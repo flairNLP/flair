@@ -1,8 +1,8 @@
 
 
-![alt text](resources/docs/flair_logo.svg):
+![alt text](resources/docs/flair_logo.svg)
 
-a very simple framework for **state-of-the-art NLP**. Developed by [Zalando Research](https://research.zalando.com/).
+- a very simple framework for **state-of-the-art NLP**. Developed by [Zalando Research](https://research.zalando.com/).
 
 ---
 
@@ -11,8 +11,8 @@ vanilla classifiaction approaches, yield state-of-the-art NLP components.
 
 Use `Flair` if:
 
-* you want to reproduce our experiments in paper [(Akbik et. al, 2018)](https://drive.google.com/file/d/19dWlBaoDGXeiZ2wQzxd95-i2nJZnTGWU/view)
-* you want to build your own state-of-the-art NLP components based on **contextual string embeddings**, or stacked combinations of various embedding types
+* you want to easily **embed your text** with various word embeddings, including *contextual string embeddings*, to build your own state-of-the-art NLP components
+* you want to reproduce our experiments in paper [Akbik et. al (2018)](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)
 * you want to apply our pre-trained models for NER, PoS tagging and chunking to your text
 
 
@@ -23,8 +23,10 @@ Use `Flair` if:
 | Task | Dataset | Our Result | Previous best |
 | -------------    | ------------- | ------------- | ------------- |
 | Named Entity Recognition (English) | Conll-03    |  **93.09** (F1)  | *92.22* |
-| Named Entity Recognition (German)  | Conll-03    |  **86.85** (F1)  | *78.76* |
-| Part-of-Speech tagging | WSJ  | **97.82**  | |
+| Named Entity Recognition (English) | Ontonotes    |  **89.71** (F1)  | *85.28* |
+| Named Entity Recognition (German)  | Conll-03    |  **88.32** (F1)  | *78.76* |
+| Named Entity Recognition (German)  | Germeval    |  **84.65** (F1)  | *79.08* |
+| Part-of-Speech tagging | WSJ  | **97.85**  | *97.64* |
 | Chunking | Conll-2000  |  **96.72** (F1) | *96.36* |
 
 
@@ -48,9 +50,22 @@ source [path/to/this/virtualenv]/bin/activate
 pip install -r requirements.txt
 ```
 
+### Training Data
+
+In order to train your own models, you need training data. For instance, get the publicly available 
+CoNLL-03 data set for English and place train, test and dev data in `/resources/tasks/conll_03/` as follows: 
+
+```
+/resources/tasks/conll_03/eng.testa
+/resources/tasks/conll_03/eng.testb
+/resources/tasks/conll_03/eng.train
+```
+
+To set up more tasks, follow the guidelines here.
+
 ### Train a quick model and predict
 
-To check if everything works, go into the virtualenv and run the following command to train a small NER model:
+Once you have the data, go into the virtualenv and run the following command to train a small NER model:
 ```bash
 python train.py 
 ```
@@ -97,9 +112,9 @@ Now, you can embed the words in a sentence. We start with a simple example that 
 
 ```python
 
-# all embeddings inherit from the TextEmbedding class. Init a simple glove embedding.
-from flair.embeddings import TextEmbedding, WordEmbeddingGensim
-glove_embedding: TextEmbedding = WordEmbeddingGensim(precomputed_embeddings_file='resources/embeddings/glove.gensim')
+# all embeddings inherit from the TextEmbeddings class. Init a simple glove embedding.
+from flair.embeddings import TextEmbeddings, WordEmbeddings
+glove_embedding: TextEmbeddings = WordEmbeddings('glove')
 
 # embed a sentence using glove.
 from flair.data import Sentence
@@ -118,9 +133,9 @@ You can also use our contextual string embeddings. Same code as above, with diff
 
 ```python
 
-# the CharLMEmbedding also inherits from the TextEmbedding class
-from flair.embeddings import TextEmbedding, CharLMEmbedding
-contextual_string_embedding: TextEmbedding = CharLMEmbedding(model_file='resources/LMs/news-forward-2048/lm.pt')
+# the CharLMEmbedding also inherits from the TextEmbeddings class
+from flair.embeddings import TextEmbeddings, CharLMEmbeddings
+contextual_string_embedding: TextEmbeddings = CharLMEmbeddings('news-forward')
 
 # embed a sentence using CharLM.
 from flair.data import Sentence
@@ -133,40 +148,30 @@ for token in sentence.tokens:
     print(token.get_embedding())
 ```
 
+This is just one example, the [tutorial](/resources/docs/TUTORIAL.md) contains more!
 
-### Stacked Embeddings
+## [Tutorial](/resources/docs/TUTORIAL.md)
 
-Very often, you want to combine different embedding types. For instance, you might want to combine classic static
-word embeddings such as GloVe with embeddings from a forward and backward language model. This normally gives best
-results.
+Flair makes it easy to embed your text with many different types of embeddings and their combinations. And then train 
+state-of-the-art NLP models. Just follow the [tutorial](/resources/docs/TUTORIAL.md) to get a better overview of functionality.
 
-For this case, use the StackedEmbeddings class which combines a list of TextEmbeddings.
+## Contributing
 
-```python
+Thanks for your interest in contributing! There are many ways to get involved; 
+start with our [contributor guidelines](/resources/docs/CONTRIBUTING.md) and then 
+check these [open issues](https://github.com/zalandoresearch/flair/issues) for specific tasks.
 
-# the CharLMEmbedding also inherits from the TextEmbedding class
-from flair.embeddings import TextEmbedding, WordEmbeddingGensim, CharLMEmbedding
-
-# init GloVe embedding
-glove_embedding: TextEmbedding = WordEmbeddingGensim(precomputed_embeddings_file='resources/embeddings/glove.gensim')
-
-# init CharLM embedding
-charlm_embedding_forward: TextEmbedding = CharLMEmbedding(model_file='resources/LMs/news-forward-2048/lm.pt')
-charlm_embedding_backward: TextEmbedding = CharLMEmbedding(model_file='resources/LMs/news-backward-2048/lm.pt')
-
-# now create the StackedEmbedding object that combines all embeddings
-from flair.embeddings import StackedEmbedding
-stacked_embeddings: TextEmbedding = StackedEmbedding(embeddings=[glove_embedding, charlm_embedding_forward, charlm_embedding_backward])
+For contributors looking to get deeper into the API we suggest cloning the repository and checking out the unit 
+tests for examples of how to call methods. Nearly all classes and methods are documented, so finding your way around 
+the code should hopefully be easy.
 
 
-# just embed a sentence using the StackedEmbedding as you would with any single embedding.
-from flair.data import Sentence
-sentence: Sentence = Sentence('The grass is green .')
-stacked_embeddings.get_embeddings(sentences=[sentence])
+## [License](/LICENSE.md)
 
-# now check out the embedded tokens.
-for token in sentence.tokens:
-    print(token)
-    print(token.get_embedding())
-```
+Flair is in general licensed under the following MIT license: The MIT License (MIT) Copyright © 2018 Zalando SE, https://tech.zalando.com
 
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
