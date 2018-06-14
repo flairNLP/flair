@@ -22,12 +22,12 @@ Use `Flair` if:
 
 | Task | Dataset | Our Result | Previous best |
 | -------------    | ------------- | ------------- | ------------- |
-| Named Entity Recognition (English) | Conll-03    |  **93.09** (F1)  | *92.22* |
-| Named Entity Recognition (English) | Ontonotes    |  **89.71** (F1)  | *85.28* |
-| Named Entity Recognition (German)  | Conll-03    |  **88.32** (F1)  | *78.76* |
-| Named Entity Recognition (German)  | Germeval    |  **84.65** (F1)  | *79.08* |
-| Part-of-Speech tagging | WSJ  | **97.85**  | *97.64* |
-| Chunking | Conll-2000  |  **96.72** (F1) | *96.36* |
+| Named Entity Recognition (English) | Conll-03    |  **93.09** (F1)  | *92.22 [(Peters et al., 2018)](https://arxiv.org/pdf/1802.05365.pdf)* |
+| Named Entity Recognition (English) | Ontonotes    |  **89.71** (F1)  | *86.28 [(Chiu et al., 2016)](https://arxiv.org/pdf/1511.08308.pdf)* |
+| Named Entity Recognition (German)  | Conll-03    |  **88.32** (F1)  | *78.76 [(Lample et al., 2016)](https://arxiv.org/abs/1603.01360)* |
+| Named Entity Recognition (German)  | Germeval    |  **84.65** (F1)  | *79.08 [(Hänig et al, 2014)](http://asv.informatik.uni-leipzig.de/publication/file/300/GermEval2014_ExB.pdf)*|
+| Part-of-Speech tagging | WSJ  | **97.85**  | *97.64 [(Choi, 2016)](https://www.aclweb.org/anthology/N16-1031)*|
+| Chunking | Conll-2000  |  **96.72** (F1) | *96.36 [(Peters et al., 2017)](https://arxiv.org/pdf/1705.00108.pdf)*
 
 
 ## Set up
