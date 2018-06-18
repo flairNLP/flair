@@ -218,7 +218,7 @@ trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=15
 
 ## Germeval Named Entity Recognition (German)
 
-**Data.** The [Germeval data set](https://www.clips.uantwerpen.be/conll2003/ner/) is a more recent and more accessible 
+**Data.** The [Germeval data set](https://sites.google.com/site/germeval2014ner/data) is a more recent and more accessible 
 NER data for German. It contains 4 entity classes, plus extra derivative classes. 
 Follows the steps on the task Web site to 
 get the dataset and place train, test and dev data in `/resources/tasks/germeval/` as follows: 
@@ -275,5 +275,135 @@ from flair.trainer import TagTrain
 trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
 
 trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
+              train_with_dev=True, anneal_mode=True)
+```
+
+
+
+
+## Penn Treebank Part-of-Speech Tagging (English)
+
+**Data.** Get the [Penn treebank](https://catalog.ldc.upenn.edu/ldc99t42) and follow the guidelines 
+in [Collins (2002)](http://www.cs.columbia.edu/~mcollins/papers/tagperc.pdf) to produce train, dev and test splits.
+Convert splits into CoNLLU-U format and place train, test and dev data in `/resources/tasks/penn/` as follows: 
+
+```
+/resources/tasks/penn/test.conll
+/resources/tasks/penn/train.conll
+/resources/tasks/penn/valid.conll
+```
+
+Then, run the experiments with extec embeddings and contextual string embeddings. Also, select 'pos' as `tag_type`, 
+so the algorithm knows that POS tags and not NER are to be predicted from this data. 
+
+
+```python
+from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
+from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
+from typing import List
+import torch
+
+# 1. get the corpus
+task_data_fetcher: NLPTaskDataFetcher = NLPTaskDataFetcher()
+corpus: TaggedCorpus = task_data_fetcher.fetch_data(NLPTask.PENN)
+print(corpus)
+
+# 2. what tag do we want to predict?
+tag_type = 'pos'
+
+# 3. make the tag dictionary from the corpus
+tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+print(tag_dictionary.idx2item)
+
+# initialize embeddings
+embedding_types: List[TextEmbeddings] = [
+
+    WordEmbeddings('extvec')
+    ,
+    CharLMEmbeddings('news-forward')
+    ,
+    CharLMEmbeddings('news-backward')
+]
+
+embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
+
+# initialize sequence tagger
+from flair.tagging_model import SequenceTaggerLSTM
+
+tagger: SequenceTaggerLSTM = SequenceTaggerLSTM(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
+                                                use_crf=False)
+if torch.cuda.is_available():
+    tagger = tagger.cuda()
+
+# initialize trainer
+from flair.trainer import TagTrain
+
+trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
+
+trainer.train('resources/taggers/example-pos', mini_batch_size=32, max_epochs=150, save_model=True,
+              train_with_dev=True, anneal_mode=True)
+
+```
+
+## CoNLL-2000 Noun Phrase Chunking (English)
+
+**Data.** Get the [CoNLL-2000 data set for English](https://www.clips.uantwerpen.be/conll2000/chunking/), the most 
+well-known dataset to evaluate chunking on. Follows the steps on the task Web site to 
+get the dataset and place train and test data in `/resources/tasks/conll_2000/` as follows: 
+
+```
+/resources/tasks/conll_2000/test.txt
+/resources/tasks/conll_2000/train.txt
+```
+
+Our data loader class automatically samples a dev dataset. 
+
+Run the code with extvec embeddings and our proposed contextual string embeddings. Use 'np' as `tag_type`, 
+so the algorithm knows that chunking tags and not NER are to be predicted from this data. 
+
+```python
+from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
+from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
+from typing import List
+import torch
+
+# 1. get the corpus
+task_data_fetcher: NLPTaskDataFetcher = NLPTaskDataFetcher()
+corpus: TaggedCorpus = task_data_fetcher.fetch_data(NLPTask.CONLL_2000)
+print(corpus)
+
+# 2. what tag do we want to predict?
+tag_type = 'np'
+
+# 3. make the tag dictionary from the corpus
+tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+print(tag_dictionary.idx2item)
+
+# initialize embeddings
+embedding_types: List[TextEmbeddings] = [
+
+    WordEmbeddings('extvec')
+    ,
+    CharLMEmbeddings('news-forward')
+    ,
+    CharLMEmbeddings('news-backward')
+]
+
+embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
+
+# initialize sequence tagger
+from flair.tagging_model import SequenceTaggerLSTM
+
+tagger: SequenceTaggerLSTM = SequenceTaggerLSTM(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
+                                                use_crf=False)
+if torch.cuda.is_available():
+    tagger = tagger.cuda()
+
+# initialize trainer
+from flair.trainer import TagTrain
+
+trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
+
+trainer.train('resources/taggers/example-pos', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
 ```
