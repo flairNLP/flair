@@ -151,3 +151,129 @@ trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=15
               train_with_dev=True, anneal_mode=True)
 
 ```
+
+
+## CoNLL-03 Named Entity Recognition (German)
+
+**Data.** Get the [CoNLL-03 data set for German](https://www.clips.uantwerpen.be/conll2003/ner/). 
+It contains 4 entity classes. Follows the steps on the task Web site to 
+get the dataset and place train, test and dev data in `/resources/tasks/conll_03-ger/` as follows: 
+
+```
+/resources/tasks/conll_03-ger/deu.testa
+/resources/tasks/conll_03-ger/deu.testb
+/resources/tasks/conll_03-ger/deu.train
+```
+
+Once you have the data, reproduce our experiments exactly like for CoNLL-03, just with a different dataset and with 
+FastText word embeddings and German contextual string embeddings. The full code then is as follows: 
+
+```python
+from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
+from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
+from typing import List
+import torch
+
+# 1. get the corpus
+task_data_fetcher: NLPTaskDataFetcher = NLPTaskDataFetcher()
+corpus: TaggedCorpus = task_data_fetcher.fetch_data(NLPTask.CONLL_03_GERMAN)
+print(corpus)
+
+# 2. what tag do we want to predict?
+tag_type = 'ner'
+
+# 3. make the tag dictionary from the corpus
+tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+print(tag_dictionary.idx2item)
+
+# initialize embeddings
+embedding_types: List[TextEmbeddings] = [
+
+    WordEmbeddings('ft-german')
+    ,
+    CharLMEmbeddings('german-forward')
+    ,
+    CharLMEmbeddings('german-backward')
+]
+
+embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
+
+# initialize sequence tagger
+from flair.tagging_model import SequenceTaggerLSTM
+
+tagger: SequenceTaggerLSTM = SequenceTaggerLSTM(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
+                                                use_crf=False)
+if torch.cuda.is_available():
+    tagger = tagger.cuda()
+
+# initialize trainer
+from flair.trainer import TagTrain
+
+trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
+
+trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
+              train_with_dev=True, anneal_mode=True)
+```
+
+
+## Germeval Named Entity Recognition (German)
+
+**Data.** The [Germeval data set](https://www.clips.uantwerpen.be/conll2003/ner/) is a more recent and more accessible 
+NER data for German. It contains 4 entity classes, plus extra derivative classes. 
+Follows the steps on the task Web site to 
+get the dataset and place train, test and dev data in `/resources/tasks/germeval/` as follows: 
+
+```
+/resources/tasks/germeval/NER-de-dev.tsv
+/resources/tasks/germeval/NER-de-test.tsv
+/resources/tasks/germeval/NER-de-train.tsv
+```
+
+Once you have the data, reproduce our experiments exactly like for the German CoNLL-03: 
+
+```python
+from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
+from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
+from typing import List
+import torch
+
+# 1. get the corpus
+task_data_fetcher: NLPTaskDataFetcher = NLPTaskDataFetcher()
+corpus: TaggedCorpus = task_data_fetcher.fetch_data(NLPTask.GERMEVAL)
+print(corpus)
+
+# 2. what tag do we want to predict?
+tag_type = 'ner'
+
+# 3. make the tag dictionary from the corpus
+tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+print(tag_dictionary.idx2item)
+
+# initialize embeddings
+embedding_types: List[TextEmbeddings] = [
+
+    WordEmbeddings('ft-german')
+    ,
+    CharLMEmbeddings('german-forward')
+    ,
+    CharLMEmbeddings('german-backward')
+]
+
+embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
+
+# initialize sequence tagger
+from flair.tagging_model import SequenceTaggerLSTM
+
+tagger: SequenceTaggerLSTM = SequenceTaggerLSTM(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
+                                                use_crf=False)
+if torch.cuda.is_available():
+    tagger = tagger.cuda()
+
+# initialize trainer
+from flair.trainer import TagTrain
+
+trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
+
+trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
+              train_with_dev=True, anneal_mode=True)
+```
