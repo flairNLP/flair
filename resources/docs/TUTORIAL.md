@@ -116,7 +116,7 @@ In this example, we downsample the data to 10% of the original data.
 
 ```python
 from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
-from flair.embeddings import WordEmbeddings, StackedEmbeddings
+from flair.embeddings import WordEmbeddings
 import torch
 
 # 1. get the corpus
@@ -131,12 +131,8 @@ tag_type = 'ner'
 tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary.idx2item)
 
-# initialize embeddings
-embedding_types = [
-    WordEmbeddings('glove')
-]
-
-embeddings = StackedEmbeddings(embeddings=embedding_types)
+# initialize embeddings. In this case, simple GloVe embeddings
+embeddings = WordEmbeddings('glove')
 
 # initialize sequence tagger
 from flair.tagging_model import SequenceTaggerLSTM
