@@ -29,6 +29,7 @@ Use `Flair` if:
 | Part-of-Speech tagging | WSJ  | **97.85**  | *97.64 [(Choi, 2016)](https://www.aclweb.org/anthology/N16-1031)*|
 | Chunking | Conll-2000  |  **96.72** (F1) | *96.36 [(Peters et al., 2017)](https://arxiv.org/pdf/1705.00108.pdf)*
 
+Here's how to [reproduce these numbers](/resources/docs/EXPERIMENTS.md) using Flair.
 
 ## Set up
 
@@ -154,6 +155,7 @@ This is just one example, the [tutorial](/resources/docs/TUTORIAL.md) contains m
 
 Flair makes it easy to embed your text with many different types of embeddings and their combinations. And then train 
 state-of-the-art NLP models. Just follow the [tutorial](/resources/docs/TUTORIAL.md) to get a better overview of functionality.
+Or look at to [reproduce our state-of-the-art results](/resources/docs/EXPERIMENTS.md) using Flair.
 
 ## Contributing
 
