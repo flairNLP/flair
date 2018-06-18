@@ -11,7 +11,7 @@ First, you need to construct Sentence objects for your text.
 from flair.data import Sentence
 
 # Make a sentence object by passing a whitespace tokenized string
-sentence: Sentence = Sentence('The grass is green .')
+sentence = Sentence('The grass is green .')
 
 # Print the object to see what's in there
 print(sentence)
@@ -37,12 +37,12 @@ Now, you can embed the words in a sentence. We start with a simple example that 
 ```python
 
 # all embeddings inherit from the TextEmbeddings class. Init a simple glove embedding.
-from flair.embeddings import TextEmbeddings, WordEmbeddings
-glove_embedding: TextEmbeddings = WordEmbeddings('glove')
+from flair.embeddings import WordEmbeddings
+glove_embedding = WordEmbeddings('glove')
 
 # embed a sentence using glove.
 from flair.data import Sentence
-sentence: Sentence = Sentence('The grass is green .')
+sentence = Sentence('The grass is green .')
 glove_embedding.get_embeddings(sentences=[sentence])
 
 # now check out the embedded tokens.
