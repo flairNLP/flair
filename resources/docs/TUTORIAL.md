@@ -139,14 +139,16 @@ from flair.tagging_model import SequenceTaggerLSTM
 
 tagger = SequenceTaggerLSTM(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
                                                 use_crf=False)
+                                                
+# put model on cuda if GPU is available (i.e. much faster training)
 if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
 from flair.trainer import TagTrain
-
 trainer = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
 
+# run training for 5 epochs
 trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=5, save_model=True,
               train_with_dev=True, anneal_mode=True)
 ```
