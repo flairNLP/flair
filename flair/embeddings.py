@@ -12,22 +12,12 @@ from .language_model import RNNModel
 from .data import Dictionary, Token, Sentence, TaggedCorpus
 
 
-class TextEmbeddings(ABC):
+class TextEmbeddings(torch.nn.Module):
     """Abstract base class for all embeddings. Ever new type of embedding must implement these methods."""
 
     @abstractmethod
     def embedding_length(self) -> int:
         """Returns the length of the embedding vector."""
-        pass
-
-    @abstractmethod
-    def eval(self):
-        """Switches embeddings into Pytorch eval mode, i.e. no dropout."""
-        pass
-
-    @abstractmethod
-    def train(self):
-        """Switches embeddings into Pytorch train mode, i.e. with dropout."""
         pass
 
     def get_embeddings(self, sentences: List[Sentence]) -> List[Sentence]:
@@ -51,11 +41,6 @@ class TextEmbeddings(ABC):
         """Private method for adding embeddings to all words in a list of sentences."""
         pass
 
-    @abstractmethod
-    def cuda(self):
-        """Put self on cuda."""
-        pass
-
 
 class StackedEmbeddings(TextEmbeddings):
     """A stack of embeddings, used if you need to combine several different embedding types."""
@@ -65,6 +50,11 @@ class StackedEmbeddings(TextEmbeddings):
         super().__init__()
 
         self.embeddings = embeddings
+
+        # IMPORTANT: add embeddings as torch modules
+        for i, embedding in enumerate(embeddings):
+            self.add_module('list_embedding_%s' % str(i), embedding)
+
         self.detach = detach
         self.name = 'Stack'
         self.static_embeddings = True
@@ -73,22 +63,10 @@ class StackedEmbeddings(TextEmbeddings):
         for embedding in embeddings:
             self.embedding_length += embedding.embedding_length
 
-    def cuda(self):
-        for embedding in self.embeddings:
-            embedding.cuda()
-
     def get_embeddings(self, sentences: List[Sentence], static_embeddings: bool = True):
 
         for embedding in self.embeddings:
             embedding.get_embeddings(sentences)
-
-    def eval(self):
-        for embedding in self.embeddings:
-            embedding.eval()
-
-    def train(self):
-        for embedding in self.embeddings:
-            embedding.train()
 
     def embedding_length(self) -> int:
         return self.embedding_length
@@ -139,15 +117,6 @@ class WordEmbeddings(TextEmbeddings):
 
         self.embedding_length: int = self.precomputed_word_embeddings.vector_size
         super().__init__()
-
-    def eval(self):
-        pass
-
-    def train(self):
-        pass
-
-    def cuda(self):
-        pass
 
     def embedding_length(self) -> int:
         return self.embedding_length
@@ -201,18 +170,6 @@ class CharacterEmbeddings(TextEmbeddings):
                                       bidirectional=True)
 
         self.embedding_length = self.char_embedding_dim * 2
-
-    def cuda(self):
-        self.char_embedding = self.char_embedding.cuda()
-        self.char_rnn = self.char_rnn.cuda()
-
-    def eval(self):
-        self.char_rnn.eval()
-        self.char_embedding.eval()
-
-    def train(self):
-        self.char_rnn.train()
-        self.char_embedding.train()
 
     def embedding_length(self) -> int:
         return self.embedding_length
@@ -277,6 +234,8 @@ class CharLMEmbeddings(TextEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
     def __init__(self, model, detach: bool = True):
+        super().__init__()
+
         """
             Contextual string embeddings of words, as proposed in Akbik et al., 2018.
 
@@ -344,17 +303,6 @@ class CharLMEmbeddings(TextEmbeddings):
         embedded_dummy = self.get_embeddings([dummy_sentence])
         self.embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
-        super().__init__()
-
-    def eval(self):
-        pass
-
-    def train(self):
-        pass
-
-    def cuda(self):
-        if torch.cuda.is_available():
-            self.lm = self.lm.cuda()
 
     def embedding_length(self) -> int:
         return self.embedding_length
@@ -484,9 +432,6 @@ class OnePassStoreEmbeddings(TextEmbeddings):
         signature = '%s··%d:··%s' % (token.text, token.idx, context)
         return signature.strip().replace(' ', '·')
 
-    def cuda(self):
-        self.embeddings.cuda()
-
     def get_embeddings(self, sentences: List[Sentence], static_embeddings: bool = True):
 
         for sentence in sentences:
@@ -495,12 +440,6 @@ class OnePassStoreEmbeddings(TextEmbeddings):
                 word_embedding = self.embeddings.precomputed_word_embeddings.get_vector(signature)
                 word_embedding = torch.autograd.Variable(torch.FloatTensor(word_embedding))
                 token.set_embedding(self.name, word_embedding)
-
-    def eval(self):
-        self.embeddings.eval()
-
-    def train(self):
-        self.embeddings.train()
 
     def embedding_length(self) -> int:
         return self.embedding_length

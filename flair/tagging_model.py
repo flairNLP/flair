@@ -32,7 +32,7 @@ def log_sum_exp(vec):
 class SequenceTaggerLSTM(nn.Module):
     def __init__(self,
                  hidden_size: int,
-                 embeddings: TextEmbeddings,
+                 embeddings,
                  tag_dictionary: Dictionary,
                  use_crf: bool = True,
                  use_rnn: bool = True,
@@ -47,7 +47,7 @@ class SequenceTaggerLSTM(nn.Module):
 
         self.trained_epochs: int = 0
 
-        self.embeddings: TextEmbeddings = embeddings
+        self.embeddings = embeddings
 
         # set the dictionaries
         self.tag_dictionary: Dictionary = tag_dictionary
@@ -105,6 +105,9 @@ class SequenceTaggerLSTM(nn.Module):
         longest_token_sequence_in_batch: int = len(sentences[0])
 
         self.embeddings.get_embeddings(sentences)
+        sent = sentences[0]
+        # print(sent)
+        # print(sent.tokens[0].get_embedding()[0:7])
 
         all_sentence_tensors = []
         lengths: List[int] = []
