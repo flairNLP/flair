@@ -62,7 +62,7 @@ CoNLL-03 data set for English and place train, test and dev data in `/resources/
 /resources/tasks/conll_03/eng.train
 ```
 
-To set up more tasks, follow the guidelines here.
+To set up more tasks, follow the guidelines [here](/resources/docs/EXPERIMENTS.md).
 
 ### Train a quick model and predict
 
