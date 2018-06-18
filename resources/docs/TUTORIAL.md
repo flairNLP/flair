@@ -58,12 +58,12 @@ You can also use our contextual string embeddings. Same code as above, with diff
 ```python
 
 # the CharLMEmbedding also inherits from the TextEmbeddings class
-from flair.embeddings import TextEmbeddings, CharLMEmbeddings
-contextual_string_embedding: TextEmbeddings = CharLMEmbeddings('news-forward')
+from flair.embeddings import CharLMEmbeddings
+contextual_string_embedding = CharLMEmbeddings('news-forward')
 
 # embed a sentence using CharLM.
 from flair.data import Sentence
-sentence: Sentence = Sentence('The grass is green .')
+sentence = Sentence('The grass is green .')
 contextual_string_embedding.get_embeddings(sentences=[sentence])
 
 # now check out the embedded tokens.
@@ -84,23 +84,23 @@ For this case, use the StackedEmbeddings class which combines a list of TextEmbe
 ```python
 
 # the CharLMEmbedding also inherits from the TextEmbeddings class
-from flair.embeddings import TextEmbeddings, WordEmbeddings, CharLMEmbeddings
+from flair.embeddings import WordEmbeddings, CharLMEmbeddings
 
 # init GloVe embedding
-glove_embedding: TextEmbeddings = WordEmbeddings('glove')
+glove_embedding = WordEmbeddings('glove')
 
 # init CharLM embedding
-charlm_embedding_forward: TextEmbeddings = CharLMEmbeddings('news-forward')
-charlm_embedding_backward: TextEmbeddings = CharLMEmbeddings('news-backward')
+charlm_embedding_forward = CharLMEmbeddings('news-forward')
+charlm_embedding_backward = CharLMEmbeddings('news-backward')
 
 # now create the StackedEmbedding object that combines all embeddings
 from flair.embeddings import StackedEmbeddings
-stacked_embeddings: TextEmbeddings = StackedEmbeddings(embeddings=[glove_embedding, charlm_embedding_forward, charlm_embedding_backward])
+stacked_embeddings = StackedEmbeddings(embeddings=[glove_embedding, charlm_embedding_forward, charlm_embedding_backward])
 
 
 # just embed a sentence using the StackedEmbedding as you would with any single embedding.
 from flair.data import Sentence
-sentence: Sentence = Sentence('The grass is green .')
+sentence = Sentence('The grass is green .')
 stacked_embeddings.get_embeddings(sentences=[sentence])
 
 # now check out the embedded tokens.
@@ -116,8 +116,7 @@ In this example, we downsample the data to 10% of the original data.
 
 ```python
 from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
-from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
-from typing import List
+from flair.embeddings import WordEmbeddings, StackedEmbeddings
 import torch
 
 # 1. get the corpus
@@ -133,16 +132,16 @@ tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary.idx2item)
 
 # initialize embeddings
-embedding_types: List[TextEmbeddings] = [
+embedding_types = [
     WordEmbeddings('glove')
 ]
 
-embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
+embeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # initialize sequence tagger
 from flair.tagging_model import SequenceTaggerLSTM
 
-tagger: SequenceTaggerLSTM = SequenceTaggerLSTM(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
+tagger = SequenceTaggerLSTM(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
                                                 use_crf=False)
 if torch.cuda.is_available():
     tagger = tagger.cuda()
@@ -150,11 +149,12 @@ if torch.cuda.is_available():
 # initialize trainer
 from flair.trainer import TagTrain
 
-trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
+trainer = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
 
-trainer.train('resources/taggers/example-pos', mini_batch_size=32, max_epochs=5, save_model=True,
+trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=5, save_model=True,
               train_with_dev=True, anneal_mode=True)
 ```
 
 Alternatively, try using a stacked embedding with charLM and glove, over the full data, for 150 epochs.
-This will give you the state-of-the-art accuracy we report in the paper.
+This will give you the state-of-the-art accuracy we report in the paper. To see the full code to reproduce experiments, 
+check [here](/resources/docs/EXPERIMENTS.md). 
