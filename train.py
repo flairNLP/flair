@@ -5,7 +5,7 @@ import torch
 
 # 1. get the corpus
 task_data_fetcher: NLPTaskDataFetcher = NLPTaskDataFetcher()
-corpus: TaggedCorpus = task_data_fetcher.fetch_data(NLPTask.CONLL_03).downsample(0.1)  # remove the last bit to not downsample
+corpus: TaggedCorpus = task_data_fetcher.fetch_data(NLPTask.CONLL_03).downsample(0.1)
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -19,10 +19,14 @@ print(tag_dictionary.idx2item)
 embedding_types: List[TextEmbeddings] = [
 
     WordEmbeddings('glove')
+
+    # comment in this line to use character embeddings
     # , CharacterEmbeddings()
 
-    # comment these two lines in for contextual string embeddings
-    # , CharLMEmbeddings('news-forward'),
+    # comment in these lines to use contextual string embeddings
+    # ,
+    # CharLMEmbeddings('news-forward')
+    # ,
     # CharLMEmbeddings('news-backward')
 ]
 
@@ -32,7 +36,7 @@ embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 from flair.tagging_model import SequenceTaggerLSTM
 
 tagger: SequenceTaggerLSTM = SequenceTaggerLSTM(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
-                                                use_crf=False)
+                                                use_crf=True)
 if torch.cuda.is_available():
     tagger = tagger.cuda()
 
@@ -41,5 +45,5 @@ from flair.trainer import TagTrain
 
 trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
 
-trainer.train('resources/taggers/example-pos', mini_batch_size=32, max_epochs=5, save_model=True,
-              train_with_dev=True, anneal_mode=True)
+trainer.train('resources/taggers/example-pos', mini_batch_size=32, max_epochs=150, save_model=False,
+              train_with_dev=False, anneal_mode=False)

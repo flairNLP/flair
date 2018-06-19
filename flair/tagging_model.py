@@ -133,12 +133,10 @@ class SequenceTaggerLSTM(nn.Module):
 
             # PADDING: pad shorter sentences out
             for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
-
                 word_embeddings.append(
                     torch.autograd.Variable(
                         torch.FloatTensor(np.zeros(self.embeddings.embedding_length, dtype='float')).unsqueeze(0)))
 
-            # print(word_embeddings)
             word_embeddings_tensor = torch.cat(word_embeddings, 0)
 
             sentence_states = word_embeddings_tensor

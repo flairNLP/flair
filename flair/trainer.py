@@ -9,7 +9,7 @@ import torch, random, datetime, re, sys, os, shutil
 
 
 class TagTrain:
-    def __init__(self, model: SequenceTaggerLSTM, corpus: TaggedCorpus, tag_type: str, test_mode: bool = False):
+    def __init__(self, model: SequenceTaggerLSTM, corpus: TaggedCorpus, tag_type: str, test_mode: bool = False) -> None:
 
         self.model: SequenceTaggerLSTM = model
         self.corpus: TaggedCorpus = corpus
@@ -146,7 +146,7 @@ class TagTrain:
 
                     if save_model or anneal_mode:
                         with open(base_path + "/model.pt", 'wb') as model_save_file:
-                            torch.save(self.model, model_save_file)
+                            torch.save(self.model, model_save_file, pickle_protocol=4)
                             model_save_file.close()
                         print(model_save_file.closed)
                     print('.. model saved ... ')
