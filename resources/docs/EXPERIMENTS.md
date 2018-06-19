@@ -41,8 +41,7 @@ from typing import List
 import torch
 
 # 1. get the corpus
-task_data_fetcher: NLPTaskDataFetcher = NLPTaskDataFetcher()
-corpus: TaggedCorpus = task_data_fetcher.fetch_data(NLPTask.CONLL_03)
+corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03)
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -71,14 +70,14 @@ embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 from flair.tagging_model import SequenceTaggerLSTM
 
 tagger: SequenceTaggerLSTM = SequenceTaggerLSTM(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
-                                                use_crf=False)
+                                                use_crf=True)
 if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
 from flair.trainer import TagTrain
 
-trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
+trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=False)
 
 trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
@@ -111,8 +110,7 @@ from typing import List
 import torch
 
 # 1. get the corpus
-task_data_fetcher: NLPTaskDataFetcher = NLPTaskDataFetcher()
-corpus: TaggedCorpus = task_data_fetcher.fetch_data(NLPTask.ONTONER)
+corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.ONTONER)
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -138,14 +136,14 @@ embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 from flair.tagging_model import SequenceTaggerLSTM
 
 tagger: SequenceTaggerLSTM = SequenceTaggerLSTM(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
-                                                use_crf=False)
+                                                use_crf=True)
 if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
 from flair.trainer import TagTrain
 
-trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
+trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=False)
 
 trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
@@ -175,8 +173,7 @@ from typing import List
 import torch
 
 # 1. get the corpus
-task_data_fetcher: NLPTaskDataFetcher = NLPTaskDataFetcher()
-corpus: TaggedCorpus = task_data_fetcher.fetch_data(NLPTask.CONLL_03_GERMAN)
+corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03_GERMAN)
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -202,14 +199,14 @@ embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 from flair.tagging_model import SequenceTaggerLSTM
 
 tagger: SequenceTaggerLSTM = SequenceTaggerLSTM(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
-                                                use_crf=False)
+                                                use_crf=True)
 if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
 from flair.trainer import TagTrain
 
-trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
+trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=False)
 
 trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
@@ -238,8 +235,7 @@ from typing import List
 import torch
 
 # 1. get the corpus
-task_data_fetcher: NLPTaskDataFetcher = NLPTaskDataFetcher()
-corpus: TaggedCorpus = task_data_fetcher.fetch_data(NLPTask.GERMEVAL)
+corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.GERMEVAL)
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -265,14 +261,14 @@ embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 from flair.tagging_model import SequenceTaggerLSTM
 
 tagger: SequenceTaggerLSTM = SequenceTaggerLSTM(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
-                                                use_crf=False)
+                                                use_crf=True)
 if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
 from flair.trainer import TagTrain
 
-trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
+trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=False)
 
 trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
@@ -304,8 +300,7 @@ from typing import List
 import torch
 
 # 1. get the corpus
-task_data_fetcher: NLPTaskDataFetcher = NLPTaskDataFetcher()
-corpus: TaggedCorpus = task_data_fetcher.fetch_data(NLPTask.PENN)
+corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.PENN)
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -331,14 +326,14 @@ embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 from flair.tagging_model import SequenceTaggerLSTM
 
 tagger: SequenceTaggerLSTM = SequenceTaggerLSTM(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
-                                                use_crf=False)
+                                                use_crf=True)
 if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
 from flair.trainer import TagTrain
 
-trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
+trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=False)
 
 trainer.train('resources/taggers/example-pos', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
@@ -368,8 +363,7 @@ from typing import List
 import torch
 
 # 1. get the corpus
-task_data_fetcher: NLPTaskDataFetcher = NLPTaskDataFetcher()
-corpus: TaggedCorpus = task_data_fetcher.fetch_data(NLPTask.CONLL_2000)
+corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_2000)
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -395,14 +389,14 @@ embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 from flair.tagging_model import SequenceTaggerLSTM
 
 tagger: SequenceTaggerLSTM = SequenceTaggerLSTM(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
-                                                use_crf=False)
+                                                use_crf=True)
 if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
 from flair.trainer import TagTrain
 
-trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
+trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=False)
 
 trainer.train('resources/taggers/example-pos', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)

@@ -120,8 +120,7 @@ from flair.embeddings import WordEmbeddings
 import torch
 
 # 1. get the corpus
-task_data_fetcher: NLPTaskDataFetcher = NLPTaskDataFetcher()
-corpus: TaggedCorpus = task_data_fetcher.fetch_data(NLPTask.CONLL_03).downsample(0.1)  # remove the last bit to not downsample
+corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03).downsample(0.1)  # remove the last bit to not downsample
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -138,7 +137,7 @@ embeddings = WordEmbeddings('glove')
 from flair.tagging_model import SequenceTaggerLSTM
 
 tagger = SequenceTaggerLSTM(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
-                                                use_crf=False)
+                                                use_crf=True)
                                                 
 # put model on cuda if GPU is available (i.e. much faster training)
 if torch.cuda.is_available():
@@ -146,7 +145,7 @@ if torch.cuda.is_available():
 
 # initialize trainer
 from flair.trainer import TagTrain
-trainer = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
+trainer = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=False)
 
 # run training for 5 epochs
 trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=5, save_model=True,
