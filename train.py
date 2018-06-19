@@ -4,8 +4,7 @@ from typing import List
 import torch
 
 # 1. get the corpus
-task_data_fetcher: NLPTaskDataFetcher = NLPTaskDataFetcher()
-corpus: TaggedCorpus = task_data_fetcher.fetch_data(NLPTask.CONLL_03).downsample(0.1)
+corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03).downsample(0.1)
 print(corpus)
 
 # 2. what tag do we want to predict?
