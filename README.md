@@ -126,8 +126,10 @@ embedder.embed(sentences=[sentence])
 ### Character Embeddings
 
 Some embeddings - such as character-features - are not pre-trained but rather trained on the downstream task. Normally
-this requires you to implement a hierarchical training architecture. With flair, you need only choose the appropriate
-embedding class - the features will then automatically train during downstream task training. 
+this requires you to implement a [hierarchical embedding architecture](http://neuroner.com/NeuroNERengine_with_caption_no_figure.png). 
+
+With Flair, you need not worry about such things. Just choose the appropriate
+embedding class and character features will then automatically train during downstream task training. 
 
 ```python
 # the CharLMEmbedding also inherits from the TextEmbeddings class
