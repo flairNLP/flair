@@ -20,7 +20,7 @@ to build your own state-of-the-art NLP methods.
 * **A powerful syntactic / semantic tagger.** Flair allows you to apply our state-of-the-art models for named entity recognition (NER), 
 part-of-speech tagging (PoS) and chunking to your text.
 
-Embedding your text - and state-of-the-art NLP - has never been easier. 
+Embedding your text for state-of-the-art NLP has never been easier. 
 
 ## Comparison with State-of-the-Art
 
