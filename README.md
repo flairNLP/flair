@@ -6,19 +6,25 @@
 
 ---
 
-The framework's strength resides in **hyper-powerful word embeddings** that, when used in 
-vanilla classifiaction approaches, yield state-of-the-art NLP components. 
+Flair uses **hyper-powerful word embeddings** to achieve state-of-the-art accuracies
+ on a range of natural language processing (NLP) tasks. 
 
-Use `Flair` if:
+Flair is:
 
-* you want to easily **embed your text** with various word embeddings, including *contextual string embeddings*, to build your own state-of-the-art NLP components
-* you want to reproduce our experiments in paper [Akbik et. al (2018)](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)
-* you want to apply our pre-trained models for NER, PoS tagging and chunking to your text
+* **A word embedding library.** There are many different types of word embeddings out there, with wildly different properties. 
+Flair packages many of them behind a simple interface, so you can mix and match embeddings for your experiments. 
+In particular, you can try out our proposed 
+*[contextual string embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)*, 
+to build your own state-of-the-art NLP methods.
 
+* **A powerful syntactic / semantic tagger.** Flair allows you to apply our state-of-the-art models for named entity recognition (NER), 
+part-of-speech tagging (PoS) and chunking to your text.
 
-## Flair NLP
+Embedding your text - and state-of-the-art NLP - has never been easier. 
 
-`Flair` outperforms the previous best methods on a range of NLP tasks:
+## Comparison with State-of-the-Art
+
+Flair outperforms the previous best methods on a range of NLP tasks:
 
 | Task | Dataset | Our Result | Previous best |
 | -------------    | ------------- | ------------- | ------------- |
@@ -29,7 +35,111 @@ Use `Flair` if:
 | Part-of-Speech tagging | WSJ  | **97.85**  | *97.64 [(Choi, 2016)](https://www.aclweb.org/anthology/N16-1031)*|
 | Chunking | Conll-2000  |  **96.72** (F1) | *96.36 [(Peters et al., 2017)](https://arxiv.org/pdf/1705.00108.pdf)*
 
+You can find an in-depth evaluation of our approach 
+in our paper [Contextual String Embeddings for Sequence Labeling](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing).
 Here's how to [reproduce these numbers](/resources/docs/EXPERIMENTS.md) using Flair.
+
+
+
+
+## Examples
+
+Let's look into some core functionality to understand the library better. There is a more in-depth introduction
+in the [tutorial](/resources/docs/TUTORIAL.md) section!
+
+### NLP base types
+
+First, you need to construct Sentence objects for your text.
+
+```python
+# The sentence objects holds a sentence that we may want to embed
+from flair.data import Sentence
+
+# Make a sentence object by passing a whitespace tokenized string
+sentence = Sentence('The grass is green .')
+
+# Print the object to see what's in there
+print(sentence)
+```
+
+You can access the tokens of a sentence via their token id, or iterate through the tokens in a sentence.
+```python
+print(sentence[4])
+
+# The Sentence object has a list of Token objects (each token represents a word)
+for token in sentence:
+    print(token) 
+```
+
+Tokens can also have tags, such as a named entity tag. In this example, we're adding an NER tag of type 'color' to 
+the word 'green' in the example sentence.
+
+```python
+# add a tag to a word in the sentence
+sentence[4].add_tag('ner', 'color')
+
+# print the sentence with all tags of this type
+print(sentence.to_tag_string('ner'))
+```
+
+### Word Embeddings
+
+Now, you can embed the words in a sentence. Instantiate an embedding class and call the method 
+`embed()` over a list of sentences. We start with a simple GloVe embedding.
+
+```python
+# Init a simple GloVe embedding.
+from flair.embeddings import WordEmbeddings
+embedder = WordEmbeddings('glove')
+
+# embed a sentence using GloVe.
+from flair.data import Sentence
+sentence = Sentence('The grass is green .')
+embedder.embed(sentences=[sentence])
+```
+If you want to check the embeddings of the words, just call the `embedding` property of any `Token`:
+
+```python
+# now check out the embedded tokens.
+for token in sentence:
+    print(token)
+    print(token.embedding)
+```
+
+### Contextual String Embeddings
+
+Switching to a different embedding is as simple as choosing a different embeddings class. Here, we use contextual
+string embeddings.
+
+```python
+
+# the CharLMEmbedding also inherits from the TextEmbeddings class
+from flair.embeddings import CharLMEmbeddings
+embedder = CharLMEmbeddings('news-forward')
+
+# embed a sentence using CharLM.
+from flair.data import Sentence
+sentence = Sentence('The grass is green .')
+embedder.embed(sentences=[sentence])
+```
+
+### Character Embeddings
+
+Some embeddings - such as character-features - are not pre-trained but rather trained on the downstream task. Normally
+this requires you to implement a hierarchical training architecture. With flair, you need only choose the appropriate
+embedding class - the features will then automatically train during downstream task training. 
+
+```python
+# the CharLMEmbedding also inherits from the TextEmbeddings class
+from flair.embeddings import CharacterEmbeddings
+embedder = CharacterEmbeddings()
+
+# embed a sentence using CharLM.
+from flair.data import Sentence
+sentence = Sentence('The grass is green .')
+embedder.embed(sentences=[sentence])
+```
+
 
 ## Set up
 
@@ -50,6 +160,8 @@ source [path/to/this/virtualenv]/bin/activate
 
 pip install -r requirements.txt
 ```
+
+## Train a Sequence Labeler
 
 ### Training Data
 
@@ -76,86 +188,22 @@ Run this for a few epochs. Then test it on a sentence using the following comman
 python predict.py
 ```
 
+To reproduce our state-of-the-art results using Flair, check out the [experiments](/resources/docs/EXPERIMENTS.md) section.
 
-## Understand
+## Citing Flair
 
-Let's look into some core functionality to understand the library better.
-
-### NLP base types
-
-First, you need to construct Sentence objects for your text.
-
-```python
-# The sentence objects holds a sentence that we may want to embed
-from flair.data import Sentence
-
-# Make a sentence object by passing a whitespace tokenized string
-sentence = Sentence('The grass is green .')
-
-# Print the object to see what's in there
-print(sentence)
-
-# The Sentence object has a list of Token objects (each token represents a word)
-for token in sentence.tokens:
-    print(token)
-
-# add a tag to a word in the sentence
-sentence.get_token(4).add_tag('ner', 'color')
-
-# print the sentence with all tags of this type
-print(sentence.to_tag_string('ner'))
+Please cite the following paper when using Flair: 
 
 ```
-
-### Word Embeddings
-
-Now, you can embed the words in a sentence. We start with a simple example that uses GloVe embeddings:
-
-```python
-
-# all embeddings inherit from the TextEmbeddings class. Init a simple glove embedding.
-from flair.embeddings import WordEmbeddings
-glove_embedding = WordEmbeddings('glove')
-
-# embed a sentence using glove.
-from flair.data import Sentence
-sentence = Sentence('The grass is green .')
-glove_embedding.get_embeddings(sentences=[sentence])
-
-# now check out the embedded tokens.
-for token in sentence.tokens:
-    print(token)
-    print(token.get_embedding())
+@inproceedings{akbik2018coling,
+  title={Contextual String Embeddings for Sequence Labeling},
+  author={Akbik, Alan and Blythe, duncan and Vollgraf, Roland},
+  booktitle = {{COLING} 2018, 27th International Conference on Computational Linguistics},
+  pages     = {(forthcoming)},
+  year      = {2018}
+}
 ```
 
-### Contextual String Embeddings
-
-You can also use our contextual string embeddings. Same code as above, with different TextEmbedding class:
-
-```python
-
-# the CharLMEmbedding also inherits from the TextEmbeddings class
-from flair.embeddings import CharLMEmbeddings
-contextual_string_embedding = CharLMEmbeddings('news-forward')
-
-# embed a sentence using CharLM.
-from flair.data import Sentence
-sentence = Sentence('The grass is green .')
-contextual_string_embedding.get_embeddings(sentences=[sentence])
-
-# now check out the embedded tokens.
-for token in sentence.tokens:
-    print(token)
-    print(token.get_embedding())
-```
-
-This is just one example, the [tutorial](/resources/docs/TUTORIAL.md) contains more!
-
-## [Tutorial](/resources/docs/TUTORIAL.md)
-
-Flair makes it easy to embed your text with many different types of embeddings and their combinations. And then train 
-state-of-the-art NLP models. Just follow the [tutorial](/resources/docs/TUTORIAL.md) to get a better overview of functionality.
-Or look at to [reproduce our state-of-the-art results](/resources/docs/EXPERIMENTS.md) using Flair.
 
 ## Contributing
 
@@ -170,7 +218,7 @@ the code should hopefully be easy.
 
 ## [License](/LICENSE.md)
 
-Flair is in general licensed under the following MIT license: The MIT License (MIT) Copyright © 2018 Zalando SE, https://tech.zalando.com
+Flair is licensed under the following MIT license: The MIT License (MIT) Copyright © 2018 Zalando SE, https://tech.zalando.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
