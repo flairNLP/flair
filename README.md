@@ -35,8 +35,12 @@ Flair outperforms the previous best methods on a range of NLP tasks:
 | Part-of-Speech tagging | WSJ  | **97.85**  | *97.64 [(Choi, 2016)](https://www.aclweb.org/anthology/N16-1031)*|
 | Chunking | Conll-2000  |  **96.72** (F1) | *96.36 [(Peters et al., 2017)](https://arxiv.org/pdf/1705.00108.pdf)*
 
-You can find an in-depth evaluation of our approach 
-in our paper [Contextual String Embeddings for Sequence Labeling](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing).
+Find more information in our paper: 
+
+[Contextual String Embeddings for Sequence Labeling](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing).
+Alan Akbik, Duncan Blythe and Roland Vollgraf. 
+27th International Conference on Computational Linguistics, COLING 2018. 
+
 Here's how to [reproduce these numbers](/resources/docs/EXPERIMENTS.md) using Flair.
 
 
