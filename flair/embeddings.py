@@ -20,14 +20,14 @@ class TextEmbeddings(torch.nn.Module):
         """Returns the length of the embedding vector."""
         pass
 
-    def get_embeddings(self, sentences: List[Sentence]) -> List[Sentence]:
+    def embed(self, sentences: List[Sentence]) -> List[Sentence]:
         """Add embeddings to all words in a list of sentences. If embeddings are already added, updates only if embeddings
         are non-static."""
 
         everything_embedded: bool = True
         for sentence in sentences:
             for token in sentence.tokens:
-                if self.name not in token.embeddings.keys(): everything_embedded = False
+                if self.name not in token._embeddings.keys(): everything_embedded = False
 
         # print(everything_embedded)
         if not everything_embedded or not self.static_embeddings:
@@ -63,10 +63,10 @@ class StackedEmbeddings(TextEmbeddings):
         for embedding in embeddings:
             self.embedding_length += embedding.embedding_length
 
-    def get_embeddings(self, sentences: List[Sentence], static_embeddings: bool = True):
+    def embed(self, sentences: List[Sentence], static_embeddings: bool = True):
 
         for embedding in self.embeddings:
-            embedding.get_embeddings(sentences)
+            embedding.embed(sentences)
 
     def embedding_length(self) -> int:
         return self.embedding_length
@@ -300,7 +300,7 @@ class CharLMEmbeddings(TextEmbeddings):
 
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token('hello'))
-        embedded_dummy = self.get_embeddings([dummy_sentence])
+        embedded_dummy = self.embed([dummy_sentence])
         self.embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
 
@@ -395,7 +395,7 @@ class OnePassStoreEmbeddings(TextEmbeddings):
 
             for batch in batches:
 
-                self.embedding_stack.get_embeddings(batch)
+                self.embedding_stack.embed(batch)
 
                 for sentence in batch:
                     sentence: Sentence = sentence
@@ -432,7 +432,7 @@ class OnePassStoreEmbeddings(TextEmbeddings):
         signature = '%s··%d:··%s' % (token.text, token.idx, context)
         return signature.strip().replace(' ', '·')
 
-    def get_embeddings(self, sentences: List[Sentence], static_embeddings: bool = True):
+    def embed(self, sentences: List[Sentence], static_embeddings: bool = True):
 
         for sentence in sentences:
             for token in sentence.tokens:

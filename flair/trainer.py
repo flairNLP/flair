@@ -9,8 +9,9 @@ import torch, random, datetime, re, sys, os, shutil
 
 
 class TagTrain:
-    def __init__(self, model: SequenceTaggerLSTM, corpus: TaggedCorpus, tag_type: str, test_mode: bool = False) -> None:
 
+    def __init__(self, model: SequenceTaggerLSTM, corpus: TaggedCorpus, tag_type: str,
+                 test_mode: bool = False) -> None:
         self.model: SequenceTaggerLSTM = model
         self.corpus: TaggedCorpus = corpus
         self.tag_type: str = tag_type
@@ -29,9 +30,10 @@ class TagTrain:
         evaluate_with_fscore: bool = True
         if self.tag_type not in ['ner', 'np']: evaluate_with_fscore = False
 
-        os.makedirs(base_path, exist_ok=True)
+        self.base_path = base_path
+        os.makedirs(self.base_path, exist_ok=True)
 
-        loss_txt = os.path.join(base_path, "loss.txt")
+        loss_txt = os.path.join(self.base_path, "loss.txt")
         open(loss_txt, "w", encoding='utf-8').close()
 
         optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
@@ -180,7 +182,7 @@ class TagTrain:
         for batch in batches:
             batch_no += 1
 
-            self.model.embeddings.get_embeddings(batch)
+            self.model.embeddings.embed(batch)
 
             for sentence in batch:
 
@@ -201,8 +203,6 @@ class TagTrain:
                     # get the gold tag
                     gold_tag = token.get_tag(self.tag_type)
 
-                    if predicted_tag == '': predicted_tag = '000'
-
                     # append both to file for evaluation
                     eval_line = token.text + ' ' + gold_tag + ' ' + predicted_tag + "\n"
                     if gold_tag == predicted_tag:
@@ -216,6 +216,10 @@ class TagTrain:
 
             if not embeddings_in_memory:
                 self.clear_embeddings_in_batch(batch)
+
+        test_tsv = os.path.join(self.base_path, "test.tsv")
+        with open(test_tsv, "w", encoding='utf-8') as outfile:
+            outfile.write(''.join(lines))
 
         if evaluate_with_fscore:
             eval_script = 'resources/tasks/eval_script'

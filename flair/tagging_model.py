@@ -104,7 +104,7 @@ class SequenceTaggerLSTM(nn.Module):
         sentences.sort(key=lambda x: len(x), reverse=True)
         longest_token_sequence_in_batch: int = len(sentences[0])
 
-        self.embeddings.get_embeddings(sentences)
+        self.embeddings.embed(sentences)
         sent = sentences[0]
         # print(sent)
         # print(sent.tokens[0].get_embedding()[0:7])

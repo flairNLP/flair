@@ -80,7 +80,7 @@ class Token:
         self.head_id: int = head_id
 
         self.sentence: Sentence = None
-        self.embeddings: Dict = {}
+        self._embeddings: Dict = {}
         self.tags: Dict[str, str] = {}
 
     def add_tag(self, tag_type: str, tag_value: str):
@@ -97,18 +97,22 @@ class Token:
         return 'Token: %d %s' % (self.idx, self.text)
 
     def set_embedding(self, name: str, vector: torch.autograd.Variable):
-        self.embeddings[name] = vector
+        self._embeddings[name] = vector
 
     def clear_embeddings(self):
-        self.embeddings: Dict = {}
+        self._embeddings: Dict = {}
 
     def get_embedding(self) -> torch.autograd.Variable:
 
         embeddings = []
-        for embed in sorted(self.embeddings.keys()):
-            embeddings.append(self.embeddings[embed])
+        for embed in sorted(self._embeddings.keys()):
+            embeddings.append(self._embeddings[embed])
 
         return torch.cat(embeddings, dim=0)
+
+    @property
+    def embedding(self):
+        return self.get_embedding()
 
 
 class Sentence:
@@ -120,6 +124,12 @@ class Sentence:
         if tokenized_text is not None:
             for word in tokenized_text.split(' '):
                 self.add_token(Token(word))
+
+    def __getitem__(self, token_id: int) -> Token:
+        return self.get_token(token_id)
+
+    def __iter__(self):
+        return iter(self.tokens)
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
