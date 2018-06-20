@@ -203,7 +203,7 @@ Please cite the following paper when using Flair:
 ```
 @inproceedings{akbik2018coling,
   title={Contextual String Embeddings for Sequence Labeling},
-  author={Akbik, Alan and Blythe, duncan and Vollgraf, Roland},
+  author={Akbik, Alan and Blythe, Duncan and Vollgraf, Roland},
   booktitle = {{COLING} 2018, 27th International Conference on Computational Linguistics},
   pages     = {(forthcoming)},
   year      = {2018}

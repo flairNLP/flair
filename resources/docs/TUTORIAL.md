@@ -17,11 +17,11 @@ sentence = Sentence('The grass is green .')
 print(sentence)
 
 # The Sentence object has a list of Token objects (each token represents a word)
-for token in sentence.tokens:
+for token in sentence:
     print(token)
 
 # add a tag to a word in the sentence
-sentence.get_token(4).add_tag('ner', 'color')
+sentence[4].add_tag('ner', 'color')
 
 # print the sentence with all tags of this type
 print(sentence.to_tag_string('ner'))
@@ -43,12 +43,12 @@ glove_embedding = WordEmbeddings('glove')
 # embed a sentence using glove.
 from flair.data import Sentence
 sentence = Sentence('The grass is green .')
-glove_embedding.get_embeddings(sentences=[sentence])
+glove_embedding.embed(sentences=[sentence])
 
 # now check out the embedded tokens.
-for token in sentence.tokens:
+for token in sentence:
     print(token)
-    print(token.get_embedding())
+    print(token.embedding)
 ```
 
 ### Contextual String Embeddings
@@ -64,12 +64,12 @@ contextual_string_embedding = CharLMEmbeddings('news-forward')
 # embed a sentence using CharLM.
 from flair.data import Sentence
 sentence = Sentence('The grass is green .')
-contextual_string_embedding.get_embeddings(sentences=[sentence])
+contextual_string_embedding.embed(sentences=[sentence])
 
 # now check out the embedded tokens.
-for token in sentence.tokens:
+for token in sentence:
     print(token)
-    print(token.get_embedding())
+    print(token.embedding)
 ```
 
 
@@ -101,12 +101,12 @@ stacked_embeddings = StackedEmbeddings(embeddings=[glove_embedding, charlm_embed
 # just embed a sentence using the StackedEmbedding as you would with any single embedding.
 from flair.data import Sentence
 sentence = Sentence('The grass is green .')
-stacked_embeddings.get_embeddings(sentences=[sentence])
+stacked_embeddings.embed(sentences=[sentence])
 
 # now check out the embedded tokens.
-for token in sentence.tokens:
+for token in sentence:
     print(token)
-    print(token.get_embedding())
+    print(token.embedding)
 ```
 
 ## Training a Model
