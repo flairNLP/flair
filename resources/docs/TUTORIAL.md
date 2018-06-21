@@ -2,9 +2,12 @@
 
 Let's look into some core functionality to understand the library better.
 
-## NLP base types
+### NLP base types
 
-First, you need to construct Sentence objects for your text.
+There are two types of objects that are central to this library, namely the `Sentence` and `Token` objects. A `Sentence` 
+holds a textual sentence and is essentially a list of `Token`.
+
+Let's start by making a `Sentence` object for an example sentence.
 
 ```python
 # The sentence objects holds a sentence that we may want to embed
@@ -15,18 +18,93 @@ sentence = Sentence('The grass is green .')
 
 # Print the object to see what's in there
 print(sentence)
+```
 
-# The Sentence object has a list of Token objects (each token represents a word)
+This should print: 
+
+```console
+Sentence: "The grass is green ." - 5 Tokens
+```
+
+The print-out tells us that the sentence consists of 5 tokens. 
+You can access the tokens of a sentence via their token id:
+
+```python
+print(sentence[4])
+```
+
+This should print: 
+
+```console
+Token: 4 green
+```
+
+The print-out includes the token id (4) and the lexical value of the token ("green"). You can also iterate over all 
+tokens in a sentence.
+
+```python
 for token in sentence:
-    print(token)
+    print(token) 
+```
 
+This should print: 
+
+```console
+Token: 1 The
+Token: 2 grass
+Token: 3 is
+Token: 4 green
+Token: 5 .
+```
+
+A Token has fields for linguistic annotation, such as lemmas, part-of-speech tags or named entity tags. You can 
+add a tag by specifying the tag type and the tag value. In this example, we're adding an NER tag of type 'color' to 
+the word 'green'. This means that we've tagged this word as an entity of type color.
+
+```python
 # add a tag to a word in the sentence
 sentence[4].add_tag('ner', 'color')
 
 # print the sentence with all tags of this type
-print(sentence.to_tag_string('ner'))
-
+print(sentence.to_ner_string())
 ```
+
+This should print: 
+
+```console
+The grass is green <color> .
+```
+
+
+### Tagging with Pre-Trained Model
+
+Now, lets use a pre-trained model for named entity recognition (NER). This model was trained over the English CoNLL-03 task and can recognize 4 different entity
+types.
+
+```python
+from flair.tagging_model import SequenceTaggerLSTM
+
+tagger = SequenceTaggerLSTM.load('ner')
+```
+All you need to do is use the `predict()` method of the tagger on a sentence. This will add predicted tags to the tokens
+in the sentence. Lets use a sentence with two named
+entities: 
+
+```python
+sentence = Sentence('George Washington went to Washington .')
+
+# predict NER tags
+tagger.predict(sentence)
+
+# print sentence with predicted tags
+print(sentence.to_tag_string())
+```
+
+This should print: 
+```console
+George <B-PER> Washington <E-PER> went <O> to <O> Washington <S-LOC> . <O>
+```
+
 
 ## Embeddings
 

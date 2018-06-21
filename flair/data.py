@@ -154,7 +154,7 @@ class Sentence:
     def to_ner_string(self) -> str:
         list = []
         for token in self.tokens:
-            if token.get_tag('ner') == 'O':
+            if token.get_tag('ner') == 'O' or token.get_tag('ner') == '':
                 list.append(token.text)
             else:
                 list.append(token.text)
