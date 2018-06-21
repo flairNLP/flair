@@ -45,7 +45,7 @@ Alan Akbik, Duncan Blythe and Roland Vollgraf.
 ## Examples
 
 Let's look into some core functionality to understand the library better. For a more extensive introduction, please
-check out the [tutorial](/resources/docs/TUTORIAL.md)!
+check out the [TUTORIAL](/resources/docs/TUTORIAL.md)!
 
 ### NLP base types
 
