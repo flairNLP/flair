@@ -200,35 +200,6 @@ George <B-PER> Washington <E-PER> went to Washington <S-LOC> .
 ```
 
 
-## Train a Sequence Labeler
-
-### Training Data
-
-In order to train your own models, you need training data. For instance, get the publicly available 
-CoNLL-03 data set for English and place train, test and dev data in `/resources/tasks/conll_03/` as follows: 
-
-```
-/resources/tasks/conll_03/eng.testa
-/resources/tasks/conll_03/eng.testb
-/resources/tasks/conll_03/eng.train
-```
-
-To set up more tasks, follow the guidelines [here](/resources/docs/EXPERIMENTS.md).
-
-### Train a quick model and predict
-
-Once you have the data, go into the virtualenv and run the following command to train a small NER model:
-```bash
-python train.py 
-```
-Run this for a few epochs. Then test it on a sentence using the following command:
-
-```bash
-python predict.py
-```
-
-To reproduce our state-of-the-art results using Flair, check out the [experiments](/resources/docs/EXPERIMENTS.md) section.
-
 ## Citing Flair
 
 Please cite the following paper when using Flair: 
