@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch
 import numpy as np
 
+from flair.file_utils import cached_path
 from .data import Dictionary, Sentence, Token
 from .embeddings import TextEmbeddings
 
@@ -30,6 +31,7 @@ def log_sum_exp(vec):
 
 
 class SequenceTaggerLSTM(nn.Module):
+
     def __init__(self,
                  hidden_size: int,
                  embeddings,
@@ -95,6 +97,21 @@ class SequenceTaggerLSTM(nn.Module):
                 torch.randn(self.tagset_size, self.tagset_size))
             self.transitions.data[self.tag_dictionary.get_idx_for_item(START_TAG), :] = -10000
             self.transitions.data[:, self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000
+
+    @staticmethod
+    def load(model: str):
+        model_file = None
+        # news-english-forward
+        if model.lower() == 'ner':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/ner-test.pt'
+            model_file = cached_path(base_path)
+
+        if model_file is not None:
+            tagger: SequenceTaggerLSTM = torch.load(model_file, map_location={'cuda:0': 'cpu'})
+            tagger.eval()
+            if torch.cuda.is_available():
+                tagger = tagger.cuda()
+            return tagger
 
     def forward(self, sentences: List[Sentence], tag_type: str) -> Tuple[List, List]:
 
@@ -310,7 +327,7 @@ class SequenceTaggerLSTM(nn.Module):
 
         return score, tag_seq
 
-    def predict(self, sentence: Sentence, tag_type: str) -> Sentence:
+    def predict(self, sentence: Sentence, tag_type: str = 'tag') -> Sentence:
 
         score, tag_seq = self.predict_scores(sentence, tag_type)
         # sentences_out = copy.deepcopy(sentence)
@@ -322,7 +339,6 @@ class SequenceTaggerLSTM(nn.Module):
             token.add_tag(tag_type, predicted_tag)
 
         return sentence
-
 
 
 class LockedDropout(nn.Module):

@@ -143,7 +143,7 @@ class Sentence:
         if token.idx is None:
             token.idx = len(self.tokens)
 
-    def to_tag_string(self, tag_type: str) -> str:
+    def to_tag_string(self, tag_type: str = 'tag') -> str:
         list = []
         for token in self.tokens:
             list.append(token.text)
