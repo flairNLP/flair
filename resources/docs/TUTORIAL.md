@@ -2,7 +2,7 @@
 
 Let's look into some core functionality to understand the library better.
 
-### NLP base types
+## NLP base types
 
 There are two types of objects that are central to this library, namely the `Sentence` and `Token` objects. A `Sentence` 
 holds a textual sentence and is essentially a list of `Token`.
@@ -76,7 +76,7 @@ The grass is green <color> .
 ```
 
 
-### Tagging with Pre-Trained Models
+## Tagging with Pre-Trained Models
 
 Now, lets use a pre-trained model for named entity recognition (NER). 
 This model was trained over the English CoNLL-03 task and can recognize 4 different entity
@@ -113,12 +113,6 @@ are provided (more coming):
 | ID | Task + Training Dataset | Accuracy | 
 | -------------    | ------------- | ------------- |
 | 'ner' | Conll-03 Named Entity Recognition (English)     |  **93.09** (F1) |
-
-
-
-
-
-
 
 
 ## Embeddings
