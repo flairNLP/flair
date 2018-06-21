@@ -194,7 +194,7 @@ following:
 ```console
 Analysing Sentence: "George Washington went to Washington ." - 6 Tokens
 
-# The following NER tags are found: 
+The following NER tags are found: 
 
 George <B-PER> Washington <E-PER> went <O> to <O> Washington <S-LOC> . <O>
 ```
