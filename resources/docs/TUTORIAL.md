@@ -76,9 +76,10 @@ The grass is green <color> .
 ```
 
 
-### Tagging with Pre-Trained Model
+### Tagging with Pre-Trained Models
 
-Now, lets use a pre-trained model for named entity recognition (NER). This model was trained over the English CoNLL-03 task and can recognize 4 different entity
+Now, lets use a pre-trained model for named entity recognition (NER). 
+This model was trained over the English CoNLL-03 task and can recognize 4 different entity
 types.
 
 ```python
@@ -105,6 +106,20 @@ This should print:
 George <B-PER> Washington <E-PER> went <O> to <O> Washington <S-LOC> . <O>
 ```
 
+You chose which pre-trained model you load by passing the appropriate 
+string you pass to the `load()` method of the `SequenceTaggerLSTM` class. Currently, the following pre-trained models
+are provided (more coming): 
+ 
+| ID | Task + Training Dataset | Accuracy | 
+| -------------    | ------------- | ------------- |
+| 'ner' | Conll-03 Named Entity Recognition (English)     |  **93.09** (F1) |
+
+
+
+
+
+
+
 
 ## Embeddings
 
@@ -127,7 +142,23 @@ glove_embedding.embed(sentences=[sentence])
 for token in sentence:
     print(token)
     print(token.embedding)
+
 ```
+You choose which pre-trained embeddings you load by passing the appropriate 
+string you pass to the constructor of the `WordEmbeddings` class. Currently, the following static embeddings
+are provided (more coming): 
+ 
+| ID | Embedding | 
+| -------------  | ------------- |
+| 'glove' | GloVe embeddings |
+| 'extvec' | Komnios embeddings |
+| 'ft-crawl' | FastText embeddings |
+| 'ft-german' | German FastText embeddings |
+
+
+
+
+
 
 ### Contextual String Embeddings
 
@@ -149,6 +180,20 @@ for token in sentence:
     print(token)
     print(token.embedding)
 ```
+
+You choose which pre-trained embeddings you load by passing the appropriate 
+string you pass to the constructor of the `CharLMEmbeddings` class. Currently, the following contextual string
+ embeddings
+are provided (more coming): 
+ 
+| ID | Language | Embedding | 
+| -------------  | ------------- | ------------- |
+| 'news-forward' | English | Forward LM embeddings over 1 billion word corpus |
+| 'news-backward' | English | Backward LM embeddings over 1 billion word corpus |
+| 'mix-forward' | English | Forward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
+| 'mix-backward' | English | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
+| 'german-forward' | German | Forward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
+| 'german-backward' | German | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
 
 ### Character Embeddings
 
