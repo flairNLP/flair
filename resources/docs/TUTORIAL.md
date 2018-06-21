@@ -243,16 +243,19 @@ sentence = Sentence('The grass is green .')
 embedder.embed(sentences=[sentence])
 ```
 
-### Stacked Embeddings
+## Stacked Embeddings
 
-Very often, you want to combine different embedding types. For instance, you might want to combine classic static
-word embeddings such as GloVe with embeddings from a forward and backward language model. This normally gives best
-results.
+Stacked embeddings are one of the most important concepts of this library. You can use them to combine different embeddings
+together, for instance if you want to use both traditional embeddings together with contextual sting embeddings. 
+Stacked embeddings allow you to mix and match. We find that a combination of embeddings often gives best results. 
 
-For this case, use the StackedEmbeddings class which combines a list of TextEmbeddings.
+All you need to do is use the `StackedEmbeddings` class and instantiate it by passing a list of embeddings that you wish 
+to combine. For instance, lets combine classic GloVe embeddings with embeddings from a forward and backward 
+character language model.
+
+First, instantiate the three embeddings you wish to combine: 
 
 ```python
-
 # the CharLMEmbedding also inherits from the TextEmbeddings class
 from flair.embeddings import WordEmbeddings, CharLMEmbeddings
 
@@ -262,12 +265,19 @@ glove_embedding = WordEmbeddings('glove')
 # init CharLM embedding
 charlm_embedding_forward = CharLMEmbeddings('news-forward')
 charlm_embedding_backward = CharLMEmbeddings('news-backward')
+```
 
+Now instantiate the `StackedEmbeddings` class and pass it a list containing these three embeddings.
+
+```python
 # now create the StackedEmbedding object that combines all embeddings
 from flair.embeddings import StackedEmbeddings
 stacked_embeddings = StackedEmbeddings(embeddings=[glove_embedding, charlm_embedding_forward, charlm_embedding_backward])
+```
 
+That's it! Now just use this embedding like all the other embeddings, i.e. call the `embed()` method over your sentences.
 
+```python
 # just embed a sentence using the StackedEmbedding as you would with any single embedding.
 from flair.data import Sentence
 sentence = Sentence('The grass is green .')
@@ -278,6 +288,10 @@ for token in sentence:
     print(token)
     print(token.embedding)
 ```
+
+Words are now embedding using a concatenation of three different embeddings. This means that the resulting embedding
+vector is still a single Pytorch vector. 
+
 
 ## Training a Model
 
