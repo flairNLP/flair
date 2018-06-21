@@ -33,13 +33,13 @@ You can access the tokens of a sentence via their token id:
 print(sentence[4])
 ```
 
-This should print: 
+which should print 
 
 ```console
 Token: 4 green
 ```
 
-The print-out includes the token id (4) and the lexical value of the token ("green"). You can also iterate over all 
+This print-out includes the token id (4) and the lexical value of the token ("green"). You can also iterate over all 
 tokens in a sentence.
 
 ```python
