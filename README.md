@@ -115,7 +115,7 @@ George <B-PER> Washington <E-PER> went <O> to <O> Washington <S-LOC> . <O>
 ### Word Embeddings
 
 A main use case of Flair is to make embedding words with powerful embeddings easy. All you need to do is instantiate 
-an embedding class nd call the method 
+an embedding class and call the method 
 `embed()` over a list of sentences. We illustrate this with a simple GloVe embedding.
 
 ```python
