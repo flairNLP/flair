@@ -123,16 +123,32 @@ are provided (more coming):
 
 ## Embeddings
 
+We provide a set of classes with which you can embed the words in sentences in various ways. Note that all embedding 
+classes inherit from the `TextEmbeddings` class and implement the `embed()` method which you need to call 
+to embed your text. This means that for most users of Flair, the complexity of different embeddings remains hidden 
+behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
+
+All embeddings produced with our methods are pytorch vectors, so they can be immediately used for training and 
+fine-tuning.
+
 ### Classic Word Embeddings
 
-Now, you can embed the words in a sentence. We start with a simple example that uses GloVe embeddings:
+Classic word embeddings are static and word-level, meaning that each distinc word gets exactly one pre-computed 
+embedding. Most embeddings fall under this class, including the popular GloVe or Komnios embeddings. 
+
+Simply instantiate the WordEmbeddings class and pass a string identifier of the embedding you wish to load. So, if 
+you want to use GloVe embeddings, pass the string 'glove' to the constructor: 
 
 ```python
-
 # all embeddings inherit from the TextEmbeddings class. Init a simple glove embedding.
 from flair.embeddings import WordEmbeddings
 glove_embedding = WordEmbeddings('glove')
+```
+Now, create an example sentence and call the embedding's `embed()` method. You always pass a list of sentences to 
+this method since some embedding types make use of batching to increase speed. So if you only have one sentence, 
+pass a list containing only one sentence:
 
+```python
 # embed a sentence using glove.
 from flair.data import Sentence
 sentence = Sentence('The grass is green .')
@@ -142,8 +158,10 @@ glove_embedding.embed(sentences=[sentence])
 for token in sentence:
     print(token)
     print(token.embedding)
-
 ```
+
+This prints out the tokens and their embeddings. GloVe embeddings are pytorch vectors of dimensionality 100.
+
 You choose which pre-trained embeddings you load by passing the appropriate 
 string you pass to the constructor of the `WordEmbeddings` class. Currently, the following static embeddings
 are provided (more coming): 
@@ -154,10 +172,6 @@ are provided (more coming):
 | 'extvec' | Komnios embeddings |
 | 'ft-crawl' | FastText embeddings |
 | 'ft-german' | German FastText embeddings |
-
-
-
-
 
 
 ### Contextual String Embeddings
@@ -187,13 +201,13 @@ string you pass to the constructor of the `CharLMEmbeddings` class. Currently, t
 are provided (more coming): 
  
 | ID | Language | Embedding | 
-| -------------  | ------------- | ------------- |
-| 'news-forward' | English | Forward LM embeddings over 1 billion word corpus |
-| 'news-backward' | English | Backward LM embeddings over 1 billion word corpus |
-| 'mix-forward' | English | Forward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
-| 'mix-backward' | English | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
-| 'german-forward' | German | Forward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
-| 'german-backward' | German | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
+| -------------     | ------------- | ------------- |
+| 'news-forward'    | English | Forward LM embeddings over 1 billion word corpus |
+| 'news-backward'   | English | Backward LM embeddings over 1 billion word corpus |
+| 'mix-forward'     | English | Forward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
+| 'mix-backward'    | English | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
+| 'german-forward'  | German  | Forward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
+| 'german-backward' | German  | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
 
 ### Character Embeddings
 
