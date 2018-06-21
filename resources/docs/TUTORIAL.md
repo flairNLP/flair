@@ -173,6 +173,11 @@ are provided (more coming):
 | 'ft-crawl' | FastText embeddings |
 | 'ft-german' | German FastText embeddings |
 
+So, if you want to load German FastText embeddings, instantiate the method as follows:
+
+```python
+german_embedding = WordEmbeddings('ft-german')
+```
 
 ### Contextual String Embeddings
 
