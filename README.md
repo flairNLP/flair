@@ -173,7 +173,7 @@ Python 3.6, install it first. [Here is how for Ubuntu 16.04](http://ubuntuhandbo
 
 The `requirements.txt` lists all libraries that we depend on. Install them first. For instance, if you 
 use pip and virtualenv, run these commands: 
-```bash
+```
 virtualenv --python=[path/to/python3.6] [path/to/this/virtualenv]
 
 source [path/to/this/virtualenv]/bin/activate
