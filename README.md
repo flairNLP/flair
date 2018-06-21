@@ -114,8 +114,9 @@ George <B-PER> Washington <E-PER> went <O> to <O> Washington <S-LOC> . <O>
 
 ### Word Embeddings
 
-Now, you can embed the words in a sentence. Instantiate an embedding class and call the method 
-`embed()` over a list of sentences. We start with a simple GloVe embedding.
+A main use case of Flair is to make embedding words with powerful embeddings easy. All you need to do is instantiate 
+an embedding class nd call the method 
+`embed()` over a list of sentences. We illustrate this with a simple GloVe embedding.
 
 ```python
 # Init a simple GloVe embedding.
@@ -138,8 +139,14 @@ for token in sentence:
 
 ### Contextual String Embeddings
 
-Switching to a different embedding is as simple as choosing a different embeddings class. Here, we use contextual
-string embeddings.
+Contextual string embeddings are [powerful embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)
+ that capture latent syntactic-semantic information that goes beyond
+standard word embeddings. Key differences are: (1) they are trained without any explicit notion of words and
+thus fundamentally model words as sequences of characters. And (2) they are **contextualized** by their
+surrounding text, meaning that the *same word will have different embeddings depending on its
+contextual use*.
+
+With Flair, you can use these embeddings simply by instantiating the appropriate embedding class, same as before:
 
 ```python
 
