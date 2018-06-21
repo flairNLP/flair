@@ -226,7 +226,7 @@ tests for examples of how to call methods. Nearly all classes and methods are do
 the code should hopefully be easy.
 
 
-## [License](/LICENSE.md)
+## [License](/LICENSE)
 
 The MIT License (MIT)
 
