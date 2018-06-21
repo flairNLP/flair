@@ -108,7 +108,7 @@ print(sentence.to_tag_string())
 ```
 
 This should print: 
-```css
+```console
 George <B-PER> Washington <E-PER> went <O> to <O> Washington <S-LOC> . <O>
 ```
 
