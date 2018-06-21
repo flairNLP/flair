@@ -42,10 +42,6 @@ Alan Akbik, Duncan Blythe and Roland Vollgraf.
 27th International Conference on Computational Linguistics, COLING 2018.* 
 
 
-
-
-
-
 ## Examples
 
 Let's look into some core functionality to understand the library better. For a more extensive introduction, please
@@ -84,6 +80,36 @@ sentence[4].add_tag('ner', 'color')
 
 # print the sentence with all tags of this type
 print(sentence.to_tag_string('ner'))
+```
+
+
+### Tagging with Pre-Trained Model
+
+Now, lets use a pre-trained model for named entity recognition (NER). This model was trained over the English CoNLL-03 task and can recognize 4 different entity
+types.
+
+```python
+from flair.tagging_model import SequenceTaggerLSTM
+
+tagger = SequenceTaggerLSTM.load('ner')
+```
+All you need to do is use the `predict()` method of the tagger on a sentence. This will add predicted tags to the tokens
+in the sentence. Lets use a sentence with two named
+entities: 
+
+```python
+sentence = Sentence('George Washington went to Washington .')
+
+# predict NER tags
+tagger.predict(sentence)
+
+# print sentence with predicted tags
+print(sentence.to_tag_string())
+```
+
+This should print: 
+```css
+George <B-PER> Washington <E-PER> went <O> to <O> Washington <S-LOC> . <O>
 ```
 
 ### Word Embeddings
