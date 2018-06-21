@@ -1,6 +1,7 @@
 # Tutorial
 
-Let's look into some core functionality to understand the library better.
+Let's look into some core functionality to understand the library better. A [Jupyter notebook](tutorial.ipynb) version of this tutorial
+is available, too.
 
 ## NLP base types
 
