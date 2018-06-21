@@ -181,26 +181,29 @@ german_embedding = WordEmbeddings('ft-german')
 
 ### Contextual String Embeddings
 
-You can also use our contextual string embeddings. Same code as above, with different TextEmbedding class:
+
+Contextual string embeddings are [powerful embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)
+ that capture latent syntactic-semantic information that goes beyond
+standard word embeddings. Key differences are: (1) they are trained without any explicit notion of words and
+thus fundamentally model words as sequences of characters. And (2) they are **contextualized** by their
+surrounding text, meaning that the *same word will have different embeddings depending on its
+contextual use*.
+
+With Flair, you can use these embeddings simply by instantiating the appropriate embedding class, same as before:
 
 ```python
 
 # the CharLMEmbedding also inherits from the TextEmbeddings class
 from flair.embeddings import CharLMEmbeddings
-contextual_string_embedding = CharLMEmbeddings('news-forward')
+charlm_embedding_forward = CharLMEmbeddings('news-forward')
 
 # embed a sentence using CharLM.
 from flair.data import Sentence
 sentence = Sentence('The grass is green .')
-contextual_string_embedding.embed(sentences=[sentence])
-
-# now check out the embedded tokens.
-for token in sentence:
-    print(token)
-    print(token.embedding)
+charlm_embedding_forward.embed(sentences=[sentence])
 ```
 
-You choose which pre-trained embeddings you load by passing the appropriate 
+You choose which embeddings you load by passing the appropriate 
 string you pass to the constructor of the `CharLMEmbeddings` class. Currently, the following contextual string
  embeddings
 are provided (more coming): 
@@ -213,6 +216,13 @@ are provided (more coming):
 | 'mix-backward'    | English | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
 | 'german-forward'  | German  | Forward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
 | 'german-backward' | German  | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
+
+So, if you want to load embeddings from the English news backward LM model, instantiate the method as follows:
+
+```python
+charlm_embedding_backward = CharLMEmbeddings('news-backward')
+```
+
 
 ### Character Embeddings
 
