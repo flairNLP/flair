@@ -181,6 +181,25 @@ source [path/to/this/virtualenv]/bin/activate
 pip install -r requirements.txt
 ```
 
+### Check if everything works
+
+Go into the virtualenv and run the following command.
+
+```bash
+python predict.py
+```
+This should download a pre-trained NER model for English and apply it to an example sentence. It should print out the 
+following:
+
+```console
+Analysing Sentence: "George Washington went to Washington ." - 6 Tokens
+
+# The following NER tags are found: 
+
+George <B-PER> Washington <E-PER> went <O> to <O> Washington <S-LOC> . <O>
+```
+
+
 ## Train a Sequence Labeler
 
 ### Training Data
