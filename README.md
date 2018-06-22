@@ -81,8 +81,8 @@ I love Berlin <S-LOC> .
 
 ## More Examples
 
-Let's look into some core functionality to understand the library better. For a more extensive introduction, please
-check out the [TUTORIAL](/resources/docs/TUTORIAL.md)!
+Let's look into some core functionality to understand the library better. You can find more information in the
+ [TUTORIAL](/resources/docs/TUTORIAL.md)!
 
 ### NLP base types
 
