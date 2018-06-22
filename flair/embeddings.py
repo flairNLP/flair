@@ -161,7 +161,7 @@ class CharacterEmbeddings(TextEmbeddings):
             item2idx = mappings['item2idx']
             self.char_dictionary.item2idx = item2idx
             self.char_dictionary.idx2item = idx2item
-            print(self.char_dictionary.item2idx)
+            # print(self.char_dictionary.item2idx)
 
         self.char_embedding_dim: int = 25
         self.hidden_size_char: int = 25
