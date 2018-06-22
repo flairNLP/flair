@@ -44,6 +44,27 @@ Alan Akbik, Duncan Blythe and Roland Vollgraf.
 
 ## Quick Start
 
+### Requirements and Installation
+
+The project is based on PyTorch 0.4+ and Python 3.6- because methods signatures and type hints are beautiful.
+If you do not have Python 3.6, install it first. [Here is how for Ubuntu 16.04](http://ubuntuhandbook.org/index.php/2017/07/install-python-3-6-1-in-ubuntu-16-04-lts/). 
+
+You can create an appropriate environment using virtualenv:
+
+```
+virtualenv --python=[path/to/python3.6] [path/to/this/virtualenv]
+
+source [path/to/this/virtualenv]/bin/activate
+```
+
+Within this environment, install the package from the repository:
+
+```
+pip install git+https://github.com/zalandoresearch/flair
+```
+
+### Example Usage
+
 Let's run named entity recognition (NER) over an example sentence. All you need to do is make a `Sentence`, load 
 a pre-trained model and use it to predict tags for the sentence:
 
@@ -79,7 +100,9 @@ The following NER tags are found:
 I love Berlin <S-LOC> .
 ```
 
-## More Examples
+## Tutorial
+
+We provide a [TUTORIAL](/resources/docs/TUTORIAL.md) to get you started with the library. It explains the base
 
 Let's look into some core functionality to understand the library better. You can find more information in the
  [TUTORIAL](/resources/docs/TUTORIAL.md)!
@@ -195,45 +218,6 @@ embedder = CharLMEmbeddings('news-forward')
 from flair.data import Sentence
 sentence = Sentence('The grass is green .')
 embedder.embed(sentences=[sentence])
-```
-
-
-## Set up
-
-### Python 3.6
-
-This library runs on Python 3.6 - because methods signatures and type hints are beautiful. If you do not have 
-Python 3.6, install it first. [Here is how for Ubuntu 16.04](http://ubuntuhandbook.org/index.php/2017/07/install-python-3-6-1-in-ubuntu-16-04-lts/). 
-
-
-### Requirements
-
-The `requirements.txt` lists all libraries that we depend on. Install them first. For instance, if you 
-use pip and virtualenv, run these commands: 
-```
-virtualenv --python=[path/to/python3.6] [path/to/this/virtualenv]
-
-source [path/to/this/virtualenv]/bin/activate
-
-pip install -r requirements.txt
-```
-
-### Check if everything works
-
-Go into the virtualenv and run the following command.
-
-```bash
-python predict.py
-```
-This should download a pre-trained NER model for English and apply it to an example sentence. It should print out the 
-following:
-
-```console
-Analysing Sentence: "George Washington went to Washington ." - 6 Tokens
-
-The following NER tags are found: 
-
-George <B-PER> Washington <E-PER> went to Washington <S-LOC> .
 ```
 
 
