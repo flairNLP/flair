@@ -113,7 +113,8 @@ are provided (more coming):
  
 | ID | Task + Training Dataset | Accuracy | 
 | -------------    | ------------- | ------------- |
-| 'ner' | Conll-03 Named Entity Recognition (English)     |  **93.09** (F1) |
+| 'ner' | Conll-03 Named Entity Recognition (English)     |  **93.17** (F1) |
+| 'chunk' | Conll-2000 Syntactic Chunking (English)     |  **96.74** (F1) |
 
 
 ## Embeddings
