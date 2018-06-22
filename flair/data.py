@@ -147,7 +147,7 @@ class Sentence:
         list = []
         for token in self.tokens:
             list.append(token.text)
-            if token.get_tag(tag_type) == '': continue
+            if token.get_tag(tag_type) == '' or token.get_tag(tag_type) == 'O': continue
             list.append('<' + token.get_tag(tag_type) + '>')
         return ' '.join(list)
 

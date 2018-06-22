@@ -42,7 +42,44 @@ Alan Akbik, Duncan Blythe and Roland Vollgraf.
 27th International Conference on Computational Linguistics, COLING 2018.* 
 
 
-## Examples
+## Quick Start
+
+Let's run named entity recognition (NER) over an example sentence. All you need to do is make a `Sentence`, load 
+a pre-trained model and use it to predict tags for the sentence:
+
+```python
+from flair.data import Sentence
+from flair.tagging_model import SequenceTaggerLSTM
+
+# make a sentence
+sentence = Sentence('I love Berlin .')
+
+# load the NER tagger
+tagger = SequenceTaggerLSTM.load('ner')
+
+# run NER over sentence
+tagger.predict(sentence)
+```
+
+Done! The `Sentence` now has entity annotations. Print the sentence to see what the tagger found.
+
+```python
+print('Analysing %s' % sentence)
+print('\nThe following NER tags are found: \n')
+print(sentence.to_tag_string())
+```
+
+This should print: 
+
+```console
+Analysing Sentence: "I love Berlin ." - 4 Tokens
+
+The following NER tags are found: 
+
+I love Berlin <S-LOC> .
+```
+
+## More Examples
 
 Let's look into some core functionality to understand the library better. For a more extensive introduction, please
 check out the [TUTORIAL](/resources/docs/TUTORIAL.md)!
