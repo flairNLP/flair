@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
    name='flair',
    version='0.1',
-   description='A useful module',
+   description='A very simple framework for state-of-the-art NLP',
    author='Alan Akbik',
    author_email='alan.akbik@zalando.de',
    url='https://github.com/zalandoresearch/flair',
