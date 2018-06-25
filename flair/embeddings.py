@@ -146,16 +146,21 @@ class WordEmbeddings(TextEmbeddings):
 class CharacterEmbeddings(TextEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
 
-    def __init__(self, path_to_char_dict: str = 'resources/common_characters'):
-        """Use the default character dictionary if none provided."""
+    def __init__(self, path_to_char_dict: str = None):
+        """Uses the default character dictionary if none provided."""
 
         super(CharacterEmbeddings, self).__init__()
         self.name = 'Char'
         self.static_embeddings = False
 
+        # get list of common characters if none provided
+        if path_to_char_dict is None:
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters'
+            char_dict = cached_path(base_path)
+
         # load dictionary
         self.char_dictionary: Dictionary = Dictionary()
-        with open(path_to_char_dict, 'rb') as f:
+        with open(char_dict, 'rb') as f:
             mappings = pickle.load(f, encoding='latin1')
             idx2item = mappings['idx2item']
             item2idx = mappings['item2idx']
