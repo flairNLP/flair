@@ -113,8 +113,15 @@ are provided (more coming):
  
 | ID | Task + Training Dataset | Accuracy | 
 | -------------    | ------------- | ------------- |
-| 'ner' | Conll-03 Named Entity Recognition (English)     |  **93.17** (F1) |
+| 'ner' | Conll-03 Named Entity Recognition (English)   |  **93.17** (F1) |
 | 'chunk' | Conll-2000 Syntactic Chunking (English)     |  **96.74** (F1) |
+| 'pos' | Ontonotes Part-of-Speech Tagging (English)    |  **98.06** (Accuracy) |
+
+So, if you want to use a `SequenceTaggerLSTM` that performs PoS tagging, instantiate the tagger as follows:
+
+```python
+tagger = SequenceTaggerLSTM.load('pos')
+```
 
 
 ## Embeddings

@@ -101,13 +101,17 @@ class SequenceTaggerLSTM(nn.Module):
     @staticmethod
     def load(model: str):
         model_file = None
-        # news-english-forward
+
         if model.lower() == 'ner':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/ner-conll03.pt'
             model_file = cached_path(base_path)
 
         if model.lower() == 'chunk':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/chunk-conll2000.pt'
+            model_file = cached_path(base_path)
+
+        if model.lower() == 'pos':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/pos-ontonotes-small.pt'
             model_file = cached_path(base_path)
 
         if model_file is not None:
