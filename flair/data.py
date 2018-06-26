@@ -117,8 +117,12 @@ class Token:
 
 class Sentence:
     def __init__(self, tokenized_text=None, labels=None):
+
         self.tokens: List[Token] = []
+
         self.labels: List[str] = labels
+
+        self.embeddings: Dict = {}
 
         # optionally, directly instantiate with sentence tokens
         if tokenized_text is not None:
@@ -142,6 +146,24 @@ class Sentence:
         token.sentence = self
         if token.idx is None:
             token.idx = len(self.tokens)
+
+    def set_embedding(self, name: str, vector):
+        self.embeddings[name] = vector
+
+    def clear_embeddings(self):
+        self.embeddings: Dict = {}
+
+    def get_embedding(self) -> torch.autograd.Variable:
+        embeddings = []
+        for embed in sorted(self.embeddings.keys()):
+            embedding = self.embeddings[embed]
+            embeddings.append(embedding)
+
+        return torch.cat(embeddings, dim=0)
+
+    @property
+    def embedding(self):
+        return self.get_embedding()
 
     def to_tag_string(self, tag_type: str = 'tag') -> str:
         list = []
@@ -327,6 +349,8 @@ class NLPTask(Enum):
     FASHION = 8
     GERMEVAL = 9
     UD_GERMAN = 10
+    CONLL_12 = 11
+    SRL = 12
 
 
 class NLPTaskDataFetcher:
@@ -385,6 +409,22 @@ class NLPTaskDataFetcher:
             sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/train.conllu')
             sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/test.conllu')
             sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/dev.conllu')
+
+            return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
+
+        if task == NLPTask.CONLL_12:
+            data_folder = 'resources/tasks/conll_12'
+            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/train.propbank.conllu')
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/test.propbank.conllu')
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/dev.propbank.conllu')
+
+            return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
+
+        if task == NLPTask.SRL:
+            data_folder = 'resources/tasks/srl'
+            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_2_column_data(data_folder + '/train.srl.conll')
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_2_column_data(data_folder + '/test.srl.conll')
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_2_column_data(data_folder + '/dev.srl.conll')
 
             return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
@@ -478,6 +518,32 @@ class NLPTaskDataFetcher:
         return sample
 
     @staticmethod
+    def read_conll_2_column_data(path_to_conll_file: str):
+
+        sentences: List[Sentence] = []
+
+        lines: List[str] = open(path_to_conll_file). \
+            read().strip().split('\n')
+
+        sentence: Sentence = Sentence()
+        for line in lines:
+
+            if line == '':
+                sentences.append(sentence)
+                sentence: Sentence = Sentence()
+            else:
+                # print(line)
+                fields: List[str] = re.split("\s+", line)
+                token = Token(fields[0])
+                token.add_tag('srl', fields[1])
+                sentence.add_token(token)
+
+        if len(sentence.tokens) > 0:
+            sentences.append(sentence)
+
+        return sentences
+
+    @staticmethod
     def read_conll_sequence_labeling_data(path_to_conll_file: str):
 
         sentences: List[Sentence] = []
@@ -537,6 +603,9 @@ class NLPTaskDataFetcher:
                 for morph in str(fields[5]).split('|'):
                     if not "=" in morph: continue;
                     token.add_tag(morph.split('=')[0].lower(), morph.split('=')[1])
+
+                if str(fields[10]) == 'Y':
+                    token.add_tag('frame', str(fields[11]))
 
                 sentence.add_token(token)
 

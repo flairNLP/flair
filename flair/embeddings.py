@@ -451,3 +451,48 @@ class OnePassStoreEmbeddings(TextEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         return sentences
+
+
+class TextMeanEmbedder():
+
+    def __init__(self, word_embeddings: List[TextEmbeddings], detach: bool = True):
+        """The constructor takes a list of embeddings to be combined."""
+        super().__init__()
+
+        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=word_embeddings)
+        self.detach = detach
+        self.name = 'word_mean'
+        self.static_embeddings = True
+
+        self.embedding_length: int = 0
+        self.embedding_length = self.embeddings.embedding_length
+
+    def embedding_length(self) -> int:
+        return self.embedding_length
+
+    def embed(self, paragraphs: List[Sentence]) -> List[Sentence]:
+        """Add embeddings to all words in a list of sentences. If embeddings are already added, updates only if embeddings
+        are non-static."""
+
+        everything_embedded: bool = True
+
+        for paragraph in paragraphs:
+            if self.name not in paragraph.embeddings.keys(): everything_embedded = False
+
+        if not everything_embedded or not self.static_embeddings:
+
+            self.embeddings.embed(paragraphs)
+
+            for paragraph in paragraphs:
+                word_embeddings = []
+                for token in paragraph.tokens:
+                    token: Token = token
+                    word_embeddings.append(token.get_embedding().unsqueeze(0))
+
+                word_embeddings = torch.cat(word_embeddings, dim=0)
+                if torch.cuda.is_available():
+                    word_embeddings = word_embeddings.cuda()
+
+                paragraph.set_embedding(self.name, torch.mean(word_embeddings, 0))
+
+        return paragraphs
