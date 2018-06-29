@@ -1,7 +1,7 @@
-# Tutorial
+# Tutorial 5: Training a Model
 
-Let's look into some core functionality to understand the library better. A [Jupyter notebook](/tutorial.ipynb) version of this tutorial
-is available, too.
+This part of the tutorial shows how you can train your own sequence labeling models using state-of-the-art word 
+embeddings. 
 
 
 ## Reading an Evaluation Dataset

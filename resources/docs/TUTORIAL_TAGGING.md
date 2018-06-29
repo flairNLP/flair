@@ -53,3 +53,9 @@ tagger = SequenceTaggerLSTM.load('pos')
 ## Tagging a List of Sentences
 
 TODO: will be added soon
+
+
+
+## Next 
+
+Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_WORD_EMBEDDING.md) to embed your text.
