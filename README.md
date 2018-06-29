@@ -103,10 +103,17 @@ I love Berlin <S-LOC> .
 
 ## Tutorial
 
-We provide a [TUTORIAL](/resources/docs/TUTORIAL.md) to get you started with the library. 
-The tutorial explains how the base NLP classes work, how you can load pre-trained models to tag your
+We provide a set of quick tutorials to get you started with the library:
+
+* [Tutorial 1: Basics](/resources/docs/TUTORIAL_BASICS.md)
+* [Tutorial 2: Tagging your Text](/resources/docs/TUTORIAL_TAGGING.md)
+* [Tutorial 3: Using Word Embeddings](/resources/docs/TUTORIAL_WORD_EMBEDDING.md)
+* [Tutorial 4: Using Text Embeddings](/resources/docs/TUTORIAL_TEXT_EMBEDDINGS.md)
+* [Tutorial 5: Training your own Models](/resources/docs/TUTORIAL_TRAINING_A_MODEL.md)
+ 
+The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
 text, how you embed your text with different word embeddings, and how you can train your own 
-sequence labeling models.
+sequence labeling models. Let us know if anything is unclear.
 
 
 ## Citing Flair
