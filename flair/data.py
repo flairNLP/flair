@@ -12,6 +12,10 @@ from enum import Enum
 from collections import Counter
 from collections import defaultdict
 
+from segtok.segmenter import split_single
+from segtok.tokenizer import split_contractions
+from segtok.tokenizer import word_tokenizer
+
 
 class Dictionary:
     """
@@ -116,7 +120,7 @@ class Token:
 
 
 class Sentence:
-    def __init__(self, tokenized_text=None, labels=None):
+    def __init__(self, text: str = None, use_tokenizer: bool = False, labels: List[str] = None):
 
         self.tokens: List[Token] = []
 
@@ -125,8 +129,20 @@ class Sentence:
         self.embeddings: Dict = {}
 
         # optionally, directly instantiate with sentence tokens
-        if tokenized_text is not None:
-            for word in tokenized_text.split(' '):
+        if text is not None:
+
+            # tokenize the text first if option selected, otherwise assumes whitespace tokenized text
+            if use_tokenizer:
+                sentences = split_single(text)
+                tokens = []
+                for sentence in sentences:
+                    contractions = split_contractions(word_tokenizer(sentence))
+                    tokens.extend(contractions)
+
+                text = ' '.join(tokens)
+
+            # add each word in tokenized string as Token object to Sentence
+            for word in text.split(' '):
                 self.add_token(Token(word))
 
     def __getitem__(self, token_id: int) -> Token:
@@ -199,6 +215,9 @@ class Sentence:
 
         for index, tag in enumerate(tags):
             self.tokens[index].add_tag(tag_type, tag)
+
+    def __repr__(self):
+        return ' '.join([x.text for x in self.tokens])
 
     def __copy__(self):
         s = Sentence()

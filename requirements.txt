@@ -3,3 +3,4 @@ awscli==1.14.32
 gensim==3.4.0
 typing==3.6.4
 tqdm
+segtok
