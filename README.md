@@ -100,6 +100,7 @@ The following NER tags are found:
 I love Berlin <S-LOC> .
 ```
 
+
 ## Tutorial
 
 We provide a [TUTORIAL](/resources/docs/TUTORIAL.md) to get you started with the library. 
@@ -122,6 +123,9 @@ Please cite the following paper when using Flair:
 }
 ```
 
+## Contact 
+
+Please email your questions or comments to [Alan Akbik](http://alanakbik.github.io/).
 
 ## Contributing
 
