@@ -1,10 +1,11 @@
-# Tutorial
+# Tagging your Text - Tutorial
 
-Let's look into some core functionality to understand the library better. 
+This is part 2 of the tutorial. It assumes that you're familiar with the [base types](/resources/docs/TUTORIAL_BASICS.md) of this library.  
+Here, we show how to use our pre-trained models to tag your text. 
 
 ## Tagging with Pre-Trained Models
 
-Now, lets use a pre-trained model for named entity recognition (NER). 
+Let's use a pre-trained model for named entity recognition (NER). 
 This model was trained over the English CoNLL-03 task and can recognize 4 different entity
 types.
 
@@ -50,3 +51,5 @@ tagger = SequenceTaggerLSTM.load('pos')
 
 
 ## Tagging a List of Sentences
+
+TODO: will be added soon

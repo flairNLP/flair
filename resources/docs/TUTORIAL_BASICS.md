@@ -126,3 +126,6 @@ its head token. You can access this information using the tag fields of the  `To
 
 
 
+## Next 
+
+Now, let us look at how to use [pre-trained models](/resources/docs/TUTORIAL_TAGGING.md) to tag your text.
