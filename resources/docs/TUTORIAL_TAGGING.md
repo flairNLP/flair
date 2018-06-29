@@ -1,4 +1,4 @@
-# Tagging your Text - Tutorial
+# Tutorial 2: Tagging your Text
 
 This is part 2 of the tutorial. It assumes that you're familiar with the [base types](/resources/docs/TUTORIAL_BASICS.md) of this library.  
 Here, we show how to use our pre-trained models to tag your text. 

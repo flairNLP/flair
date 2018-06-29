@@ -1,4 +1,4 @@
-# NLP base types - Tutorial
+# Tutorial 1: NLP Base Types
 
 This is part 1 of the tutorial, in which we look into some of the base types used in this library.
 
