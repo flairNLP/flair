@@ -271,8 +271,8 @@ class TaggedCorpus:
         # Make the tag dictionary
         tag_dictionary: Dictionary = Dictionary()
         tag_dictionary.add_item('O')
-        for i, sentence in enumerate(self.get_all_sentences()):
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+        for sentence in self.get_all_sentences():
+            for token in sentence.tokens:
                 token: Token = token
                 tag_dictionary.add_item(token.get_tag(tag_type))
         tag_dictionary.add_item('<START>')
@@ -379,13 +379,13 @@ class NLPTaskDataFetcher:
 
         if task == NLPTask.CONLL_03 or task == NLPTask.ONTONER or task == NLPTask.FASHION:
 
-            data_folder = 'resources/tasks/conll_03'
-            if task == NLPTask.ONTONER: data_folder = 'resources/tasks/onto-ner'
-            if task == NLPTask.FASHION: data_folder = 'resources/tasks/fashion'
+            data_folder = os.path.join('resources', 'tasks', 'conll_03')
+            if task == NLPTask.ONTONER: data_folder = os.path.join('resources', 'tasks', 'onto-ner')
+            if task == NLPTask.FASHION: data_folder = os.path.join('resources', 'tasks', 'fashion')
 
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_sequence_labeling_data(data_folder + '/eng.train')
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_sequence_labeling_data(data_folder + '/eng.testa')
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_sequence_labeling_data(data_folder + '/eng.testb')
+            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_sequence_labeling_data(os.path.join(data_folder, 'eng.train'))
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_sequence_labeling_data(os.path.join(data_folder, 'eng.testa'))
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_sequence_labeling_data(os.path.join(data_folder, 'eng.testb'))
             for sentence in sentences_train + sentences_test + sentences_dev:
                 sentence: Sentence = sentence
                 sentence.convert_tag_scheme(tag_type='ner', target_scheme='iobes')
@@ -394,12 +394,12 @@ class NLPTaskDataFetcher:
 
         if task == NLPTask.CONLL_2000:
 
-            data_folder = 'resources/tasks/conll_2000'
+            data_folder = os.path.join('resources', 'tasks', 'conll_2000')
 
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_sequence_labeling_data(data_folder + '/train.txt')
+            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_sequence_labeling_data(os.path.join(data_folder, 'train.txt'))
             sentences_dev: List[Sentence] = [sentences_train[i] for i in NLPTaskDataFetcher._sample()]
             sentences_train = [x for x in sentences_train if x not in sentences_dev]
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_sequence_labeling_data(data_folder + '/test.txt')
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_sequence_labeling_data(os.path.join(data_folder, 'test.txt'))
             for sentence in sentences_train + sentences_test + sentences_dev:
                 sentence: Sentence = sentence
                 sentence.convert_tag_scheme(tag_type='np', target_scheme='iobes')
@@ -407,71 +407,71 @@ class NLPTaskDataFetcher:
             return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
         if task == NLPTask.UD_ENGLISH:
-            data_folder = 'resources/tasks/ud'
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/en-ud-train.conllu')
+            data_folder = os.path.join('resources', 'tasks', 'ud')
+            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(os.path.join(data_folder, 'en-ud-train.conllu'))
             sentences_dev: List[Sentence] = [sentences_train[i] for i in NLPTaskDataFetcher._sample()]
             sentences_train = [x for x in sentences_train if x not in sentences_dev]
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/en-ud-dev.conllu')
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(os.path.join(data_folder, 'en-ud-dev.conllu'))
 
             return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
         if task == NLPTask.UD_GERMAN:
-            data_folder = 'resources/tasks/ud-ger'
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/de_gsd-ud-train.conllu')
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/de_gsd-ud-test.conllu')
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/de_gsd-ud-dev.conllu')
+            data_folder = os.path.join('resources', 'tasks', 'ud-ger')
+            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(os.path.join(data_folder, 'de_gsd-ud-train.conllu'))
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(os.path.join(data_folder, 'de_gsd-ud-test.conllu'))
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(os.path.join(data_folder, 'de_gsd-ud-dev.conllu'))
 
             return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
         if task == NLPTask.ONTONOTES:
-            data_folder = 'resources/tasks/ontonotes'
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/train.conllu')
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/test.conllu')
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/dev.conllu')
+            data_folder = os.path.join('resources', 'tasks', 'ontonotes')
+            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(os.path.join(data_folder, 'train.conllu'))
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(os.path.join(data_folder, 'test.conllu'))
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(os.path.join(data_folder, 'dev.conllu'))
 
             return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
         if task == NLPTask.CONLL_12:
-            data_folder = 'resources/tasks/conll_12'
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/train.propbank.conllu')
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/test.propbank.conllu')
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/dev.propbank.conllu')
+            data_folder = os.path.join('resources', 'tasks', 'conll_12')
+            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(os.path.join(data_folder, 'train.propbank.conllu'))
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(os.path.join(data_folder, 'test.propbank.conllu'))
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(os.path.join(data_folder, 'dev.propbank.conllu'))
 
             return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
         if task == NLPTask.SRL:
-            data_folder = 'resources/tasks/srl'
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_2_column_data(data_folder + '/train.srl.conll')
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_2_column_data(data_folder + '/test.srl.conll')
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_2_column_data(data_folder + '/dev.srl.conll')
+            data_folder = os.path.join('resources', 'tasks', 'srl')
+            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_2_column_data(os.path.join(data_folder, 'train.srl.conll'))
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_2_column_data(os.path.join(data_folder, 'test.srl.conll'))
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_2_column_data(os.path.join(data_folder, 'dev.srl.conll'))
 
             return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
         if task == NLPTask.PENN:
-            data_folder = 'resources/tasks/penn'
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/train.conll')
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/valid.conll')
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder + '/test.conll')
+            data_folder = os.path.join('resources', 'tasks', 'penn')
+            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(os.path.join(data_folder, 'train.conll'))
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(os.path.join(data_folder, 'valid.conll'))
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(os.path.join(data_folder, 'test.conll'))
 
             return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
         if task == NLPTask.CONLL_03_GERMAN:
-            data_folder = 'resources/tasks/conll_03-ger'
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_03_german(data_folder + '/deu.train',
+            data_folder = os.path.join('resources', 'tasks', 'conll_03-ger')
+            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_03_german(os.path.join(data_folder, 'deu.train'),
                                                                                tag_scheme='iobes')
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_03_german(data_folder + '/deu.testa',
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_03_german(os.path.join(data_folder, 'deu.testa'),
                                                                              tag_scheme='iobes')
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_03_german(data_folder + '/deu.testb',
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_03_german(os.path.join(data_folder, 'deu.testb'),
                                                                               tag_scheme='iobes')
             return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
         if task == NLPTask.GERMEVAL:
-            data_folder = 'resources/tasks/germeval'
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_germeval(data_folder + '/NER-de-train.tsv',
+            data_folder = os.path.join('resources', 'tasks', 'germeval')
+            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_germeval(os.path.join(data_folder, 'NER-de-train.tsv'),
                                                                         tag_scheme='iobes')
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_germeval(data_folder + '/NER-de-dev.tsv',
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_germeval(os.path.join(data_folder,  'NER-de-dev.tsv'),
                                                                       tag_scheme='iobes')
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_germeval(data_folder + '/NER-de-test.tsv',
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_germeval(os.path.join(data_folder, 'NER-de-test.tsv'),
                                                                        tag_scheme='iobes')
             return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
