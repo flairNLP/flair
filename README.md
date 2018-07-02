@@ -11,14 +11,17 @@ Flair uses **hyper-powerful word embeddings** to achieve state-of-the-art accura
 
 Flair is:
 
+* **A powerful syntactic / semantic tagger.** Flair allows you to apply our state-of-the-art models for named entity recognition (NER), 
+part-of-speech tagging (PoS) and chunking to your text.
+
 * **A word embedding library.** There are many different types of word embeddings out there, with wildly different properties. 
 Flair packages many of them behind a simple interface, so you can mix and match embeddings for your experiments. 
 In particular, you can try out our proposed 
 *[contextual string embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)*, 
 to build your own state-of-the-art NLP methods.
 
-* **A powerful syntactic / semantic tagger.** Flair allows you to apply our state-of-the-art models for named entity recognition (NER), 
-part-of-speech tagging (PoS) and chunking to your text.
+* **A Pytorch NLP framework.** Our framework builds directly on Pytorch, making it easy to train your own models and 
+experiment with new approaches using Flair embeddings and classes.
 
 Embedding your text for state-of-the-art NLP has never been easier. 
 
@@ -27,9 +30,9 @@ Embedding your text for state-of-the-art NLP has never been easier.
 Flair outperforms the previous best methods on a range of NLP tasks:
 
 | Task | Dataset | Our Result | Previous best |
-| -------------    | ------------- | ------------- | ------------- |
+| -------------------------------    | ----------- | ---------------- | ------------- |
 | Named Entity Recognition (English) | Conll-03    |  **93.09** (F1)  | *92.22 [(Peters et al., 2018)](https://arxiv.org/pdf/1802.05365.pdf)* |
-| Named Entity Recognition (English) | Ontonotes    |  **89.71** (F1)  | *86.28 [(Chiu et al., 2016)](https://arxiv.org/pdf/1511.08308.pdf)* |
+| Named Entity Recognition (English) | Ontonotes   |  **89.71** (F1)  | *86.28 [(Chiu et al., 2016)](https://arxiv.org/pdf/1511.08308.pdf)* |
 | Named Entity Recognition (German)  | Conll-03    |  **88.32** (F1)  | *78.76 [(Lample et al., 2016)](https://arxiv.org/abs/1603.01360)* |
 | Named Entity Recognition (German)  | Germeval    |  **84.65** (F1)  | *79.08 [(Hänig et al, 2014)](http://asv.informatik.uni-leipzig.de/publication/file/300/GermEval2014_ExB.pdf)*|
 | Part-of-Speech tagging | WSJ  | **97.85**  | *97.64 [(Choi, 2016)](https://www.aclweb.org/anthology/N16-1031)*|
