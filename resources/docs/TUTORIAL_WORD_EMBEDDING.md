@@ -52,7 +52,7 @@ are provided (more coming):
 | ID | Embedding | 
 | -------------  | ------------- |
 | 'en-glove' (or 'glove') | GloVe embeddings |
-| 'en-numberbatch' (or 'numberbatch') | numberbatch embeddings |
+| 'en-numberbatch' (or 'numberbatch') | [Numberbatch](https://github.com/commonsense/conceptnet-numberbatch) embeddings |
 | 'en-extvec' (or 'extvec') | Komnios embeddings |
 | 'en-crawl' (or 'crawl')  | FastText embeddings over Web crawls |
 | 'de-fasttext' | German FastText embeddings |
