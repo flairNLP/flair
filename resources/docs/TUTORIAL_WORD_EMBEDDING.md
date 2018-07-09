@@ -51,15 +51,17 @@ are provided (more coming):
  
 | ID | Embedding | 
 | -------------  | ------------- |
-| 'glove' | GloVe embeddings |
-| 'extvec' | Komnios embeddings |
-| 'ft-crawl' | FastText embeddings |
-| 'ft-german' | German FastText embeddings |
+| 'en-glove' (or 'glove') | GloVe embeddings |
+| 'en-numberbatch' (or 'numberbatch') | numberbatch embeddings |
+| 'en-extvec' (or 'extvec') | Komnios embeddings |
+| 'en-crawl' (or 'crawl')  | FastText embeddings over Web crawls |
+| 'de-fasttext' | German FastText embeddings |
+| 'sv-fasttext' | Swedish FastText embeddings |
 
 So, if you want to load German FastText embeddings, instantiate the method as follows:
 
 ```python
-german_embedding = WordEmbeddings('ft-german')
+german_embedding = WordEmbeddings('de-fasttext')
 ```
 
 ## Contextual String Embeddings

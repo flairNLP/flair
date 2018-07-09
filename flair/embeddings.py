@@ -108,7 +108,7 @@ class WordEmbeddings(TextEmbeddings):
             embeddings = cached_path('%sextvec.gensim' % base_path)
 
         # FT-CRAWL embeddings
-        if embeddings.lower() == 'ft-crawl' or embeddings.lower() == 'en-crawl':
+        if embeddings.lower() == 'ft-crawl' or embeddings.lower() == 'en-crawl' or embeddings.lower() == 'crawl':
             cached_path('%sft-crawl.gensim.vectors.npy' % base_path)
             embeddings = cached_path('%sft-crawl.gensim' % base_path)
 
