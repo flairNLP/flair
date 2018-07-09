@@ -139,6 +139,7 @@ class TagTrain:
                 # if dev data is used for training, use training loss to determine best model
                 if train_with_dev and current_loss < best_loss:
                     best_loss = current_loss
+                    epochs_without_improvement = 0
                     is_best_model_so_far = True
                     print('after %d - new best loss: %f' % (epochs_without_improvement, best_loss))
 

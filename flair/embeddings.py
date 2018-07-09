@@ -24,6 +24,10 @@ class TextEmbeddings(torch.nn.Module):
         """Add embeddings to all words in a list of sentences. If embeddings are already added, updates only if embeddings
         are non-static."""
 
+        # if only one sentence is passed, convert to list of sentence
+        if type(sentences) is Sentence:
+            sentences = [sentences]
+
         everything_embedded: bool = True
         for sentence in sentences:
             for token in sentence.tokens:
@@ -89,24 +93,35 @@ class WordEmbeddings(TextEmbeddings):
         base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/'
 
         # GLOVE embeddings
-        if embeddings.lower() == 'glove':
+        if embeddings.lower() == 'glove' or embeddings.lower() == 'en-glove':
             cached_path('%sglove.gensim.vectors.npy' % base_path)
             embeddings = cached_path('%sglove.gensim' % base_path)
 
+        # NUMBERBATCH embeddings
+        if embeddings.lower() == 'numberbatch' or embeddings.lower() == 'en-numberbatch':
+            cached_path('%snumberbatch-en.vectors.npy' % base_path)
+            embeddings = cached_path('%snumberbatch-en' % base_path)
+
         # KOMNIOS embeddings
-        if embeddings.lower() == 'extvec':
+        if embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
             cached_path('%sextvec.gensim.vectors.npy' % base_path)
             embeddings = cached_path('%sextvec.gensim' % base_path)
 
         # FT-CRAWL embeddings
-        if embeddings.lower() == 'ft-crawl':
+        if embeddings.lower() == 'ft-crawl' or embeddings.lower() == 'en-crawl':
             cached_path('%sft-crawl.gensim.vectors.npy' % base_path)
             embeddings = cached_path('%sft-crawl.gensim' % base_path)
 
-        # FT-GERMAN embeddings
-        if embeddings.lower() == 'ft-german':
+        # GERMAN FASTTEXT embeddings
+        if embeddings.lower() == 'ft-german' or embeddings.lower() == 'de-fasttext':
             cached_path('%sft-wiki-de.gensim.vectors.npy' % base_path)
             embeddings = cached_path('%sft-wiki-de.gensim' % base_path)
+
+        # SWEDISCH FASTTEXT embeddings
+        if embeddings.lower() == 'sv-fasttext':
+            cached_path('%scc.sv.300.vectors.npy' % base_path)
+            embeddings = cached_path('%scc.sv.300' % base_path)
+
 
         self.name = embeddings
         self.static_embeddings = True
@@ -473,6 +488,10 @@ class TextMeanEmbedder():
     def embed(self, paragraphs: List[Sentence]) -> List[Sentence]:
         """Add embeddings to all words in a list of sentences. If embeddings are already added, updates only if embeddings
         are non-static."""
+
+        # if only one sentence is passed, convert to list of sentence
+        if type(paragraphs) is Sentence:
+            paragraphs = [paragraphs]
 
         everything_embedded: bool = True
 
