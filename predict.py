@@ -1,10 +1,10 @@
 from flair.data import Sentence
-from flair.tagging_model import SequenceTaggerLSTM
+from flair.tagging_model import SequenceTagger
 
-tagger: SequenceTaggerLSTM = SequenceTaggerLSTM.load('ner')
+tagger: SequenceTagger = SequenceTagger.load('ner')
 
 sentence: Sentence = Sentence('George Washington went to Washington .')
-tagger.predict(sentence, tag_type='ner')
+tagger.predict(sentence)
 
 print('Analysing %s' % sentence)
 print('\nThe following NER tags are found: \n')
