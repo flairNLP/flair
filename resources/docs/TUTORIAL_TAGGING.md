@@ -9,9 +9,9 @@ This model was trained over the English CoNLL-03 task and can recognize 4 differ
 types.
 
 ```python
-from flair.tagging_model import SequenceTaggerLSTM
+from flair.tagging_model import SequenceTagger
 
-tagger = SequenceTaggerLSTM.load('ner')
+tagger = SequenceTagger.load('ner')
 ```
 All you need to do is use the `predict()` method of the tagger on a sentence. This will add predicted tags to the tokens
 in the sentence. Lets use a sentence with two named
@@ -33,7 +33,7 @@ George <B-PER> Washington <E-PER> went <O> to <O> Washington <S-LOC> . <O>
 ```
 
 You chose which pre-trained model you load by passing the appropriate 
-string you pass to the `load()` method of the `SequenceTaggerLSTM` class. Currently, the following pre-trained models
+string you pass to the `load()` method of the `SequenceTagger` class. Currently, the following pre-trained models
 are provided (more coming): 
  
 | ID | Task + Training Dataset | Accuracy | 
@@ -42,10 +42,10 @@ are provided (more coming):
 | 'chunk' | Conll-2000 Syntactic Chunking (English)     |  **96.74** (F1) |
 | 'pos' | Ontonotes Part-of-Speech Tagging (English)    |  **98.06** (Accuracy) |
 
-So, if you want to use a `SequenceTaggerLSTM` that performs PoS tagging, instantiate the tagger as follows:
+So, if you want to use a `SequenceTagger` that performs PoS tagging, instantiate the tagger as follows:
 
 ```python
-tagger = SequenceTaggerLSTM.load('pos')
+tagger = SequenceTagger.load('pos')
 ```
 
 

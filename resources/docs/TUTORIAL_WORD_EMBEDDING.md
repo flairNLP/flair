@@ -85,7 +85,7 @@ charlm_embedding_forward = CharLMEmbeddings('news-forward')
 # embed a sentence using CharLM.
 from flair.data import Sentence
 sentence = Sentence('The grass is green .')
-charlm_embedding_forward.embed(sentences=[sentence])
+charlm_embedding_forward.embed(sentence)
 ```
 
 You choose which embeddings you load by passing the appropriate 
@@ -125,7 +125,7 @@ embedder = CharacterEmbeddings()
 # embed a sentence using CharLM.
 from flair.data import Sentence
 sentence = Sentence('The grass is green .')
-embedder.embed(sentences=[sentence])
+embedder.embed(sentence)
 ```
 
 # Stacked Embeddings
@@ -166,7 +166,7 @@ That's it! Now just use this embedding like all the other embeddings, i.e. call 
 # just embed a sentence using the StackedEmbedding as you would with any single embedding.
 from flair.data import Sentence
 sentence = Sentence('The grass is green .')
-stacked_embeddings.embed(sentences=[sentence])
+stacked_embeddings.embed(sentence)
 
 # now check out the embedded tokens.
 for token in sentence:

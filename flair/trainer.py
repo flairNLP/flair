@@ -9,10 +9,9 @@ import torch, random, datetime, re, sys, os, shutil
 
 
 class TagTrain:
-    def __init__(self, model: SequenceTagger, corpus: TaggedCorpus, tag_type: str, test_mode: bool = False) -> None:
+    def __init__(self, model: SequenceTagger, corpus: TaggedCorpus, test_mode: bool = False) -> None:
         self.model: SequenceTagger = model
         self.corpus: TaggedCorpus = corpus
-        self.tag_type: str = tag_type
         self.test_mode: bool = test_mode
 
     def train(self,
@@ -28,7 +27,7 @@ class TagTrain:
         checkpoint: bool = False
 
         evaluate_with_fscore: bool = True
-        if self.tag_type not in ['ner', 'np', 'srl']: evaluate_with_fscore = False
+        if self.model.tag_type not in ['ner', 'np', 'srl']: evaluate_with_fscore = False
 
         self.base_path = base_path
         os.makedirs(self.base_path, exist_ok=True)
@@ -78,7 +77,7 @@ class TagTrain:
                     optimizer.zero_grad()
 
                     # Step 4. Compute the loss, gradients, and update the parameters by calling optimizer.step()
-                    loss = self.model.neg_log_likelihood(batch, self.tag_type)
+                    loss = self.model.neg_log_likelihood(batch, self.model.tag_type)
 
                     current_loss += loss.item()
 
@@ -201,7 +200,7 @@ class TagTrain:
                 sentence: Sentence = sentence
 
                 # Step 3. Run our forward pass.
-                score, tag_seq = self.model.predict_scores(sentence, self.tag_type)
+                score, tag_seq = self.model.predict_scores(sentence)
 
                 # Step 5. Compute predictions
                 predicted_id = tag_seq
@@ -213,7 +212,7 @@ class TagTrain:
                     token.add_tag('predicted', predicted_tag)
 
                     # get the gold tag
-                    gold_tag = token.get_tag(self.tag_type)
+                    gold_tag = token.get_tag(self.model.tag_type)
 
                     # append both to file for evaluation
                     eval_line = token.text + ' ' + gold_tag + ' ' + predicted_tag + "\n"

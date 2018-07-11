@@ -45,7 +45,7 @@ if torch.cuda.is_available():
 # initialize trainer
 from flair.trainer import TagTrain
 
-trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=True)
+trainer: TagTrain = TagTrain(tagger, corpus, test_mode=True)
 
-trainer.train('resources/taggers/example-pos', mini_batch_size=32, max_epochs=150, save_model=False,
+trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=False,
               train_with_dev=False, anneal_mode=False)
