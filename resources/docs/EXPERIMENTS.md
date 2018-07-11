@@ -81,7 +81,7 @@ if torch.cuda.is_available():
 # initialize trainer
 from flair.trainer import TagTrain
 
-trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=False)
+trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
 
 trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
@@ -152,7 +152,7 @@ if torch.cuda.is_available():
 # initialize trainer
 from flair.trainer import TagTrain
 
-trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=False)
+trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
 
 trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
@@ -207,15 +207,19 @@ embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 # initialize sequence tagger
 from flair.tagging_model import SequenceTagger
 
-tagger: SequenceTagger = SequenceTagger(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
-                                                use_crf=True)
+tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+                                        embeddings=embeddings,
+                                        tag_dictionary=tag_dictionary,
+                                        tag_type=tag_type,
+                                        use_crf=True)
+                                        
 if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
 from flair.trainer import TagTrain
 
-trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=False)
+trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
 
 trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
@@ -269,15 +273,19 @@ embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 # initialize sequence tagger
 from flair.tagging_model import SequenceTagger
 
-tagger: SequenceTagger = SequenceTagger(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
-                                                use_crf=True)
+tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+                                        embeddings=embeddings,
+                                        tag_dictionary=tag_dictionary,
+                                        tag_type=tag_type,
+                                        use_crf=True)
+                                        
 if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
 from flair.trainer import TagTrain
 
-trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=False)
+trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
 
 trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
@@ -334,15 +342,19 @@ embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 # initialize sequence tagger
 from flair.tagging_model import SequenceTagger
 
-tagger: SequenceTagger = SequenceTagger(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
-                                                use_crf=True)
+tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+                                        embeddings=embeddings,
+                                        tag_dictionary=tag_dictionary,
+                                        tag_type=tag_type,
+                                        use_crf=True)
+                                        
 if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
 from flair.trainer import TagTrain
 
-trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=False)
+trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
 
 trainer.train('resources/taggers/example-pos', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
@@ -397,15 +409,19 @@ embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 # initialize sequence tagger
 from flair.tagging_model import SequenceTagger
 
-tagger: SequenceTagger = SequenceTagger(hidden_size=256, embeddings=embeddings, tag_dictionary=tag_dictionary,
-                                                use_crf=True)
+tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+                                        embeddings=embeddings,
+                                        tag_dictionary=tag_dictionary,
+                                        tag_type=tag_type,
+                                        use_crf=True)
+                                        
 if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
 from flair.trainer import TagTrain
 
-trainer: TagTrain = TagTrain(tagger, corpus, tag_type=tag_type, test_mode=False)
+trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
 
 trainer.train('resources/taggers/example-pos', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
