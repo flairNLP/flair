@@ -1,5 +1,5 @@
 from .data import Sentence, Token, TaggedCorpus, Dictionary
-from .tagging_model import SequenceTaggerLSTM
+from .tagging_model import SequenceTagger
 
 from typing import List, Dict, Tuple
 
@@ -9,10 +9,8 @@ import torch, random, datetime, re, sys, os, shutil
 
 
 class TagTrain:
-
-    def __init__(self, model: SequenceTaggerLSTM, corpus: TaggedCorpus, tag_type: str,
-                 test_mode: bool = False) -> None:
-        self.model: SequenceTaggerLSTM = model
+    def __init__(self, model: SequenceTagger, corpus: TaggedCorpus, tag_type: str, test_mode: bool = False) -> None:
+        self.model: SequenceTagger = model
         self.corpus: TaggedCorpus = corpus
         self.tag_type: str = tag_type
         self.test_mode: bool = test_mode
@@ -27,8 +25,10 @@ class TagTrain:
               train_with_dev: bool = False,
               anneal_mode: bool = False):
 
+        checkpoint: bool = False
+
         evaluate_with_fscore: bool = True
-        if self.tag_type not in ['ner', 'np']: evaluate_with_fscore = False
+        if self.tag_type not in ['ner', 'np', 'srl']: evaluate_with_fscore = False
 
         self.base_path = base_path
         os.makedirs(self.base_path, exist_ok=True)
@@ -48,8 +48,10 @@ class TagTrain:
         try:
 
             # record overall best dev scores and best loss
-            best_dev_score = 0
-            best_loss: float = 10000
+            best_score = 0
+            if train_with_dev: best_score = 10000
+            # best_dev_score = 0
+            # best_loss: float = 10000
 
             # this variable is used for annealing schemes
             epochs_without_improvement: int = 0
@@ -111,18 +113,8 @@ class TagTrain:
                                                                  evaluate_with_fscore=evaluate_with_fscore,
                                                                  embeddings_in_memory=embeddings_in_memory)
 
-                summary = '%d' % epoch + '\t({:%H:%M:%S})'.format(datetime.datetime.now()) \
-                          + '\t%f\t%f\tDEV   %d\t' % (current_loss, learning_rate, dev_fp) + dev_result
-                summary = summary.replace('\n', '')
-                summary += '\tTEST   \t%d\t' % test_fp + test_result
-
                 # IMPORTANT: Switch back to train mode
                 self.model.train()
-
-                print(summary)
-                with open(loss_txt, "a") as loss_file:
-                    loss_file.write('%s\n' % summary)
-                    loss_file.close()
 
                 # checkpoint model
                 self.model.trained_epochs = epoch
@@ -131,42 +123,61 @@ class TagTrain:
                 is_best_model_so_far: bool = False
 
                 # if dev data is used for model selection, use dev F1 score to determine best model
-                if not train_with_dev and dev_score > best_dev_score:
-                    best_dev_score = dev_score
+                if not train_with_dev and dev_score > best_score:
+                    best_score = dev_score
                     is_best_model_so_far = True
-                    print('new best dev F1: %f' % best_dev_score)
 
                 # if dev data is used for training, use training loss to determine best model
-                if train_with_dev and current_loss < best_loss:
-                    best_loss = current_loss
-                    epochs_without_improvement = 0
+                if train_with_dev and current_loss < best_score:
+                    best_score = current_loss
                     is_best_model_so_far = True
-                    print('after %d - new best loss: %f' % (epochs_without_improvement, best_loss))
 
                 if is_best_model_so_far:
 
+                    print('after %d - new best score: %f' % (epochs_without_improvement, best_score))
+
                     epochs_without_improvement = 0
 
-                    if save_model or anneal_mode:
-                        with open(base_path + "/model.pt", 'wb') as model_save_file:
-                            torch.save(self.model, model_save_file, pickle_protocol=4)
-                            model_save_file.close()
-                        print(model_save_file.closed)
-                    print('.. model saved ... ')
+                    # save model
+                    if save_model or (anneal_mode and checkpoint):
+                        self.model.save(base_path + "/model.pt")
+                        print('.. model saved ... ')
 
                 else:
                     epochs_without_improvement += 1
 
-                if epochs_without_improvement == 5 and anneal_mode:
-                    epochs_without_improvement = 0
+                # anneal after 3 epochs of no improvement if anneal mode
+                if epochs_without_improvement == 3 and anneal_mode:
+                    best_score = current_loss
                     learning_rate /= 2
 
-                    self.model = torch.load(base_path + '/model.pt')
+                    if checkpoint:
+                        self.model = SequenceTagger.load_from_file(base_path + '/model.pt')
+
                     optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
+
+                # print info
+                summary = '%d' % epoch + '\t({:%H:%M:%S})'.format(datetime.datetime.now()) \
+                          + '\t%f\t%d\t%f\tDEV   %d\t' % (current_loss, epochs_without_improvement, learning_rate, dev_fp) + dev_result
+                summary = summary.replace('\n', '')
+                summary += '\tTEST   \t%d\t' % test_fp + test_result
+
+                print(summary)
+                with open(loss_txt, "a") as loss_file:
+                    loss_file.write('%s\n' % summary)
+                    loss_file.close()
+
+            self.model.save(base_path + "/final-model.pt")
 
         except KeyboardInterrupt:
             print('-' * 89)
             print('Exiting from training early')
+            print('saving model')
+            with open(base_path + "/final-model.pt", 'wb') as model_save_file:
+                torch.save(self.model, model_save_file, pickle_protocol=4)
+                model_save_file.close()
+            print('done')
+
 
     def evaluate(self, evaluation: List[Sentence], evaluate_with_fscore: bool = True,
                  embeddings_in_memory: bool = True):

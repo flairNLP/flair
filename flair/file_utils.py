@@ -91,16 +91,19 @@ def get_from_cache(url: str, cache_dir: str = None) -> str:
 
     os.makedirs(cache_dir, exist_ok=True)
 
+    filename = re.sub(r'.+/', '', url)
+    # get cache path to put the file
+    cache_path = os.path.join(cache_dir, filename)
+    if os.path.exists(cache_path):
+        return cache_path
+
     # make HEAD request to check ETag
     response = requests.head(url)
     if response.status_code != 200:
         raise IOError("HEAD request failed for url {}".format(url))
 
     # add ETag to filename if it exists
-    etag = response.headers.get("ETag")
-    filename = re.sub(r'.+/', '', url)
-    # get cache path to put the file
-    cache_path = os.path.join(cache_dir, filename)
+    # etag = response.headers.get("ETag")
 
     if not os.path.exists(cache_path):
         # Download to temporary file, then copy to cache dir once finished.

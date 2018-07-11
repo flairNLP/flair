@@ -126,7 +126,7 @@ class Sentence:
 
         self.labels: List[str] = labels
 
-        self.embeddings: Dict = {}
+        self._embeddings: Dict = {}
 
         # optionally, directly instantiate with sentence tokens
         if text is not None:
@@ -164,15 +164,19 @@ class Sentence:
             token.idx = len(self.tokens)
 
     def set_embedding(self, name: str, vector):
-        self.embeddings[name] = vector
+        self._embeddings[name] = vector
 
     def clear_embeddings(self):
-        self.embeddings: Dict = {}
+        self._embeddings: Dict = {}
+
+    def cpu_embeddings(self):
+        for name, vector in self._embeddings.items():
+            self._embeddings[name] = vector.cpu()
 
     def get_embedding(self) -> torch.autograd.Variable:
         embeddings = []
-        for embed in sorted(self.embeddings.keys()):
-            embedding = self.embeddings[embed]
+        for embed in sorted(self._embeddings.keys()):
+            embedding = self._embeddings[embed]
             embeddings.append(embedding)
 
         return torch.cat(embeddings, dim=0)
@@ -217,7 +221,7 @@ class Sentence:
             self.tokens[index].add_tag(tag_type, tag)
 
     def __repr__(self):
-        return ' '.join([x.text for x in self.tokens])
+        return 'Sentence: "' + ' '.join([t.text for t in self.tokens]) + '" - %d Tokens' % len(self)
 
     def __copy__(self):
         s = Sentence()
