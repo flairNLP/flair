@@ -6,18 +6,14 @@
 
 ---
 
-Flair uses **powerful word embeddings** to achieve state-of-the-art accuracies
- on a range of natural language processing (NLP) tasks. 
-
 Flair is:
 
 * **A powerful syntactic / semantic tagger.** Flair allows you to apply our state-of-the-art models for named entity recognition (NER), 
 part-of-speech tagging (PoS) and chunking to your text.
 
-* **A word embedding library.** There are many different types of word embeddings out there, with wildly different properties. 
-Flair packages many of them behind a simple interface, so you can mix and match embeddings for your experiments. 
+* **A word embedding library.** Flair has simple interfaces that allow you to use and combine different word embeddings. 
 In particular, you can try out our proposed 
-*[contextual string embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)*, 
+**[contextual string embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)**, 
 to build your own state-of-the-art NLP methods.
 
 * **A Pytorch NLP framework.** Our framework builds directly on [Pytorch](https://pytorch.org/), making it easy to train your own models and 
