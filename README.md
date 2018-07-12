@@ -4,6 +4,8 @@
 
 A very simple framework for **state-of-the-art NLP**. Developed by [Zalando Research](https://research.zalando.com/).
 
+---
+
 Flair is:
 
 * **A powerful syntactic / semantic tagger.** Flair allows you to apply our state-of-the-art models for named entity recognition (NER), 
