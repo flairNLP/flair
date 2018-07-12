@@ -49,16 +49,16 @@ You choose which pre-trained embeddings you load by passing the appropriate
 string you pass to the constructor of the `WordEmbeddings` class. Currently, the following static embeddings
 are provided (more coming): 
  
-| ID | Embedding | 
-| -------------  | ------------- |
-| 'en-glove' (or 'glove') | GloVe embeddings |
-| 'en-numberbatch' (or 'numberbatch') | [Numberbatch](https://github.com/commonsense/conceptnet-numberbatch) embeddings |
-| 'en-extvec' (or 'extvec') | Komnios embeddings |
-| 'en-crawl' (or 'crawl')  | FastText embeddings over Web crawls |
-| 'en-news' (or 'news')  | FastText embeddings over news and wikipedia data |
-| 'de-fasttext' | German FastText embeddings |
-| 'de-numberbatch' | German Numberbatch embeddings |
-| 'sv-fasttext' | Swedish FastText embeddings |
+| ID | Language | Embedding | 
+| ------------- | -------------  | ------------- |
+| 'en-glove' (or 'glove') | English | GloVe embeddings |
+| 'en-numberbatch' (or 'numberbatch') | English |[Numberbatch](https://github.com/commonsense/conceptnet-numberbatch) embeddings |
+| 'en-extvec' (or 'extvec') | English |Komnios embeddings |
+| 'en-crawl' (or 'crawl')  | English |FastText embeddings over Web crawls |
+| 'en-news' (or 'news')  |English | FastText embeddings over news and wikipedia data |
+| 'de-fasttext' | German |German FastText embeddings |
+| 'de-numberbatch' |German | German Numberbatch embeddings |
+| 'sv-fasttext' |Swedish | Swedish FastText embeddings |
 
 So, if you want to load German FastText embeddings, instantiate the method as follows:
 
