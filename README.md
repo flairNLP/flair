@@ -88,7 +88,7 @@ tagger.predict(sentence)
 Done! The `Sentence` now has entity annotations. Print the sentence to see what the tagger found.
 
 ```python
-print('Analysing %s' % sentence)
+print(sentence)
 print('The following NER tags are found:')
 print(sentence.to_tagged_string())
 ```
@@ -96,7 +96,7 @@ print(sentence.to_tagged_string())
 This should print: 
 
 ```console
-Analysing Sentence: "I love Berlin ." - 4 Tokens
+Sentence: "I love Berlin ." - 4 Tokens
 
 The following NER tags are found: 
 
