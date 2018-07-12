@@ -2,7 +2,7 @@
 
 ![alt text](resources/docs/flair_logo.svg)
 
-- a very simple framework for **state-of-the-art NLP**. Developed by [Zalando Research](https://research.zalando.com/).
+A very simple framework for **state-of-the-art NLP**. Developed by [Zalando Research](https://research.zalando.com/).
 
 ---
 
@@ -18,6 +18,7 @@ to build your own state-of-the-art NLP methods.
 
 * **A Pytorch NLP framework.** Our framework builds directly on [Pytorch](https://pytorch.org/), making it easy to train your own models and 
 experiment with new approaches using Flair embeddings and classes.
+
 
 ## Comparison with State-of-the-Art
 
