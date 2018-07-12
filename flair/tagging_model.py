@@ -384,8 +384,7 @@ class SequenceTagger(nn.Module):
             predicted_tag = self.tag_dictionary.get_item_for_index(pred_id)
             token.add_tag(self.tag_type, predicted_tag)
 
-        for token in sentence:
-            token.clear_embeddings()
+        sentence.clear_embeddings()
 
         return sentence
 

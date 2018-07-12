@@ -55,7 +55,9 @@ are provided (more coming):
 | 'en-numberbatch' (or 'numberbatch') | [Numberbatch](https://github.com/commonsense/conceptnet-numberbatch) embeddings |
 | 'en-extvec' (or 'extvec') | Komnios embeddings |
 | 'en-crawl' (or 'crawl')  | FastText embeddings over Web crawls |
+| 'en-news' (or 'news')  | FastText embeddings over news and wikipedia data |
 | 'de-fasttext' | German FastText embeddings |
+| 'de-numberbatch' | German Numberbatch embeddings |
 | 'sv-fasttext' | Swedish FastText embeddings |
 
 So, if you want to load German FastText embeddings, instantiate the method as follows:

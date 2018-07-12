@@ -1,5 +1,6 @@
 import pickle
 import re
+import os
 from abc import ABC, abstractmethod
 from typing import List, Dict, Tuple
 
@@ -109,33 +110,43 @@ class WordEmbeddings(TextEmbeddings):
 
         # GLOVE embeddings
         if embeddings.lower() == 'glove' or embeddings.lower() == 'en-glove':
-            cached_path('%sglove.gensim.vectors.npy' % base_path)
-            embeddings = cached_path('%sglove.gensim' % base_path)
-
-        # NUMBERBATCH embeddings
-        if embeddings.lower() == 'numberbatch' or embeddings.lower() == 'en-numberbatch':
-            cached_path('%snumberbatch-en.vectors.npy' % base_path)
-            embeddings = cached_path('%snumberbatch-en' % base_path)
+            cached_path(os.path.join(base_path, 'glove.gensim.vectors.npy'))
+            embeddings = cached_path(os.path.join(base_path, 'glove.gensim'))
 
         # KOMNIOS embeddings
         if embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
-            cached_path('%sextvec.gensim.vectors.npy' % base_path)
-            embeddings = cached_path('%sextvec.gensim' % base_path)
+            cached_path(os.path.join(base_path, 'extvec.gensim.vectors.npy'))
+            embeddings = cached_path(os.path.join(base_path, 'extvec.gensim'))
+
+        # NUMBERBATCH embeddings
+        if embeddings.lower() == 'numberbatch' or embeddings.lower() == 'en-numberbatch':
+            cached_path(os.path.join(base_path, 'numberbatch-en.vectors.npy'))
+            embeddings = cached_path(os.path.join(base_path, 'numberbatch-en'))
 
         # FT-CRAWL embeddings
-        if embeddings.lower() == 'ft-crawl' or embeddings.lower() == 'en-crawl' or embeddings.lower() == 'crawl':
-            cached_path('%sft-crawl.gensim.vectors.npy' % base_path)
-            embeddings = cached_path('%sft-crawl.gensim' % base_path)
+        if embeddings.lower() == 'crawl' or embeddings.lower() == 'en-crawl':
+            cached_path(os.path.join(base_path, 'ft-crawl.gensim.vectors.npy'))
+            embeddings = cached_path(os.path.join(base_path, 'ft-crawl.gensim'))
+
+        # FT-CRAWL embeddings
+        if embeddings.lower() == 'news' or embeddings.lower() == 'en-news':
+            cached_path(os.path.join(base_path, 'ft-news.gensim.vectors.npy'))
+            embeddings = cached_path(os.path.join(base_path, 'ft-news.gensim'))
 
         # GERMAN FASTTEXT embeddings
-        if embeddings.lower() == 'ft-german' or embeddings.lower() == 'de-fasttext':
-            cached_path('%sft-wiki-de.gensim.vectors.npy' % base_path)
-            embeddings = cached_path('%sft-wiki-de.gensim' % base_path)
+        if embeddings.lower() == 'de-fasttext':
+            cached_path(os.path.join(base_path, 'ft-wiki-de.gensim.vectors.npy'))
+            embeddings = cached_path(os.path.join(base_path, 'ft-wiki-de.gensim'))
+
+        # NUMBERBATCH embeddings
+        if embeddings.lower() == 'de-numberbatch':
+            cached_path(os.path.join(base_path, 'de-numberbatch.vectors.npy'))
+            embeddings = cached_path(os.path.join(base_path, 'de-numberbatch'))
 
         # SWEDISCH FASTTEXT embeddings
         if embeddings.lower() == 'sv-fasttext':
-            cached_path('%scc.sv.300.vectors.npy' % base_path)
-            embeddings = cached_path('%scc.sv.300' % base_path)
+            cached_path(os.path.join(base_path, 'cc.sv.300.vectors.npy'))
+            embeddings = cached_path(os.path.join(base_path, 'cc.sv.300'))
 
         self.name = embeddings
         self.static_embeddings = True

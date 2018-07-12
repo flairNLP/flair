@@ -166,8 +166,13 @@ class Sentence:
     def set_embedding(self, name: str, vector):
         self._embeddings[name] = vector
 
-    def clear_embeddings(self):
+    def clear_embeddings(self, also_clear_word_embeddings: bool = True):
+
         self._embeddings: Dict = {}
+
+        if also_clear_word_embeddings:
+            for token in self:
+                token.clear_embeddings()
 
     def cpu_embeddings(self):
         for name, vector in self._embeddings.items():

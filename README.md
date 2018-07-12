@@ -6,7 +6,7 @@
 
 ---
 
-Flair uses **hyper-powerful word embeddings** to achieve state-of-the-art accuracies
+Flair uses **powerful word embeddings** to achieve state-of-the-art accuracies
  on a range of natural language processing (NLP) tasks. 
 
 Flair is:
