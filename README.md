@@ -19,8 +19,6 @@ to build your own state-of-the-art NLP methods.
 * **A Pytorch NLP framework.** Our framework builds directly on [Pytorch](https://pytorch.org/), making it easy to train your own models and 
 experiment with new approaches using Flair embeddings and classes.
 
-Embedding your text for state-of-the-art NLP has never been easier. 
-
 ## Comparison with State-of-the-Art
 
 Flair outperforms the previous best methods on a range of NLP tasks:
