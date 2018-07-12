@@ -24,7 +24,7 @@ sentence = Sentence('George Washington went to Washington .')
 tagger.predict(sentence)
 
 # print sentence with predicted tags
-print(sentence.to_tag_string())
+print(sentence.to_tagged_string())
 ```
 
 This should print: 

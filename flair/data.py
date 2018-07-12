@@ -185,23 +185,40 @@ class Sentence:
     def embedding(self):
         return self.get_embedding()
 
-    def to_tag_string(self, tag_type: str = 'tag') -> str:
+    def to_tagged_string(self) -> str:
+
         list = []
         for token in self.tokens:
             list.append(token.text)
-            if token.get_tag(tag_type) == '' or token.get_tag(tag_type) == 'O': continue
-            list.append('<' + token.get_tag(tag_type) + '>')
+
+            tags = []
+            for tag_type in token.tags.keys():
+
+                if token.get_tag(tag_type) == '' or token.get_tag(tag_type) == 'O': continue
+                tags.append(token.get_tag(tag_type))
+            all_tags = '<' + '/'.join(tags) + '>'
+            if all_tags != '<>':
+                list.append(all_tags)
         return ' '.join(list)
 
-    def to_ner_string(self) -> str:
-        list = []
-        for token in self.tokens:
-            if token.get_tag('ner') == 'O' or token.get_tag('ner') == '':
-                list.append(token.text)
-            else:
-                list.append(token.text)
-                list.append('<' + token.get_tag('ner') + '>')
-        return ' '.join(list)
+    # def to_tag_string(self, tag_type: str = 'tag') -> str:
+    #
+    #     list = []
+    #     for token in self.tokens:
+    #         list.append(token.text)
+    #         if token.get_tag(tag_type) == '' or token.get_tag(tag_type) == 'O': continue
+    #         list.append('<' + token.get_tag(tag_type) + '>')
+    #     return ' '.join(list)
+    #
+    # def to_ner_string(self) -> str:
+    #     list = []
+    #     for token in self.tokens:
+    #         if token.get_tag('ner') == 'O' or token.get_tag('ner') == '':
+    #             list.append(token.text)
+    #         else:
+    #             list.append(token.text)
+    #             list.append('<' + token.get_tag('ner') + '>')
+    #     return ' '.join(list)
 
     def convert_tag_scheme(self, tag_type: str = 'ner', target_scheme: str = 'iob'):
 

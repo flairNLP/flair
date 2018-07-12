@@ -90,7 +90,7 @@ Done! The `Sentence` now has entity annotations. Print the sentence to see what 
 ```python
 print('Analysing %s' % sentence)
 print('The following NER tags are found:')
-print(sentence.to_tag_string())
+print(sentence.to_tagged_string())
 ```
 
 This should print: 

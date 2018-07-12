@@ -5,13 +5,13 @@ import numpy as np
 
 from flair.file_utils import cached_path
 from .data import Dictionary, Sentence, Token
-from .embeddings import TextEmbeddings
 
 from typing import List, Tuple
+import warnings
+
 
 START_TAG: str = '<START>'
 STOP_TAG: str = '<STOP>'
-
 
 def to_scalar(var):
     return var.view(-1).data.tolist()[0]
@@ -116,7 +116,11 @@ class SequenceTagger(nn.Module):
     @classmethod
     def load_from_file(cls, model_file):
 
+        # ACHTUNG: suppressing torch serialization warnings. This needs to be taken out once we sort out recursive
+        # serialization of torch objects
+        warnings.filterwarnings("ignore")
         state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
+        warnings.filterwarnings("default")
 
         model = SequenceTagger(
             hidden_size=state['hidden_size'],
@@ -379,6 +383,9 @@ class SequenceTagger(nn.Module):
             # get the predicted tag
             predicted_tag = self.tag_dictionary.get_item_for_index(pred_id)
             token.add_tag(self.tag_type, predicted_tag)
+
+        for token in sentence:
+            token.clear_embeddings()
 
         return sentence
 
