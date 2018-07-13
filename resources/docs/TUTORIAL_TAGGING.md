@@ -29,7 +29,7 @@ print(sentence.to_tagged_string())
 
 This should print: 
 ```console
-George <B-PER> Washington <E-PER> went <O> to <O> Washington <S-LOC> . <O>
+George <B-PER> Washington <E-PER> went to Washington <S-LOC> . 
 ```
 
 You chose which pre-trained model you load by passing the appropriate 
@@ -45,7 +45,7 @@ are provided (more coming):
 | 'frame'  |   Semantic Frame Detection  (***Experimental***)| English | Propbank 3.0     |  **98.00** (Accuracy) |
 | |  | German |  |   |
 | 'de-ner' | 4-class Named Entity Recognition | German | Conll-03  |  **88.29** (F1) |
-| 'de-ner-germeval' | 4+4-class Named Entity Recognition | German | Conll-03  |  **84.53** (F1) |
+| 'de-ner-germeval' | 4+4-class Named Entity Recognition | German | Germeval  |  **84.53** (F1) |
 | 'de-pos' | Part-of-Speech Tagging | German | Universal Dependency Treebank  |  **94.67** (Accuracy) |
 
 
@@ -54,6 +54,69 @@ So, if you want to use a `SequenceTagger` that performs PoS tagging, instantiate
 ```python
 tagger = SequenceTagger.load('pos')
 ```
+
+## Tagging a German sentence
+
+As indicated in the list above, we also provide pre-trained models for languages other than English. Currently, we
+support German and other languages are forthcoming. To tag a German sentence, just load the appropriate model:
+
+```python
+
+# load model
+tagger = SequenceTagger.load('de-ner')
+
+# make German sentence
+sentence = Sentence('George Washington ging nach Washington .')
+
+# predict NER tags
+tagger.predict(sentence)
+
+# print sentence with predicted tags
+print(sentence.to_tagged_string())
+```
+This should print: 
+```console
+George <B-PER> Washington <E-PER> ging nach Washington <S-LOC> .
+```
+
+## Experimental: Semantic Frame Detection
+
+For English, we now provide a pre-trained model that detects semantic frames in text, trained using Propbank 3.0 frames. 
+This provides a sort of word sense disambiguation for frame evoking words, and we are curious what researchers might
+do with this. 
+
+Here's an example: 
+
+```python
+# load model
+tagger = SequenceTagger.load('frame')
+
+# make German sentence
+sentence_1 = Sentence('George returned to Berlin to return his hat .')
+sentence_2 = Sentence('He had a look at different hats .')
+
+# predict NER tags
+tagger.predict(sentence_1)
+tagger.predict(sentence_2)
+
+# print sentence with predicted tags
+print(sentence_1.to_tagged_string())
+print(sentence_2.to_tagged_string())
+```
+This should print: 
+
+```console
+George returned <return.01> to Berlin to return <return.02> his hat .
+
+He had <have.LV> a look <look.01> at different hats .
+```
+
+As we can see, the frame detector makes a distinction in sentence 1 between two different meanings of the word 'return'.
+'return.01' means returning to a location, while 'return.02' means giving something back. 
+
+Similarly, in sentence 2 the frame detector finds a light verb construction in which 'have' is the light verb and 
+'look' is a frame evoking word.
+
 
 
 ## Tagging a List of Sentences
