@@ -47,7 +47,8 @@ are provided (more coming):
 | 'de-ner' | 4-class Named Entity Recognition | German | Conll-03  |  **88.29** (F1) |
 | 'de-ner-germeval' | 4+4-class Named Entity Recognition | German | Conll-03  |  **84.53** (F1) |
 | 'de-pos' | Part-of-Speech Tagging | German | Universal Dependency Treebank  |  **94.67** (Accuracy) |
-.
+
+
 So, if you want to use a `SequenceTagger` that performs PoS tagging, instantiate the tagger as follows:
 
 ```python
