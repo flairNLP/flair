@@ -11,7 +11,7 @@ Flair is:
 * **A powerful syntactic / semantic tagger.** Flair allows you to apply our state-of-the-art models for named entity recognition (NER), 
 part-of-speech tagging (PoS) and chunking to your text.
 
-* **A word embedding library.** Flair has simple interfaces that allow you to use and combine different word embeddings. 
+* **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word embeddings. 
 In particular, you can try out our proposed 
 **[contextual string embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)** 
 to build your own state-of-the-art NLP methods.
