@@ -92,7 +92,7 @@ the word 'green'. This means that we've tagged this word as an entity of type co
 sentence[4].add_tag('ner', 'color')
 
 # print the sentence with all tags of this type
-print(sentence.to_ner_string())
+print(sentence.to_tagged_string())
 ```
 
 This should print: 

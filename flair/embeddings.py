@@ -1,5 +1,6 @@
 import pickle
 import re
+import os
 from abc import ABC, abstractmethod
 from typing import List, Dict, Tuple
 
@@ -15,10 +16,15 @@ from .data import Dictionary, Token, Sentence, TaggedCorpus
 class TextEmbeddings(torch.nn.Module):
     """Abstract base class for all embeddings. Ever new type of embedding must implement these methods."""
 
+    @property
     @abstractmethod
     def embedding_length(self) -> int:
         """Returns the length of the embedding vector."""
         pass
+
+    @property
+    def embedding_type(self) -> str:
+        return 'word-level'
 
     def embed(self, sentences: List[Sentence]) -> List[Sentence]:
         """Add embeddings to all words in a list of sentences. If embeddings are already added, updates only if embeddings
@@ -29,13 +35,16 @@ class TextEmbeddings(torch.nn.Module):
             sentences = [sentences]
 
         everything_embedded: bool = True
-        for sentence in sentences:
-            for token in sentence.tokens:
-                if self.name not in token._embeddings.keys(): everything_embedded = False
 
-        # print(everything_embedded)
+        if self.embedding_type == 'word-level':
+            for sentence in sentences:
+                for token in sentence.tokens:
+                    if self.name not in token._embeddings.keys(): everything_embedded = False
+        else:
+            for sentence in sentences:
+                if self.name not in sentence._embeddings.keys(): everything_embedded = False
+
         if not everything_embedded or not self.static_embeddings:
-            # print('retrieving embeddings %s' + self.name)
             self._add_embeddings_internal(sentences)
 
         return sentences
@@ -63,17 +72,24 @@ class StackedEmbeddings(TextEmbeddings):
         self.name = 'Stack'
         self.static_embeddings = True
 
-        self.embedding_length: int = 0
+        self.__embedding_type: int = embeddings[0].embedding_type
+
+        self.__embedding_length: int = 0
         for embedding in embeddings:
-            self.embedding_length += embedding.embedding_length
+            self.__embedding_length += embedding.embedding_length
 
     def embed(self, sentences: List[Sentence], static_embeddings: bool = True):
 
         for embedding in self.embeddings:
             embedding.embed(sentences)
 
+    @property
+    def embedding_type(self):
+        return self.__embedding_type
+
+    @property
     def embedding_length(self) -> int:
-        return self.embedding_length
+        return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
 
@@ -94,34 +110,43 @@ class WordEmbeddings(TextEmbeddings):
 
         # GLOVE embeddings
         if embeddings.lower() == 'glove' or embeddings.lower() == 'en-glove':
-            cached_path('%sglove.gensim.vectors.npy' % base_path)
-            embeddings = cached_path('%sglove.gensim' % base_path)
-
-        # NUMBERBATCH embeddings
-        if embeddings.lower() == 'numberbatch' or embeddings.lower() == 'en-numberbatch':
-            cached_path('%snumberbatch-en.vectors.npy' % base_path)
-            embeddings = cached_path('%snumberbatch-en' % base_path)
+            cached_path(os.path.join(base_path, 'glove.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'glove.gensim'), cache_dir='embeddings')
 
         # KOMNIOS embeddings
         if embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
-            cached_path('%sextvec.gensim.vectors.npy' % base_path)
-            embeddings = cached_path('%sextvec.gensim' % base_path)
+            cached_path(os.path.join(base_path, 'extvec.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'extvec.gensim'), cache_dir='embeddings')
+
+        # NUMBERBATCH embeddings
+        if embeddings.lower() == 'numberbatch' or embeddings.lower() == 'en-numberbatch':
+            cached_path(os.path.join(base_path, 'numberbatch-en.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'numberbatch-en'), cache_dir='embeddings')
 
         # FT-CRAWL embeddings
-        if embeddings.lower() == 'ft-crawl' or embeddings.lower() == 'en-crawl' or embeddings.lower() == 'crawl':
-            cached_path('%sft-crawl.gensim.vectors.npy' % base_path)
-            embeddings = cached_path('%sft-crawl.gensim' % base_path)
+        if embeddings.lower() == 'crawl' or embeddings.lower() == 'en-crawl':
+            cached_path(os.path.join(base_path, 'ft-crawl.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'ft-crawl.gensim'), cache_dir='embeddings')
+
+        # FT-CRAWL embeddings
+        if embeddings.lower() == 'news' or embeddings.lower() == 'en-news':
+            cached_path(os.path.join(base_path, 'ft-news.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'ft-news.gensim'), cache_dir='embeddings')
 
         # GERMAN FASTTEXT embeddings
-        if embeddings.lower() == 'ft-german' or embeddings.lower() == 'de-fasttext':
-            cached_path('%sft-wiki-de.gensim.vectors.npy' % base_path)
-            embeddings = cached_path('%sft-wiki-de.gensim' % base_path)
+        if embeddings.lower() == 'de-fasttext':
+            cached_path(os.path.join(base_path, 'ft-wiki-de.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'ft-wiki-de.gensim'), cache_dir='embeddings')
+
+        # NUMBERBATCH embeddings
+        if embeddings.lower() == 'de-numberbatch':
+            cached_path(os.path.join(base_path, 'de-numberbatch.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'de-numberbatch'), cache_dir='embeddings')
 
         # SWEDISCH FASTTEXT embeddings
         if embeddings.lower() == 'sv-fasttext':
-            cached_path('%scc.sv.300.vectors.npy' % base_path)
-            embeddings = cached_path('%scc.sv.300' % base_path)
-
+            cached_path(os.path.join(base_path, 'cc.sv.300.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'cc.sv.300'), cache_dir='embeddings')
 
         self.name = embeddings
         self.static_embeddings = True
@@ -130,11 +155,12 @@ class WordEmbeddings(TextEmbeddings):
 
         self.known_words = set(self.precomputed_word_embeddings.index2word)
 
-        self.embedding_length: int = self.precomputed_word_embeddings.vector_size
+        self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
         super().__init__()
 
+    @property
     def embedding_length(self) -> int:
-        return self.embedding_length
+        return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
@@ -147,6 +173,8 @@ class WordEmbeddings(TextEmbeddings):
                     word_embedding = self.precomputed_word_embeddings[token.text]
                 elif token.text.lower() in self.known_words:
                     word_embedding = self.precomputed_word_embeddings[token.text.lower()]
+                elif re.sub('\d', '#', token.text.lower()) in self.known_words:
+                    word_embedding = self.precomputed_word_embeddings[re.sub('\d', '#', token.text.lower())]
                 elif re.sub('\d', '0', token.text.lower()) in self.known_words:
                     word_embedding = self.precomputed_word_embeddings[re.sub('\d', '0', token.text.lower())]
                 else:
@@ -171,7 +199,7 @@ class CharacterEmbeddings(TextEmbeddings):
         # get list of common characters if none provided
         if path_to_char_dict is None:
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters'
-            char_dict = cached_path(base_path)
+            char_dict = cached_path(base_path, cache_dir='datasets')
 
         # load dictionary
         self.char_dictionary: Dictionary = Dictionary()
@@ -189,10 +217,11 @@ class CharacterEmbeddings(TextEmbeddings):
         self.char_rnn = torch.nn.LSTM(self.char_embedding_dim, self.hidden_size_char, num_layers=1,
                                       bidirectional=True)
 
-        self.embedding_length = self.char_embedding_dim * 2
+        self.__embedding_length = self.char_embedding_dim * 2
 
+    @property
     def embedding_length(self) -> int:
-        return self.embedding_length
+        return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
 
@@ -272,32 +301,32 @@ class CharLMEmbeddings(TextEmbeddings):
         # news-english-forward
         if model.lower() == 'news-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward.pt'
-            model = cached_path(base_path)
+            model = cached_path(base_path, cache_dir='embeddings')
 
         # news-english-backward
         if model.lower() == 'news-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward.pt'
-            model = cached_path(base_path)
+            model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-forward
         if model.lower() == 'mix-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-forward.pt'
-            model = cached_path(base_path)
+            model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-backward
         if model.lower() == 'mix-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-backward.pt'
-            model = cached_path(base_path)
+            model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-forward
         if model.lower() == 'german-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-forward.pt'
-            model = cached_path(base_path)
+            model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-backward
         if model.lower() == 'german-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-backward.pt'
-            model = cached_path(base_path)
+            model = cached_path(base_path, cache_dir='embeddings')
 
         self.name = model
         self.static_embeddings = detach
@@ -321,11 +350,11 @@ class CharLMEmbeddings(TextEmbeddings):
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token('hello'))
         embedded_dummy = self.embed([dummy_sentence])
-        self.embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
-
+    @property
     def embedding_length(self) -> int:
-        return self.embedding_length
+        return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
@@ -378,7 +407,7 @@ class CharLMEmbeddings(TextEmbeddings):
                 offset_backward -= len(token.text)
 
                 token.set_embedding(self.name, torch.autograd.Variable(embedding))
-                self.embedding_length = len(embedding)
+                self.__embedding_length = len(embedding)
 
         return sentences
 
@@ -392,7 +421,7 @@ class OnePassStoreEmbeddings(TextEmbeddings):
         self.name = 'Stack'
         self.static_embeddings = True
 
-        self.embedding_length: int = embedding_stack.embedding_length
+        self.__embedding_length: int = embedding_stack.embedding_length
         print(self.embedding_length)
 
         sentences = corpus.get_all_sentences()
@@ -461,42 +490,49 @@ class OnePassStoreEmbeddings(TextEmbeddings):
                 word_embedding = torch.autograd.Variable(torch.FloatTensor(word_embedding))
                 token.set_embedding(self.name, word_embedding)
 
+    @property
     def embedding_length(self) -> int:
-        return self.embedding_length
+        return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         return sentences
 
 
-class TextMeanEmbedder():
-
-    def __init__(self, word_embeddings: List[TextEmbeddings], detach: bool = True):
+class TextMeanEmbedder(TextEmbeddings):
+    def __init__(self, word_embeddings: List[TextEmbeddings], reproject_words: bool = True):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
         self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=word_embeddings)
-        self.detach = detach
-        self.name = 'word_mean'
-        self.static_embeddings = True
+        self.name: str = 'word_mean'
+        self.reproject_words: bool = reproject_words
+        self.static_embeddings: bool = not reproject_words
 
-        self.embedding_length: int = 0
-        self.embedding_length = self.embeddings.embedding_length
+        self.__embedding_length: int = 0
+        self.__embedding_length = self.embeddings.embedding_length
 
+        self.word_reprojection_map = torch.nn.Linear(self.__embedding_length, self.__embedding_length)
+
+    @property
+    def embedding_type(self):
+        return 'sentence-level'
+
+    @property
     def embedding_length(self) -> int:
-        return self.embedding_length
+        return self.__embedding_length
 
-    def embed(self, paragraphs: List[Sentence]) -> List[Sentence]:
+    def embed(self, paragraphs: List[Sentence]):
         """Add embeddings to all words in a list of sentences. If embeddings are already added, updates only if embeddings
         are non-static."""
+
+        everything_embedded: bool = True
 
         # if only one sentence is passed, convert to list of sentence
         if type(paragraphs) is Sentence:
             paragraphs = [paragraphs]
 
-        everything_embedded: bool = True
-
         for paragraph in paragraphs:
-            if self.name not in paragraph.embeddings.keys(): everything_embedded = False
+            if self.name not in paragraph._embeddings.keys(): everything_embedded = False
 
         if not everything_embedded or not self.static_embeddings:
 
@@ -512,6 +548,153 @@ class TextMeanEmbedder():
                 if torch.cuda.is_available():
                     word_embeddings = word_embeddings.cuda()
 
-                paragraph.set_embedding(self.name, torch.mean(word_embeddings, 0))
+                if self.reproject_words:
+                    word_embeddings = self.word_reprojection_map(word_embeddings)
 
-        return paragraphs
+                mean_embedding = torch.mean(word_embeddings, 0)
+
+                # mean_embedding /= len(paragraph.tokens)
+                paragraph.set_embedding(self.name, mean_embedding)
+
+
+class TextLSTMEmbedder(TextEmbeddings):
+    def __init__(self, word_embeddings: List[TextEmbeddings], hidden_states=128, num_layers=1,
+                 reproject_words: bool = True):
+        """The constructor takes a list of embeddings to be combined."""
+        super().__init__()
+
+        # self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=word_embeddings)
+        self.embeddings: List[TextEmbeddings] = word_embeddings
+
+        self.reproject_words = reproject_words
+
+        self.length_of_all_word_embeddings = 0
+        for word_embedding in self.embeddings:
+            self.length_of_all_word_embeddings += word_embedding.embedding_length
+
+        self.name = 'text_lstm'
+        self.static_embeddings = False
+
+        # self.__embedding_length: int = hidden_states
+        self.__embedding_length: int = hidden_states * 2
+
+        # bidirectional LSTM on top of embedding layer
+        self.word_reprojection_map = torch.nn.Linear(self.length_of_all_word_embeddings,
+                                                     self.length_of_all_word_embeddings)
+        self.rnn = torch.nn.LSTM(self.length_of_all_word_embeddings, hidden_states, num_layers=num_layers,
+                                 bidirectional=True)
+        self.dropout = torch.nn.Dropout(0.5)
+
+    @property
+    def embedding_type(self):
+        return 'sentence-level'
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def embed(self, sentences: List[Sentence]):
+        """Add embeddings to all words in a list of sentences. If embeddings are already added, updates only if embeddings
+        are non-static."""
+
+        self.rnn.zero_grad()
+
+        sentences.sort(key=lambda x: len(x), reverse=True)
+
+        for word_embedding in self.embeddings:
+            word_embedding.embed(sentences)
+
+        # first, sort sentences by number of tokens
+        longest_token_sequence_in_batch: int = len(sentences[0])
+
+        all_sentence_tensors = []
+        lengths: List[int] = []
+
+        # go through each sentence in batch
+        for i, sentence in enumerate(sentences):
+
+            lengths.append(len(sentence.tokens))
+
+            word_embeddings = []
+
+            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+                token: Token = token
+                word_embeddings.append(token.get_embedding().unsqueeze(0))
+
+            # PADDING: pad shorter sentences out
+            for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
+                word_embeddings.append(
+                    torch.autograd.Variable(
+                        torch.FloatTensor(np.zeros(self.length_of_all_word_embeddings, dtype='float')).unsqueeze(0)))
+
+            word_embeddings_tensor = torch.cat(word_embeddings, 0)
+
+            sentence_states = word_embeddings_tensor
+
+            # ADD TO SENTENCE LIST: add the representation
+            all_sentence_tensors.append(sentence_states.unsqueeze(1))
+
+        # --------------------------------------------------------------------
+        # GET REPRESENTATION FOR ENTIRE BATCH
+        # --------------------------------------------------------------------
+        sentence_tensor = torch.cat(all_sentence_tensors, 1)
+        if torch.cuda.is_available():
+            sentence_tensor = sentence_tensor.cuda()
+
+        # --------------------------------------------------------------------
+        # FF PART
+        # --------------------------------------------------------------------
+        if self.reproject_words:
+            sentence_tensor = self.word_reprojection_map(sentence_tensor)
+
+        sentence_tensor = self.dropout(sentence_tensor)
+
+        packed = torch.nn.utils.rnn.pack_padded_sequence(sentence_tensor, lengths)
+
+        lstm_out, hidden = self.rnn(packed)
+        outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(lstm_out)
+
+        outputs = self.dropout(outputs)
+
+        for i, sentence in enumerate(sentences):
+            embedding = outputs[output_lengths[i].item() - 1, i]
+            sentence.set_embedding(self.name, embedding)
+
+
+class TextLMEmbedder(TextEmbeddings):
+    def __init__(self, charlm_embeddings: List[CharLMEmbeddings], detach: bool = True):
+        super().__init__()
+
+        self.embeddings = charlm_embeddings
+
+        self.static_embeddings = detach
+        self.detach = detach
+
+        dummy: Sentence = Sentence('jo')
+        self.embed([dummy])
+        self._embedding_length: int = len(dummy.embedding)
+
+    @property
+    def embedding_length(self) -> int:
+        return self._embedding_length
+
+    @property
+    def embedding_type(self):
+        return 'sentence-level'
+
+    def embed(self, sentences: List[Sentence]):
+
+        for embedding in self.embeddings:
+            embedding.embed(sentences)
+
+            # iterate over sentences
+            for sentence in sentences:
+
+                # if its a forward LM, take last state
+                if embedding.is_forward_lm:
+                    sentence.set_embedding(embedding.name, sentence[len(sentence)]._embeddings[embedding.name])
+                else:
+                    sentence.set_embedding(embedding.name, sentence[1]._embeddings[embedding.name])
+
+        return sentences
+

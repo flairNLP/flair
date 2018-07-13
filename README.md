@@ -2,28 +2,23 @@
 
 ![alt text](resources/docs/flair_logo.svg)
 
-- a very simple framework for **state-of-the-art NLP**. Developed by [Zalando Research](https://research.zalando.com/).
+A very simple framework for **state-of-the-art NLP**. Developed by [Zalando Research](https://research.zalando.com/).
 
 ---
-
-Flair uses **hyper-powerful word embeddings** to achieve state-of-the-art accuracies
- on a range of natural language processing (NLP) tasks. 
 
 Flair is:
 
 * **A powerful syntactic / semantic tagger.** Flair allows you to apply our state-of-the-art models for named entity recognition (NER), 
 part-of-speech tagging (PoS) and chunking to your text.
 
-* **A word embedding library.** There are many different types of word embeddings out there, with wildly different properties. 
-Flair packages many of them behind a simple interface, so you can mix and match embeddings for your experiments. 
+* **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word embeddings. 
 In particular, you can try out our proposed 
-*[contextual string embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)*, 
+**[contextual string embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)** 
 to build your own state-of-the-art NLP methods.
 
 * **A Pytorch NLP framework.** Our framework builds directly on [Pytorch](https://pytorch.org/), making it easy to train your own models and 
 experiment with new approaches using Flair embeddings and classes.
 
-Embedding your text for state-of-the-art NLP has never been easier. 
 
 ## Comparison with State-of-the-Art
 
@@ -73,13 +68,13 @@ a pre-trained model and use it to predict tags for the sentence:
 
 ```python
 from flair.data import Sentence
-from flair.tagging_model import SequenceTaggerLSTM
+from flair.tagging_model import SequenceTagger
 
 # make a sentence
 sentence = Sentence('I love Berlin .')
 
 # load the NER tagger
-tagger = SequenceTaggerLSTM.load('ner')
+tagger = SequenceTagger.load('ner')
 
 # run NER over sentence
 tagger.predict(sentence)
@@ -88,15 +83,15 @@ tagger.predict(sentence)
 Done! The `Sentence` now has entity annotations. Print the sentence to see what the tagger found.
 
 ```python
-print('Analysing %s' % sentence)
+print(sentence)
 print('The following NER tags are found:')
-print(sentence.to_tag_string())
+print(sentence.to_tagged_string())
 ```
 
 This should print: 
 
 ```console
-Analysing Sentence: "I love Berlin ." - 4 Tokens
+Sentence: "I love Berlin ." - 4 Tokens
 
 The following NER tags are found: 
 

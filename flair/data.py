@@ -126,7 +126,7 @@ class Sentence:
 
         self.labels: List[str] = labels
 
-        self.embeddings: Dict = {}
+        self._embeddings: Dict = {}
 
         # optionally, directly instantiate with sentence tokens
         if text is not None:
@@ -164,15 +164,24 @@ class Sentence:
             token.idx = len(self.tokens)
 
     def set_embedding(self, name: str, vector):
-        self.embeddings[name] = vector
+        self._embeddings[name] = vector
 
-    def clear_embeddings(self):
-        self.embeddings: Dict = {}
+    def clear_embeddings(self, also_clear_word_embeddings: bool = True):
+
+        self._embeddings: Dict = {}
+
+        if also_clear_word_embeddings:
+            for token in self:
+                token.clear_embeddings()
+
+    def cpu_embeddings(self):
+        for name, vector in self._embeddings.items():
+            self._embeddings[name] = vector.cpu()
 
     def get_embedding(self) -> torch.autograd.Variable:
         embeddings = []
-        for embed in sorted(self.embeddings.keys()):
-            embedding = self.embeddings[embed]
+        for embed in sorted(self._embeddings.keys()):
+            embedding = self._embeddings[embed]
             embeddings.append(embedding)
 
         return torch.cat(embeddings, dim=0)
@@ -181,23 +190,40 @@ class Sentence:
     def embedding(self):
         return self.get_embedding()
 
-    def to_tag_string(self, tag_type: str = 'tag') -> str:
+    def to_tagged_string(self) -> str:
+
         list = []
         for token in self.tokens:
             list.append(token.text)
-            if token.get_tag(tag_type) == '' or token.get_tag(tag_type) == 'O': continue
-            list.append('<' + token.get_tag(tag_type) + '>')
+
+            tags = []
+            for tag_type in token.tags.keys():
+
+                if token.get_tag(tag_type) == '' or token.get_tag(tag_type) == 'O': continue
+                tags.append(token.get_tag(tag_type))
+            all_tags = '<' + '/'.join(tags) + '>'
+            if all_tags != '<>':
+                list.append(all_tags)
         return ' '.join(list)
 
-    def to_ner_string(self) -> str:
-        list = []
-        for token in self.tokens:
-            if token.get_tag('ner') == 'O' or token.get_tag('ner') == '':
-                list.append(token.text)
-            else:
-                list.append(token.text)
-                list.append('<' + token.get_tag('ner') + '>')
-        return ' '.join(list)
+    # def to_tag_string(self, tag_type: str = 'tag') -> str:
+    #
+    #     list = []
+    #     for token in self.tokens:
+    #         list.append(token.text)
+    #         if token.get_tag(tag_type) == '' or token.get_tag(tag_type) == 'O': continue
+    #         list.append('<' + token.get_tag(tag_type) + '>')
+    #     return ' '.join(list)
+    #
+    # def to_ner_string(self) -> str:
+    #     list = []
+    #     for token in self.tokens:
+    #         if token.get_tag('ner') == 'O' or token.get_tag('ner') == '':
+    #             list.append(token.text)
+    #         else:
+    #             list.append(token.text)
+    #             list.append('<' + token.get_tag('ner') + '>')
+    #     return ' '.join(list)
 
     def convert_tag_scheme(self, tag_type: str = 'ner', target_scheme: str = 'iob'):
 
@@ -217,7 +243,7 @@ class Sentence:
             self.tokens[index].add_tag(tag_type, tag)
 
     def __repr__(self):
-        return ' '.join([x.text for x in self.tokens])
+        return 'Sentence: "' + ' '.join([t.text for t in self.tokens]) + '" - %d Tokens' % len(self)
 
     def __copy__(self):
         s = Sentence()

@@ -16,6 +16,8 @@ class RNNModel(nn.Module):
         self.dictionary = Dictionary()
         self.is_forward_lm: bool = True
 
+        self.dropout = dropout
+
         self.drop = nn.Dropout(dropout)
         self.encoder = nn.Embedding(ntoken, ninp)
 
@@ -30,6 +32,7 @@ class RNNModel(nn.Module):
 
         self.rnn_type = rnn_type
         self.nhid = nhid
+        self.ninp = ninp
         self.nlayers = nlayers
 
         self.hidden = None
@@ -57,7 +60,7 @@ class RNNModel(nn.Module):
         output, hidden = self.rnn(emb, hidden)
 
         if self.proj is not None:
-           output = self.proj(output)
+            output = self.proj(output)
 
         output = self.drop(output)
 
@@ -108,8 +111,23 @@ class RNNModel(nn.Module):
     def load_language_model(cls, model_file):
         state = torch.load(model_file)
         model = RNNModel(state['rnn_type'], state['ntoken'], state['ninp'], state['nhid'], state['nout'],
-                                       state['nlayers'], state['dropout'])
+                         state['nlayers'], state['dropout'])
         model.load_state_dict(state['state_dict'])
         model.is_forward_lm = state['is_forward_lm']
         model.dictionary = state['char_dictionary_forward']
         return model
+
+    def save(self, file):
+        model_state = {
+            'state_dict': self.state_dict(),
+            'is_forward_lm': self.is_forward_lm,
+            'char_dictionary_forward': self.dictionary,
+            'rnn_type': self.rnn_type,
+            'ntoken': len(self.dictionary),
+            'ninp': self.ninp,
+            'nhid': self.nhid,
+            'nout': self.proj,
+            'nlayers': self.nlayers,
+            'dropout': self.dropout
+        }
+        torch.save(model_state, file, pickle_protocol=4)

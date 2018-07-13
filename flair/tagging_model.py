@@ -1,6 +1,9 @@
+import warnings
+
 import torch.autograd as autograd
 import torch.nn as nn
 import torch
+import os
 import numpy as np
 
 from flair.file_utils import cached_path
@@ -30,22 +33,23 @@ def log_sum_exp(vec):
            torch.log(torch.sum(torch.exp(vec - max_score_broadcast)))
 
 
-class SequenceTaggerLSTM(nn.Module):
-
+class SequenceTagger(nn.Module):
     def __init__(self,
                  hidden_size: int,
                  embeddings,
                  tag_dictionary: Dictionary,
+                 tag_type: str,
                  use_crf: bool = True,
                  use_rnn: bool = True,
                  rnn_layers: int = 1
                  ):
 
-        super(SequenceTaggerLSTM, self).__init__()
+        super(SequenceTagger, self).__init__()
 
-        self.use_RNN = use_rnn
+        self.use_rnn = use_rnn
         self.hidden_size = hidden_size
         self.use_crf: bool = use_crf
+        self.rnn_layers: int = rnn_layers
 
         self.trained_epochs: int = 0
 
@@ -53,6 +57,7 @@ class SequenceTaggerLSTM(nn.Module):
 
         # set the dictionaries
         self.tag_dictionary: Dictionary = tag_dictionary
+        self.tag_type: str = tag_type
         self.tagset_size: int = len(tag_dictionary)
 
         # initialize the network architecture
@@ -86,7 +91,7 @@ class SequenceTaggerLSTM(nn.Module):
         self.relu = nn.ReLU()
 
         # final linear map to tag space
-        if self.use_RNN:
+        if self.use_rnn:
             self.linear = nn.Linear(hidden_size * 2, len(tag_dictionary))
         else:
             self.linear = nn.Linear(self.embeddings.embedding_length, len(tag_dictionary))
@@ -98,30 +103,44 @@ class SequenceTaggerLSTM(nn.Module):
             self.transitions.data[self.tag_dictionary.get_idx_for_item(START_TAG), :] = -10000
             self.transitions.data[:, self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000
 
-    @staticmethod
-    def load(model: str):
-        model_file = None
+    def save(self, model_file: str):
+        model_state = {
+            'state_dict': self.state_dict(),
+            'embeddings': self.embeddings,
+            'hidden_size': self.hidden_size,
+            'tag_dictionary': self.tag_dictionary,
+            'tag_type': self.tag_type,
+            'use_crf': self.use_crf,
+            'use_rnn': self.use_rnn,
+            'rnn_layers': self.rnn_layers,
+        }
+        torch.save(model_state, model_file, pickle_protocol=4)
 
-        if model.lower() == 'ner':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/ner-conll03.pt'
-            model_file = cached_path(base_path)
+    @classmethod
+    def load_from_file(cls, model_file):
 
-        if model.lower() == 'chunk':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/chunk-conll2000.pt'
-            model_file = cached_path(base_path)
+        # ACHTUNG: suppressing torch serialization warnings. This needs to be taken out once we sort out recursive
+        # serialization of torch objects
+        warnings.filterwarnings("ignore")
+        state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
+        warnings.filterwarnings("default")
 
-        if model.lower() == 'pos':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/pos-ontonotes-small.pt'
-            model_file = cached_path(base_path)
+        model = SequenceTagger(
+            hidden_size=state['hidden_size'],
+            embeddings=state['embeddings'],
+            tag_dictionary=state['tag_dictionary'],
+            tag_type=state['tag_type'],
+            use_crf=state['use_crf'],
+            use_rnn=state['use_rnn'],
+            rnn_layers=state['rnn_layers'])
 
-        if model_file is not None:
-            tagger: SequenceTaggerLSTM = torch.load(model_file, map_location={'cuda:0': 'cpu'})
-            tagger.eval()
-            if torch.cuda.is_available():
-                tagger = tagger.cuda()
-            return tagger
+        model.load_state_dict(state['state_dict'])
+        model.eval()
+        if torch.cuda.is_available():
+            model = model.cuda()
+        return model
 
-    def forward(self, sentences: List[Sentence], tag_type: str) -> Tuple[List, List]:
+    def forward(self, sentences: List[Sentence]) -> Tuple[List, List]:
 
         self.zero_grad()
 
@@ -152,7 +171,7 @@ class SequenceTaggerLSTM(nn.Module):
                 token: Token = token
 
                 # get the tag
-                tag_idx.append(self.tag_dictionary.get_idx_for_item(token.get_tag(tag_type)))
+                tag_idx.append(self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type)))
 
                 word_embeddings.append(token.get_embedding().unsqueeze(0))
 
@@ -190,7 +209,7 @@ class SequenceTaggerLSTM(nn.Module):
         if self.relearn_embeddings:
             tagger_states = self.embedding2nn(tagger_states)
 
-        if self.use_RNN:
+        if self.use_rnn:
             packed = torch.nn.utils.rnn.pack_padded_sequence(tagger_states, lengths)
 
             rnn_output, hidden = self.rnn(packed)
@@ -267,7 +286,7 @@ class SequenceTaggerLSTM(nn.Module):
         # features is a 2D tensor, len(sentence) * self.tagset_size
         # for sentence in sentences:
         #     print(sentence)
-        feats, tags = self.forward(sentences, tag_type)
+        feats, tags = self.forward(sentences)
 
         if self.use_crf:
 
@@ -322,8 +341,8 @@ class SequenceTaggerLSTM(nn.Module):
         # Z(x)
         return alpha
 
-    def predict_scores(self, sentence: Sentence, tag_type: str):
-        feats, tags = self.forward([sentence], tag_type)
+    def predict_scores(self, sentence: Sentence):
+        feats, tags = self.forward([sentence])
         feats = feats[0]
         tags = tags[0]
         # viterbi to get tag_seq
@@ -335,19 +354,75 @@ class SequenceTaggerLSTM(nn.Module):
 
         return score, tag_seq
 
-    def predict(self, sentence: Sentence, tag_type: str = 'tag') -> Sentence:
+    def predict(self, sentence: Sentence) -> Sentence:
 
-        score, tag_seq = self.predict_scores(sentence, tag_type)
-        # sentences_out = copy.deepcopy(sentence)
+        score, tag_seq = self.predict_scores(sentence)
         predicted_id = tag_seq
         for (token, pred_id) in zip(sentence.tokens, predicted_id):
             token: Token = token
             # get the predicted tag
             predicted_tag = self.tag_dictionary.get_item_for_index(pred_id)
-            token.add_tag(tag_type, predicted_tag)
+            token.add_tag(self.tag_type, predicted_tag)
 
         return sentence
 
+
+    @staticmethod
+    def load(model: str):
+        model_file = None
+        aws_resource_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models'
+
+        if model.lower() == 'ner':
+            base_path = '/'.join([aws_resource_path,
+                                 'NER-conll03--h256-l1-b32-%2Bglove%2Bnews-forward%2Bnews-backward--anneal',
+                                 'en-ner-conll03-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'ner-ontonotes':
+            base_path = '/'.join([aws_resource_path,
+                                 'NER-ontoner--h256-l1-b32-%2Bft-crawl%2Bnews-forward%2Bnews-backward--anneal',
+                                 'en-ner-ontonotes-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'chunk':
+            base_path = '/'.join([aws_resource_path,
+                                 'NP-conll2000--h256-l1-b32-%2Bnews-forward%2Bnews-backward--anneal',
+                                 'en-chunk-conll2000-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'pos':
+            base_path = '/'.join([aws_resource_path,
+                                 'POS-ontonotes--h256-l1-b32-%2Bmix-forward%2Bmix-backward--anneal',
+                                 'en-pos-ontonotes-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'frame':
+            base_path = '/'.join([aws_resource_path,
+                                 'FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward%2Bnews-backward--anneal',
+                                 'en-frame-ontonotes-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'de-pos':
+            base_path = '/'.join([aws_resource_path,
+                                 'UPOS-udgerman--h256-l1-b8-%2Bgerman-forward%2Bgerman-backward--anneal',
+                                 'de-pos-ud-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'de-ner':
+            base_path = '/'.join([aws_resource_path,
+                                 'NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--anneal',
+                                 'de-ner-conll03-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'de-ner-germeval':
+            base_path = '/'.join([aws_resource_path,
+                                 'NER-germeval--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--anneal',
+                                 'de-ner-germeval-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model_file is not None:
+            tagger: SequenceTagger = SequenceTagger.load_from_file(model_file)
+            return tagger
 
 class LockedDropout(nn.Module):
     def __init__(self, dropout_rate=0.5):
@@ -361,38 +436,4 @@ class LockedDropout(nn.Module):
         m = x.data.new(1, x.size(1), x.size(2)).bernoulli_(1 - self.dropout_rate)
         mask = torch.autograd.Variable(m, requires_grad=False) / (1 - self.dropout_rate)
         mask = mask.expand_as(x)
-        return mask * x
-
-
-class Fokus(nn.Module):
-    def __init__(self, dropout_rate=0.5):
-        super(Fokus, self).__init__()
-        self.dropout_rate = dropout_rate
-
-    def forward(self, x):
-        if not self.training or not self.dropout_rate:
-            return x
-
-        states = len(x.data[0, 0, :])
-        # print(states)
-
-        import random
-        mu, sigma = 0.5, 0.2  # mean and standard deviation
-        s = sorted(np.random.normal(mu, sigma, states))
-        # print(s)
-        mask = [0 if i < random.random() else 1 for i in s]
-
-        if torch.cuda.is_available():
-            mask = torch.autograd.Variable(torch.cuda.FloatTensor(mask), requires_grad=False)
-        else:
-            mask = torch.autograd.Variable(torch.FloatTensor(mask), requires_grad=False)
-        # print(mask)
-        # print(mask * x)
-
-        # m = x.data.new(1, x.size(1), x.size(2)).bernoulli_(1 - self.dropout_rate)
-        # # print(x.data.new(1, x.size(1), x.size(2)))
-        # # print(m)
-        # mask = torch.autograd.Variable(m, requires_grad=False) / (1 - self.dropout_rate)
-        # mask = mask.expand_as(x)
-        # asd
         return mask * x

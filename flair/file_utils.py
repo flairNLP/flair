@@ -18,7 +18,6 @@ import requests
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 CACHE_ROOT = os.path.expanduser(os.path.join('~', '.flair'))
-DATASET_CACHE = os.path.join(CACHE_ROOT, "datasets")
 
 def url_to_filename(url: str, etag: str = None) -> str:
     """
@@ -54,21 +53,20 @@ def filename_to_url(filename: str) -> Tuple[str, str]:
     url_bytes = base64.b64decode(filename_bytes)
     return url_bytes.decode('utf-8'), etag
 
-def cached_path(url_or_filename: str, cache_dir: str = None) -> str:
+def cached_path(url_or_filename: str, cache_dir: str) -> str:
     """
     Given something that might be a URL (or might be a local path),
     determine which. If it's a URL, download the file and cache it, and
     return the path to the cached file. If it's already a local path,
     make sure the file exists and then return the path.
     """
-    if cache_dir is None:
-        cache_dir = DATASET_CACHE
+    dataset_cache = os.path.join(CACHE_ROOT, cache_dir)
 
     parsed = urlparse(url_or_filename)
 
     if parsed.scheme in ('http', 'https'):
         # URL, so get it from the cache (downloading if necessary)
-        return get_from_cache(url_or_filename, cache_dir)
+        return get_from_cache(url_or_filename, dataset_cache)
     elif parsed.scheme == '' and os.path.exists(url_or_filename):
         # File, and it exists.
         return url_or_filename
@@ -86,10 +84,14 @@ def get_from_cache(url: str, cache_dir: str = None) -> str:
     Given a URL, look for the corresponding dataset in the local cache.
     If it's not there, download it. Then return the path to the cached file.
     """
-    if cache_dir is None:
-        cache_dir = DATASET_CACHE
 
     os.makedirs(cache_dir, exist_ok=True)
+
+    filename = re.sub(r'.+/', '', url)
+    # get cache path to put the file
+    cache_path = os.path.join(cache_dir, filename)
+    if os.path.exists(cache_path):
+        return cache_path
 
     # make HEAD request to check ETag
     response = requests.head(url)
@@ -97,10 +99,7 @@ def get_from_cache(url: str, cache_dir: str = None) -> str:
         raise IOError("HEAD request failed for url {}".format(url))
 
     # add ETag to filename if it exists
-    etag = response.headers.get("ETag")
-    filename = re.sub(r'.+/', '', url)
-    # get cache path to put the file
-    cache_path = os.path.join(cache_dir, filename)
+    # etag = response.headers.get("ETag")
 
     if not os.path.exists(cache_path):
         # Download to temporary file, then copy to cache dir once finished.
