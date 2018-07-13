@@ -1,17 +1,20 @@
+import warnings
+
 import torch.autograd as autograd
 import torch.nn as nn
 import torch
+import os
 import numpy as np
 
 from flair.file_utils import cached_path
 from .data import Dictionary, Sentence, Token
+from .embeddings import TextEmbeddings
 
 from typing import List, Tuple
-import warnings
-
 
 START_TAG: str = '<START>'
 STOP_TAG: str = '<STOP>'
+
 
 def to_scalar(var):
     return var.view(-1).data.tolist()[0]
@@ -136,29 +139,6 @@ class SequenceTagger(nn.Module):
         if torch.cuda.is_available():
             model = model.cuda()
         return model
-
-    @staticmethod
-    def load(model: str):
-        model_file = None
-
-        if model.lower() == 'ner':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/ner-conll03.pt'
-            model_file = cached_path(base_path)
-
-        if model.lower() == 'chunk':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/chunk-conll2000.pt'
-            model_file = cached_path(base_path)
-
-        if model.lower() == 'pos':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/pos-ontonotes-small.pt'
-            model_file = cached_path(base_path)
-
-        if model_file is not None:
-            tagger: SequenceTagger = torch.load(model_file, map_location={'cuda:0': 'cpu'})
-            tagger.eval()
-            if torch.cuda.is_available():
-                tagger = tagger.cuda()
-            return tagger
 
     def forward(self, sentences: List[Sentence]) -> Tuple[List, List]:
 
@@ -384,10 +364,65 @@ class SequenceTagger(nn.Module):
             predicted_tag = self.tag_dictionary.get_item_for_index(pred_id)
             token.add_tag(self.tag_type, predicted_tag)
 
-        sentence.clear_embeddings()
-
         return sentence
 
+
+    @staticmethod
+    def load(model: str):
+        model_file = None
+        aws_resource_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models'
+
+        if model.lower() == 'ner':
+            base_path = '/'.join([aws_resource_path,
+                                 'NER-conll03--h256-l1-b32-%2Bglove%2Bnews-forward%2Bnews-backward--anneal',
+                                 'en-ner-conll03-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'ner-ontonotes':
+            base_path = '/'.join([aws_resource_path,
+                                 'NER-ontoner--h256-l1-b32-%2Bft-crawl%2Bnews-forward%2Bnews-backward--anneal',
+                                 'en-ner-ontonotes-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'chunk':
+            base_path = '/'.join([aws_resource_path,
+                                 'NP-conll2000--h256-l1-b32-%2Bnews-forward%2Bnews-backward--anneal',
+                                 'en-chunk-conll2000-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'pos':
+            base_path = '/'.join([aws_resource_path,
+                                 'POS-ontonotes--h256-l1-b32-%2Bmix-forward%2Bmix-backward--anneal',
+                                 'en-pos-ontonotes-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'frame':
+            base_path = '/'.join([aws_resource_path,
+                                 'FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward%2Bnews-backward--anneal',
+                                 'en-frame-ontonotes-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'de-pos':
+            base_path = '/'.join([aws_resource_path,
+                                 'UPOS-udgerman--h256-l1-b8-%2Bgerman-forward%2Bgerman-backward--anneal',
+                                 'de-pos-ud-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'de-ner':
+            base_path = '/'.join([aws_resource_path,
+                                 'NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--anneal',
+                                 'de-ner-conll03-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'de-ner-germeval':
+            base_path = '/'.join([aws_resource_path,
+                                 'NER-germeval--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--anneal',
+                                 'de-ner-germeval-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model_file is not None:
+            tagger: SequenceTagger = SequenceTagger.load_from_file(model_file)
+            return tagger
 
 class LockedDropout(nn.Module):
     def __init__(self, dropout_rate=0.5):

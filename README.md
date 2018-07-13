@@ -13,7 +13,7 @@ part-of-speech tagging (PoS) and chunking to your text.
 
 * **A word embedding library.** Flair has simple interfaces that allow you to use and combine different word embeddings. 
 In particular, you can try out our proposed 
-**[contextual string embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)**, 
+**[contextual string embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)** 
 to build your own state-of-the-art NLP methods.
 
 * **A Pytorch NLP framework.** Our framework builds directly on [Pytorch](https://pytorch.org/), making it easy to train your own models and 

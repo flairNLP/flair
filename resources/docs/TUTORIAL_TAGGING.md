@@ -36,12 +36,18 @@ You chose which pre-trained model you load by passing the appropriate
 string you pass to the `load()` method of the `SequenceTagger` class. Currently, the following pre-trained models
 are provided (more coming): 
  
-| ID | Task + Training Dataset | Accuracy | 
-| -------------    | ------------- | ------------- |
-| 'ner' | Conll-03 Named Entity Recognition (English)   |  **93.17** (F1) |
-| 'chunk' | Conll-2000 Syntactic Chunking (English)     |  **96.74** (F1) |
-| 'pos' | Ontonotes Part-of-Speech Tagging (English)    |  **98.06** (Accuracy) |
-
+| ID | Task | Language| Training Dataset | Accuracy | 
+| -------------    | ------------- | ------------- |------------- |------------- |
+| 'ner' | 4-class Named Entity Recognition | English | Conll-03  |  **93.18** (F1) |
+| 'ner-ontonotes' | 12-class Named Entity Recognition | English | Ontonotes  |  **89.62** (F1) |
+| 'chunk' |  Syntactic Chunking   | English | Conll-2000     |  **96.68** (F1) |
+| 'pos' |  Part-of-Speech Tagging | English | Ontonotes     |  **98.06** (Accuracy) |
+| 'frame'  |   Semantic Frame Detection  (***Experimental***)| English | Propbank 3.0     |  **98.00** (Accuracy) |
+| |  | German |  |   |
+| 'de-ner' | 4-class Named Entity Recognition | German | Conll-03  |  **88.29** (F1) |
+| 'de-ner-germeval' | 4+4-class Named Entity Recognition | German | Conll-03  |  **84.53** (F1) |
+| 'de-pos' | Part-of-Speech Tagging | German | Universal Dependency Treebank  |  **94.67** (Accuracy) |
+.
 So, if you want to use a `SequenceTagger` that performs PoS tagging, instantiate the tagger as follows:
 
 ```python

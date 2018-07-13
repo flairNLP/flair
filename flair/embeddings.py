@@ -110,43 +110,43 @@ class WordEmbeddings(TextEmbeddings):
 
         # GLOVE embeddings
         if embeddings.lower() == 'glove' or embeddings.lower() == 'en-glove':
-            cached_path(os.path.join(base_path, 'glove.gensim.vectors.npy'))
-            embeddings = cached_path(os.path.join(base_path, 'glove.gensim'))
+            cached_path(os.path.join(base_path, 'glove.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'glove.gensim'), cache_dir='embeddings')
 
         # KOMNIOS embeddings
         if embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
-            cached_path(os.path.join(base_path, 'extvec.gensim.vectors.npy'))
-            embeddings = cached_path(os.path.join(base_path, 'extvec.gensim'))
+            cached_path(os.path.join(base_path, 'extvec.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'extvec.gensim'), cache_dir='embeddings')
 
         # NUMBERBATCH embeddings
         if embeddings.lower() == 'numberbatch' or embeddings.lower() == 'en-numberbatch':
-            cached_path(os.path.join(base_path, 'numberbatch-en.vectors.npy'))
-            embeddings = cached_path(os.path.join(base_path, 'numberbatch-en'))
+            cached_path(os.path.join(base_path, 'numberbatch-en.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'numberbatch-en'), cache_dir='embeddings')
 
         # FT-CRAWL embeddings
         if embeddings.lower() == 'crawl' or embeddings.lower() == 'en-crawl':
-            cached_path(os.path.join(base_path, 'ft-crawl.gensim.vectors.npy'))
-            embeddings = cached_path(os.path.join(base_path, 'ft-crawl.gensim'))
+            cached_path(os.path.join(base_path, 'ft-crawl.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'ft-crawl.gensim'), cache_dir='embeddings')
 
         # FT-CRAWL embeddings
         if embeddings.lower() == 'news' or embeddings.lower() == 'en-news':
-            cached_path(os.path.join(base_path, 'ft-news.gensim.vectors.npy'))
-            embeddings = cached_path(os.path.join(base_path, 'ft-news.gensim'))
+            cached_path(os.path.join(base_path, 'ft-news.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'ft-news.gensim'), cache_dir='embeddings')
 
         # GERMAN FASTTEXT embeddings
         if embeddings.lower() == 'de-fasttext':
-            cached_path(os.path.join(base_path, 'ft-wiki-de.gensim.vectors.npy'))
-            embeddings = cached_path(os.path.join(base_path, 'ft-wiki-de.gensim'))
+            cached_path(os.path.join(base_path, 'ft-wiki-de.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'ft-wiki-de.gensim'), cache_dir='embeddings')
 
         # NUMBERBATCH embeddings
         if embeddings.lower() == 'de-numberbatch':
-            cached_path(os.path.join(base_path, 'de-numberbatch.vectors.npy'))
-            embeddings = cached_path(os.path.join(base_path, 'de-numberbatch'))
+            cached_path(os.path.join(base_path, 'de-numberbatch.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'de-numberbatch'), cache_dir='embeddings')
 
         # SWEDISCH FASTTEXT embeddings
         if embeddings.lower() == 'sv-fasttext':
-            cached_path(os.path.join(base_path, 'cc.sv.300.vectors.npy'))
-            embeddings = cached_path(os.path.join(base_path, 'cc.sv.300'))
+            cached_path(os.path.join(base_path, 'cc.sv.300.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'cc.sv.300'), cache_dir='embeddings')
 
         self.name = embeddings
         self.static_embeddings = True
@@ -199,7 +199,7 @@ class CharacterEmbeddings(TextEmbeddings):
         # get list of common characters if none provided
         if path_to_char_dict is None:
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters'
-            char_dict = cached_path(base_path)
+            char_dict = cached_path(base_path, cache_dir='datasets')
 
         # load dictionary
         self.char_dictionary: Dictionary = Dictionary()
@@ -301,32 +301,32 @@ class CharLMEmbeddings(TextEmbeddings):
         # news-english-forward
         if model.lower() == 'news-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward.pt'
-            model = cached_path(base_path)
+            model = cached_path(base_path, cache_dir='embeddings')
 
         # news-english-backward
         if model.lower() == 'news-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward.pt'
-            model = cached_path(base_path)
+            model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-forward
         if model.lower() == 'mix-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-forward.pt'
-            model = cached_path(base_path)
+            model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-backward
         if model.lower() == 'mix-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-backward.pt'
-            model = cached_path(base_path)
+            model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-forward
         if model.lower() == 'german-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-forward.pt'
-            model = cached_path(base_path)
+            model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-backward
         if model.lower() == 'german-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-backward.pt'
-            model = cached_path(base_path)
+            model = cached_path(base_path, cache_dir='embeddings')
 
         self.name = model
         self.static_embeddings = detach
@@ -697,3 +697,4 @@ class TextLMEmbedder(TextEmbeddings):
                     sentence.set_embedding(embedding.name, sentence[1]._embeddings[embedding.name])
 
         return sentences
+
