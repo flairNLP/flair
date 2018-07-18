@@ -177,7 +177,6 @@ class TagTrain:
                 model_save_file.close()
             print('done')
 
-
     def evaluate(self, evaluation: List[Sentence], evaluate_with_fscore: bool = True,
                  embeddings_in_memory: bool = True):
         tp: int = 0

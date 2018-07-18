@@ -10,7 +10,7 @@ from flair.file_utils import cached_path
 from .data import Dictionary, Sentence, Token
 from .embeddings import TextEmbeddings
 
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 START_TAG: str = '<START>'
 STOP_TAG: str = '<STOP>'
@@ -282,10 +282,6 @@ class SequenceTagger(nn.Module):
         return path_score, best_path
 
     def neg_log_likelihood(self, sentences: List[Sentence], tag_type: str):
-        # sentence, tags is a list of ints
-        # features is a 2D tensor, len(sentence) * self.tagset_size
-        # for sentence in sentences:
-        #     print(sentence)
         feats, tags = self.forward(sentences)
 
         if self.use_crf:
@@ -354,7 +350,7 @@ class SequenceTagger(nn.Module):
 
         return score, tag_seq
 
-    def predict(self, sentence: Sentence) -> Sentence:
+    def predict_old(self, sentence: Sentence) -> Sentence:
 
         score, tag_seq = self.predict_scores(sentence)
         predicted_id = tag_seq
@@ -366,6 +362,47 @@ class SequenceTagger(nn.Module):
 
         return sentence
 
+    def predict(self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32) -> List[Sentence]:
+
+        if type(sentences) is Sentence:
+            sentences = [sentences]
+
+        # make mini-batches
+        batches = [sentences[x:x + mini_batch_size] for x in range(0, len(sentences), mini_batch_size)]
+
+        for batch in batches:
+            score, tag_seq = self._predict_scores_batch(batch)
+            predicted_id = tag_seq
+            all_tokens = []
+            for sentence in batch:
+                all_tokens.extend(sentence.tokens)
+
+            for (token, pred_id) in zip(all_tokens, predicted_id):
+                token: Token = token
+                # get the predicted tag
+                predicted_tag = self.tag_dictionary.get_item_for_index(pred_id)
+                token.add_tag(self.tag_type, predicted_tag)
+
+        return sentences
+
+    def _predict_scores_batch(self, sentences: List[Sentence]):
+        all_feats, tags = self.forward(sentences)
+
+        overall_score = 0
+        all_tags_seqs = []
+
+        for feats in all_feats:
+            # viterbi to get tag_seq
+            if self.use_crf:
+                score, tag_seq = self.viterbi_decode(feats)
+            else:
+                score, tag_seq = torch.max(feats, 1)
+                tag_seq = list(tag_seq.cpu().data)
+
+            # overall_score += score
+            all_tags_seqs.extend(tag_seq)
+
+        return overall_score, all_tags_seqs
 
     @staticmethod
     def load(model: str):
@@ -374,55 +411,56 @@ class SequenceTagger(nn.Module):
 
         if model.lower() == 'ner':
             base_path = '/'.join([aws_resource_path,
-                                 'NER-conll03--h256-l1-b32-%2Bglove%2Bnews-forward%2Bnews-backward--anneal',
-                                 'en-ner-conll03-v0.1.pt'])
+                                  'NER-conll03--h256-l1-b32-%2Bglove%2Bnews-forward%2Bnews-backward--anneal',
+                                  'en-ner-conll03-v0.1.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'ner-ontonotes':
             base_path = '/'.join([aws_resource_path,
-                                 'NER-ontoner--h256-l1-b32-%2Bft-crawl%2Bnews-forward%2Bnews-backward--anneal',
-                                 'en-ner-ontonotes-v0.1.pt'])
+                                  'NER-ontoner--h256-l1-b32-%2Bft-crawl%2Bnews-forward%2Bnews-backward--anneal',
+                                  'en-ner-ontonotes-v0.1.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'chunk':
             base_path = '/'.join([aws_resource_path,
-                                 'NP-conll2000--h256-l1-b32-%2Bnews-forward%2Bnews-backward--anneal',
-                                 'en-chunk-conll2000-v0.1.pt'])
+                                  'NP-conll2000--h256-l1-b32-%2Bnews-forward%2Bnews-backward--anneal',
+                                  'en-chunk-conll2000-v0.1.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'pos':
             base_path = '/'.join([aws_resource_path,
-                                 'POS-ontonotes--h256-l1-b32-%2Bmix-forward%2Bmix-backward--anneal',
-                                 'en-pos-ontonotes-v0.1.pt'])
+                                  'POS-ontonotes--h256-l1-b32-%2Bmix-forward%2Bmix-backward--anneal',
+                                  'en-pos-ontonotes-v0.1.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'frame':
             base_path = '/'.join([aws_resource_path,
-                                 'FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward%2Bnews-backward--anneal',
-                                 'en-frame-ontonotes-v0.1.pt'])
+                                  'FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward%2Bnews-backward--anneal',
+                                  'en-frame-ontonotes-v0.1.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'de-pos':
             base_path = '/'.join([aws_resource_path,
-                                 'UPOS-udgerman--h256-l1-b8-%2Bgerman-forward%2Bgerman-backward--anneal',
-                                 'de-pos-ud-v0.1.pt'])
+                                  'UPOS-udgerman--h256-l1-b8-%2Bgerman-forward%2Bgerman-backward--anneal',
+                                  'de-pos-ud-v0.1.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'de-ner':
             base_path = '/'.join([aws_resource_path,
-                                 'NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--anneal',
-                                 'de-ner-conll03-v0.1.pt'])
+                                  'NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--anneal',
+                                  'de-ner-conll03-v0.1.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'de-ner-germeval':
             base_path = '/'.join([aws_resource_path,
-                                 'NER-germeval--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--anneal',
-                                 'de-ner-germeval-v0.1.pt'])
+                                  'NER-germeval--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--anneal',
+                                  'de-ner-germeval-v0.1.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model_file is not None:
             tagger: SequenceTagger = SequenceTagger.load_from_file(model_file)
             return tagger
+
 
 class LockedDropout(nn.Module):
     def __init__(self, dropout_rate=0.5):

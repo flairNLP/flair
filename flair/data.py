@@ -122,6 +122,8 @@ class Token:
 class Sentence:
     def __init__(self, text: str = None, use_tokenizer: bool = False, labels: List[str] = None):
 
+        super(Sentence, self).__init__()
+
         self.tokens: List[Token] = []
 
         self.labels: List[str] = labels
