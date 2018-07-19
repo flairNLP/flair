@@ -46,7 +46,6 @@ Alan Akbik, Duncan Blythe and Roland Vollgraf.
 
 The project is based on PyTorch 0.4+ and Python 3.6+, because methods signatures and type hints are beautiful.
 If you do not have Python 3.6, install it first. [Here is how for Ubuntu 16.04](http://ubuntuhandbook.org/index.php/2017/07/install-python-3-6-1-in-ubuntu-16-04-lts/). 
-
 Then, in your favorite virtual environment, simply do:
 
 ```
