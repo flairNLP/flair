@@ -104,7 +104,7 @@ The grass is green <color> .
 
 ## Reading CoNLL parsed files
 
-We provide a set of helper methods to read CoNLL parsed files as a list of `Sentence` objects. For instance, use can
+We provide a set of helper methods to read CoNLL parsed files as a list of `Sentence` objects. For instance, you can
 use the popular CoNLL-U format introduced by the Universal Dependencies project. 
 
 Simply point the `NLPTaskDataFetcher` to the file containing the parsed sentences. It will read the sentences into a 
@@ -120,9 +120,9 @@ data_folder = 'path/to/conll/formatted/data'
 sentences: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder)
 ```
 
-Importantly, these sentences now contain a wealth of `Token` level annotations. In the case of CoNLL-u, they should 
-contain information including a token lemma, its part-of-speech, morphological annotation, its dependency relation and 
-its head token. You can access this information using the tag fields of the  `Token`. 
+Importantly, these sentences now contain a wealth of `Token` level annotations.
+In the case of CoNLL-U, they should contain information including a token lemma, its part-of-speech, morphological annotation, its dependency relation and its head token.
+You can access this information using the tag fields of the  `Token`.
 
 
 

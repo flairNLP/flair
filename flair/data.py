@@ -308,6 +308,11 @@ class TaggedCorpus:
         return tag_dictionary
 
     def make_label_dictionary(self) -> Dictionary:
+        """
+        Creates a dictionary of all labels assigned to the sentences in the corpus.
+        :return: dictionary of labels
+        """
+
         labels = set(self._get_all_labels())
 
         label_dictionary: Dictionary = Dictionary(add_unk=False)
@@ -317,6 +322,16 @@ class TaggedCorpus:
         return label_dictionary
 
     def make_vocab_dictionary(self, max_tokens=-1, min_freq=1) -> Dictionary:
+        """
+        Creates a dictionary of all tokens contained in the corpus.
+        By defining `max_tokens` you can set the maximum number of tokens that should be contained in the dictionary.
+        If there are more than `max_tokens` tokens in the corpus, the most frequent tokens are added first.
+        If `min_freq` is set the a value greater than 1 only tokens occurring more than `min_freq` times are considered
+        to be added to the dictionary.
+        :param max_tokens: the maximum number of tokens that should be added to the dictionary (-1 = take all tokens)
+        :param min_freq: a token needs to occur at least `min_freq` times to be added to the dictionary (-1 = there is no limitation)
+        :return: dictionary of tokens
+        """
         tokens = self._get_most_common_tokens(max_tokens, min_freq)
 
         vocab_dictionary: Dictionary = Dictionary()
@@ -325,7 +340,7 @@ class TaggedCorpus:
 
         return vocab_dictionary
 
-    def _get_most_common_tokens(self, max_tokens, min_freq):
+    def _get_most_common_tokens(self, max_tokens, min_freq) -> List[Token]:
         tokens_and_frequencies = Counter(self._get_all_tokens())
         tokens_and_frequencies = tokens_and_frequencies.most_common()
 
@@ -336,10 +351,10 @@ class TaggedCorpus:
             tokens.append(token)
         return tokens
 
-    def _get_all_labels(self):
+    def _get_all_labels(self) -> List[str]:
         return [label for sent in self.train for label in sent.labels]
 
-    def _get_all_tokens(self):
+    def _get_all_tokens(self) -> List[str]:
         tokens = list(map((lambda s: s.tokens), self.train))
         tokens = [token for sublist in tokens for token in sublist]
         return list(map((lambda t: t.text), tokens))
@@ -358,6 +373,11 @@ class TaggedCorpus:
         return downsampled
 
     def print_statistics(self):
+        """
+        Print statistics about the class distribution (only labels of sentences are taken into account) and sentence
+        sizes.
+        """
+
         self._print_statistics_for(self.train, "TRAIN")
         self._print_statistics_for(self.test, "TEST")
         self._print_statistics_for(self.dev, "DEV")

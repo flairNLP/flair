@@ -33,7 +33,7 @@ George <B-PER> Washington <E-PER> went to Washington <S-LOC> .
 ```
 
 You chose which pre-trained model you load by passing the appropriate 
-string you pass to the `load()` method of the `SequenceTagger` class. Currently, the following pre-trained models
+string to the `load()` method of the `SequenceTagger` class. Currently, the following pre-trained models
 are provided (more coming): 
  
 | ID | Task | Language| Training Dataset | Accuracy | 
@@ -43,7 +43,6 @@ are provided (more coming):
 | 'chunk' |  Syntactic Chunking   | English | Conll-2000     |  **96.68** (F1) |
 | 'pos' |  Part-of-Speech Tagging | English | Ontonotes     |  **98.06** (Accuracy) |
 | 'frame'  |   Semantic Frame Detection  (***Experimental***)| English | Propbank 3.0     |  **98.00** (Accuracy) |
-| |  | German |  |   |
 | 'de-ner' | 4-class Named Entity Recognition | German | Conll-03  |  **88.29** (F1) |
 | 'de-ner-germeval' | 4+4-class Named Entity Recognition | German | Germeval  |  **84.53** (F1) |
 | 'de-pos' | Part-of-Speech Tagging | German | Universal Dependency Treebank  |  **94.67** (Accuracy) |
