@@ -499,6 +499,7 @@ class OnePassStoreEmbeddings(TextEmbeddings):
 
 
 class TextMeanEmbedder(TextEmbeddings):
+
     def __init__(self, word_embeddings: List[TextEmbeddings], reproject_words: bool = True):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
@@ -522,8 +523,8 @@ class TextMeanEmbedder(TextEmbeddings):
         return self.__embedding_length
 
     def embed(self, paragraphs: List[Sentence]):
-        """Add embeddings to all words in a list of sentences. If embeddings are already added, updates only if embeddings
-        are non-static."""
+        """Add embeddings to every sentence in the given list of sentences. If embeddings are already added, updates
+        only if embeddings are non-static."""
 
         everything_embedded: bool = True
 
@@ -556,8 +557,12 @@ class TextMeanEmbedder(TextEmbeddings):
                 # mean_embedding /= len(paragraph.tokens)
                 paragraph.set_embedding(self.name, mean_embedding)
 
+    def _add_embeddings_internal(self, sentences: List[Sentence]):
+        pass
+
 
 class TextLSTMEmbedder(TextEmbeddings):
+
     def __init__(self, word_embeddings: List[TextEmbeddings], hidden_states=128, num_layers=1,
                  reproject_words: bool = True):
         """The constructor takes a list of embeddings to be combined."""
@@ -594,8 +599,8 @@ class TextLSTMEmbedder(TextEmbeddings):
         return self.__embedding_length
 
     def embed(self, sentences: List[Sentence]):
-        """Add embeddings to all words in a list of sentences. If embeddings are already added, updates only if embeddings
-        are non-static."""
+        """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
+         only if embeddings are non-static."""
 
         self.rnn.zero_grad()
 
@@ -660,6 +665,9 @@ class TextLSTMEmbedder(TextEmbeddings):
             embedding = outputs[output_lengths[i].item() - 1, i]
             sentence.set_embedding(self.name, embedding)
 
+    def _add_embeddings_internal(self, sentences: List[Sentence]):
+        pass
+
 
 class TextLMEmbedder(TextEmbeddings):
     def __init__(self, charlm_embeddings: List[CharLMEmbeddings], detach: bool = True):
@@ -698,3 +706,5 @@ class TextLMEmbedder(TextEmbeddings):
 
         return sentences
 
+    def _add_embeddings_internal(self, sentences: List[Sentence]):
+        pass

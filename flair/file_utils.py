@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 CACHE_ROOT = os.path.expanduser(os.path.join('~', '.flair'))
 
+
 def url_to_filename(url: str, etag: str = None) -> str:
     """
     Converts a url into a filename in a reversible way.
@@ -37,6 +38,7 @@ def url_to_filename(url: str, etag: str = None) -> str:
     else:
         return decoded
 
+
 def filename_to_url(filename: str) -> Tuple[str, str]:
     """
     Recovers the the url from the encoded filename. Returns it and the ETag
@@ -52,6 +54,7 @@ def filename_to_url(filename: str) -> Tuple[str, str]:
     filename_bytes = decoded.encode('utf-8')
     url_bytes = base64.b64decode(filename_bytes)
     return url_bytes.decode('utf-8'), etag
+
 
 def cached_path(url_or_filename: str, cache_dir: str) -> str:
     """
@@ -129,6 +132,7 @@ def get_from_cache(url: str, cache_dir: str = None) -> str:
 
 
 from tqdm import tqdm as _tqdm
+
 
 class Tqdm:
     # These defaults are the same as the argument defaults in tqdm.

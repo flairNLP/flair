@@ -12,8 +12,7 @@ CoNLL-U format. These might be interesting to you if you want to train your own 
 
 All helper methods for reading data are bundled in the `NLPTaskDataFetcher` class. One option for you is to follow 
 the instructions for putting the training data in the appropriate folder structure, and use the prepared functions. 
-For instance, if you want to use the CoNLL-03 data, get it from the task Web site 
-and place train, test and dev data in `/resources/tasks/conll_03/` as follows: 
+For instance, if you want to use the CoNLL-03 data, get it from the task web site and place train, test and dev data in `/resources/tasks/conll_03/` as follows: 
 
 ```
 /resources/tasks/conll_03/eng.testa

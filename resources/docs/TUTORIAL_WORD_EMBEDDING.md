@@ -90,10 +90,8 @@ sentence = Sentence('The grass is green .')
 charlm_embedding_forward.embed(sentence)
 ```
 
-You choose which embeddings you load by passing the appropriate 
-string you pass to the constructor of the `CharLMEmbeddings` class. Currently, the following contextual string
- embeddings
-are provided (more coming): 
+You choose which embeddings you load by passing the appropriate string to the constructor of the `CharLMEmbeddings` class. 
+Currently, the following contextual string embeddings are provided (more coming):
  
 | ID | Language | Embedding | 
 | -------------     | ------------- | ------------- |
