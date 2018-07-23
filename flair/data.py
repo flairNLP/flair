@@ -401,8 +401,6 @@ class TaggedCorpus:
         return 'TaggedCorpus: %d train + %d dev + %d test sentences' % (len(self.train), len(self.dev), len(self.test))
 
 
-
-
 class CorpusLM(object):
     def __init__(self, path, dictionary: Dictionary, forward: bool = True, character_level: bool = True):
         self.dictionary: Dictionary = dictionary

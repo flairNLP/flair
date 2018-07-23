@@ -19,6 +19,8 @@ class NLPTask(Enum):
     UD_GERMAN = 10
     CONLL_12 = 11
     SRL = 12
+    IMDB = 13
+    AG_NEWS = 14
 
 
 class NLPTaskDataFetcher:
@@ -122,6 +124,20 @@ class NLPTaskDataFetcher:
                                                                       tag_scheme='iobes')
             sentences_test: List[Sentence] = NLPTaskDataFetcher.read_germeval(os.path.join(data_folder, 'NER-de-test.tsv'),
                                                                        tag_scheme='iobes')
+            return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
+
+        if task == NLPTask.IMDB:
+            data_folder = os.path.join('resources', 'tasks', 'imdb')
+            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(os.path.join(data_folder, 'train.txt'))
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(os.path.join(data_folder, 'dev.txt'))
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(os.path.join(data_folder, 'test.txt'))
+            return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
+
+        if task == NLPTask.AG_NEWS:
+            data_folder = os.path.join('resources', 'tasks', 'ag_news')
+            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(os.path.join(data_folder, 'train.txt'))
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(os.path.join(data_folder, 'dev.txt'))
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(os.path.join(data_folder, 'test.txt'))
             return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
     @staticmethod
@@ -335,5 +351,35 @@ class NLPTaskDataFetcher:
         if len(sentence.tokens) > 0:
             sentence.convert_tag_scheme(target_scheme=tag_scheme)
             sentences.append(sentence)
+
+        return sentences
+
+    @staticmethod
+    def read_text_classification_file(path_to_file):
+        label_prefix = '__label__'
+        sentences = []
+
+        print(path_to_file)
+
+        with open(path_to_file) as f:
+            lines = f.readlines()
+
+            for line in lines:
+                words = line.split()
+
+                labels = []
+                l_len = 0
+
+                for i in range(len(words)):
+                    if words[i].startswith(label_prefix):
+                        l_len += len(words[i]) + 1
+                        label = words[i].replace(label_prefix, "")
+                        labels.append(label)
+                    else:
+                        break
+
+                text = line[l_len:].strip()
+
+                sentences.append(Sentence(text, labels=labels, use_tokenizer=True))
 
         return sentences
