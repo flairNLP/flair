@@ -1,16 +1,16 @@
+import os
 import pickle
 import re
-import os
-from abc import ABC, abstractmethod
-from typing import List, Dict, Tuple
+from abc import abstractmethod
+from typing import List
 
 import gensim
 import numpy as np
 import torch
 
-from .file_utils import cached_path
-from .language_model import RNNModel
+from flair.models.language_model import RNNModel
 from .data import Dictionary, Token, Sentence, TaggedCorpus
+from .file_utils import cached_path
 
 
 class TextEmbeddings(torch.nn.Module):

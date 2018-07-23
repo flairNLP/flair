@@ -1,7 +1,9 @@
+from typing import List
+
+import torch
+
 from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
 from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
-from typing import List
-import torch
 
 # 1. get the corpus
 corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03).downsample(0.01)
@@ -32,7 +34,7 @@ embedding_types: List[TextEmbeddings] = [
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # initialize sequence tagger
-from flair.tagging_model import SequenceTagger
+from flair.models.tagging_model import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
