@@ -1,11 +1,15 @@
-from .data import Sentence, Token, TaggedCorpus, Dictionary
-from .tagging_model import SequenceTagger
-
-from typing import List, Dict, Tuple
-
 from subprocess import run, PIPE
+from typing import List
 
-import torch, random, datetime, re, sys, os, shutil
+import datetime
+import os
+import random
+import re
+import sys
+import torch
+
+from flair.models.tagging_model import SequenceTagger
+from .data import Sentence, Token, TaggedCorpus
 
 
 class TagTrain:
