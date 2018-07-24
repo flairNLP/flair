@@ -9,7 +9,7 @@ import sys
 import torch
 
 from flair.models.tagging_model import SequenceTagger
-from .data import Sentence, Token, TaggedCorpus
+from flair.data import Sentence, Token, TaggedCorpus
 
 
 class TagTrain:
