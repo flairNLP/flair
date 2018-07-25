@@ -124,7 +124,34 @@ Importantly, these sentences now contain a wealth of `Token` level annotations.
 In the case of CoNLL-U, they should contain information including a token lemma, its part-of-speech, morphological annotation, its dependency relation and its head token.
 You can access this information using the tag fields of the  `Token`.
 
+## Reading files for text classification tasks
 
+We provide a helper method to read files that contain data for text classification tasks into a list of `Sentence` objects. 
+A file containing data for a text classification task should have the following format:
+```bash
+__label__<label_1> <text>
+__label__<label_1> __label__<label_2> <text>
+```
+Each line contains a document. 
+A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix `__label__`.
+One line is converted to a `Sentence`. 
+(The `Sentence` object can actually consists of multiple sentences.)
+The labels are assigned to the `Sentence`. 
+
+To read a file containing text classification data simply point the `NLPTaskDataFetcher` to the file containing the sentences. 
+It will read the sentences into a list of `Sentence`
+
+```python
+import NLPTaskDataFetcher
+
+# use your own data path
+data_folder = 'path/to/text-classification/formatted/data'
+
+# get training, test and dev data
+sentences: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(data_folder)
+```
+
+If your text classification data files have a different format, feel free to add new methods to the `NLPTaskDataFetcher`.
 
 ## Next 
 

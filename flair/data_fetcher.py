@@ -356,6 +356,15 @@ class NLPTaskDataFetcher:
 
     @staticmethod
     def read_text_classification_file(path_to_file):
+        """
+        Reads a data file for text classification. The file should contain one document/text per line.
+        The line should have the following format:
+        __label__<class_name> <text>
+        If you have a multi class task, you can have as many labels as you want at the beginning of the line, e.g.,
+        __label__<class_name_1> __label__<class_name_2> <text>
+        :param path_to_file: the path to the data file
+        :return: list of sentences
+        """
         label_prefix = '__label__'
         sentences = []
 

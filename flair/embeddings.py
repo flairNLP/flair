@@ -50,7 +50,7 @@ class TextEmbeddings(torch.nn.Module):
         return sentences
 
     @abstractmethod
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
         """Private method for adding embeddings to all words in a list of sentences."""
         pass
 
@@ -84,14 +84,14 @@ class StackedEmbeddings(TextEmbeddings):
             embedding.embed(sentences)
 
     @property
-    def embedding_type(self):
+    def embedding_type(self) -> str:
         return self.__embedding_type
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
         for embedding in self.embeddings:
             embedding._add_embeddings_internal(sentences)
@@ -413,6 +413,7 @@ class CharLMEmbeddings(TextEmbeddings):
 
 
 class OnePassStoreEmbeddings(TextEmbeddings):
+
     def __init__(self, embedding_stack: StackedEmbeddings, corpus: TaggedCorpus, detach: bool = True):
         super().__init__()
 
@@ -564,7 +565,7 @@ class TextMeanEmbedder(TextEmbeddings):
 class TextLSTMEmbedder(TextEmbeddings):
 
     def __init__(self, word_embeddings: List[TextEmbeddings], hidden_states=128, num_layers=1,
-                 reproject_words: bool = True):
+                 reproject_words: bool = True, bidirectional: bool = True):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
@@ -572,6 +573,7 @@ class TextLSTMEmbedder(TextEmbeddings):
         self.embeddings: List[TextEmbeddings] = word_embeddings
 
         self.reproject_words = reproject_words
+        self.bidirectional = bidirectional
 
         self.length_of_all_word_embeddings = 0
         for word_embedding in self.embeddings:
@@ -580,14 +582,16 @@ class TextLSTMEmbedder(TextEmbeddings):
         self.name = 'text_lstm'
         self.static_embeddings = False
 
-        # self.__embedding_length: int = hidden_states
-        self.__embedding_length: int = hidden_states * 2
+        if self.bidirectional:
+            self.__embedding_length: int = hidden_states * 2
+        else:
+            self.__embedding_length: int = hidden_states
 
         # bidirectional LSTM on top of embedding layer
         self.word_reprojection_map = torch.nn.Linear(self.length_of_all_word_embeddings,
                                                      self.length_of_all_word_embeddings)
         self.rnn = torch.nn.LSTM(self.length_of_all_word_embeddings, hidden_states, num_layers=num_layers,
-                                 bidirectional=True)
+                                 bidirectional=self.bidirectional)
         self.dropout = torch.nn.Dropout(0.5)
 
     @property
