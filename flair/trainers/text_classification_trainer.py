@@ -8,10 +8,15 @@ import torch
 
 from flair.data import Sentence, TaggedCorpus, Dictionary
 from flair.models.text_classification_model import TextClassifier
-from flair.trainers.util import convert_labels_to_one_hot, calculate_overall_metric
+from flair.trainers.metric import Metric
+from flair.trainers.util import convert_labels_to_one_hot, calculate_overall_metric, init_output_file, clear_embeddings, \
+    calculate_class_metrics
 
 
 class TextClassifierTrainer:
+    """
+    Training class to train and evaluate a text classification model.
+    """
 
     def __init__(self, model: TextClassifier, corpus: TaggedCorpus, label_dict: Dictionary, test_mode: bool = False) -> None:
         self.model: TextClassifier = model
@@ -27,9 +32,19 @@ class TextClassifierTrainer:
               save_model: bool = True,
               embeddings_in_memory: bool = True,
               train_with_dev: bool = False):
+        """
+        Trains the model using the training data of the corpus.
+        :param base_path: the directory to which any results should be written to
+        :param learning_rate: the learning rate
+        :param mini_batch_size: the mini batch size
+        :param max_epochs: the maximum number of epochs to train
+        :param save_model: boolean value indicating, whether the model should be saved or not
+        :param embeddings_in_memory: boolean value indicating, if embeddings should be kept in memory or not
+        :param train_with_dev: boolean value indicating, if the dev data set should be used for training or not
+        """
 
-        loss_txt = self.init_output_file(base_path, 'loss.txt')
-        weights_txt = self.init_output_file(base_path, 'weights.txt')
+        loss_txt = init_output_file(base_path, 'loss.txt')
+        weights_txt = init_output_file(base_path, 'weights.txt')
 
         weights_index = defaultdict(lambda: defaultdict(lambda: list()))
 
@@ -69,7 +84,7 @@ class TextClassifierTrainer:
                     current_loss += loss.item()
 
                     if not embeddings_in_memory:
-                        self.clear_embeddings_in_batch(batch)
+                        clear_embeddings(batch)
 
                     if batch_no % modulo == 0:
                         print("epoch {0} - iter {1}/{2} - loss {3:.8f}".format(epoch + 1, batch_no, len(batches), current_loss / seen_sentences))
@@ -82,13 +97,17 @@ class TextClassifierTrainer:
                 # IMPORTANT: Switch to eval mode
                 self.model.eval()
 
-                train_f_score, train_acc, train_loss = self.evaluate(self.corpus.train, mini_batch_size)
+                train_metrics, train_loss = self.evaluate(self.corpus.train, mini_batch_size=mini_batch_size)
+                train_f_score = train_metrics['OVERALL'].f_score()
+                train_acc = train_metrics['OVERALL'].accuracy()
                 print("{0:<7} epoch {1} - loss {2:.8f} - f-score {3:.4f} - acc {4:.4f}".format(
                     'TRAIN:', epoch, train_loss, train_f_score, train_acc))
 
                 dev_f_score = dev_acc = dev_loss = 0
                 if not train_with_dev:
-                    dev_f_score, dev_acc, dev_loss = self.evaluate(self.corpus.dev, mini_batch_size)
+                    dev_metrics, dev_loss = self.evaluate(self.corpus.dev, mini_batch_size=mini_batch_size)
+                    dev_f_score = dev_metrics['OVERALL'].f_score()
+                    dev_acc = dev_metrics['OVERALL'].accuracy()
                     print("{0:<7} epoch {1} - loss {2:.8f} - f-score {3:.4f} - acc {4:.4f}".format(
                         'DEV:', epoch, dev_loss, dev_f_score, dev_acc))
 
@@ -112,6 +131,11 @@ class TextClassifierTrainer:
 
             self.model.save(base_path + "/final-model.pt")
 
+            self.model = TextClassifier.load_from_file(base_path + "/model.pt")
+            test_metrics, test_loss = self.evaluate(self.corpus.dev, mini_batch_size=mini_batch_size, eval_class_metrics=True)
+            for metric in test_metrics.values():
+                metric.print()
+
         except KeyboardInterrupt:
             print('-' * 89)
             print('Exiting from training early')
@@ -121,14 +145,13 @@ class TextClassifierTrainer:
                 model_save_file.close()
             print('done')
 
-    def init_output_file(self, base_path, file_name):
-        os.makedirs(base_path, exist_ok=True)
-
-        file = os.path.join(base_path, file_name)
-        open(file, "w", encoding='utf-8').close()
-        return file
-
-    def evaluate(self, sentences: List[Sentence], mini_batch_size: int = 32):
+    def evaluate(self, sentences: List[Sentence], eval_class_metrics: bool = False, mini_batch_size: int = 32) -> (dict, float):
+        """
+        Evaluates the model with the given list of sentences.
+        :param sentences: the list of sentences
+        :param mini_batch_size: the mini batch size to use
+        :return: list of metrics, and the loss
+        """
         eval_loss = 0
 
         batches = [sentences[x:x + mini_batch_size] for x in
@@ -148,17 +171,15 @@ class TextClassifierTrainer:
         y_pred = convert_labels_to_one_hot(y_pred, self.label_dict)
         y_true = convert_labels_to_one_hot(y_true, self.label_dict)
 
-        metric = calculate_overall_metric(y_true, y_pred, self.label_dict)
+        metrics = [calculate_overall_metric(y_true, y_pred, self.label_dict)]
+        if eval_class_metrics:
+            metrics.extend(calculate_class_metrics(y_true, y_pred, self.label_dict))
 
         eval_loss /= len(sentences)
 
-        return metric.f_score(), metric.accuracy(), eval_loss
+        metrics_dict = {metric.name: metric for metric in metrics}
 
-    @staticmethod
-    def clear_embeddings_in_batch(batch: List[Sentence]):
-        for sentence in batch:
-            for token in sentence.tokens:
-                token.clear_embeddings()
+        return metrics_dict, eval_loss
 
     def _extract_weigths(self, iteration, weights_index, weights_txt):
         for key in self.model.state_dict().keys():

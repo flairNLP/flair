@@ -52,5 +52,5 @@ class Metric(object):
             self.name, self.precision(), self.recall(), self.accuracy(), self.f_score())
 
     def print(self):
-        log.info('{0:<20}\tprecision: {1:.4f} - recall: {2:.4f} - accuracy: {3:.4f} - f1-score: {4:.4f}'.format(
+        print('{0:<20}\tprecision: {1:.4f} - recall: {2:.4f} - accuracy: {3:.4f} - f1-score: {4:.4f}'.format(
                 self.name, self.precision(), self.recall(), self.accuracy(), self.f_score()))
