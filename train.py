@@ -2,7 +2,8 @@ from typing import List
 
 import torch
 
-from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
+from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
+from flair.data import TaggedCorpus
 from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
 
 # 1. get the corpus

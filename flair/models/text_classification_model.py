@@ -1,21 +1,22 @@
 import warnings
 
-import torch.autograd as autograd
 import torch.nn as nn
 import torch
-import os
-import numpy as np
-
-from flair.file_utils import cached_path
-from flair.data import Dictionary, Sentence, Token
+from flair.data import Dictionary, Sentence
 from flair.embeddings import TextEmbeddings, TextLSTMEmbedder
 
-from typing import List, Tuple, Union
+from typing import List
 
 from flair.trainers.util import convert_labels_to_one_hot
 
 
 class TextClassifier(nn.Module):
+    """
+    Text Classification Model
+    The model takes word embeddings, puts them into an LSTM to obtain a text representation, and puts the
+    text representation in the end into a linear layer to get the actual class label.
+    The model can handle single and multi class data sets.
+    """
 
     def __init__(self,
                  word_embeddings: List[TextEmbeddings],
@@ -40,9 +41,9 @@ class TextClassifier(nn.Module):
 
         self.decoder = nn.Linear(self.text_embeddings.embedding_length, len(self.label_dictionary))
 
-        self.init_weights()
+        self._init_weights()
 
-    def init_weights(self):
+    def _init_weights(self):
         nn.init.xavier_uniform_(self.decoder.weight)
 
     def forward(self, sentences):
@@ -59,6 +60,10 @@ class TextClassifier(nn.Module):
         return label_scores
 
     def save(self, model_file: str):
+        """
+        Saves the current model to the provided file.
+        :param model_file: the model file
+        """
         model_state = {
             'state_dict': self.state_dict(),
             'word_embeddings': self.word_embeddings,
@@ -73,6 +78,11 @@ class TextClassifier(nn.Module):
 
     @classmethod
     def load_from_file(cls, model_file):
+        """
+        Loads the model from the given file.
+        :param model_file: the model file
+        :return: the loaded text classifier model
+        """
 
         # ATTENTION: suppressing torch serialization warnings. This needs to be taken out once we sort out recursive
         # serialization of torch objects
@@ -97,6 +107,11 @@ class TextClassifier(nn.Module):
         return model
 
     def obtain_labels_and_loss(self, sentences: List[Sentence]) -> (List[List[str]], float):
+        """
+        Predicts the labels of sentences and calculates the loss.
+        :param sentences: list of sentences
+        :return: list of predicted labels and the loss value
+        """
         label_scores = self.forward(sentences)
 
         if torch.cuda.is_available():
@@ -112,11 +127,15 @@ class TextClassifier(nn.Module):
         return pred_labels, loss
 
     def predict(self, sentences: List[Sentence], mini_batch_size=32) -> List[Sentence]:
-
+        """
+        Predicts the class labels for the given sentences. The labels are directly added to the sentences.
+        :param sentences: list of sentences
+        :param mini_batch_size: mini batch size to use
+        :return: the list of sentences containing the labels
+        """
         if type(sentences) is Sentence:
             sentences = [sentences]
 
-        # make mini-batches
         batches = [sentences[x:x + mini_batch_size] for x in range(0, len(sentences), mini_batch_size)]
 
         for batch in batches:
@@ -176,9 +195,11 @@ class TextClassifier(nn.Module):
         loss_function = nn.CrossEntropyLoss()
         return loss_function(label_scores, self._labels_to_indices(sentences))
 
-    def _labels_to_one_hot(self, batch):
-        one_hot = convert_labels_to_one_hot(batch, self.label_dictionary)
-        return torch.from_numpy(one_hot)
+    def _labels_to_one_hot(self, sentences):
+        label_list = [sentence.labels for sentence in sentences]
+        one_hot = convert_labels_to_one_hot(label_list, self.label_dictionary)
+        one_hot = [torch.LongTensor(l).unsqueeze(0) for l in one_hot]
+        return torch.cat(one_hot, 0)
 
     def _labels_to_indices(self, sentences):
 

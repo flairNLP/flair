@@ -1,11 +1,34 @@
-from functools import reduce
-import random
 from typing import List
 
+import os
 import numpy as np
 
-from flair.data import Dictionary
+from flair.data import Dictionary, Sentence
 from flair.trainers.metric import Metric
+
+
+def clear_embeddings(sentences: List[Sentence]):
+    """
+    Clears the embeddings from all given sentences.
+    :param sentences: list of sentences
+    """
+    for sentence in sentences:
+        for token in sentence.tokens:
+            token.clear_embeddings()
+
+
+def init_output_file(base_path: str, file_name: str):
+    """
+    Creates a local file.
+    :param base_path: the path to the directory
+    :param file_name: the file name
+    :return: the created file
+    """
+    os.makedirs(base_path, exist_ok=True)
+
+    file = os.path.join(base_path, file_name)
+    open(file, "w", encoding='utf-8').close()
+    return file
 
 
 def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionary) -> List[List[int]]:
