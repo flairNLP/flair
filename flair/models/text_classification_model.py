@@ -1,13 +1,12 @@
 import warnings
-
-import torch.nn as nn
-import torch
-from flair.data import Dictionary, Sentence
-from flair.embeddings import TextEmbeddings, TextLSTMEmbedder
-
 from typing import List
 
-from flair.trainers.util import convert_labels_to_one_hot
+import torch
+import torch.nn as nn
+
+from flair.data import Dictionary, Sentence
+from flair.embeddings import TextEmbeddings, TextLSTMEmbedder
+from flair.training_utils import convert_labels_to_one_hot
 
 
 class TextClassifier(nn.Module):
@@ -106,7 +105,27 @@ class TextClassifier(nn.Module):
             model = model.cuda()
         return model
 
-    def obtain_labels_and_loss(self, sentences: List[Sentence]) -> (List[List[str]], float):
+    def predict(self, sentences: List[Sentence], mini_batch_size=32) -> List[Sentence]:
+        """
+        Predicts the class labels for the given sentences. The labels are directly added to the sentences.
+        :param sentences: list of sentences
+        :param mini_batch_size: mini batch size to use
+        :return: the list of sentences containing the labels
+        """
+        if type(sentences) is Sentence:
+            sentences = [sentences]
+
+        batches = [sentences[x:x + mini_batch_size] for x in range(0, len(sentences), mini_batch_size)]
+
+        for batch in batches:
+            batch_labels, _ = self.get_labels_and_loss(batch)
+
+            for (sentence, labels) in zip(batch, batch_labels):
+                sentence.labels = labels
+
+        return sentences
+
+    def get_labels_and_loss(self, sentences: List[Sentence]) -> (List[List[str]], float):
         """
         Predicts the labels of sentences and calculates the loss.
         :param sentences: list of sentences
@@ -126,38 +145,7 @@ class TextClassifier(nn.Module):
 
         return pred_labels, loss
 
-    def predict(self, sentences: List[Sentence], mini_batch_size=32) -> List[Sentence]:
-        """
-        Predicts the class labels for the given sentences. The labels are directly added to the sentences.
-        :param sentences: list of sentences
-        :param mini_batch_size: mini batch size to use
-        :return: the list of sentences containing the labels
-        """
-        if type(sentences) is Sentence:
-            sentences = [sentences]
-
-        batches = [sentences[x:x + mini_batch_size] for x in range(0, len(sentences), mini_batch_size)]
-
-        for batch in batches:
-            batch_labels = self._predict_labels(batch)
-
-            for (sentence, labels) in zip(batch, batch_labels):
-                sentence.labels = labels
-
-        return sentences
-
-    def _predict_labels(self, sentences: List[Sentence]) -> List[List[str]]:
-        label_scores = self.forward(sentences)
-
-        if torch.cuda.is_available():
-            label_scores = label_scores.cuda()
-
-        if self.multi_label:
-            return [self._get_multi_label(scores) for scores in label_scores]
-
-        return [self._get_single_label(scores) for scores in label_scores]
-
-    def _get_multi_label(self, label_scores):
+    def _get_multi_label(self, label_scores) -> List[str]:
         labels = []
 
         sigmoid = torch.nn.Sigmoid()
@@ -169,40 +157,28 @@ class TextClassifier(nn.Module):
 
         return labels
 
-    def _get_single_label(self, label_scores):
+    def _get_single_label(self, label_scores) -> List[str]:
         conf, idx = torch.max(label_scores[0], 0)
         label = self.label_dictionary.get_item_for_index(idx.item())
 
         return [label]
 
-    def calculate_loss(self, sentences: List[Sentence]):
-        label_scores = self.forward(sentences)
-
-        if torch.cuda.is_available():
-            label_scores = label_scores.cuda()
-
-        if self.multi_label:
-            return self._calculate_multi_label_loss(label_scores, sentences)
-
-        return self._calculate_single_label_loss(label_scores, sentences)
-
-    def _calculate_multi_label_loss(self, label_scores, batch):
+    def _calculate_multi_label_loss(self, label_scores, sentences: List[Sentence]) -> float:
         loss_function = nn.BCELoss()
         sigmoid = nn.Sigmoid()
-        return loss_function(sigmoid(label_scores), self._labels_to_one_hot(batch))
+        return loss_function(sigmoid(label_scores), self._labels_to_one_hot(sentences))
 
-    def _calculate_single_label_loss(self, label_scores, sentences):
+    def _calculate_single_label_loss(self, label_scores, sentences: List[Sentence]) -> float:
         loss_function = nn.CrossEntropyLoss()
         return loss_function(label_scores, self._labels_to_indices(sentences))
 
-    def _labels_to_one_hot(self, sentences):
+    def _labels_to_one_hot(self, sentences: List[Sentence]):
         label_list = [sentence.labels for sentence in sentences]
         one_hot = convert_labels_to_one_hot(label_list, self.label_dictionary)
         one_hot = [torch.LongTensor(l).unsqueeze(0) for l in one_hot]
         return torch.cat(one_hot, 0)
 
-    def _labels_to_indices(self, sentences):
-
+    def _labels_to_indices(self, sentences: List[Sentence]):
         indices = [
             torch.LongTensor([self.label_dictionary.get_idx_for_item(label) for label in sentence.labels])
             for sentence in sentences

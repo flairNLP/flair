@@ -1,15 +1,13 @@
+import random
 from collections import defaultdict
 from functools import reduce
 from typing import List
 
-import os
-import random
 import torch
 
 from flair.data import Sentence, TaggedCorpus, Dictionary
 from flair.models.text_classification_model import TextClassifier
-from flair.trainers.metric import Metric
-from flair.trainers.util import convert_labels_to_one_hot, calculate_overall_metric, init_output_file, clear_embeddings, \
+from flair.training_utils import convert_labels_to_one_hot, calculate_overall_metric, init_output_file, clear_embeddings, \
     calculate_class_metrics
 
 
@@ -73,7 +71,7 @@ class TextClassifierTrainer:
                 self.model.train()
 
                 for batch_no, batch in enumerate(batches):
-                    loss = self.model.calculate_loss(batch)
+                    _, loss = self.model.get_labels_and_loss(batch)
 
                     optimizer.zero_grad()
                     loss.backward()
@@ -131,8 +129,10 @@ class TextClassifierTrainer:
 
             self.model.save(base_path + "/final-model.pt")
 
-            self.model = TextClassifier.load_from_file(base_path + "/model.pt")
-            test_metrics, test_loss = self.evaluate(self.corpus.dev, mini_batch_size=mini_batch_size, eval_class_metrics=True)
+            if save_model:
+                self.model = TextClassifier.load_from_file(base_path + "/model.pt")
+            test_metrics, test_loss = self.evaluate(
+                self.corpus.test, mini_batch_size=mini_batch_size, eval_class_metrics=True)
             for metric in test_metrics.values():
                 metric.print()
 
@@ -161,7 +161,7 @@ class TextClassifierTrainer:
         y_true = []
 
         for batch in batches:
-            labels, loss = self.model.obtain_labels_and_loss(batch)
+            labels, loss = self.model.get_labels_and_loss(batch)
 
             eval_loss += loss
 

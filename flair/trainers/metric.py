@@ -1,10 +1,3 @@
-# coding: utf8
-import logging
-
-
-log = logging.getLogger(__name__)
-
-
 class Metric(object):
 
     def __init__(self, name):
