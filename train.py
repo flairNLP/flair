@@ -45,7 +45,7 @@ if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
-from flair.trainers.trainer import TagTrain
+from flair.trainers.tag_trainer import TagTrain
 
 trainer: TagTrain = TagTrain(tagger, corpus, test_mode=True)
 
