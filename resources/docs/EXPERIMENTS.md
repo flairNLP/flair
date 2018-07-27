@@ -35,8 +35,9 @@ Now, select 'ner' as the tag you wish to predict and init the embeddings you wis
 The full code to get a state-of-the-art model for English NER is as follows: 
 
 ```python
-from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
-from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
+from flair.data import TaggedCorpus
+from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
 from typing import List
 import torch
 
@@ -52,7 +53,7 @@ tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary.idx2item)
 
 # initialize embeddings
-embedding_types: List[TextEmbeddings] = [
+embedding_types: List[TokenEmbeddings] = [
 
     # GloVe embeddings
     WordEmbeddings('glove')
@@ -67,7 +68,7 @@ embedding_types: List[TextEmbeddings] = [
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # initialize sequence tagger
-from flair.tagging_model import SequenceTagger
+from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
@@ -79,9 +80,9 @@ if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
-from flair.trainer import TagTrain
+from flair.trainers import SequenceTaggerTrainer
 
-trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
 trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
@@ -108,8 +109,9 @@ FastText embeddings (they work better on this dataset). The full code then is as
 
 
 ```python
-from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
-from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
+from flair.data import TaggedCorpus
+from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
 from typing import List
 import torch
 
@@ -125,7 +127,7 @@ tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary.idx2item)
 
 # initialize embeddings
-embedding_types: List[TextEmbeddings] = [
+embedding_types: List[TokenEmbeddings] = [
 
     WordEmbeddings('ft-crawl')
     ,
@@ -137,8 +139,7 @@ embedding_types: List[TextEmbeddings] = [
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # initialize sequence tagger
-from flair.tagging_model import SequenceTagger
-
+from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
@@ -150,9 +151,9 @@ if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
-from flair.trainer import TagTrain
+from flair.trainers import SequenceTaggerTrainer
 
-trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
 trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
@@ -176,8 +177,9 @@ Once you have the data, reproduce our experiments exactly like for CoNLL-03, jus
 FastText word embeddings and German contextual string embeddings. The full code then is as follows: 
 
 ```python
-from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
-from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
+from flair.data import TaggedCorpus
+from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
 from typing import List
 import torch
 
@@ -193,7 +195,7 @@ tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary.idx2item)
 
 # initialize embeddings
-embedding_types: List[TextEmbeddings] = [
+embedding_types: List[TokenEmbeddings] = [
 
     WordEmbeddings('ft-german')
     ,
@@ -205,7 +207,7 @@ embedding_types: List[TextEmbeddings] = [
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # initialize sequence tagger
-from flair.tagging_model import SequenceTagger
+from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
@@ -217,9 +219,9 @@ if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
-from flair.trainer import TagTrain
+from flair.trainers import SequenceTaggerTrainer
 
-trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
 trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
@@ -242,8 +244,9 @@ get the dataset and place train, test and dev data in `/resources/tasks/germeval
 Once you have the data, reproduce our experiments exactly like for the German CoNLL-03: 
 
 ```python
-from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
-from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
+from flair.data import TaggedCorpus
+from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
 from typing import List
 import torch
 
@@ -259,7 +262,7 @@ tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary.idx2item)
 
 # initialize embeddings
-embedding_types: List[TextEmbeddings] = [
+embedding_types: List[TokenEmbeddings] = [
 
     WordEmbeddings('ft-german')
     ,
@@ -271,7 +274,7 @@ embedding_types: List[TextEmbeddings] = [
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # initialize sequence tagger
-from flair.tagging_model import SequenceTagger
+from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
@@ -283,9 +286,9 @@ if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
-from flair.trainer import TagTrain
+from flair.trainers import SequenceTaggerTrainer
 
-trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
 trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
@@ -311,8 +314,9 @@ so the algorithm knows that POS tags and not NER are to be predicted from this d
 
 
 ```python
-from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
-from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
+from flair.data import TaggedCorpus
+from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
 from typing import List
 import torch
 
@@ -328,7 +332,7 @@ tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary.idx2item)
 
 # initialize embeddings
-embedding_types: List[TextEmbeddings] = [
+embedding_types: List[TokenEmbeddings] = [
 
     WordEmbeddings('extvec')
     ,
@@ -340,7 +344,7 @@ embedding_types: List[TextEmbeddings] = [
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # initialize sequence tagger
-from flair.tagging_model import SequenceTagger
+from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
@@ -352,9 +356,9 @@ if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
-from flair.trainer import TagTrain
+from flair.trainers import SequenceTaggerTrainer
 
-trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
 trainer.train('resources/taggers/example-pos', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)
@@ -378,8 +382,9 @@ Run the code with extvec embeddings and our proposed contextual string embedding
 so the algorithm knows that chunking tags and not NER are to be predicted from this data. 
 
 ```python
-from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
-from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
+from flair.data import TaggedCorpus
+from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
 from typing import List
 import torch
 
@@ -395,7 +400,7 @@ tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary.idx2item)
 
 # initialize embeddings
-embedding_types: List[TextEmbeddings] = [
+embedding_types: List[TokenEmbeddings] = [
 
     WordEmbeddings('extvec')
     ,
@@ -407,7 +412,7 @@ embedding_types: List[TextEmbeddings] = [
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # initialize sequence tagger
-from flair.tagging_model import SequenceTagger
+from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
@@ -419,9 +424,9 @@ if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
-from flair.trainer import TagTrain
+from flair.trainers import SequenceTaggerTrainer
 
-trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
 trainer.train('resources/taggers/example-pos', mini_batch_size=32, max_epochs=150, save_model=True,
               train_with_dev=True, anneal_mode=True)

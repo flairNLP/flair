@@ -9,7 +9,7 @@ This model was trained over the English CoNLL-03 task and can recognize 4 differ
 types.
 
 ```python
-from flair.tagging_model import SequenceTagger
+from flair.models import SequenceTagger
 
 tagger = SequenceTagger.load('ner')
 ```

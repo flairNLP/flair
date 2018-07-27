@@ -1,14 +1,18 @@
-from .data import Sentence, Token, TaggedCorpus, Dictionary
-from .tagging_model import SequenceTagger
-
-from typing import List, Dict, Tuple
-
 from subprocess import run, PIPE
+from typing import List
 
-import torch, random, datetime, re, sys, os, shutil
+import datetime
+import os
+import random
+import re
+import sys
+import torch
+
+from flair.models.sequence_tagger_model import SequenceTagger
+from flair.data import Sentence, Token, TaggedCorpus
 
 
-class TagTrain:
+class SequenceTaggerTrainer:
     def __init__(self, model: SequenceTagger, corpus: TaggedCorpus, test_mode: bool = False) -> None:
         self.model: SequenceTagger = model
         self.corpus: TaggedCorpus = corpus

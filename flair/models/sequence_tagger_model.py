@@ -3,12 +3,11 @@ import warnings
 import torch.autograd as autograd
 import torch.nn as nn
 import torch
-import os
 import numpy as np
 
+import flair.embeddings
+from flair.data import Dictionary, Sentence, Token
 from flair.file_utils import cached_path
-from .data import Dictionary, Sentence, Token
-from .embeddings import TextEmbeddings
 
 from typing import List, Tuple, Union
 
@@ -34,9 +33,10 @@ def log_sum_exp(vec):
 
 
 class SequenceTagger(nn.Module):
+
     def __init__(self,
                  hidden_size: int,
-                 embeddings,
+                 embeddings: flair.embeddings.TokenEmbeddings,
                  tag_dictionary: Dictionary,
                  tag_type: str,
                  use_crf: bool = True,
