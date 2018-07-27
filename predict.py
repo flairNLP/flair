@@ -1,7 +1,8 @@
 from flair.data import Sentence
-from flair.models.tagging_model import SequenceTagger
+from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger.load('ner')
+# tagger: SequenceTagger = SequenceTagger.load_from_file('resources/taggers/example-ner/model.pt')
 
 sentence: Sentence = Sentence('George Washington went to Washington .')
 tagger.predict(sentence)
