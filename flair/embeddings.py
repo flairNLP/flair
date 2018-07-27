@@ -566,7 +566,14 @@ class TextLSTMEmbedder(TextEmbeddings):
 
     def __init__(self, word_embeddings: List[TextEmbeddings], hidden_states=128, num_layers=1,
                  reproject_words: bool = True, bidirectional: bool = True):
-        """The constructor takes a list of embeddings to be combined."""
+        """The constructor takes a list of embeddings to be combined.
+        :param word_embeddings: a list of word embeddings
+        :param hidden_states: the number of hidden states in the lstm
+        :param num_layers: the number of layers for the lstm
+        :param reproject_words: boolean value, indicating whether to reproject the word embedding in a separate linear
+        layer before putting them into the lstm or not
+        :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
+        """
         super().__init__()
 
         # self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=word_embeddings)
