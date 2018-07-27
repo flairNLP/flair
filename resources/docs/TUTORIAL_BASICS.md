@@ -111,7 +111,7 @@ Simply point the `NLPTaskDataFetcher` to the file containing the parsed sentence
 list of `Sentence`
 
 ```python
-import NLPTaskDataFetcher
+from flair.data_fetcher import NLPTaskDataFetcher
 
 # use your own data path
 data_folder = 'path/to/conll/formatted/data'
@@ -142,7 +142,7 @@ To read a file containing text classification data simply point the `NLPTaskData
 It will read the sentences into a list of `Sentence`
 
 ```python
-import NLPTaskDataFetcher
+from flair.data_fetcher import NLPTaskDataFetcher
 
 # use your own data path
 data_folder = 'path/to/text-classification/formatted/data'

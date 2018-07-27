@@ -33,7 +33,7 @@ So if you want to create a text embedding using GloVe embeddings together with C
 use the following code:
 
 ```python
-from flair.embeddings import WordEmbeddings, CharLMEmbeddings, TextMeanEmbedder
+from flair.embeddings import WordEmbeddings, CharLMEmbeddings, DocumentMeanEmbeddings
 
 # initialize the word embeddings
 glove_embedding = WordEmbeddings('glove')
@@ -41,7 +41,7 @@ charlm_embedding_forward = CharLMEmbeddings('news-forward')
 charlm_embedding_backward = CharLMEmbeddings('news-backward')
 
 # initialize the text embeddings
-text_embeddings = TextMeanEmbedder([glove_embedding, charlm_embedding_backward, charlm_embedding_forward])
+text_embeddings = DocumentMeanEmbeddings([glove_embedding, charlm_embedding_backward, charlm_embedding_forward])
 ```
 
 Now, create an example sentence and call the embedding's `embed()` method. 
@@ -82,11 +82,11 @@ If you want, you can also specify some other parameters:
 So if you want to create a text embedding using only GloVe embeddings, use the following code:
 
 ```python
-from flair.embeddings import WordEmbeddings, TextLSTMEmbedder
+from flair.embeddings import WordEmbeddings, DocumentLSTMEmbeddings
 
 glove_embedding = WordEmbeddings('glove')
 
-text_embeddings = TextLSTMEmbedder([glove_embedding])
+text_embeddings = DocumentLSTMEmbeddings([glove_embedding])
 ```
 
 Now, create an example sentence and call the embedding's `embed()` method. 
