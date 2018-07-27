@@ -85,8 +85,9 @@ Here is example code for a small NER model trained over CoNLL-03 data, using sim
 In this example, we downsample the data to 10% of the original data. 
 
 ```python
-from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
-from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
+from flair.data import TaggedCorpus
+from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
 from typing import List
 import torch
 
@@ -102,7 +103,7 @@ tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary.idx2item)
 
 # initialize embeddings
-embedding_types: List[TextEmbeddings] = [
+embedding_types: List[TokenEmbeddings] = [
 
     WordEmbeddings('glove')
 
@@ -119,7 +120,7 @@ embedding_types: List[TextEmbeddings] = [
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # initialize sequence tagger
-from flair.tagging_model import SequenceTagger
+from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
@@ -130,9 +131,9 @@ if torch.cuda.is_available():
     tagger = tagger.cuda()
 
 # initialize trainer
-from flair.trainer import TagTrain
+from flair.trainers import SequenceTaggerTrainer
 
-trainer: TagTrain = TagTrain(tagger, corpus, test_mode=True)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
 
 trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=False,
               train_with_dev=False, anneal_mode=False)

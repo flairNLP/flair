@@ -459,10 +459,6 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
         self.word_reprojection_map = torch.nn.Linear(self.__embedding_length, self.__embedding_length)
 
     @property
-    def embedding_type(self):
-        return 'sentence-level'
-
-    @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
@@ -543,10 +539,6 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         self.rnn = torch.nn.LSTM(self.length_of_all_word_embeddings, hidden_states, num_layers=num_layers,
                                  bidirectional=self.bidirectional)
         self.dropout = torch.nn.Dropout(0.5)
-
-    @property
-    def embedding_type(self):
-        return 'sentence-level'
 
     @property
     def embedding_length(self) -> int:
@@ -639,10 +631,6 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
     @property
     def embedding_length(self) -> int:
         return self._embedding_length
-
-    @property
-    def embedding_type(self):
-        return 'sentence-level'
 
     def embed(self, sentences: List[Sentence]):
 
