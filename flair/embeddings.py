@@ -9,7 +9,6 @@ import numpy as np
 import torch
 
 import flair
-# from flair.models.language_model import LanguageModel
 from .data import Dictionary, Token, Sentence, TaggedCorpus
 from .file_utils import cached_path
 
@@ -88,7 +87,7 @@ class DocumentEmbeddings(Embeddings):
 class StackedEmbeddings(TokenEmbeddings):
     """A stack of embeddings, used if you need to combine several different embedding types."""
 
-    def __init__(self, embeddings: List[Embeddings], detach: bool = True):
+    def __init__(self, embeddings: List[TokenEmbeddings], detach: bool = True):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
