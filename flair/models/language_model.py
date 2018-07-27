@@ -6,12 +6,12 @@ from typing import Dict, List
 from flair.data import Dictionary
 
 
-class RNNModel(nn.Module):
+class LanguageModel(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
 
     def __init__(self, rnn_type, ntoken, ninp, nhid, nout, nlayers, dropout=0.5):
 
-        super(RNNModel, self).__init__()
+        super(LanguageModel, self).__init__()
 
         self.dictionary = Dictionary()
         self.is_forward_lm: bool = True
@@ -110,8 +110,8 @@ class RNNModel(nn.Module):
     @classmethod
     def load_language_model(cls, model_file):
         state = torch.load(model_file)
-        model = RNNModel(state['rnn_type'], state['ntoken'], state['ninp'], state['nhid'], state['nout'],
-                         state['nlayers'], state['dropout'])
+        model = LanguageModel(state['rnn_type'], state['ntoken'], state['ninp'], state['nhid'], state['nout'],
+                              state['nlayers'], state['dropout'])
         model.load_state_dict(state['state_dict'])
         model.is_forward_lm = state['is_forward_lm']
         model.dictionary = state['char_dictionary_forward']

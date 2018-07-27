@@ -4,8 +4,8 @@ from typing import List
 import torch
 import torch.nn as nn
 
+import flair.embeddings
 from flair.data import Dictionary, Sentence
-from flair.embeddings import TextEmbeddings, TextLSTMEmbedder
 from flair.training_utils import convert_labels_to_one_hot
 
 
@@ -18,7 +18,7 @@ class TextClassifier(nn.Module):
     """
 
     def __init__(self,
-                 word_embeddings: List[TextEmbeddings],
+                 document_embeddings: flair.embeddings.DocumentEmbeddings,
                  hidden_states: int,
                  num_layers: int,
                  reproject_words: bool,
@@ -28,17 +28,16 @@ class TextClassifier(nn.Module):
 
         super(TextClassifier, self).__init__()
 
-        self.word_embeddings = word_embeddings
         self.hidden_states = hidden_states
         self.num_layers = num_layers
         self.reproject_words = reproject_words
         self.bidirectional = bidirectional
-        self.label_dictionary = label_dictionary
+        self.label_dictionary: Dictionary = label_dictionary
         self.multi_label = multi_label
 
-        self.text_embeddings: TextLSTMEmbedder = TextLSTMEmbedder(word_embeddings, hidden_states, num_layers, reproject_words, bidirectional)
+        self.document_embeddings: flair.embeddings.DocumentLSTMEmbeddings = document_embeddings
 
-        self.decoder = nn.Linear(self.text_embeddings.embedding_length, len(self.label_dictionary))
+        self.decoder = nn.Linear(self.document_embeddings.embedding_length, len(self.label_dictionary))
 
         self._init_weights()
 
@@ -46,7 +45,7 @@ class TextClassifier(nn.Module):
         nn.init.xavier_uniform_(self.decoder.weight)
 
     def forward(self, sentences):
-        self.text_embeddings.embed(sentences)
+        self.document_embeddings.embed(sentences)
 
         text_embedding_list = [sentence.get_embedding().unsqueeze(0) for sentence in sentences]
         text_embedding_tensor = torch.cat(text_embedding_list, 0)
@@ -65,7 +64,7 @@ class TextClassifier(nn.Module):
         """
         model_state = {
             'state_dict': self.state_dict(),
-            'word_embeddings': self.word_embeddings,
+            'document_embeddings': self.document_embeddings,
             'hidden_states': self.hidden_states,
             'num_layers': self.num_layers,
             'reproject_words': self.reproject_words,
@@ -90,7 +89,7 @@ class TextClassifier(nn.Module):
         warnings.filterwarnings("default")
 
         model = TextClassifier(
-            word_embeddings=state['word_embeddings'],
+            document_embeddings=state['document_embeddings'],
             hidden_states=state['hidden_states'],
             num_layers=state['num_layers'],
             reproject_words=state['reproject_words'],

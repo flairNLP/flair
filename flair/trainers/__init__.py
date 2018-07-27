@@ -1,0 +1,2 @@
+from .sequence_tagger_trainer import SequenceTaggerTrainer
+from .text_classification_trainer import TextClassifierTrainer
