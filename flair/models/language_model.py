@@ -3,7 +3,7 @@ import torch
 import math
 from torch.autograd import Variable
 from typing import Dict, List
-from .data import Dictionary
+from flair.data import Dictionary
 
 
 class RNNModel(nn.Module):

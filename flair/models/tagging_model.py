@@ -7,8 +7,8 @@ import os
 import numpy as np
 
 from flair.file_utils import cached_path
-from .data import Dictionary, Sentence, Token
-from .embeddings import TextEmbeddings
+from flair.data import Dictionary, Sentence, Token
+from flair.embeddings import TextEmbeddings
 
 from typing import List, Tuple, Union
 
