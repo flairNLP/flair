@@ -20,10 +20,10 @@ print(tag_dictionary.idx2item)
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
 
-    WordEmbeddings('glove'),
+    # WordEmbeddings('glove'),
 
     # comment in this line to use character embeddings
-    # CharacterEmbeddings(),
+    CharacterEmbeddings(),
 
     # comment in these lines to use contextual string embeddings
     #
@@ -50,5 +50,5 @@ from flair.trainers.sequence_tagger_trainer import SequenceTaggerTrainer
 
 trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
 
-trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
+trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=20, save_model=False,
               train_with_dev=False, anneal_mode=False)

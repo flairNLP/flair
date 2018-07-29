@@ -291,7 +291,6 @@ class SequenceTagger(nn.Module):
             for i in range(len(feats)):
                 sentence_feats = feats[i]
                 sentence_tags = tags[i]
-
                 forward_score = self._forward_alg(sentence_feats)
                 # calculate the score of the ground_truth, in CRF
                 gold_score = self._score_sentence(sentence_feats, sentence_tags)

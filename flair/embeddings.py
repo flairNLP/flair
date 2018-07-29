@@ -8,7 +8,6 @@ import gensim
 import numpy as np
 import torch
 
-import flair
 from .data import Dictionary, Token, Sentence, TaggedCorpus
 from .file_utils import cached_path
 
@@ -329,37 +328,38 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         # news-english-forward
         if model.lower() == 'news-forward':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward.pt'
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # news-english-backward
         if model.lower() == 'news-backward':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward.pt'
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-forward
         if model.lower() == 'mix-forward':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-forward.pt'
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-forward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-backward
         if model.lower() == 'mix-backward':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-backward.pt'
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-forward
         if model.lower() == 'german-forward':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-forward.pt'
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-forward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-backward
         if model.lower() == 'german-backward':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-backward.pt'
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         self.name = model
         self.static_embeddings = detach
 
+        import flair.models
         self.lm: flair.models.LanguageModel = flair.models.LanguageModel.load_language_model(model)
         if torch.cuda.is_available():
             self.lm = self.lm.cuda()

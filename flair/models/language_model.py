@@ -9,40 +9,45 @@ from flair.data import Dictionary
 class LanguageModel(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
 
-    def __init__(self, rnn_type, ntoken, ninp, nhid, nout, nlayers, dropout=0.5):
+    def __init__(self,
+                 dictionary: Dictionary,
+                 is_forward_lm: bool,
+                 hidden_size: int,
+                 nlayers: int,
+                 embedding_size: int = 100,
+                 nout=None,
+                 dropout=0.5):
 
         super(LanguageModel, self).__init__()
 
-        self.dictionary = Dictionary()
-        self.is_forward_lm: bool = True
+        self.dictionary = dictionary
+        self.is_forward_lm: bool = is_forward_lm
 
         self.dropout = dropout
+        self.hidden_size = hidden_size
+        self.embedding_size = embedding_size
+        self.nlayers = nlayers
 
         self.drop = nn.Dropout(dropout)
-        self.encoder = nn.Embedding(ntoken, ninp)
+        self.encoder = nn.Embedding(len(dictionary), embedding_size)
 
         if nlayers == 1:
-            self.rnn = nn.LSTM(ninp, nhid, nlayers)
+            self.rnn = nn.LSTM(embedding_size, hidden_size, nlayers)
         else:
-            self.rnn = nn.LSTM(ninp, nhid, nlayers, dropout=dropout)
-
-        self.decoder = nn.Linear(nhid, ntoken)
-
-        self.init_weights()
-
-        self.rnn_type = rnn_type
-        self.nhid = nhid
-        self.ninp = ninp
-        self.nlayers = nlayers
+            self.rnn = nn.LSTM(embedding_size, hidden_size, nlayers, dropout=dropout)
 
         self.hidden = None
 
+        self.nout = nout
         if nout is not None:
-            self.proj = nn.Linear(nhid, nout)
+            self.proj = nn.Linear(hidden_size, nout)
             self.initialize(self.proj.weight)
-            self.decoder = nn.Linear(nout, ntoken)
+            self.decoder = nn.Linear(nout, len(dictionary))
         else:
             self.proj = None
+            self.decoder = nn.Linear(hidden_size, len(dictionary))
+
+        self.init_weights()
 
     def init_weights(self):
         initrange = 0.1
@@ -70,11 +75,8 @@ class LanguageModel(nn.Module):
 
     def init_hidden(self, bsz):
         weight = next(self.parameters()).data
-        if self.rnn_type == 'LSTM':
-            return (Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()),
-                    Variable(weight.new(self.nlayers, bsz, self.nhid).zero_()))
-        else:
-            return Variable(weight.new(self.nlayers, bsz, self.nhid).zero_())
+        return (Variable(weight.new(self.nlayers, bsz, self.hidden_size).zero_()),
+                Variable(weight.new(self.nlayers, bsz, self.hidden_size).zero_()))
 
     def get_representation(self, strings: List[str], detach_from_lm=True):
 
@@ -110,24 +112,26 @@ class LanguageModel(nn.Module):
     @classmethod
     def load_language_model(cls, model_file):
         state = torch.load(model_file)
-        model = LanguageModel(state['rnn_type'], state['ntoken'], state['ninp'], state['nhid'], state['nout'],
-                              state['nlayers'], state['dropout'])
+        model = LanguageModel(state['dictionary'],
+                              state['is_forward_lm'],
+                              state['hidden_size'],
+                              state['nlayers'],
+                              state['embedding_size'],
+                              state['nout'],
+                              state['dropout'])
         model.load_state_dict(state['state_dict'])
-        model.is_forward_lm = state['is_forward_lm']
-        model.dictionary = state['char_dictionary_forward']
+        model.eval()
         return model
 
     def save(self, file):
         model_state = {
             'state_dict': self.state_dict(),
+            'dictionary': self.dictionary,
             'is_forward_lm': self.is_forward_lm,
-            'char_dictionary_forward': self.dictionary,
-            'rnn_type': self.rnn_type,
-            'ntoken': len(self.dictionary),
-            'ninp': self.ninp,
-            'nhid': self.nhid,
-            'nout': self.proj,
+            'hidden_size': self.hidden_size,
             'nlayers': self.nlayers,
+            'embedding_size': self.embedding_size,
+            'nout': self.nout,
             'dropout': self.dropout
         }
         torch.save(model_state, file, pickle_protocol=4)
