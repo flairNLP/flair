@@ -13,6 +13,7 @@ from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
 
 
+
 class Dictionary:
     """
     This class holds a dictionary that maps strings to IDs, used to generate one-hot encodings of strings.
@@ -62,6 +63,37 @@ class Dictionary:
 
     def get_item_for_index(self, idx):
         return self.idx2item[idx].decode('UTF-8')
+
+    def save(self, savefile):
+        import pickle
+        with open(savefile, 'wb') as f:
+            mappings = {
+                'idx2item': self.idx2item,
+                'item2idx': self.item2idx
+            }
+            pickle.dump(mappings, f)
+
+    @classmethod
+    def load_from_file(cls, filename: str):
+        import pickle
+        dictionary: Dictionary = Dictionary()
+        with open(filename, 'rb') as f:
+            mappings = pickle.load(f, encoding='latin1')
+            idx2item = mappings['idx2item']
+            item2idx = mappings['item2idx']
+            dictionary.item2idx = item2idx
+            dictionary.idx2item = idx2item
+        return dictionary
+
+    @classmethod
+    def load(cls, name: str):
+        from flair.file_utils import cached_path
+        if name == 'chars' or name == 'common-chars':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters'
+            char_dict = cached_path(base_path, cache_dir='datasets')
+            return Dictionary.load_from_file(char_dict)
+
+        return Dictionary.load_from_file(name)
 
 
 class Token:
@@ -399,145 +431,6 @@ class TaggedCorpus:
 
     def __str__(self) -> str:
         return 'TaggedCorpus: %d train + %d dev + %d test sentences' % (len(self.train), len(self.dev), len(self.test))
-
-
-class CorpusLM(object):
-    def __init__(self, path, dictionary: Dictionary, forward: bool = True, character_level: bool = True):
-        self.dictionary: Dictionary = dictionary
-        self.train_path = os.path.join(path, 'train')
-        self.train = None
-        self.forward = forward
-        self.split_on_char = character_level
-
-        self.train_files = sorted([f for f in listdir(self.train_path) if isfile(join(self.train_path, f))])
-        self.current_train_file = None
-
-        if forward:
-            self.valid = self.charsplit(os.path.join(path, 'valid.txt'), expand_vocab=False, forward=True,
-                                        split_on_char=self.split_on_char)
-            self.test = self.charsplit(os.path.join(path, 'test.txt'), expand_vocab=False, forward=True,
-                                       split_on_char=self.split_on_char)
-        else:
-            self.valid = self.charsplit(os.path.join(path, 'valid.txt'), expand_vocab=False, forward=False,
-                                        split_on_char=self.split_on_char)
-            self.test = self.charsplit(os.path.join(path, 'test.txt'), expand_vocab=False, forward=False,
-                                       split_on_char=self.split_on_char)
-
-    def get_next_train_slice(self) -> str:
-
-        if self.current_train_file == None:
-            self.current_train_file = self.train_files[0]
-
-        elif len(self.train_files) != 1:
-
-            index = self.train_files.index(self.current_train_file) + 1
-            if index > len(self.train_files): index = 0
-
-            self.current_train_file = self.train_files[index]
-
-            self.train = self.charsplit(os.path.join(self.train_path, self.current_train_file), expand_vocab=False,
-                                        forward=self.forward, split_on_char=self.split_on_char)
-
-        return self.current_train_file
-
-    def get_random_train_slice(self) -> str:
-        train_files = [f for f in listdir(self.train_path) if isfile(join(self.train_path, f))]
-        current_train_file = random.choice(train_files)
-        self.train = self.charsplit(os.path.join(self.train_path, current_train_file), expand_vocab=False,
-                                    forward=self.forward, split_on_char=self.split_on_char)
-        return current_train_file
-
-    def charsplit(self, path: str, expand_vocab=False, forward=True, split_on_char=True) -> torch.LongTensor:
-
-        """Tokenizes a text file on characted basis."""
-        assert os.path.exists(path)
-
-        #
-        with open(path, 'r', encoding="utf-8") as f:
-            tokens = 0
-            for line in f:
-
-                if split_on_char:
-                    chars = list(line)
-                else:
-                    chars = line.split()
-
-                # print(chars)
-                tokens += len(chars)
-
-                # Add chars to the dictionary
-                if expand_vocab:
-                    for char in chars:
-                        self.dictionary.add_item(char)
-
-        if forward:
-            # charsplit file content
-            with open(path, 'r', encoding="utf-8") as f:
-                ids = torch.LongTensor(tokens)
-                token = 0
-                for line in f:
-                    line = self.random_casechange(line)
-
-                    if split_on_char:
-                        chars = list(line)
-                    else:
-                        chars = line.split()
-
-                    for char in chars:
-                        if token >= tokens: break
-                        ids[token] = self.dictionary.get_idx_for_item(char)
-                        token += 1
-        else:
-            # charsplit file content
-            with open(path, 'r', encoding="utf-8") as f:
-                ids = torch.LongTensor(tokens)
-                token = tokens - 1
-                for line in f:
-                    line = self.random_casechange(line)
-
-                    if split_on_char:
-                        chars = list(line)
-                    else:
-                        chars = line.split()
-
-                    for char in chars:
-                        if token >= tokens: break
-                        ids[token] = self.dictionary.get_idx_for_item(char)
-                        token -= 1
-
-        return ids
-
-    def random_casechange(self, line: str) -> str:
-        no = randint(0, 99)
-        if no is 0:
-            line = line.lower()
-        if no is 1:
-            line = line.upper()
-        return line
-
-    def tokenize(self, path):
-        """Tokenizes a text file."""
-        assert os.path.exists(path)
-        # Add words to the dictionary
-        with open(path, 'r') as f:
-            tokens = 0
-            for line in f:
-                words = line.split() + ['<eos>']
-                tokens += len(words)
-                for word in words:
-                    self.dictionary.add_word(word)
-
-        # Tokenize file content
-        with open(path, 'r') as f:
-            ids = torch.LongTensor(tokens)
-            token = 0
-            for line in f:
-                words = line.split() + ['<eos>']
-                for word in words:
-                    ids[token] = self.dictionary.word2idx[word]
-                    token += 1
-
-        return ids
 
 
 def iob2(tags):
