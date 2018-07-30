@@ -6,7 +6,7 @@ import torch.nn as nn
 
 import flair.embeddings
 from flair.data import Dictionary, Sentence
-from flair.training_utils import convert_labels_to_one_hot
+from flair.training_utils import convert_labels_to_one_hot, clear_embeddings
 
 
 class TextClassifier(nn.Module):
@@ -18,7 +18,7 @@ class TextClassifier(nn.Module):
     """
 
     def __init__(self,
-                 document_embeddings: flair.embeddings.DocumentEmbeddings,
+                 token_embeddings: List[flair.embeddings.TokenEmbeddings],
                  hidden_states: int,
                  num_layers: int,
                  reproject_words: bool,
@@ -35,13 +35,13 @@ class TextClassifier(nn.Module):
         self.label_dictionary: Dictionary = label_dictionary
         self.multi_label = multi_label
 
-        self.document_embeddings: flair.embeddings.DocumentLSTMEmbeddings = document_embeddings
+        self.document_embeddings: flair.embeddings.DocumentLSTMEmbeddings = flair.embeddings.DocumentLSTMEmbeddings(
+            token_embeddings, hidden_states, num_layers, reproject_words, bidirectional)
 
         self.decoder = nn.Linear(self.document_embeddings.embedding_length, len(self.label_dictionary))
 
         self._init_weights()
 
-        # auto-spawn on GPU if available
         if torch.cuda.is_available():
             self.cuda()
 
@@ -93,7 +93,7 @@ class TextClassifier(nn.Module):
         warnings.filterwarnings("default")
 
         model = TextClassifier(
-            document_embeddings=state['document_embeddings'],
+            token_embeddings=state['document_embeddings'],
             hidden_states=state['hidden_states'],
             num_layers=state['num_layers'],
             reproject_words=state['reproject_words'],
@@ -108,7 +108,7 @@ class TextClassifier(nn.Module):
             model = model.cuda()
         return model
 
-    def predict(self, sentences: List[Sentence], mini_batch_size=32) -> List[Sentence]:
+    def predict(self, sentences: List[Sentence], mini_batch_size: int = 32, embeddings_in_memory: bool = True) -> List[Sentence]:
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
         :param sentences: list of sentences
@@ -125,6 +125,9 @@ class TextClassifier(nn.Module):
 
             for (sentence, labels) in zip(batch, batch_labels):
                 sentence.labels = labels
+
+            if not embeddings_in_memory:
+                clear_embeddings(batch)
 
         return sentences
 
@@ -153,7 +156,7 @@ class TextClassifier(nn.Module):
 
         sigmoid = torch.nn.Sigmoid()
 
-        results = list(map(lambda x: sigmoid(x), label_scores[0]))
+        results = list(map(lambda x: sigmoid(x), label_scores))
         for idx, conf in enumerate(results):
             label = self.label_dictionary.get_item_for_index(idx)
             labels.append(label)
@@ -178,8 +181,11 @@ class TextClassifier(nn.Module):
     def _labels_to_one_hot(self, sentences: List[Sentence]):
         label_list = [sentence.labels for sentence in sentences]
         one_hot = convert_labels_to_one_hot(label_list, self.label_dictionary)
-        one_hot = [torch.LongTensor(l).unsqueeze(0) for l in one_hot]
-        return torch.cat(one_hot, 0)
+        one_hot = [torch.FloatTensor(l).unsqueeze(0) for l in one_hot]
+        one_hot = torch.cat(one_hot, 0)
+        if torch.cuda.is_available():
+            one_hot = one_hot.cuda()
+        return one_hot
 
     def _labels_to_indices(self, sentences: List[Sentence]):
         indices = [

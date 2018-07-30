@@ -85,7 +85,8 @@ class TextClassifierTrainer:
                         clear_embeddings(batch)
 
                     if batch_no % modulo == 0:
-                        print("epoch {0} - iter {1}/{2} - loss {3:.8f}".format(epoch + 1, batch_no, len(batches), current_loss / seen_sentences))
+                        print("epoch {0} - iter {1}/{2} - loss {3:.8f}".format(epoch + 1, batch_no, len(batches),
+                                                                               current_loss / seen_sentences))
 
                         iteration = epoch * len(batches) + batch_no
                         self._extract_weigths(iteration, weights_index, weights_txt)
@@ -95,7 +96,8 @@ class TextClassifierTrainer:
                 # IMPORTANT: Switch to eval mode
                 self.model.eval()
 
-                train_metrics, train_loss = self.evaluate(self.corpus.train, mini_batch_size=mini_batch_size)
+                train_metrics, train_loss = self.evaluate(self.corpus.train, mini_batch_size=mini_batch_size,
+                                                          embeddings_in_memory=embeddings_in_memory)
                 train_f_score = train_metrics['OVERALL'].f_score()
                 train_acc = train_metrics['OVERALL'].accuracy()
                 print("{0:<7} epoch {1} - loss {2:.8f} - f-score {3:.4f} - acc {4:.4f}".format(
@@ -103,7 +105,8 @@ class TextClassifierTrainer:
 
                 dev_f_score = dev_acc = dev_loss = 0
                 if not train_with_dev:
-                    dev_metrics, dev_loss = self.evaluate(self.corpus.dev, mini_batch_size=mini_batch_size)
+                    dev_metrics, dev_loss = self.evaluate(self.corpus.dev, mini_batch_size=mini_batch_size,
+                                                          embeddings_in_memory=embeddings_in_memory)
                     dev_f_score = dev_metrics['OVERALL'].f_score()
                     dev_acc = dev_metrics['OVERALL'].accuracy()
                     print("{0:<7} epoch {1} - loss {2:.8f} - f-score {3:.4f} - acc {4:.4f}".format(
@@ -132,7 +135,8 @@ class TextClassifierTrainer:
             if save_model:
                 self.model = TextClassifier.load_from_file(base_path + "/model.pt")
             test_metrics, test_loss = self.evaluate(
-                self.corpus.test, mini_batch_size=mini_batch_size, eval_class_metrics=True)
+                self.corpus.test, mini_batch_size=mini_batch_size, eval_class_metrics=True,
+                embeddings_in_memory=embeddings_in_memory)
             for metric in test_metrics.values():
                 metric.print()
 
@@ -145,7 +149,8 @@ class TextClassifierTrainer:
                 model_save_file.close()
             print('done')
 
-    def evaluate(self, sentences: List[Sentence], eval_class_metrics: bool = False, mini_batch_size: int = 32) -> (dict, float):
+    def evaluate(self, sentences: List[Sentence], eval_class_metrics: bool = False, mini_batch_size: int = 32,
+                 embeddings_in_memory: bool = True) -> (dict, float):
         """
         Evaluates the model with the given list of sentences.
         :param sentences: the list of sentences
@@ -167,6 +172,9 @@ class TextClassifierTrainer:
 
             y_true.extend([sentence.labels for sentence in batch])
             y_pred.extend(labels)
+
+            if not embeddings_in_memory:
+                clear_embeddings(batch)
 
         y_pred = convert_labels_to_one_hot(y_pred, self.label_dict)
         y_true = convert_labels_to_one_hot(y_true, self.label_dict)

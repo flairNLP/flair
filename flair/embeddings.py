@@ -297,7 +297,7 @@ class CharacterEmbeddings(TokenEmbeddings):
                 character_embeddings[d[i]] = chars_embeds_temp[i]
 
             for token_number, token in enumerate(sentence.tokens):
-                token.set_embedding(self.name, character_embeddings[token_number].cpu())
+                token.set_embedding(self.name, character_embeddings[token_number])
 
 
 class CharLMEmbeddings(TokenEmbeddings):
@@ -420,13 +420,14 @@ class CharLMEmbeddings(TokenEmbeddings):
                 offset_backward -= 1
                 offset_backward -= len(token.text)
 
-                token.set_embedding(self.name, embedding.cpu())
+                token.set_embedding(self.name, embedding)
                 self.__embedding_length = len(embedding)
 
         return sentences
 
 
 class DocumentMeanEmbeddings(DocumentEmbeddings):
+
     def __init__(self, word_embeddings: List[TokenEmbeddings], reproject_words: bool = True):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
@@ -445,26 +446,26 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def embed(self, paragraphs: Union[List[Sentence], Sentence]):
+    def embed(self, sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to every sentence in the given list of sentences. If embeddings are already added, updates
         only if embeddings are non-static."""
 
         everything_embedded: bool = True
 
         # if only one sentence is passed, convert to list of sentence
-        if type(paragraphs) is Sentence:
-            paragraphs = [paragraphs]
+        if type(sentences) is Sentence:
+            sentences = [sentences]
 
-        for paragraph in paragraphs:
-            if self.name not in paragraph._embeddings.keys(): everything_embedded = False
+        for sentence in sentences:
+            if self.name not in sentence._embeddings.keys(): everything_embedded = False
 
         if not everything_embedded or not self.static_embeddings:
 
-            self.embeddings.embed(paragraphs)
+            self.embeddings.embed(sentences)
 
-            for paragraph in paragraphs:
+            for sentence in sentences:
                 word_embeddings = []
-                for token in paragraph.tokens:
+                for token in sentence.tokens:
                     token: Token = token
                     word_embeddings.append(token.get_embedding().unsqueeze(0))
 
@@ -477,13 +478,14 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
 
                 mean_embedding = torch.mean(word_embeddings, 0)
 
-                paragraph.set_embedding(self.name, mean_embedding)
+                sentence.set_embedding(self.name, mean_embedding.cpu())
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
 
 
 class DocumentLSTMEmbeddings(DocumentEmbeddings):
+
     def __init__(self, word_embeddings: List[TokenEmbeddings], hidden_states=128, num_layers=1,
                  reproject_words: bool = True, bidirectional: bool = True):
         """The constructor takes a list of embeddings to be combined.
@@ -519,6 +521,9 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         self.rnn = torch.nn.LSTM(self.length_of_all_word_embeddings, hidden_states, num_layers=num_layers,
                                  bidirectional=self.bidirectional)
         self.dropout = torch.nn.Dropout(0.5)
+
+        if torch.cuda.is_available():
+            self.cuda()
 
     @property
     def embedding_length(self) -> int:

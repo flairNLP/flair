@@ -125,7 +125,7 @@ class Token:
         return 'Token: %d %s' % (self.idx, self.text)
 
     def set_embedding(self, name: str, vector: torch.autograd.Variable):
-        self._embeddings[name] = vector
+        self._embeddings[name] = vector.cpu()
 
     def clear_embeddings(self):
         self._embeddings: Dict = {}
@@ -193,10 +193,9 @@ class Sentence:
             token.idx = len(self.tokens)
 
     def set_embedding(self, name: str, vector):
-        self._embeddings[name] = vector
+        self._embeddings[name] = vector.cpu()
 
     def clear_embeddings(self, also_clear_word_embeddings: bool = True):
-
         self._embeddings: Dict = {}
 
         if also_clear_word_embeddings:
