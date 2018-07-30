@@ -88,6 +88,8 @@ class SequenceTagger(nn.Module):
                                                       dropout=0.5,
                                                       bidirectional=True)
 
+        self.nonlinearity = nn.Tanh()
+
         # final linear map to tag space
         if self.use_rnn:
             self.linear = nn.Linear(hidden_size * 2, len(tag_dictionary))
@@ -101,7 +103,6 @@ class SequenceTagger(nn.Module):
             self.transitions.data[self.tag_dictionary.get_idx_for_item(START_TAG), :] = -10000
             self.transitions.data[:, self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000
 
-        # auto-spawn on GPU if available
         if torch.cuda.is_available():
             self.cuda()
 

@@ -26,8 +26,8 @@ class SequenceTaggerTrainer:
               mini_batch_size: int = 32,
               max_epochs: int = 100,
               anneal_factor: float = 0.5,
-              patience: int = 3,
-              checkpoint: bool = False,
+              patience: int = 2,
+              save_model: bool = False,
               embeddings_in_memory: bool = True,
               train_with_dev: bool = False):
 
@@ -42,8 +42,10 @@ class SequenceTaggerTrainer:
         open(loss_txt, "w", encoding='utf-8').close()
 
         optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
-        scheduler: ReduceLROnPlateau = ReduceLROnPlateau(optimizer, verbose=True, factor=anneal_factor,
-                                                         patience=patience)
+
+        anneal_mode = 'min' if train_with_dev else 'max'
+        scheduler: ReduceLROnPlateau = ReduceLROnPlateau(optimizer, factor=anneal_factor, patience=patience,
+                                                         mode=anneal_mode)
 
         train_data = self.corpus.train
 
@@ -97,9 +99,6 @@ class SequenceTaggerTrainer:
 
                 current_loss /= len(train_data)
 
-                # anneal against train loss
-                scheduler.step(current_loss)
-
                 # switch to eval mode
                 self.model.eval()
 
@@ -117,13 +116,15 @@ class SequenceTaggerTrainer:
                                                                  evaluation_method=evaluation_method,
                                                                  embeddings_in_memory=embeddings_in_memory)
 
-                # IMPORTANT: Switch back to train mode
+                # switch back to train mode
                 self.model.train()
 
-                # print info
+                # anneal against train loss if training with dev, otherwise anneal against dev score
+                scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_score)
+
                 summary = '%d' % epoch + '\t({:%H:%M:%S})'.format(datetime.datetime.now()) \
                           + '\t%f\t%d\t%f\tDEV   %d\t' % (
-                current_loss, scheduler.num_bad_epochs, learning_rate, dev_fp) + dev_result
+                    current_loss, scheduler.num_bad_epochs, learning_rate, dev_fp) + dev_result
                 summary = summary.replace('\n', '')
                 summary += '\tTEST   \t%d\t' % test_fp + test_result
 
@@ -132,10 +133,12 @@ class SequenceTaggerTrainer:
                     loss_file.write('%s\n' % summary)
                     loss_file.close()
 
-                if checkpoint and scheduler.num_bad_epochs == 0:
-                    self.model.save(base_path + "/checkpoint-model.pt")
+                # save if model is current best and we use dev data for model selection
+                if save_model and not train_with_dev and current_loss == scheduler.best:
+                    self.model.save(base_path + "/best-model.pt")
 
-            self.model.save(base_path + "/final-model.pt")
+            # if we do not use dev data for model selection, save final model
+            if save_model and train_with_dev: self.model.save(base_path + "/final-model.pt")
 
         except KeyboardInterrupt:
             print('-' * 89)
