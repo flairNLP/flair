@@ -192,6 +192,24 @@ class SequenceTaggerTrainer:
                     else:
                         fp += 1
 
+                    # positives
+                    if predicted_tag != '':
+                        # true positives
+                        if predicted_tag == gold_tag:
+                            metric.tp()
+                        # false positive
+                        if predicted_tag != gold_tag:
+                            metric.fp()
+
+                    # negatives
+                    if predicted_tag == '':
+                        # true negative
+                        if predicted_tag == gold_tag:
+                            metric.tn()
+                        # false negative
+                        if predicted_tag != gold_tag:
+                            metric.fn()
+
                     lines.append(eval_line)
 
                 lines.append('\n')
