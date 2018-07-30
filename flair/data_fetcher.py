@@ -288,7 +288,7 @@ class NLPTaskDataFetcher:
                     if not "=" in morph: continue;
                     token.add_tag(morph.split('=')[0].lower(), morph.split('=')[1])
 
-                if str(fields[10]) == 'Y':
+                if len(fields) > 10 and str(fields[10]) == 'Y':
                     token.add_tag('frame', str(fields[11]))
 
                 sentence.add_token(token)
