@@ -103,6 +103,10 @@ class SequenceTagger(nn.Module):
             self.transitions.data[self.tag_dictionary.get_idx_for_item(START_TAG), :] = -10000
             self.transitions.data[:, self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000
 
+        if torch.cuda.is_available():
+            self.cuda()
+
+
     def save(self, model_file: str):
         model_state = {
             'state_dict': self.state_dict(),
