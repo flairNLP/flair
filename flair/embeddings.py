@@ -2,7 +2,7 @@ import os
 import pickle
 import re
 from abc import abstractmethod
-from typing import List
+from typing import List, Union
 
 import gensim
 import numpy as np
@@ -26,7 +26,7 @@ class Embeddings(torch.nn.Module):
     def embedding_type(self) -> str:
         pass
 
-    def embed(self, sentences: List[Sentence]) -> List[Sentence]:
+    def embed(self, sentences: Union[Sentence, List[Sentence]]) -> List[Sentence]:
         """Add embeddings to all words in a list of sentences. If embeddings are already added, updates only if embeddings
         are non-static."""
 
@@ -208,7 +208,11 @@ class WordEmbeddings(TokenEmbeddings):
                 else:
                     word_embedding = np.zeros(self.embedding_length, dtype='float')
 
-                word_embedding = torch.autograd.Variable(torch.FloatTensor(word_embedding))
+                # if torch.cuda.is_available():
+                #     word_embedding = torch.cuda.FloatTensor(word_embedding)
+                # else:
+                word_embedding = torch.FloatTensor(word_embedding)
+
                 token.set_embedding(self.name, word_embedding)
 
         return sentences
@@ -224,20 +228,11 @@ class CharacterEmbeddings(TokenEmbeddings):
         self.name = 'Char'
         self.static_embeddings = False
 
-        # get list of common characters if none provided
+        # use list of common characters if none provided
         if path_to_char_dict is None:
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters'
-            char_dict = cached_path(base_path, cache_dir='datasets')
-
-        # load dictionary
-        self.char_dictionary: Dictionary = Dictionary()
-        with open(char_dict, 'rb') as f:
-            mappings = pickle.load(f, encoding='latin1')
-            idx2item = mappings['idx2item']
-            item2idx = mappings['item2idx']
-            self.char_dictionary.item2idx = item2idx
-            self.char_dictionary.idx2item = idx2item
-            # print(self.char_dictionary.item2idx)
+            self.char_dictionary: Dictionary = Dictionary.load('common-chars')
+        else:
+            self.char_dictionary: Dictionary = Dictionary.load_from_file(path_to_char_dict)
 
         self.char_embedding_dim: int = 25
         self.hidden_size_char: int = 25
@@ -260,7 +255,6 @@ class CharacterEmbeddings(TokenEmbeddings):
             # translate words in sentence into ints using dictionary
             for token in sentence.tokens:
                 token: Token = token
-                # print(token)
                 char_indices = [self.char_dictionary.get_idx_for_item(char) for char in token.text]
                 tokens_char_indices.append(char_indices)
 
@@ -278,7 +272,7 @@ class CharacterEmbeddings(TokenEmbeddings):
             for i, c in enumerate(tokens_sorted_by_length):
                 tokens_mask[i, :chars2_length[i]] = c
 
-            tokens_mask = torch.autograd.Variable(torch.LongTensor(tokens_mask))
+            tokens_mask = torch.LongTensor(tokens_mask)
 
             # chars for rnn processing
             chars = tokens_mask
@@ -293,8 +287,7 @@ class CharacterEmbeddings(TokenEmbeddings):
 
             outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(lstm_out)
             outputs = outputs.transpose(0, 1)
-            chars_embeds_temp = torch.autograd.Variable(
-                torch.FloatTensor(torch.zeros((outputs.size(0), outputs.size(2)))))
+            chars_embeds_temp = torch.FloatTensor(torch.zeros((outputs.size(0), outputs.size(2))))
             if torch.cuda.is_available():
                 chars_embeds_temp = chars_embeds_temp.cuda()
             for i, index in enumerate(output_lengths):
@@ -304,7 +297,7 @@ class CharacterEmbeddings(TokenEmbeddings):
                 character_embeddings[d[i]] = chars_embeds_temp[i]
 
             for token_number, token in enumerate(sentence.tokens):
-                token.set_embedding(self.name, character_embeddings[token_number].cpu())
+                token.set_embedding(self.name, character_embeddings[token_number])
 
 
 class CharLMEmbeddings(TokenEmbeddings):
@@ -359,12 +352,8 @@ class CharLMEmbeddings(TokenEmbeddings):
         self.name = model
         self.static_embeddings = detach
 
-        import flair.models
-        self.lm: flair.models.LanguageModel = flair.models.LanguageModel.load_language_model(model)
-        if torch.cuda.is_available():
-            self.lm = self.lm.cuda()
-        self.lm.eval()
-
+        from flair.models import LanguageModel
+        self.lm = LanguageModel.load_language_model(model)
         self.detach = detach
 
         self.is_forward_lm: bool = self.lm.is_forward_lm
@@ -378,7 +367,7 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token('hello'))
-        embedded_dummy = self.embed([dummy_sentence])
+        embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
     @property
@@ -406,8 +395,6 @@ class CharLMEmbeddings(TokenEmbeddings):
                     '\n' + sentence.to_plain_string()[::-1] + ' ' + (
                         (longest_character_sequence_in_batch - len(sentence.to_plain_string())) * ' '))
 
-        # print(sentences_padded)
-
         # get states from LM
         all_hidden_states_in_lm = self.lm.get_representation(sentences_padded, self.detach)
 
@@ -426,23 +413,20 @@ class CharLMEmbeddings(TokenEmbeddings):
                 else:
                     offset = offset_backward
 
-                embedding = all_hidden_states_in_lm[offset, i, :].data.cpu()
-                # if not torch.cuda.is_available():
-                #     embedding = embedding.cpu()
+                embedding = all_hidden_states_in_lm[offset, i, :]
 
                 offset_forward += 1
 
                 offset_backward -= 1
                 offset_backward -= len(token.text)
 
-                token.set_embedding(self.name, torch.autograd.Variable(embedding))
+                token.set_embedding(self.name, embedding.cpu())
                 self.__embedding_length = len(embedding)
 
         return sentences
 
 
 class DocumentMeanEmbeddings(DocumentEmbeddings):
-
     def __init__(self, word_embeddings: List[TokenEmbeddings], reproject_words: bool = True):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
@@ -493,7 +477,6 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
 
                 mean_embedding = torch.mean(word_embeddings, 0)
 
-                # mean_embedding /= len(paragraph.tokens)
                 paragraph.set_embedding(self.name, mean_embedding)
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
@@ -501,7 +484,6 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
 
 
 class DocumentLSTMEmbeddings(DocumentEmbeddings):
-
     def __init__(self, word_embeddings: List[TokenEmbeddings], hidden_states=128, num_layers=1,
                  reproject_words: bool = True, bidirectional: bool = True):
         """The constructor takes a list of embeddings to be combined.
@@ -514,7 +496,6 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         """
         super().__init__()
 
-        # self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=word_embeddings)
         self.embeddings: List[TokenEmbeddings] = word_embeddings
 
         self.reproject_words = reproject_words
@@ -649,6 +630,3 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
-
-
-
