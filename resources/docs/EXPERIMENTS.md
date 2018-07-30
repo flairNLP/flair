@@ -75,17 +75,13 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         tag_dictionary=tag_dictionary,
                                         tag_type=tag_type,
                                         use_crf=True)
-                                        
-if torch.cuda.is_available():
-    tagger = tagger.cuda()
 
 # initialize trainer
 from flair.trainers import SequenceTaggerTrainer
 
 trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
-              train_with_dev=True, anneal_mode=True)
+trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
 ```
 
 
@@ -146,18 +142,13 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         tag_dictionary=tag_dictionary,
                                         tag_type=tag_type,
                                         use_crf=True)
-                                        
-if torch.cuda.is_available():
-    tagger = tagger.cuda()
 
 # initialize trainer
 from flair.trainers import SequenceTaggerTrainer
 
 trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
-              train_with_dev=True, anneal_mode=True)
-
+trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
 ```
 
 
@@ -214,17 +205,13 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         tag_dictionary=tag_dictionary,
                                         tag_type=tag_type,
                                         use_crf=True)
-                                        
-if torch.cuda.is_available():
-    tagger = tagger.cuda()
 
 # initialize trainer
 from flair.trainers import SequenceTaggerTrainer
 
 trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
-              train_with_dev=True, anneal_mode=True)
+trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
 ```
 
 
@@ -281,17 +268,13 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         tag_dictionary=tag_dictionary,
                                         tag_type=tag_type,
                                         use_crf=True)
-                                        
-if torch.cuda.is_available():
-    tagger = tagger.cuda()
 
 # initialize trainer
 from flair.trainers import SequenceTaggerTrainer
 
 trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
-              train_with_dev=True, anneal_mode=True)
+trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
 ```
 
 
@@ -351,18 +334,12 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         tag_dictionary=tag_dictionary,
                                         tag_type=tag_type,
                                         use_crf=True)
-                                        
-if torch.cuda.is_available():
-    tagger = tagger.cuda()
-
 # initialize trainer
 from flair.trainers import SequenceTaggerTrainer
 
 trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-pos', mini_batch_size=32, max_epochs=150, save_model=True,
-              train_with_dev=True, anneal_mode=True)
-
+trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
 ```
 
 ## CoNLL-2000 Noun Phrase Chunking (English)
@@ -419,15 +396,11 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         tag_dictionary=tag_dictionary,
                                         tag_type=tag_type,
                                         use_crf=True)
-                                        
-if torch.cuda.is_available():
-    tagger = tagger.cuda()
 
 # initialize trainer
 from flair.trainers import SequenceTaggerTrainer
 
 trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-pos', mini_batch_size=32, max_epochs=150, save_model=True,
-              train_with_dev=True, anneal_mode=True)
+trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
 ```

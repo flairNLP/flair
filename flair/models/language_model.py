@@ -49,6 +49,10 @@ class LanguageModel(nn.Module):
 
         self.init_weights()
 
+        # auto-spawn on GPU if available
+        if torch.cuda.is_available():
+            self.cuda()
+
     def init_weights(self):
         initrange = 0.1
         self.encoder.weight.data.uniform_(-initrange, initrange)

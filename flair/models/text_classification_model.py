@@ -41,6 +41,10 @@ class TextClassifier(nn.Module):
 
         self._init_weights()
 
+        # auto-spawn on GPU if available
+        if torch.cuda.is_available():
+            self.cuda()
+
     def _init_weights(self):
         nn.init.xavier_uniform_(self.decoder.weight)
 

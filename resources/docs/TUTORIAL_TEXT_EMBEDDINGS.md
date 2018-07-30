@@ -1,6 +1,6 @@
-# Tutorial 4: Text Embeddings
+# Tutorial 4: Document Embeddings
 
-Text embeddings are different from [word embeddings](/resources/docs/TUTORIAL_WORD_EMBEDDING.md) in that they give you one embedding for an entire text, whereas word embeddings give you embeddings for individual words. 
+Document embeddings are different from [word embeddings](/resources/docs/TUTORIAL_WORD_EMBEDDING.md) in that they give you one embedding for an entire text, whereas word embeddings give you embeddings for individual words. 
 
 For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_BASICS.md) of this library and how
    [word embeddings](/resources/docs/TUTORIAL_WORD_EMBEDDING.md) work.
@@ -8,7 +8,7 @@ For this tutorial, we assume that you're familiar with the [base types](/resourc
 
 # Embeddings
 
-All embedding classes inherit from the `TextEmbeddings` class and implement the `embed()` method which you need to call 
+All embedding classes inherit from the `DocumentEmbeddings` class and implement the `embed()` method which you need to call 
 to embed your text. This means that for most users of Flair, the complexity of different embeddings remains hidden 
 behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
