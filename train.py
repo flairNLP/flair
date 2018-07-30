@@ -48,7 +48,7 @@ if torch.cuda.is_available():
 # initialize trainer
 from flair.trainers.sequence_tagger_trainer import SequenceTaggerTrainer
 
-trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
+trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=20, save_model=False,
               train_with_dev=False, anneal_mode=False)
