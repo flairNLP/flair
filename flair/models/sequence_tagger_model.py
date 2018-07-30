@@ -65,7 +65,7 @@ class SequenceTagger(nn.Module):
         self.hidden_word = None
 
         # self.dropout = nn.Dropout(0.5)
-        self.dropout = LockedDropout(0.5)
+        self.dropout: nn.Module = LockedDropout(0.5)
 
         rnn_input_dim: int = self.embeddings.embedding_length
 
@@ -88,7 +88,7 @@ class SequenceTagger(nn.Module):
                                                       dropout=0.5,
                                                       bidirectional=True)
 
-        self.relu = nn.ReLU()
+        self.nonlinearity = nn.Tanh()
 
         # final linear map to tag space
         if self.use_rnn:
@@ -149,16 +149,14 @@ class SequenceTagger(nn.Module):
         longest_token_sequence_in_batch: int = len(sentences[0])
 
         self.embeddings.embed(sentences)
-        sent = sentences[0]
-        # print(sent)
-        # print(sent.tokens[0].get_embedding()[0:7])
 
         all_sentence_tensors = []
         lengths: List[int] = []
         tag_list: List = []
 
-        # go through each sentence in batch
-        for i, sentence in enumerate(sentences):
+        padding = torch.FloatTensor(np.zeros(self.embeddings.embedding_length, dtype='float')).unsqueeze(0)
+
+        for sentence in sentences:
 
             # get the tags in this sentence
             tag_idx: List[int] = []
@@ -167,58 +165,50 @@ class SequenceTagger(nn.Module):
 
             word_embeddings = []
 
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                token: Token = token
-
+            for token in sentence:
                 # get the tag
                 tag_idx.append(self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type)))
-
+                # get the word embeddings
                 word_embeddings.append(token.get_embedding().unsqueeze(0))
 
-            # PADDING: pad shorter sentences out
+            # pad shorter sentences out
             for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
-                word_embeddings.append(
-                    torch.autograd.Variable(
-                        torch.FloatTensor(np.zeros(self.embeddings.embedding_length, dtype='float')).unsqueeze(0)))
+                word_embeddings.append(padding)
 
             word_embeddings_tensor = torch.cat(word_embeddings, 0)
-
-            sentence_states = word_embeddings_tensor
 
             if torch.cuda.is_available():
                 tag_list.append(torch.cuda.LongTensor(tag_idx))
             else:
                 tag_list.append(torch.LongTensor(tag_idx))
 
-            # ADD TO SENTENCE LIST: add the representation
-            all_sentence_tensors.append(sentence_states.unsqueeze(1))
+            all_sentence_tensors.append(word_embeddings_tensor.unsqueeze(1))
 
-        # --------------------------------------------------------------------
-        # GET REPRESENTATION FOR ENTIRE BATCH
-        # --------------------------------------------------------------------
+        # padded tensor for entire batch
         sentence_tensor = torch.cat(all_sentence_tensors, 1)
-
         if torch.cuda.is_available():
             sentence_tensor = sentence_tensor.cuda()
 
         # --------------------------------------------------------------------
         # FF PART
         # --------------------------------------------------------------------
-        tagger_states = self.dropout(sentence_tensor)
+        sentence_tensor = self.dropout(sentence_tensor)
 
         if self.relearn_embeddings:
-            tagger_states = self.embedding2nn(tagger_states)
+            sentence_tensor = self.embedding2nn(sentence_tensor)
 
         if self.use_rnn:
-            packed = torch.nn.utils.rnn.pack_padded_sequence(tagger_states, lengths)
+            packed = torch.nn.utils.rnn.pack_padded_sequence(sentence_tensor, lengths)
 
             rnn_output, hidden = self.rnn(packed)
 
-            tagger_states, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(rnn_output)
+            sentence_tensor, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(rnn_output)
 
-            tagger_states = self.dropout(tagger_states)
+            sentence_tensor = self.dropout(sentence_tensor)
 
-        features = self.linear(tagger_states)
+        # sentence_tensor = self.nonlinearity(sentence_tensor)
+
+        features = self.linear(sentence_tensor)
 
         predictions_list = []
         for sentence_no, length in enumerate(lengths):
@@ -230,7 +220,6 @@ class SequenceTagger(nn.Module):
         return predictions_list, tag_list
 
     def _score_sentence(self, feats, tags):
-        # print(tags)
         # tags is ground_truth, a list of ints, length is len(sentence)
         # feats is a 2D tensor, len(sentence) * tagset_size
         r = torch.LongTensor(range(feats.size()[0]))
