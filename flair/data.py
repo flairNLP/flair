@@ -1,12 +1,13 @@
 from typing import List, Dict
+
 import torch
+
 from collections import Counter
 from collections import defaultdict
 
 from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
-
 
 
 class Dictionary:
@@ -216,7 +217,6 @@ class Sentence:
         return self.get_embedding()
 
     def to_tagged_string(self) -> str:
-
         list = []
         for token in self.tokens:
             list.append(token.text)
@@ -369,7 +369,7 @@ class TaggedCorpus:
 
         tokens = []
         for token, freq in tokens_and_frequencies:
-            if freq <= min_freq or len(tokens) == max_tokens:
+            if (min_freq != -1 and freq < min_freq) or (max_tokens != -1 and len(tokens) == max_tokens):
                 break
             tokens.append(token)
         return tokens
@@ -405,24 +405,34 @@ class TaggedCorpus:
         self._print_statistics_for(self.test, "TEST")
         self._print_statistics_for(self.dev, "DEV")
 
-    def _print_statistics_for(self, dataset, name):
-        if len(dataset) == 0:
+    @staticmethod
+    def _print_statistics_for(sentences, name):
+        if len(sentences) == 0:
             return
 
-        classes_to_count = defaultdict(lambda: 0)
-        for sent in dataset:
-            for label in sent.labels:
-                classes_to_count[label] += 1
-        tokens_per_doc = list(map(lambda x: len(x.tokens), dataset))
+        classes_to_count = TaggedCorpus._get_classes_to_count(sentences)
+        tokens_per_sentence = TaggedCorpus._get_tokens_per_sentence(sentences)
 
         print(name)
-        print("total size: " + str(len(dataset)))
+        print("total size: " + str(len(sentences)))
         for l, c in classes_to_count.items():
             print("size of class {}: {}".format(l, c))
-        print("total # of tokens: " + str(sum(tokens_per_doc)))
-        print("min # of tokens: " + str(min(tokens_per_doc)))
-        print("max # of tokens: " + str(max(tokens_per_doc)))
-        print("avg # of tokens: " + str(sum(tokens_per_doc) / len(dataset)))
+        print("total # of tokens: " + str(sum(tokens_per_sentence)))
+        print("min # of tokens: " + str(min(tokens_per_sentence)))
+        print("max # of tokens: " + str(max(tokens_per_sentence)))
+        print("avg # of tokens: " + str(sum(tokens_per_sentence) / len(sentences)))
+
+    @staticmethod
+    def _get_tokens_per_sentence(sentences):
+        return list(map(lambda x: len(x.tokens), sentences))
+
+    @staticmethod
+    def _get_classes_to_count(sentences):
+        classes_to_count = defaultdict(lambda: 0)
+        for sent in sentences:
+            for label in sent.labels:
+                classes_to_count[label] += 1
+        return classes_to_count
 
     def __str__(self) -> str:
         return 'TaggedCorpus: %d train + %d dev + %d test sentences' % (len(self.train), len(self.dev), len(self.test))
