@@ -10,8 +10,8 @@ def init():
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.AG_NEWS)
     label_dict = corpus.make_label_dictionary()
 
-    glove_embedding = WordEmbeddings('en-glove')
-    model = TextClassifier([glove_embedding], 128, 1, False, False, label_dict, False)
+    glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
+    model = TextClassifier(glove_embedding, 128, 1, False, False, label_dict, False)
 
     return corpus, label_dict, model
 
