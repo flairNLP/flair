@@ -208,9 +208,6 @@ class WordEmbeddings(TokenEmbeddings):
                 else:
                     word_embedding = np.zeros(self.embedding_length, dtype='float')
 
-                # if torch.cuda.is_available():
-                #     word_embedding = torch.cuda.FloatTensor(word_embedding)
-                # else:
                 word_embedding = torch.FloatTensor(word_embedding)
 
                 token.set_embedding(self.name, word_embedding)
