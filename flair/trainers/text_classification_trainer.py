@@ -4,6 +4,7 @@ from functools import reduce
 from typing import List
 
 import torch
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from flair.data import Sentence, TaggedCorpus, Dictionary
 from flair.models.text_classification_model import TextClassifier
@@ -27,6 +28,8 @@ class TextClassifierTrainer:
               learning_rate: float = 0.1,
               mini_batch_size: int = 32,
               max_epochs: int = 100,
+              anneal_factor: float = 0.5,
+              patience: int = 2,
               save_model: bool = True,
               embeddings_in_memory: bool = True,
               train_with_dev: bool = False):
@@ -47,6 +50,10 @@ class TextClassifierTrainer:
         weights_index = defaultdict(lambda: defaultdict(lambda: list()))
 
         optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
+
+        anneal_mode = 'min' if train_with_dev else 'max'
+        scheduler: ReduceLROnPlateau = ReduceLROnPlateau(optimizer, factor=anneal_factor, patience=patience,
+                                                         mode=anneal_mode)
 
         train_data = self.corpus.train
         # if training also uses dev data, include in training set
@@ -118,6 +125,9 @@ class TextClassifierTrainer:
 
                 # IMPORTANT: Switch back to train mode
                 self.model.train()
+
+                # anneal against train loss if training with dev, otherwise anneal against dev score
+                scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_f_score)
 
                 is_best_model_so_far: bool = False
                 current_score = dev_f_score if not train_with_dev else train_f_score
