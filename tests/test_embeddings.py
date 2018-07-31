@@ -4,35 +4,35 @@ from flair.data import Sentence
 
 
 def test_en_glove():
-    load_and_apply_embeddings('en-glove')
+    load_and_apply_word_embeddings('en-glove')
 
 
 def test_en_numberbatch():
-    load_and_apply_embeddings('en-numberbatch')
+    load_and_apply_word_embeddings('en-numberbatch')
 
 
 def test_en_extvec():
-    load_and_apply_embeddings('en-extvec')
+    load_and_apply_word_embeddings('en-extvec')
 
 
 def test_en_crawl():
-    load_and_apply_embeddings('en-crawl')
+    load_and_apply_word_embeddings('en-crawl')
 
 
 def test_en_news():
-    load_and_apply_embeddings('en-news')
+    load_and_apply_word_embeddings('en-news')
 
 
 def test_de_fasttext():
-    load_and_apply_embeddings('de-fasttext')
+    load_and_apply_word_embeddings('de-fasttext')
 
 
 def test_de_numberbatch():
-    load_and_apply_embeddings('de-numberbatch')
+    load_and_apply_word_embeddings('de-numberbatch')
 
 
 def test_sv_fasttext():
-    load_and_apply_embeddings('sv-fasttext')
+    load_and_apply_word_embeddings('sv-fasttext')
 
 
 def test_news_forward():
@@ -65,8 +65,9 @@ def test_stacked_embeddings():
 
     glove: TokenEmbeddings = WordEmbeddings('en-glove')
     news: TokenEmbeddings = WordEmbeddings('en-news')
+    charlm: TokenEmbeddings = CharLMEmbeddings('mix-backward')
 
-    embeddings: StackedEmbeddings = StackedEmbeddings([glove, news])
+    embeddings: StackedEmbeddings = StackedEmbeddings([glove, news, charlm])
 
     embeddings.embed(sentence)
 
@@ -78,7 +79,7 @@ def test_stacked_embeddings():
         assert(len(token.get_embedding()) == 0)
 
 
-def load_and_apply_embeddings(emb_type: str):
+def load_and_apply_word_embeddings(emb_type: str):
     text = 'I love Berlin.'
     sentence: Sentence = Sentence(text)
     embeddings: TokenEmbeddings = WordEmbeddings(emb_type)
