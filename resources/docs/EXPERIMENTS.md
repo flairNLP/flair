@@ -127,7 +127,7 @@ print(tag_dictionary.idx2item)
 # initialize embeddings
 embedding_types: List[TextEmbeddings] = [
 
-    WordEmbeddings('ft-crawl')
+    WordEmbeddings('crawl')
     ,
     CharLMEmbeddings('news-forward')
     ,
@@ -195,7 +195,7 @@ print(tag_dictionary.idx2item)
 # initialize embeddings
 embedding_types: List[TextEmbeddings] = [
 
-    WordEmbeddings('ft-german')
+    WordEmbeddings('de-fasttext')
     ,
     CharLMEmbeddings('german-forward')
     ,
@@ -261,7 +261,7 @@ print(tag_dictionary.idx2item)
 # initialize embeddings
 embedding_types: List[TextEmbeddings] = [
 
-    WordEmbeddings('ft-german')
+    WordEmbeddings('de-fasttext')
     ,
     CharLMEmbeddings('german-forward')
     ,
