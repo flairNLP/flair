@@ -106,7 +106,10 @@ class StackedEmbeddings(TokenEmbeddings):
         for embedding in embeddings:
             self.__embedding_length += embedding.embedding_length
 
-    def embed(self, sentences: List[Sentence], static_embeddings: bool = True):
+    def embed(self, sentences: Union[Sentence, List[Sentence]], static_embeddings: bool = True):
+        # if only one sentence is passed, convert to list of sentence
+        if type(sentences) is Sentence:
+            sentences = [sentences]
 
         for embedding in self.embeddings:
             embedding.embed(sentences)
@@ -442,7 +445,7 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def embed(self, paragraphs: List[Sentence]):
+    def embed(self, paragraphs: Union[List[Sentence], Sentence]):
         """Add embeddings to every sentence in the given list of sentences. If embeddings are already added, updates
         only if embeddings are non-static."""
 
@@ -521,9 +524,12 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def embed(self, sentences: List[Sentence]):
+    def embed(self, sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
          only if embeddings are non-static."""
+
+        if type(sentences) is Sentence:
+            sentences = [sentences]
 
         self.rnn.zero_grad()
 
@@ -609,7 +615,10 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self._embedding_length
 
-    def embed(self, sentences: List[Sentence]):
+    def embed(self, sentences: Union[List[Sentence], Sentence]):
+
+        if type(sentences) is Sentence:
+            sentences = [sentences]
 
         for embedding in self.embeddings:
             embedding.embed(sentences)

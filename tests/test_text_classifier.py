@@ -1,12 +1,14 @@
 import pytest
+from typing import Tuple
 
+from flair.data import Dictionary, TaggedCorpus
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 from flair.embeddings import WordEmbeddings
 from flair.models.text_classification_model import TextClassifier
 
 
 @pytest.fixture
-def init():
+def init() -> Tuple[TaggedCorpus, Dictionary, TextClassifier]:
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.AG_NEWS)
     label_dict = corpus.make_label_dictionary()
 
