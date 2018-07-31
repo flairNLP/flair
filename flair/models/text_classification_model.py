@@ -28,6 +28,7 @@ class TextClassifier(nn.Module):
 
         super(TextClassifier, self).__init__()
 
+        self.token_embeddings = token_embeddings
         self.hidden_states = hidden_states
         self.num_layers = num_layers
         self.reproject_words = reproject_words
@@ -42,6 +43,7 @@ class TextClassifier(nn.Module):
 
         self._init_weights()
 
+        # auto-spawn on GPU if available
         if torch.cuda.is_available():
             self.cuda()
 
@@ -68,7 +70,7 @@ class TextClassifier(nn.Module):
         """
         model_state = {
             'state_dict': self.state_dict(),
-            'document_embeddings': self.document_embeddings,
+            'token_embeddings': self.token_embeddings,
             'hidden_states': self.hidden_states,
             'num_layers': self.num_layers,
             'reproject_words': self.reproject_words,
@@ -93,7 +95,7 @@ class TextClassifier(nn.Module):
         warnings.filterwarnings("default")
 
         model = TextClassifier(
-            token_embeddings=state['document_embeddings'],
+            token_embeddings=state['token_embeddings'],
             hidden_states=state['hidden_states'],
             num_layers=state['num_layers'],
             reproject_words=state['reproject_words'],
@@ -104,8 +106,6 @@ class TextClassifier(nn.Module):
 
         model.load_state_dict(state['state_dict'])
         model.eval()
-        if torch.cuda.is_available():
-            model = model.cuda()
         return model
 
     def predict(self, sentences: List[Sentence], mini_batch_size: int = 32, embeddings_in_memory: bool = True) -> List[Sentence]:
@@ -138,9 +138,6 @@ class TextClassifier(nn.Module):
         :return: list of predicted labels and the loss value
         """
         label_scores = self.forward(sentences)
-
-        if torch.cuda.is_available():
-            label_scores = label_scores.cuda()
 
         if self.multi_label:
             pred_labels = [self._get_multi_label(scores) for scores in label_scores]
@@ -193,4 +190,8 @@ class TextClassifier(nn.Module):
             for sentence in sentences
         ]
 
-        return torch.cat(indices, 0)
+        vec = torch.cat(indices, 0)
+        if torch.cuda.is_available():
+            vec = vec.cuda()
+
+        return vec
