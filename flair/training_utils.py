@@ -102,7 +102,7 @@ def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionar
     return converted_label_list
 
 
-def calculate_overall_metric(y_true: List[List[int]], y_pred: List[List[int]], labels: Dictionary) -> Metric:
+def calculate_micro_avg_metric(y_true: List[List[int]], y_pred: List[List[int]], labels: Dictionary) -> Metric:
     """
     Calculates the overall metrics (micro averaged) for the given predictions.
     The labels should be converted into a one-hot-list.

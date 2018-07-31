@@ -7,7 +7,7 @@ import torch
 
 from flair.data import Sentence, TaggedCorpus, Dictionary
 from flair.models.text_classification_model import TextClassifier
-from flair.training_utils import convert_labels_to_one_hot, calculate_overall_metric, init_output_file, clear_embeddings, \
+from flair.training_utils import convert_labels_to_one_hot, calculate_micro_avg_metric, init_output_file, clear_embeddings, \
     calculate_class_metrics
 
 
@@ -171,7 +171,7 @@ class TextClassifierTrainer:
         y_pred = convert_labels_to_one_hot(y_pred, self.label_dict)
         y_true = convert_labels_to_one_hot(y_true, self.label_dict)
 
-        metrics = [calculate_overall_metric(y_true, y_pred, self.label_dict)]
+        metrics = [calculate_micro_avg_metric(y_true, y_pred, self.label_dict)]
         if eval_class_metrics:
             metrics.extend(calculate_class_metrics(y_true, y_pred, self.label_dict))
 
