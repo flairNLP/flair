@@ -1,4 +1,5 @@
-from flair.embeddings import WordEmbeddings, TokenEmbeddings, CharLMEmbeddings, StackedEmbeddings
+from flair.embeddings import WordEmbeddings, TokenEmbeddings, CharLMEmbeddings, StackedEmbeddings, \
+    DocumentLSTMEmbeddings, DocumentMeanEmbeddings
 
 from flair.data import Sentence
 
@@ -77,6 +78,42 @@ def test_stacked_embeddings():
         token.clear_embeddings()
 
         assert(len(token.get_embedding()) == 0)
+
+
+def test_document_lstm_embeddings():
+    text = 'I love Berlin. Berlin is a great place to live.'
+    sentence: Sentence = Sentence(text)
+
+    glove: TokenEmbeddings = WordEmbeddings('en-glove')
+    charlm: TokenEmbeddings = CharLMEmbeddings('mix-backward')
+
+    embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], bidirectional=False)
+
+    embeddings.embed(sentence)
+
+    assert (len(sentence.get_embedding()) != 0)
+
+    sentence.clear_embeddings()
+
+    assert (len(sentence.get_embedding()) == 0)
+
+
+def test_document_mean_embeddings():
+    text = 'I love Berlin. Berlin is a great place to live.'
+    sentence: Sentence = Sentence(text)
+
+    glove: TokenEmbeddings = WordEmbeddings('en-glove')
+    charlm: TokenEmbeddings = CharLMEmbeddings('mix-backward')
+
+    embeddings: DocumentMeanEmbeddings = DocumentMeanEmbeddings([glove, charlm])
+
+    embeddings.embed(sentence)
+
+    assert (len(sentence.get_embedding()) != 0)
+
+    sentence.clear_embeddings()
+
+    assert (len(sentence.get_embedding()) == 0)
 
 
 def load_and_apply_word_embeddings(emb_type: str):

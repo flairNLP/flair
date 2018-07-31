@@ -213,7 +213,10 @@ class Sentence:
             embedding = self._embeddings[embed]
             embeddings.append(embedding)
 
-        return torch.cat(embeddings, dim=0)
+        if embeddings:
+            return torch.cat(embeddings, dim=0)
+
+        return torch.FloatTensor()
 
     @property
     def embedding(self):
