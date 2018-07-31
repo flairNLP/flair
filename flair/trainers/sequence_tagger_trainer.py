@@ -187,10 +187,6 @@ class SequenceTaggerTrainer:
 
                     # append both to file for evaluation
                     eval_line = token.text + ' ' + gold_tag + ' ' + predicted_tag + "\n"
-                    if gold_tag == predicted_tag:
-                        tp += 1
-                    else:
-                        fp += 1
 
                     # positives
                     if predicted_tag != '':
@@ -217,7 +213,7 @@ class SequenceTaggerTrainer:
             if not embeddings_in_memory:
                 self.clear_embeddings_in_batch(batch)
 
-        if out_path != None:
+        if out_path is not None:
             test_tsv = os.path.join(out_path, "test.tsv")
             with open(test_tsv, "w", encoding='utf-8') as outfile:
                 outfile.write(''.join(lines))
@@ -240,18 +236,15 @@ class SequenceTaggerTrainer:
             main_result = re.sub('accuracy', 'acc', main_result)
 
             f_score = float(re.findall(r'\d+\.\d+$', main_result)[0])
-            return f_score, fp, main_result
+            return f_score, metric._fp, main_result
 
         if evaluation_method == 'accuracy':
             score = metric.accuracy()
-            accuracy: float = tp / (tp + fp)
-            print(accuracy)
-            return score, fp, str(score)
+            return score, metric._fp, str(score)
 
         if evaluation_method == 'F1':
-            print(metric.accuracy())
             score = metric.f_score()
-            return score, fp, str(metric)
+            return score, metric._fp, str(metric)
 
     def clear_embeddings_in_batch(self, batch: List[Sentence]):
         for sentence in batch:

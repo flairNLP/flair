@@ -70,7 +70,7 @@ class TokenEmbeddings(Embeddings):
 
 
 class DocumentEmbeddings(Embeddings):
-    """Abstract base class for all token-level embeddings. Ever new type of word embedding must implement these methods."""
+    """Abstract base class for all document-level embeddings. Ever new type of document embedding must implement these methods."""
 
     @property
     @abstractmethod
