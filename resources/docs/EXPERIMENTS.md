@@ -6,7 +6,7 @@ and how to train your own state-of-the-art sequence labelers.
 **Data.** For each experiment, you need to first get the evaluation dataset. Then execute the code as provided in this 
 documentation.
 
-**More info.** Also do check out the [tutorial](/resources/docs/TUTORIAL.md)  to get a better overview of how Flair works.
+**More info.** Also do check out the [tutorial](/resources/docs/TUTORIAL_BASICS.md)  to get a better overview of how Flair works.
 
 
 ## CoNLL-03 Named Entity Recognition (English)
