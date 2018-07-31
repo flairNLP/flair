@@ -522,6 +522,8 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
                                  bidirectional=self.bidirectional)
         self.dropout = torch.nn.Dropout(0.5)
 
+        torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
+
         if torch.cuda.is_available():
             self.cuda()
 
