@@ -136,7 +136,10 @@ class Token:
         for embed in sorted(self._embeddings.keys()):
             embeddings.append(self._embeddings[embed])
 
-        return torch.cat(embeddings, dim=0)
+        if embeddings:
+            return torch.cat(embeddings, dim=0)
+
+        return torch.FloatTensor()
 
     @property
     def embedding(self):

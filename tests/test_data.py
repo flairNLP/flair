@@ -1,5 +1,3 @@
-import shutil
-
 import os
 
 from flair.data import Sentence, Token, Dictionary, TaggedCorpus
@@ -10,7 +8,7 @@ def test_get_head():
     token2 = Token('love', 1, 0)
     token3 = Token('Berlin', 2, 1)
 
-    sentence = Sentence()
+    sentence: Sentence = Sentence()
     sentence.add_token(token1)
     sentence.add_token(token2)
     sentence.add_token(token3)
@@ -21,7 +19,7 @@ def test_get_head():
 
 
 def test_create_sentence_without_tokenizer():
-    sentence = Sentence('I love Berlin.')
+    sentence: Sentence = Sentence('I love Berlin.')
 
     assert(3 == len(sentence.tokens))
     assert('I' == sentence.tokens[0].text)
@@ -30,7 +28,7 @@ def test_create_sentence_without_tokenizer():
 
 
 def test_create_sentence_with_tokenizer():
-    sentence = Sentence('I love Berlin.', use_tokenizer=True)
+    sentence: Sentence = Sentence('I love Berlin.', use_tokenizer=True)
 
     assert (4 == len(sentence.tokens))
     assert ('I' == sentence.tokens[0].text)
@@ -40,7 +38,7 @@ def test_create_sentence_with_tokenizer():
 
 
 def test_sentence_to_plain_string():
-    sentence = Sentence('I love Berlin.', use_tokenizer=True)
+    sentence: Sentence = Sentence('I love Berlin.', use_tokenizer=True)
 
     assert ('I love Berlin .' == sentence.to_plain_string())
 
@@ -51,7 +49,7 @@ def test_sentence_to_tagged_string():
     token3 = Token('Berlin', 2, 1)
     token3.add_tag('ner', 'LOC')
 
-    sentence = Sentence()
+    sentence: Sentence = Sentence()
     sentence.add_token(token1)
     sentence.add_token(token2)
     sentence.add_token(token3)
@@ -60,7 +58,7 @@ def test_sentence_to_tagged_string():
 
 
 def test_dictionary_get_items_with_unk():
-    dictionary = Dictionary()
+    dictionary: Dictionary = Dictionary()
 
     dictionary.add_item('class_1')
     dictionary.add_item('class_2')
@@ -76,7 +74,7 @@ def test_dictionary_get_items_with_unk():
 
 
 def test_dictionary_get_items_without_unk():
-    dictionary = Dictionary(add_unk=False)
+    dictionary: Dictionary = Dictionary(add_unk=False)
 
     dictionary.add_item('class_1')
     dictionary.add_item('class_2')
@@ -91,7 +89,7 @@ def test_dictionary_get_items_without_unk():
 
 
 def test_dictionary_get_idx_for_item():
-    dictionary = Dictionary(add_unk=False)
+    dictionary: Dictionary = Dictionary(add_unk=False)
 
     dictionary.add_item('class_1')
     dictionary.add_item('class_2')
@@ -103,7 +101,7 @@ def test_dictionary_get_idx_for_item():
 
 
 def test_dictionary_get_item_for_index():
-    dictionary = Dictionary(add_unk=False)
+    dictionary: Dictionary = Dictionary(add_unk=False)
 
     dictionary.add_item('class_1')
     dictionary.add_item('class_2')
@@ -115,7 +113,7 @@ def test_dictionary_get_item_for_index():
 
 
 def test_dictionary_save_and_load():
-    dictionary = Dictionary(add_unk=False)
+    dictionary: Dictionary = Dictionary(add_unk=False)
 
     dictionary.add_item('class_1')
     dictionary.add_item('class_2')
@@ -138,7 +136,7 @@ def test_tagged_corpus_get_all_sentences():
     dev_sentence = Sentence("I'm a dev sentence.", use_tokenizer=True)
     test_sentence = Sentence("I will be only used for testing.", use_tokenizer=True)
 
-    corpus = TaggedCorpus([train_sentence], [dev_sentence], [test_sentence])
+    corpus: TaggedCorpus = TaggedCorpus([train_sentence], [dev_sentence], [test_sentence])
 
     all_sentences = corpus.get_all_sentences()
 
@@ -148,7 +146,7 @@ def test_tagged_corpus_get_all_sentences():
 def test_tagged_corpus_make_vocab_dictionary():
     train_sentence = Sentence('used in training. training is cool.', use_tokenizer=True)
 
-    corpus = TaggedCorpus([train_sentence], [], [])
+    corpus: TaggedCorpus = TaggedCorpus([train_sentence], [], [])
 
     vocab = corpus.make_vocab_dictionary(max_tokens=2, min_freq=-1)
 
@@ -174,7 +172,7 @@ def test_tagged_corpus_make_label_dictionary():
     sentence_2 = Sentence('sentence 2', labels=['class_2'])
     sentence_3 = Sentence('sentence 3', labels=['class_1'])
 
-    corpus = TaggedCorpus([sentence_1, sentence_2, sentence_3], [], [])
+    corpus: TaggedCorpus = TaggedCorpus([sentence_1, sentence_2, sentence_3], [], [])
 
     label_dict = corpus.make_label_dictionary()
 
@@ -207,7 +205,7 @@ def test_tagged_corpus_statistics():
 def test_tagged_corpus_downsample():
     sentence = Sentence('I love Berlin.', labels=['class_1'], use_tokenizer=True)
 
-    corpus = TaggedCorpus(
+    corpus: TaggedCorpus = TaggedCorpus(
         [sentence, sentence, sentence, sentence, sentence, sentence, sentence, sentence, sentence, sentence], [], [])
 
     assert(10 == len(corpus.train))
