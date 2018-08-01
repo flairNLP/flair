@@ -525,7 +525,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         # bidirectional LSTM on top of embedding layer
         self.word_reprojection_map = torch.nn.Linear(self.length_of_all_token_embeddings,
                                                      self.embeddings_dimension)
-        self.rnn = torch.nn.LSTM(self.embeddings_dimension, hidden_states, num_layers=num_layers,
+        self.rnn = torch.nn.GRU(self.embeddings_dimension, hidden_states, num_layers=num_layers,
                                  bidirectional=self.bidirectional)
         self.dropout = torch.nn.Dropout(0.5)
 
@@ -608,11 +608,11 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         # EXTRACT EMBEDDINGS FROM LSTM
         # --------------------------------------------------------------------
         for sentence_no, length in enumerate(lengths):
-            last_rep = outputs[length - 1, sentence_no, :].unsqueeze(0)
+            last_rep = outputs[length - 1, sentence_no].unsqueeze(0)
 
             embedding = last_rep
             if self.use_first_representation:
-                first_rep = outputs[0, sentence_no, :].unsqueeze(0)
+                first_rep = outputs[0, sentence_no].unsqueeze(0)
                 embedding = torch.cat([first_rep, last_rep], 1)
 
             sentence = sentences[sentence_no]

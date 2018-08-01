@@ -55,7 +55,7 @@ class TextClassifier(nn.Module):
     def forward(self, sentences):
         self.document_embeddings.embed(sentences)
 
-        text_embedding_list = [sentence.get_embedding().unsqueeze(0) for sentence in sentences]
+        text_embedding_list = [sentence.get_embedding() for sentence in sentences]
         text_embedding_tensor = torch.cat(text_embedding_list, 0)
 
         if torch.cuda.is_available():
