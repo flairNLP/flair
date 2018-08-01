@@ -6,7 +6,7 @@ from flair.models.text_classification_model import TextClassifier
 from flair.trainers.text_classification_trainer import TextClassifierTrainer
 
 
-def test_training():
+def test_text_classifier():
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB)
     label_dict = corpus.make_label_dictionary()
 
