@@ -144,6 +144,11 @@ class WordEmbeddings(TokenEmbeddings):
             cached_path(os.path.join(base_path, 'glove.gensim.vectors.npy'), cache_dir='embeddings')
             embeddings = cached_path(os.path.join(base_path, 'glove.gensim'), cache_dir='embeddings')
 
+        # twitter embeddings
+        if embeddings.lower() == 'twitter' or embeddings.lower() == 'en-twitter':
+            cached_path(os.path.join(base_path, 'twitter.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'twitter.gensim'), cache_dir='embeddings')
+
         # KOMNIOS embeddings
         if embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
             cached_path(os.path.join(base_path, 'extvec.gensim.vectors.npy'), cache_dir='embeddings')
@@ -327,6 +332,16 @@ class CharLMEmbeddings(TokenEmbeddings):
         # news-english-backward
         if model.lower() == 'news-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward-v0.2rc.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+
+        # news-english-forward
+        if model.lower() == 'news-forward-fast':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward-1024-v0.2rc.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+
+        # news-english-backward
+        if model.lower() == 'news-backward-fast':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward-1024-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-forward
