@@ -13,7 +13,7 @@ def init() -> Tuple[TaggedCorpus, Dictionary, TextClassifier]:
     label_dict = corpus.make_label_dictionary()
 
     glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
-    model = TextClassifier(glove_embedding, 128, 1, False, False, label_dict, False)
+    model = TextClassifier([glove_embedding], 128, 1, False, 64, False, label_dict, False)
 
     return corpus, label_dict, model
 

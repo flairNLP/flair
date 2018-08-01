@@ -10,8 +10,7 @@ def test_training():
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB)
     label_dict = corpus.make_label_dictionary()
 
-    document_embedding = DocumentMeanEmbeddings([WordEmbeddings('en-glove')])
-    model = TextClassifier(document_embedding, 128, 1, False, False, label_dict, False)
+    model = TextClassifier([WordEmbeddings('en-glove')], 128, 1, False, 64, False, label_dict, False)
 
     trainer = TextClassifierTrainer(model, corpus, label_dict, False)
     trainer.train('./results', max_epochs=2)

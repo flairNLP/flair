@@ -22,6 +22,7 @@ class TextClassifier(nn.Module):
                  hidden_states: int,
                  num_layers: int,
                  reproject_words: bool,
+                 reproject_words_dimension: int,
                  bidirectional: bool,
                  label_dictionary: Dictionary,
                  multi_label: bool):
@@ -32,12 +33,13 @@ class TextClassifier(nn.Module):
         self.hidden_states = hidden_states
         self.num_layers = num_layers
         self.reproject_words = reproject_words
+        self.reproject_words_dimension = reproject_words_dimension
         self.bidirectional = bidirectional
         self.label_dictionary: Dictionary = label_dictionary
         self.multi_label = multi_label
 
         self.document_embeddings: flair.embeddings.DocumentLSTMEmbeddings = flair.embeddings.DocumentLSTMEmbeddings(
-            token_embeddings, hidden_states, num_layers, reproject_words, bidirectional)
+            token_embeddings, hidden_states, num_layers, reproject_words, reproject_words_dimension, bidirectional)
 
         self.decoder = nn.Linear(self.document_embeddings.embedding_length, len(self.label_dictionary))
 
@@ -74,6 +76,7 @@ class TextClassifier(nn.Module):
             'hidden_states': self.hidden_states,
             'num_layers': self.num_layers,
             'reproject_words': self.reproject_words,
+            'reproject_words_dimension': self.reproject_words_dimension,
             'bidirectional': self.bidirectional,
             'label_dictionary': self.label_dictionary,
             'multi_label': self.multi_label,
@@ -99,6 +102,7 @@ class TextClassifier(nn.Module):
             hidden_states=state['hidden_states'],
             num_layers=state['num_layers'],
             reproject_words=state['reproject_words'],
+            reproject_words_dimension=state['reproject_words_dimension'],
             bidirectional=state['bidirectional'],
             label_dictionary=state['label_dictionary'],
             multi_label=state['multi_label']

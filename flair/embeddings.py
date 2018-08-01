@@ -484,13 +484,15 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
 class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
     def __init__(self, token_embeddings: List[TokenEmbeddings], hidden_states=128, num_layers=1,
-                 reproject_words: bool = True, bidirectional: bool = True):
+                 reproject_words: bool = True, reproject_words_dimension: int = None, bidirectional: bool = True):
         """The constructor takes a list of embeddings to be combined.
         :param token_embeddings: a list of token embeddings
         :param hidden_states: the number of hidden states in the lstm
         :param num_layers: the number of layers for the lstm
         :param reproject_words: boolean value, indicating whether to reproject the word embedding in a separate linear
         layer before putting them into the lstm or not
+        :param reproject_words_dimension: output dimension of reprojecting words. If None the same output dimension as
+        before will be taken.
         :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
         """
         super().__init__()
@@ -512,10 +514,14 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         else:
             self.__embedding_length: int = hidden_states
 
+        self.embeddings_dimension: int = self.length_of_all_token_embeddings
+        if self.reproject_words and reproject_words_dimension is not None:
+            self.embeddings_dimension = reproject_words_dimension
+
         # bidirectional LSTM on top of embedding layer
         self.word_reprojection_map = torch.nn.Linear(self.length_of_all_token_embeddings,
-                                                     self.length_of_all_token_embeddings)
-        self.rnn = torch.nn.LSTM(self.length_of_all_token_embeddings, hidden_states, num_layers=num_layers,
+                                                     self.embeddings_dimension)
+        self.rnn = torch.nn.LSTM(self.embeddings_dimension, hidden_states, num_layers=num_layers,
                                  bidirectional=self.bidirectional)
         self.dropout = torch.nn.Dropout(0.5)
 
