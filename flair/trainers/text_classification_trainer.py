@@ -105,8 +105,8 @@ class TextClassifierTrainer:
 
                 train_metrics, train_loss = self.evaluate(self.corpus.train, mini_batch_size=mini_batch_size,
                                                           embeddings_in_memory=embeddings_in_memory)
-                train_f_score = train_metrics['OVERALL'].f_score()
-                train_acc = train_metrics['OVERALL'].accuracy()
+                train_f_score = train_metrics['MICRO_AVG'].f_score()
+                train_acc = train_metrics['MICRO_AVG'].accuracy()
                 print("{0:<7} epoch {1} - loss {2:.8f} - f-score {3:.4f} - acc {4:.4f}".format(
                     'TRAIN:', epoch, train_loss, train_f_score, train_acc))
 
@@ -114,8 +114,8 @@ class TextClassifierTrainer:
                 if not train_with_dev:
                     dev_metrics, dev_loss = self.evaluate(self.corpus.dev, mini_batch_size=mini_batch_size,
                                                           embeddings_in_memory=embeddings_in_memory)
-                    dev_f_score = dev_metrics['OVERALL'].f_score()
-                    dev_acc = dev_metrics['OVERALL'].accuracy()
+                    dev_f_score = dev_metrics['MICRO_AVG'].f_score()
+                    dev_acc = dev_metrics['MICRO_AVG'].accuracy()
                     print("{0:<7} epoch {1} - loss {2:.8f} - f-score {3:.4f} - acc {4:.4f}".format(
                         'DEV:', epoch, dev_loss, dev_f_score, dev_acc))
 
