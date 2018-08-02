@@ -1,7 +1,7 @@
 import shutil
 
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
-from flair.embeddings import WordEmbeddings, DocumentMeanEmbeddings
+from flair.embeddings import WordEmbeddings, DocumentMeanEmbeddings, DocumentLSTMEmbeddings
 from flair.models.text_classification_model import TextClassifier
 from flair.trainers.text_classification_trainer import TextClassifierTrainer
 
@@ -10,7 +10,10 @@ def test_text_classifier_single_label():
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB)
     label_dict = corpus.make_label_dictionary()
 
-    model = TextClassifier([WordEmbeddings('en-glove')], 128, 1, False, 64, False, label_dict, False)
+    glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
+    document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove_embedding], 128, 1, False, 64, False, False)
+
+    model = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = TextClassifierTrainer(model, corpus, label_dict, False)
     trainer.train('./results', max_epochs=2)
@@ -23,7 +26,10 @@ def test_text_classifier_mulit_label():
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB)
     label_dict = corpus.make_label_dictionary()
 
-    model = TextClassifier([WordEmbeddings('en-glove')], 128, 1, False, 64, False, label_dict, True)
+    glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
+    document_embeddings: DocumentMeanEmbeddings = DocumentMeanEmbeddings([glove_embedding], True)
+
+    model = TextClassifier(document_embeddings, label_dict, True)
 
     trainer = TextClassifierTrainer(model, corpus, label_dict, False)
     trainer.train('./results', max_epochs=2)

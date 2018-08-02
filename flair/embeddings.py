@@ -475,7 +475,7 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
 
                 mean_embedding = torch.mean(word_embeddings, 0)
 
-                sentence.set_embedding(self.name, mean_embedding.cpu())
+                sentence.set_embedding(self.name, mean_embedding.unsqueeze(0))
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass

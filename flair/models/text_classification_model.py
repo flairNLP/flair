@@ -18,28 +18,17 @@ class TextClassifier(nn.Module):
     """
 
     def __init__(self,
-                 token_embeddings: List[flair.embeddings.TokenEmbeddings],
-                 hidden_states: int,
-                 num_layers: int,
-                 reproject_words: bool,
-                 reproject_words_dimension: int,
-                 bidirectional: bool,
+                 document_embeddings: flair.embeddings.DocumentEmbeddings,
                  label_dictionary: Dictionary,
                  multi_label: bool):
 
         super(TextClassifier, self).__init__()
 
-        self.token_embeddings = token_embeddings
-        self.hidden_states = hidden_states
-        self.num_layers = num_layers
-        self.reproject_words = reproject_words
-        self.reproject_words_dimension = reproject_words_dimension
-        self.bidirectional = bidirectional
+        self.document_embeddings = document_embeddings
         self.label_dictionary: Dictionary = label_dictionary
         self.multi_label = multi_label
 
-        self.document_embeddings: flair.embeddings.DocumentLSTMEmbeddings = flair.embeddings.DocumentLSTMEmbeddings(
-            token_embeddings, hidden_states, num_layers, reproject_words, reproject_words_dimension, bidirectional)
+        self.document_embeddings: flair.embeddings.DocumentLSTMEmbeddings = document_embeddings
 
         self.decoder = nn.Linear(self.document_embeddings.embedding_length, len(self.label_dictionary))
 
@@ -72,12 +61,7 @@ class TextClassifier(nn.Module):
         """
         model_state = {
             'state_dict': self.state_dict(),
-            'token_embeddings': self.token_embeddings,
-            'hidden_states': self.hidden_states,
-            'num_layers': self.num_layers,
-            'reproject_words': self.reproject_words,
-            'reproject_words_dimension': self.reproject_words_dimension,
-            'bidirectional': self.bidirectional,
+            'document_embeddings': self.document_embeddings,
             'label_dictionary': self.label_dictionary,
             'multi_label': self.multi_label,
         }
@@ -98,12 +82,7 @@ class TextClassifier(nn.Module):
         warnings.filterwarnings("default")
 
         model = TextClassifier(
-            token_embeddings=state['token_embeddings'],
-            hidden_states=state['hidden_states'],
-            num_layers=state['num_layers'],
-            reproject_words=state['reproject_words'],
-            reproject_words_dimension=state['reproject_words_dimension'],
-            bidirectional=state['bidirectional'],
+            document_embeddings=state['document_embeddings'],
             label_dictionary=state['label_dictionary'],
             multi_label=state['multi_label']
         )
