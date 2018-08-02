@@ -7,7 +7,7 @@ library.
 
 # Embeddings
 
-All embedding classes inherit from the `TextEmbeddings` class and implement the `embed()` method which you need to 
+All word embedding classes inherit from the `TokenEmbeddings` class and implement the `embed()` method which you need to 
 call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains 
 hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 

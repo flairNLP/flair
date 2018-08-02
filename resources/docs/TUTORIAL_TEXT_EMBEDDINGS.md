@@ -8,7 +8,7 @@ library and how [word embeddings](/resources/docs/TUTORIAL_WORD_EMBEDDING.md) wo
 
 # Embeddings
 
-All embedding classes inherit from the `TextEmbeddings` class and implement the `embed()` method which you need to call 
+All document embedding classes inherit from the `DocumentEmbeddings` class and implement the `embed()` method which you need to call 
 to embed your text. This means that for most users of Flair, the complexity of different embeddings remains hidden 
 behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
@@ -27,7 +27,7 @@ Currently, we have two different methods defined on how to obtain the document e
 The first method calculates the mean over all word embeddings in a document.
 The resulting embedding is taken as document embedding.
 
-To create a mean document embedding simply create any number of `WordEmbeddings` first.
+To create a mean document embedding simply create any number of `TokenEmbeddings` first.
 Afterwards, initiate the `DocumentMeanEmbeddings` and pass a list containing the created `WordEmbeddings`.
 So, if you want to create a document embedding using GloVe embeddings together with CharLMEmbeddings,
 use the following code:
@@ -69,7 +69,7 @@ The method calculates first word embeddings for every token in the document.
 Those word embeddings are then taken as input to a LSTM.
 In the end, the last representation of the LSTM is taken as the document embedding.
 
-To create a `DocumentLSTMEmbeddings` simply create any number of WordEmbeddings first.
+To create a `DocumentLSTMEmbeddings` simply create any number of `TokenEmbeddings` first.
 Afterwards, initiate the `DocumentLSTMEmbeddings` and pass a list containing the created WordEmbeddings.
 If you want, you can also specify some other parameters:
 ```text
