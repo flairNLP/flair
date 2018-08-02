@@ -193,3 +193,7 @@ trainer = TextClassifierTrainer(classifier, corpus, label_dict)
 # 5. start the trainig
 trainer.train('resources/ag_news/results', learning_rate=0.1, mini_batch_size=32, max_epochs=150, embeddings_in_memory=False, anneal_factor=0.5, patience=10) 
 ```
+
+## Next
+
+You can now look into [training your own embeddings](/resources/docs/TUTORIAL_TRAINING_LM_EMBEDDINGS.md).
