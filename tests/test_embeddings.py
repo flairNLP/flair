@@ -102,7 +102,7 @@ def test_document_lstm_embeddings():
     embeddings.embed(sentence)
 
     assert (len(sentence.get_embedding()) != 0)
-    assert (sentence.get_embedding().shape[1] == 128)
+    assert (sentence.get_embedding().shape[1] == embeddings.embedding_length)
 
     sentence.clear_embeddings()
 
@@ -118,7 +118,7 @@ def test_document_bidirectional_lstm_embeddings():
     embeddings.embed(sentence)
 
     assert (len(sentence.get_embedding()) != 0)
-    assert (sentence.get_embedding().shape[1] == 128 * 2)
+    assert (sentence.get_embedding().shape[1] == embeddings.embedding_length)
 
     sentence.clear_embeddings()
 
@@ -134,7 +134,7 @@ def test_document_bidirectional_lstm_embeddings_using_first_representation():
     embeddings.embed(sentence)
 
     assert (len(sentence.get_embedding()) != 0)
-    assert (sentence.get_embedding().shape[1] == 128 * 4)
+    assert (sentence.get_embedding().shape[1] == embeddings.embedding_length)
 
     sentence.clear_embeddings()
 
@@ -150,7 +150,7 @@ def test_document_lstm_embeddings_using_first_representation():
     embeddings.embed(sentence)
 
     assert (len(sentence.get_embedding()) != 0)
-    assert (sentence.get_embedding().shape[1] == 128 * 2)
+    assert (sentence.get_embedding().shape[1] == embeddings.embedding_length)
 
     sentence.clear_embeddings()
 

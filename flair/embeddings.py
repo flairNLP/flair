@@ -513,10 +513,11 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         self.name = 'document_lstm'
         self.static_embeddings = False
 
+        self.__embedding_length: int = hidden_states
         if self.bidirectional:
-            self.__embedding_length: int = hidden_states * 2
-        else:
-            self.__embedding_length: int = hidden_states
+            self.__embedding_length *= 2
+        if self.use_first_representation:
+            self.__embedding_length *= 2
 
         self.embeddings_dimension: int = self.length_of_all_token_embeddings
         if self.reproject_words and reproject_words_dimension is not None:
