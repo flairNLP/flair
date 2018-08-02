@@ -641,7 +641,6 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
         return self._embedding_length
 
     def embed(self, sentences: Union[List[Sentence], Sentence]):
-
         if type(sentences) is Sentence:
             sentences = [sentences]
 

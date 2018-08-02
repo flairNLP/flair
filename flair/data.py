@@ -180,6 +180,18 @@ class Sentence:
     def __iter__(self):
         return iter(self.tokens)
 
+    def add_label(self, label: str):
+        if self.labels is None:
+            self.labels = [label]
+        else:
+            self.labels.append(label)
+
+    def add_labels(self, labels: List[str]):
+        if self.labels is None:
+            self.labels = labels
+        else:
+            self.labels.extend(labels)
+
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
             if token.idx == token_id: return token
