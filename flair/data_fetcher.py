@@ -368,8 +368,6 @@ class NLPTaskDataFetcher:
         label_prefix = '__label__'
         sentences = []
 
-        print(path_to_file)
-
         with open(path_to_file) as f:
             lines = f.readlines()
 

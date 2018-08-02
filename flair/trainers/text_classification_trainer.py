@@ -45,6 +45,8 @@ class TextClassifierTrainer:
         """
 
         loss_txt = init_output_file(base_path, 'loss.txt')
+        with open(loss_txt, 'a') as f:
+            f.write('EPOCH\tITERATION\tDEV_LOSS\tTRAIN_LOSS\tDEV_F_SCORE\tTRAIN_F_SCORE\tDEV_ACC\tTRAIN_ACC\n')
         weights_txt = init_output_file(base_path, 'weights.txt')
 
         weights_index = defaultdict(lambda: defaultdict(lambda: list()))
@@ -66,6 +68,7 @@ class TextClassifierTrainer:
             best_score = 0
 
             for epoch in range(max_epochs):
+                print('-' * 100)
                 if not self.test_mode:
                     random.shuffle(train_data)
 
@@ -103,6 +106,7 @@ class TextClassifierTrainer:
                 # IMPORTANT: Switch to eval mode
                 self.model.eval()
 
+                print('-' * 100)
                 train_metrics, train_loss = self.evaluate(self.corpus.train, mini_batch_size=mini_batch_size,
                                                           embeddings_in_memory=embeddings_in_memory)
                 train_f_score = train_metrics['MICRO_AVG'].f_score()
@@ -145,12 +149,17 @@ class TextClassifierTrainer:
             if save_model:
                 self.model = TextClassifier.load_from_file(base_path + "/model.pt")
 
+            print('-' * 100)
+            print('testing...')
+
             test_metrics, test_loss = self.evaluate(
                 self.corpus.test, mini_batch_size=mini_batch_size, eval_class_metrics=True,
                 embeddings_in_memory=embeddings_in_memory)
 
             for metric in test_metrics.values():
                 metric.print()
+
+            print('-' * 100)
 
         except KeyboardInterrupt:
             print('-' * 89)
