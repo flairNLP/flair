@@ -94,7 +94,7 @@ class TextClassifier(nn.Module):
         # ATTENTION: suppressing torch serialization warnings. This needs to be taken out once we sort out recursive
         # serialization of torch objects
         warnings.filterwarnings("ignore")
-        state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
+        state = torch.load(model_file)
         warnings.filterwarnings("default")
 
         model = TextClassifier(
@@ -159,8 +159,9 @@ class TextClassifier(nn.Module):
 
         results = list(map(lambda x: sigmoid(x), label_scores))
         for idx, conf in enumerate(results):
-            label = self.label_dictionary.get_item_for_index(idx)
-            labels.append(label)
+            if conf > 0.5:
+                label = self.label_dictionary.get_item_for_index(idx)
+                labels.append(label)
 
         return labels
 

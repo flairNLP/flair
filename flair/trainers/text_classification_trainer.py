@@ -144,9 +144,11 @@ class TextClassifierTrainer:
 
             if save_model:
                 self.model = TextClassifier.load_from_file(base_path + "/model.pt")
+
             test_metrics, test_loss = self.evaluate(
                 self.corpus.test, mini_batch_size=mini_batch_size, eval_class_metrics=True,
                 embeddings_in_memory=embeddings_in_memory)
+
             for metric in test_metrics.values():
                 metric.print()
 
