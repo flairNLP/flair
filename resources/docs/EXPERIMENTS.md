@@ -1,12 +1,14 @@
 # How to Reproduce Experiments 
 
-Here, we detail the steps you need to take to reproduce the experiments in [Akbik et. al (2018)](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)
+Here, we detail the steps you need to take to reproduce the experiments in 
+[Akbik et. al (2018)](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)
 and how to train your own state-of-the-art sequence labelers. 
 
 **Data.** For each experiment, you need to first get the evaluation dataset. Then execute the code as provided in this 
 documentation.
 
-**More info.** Also do check out the [tutorial](/resources/docs/TUTORIAL_BASICS.md)  to get a better overview of how Flair works.
+**More info.** Also do check out the [tutorial](/resources/docs/TUTORIAL_BASICS.md)  to get a better overview of 
+how Flair works.
 
 
 ## CoNLL-03 Named Entity Recognition (English)
@@ -30,7 +32,7 @@ corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03)
 
 This gives you a `TaggedCorpus` object that contains the data. 
 
-Now, select 'ner' as the tag you wish to predict and init the embeddings you wish to use.
+Now, select `ner` as the tag you wish to predict and init the embeddings you wish to use.
  
 The full code to get a state-of-the-art model for English NER is as follows: 
 
@@ -83,8 +85,6 @@ trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode
 
 trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
 ```
-
-
 
 ## Ontonotes Named Entity Recognition (English)
 
@@ -151,7 +151,6 @@ trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode
 trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
 ```
 
-
 ## CoNLL-03 Named Entity Recognition (German)
 
 **Data.** Get the [CoNLL-03 data set for German](https://www.clips.uantwerpen.be/conll2003/ner/). 
@@ -214,7 +213,6 @@ trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode
 trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
 ```
 
-
 ## Germeval Named Entity Recognition (German)
 
 **Data.** The [Germeval data set](https://sites.google.com/site/germeval2014ner/data) is a more recent and more accessible 
@@ -276,9 +274,6 @@ trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode
 
 trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
 ```
-
-
-
 
 ## Penn Treebank Part-of-Speech Tagging (English)
 

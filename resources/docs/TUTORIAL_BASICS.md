@@ -4,8 +4,8 @@ This is part 1 of the tutorial, in which we look into some of the base types use
 
 ## Creating a Sentence
 
-There are two types of objects that are central to this library, namely the `Sentence` and `Token` objects. A `Sentence` 
-holds a textual sentence and is essentially a list of `Token`.
+There are two types of objects that are central to this library, namely the `Sentence` and `Token` objects. A 
+`Sentence` holds a textual sentence and is essentially a list of `Token`.
 
 Let's start by making a `Sentence` object for an example sentence.
 
@@ -59,8 +59,8 @@ Token: 5 .
 
 ## Tokenization
 
-In some use cases, you might not have your text already tokenized. For this case, we added a simple tokenizer using the
-lightweight segtok library. 
+In some use cases, you might not have your text already tokenized. For this case, we added a simple tokenizer using
+the lightweight segtok library. 
 
 Simply use the 'use_tokenizer' flag when instantiating your `Sentence` with an untokenized string:
 
@@ -101,7 +101,6 @@ This should print:
 The grass is green <color> .
 ```
 
-
 ## Reading CoNLL parsed files
 
 We provide a set of helper methods to read CoNLL parsed files as a list of `Sentence` objects. For instance, you can
@@ -126,19 +125,21 @@ You can access this information using the tag fields of the  `Token`.
 
 ## Reading files for text classification tasks
 
-We provide a helper method to read files that contain data for text classification tasks into a list of `Sentence` objects. 
-A file containing data for a text classification task should have the following format:
+We provide a helper method to read files that contain data for text classification tasks into a list of `Sentence` 
+objects. A file containing data for a text classification task should have the following format:
 ```bash
 __label__<label_1> <text>
 __label__<label_1> __label__<label_2> <text>
 ```
 Each line contains a document. 
-A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix `__label__`.
+A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix 
+`__label__`.
 One line is converted to a `Sentence`. 
 (The `Sentence` object can actually consists of multiple sentences.)
 The labels are assigned to the `Sentence`. 
 
-To read a file containing text classification data simply point the `NLPTaskDataFetcher` to the file containing the sentences. 
+To read a file containing text classification data simply point the `NLPTaskDataFetcher` to the file containing 
+the sentences. 
 It will read the sentences into a list of `Sentence`
 
 ```python
