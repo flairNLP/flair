@@ -59,10 +59,10 @@ Token: 5 .
 
 ## Tokenization
 
-In some use cases, you might not have your text already tokenized. For this case, we added a simple tokenizer using
-the lightweight segtok library. 
+In some use cases, you might not have your text already tokenized. For this case, we added a simple tokenizer using the
+lightweight [segtok library](https://pypi.org/project/segtok/). 
 
-Simply use the 'use_tokenizer' flag when instantiating your `Sentence` with an untokenized string:
+Simply use the `use_tokenizer` flag when instantiating your `Sentence` with an untokenized string:
 
 ```python
 # The sentence objects holds a sentence that we may want to embed
@@ -83,7 +83,7 @@ Sentence: "The grass is green ." - 5 Tokens
 
 ## Adding Tags to Tokens
 
-A Token has fields for linguistic annotation, such as lemmas, part-of-speech tags or named entity tags. You can 
+A `Token` has fields for linguistic annotation, such as lemmas, part-of-speech tags or named entity tags. You can 
 add a tag by specifying the tag type and the tag value. In this example, we're adding an NER tag of type 'color' to 
 the word 'green'. This means that we've tagged this word as an entity of type color.
 
@@ -101,13 +101,31 @@ This should print:
 The grass is green <color> .
 ```
 
+## Adding Labels to Sentences
+
+A `Sentence` can have one or multiple labels, that can be used in, for example, text classification tasks. In this 
+example, we're adding different class labels to a sentence. 
+
+```python
+sentence = Sentence('France is the current world cup winner.')
+
+# add a label to a sentence
+sentence.add_label('sport')
+
+# a sentence can also belong to multiple classes
+sentence.add_labels(['sport', 'world'])
+
+# you can also set the labels while initializing the sentence
+Sentence('France is the current world cup winner.', labels=['sport', 'world'])
+```
+
 ## Reading CoNLL parsed files
 
 We provide a set of helper methods to read CoNLL parsed files as a list of `Sentence` objects. For instance, you can
 use the popular CoNLL-U format introduced by the Universal Dependencies project. 
 
 Simply point the `NLPTaskDataFetcher` to the file containing the parsed sentences. It will read the sentences into a 
-list of `Sentence`
+list of `Sentence`.
 
 ```python
 from flair.data_fetcher import NLPTaskDataFetcher
@@ -120,14 +138,15 @@ sentences: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder)
 ```
 
 Importantly, these sentences now contain a wealth of `Token` level annotations.
-In the case of CoNLL-U, they should contain information including a token lemma, its part-of-speech, morphological annotation, its dependency relation and its head token.
-You can access this information using the tag fields of the  `Token`.
+In the case of CoNLL-U, they should contain information including a token lemma, its part-of-speech, morphological 
+annotation, its dependency relation and its head token.
+You can access this information using the tag fields of the `Token`.
 
 ## Reading files for text classification tasks
 
 We provide a helper method to read files that contain data for text classification tasks into a list of `Sentence` 
 objects. A file containing data for a text classification task should have the following format:
-```bash
+```text
 __label__<label_1> <text>
 __label__<label_1> __label__<label_2> <text>
 ```
@@ -140,7 +159,7 @@ The labels are assigned to the `Sentence`.
 
 To read a file containing text classification data simply point the `NLPTaskDataFetcher` to the file containing 
 the sentences. 
-It will read the sentences into a list of `Sentence`
+It will read the sentences into a list of `Sentence`.
 
 ```python
 from flair.data_fetcher import NLPTaskDataFetcher
