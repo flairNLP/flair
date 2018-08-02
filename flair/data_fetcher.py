@@ -368,8 +368,6 @@ class NLPTaskDataFetcher:
         label_prefix = '__label__'
         sentences = []
 
-        print(path_to_file)
-
         with open(path_to_file) as f:
             lines = f.readlines()
 
@@ -389,6 +387,7 @@ class NLPTaskDataFetcher:
 
                 text = line[l_len:].strip()
 
-                sentences.append(Sentence(text, labels=labels, use_tokenizer=True))
+                if text and labels:
+                    sentences.append(Sentence(text, labels=labels, use_tokenizer=True))
 
         return sentences

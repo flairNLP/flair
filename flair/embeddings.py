@@ -297,7 +297,7 @@ class CharacterEmbeddings(TokenEmbeddings):
                 character_embeddings[d[i]] = chars_embeds_temp[i]
 
             for token_number, token in enumerate(sentence.tokens):
-                token.set_embedding(self.name, character_embeddings[token_number].cpu())
+                token.set_embedding(self.name, character_embeddings[token_number])
 
 
 class CharLMEmbeddings(TokenEmbeddings):
@@ -357,13 +357,6 @@ class CharLMEmbeddings(TokenEmbeddings):
         self.detach = detach
 
         self.is_forward_lm: bool = self.lm.is_forward_lm
-        if self.is_forward_lm:
-            print('FORWARD language mode loaded')
-        else:
-            print('BACKWARD language mode loaded')
-
-        print('on cuda:')
-        print(next(self.lm.parameters()).is_cuda)
 
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token('hello'))
@@ -420,19 +413,20 @@ class CharLMEmbeddings(TokenEmbeddings):
                 offset_backward -= 1
                 offset_backward -= len(token.text)
 
-                token.set_embedding(self.name, embedding.cpu())
+                token.set_embedding(self.name, embedding)
                 self.__embedding_length = len(embedding)
 
         return sentences
 
 
 class DocumentMeanEmbeddings(DocumentEmbeddings):
+
     def __init__(self, word_embeddings: List[TokenEmbeddings], reproject_words: bool = True):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
         self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=word_embeddings)
-        self.name: str = 'word_mean'
+        self.name: str = 'document_mean'
         self.reproject_words: bool = reproject_words
         self.static_embeddings: bool = not reproject_words
 
@@ -440,31 +434,35 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
         self.__embedding_length = self.embeddings.embedding_length
 
         self.word_reprojection_map = torch.nn.Linear(self.__embedding_length, self.__embedding_length)
+        torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
+
+        if torch.cuda.is_available():
+            self.cuda()
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def embed(self, paragraphs: Union[List[Sentence], Sentence]):
+    def embed(self, sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to every sentence in the given list of sentences. If embeddings are already added, updates
         only if embeddings are non-static."""
 
         everything_embedded: bool = True
 
         # if only one sentence is passed, convert to list of sentence
-        if type(paragraphs) is Sentence:
-            paragraphs = [paragraphs]
+        if type(sentences) is Sentence:
+            sentences = [sentences]
 
-        for paragraph in paragraphs:
-            if self.name not in paragraph._embeddings.keys(): everything_embedded = False
+        for sentence in sentences:
+            if self.name not in sentence._embeddings.keys(): everything_embedded = False
 
         if not everything_embedded or not self.static_embeddings:
 
-            self.embeddings.embed(paragraphs)
+            self.embeddings.embed(sentences)
 
-            for paragraph in paragraphs:
+            for sentence in sentences:
                 word_embeddings = []
-                for token in paragraph.tokens:
+                for token in sentence.tokens:
                     token: Token = token
                     word_embeddings.append(token.get_embedding().unsqueeze(0))
 
@@ -477,48 +475,65 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
 
                 mean_embedding = torch.mean(word_embeddings, 0)
 
-                paragraph.set_embedding(self.name, mean_embedding)
+                sentence.set_embedding(self.name, mean_embedding.unsqueeze(0))
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
 
 
 class DocumentLSTMEmbeddings(DocumentEmbeddings):
-    def __init__(self, word_embeddings: List[TokenEmbeddings], hidden_states=128, num_layers=1,
-                 reproject_words: bool = True, bidirectional: bool = True):
+
+    def __init__(self, token_embeddings: List[TokenEmbeddings], hidden_states=128, num_layers=1,
+                 reproject_words: bool = True, reproject_words_dimension: int = None, bidirectional: bool = False,
+                 use_first_representation: bool = False):
         """The constructor takes a list of embeddings to be combined.
-        :param word_embeddings: a list of word embeddings
+        :param token_embeddings: a list of token embeddings
         :param hidden_states: the number of hidden states in the lstm
         :param num_layers: the number of layers for the lstm
         :param reproject_words: boolean value, indicating whether to reproject the word embedding in a separate linear
         layer before putting them into the lstm or not
+        :param reproject_words_dimension: output dimension of reprojecting words. If None the same output dimension as
+        before will be taken.
         :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
+        :param use_first_representation: boolean value, indicating whether to concatenate the first and last
+        representation of the lstm to be used as final document embedding.
         """
         super().__init__()
 
-        self.embeddings: List[TokenEmbeddings] = word_embeddings
+        self.embeddings: List[TokenEmbeddings] = token_embeddings
 
         self.reproject_words = reproject_words
         self.bidirectional = bidirectional
+        self.use_first_representation = use_first_representation
 
-        self.length_of_all_word_embeddings = 0
-        for word_embedding in self.embeddings:
-            self.length_of_all_word_embeddings += word_embedding.embedding_length
+        self.length_of_all_token_embeddings = 0
+        for token_embedding in self.embeddings:
+            self.length_of_all_token_embeddings += token_embedding.embedding_length
 
-        self.name = 'text_lstm'
+        self.name = 'document_lstm'
         self.static_embeddings = False
 
+        self.__embedding_length: int = hidden_states
         if self.bidirectional:
-            self.__embedding_length: int = hidden_states * 2
-        else:
-            self.__embedding_length: int = hidden_states
+            self.__embedding_length *= 2
+        if self.use_first_representation:
+            self.__embedding_length *= 2
+
+        self.embeddings_dimension: int = self.length_of_all_token_embeddings
+        if self.reproject_words and reproject_words_dimension is not None:
+            self.embeddings_dimension = reproject_words_dimension
 
         # bidirectional LSTM on top of embedding layer
-        self.word_reprojection_map = torch.nn.Linear(self.length_of_all_word_embeddings,
-                                                     self.length_of_all_word_embeddings)
-        self.rnn = torch.nn.LSTM(self.length_of_all_word_embeddings, hidden_states, num_layers=num_layers,
+        self.word_reprojection_map = torch.nn.Linear(self.length_of_all_token_embeddings,
+                                                     self.embeddings_dimension)
+        self.rnn = torch.nn.GRU(self.embeddings_dimension, hidden_states, num_layers=num_layers,
                                  bidirectional=self.bidirectional)
         self.dropout = torch.nn.Dropout(0.5)
+
+        torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
+
+        if torch.cuda.is_available():
+            self.cuda()
 
     @property
     def embedding_length(self) -> int:
@@ -535,8 +550,8 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
         sentences.sort(key=lambda x: len(x), reverse=True)
 
-        for word_embedding in self.embeddings:
-            word_embedding.embed(sentences)
+        for token_embedding in self.embeddings:
+            token_embedding.embed(sentences)
 
         # first, sort sentences by number of tokens
         longest_token_sequence_in_batch: int = len(sentences[0])
@@ -558,8 +573,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
             # PADDING: pad shorter sentences out
             for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
                 word_embeddings.append(
-                    torch.autograd.Variable(
-                        torch.FloatTensor(np.zeros(self.length_of_all_word_embeddings, dtype='float')).unsqueeze(0)))
+                    torch.FloatTensor(np.zeros(self.length_of_all_token_embeddings, dtype='float')).unsqueeze(0))
 
             word_embeddings_tensor = torch.cat(word_embeddings, 0)
 
@@ -586,12 +600,23 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         packed = torch.nn.utils.rnn.pack_padded_sequence(sentence_tensor, lengths)
 
         lstm_out, hidden = self.rnn(packed)
+
         outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(lstm_out)
 
         outputs = self.dropout(outputs)
 
-        for i, sentence in enumerate(sentences):
-            embedding = outputs[output_lengths[i].item() - 1, i]
+        # --------------------------------------------------------------------
+        # EXTRACT EMBEDDINGS FROM LSTM
+        # --------------------------------------------------------------------
+        for sentence_no, length in enumerate(lengths):
+            last_rep = outputs[length - 1, sentence_no].unsqueeze(0)
+
+            embedding = last_rep
+            if self.use_first_representation:
+                first_rep = outputs[0, sentence_no].unsqueeze(0)
+                embedding = torch.cat([first_rep, last_rep], 1)
+
+            sentence = sentences[sentence_no]
             sentence.set_embedding(self.name, embedding)
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):

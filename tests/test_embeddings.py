@@ -1,3 +1,5 @@
+import pytest
+
 from flair.embeddings import WordEmbeddings, TokenEmbeddings, CharLMEmbeddings, StackedEmbeddings, \
     DocumentLSTMEmbeddings, DocumentMeanEmbeddings
 
@@ -80,18 +82,75 @@ def test_stacked_embeddings():
         assert(len(token.get_embedding()) == 0)
 
 
-def test_document_lstm_embeddings():
+@pytest.fixture
+def init_document_embeddings():
     text = 'I love Berlin. Berlin is a great place to live.'
     sentence: Sentence = Sentence(text)
 
     glove: TokenEmbeddings = WordEmbeddings('en-glove')
     charlm: TokenEmbeddings = CharLMEmbeddings('mix-backward')
 
-    embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], bidirectional=False)
+    return sentence, glove, charlm
+
+
+def test_document_lstm_embeddings():
+    sentence, glove, charlm = init_document_embeddings()
+
+    embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_states=128,
+                                                                bidirectional=False, use_first_representation=False)
 
     embeddings.embed(sentence)
 
     assert (len(sentence.get_embedding()) != 0)
+    assert (sentence.get_embedding().shape[1] == embeddings.embedding_length)
+
+    sentence.clear_embeddings()
+
+    assert (len(sentence.get_embedding()) == 0)
+
+
+def test_document_bidirectional_lstm_embeddings():
+    sentence, glove, charlm = init_document_embeddings()
+
+    embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_states=128,
+                                                                bidirectional=True, use_first_representation=False)
+
+    embeddings.embed(sentence)
+
+    assert (len(sentence.get_embedding()) != 0)
+    assert (sentence.get_embedding().shape[1] == embeddings.embedding_length)
+
+    sentence.clear_embeddings()
+
+    assert (len(sentence.get_embedding()) == 0)
+
+
+def test_document_bidirectional_lstm_embeddings_using_first_representation():
+    sentence, glove, charlm = init_document_embeddings()
+
+    embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_states=128,
+                                                                bidirectional=True, use_first_representation=True)
+
+    embeddings.embed(sentence)
+
+    assert (len(sentence.get_embedding()) != 0)
+    assert (sentence.get_embedding().shape[1] == embeddings.embedding_length)
+
+    sentence.clear_embeddings()
+
+    assert (len(sentence.get_embedding()) == 0)
+
+
+def test_document_lstm_embeddings_using_first_representation():
+    sentence, glove, charlm = init_document_embeddings()
+
+    embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_states=128,
+                                                                bidirectional=False, use_first_representation=True)
+
+    embeddings.embed(sentence)
+
+    assert (len(sentence.get_embedding()) != 0)
+    assert (sentence.get_embedding().shape[1] == embeddings.embedding_length)
 
     sentence.clear_embeddings()
 

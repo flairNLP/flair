@@ -63,8 +63,7 @@ def clear_embeddings(sentences: List[Sentence]):
     :param sentences: list of sentences
     """
     for sentence in sentences:
-        for token in sentence.tokens:
-            token.clear_embeddings()
+        sentence.clear_embeddings(also_clear_word_embeddings=True)
 
 
 def init_output_file(base_path: str, file_name: str):
@@ -111,7 +110,7 @@ def calculate_micro_avg_metric(y_true: List[List[int]], y_pred: List[List[int]],
     :param labels: the label dictionary
     :return: the overall metrics
     """
-    metric = Metric("OVERALL")
+    metric = Metric("MICRO_AVG")
 
     for pred, true in zip(y_pred, y_true):
         for i in range(len(labels)):

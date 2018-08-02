@@ -4,6 +4,7 @@ from functools import reduce
 from typing import List
 
 import torch
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from flair.data import Sentence, TaggedCorpus, Dictionary
 from flair.models.text_classification_model import TextClassifier
@@ -27,6 +28,8 @@ class TextClassifierTrainer:
               learning_rate: float = 0.1,
               mini_batch_size: int = 32,
               max_epochs: int = 100,
+              anneal_factor: float = 0.5,
+              patience: int = 2,
               save_model: bool = True,
               embeddings_in_memory: bool = True,
               train_with_dev: bool = False):
@@ -42,11 +45,17 @@ class TextClassifierTrainer:
         """
 
         loss_txt = init_output_file(base_path, 'loss.txt')
+        with open(loss_txt, 'a') as f:
+            f.write('EPOCH\tITERATION\tDEV_LOSS\tTRAIN_LOSS\tDEV_F_SCORE\tTRAIN_F_SCORE\tDEV_ACC\tTRAIN_ACC\n')
         weights_txt = init_output_file(base_path, 'weights.txt')
 
         weights_index = defaultdict(lambda: defaultdict(lambda: list()))
 
         optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
+
+        anneal_mode = 'min' if train_with_dev else 'max'
+        scheduler: ReduceLROnPlateau = ReduceLROnPlateau(optimizer, factor=anneal_factor, patience=patience,
+                                                         mode=anneal_mode)
 
         train_data = self.corpus.train
         # if training also uses dev data, include in training set
@@ -59,6 +68,7 @@ class TextClassifierTrainer:
             best_score = 0
 
             for epoch in range(max_epochs):
+                print('-' * 100)
                 if not self.test_mode:
                     random.shuffle(train_data)
 
@@ -85,7 +95,8 @@ class TextClassifierTrainer:
                         clear_embeddings(batch)
 
                     if batch_no % modulo == 0:
-                        print("epoch {0} - iter {1}/{2} - loss {3:.8f}".format(epoch + 1, batch_no, len(batches), current_loss / seen_sentences))
+                        print("epoch {0} - iter {1}/{2} - loss {3:.8f}".format(epoch + 1, batch_no, len(batches),
+                                                                               current_loss / seen_sentences))
 
                         iteration = epoch * len(batches) + batch_no
                         self._extract_weigths(iteration, weights_index, weights_txt)
@@ -95,17 +106,20 @@ class TextClassifierTrainer:
                 # IMPORTANT: Switch to eval mode
                 self.model.eval()
 
-                train_metrics, train_loss = self.evaluate(self.corpus.train, mini_batch_size=mini_batch_size)
-                train_f_score = train_metrics['OVERALL'].f_score()
-                train_acc = train_metrics['OVERALL'].accuracy()
+                print('-' * 100)
+                train_metrics, train_loss = self.evaluate(self.corpus.train, mini_batch_size=mini_batch_size,
+                                                          embeddings_in_memory=embeddings_in_memory)
+                train_f_score = train_metrics['MICRO_AVG'].f_score()
+                train_acc = train_metrics['MICRO_AVG'].accuracy()
                 print("{0:<7} epoch {1} - loss {2:.8f} - f-score {3:.4f} - acc {4:.4f}".format(
                     'TRAIN:', epoch, train_loss, train_f_score, train_acc))
 
                 dev_f_score = dev_acc = dev_loss = 0
                 if not train_with_dev:
-                    dev_metrics, dev_loss = self.evaluate(self.corpus.dev, mini_batch_size=mini_batch_size)
-                    dev_f_score = dev_metrics['OVERALL'].f_score()
-                    dev_acc = dev_metrics['OVERALL'].accuracy()
+                    dev_metrics, dev_loss = self.evaluate(self.corpus.dev, mini_batch_size=mini_batch_size,
+                                                          embeddings_in_memory=embeddings_in_memory)
+                    dev_f_score = dev_metrics['MICRO_AVG'].f_score()
+                    dev_acc = dev_metrics['MICRO_AVG'].accuracy()
                     print("{0:<7} epoch {1} - loss {2:.8f} - f-score {3:.4f} - acc {4:.4f}".format(
                         'DEV:', epoch, dev_loss, dev_f_score, dev_acc))
 
@@ -115,6 +129,9 @@ class TextClassifierTrainer:
 
                 # IMPORTANT: Switch back to train mode
                 self.model.train()
+
+                # anneal against train loss if training with dev, otherwise anneal against dev score
+                scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_f_score)
 
                 is_best_model_so_far: bool = False
                 current_score = dev_f_score if not train_with_dev else train_f_score
@@ -131,10 +148,18 @@ class TextClassifierTrainer:
 
             if save_model:
                 self.model = TextClassifier.load_from_file(base_path + "/model.pt")
+
+            print('-' * 100)
+            print('testing...')
+
             test_metrics, test_loss = self.evaluate(
-                self.corpus.test, mini_batch_size=mini_batch_size, eval_class_metrics=True)
+                self.corpus.test, mini_batch_size=mini_batch_size, eval_class_metrics=True,
+                embeddings_in_memory=embeddings_in_memory)
+
             for metric in test_metrics.values():
                 metric.print()
+
+            print('-' * 100)
 
         except KeyboardInterrupt:
             print('-' * 89)
@@ -145,7 +170,8 @@ class TextClassifierTrainer:
                 model_save_file.close()
             print('done')
 
-    def evaluate(self, sentences: List[Sentence], eval_class_metrics: bool = False, mini_batch_size: int = 32) -> (dict, float):
+    def evaluate(self, sentences: List[Sentence], eval_class_metrics: bool = False, mini_batch_size: int = 32,
+                 embeddings_in_memory: bool = True) -> (dict, float):
         """
         Evaluates the model with the given list of sentences.
         :param sentences: the list of sentences
@@ -167,6 +193,9 @@ class TextClassifierTrainer:
 
             y_true.extend([sentence.labels for sentence in batch])
             y_pred.extend(labels)
+
+            if not embeddings_in_memory:
+                clear_embeddings(batch)
 
         y_pred = convert_labels_to_one_hot(y_pred, self.label_dict)
         y_true = convert_labels_to_one_hot(y_true, self.label_dict)
