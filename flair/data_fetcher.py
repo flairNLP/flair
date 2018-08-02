@@ -387,6 +387,7 @@ class NLPTaskDataFetcher:
 
                 text = line[l_len:].strip()
 
-                sentences.append(Sentence(text, labels=labels, use_tokenizer=True))
+                if text and labels:
+                    sentences.append(Sentence(text, labels=labels, use_tokenizer=True))
 
         return sentences

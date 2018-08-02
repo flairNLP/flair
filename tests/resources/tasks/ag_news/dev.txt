@@ -8,3 +8,7 @@ __label__Business Exxon boosted by oil price boom Exxon Mobil becomes the latest
 __label__Business General Mills Says Its Costs Pinch Its Profit Profit in the fourth quarter rose less than 1 percent, hurt by soaring grain costs, despite a 7 percent increase in sales.
 __label__Sci/Tech Big Video Game Producer Receives More Subpoenas Take-Two Interactive Software said it received additional grand jury subpoenas seeking information about its financial activities.
 __label__World On video, British hostage faults Blair LONDON -- A videotape broadcast yesterday showed a British hostage in Iraq shackled in a cage and wearing an orange jumpsuit, pleading with Prime Minister Tony Blair to help save his life and accusing him of not doing enough to secure his freedom.
+
+__label__dummy
+
+test
