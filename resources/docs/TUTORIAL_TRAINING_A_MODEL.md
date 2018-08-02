@@ -152,8 +152,8 @@ following format:
 __label__<label_1> <text>
 __label__<label_1> __label__<label_2> <text>
 ```
-Thus, you need to convert the data before into the expected format. After you converted the data you can use the 
-`NLPTask.AG_NEWS` to read the data, if they are located in the following folder structure:
+Thus, you need to convert the data into the expected format. After you converted the data you can use the
+`NLPTask.AG_NEWS` to read the data, if the data files are located in the following folder structure:
 ```
 /resources/tasks/ag_news/train.txt
 /resources/tasks/ag_ness/dev.txt
