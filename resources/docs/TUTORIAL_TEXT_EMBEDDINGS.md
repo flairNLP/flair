@@ -8,28 +8,28 @@ library and how [word embeddings](/resources/docs/TUTORIAL_WORD_EMBEDDING.md) wo
 
 # Embeddings
 
-All embedding classes inherit from the `DocumentEmbeddings` class and implement the `embed()` method which you need to call 
+All embedding classes inherit from the `TextEmbeddings` class and implement the `embed()` method which you need to call 
 to embed your text. This means that for most users of Flair, the complexity of different embeddings remains hidden 
 behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
 All embeddings produced with our methods are pytorch vectors, so they can be immediately used for training and 
 fine-tuning.
 
-# Text Embeddings
+# Document Embeddings
 
-Text embeddings define one embedding for an entire text.
-Every text embedding take any number of word embedding as input.
+Document embeddings define one embedding for an entire document.
+Every document embedding takes any number of word embedding as input.
 The word embeddings are than mapped to a single text embedding.
-Currently, we have two different methods defined on how to obtain the text embedding from a list of word embeddings.
+Currently, we have two different methods defined on how to obtain the document embedding from a list of word embeddings.
 
 ### MEAN
 
-The first method calculates the mean over all word embeddings in a text.
-The resulting embedding is taken as text embedding.
+The first method calculates the mean over all word embeddings in a document.
+The resulting embedding is taken as document embedding.
 
-To create a mean text embedding simply create any number of WordEmbeddings first.
-Afterwards, initiate the TextMeanEmbedder and pass a list containing the created WordEmbeddings.
-So if you want to create a text embedding using GloVe embeddings together with CharLMEmbeddings,
+To create a mean document embedding simply create any number of `WordEmbeddings` first.
+Afterwards, initiate the `DocumentMeanEmbeddings` and pass a list containing the created `WordEmbeddings`.
+So, if you want to create a document embedding using GloVe embeddings together with CharLMEmbeddings,
 use the following code:
 
 ```python
@@ -41,7 +41,7 @@ charlm_embedding_forward = CharLMEmbeddings('news-forward')
 charlm_embedding_backward = CharLMEmbeddings('news-backward')
 
 # initialize the text embeddings
-text_embeddings = DocumentMeanEmbeddings([glove_embedding, charlm_embedding_backward, charlm_embedding_forward])
+document_embeddings = DocumentMeanEmbeddings([glove_embedding, charlm_embedding_backward, charlm_embedding_forward])
 ```
 
 Now, create an example sentence and call the embedding's `embed()` method. 
@@ -53,7 +53,7 @@ from flair.data import Sentence
 
 # create an example sentence and embed it
 sentence = Sentence('The grass is green .')
-text_embeddings.embed(paragraphs=[sentence])
+document_embeddings.embed(sentences=[sentence])
 
 # now check out the embedded tokens.
 print(sentence.get_embedding())
@@ -64,19 +64,23 @@ The embeddings dimensionality depends on the dimensionality of word embeddings y
 
 ### LSTM
 
-The second method obtains a text embeddings by using an LSTM.
-The method calculates first word embeddings for every token in the text.
-Those word embeddings are then taken as input to the LSTM.
-In the end, the last representation of the LSTM is taken as the text embedding.
+The second method creates a `DocumentEmbeddings` by using a LSTM.
+The method calculates first word embeddings for every token in the document.
+Those word embeddings are then taken as input to a LSTM.
+In the end, the last representation of the LSTM is taken as the document embedding.
 
-To create a LSTM text embedding simply create any number of WordEmbeddings first.
-Afterwards, initiate the TextLSTMEmbedder and pass a list containing the created WordEmbeddings.
+To create a `DocumentLSTMEmbeddings` simply create any number of WordEmbeddings first.
+Afterwards, initiate the `DocumentLSTMEmbeddings` and pass a list containing the created WordEmbeddings.
 If you want, you can also specify some other parameters:
-```bash
+```text
 :param hidden_states: the number of hidden states in the lstm
 :param num_layers: the number of layers for the lstm
+:param reproject_words: boolean value, indicating whether to reproject the word embedding in a separate linear
+layer before putting them into the lstm or not
+:param reproject_words_dimension: output dimension of reprojecting words
 :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
-:param reproject_words: boolean value, indicating whether to reproject the word embedding in a separate linear layer before putting them into the lstm or not
+:param use_first_representation: boolean value, indicating whether to concatenate the first and last
+representation of the lstm to be used as final document embedding or not
 ```
 
 So if you want to create a text embedding using only GloVe embeddings, use the following code:
@@ -86,7 +90,7 @@ from flair.embeddings import WordEmbeddings, DocumentLSTMEmbeddings
 
 glove_embedding = WordEmbeddings('glove')
 
-text_embeddings = DocumentLSTMEmbeddings([glove_embedding])
+document_embeddings = DocumentLSTMEmbeddings([glove_embedding])
 ```
 
 Now, create an example sentence and call the embedding's `embed()` method. 
@@ -97,7 +101,7 @@ So if you only have one sentence, pass a list containing only one sentence:
 from flair.data import Sentence
 
 sentence = Sentence('The grass is green .')
-text_embeddings.embed(paragraphs=[sentence])
+document_embeddings.embed(sentences=[sentence])
 
 # now check out the embedded tokens.
 print(sentence.get_embedding())
