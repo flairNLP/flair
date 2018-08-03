@@ -77,10 +77,6 @@ TaggedCorpus: 14987 train + 3466 dev + 3684 test sentences
 TaggedCorpus: 1499 train + 347 dev + 369 test sentences
 ```
 
-## Training a Language Model
-
-TODO
-
 ## Training a Sequence Labeling Model
 
 Here is example code for a small NER model trained over CoNLL-03 data, using simple GloVe embeddings.
