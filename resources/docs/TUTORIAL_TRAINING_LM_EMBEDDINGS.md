@@ -9,7 +9,11 @@ This tutorial shows you how to train your own CharLM embeddings, which may come 
 Language models are trained with plain text. In the case of character LMs, we train them to predict the next character in a sequence of characters.
 To train your own model, you first need to identify a suitably large corpus. In our eperiments, we used corpora that have about 1 billion words.
 
-You need to split your corpus into train, validation and test portions. Our trainer class assumes that there is a folder for the corpus in which there is a 'test.txt' and a 'valid.txt' with test and validation data. Importantly, there is also a folder called 'train' that contains the training data in splits. For instance, the billion word corpus is split into 100 parts. The splits were necessary since all the data does not fit into memory, so it randomly iterates through all splits during training.
+You need to split your corpus into train, validation and test portions.
+Our trainer class assumes that there is a folder for the corpus in which there is a 'test.txt' and a 'valid.txt' with test and validation data.
+Importantly, there is also a folder called 'train' that contains the training data in splits.
+For instance, the billion word corpus is split into 100 parts.
+The splits are necessary if all the data does not fit into memory, in which case the trainer randomly iterates through all splits.
 
 So, the folder structure must look like this:
 
