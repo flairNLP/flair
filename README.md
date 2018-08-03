@@ -8,10 +8,8 @@ A very simple framework for **state-of-the-art NLP**. Developed by [Zalando Rese
 
 Flair is:
 
-* **A powerful syntactic / semantic tagger.** Flair allows you to apply our state-of-the-art models for named entity
-recognition (NER), part-of-speech tagging (PoS) and chunking to your text.
-
-* **A simple text classifier.** Flair offers you to apply our models for text classification to your text.
+* **A powerful syntactic-semantic tagger / classifier.** Flair allows you to apply our state-of-the-art models for named entity
+recognition (NER), part-of-speech tagging (PoS), frame sense disambiguation, chunking and classification to your text.
 
 * **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and 
 document embeddings. In particular, you can try out our proposed 
@@ -21,6 +19,7 @@ to build your own state-of-the-art NLP methods.
 * **A Pytorch NLP framework.** Our framework builds directly on [Pytorch](https://pytorch.org/), making it easy to 
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
+Now at [version 0.2.0](https://github.com/zalandoresearch/flair/releases)!
 
 ## Comparison with State-of-the-Art
 
@@ -30,10 +29,13 @@ Flair outperforms the previous best methods on a range of NLP tasks:
 | -------------------------------    | ----------- | ---------------- | ------------- |
 | Named Entity Recognition (English) | Conll-03    |  **93.09** (F1)  | *92.22 [(Peters et al., 2018)](https://arxiv.org/pdf/1802.05365.pdf)* |
 | Named Entity Recognition (English) | Ontonotes   |  **89.71** (F1)  | *86.28 [(Chiu et al., 2016)](https://arxiv.org/pdf/1511.08308.pdf)* |
+| Emerging Entity Detection (English) | WNUT-17      |  **50.20** (F1)  | *45.55 [(Aguilar et al., 2018)](http://aclweb.org/anthology/N18-1127.pdf)* |
 | Named Entity Recognition (German)  | Conll-03    |  **88.32** (F1)  | *78.76 [(Lample et al., 2016)](https://arxiv.org/abs/1603.01360)* |
 | Named Entity Recognition (German)  | Germeval    |  **84.65** (F1)  | *79.08 [(Hänig et al, 2014)](http://asv.informatik.uni-leipzig.de/publication/file/300/GermEval2014_ExB.pdf)*|
 | Part-of-Speech tagging | WSJ  | **97.85**  | *97.64 [(Choi, 2016)](https://www.aclweb.org/anthology/N16-1031)*|
 | Chunking | Conll-2000  |  **96.72** (F1) | *96.36 [(Peters et al., 2017)](https://arxiv.org/pdf/1705.00108.pdf)*
+
+
 
 Here's how to [reproduce these numbers](/resources/docs/EXPERIMENTS.md) using Flair. You can also find a detailed evaluation and discussion in our paper: 
 

@@ -455,6 +455,12 @@ class SequenceTagger(nn.Module):
                                   'en-chunk-conll2000-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
+        if model.lower() == 'chunk-fast':
+            base_path = '/'.join([aws_resource_path,
+                                  'NP-conll2000--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
+                                  'en-chunk-conll2000-fast-v0.2.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
         if model.lower() == 'de-pos':
             base_path = '/'.join([aws_resource_path,
                                   'UPOS-udgerman--h256-l1-b8-%2Bgerman-forward%2Bgerman-backward--v0.2',

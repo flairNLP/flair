@@ -9,7 +9,11 @@ This tutorial shows you how to train your own CharLM embeddings, which may come 
 Language models are trained with plain text. In the case of character LMs, we train them to predict the next character in a sequence of characters.
 To train your own model, you first need to identify a suitably large corpus. In our eperiments, we used corpora that have about 1 billion words.
 
-You need to split your corpus into train, validation and test portions. Our trainer class assumes that there is a folder for the corpus in which there is a 'test.txt' and a 'valid.txt' with test and validation data. Importantly, there is also a folder called 'train' that contains the training data in splits. For instance, the billion word corpus is split into 100 parts. The splits were necessary since all the data does not fit into memory, so it randomly iterates through all splits during training.
+You need to split your corpus into train, validation and test portions.
+Our trainer class assumes that there is a folder for the corpus in which there is a 'test.txt' and a 'valid.txt' with test and validation data.
+Importantly, there is also a folder called 'train' that contains the training data in splits.
+For instance, the billion word corpus is split into 100 parts.
+The splits are necessary if all the data does not fit into memory, in which case the trainer randomly iterates through all splits.
 
 So, the folder structure must look like this:
 
@@ -68,15 +72,16 @@ Depending on your resources, you can try training large models, but beware that 
 
 ## Using the LM as Embeddings
 
-Once you have the LM trained, using it as embeddings is easy. Just load it into the `CharLMEmbeddings` class and use as you would any other embedding in Flair:
+Once you have the LM trained, using it as embeddings is easy. Just load the model into the `CharLMEmbeddings` class and use as you would any other embedding in Flair:
 
 ```python
+sentence = Sentence('I love Berlin')
+
+# init embeddings from your trained LM
 char_lm_embeddings = CharLMEmbeddings('resources/taggers/language_model/best-lm.pt')
 
-sentence = Sentence('I love Berlin')
+# embed sentence
 char_lm_embeddings.embed(sentence)
-
-print(sentence[1].embedding.size())
 ```
 
 Done!
@@ -84,7 +89,9 @@ Done!
 
 ## Parameters
 
-You might to play around with some of learning parameters in the `LanguageModelTrainer`. For instance, we generally find that an initial learning rate of 20, and an annealing factor of 4 is pretty good for most corpora. You might want to play around with the 'patience' value of the learning rate scheduler. We currently have it at 25, meaning that if the training loss does not improve for 25 splits, it decreases the learning rate.
+You might to play around with some of the learning parameters in the `LanguageModelTrainer`.
+For instance, we generally find that an initial learning rate of 20, and an annealing factor of 4 is pretty good for most corpora.
+You might also want to modify the 'patience' value of the learning rate scheduler. We currently have it at 25, meaning that if the training loss does not improve for 25 splits, it decreases the learning rate.
 
 
 

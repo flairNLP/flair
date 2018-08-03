@@ -23,8 +23,9 @@ Simply instantiate the WordEmbeddings class and pass a string identifier of the 
 you want to use GloVe embeddings, pass the string 'glove' to the constructor: 
 
 ```python
-# all embeddings inherit from the TextEmbeddings class. Init a simple glove embedding.
 from flair.embeddings import WordEmbeddings
+
+# init embedding
 glove_embedding = WordEmbeddings('glove')
 ```
 Now, create an example sentence and call the embedding's `embed()` method. You always pass a list of sentences to 
@@ -32,10 +33,11 @@ this method since some embedding types make use of batching to increase speed. S
 pass a list containing only one sentence:
 
 ```python
-# embed a sentence using glove.
-from flair.data import Sentence
+# create sentence.
 sentence = Sentence('The grass is green .')
-glove_embedding.embed(sentences=[sentence])
+
+# embed a sentence using glove.
+glove_embedding.embed(sentence)
 
 # now check out the embedded tokens.
 for token in sentence:
@@ -43,10 +45,10 @@ for token in sentence:
     print(token.embedding)
 ```
 
-This prints out the tokens and their embeddings. GloVe embeddings are pytorch vectors of dimensionality 100.
+This prints out the tokens and their embeddings. GloVe embeddings are Pytorch vectors of dimensionality 100.
 
 You choose which pre-trained embeddings you load by passing the appropriate 
-string you pass to the constructor of the `WordEmbeddings` class. Currently, the following static embeddings
+id string to the constructor of the `WordEmbeddings` class. Currently, the following static embeddings
 are provided (more coming): 
  
 | ID | Language | Embedding | 
@@ -54,17 +56,20 @@ are provided (more coming):
 | 'en-glove' (or 'glove') | English | GloVe embeddings |
 | 'en-numberbatch' (or 'numberbatch') | English |[Numberbatch](https://github.com/commonsense/conceptnet-numberbatch) embeddings |
 | 'en-extvec' (or 'extvec') | English |Komnios embeddings |
-| 'en-crawl' (or 'crawl')  | English |FastText embeddings over Web crawls |
-| 'en-news' (or 'news')  |English | FastText embeddings over news and wikipedia data |
+| 'en-crawl' (or 'crawl')  | English | FastText embeddings over Web crawls |
+| 'en-news' (or 'news')  |E nglish | FastText embeddings over news and wikipedia data |
+| 'en-twitter' (or 'twitter')  | English | GloVe embeddings computed over twitter data |
 | 'de-fasttext' | German |German FastText embeddings |
-| 'de-numberbatch' |German | German Numberbatch embeddings |
-| 'sv-fasttext' |Swedish | Swedish FastText embeddings |
+| 'de-numberbatch' | German | German Numberbatch embeddings |
+| 'sv-fasttext' | Swedish | Swedish FastText embeddings |
 
 So, if you want to load German FastText embeddings, instantiate the method as follows:
 
 ```python
 german_embedding = WordEmbeddings('de-fasttext')
 ```
+
+We generally recommend the FastText embeddings, or GloVe if you want a smaller model.
 
 ## Contextual String Embeddings
 
@@ -78,14 +83,15 @@ contextual use*.
 With Flair, you can use these embeddings simply by instantiating the appropriate embedding class, same as before:
 
 ```python
-
-# the CharLMEmbedding also inherits from the TextEmbeddings class
 from flair.embeddings import CharLMEmbeddings
+
+# init embedding
 charlm_embedding_forward = CharLMEmbeddings('news-forward')
 
-# embed a sentence using CharLM.
-from flair.data import Sentence
+# create a sentence
 sentence = Sentence('The grass is green .')
+
+# embed words in sentence
 charlm_embedding_forward.embed(sentence)
 ```
 
@@ -96,6 +102,8 @@ Currently, the following contextual string embeddings are provided (more coming)
 | -------------     | ------------- | ------------- |
 | 'news-forward'    | English | Forward LM embeddings over 1 billion word corpus |
 | 'news-backward'   | English | Backward LM embeddings over 1 billion word corpus |
+| 'news-forward-fast'    | English | Smaller, CPU-friendly forward LM embeddings over 1 billion word corpus |
+| 'news-backward-fast'   | English | Smaller, CPU-friendly backward LM embeddings over 1 billion word corpus |
 | 'mix-forward'     | English | Forward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
 | 'mix-backward'    | English | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
 | 'german-forward'  | German  | Forward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
@@ -117,14 +125,16 @@ With Flair, you need not worry about such things. Just choose the appropriate
 embedding class and character features will then automatically train during downstream task training. 
 
 ```python
-# the CharLMEmbedding also inherits from the TextEmbeddings class
 from flair.embeddings import CharacterEmbeddings
-embedder = CharacterEmbeddings()
 
-# embed a sentence using CharLM.
-from flair.data import Sentence
+# init embedding
+embedding = CharacterEmbeddings()
+
+# create a sentence
 sentence = Sentence('The grass is green .')
-embedder.embed(sentence)
+
+# embed words in sentence
+embedding.embed(sentence)
 ```
 
 # Stacked Embeddings
@@ -140,13 +150,12 @@ character language model.
 First, instantiate the three embeddings you wish to combine: 
 
 ```python
-# the CharLMEmbedding also inherits from the TextEmbeddings class
 from flair.embeddings import WordEmbeddings, CharLMEmbeddings
 
 # init GloVe embedding
 glove_embedding = WordEmbeddings('glove')
 
-# init CharLM embedding
+# init CharLM embeddings
 charlm_embedding_forward = CharLMEmbeddings('news-forward')
 charlm_embedding_backward = CharLMEmbeddings('news-backward')
 ```
@@ -154,17 +163,18 @@ charlm_embedding_backward = CharLMEmbeddings('news-backward')
 Now instantiate the `StackedEmbeddings` class and pass it a list containing these three embeddings.
 
 ```python
-# now create the StackedEmbedding object that combines all embeddings
 from flair.embeddings import StackedEmbeddings
+
+# now create the StackedEmbedding object that combines all embeddings
 stacked_embeddings = StackedEmbeddings(embeddings=[glove_embedding, charlm_embedding_forward, charlm_embedding_backward])
 ```
 
 That's it! Now just use this embedding like all the other embeddings, i.e. call the `embed()` method over your sentences.
 
 ```python
-# just embed a sentence using the StackedEmbedding as you would with any single embedding.
-from flair.data import Sentence
 sentence = Sentence('The grass is green .')
+
+# just embed a sentence using the StackedEmbedding as you would with any single embedding.
 stacked_embeddings.embed(sentence)
 
 # now check out the embedded tokens.
@@ -173,7 +183,7 @@ for token in sentence:
     print(token.embedding)
 ```
 
-Words are now embedding using a concatenation of three different embeddings. This means that the resulting embedding
+Words are now embedded using a concatenation of three different embeddings. This means that the resulting embedding
 vector is still a single Pytorch vector. 
 
 ## Next 
