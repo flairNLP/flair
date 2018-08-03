@@ -85,7 +85,7 @@ In this example, we downsample the data to 10% of the original data.
 ```python
 from flair.data import TaggedCorpus
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
-from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
 from typing import List
 
 # 1. get the corpus
@@ -129,7 +129,10 @@ from flair.trainers import SequenceTaggerTrainer
 trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
 
 # 7. start training
-trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
+trainer.train('resources/taggers/example-ner',
+              learning_rate=0.1,
+              mini_batch_size=32,
+              max_epochs=150)
 ```
 
 Alternatively, try using a stacked embedding with charLM and glove, over the full data, for 150 epochs.
@@ -170,24 +173,25 @@ corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.AG_NEWS).downsample
 # 2. create the label dictionary
 label_dict = corpus.make_label_dictionary()
 
-# 2. create the document embedding
-document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings(
-    [WordEmbeddings('de-fasttext'), CharLMEmbeddings('german-forward'), CharLMEmbeddings('german-backward')],
-    hidden_states=512,
-    num_layers=1,
-    reproject_words=True,
-    reproject_words_dimension=256,
-    bidirectional=False
-)
+# 3. make a list of word embeddings
+word_embeddings = [WordEmbeddings('de-fasttext'),
+                   CharLMEmbeddings('german-forward'),
+                   CharLMEmbeddings('german-backward')]
 
-# 3. create the text classifier
+# 4. init document embedding by passing list of word embeddings
+document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings(word_embeddings, hidden_states=512)
+
+# 5. create the text classifier
 classifier = TextClassifier(document_embeddings, label_dictionary=label_dict, multi_label=False)
 
-# 4. initialize the text classifier trainer
+# 6. initialize the text classifier trainer
 trainer = TextClassifierTrainer(classifier, corpus, label_dict)
 
-# 5. start the trainig
-trainer.train('resources/ag_news/results', learning_rate=0.1, mini_batch_size=32, max_epochs=150, embeddings_in_memory=False, anneal_factor=0.5, patience=10) 
+# 7. start the trainig
+trainer.train('resources/ag_news/results',
+              learning_rate=0.1,
+              mini_batch_size=32,
+              max_epochs=150)
 ```
 
 ## Next
