@@ -11,6 +11,8 @@ from flair.file_utils import cached_path
 
 from typing import List, Tuple, Union
 
+from flair.training_utils import clear_embeddings
+
 START_TAG: str = '<START>'
 STOP_TAG: str = '<STOP>'
 
@@ -358,6 +360,9 @@ class SequenceTagger(nn.Module):
 
         if type(sentences) is Sentence:
             sentences = [sentences]
+
+        # remove previous embeddings
+        clear_embeddings(sentences)
 
         # make mini-batches
         batches = [sentences[x:x + mini_batch_size] for x in range(0, len(sentences), mini_batch_size)]
