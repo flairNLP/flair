@@ -44,7 +44,7 @@ are provided:
 | 'ner-ontonotes' | 12-class Named Entity Recognition |  Ontonotes  |  **89.52** (F1) |
 | 'chunk' |  Syntactic Chunking   |  Conll-2000     |  **96.61** (F1) |
 | 'pos' |  Part-of-Speech Tagging |  Ontonotes     |  **98.01** (Accuracy) |
-| 'frame'  |   Semantic Frame Detection  (***Experimental***)| English | Propbank 3.0     |  **93.92** (F1) |
+| 'frame'  |   Semantic Frame Detection  (***Experimental***)|  Propbank 3.0     |  **93.92** (F1) |
 
 
 ### Fast English Models
@@ -58,9 +58,11 @@ In case you do not have a GPU available, we also distribute smaller models that 
 | 'ner-ontonotes-fast' | 12-class Named Entity Recognition |  Ontonotes  |  **89.28** (F1) |
 | 'chunk-fast' |  Syntactic Chunking   |  Conll-2000     |  **96.68** (F1) |
 | 'pos-fast' |  Part-of-Speech Tagging |  Ontonotes     |  **97.93** (Accuracy) |
-| 'frame-fast'  |   Semantic Frame Detection  (***Experimental***)| English | Propbank 3.0     |  **93.50** (F1) |
+| 'frame-fast'  |   Semantic Frame Detection  (***Experimental***)| Propbank 3.0     |  **93.50** (F1) |
 
 ### German Models
+
+We also distribute German models.
 
 | ID | Task | Training Dataset | Accuracy |
 | -------------    | ------------- |------------- |------------- |
@@ -69,12 +71,6 @@ In case you do not have a GPU available, we also distribute smaller models that 
 | 'de-pos' | Part-of-Speech Tagging |  Universal Dependency Treebank  |  **94.77** (Accuracy) |
 
 
-
-So, if you want to use a `SequenceTagger` that performs PoS tagging, instantiate the tagger as follows:
-
-```python
-tagger = SequenceTagger.load('pos')
-```
 
 ## Tagging a German sentence
 
