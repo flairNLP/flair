@@ -83,14 +83,15 @@ contextual use*.
 With Flair, you can use these embeddings simply by instantiating the appropriate embedding class, same as before:
 
 ```python
-
-# the CharLMEmbedding also inherits from the TextEmbeddings class
 from flair.embeddings import CharLMEmbeddings
+
+# init embedding
 charlm_embedding_forward = CharLMEmbeddings('news-forward')
 
-# embed a sentence using CharLM.
-from flair.data import Sentence
+# create a sentence
 sentence = Sentence('The grass is green .')
+
+# embed words in sentence
 charlm_embedding_forward.embed(sentence)
 ```
 
@@ -101,6 +102,8 @@ Currently, the following contextual string embeddings are provided (more coming)
 | -------------     | ------------- | ------------- |
 | 'news-forward'    | English | Forward LM embeddings over 1 billion word corpus |
 | 'news-backward'   | English | Backward LM embeddings over 1 billion word corpus |
+| 'news-forward-fast'    | English | Smaller, CPU-friendly forward LM embeddings over 1 billion word corpus |
+| 'news-backward-fast'   | English | Smaller, CPU-friendly backward LM embeddings over 1 billion word corpus |
 | 'mix-forward'     | English | Forward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
 | 'mix-backward'    | English | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
 | 'german-forward'  | German  | Forward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
