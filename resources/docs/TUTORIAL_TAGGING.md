@@ -34,18 +34,40 @@ George <B-PER> Washington <E-PER> went to Washington <S-LOC> .
 
 You chose which pre-trained model you load by passing the appropriate 
 string to the `load()` method of the `SequenceTagger` class. Currently, the following pre-trained models
-are provided (more coming): 
- 
-| ID | Task | Language| Training Dataset | Accuracy | 
-| -------------    | ------------- | ------------- |------------- |------------- |
-| 'ner' | 4-class Named Entity Recognition | English | Conll-03  |  **93.18** (F1) |
-| 'ner-ontonotes' | 12-class Named Entity Recognition | English | Ontonotes  |  **89.62** (F1) |
-| 'chunk' |  Syntactic Chunking   | English | Conll-2000     |  **96.68** (F1) |
-| 'pos' |  Part-of-Speech Tagging | English | Ontonotes     |  **98.06** (Accuracy) |
-| 'frame'  |   Semantic Frame Detection  (***Experimental***)| English | Propbank 3.0     |  **98.00** (Accuracy) |
-| 'de-ner' | 4-class Named Entity Recognition | German | Conll-03  |  **88.29** (F1) |
-| 'de-ner-germeval' | 4+4-class Named Entity Recognition | German | Germeval  |  **84.53** (F1) |
-| 'de-pos' | Part-of-Speech Tagging | German | Universal Dependency Treebank  |  **94.67** (Accuracy) |
+are provided:
+
+### English Models
+
+| ID | Task | Training Dataset | Accuracy |
+| -------------    | ------------- |------------- |------------- |
+| 'ner' | 4-class Named Entity Recognition |  Conll-03  |  **93.24** (F1) |
+| 'ner-ontonotes' | 12-class Named Entity Recognition |  Ontonotes  |  **89.52** (F1) |
+| 'chunk' |  Syntactic Chunking   |  Conll-2000     |  **96.61** (F1) |
+| 'pos' |  Part-of-Speech Tagging |  Ontonotes     |  **98.01** (Accuracy) |
+| 'frame'  |   Semantic Frame Detection  (***Experimental***)| English | Propbank 3.0     |  **93.92** (F1) |
+
+
+### Fast English Models
+
+In case you do not have a GPU available, we also distribute smaller models that run faster on CPU.
+
+
+| ID | Task | Training Dataset | Accuracy |
+| -------------    | ------------- |------------- |------------- |
+| 'ner-fast' | 4-class Named Entity Recognition |  Conll-03  |  **92.61** (F1) |
+| 'ner-ontonotes-fast' | 12-class Named Entity Recognition |  Ontonotes  |  **89.28** (F1) |
+| 'chunk-fast' |  Syntactic Chunking   |  Conll-2000     |  **96.68** (F1) |
+| 'pos-fast' |  Part-of-Speech Tagging |  Ontonotes     |  **97.93** (Accuracy) |
+| 'frame-fast'  |   Semantic Frame Detection  (***Experimental***)| English | Propbank 3.0     |  **93.50** (F1) |
+
+### German Models
+
+| ID | Task | Training Dataset | Accuracy |
+| -------------    | ------------- |------------- |------------- |
+| 'de-ner' | 4-class Named Entity Recognition |  Conll-03  |  **87.99** (F1) |
+| 'de-ner-germeval' | 4+4-class Named Entity Recognition |  Germeval  |  **84.90** (F1) |
+| 'de-pos' | Part-of-Speech Tagging |  Universal Dependency Treebank  |  **94.77** (Accuracy) |
+
 
 
 So, if you want to use a `SequenceTagger` that performs PoS tagging, instantiate the tagger as follows:
