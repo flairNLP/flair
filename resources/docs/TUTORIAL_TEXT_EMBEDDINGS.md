@@ -66,7 +66,32 @@ Since the document embedding is derived from word embeddings, its dimensionality
 The second method creates a `DocumentEmbeddings` using an LSTM.
 The LSTM takes as input the word embeddings of every token in the document and provides its last output state as document embedding.
 
-Initiate the `DocumentLSTMEmbeddings` by passing a list of word embeddings. You can also specify the parameters of the LSTM:
+Initiate the `DocumentLSTMEmbeddings` by passing a list of word embeddings:
+
+```python
+from flair.embeddings import WordEmbeddings, DocumentLSTMEmbeddings
+
+glove_embedding = WordEmbeddings('glove')
+
+document_embeddings = DocumentLSTMEmbeddings([glove_embedding])
+```
+
+Now, create an example sentence and call the embedding's `embed()` method.
+
+```python
+# create an example sentence
+sentence = Sentence('The grass is green .')
+
+# embed the sentence with our document embedding
+document_embeddings.embed(sentence)
+
+# now check out the embedded sentence.
+print(sentence.get_embedding())
+```
+
+The embedding dimensionality depends on the number of hidden states you are using and whether the LSTM is bidirectional or not.
+
+There are a number of hyperparameters of the LSTM you can tune to improve learning:
 
 ```text
 :param hidden_states: the number of hidden states in the lstm
@@ -79,32 +104,9 @@ layer before putting them into the lstm or not
 representation of the lstm to be used as final document embedding or not
 ```
 
-So if you want to create a text embedding using only GloVe embeddings, use the following code:
+Note that while MEAN embeddings are immediately meaningful, LSTM embeddings need to be tuned on the downstream task.
+This happens automatically in Flair if you train a new model with these embeddings.
 
-```python
-from flair.embeddings import WordEmbeddings, DocumentLSTMEmbeddings
-
-glove_embedding = WordEmbeddings('glove')
-
-document_embeddings = DocumentLSTMEmbeddings([glove_embedding])
-```
-
-Now, create an example sentence and call the embedding's `embed()` method. 
-You always pass a list of sentences to this method since some embedding types make use of batching to increase speed. 
-So if you only have one sentence, pass a list containing only one sentence:
-
-```python
-from flair.data import Sentence
-
-sentence = Sentence('The grass is green .')
-document_embeddings.embed(sentences=[sentence])
-
-# now check out the embedded tokens.
-print(sentence.get_embedding())
-```
-
-This prints out the embedding of the text. 
-The embedding dimensionality depends on the number of hidden states you are using and whether the LSTM is bidirectional or not.
 
 ## Next 
 
