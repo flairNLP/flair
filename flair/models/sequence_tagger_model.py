@@ -399,54 +399,78 @@ class SequenceTagger(nn.Module):
     @staticmethod
     def load(model: str):
         model_file = None
-        aws_resource_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models'
+        aws_resource_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.2'
 
         if model.lower() == 'ner':
             base_path = '/'.join([aws_resource_path,
-                                  'NER-conll03--h256-l1-b32-%2Bglove%2Bnews-forward%2Bnews-backward--anneal',
-                                  'en-ner-conll03-v0.1.pt'])
+                                  'NER-conll03--h256-l1-b32-%2Bglove%2Bnews-forward%2Bnews-backward--v0.2',
+                                  'en-ner-conll03-v0.2.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'ner-fast':
+            base_path = '/'.join([aws_resource_path,
+                                  'NER-conll03--h256-l1-b32-experimental--fast-v0.2',
+                                  'en-ner-fast-conll03-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'ner-ontonotes':
             base_path = '/'.join([aws_resource_path,
-                                  'NER-ontoner--h256-l1-b32-%2Bft-crawl%2Bnews-forward%2Bnews-backward--anneal',
-                                  'en-ner-ontonotes-v0.1.pt'])
+                                  'NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward%2Bnews-backward--v0.2',
+                                  'en-ner-ontonotes-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
-        if model.lower() == 'chunk':
+        if model.lower() == 'ner-ontonotes-fast':
             base_path = '/'.join([aws_resource_path,
-                                  'NP-conll2000--h256-l1-b32-%2Bnews-forward%2Bnews-backward--anneal',
-                                  'en-chunk-conll2000-v0.1.pt'])
+                                  'NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
+                                  'en-ner-ontonotes-fast-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'pos':
             base_path = '/'.join([aws_resource_path,
-                                  'POS-ontonotes--h256-l1-b32-%2Bmix-forward%2Bmix-backward--anneal',
-                                  'en-pos-ontonotes-v0.1.pt'])
+                                  'POS-ontonotes--h256-l1-b32-%2Bmix-forward%2Bmix-backward--v0.2',
+                                  'en-pos-ontonotes-v0.2.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'pos-fast':
+            base_path = '/'.join([aws_resource_path,
+                                  'POS-ontonotes--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
+                                  'en-pos-ontonotes-fast-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'frame':
             base_path = '/'.join([aws_resource_path,
-                                  'FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward%2Bnews-backward--anneal',
-                                  'en-frame-ontonotes-v0.1.pt'])
+                                  'FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward%2Bnews-backward--v0.2',
+                                  'en-frame-ontonotes-v0.2.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'frame-fast':
+            base_path = '/'.join([aws_resource_path,
+                                  'FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
+                                  'en-frame-ontonotes-fast-v0.2.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'chunk':
+            base_path = '/'.join([aws_resource_path,
+                                  'NP-conll2000--h256-l1-b32-%2Bnews-forward%2Bnews-backward--v0.2',
+                                  'en-chunk-conll2000-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'de-pos':
             base_path = '/'.join([aws_resource_path,
-                                  'UPOS-udgerman--h256-l1-b8-%2Bgerman-forward%2Bgerman-backward--anneal',
-                                  'de-pos-ud-v0.1.pt'])
+                                  'UPOS-udgerman--h256-l1-b8-%2Bgerman-forward%2Bgerman-backward--v0.2',
+                                  'de-pos-ud-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'de-ner':
             base_path = '/'.join([aws_resource_path,
-                                  'NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--anneal',
-                                  'de-ner-conll03-v0.1.pt'])
+                                  'NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2',
+                                  'de-ner-conll03-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'de-ner-germeval':
             base_path = '/'.join([aws_resource_path,
-                                  'NER-germeval--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--anneal',
-                                  'de-ner-germeval-v0.1.pt'])
+                                  'NER-germeval--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2',
+                                  'de-ner-germeval-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model_file is not None:

@@ -9,6 +9,7 @@ import sys
 import torch
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
+from flair.file_utils import cached_path
 from flair.models.sequence_tagger_model import SequenceTagger
 from flair.data import Sentence, Token, TaggedCorpus
 from flair.training_utils import Metric
@@ -219,7 +220,10 @@ class SequenceTaggerTrainer:
                 outfile.write(''.join(lines))
 
         if evaluation_method == 'span-F1':
-            eval_script = 'resources/tasks/eval_script'
+
+            # get the eval script
+            eval_script = cached_path('https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/scripts/conll03_eval_script.pl', cache_dir='scripts')
+            os.chmod(eval_script, 0o777)
 
             eval_data = ''.join(lines)
 

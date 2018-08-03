@@ -92,9 +92,9 @@ class NLPTaskDataFetcher:
 
         if task == NLPTask.SRL:
             data_folder = os.path.join('resources', 'tasks', 'srl')
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_2_column_data(os.path.join(data_folder, 'train.srl.conll'))
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_2_column_data(os.path.join(data_folder, 'test.srl.conll'))
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_2_column_data(os.path.join(data_folder, 'dev.srl.conll'))
+            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_2_column_data(os.path.join(data_folder, 'train.srl.conll'), 'srl')
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_2_column_data(os.path.join(data_folder, 'test.srl.conll'), 'srl')
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_2_column_data(os.path.join(data_folder, 'dev.srl.conll'), 'srl')
 
             return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
@@ -202,7 +202,7 @@ class NLPTaskDataFetcher:
         return sample
 
     @staticmethod
-    def read_conll_2_column_data(path_to_conll_file: str):
+    def read_conll_2_column_data(path_to_conll_file: str, tag_name: str):
 
         sentences: List[Sentence] = []
 
@@ -213,13 +213,14 @@ class NLPTaskDataFetcher:
         for line in lines:
 
             if line == '':
-                sentences.append(sentence)
+                if len(sentence) > 0:
+                    sentences.append(sentence)
                 sentence: Sentence = Sentence()
             else:
                 # print(line)
                 fields: List[str] = re.split("\s+", line)
                 token = Token(fields[0])
-                token.add_tag('srl', fields[1])
+                token.add_tag(tag_name, fields[1])
                 sentence.add_token(token)
 
         if len(sentence.tokens) > 0:
@@ -239,7 +240,8 @@ class NLPTaskDataFetcher:
         for line in lines:
 
             if line == '':
-                sentences.append(sentence)
+                if len(sentence) > 0:
+                    sentences.append(sentence)
                 sentence: Sentence = Sentence()
             else:
                 # print(line)
@@ -268,7 +270,8 @@ class NLPTaskDataFetcher:
 
             fields: List[str] = re.split("\s+", line)
             if line == '':
-                sentences.append(sentence)
+                if len(sentence) > 0:
+                    sentences.append(sentence)
                 sentence: Sentence = Sentence()
 
             elif line.startswith('#'):
@@ -337,8 +340,9 @@ class NLPTaskDataFetcher:
         for line in lines:
 
             if line == '':
-                sentence.convert_tag_scheme(target_scheme=tag_scheme)
-                sentences.append(sentence)
+                if len(sentence) > 0:
+                    sentence.convert_tag_scheme(target_scheme=tag_scheme)
+                    sentences.append(sentence)
                 sentence: Sentence = Sentence()
             else:
                 fields: List[str] = re.split("\s+", line)
