@@ -8,7 +8,7 @@ A very simple framework for **state-of-the-art NLP**. Developed by [Zalando Rese
 
 Flair is:
 
-* **A powerful syntactic-semantic tagger and classifier.** Flair allows you to apply our state-of-the-art models for named entity
+* **A powerful syntactic-semantic tagger / classifier.** Flair allows you to apply our state-of-the-art models for named entity
 recognition (NER), part-of-speech tagging (PoS), frame sense disambiguation, chunking and classification to your text.
 
 * **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and 
