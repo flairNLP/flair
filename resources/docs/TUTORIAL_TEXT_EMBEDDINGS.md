@@ -42,23 +42,22 @@ charlm_embedding_backward = CharLMEmbeddings('news-backward')
 document_embeddings = DocumentMeanEmbeddings([glove_embedding, charlm_embedding_backward, charlm_embedding_forward])
 ```
 
-Now, create an example sentence and call the embedding's `embed()` method. 
-You always pass a list of sentences to this method since some embedding types make use of batching to increase speed. 
-So if you only have one sentence, pass a list containing only one sentence:
+Now, create an example sentence and call the embedding's `embed()` method.
 
 ```python
-from flair.data import Sentence
-
-# create an example sentence and embed it
+# create an example sentence
 sentence = Sentence('The grass is green .')
-document_embeddings.embed(sentences=[sentence])
 
-# now check out the embedded tokens.
+# embed the sentence with our document embedding
+document_embeddings.embed(sentence)
+
+# now check out the embedded sentence.
 print(sentence.get_embedding())
 ```
 
-This prints out the embedding of the text. 
-The embeddings dimensionality depends on the dimensionality of word embeddings you are using.
+This prints out the embedding of the document.
+Since the document embedding is derived from word embeddings, its dimensionality depends on the dimensionality of word embeddings you are using.
+
 
 ### LSTM
 
