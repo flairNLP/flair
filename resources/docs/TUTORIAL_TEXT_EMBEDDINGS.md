@@ -63,14 +63,11 @@ Since the document embedding is derived from word embeddings, its dimensionality
 
 ### LSTM
 
-The second method creates a `DocumentEmbeddings` by using a LSTM.
-The method calculates first word embeddings for every token in the document.
-Those word embeddings are then taken as input to a LSTM.
-In the end, the last representation of the LSTM is taken as the document embedding.
+The second method creates a `DocumentEmbeddings` using an LSTM.
+The LSTM takes as input the word embeddings of every token in the document and provides its last output state as document embedding.
 
-To create a `DocumentLSTMEmbeddings` simply create any number of `TokenEmbeddings` first.
-Afterwards, initiate the `DocumentLSTMEmbeddings` and pass a list containing the created WordEmbeddings.
-If you want, you can also specify some other parameters:
+Initiate the `DocumentLSTMEmbeddings` by passing a list of word embeddings. You can also specify the parameters of the LSTM:
+
 ```text
 :param hidden_states: the number of hidden states in the lstm
 :param num_layers: the number of layers for the lstm
