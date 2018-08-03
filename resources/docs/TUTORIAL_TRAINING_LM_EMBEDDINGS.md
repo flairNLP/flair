@@ -89,7 +89,9 @@ Done!
 
 ## Parameters
 
-You might to play around with some of learning parameters in the `LanguageModelTrainer`. For instance, we generally find that an initial learning rate of 20, and an annealing factor of 4 is pretty good for most corpora. You might want to play around with the 'patience' value of the learning rate scheduler. We currently have it at 25, meaning that if the training loss does not improve for 25 splits, it decreases the learning rate.
+You might to play around with some of the learning parameters in the `LanguageModelTrainer`.
+For instance, we generally find that an initial learning rate of 20, and an annealing factor of 4 is pretty good for most corpora.
+You might also want to modify the 'patience' value of the learning rate scheduler. We currently have it at 25, meaning that if the training loss does not improve for 25 splits, it decreases the learning rate.
 
 
 
