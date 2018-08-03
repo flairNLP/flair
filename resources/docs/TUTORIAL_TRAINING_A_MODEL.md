@@ -77,10 +77,6 @@ TaggedCorpus: 14987 train + 3466 dev + 3684 test sentences
 TaggedCorpus: 1499 train + 347 dev + 369 test sentences
 ```
 
-## Training a Language Model
-
-TODO
-
 ## Training a Sequence Labeling Model
 
 Here is example code for a small NER model trained over CoNLL-03 data, using simple GloVe embeddings.
@@ -193,3 +189,7 @@ trainer = TextClassifierTrainer(classifier, corpus, label_dict)
 # 5. start the trainig
 trainer.train('resources/ag_news/results', learning_rate=0.1, mini_batch_size=32, max_epochs=150, embeddings_in_memory=False, anneal_factor=0.5, patience=10) 
 ```
+
+## Next
+
+You can now look into [training your own embeddings](/resources/docs/TUTORIAL_TRAINING_LM_EMBEDDINGS.md).

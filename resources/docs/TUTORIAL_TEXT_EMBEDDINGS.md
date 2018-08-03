@@ -112,4 +112,4 @@ The embedding dimensionality depends on the number of hidden states you are usin
 
 ## Next 
 
-You can now either look into the tutorial about [training your own models](/resources/docs/TUTORIAL_TRAINING_A_MODEL.md). 
+You can now either look into the tutorial about [training your own models](/resources/docs/TUTORIAL_TRAINING_A_MODEL.md) or into [training your own embeddings](/resources/docs/TUTORIAL_TRAINING_LM_EMBEDDINGS.md).
