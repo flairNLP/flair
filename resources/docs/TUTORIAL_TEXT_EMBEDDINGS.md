@@ -12,15 +12,13 @@ All document embedding classes inherit from the `DocumentEmbeddings` class and i
 to embed your text. This means that for most users of Flair, the complexity of different embeddings remains hidden 
 behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
-All embeddings produced with our methods are pytorch vectors, so they can be immediately used for training and 
+All embeddings produced with our methods are Pytorch vectors, so they can be immediately used for training and
 fine-tuning.
 
 # Document Embeddings
 
-Document embeddings define one embedding for an entire document.
-Every document embedding takes any number of word embedding as input.
-The word embeddings are than mapped to a single text embedding.
-Currently, we have two different methods defined on how to obtain the document embedding from a list of word embeddings.
+Our document embeddings are created from the embeddings of all words in the document.
+Currently, we have two different methods to obtain a document embedding from a list of word embeddings.
 
 ### MEAN
 
