@@ -72,15 +72,16 @@ Depending on your resources, you can try training large models, but beware that 
 
 ## Using the LM as Embeddings
 
-Once you have the LM trained, using it as embeddings is easy. Just load it into the `CharLMEmbeddings` class and use as you would any other embedding in Flair:
+Once you have the LM trained, using it as embeddings is easy. Just load the model into the `CharLMEmbeddings` class and use as you would any other embedding in Flair:
 
 ```python
+sentence = Sentence('I love Berlin')
+
+# init embeddings from your trained LM
 char_lm_embeddings = CharLMEmbeddings('resources/taggers/language_model/best-lm.pt')
 
-sentence = Sentence('I love Berlin')
+# embed sentence
 char_lm_embeddings.embed(sentence)
-
-print(sentence[1].embedding.size())
 ```
 
 Done!
