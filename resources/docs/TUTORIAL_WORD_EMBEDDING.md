@@ -1,22 +1,22 @@
 # Tutorial 3: Word Embeddings
 
 We provide a set of classes with which you can embed the words in sentences in various ways. This tutorial explains
-how that works. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_BASICS.md) of this library.  
+how that works. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_BASICS.md) of this 
+library.  
 
 
 # Embeddings
 
-All embedding 
-classes inherit from the `TextEmbeddings` class and implement the `embed()` method which you need to call 
-to embed your text. This means that for most users of Flair, the complexity of different embeddings remains hidden 
-behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
+All word embedding classes inherit from the `TokenEmbeddings` class and implement the `embed()` method which you need to 
+call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains 
+hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
 All embeddings produced with our methods are pytorch vectors, so they can be immediately used for training and 
 fine-tuning.
 
 ## Classic Word Embeddings
 
-Classic word embeddings are static and word-level, meaning that each distinc word gets exactly one pre-computed 
+Classic word embeddings are static and word-level, meaning that each distinct word gets exactly one pre-computed 
 embedding. Most embeddings fall under this class, including the popular GloVe or Komnios embeddings. 
 
 Simply instantiate the WordEmbeddings class and pass a string identifier of the embedding you wish to load. So, if 
@@ -67,7 +67,6 @@ german_embedding = WordEmbeddings('de-fasttext')
 ```
 
 ## Contextual String Embeddings
-
 
 Contextual string embeddings are [powerful embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)
  that capture latent syntactic-semantic information that goes beyond
@@ -177,10 +176,9 @@ for token in sentence:
 Words are now embedding using a concatenation of three different embeddings. This means that the resulting embedding
 vector is still a single Pytorch vector. 
 
-
 ## Next 
 
-You can now either look into [text embeddings](/resources/docs/TUTORIAL_TEXT_EMBEDDINGS.md) to embed entire text passages
-with one vector for tasks such as text classification, or go directly to the tutorial about 
+You can now either look into [document embeddings](/resources/docs/TUTORIAL_TEXT_EMBEDDINGS.md) to embed entire text 
+passages with one vector for tasks such as text classification, or go directly to the tutorial about 
 [training your own models](/resources/docs/TUTORIAL_TRAINING_A_MODEL.md). 
 

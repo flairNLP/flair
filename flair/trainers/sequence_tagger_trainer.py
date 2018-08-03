@@ -1,14 +1,21 @@
-from .data import Sentence, Token, TaggedCorpus, Dictionary
-from .tagging_model import SequenceTagger
-
-from typing import List, Dict, Tuple
-
 from subprocess import run, PIPE
+from typing import List
 
-import torch, random, datetime, re, sys, os, shutil
+import datetime
+import os
+import random
+import re
+import sys
+import torch
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+
+from flair.file_utils import cached_path
+from flair.models.sequence_tagger_model import SequenceTagger
+from flair.data import Sentence, Token, TaggedCorpus
+from flair.training_utils import Metric
 
 
-class TagTrain:
+class SequenceTaggerTrainer:
     def __init__(self, model: SequenceTagger, corpus: TaggedCorpus, test_mode: bool = False) -> None:
         self.model: SequenceTagger = model
         self.corpus: TaggedCorpus = corpus
@@ -19,23 +26,27 @@ class TagTrain:
               learning_rate: float = 0.1,
               mini_batch_size: int = 32,
               max_epochs: int = 100,
-              save_model: bool = True,
+              anneal_factor: float = 0.5,
+              patience: int = 2,
+              save_model: bool = False,
               embeddings_in_memory: bool = True,
-              train_with_dev: bool = False,
-              anneal_mode: bool = False):
+              train_with_dev: bool = False):
 
-        checkpoint: bool = False
+        evaluation_method = 'F1'
+        if self.model.tag_type in ['ner', 'np', 'srl']: evaluation_method = 'span-F1'
+        if self.model.tag_type in ['pos', 'upos']: evaluation_method = 'accuracy'
+        print(evaluation_method)
 
-        evaluate_with_fscore: bool = True
-        if self.model.tag_type not in ['ner', 'np', 'srl']: evaluate_with_fscore = False
+        os.makedirs(base_path, exist_ok=True)
 
-        self.base_path = base_path
-        os.makedirs(self.base_path, exist_ok=True)
-
-        loss_txt = os.path.join(self.base_path, "loss.txt")
+        loss_txt = os.path.join(base_path, "loss.txt")
         open(loss_txt, "w", encoding='utf-8').close()
 
         optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
+
+        anneal_mode = 'min' if train_with_dev else 'max'
+        scheduler: ReduceLROnPlateau = ReduceLROnPlateau(optimizer, factor=anneal_factor, patience=patience,
+                                                         mode=anneal_mode)
 
         train_data = self.corpus.train
 
@@ -46,18 +57,12 @@ class TagTrain:
         # At any point you can hit Ctrl + C to break out of training early.
         try:
 
-            # record overall best dev scores and best loss
-            best_score = 0
-            if train_with_dev: best_score = 10000
-            # best_dev_score = 0
-            # best_loss: float = 10000
-
-            # this variable is used for annealing schemes
-            epochs_without_improvement: int = 0
-
             for epoch in range(0, max_epochs):
 
                 current_loss: int = 0
+
+                for group in optimizer.param_groups:
+                    learning_rate = group['lr']
 
                 if not self.test_mode: random.shuffle(train_data)
 
@@ -95,69 +100,32 @@ class TagTrain:
 
                 current_loss /= len(train_data)
 
-                # IMPORTANT: Switch to eval mode
+                # switch to eval mode
                 self.model.eval()
 
                 if not train_with_dev:
                     print('.. evaluating... dev... ')
-                    dev_score, dev_fp, dev_result = self.evaluate(self.corpus.dev,
-                                                                  evaluate_with_fscore=evaluate_with_fscore,
+                    dev_score, dev_fp, dev_result = self.evaluate(self.corpus.dev, base_path,
+                                                                  evaluation_method=evaluation_method,
                                                                   embeddings_in_memory=embeddings_in_memory)
                 else:
                     dev_fp = 0
                     dev_result = '_'
 
                 print('test... ')
-                test_score, test_fp, test_result = self.evaluate(self.corpus.test,
-                                                                 evaluate_with_fscore=evaluate_with_fscore,
+                test_score, test_fp, test_result = self.evaluate(self.corpus.test, base_path,
+                                                                 evaluation_method=evaluation_method,
                                                                  embeddings_in_memory=embeddings_in_memory)
 
-                # IMPORTANT: Switch back to train mode
+                # switch back to train mode
                 self.model.train()
 
-                # checkpoint model
-                self.model.trained_epochs = epoch
+                # anneal against train loss if training with dev, otherwise anneal against dev score
+                scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_score)
 
-                # is this the best model so far?
-                is_best_model_so_far: bool = False
-
-                # if dev data is used for model selection, use dev F1 score to determine best model
-                if not train_with_dev and dev_score > best_score:
-                    best_score = dev_score
-                    is_best_model_so_far = True
-
-                # if dev data is used for training, use training loss to determine best model
-                if train_with_dev and current_loss < best_score:
-                    best_score = current_loss
-                    is_best_model_so_far = True
-
-                if is_best_model_so_far:
-
-                    print('after %d - new best score: %f' % (epochs_without_improvement, best_score))
-
-                    epochs_without_improvement = 0
-
-                    # save model
-                    if save_model or (anneal_mode and checkpoint):
-                        self.model.save(base_path + "/model.pt")
-                        print('.. model saved ... ')
-
-                else:
-                    epochs_without_improvement += 1
-
-                # anneal after 3 epochs of no improvement if anneal mode
-                if epochs_without_improvement == 3 and anneal_mode:
-                    best_score = current_loss
-                    learning_rate /= 2
-
-                    if checkpoint:
-                        self.model = SequenceTagger.load_from_file(base_path + '/model.pt')
-
-                    optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
-
-                # print info
                 summary = '%d' % epoch + '\t({:%H:%M:%S})'.format(datetime.datetime.now()) \
-                          + '\t%f\t%d\t%f\tDEV   %d\t' % (current_loss, epochs_without_improvement, learning_rate, dev_fp) + dev_result
+                          + '\t%f\t%d\t%f\tDEV   %d\t' % (
+                    current_loss, scheduler.num_bad_epochs, learning_rate, dev_fp) + dev_result
                 summary = summary.replace('\n', '')
                 summary += '\tTEST   \t%d\t' % test_fp + test_result
 
@@ -166,19 +134,23 @@ class TagTrain:
                     loss_file.write('%s\n' % summary)
                     loss_file.close()
 
-            self.model.save(base_path + "/final-model.pt")
+                # save if model is current best and we use dev data for model selection
+                if save_model and not train_with_dev and current_loss == scheduler.best:
+                    self.model.save(base_path + "/best-model.pt")
+
+            # if we do not use dev data for model selection, save final model
+            if save_model and train_with_dev: self.model.save(base_path + "/final-model.pt")
 
         except KeyboardInterrupt:
             print('-' * 89)
             print('Exiting from training early')
             print('saving model')
-            with open(base_path + "/final-model.pt", 'wb') as model_save_file:
-                torch.save(self.model, model_save_file, pickle_protocol=4)
-                model_save_file.close()
+            self.model.save(base_path + "/final-model.pt")
             print('done')
 
-    def evaluate(self, evaluation: List[Sentence], evaluate_with_fscore: bool = True,
+    def evaluate(self, evaluation: List[Sentence], out_path=None, evaluation_method: str = 'F1',
                  embeddings_in_memory: bool = True):
+
         tp: int = 0
         fp: int = 0
 
@@ -186,6 +158,8 @@ class TagTrain:
         mini_batch_size = 32
         batches = [evaluation[x:x + mini_batch_size] for x in
                    range(0, len(evaluation), mini_batch_size)]
+
+        metric = Metric('')
 
         lines: List[str] = []
 
@@ -205,7 +179,6 @@ class TagTrain:
                 predicted_id = tag_seq
                 for (token, pred_id) in zip(sentence.tokens, predicted_id):
                     token: Token = token
-                    # print(token)
                     # get the predicted tag
                     predicted_tag = self.model.tag_dictionary.get_item_for_index(pred_id)
                     token.add_tag('predicted', predicted_tag)
@@ -215,10 +188,24 @@ class TagTrain:
 
                     # append both to file for evaluation
                     eval_line = token.text + ' ' + gold_tag + ' ' + predicted_tag + "\n"
-                    if gold_tag == predicted_tag:
-                        tp += 1
-                    else:
-                        fp += 1
+
+                    # positives
+                    if predicted_tag != '':
+                        # true positives
+                        if predicted_tag == gold_tag:
+                            metric.tp()
+                        # false positive
+                        if predicted_tag != gold_tag:
+                            metric.fp()
+
+                    # negatives
+                    if predicted_tag == '':
+                        # true negative
+                        if predicted_tag == gold_tag:
+                            metric.tn()
+                        # false negative
+                        if predicted_tag != gold_tag:
+                            metric.fn()
 
                     lines.append(eval_line)
 
@@ -227,17 +214,20 @@ class TagTrain:
             if not embeddings_in_memory:
                 self.clear_embeddings_in_batch(batch)
 
-        test_tsv = os.path.join(self.base_path, "test.tsv")
-        with open(test_tsv, "w", encoding='utf-8') as outfile:
-            outfile.write(''.join(lines))
+        if out_path is not None:
+            test_tsv = os.path.join(out_path, "test.tsv")
+            with open(test_tsv, "w", encoding='utf-8') as outfile:
+                outfile.write(''.join(lines))
 
-        if evaluate_with_fscore:
-            eval_script = 'resources/tasks/eval_script'
+        if evaluation_method == 'span-F1':
+
+            # get the eval script
+            eval_script = cached_path('https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/scripts/conll03_eval_script.pl', cache_dir='scripts')
+            os.chmod(eval_script, 0o777)
 
             eval_data = ''.join(lines)
 
             p = run(eval_script, stdout=PIPE, input=eval_data, encoding='utf-8')
-            print(p.returncode)
             main_result = p.stdout
             print(main_result)
 
@@ -250,12 +240,15 @@ class TagTrain:
             main_result = re.sub('accuracy', 'acc', main_result)
 
             f_score = float(re.findall(r'\d+\.\d+$', main_result)[0])
+            return f_score, metric._fp, main_result
 
-            return f_score, fp, main_result
+        if evaluation_method == 'accuracy':
+            score = metric.accuracy()
+            return score, metric._fp, str(score)
 
-        precision: float = tp / (tp + fp)
-
-        return precision, fp, str(precision)
+        if evaluation_method == 'F1':
+            score = metric.f_score()
+            return score, metric._fp, str(metric)
 
     def clear_embeddings_in_batch(self, batch: List[Sentence]):
         for sentence in batch:

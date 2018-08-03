@@ -3,12 +3,11 @@ import warnings
 import torch.autograd as autograd
 import torch.nn as nn
 import torch
-import os
 import numpy as np
 
+import flair.embeddings
+from flair.data import Dictionary, Sentence, Token
 from flair.file_utils import cached_path
-from .data import Dictionary, Sentence, Token
-from .embeddings import TextEmbeddings
 
 from typing import List, Tuple, Union
 
@@ -34,9 +33,10 @@ def log_sum_exp(vec):
 
 
 class SequenceTagger(nn.Module):
+
     def __init__(self,
                  hidden_size: int,
-                 embeddings,
+                 embeddings: flair.embeddings.TokenEmbeddings,
                  tag_dictionary: Dictionary,
                  tag_type: str,
                  use_crf: bool = True,
@@ -65,7 +65,7 @@ class SequenceTagger(nn.Module):
         self.hidden_word = None
 
         # self.dropout = nn.Dropout(0.5)
-        self.dropout = LockedDropout(0.5)
+        self.dropout: nn.Module = LockedDropout(0.5)
 
         rnn_input_dim: int = self.embeddings.embedding_length
 
@@ -88,7 +88,7 @@ class SequenceTagger(nn.Module):
                                                       dropout=0.5,
                                                       bidirectional=True)
 
-        self.relu = nn.ReLU()
+        self.nonlinearity = nn.Tanh()
 
         # final linear map to tag space
         if self.use_rnn:
@@ -102,6 +102,10 @@ class SequenceTagger(nn.Module):
                 torch.randn(self.tagset_size, self.tagset_size))
             self.transitions.data[self.tag_dictionary.get_idx_for_item(START_TAG), :] = -10000
             self.transitions.data[:, self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000
+
+        if torch.cuda.is_available():
+            self.cuda()
+
 
     def save(self, model_file: str):
         model_state = {
@@ -149,16 +153,14 @@ class SequenceTagger(nn.Module):
         longest_token_sequence_in_batch: int = len(sentences[0])
 
         self.embeddings.embed(sentences)
-        sent = sentences[0]
-        # print(sent)
-        # print(sent.tokens[0].get_embedding()[0:7])
 
         all_sentence_tensors = []
         lengths: List[int] = []
         tag_list: List = []
 
-        # go through each sentence in batch
-        for i, sentence in enumerate(sentences):
+        padding = torch.FloatTensor(np.zeros(self.embeddings.embedding_length, dtype='float')).unsqueeze(0)
+
+        for sentence in sentences:
 
             # get the tags in this sentence
             tag_idx: List[int] = []
@@ -167,58 +169,50 @@ class SequenceTagger(nn.Module):
 
             word_embeddings = []
 
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                token: Token = token
-
+            for token in sentence:
                 # get the tag
                 tag_idx.append(self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type)))
-
+                # get the word embeddings
                 word_embeddings.append(token.get_embedding().unsqueeze(0))
 
-            # PADDING: pad shorter sentences out
+            # pad shorter sentences out
             for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
-                word_embeddings.append(
-                    torch.autograd.Variable(
-                        torch.FloatTensor(np.zeros(self.embeddings.embedding_length, dtype='float')).unsqueeze(0)))
+                word_embeddings.append(padding)
 
             word_embeddings_tensor = torch.cat(word_embeddings, 0)
-
-            sentence_states = word_embeddings_tensor
 
             if torch.cuda.is_available():
                 tag_list.append(torch.cuda.LongTensor(tag_idx))
             else:
                 tag_list.append(torch.LongTensor(tag_idx))
 
-            # ADD TO SENTENCE LIST: add the representation
-            all_sentence_tensors.append(sentence_states.unsqueeze(1))
+            all_sentence_tensors.append(word_embeddings_tensor.unsqueeze(1))
 
-        # --------------------------------------------------------------------
-        # GET REPRESENTATION FOR ENTIRE BATCH
-        # --------------------------------------------------------------------
+        # padded tensor for entire batch
         sentence_tensor = torch.cat(all_sentence_tensors, 1)
-
         if torch.cuda.is_available():
             sentence_tensor = sentence_tensor.cuda()
 
         # --------------------------------------------------------------------
         # FF PART
         # --------------------------------------------------------------------
-        tagger_states = self.dropout(sentence_tensor)
+        sentence_tensor = self.dropout(sentence_tensor)
 
         if self.relearn_embeddings:
-            tagger_states = self.embedding2nn(tagger_states)
+            sentence_tensor = self.embedding2nn(sentence_tensor)
 
         if self.use_rnn:
-            packed = torch.nn.utils.rnn.pack_padded_sequence(tagger_states, lengths)
+            packed = torch.nn.utils.rnn.pack_padded_sequence(sentence_tensor, lengths)
 
             rnn_output, hidden = self.rnn(packed)
 
-            tagger_states, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(rnn_output)
+            sentence_tensor, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(rnn_output)
 
-            tagger_states = self.dropout(tagger_states)
+            sentence_tensor = self.dropout(sentence_tensor)
 
-        features = self.linear(tagger_states)
+        # sentence_tensor = self.nonlinearity(sentence_tensor)
+
+        features = self.linear(sentence_tensor)
 
         predictions_list = []
         for sentence_no, length in enumerate(lengths):
@@ -230,7 +224,6 @@ class SequenceTagger(nn.Module):
         return predictions_list, tag_list
 
     def _score_sentence(self, feats, tags):
-        # print(tags)
         # tags is ground_truth, a list of ints, length is len(sentence)
         # feats is a 2D tensor, len(sentence) * tagset_size
         r = torch.LongTensor(range(feats.size()[0]))
@@ -291,7 +284,6 @@ class SequenceTagger(nn.Module):
             for i in range(len(feats)):
                 sentence_feats = feats[i]
                 sentence_tags = tags[i]
-
                 forward_score = self._forward_alg(sentence_feats)
                 # calculate the score of the ground_truth, in CRF
                 gold_score = self._score_sentence(sentence_feats, sentence_tags)
@@ -407,54 +399,78 @@ class SequenceTagger(nn.Module):
     @staticmethod
     def load(model: str):
         model_file = None
-        aws_resource_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models'
+        aws_resource_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.2'
 
         if model.lower() == 'ner':
             base_path = '/'.join([aws_resource_path,
-                                  'NER-conll03--h256-l1-b32-%2Bglove%2Bnews-forward%2Bnews-backward--anneal',
-                                  'en-ner-conll03-v0.1.pt'])
+                                  'NER-conll03--h256-l1-b32-%2Bglove%2Bnews-forward%2Bnews-backward--v0.2',
+                                  'en-ner-conll03-v0.2.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'ner-fast':
+            base_path = '/'.join([aws_resource_path,
+                                  'NER-conll03--h256-l1-b32-experimental--fast-v0.2',
+                                  'en-ner-fast-conll03-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'ner-ontonotes':
             base_path = '/'.join([aws_resource_path,
-                                  'NER-ontoner--h256-l1-b32-%2Bft-crawl%2Bnews-forward%2Bnews-backward--anneal',
-                                  'en-ner-ontonotes-v0.1.pt'])
+                                  'NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward%2Bnews-backward--v0.2',
+                                  'en-ner-ontonotes-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
-        if model.lower() == 'chunk':
+        if model.lower() == 'ner-ontonotes-fast':
             base_path = '/'.join([aws_resource_path,
-                                  'NP-conll2000--h256-l1-b32-%2Bnews-forward%2Bnews-backward--anneal',
-                                  'en-chunk-conll2000-v0.1.pt'])
+                                  'NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
+                                  'en-ner-ontonotes-fast-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'pos':
             base_path = '/'.join([aws_resource_path,
-                                  'POS-ontonotes--h256-l1-b32-%2Bmix-forward%2Bmix-backward--anneal',
-                                  'en-pos-ontonotes-v0.1.pt'])
+                                  'POS-ontonotes--h256-l1-b32-%2Bmix-forward%2Bmix-backward--v0.2',
+                                  'en-pos-ontonotes-v0.2.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'pos-fast':
+            base_path = '/'.join([aws_resource_path,
+                                  'POS-ontonotes--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
+                                  'en-pos-ontonotes-fast-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'frame':
             base_path = '/'.join([aws_resource_path,
-                                  'FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward%2Bnews-backward--anneal',
-                                  'en-frame-ontonotes-v0.1.pt'])
+                                  'FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward%2Bnews-backward--v0.2',
+                                  'en-frame-ontonotes-v0.2.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'frame-fast':
+            base_path = '/'.join([aws_resource_path,
+                                  'FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
+                                  'en-frame-ontonotes-fast-v0.2.pt'])
+            model_file = cached_path(base_path, cache_dir='models')
+
+        if model.lower() == 'chunk':
+            base_path = '/'.join([aws_resource_path,
+                                  'NP-conll2000--h256-l1-b32-%2Bnews-forward%2Bnews-backward--v0.2',
+                                  'en-chunk-conll2000-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'de-pos':
             base_path = '/'.join([aws_resource_path,
-                                  'UPOS-udgerman--h256-l1-b8-%2Bgerman-forward%2Bgerman-backward--anneal',
-                                  'de-pos-ud-v0.1.pt'])
+                                  'UPOS-udgerman--h256-l1-b8-%2Bgerman-forward%2Bgerman-backward--v0.2',
+                                  'de-pos-ud-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'de-ner':
             base_path = '/'.join([aws_resource_path,
-                                  'NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--anneal',
-                                  'de-ner-conll03-v0.1.pt'])
+                                  'NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2',
+                                  'de-ner-conll03-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'de-ner-germeval':
             base_path = '/'.join([aws_resource_path,
-                                  'NER-germeval--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--anneal',
-                                  'de-ner-germeval-v0.1.pt'])
+                                  'NER-germeval--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2',
+                                  'de-ner-germeval-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model_file is not None:

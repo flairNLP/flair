@@ -9,7 +9,7 @@ This model was trained over the English CoNLL-03 task and can recognize 4 differ
 types.
 
 ```python
-from flair.tagging_model import SequenceTagger
+from flair.models import SequenceTagger
 
 tagger = SequenceTagger.load('ner')
 ```
@@ -120,7 +120,25 @@ Similarly, in sentence 2 the frame detector finds a light verb construction in w
 
 ## Tagging a List of Sentences
 
-TODO: will be added soon
+Often, you may want to tag an entire text corpus. In this case, you need to split the corpus into sentences and pass a list of `Sentence` objects to the `.predict()` method.
+
+For instance, you can use the sentence splitter of segtok to split your text:
+
+```python
+
+# your text of many sentences
+text = "This is a sentence. This is another sentence. I love Berlin."
+
+# use a library to split into sentences
+from segtok.segmenter import split_single
+sentences = [Sentence(sent, use_tokenizer=True) for sent in split_single(text)]
+
+# predict tags for list of sentences
+tagger: SequenceTagger = SequenceTagger.load('ner')
+tagger.predict(sentences)
+```
+
+Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the tagger. Depending on your resources, you might want to play around with this parameter to optimize speed.
 
 
 

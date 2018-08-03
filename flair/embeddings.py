@@ -1,20 +1,19 @@
+import os
 import pickle
 import re
-import os
-from abc import ABC, abstractmethod
-from typing import List, Dict, Tuple
+from abc import abstractmethod
+from typing import List, Union
 
 import gensim
 import numpy as np
 import torch
 
-from .file_utils import cached_path
-from .language_model import RNNModel
 from .data import Dictionary, Token, Sentence, TaggedCorpus
+from .file_utils import cached_path
 
 
-class TextEmbeddings(torch.nn.Module):
-    """Abstract base class for all embeddings. Ever new type of embedding must implement these methods."""
+class Embeddings(torch.nn.Module):
+    """Abstract base class for all embeddings. Every new type of embedding must implement these methods."""
 
     @property
     @abstractmethod
@@ -23,10 +22,11 @@ class TextEmbeddings(torch.nn.Module):
         pass
 
     @property
+    @abstractmethod
     def embedding_type(self) -> str:
-        return 'word-level'
+        pass
 
-    def embed(self, sentences: List[Sentence]) -> List[Sentence]:
+    def embed(self, sentences: Union[Sentence, List[Sentence]]) -> List[Sentence]:
         """Add embeddings to all words in a list of sentences. If embeddings are already added, updates only if embeddings
         are non-static."""
 
@@ -50,15 +50,43 @@ class TextEmbeddings(torch.nn.Module):
         return sentences
 
     @abstractmethod
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
         """Private method for adding embeddings to all words in a list of sentences."""
         pass
 
 
-class StackedEmbeddings(TextEmbeddings):
+class TokenEmbeddings(Embeddings):
+    """Abstract base class for all token-level embeddings. Ever new type of word embedding must implement these methods."""
+
+    @property
+    @abstractmethod
+    def embedding_length(self) -> int:
+        """Returns the length of the embedding vector."""
+        pass
+
+    @property
+    def embedding_type(self) -> str:
+        return 'word-level'
+
+
+class DocumentEmbeddings(Embeddings):
+    """Abstract base class for all document-level embeddings. Ever new type of document embedding must implement these methods."""
+
+    @property
+    @abstractmethod
+    def embedding_length(self) -> int:
+        """Returns the length of the embedding vector."""
+        pass
+
+    @property
+    def embedding_type(self) -> str:
+        return 'sentence-level'
+
+
+class StackedEmbeddings(TokenEmbeddings):
     """A stack of embeddings, used if you need to combine several different embedding types."""
 
-    def __init__(self, embeddings: List[TextEmbeddings], detach: bool = True):
+    def __init__(self, embeddings: List[TokenEmbeddings], detach: bool = True):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
@@ -78,20 +106,23 @@ class StackedEmbeddings(TextEmbeddings):
         for embedding in embeddings:
             self.__embedding_length += embedding.embedding_length
 
-    def embed(self, sentences: List[Sentence], static_embeddings: bool = True):
+    def embed(self, sentences: Union[Sentence, List[Sentence]], static_embeddings: bool = True):
+        # if only one sentence is passed, convert to list of sentence
+        if type(sentences) is Sentence:
+            sentences = [sentences]
 
         for embedding in self.embeddings:
             embedding.embed(sentences)
 
     @property
-    def embedding_type(self):
+    def embedding_type(self) -> str:
         return self.__embedding_type
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
         for embedding in self.embeddings:
             embedding._add_embeddings_internal(sentences)
@@ -99,7 +130,7 @@ class StackedEmbeddings(TextEmbeddings):
         return sentences
 
 
-class WordEmbeddings(TextEmbeddings):
+class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
     def __init__(self, embeddings):
@@ -112,6 +143,11 @@ class WordEmbeddings(TextEmbeddings):
         if embeddings.lower() == 'glove' or embeddings.lower() == 'en-glove':
             cached_path(os.path.join(base_path, 'glove.gensim.vectors.npy'), cache_dir='embeddings')
             embeddings = cached_path(os.path.join(base_path, 'glove.gensim'), cache_dir='embeddings')
+
+        # twitter embeddings
+        if embeddings.lower() == 'twitter' or embeddings.lower() == 'en-twitter':
+            cached_path(os.path.join(base_path, 'twitter.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'twitter.gensim'), cache_dir='embeddings')
 
         # KOMNIOS embeddings
         if embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
@@ -180,13 +216,14 @@ class WordEmbeddings(TextEmbeddings):
                 else:
                     word_embedding = np.zeros(self.embedding_length, dtype='float')
 
-                word_embedding = torch.autograd.Variable(torch.FloatTensor(word_embedding))
+                word_embedding = torch.FloatTensor(word_embedding)
+
                 token.set_embedding(self.name, word_embedding)
 
         return sentences
 
 
-class CharacterEmbeddings(TextEmbeddings):
+class CharacterEmbeddings(TokenEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
 
     def __init__(self, path_to_char_dict: str = None):
@@ -196,20 +233,11 @@ class CharacterEmbeddings(TextEmbeddings):
         self.name = 'Char'
         self.static_embeddings = False
 
-        # get list of common characters if none provided
+        # use list of common characters if none provided
         if path_to_char_dict is None:
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters'
-            char_dict = cached_path(base_path, cache_dir='datasets')
-
-        # load dictionary
-        self.char_dictionary: Dictionary = Dictionary()
-        with open(char_dict, 'rb') as f:
-            mappings = pickle.load(f, encoding='latin1')
-            idx2item = mappings['idx2item']
-            item2idx = mappings['item2idx']
-            self.char_dictionary.item2idx = item2idx
-            self.char_dictionary.idx2item = idx2item
-            # print(self.char_dictionary.item2idx)
+            self.char_dictionary: Dictionary = Dictionary.load('common-chars')
+        else:
+            self.char_dictionary: Dictionary = Dictionary.load_from_file(path_to_char_dict)
 
         self.char_embedding_dim: int = 25
         self.hidden_size_char: int = 25
@@ -232,7 +260,6 @@ class CharacterEmbeddings(TextEmbeddings):
             # translate words in sentence into ints using dictionary
             for token in sentence.tokens:
                 token: Token = token
-                # print(token)
                 char_indices = [self.char_dictionary.get_idx_for_item(char) for char in token.text]
                 tokens_char_indices.append(char_indices)
 
@@ -250,7 +277,7 @@ class CharacterEmbeddings(TextEmbeddings):
             for i, c in enumerate(tokens_sorted_by_length):
                 tokens_mask[i, :chars2_length[i]] = c
 
-            tokens_mask = torch.autograd.Variable(torch.LongTensor(tokens_mask))
+            tokens_mask = torch.LongTensor(tokens_mask)
 
             # chars for rnn processing
             chars = tokens_mask
@@ -265,8 +292,7 @@ class CharacterEmbeddings(TextEmbeddings):
 
             outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(lstm_out)
             outputs = outputs.transpose(0, 1)
-            chars_embeds_temp = torch.autograd.Variable(
-                torch.FloatTensor(torch.zeros((outputs.size(0), outputs.size(2)))))
+            chars_embeds_temp = torch.FloatTensor(torch.zeros((outputs.size(0), outputs.size(2))))
             if torch.cuda.is_available():
                 chars_embeds_temp = chars_embeds_temp.cuda()
             for i, index in enumerate(output_lengths):
@@ -276,10 +302,10 @@ class CharacterEmbeddings(TextEmbeddings):
                 character_embeddings[d[i]] = chars_embeds_temp[i]
 
             for token_number, token in enumerate(sentence.tokens):
-                token.set_embedding(self.name, character_embeddings[token_number].cpu())
+                token.set_embedding(self.name, character_embeddings[token_number])
 
 
-class CharLMEmbeddings(TextEmbeddings):
+class CharLMEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
     def __init__(self, model, detach: bool = True):
@@ -300,56 +326,56 @@ class CharLMEmbeddings(TextEmbeddings):
 
         # news-english-forward
         if model.lower() == 'news-forward':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward.pt'
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # news-english-backward
         if model.lower() == 'news-backward':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward.pt'
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward-v0.2rc.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+
+        # news-english-forward
+        if model.lower() == 'news-forward-fast':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward-1024-v0.2rc.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+
+        # news-english-backward
+        if model.lower() == 'news-backward-fast':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward-1024-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-forward
         if model.lower() == 'mix-forward':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-forward.pt'
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-forward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-backward
         if model.lower() == 'mix-backward':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-backward.pt'
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-forward
         if model.lower() == 'german-forward':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-forward.pt'
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-forward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-backward
         if model.lower() == 'german-backward':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-backward.pt'
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         self.name = model
         self.static_embeddings = detach
 
-        self.lm: RNNModel = RNNModel.load_language_model(model)
-        if torch.cuda.is_available():
-            self.lm = self.lm.cuda()
-        self.lm.eval()
-
+        from flair.models import LanguageModel
+        self.lm = LanguageModel.load_language_model(model)
         self.detach = detach
 
         self.is_forward_lm: bool = self.lm.is_forward_lm
-        if self.is_forward_lm:
-            print('FORWARD language mode loaded')
-        else:
-            print('BACKWARD language mode loaded')
-
-        print('on cuda:')
-        print(next(self.lm.parameters()).is_cuda)
 
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token('hello'))
-        embedded_dummy = self.embed([dummy_sentence])
+        embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
     @property
@@ -377,8 +403,6 @@ class CharLMEmbeddings(TextEmbeddings):
                     '\n' + sentence.to_plain_string()[::-1] + ' ' + (
                         (longest_character_sequence_in_batch - len(sentence.to_plain_string())) * ' '))
 
-        # print(sentences_padded)
-
         # get states from LM
         all_hidden_states_in_lm = self.lm.get_representation(sentences_padded, self.detach)
 
@@ -397,115 +421,27 @@ class CharLMEmbeddings(TextEmbeddings):
                 else:
                     offset = offset_backward
 
-                embedding = all_hidden_states_in_lm[offset, i, :].data.cpu()
-                # if not torch.cuda.is_available():
-                #     embedding = embedding.cpu()
+                embedding = all_hidden_states_in_lm[offset, i, :]
 
                 offset_forward += 1
 
                 offset_backward -= 1
                 offset_backward -= len(token.text)
 
-                token.set_embedding(self.name, torch.autograd.Variable(embedding))
+                token.set_embedding(self.name, embedding)
                 self.__embedding_length = len(embedding)
 
         return sentences
 
 
-class OnePassStoreEmbeddings(TextEmbeddings):
-    def __init__(self, embedding_stack: StackedEmbeddings, corpus: TaggedCorpus, detach: bool = True):
-        super().__init__()
+class DocumentMeanEmbeddings(DocumentEmbeddings):
 
-        self.embedding_stack = embedding_stack
-        self.detach = detach
-        self.name = 'Stack'
-        self.static_embeddings = True
-
-        self.__embedding_length: int = embedding_stack.embedding_length
-        print(self.embedding_length)
-
-        sentences = corpus.get_all_sentences()
-        mini_batch_size: int = 32
-        sentence_no: int = 0
-        written_embeddings: int = 0
-
-        total_count = 0
-        for sentence in sentences:
-            for token in sentence.tokens:
-                total_count += 1
-
-        embeddings_vec = 'fragment_embeddings.vec'
-        with open(embeddings_vec, 'a') as f:
-
-            f.write('%d %d\n' % (total_count, self.embedding_stack.embedding_length))
-
-            batches = [sentences[x:x + mini_batch_size] for x in
-                       range(0, len(sentences), mini_batch_size)]
-
-            for batch in batches:
-
-                self.embedding_stack.embed(batch)
-
-                for sentence in batch:
-                    sentence: Sentence = sentence
-                    sentence_no += 1
-                    print('%d\t(%d)' % (sentence_no, written_embeddings))
-                    # lines: List[str] = []
-
-                    for token in sentence.tokens:
-                        token: Token = token
-
-                        signature = self.get_signature(token)
-                        vector = token.get_embedding().data.numpy().tolist()
-                        vector = ' '.join(map(str, vector))
-                        vec = signature + ' ' + vector
-                        # lines.append(vec)
-                        written_embeddings += 1
-                        token.clear_embeddings()
-
-                        f.write('%s\n' % vec)
-
-        vectors = gensim.models.KeyedVectors.load_word2vec_format(embeddings_vec, binary=False)
-        vectors.save('stored_embeddings')
-        import os
-        os.remove('fragment_embeddings.vec')
-        vectors = None
-
-        self.embeddings = WordEmbeddings('stored_embeddings')
-
-    def get_signature(self, token: Token) -> str:
-        context: str = ' '
-        for i in range(token.idx - 4, token.idx + 5):
-            if token.sentence.get_token(i) is not None:
-                context += token.sentence.get_token(i).text + ' '
-        signature = '%s··%d:··%s' % (token.text, token.idx, context)
-        return signature.strip().replace(' ', '·')
-
-    def embed(self, sentences: List[Sentence], static_embeddings: bool = True):
-
-        for sentence in sentences:
-            for token in sentence.tokens:
-                signature = self.get_signature(token)
-                word_embedding = self.embeddings.precomputed_word_embeddings.get_vector(signature)
-                word_embedding = torch.autograd.Variable(torch.FloatTensor(word_embedding))
-                token.set_embedding(self.name, word_embedding)
-
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
-        return sentences
-
-
-class TextMeanEmbedder(TextEmbeddings):
-
-    def __init__(self, word_embeddings: List[TextEmbeddings], reproject_words: bool = True):
+    def __init__(self, word_embeddings: List[TokenEmbeddings], reproject_words: bool = True):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
         self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=word_embeddings)
-        self.name: str = 'word_mean'
+        self.name: str = 'document_mean'
         self.reproject_words: bool = reproject_words
         self.static_embeddings: bool = not reproject_words
 
@@ -513,35 +449,35 @@ class TextMeanEmbedder(TextEmbeddings):
         self.__embedding_length = self.embeddings.embedding_length
 
         self.word_reprojection_map = torch.nn.Linear(self.__embedding_length, self.__embedding_length)
+        torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
 
-    @property
-    def embedding_type(self):
-        return 'sentence-level'
+        if torch.cuda.is_available():
+            self.cuda()
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def embed(self, paragraphs: List[Sentence]):
+    def embed(self, sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to every sentence in the given list of sentences. If embeddings are already added, updates
         only if embeddings are non-static."""
 
         everything_embedded: bool = True
 
         # if only one sentence is passed, convert to list of sentence
-        if type(paragraphs) is Sentence:
-            paragraphs = [paragraphs]
+        if type(sentences) is Sentence:
+            sentences = [sentences]
 
-        for paragraph in paragraphs:
-            if self.name not in paragraph._embeddings.keys(): everything_embedded = False
+        for sentence in sentences:
+            if self.name not in sentence._embeddings.keys(): everything_embedded = False
 
         if not everything_embedded or not self.static_embeddings:
 
-            self.embeddings.embed(paragraphs)
+            self.embeddings.embed(sentences)
 
-            for paragraph in paragraphs:
+            for sentence in sentences:
                 word_embeddings = []
-                for token in paragraph.tokens:
+                for token in sentence.tokens:
                     token: Token = token
                     word_embeddings.append(token.get_embedding().unsqueeze(0))
 
@@ -554,60 +490,83 @@ class TextMeanEmbedder(TextEmbeddings):
 
                 mean_embedding = torch.mean(word_embeddings, 0)
 
-                # mean_embedding /= len(paragraph.tokens)
-                paragraph.set_embedding(self.name, mean_embedding)
+                sentence.set_embedding(self.name, mean_embedding.unsqueeze(0))
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
 
 
-class TextLSTMEmbedder(TextEmbeddings):
+class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
-    def __init__(self, word_embeddings: List[TextEmbeddings], hidden_states=128, num_layers=1,
-                 reproject_words: bool = True):
-        """The constructor takes a list of embeddings to be combined."""
+    def __init__(self, token_embeddings: List[TokenEmbeddings], hidden_states=128, num_layers=1,
+                 reproject_words: bool = True, reproject_words_dimension: int = None, bidirectional: bool = False,
+                 use_first_representation: bool = False):
+        """The constructor takes a list of embeddings to be combined.
+        :param token_embeddings: a list of token embeddings
+        :param hidden_states: the number of hidden states in the lstm
+        :param num_layers: the number of layers for the lstm
+        :param reproject_words: boolean value, indicating whether to reproject the word embedding in a separate linear
+        layer before putting them into the lstm or not
+        :param reproject_words_dimension: output dimension of reprojecting words. If None the same output dimension as
+        before will be taken.
+        :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
+        :param use_first_representation: boolean value, indicating whether to concatenate the first and last
+        representation of the lstm to be used as final document embedding.
+        """
         super().__init__()
 
-        # self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=word_embeddings)
-        self.embeddings: List[TextEmbeddings] = word_embeddings
+        self.embeddings: List[TokenEmbeddings] = token_embeddings
 
         self.reproject_words = reproject_words
+        self.bidirectional = bidirectional
+        self.use_first_representation = use_first_representation
 
-        self.length_of_all_word_embeddings = 0
-        for word_embedding in self.embeddings:
-            self.length_of_all_word_embeddings += word_embedding.embedding_length
+        self.length_of_all_token_embeddings = 0
+        for token_embedding in self.embeddings:
+            self.length_of_all_token_embeddings += token_embedding.embedding_length
 
-        self.name = 'text_lstm'
+        self.name = 'document_lstm'
         self.static_embeddings = False
 
-        # self.__embedding_length: int = hidden_states
-        self.__embedding_length: int = hidden_states * 2
+        self.__embedding_length: int = hidden_states
+        if self.bidirectional:
+            self.__embedding_length *= 2
+        if self.use_first_representation:
+            self.__embedding_length *= 2
+
+        self.embeddings_dimension: int = self.length_of_all_token_embeddings
+        if self.reproject_words and reproject_words_dimension is not None:
+            self.embeddings_dimension = reproject_words_dimension
 
         # bidirectional LSTM on top of embedding layer
-        self.word_reprojection_map = torch.nn.Linear(self.length_of_all_word_embeddings,
-                                                     self.length_of_all_word_embeddings)
-        self.rnn = torch.nn.LSTM(self.length_of_all_word_embeddings, hidden_states, num_layers=num_layers,
-                                 bidirectional=True)
+        self.word_reprojection_map = torch.nn.Linear(self.length_of_all_token_embeddings,
+                                                     self.embeddings_dimension)
+        self.rnn = torch.nn.GRU(self.embeddings_dimension, hidden_states, num_layers=num_layers,
+                                 bidirectional=self.bidirectional)
         self.dropout = torch.nn.Dropout(0.5)
 
-    @property
-    def embedding_type(self):
-        return 'sentence-level'
+        torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
+
+        if torch.cuda.is_available():
+            self.cuda()
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def embed(self, sentences: List[Sentence]):
+    def embed(self, sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
          only if embeddings are non-static."""
+
+        if type(sentences) is Sentence:
+            sentences = [sentences]
 
         self.rnn.zero_grad()
 
         sentences.sort(key=lambda x: len(x), reverse=True)
 
-        for word_embedding in self.embeddings:
-            word_embedding.embed(sentences)
+        for token_embedding in self.embeddings:
+            token_embedding.embed(sentences)
 
         # first, sort sentences by number of tokens
         longest_token_sequence_in_batch: int = len(sentences[0])
@@ -629,8 +588,7 @@ class TextLSTMEmbedder(TextEmbeddings):
             # PADDING: pad shorter sentences out
             for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
                 word_embeddings.append(
-                    torch.autograd.Variable(
-                        torch.FloatTensor(np.zeros(self.length_of_all_word_embeddings, dtype='float')).unsqueeze(0)))
+                    torch.FloatTensor(np.zeros(self.length_of_all_token_embeddings, dtype='float')).unsqueeze(0))
 
             word_embeddings_tensor = torch.cat(word_embeddings, 0)
 
@@ -657,19 +615,30 @@ class TextLSTMEmbedder(TextEmbeddings):
         packed = torch.nn.utils.rnn.pack_padded_sequence(sentence_tensor, lengths)
 
         lstm_out, hidden = self.rnn(packed)
+
         outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(lstm_out)
 
         outputs = self.dropout(outputs)
 
-        for i, sentence in enumerate(sentences):
-            embedding = outputs[output_lengths[i].item() - 1, i]
+        # --------------------------------------------------------------------
+        # EXTRACT EMBEDDINGS FROM LSTM
+        # --------------------------------------------------------------------
+        for sentence_no, length in enumerate(lengths):
+            last_rep = outputs[length - 1, sentence_no].unsqueeze(0)
+
+            embedding = last_rep
+            if self.use_first_representation:
+                first_rep = outputs[0, sentence_no].unsqueeze(0)
+                embedding = torch.cat([first_rep, last_rep], 1)
+
+            sentence = sentences[sentence_no]
             sentence.set_embedding(self.name, embedding)
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
 
 
-class TextLMEmbedder(TextEmbeddings):
+class DocumentLMEmbeddings(DocumentEmbeddings):
     def __init__(self, charlm_embeddings: List[CharLMEmbeddings], detach: bool = True):
         super().__init__()
 
@@ -686,11 +655,9 @@ class TextLMEmbedder(TextEmbeddings):
     def embedding_length(self) -> int:
         return self._embedding_length
 
-    @property
-    def embedding_type(self):
-        return 'sentence-level'
-
-    def embed(self, sentences: List[Sentence]):
+    def embed(self, sentences: Union[List[Sentence], Sentence]):
+        if type(sentences) is Sentence:
+            sentences = [sentences]
 
         for embedding in self.embeddings:
             embedding.embed(sentences)

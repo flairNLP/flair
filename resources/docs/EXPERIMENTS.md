@@ -1,12 +1,14 @@
 # How to Reproduce Experiments 
 
-Here, we detail the steps you need to take to reproduce the experiments in [Akbik et. al (2018)](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)
+Here, we detail the steps you need to take to reproduce the experiments in 
+[Akbik et. al (2018)](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)
 and how to train your own state-of-the-art sequence labelers. 
 
 **Data.** For each experiment, you need to first get the evaluation dataset. Then execute the code as provided in this 
 documentation.
 
-**More info.** Also do check out the [tutorial](/resources/docs/TUTORIAL_BASICS.md)  to get a better overview of how Flair works.
+**More info.** Also do check out the [tutorial](/resources/docs/TUTORIAL_BASICS.md)  to get a better overview of 
+how Flair works.
 
 
 ## CoNLL-03 Named Entity Recognition (English)
@@ -30,13 +32,14 @@ corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03)
 
 This gives you a `TaggedCorpus` object that contains the data. 
 
-Now, select 'ner' as the tag you wish to predict and init the embeddings you wish to use.
+Now, select `ner` as the tag you wish to predict and init the embeddings you wish to use.
  
 The full code to get a state-of-the-art model for English NER is as follows: 
 
 ```python
-from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
-from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
+from flair.data import TaggedCorpus
+from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
 from typing import List
 import torch
 
@@ -52,7 +55,7 @@ tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary.idx2item)
 
 # initialize embeddings
-embedding_types: List[TextEmbeddings] = [
+embedding_types: List[TokenEmbeddings] = [
 
     # GloVe embeddings
     WordEmbeddings('glove')
@@ -67,27 +70,21 @@ embedding_types: List[TextEmbeddings] = [
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # initialize sequence tagger
-from flair.tagging_model import SequenceTagger
+from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
                                         tag_dictionary=tag_dictionary,
                                         tag_type=tag_type,
                                         use_crf=True)
-                                        
-if torch.cuda.is_available():
-    tagger = tagger.cuda()
 
 # initialize trainer
-from flair.trainer import TagTrain
+from flair.trainers import SequenceTaggerTrainer
 
-trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
-              train_with_dev=True, anneal_mode=True)
+trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
 ```
-
-
 
 ## Ontonotes Named Entity Recognition (English)
 
@@ -108,8 +105,9 @@ FastText embeddings (they work better on this dataset). The full code then is as
 
 
 ```python
-from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
-from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
+from flair.data import TaggedCorpus
+from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
 from typing import List
 import torch
 
@@ -125,7 +123,7 @@ tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary.idx2item)
 
 # initialize embeddings
-embedding_types: List[TextEmbeddings] = [
+embedding_types: List[TokenEmbeddings] = [
 
     WordEmbeddings('crawl')
     ,
@@ -137,28 +135,21 @@ embedding_types: List[TextEmbeddings] = [
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # initialize sequence tagger
-from flair.tagging_model import SequenceTagger
-
+from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
                                         tag_dictionary=tag_dictionary,
                                         tag_type=tag_type,
                                         use_crf=True)
-                                        
-if torch.cuda.is_available():
-    tagger = tagger.cuda()
 
 # initialize trainer
-from flair.trainer import TagTrain
+from flair.trainers import SequenceTaggerTrainer
 
-trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
-              train_with_dev=True, anneal_mode=True)
-
+trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
 ```
-
 
 ## CoNLL-03 Named Entity Recognition (German)
 
@@ -176,8 +167,9 @@ Once you have the data, reproduce our experiments exactly like for CoNLL-03, jus
 FastText word embeddings and German contextual string embeddings. The full code then is as follows: 
 
 ```python
-from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
-from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
+from flair.data import TaggedCorpus
+from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
 from typing import List
 import torch
 
@@ -193,7 +185,7 @@ tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary.idx2item)
 
 # initialize embeddings
-embedding_types: List[TextEmbeddings] = [
+embedding_types: List[TokenEmbeddings] = [
 
     WordEmbeddings('de-fasttext')
     ,
@@ -205,26 +197,21 @@ embedding_types: List[TextEmbeddings] = [
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # initialize sequence tagger
-from flair.tagging_model import SequenceTagger
+from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
                                         tag_dictionary=tag_dictionary,
                                         tag_type=tag_type,
                                         use_crf=True)
-                                        
-if torch.cuda.is_available():
-    tagger = tagger.cuda()
 
 # initialize trainer
-from flair.trainer import TagTrain
+from flair.trainers import SequenceTaggerTrainer
 
-trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
-              train_with_dev=True, anneal_mode=True)
+trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
 ```
-
 
 ## Germeval Named Entity Recognition (German)
 
@@ -242,8 +229,9 @@ get the dataset and place train, test and dev data in `/resources/tasks/germeval
 Once you have the data, reproduce our experiments exactly like for the German CoNLL-03: 
 
 ```python
-from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
-from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
+from flair.data import TaggedCorpus
+from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
 from typing import List
 import torch
 
@@ -259,7 +247,7 @@ tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary.idx2item)
 
 # initialize embeddings
-embedding_types: List[TextEmbeddings] = [
+embedding_types: List[TokenEmbeddings] = [
 
     WordEmbeddings('de-fasttext')
     ,
@@ -271,28 +259,21 @@ embedding_types: List[TextEmbeddings] = [
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # initialize sequence tagger
-from flair.tagging_model import SequenceTagger
+from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
                                         tag_dictionary=tag_dictionary,
                                         tag_type=tag_type,
                                         use_crf=True)
-                                        
-if torch.cuda.is_available():
-    tagger = tagger.cuda()
 
 # initialize trainer
-from flair.trainer import TagTrain
+from flair.trainers import SequenceTaggerTrainer
 
-trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-ner', mini_batch_size=32, max_epochs=150, save_model=True,
-              train_with_dev=True, anneal_mode=True)
+trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
 ```
-
-
-
 
 ## Penn Treebank Part-of-Speech Tagging (English)
 
@@ -311,8 +292,9 @@ so the algorithm knows that POS tags and not NER are to be predicted from this d
 
 
 ```python
-from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
-from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
+from flair.data import TaggedCorpus
+from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
 from typing import List
 import torch
 
@@ -328,7 +310,7 @@ tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary.idx2item)
 
 # initialize embeddings
-embedding_types: List[TextEmbeddings] = [
+embedding_types: List[TokenEmbeddings] = [
 
     WordEmbeddings('extvec')
     ,
@@ -340,25 +322,19 @@ embedding_types: List[TextEmbeddings] = [
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # initialize sequence tagger
-from flair.tagging_model import SequenceTagger
+from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
                                         tag_dictionary=tag_dictionary,
                                         tag_type=tag_type,
                                         use_crf=True)
-                                        
-if torch.cuda.is_available():
-    tagger = tagger.cuda()
-
 # initialize trainer
-from flair.trainer import TagTrain
+from flair.trainers import SequenceTaggerTrainer
 
-trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-pos', mini_batch_size=32, max_epochs=150, save_model=True,
-              train_with_dev=True, anneal_mode=True)
-
+trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
 ```
 
 ## CoNLL-2000 Noun Phrase Chunking (English)
@@ -378,8 +354,9 @@ Run the code with extvec embeddings and our proposed contextual string embedding
 so the algorithm knows that chunking tags and not NER are to be predicted from this data. 
 
 ```python
-from flair.data import NLPTaskDataFetcher, TaggedCorpus, NLPTask
-from flair.embeddings import TextEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
+from flair.data import TaggedCorpus
+from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
 from typing import List
 import torch
 
@@ -395,7 +372,7 @@ tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary.idx2item)
 
 # initialize embeddings
-embedding_types: List[TextEmbeddings] = [
+embedding_types: List[TokenEmbeddings] = [
 
     WordEmbeddings('extvec')
     ,
@@ -407,22 +384,18 @@ embedding_types: List[TextEmbeddings] = [
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # initialize sequence tagger
-from flair.tagging_model import SequenceTagger
+from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
                                         tag_dictionary=tag_dictionary,
                                         tag_type=tag_type,
                                         use_crf=True)
-                                        
-if torch.cuda.is_available():
-    tagger = tagger.cuda()
 
 # initialize trainer
-from flair.trainer import TagTrain
+from flair.trainers import SequenceTaggerTrainer
 
-trainer: TagTrain = TagTrain(tagger, corpus, test_mode=False)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-pos', mini_batch_size=32, max_epochs=150, save_model=True,
-              train_with_dev=True, anneal_mode=True)
+trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
 ```
