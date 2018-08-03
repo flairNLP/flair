@@ -10,7 +10,7 @@ There are two types of objects that are central to this library, namely the `Sen
 Let's start by making a `Sentence` object for an example sentence.
 
 ```python
-# The sentence objects holds a sentence that we may want to embed
+# The sentence objects holds a sentence that we may want to embed or tag
 from flair.data import Sentence
 
 # Make a sentence object by passing a whitespace tokenized string
@@ -65,7 +65,6 @@ lightweight [segtok library](https://pypi.org/project/segtok/).
 Simply use the `use_tokenizer` flag when instantiating your `Sentence` with an untokenized string:
 
 ```python
-# The sentence objects holds a sentence that we may want to embed
 from flair.data import Sentence
 
 # Make a sentence object by passing an untokenized string and the 'use_tokenizer' flag
@@ -103,23 +102,26 @@ The grass is green <color> .
 
 ## Adding Labels to Sentences
 
-A `Sentence` can have one or multiple labels, that can be used in, for example, text classification tasks. In this 
-example, we're adding different class labels to a sentence. 
+A `Sentence` can have one or multiple labels that can for example be used in text classification tasks.
+For instance, the example below shows how we add the label 'sports' to a sentence, thereby labeling it
+as belonging to the sports category.
 
 ```python
 sentence = Sentence('France is the current world cup winner.')
 
 # add a label to a sentence
-sentence.add_label('sport')
+sentence.add_label('sports')
 
 # a sentence can also belong to multiple classes
-sentence.add_labels(['sport', 'world'])
+sentence.add_labels(['sports', 'world cup'])
 
 # you can also set the labels while initializing the sentence
-Sentence('France is the current world cup winner.', labels=['sport', 'world'])
+Sentence('France is the current world cup winner.', labels=['sports', 'world cup'])
 ```
 
-## Reading CoNLL parsed files
+
+
+## Reading CoNLL-formatted Files
 
 We provide a set of helper methods to read CoNLL parsed files as a list of `Sentence` objects. For instance, you can
 use the popular CoNLL-U format introduced by the Universal Dependencies project. 
@@ -142,7 +144,7 @@ In the case of CoNLL-U, they should contain information including a token lemma,
 annotation, its dependency relation and its head token.
 You can access this information using the tag fields of the `Token`.
 
-## Reading files for text classification tasks
+## Reading Files for Text Classification Tasks
 
 We provide a helper method to read files that contain data for text classification tasks into a list of `Sentence` 
 objects. A file containing data for a text classification task should have the following format:
@@ -154,7 +156,7 @@ Each line contains a document.
 A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix 
 `__label__`.
 One line is converted to a `Sentence`. 
-(The `Sentence` object can actually consists of multiple sentences.)
+(The `Sentence` object can actually consist of multiple sentences.)
 The labels are assigned to the `Sentence`. 
 
 To read a file containing text classification data simply point the `NLPTaskDataFetcher` to the file containing 
