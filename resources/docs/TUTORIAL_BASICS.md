@@ -146,22 +146,15 @@ You can access this information using the tag fields of the `Token`.
 
 ## Reading Files for Text Classification Tasks
 
-We provide a helper method to read files that contain data for text classification tasks into a list of `Sentence` 
-objects. A file containing data for a text classification task should have the following format:
+We also provide a helper method to read files that contain data for text classification tasks. Such files should have the following format:
 ```text
 __label__<label_1> <text>
 __label__<label_1> __label__<label_2> <text>
 ```
-Each line contains a document. 
-A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix 
+Each line contains a textual document. A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix
 `__label__`.
-One line is converted to a `Sentence`. 
-(The `Sentence` object can actually consist of multiple sentences.)
-The labels are assigned to the `Sentence`. 
 
-To read a file containing text classification data simply point the `NLPTaskDataFetcher` to the file containing 
-the sentences. 
-It will read the sentences into a list of `Sentence`.
+To read such data, simply use the `NLPTaskDataFetcher` which converts each line to a `Sentence` object and assigns the labels. It returns a list of `Sentence`.
 
 ```python
 from flair.data_fetcher import NLPTaskDataFetcher
