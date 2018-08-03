@@ -38,8 +38,10 @@ glove_embedding = WordEmbeddings('glove')
 charlm_embedding_forward = CharLMEmbeddings('news-forward')
 charlm_embedding_backward = CharLMEmbeddings('news-backward')
 
-# initialize the text embeddings
-document_embeddings = DocumentMeanEmbeddings([glove_embedding, charlm_embedding_backward, charlm_embedding_forward])
+# initialize the document embeddings
+document_embeddings = DocumentMeanEmbeddings([glove_embedding,
+                                              charlm_embedding_backward,
+                                              charlm_embedding_forward])
 ```
 
 Now, create an example sentence and call the embedding's `embed()` method.
