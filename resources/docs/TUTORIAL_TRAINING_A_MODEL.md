@@ -174,9 +174,9 @@ corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.AG_NEWS).downsample
 label_dict = corpus.make_label_dictionary()
 
 # 3. make a list of word embeddings
-word_embeddings = [WordEmbeddings('de-fasttext'),
-                   CharLMEmbeddings('german-forward'),
-                   CharLMEmbeddings('german-backward')]
+word_embeddings = [WordEmbeddings('glove'),
+                   CharLMEmbeddings('news-forward'),
+                   CharLMEmbeddings('news-backward')]
 
 # 4. init document embedding by passing list of word embeddings
 document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings(word_embeddings, hidden_states=512)
