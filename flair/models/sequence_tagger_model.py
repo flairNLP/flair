@@ -43,6 +43,7 @@ class SequenceTagger(nn.Module):
                  tag_type: str,
                  use_crf: bool = True,
                  use_rnn: bool = True,
+                 use_word_dropout: bool = False,
                  rnn_layers: int = 1
                  ):
 
@@ -66,8 +67,11 @@ class SequenceTagger(nn.Module):
         self.nlayers: int = rnn_layers
         self.hidden_word = None
 
-        # self.dropout = nn.Dropout(0.5)
         self.dropout: nn.Module = LockedDropout(0.5)
+
+        self.use_word_dropout: bool = use_word_dropout
+        if self.use_word_dropout:
+            self.word_dropout = WordDropout(0.2)
 
         rnn_input_dim: int = self.embeddings.embedding_length
 
@@ -89,8 +93,6 @@ class SequenceTagger(nn.Module):
                                                       num_layers=self.nlayers,
                                                       dropout=0.5,
                                                       bidirectional=True)
-
-        self.nonlinearity = nn.Tanh()
 
         # final linear map to tag space
         if self.use_rnn:
@@ -198,6 +200,10 @@ class SequenceTagger(nn.Module):
         # --------------------------------------------------------------------
         # FF PART
         # --------------------------------------------------------------------
+        if self.use_word_dropout:
+            # print(sentence_tensor)
+            sentence_tensor = self.word_dropout(sentence_tensor)
+            # print(sentence_tensor)
         sentence_tensor = self.dropout(sentence_tensor)
 
         if self.relearn_embeddings:
@@ -500,5 +506,20 @@ class LockedDropout(nn.Module):
 
         m = x.data.new(1, x.size(1), x.size(2)).bernoulli_(1 - self.dropout_rate)
         mask = torch.autograd.Variable(m, requires_grad=False) / (1 - self.dropout_rate)
+        mask = mask.expand_as(x)
+        return mask * x
+
+
+class WordDropout(nn.Module):
+    def __init__(self, dropout_rate=0.5):
+        super(WordDropout, self).__init__()
+        self.dropout_rate = dropout_rate
+
+    def forward(self, x):
+        if not self.training or not self.dropout_rate:
+            return x
+
+        m = x.data.new(x.size(0), 1, 1).bernoulli_(1 - self.dropout_rate)
+        mask = torch.autograd.Variable(m, requires_grad=False)
         mask = mask.expand_as(x)
         return mask * x
