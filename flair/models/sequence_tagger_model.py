@@ -13,6 +13,7 @@ from typing import List, Tuple, Union
 
 from flair.training_utils import clear_embeddings
 
+
 START_TAG: str = '<START>'
 STOP_TAG: str = '<STOP>'
 
@@ -43,6 +44,18 @@ def log_sum_exp_batch(vecs):
     maxi_bc = maxi[:, None].repeat(1, vecs.shape[1])
     recti_ = torch.log(torch.sum(torch.exp(vecs - maxi_bc), 1))
     return maxi + recti_
+
+
+def pad_tensors(tensor_list, type_=torch.FloatTensor):
+    ml = max([x.shape[0] for x in tensor_list])
+    shape = [len(tensor_list), ml] + list(tensor_list[0].shape[1:])
+    template = type_(*shape)
+    template.fill_(0)
+    lens_ = [x.shape[0] for x in tensor_list]
+    for i, tensor in enumerate(tensor_list):
+        template[i, :lens_[i]] = tensor
+
+    return template, lens_
 
 
 class SequenceTaggerOld(nn.Module):
@@ -285,6 +298,7 @@ class SequenceTaggerOld(nn.Module):
         return path_score, best_path
 
     def neg_log_likelihood(self, sentences: List[Sentence], tag_type: str):
+
         feats, tags = self.forward(sentences)
 
         if self.use_crf:
@@ -684,8 +698,7 @@ class SequenceTagger(nn.Module):
 
         return predictions_list, tag_list
 
-    def _score_sentence(self, feats, tags):
-        r = torch.LongTensor(range(feats.shape[1]))
+    def _score_sentence(self, feats, tags, lens_):
 
         if torch.cuda.is_available():
             start = torch.cuda.LongTensor([
@@ -698,7 +711,6 @@ class SequenceTagger(nn.Module):
             ])
             stop = stop[None, :].repeat(tags.shape[0], 1)
 
-            r = r.cuda()
             pad_start_tags = \
                 torch.cat([torch.cuda.LongTensor([start]), tags], 1)
             pad_stop_tags = \
@@ -718,22 +730,29 @@ class SequenceTagger(nn.Module):
             pad_start_tags = torch.cat([start, tags], 1)
             pad_stop_tags = torch.cat([tags, stop], 1)
 
+        for i in range(len(lens_)):
+            pad_stop_tags[i, lens_[i]:] = \
+                self.tag_dictionary.get_idx_for_item(STOP_TAG)
+
         score = torch.FloatTensor(feats.shape[0])
         if torch.cuda.is_available():
             score = score.cuda()
 
         for i in range(feats.shape[0]):
+            r = torch.LongTensor(range(lens_[i]))
+            if torch.cuda.is_available():
+                r = r.cuda()
+
             score[i] = \
                 torch.sum(
-                    self.transitions[pad_stop_tags[i, :], pad_start_tags[i, :]]
+                    self.transitions[pad_stop_tags[i, :lens_[i] + 1], pad_start_tags[i, :lens_[i] + 1]]
                 ) + \
-                torch.sum(feats[i, r, tags[i, :]])
+                torch.sum(feats[i, r, tags[i, :lens_[i]]])
 
         return score
 
     def viterbi_decode(self, feats):
         backpointers = []
-        # analogous to forward
         init_vvars = torch.Tensor(1, self.tagset_size).fill_(-10000.)
         init_vvars[0][self.tag_dictionary.get_idx_for_item(START_TAG)] = 0
         forward_var = autograd.Variable(init_vvars)
@@ -768,13 +787,18 @@ class SequenceTagger(nn.Module):
     def neg_log_likelihood(self, sentences: List[Sentence], tag_type: str):
         feats, tags = self.forward(sentences)
 
-        feats = torch.stack(feats)
-        tags = torch.stack(tags)
+        if torch.cuda.is_available():
+            feats, lens_ = pad_tensors(feats, torch.cuda.FloatTensor)
+            tags, _ = pad_tensors(tags, torch.cuda.LongTensor)
+        else:
+            feats, lens_ = pad_tensors(feats)
+            tags, _ = pad_tensors(tags, torch.LongTensor)
 
         if self.use_crf:
 
-            forward_score = self._forward_alg(feats)
-            gold_score = self._score_sentence(feats, tags)
+            forward_score = self._forward_alg(feats, lens_)
+            gold_score = self._score_sentence(feats, tags, lens_)
+
             score = forward_score - gold_score
 
             return score.sum()
@@ -794,12 +818,19 @@ class SequenceTagger(nn.Module):
 
             return score
 
-    def _forward_alg(self, feats):
+    def _forward_alg(self, feats, lens_):
 
         init_alphas = torch.Tensor(self.tagset_size).fill_(-10000.)
         init_alphas[self.tag_dictionary.get_idx_for_item(START_TAG)] = 0.
 
-        forward_var = init_alphas[None, :].repeat(feats.shape[0], 1)
+        forward_var = torch.FloatTensor(
+            feats.shape[0],
+            feats.shape[1] + 1,
+            feats.shape[2],
+        ).fill_(0)
+
+        forward_var[:, 0, :] = init_alphas[None, :].repeat(feats.shape[0], 1)
+
         if torch.cuda.is_available():
             forward_var = forward_var.cuda()
 
@@ -816,7 +847,7 @@ class SequenceTagger(nn.Module):
             tag_var = \
                 emit_score[:, :, None].repeat(1, 1, transitions.shape[2]) + \
                 transitions + \
-                forward_var[:, :, None].repeat(1, 1, transitions.shape[2]).transpose(2, 1)
+                forward_var[:, i, :][:, :, None].repeat(1, 1, transitions.shape[2]).transpose(2, 1)
 
             max_tag_var, _ = torch.max(tag_var, dim=2)
 
@@ -825,7 +856,9 @@ class SequenceTagger(nn.Module):
 
             agg_ = torch.log(torch.sum(torch.exp(tag_var), dim=2))
 
-            forward_var = max_tag_var + agg_
+            forward_var[:, i + 1, :] = max_tag_var + agg_
+
+        forward_var = forward_var[range(forward_var.shape[0]), lens_, :]
 
         terminal_var = forward_var + \
             self.transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)][None, :].repeat(forward_var.shape[0], 1)
@@ -838,7 +871,6 @@ class SequenceTagger(nn.Module):
         feats, tags = self.forward([sentence])
         feats = feats[0]
         tags = tags[0]
-        # viterbi to get tag_seq
         if self.use_crf:
             score, tag_seq = self.viterbi_decode(feats)
         else:

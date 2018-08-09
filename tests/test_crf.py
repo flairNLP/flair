@@ -57,6 +57,7 @@ sto.eval()
 st.eval()
 
 sentence = Sentence('I love Berlin .')
+long_sentence = Sentence('I love New York .')
 
 
 class Test1(unittest.TestCase):
@@ -135,6 +136,17 @@ class Test5(unittest.TestCase):
         print('Time elapsed: {}s'.format(stop_))
 
         print('Speedup factor is {}'.format(stop_old / stop_))
+
+
+class Test6(unittest.TestCase):
+    def test(self):
+
+        out_old = sto.neg_log_likelihood([sentence, long_sentence], 'ner')
+        out = st.neg_log_likelihood([sentence, long_sentence], 'ner')
+
+        rel_diff = abs((out_old.item() - out.item()) / out.item())
+
+        self.assertLess(rel_diff, 0.001)
 
 
 if __name__ == '__main__':
