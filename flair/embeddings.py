@@ -189,8 +189,6 @@ class WordEmbeddings(TokenEmbeddings):
 
         self.precomputed_word_embeddings = gensim.models.KeyedVectors.load(embeddings)
 
-        self.known_words = set(self.precomputed_word_embeddings.index2word)
-
         self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
         super().__init__()
 
@@ -205,13 +203,13 @@ class WordEmbeddings(TokenEmbeddings):
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
                 token: Token = token
 
-                if token.text in self.known_words:
+                if token.text in self.precomputed_word_embeddings:
                     word_embedding = self.precomputed_word_embeddings[token.text]
-                elif token.text.lower() in self.known_words:
+                elif token.text.lower() in self.precomputed_word_embeddings:
                     word_embedding = self.precomputed_word_embeddings[token.text.lower()]
-                elif re.sub('\d', '#', token.text.lower()) in self.known_words:
+                elif re.sub('\d', '#', token.text.lower()) in self.precomputed_word_embeddings:
                     word_embedding = self.precomputed_word_embeddings[re.sub('\d', '#', token.text.lower())]
-                elif re.sub('\d', '0', token.text.lower()) in self.known_words:
+                elif re.sub('\d', '0', token.text.lower()) in self.precomputed_word_embeddings:
                     word_embedding = self.precomputed_word_embeddings[re.sub('\d', '0', token.text.lower())]
                 else:
                     word_embedding = np.zeros(self.embedding_length, dtype='float')
