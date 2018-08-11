@@ -259,6 +259,7 @@ class LanguageModelTrainer:
                 # Save the model if the validation loss is the best we've seen so far.
                 if val_loss < best_val_loss:
                     self.model.save(savefile)
+                    best_val_loss = val_loss
 
                 ###############################################################################
                 # print info
