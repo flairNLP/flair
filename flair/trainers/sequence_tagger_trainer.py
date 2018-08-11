@@ -135,7 +135,7 @@ class SequenceTaggerTrainer:
                     loss_file.close()
 
                 # save if model is current best and we use dev data for model selection
-                if save_model and not train_with_dev and current_loss == scheduler.best:
+                if save_model and not train_with_dev and dev_score == scheduler.best:
                     self.model.save(base_path + "/best-model.pt")
 
             # if we do not use dev data for model selection, save final model
