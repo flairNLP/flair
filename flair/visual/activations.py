@@ -57,6 +57,9 @@ class Highlighter:
         for i, (char, color) in enumerate(zip(list(text), colors)):
             str_ += self._render(char, color)
 
+            if i % 100 == 0 and i > 0:
+                str_ += '<br>'
+
         with open(file_, 'w') as f:
             f.write(str_)
 
