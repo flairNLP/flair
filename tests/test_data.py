@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 from flair.data import Sentence, Token, Dictionary, TaggedCorpus
 
 
@@ -48,7 +50,9 @@ def test_sentence_get_item():
 
     assert (sentence.get_token(1) == sentence[0])
     assert (sentence.get_token(3) == sentence[2])
-    assert (sentence[4] is None)
+
+    with pytest.raises(IndexError):
+        token = sentence[4]
 
 
 def test_sentence_to_tagged_string():
