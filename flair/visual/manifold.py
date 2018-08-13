@@ -1,11 +1,6 @@
 from sklearn.manifold import TSNE
-from umap import UMAP
 import tqdm
 import numpy
-import blessings
-
-
-t = blessings.Terminal()
 
 
 def prepare_word_embeddings(embeddings, sentences):

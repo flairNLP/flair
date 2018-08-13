@@ -62,6 +62,27 @@ class Test(unittest.TestCase):
 
         numpy.save('resources/data/char_tsne', reduced)
 
+    def test_prepare_char_uni(self):
+
+        with open('resources/data/snippet.txt') as f:
+            sentences = [x for x in f.read().split('\n') if x]
+
+        sentences = [Sentence(x) for x in sentences[:100]]
+
+        embeddings = CharLMEmbeddings('news-forward')
+
+        X = prepare_char_embeddings(embeddings, sentences)
+
+        numpy.save('resources/data/uni_embeddings', X)
+
+    def test_tSNE_char_uni(self):
+
+        X = numpy.load('resources/data/uni_embeddings.npy')
+        trans_ = tSNE()
+        reduced = trans_.fit(X)
+
+        numpy.save('resources/data/uni_tsne', reduced)
+
     def test_char_contexts(self):
 
         with open('resources/data/snippet.txt') as f:
@@ -74,21 +95,48 @@ class Test(unittest.TestCase):
         with open('resources/data/char_contexts.txt', 'w') as f:
             f.write('\n'.join(contexts))
 
+    def test_benchmark(self):
 
-class TestuMap(unittest.TestCase):
-    def test(self):
+        import time
 
-        X = numpy.load('resources/data/embeddings.npy')
+        with open('resources/data/snippet.txt') as f:
+            sentences = [x for x in f.read().split('\n') if x]
 
-        reduced = uMap().fit(X)
+        sentences = [Sentence(x) for x in sentences[:10]]
 
-        numpy.save('resources/data/umap', reduced)
+
+        charlm_embedding_forward = CharLMEmbeddings('news-forward')
+        charlm_embedding_backward = CharLMEmbeddings('news-backward')
+
+        embeddings = StackedEmbeddings(
+            [charlm_embedding_backward, charlm_embedding_forward]
+        )
+
+        tic = time.time()
+
+        prepare_word_embeddings(embeddings, sentences)
+
+        current_elaped = time.time() - tic
+
+        print('current implementation: {} sec/ sentence'.format(current_elaped / 10))
+
+        embeddings_f = CharLMEmbeddings('news-forward')
+        embeddings_b = CharLMEmbeddings('news-backward')
+
+        tic = time.time()
+
+        prepare_char_embeddings(embeddings_f, sentences)
+        prepare_char_embeddings(embeddings_b, sentences)
+
+        current_elaped = time.time() - tic
+
+        print('pytorch implementation: {} sec/ sentence'.format(current_elaped / 10))
 
 
 class Test_show(unittest.TestCase):
     def test_word(self):
 
-        reduced = numpy.load('resources/data/umap.npy')
+        reduced = numpy.load('resources/data/tsne.npy')
 
         with open('resources/data/contexts.txt') as f:
             contexts = f.read().split('\n')
@@ -98,6 +146,29 @@ class Test_show(unittest.TestCase):
     def test_char(self):
 
         reduced = numpy.load('resources/data/char_tsne.npy')
+
+        with open('resources/data/char_contexts.txt') as f:
+            contexts = f.read().split('\n')
+
+        show(reduced, contexts)
+
+    def test_uni_sentence(self):
+
+        reduced = numpy.load('resources/data/uni_tsne.npy')
+
+        with open('resources/data/snippet.txt') as f:
+            sentences = [x for x in f.read().split('\n') if x]
+
+        l = len(sentences[0])
+
+        with open('resources/data/char_contexts.txt') as f:
+            contexts = f.read().split('\n')
+
+        show(reduced[:l], contexts[:l])
+
+    def test_uni(self):
+
+        reduced = numpy.load('resources/data/uni_tsne.npy')
 
         with open('resources/data/char_contexts.txt') as f:
             contexts = f.read().split('\n')
