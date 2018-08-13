@@ -175,7 +175,7 @@ class Sentence:
                 self.add_token(Token(word))
 
     def __getitem__(self, token_id: int) -> Token:
-        return self.get_token(token_id)
+        return self.get_token(token_id + 1)
 
     def __iter__(self):
         return iter(self.tokens)
@@ -194,7 +194,8 @@ class Sentence:
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
-            if token.idx == token_id: return token
+            if token.idx == token_id:
+                return token
 
     def add_token(self, token: Token):
         self.tokens.append(token)

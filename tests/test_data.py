@@ -43,6 +43,14 @@ def test_sentence_to_plain_string():
     assert ('I love Berlin .' == sentence.to_plain_string())
 
 
+def test_sentence_get_item():
+    sentence: Sentence = Sentence('I love Berlin.', use_tokenizer=True)
+
+    assert (sentence.get_token(1) == sentence[0])
+    assert (sentence.get_token(3) == sentence[2])
+    assert (sentence[4] is None)
+
+
 def test_sentence_to_tagged_string():
     token1 = Token('I', 0)
     token2 = Token('love', 1, 0)
