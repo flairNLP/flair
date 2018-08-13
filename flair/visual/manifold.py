@@ -89,18 +89,6 @@ class tSNE(_Transform):
             TSNE(n_components=2, verbose=1, perplexity=40, n_iter=300)
 
 
-class uMap(_Transform):
-    def __init__(self):
-
-        super().__init__()
-
-        self.transform = UMAP(
-            n_neighbors = 5,
-            min_dist = 0.3,
-            metric = 'correlation',
-        )
-
-
 def show(X, contexts):
     import matplotlib.pyplot
     import mpld3

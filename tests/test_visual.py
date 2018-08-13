@@ -176,6 +176,21 @@ class Test_show(unittest.TestCase):
         show(reduced, contexts)
 
 
+class TestHighlighter(unittest.TestCase):
+    def test(self):
+
+        i = numpy.random.choice(2048)
+
+        with open('resources/data/snippet.txt') as f:
+            sentences = [x for x in f.read().split('\n') if x]
+
+        embeddings = CharLMEmbeddings('news-forward')
+
+        features = embeddings.lm.get_representation(sentences[0]).squeeze()
+
+        Highlighter().highlight(features[:, i], sentences[0])
+
+
 
 if __name__ == '__main__':
     unittest.main()

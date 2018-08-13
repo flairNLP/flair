@@ -1,0 +1,66 @@
+import numpy
+
+
+class Highlighter:
+    def __init__(self):
+        self.color_map = [
+            "#ff0000",
+            "#ff4000",
+            "#ff8000",
+            "#ffbf00",
+            "#ffff00",
+            "#bfff00",
+            "#80ff00",
+            "#40ff00",
+            "#00ff00",
+            "#00ff40",
+            "#00ff80",
+            "#00ffbf",
+            "#00ffff",
+            "#00bfff",
+            "#0080ff",
+            "#0040ff",
+            "#0000ff",
+            "#4000ff",
+            "#8000ff",
+            "#bf00ff",
+            "#ff00ff",
+            "#ff00bf",
+            "#ff0080",
+            "#ff0040",
+            "#ff0000",
+        ]
+
+    def highlight(self, activation, text, file_='resources/data/highlight.html'):
+
+        activation = activation.detach().numpy()
+
+        step_size = (max(activation) - min(activation)) / len(self.color_map)
+
+        lookup = numpy.array(list(
+            numpy.arange(min(activation), max(activation), step_size)
+        ))
+
+        colors = []
+
+        for i, act in enumerate(activation):
+
+            try:
+                colors.append(
+                    self.color_map[numpy.where(act > lookup)[0][-1]]
+                )
+            except IndexError:
+                colors.append(len(self.color_map) - 1)
+
+        str_ = ''
+
+        for i, (char, color) in enumerate(zip(list(text), colors)):
+            str_ += self._render(char, color)
+
+        with open(file_, 'w') as f:
+            f.write(str_)
+
+    def _render(self, char, color):
+        return '<span style="background-color: {}">{}</span>'.format(color, char)
+
+
