@@ -124,6 +124,9 @@ class Token:
     def __str__(self) -> str:
         return 'Token: %d %s' % (self.idx, self.text)
 
+    def __repr__(self) -> str:
+        return 'Token: %d %s' % (self.idx, self.text)
+
     def set_embedding(self, name: str, vector: torch.autograd.Variable):
         self._embeddings[name] = vector.cpu()
 
