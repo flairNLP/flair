@@ -177,11 +177,8 @@ class Sentence:
             for word in text.split(' '):
                 self.add_token(Token(word))
 
-    def __getitem__(self, token_id: int) -> Token:
-        token = self.get_token(token_id + 1)
-        if token is None:
-            raise IndexError()
-        return token
+    def __getitem__(self, idx: int) -> Token:
+        return self.tokens[idx]
 
     def __iter__(self):
         return iter(self.tokens)
