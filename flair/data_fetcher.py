@@ -43,7 +43,7 @@ class NLPTaskDataFetcher:
         """
 
         data_folder = os.path.join('resources', 'tasks', str(task.value).lower())
-        print(data_folder)
+        print("reading data from %s".format(data_folder))
 
         # the CoNLL 2000 task on chunking has three columns: text, pos and np (chunk)
         if task == NLPTask.CONLL_2000:
@@ -246,9 +246,7 @@ class NLPTaskDataFetcher:
                 sentence: Sentence = Sentence()
 
             else:
-                # print(line)
                 fields: List[str] = re.split("\s+", line)
-                # print(len(fields))
                 token = Token(fields[text_column])
                 for column in column_name_map:
                     if len(fields) > column:
