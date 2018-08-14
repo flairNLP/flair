@@ -188,7 +188,7 @@ class TestHighlighter(unittest.TestCase):
 
         features = embeddings.lm.get_representation(sentences[0]).squeeze()
 
-        Highlighter().highlight(features[:, i], sentences[0])
+        Highlighter().highlight_selection(features, sentences[0], n=1000)
 
 
 

@@ -31,7 +31,7 @@ class Highlighter:
             "#ff0000",
         ]
 
-    def highlight(self, activation, text, file_='resources/data/highlight.html'):
+    def highlight(self, activation, text):
 
         activation = activation.detach().numpy()
 
@@ -52,7 +52,7 @@ class Highlighter:
             except IndexError:
                 colors.append(len(self.color_map) - 1)
 
-        str_ = ''
+        str_ = '<br><br>'
 
         for i, (char, color) in enumerate(zip(list(text), colors)):
             str_ += self._render(char, color)
@@ -60,8 +60,20 @@ class Highlighter:
             if i % 100 == 0 and i > 0:
                 str_ += '<br>'
 
+        return str_
+
+    def highlight_selection(self, activations, text, file_='resources/data/highlight.html', n=10):
+
+        ix = numpy.random.choice(activations.shape[1], size=n)
+
+        rendered = ''
+
+        for i in ix:
+
+            rendered += self.highlight(activations[:, i], text)
+
         with open(file_, 'w') as f:
-            f.write(str_)
+            f.write(rendered)
 
     def _render(self, char, color):
         return '<span style="background-color: {}">{}</span>'.format(color, char)
