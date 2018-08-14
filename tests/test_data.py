@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from flair.data import Sentence, Token, Dictionary, TaggedCorpus
+from flair.data import Sentence, Label, Token, Dictionary, TaggedCorpus
 
 
 def test_get_head():
@@ -180,9 +180,9 @@ def test_tagged_corpus_make_vocab_dictionary():
 
 
 def test_tagged_corpus_make_label_dictionary():
-    sentence_1 = Sentence('sentence 1', labels=['class_1'])
-    sentence_2 = Sentence('sentence 2', labels=['class_2'])
-    sentence_3 = Sentence('sentence 3', labels=['class_1'])
+    sentence_1 = Sentence('sentence 1', labels=[Label('class_1')])
+    sentence_2 = Sentence('sentence 2', labels=[Label('class_2')])
+    sentence_3 = Sentence('sentence 3', labels=[Label('class_1')])
 
     corpus: TaggedCorpus = TaggedCorpus([sentence_1, sentence_2, sentence_3], [], [])
 
@@ -195,9 +195,9 @@ def test_tagged_corpus_make_label_dictionary():
 
 
 def test_tagged_corpus_statistics():
-    train_sentence = Sentence('I love Berlin.', labels=['class_1'], use_tokenizer=True)
-    dev_sentence = Sentence('The sun is shining.', labels=['class_2'], use_tokenizer=True)
-    test_sentence = Sentence('Berlin is sunny.', labels=['class_1'], use_tokenizer=True)
+    train_sentence = Sentence('I love Berlin.', labels=[Label('class_1')], use_tokenizer=True)
+    dev_sentence = Sentence('The sun is shining.', labels=[Label('class_2')], use_tokenizer=True)
+    test_sentence = Sentence('Berlin is sunny.', labels=[Label('class_1')], use_tokenizer=True)
 
     class_to_count_dict = TaggedCorpus._get_classes_to_count([train_sentence, dev_sentence, test_sentence])
 
@@ -215,7 +215,7 @@ def test_tagged_corpus_statistics():
 
 
 def test_tagged_corpus_downsample():
-    sentence = Sentence('I love Berlin.', labels=['class_1'], use_tokenizer=True)
+    sentence = Sentence('I love Berlin.', labels=[Label('class_1')], use_tokenizer=True)
 
     corpus: TaggedCorpus = TaggedCorpus(
         [sentence, sentence, sentence, sentence, sentence, sentence, sentence, sentence, sentence, sentence], [], [])

@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 
 import flair.embeddings
-from flair.data import Dictionary, Sentence
+from flair.data import Dictionary, Sentence, Label
 from flair.training_utils import convert_labels_to_one_hot, clear_embeddings
 
 
@@ -117,7 +117,7 @@ class TextClassifier(nn.Module):
 
         return sentences
 
-    def get_labels_and_loss(self, sentences: List[Sentence]) -> (List[List[str]], float):
+    def get_labels_and_loss(self, sentences: List[Sentence]) -> (List[List[Label]], float):
         """
         Predicts the labels of sentences and calculates the loss.
         :param sentences: list of sentences
@@ -134,7 +134,7 @@ class TextClassifier(nn.Module):
 
         return pred_labels, loss
 
-    def _get_multi_label(self, label_scores) -> List[str]:
+    def _get_multi_label(self, label_scores) -> List[Label]:
         labels = []
 
         sigmoid = torch.nn.Sigmoid()
@@ -143,15 +143,15 @@ class TextClassifier(nn.Module):
         for idx, conf in enumerate(results):
             if conf > 0.5:
                 label = self.label_dictionary.get_item_for_index(idx)
-                labels.append(label)
+                labels.append(Label(label, conf))
 
         return labels
 
-    def _get_single_label(self, label_scores) -> List[str]:
+    def _get_single_label(self, label_scores) -> List[Label]:
         conf, idx = torch.max(label_scores[0], 0)
         label = self.label_dictionary.get_item_for_index(idx.item())
 
-        return [label]
+        return [Label(label, conf)]
 
     def _calculate_multi_label_loss(self, label_scores, sentences: List[Sentence]) -> float:
         loss_function = nn.BCELoss()
@@ -163,7 +163,7 @@ class TextClassifier(nn.Module):
         return loss_function(label_scores, self._labels_to_indices(sentences))
 
     def _labels_to_one_hot(self, sentences: List[Sentence]):
-        label_list = [sentence.labels for sentence in sentences]
+        label_list = [sentence.get_label_names() for sentence in sentences]
         one_hot = convert_labels_to_one_hot(label_list, self.label_dictionary)
         one_hot = [torch.FloatTensor(l).unsqueeze(0) for l in one_hot]
         one_hot = torch.cat(one_hot, 0)
@@ -173,7 +173,7 @@ class TextClassifier(nn.Module):
 
     def _labels_to_indices(self, sentences: List[Sentence]):
         indices = [
-            torch.LongTensor([self.label_dictionary.get_idx_for_item(label) for label in sentence.labels])
+            torch.LongTensor([self.label_dictionary.get_idx_for_item(label.name) for label in sentence.labels])
             for sentence in sentences
         ]
 

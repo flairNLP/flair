@@ -191,8 +191,8 @@ class TextClassifierTrainer:
 
             eval_loss += loss
 
-            y_true.extend([sentence.labels for sentence in batch])
-            y_pred.extend(labels)
+            y_true.extend([sentence.get_label_names() for sentence in batch])
+            y_pred.extend([[label.name for label in sent_labels] for sent_labels in labels])
 
             if not embeddings_in_memory:
                 clear_embeddings(batch)

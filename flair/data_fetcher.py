@@ -3,7 +3,7 @@ import re
 import os
 from enum import Enum
 
-from flair.data import Sentence, TaggedCorpus, Token
+from flair.data import Sentence, TaggedCorpus, Token, Label
 
 
 class NLPTask(Enum):
@@ -333,7 +333,7 @@ class NLPTaskDataFetcher:
                     if words[i].startswith(label_prefix):
                         l_len += len(words[i]) + 1
                         label = words[i].replace(label_prefix, "")
-                        labels.append(label)
+                        labels.append(Label(label))
                     else:
                         break
 

@@ -26,7 +26,7 @@ def test_labels_to_indices():
     result = model._labels_to_indices(corpus.train)
 
     for i in range(len(corpus.train)):
-        expected = label_dict.get_idx_for_item(corpus.train[i].labels[0])
+        expected = label_dict.get_idx_for_item(corpus.train[i].labels[0].name)
         actual = result[i].item()
 
         assert(expected == actual)
@@ -38,7 +38,7 @@ def test_labels_to_one_hot():
     result = model._labels_to_one_hot(corpus.train)
 
     for i in range(len(corpus.train)):
-        expected = label_dict.get_idx_for_item(corpus.train[i].labels[0])
+        expected = label_dict.get_idx_for_item(corpus.train[i].labels[0].name)
         actual = result[i]
 
         for idx in range(len(label_dict)):
