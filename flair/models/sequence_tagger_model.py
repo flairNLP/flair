@@ -851,12 +851,15 @@ class SequenceTagger(nn.Module):
 
             max_tag_var, _ = torch.max(tag_var, dim=2)
 
-            tag_var -= \
+            tag_var = tag_var - \
                 max_tag_var[:, :, None].repeat(1, 1, transitions.shape[2])
 
             agg_ = torch.log(torch.sum(torch.exp(tag_var), dim=2))
 
-            forward_var[:, i + 1, :] = max_tag_var + agg_
+            cloned = forward_var.clone()
+            cloned[:, i + 1, :] = max_tag_var + agg_
+
+            forward_var = cloned
 
         forward_var = forward_var[range(forward_var.shape[0]), lens_, :]
 

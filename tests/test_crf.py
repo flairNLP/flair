@@ -1,6 +1,8 @@
 from flair.models import SequenceTagger, SequenceTaggerOld
+from flair.models.sequence_tagger_model import pad_tensors
 from flair.embeddings import WordEmbeddings
 from flair.data import Sentence, Dictionary
+import numpy
 import torch
 import unittest
 import time
@@ -120,6 +122,8 @@ class Test5(unittest.TestCase):
 
         feats = torch.randn(1000, 5, 3)
 
+        lens = torch.LongTensor(1000).random_(0, 3)
+
         start_ = time.time()
 
         for i in range(feats.shape[0]):
@@ -130,7 +134,10 @@ class Test5(unittest.TestCase):
         print('Time elapsed: {}s'.format(stop_old))
 
         start_ = time.time()
-        st._forward_alg(feats)
+        out = st._forward_alg(feats, lens)
+
+        out.sum().backward()
+
         stop_ = time.time() - start_
 
         print('Time elapsed: {}s'.format(stop_))
@@ -144,9 +151,26 @@ class Test6(unittest.TestCase):
         out_old = sto.neg_log_likelihood([sentence, long_sentence], 'ner')
         out = st.neg_log_likelihood([sentence, long_sentence], 'ner')
 
+        out.backward()
+
         rel_diff = abs((out_old.item() - out.item()) / out.item())
 
         self.assertLess(rel_diff, 0.001)
+
+
+class Test7(unittest.TestCase):
+    def test(self):
+
+        tensor_list = [
+            torch.randn(numpy.random.randint(2, 5))
+            for _ in range(3)
+        ]
+
+        padded = pad_tensors(tensor_list)[0]
+
+        layer = torch.nn.Linear(4, 5)
+
+        out = layer(padded).sum()
 
 
 if __name__ == '__main__':

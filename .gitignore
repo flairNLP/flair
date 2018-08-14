@@ -104,3 +104,10 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# resources
+
+resources/data
+resources/tasks
+resources/taggers
+tests/results
