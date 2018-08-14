@@ -111,3 +111,6 @@ resources/data
 resources/tasks
 resources/taggers
 tests/results
+
+resources
+checkpoints
