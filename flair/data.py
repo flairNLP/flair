@@ -124,6 +124,9 @@ class Token:
     def __str__(self) -> str:
         return 'Token: %d %s' % (self.idx, self.text)
 
+    def __repr__(self) -> str:
+        return 'Token: %d %s' % (self.idx, self.text)
+
     def set_embedding(self, name: str, vector: torch.autograd.Variable):
         self._embeddings[name] = vector.cpu()
 
@@ -174,8 +177,8 @@ class Sentence:
             for word in text.split(' '):
                 self.add_token(Token(word))
 
-    def __getitem__(self, token_id: int) -> Token:
-        return self.get_token(token_id)
+    def __getitem__(self, idx: int) -> Token:
+        return self.tokens[idx]
 
     def __iter__(self):
         return iter(self.tokens)
@@ -194,7 +197,8 @@ class Sentence:
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
-            if token.idx == token_id: return token
+            if token.idx == token_id:
+                return token
 
     def add_token(self, token: Token):
         self.tokens.append(token)

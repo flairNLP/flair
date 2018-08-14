@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 from flair.data import Sentence, Token, Dictionary, TaggedCorpus
 
 
@@ -41,6 +43,16 @@ def test_sentence_to_plain_string():
     sentence: Sentence = Sentence('I love Berlin.', use_tokenizer=True)
 
     assert ('I love Berlin .' == sentence.to_plain_string())
+
+
+def test_sentence_get_item():
+    sentence: Sentence = Sentence('I love Berlin.', use_tokenizer=True)
+
+    assert (sentence.get_token(1) == sentence[0])
+    assert (sentence.get_token(3) == sentence[2])
+
+    with pytest.raises(IndexError):
+        token = sentence[4]
 
 
 def test_sentence_to_tagged_string():
