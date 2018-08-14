@@ -93,6 +93,10 @@ class Dictionary:
 
 
 class Label:
+    """
+    This class represents a label of a sentence. Each label has a name and optional a confidence value. The confidence
+    value needs to be between 0.0 and 1.0. Default value for the confidence is 0.0.
+    """
     def __init__(self, name: str, confidence: float = 0.0):
         self.name = name
         self.confidence = confidence
@@ -103,16 +107,21 @@ class Label:
 
     @name.setter
     def name(self, name):
-        self._name = name
+        if not name:
+            raise ValueError('Incorrect label name provided. Label name needs to be set.')
+        else:
+            self._name = name
 
     @property
     def confidence(self):
-        return self._name
+        return self._confidence
 
     @confidence.setter
     def confidence(self, confidence):
         if 0.0 <= confidence <= 1.0:
             self._confidence = confidence
+        else:
+            self._confidence = 0.0
 
 
 class Token:

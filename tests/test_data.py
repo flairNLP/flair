@@ -179,6 +179,20 @@ def test_tagged_corpus_make_vocab_dictionary():
     assert('.' in vocab.get_items())
 
 
+def test_label_set_confidence():
+    label = Label('class_1', 3.2)
+
+    assert (0.0 == label.confidence)
+    assert ('class_1' == label.name)
+
+    label.confidence = 0.2
+
+    assert (0.2 == label.confidence)
+
+    with pytest.raises(ValueError):
+        label.name = ''
+
+
 def test_tagged_corpus_make_label_dictionary():
     sentence_1 = Sentence('sentence 1', labels=[Label('class_1')])
     sentence_2 = Sentence('sentence 2', labels=[Label('class_2')])
