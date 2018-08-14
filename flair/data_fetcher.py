@@ -250,7 +250,8 @@ class NLPTaskDataFetcher:
                 token = Token(fields[text_column])
                 for column in column_name_map:
                     if len(fields) > column:
-                        token.add_tag(column_name_map[column], fields[column])
+                        if column != text_column:
+                            token.add_tag(column_name_map[column], fields[column])
                 sentence.add_token(token)
 
         if len(sentence.tokens) > 0:
