@@ -71,7 +71,7 @@ class SequenceTagger(nn.Module):
 
         self.use_word_dropout: bool = use_word_dropout
         if self.use_word_dropout:
-            self.word_dropout = WordDropout(0.2)
+            self.word_dropout = WordDropout(0.05)
 
         rnn_input_dim: int = self.embeddings.embedding_length
 

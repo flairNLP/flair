@@ -53,4 +53,4 @@ from flair.trainers.sequence_tagger_trainer import SequenceTaggerTrainer
 
 trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=50)
+trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=20)
