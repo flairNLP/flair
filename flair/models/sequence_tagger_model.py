@@ -758,6 +758,7 @@ class SequenceTagger(nn.Module):
         forward_var = autograd.Variable(init_vvars)
         if torch.cuda.is_available():
             forward_var = forward_var.cuda()
+
         for feat in feats:
             next_tag_var = forward_var.view(1, -1).expand(self.tagset_size, self.tagset_size) + self.transitions
             _, bptrs_t = torch.max(next_tag_var, dim=1)
