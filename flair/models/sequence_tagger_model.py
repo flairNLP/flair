@@ -712,9 +712,9 @@ class SequenceTagger(nn.Module):
             stop = stop[None, :].repeat(tags.shape[0], 1)
 
             pad_start_tags = \
-                torch.cat([torch.cuda.LongTensor([start]), tags], 1)
+                torch.cat([start, tags], 1)
             pad_stop_tags = \
-                torch.cat([tags, torch.cuda.LongTensor([stop])], 1)
+                torch.cat([tags, stop], 1)
         else:
             start = torch.LongTensor([
                 self.tag_dictionary.get_idx_for_item(START_TAG) 
