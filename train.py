@@ -7,7 +7,7 @@ from flair.data import TaggedCorpus
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03).downsample(0.1)
+corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03)
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -27,9 +27,9 @@ embedding_types: List[TokenEmbeddings] = [
 
     # comment in these lines to use contextual string embeddings
     #
-    # CharLMEmbeddings('news-forward'),
-    #
-    # CharLMEmbeddings('news-backward'),
+    CharLMEmbeddings('news-forward'),
+
+    CharLMEmbeddings('news-backward'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
@@ -46,6 +46,6 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
 # initialize trainer
 from flair.trainers.sequence_tagger_trainer import SequenceTaggerTrainer
 
-trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=20)
+trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
