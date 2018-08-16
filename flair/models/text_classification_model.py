@@ -151,7 +151,7 @@ class TextClassifier(nn.Module):
         for idx, conf in enumerate(results):
             if conf > 0.5:
                 label = self.label_dictionary.get_item_for_index(idx)
-                labels.append(Label(label, conf))
+                labels.append(Label(label, conf.item()))
 
         return labels
 
@@ -159,7 +159,7 @@ class TextClassifier(nn.Module):
         conf, idx = torch.max(label_scores[0], 0)
         label = self.label_dictionary.get_item_for_index(idx.item())
 
-        return [Label(label, conf)]
+        return [Label(label, conf.item())]
 
     def _calculate_multi_label_loss(self, label_scores, sentences: List[Sentence]) -> float:
         loss_function = nn.BCELoss()
