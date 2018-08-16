@@ -25,7 +25,7 @@ def test_text_classifier_single_label():
     for s in model.predict(sentence):
         for l in s.labels:
             assert(l.name is not None)
-            assert(l.confidence > 0.0)
+            assert(0.0 >= l.confidence <= 1.0)
 
     # clean up results directory
     shutil.rmtree('./results')
@@ -47,8 +47,8 @@ def test_text_classifier_mulit_label():
 
     for s in model.predict(sentence):
         for l in s.labels:
-            assert (l.name is not None)
-            assert (l.confidence > 0.0)
+            assert(l.name is not None)
+            assert(0.0 >= l.confidence <= 1.0)
 
     # clean up results directory
     shutil.rmtree('./results')
