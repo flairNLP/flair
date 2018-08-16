@@ -1,5 +1,5 @@
 import warnings
-from typing import List
+from typing import List, Union
 
 import torch
 import torch.nn as nn
@@ -94,7 +94,7 @@ class TextClassifier(nn.Module):
         model.eval()
         return model
 
-    def predict(self, sentences: List[Sentence], mini_batch_size: int = 32, embeddings_in_memory: bool = True) -> List[Sentence]:
+    def predict(self, sentences: Union[Sentence, List[Sentence]], mini_batch_size: int = 32, embeddings_in_memory: bool = True) -> List[Sentence]:
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
         :param sentences: list of sentences
@@ -107,7 +107,7 @@ class TextClassifier(nn.Module):
         batches = [sentences[x:x + mini_batch_size] for x in range(0, len(sentences), mini_batch_size)]
 
         for batch in batches:
-            batch_labels, _ = self.get_labels_and_loss(batch)
+            batch_labels, _ = self.get_labels_and_loss(batch, False)
 
             for (sentence, labels) in zip(batch, batch_labels):
                 sentence.labels = labels
@@ -117,20 +117,23 @@ class TextClassifier(nn.Module):
 
         return sentences
 
-    def get_labels_and_loss(self, sentences: List[Sentence]) -> (List[List[Label]], float):
+    def get_labels_and_loss(self, sentences: List[Sentence], calculate_loss: bool = True) -> (List[List[Label]], float):
         """
         Predicts the labels of sentences and calculates the loss.
         :param sentences: list of sentences
         :return: list of predicted labels and the loss value
         """
         label_scores = self.forward(sentences)
+        loss = 0.0
 
         if self.multi_label:
             pred_labels = [self._get_multi_label(scores) for scores in label_scores]
-            loss = self._calculate_multi_label_loss(label_scores, sentences)
+            if calculate_loss:
+                loss = self._calculate_multi_label_loss(label_scores, sentences)
         else:
             pred_labels = [self._get_single_label(scores) for scores in label_scores]
-            loss = self._calculate_single_label_loss(label_scores, sentences)
+            if calculate_loss:
+                loss = self._calculate_single_label_loss(label_scores, sentences)
 
         return pred_labels, loss
 

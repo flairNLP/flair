@@ -123,6 +123,12 @@ class Label:
         else:
             self._confidence = 0.0
 
+    def __str__(self):
+        return "{} ({})".format(self._name, self._confidence)
+
+    def __repr__(self):
+        return "{} ({})".format(self._name, self._confidence)
+
 
 class Token:
     """
