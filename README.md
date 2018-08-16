@@ -119,7 +119,7 @@ Please cite the following paper when using Flair:
   title={Contextual String Embeddings for Sequence Labeling},
   author={Akbik, Alan and Blythe, Duncan and Vollgraf, Roland},
   booktitle = {{COLING} 2018, 27th International Conference on Computational Linguistics},
-  pages     = {(forthcoming)},
+  pages     = {1756--1765},
   year      = {2018}
 }
 ```
