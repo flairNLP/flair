@@ -383,7 +383,7 @@ class CharLMEmbeddings(TokenEmbeddings):
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
         # get text sentences
-        text_sentences = [sentence.to_plain_string() for sentence in sentences]
+        text_sentences = [sentence.to_tokenized_string() for sentence in sentences]
 
         longest_character_sequence_in_batch: int = len(max(text_sentences, key=len))
 
@@ -407,7 +407,7 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         # take first or last hidden states from language model as word representation
         for i, sentence in enumerate(sentences):
-            sentence_text = sentence.to_plain_string()
+            sentence_text = sentence.to_tokenized_string()
 
             offset_forward: int = extra_offset
             offset_backward: int = len(sentence_text) + extra_offset

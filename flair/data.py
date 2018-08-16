@@ -382,13 +382,13 @@ class Sentence:
     def __str__(self) -> str:
         return 'Sentence: "' + ' '.join([t.text for t in self.tokens]) + '" - %d Tokens' % len(self)
 
-    def to_plain_string(self) -> str:
-        return ' '.join([t.text for t in self.tokens])
-
     def __len__(self) -> int:
         return len(self.tokens)
 
-    def to_real_string(self):
+    def to_tokenized_string(self) -> str:
+        return ' '.join([t.text for t in self.tokens])
+
+    def to_plain_string(self):
         plain = ''
         for token in self.tokens:
             plain += token.text
