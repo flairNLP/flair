@@ -216,7 +216,7 @@ class Sentence:
                 # determine offsets for whitespace_after field
                 index = text.index
                 running_offset = 0
-                last_word_offset = -2
+                last_word_offset = -1
                 last_token = None
                 for word in tokens:
                     token = Token(word)
@@ -224,8 +224,8 @@ class Sentence:
                     try:
                         word_offset = index(word, running_offset)
                     except:
-                        word_offset = last_word_offset = +1
-                    if word_offset - 1 == last_word_offset:
+                        word_offset = last_word_offset + 1
+                    if word_offset - 1 == last_word_offset and last_token is not None:
                         last_token.whitespace_after = False
                     word_len = len(word)
                     running_offset = word_offset + word_len
