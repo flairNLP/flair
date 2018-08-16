@@ -1,11 +1,11 @@
 import warnings
-from typing import List
+from typing import List, Union
 
 import torch
 import torch.nn as nn
 
 import flair.embeddings
-from flair.data import Dictionary, Sentence
+from flair.data import Dictionary, Sentence, Label
 from flair.training_utils import convert_labels_to_one_hot, clear_embeddings
 
 
@@ -41,7 +41,7 @@ class TextClassifier(nn.Module):
     def _init_weights(self):
         nn.init.xavier_uniform_(self.decoder.weight)
 
-    def forward(self, sentences):
+    def forward(self, sentences) -> List[List[float]]:
         self.document_embeddings.embed(sentences)
 
         text_embedding_list = [sentence.get_embedding() for sentence in sentences]
@@ -94,7 +94,7 @@ class TextClassifier(nn.Module):
         model.eval()
         return model
 
-    def predict(self, sentences: List[Sentence], mini_batch_size: int = 32, embeddings_in_memory: bool = True) -> List[Sentence]:
+    def predict(self, sentences: Union[Sentence, List[Sentence]], mini_batch_size: int = 32, embeddings_in_memory: bool = True) -> List[Sentence]:
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
         :param sentences: list of sentences
@@ -107,9 +107,10 @@ class TextClassifier(nn.Module):
         batches = [sentences[x:x + mini_batch_size] for x in range(0, len(sentences), mini_batch_size)]
 
         for batch in batches:
-            batch_labels, _ = self.get_labels_and_loss(batch)
+            scores = self.forward(batch)
+            predicted_labels = self.obtain_labels(scores)
 
-            for (sentence, labels) in zip(batch, batch_labels):
+            for (sentence, labels) in zip(batch, predicted_labels):
                 sentence.labels = labels
 
             if not embeddings_in_memory:
@@ -117,24 +118,31 @@ class TextClassifier(nn.Module):
 
         return sentences
 
-    def get_labels_and_loss(self, sentences: List[Sentence]) -> (List[List[str]], float):
+    def calculate_loss(self, scores: List[List[float]], sentences: List[Sentence]) -> float:
         """
-        Predicts the labels of sentences and calculates the loss.
+        Calculates the loss.
+        :param scores: the prediction scores from the model
         :param sentences: list of sentences
-        :return: list of predicted labels and the loss value
+        :return: loss value
         """
-        label_scores = self.forward(sentences)
+        if self.multi_label:
+            return self._calculate_multi_label_loss(scores, sentences)
+
+        return self._calculate_single_label_loss(scores, sentences)
+
+    def obtain_labels(self, scores: List[List[float]]) -> List[List[Label]]:
+        """
+        Predicts the labels of sentences.
+        :param scores: the prediction scores from the model
+        :return: list of predicted labels
+        """
 
         if self.multi_label:
-            pred_labels = [self._get_multi_label(scores) for scores in label_scores]
-            loss = self._calculate_multi_label_loss(label_scores, sentences)
-        else:
-            pred_labels = [self._get_single_label(scores) for scores in label_scores]
-            loss = self._calculate_single_label_loss(label_scores, sentences)
+            return [self._get_multi_label(s) for s in scores]
 
-        return pred_labels, loss
+        return [self._get_single_label(s) for s in scores]
 
-    def _get_multi_label(self, label_scores) -> List[str]:
+    def _get_multi_label(self, label_scores) -> List[Label]:
         labels = []
 
         sigmoid = torch.nn.Sigmoid()
@@ -143,15 +151,15 @@ class TextClassifier(nn.Module):
         for idx, conf in enumerate(results):
             if conf > 0.5:
                 label = self.label_dictionary.get_item_for_index(idx)
-                labels.append(label)
+                labels.append(Label(label, conf.item()))
 
         return labels
 
-    def _get_single_label(self, label_scores) -> List[str]:
+    def _get_single_label(self, label_scores) -> List[Label]:
         conf, idx = torch.max(label_scores[0], 0)
         label = self.label_dictionary.get_item_for_index(idx.item())
 
-        return [label]
+        return [Label(label, conf.item())]
 
     def _calculate_multi_label_loss(self, label_scores, sentences: List[Sentence]) -> float:
         loss_function = nn.BCELoss()
@@ -163,7 +171,7 @@ class TextClassifier(nn.Module):
         return loss_function(label_scores, self._labels_to_indices(sentences))
 
     def _labels_to_one_hot(self, sentences: List[Sentence]):
-        label_list = [sentence.labels for sentence in sentences]
+        label_list = [sentence.get_label_names() for sentence in sentences]
         one_hot = convert_labels_to_one_hot(label_list, self.label_dictionary)
         one_hot = [torch.FloatTensor(l).unsqueeze(0) for l in one_hot]
         one_hot = torch.cat(one_hot, 0)
@@ -173,7 +181,7 @@ class TextClassifier(nn.Module):
 
     def _labels_to_indices(self, sentences: List[Sentence]):
         indices = [
-            torch.LongTensor([self.label_dictionary.get_idx_for_item(label) for label in sentence.labels])
+            torch.LongTensor([self.label_dictionary.get_idx_for_item(label.name) for label in sentence.labels])
             for sentence in sentences
         ]
 

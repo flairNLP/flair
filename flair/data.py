@@ -92,6 +92,44 @@ class Dictionary:
         return Dictionary.load_from_file(name)
 
 
+class Label:
+    """
+    This class represents a label of a sentence. Each label has a name and optional a confidence value. The confidence
+    value needs to be between 0.0 and 1.0. Default value for the confidence is 0.0.
+    """
+    def __init__(self, name: str, confidence: float = 0.0):
+        self.name = name
+        self.confidence = confidence
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        if not name:
+            raise ValueError('Incorrect label name provided. Label name needs to be set.')
+        else:
+            self._name = name
+
+    @property
+    def confidence(self):
+        return self._confidence
+
+    @confidence.setter
+    def confidence(self, confidence):
+        if 0.0 <= confidence <= 1.0:
+            self._confidence = confidence
+        else:
+            self._confidence = 0.0
+
+    def __str__(self):
+        return "{} ({})".format(self._name, self._confidence)
+
+    def __repr__(self):
+        return "{} ({})".format(self._name, self._confidence)
+
+
 class Token:
     """
     This class represents one word in a tokenized sentence. Each token may have any number of tags. It may also point
@@ -150,13 +188,13 @@ class Token:
 
 
 class Sentence:
-    def __init__(self, text: str = None, use_tokenizer: bool = False, labels: List[str] = None):
+    def __init__(self, text: str = None, use_tokenizer: bool = False, labels: List[Label] = None):
 
         super(Sentence, self).__init__()
 
         self.tokens: List[Token] = []
 
-        self.labels: List[str] = labels
+        self.labels: List[Label] = labels
 
         self._embeddings: Dict = {}
 
@@ -183,17 +221,20 @@ class Sentence:
     def __iter__(self):
         return iter(self.tokens)
 
-    def add_label(self, label: str):
+    def add_label(self, label: Label):
         if self.labels is None:
             self.labels = [label]
         else:
             self.labels.append(label)
 
-    def add_labels(self, labels: List[str]):
+    def add_labels(self, labels: List[Label]):
         if self.labels is None:
             self.labels = labels
         else:
             self.labels.extend(labels)
+
+    def get_label_names(self) -> List[str]:
+        return [label.name for label in self.labels]
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
@@ -357,7 +398,7 @@ class TaggedCorpus:
         :return: dictionary of labels
         """
 
-        labels = set(self._get_all_labels())
+        labels = set(self._get_all_label_names())
 
         label_dictionary: Dictionary = Dictionary(add_unk=False)
         for label in labels:
@@ -384,7 +425,7 @@ class TaggedCorpus:
 
         return vocab_dictionary
 
-    def _get_most_common_tokens(self, max_tokens, min_freq) -> List[Token]:
+    def _get_most_common_tokens(self, max_tokens, min_freq) -> List[str]:
         tokens_and_frequencies = Counter(self._get_all_tokens())
         tokens_and_frequencies = tokens_and_frequencies.most_common()
 
@@ -395,8 +436,8 @@ class TaggedCorpus:
             tokens.append(token)
         return tokens
 
-    def _get_all_labels(self) -> List[str]:
-        return [label for sent in self.train for label in sent.labels]
+    def _get_all_label_names(self) -> List[str]:
+        return [label.name for sent in self.train for label in sent.labels]
 
     def _get_all_tokens(self) -> List[str]:
         tokens = list(map((lambda s: s.tokens), self.train))
@@ -452,7 +493,7 @@ class TaggedCorpus:
         classes_to_count = defaultdict(lambda: 0)
         for sent in sentences:
             for label in sent.labels:
-                classes_to_count[label] += 1
+                classes_to_count[label.name] += 1
         return classes_to_count
 
     def __str__(self) -> str:
