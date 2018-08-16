@@ -139,11 +139,13 @@ class Token:
     def __init__(self,
                  text: str,
                  idx: int = None,
-                 head_id: int = None
+                 head_id: int = None,
+                 whitespace_after: bool = True,
                  ):
         self.text: str = text
         self.idx: int = idx
         self.head_id: int = head_id
+        self.whitespace_after: bool = whitespace_after
 
         self.sentence: Sentence = None
         self._embeddings: Dict = {}
@@ -198,22 +200,76 @@ class Sentence:
 
         self._embeddings: Dict = {}
 
-        # optionally, directly instantiate with sentence tokens
+        # if text is passed, instantiate sentence with tokens (words)
         if text is not None:
 
-            # tokenize the text first if option selected, otherwise assumes whitespace tokenized text
+            # tokenize the text first if option selected
             if use_tokenizer:
-                sentences = split_single(text)
+
+                # use segtok for tokenization
                 tokens = []
+                sentences = split_single(text)
                 for sentence in sentences:
                     contractions = split_contractions(word_tokenizer(sentence))
                     tokens.extend(contractions)
 
-                text = ' '.join(tokens)
+                # determine offsets for whitespace_after field
+                index = text.index
+                running_offset = 0
+                last_word_offset = -2
+                last_token = None
+                for word in tokens:
+                    token = Token(word)
+                    self.add_token(token)
+                    try:
+                        word_offset = index(word, running_offset)
+                    except:
+                        word_offset = last_word_offset = +1
+                    if word_offset - 1 == last_word_offset:
+                        last_token.whitespace_after = False
+                    word_len = len(word)
+                    running_offset = word_offset + word_len
+                    last_word_offset = running_offset - 1
+                    last_token = token
 
-            # add each word in tokenized string as Token object to Sentence
-            for word in text.split(' '):
-                self.add_token(Token(word))
+            # otherwise assumes whitespace tokenized text
+            else:
+                # add each word in tokenized string as Token object to Sentence
+                for word in text.split(' '):
+                    token = Token(word)
+                    self.add_token(token)
+
+    def _infer_space_after(self):
+        """
+        Heuristics in case you wish to infer whitespace_after values for tokenized text. This is useful for some old NLP
+        tasks (such as CoNLL-03 and CoNLL-2000) that provide only tokenized data with no info of original whitespacing.
+        :return:
+        """
+        last_token = None
+        quote_count: int = 0
+        # infer whitespace after field
+
+        for token in self.tokens:
+            if token.text == '"':
+                quote_count += 1
+                if quote_count % 2 != 0:
+                    token.whitespace_after = False
+                elif last_token is not None:
+                    last_token.whitespace_after = False
+
+            if last_token is not None:
+
+                if token.text in ['.', ':', ',', ';', ')', 'n\'t', '!', '?']:
+                    last_token.whitespace_after = False
+
+                if token.text.startswith('\''):
+                    last_token.whitespace_after = False
+
+            if token.text in ['(']:
+                token.whitespace_after = False
+
+            last_token = token
+        return self
 
     def __getitem__(self, idx: int) -> Token:
         return self.tokens[idx]
@@ -293,25 +349,6 @@ class Sentence:
                 list.append(all_tags)
         return ' '.join(list)
 
-    # def to_tag_string(self, tag_type: str = 'tag') -> str:
-    #
-    #     list = []
-    #     for token in self.tokens:
-    #         list.append(token.text)
-    #         if token.get_tag(tag_type) == '' or token.get_tag(tag_type) == 'O': continue
-    #         list.append('<' + token.get_tag(tag_type) + '>')
-    #     return ' '.join(list)
-    #
-    # def to_ner_string(self) -> str:
-    #     list = []
-    #     for token in self.tokens:
-    #         if token.get_tag('ner') == 'O' or token.get_tag('ner') == '':
-    #             list.append(token.text)
-    #         else:
-    #             list.append(token.text)
-    #             list.append('<' + token.get_tag('ner') + '>')
-    #     return ' '.join(list)
-
     def convert_tag_scheme(self, tag_type: str = 'ner', target_scheme: str = 'iob'):
 
         tags: List[str] = []
@@ -350,6 +387,13 @@ class Sentence:
 
     def __len__(self) -> int:
         return len(self.tokens)
+
+    def to_real_string(self):
+        plain = ''
+        for token in self.tokens:
+            plain += token.text
+            if token.whitespace_after: plain += ' '
+        return plain.rstrip()
 
 
 class TaggedCorpus:

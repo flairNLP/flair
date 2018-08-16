@@ -3,6 +3,7 @@ import os
 import pytest
 
 from flair.data import Sentence, Label, Token, Dictionary, TaggedCorpus
+from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 
 
 def test_get_head():
@@ -43,6 +44,22 @@ def test_sentence_to_plain_string():
     sentence: Sentence = Sentence('I love Berlin.', use_tokenizer=True)
 
     assert ('I love Berlin .' == sentence.to_plain_string())
+
+
+def test_sentence_to_real_string():
+
+    sentence: Sentence = Sentence('I love Berlin.', use_tokenizer=True)
+    assert ('I love Berlin.' == sentence.to_real_string())
+
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.GERMEVAL)
+
+    sentence = corpus.train[0]
+    assert ('Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in einer Weise aufgetreten , die alles andere als überzeugend war " .' == sentence.to_plain_string())
+    assert ('Schartau sagte dem "Tagesspiegel" vom Freitag, Fischer sei "in einer Weise aufgetreten, die alles andere als überzeugend war".' == sentence.to_real_string())
+
+    sentence = corpus.train[1]
+    assert ('Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf .' == sentence.to_plain_string())
+    assert ('Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als Möbelvertreter, als er einen fliegenden Händler aus dem Libanon traf.' == sentence.to_real_string())
 
 
 def test_sentence_get_item():

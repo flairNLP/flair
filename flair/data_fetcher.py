@@ -177,8 +177,8 @@ class NLPTaskDataFetcher:
             column_format: Dict[int, str],
             train_file: str,
             test_file: str,
-            dev_file = None,
-            tag_to_biloes = None) -> TaggedCorpus:
+            dev_file=None,
+            tag_to_biloes=None) -> TaggedCorpus:
         """
         Helper function to get a TaggedCorpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
 
@@ -214,7 +214,9 @@ class NLPTaskDataFetcher:
         return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
     @staticmethod
-    def read_column_data(path_to_column_file: str, column_name_map: Dict[int, str]):
+    def read_column_data(path_to_column_file: str,
+                         column_name_map: Dict[int, str],
+                         infer_whitespace_after: bool = True):
         """
         Reads a file in column format and produces a list of Sentence with tokenlevel annotation as specified in the
         column_name_map. For instance, by passing "{0: 'text', 1: 'pos', 2: 'np', 3: 'ner'}" as column_name_map you
@@ -222,6 +224,7 @@ class NLPTaskDataFetcher:
         the chunk and the forth the NER tag.
         :param path_to_column_file: the path to the column file
         :param column_name_map: a map of column number to token annotation name
+        :param infer_whitespace_after: if True, tries to infer whitespace_after field for Teach oken
         :return: list of sentences
         """
         sentences: List[Sentence] = []
@@ -242,6 +245,7 @@ class NLPTaskDataFetcher:
 
             if line == '':
                 if len(sentence) > 0:
+                    sentence._infer_space_after()
                     sentences.append(sentence)
                 sentence: Sentence = Sentence()
 
@@ -255,6 +259,7 @@ class NLPTaskDataFetcher:
                 sentence.add_token(token)
 
         if len(sentence.tokens) > 0:
+            sentence._infer_space_after()
             sentences.append(sentence)
 
         return sentences

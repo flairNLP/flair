@@ -382,34 +382,37 @@ class CharLMEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
-        # find longest sentence by characters
-        longest_character_sequence_in_batch: int = 0
-        for sentence in sentences:
-            if len(
-                    sentence.to_plain_string()) > longest_character_sequence_in_batch: longest_character_sequence_in_batch \
-                = len(sentence.to_plain_string())
+        # get text sentences
+        text_sentences = [sentence.to_plain_string() for sentence in sentences]
 
+        longest_character_sequence_in_batch: int = len(max(text_sentences, key=len))
+
+        # pad strings with whitespaces to longest sentence
         sentences_padded: List[str] = []
+        append_padded_sentence = sentences_padded.append
 
-        for sentence in sentences:
+        end_marker = ' '
+        extra_offset = 1
+        for sentence_text in text_sentences:
+            pad_by = longest_character_sequence_in_batch - len(sentence_text)
             if self.is_forward_lm:
-                sentences_padded.append(
-                    '\n' + sentence.to_plain_string() + ' ' + (
-                        (longest_character_sequence_in_batch - len(sentence.to_plain_string())) * ' '))
+                padded = '\n{}{}{}'.format(sentence_text, end_marker, pad_by * ' ')
+                append_padded_sentence(padded)
             else:
-                sentences_padded.append(
-                    '\n' + sentence.to_plain_string()[::-1] + ' ' + (
-                        (longest_character_sequence_in_batch - len(sentence.to_plain_string())) * ' '))
+                padded = '\n{}{}{}'.format(sentence_text[::-1], end_marker, pad_by * ' ')
+                append_padded_sentence(padded)
 
-        # get states from LM
+        # get hidden states from language model
         all_hidden_states_in_lm = self.lm.get_representation(sentences_padded, self.detach)
 
+        # take first or last hidden states from language model as word representation
         for i, sentence in enumerate(sentences):
+            sentence_text = sentence.to_plain_string()
 
-            offset_forward: int = 1
-            offset_backward: int = len(sentence.to_plain_string()) + 1
+            offset_forward: int = extra_offset
+            offset_backward: int = len(sentence_text) + extra_offset
 
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+            for token in sentence.tokens:
                 token: Token = token
 
                 offset_forward += len(token.text)
@@ -421,13 +424,13 @@ class CharLMEmbeddings(TokenEmbeddings):
 
                 embedding = all_hidden_states_in_lm[offset, i, :]
 
+                # if self.tokenized_lm or token.whitespace_after:
                 offset_forward += 1
-
                 offset_backward -= 1
+
                 offset_backward -= len(token.text)
 
                 token.set_embedding(self.name, embedding)
-                self.__embedding_length = len(embedding)
 
         return sentences
 
