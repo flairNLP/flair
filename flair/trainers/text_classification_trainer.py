@@ -81,7 +81,8 @@ class TextClassifierTrainer:
                 self.model.train()
 
                 for batch_no, batch in enumerate(batches):
-                    _, loss = self.model.get_labels_and_loss(batch)
+                    scores = self.model.forward(batch)
+                    loss = self.model.calculate_loss(scores, batch)
 
                     optimizer.zero_grad()
                     loss.backward()
@@ -187,7 +188,9 @@ class TextClassifierTrainer:
         y_true = []
 
         for batch in batches:
-            labels, loss = self.model.get_labels_and_loss(batch)
+            scores = self.model.forward(batch)
+            labels = self.model.obtain_labels(scores)
+            loss = self.model.calculate_loss(scores, batch)
 
             eval_loss += loss
 

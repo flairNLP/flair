@@ -41,7 +41,7 @@ class TextClassifier(nn.Module):
     def _init_weights(self):
         nn.init.xavier_uniform_(self.decoder.weight)
 
-    def forward(self, sentences):
+    def forward(self, sentences) -> List[List[float]]:
         self.document_embeddings.embed(sentences)
 
         text_embedding_list = [sentence.get_embedding() for sentence in sentences]
@@ -107,9 +107,10 @@ class TextClassifier(nn.Module):
         batches = [sentences[x:x + mini_batch_size] for x in range(0, len(sentences), mini_batch_size)]
 
         for batch in batches:
-            batch_labels, _ = self.get_labels_and_loss(batch, False)
+            scores = self.forward(batch)
+            predicted_labels = self.obtain_labels(scores)
 
-            for (sentence, labels) in zip(batch, batch_labels):
+            for (sentence, labels) in zip(batch, predicted_labels):
                 sentence.labels = labels
 
             if not embeddings_in_memory:
@@ -117,25 +118,29 @@ class TextClassifier(nn.Module):
 
         return sentences
 
-    def get_labels_and_loss(self, sentences: List[Sentence], calculate_loss: bool = True) -> (List[List[Label]], float):
+    def calculate_loss(self, scores: List[List[float]], sentences: List[Sentence]) -> float:
         """
-        Predicts the labels of sentences and calculates the loss.
+        Calculates the loss.
+        :param scores: the prediction scores from the model
         :param sentences: list of sentences
-        :return: list of predicted labels and the loss value
+        :return: loss value
         """
-        label_scores = self.forward(sentences)
-        loss = 0.0
+        if self.multi_label:
+            return self._calculate_multi_label_loss(scores, sentences)
+
+        return self._calculate_single_label_loss(scores, sentences)
+
+    def obtain_labels(self, scores: List[List[float]]) -> List[List[Label]]:
+        """
+        Predicts the labels of sentences.
+        :param scores: the prediction scores from the model
+        :return: list of predicted labels
+        """
 
         if self.multi_label:
-            pred_labels = [self._get_multi_label(scores) for scores in label_scores]
-            if calculate_loss:
-                loss = self._calculate_multi_label_loss(label_scores, sentences)
-        else:
-            pred_labels = [self._get_single_label(scores) for scores in label_scores]
-            if calculate_loss:
-                loss = self._calculate_single_label_loss(label_scores, sentences)
+            return [self._get_multi_label(s) for s in scores]
 
-        return pred_labels, loss
+        return [self._get_single_label(s) for s in scores]
 
     def _get_multi_label(self, label_scores) -> List[Label]:
         labels = []
