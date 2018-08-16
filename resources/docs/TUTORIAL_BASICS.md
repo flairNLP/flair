@@ -113,15 +113,14 @@ as belonging to the sports category.
 sentence = Sentence('France is the current world cup winner.')
 
 # add a label to a sentence
-sentence.add_label('sports')
+sentence.add_label(Label('sports'))
 
 # a sentence can also belong to multiple classes
-sentence.add_labels(['sports', 'world cup'])
+sentence.add_labels([Label('sports'), Label('world cup')])
 
 # you can also set the labels while initializing the sentence
-Sentence('France is the current world cup winner.', labels=['sports', 'world cup'])
+Sentence('France is the current world cup winner.', labels=[Label('sports'), Label('world cup')])
 ```
-
 
 
 ## Reading CoNLL-formatted Files

@@ -1,17 +1,17 @@
 # Tutorial 5: Training a Model
 
 This part of the tutorial shows how you can train your own sequence labeling and text
-classification models using state-of-the-art word embeddings. 
+classification models using state-of-the-art word embeddings.
 
 ## Reading an Evaluation Dataset
 
-Flair provides helper methods to read common NLP datasets, such as the CoNLL-03 and CoNLL-2000 evaluation datasets, 
-and the CoNLL-U format. These might be interesting to you if you want to train your own sequence labelers. 
+Flair provides helper methods to read common NLP datasets, such as the CoNLL-03 and CoNLL-2000 evaluation datasets,
+and the CoNLL-U format. These might be interesting to you if you want to train your own sequence labelers.
 
-All helper methods for reading data are bundled in the `NLPTaskDataFetcher` class. One option for you is to follow 
-the instructions for putting the training data in the appropriate folder structure, and use the prepared functions. 
+All helper methods for reading data are bundled in the `NLPTaskDataFetcher` class. One option for you is to follow
+the instructions for putting the training data in the appropriate folder structure, and use the prepared functions.
 For instance, if you want to use the CoNLL-03 data, get it from the task web site and place train, test and dev data
-in `/resources/tasks/conll_03/` as follows: 
+in `/resources/tasks/conll_03/` as follows:
 
 ```
 /resources/tasks/conll_03/eng.testa
@@ -19,16 +19,16 @@ in `/resources/tasks/conll_03/` as follows:
 /resources/tasks/conll_03/eng.train
 ```
 
-This allows the `NLPTaskDataFetcher` class to read the data into our data structures. Use the `NLPTask` enum to select 
-the dataset, as follows: 
+This allows the `NLPTaskDataFetcher` class to read the data into our data structures. Use the `NLPTask` enum to select
+the dataset, as follows:
 
 ```python
 corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03)
 ```
 
-This gives you a `TaggedCorpus` object that contains the data. 
+This gives you a `TaggedCorpus` object that contains the data.
 
-However, this only works if the relative folder structure perfectly matches the presets. If not - or you are using 
+However, this only works if the relative folder structure perfectly matches the presets. If not - or you are using
 a different dataset, you can still use the inbuilt functions to read different CoNLL formats:
 
 ```python
@@ -51,13 +51,13 @@ The `TaggedCorpus` contains a bunch of useful helper functions. For instance, yo
 original_corpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03)
 ```
 
-then you can downsample the corpus, simply like this: 
+then you can downsample the corpus, simply like this:
 
 ```python
 downsampled_corpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03).downsample(0.1)
 ```
 
-If you print both corpora, you see that the second one has been downsampled to 10% of the data. 
+If you print both corpora, you see that the second one has been downsampled to 10% of the data.
 
 ```python
 print("--- 1 Original ---")
@@ -67,7 +67,7 @@ print("--- 2 Downsampled ---")
 print(downsampled_corpus)
 ```
 
-This should print: 
+This should print:
 
 ```console
 --- 1 Original ---
@@ -80,7 +80,7 @@ TaggedCorpus: 1499 train + 347 dev + 369 test sentences
 ## Training a Sequence Labeling Model
 
 Here is example code for a small NER model trained over CoNLL-03 data, using simple GloVe embeddings.
-In this example, we downsample the data to 10% of the original data. 
+In this example, we downsample the data to 10% of the original data.
 
 ```python
 from flair.data import TaggedCorpus
@@ -136,16 +136,16 @@ trainer.train('resources/taggers/example-ner',
 ```
 
 Alternatively, try using a stacked embedding with charLM and glove, over the full data, for 150 epochs.
-This will give you the state-of-the-art accuracy we report in the paper. To see the full code to reproduce experiments, 
-check [here](/resources/docs/EXPERIMENTS.md). 
+This will give you the state-of-the-art accuracy we report in the paper. To see the full code to reproduce experiments,
+check [here](/resources/docs/EXPERIMENTS.md).
 
 ## Training a Text Classification Model
 
-Here is example code for training a text classifier over the AGNews corpus, using  a combination of simple GloVe 
-embeddings and contextual string embeddings. In this example, we downsample the data to 10% of the original data. 
+Here is example code for training a text classifier over the AGNews corpus, using  a combination of simple GloVe
+embeddings and contextual string embeddings. In this example, we downsample the data to 10% of the original data.
 
-The AGNews corpus can be downloaded [here](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html). As 
-described in the [basics](/resources/docs/TUTORIAL_BASICS.md) the `NLPTaskDataFetcher` expects the data in the 
+The AGNews corpus can be downloaded [here](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html). As
+described in the [basics](/resources/docs/TUTORIAL_BASICS.md) the `NLPTaskDataFetcher` expects the data in the
 following format:
 ```bash
 __label__<label_1> <text>
@@ -192,6 +192,19 @@ trainer.train('resources/ag_news/results',
               learning_rate=0.1,
               mini_batch_size=32,
               max_epochs=150)
+```
+
+Once the model is trained you can use it to predict the class of new sentences. Just call the `predict` method of the
+model.
+
+```
+sentences = model.predict(Sentence('France is the current world cup winner.'))
+
+```
+The predict method adds the class labels directly to the sentences. Each label has a name and a confidence value.
+```
+for sentence in sentences:
+    print(sentence.labels)
 ```
 
 ## Next
