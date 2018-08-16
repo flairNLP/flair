@@ -224,7 +224,7 @@ class NLPTaskDataFetcher:
         the chunk and the forth the NER tag.
         :param path_to_column_file: the path to the column file
         :param column_name_map: a map of column number to token annotation name
-        :param infer_whitespace_after: if True, tries to infer whitespace_after field for Teach oken
+        :param infer_whitespace_after: if True, tries to infer whitespace_after field for Token
         :return: list of sentences
         """
         sentences: List[Sentence] = []
