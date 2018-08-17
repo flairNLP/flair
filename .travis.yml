@@ -8,3 +8,6 @@ install:
 before_script: cd tests
 script:
   - pytest
+branches:
+  only: 
+    - master
