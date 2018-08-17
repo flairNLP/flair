@@ -57,7 +57,7 @@ class TextCorpus(object):
 
     def charsplit(self, path: str, expand_vocab=False, forward=True, split_on_char=True) -> torch.LongTensor:
 
-        """Tokenizes a text file on characted basis."""
+        """Tokenizes a text file on character basis."""
         assert os.path.exists(path)
 
         #
