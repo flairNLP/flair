@@ -43,7 +43,7 @@ class NLPTaskDataFetcher:
         """
 
         data_folder = os.path.join('resources', 'tasks', str(task.value).lower())
-        print("reading data from %s".format(data_folder))
+        print("reading data from {}".format(data_folder))
 
         # the CoNLL 2000 task on chunking has three columns: text, pos and np (chunk)
         if task == NLPTask.CONLL_2000:
