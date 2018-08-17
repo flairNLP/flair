@@ -5,6 +5,6 @@ python:
   - "3.6"
 install:
   - pip install -r requirements.txt -q
-before_script: cd flair/tests
+before_script: cd tests
 script:
   - pytest
