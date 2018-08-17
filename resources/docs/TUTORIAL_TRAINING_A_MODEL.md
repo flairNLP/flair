@@ -155,7 +155,7 @@ Thus, you need to convert the data into the expected format. After you converted
 `NLPTask.AG_NEWS` to read the data, if the data files are located in the following folder structure:
 ```
 /resources/tasks/ag_news/train.txt
-/resources/tasks/ag_ness/dev.txt
+/resources/tasks/ag_news/dev.txt
 /resources/tasks/ag_news/test.txt
 ```
 
