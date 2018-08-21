@@ -81,6 +81,7 @@ def test_sentence_infer_tokenization():
     assert ('xyz " abc "' == sentence.to_tokenized_string())
     assert ('xyz "abc"' == sentence.to_plain_string())
 
+
 def test_sentence_get_item():
     sentence: Sentence = Sentence('I love Berlin.', use_tokenizer=True)
 
@@ -89,6 +90,16 @@ def test_sentence_get_item():
 
     with pytest.raises(IndexError):
         token = sentence[4]
+
+
+def test_sentence_whitespace_tokenization():
+    sentence: Sentence = Sentence('I  love Berlin .')
+
+    assert (4 == len(sentence.tokens))
+    assert ('I' == sentence.get_token(1).text)
+    assert ('love' == sentence.get_token(2).text)
+    assert ('Berlin' == sentence.get_token(3).text)
+    assert ('.' == sentence.get_token(4).text)
 
 
 def test_sentence_to_tagged_string():
