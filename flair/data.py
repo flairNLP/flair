@@ -236,8 +236,9 @@ class Sentence:
             else:
                 # add each word in tokenized string as Token object to Sentence
                 for word in text.split(' '):
-                    token = Token(word)
-                    self.add_token(token)
+                    if word:
+                        token = Token(word)
+                        self.add_token(token)
 
     def _infer_space_after(self):
         """
