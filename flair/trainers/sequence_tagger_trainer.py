@@ -28,7 +28,7 @@ class SequenceTaggerTrainer:
               max_epochs: int = 100,
               anneal_factor: float = 0.5,
               patience: int = 2,
-              save_model: bool = False,
+              save_model: bool = True,
               embeddings_in_memory: bool = True,
               train_with_dev: bool = False):
 
