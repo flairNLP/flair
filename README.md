@@ -2,6 +2,12 @@
 
 ![alt text](resources/docs/flair_logo.svg)
 
+[![PyPI version](https://badge.fury.io/py/flair.svg)](https://badge.fury.io/py/flair)
+[![GitHub Issues](https://img.shields.io/github/issues/zalandoresearch/flair.svg)](https://github.com/zalandoresearch/flair/issues)
+[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](resources/docs/CONTRIBUTING.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
+[![Travis](https://img.shields.io/travis/zalandoresearch/flair.svg)](https://travis-ci.org/zalandoresearch/flair)
+
 A very simple framework for **state-of-the-art NLP**. Developed by [Zalando Research](https://research.zalando.com/).
 
 ---
