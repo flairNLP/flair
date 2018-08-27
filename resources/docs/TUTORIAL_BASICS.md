@@ -33,7 +33,7 @@ You can access the tokens of a sentence via their token id or with their index:
 # using the token id
 print(sentence.get_token(4))
 # using the index itself
-print(sentence[3]
+print(sentence[3])
 ```
 
 which should print in both cases
@@ -145,30 +145,6 @@ Importantly, these sentences now contain a wealth of `Token` level annotations.
 In the case of CoNLL-U, they should contain information including a token lemma, its part-of-speech, morphological
 annotation, its dependency relation and its head token.
 You can access this information using the tag fields of the `Token`.
-
-## Reading Files for Text Classification Tasks
-
-We also provide a helper method to read files that contain data for text classification tasks. Such files should have the following format:
-```text
-__label__<label_1> <text>
-__label__<label_1> __label__<label_2> <text>
-```
-Each line contains a textual document. A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix
-`__label__`.
-
-To read such data, simply use the `NLPTaskDataFetcher` which converts each line to a `Sentence` object and assigns the labels. It returns a list of `Sentence`.
-
-```python
-from flair.data_fetcher import NLPTaskDataFetcher
-
-# use your own data path
-data_folder = 'path/to/text-classification/formatted/data'
-
-# get training, test and dev data
-sentences: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(data_folder)
-```
-
-If your text classification data files have a different format, feel free to add new methods to the `NLPTaskDataFetcher`.
 
 ## Next
 
