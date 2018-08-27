@@ -143,15 +143,31 @@ check [here](/resources/docs/EXPERIMENTS.md).
 
 Here is example code for training a text classifier over the AGNews corpus, using  a combination of simple GloVe
 embeddings and contextual string embeddings. In this example, we downsample the data to 10% of the original data.
+The AGNews corpus can be downloaded [here](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html).
 
-The AGNews corpus can be downloaded [here](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html). As
-described in the [basics](/resources/docs/TUTORIAL_BASICS.md) the `NLPTaskDataFetcher` expects the data in the
-following format:
+You need to convert the data into the following format so that the `NLPTaskDataFetcher` can read it:
+
 ```bash
 __label__<label_1> <text>
 __label__<label_1> __label__<label_2> <text>
 ```
-Thus, you need to convert the data into the expected format. After you converted the data you can use the
+
+Here, each line in the file contains a textual document. A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix
+`__label__`. (If your text classification data files have a different format, feel free to add new methods to the `NLPTaskDataFetcher`.)
+
+Point the `NLPTaskDataFetcher` to this file to convert each line to a `Sentence` object annotated with the labels. It returns a list of `Sentence`.
+
+```python
+from flair.data_fetcher import NLPTaskDataFetcher
+
+# use your own data path
+data_folder = 'path/to/text-classification/formatted/data'
+
+# get training, test and dev data
+sentences: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(data_folder)
+```
+
+To train a model, you need to create three files in this way: A train, dev and test file. After you converted the data you can use the
 `NLPTask.AG_NEWS` to read the data, if the data files are located in the following folder structure:
 ```
 /resources/tasks/ag_news/train.txt
