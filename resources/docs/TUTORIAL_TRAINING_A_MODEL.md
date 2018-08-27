@@ -143,7 +143,10 @@ check [here](/resources/docs/EXPERIMENTS.md).
 
 Here is example code for training a text classifier over the AGNews corpus, using  a combination of simple GloVe
 embeddings and contextual string embeddings. In this example, we downsample the data to 10% of the original data.
+
 The AGNews corpus can be downloaded [here](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html).
+
+### Preparing the data
 
 You need to convert the data into the following format so that the `NLPTaskDataFetcher` can read it:
 
@@ -166,6 +169,9 @@ data_folder = 'path/to/text-classification/formatted/data'
 # get training, test and dev data
 sentences: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(data_folder)
 ```
+
+
+### Training the classifier
 
 To train a model, you need to create three files in this way: A train, dev and test file. After you converted the data you can use the
 `NLPTask.AG_NEWS` to read the data, if the data files are located in the following folder structure:
