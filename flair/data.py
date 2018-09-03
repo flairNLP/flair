@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import torch
 
@@ -95,9 +95,10 @@ class Dictionary:
 class Label:
     """
     This class represents a label of a sentence. Each label has a name and optional a confidence value. The confidence
-    value needs to be between 0.0 and 1.0. Default value for the confidence is 0.0.
+    value needs to be between 0.0 and 1.0. Default value for the confidence is 1.0.
     """
-    def __init__(self, name: str, confidence: float = 0.0):
+
+    def __init__(self, name: str, confidence: float = 1.0):
         self.name = name
         self.confidence = confidence
 
@@ -190,13 +191,14 @@ class Token:
 
 
 class Sentence:
-    def __init__(self, text: str = None, use_tokenizer: bool = False, labels: List[Label] = None):
+    def __init__(self, text: str = None, use_tokenizer: bool = False, labels: Union[List[Label], List[str]] = None):
 
         super(Sentence, self).__init__()
 
         self.tokens: List[Token] = []
 
-        self.labels: List[Label] = labels
+        self.labels: List[Label] = []
+        if labels is not None: self.add_labels(labels)
 
         self._embeddings: Dict = {}
 
@@ -278,17 +280,16 @@ class Sentence:
     def __iter__(self):
         return iter(self.tokens)
 
-    def add_label(self, label: Label):
-        if self.labels is None:
-            self.labels = [label]
-        else:
+    def add_label(self, label: Union[Label, str]):
+        if type(label) is Label:
             self.labels.append(label)
 
-    def add_labels(self, labels: List[Label]):
-        if self.labels is None:
-            self.labels = labels
-        else:
-            self.labels.extend(labels)
+        elif type(label) is str:
+            self.labels.append(Label(label))
+
+    def add_labels(self, labels: Union[List[Label], List[str]]):
+        for label in labels:
+            self.add_label(label)
 
     def get_label_names(self) -> List[str]:
         return [label.name for label in self.labels]
@@ -577,13 +578,13 @@ def iob_iobes(tags):
             new_tags.append(tag)
         elif tag.split('-')[0] == 'B':
             if i + 1 != len(tags) and \
-                            tags[i + 1].split('-')[0] == 'I':
+                    tags[i + 1].split('-')[0] == 'I':
                 new_tags.append(tag)
             else:
                 new_tags.append(tag.replace('B-', 'S-'))
         elif tag.split('-')[0] == 'I':
             if i + 1 < len(tags) and \
-                            tags[i + 1].split('-')[0] == 'I':
+                    tags[i + 1].split('-')[0] == 'I':
                 new_tags.append(tag)
             else:
                 new_tags.append(tag.replace('I-', 'E-'))

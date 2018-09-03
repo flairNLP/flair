@@ -255,6 +255,21 @@ def test_tagged_corpus_make_label_dictionary():
     assert ('class_2' in label_dict.get_items())
 
 
+def test_tagged_corpus_make_label_dictionary_string():
+    sentence_1 = Sentence('sentence 1', labels=['class_1'])
+    sentence_2 = Sentence('sentence 2', labels=['class_2'])
+    sentence_3 = Sentence('sentence 3', labels=['class_1'])
+
+    corpus: TaggedCorpus = TaggedCorpus([sentence_1, sentence_2, sentence_3], [], [])
+
+    label_dict = corpus.make_label_dictionary()
+
+    assert (2 == len(label_dict))
+    assert ('<unk>' not in label_dict.get_items())
+    assert ('class_1' in label_dict.get_items())
+    assert ('class_2' in label_dict.get_items())
+
+
 def test_tagged_corpus_statistics():
     train_sentence = Sentence('I love Berlin.', labels=[Label('class_1')], use_tokenizer=True)
     dev_sentence = Sentence('The sun is shining.', labels=[Label('class_2')], use_tokenizer=True)
@@ -273,6 +288,47 @@ def test_tagged_corpus_statistics():
     assert (4 == tokens_in_sentences[0])
     assert (5 == tokens_in_sentences[1])
     assert (4 == tokens_in_sentences[2])
+
+
+def test_tagged_corpus_statistics_string_label():
+    train_sentence = Sentence('I love Berlin.', labels=['class_1'], use_tokenizer=True)
+    dev_sentence = Sentence('The sun is shining.', labels=['class_2'], use_tokenizer=True)
+    test_sentence = Sentence('Berlin is sunny.', labels=['class_1'], use_tokenizer=True)
+
+    class_to_count_dict = TaggedCorpus._get_classes_to_count([train_sentence, dev_sentence, test_sentence])
+
+    assert ('class_1' in class_to_count_dict)
+    assert ('class_2' in class_to_count_dict)
+    assert (2 == class_to_count_dict['class_1'])
+    assert (1 == class_to_count_dict['class_2'])
+
+    tokens_in_sentences = TaggedCorpus._get_tokens_per_sentence([train_sentence, dev_sentence, test_sentence])
+
+    assert (3 == len(tokens_in_sentences))
+    assert (4 == tokens_in_sentences[0])
+    assert (5 == tokens_in_sentences[1])
+    assert (4 == tokens_in_sentences[2])
+
+
+def test_tagged_corpus_statistics_multi_label():
+    train_sentence = Sentence('I love Berlin.', labels=['class_1'], use_tokenizer=True)
+    dev_sentence = Sentence('The sun is shining.', labels=['class_2'], use_tokenizer=True)
+    test_sentence = Sentence('Berlin is sunny.', labels=['class_1', 'class_2'], use_tokenizer=True)
+
+    class_to_count_dict = TaggedCorpus._get_classes_to_count([train_sentence, dev_sentence, test_sentence])
+
+    assert ('class_1' in class_to_count_dict)
+    assert ('class_2' in class_to_count_dict)
+    assert (2 == class_to_count_dict['class_1'])
+    assert (2 == class_to_count_dict['class_2'])
+
+    tokens_in_sentences = TaggedCorpus._get_tokens_per_sentence([train_sentence, dev_sentence, test_sentence])
+
+    assert (3 == len(tokens_in_sentences))
+    assert (4 == tokens_in_sentences[0])
+    assert (5 == tokens_in_sentences[1])
+    assert (4 == tokens_in_sentences[2])
+
 
 
 def test_tagged_corpus_downsample():

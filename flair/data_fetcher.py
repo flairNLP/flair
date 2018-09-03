@@ -338,7 +338,7 @@ class NLPTaskDataFetcher:
                     if words[i].startswith(label_prefix):
                         l_len += len(words[i]) + 1
                         label = words[i].replace(label_prefix, "")
-                        labels.append(Label(label))
+                        labels.append(label)
                     else:
                         break
 
