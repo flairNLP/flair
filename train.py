@@ -27,9 +27,9 @@ embedding_types: List[TokenEmbeddings] = [
 
     # comment in these lines to use contextual string embeddings
     #
-    # CharLMEmbeddings('news-forward'),
+    # CharLMEmbeddings('news-forward-fast'),
     #
-    # CharLMEmbeddings('news-backward'),
+    # CharLMEmbeddings('news-backward-fast'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
@@ -37,15 +37,20 @@ embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 # initialize sequence tagger
 from flair.models import SequenceTagger
 
+use_word_dropout = True
+print(use_word_dropout)
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
                                         tag_dictionary=tag_dictionary,
                                         tag_type=tag_type,
-                                        use_crf=True)
+                                        use_crf=True,
+                                        use_word_dropout=use_word_dropout)
+
+print(tagger.modules().__next__())
 
 # initialize trainer
 from flair.trainers.sequence_tagger_trainer import SequenceTaggerTrainer
 
-trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
 trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=20)
