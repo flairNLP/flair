@@ -437,20 +437,15 @@ class CharLMEmbeddings(TokenEmbeddings):
 
 class DocumentMeanEmbeddings(DocumentEmbeddings):
 
-    def __init__(self, word_embeddings: List[TokenEmbeddings], reproject_words: bool = True):
+    def __init__(self, word_embeddings: List[TokenEmbeddings]):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
         self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=word_embeddings)
         self.name: str = 'document_mean'
-        self.reproject_words: bool = reproject_words
-        self.static_embeddings: bool = not reproject_words
 
         self.__embedding_length: int = 0
         self.__embedding_length = self.embeddings.embedding_length
-
-        self.word_reprojection_map = torch.nn.Linear(self.__embedding_length, self.__embedding_length)
-        torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
 
         if torch.cuda.is_available():
             self.cuda()
@@ -472,7 +467,7 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
         for sentence in sentences:
             if self.name not in sentence._embeddings.keys(): everything_embedded = False
 
-        if not everything_embedded or not self.static_embeddings:
+        if not everything_embedded:
 
             self.embeddings.embed(sentences)
 
@@ -485,9 +480,6 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
                 word_embeddings = torch.cat(word_embeddings, dim=0)
                 if torch.cuda.is_available():
                     word_embeddings = word_embeddings.cuda()
-
-                if self.reproject_words:
-                    word_embeddings = self.word_reprojection_map(word_embeddings)
 
                 mean_embedding = torch.mean(word_embeddings, 0)
 
