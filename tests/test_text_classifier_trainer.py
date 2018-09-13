@@ -37,7 +37,7 @@ def test_text_classifier_mulit_label():
     label_dict = corpus.make_label_dictionary()
 
     glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
-    document_embeddings: DocumentMeanEmbeddings = DocumentMeanEmbeddings([glove_embedding], True)
+    document_embeddings: DocumentMeanEmbeddings = DocumentMeanEmbeddings([glove_embedding])
 
     model = TextClassifier(document_embeddings, label_dict, True)
 
