@@ -156,7 +156,7 @@ class TextClassifier(nn.Module):
         return labels
 
     def _get_single_label(self, label_scores) -> List[Label]:
-        conf, idx = torch.max(label_scores[0], 0)
+        conf, idx = torch.max(label_scores, 0)
         label = self.label_dictionary.get_item_for_index(idx.item())
 
         return [Label(label, conf.item())]
