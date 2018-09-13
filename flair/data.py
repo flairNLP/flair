@@ -122,7 +122,7 @@ class Label:
         if 0.0 <= confidence <= 1.0:
             self._confidence = confidence
         else:
-            self._confidence = 0.0
+            self._confidence = 1.0
 
     def __str__(self):
         return "{} ({})".format(self._name, self._confidence)
