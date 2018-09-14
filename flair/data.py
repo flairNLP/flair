@@ -312,8 +312,8 @@ class Sentence:
             if tag[0:2] in ['B-', 'S-']:
                 starts_new_span = True
 
-            # if previous_tag[0:2] in ['S-', 'E-']:
-            #     starts_new_span = True
+            if previous_tag[0:2] in ['S-'] and previous_tag[2:] != tag[2:] and in_span:
+                starts_new_span = True
 
             if (starts_new_span or not in_span) and len(current_span) > 0:
                 spans.append(Span(current_span, tags.best()))
