@@ -218,39 +218,10 @@ class SequenceTaggerTrainer:
             if not embeddings_in_memory:
                 self.clear_embeddings_in_batch(batch)
 
-        span_f1_score = metric.f_score() * 100
-        span_f1_score = "{0:.2f}".format(span_f1_score)
-
         if out_path is not None:
             test_tsv = os.path.join(out_path, "test.tsv")
             with open(test_tsv, "w", encoding='utf-8') as outfile:
                 outfile.write(''.join(lines))
-
-        # if evaluation_method == 'span-F1':
-        #
-        #     # get the eval script
-        #     eval_script = cached_path('https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/scripts/conll03_eval_script.pl', cache_dir='scripts')
-        #     eval_script = 'resources/tasks/eval_script_mod'
-        #
-        #     os.chmod(eval_script, 0o777)
-        #
-        #     eval_data = ''.join(lines)
-        #
-        #     p = run(eval_script, stdout=PIPE, input=eval_data, encoding='utf-8')
-        #     main_result = p.stdout
-        #     print(span_f1_score)
-        #     print(main_result)
-        #
-        #     main_result = main_result.split('\n')[1]
-        #
-        #     # parse the result file
-        #     main_result = re.sub(';', ' ', main_result)
-        #     main_result = re.sub('precision', 'p', main_result)
-        #     main_result = re.sub('recall', 'r', main_result)
-        #     main_result = re.sub('accuracy', 'acc', main_result)
-        #
-        #     f_score = float(re.findall(r'\d+\.\d+$', main_result)[0])
-        #     return f_score, metric._fp, main_result
 
         if evaluation_method == 'accuracy':
             score = metric.accuracy()
