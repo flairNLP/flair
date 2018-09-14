@@ -33,7 +33,6 @@ class SequenceTaggerTrainer:
               train_with_dev: bool = False):
 
         evaluation_method = 'F1'
-        # if self.model.tag_type in ['ner', 'np', 'srl']: evaluation_method = 'span-F1'
         if self.model.tag_type in ['pos', 'upos']: evaluation_method = 'accuracy'
         print(evaluation_method)
 
