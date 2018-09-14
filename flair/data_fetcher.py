@@ -64,7 +64,8 @@ class NLPTaskDataFetcher:
                                                           train_file='eng.train',
                                                           test_file='eng.testb',
                                                           dev_file='eng.testa',
-                                                          tag_to_biloes='ner')
+                                                          tag_to_biloes='ner',
+                                                          )
 
         # the CoNLL 03 task for German has an additional lemma column
         if task == NLPTask.CONLL_03_GERMAN:
@@ -210,6 +211,7 @@ class NLPTaskDataFetcher:
             for sentence in sentences_train + sentences_test + sentences_dev:
                 sentence: Sentence = sentence
                 sentence.convert_tag_scheme(tag_type=tag_to_biloes, target_scheme='iobes')
+                # sentence.convert_tag_scheme(tag_type=tag_to_biloes, target_scheme='iob')
 
         return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 

@@ -191,13 +191,17 @@ class Token:
 
 
 class Span:
+    """
+    This class represents one textual span consisting of Tokens. A span may have a tag.
+    """
+
     def __init__(self, tokens: List[Token], tag: str = None):
         self.tokens = tokens
         self.tag = tag
 
     @property
     def text(self) -> str:
-        return(' '.join([t.text for t in self.tokens]))
+        return ' '.join([t.text for t in self.tokens])
 
     def __str__(self) -> str:
         ids = ','.join([str(t.idx) for t in self.tokens])
@@ -209,7 +213,12 @@ class Span:
         return '<{}-span ({}): "{}">'.format(self.tag, ids, self.text) \
             if self.tag is not None else '<span ({}): "{}">'.format(ids, self.text)
 
+
 class Sentence:
+    """
+    A Sentence is a list of Tokens and is used to represent a sentence or text fragment.
+    """
+
     def __init__(self, text: str = None, use_tokenizer: bool = False, labels: Union[List[Label], List[str]] = None):
 
         super(Sentence, self).__init__()
@@ -279,7 +288,9 @@ class Sentence:
         spans: List[Span] = []
 
         current_span = []
-        tags = []
+        import flair.training_utils
+        tags: flair.training_utils.ItemWeigher = flair.training_utils.ItemWeigher()
+        previous_tag = ''
         for token in self:
 
             tag = token.get_tag(tag_type)
@@ -301,24 +312,24 @@ class Sentence:
             if tag[0:2] in ['B-', 'S-']:
                 starts_new_span = True
 
+            # if previous_tag[0:2] in ['S-', 'E-']:
+            #     starts_new_span = True
+
             if (starts_new_span or not in_span) and len(current_span) > 0:
-                tag = Counter(tags).most_common(1)[0][0]
-                spans.append(Span(current_span, tag))
+                spans.append(Span(current_span, tags.best()))
                 current_span = []
-                tags = []
+                tags = flair.training_utils.ItemWeigher()
 
             if in_span:
                 current_span.append(token)
-                tags.append(tag[2:])
+                weight = 1.1 if starts_new_span else 1.0
+                tags.add(tag[2:], weight)
 
-                if tag[0:2] in ['S-']:
-                    spans.append(Span(current_span, tag[2:]))
-                    current_span = []
-                    tags = []
+            # remember previous tag
+            previous_tag = tag
 
         if len(current_span) > 0:
-            tag = Counter(tags).most_common(1)[0][0]
-            spans.append(Span(current_span, tag))
+            spans.append(Span(current_span, tags.best()))
 
         return spans
 
@@ -365,7 +376,7 @@ class Sentence:
         for name, vector in self._embeddings.items():
             self._embeddings[name] = vector.cpu()
 
-    def to_tagged_string(self, main_tag = None) -> str:
+    def to_tagged_string(self, main_tag=None) -> str:
         list = []
         for token in self.tokens:
             list.append(token.text)
@@ -577,7 +588,6 @@ class TaggedCorpus:
         Print statistics about the class distribution (only labels of sentences are taken into account) and sentence
         sizes.
         """
-
         self._print_statistics_for(self.train, "TRAIN")
         self._print_statistics_for(self.test, "TEST")
         self._print_statistics_for(self.dev, "DEV")
