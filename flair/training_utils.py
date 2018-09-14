@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 import os
 import numpy as np
@@ -54,6 +54,24 @@ class Metric(object):
 
     def print(self):
         print(self)
+
+
+class ItemWeigher(object):
+    """
+    Simple helper class for counting (optionally weighed) strings.
+    """
+    def __init__(self):
+        self.dict: Dict[str, float] = {}
+
+    def add(self, item:str, weight:float = 1.0):
+        new_val: float = weight if item not in self.dict else weight + self.dict[item]
+        self.dict[item] = new_val
+
+    def best(self) -> str:
+        sorted_by_value = sorted(self.dict.items(), key=lambda kv: kv[1])
+        sorted_by_value.reverse()
+        # print(sorted_by_value)
+        return sorted_by_value[0][0]
 
 
 def clear_embeddings(sentences: List[Sentence]):

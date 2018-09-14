@@ -33,7 +33,7 @@ class SequenceTaggerTrainer:
               train_with_dev: bool = False):
 
         evaluation_method = 'F1'
-        if self.model.tag_type in ['ner', 'np', 'srl']: evaluation_method = 'span-F1'
+        # if self.model.tag_type in ['ner', 'np', 'srl']: evaluation_method = 'span-F1'
         if self.model.tag_type in ['pos', 'upos']: evaluation_method = 'accuracy'
         print(evaluation_method)
 
@@ -151,9 +151,6 @@ class SequenceTaggerTrainer:
     def evaluate(self, evaluation: List[Sentence], out_path=None, evaluation_method: str = 'F1',
                  embeddings_in_memory: bool = True):
 
-        tp: int = 0
-        fp: int = 0
-
         batch_no: int = 0
         mini_batch_size = 32
         batches = [evaluation[x:x + mini_batch_size] for x in
@@ -175,37 +172,45 @@ class SequenceTaggerTrainer:
                 # Step 3. Run our forward pass.
                 score, tag_seq = self.model.predict_scores(sentence)
 
+                # add predicted tags
+                for (token, pred_id) in zip(sentence.tokens, tag_seq):
+                    token: Token = token
+                    # get the predicted tag
+                    predicted_tag = self.model.tag_dictionary.get_item_for_index(pred_id)
+                    token.add_tag('predicted', predicted_tag)
+
+                gold_tags = []
+                predicted_tags = []
+
+                # get spans
+                for tag in sentence.get_spans(self.model.tag_type):
+                    gold_tags.append(tag.__str__())
+
+                for tag in sentence.get_spans('predicted'):
+                    predicted_tags.append(tag.__str__())
+
+                for prediction in predicted_tags:
+                    if prediction in gold_tags:
+                        metric.tp()
+                    else:
+                        metric.fp()
+
+                for gold in gold_tags:
+                    if gold not in predicted_tags:
+                        metric.fn()
+
                 # Step 5. Compute predictions
                 predicted_id = tag_seq
                 for (token, pred_id) in zip(sentence.tokens, predicted_id):
                     token: Token = token
                     # get the predicted tag
                     predicted_tag = self.model.tag_dictionary.get_item_for_index(pred_id)
-                    token.add_tag('predicted', predicted_tag)
 
                     # get the gold tag
                     gold_tag = token.get_tag(self.model.tag_type)
 
                     # append both to file for evaluation
                     eval_line = token.text + ' ' + gold_tag + ' ' + predicted_tag + "\n"
-
-                    # positives
-                    if predicted_tag != '':
-                        # true positives
-                        if predicted_tag == gold_tag:
-                            metric.tp()
-                        # false positive
-                        if predicted_tag != gold_tag:
-                            metric.fp()
-
-                    # negatives
-                    if predicted_tag == '':
-                        # true negative
-                        if predicted_tag == gold_tag:
-                            metric.tn()
-                        # false negative
-                        if predicted_tag != gold_tag:
-                            metric.fn()
 
                     lines.append(eval_line)
 
@@ -214,33 +219,39 @@ class SequenceTaggerTrainer:
             if not embeddings_in_memory:
                 self.clear_embeddings_in_batch(batch)
 
+        span_f1_score = metric.f_score() * 100
+        span_f1_score = "{0:.2f}".format(span_f1_score)
+
         if out_path is not None:
             test_tsv = os.path.join(out_path, "test.tsv")
             with open(test_tsv, "w", encoding='utf-8') as outfile:
                 outfile.write(''.join(lines))
 
-        if evaluation_method == 'span-F1':
-
-            # get the eval script
-            eval_script = cached_path('https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/scripts/conll03_eval_script.pl', cache_dir='scripts')
-            os.chmod(eval_script, 0o777)
-
-            eval_data = ''.join(lines)
-
-            p = run(eval_script, stdout=PIPE, input=eval_data, encoding='utf-8')
-            main_result = p.stdout
-            print(main_result)
-
-            main_result = main_result.split('\n')[1]
-
-            # parse the result file
-            main_result = re.sub(';', ' ', main_result)
-            main_result = re.sub('precision', 'p', main_result)
-            main_result = re.sub('recall', 'r', main_result)
-            main_result = re.sub('accuracy', 'acc', main_result)
-
-            f_score = float(re.findall(r'\d+\.\d+$', main_result)[0])
-            return f_score, metric._fp, main_result
+        # if evaluation_method == 'span-F1':
+        #
+        #     # get the eval script
+        #     eval_script = cached_path('https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/scripts/conll03_eval_script.pl', cache_dir='scripts')
+        #     eval_script = 'resources/tasks/eval_script_mod'
+        #
+        #     os.chmod(eval_script, 0o777)
+        #
+        #     eval_data = ''.join(lines)
+        #
+        #     p = run(eval_script, stdout=PIPE, input=eval_data, encoding='utf-8')
+        #     main_result = p.stdout
+        #     print(span_f1_score)
+        #     print(main_result)
+        #
+        #     main_result = main_result.split('\n')[1]
+        #
+        #     # parse the result file
+        #     main_result = re.sub(';', ' ', main_result)
+        #     main_result = re.sub('precision', 'p', main_result)
+        #     main_result = re.sub('recall', 'r', main_result)
+        #     main_result = re.sub('accuracy', 'acc', main_result)
+        #
+        #     f_score = float(re.findall(r'\d+\.\d+$', main_result)[0])
+        #     return f_score, metric._fp, main_result
 
         if evaluation_method == 'accuracy':
             score = metric.accuracy()

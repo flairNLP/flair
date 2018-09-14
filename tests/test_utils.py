@@ -1,7 +1,7 @@
 import pytest
 
 from flair.data import Dictionary
-from flair.training_utils import calculate_micro_avg_metric, calculate_class_metrics
+from flair.training_utils import calculate_micro_avg_metric, calculate_class_metrics, ItemWeigher
 
 
 @pytest.fixture
@@ -51,4 +51,16 @@ def test_calculate_class_metrics():
     assert(0 == metrics_dict['class-3']._fp)
     assert(1 == metrics_dict['class-3']._tn)
     assert(1 == metrics_dict['class-3']._fn)
+
+
+def test_item_weigher():
+    weigher = ItemWeigher()
+    weigher.add('one element')
+    weigher.add('one element')
+    weigher.add('another element')
+
+    assert('one element' == weigher.best())
+
+    weigher.add('another element', weight=1.1)
+    assert('another element' == weigher.best())
 
