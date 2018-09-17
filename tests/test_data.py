@@ -72,13 +72,13 @@ def test_sentence_infer_tokenization():
     sentence.add_token(Token('"'))
     sentence.add_token(Token('abc'))
     sentence.add_token(Token('"'))
-    sentence._infer_space_after()
+    sentence.infer_space_after()
 
     assert ('xyz " abc "' == sentence.to_tokenized_string())
     assert ('xyz "abc"' == sentence.to_plain_string())
 
     sentence: Sentence = Sentence('xyz " abc "')
-    sentence._infer_space_after()
+    sentence.infer_space_after()
     assert ('xyz " abc "' == sentence.to_tokenized_string())
     assert ('xyz "abc"' == sentence.to_plain_string())
 

@@ -421,7 +421,7 @@ class Sentence:
         for index, tag in enumerate(tags):
             self.tokens[index].add_tag(tag_type, tag)
 
-    def _infer_space_after(self):
+    def infer_space_after(self):
         """
         Heuristics in case you wish to infer whitespace_after values for tokenized text. This is useful for some old NLP
         tasks (such as CoNLL-03 and CoNLL-2000) that provide only tokenized data with no info of original whitespacing.
