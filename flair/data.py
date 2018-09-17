@@ -288,8 +288,9 @@ class Sentence:
         spans: List[Span] = []
 
         current_span = []
-        import flair.training_utils
-        tags: flair.training_utils.ItemWeigher = flair.training_utils.ItemWeigher()
+
+        tags = defaultdict(lambda: 0.0)
+
         previous_tag = ''
         for token in self:
 
@@ -316,20 +317,20 @@ class Sentence:
                 starts_new_span = True
 
             if (starts_new_span or not in_span) and len(current_span) > 0:
-                spans.append(Span(current_span, tags.best()))
+                spans.append(Span(current_span, sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]))
                 current_span = []
-                tags = flair.training_utils.ItemWeigher()
+                tags = defaultdict(lambda: 0.0)
 
             if in_span:
                 current_span.append(token)
                 weight = 1.1 if starts_new_span else 1.0
-                tags.add(tag[2:], weight)
+                tags[tag[2:]] += weight
 
             # remember previous tag
             previous_tag = tag
 
         if len(current_span) > 0:
-            spans.append(Span(current_span, tags.best()))
+           spans.append(Span(current_span, sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]))
 
         return spans
 
