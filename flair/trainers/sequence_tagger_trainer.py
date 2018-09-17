@@ -178,16 +178,18 @@ class SequenceTaggerTrainer:
                     predicted_tag = self.model.tag_dictionary.get_item_for_index(pred_id)
                     token.add_tag('predicted', predicted_tag)
 
-                gold_tags = []
-                predicted_tags = []
+                    # append both to file for evaluation
+                    eval_line = token.text + ' ' + token.get_tag(self.model.tag_type) + ' ' + predicted_tag + "\n"
+                    lines.append(eval_line)
+                lines.append('\n')
 
-                # get spans
-                for tag in sentence.get_spans(self.model.tag_type):
-                    gold_tags.append(tag.__str__())
+                # make list of gold tags
+                gold_tags = [str(tag) for tag in sentence.get_spans(self.model.tag_type)]
 
-                for tag in sentence.get_spans('predicted'):
-                    predicted_tags.append(tag.__str__())
+                # make list of predicted tags
+                predicted_tags = [str(tag) for tag in sentence.get_spans('predicted')]
 
+                # check for true positives, false positives and false negatives
                 for prediction in predicted_tags:
                     if prediction in gold_tags:
                         metric.tp()
@@ -197,23 +199,6 @@ class SequenceTaggerTrainer:
                 for gold in gold_tags:
                     if gold not in predicted_tags:
                         metric.fn()
-
-                # Step 5. Compute predictions
-                predicted_id = tag_seq
-                for (token, pred_id) in zip(sentence.tokens, predicted_id):
-                    token: Token = token
-                    # get the predicted tag
-                    predicted_tag = self.model.tag_dictionary.get_item_for_index(pred_id)
-
-                    # get the gold tag
-                    gold_tag = token.get_tag(self.model.tag_type)
-
-                    # append both to file for evaluation
-                    eval_line = token.text + ' ' + gold_tag + ' ' + predicted_tag + "\n"
-
-                    lines.append(eval_line)
-
-                lines.append('\n')
 
             if not embeddings_in_memory:
                 self.clear_embeddings_in_batch(batch)
