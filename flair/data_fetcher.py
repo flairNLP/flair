@@ -246,7 +246,7 @@ class NLPTaskDataFetcher:
 
             if line == '':
                 if len(sentence) > 0:
-                    sentence._infer_space_after()
+                    sentence.infer_space_after()
                     sentences.append(sentence)
                 sentence: Sentence = Sentence()
 
@@ -260,7 +260,7 @@ class NLPTaskDataFetcher:
                 sentence.add_token(token)
 
         if len(sentence.tokens) > 0:
-            sentence._infer_space_after()
+            sentence.infer_space_after()
             sentences.append(sentence)
 
         return sentences
