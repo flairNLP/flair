@@ -106,9 +106,9 @@ class TextClassifierTrainer:
                     if batch_no % modulo == 0:
                         print("epoch {0} - iter {1}/{2} - loss {3:.8f}".format(epoch + 1, batch_no, len(batches),
                                                                                current_loss / seen_sentences))
-                        self.trace_print()
-                        # iteration = epoch * len(batches) + batch_no
-                        # self._extract_weights(iteration, weights_index, weights_txt)
+                        # self.trace_print()
+                        iteration = epoch * len(batches) + batch_no
+                        self._extract_weights(iteration, weights_index, weights_txt)
 
                 current_loss /= len(train_data)
 
@@ -130,19 +130,19 @@ class TextClassifierTrainer:
 
                 self.model.train()
 
-                # # anneal against train loss if training with dev, otherwise anneal against dev score
-                # scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_f_score)
+                # anneal against train loss if training with dev, otherwise anneal against dev score
+                scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_f_score)
 
-                # is_best_model_so_far: bool = False
-                # current_score = dev_f_score if not train_with_dev else train_f_score
-                #
-                # if current_score > best_score:
-                #    best_score = current_score
-                #    is_best_model_so_far = True
-                #
-                # if is_best_model_so_far:
-                #     if save_model:
-                #         self.model.save(base_path + "/model.pt")
+                is_best_model_so_far: bool = False
+                current_score = dev_f_score if not train_with_dev else train_f_score
+
+                if current_score > best_score:
+                   best_score = current_score
+                   is_best_model_so_far = True
+
+                if is_best_model_so_far:
+                    if save_model:
+                        self.model.save(base_path + "/model.pt")
 
             self.model.save(base_path + "/final-model.pt")
 
@@ -213,9 +213,9 @@ class TextClassifierTrainer:
                    range(0, len(sentences), mini_batch_size)]
 
         y_pred = []
-        y_true = convert_labels_to_one_hot([sentence.get_label_names() for batch in batches for sentence in batch], self.label_dict)
+        y_true = convert_labels_to_one_hot([sentence.get_label_names() for sentence in sentences], self.label_dict)
 
-        j = 0
+        # j = 0
         for batch in batches:
             scores = self.model.forward(batch)
             labels = self.model.obtain_labels(scores)
@@ -228,9 +228,9 @@ class TextClassifierTrainer:
             if not embeddings_in_memory:
                 clear_embeddings(batch)
 
-            j += 1
-            if j % 10 == 0:
-                self.trace_print()
+            # j += 1
+            # if j % 10 == 0:
+            #     self.trace_print()
 
         metrics = [calculate_micro_avg_metric(y_true, y_pred, self.label_dict)]
         if eval_class_metrics:
