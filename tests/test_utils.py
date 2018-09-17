@@ -51,4 +51,3 @@ def test_calculate_class_metrics():
     assert(0 == metrics_dict['class-3']._fp)
     assert(1 == metrics_dict['class-3']._tn)
     assert(1 == metrics_dict['class-3']._fn)
-

@@ -190,7 +190,35 @@ class Token:
         return self.get_embedding()
 
 
+class Span:
+    """
+    This class represents one textual span consisting of Tokens. A span may have a tag.
+    """
+
+    def __init__(self, tokens: List[Token], tag: str = None):
+        self.tokens = tokens
+        self.tag = tag
+
+    @property
+    def text(self) -> str:
+        return ' '.join([t.text for t in self.tokens])
+
+    def __str__(self) -> str:
+        ids = ','.join([str(t.idx) for t in self.tokens])
+        return '{}-span [{}]: "{}"'.format(self.tag, ids, self.text) \
+            if self.tag is not None else 'span [{}]: "{}"'.format(ids, self.text)
+
+    def __repr__(self) -> str:
+        ids = ','.join([str(t.idx) for t in self.tokens])
+        return '<{}-span ({}): "{}">'.format(self.tag, ids, self.text) \
+            if self.tag is not None else '<span ({}): "{}">'.format(ids, self.text)
+
+
 class Sentence:
+    """
+    A Sentence is a list of Tokens and is used to represent a sentence or text fragment.
+    """
+
     def __init__(self, text: str = None, use_tokenizer: bool = False, labels: Union[List[Label], List[str]] = None):
 
         super(Sentence, self).__init__()
@@ -242,7 +270,158 @@ class Sentence:
                         token = Token(word)
                         self.add_token(token)
 
-    def _infer_space_after(self):
+    def get_token(self, token_id: int) -> Token:
+        for token in self.tokens:
+            if token.idx == token_id:
+                return token
+
+    def add_token(self, token: Token):
+        self.tokens.append(token)
+
+        # set token idx if not set
+        token.sentence = self
+        if token.idx is None:
+            token.idx = len(self.tokens)
+
+    def get_spans(self, tag_type: str) -> List[Span]:
+
+        spans: List[Span] = []
+
+        current_span = []
+
+        tags = defaultdict(lambda: 0.0)
+
+        previous_tag = ''
+        for token in self:
+
+            tag = token.get_tag(tag_type)
+
+            # non-set tags are OUT tags
+            if len(tag) < 2: tag = 'O-'
+
+            # anything that is not a BIOES tag is a SINGLE tag
+            if tag[0:2] not in ['B-', 'I-', 'O-', 'E-', 'S-']:
+                tag = 'S-' + tag
+
+            # anything that is not OUT is IN
+            in_span = False
+            if tag[0:2] not in ['O-']:
+                in_span = True
+
+            # single and begin tags start a new span
+            starts_new_span = False
+            if tag[0:2] in ['B-', 'S-']:
+                starts_new_span = True
+
+            if previous_tag[0:2] in ['S-'] and previous_tag[2:] != tag[2:] and in_span:
+                starts_new_span = True
+
+            if (starts_new_span or not in_span) and len(current_span) > 0:
+                spans.append(Span(current_span, sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]))
+                current_span = []
+                tags = defaultdict(lambda: 0.0)
+
+            if in_span:
+                current_span.append(token)
+                weight = 1.1 if starts_new_span else 1.0
+                tags[tag[2:]] += weight
+
+            # remember previous tag
+            previous_tag = tag
+
+        if len(current_span) > 0:
+           spans.append(Span(current_span, sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]))
+
+        return spans
+
+    def add_label(self, label: Union[Label, str]):
+        if type(label) is Label:
+            self.labels.append(label)
+
+        elif type(label) is str:
+            self.labels.append(Label(label))
+
+    def add_labels(self, labels: Union[List[Label], List[str]]):
+        for label in labels:
+            self.add_label(label)
+
+    def get_label_names(self) -> List[str]:
+        return [label.name for label in self.labels]
+
+    @property
+    def embedding(self):
+        return self.get_embedding()
+
+    def set_embedding(self, name: str, vector):
+        self._embeddings[name] = vector.cpu()
+
+    def get_embedding(self) -> torch.autograd.Variable:
+        embeddings = []
+        for embed in sorted(self._embeddings.keys()):
+            embedding = self._embeddings[embed]
+            embeddings.append(embedding)
+
+        if embeddings:
+            return torch.cat(embeddings, dim=0)
+
+        return torch.FloatTensor()
+
+    def clear_embeddings(self, also_clear_word_embeddings: bool = True):
+        self._embeddings: Dict = {}
+
+        if also_clear_word_embeddings:
+            for token in self:
+                token.clear_embeddings()
+
+    def cpu_embeddings(self):
+        for name, vector in self._embeddings.items():
+            self._embeddings[name] = vector.cpu()
+
+    def to_tagged_string(self, main_tag=None) -> str:
+        list = []
+        for token in self.tokens:
+            list.append(token.text)
+
+            tags = []
+            for tag_type in token.tags.keys():
+
+                if main_tag is not None and main_tag != tag_type: continue
+
+                if token.get_tag(tag_type) == '' or token.get_tag(tag_type) == 'O': continue
+                tags.append(token.get_tag(tag_type))
+            all_tags = '<' + '/'.join(tags) + '>'
+            if all_tags != '<>':
+                list.append(all_tags)
+        return ' '.join(list)
+
+    def to_tokenized_string(self) -> str:
+        return ' '.join([t.text for t in self.tokens])
+
+    def to_plain_string(self):
+        plain = ''
+        for token in self.tokens:
+            plain += token.text
+            if token.whitespace_after: plain += ' '
+        return plain.rstrip()
+
+    def convert_tag_scheme(self, tag_type: str = 'ner', target_scheme: str = 'iob'):
+
+        tags: List[str] = []
+        for token in self.tokens:
+            token: Token = token
+            tags.append(token.get_tag(tag_type))
+
+        if target_scheme == 'iob':
+            iob2(tags)
+
+        if target_scheme == 'iobes':
+            iob2(tags)
+            tags = iob_iobes(tags)
+
+        for index, tag in enumerate(tags):
+            self.tokens[index].add_tag(tag_type, tag)
+
+    def infer_space_after(self):
         """
         Heuristics in case you wish to infer whitespace_after values for tokenized text. This is useful for some old NLP
         tasks (such as CoNLL-03 and CoNLL-2000) that provide only tokenized data with no info of original whitespacing.
@@ -280,94 +459,6 @@ class Sentence:
     def __iter__(self):
         return iter(self.tokens)
 
-    def add_label(self, label: Union[Label, str]):
-        if type(label) is Label:
-            self.labels.append(label)
-
-        elif type(label) is str:
-            self.labels.append(Label(label))
-
-    def add_labels(self, labels: Union[List[Label], List[str]]):
-        for label in labels:
-            self.add_label(label)
-
-    def get_label_names(self) -> List[str]:
-        return [label.name for label in self.labels]
-
-    def get_token(self, token_id: int) -> Token:
-        for token in self.tokens:
-            if token.idx == token_id:
-                return token
-
-    def add_token(self, token: Token):
-        self.tokens.append(token)
-
-        # set token idx if not set
-        token.sentence = self
-        if token.idx is None:
-            token.idx = len(self.tokens)
-
-    def set_embedding(self, name: str, vector):
-        self._embeddings[name] = vector.cpu()
-
-    def clear_embeddings(self, also_clear_word_embeddings: bool = True):
-        self._embeddings: Dict = {}
-
-        if also_clear_word_embeddings:
-            for token in self:
-                token.clear_embeddings()
-
-    def cpu_embeddings(self):
-        for name, vector in self._embeddings.items():
-            self._embeddings[name] = vector.cpu()
-
-    def get_embedding(self) -> torch.autograd.Variable:
-        embeddings = []
-        for embed in sorted(self._embeddings.keys()):
-            embedding = self._embeddings[embed]
-            embeddings.append(embedding)
-
-        if embeddings:
-            return torch.cat(embeddings, dim=0)
-
-        return torch.FloatTensor()
-
-    @property
-    def embedding(self):
-        return self.get_embedding()
-
-    def to_tagged_string(self) -> str:
-        list = []
-        for token in self.tokens:
-            list.append(token.text)
-
-            tags = []
-            for tag_type in token.tags.keys():
-
-                if token.get_tag(tag_type) == '' or token.get_tag(tag_type) == 'O': continue
-                tags.append(token.get_tag(tag_type))
-            all_tags = '<' + '/'.join(tags) + '>'
-            if all_tags != '<>':
-                list.append(all_tags)
-        return ' '.join(list)
-
-    def convert_tag_scheme(self, tag_type: str = 'ner', target_scheme: str = 'iob'):
-
-        tags: List[str] = []
-        for token in self.tokens:
-            token: Token = token
-            tags.append(token.get_tag(tag_type))
-
-        if target_scheme == 'iob':
-            iob2(tags)
-
-        if target_scheme == 'iobes':
-            iob2(tags)
-            tags = iob_iobes(tags)
-
-        for index, tag in enumerate(tags):
-            self.tokens[index].add_tag(tag_type, tag)
-
     def __repr__(self):
         return 'Sentence: "' + ' '.join([t.text for t in self.tokens]) + '" - %d Tokens' % len(self)
 
@@ -386,16 +477,6 @@ class Sentence:
 
     def __len__(self) -> int:
         return len(self.tokens)
-
-    def to_tokenized_string(self) -> str:
-        return ' '.join([t.text for t in self.tokens])
-
-    def to_plain_string(self):
-        plain = ''
-        for token in self.tokens:
-            plain += token.text
-            if token.whitespace_after: plain += ' '
-        return plain.rstrip()
 
 
 class TaggedCorpus:
@@ -508,7 +589,6 @@ class TaggedCorpus:
         Print statistics about the class distribution (only labels of sentences are taken into account) and sentence
         sizes.
         """
-
         self._print_statistics_for(self.train, "TRAIN")
         self._print_statistics_for(self.test, "TEST")
         self._print_statistics_for(self.dev, "DEV")

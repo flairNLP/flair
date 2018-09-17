@@ -64,7 +64,8 @@ class NLPTaskDataFetcher:
                                                           train_file='eng.train',
                                                           test_file='eng.testb',
                                                           dev_file='eng.testa',
-                                                          tag_to_biloes='ner')
+                                                          tag_to_biloes='ner',
+                                                          )
 
         # the CoNLL 03 task for German has an additional lemma column
         if task == NLPTask.CONLL_03_GERMAN:
@@ -245,7 +246,7 @@ class NLPTaskDataFetcher:
 
             if line == '':
                 if len(sentence) > 0:
-                    sentence._infer_space_after()
+                    sentence.infer_space_after()
                     sentences.append(sentence)
                 sentence: Sentence = Sentence()
 
@@ -259,7 +260,7 @@ class NLPTaskDataFetcher:
                 sentence.add_token(token)
 
         if len(sentence.tokens) > 0:
-            sentence._infer_space_after()
+            sentence.infer_space_after()
             sentences.append(sentence)
 
         return sentences
