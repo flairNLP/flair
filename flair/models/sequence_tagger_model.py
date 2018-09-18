@@ -426,29 +426,16 @@ class SequenceTagger(torch.nn.Module):
 
         return alpha
 
-    def predict_scores(self, sentence: Sentence):
-        feats, tags = self.forward([sentence])
-        feats = feats[0]
-        tags = tags[0]
-        if self.use_crf:
-            score, tag_seq = self.viterbi_decode(feats)
-        else:
-            score, tag_seq = torch.max(feats, 1)
-            tag_seq = list(tag_seq.cpu().data)
-
-        return score, tag_seq
-
-    def predict_old(self, sentence: Sentence) -> Sentence:
-
-        score, tag_seq = self.predict_scores(sentence)
-        predicted_id = tag_seq
-        for (token, pred_id) in zip(sentence.tokens, predicted_id):
-            token: Token = token
-            # get the predicted tag
-            predicted_tag = self.tag_dictionary.get_item_for_index(pred_id)
-            token.add_tag(self.tag_type, predicted_tag)
-
-        return sentence
+    # def predict_scores(self, sentence: Sentence):
+    #     feats, tags = self.forward([sentence])
+    #     feats = feats[0]
+    #     if self.use_crf:
+    #         score, tag_seq = self.viterbi_decode(feats)
+    #     else:
+    #         score, tag_seq = torch.max(feats, 1)
+    #         tag_seq = list(tag_seq.cpu().data)
+    #
+    #     return score, tag_seq
 
     def predict(self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32) -> List[Sentence]:
 
