@@ -313,7 +313,7 @@ class NLPTaskDataFetcher:
         return sentences
 
     @staticmethod
-    def read_text_classification_file(path_to_file):
+    def read_text_classification_file(path_to_file, max_tokens_per_doc=-1):
         """
         Reads a data file for text classification. The file should contain one document/text per line.
         The line should have the following format:
@@ -321,6 +321,8 @@ class NLPTaskDataFetcher:
         If you have a multi class task, you can have as many labels as you want at the beginning of the line, e.g.,
         __label__<class_name_1> __label__<class_name_2> <text>
         :param path_to_file: the path to the data file
+        :param max_tokens_per_doc: Take only documents that contain number of tokens less or equal to this value. If
+        set to -1 all documents are taken.
         :return: list of sentences
         """
         label_prefix = '__label__'
@@ -346,7 +348,9 @@ class NLPTaskDataFetcher:
                 text = line[l_len:].strip()
 
                 if text and labels:
-                    sentences.append(Sentence(text, labels=labels, use_tokenizer=True))
+                    sentence = Sentence(text, labels=labels, use_tokenizer=True)
+                    if max_tokens_per_doc == -1 or len(sentence.tokens) <= max_tokens_per_doc:
+                        sentences.append(sentence)
 
         return sentences
 
