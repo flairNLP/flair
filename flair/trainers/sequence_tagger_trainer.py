@@ -1,18 +1,17 @@
-from subprocess import run, PIPE
 from typing import List
 
 import datetime
 import os
 import random
-import re
-import sys
+import logging
 import torch
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
-from flair.file_utils import cached_path
 from flair.models.sequence_tagger_model import SequenceTagger
 from flair.data import Sentence, Token, TaggedCorpus
 from flair.training_utils import Metric, init_output_file, WeightExtractor
+
+log = logging.getLogger(__name__)
 
 
 class SequenceTaggerTrainer:
@@ -34,7 +33,7 @@ class SequenceTaggerTrainer:
 
         evaluation_method = 'F1'
         if self.model.tag_type in ['pos', 'upos']: evaluation_method = 'accuracy'
-        print(evaluation_method)
+        log.info(evaluation_method)
 
         loss_txt = init_output_file(base_path, 'loss.txt')
         with open(loss_txt, 'a') as f:
@@ -58,7 +57,7 @@ class SequenceTaggerTrainer:
         try:
 
             for epoch in range(max_epochs):
-                print('-' * 100)
+                log.info('-' * 100)
 
                 if not self.test_mode: random.shuffle(train_data)
 
@@ -92,7 +91,7 @@ class SequenceTaggerTrainer:
                         self.clear_embeddings_in_batch(batch)
 
                     if batch_no % modulo == 0:
-                        print("epoch {0} - iter {1}/{2} - loss {3:.8f}".format(
+                        log.info("epoch {0} - iter {1}/{2} - loss {3:.8f}".format(
                             epoch + 1, batch_no, len(batches), current_loss / seen_sentences))
                         iteration = epoch * len(batches) + batch_no
                         weight_extractor.extract_weights(self.model.state_dict(), iteration)
@@ -102,7 +101,7 @@ class SequenceTaggerTrainer:
                 # switch to eval mode
                 self.model.eval()
 
-                print('-' * 100)
+                log.info('-' * 100)
 
                 if not train_with_dev:
                     dev_score, dev_metric = self.evaluate(self.corpus.dev, base_path,
@@ -119,11 +118,11 @@ class SequenceTaggerTrainer:
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_score)
 
-                print("EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, scheduler.num_bad_epochs))
+                log.info("EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, scheduler.num_bad_epochs))
                 if not train_with_dev:
-                    print("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
+                    log.info("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
                         'DEV', dev_metric.f_score(), dev_metric.accuracy(), dev_metric._tp, dev_metric._fp, dev_metric._fn, dev_metric._tn))
-                print("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
+                log.info("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
                     'TEST', test_metric.f_score(), test_metric.accuracy(), test_metric._tp, test_metric._fp, test_metric._fn, test_metric._tn))
 
                 with open(loss_txt, 'a') as f:
@@ -139,11 +138,11 @@ class SequenceTaggerTrainer:
             if save_model and train_with_dev: self.model.save(base_path + "/final-model.pt")
 
         except KeyboardInterrupt:
-            print('-' * 89)
-            print('Exiting from training early')
-            print('saving model')
+            log.info('-' * 89)
+            log.info('Exiting from training early')
+            log.info('saving model')
             self.model.save(base_path + "/final-model.pt")
-            print('done')
+            log.info('done')
 
     def evaluate(self, evaluation: List[Sentence], out_path=None, evaluation_method: str = 'F1',
                  embeddings_in_memory: bool = True):

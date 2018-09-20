@@ -1,5 +1,6 @@
 import datetime
 import random
+import logging
 from typing import List
 
 import torch
@@ -12,6 +13,7 @@ from flair.training_utils import convert_labels_to_one_hot, calculate_micro_avg_
 
 MICRO_AVG_METRIC = 'MICRO_AVG'
 
+log = logging.getLogger(__name__)
 
 class TextClassifierTrainer:
     """
@@ -73,7 +75,7 @@ class TextClassifierTrainer:
             best_score = 0
 
             for epoch in range(max_epochs):
-                print('-' * 100)
+                log.info('-' * 100)
 
                 if not self.test_mode:
                     random.shuffle(train_data)
@@ -106,7 +108,7 @@ class TextClassifierTrainer:
                         clear_embeddings(batch)
 
                     if batch_no % modulo == 0:
-                        print("epoch {0} - iter {1}/{2} - loss {3:.8f}".format(
+                        log.info("epoch {0} - iter {1}/{2} - loss {3:.8f}".format(
                             epoch + 1, batch_no, len(batches), current_loss / seen_sentences))
                         iteration = epoch * len(batches) + batch_no
                         weight_extractor.extract_weights(self.model.state_dict(), iteration)
@@ -115,8 +117,8 @@ class TextClassifierTrainer:
 
                 self.model.eval()
 
-                print('-' * 100)
-                print("EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, scheduler.num_bad_epochs))
+                log.info('-' * 100)
+                log.info("EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, scheduler.num_bad_epochs))
 
                 dev_metric = train_metric = None
                 dev_loss = train_loss = '_'
@@ -156,8 +158,8 @@ class TextClassifierTrainer:
             if save_model:
                 self.model = TextClassifier.load_from_file(base_path + "/model.pt")
 
-            print('-' * 100)
-            print('Testing using best model ...')
+            log.info('-' * 100)
+            log.info('Testing using best model ...')
 
             self.model.eval()
             test_metrics, test_loss = self.evaluate(
@@ -168,16 +170,16 @@ class TextClassifierTrainer:
                 metric.print()
             self.model.train()
 
-            print('-' * 100)
+            log.info('-' * 100)
 
         except KeyboardInterrupt:
-            print('-' * 89)
-            print('Exiting from training early')
-            print('saving model')
+            log.info('-' * 89)
+            log.info('Exiting from training early')
+            log.info('saving model')
             with open(base_path + "/final-model.pt", 'wb') as model_save_file:
                 torch.save(self.model, model_save_file, pickle_protocol=4)
                 model_save_file.close()
-            print('done')
+            log.info('done')
 
     def _calculate_evaluation_results_for(self, dataset_name, dataset, embeddings_in_memory, mini_batch_size):
         metrics, loss = self.evaluate(dataset, mini_batch_size=mini_batch_size,
@@ -186,7 +188,7 @@ class TextClassifierTrainer:
         f_score = metrics[MICRO_AVG_METRIC].f_score()
         acc = metrics[MICRO_AVG_METRIC].accuracy()
 
-        print("{0:<5}: loss {1:.8f} - f-score {2:.4f} - acc {3:.4f}".format(
+        log.info("{0:<5}: loss {1:.8f} - f-score {2:.4f} - acc {3:.4f}".format(
             dataset_name, loss, f_score, acc))
 
         return metrics[MICRO_AVG_METRIC], loss
