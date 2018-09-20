@@ -24,7 +24,6 @@ class TextClassifierTrainer:
         self.corpus: TaggedCorpus = corpus
         self.label_dict: Dictionary = label_dict
         self.test_mode: bool = test_mode
-        self.snapshot = None
 
     def train(self,
               base_path: str,
