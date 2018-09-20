@@ -12,7 +12,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from flair.file_utils import cached_path
 from flair.models.sequence_tagger_model import SequenceTagger
 from flair.data import Sentence, Token, TaggedCorpus
-from flair.training_utils import Metric
+from flair.training_utils import Metric, init_output_file, WeightExtractor
 
 
 class SequenceTaggerTrainer:
@@ -36,10 +36,11 @@ class SequenceTaggerTrainer:
         if self.model.tag_type in ['pos', 'upos']: evaluation_method = 'accuracy'
         print(evaluation_method)
 
-        os.makedirs(base_path, exist_ok=True)
+        loss_txt = init_output_file(base_path, 'loss.txt')
+        with open(loss_txt, 'a') as f:
+            f.write('EPOCH\tTIMESTAMP\tTRAIN_LOSS\tTRAIN_METRICS\tDEV_LOSS\tDEV_METRICS\tTEST_LOSS\tTEST_METRICS\n')
 
-        loss_txt = os.path.join(base_path, "loss.txt")
-        open(loss_txt, "w", encoding='utf-8').close()
+        weight_extractor = WeightExtractor(base_path)
 
         optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
 
@@ -56,12 +57,8 @@ class SequenceTaggerTrainer:
         # At any point you can hit Ctrl + C to break out of training early.
         try:
 
-            for epoch in range(0, max_epochs):
-
-                current_loss: int = 0
-
-                for group in optimizer.param_groups:
-                    learning_rate = group['lr']
+            for epoch in range(max_epochs):
+                print('-' * 100)
 
                 if not self.test_mode: random.shuffle(train_data)
 
@@ -69,14 +66,15 @@ class SequenceTaggerTrainer:
 
                 self.model.train()
 
-                batch_no: int = 0
+                current_loss: float = 0
+                seen_sentences = 0
+                modulo = max(1, int(len(batches) / 10))
 
-                for batch in batches:
+                for group in optimizer.param_groups:
+                    learning_rate = group['lr']
+
+                for batch_no, batch in enumerate(batches):
                     batch: List[Sentence] = batch
-                    batch_no += 1
-
-                    if batch_no % 100 == 0:
-                        print("%d of %d (%f)" % (batch_no, len(batches), float(batch_no / len(batches))))
 
                     optimizer.zero_grad()
 
@@ -84,35 +82,34 @@ class SequenceTaggerTrainer:
                     loss = self.model.neg_log_likelihood(batch, self.model.tag_type)
 
                     current_loss += loss.item()
+                    seen_sentences += len(batch)
 
                     loss.backward()
-
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
-
                     optimizer.step()
-
-                    sys.stdout.write('.')
-                    sys.stdout.flush()
 
                     if not embeddings_in_memory:
                         self.clear_embeddings_in_batch(batch)
+
+                    if batch_no % modulo == 0:
+                        print("epoch {0} - iter {1}/{2} - loss {3:.8f}".format(
+                            epoch + 1, batch_no, len(batches), current_loss / seen_sentences))
+                        iteration = epoch * len(batches) + batch_no
+                        weight_extractor.extract_weights(self.model.state_dict(), iteration)
 
                 current_loss /= len(train_data)
 
                 # switch to eval mode
                 self.model.eval()
 
+                print('-' * 100)
+
                 if not train_with_dev:
-                    print('.. evaluating... dev... ')
-                    dev_score, dev_fp, dev_result = self.evaluate(self.corpus.dev, base_path,
+                    dev_score, dev_metric = self.evaluate(self.corpus.dev, base_path,
                                                                   evaluation_method=evaluation_method,
                                                                   embeddings_in_memory=embeddings_in_memory)
-                else:
-                    dev_fp = 0
-                    dev_result = '_'
 
-                print('test... ')
-                test_score, test_fp, test_result = self.evaluate(self.corpus.test, base_path,
+                test_score, test_metric = self.evaluate(self.corpus.test, base_path,
                                                                  evaluation_method=evaluation_method,
                                                                  embeddings_in_memory=embeddings_in_memory)
 
@@ -122,16 +119,16 @@ class SequenceTaggerTrainer:
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_score)
 
-                summary = '%d' % epoch + '\t({:%H:%M:%S})'.format(datetime.datetime.now()) \
-                          + '\t%f\t%d\t%f\tDEV   %d\t' % (
-                    current_loss, scheduler.num_bad_epochs, learning_rate, dev_fp) + dev_result
-                summary = summary.replace('\n', '')
-                summary += '\tTEST   \t%d\t' % test_fp + test_result
+                if not train_with_dev:
+                    print("{0:<7} epoch {1} - lr {2:.4f} - bad epochs {3} - f-score {4:.4f} - acc {5:.4f}".format(
+                        'DEV', epoch + 1, learning_rate, scheduler.num_bad_epochs, dev_metric.f_score(), dev_metric.accuracy()))
+                print("{0:<7} epoch {1} - lr {2:.4f} - bad epochs {3} - f-score {4:.4f} - acc {5:.4f}".format(
+                    'TEST', epoch + 1, learning_rate, scheduler.num_bad_epochs, test_metric.f_score(), test_metric.accuracy()))
 
-                print(summary)
-                with open(loss_txt, "a") as loss_file:
-                    loss_file.write('%s\n' % summary)
-                    loss_file.close()
+                with open(loss_txt, 'a') as f:
+                    dev_metric_str = dev_metric.to_csv() if dev_metric is not None else '_'
+                    f.write('{}\t{:%H:%M:%S}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
+                        epoch, datetime.datetime.now(), '_', '_', '_', dev_metric_str, '_', test_metric.to_csv()))
 
                 # save if model is current best and we use dev data for model selection
                 if save_model and not train_with_dev and dev_score == scheduler.best:
@@ -210,11 +207,11 @@ class SequenceTaggerTrainer:
 
         if evaluation_method == 'accuracy':
             score = metric.accuracy()
-            return score, metric._fp, str(score)
+            return score, metric
 
         if evaluation_method == 'F1':
             score = metric.f_score()
-            return score, metric._fp, str(metric)
+            return score, metric
 
     def clear_embeddings_in_batch(self, batch: List[Sentence]):
         for sentence in batch:

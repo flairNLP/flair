@@ -1,3 +1,4 @@
+import datetime
 import random
 from typing import List
 
@@ -51,7 +52,7 @@ class TextClassifierTrainer:
 
         loss_txt = init_output_file(base_path, 'loss.txt')
         with open(loss_txt, 'a') as f:
-            f.write('EPOCH\tITERATION\tDEV_LOSS\tTRAIN_LOSS\tDEV_F_SCORE\tTRAIN_F_SCORE\tDEV_ACC\tTRAIN_ACC\n')
+            f.write('EPOCH\tTIMESTAMP\tTRAIN_LOSS\tTRAIN_METRICS\tDEV_LOSS\tDEV_METRICS\tTEST_LOSS\tTEST_METRICS\n')
 
         weight_extractor = WeightExtractor(base_path)
 
@@ -86,6 +87,9 @@ class TextClassifierTrainer:
                 seen_sentences = 0
                 modulo = max(1, int(len(batches) / 10))
 
+                for group in optimizer.param_groups:
+                    learning_rate = group['lr']
+
                 for batch_no, batch in enumerate(batches):
                     scores = self.model.forward(batch)
                     loss = self.model.calculate_loss(scores, batch)
@@ -102,11 +106,8 @@ class TextClassifierTrainer:
                         clear_embeddings(batch)
 
                     if batch_no % modulo == 0:
-                        for group in optimizer.param_groups:
-                            learning_rate = group['lr']
-
-                        print("epoch {0} - iter {1}/{2} - loss {3:.8f} - lr {4:.4f} - bad epochs {5}".format(
-                            epoch + 1, batch_no, len(batches), current_loss / seen_sentences, learning_rate, scheduler.num_bad_epochs))
+                        print("epoch {0} - iter {1}/{2} - loss {3:.8f}".format(
+                            epoch + 1, batch_no, len(batches), current_loss / seen_sentences))
                         iteration = epoch * len(batches) + batch_no
                         weight_extractor.extract_weights(self.model.state_dict(), iteration)
 
@@ -116,27 +117,30 @@ class TextClassifierTrainer:
 
                 print('-' * 100)
 
-                train_f_score = train_acc = train_loss = 0
-                if eval_on_train:
-                    train_acc, train_f_score, train_loss = self._calculate_evaluation_results_for(
-                        'TRAIN', self.corpus.train, embeddings_in_memory, epoch, eval_mini_batch_size)
+                dev_metric = train_metric = None
+                dev_loss = train_loss = '_'
 
-                dev_f_score = dev_acc = dev_loss = 0
+                if eval_on_train:
+                    train_metric, train_loss = self._calculate_evaluation_results_for(
+                        'TRAIN', self.corpus.train, embeddings_in_memory, epoch, eval_mini_batch_size, learning_rate, scheduler.num_bad_epochs)
+
                 if not train_with_dev:
-                    dev_acc, dev_f_score, dev_loss = self._calculate_evaluation_results_for(
-                        'DEV', self.corpus.dev, embeddings_in_memory, epoch, eval_mini_batch_size)
+                    dev_metric, dev_loss = self._calculate_evaluation_results_for(
+                        'DEV', self.corpus.dev, embeddings_in_memory, epoch, eval_mini_batch_size, learning_rate, scheduler.num_bad_epochs)
 
                 with open(loss_txt, 'a') as f:
-                    f.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
-                        epoch, epoch * len(batches), dev_loss, train_loss, dev_f_score, train_f_score, dev_acc, train_acc))
+                    train_metric_str = train_metric.to_csv() if train_metric is not None else '_'
+                    dev_metric_str = dev_metric.to_csv() if dev_metric is not None else '_'
+                    f.write('{}\t{:%H:%M:%S}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
+                        epoch, datetime.datetime.now(), train_loss, train_metric_str, dev_loss, dev_metric_str, '_', '_'))
 
                 self.model.train()
 
                 # anneal against train loss if training with dev, otherwise anneal against dev score
-                scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_f_score)
+                scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_metric.f_score())
 
                 is_best_model_so_far: bool = False
-                current_score = dev_f_score if not train_with_dev else train_f_score
+                current_score = dev_metric.f_score() if not train_with_dev else train_metric.f_score()
 
                 if current_score > best_score:
                    best_score = current_score
@@ -174,17 +178,17 @@ class TextClassifierTrainer:
                 model_save_file.close()
             print('done')
 
-    def _calculate_evaluation_results_for(self, dataset_name, dataset, embeddings_in_memory, epoch, mini_batch_size):
+    def _calculate_evaluation_results_for(self, dataset_name, dataset, embeddings_in_memory, epoch, mini_batch_size, learning_rate, num_bad_epochs):
         metrics, loss = self.evaluate(dataset, mini_batch_size=mini_batch_size,
                                                   embeddings_in_memory=embeddings_in_memory)
 
         f_score = metrics[MICRO_AVG_METRIC].f_score()
         acc = metrics[MICRO_AVG_METRIC].accuracy()
 
-        print("{0:<7} epoch {1} - loss {2:.8f} - f-score {3:.4f} - acc {4:.4f}".format(
-            dataset_name, epoch + 1, loss, f_score, acc))
+        print("{0:<7} epoch {1} - lr {2:.4f} - bad epochs {3} - loss {4:.8f} - f-score {5:.4f} - acc {6:.4f}".format(
+            dataset_name, epoch + 1, learning_rate, num_bad_epochs, loss, f_score, acc))
 
-        return acc, f_score, loss
+        return metrics[MICRO_AVG_METRIC], loss
 
     def evaluate(self, sentences: List[Sentence], eval_class_metrics: bool = False, mini_batch_size: int = 16,
                  embeddings_in_memory: bool = True) -> (dict, float):

@@ -48,6 +48,10 @@ class Metric(object):
             return (self._tp + self._tn) / (self._tp + self._tn + self._fp + self._fn)
         return 0.0
 
+    def to_csv(self):
+        return '{},{},{},{},{},{},{},{}'.format(
+            self._tp, self._tn, self._fp, self._fn, self.precision(), self.recall(), self.f_score(), self.accuracy())
+
     def __str__(self):
         return '{0:<20}\tprecision: {1:.4f} - recall: {2:.4f} - accuracy: {3:.4f} - f1-score: {4:.4f}'.format(
             self.name, self.precision(), self.recall(), self.accuracy(), self.f_score())
