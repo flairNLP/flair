@@ -86,18 +86,7 @@ def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionar
     :param label_dict: label dictionary
     :return: converted label list
     """
-    converted_label_list = []
-
-    for labels in label_list:
-        arr = np.empty(len(label_dict))
-        arr.fill(0)
-
-        for label in labels:
-            arr[label_dict.get_idx_for_item(label)] = 1
-
-        converted_label_list.append(arr.tolist())
-
-    return converted_label_list
+    return [[1 if l in labels else 0 for l in label_dict.get_items()] for labels in label_list]
 
 
 def calculate_micro_avg_metric(y_true: List[List[int]], y_pred: List[List[int]], labels: Dictionary) -> Metric:
