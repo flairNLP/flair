@@ -1,5 +1,4 @@
 import os
-import pickle
 import re
 from abc import abstractmethod
 from typing import List, Union
@@ -8,7 +7,8 @@ import gensim
 import numpy as np
 import torch
 
-from .data import Dictionary, Token, Sentence, TaggedCorpus
+from .nn import LockedDropout, WordDropout
+from .data import Dictionary, Token, Sentence
 from .file_utils import cached_path
 
 
@@ -491,7 +491,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
     def __init__(self, token_embeddings: List[TokenEmbeddings], hidden_states=128, num_layers=1,
                  reproject_words: bool = True, reproject_words_dimension: int = None, bidirectional: bool = False,
-                 use_first_representation: bool = False):
+                 use_first_representation: bool = False, use_word_dropout: bool = True):
         """The constructor takes a list of embeddings to be combined.
         :param token_embeddings: a list of token embeddings
         :param hidden_states: the number of hidden states in the lstm
@@ -503,6 +503,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
         :param use_first_representation: boolean value, indicating whether to concatenate the first and last
         representation of the lstm to be used as final document embedding.
+        :param use_word_dropout: boolean value, indicating whether to use word dropout or not.
         """
         super().__init__()
 
@@ -534,7 +535,13 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
                                                      self.embeddings_dimension)
         self.rnn = torch.nn.GRU(self.embeddings_dimension, hidden_states, num_layers=num_layers,
                                  bidirectional=self.bidirectional)
-        self.dropout = torch.nn.Dropout(0.5)
+
+        # dropouts
+        self.dropout: torch.nn.Module = LockedDropout(0.5)
+
+        self.use_word_dropout: bool = use_word_dropout
+        if self.use_word_dropout:
+            self.word_dropout = WordDropout(0.05)
 
         torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
 
@@ -598,6 +605,10 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         # --------------------------------------------------------------------
         # FF PART
         # --------------------------------------------------------------------
+        # use word dropout if set
+        if self.use_word_dropout:
+            sentence_tensor = self.word_dropout(sentence_tensor)
+
         if self.reproject_words:
             sentence_tensor = self.word_reprojection_map(sentence_tensor)
 
