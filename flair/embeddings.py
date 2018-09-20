@@ -381,7 +381,6 @@ class CharLMEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         # get text sentences
         text_sentences = [sentence.to_tokenized_string() for sentence in sentences]
 

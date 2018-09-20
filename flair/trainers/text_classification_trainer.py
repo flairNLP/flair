@@ -24,6 +24,7 @@ class TextClassifierTrainer:
         self.corpus: TaggedCorpus = corpus
         self.label_dict: Dictionary = label_dict
         self.test_mode: bool = test_mode
+        self.snapshot = None
 
     def train(self,
               base_path: str,
@@ -179,7 +180,7 @@ class TextClassifierTrainer:
 
         return acc, f_score, loss
 
-    def evaluate(self, sentences: List[Sentence], eval_class_metrics: bool = False, mini_batch_size: int = 32,
+    def evaluate(self, sentences: List[Sentence], eval_class_metrics: bool = False, mini_batch_size: int = 16,
                  embeddings_in_memory: bool = True) -> (dict, float):
         """
         Evaluates the model with the given list of sentences.
@@ -200,12 +201,12 @@ class TextClassifierTrainer:
             labels = self.model.obtain_labels(scores)
             loss = self.model.calculate_loss(scores, batch)
 
+            if not embeddings_in_memory:
+                clear_embeddings(batch)
+
             eval_loss += loss
 
             y_pred.extend(convert_labels_to_one_hot([[label.name for label in sent_labels] for sent_labels in labels], self.label_dict))
-
-            if not embeddings_in_memory:
-                clear_embeddings(batch)
 
         metrics = [calculate_micro_avg_metric(y_true, y_pred, self.label_dict)]
         if eval_class_metrics:
