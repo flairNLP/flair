@@ -119,11 +119,12 @@ class SequenceTaggerTrainer:
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_score)
 
+                print("EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, scheduler.num_bad_epochs))
                 if not train_with_dev:
-                    print("{0:<7} epoch {1} - lr {2:.4f} - bad epochs {3} - f-score {4:.4f} - acc {5:.4f}".format(
-                        'DEV', epoch + 1, learning_rate, scheduler.num_bad_epochs, dev_metric.f_score(), dev_metric.accuracy()))
-                print("{0:<7} epoch {1} - lr {2:.4f} - bad epochs {3} - f-score {4:.4f} - acc {5:.4f}".format(
-                    'TEST', epoch + 1, learning_rate, scheduler.num_bad_epochs, test_metric.f_score(), test_metric.accuracy()))
+                    print("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
+                        'DEV', dev_metric.f_score(), dev_metric.accuracy(), dev_metric._tp, dev_metric._fp, dev_metric._fn, dev_metric._tn))
+                print("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
+                    'TEST', test_metric.f_score(), test_metric.accuracy(), test_metric._tp, test_metric._fp, test_metric._fn, test_metric._tn))
 
                 with open(loss_txt, 'a') as f:
                     dev_metric_str = dev_metric.to_csv() if dev_metric is not None else '_'

@@ -116,17 +116,18 @@ class TextClassifierTrainer:
                 self.model.eval()
 
                 print('-' * 100)
+                print("EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, scheduler.num_bad_epochs))
 
                 dev_metric = train_metric = None
                 dev_loss = train_loss = '_'
 
                 if eval_on_train:
                     train_metric, train_loss = self._calculate_evaluation_results_for(
-                        'TRAIN', self.corpus.train, embeddings_in_memory, epoch, eval_mini_batch_size, learning_rate, scheduler.num_bad_epochs)
+                        'TRAIN', self.corpus.train, embeddings_in_memory, eval_mini_batch_size)
 
                 if not train_with_dev:
                     dev_metric, dev_loss = self._calculate_evaluation_results_for(
-                        'DEV', self.corpus.dev, embeddings_in_memory, epoch, eval_mini_batch_size, learning_rate, scheduler.num_bad_epochs)
+                        'DEV', self.corpus.dev, embeddings_in_memory, eval_mini_batch_size)
 
                 with open(loss_txt, 'a') as f:
                     train_metric_str = train_metric.to_csv() if train_metric is not None else '_'
@@ -178,15 +179,15 @@ class TextClassifierTrainer:
                 model_save_file.close()
             print('done')
 
-    def _calculate_evaluation_results_for(self, dataset_name, dataset, embeddings_in_memory, epoch, mini_batch_size, learning_rate, num_bad_epochs):
+    def _calculate_evaluation_results_for(self, dataset_name, dataset, embeddings_in_memory, mini_batch_size):
         metrics, loss = self.evaluate(dataset, mini_batch_size=mini_batch_size,
                                                   embeddings_in_memory=embeddings_in_memory)
 
         f_score = metrics[MICRO_AVG_METRIC].f_score()
         acc = metrics[MICRO_AVG_METRIC].accuracy()
 
-        print("{0:<7} epoch {1} - lr {2:.4f} - bad epochs {3} - loss {4:.8f} - f-score {5:.4f} - acc {6:.4f}".format(
-            dataset_name, epoch + 1, learning_rate, num_bad_epochs, loss, f_score, acc))
+        print("{0:<5}: loss {1:.8f} - f-score {2:.4f} - acc {3:.4f}".format(
+            dataset_name, loss, f_score, acc))
 
         return metrics[MICRO_AVG_METRIC], loss
 
