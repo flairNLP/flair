@@ -106,9 +106,10 @@ class TextClassifierTrainer:
                     if batch_no % modulo == 0:
                         print("epoch {0} - iter {1}/{2} - loss {3:.8f}".format(epoch + 1, batch_no, len(batches),
                                                                                current_loss / seen_sentences))
-                        # self.trace_print()
                         iteration = epoch * len(batches) + batch_no
                         self._extract_weights(iteration, weights_index, weights_txt)
+
+                self.trace_print()
 
                 current_loss /= len(train_data)
 
@@ -184,21 +185,6 @@ class TextClassifierTrainer:
 
         return acc, f_score, loss
 
-    def trace_print(self):
-        snapshot2 = tracemalloc.take_snapshot()
-        snapshot2 = snapshot2.filter_traces((
-            tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
-            tracemalloc.Filter(False, "<unknown>"),
-            tracemalloc.Filter(False, tracemalloc.__file__)
-        ))
-
-        if self.snapshot is not None:
-            print("================================== Begin Trace:")
-            top_stats = snapshot2.compare_to(self.snapshot, 'lineno', cumulative=True)
-            for stat in top_stats[:10]:
-                print(stat)
-        self.snapshot = snapshot2
-
     def evaluate(self, sentences: List[Sentence], eval_class_metrics: bool = False, mini_batch_size: int = 32,
                  embeddings_in_memory: bool = True) -> (dict, float):
         """
@@ -215,7 +201,6 @@ class TextClassifierTrainer:
         y_pred = []
         y_true = convert_labels_to_one_hot([sentence.get_label_names() for sentence in sentences], self.label_dict)
 
-        # j = 0
         for batch in batches:
             scores = self.model.forward(batch)
             labels = self.model.obtain_labels(scores)
@@ -228,9 +213,7 @@ class TextClassifierTrainer:
             if not embeddings_in_memory:
                 clear_embeddings(batch)
 
-            # j += 1
-            # if j % 10 == 0:
-            #     self.trace_print()
+        self.trace_print()
 
         metrics = [calculate_micro_avg_metric(y_true, y_pred, self.label_dict)]
         if eval_class_metrics:
@@ -279,3 +262,18 @@ class TextClassifierTrainer:
                 i += 1
 
         weights_index[key] = indices
+
+    def trace_print(self):
+        snapshot2 = tracemalloc.take_snapshot()
+        snapshot2 = snapshot2.filter_traces((
+            tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+            tracemalloc.Filter(False, "<unknown>"),
+            tracemalloc.Filter(False, tracemalloc.__file__)
+        ))
+
+        if self.snapshot is not None:
+            print("================================== Begin Trace:")
+            top_stats = snapshot2.compare_to(self.snapshot, 'lineno', cumulative=True)
+            for stat in top_stats[:10]:
+                print(stat)
+        self.snapshot = snapshot2
