@@ -29,21 +29,26 @@ class TextClassifierTrainer:
               base_path: str,
               learning_rate: float = 0.1,
               mini_batch_size: int = 32,
+              eval_mini_batch_size: int = 8,
               max_epochs: int = 100,
               anneal_factor: float = 0.5,
               patience: int = 2,
               save_model: bool = True,
               embeddings_in_memory: bool = True,
-              train_with_dev: bool = False):
+              train_with_dev: bool = False,
+              eval_on_train: bool = False):
         """
         Trains the model using the training data of the corpus.
         :param base_path: the directory to which any results should be written to
         :param learning_rate: the learning rate
         :param mini_batch_size: the mini batch size
+        :param eval_mini_batch_size: the mini batch size for evaluation
         :param max_epochs: the maximum number of epochs to train
         :param save_model: boolean value indicating, whether the model should be saved or not
         :param embeddings_in_memory: boolean value indicating, if embeddings should be kept in memory or not
         :param train_with_dev: boolean value indicating, if the dev data set should be used for training or not
+        :param eval_on_train: boolean value indicating, if evaluation metrics should be calculated on training data set
+        or not
         """
 
         loss_txt = init_output_file(base_path, 'loss.txt')
@@ -100,8 +105,11 @@ class TextClassifierTrainer:
                         clear_embeddings(batch)
 
                     if batch_no % modulo == 0:
-                        print("epoch {0} - iter {1}/{2} - loss {3:.8f}".format(epoch + 1, batch_no, len(batches),
-                                                                               current_loss / seen_sentences))
+                        for group in optimizer.param_groups:
+                            learning_rate = group['lr']
+
+                        print("epoch {0} - iter {1}/{2} - loss {3:.8f} - lr {4:.4f} - bad epochs {5}".format(
+                            epoch + 1, batch_no, len(batches), current_loss / seen_sentences, learning_rate, scheduler.num_bad_epochs))
                         iteration = epoch * len(batches) + batch_no
                         self._extract_weights(iteration, weights_index, weights_txt)
 
@@ -111,13 +119,15 @@ class TextClassifierTrainer:
 
                 print('-' * 100)
 
-                train_acc, train_f_score, train_loss = self._calculate_evaluation_results_for(
-                    'TRAIN', self.corpus.train, embeddings_in_memory, epoch, mini_batch_size)
+                train_f_score = train_acc = train_loss = 0
+                if eval_on_train:
+                    train_acc, train_f_score, train_loss = self._calculate_evaluation_results_for(
+                        'TRAIN', self.corpus.train, embeddings_in_memory, epoch, eval_mini_batch_size)
 
                 dev_f_score = dev_acc = dev_loss = 0
                 if not train_with_dev:
                     dev_acc, dev_f_score, dev_loss = self._calculate_evaluation_results_for(
-                        'DEV', self.corpus.dev, embeddings_in_memory, epoch, mini_batch_size)
+                        'DEV', self.corpus.dev, embeddings_in_memory, epoch, eval_mini_batch_size)
 
                 with open(loss_txt, 'a') as f:
                     f.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
@@ -179,7 +189,7 @@ class TextClassifierTrainer:
 
         return acc, f_score, loss
 
-    def evaluate(self, sentences: List[Sentence], eval_class_metrics: bool = False, mini_batch_size: int = 32,
+    def evaluate(self, sentences: List[Sentence], eval_class_metrics: bool = False, mini_batch_size: int = 16,
                  embeddings_in_memory: bool = True) -> (dict, float):
         """
         Evaluates the model with the given list of sentences.
@@ -200,12 +210,12 @@ class TextClassifierTrainer:
             labels = self.model.obtain_labels(scores)
             loss = self.model.calculate_loss(scores, batch)
 
+            if not embeddings_in_memory:
+                clear_embeddings(batch)
+
             eval_loss += loss
 
             y_pred.extend(convert_labels_to_one_hot([[label.name for label in sent_labels] for sent_labels in labels], self.label_dict))
-
-            if not embeddings_in_memory:
-                clear_embeddings(batch)
 
         metrics = [calculate_micro_avg_metric(y_true, y_pred, self.label_dict)]
         if eval_class_metrics:

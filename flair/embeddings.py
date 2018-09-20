@@ -307,8 +307,6 @@ class CharLMEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
     def __init__(self, model, detach: bool = True):
-        super().__init__()
-
         """
             Contextual string embeddings of words, as proposed in Akbik et al., 2018.
 
@@ -321,6 +319,7 @@ class CharLMEmbeddings(TokenEmbeddings):
                 if set to false, the gradient will propagate into the language model. this dramatically slows down
                 training and often leads to worse results, so not recommended.
         """
+        super().__init__()
 
         # news-english-forward
         if model.lower() == 'news-forward':
@@ -381,7 +380,6 @@ class CharLMEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         # get text sentences
         text_sentences = [sentence.to_tokenized_string() for sentence in sentences]
 
