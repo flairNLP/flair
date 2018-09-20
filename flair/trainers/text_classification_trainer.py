@@ -10,7 +10,6 @@ from flair.data import Sentence, TaggedCorpus, Dictionary
 from flair.models.text_classification_model import TextClassifier
 from flair.training_utils import convert_labels_to_one_hot, calculate_micro_avg_metric, init_output_file, clear_embeddings, \
     calculate_class_metrics
-import tracemalloc
 
 MICRO_AVG_METRIC = 'MICRO_AVG'
 
@@ -47,8 +46,6 @@ class TextClassifierTrainer:
         :param embeddings_in_memory: boolean value indicating, if embeddings should be kept in memory or not
         :param train_with_dev: boolean value indicating, if the dev data set should be used for training or not
         """
-
-        tracemalloc.start()
 
         loss_txt = init_output_file(base_path, 'loss.txt')
         with open(loss_txt, 'a') as f:
@@ -108,8 +105,6 @@ class TextClassifierTrainer:
                                                                                current_loss / seen_sentences))
                         iteration = epoch * len(batches) + batch_no
                         self._extract_weights(iteration, weights_index, weights_txt)
-
-                self.trace_print()
 
                 current_loss /= len(train_data)
 
@@ -213,8 +208,6 @@ class TextClassifierTrainer:
             if not embeddings_in_memory:
                 clear_embeddings(batch)
 
-        self.trace_print()
-
         metrics = [calculate_micro_avg_metric(y_true, y_pred, self.label_dict)]
         if eval_class_metrics:
             metrics.extend(calculate_class_metrics(y_true, y_pred, self.label_dict))
@@ -262,18 +255,3 @@ class TextClassifierTrainer:
                 i += 1
 
         weights_index[key] = indices
-
-    def trace_print(self):
-        snapshot2 = tracemalloc.take_snapshot()
-        snapshot2 = snapshot2.filter_traces((
-            tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
-            tracemalloc.Filter(False, "<unknown>"),
-            tracemalloc.Filter(False, tracemalloc.__file__)
-        ))
-
-        if self.snapshot is not None:
-            print("================================== Begin Trace:")
-            top_stats = snapshot2.compare_to(self.snapshot, 'lineno', cumulative=True)
-            for stat in top_stats[:10]:
-                print(stat)
-        self.snapshot = snapshot2
