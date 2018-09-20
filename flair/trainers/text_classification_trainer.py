@@ -1,6 +1,4 @@
 import random
-from collections import defaultdict
-from functools import reduce
 from typing import List
 
 import torch
@@ -8,8 +6,8 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from flair.data import Sentence, TaggedCorpus, Dictionary
 from flair.models.text_classification_model import TextClassifier
-from flair.training_utils import convert_labels_to_one_hot, calculate_micro_avg_metric, init_output_file, clear_embeddings, \
-    calculate_class_metrics
+from flair.training_utils import convert_labels_to_one_hot, calculate_micro_avg_metric, init_output_file, \
+    clear_embeddings, calculate_class_metrics, WeightExtractor
 
 MICRO_AVG_METRIC = 'MICRO_AVG'
 
@@ -54,9 +52,8 @@ class TextClassifierTrainer:
         loss_txt = init_output_file(base_path, 'loss.txt')
         with open(loss_txt, 'a') as f:
             f.write('EPOCH\tITERATION\tDEV_LOSS\tTRAIN_LOSS\tDEV_F_SCORE\tTRAIN_F_SCORE\tDEV_ACC\tTRAIN_ACC\n')
-        weights_txt = init_output_file(base_path, 'weights.txt')
 
-        weights_index = defaultdict(lambda: defaultdict(lambda: list()))
+        weight_extractor = WeightExtractor(base_path)
 
         optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
 
@@ -111,7 +108,7 @@ class TextClassifierTrainer:
                         print("epoch {0} - iter {1}/{2} - loss {3:.8f} - lr {4:.4f} - bad epochs {5}".format(
                             epoch + 1, batch_no, len(batches), current_loss / seen_sentences, learning_rate, scheduler.num_bad_epochs))
                         iteration = epoch * len(batches) + batch_no
-                        self._extract_weights(iteration, weights_index, weights_txt)
+                        weight_extractor.extract_weights(self.model.state_dict(), iteration)
 
                 current_loss /= len(train_data)
 
@@ -226,41 +223,3 @@ class TextClassifierTrainer:
         metrics_dict = {metric.name: metric for metric in metrics}
 
         return metrics_dict, eval_loss
-
-    def _extract_weights(self, iteration, weights_index, weights_txt):
-        for key in self.model.state_dict().keys():
-
-            vec = self.model.state_dict()[key]
-            weights_to_watch = min(10, reduce(lambda x, y: x*y, list(vec.size())))
-
-            if key not in weights_index:
-                self._init_weights_index(key, weights_index, weights_to_watch)
-
-            for i in range(weights_to_watch):
-                vec = self.model.state_dict()[key]
-                for index in weights_index[key][i]:
-                    vec = vec[index]
-
-                value = vec.item()
-
-                with open(weights_txt, 'a') as f:
-                    f.write('{}\t{}\t{}\t{}\n'.format(iteration, key, i, float(value)))
-
-    def _init_weights_index(self, key, weights_index, weights_to_watch):
-        indices = {}
-
-        i = 0
-        while len(indices) < weights_to_watch:
-            vec = self.model.state_dict()[key]
-            cur_indices = []
-
-            for x in range(len(vec.size())):
-                index = random.randint(0, len(vec) - 1)
-                vec = vec[index]
-                cur_indices.append(index)
-
-            if cur_indices not in list(indices.values()):
-                indices[i] = cur_indices
-                i += 1
-
-        weights_index[key] = indices

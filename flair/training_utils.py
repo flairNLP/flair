@@ -1,9 +1,9 @@
-from typing import List, Dict
-
+import random
 import os
-import numpy as np
-
+from collections import defaultdict
+from typing import List
 from flair.data import Dictionary, Sentence
+from functools import reduce
 
 
 class Metric(object):
@@ -54,6 +54,52 @@ class Metric(object):
 
     def print(self):
         print(self)
+
+
+class WeightExtractor(object):
+
+    def __init__(self, directory: str, number_of_weights: int = 10):
+        self.weights_file = init_output_file(directory, 'weights.txt')
+        self.weights_dict = defaultdict(lambda: defaultdict(lambda: list()))
+        self.number_of_weights = number_of_weights
+
+    def extract_weights(self, state_dict, iteration):
+        for key in state_dict.keys():
+
+            vec = state_dict[key]
+            weights_to_watch = min(self.number_of_weights, reduce(lambda x, y: x*y, list(vec.size())))
+
+            if key not in self.weights_dict:
+                self._init_weights_index(key, state_dict, weights_to_watch)
+
+            for i in range(weights_to_watch):
+                vec = state_dict[key]
+                for index in self.weights_dict[key][i]:
+                    vec = vec[index]
+
+                value = vec.item()
+
+                with open(self.weights_file, 'a') as f:
+                    f.write('{}\t{}\t{}\t{}\n'.format(iteration, key, i, float(value)))
+
+    def _init_weights_index(self, key, state_dict, weights_to_watch):
+        indices = {}
+
+        i = 0
+        while len(indices) < weights_to_watch:
+            vec = state_dict[key]
+            cur_indices = []
+
+            for x in range(len(vec.size())):
+                index = random.randint(0, len(vec) - 1)
+                vec = vec[index]
+                cur_indices.append(index)
+
+            if cur_indices not in list(indices.values()):
+                indices[i] = cur_indices
+                i += 1
+
+        self.weights_dict[key] = indices
 
 
 def clear_embeddings(sentences: List[Sentence]):
