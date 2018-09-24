@@ -49,8 +49,8 @@ class Metric(object):
         return 0.0
 
     def __str__(self):
-        return '{0:<20}\tprecision: {1:.4f} - recall: {2:.4f} - accuracy: {3:.4f} - f1-score: {4:.4f}'.format(
-            self.name, self.precision(), self.recall(), self.accuracy(), self.f_score())
+        return '{0:<10}\ttp: {1} - fp: {2} - fn: {3} - precision: {4:.4f} - recall: {5:.4f} - accuracy: {6:.4f} - f1-score: {7:.4f}'.format(
+            self.name, self._tp, self._fp, self._fn, self.precision(), self.recall(), self.accuracy(), self.f_score())
 
     def print(self):
         print(self)

@@ -237,8 +237,8 @@ def test_label_set_confidence():
 
     assert (0.2 == label.confidence)
 
-    with pytest.raises(ValueError):
-        label.name = ''
+    # with pytest.raises(ValueError):
+    #     label.name = ''
 
 
 def test_tagged_corpus_make_label_dictionary():
@@ -415,3 +415,13 @@ def test_spans():
     assert ('LOC' == spans[1].tag)
     assert ('located in' == spans[3].text)
     assert ('relation' == spans[3].tag)
+
+    sentence = Sentence(
+        'A woman was charged on Friday with terrorist offences after three Irish Republican Army mortar bombs were found in a Belfast house , police said . ')
+    sentence[11].add_tag('ner', 'S-MISC')
+    sentence[12].add_tag('ner', 'B-MISC')
+    sentence[13].add_tag('ner', 'E-MISC')
+    spans: List[Span] = sentence.get_spans('ner')
+    assert (2 == len(spans))
+    assert ('Irish' == spans[0].text)
+    assert ('Republican Army' == spans[1].text)

@@ -8,8 +8,9 @@ import sys
 import torch
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
+from flair.embeddings import MemoryEmbeddings
 from flair.models.sequence_tagger_model import SequenceTagger
-from flair.data import Sentence, Token, TaggedCorpus
+from flair.data import Sentence, Token, TaggedCorpus, Label
 from flair.training_utils import Metric
 
 
@@ -25,16 +26,22 @@ class SequenceTaggerTrainer:
               mini_batch_size: int = 32,
               max_epochs: int = 100,
               anneal_factor: float = 0.5,
-              patience: int = 2,
+              patience: int = 3,
               train_with_dev: bool = False,
               embeddings_in_memory: bool = True,
               checkpoint: bool = False,
               save_final_model: bool = True,
+              memory: MemoryEmbeddings = None,
               ):
 
         evaluation_method = 'F1'
         if self.model.tag_type in ['pos', 'upos']: evaluation_method = 'accuracy'
-        print(evaluation_method)
+        print('evaluation method: {}'.format(evaluation_method))
+
+        # if memory is not None, set as field and eval batch size to 1
+        self.memory = memory
+        eval_batch_size = 1 if self.memory else mini_batch_size
+        print('evaluation eval_batch_size: {}'.format(eval_batch_size))
 
         os.makedirs(base_path, exist_ok=True)
 
@@ -46,15 +53,11 @@ class SequenceTaggerTrainer:
         anneal_mode = 'min' if train_with_dev else 'max'
         scheduler: ReduceLROnPlateau = ReduceLROnPlateau(optimizer, factor=anneal_factor, patience=patience,
                                                          mode=anneal_mode)
-
         train_data = self.corpus.train
 
         # if training also uses dev data, include in training set
         if train_with_dev:
             train_data.extend(self.corpus.dev)
-
-        # variable to store best model during training
-        best_model = None
 
         # At any point you can hit Ctrl + C to break out of training early.
         try:
@@ -65,6 +68,10 @@ class SequenceTaggerTrainer:
 
                 for group in optimizer.param_groups:
                     learning_rate = group['lr']
+
+                if learning_rate < 0.001:
+                    print('learning rate too small - quitting training!')
+                    break
 
                 if not self.test_mode: random.shuffle(train_data)
 
@@ -84,7 +91,7 @@ class SequenceTaggerTrainer:
                     optimizer.zero_grad()
 
                     # Step 4. Compute the loss, gradients, and update the parameters by calling optimizer.step()
-                    loss = self.model.neg_log_likelihood(batch, self.model.tag_type)
+                    loss = self.model.neg_log_likelihood(batch)
 
                     current_loss += loss.item()
 
@@ -105,47 +112,43 @@ class SequenceTaggerTrainer:
                 # switch to eval mode
                 self.model.eval()
 
+                # if set, make a model checkpoint before evaluation
+                if checkpoint:
+                    self.model.save(base_path + "/checkpoint.pt")
+
                 if not train_with_dev:
                     print('.. evaluating... dev... ')
                     dev_score, dev_fp, dev_result = self.evaluate(self.corpus.dev, base_path,
                                                                   evaluation_method=evaluation_method,
-                                                                  embeddings_in_memory=embeddings_in_memory)
+                                                                  embeddings_in_memory=embeddings_in_memory,
+                                                                  eval_batch_size=eval_batch_size,
+                                                                  )
                 else:
-                    dev_fp = 0
                     dev_result = '_'
 
                 print('test... ')
                 test_score, test_fp, test_result = self.evaluate(self.corpus.test, base_path,
                                                                  evaluation_method=evaluation_method,
-                                                                 embeddings_in_memory=embeddings_in_memory)
+                                                                 embeddings_in_memory=embeddings_in_memory,
+                                                                 eval_batch_size=eval_batch_size,
+                                                                 )
 
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_score)
 
-                summary = '%d' % epoch + '\t({:%H:%M:%S})'.format(datetime.datetime.now()) \
-                          + '\t%f\t%d\t%f\tDEV   %d\t' % (
-                              current_loss, scheduler.num_bad_epochs, learning_rate, dev_fp) + dev_result
-                summary = summary.replace('\n', '')
-                summary += '\tTEST   \t%d\t' % test_fp + test_result
+                summary = '{} ({:%H:%M:%S})\t{}\t{}\t{} DEV {} TEST {}'.format(epoch, datetime.datetime.now(),
+                                                                            current_loss, scheduler.num_bad_epochs,
+                                                                            learning_rate, dev_result, test_result)
 
                 print(summary)
                 with open(loss_txt, "a") as loss_file:
                     loss_file.write('%s\n' % summary)
                     loss_file.close()
 
-                if checkpoint:
-                    self.model.save(base_path + "/checkpoint.pt")
-
-                # if we use dev data, remember best model based on dev evaluation score
-                if not train_with_dev and dev_score == scheduler.best:
-                    best_model = copy.deepcopy(self.model)
-
             # if we do not use dev data for model selection, save final model
             if save_final_model:
                 if train_with_dev:
                     self.model.save(base_path + "/final-model.pt")
-                else:
-                    best_model.save(base_path + "/best-model.pt")
 
         except KeyboardInterrupt:
             print('-' * 89)
@@ -169,28 +172,36 @@ class SequenceTaggerTrainer:
         for batch in batches:
             batch_no += 1
 
-            score, tag_seq = self.model._predict_scores_batch(batch)
-            predicted_id = tag_seq
+            scores, tag_seq = self.model._predict_scores_batch(batch)
+            predicted_ids = tag_seq
             all_tokens = []
             for sentence in batch:
                 all_tokens.extend(sentence.tokens)
 
-            for (token, pred_id) in zip(all_tokens, predicted_id):
+            for (token, score, predicted_id) in zip(all_tokens, scores, predicted_ids):
                 token: Token = token
                 # get the predicted tag
-                predicted_tag = self.model.tag_dictionary.get_item_for_index(pred_id)
-                token.add_tag('predicted', predicted_tag)
+                predicted_tag = self.model.tag_dictionary.get_item_for_index(predicted_id)
+                token.add_tag('predicted', predicted_tag, score)
 
             for sentence in batch:
 
                 sentence: Sentence = sentence
 
                 # add predicted tags
-                for (token, pred_id) in zip(sentence.tokens, tag_seq):
+                for token in sentence.tokens:
+
+                    predicted_tag: Label = token.get_tag('predicted')
+
                     # append both to file for evaluation
                     eval_line = '{} {} {}\n'.format(token.text,
-                                                    token.get_tag(self.model.tag_type),
-                                                    token.get_tag('predicted'))
+                                                    token.get_tag(self.model.tag_type).name,
+                                                    predicted_tag.name)
+
+                    # self-supervised learning from high-confidence predicted labels
+                    if self.memory is not None and predicted_tag.confidence > 0.95:
+                        self.memory.update_embedding(token.text, predicted_tag.name)
+
                     lines.append(eval_line)
                 lines.append('\n')
 

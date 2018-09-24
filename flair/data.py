@@ -101,6 +101,7 @@ class Label:
     def __init__(self, name: str, confidence: float = 1.0):
         self.name = name
         self.confidence = confidence
+        super().__init__()
 
     @property
     def name(self):
@@ -108,7 +109,7 @@ class Label:
 
     @name.setter
     def name(self, name):
-        if not name:
+        if not name and name != '':
             raise ValueError('Incorrect label name provided. Label name needs to be set.')
         else:
             self._name = name
@@ -124,8 +125,8 @@ class Label:
         else:
             self._confidence = 1.0
 
-    def __str__(self):
-        return "{} ({})".format(self._name, self._confidence)
+    # def __str__(self):
+    #     return "{} ({})".format(self._name, self._confidence)
 
     def __repr__(self):
         return "{} ({})".format(self._name, self._confidence)
@@ -150,23 +151,24 @@ class Token:
 
         self.sentence: Sentence = None
         self._embeddings: Dict = {}
-        self.tags: Dict[str, str] = {}
+        self.tags: Dict[str, Label] = {}
 
-    def add_tag(self, tag_type: str, tag_value: str):
-        self.tags[tag_type] = tag_value
+    def add_tag(self, tag_type: str, tag_value: str, confidence=1.0):
+        tag = Label(tag_value, confidence)
+        self.tags[tag_type] = tag
 
-    def get_tag(self, tag_type: str) -> str:
+    def get_tag(self, tag_type: str) -> Label:
         if tag_type in self.tags: return self.tags[tag_type]
-        return ''
+        return Label('')
 
     def get_head(self):
         return self.sentence.get_token(self.head_id)
 
     def __str__(self) -> str:
-        return 'Token: %d %s' % (self.idx, self.text)
+        return 'Token: %d %s' % (self.idx, self.text) if self.idx is not None else 'Token: %s' % (self.text)
 
     def __repr__(self) -> str:
-        return 'Token: %d %s' % (self.idx, self.text)
+        return 'Token: %d %s' % (self.idx, self.text) if self.idx is not None else 'Token: %s' % (self.text)
 
     def set_embedding(self, name: str, vector: torch.autograd.Variable):
         self._embeddings[name] = vector.cpu()
@@ -174,11 +176,9 @@ class Token:
     def clear_embeddings(self):
         self._embeddings: Dict = {}
 
-    def get_embedding(self) -> torch.autograd.Variable:
+    def get_embedding(self) -> torch.FloatTensor:
 
-        embeddings = []
-        for embed in sorted(self._embeddings.keys()):
-            embeddings.append(self._embeddings[embed])
+        embeddings = [self._embeddings[embed] for embed in sorted(self._embeddings.keys())]
 
         if embeddings:
             return torch.cat(embeddings, dim=0)
@@ -291,29 +291,30 @@ class Sentence:
 
         tags = defaultdict(lambda: 0.0)
 
-        previous_tag = ''
+        previous_tag_value: str = 'O'
         for token in self:
 
-            tag = token.get_tag(tag_type)
+            tag: Label = token.get_tag(tag_type)
+            tag_value = tag.name
 
             # non-set tags are OUT tags
-            if len(tag) < 2: tag = 'O-'
+            if len(tag_value) < 2: tag_value = 'O-'
 
             # anything that is not a BIOES tag is a SINGLE tag
-            if tag[0:2] not in ['B-', 'I-', 'O-', 'E-', 'S-']:
-                tag = 'S-' + tag
+            if tag_value[0:2] not in ['B-', 'I-', 'O-', 'E-', 'S-']:
+                tag_value = 'S-' + tag_value
 
             # anything that is not OUT is IN
             in_span = False
-            if tag[0:2] not in ['O-']:
+            if tag_value[0:2] not in ['O-']:
                 in_span = True
 
             # single and begin tags start a new span
             starts_new_span = False
-            if tag[0:2] in ['B-', 'S-']:
+            if tag_value[0:2] in ['B-', 'S-']:
                 starts_new_span = True
 
-            if previous_tag[0:2] in ['S-'] and previous_tag[2:] != tag[2:] and in_span:
+            if previous_tag_value[0:2] in ['S-'] and previous_tag_value[2:] != tag_value[2:] and in_span:
                 starts_new_span = True
 
             if (starts_new_span or not in_span) and len(current_span) > 0:
@@ -324,13 +325,13 @@ class Sentence:
             if in_span:
                 current_span.append(token)
                 weight = 1.1 if starts_new_span else 1.0
-                tags[tag[2:]] += weight
+                tags[tag_value[2:]] += weight
 
             # remember previous tag
-            previous_tag = tag
+            previous_tag_value = tag_value
 
         if len(current_span) > 0:
-           spans.append(Span(current_span, sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]))
+            spans.append(Span(current_span, sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]))
 
         return spans
 
@@ -382,13 +383,13 @@ class Sentence:
         for token in self.tokens:
             list.append(token.text)
 
-            tags = []
+            tags: List[str] = []
             for tag_type in token.tags.keys():
 
                 if main_tag is not None and main_tag != tag_type: continue
 
-                if token.get_tag(tag_type) == '' or token.get_tag(tag_type) == 'O': continue
-                tags.append(token.get_tag(tag_type))
+                if token.get_tag(tag_type).name == '' or token.get_tag(tag_type).name == 'O': continue
+                tags.append(token.get_tag(tag_type).name)
             all_tags = '<' + '/'.join(tags) + '>'
             if all_tags != '<>':
                 list.append(all_tags)
@@ -406,7 +407,7 @@ class Sentence:
 
     def convert_tag_scheme(self, tag_type: str = 'ner', target_scheme: str = 'iob'):
 
-        tags: List[str] = []
+        tags: List[Label] = []
         for token in self.tokens:
             token: Token = token
             tags.append(token.get_tag(tag_type))
@@ -514,7 +515,7 @@ class TaggedCorpus:
         for sentence in self.get_all_sentences():
             for token in sentence.tokens:
                 token: Token = token
-                tag_dictionary.add_item(token.get_tag(tag_type))
+                tag_dictionary.add_item(token.get_tag(tag_type).name)
         tag_dictionary.add_item('<START>')
         tag_dictionary.add_item('<STOP>')
         return tag_dictionary
@@ -632,19 +633,20 @@ def iob2(tags):
     Tags in IOB1 format are converted to IOB2.
     """
     for i, tag in enumerate(tags):
-        if tag == 'O':
+        # print(tag)
+        if tag.name == 'O':
             continue
-        split = tag.split('-')
+        split = tag.name.split('-')
         if len(split) != 2 or split[0] not in ['I', 'B']:
             return False
         if split[0] == 'B':
             continue
-        elif i == 0 or tags[i - 1] == 'O':  # conversion IOB1 to IOB2
-            tags[i] = 'B' + tag[1:]
-        elif tags[i - 1][1:] == tag[1:]:
+        elif i == 0 or tags[i - 1].name == 'O':  # conversion IOB1 to IOB2
+            tags[i].name = 'B' + tag.name[1:]
+        elif tags[i - 1].name[1:] == tag.name[1:]:
             continue
         else:  # conversion IOB1 to IOB2
-            tags[i] = 'B' + tag[1:]
+            tags[i].name = 'B' + tag.name[1:]
     return True
 
 
@@ -654,20 +656,20 @@ def iob_iobes(tags):
     """
     new_tags = []
     for i, tag in enumerate(tags):
-        if tag == 'O':
-            new_tags.append(tag)
-        elif tag.split('-')[0] == 'B':
+        if tag.name == 'O':
+            new_tags.append(tag.name)
+        elif tag.name.split('-')[0] == 'B':
             if i + 1 != len(tags) and \
-                    tags[i + 1].split('-')[0] == 'I':
-                new_tags.append(tag)
+                    tags[i + 1].name.split('-')[0] == 'I':
+                new_tags.append(tag.name)
             else:
-                new_tags.append(tag.replace('B-', 'S-'))
-        elif tag.split('-')[0] == 'I':
+                new_tags.append(tag.name.replace('B-', 'S-'))
+        elif tag.name.split('-')[0] == 'I':
             if i + 1 < len(tags) and \
-                    tags[i + 1].split('-')[0] == 'I':
-                new_tags.append(tag)
+                    tags[i + 1].name.split('-')[0] == 'I':
+                new_tags.append(tag.name)
             else:
-                new_tags.append(tag.replace('I-', 'E-'))
+                new_tags.append(tag.name.replace('I-', 'E-'))
         else:
             raise Exception('Invalid IOB format!')
     return new_tags
