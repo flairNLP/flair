@@ -1,9 +1,13 @@
 import random
+import logging
 import os
 from collections import defaultdict
 from typing import List
 from flair.data import Dictionary, Sentence
 from functools import reduce
+
+
+log = logging.getLogger(__name__)
 
 
 class Metric(object):
@@ -48,16 +52,27 @@ class Metric(object):
             return (self._tp + self._tn) / (self._tp + self._tn + self._fp + self._fn)
         return 0.0
 
-    def to_csv(self):
-        return '{},{},{},{},{},{},{},{}'.format(
+    def to_tsv(self):
+        return '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
             self._tp, self._tn, self._fp, self._fn, self.precision(), self.recall(), self.f_score(), self.accuracy())
+
+    def print(self):
+        log.info(self)
+
+    @staticmethod
+    def tsv_header(prefix=None):
+        if prefix:
+            return '{0}_TP\t{0}_TN\t{0}_FP\t{0}_FN\t{0}_PRECISION\t{0}_RECALL\t{0}_F-SCORE\t{0}_ACCURACY'.format(prefix)
+
+        return 'TP\tTN\tFP\tFN\tPRECISION\tRECALL\tF-SCORE\tACCURACY'
+
+    @staticmethod
+    def to_empty_tsv():
+        return '_\t_\t_\t_\t_\t_\t_\t_'
 
     def __str__(self):
         return '{0:<20}\tprecision: {1:.4f} - recall: {2:.4f} - accuracy: {3:.4f} - f1-score: {4:.4f}'.format(
             self.name, self.precision(), self.recall(), self.accuracy(), self.f_score())
-
-    def print(self):
-        print(self)
 
 
 class WeightExtractor(object):

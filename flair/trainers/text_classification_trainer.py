@@ -9,7 +9,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from flair.data import Sentence, TaggedCorpus, Dictionary
 from flair.models.text_classification_model import TextClassifier
 from flair.training_utils import convert_labels_to_one_hot, calculate_micro_avg_metric, init_output_file, \
-    clear_embeddings, calculate_class_metrics, WeightExtractor
+    clear_embeddings, calculate_class_metrics, WeightExtractor, Metric
 
 MICRO_AVG_METRIC = 'MICRO_AVG'
 
@@ -52,9 +52,10 @@ class TextClassifierTrainer:
         or not
         """
 
-        loss_txt = init_output_file(base_path, 'loss.txt')
+        loss_txt = init_output_file(base_path, 'loss.tsv')
         with open(loss_txt, 'a') as f:
-            f.write('EPOCH\tTIMESTAMP\tTRAIN_LOSS\tTRAIN_METRICS\tDEV_LOSS\tDEV_METRICS\tTEST_LOSS\tTEST_METRICS\n')
+            f.write('EPOCH\tTIMESTAMP\tTRAIN_LOSS\t{}\tDEV_LOSS\t{}\tTEST_LOSS\t{}\n'.format(
+                Metric.tsv_header('TRAIN'), Metric.tsv_header('DEV'), Metric.tsv_header('TEST')))
 
         weight_extractor = WeightExtractor(base_path)
 
@@ -132,10 +133,10 @@ class TextClassifierTrainer:
                         'DEV', self.corpus.dev, embeddings_in_memory, eval_mini_batch_size)
 
                 with open(loss_txt, 'a') as f:
-                    train_metric_str = train_metric.to_csv() if train_metric is not None else '_'
-                    dev_metric_str = dev_metric.to_csv() if dev_metric is not None else '_'
+                    train_metric_str = train_metric.to_tsv() if train_metric is not None else Metric.to_empty_tsv()
+                    dev_metric_str = dev_metric.to_tsv() if dev_metric is not None else Metric.to_empty_tsv()
                     f.write('{}\t{:%H:%M:%S}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
-                        epoch, datetime.datetime.now(), train_loss, train_metric_str, dev_loss, dev_metric_str, '_', '_'))
+                        epoch, datetime.datetime.now(), train_loss, train_metric_str, dev_loss, dev_metric_str, '_', Metric.to_empty_tsv()))
 
                 self.model.train()
 

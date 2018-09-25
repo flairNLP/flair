@@ -35,9 +35,10 @@ class SequenceTaggerTrainer:
         if self.model.tag_type in ['pos', 'upos']: evaluation_method = 'accuracy'
         log.info(evaluation_method)
 
-        loss_txt = init_output_file(base_path, 'loss.txt')
+        loss_txt = init_output_file(base_path, 'loss.tsv')
         with open(loss_txt, 'a') as f:
-            f.write('EPOCH\tTIMESTAMP\tTRAIN_LOSS\tTRAIN_METRICS\tDEV_LOSS\tDEV_METRICS\tTEST_LOSS\tTEST_METRICS\n')
+            f.write('EPOCH\tTIMESTAMP\tTRAIN_LOSS\t{}\tDEV_LOSS\t{}\tTEST_LOSS\t{}\n'.format(
+                Metric.tsv_header('TRAIN'), Metric.tsv_header('DEV'), Metric.tsv_header('TEST')))
 
         weight_extractor = WeightExtractor(base_path)
 
@@ -103,6 +104,7 @@ class SequenceTaggerTrainer:
 
                 log.info('-' * 100)
 
+                dev_score = dev_metric = None
                 if not train_with_dev:
                     dev_score, dev_metric = self.evaluate(self.corpus.dev, base_path,
                                                                   evaluation_method=evaluation_method,
@@ -126,9 +128,9 @@ class SequenceTaggerTrainer:
                     'TEST', test_metric.f_score(), test_metric.accuracy(), test_metric._tp, test_metric._fp, test_metric._fn, test_metric._tn))
 
                 with open(loss_txt, 'a') as f:
-                    dev_metric_str = dev_metric.to_csv() if dev_metric is not None else '_'
+                    dev_metric_str = dev_metric.to_tsv() if dev_metric is not None else Metric.to_empty_tsv()
                     f.write('{}\t{:%H:%M:%S}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
-                        epoch, datetime.datetime.now(), '_', '_', '_', dev_metric_str, '_', test_metric.to_csv()))
+                        epoch, datetime.datetime.now(), '_', Metric.to_empty_tsv(), '_', dev_metric_str, '_', test_metric.to_tsv()))
 
                 # save if model is current best and we use dev data for model selection
                 if save_model and not train_with_dev and dev_score == scheduler.best:
