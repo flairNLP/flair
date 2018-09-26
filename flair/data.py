@@ -195,9 +195,10 @@ class Span:
     This class represents one textual span consisting of Tokens. A span may have a tag.
     """
 
-    def __init__(self, tokens: List[Token], tag: str = None):
+    def __init__(self, tokens: List[Token], tag: str = None, score=1.):
         self.tokens = tokens
         self.tag = tag
+        self.score = score
 
     @property
     def text(self) -> str:
@@ -283,7 +284,7 @@ class Sentence:
         if token.idx is None:
             token.idx = len(self.tokens)
 
-    def get_spans(self, tag_type: str) -> List[Span]:
+    def get_spans(self, tag_type: str, min_score=-1) -> List[Span]:
 
         spans: List[Span] = []
 
@@ -318,7 +319,14 @@ class Sentence:
                 starts_new_span = True
 
             if (starts_new_span or not in_span) and len(current_span) > 0:
-                spans.append(Span(current_span, sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]))
+                scores = [t.get_tag(tag_type).confidence for t in current_span]
+                span_score = sum(scores) / len(scores)
+                if span_score > min_score:
+                    spans.append(Span(
+                        current_span,
+                        tag=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
+                        score=span_score)
+                    )
                 current_span = []
                 tags = defaultdict(lambda: 0.0)
 
@@ -331,7 +339,14 @@ class Sentence:
             previous_tag_value = tag_value
 
         if len(current_span) > 0:
-            spans.append(Span(current_span, sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0]))
+            scores = [t.get_tag(tag_type).confidence for t in current_span]
+            span_score = sum(scores) / len(scores)
+            if span_score > min_score:
+                spans.append(Span(
+                    current_span,
+                    tag=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
+                    score=span_score)
+                )
 
         return spans
 

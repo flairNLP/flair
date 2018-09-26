@@ -1,4 +1,3 @@
-import copy
 from typing import List
 
 import datetime
@@ -8,7 +7,6 @@ import sys
 import torch
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
-from flair.embeddings import MemoryEmbeddings
 from flair.models.sequence_tagger_model import SequenceTagger
 from flair.data import Sentence, Token, TaggedCorpus, Label
 from flair.training_utils import Metric
@@ -31,17 +29,10 @@ class SequenceTaggerTrainer:
               embeddings_in_memory: bool = True,
               checkpoint: bool = False,
               save_final_model: bool = True,
-              memory: MemoryEmbeddings = None,
               ):
 
-        evaluation_method = 'F1'
-        if self.model.tag_type in ['pos', 'upos']: evaluation_method = 'accuracy'
+        evaluation_method = 'F1' if self.model.tag_type not in ['pos', 'upos'] else 'accuracy'
         print('evaluation method: {}'.format(evaluation_method))
-
-        # if memory is not None, set as field and eval batch size to 1
-        self.memory = memory
-        eval_batch_size = 1 if self.memory else mini_batch_size
-        print('evaluation eval_batch_size: {}'.format(eval_batch_size))
 
         os.makedirs(base_path, exist_ok=True)
 
@@ -75,15 +66,15 @@ class SequenceTaggerTrainer:
 
                 if not self.test_mode: random.shuffle(train_data)
 
+                # make batches
                 batches = [train_data[x:x + mini_batch_size] for x in range(0, len(train_data), mini_batch_size)]
 
+                # switch to train mode
                 self.model.train()
 
-                batch_no: int = 0
-
-                for batch in batches:
+                for batch_no, batch in enumerate(batches):
+                    # each batch is a list of sentences
                     batch: List[Sentence] = batch
-                    batch_no += 1
 
                     if batch_no % 100 == 0:
                         print("%d of %d (%f)" % (batch_no, len(batches), float(batch_no / len(batches))))
@@ -121,7 +112,7 @@ class SequenceTaggerTrainer:
                     dev_score, dev_fp, dev_result = self.evaluate(self.corpus.dev, base_path,
                                                                   evaluation_method=evaluation_method,
                                                                   embeddings_in_memory=embeddings_in_memory,
-                                                                  eval_batch_size=eval_batch_size,
+                                                                  eval_batch_size=mini_batch_size,
                                                                   )
                 else:
                     dev_result = '_'
@@ -130,15 +121,15 @@ class SequenceTaggerTrainer:
                 test_score, test_fp, test_result = self.evaluate(self.corpus.test, base_path,
                                                                  evaluation_method=evaluation_method,
                                                                  embeddings_in_memory=embeddings_in_memory,
-                                                                 eval_batch_size=eval_batch_size,
+                                                                 eval_batch_size=mini_batch_size,
                                                                  )
 
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_score)
 
                 summary = '{} ({:%H:%M:%S})\t{}\t{}\t{} DEV {} TEST {}'.format(epoch, datetime.datetime.now(),
-                                                                            current_loss, scheduler.num_bad_epochs,
-                                                                            learning_rate, dev_result, test_result)
+                                                                               current_loss, scheduler.num_bad_epochs,
+                                                                               learning_rate, dev_result, test_result)
 
                 print(summary)
                 with open(loss_txt, "a") as loss_file:
@@ -182,25 +173,18 @@ class SequenceTaggerTrainer:
                 token: Token = token
                 # get the predicted tag
                 predicted_tag = self.model.tag_dictionary.get_item_for_index(predicted_id)
-                token.add_tag('predicted', predicted_tag, score)
+                token.add_tag('predicted', predicted_tag.name, score)
 
             for sentence in batch:
 
-                sentence: Sentence = sentence
-
                 # add predicted tags
                 for token in sentence.tokens:
-
                     predicted_tag: Label = token.get_tag('predicted')
 
                     # append both to file for evaluation
                     eval_line = '{} {} {}\n'.format(token.text,
                                                     token.get_tag(self.model.tag_type).name,
                                                     predicted_tag.name)
-
-                    # self-supervised learning from high-confidence predicted labels
-                    if self.memory is not None and predicted_tag.confidence > 0.95:
-                        self.memory.update_embedding(token.text, predicted_tag.name)
 
                     lines.append(eval_line)
                 lines.append('\n')

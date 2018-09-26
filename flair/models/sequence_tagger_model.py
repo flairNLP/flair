@@ -464,11 +464,6 @@ class SequenceTagger(torch.nn.Module):
                     tag_seq.append(prediction)
                     confidences.append(softmax[prediction].item())
 
-                # softmax = F.softmax(feats[:length], dim=0)
-                # confidences, tag_seq = torch.max(F.normalize(feats[:length], p=2, dim=1), 1)
-
-                # tag_seq = list(tag_seq.cpu().data)
-
             all_tags_seqs.extend(tag_seq)
             all_confidences.extend(confidences)
 

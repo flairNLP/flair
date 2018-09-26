@@ -425,3 +425,27 @@ def test_spans():
     assert (2 == len(spans))
     assert ('Irish' == spans[0].text)
     assert ('Republican Army' == spans[1].text)
+
+    sentence = Sentence('Zalando Research is located in Berlin .')
+
+    # tags with confidence
+    sentence[0].add_tag('ner', 'B-ORG', 1.0)
+    sentence[1].add_tag('ner', 'E-ORG', 0.9)
+    sentence[5].add_tag('ner', 'S-LOC', 0.5)
+
+    spans: List[Span] = sentence.get_spans('ner', min_score=0.)
+
+    assert (2 == len(spans))
+    assert ('Zalando Research' == spans[0].text)
+    assert ('ORG' == spans[0].tag)
+    assert (0.95 == spans[0].score)
+
+    assert ('Berlin' == spans[1].text)
+    assert ('LOC' == spans[1].tag)
+    assert (0.5 == spans[1].score)
+
+    spans: List[Span] = sentence.get_spans('ner', min_score=0.6)
+    assert (1 == len(spans))
+
+    spans: List[Span] = sentence.get_spans('ner', min_score=0.99)
+    assert (0 == len(spans))
