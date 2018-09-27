@@ -174,13 +174,13 @@ class TextClassifierTrainer:
             log.info('-' * 100)
 
         except KeyboardInterrupt:
-            log.info('-' * 89)
-            log.info('Exiting from training early')
-            log.info('saving model')
+            log.info('-' * 100)
+            log.info('Exiting from training early.')
+            log.info('Saving model ...')
             with open(base_path + "/final-model.pt", 'wb') as model_save_file:
                 torch.save(self.model, model_save_file, pickle_protocol=4)
                 model_save_file.close()
-            log.info('done')
+            log.info('Done.')
 
     def _calculate_evaluation_results_for(self, dataset_name, dataset, embeddings_in_memory, mini_batch_size):
         metrics, loss = self.evaluate(dataset, mini_batch_size=mini_batch_size,

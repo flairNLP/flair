@@ -140,11 +140,11 @@ class SequenceTaggerTrainer:
             if save_model and train_with_dev: self.model.save(base_path + "/final-model.pt")
 
         except KeyboardInterrupt:
-            log.info('-' * 89)
-            log.info('Exiting from training early')
-            log.info('saving model')
+            log.info('-' * 100)
+            log.info('Exiting from training early.')
+            log.info('Saving model ...')
             self.model.save(base_path + "/final-model.pt")
-            log.info('done')
+            log.info('Done.')
 
     def evaluate(self, evaluation: List[Sentence], out_path=None, evaluation_method: str = 'F1',
                  embeddings_in_memory: bool = True):
