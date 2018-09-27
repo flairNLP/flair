@@ -172,8 +172,8 @@ class SequenceTaggerTrainer:
             for (token, score, predicted_id) in zip(all_tokens, scores, predicted_ids):
                 token: Token = token
                 # get the predicted tag
-                predicted_tag = self.model.tag_dictionary.get_item_for_index(predicted_id)
-                token.add_tag('predicted', predicted_tag.value, score)
+                predicted_value = self.model.tag_dictionary.get_item_for_index(predicted_id)
+                token.add_tag('predicted', predicted_value, score)
 
             for sentence in batch:
 
