@@ -1,9 +1,13 @@
-from typing import List, Dict
-
+import random
+import logging
 import os
-import numpy as np
-
+from collections import defaultdict
+from typing import List
 from flair.data import Dictionary, Sentence
+from functools import reduce
+
+
+log = logging.getLogger(__name__)
 
 
 class Metric(object):
@@ -48,12 +52,73 @@ class Metric(object):
             return (self._tp + self._tn) / (self._tp + self._tn + self._fp + self._fn)
         return 0.0
 
+    def to_tsv(self):
+        return '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
+            self._tp, self._tn, self._fp, self._fn, self.precision(), self.recall(), self.f_score(), self.accuracy())
+
+    def print(self):
+        log.info(self)
+
+    @staticmethod
+    def tsv_header(prefix=None):
+        if prefix:
+            return '{0}_TP\t{0}_TN\t{0}_FP\t{0}_FN\t{0}_PRECISION\t{0}_RECALL\t{0}_F-SCORE\t{0}_ACCURACY'.format(prefix)
+
+        return 'TP\tTN\tFP\tFN\tPRECISION\tRECALL\tF-SCORE\tACCURACY'
+
+    @staticmethod
+    def to_empty_tsv():
+        return '_\t_\t_\t_\t_\t_\t_\t_'
+
     def __str__(self):
         return '{0:<20}\tprecision: {1:.4f} - recall: {2:.4f} - accuracy: {3:.4f} - f1-score: {4:.4f}'.format(
             self.name, self.precision(), self.recall(), self.accuracy(), self.f_score())
 
-    def print(self):
-        print(self)
+
+class WeightExtractor(object):
+
+    def __init__(self, directory: str, number_of_weights: int = 10):
+        self.weights_file = init_output_file(directory, 'weights.txt')
+        self.weights_dict = defaultdict(lambda: defaultdict(lambda: list()))
+        self.number_of_weights = number_of_weights
+
+    def extract_weights(self, state_dict, iteration):
+        for key in state_dict.keys():
+
+            vec = state_dict[key]
+            weights_to_watch = min(self.number_of_weights, reduce(lambda x, y: x*y, list(vec.size())))
+
+            if key not in self.weights_dict:
+                self._init_weights_index(key, state_dict, weights_to_watch)
+
+            for i in range(weights_to_watch):
+                vec = state_dict[key]
+                for index in self.weights_dict[key][i]:
+                    vec = vec[index]
+
+                value = vec.item()
+
+                with open(self.weights_file, 'a') as f:
+                    f.write('{}\t{}\t{}\t{}\n'.format(iteration, key, i, float(value)))
+
+    def _init_weights_index(self, key, state_dict, weights_to_watch):
+        indices = {}
+
+        i = 0
+        while len(indices) < weights_to_watch:
+            vec = state_dict[key]
+            cur_indices = []
+
+            for x in range(len(vec.size())):
+                index = random.randint(0, len(vec) - 1)
+                vec = vec[index]
+                cur_indices.append(index)
+
+            if cur_indices not in list(indices.values()):
+                indices[i] = cur_indices
+                i += 1
+
+        self.weights_dict[key] = indices
 
 
 def clear_embeddings(sentences: List[Sentence]):
