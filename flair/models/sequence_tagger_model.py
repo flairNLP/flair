@@ -287,7 +287,6 @@ class SequenceTagger(torch.nn.Module):
     def viterbi_decode(self, feats):
         backpointers = []
         backscores = []
-        backscores_2 = []
 
         init_vvars = torch.Tensor(1, self.tagset_size).fill_(-10000.)
         init_vvars[0][self.tag_dictionary.get_idx_for_item(START_TAG)] = 0
@@ -300,7 +299,6 @@ class SequenceTagger(torch.nn.Module):
             next_tag_var = forward_var.view(1, -1).expand(self.tagset_size, self.tagset_size) + self.transitions
             _, bptrs_t = torch.max(next_tag_var, dim=1)
             bptrs_t = bptrs_t.squeeze().data.cpu().numpy()
-            backscores_2.append(next_tag_var)
             next_tag_var = next_tag_var.data.cpu().numpy()
             viterbivars_t = next_tag_var[range(len(bptrs_t)), bptrs_t]
             viterbivars_t = autograd.Variable(torch.FloatTensor(viterbivars_t))
