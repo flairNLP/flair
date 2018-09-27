@@ -1,9 +1,12 @@
 from typing import List, Dict
 import re
 import os
+import logging
 from enum import Enum
 
-from flair.data import Sentence, TaggedCorpus, Token, Label
+from flair.data import Sentence, TaggedCorpus, Token
+
+log = logging.getLogger(__name__)
 
 
 class NLPTask(Enum):
@@ -43,7 +46,7 @@ class NLPTaskDataFetcher:
         """
 
         data_folder = os.path.join('resources', 'tasks', str(task.value).lower())
-        print("reading data from {}".format(data_folder))
+        log.info("Reading data from {}".format(data_folder))
 
         # the CoNLL 2000 task on chunking has three columns: text, pos and np (chunk)
         if task == NLPTask.CONLL_2000:

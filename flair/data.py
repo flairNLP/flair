@@ -1,6 +1,7 @@
 from typing import List, Dict, Union
 
 import torch
+import logging
 
 from collections import Counter
 from collections import defaultdict
@@ -8,6 +9,9 @@ from collections import defaultdict
 from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
+
+
+log = logging.getLogger(__name__)
 
 
 class Dictionary:
@@ -617,14 +621,23 @@ class TaggedCorpus:
         classes_to_count = TaggedCorpus._get_classes_to_count(sentences)
         tokens_per_sentence = TaggedCorpus._get_tokens_per_sentence(sentences)
 
-        print(name)
-        print("total size: " + str(len(sentences)))
+        size_dict = {}
         for l, c in classes_to_count.items():
-            print("size of class {}: {}".format(l, c))
-        print("total # of tokens: " + str(sum(tokens_per_sentence)))
-        print("min # of tokens: " + str(min(tokens_per_sentence)))
-        print("max # of tokens: " + str(max(tokens_per_sentence)))
-        print("avg # of tokens: " + str(sum(tokens_per_sentence) / len(sentences)))
+            size_dict = { l: c }
+        size_dict['total'] = len(sentences)
+
+        stats = {
+            'dataset': name,
+            'number_of_documents': size_dict,
+            'number_of_tokens': {
+                'total': sum(tokens_per_sentence),
+                'min': min(tokens_per_sentence),
+                'max': max(tokens_per_sentence),
+                'avg': sum(tokens_per_sentence) / len(sentences)
+            }
+        }
+
+        log.info(stats)
 
     @staticmethod
     def _get_tokens_per_sentence(sentences):
