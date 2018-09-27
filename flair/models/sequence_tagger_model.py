@@ -194,7 +194,7 @@ class SequenceTagger(torch.nn.Module):
                                                for token in sentence], 0)
 
             # get the tags in this sentence
-            tag_idx: List[int] = [self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type).name)
+            tag_idx: List[int] = [self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value)
                                   for token in sentence]
             # add tags as tensor
             if torch.cuda.is_available():

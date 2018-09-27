@@ -265,7 +265,7 @@ class MemoryEmbeddings(TokenEmbeddings):
 
                 # add label if in training mode
                 if self.training:
-                    self.update_embedding(token.text, token.get_tag(self.tag_type).name)
+                    self.update_embedding(token.text, token.get_tag(self.tag_type).value)
 
         return sentences
 

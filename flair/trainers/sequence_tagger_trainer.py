@@ -173,7 +173,7 @@ class SequenceTaggerTrainer:
                 token: Token = token
                 # get the predicted tag
                 predicted_tag = self.model.tag_dictionary.get_item_for_index(predicted_id)
-                token.add_tag('predicted', predicted_tag.name, score)
+                token.add_tag('predicted', predicted_tag.value, score)
 
             for sentence in batch:
 
@@ -183,8 +183,8 @@ class SequenceTaggerTrainer:
 
                     # append both to file for evaluation
                     eval_line = '{} {} {}\n'.format(token.text,
-                                                    token.get_tag(self.model.tag_type).name,
-                                                    predicted_tag.name)
+                                                    token.get_tag(self.model.tag_type).value,
+                                                    predicted_tag.value)
 
                     lines.append(eval_line)
                 lines.append('\n')

@@ -94,42 +94,42 @@ class Dictionary:
 
 class Label:
     """
-    This class represents a label of a sentence. Each label has a name and optional a confidence value. The confidence
-    value needs to be between 0.0 and 1.0. Default value for the confidence is 1.0.
+    This class represents a label of a sentence. Each label has a value and optionally a confidence score. The
+    score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
     """
 
-    def __init__(self, name: str, confidence: float = 1.0):
-        self.name = name
-        self.confidence = confidence
+    def __init__(self, value: str, score: float = 1.0):
+        self.value = value
+        self.score = score
         super().__init__()
 
     @property
-    def name(self):
-        return self._name
+    def value(self):
+        return self._value
 
-    @name.setter
-    def name(self, name):
-        if not name and name != '':
-            raise ValueError('Incorrect label name provided. Label name needs to be set.')
+    @value.setter
+    def value(self, value):
+        if not value and value != '':
+            raise ValueError('Incorrect label value provided. Label value needs to be set.')
         else:
-            self._name = name
+            self._value = value
 
     @property
-    def confidence(self):
-        return self._confidence
+    def score(self):
+        return self._score
 
-    @confidence.setter
-    def confidence(self, confidence):
-        if 0.0 <= confidence <= 1.0:
-            self._confidence = confidence
+    @score.setter
+    def score(self, score):
+        if 0.0 <= score <= 1.0:
+            self._score = score
         else:
-            self._confidence = 1.0
+            self._score = 1.0
 
-    # def __str__(self):
-    #     return "{} ({})".format(self._name, self._confidence)
+    def __str__(self):
+        return "{} ({})".format(self._value, self._score)
 
     def __repr__(self):
-        return "{} ({})".format(self._name, self._confidence)
+        return "{} ({})".format(self._value, self._score)
 
 
 class Token:
@@ -296,7 +296,7 @@ class Sentence:
         for token in self:
 
             tag: Label = token.get_tag(tag_type)
-            tag_value = tag.name
+            tag_value = tag.value
 
             # non-set tags are OUT tags
             if len(tag_value) < 2: tag_value = 'O-'
@@ -319,7 +319,7 @@ class Sentence:
                 starts_new_span = True
 
             if (starts_new_span or not in_span) and len(current_span) > 0:
-                scores = [t.get_tag(tag_type).confidence for t in current_span]
+                scores = [t.get_tag(tag_type).score for t in current_span]
                 span_score = sum(scores) / len(scores)
                 if span_score > min_score:
                     spans.append(Span(
@@ -339,7 +339,7 @@ class Sentence:
             previous_tag_value = tag_value
 
         if len(current_span) > 0:
-            scores = [t.get_tag(tag_type).confidence for t in current_span]
+            scores = [t.get_tag(tag_type).score for t in current_span]
             span_score = sum(scores) / len(scores)
             if span_score > min_score:
                 spans.append(Span(
@@ -362,7 +362,7 @@ class Sentence:
             self.add_label(label)
 
     def get_label_names(self) -> List[str]:
-        return [label.name for label in self.labels]
+        return [label.value for label in self.labels]
 
     @property
     def embedding(self):
@@ -403,8 +403,8 @@ class Sentence:
 
                 if main_tag is not None and main_tag != tag_type: continue
 
-                if token.get_tag(tag_type).name == '' or token.get_tag(tag_type).name == 'O': continue
-                tags.append(token.get_tag(tag_type).name)
+                if token.get_tag(tag_type).value == '' or token.get_tag(tag_type).value == 'O': continue
+                tags.append(token.get_tag(tag_type).value)
             all_tags = '<' + '/'.join(tags) + '>'
             if all_tags != '<>':
                 list.append(all_tags)
@@ -530,7 +530,7 @@ class TaggedCorpus:
         for sentence in self.get_all_sentences():
             for token in sentence.tokens:
                 token: Token = token
-                tag_dictionary.add_item(token.get_tag(tag_type).name)
+                tag_dictionary.add_item(token.get_tag(tag_type).value)
         tag_dictionary.add_item('<START>')
         tag_dictionary.add_item('<STOP>')
         return tag_dictionary
@@ -580,7 +580,7 @@ class TaggedCorpus:
         return tokens
 
     def _get_all_label_names(self) -> List[str]:
-        return [label.name for sent in self.train for label in sent.labels]
+        return [label.value for sent in self.train for label in sent.labels]
 
     def _get_all_tokens(self) -> List[str]:
         tokens = list(map((lambda s: s.tokens), self.train))
@@ -635,7 +635,7 @@ class TaggedCorpus:
         classes_to_count = defaultdict(lambda: 0)
         for sent in sentences:
             for label in sent.labels:
-                classes_to_count[label.name] += 1
+                classes_to_count[label.value] += 1
         return classes_to_count
 
     def __str__(self) -> str:
@@ -649,19 +649,19 @@ def iob2(tags):
     """
     for i, tag in enumerate(tags):
         # print(tag)
-        if tag.name == 'O':
+        if tag.value == 'O':
             continue
-        split = tag.name.split('-')
+        split = tag.value.split('-')
         if len(split) != 2 or split[0] not in ['I', 'B']:
             return False
         if split[0] == 'B':
             continue
-        elif i == 0 or tags[i - 1].name == 'O':  # conversion IOB1 to IOB2
-            tags[i].name = 'B' + tag.name[1:]
-        elif tags[i - 1].name[1:] == tag.name[1:]:
+        elif i == 0 or tags[i - 1].value == 'O':  # conversion IOB1 to IOB2
+            tags[i].value = 'B' + tag.value[1:]
+        elif tags[i - 1].value[1:] == tag.value[1:]:
             continue
         else:  # conversion IOB1 to IOB2
-            tags[i].name = 'B' + tag.name[1:]
+            tags[i].value = 'B' + tag.value[1:]
     return True
 
 
@@ -671,20 +671,20 @@ def iob_iobes(tags):
     """
     new_tags = []
     for i, tag in enumerate(tags):
-        if tag.name == 'O':
-            new_tags.append(tag.name)
-        elif tag.name.split('-')[0] == 'B':
+        if tag.value == 'O':
+            new_tags.append(tag.value)
+        elif tag.value.split('-')[0] == 'B':
             if i + 1 != len(tags) and \
-                    tags[i + 1].name.split('-')[0] == 'I':
-                new_tags.append(tag.name)
+                    tags[i + 1].value.split('-')[0] == 'I':
+                new_tags.append(tag.value)
             else:
-                new_tags.append(tag.name.replace('B-', 'S-'))
-        elif tag.name.split('-')[0] == 'I':
+                new_tags.append(tag.value.replace('B-', 'S-'))
+        elif tag.value.split('-')[0] == 'I':
             if i + 1 < len(tags) and \
-                    tags[i + 1].name.split('-')[0] == 'I':
-                new_tags.append(tag.name)
+                    tags[i + 1].value.split('-')[0] == 'I':
+                new_tags.append(tag.value)
             else:
-                new_tags.append(tag.name.replace('I-', 'E-'))
+                new_tags.append(tag.value.replace('I-', 'E-'))
         else:
             raise Exception('Invalid IOB format!')
     return new_tags
