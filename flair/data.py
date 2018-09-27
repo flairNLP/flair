@@ -94,41 +94,42 @@ class Dictionary:
 
 class Label:
     """
-    This class represents a label of a sentence. Each label has a name and optional a confidence value. The confidence
-    value needs to be between 0.0 and 1.0. Default value for the confidence is 1.0.
+    This class represents a label of a sentence. Each label has a value and optionally a confidence score. The
+    score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
     """
 
-    def __init__(self, name: str, confidence: float = 1.0):
-        self.name = name
-        self.confidence = confidence
+    def __init__(self, value: str, score: float = 1.0):
+        self.value = value
+        self.score = score
+        super().__init__()
 
     @property
-    def name(self):
-        return self._name
+    def value(self):
+        return self._value
 
-    @name.setter
-    def name(self, name):
-        if not name:
-            raise ValueError('Incorrect label name provided. Label name needs to be set.')
+    @value.setter
+    def value(self, value):
+        if not value and value != '':
+            raise ValueError('Incorrect label value provided. Label value needs to be set.')
         else:
-            self._name = name
+            self._value = value
 
     @property
-    def confidence(self):
-        return self._confidence
+    def score(self):
+        return self._score
 
-    @confidence.setter
-    def confidence(self, confidence):
-        if 0.0 <= confidence <= 1.0:
-            self._confidence = confidence
+    @score.setter
+    def score(self, score):
+        if 0.0 <= score <= 1.0:
+            self._score = score
         else:
-            self._confidence = 0.0
+            self._score = 1.0
 
     def __str__(self):
-        return "{} ({})".format(self._name, self._confidence)
+        return "{} ({})".format(self._value, self._score)
 
     def __repr__(self):
-        return "{} ({})".format(self._name, self._confidence)
+        return "{} ({})".format(self._value, self._score)
 
 
 class Token:
@@ -150,23 +151,24 @@ class Token:
 
         self.sentence: Sentence = None
         self._embeddings: Dict = {}
-        self.tags: Dict[str, str] = {}
+        self.tags: Dict[str, Label] = {}
 
-    def add_tag(self, tag_type: str, tag_value: str):
-        self.tags[tag_type] = tag_value
+    def add_tag(self, tag_type: str, tag_value: str, confidence=1.0):
+        tag = Label(tag_value, confidence)
+        self.tags[tag_type] = tag
 
-    def get_tag(self, tag_type: str) -> str:
+    def get_tag(self, tag_type: str) -> Label:
         if tag_type in self.tags: return self.tags[tag_type]
-        return ''
+        return Label('')
 
     def get_head(self):
         return self.sentence.get_token(self.head_id)
 
     def __str__(self) -> str:
-        return 'Token: %d %s' % (self.idx, self.text)
+        return 'Token: %d %s' % (self.idx, self.text) if self.idx is not None else 'Token: %s' % (self.text)
 
     def __repr__(self) -> str:
-        return 'Token: %d %s' % (self.idx, self.text)
+        return 'Token: %d %s' % (self.idx, self.text) if self.idx is not None else 'Token: %s' % (self.text)
 
     def set_embedding(self, name: str, vector: torch.autograd.Variable):
         self._embeddings[name] = vector.cpu()
@@ -174,11 +176,9 @@ class Token:
     def clear_embeddings(self):
         self._embeddings: Dict = {}
 
-    def get_embedding(self) -> torch.autograd.Variable:
+    def get_embedding(self) -> torch.FloatTensor:
 
-        embeddings = []
-        for embed in sorted(self._embeddings.keys()):
-            embeddings.append(self._embeddings[embed])
+        embeddings = [self._embeddings[embed] for embed in sorted(self._embeddings.keys())]
 
         if embeddings:
             return torch.cat(embeddings, dim=0)
@@ -190,7 +190,36 @@ class Token:
         return self.get_embedding()
 
 
+class Span:
+    """
+    This class represents one textual span consisting of Tokens. A span may have a tag.
+    """
+
+    def __init__(self, tokens: List[Token], tag: str = None, score=1.):
+        self.tokens = tokens
+        self.tag = tag
+        self.score = score
+
+    @property
+    def text(self) -> str:
+        return ' '.join([t.text for t in self.tokens])
+
+    def __str__(self) -> str:
+        ids = ','.join([str(t.idx) for t in self.tokens])
+        return '{}-span [{}]: "{}"'.format(self.tag, ids, self.text) \
+            if self.tag is not None else 'span [{}]: "{}"'.format(ids, self.text)
+
+    def __repr__(self) -> str:
+        ids = ','.join([str(t.idx) for t in self.tokens])
+        return '<{}-span ({}): "{}">'.format(self.tag, ids, self.text) \
+            if self.tag is not None else '<span ({}): "{}">'.format(ids, self.text)
+
+
 class Sentence:
+    """
+    A Sentence is a list of Tokens and is used to represent a sentence or text fragment.
+    """
+
     def __init__(self, text: str = None, use_tokenizer: bool = False, labels: Union[List[Label], List[str]] = None):
 
         super(Sentence, self).__init__()
@@ -242,7 +271,173 @@ class Sentence:
                         token = Token(word)
                         self.add_token(token)
 
-    def _infer_space_after(self):
+    def get_token(self, token_id: int) -> Token:
+        for token in self.tokens:
+            if token.idx == token_id:
+                return token
+
+    def add_token(self, token: Token):
+        self.tokens.append(token)
+
+        # set token idx if not set
+        token.sentence = self
+        if token.idx is None:
+            token.idx = len(self.tokens)
+
+    def get_spans(self, tag_type: str, min_score=-1) -> List[Span]:
+
+        spans: List[Span] = []
+
+        current_span = []
+
+        tags = defaultdict(lambda: 0.0)
+
+        previous_tag_value: str = 'O'
+        for token in self:
+
+            tag: Label = token.get_tag(tag_type)
+            tag_value = tag.value
+
+            # non-set tags are OUT tags
+            if len(tag_value) < 2: tag_value = 'O-'
+
+            # anything that is not a BIOES tag is a SINGLE tag
+            if tag_value[0:2] not in ['B-', 'I-', 'O-', 'E-', 'S-']:
+                tag_value = 'S-' + tag_value
+
+            # anything that is not OUT is IN
+            in_span = False
+            if tag_value[0:2] not in ['O-']:
+                in_span = True
+
+            # single and begin tags start a new span
+            starts_new_span = False
+            if tag_value[0:2] in ['B-', 'S-']:
+                starts_new_span = True
+
+            if previous_tag_value[0:2] in ['S-'] and previous_tag_value[2:] != tag_value[2:] and in_span:
+                starts_new_span = True
+
+            if (starts_new_span or not in_span) and len(current_span) > 0:
+                scores = [t.get_tag(tag_type).score for t in current_span]
+                span_score = sum(scores) / len(scores)
+                if span_score > min_score:
+                    spans.append(Span(
+                        current_span,
+                        tag=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
+                        score=span_score)
+                    )
+                current_span = []
+                tags = defaultdict(lambda: 0.0)
+
+            if in_span:
+                current_span.append(token)
+                weight = 1.1 if starts_new_span else 1.0
+                tags[tag_value[2:]] += weight
+
+            # remember previous tag
+            previous_tag_value = tag_value
+
+        if len(current_span) > 0:
+            scores = [t.get_tag(tag_type).score for t in current_span]
+            span_score = sum(scores) / len(scores)
+            if span_score > min_score:
+                spans.append(Span(
+                    current_span,
+                    tag=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
+                    score=span_score)
+                )
+
+        return spans
+
+    def add_label(self, label: Union[Label, str]):
+        if type(label) is Label:
+            self.labels.append(label)
+
+        elif type(label) is str:
+            self.labels.append(Label(label))
+
+    def add_labels(self, labels: Union[List[Label], List[str]]):
+        for label in labels:
+            self.add_label(label)
+
+    def get_label_names(self) -> List[str]:
+        return [label.value for label in self.labels]
+
+    @property
+    def embedding(self):
+        return self.get_embedding()
+
+    def set_embedding(self, name: str, vector):
+        self._embeddings[name] = vector.cpu()
+
+    def get_embedding(self) -> torch.autograd.Variable:
+        embeddings = []
+        for embed in sorted(self._embeddings.keys()):
+            embedding = self._embeddings[embed]
+            embeddings.append(embedding)
+
+        if embeddings:
+            return torch.cat(embeddings, dim=0)
+
+        return torch.FloatTensor()
+
+    def clear_embeddings(self, also_clear_word_embeddings: bool = True):
+        self._embeddings: Dict = {}
+
+        if also_clear_word_embeddings:
+            for token in self:
+                token.clear_embeddings()
+
+    def cpu_embeddings(self):
+        for name, vector in self._embeddings.items():
+            self._embeddings[name] = vector.cpu()
+
+    def to_tagged_string(self, main_tag=None) -> str:
+        list = []
+        for token in self.tokens:
+            list.append(token.text)
+
+            tags: List[str] = []
+            for tag_type in token.tags.keys():
+
+                if main_tag is not None and main_tag != tag_type: continue
+
+                if token.get_tag(tag_type).value == '' or token.get_tag(tag_type).value == 'O': continue
+                tags.append(token.get_tag(tag_type).value)
+            all_tags = '<' + '/'.join(tags) + '>'
+            if all_tags != '<>':
+                list.append(all_tags)
+        return ' '.join(list)
+
+    def to_tokenized_string(self) -> str:
+        return ' '.join([t.text for t in self.tokens])
+
+    def to_plain_string(self):
+        plain = ''
+        for token in self.tokens:
+            plain += token.text
+            if token.whitespace_after: plain += ' '
+        return plain.rstrip()
+
+    def convert_tag_scheme(self, tag_type: str = 'ner', target_scheme: str = 'iob'):
+
+        tags: List[Label] = []
+        for token in self.tokens:
+            token: Token = token
+            tags.append(token.get_tag(tag_type))
+
+        if target_scheme == 'iob':
+            iob2(tags)
+
+        if target_scheme == 'iobes':
+            iob2(tags)
+            tags = iob_iobes(tags)
+
+        for index, tag in enumerate(tags):
+            self.tokens[index].add_tag(tag_type, tag)
+
+    def infer_space_after(self):
         """
         Heuristics in case you wish to infer whitespace_after values for tokenized text. This is useful for some old NLP
         tasks (such as CoNLL-03 and CoNLL-2000) that provide only tokenized data with no info of original whitespacing.
@@ -280,94 +475,6 @@ class Sentence:
     def __iter__(self):
         return iter(self.tokens)
 
-    def add_label(self, label: Union[Label, str]):
-        if type(label) is Label:
-            self.labels.append(label)
-
-        elif type(label) is str:
-            self.labels.append(Label(label))
-
-    def add_labels(self, labels: Union[List[Label], List[str]]):
-        for label in labels:
-            self.add_label(label)
-
-    def get_label_names(self) -> List[str]:
-        return [label.name for label in self.labels]
-
-    def get_token(self, token_id: int) -> Token:
-        for token in self.tokens:
-            if token.idx == token_id:
-                return token
-
-    def add_token(self, token: Token):
-        self.tokens.append(token)
-
-        # set token idx if not set
-        token.sentence = self
-        if token.idx is None:
-            token.idx = len(self.tokens)
-
-    def set_embedding(self, name: str, vector):
-        self._embeddings[name] = vector.cpu()
-
-    def clear_embeddings(self, also_clear_word_embeddings: bool = True):
-        self._embeddings: Dict = {}
-
-        if also_clear_word_embeddings:
-            for token in self:
-                token.clear_embeddings()
-
-    def cpu_embeddings(self):
-        for name, vector in self._embeddings.items():
-            self._embeddings[name] = vector.cpu()
-
-    def get_embedding(self) -> torch.autograd.Variable:
-        embeddings = []
-        for embed in sorted(self._embeddings.keys()):
-            embedding = self._embeddings[embed]
-            embeddings.append(embedding)
-
-        if embeddings:
-            return torch.cat(embeddings, dim=0)
-
-        return torch.FloatTensor()
-
-    @property
-    def embedding(self):
-        return self.get_embedding()
-
-    def to_tagged_string(self) -> str:
-        list = []
-        for token in self.tokens:
-            list.append(token.text)
-
-            tags = []
-            for tag_type in token.tags.keys():
-
-                if token.get_tag(tag_type) == '' or token.get_tag(tag_type) == 'O': continue
-                tags.append(token.get_tag(tag_type))
-            all_tags = '<' + '/'.join(tags) + '>'
-            if all_tags != '<>':
-                list.append(all_tags)
-        return ' '.join(list)
-
-    def convert_tag_scheme(self, tag_type: str = 'ner', target_scheme: str = 'iob'):
-
-        tags: List[str] = []
-        for token in self.tokens:
-            token: Token = token
-            tags.append(token.get_tag(tag_type))
-
-        if target_scheme == 'iob':
-            iob2(tags)
-
-        if target_scheme == 'iobes':
-            iob2(tags)
-            tags = iob_iobes(tags)
-
-        for index, tag in enumerate(tags):
-            self.tokens[index].add_tag(tag_type, tag)
-
     def __repr__(self):
         return 'Sentence: "' + ' '.join([t.text for t in self.tokens]) + '" - %d Tokens' % len(self)
 
@@ -386,16 +493,6 @@ class Sentence:
 
     def __len__(self) -> int:
         return len(self.tokens)
-
-    def to_tokenized_string(self) -> str:
-        return ' '.join([t.text for t in self.tokens])
-
-    def to_plain_string(self):
-        plain = ''
-        for token in self.tokens:
-            plain += token.text
-            if token.whitespace_after: plain += ' '
-        return plain.rstrip()
 
 
 class TaggedCorpus:
@@ -433,7 +530,7 @@ class TaggedCorpus:
         for sentence in self.get_all_sentences():
             for token in sentence.tokens:
                 token: Token = token
-                tag_dictionary.add_item(token.get_tag(tag_type))
+                tag_dictionary.add_item(token.get_tag(tag_type).value)
         tag_dictionary.add_item('<START>')
         tag_dictionary.add_item('<STOP>')
         return tag_dictionary
@@ -483,7 +580,7 @@ class TaggedCorpus:
         return tokens
 
     def _get_all_label_names(self) -> List[str]:
-        return [label.name for sent in self.train for label in sent.labels]
+        return [label.value for sent in self.train for label in sent.labels]
 
     def _get_all_tokens(self) -> List[str]:
         tokens = list(map((lambda s: s.tokens), self.train))
@@ -508,7 +605,6 @@ class TaggedCorpus:
         Print statistics about the class distribution (only labels of sentences are taken into account) and sentence
         sizes.
         """
-
         self._print_statistics_for(self.train, "TRAIN")
         self._print_statistics_for(self.test, "TEST")
         self._print_statistics_for(self.dev, "DEV")
@@ -539,7 +635,7 @@ class TaggedCorpus:
         classes_to_count = defaultdict(lambda: 0)
         for sent in sentences:
             for label in sent.labels:
-                classes_to_count[label.name] += 1
+                classes_to_count[label.value] += 1
         return classes_to_count
 
     def __str__(self) -> str:
@@ -552,19 +648,20 @@ def iob2(tags):
     Tags in IOB1 format are converted to IOB2.
     """
     for i, tag in enumerate(tags):
-        if tag == 'O':
+        # print(tag)
+        if tag.value == 'O':
             continue
-        split = tag.split('-')
+        split = tag.value.split('-')
         if len(split) != 2 or split[0] not in ['I', 'B']:
             return False
         if split[0] == 'B':
             continue
-        elif i == 0 or tags[i - 1] == 'O':  # conversion IOB1 to IOB2
-            tags[i] = 'B' + tag[1:]
-        elif tags[i - 1][1:] == tag[1:]:
+        elif i == 0 or tags[i - 1].value == 'O':  # conversion IOB1 to IOB2
+            tags[i].value = 'B' + tag.value[1:]
+        elif tags[i - 1].value[1:] == tag.value[1:]:
             continue
         else:  # conversion IOB1 to IOB2
-            tags[i] = 'B' + tag[1:]
+            tags[i].value = 'B' + tag.value[1:]
     return True
 
 
@@ -574,20 +671,20 @@ def iob_iobes(tags):
     """
     new_tags = []
     for i, tag in enumerate(tags):
-        if tag == 'O':
-            new_tags.append(tag)
-        elif tag.split('-')[0] == 'B':
+        if tag.value == 'O':
+            new_tags.append(tag.value)
+        elif tag.value.split('-')[0] == 'B':
             if i + 1 != len(tags) and \
-                    tags[i + 1].split('-')[0] == 'I':
-                new_tags.append(tag)
+                    tags[i + 1].value.split('-')[0] == 'I':
+                new_tags.append(tag.value)
             else:
-                new_tags.append(tag.replace('B-', 'S-'))
-        elif tag.split('-')[0] == 'I':
+                new_tags.append(tag.value.replace('B-', 'S-'))
+        elif tag.value.split('-')[0] == 'I':
             if i + 1 < len(tags) and \
-                    tags[i + 1].split('-')[0] == 'I':
-                new_tags.append(tag)
+                    tags[i + 1].value.split('-')[0] == 'I':
+                new_tags.append(tag.value)
             else:
-                new_tags.append(tag.replace('I-', 'E-'))
+                new_tags.append(tag.value.replace('I-', 'E-'))
         else:
             raise Exception('Invalid IOB format!')
     return new_tags

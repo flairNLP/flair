@@ -1,7 +1,7 @@
 import pytest
 
 from flair.data import Dictionary
-from flair.training_utils import calculate_micro_avg_metric, calculate_class_metrics
+from flair.training_utils import calculate_micro_avg_metric, calculate_class_metrics, convert_labels_to_one_hot
 
 
 @pytest.fixture
@@ -52,3 +52,15 @@ def test_calculate_class_metrics():
     assert(1 == metrics_dict['class-3']._tn)
     assert(1 == metrics_dict['class-3']._fn)
 
+
+def test_convert_labels_to_one_hot():
+    label_dict = Dictionary(add_unk=False)
+    label_dict.add_item('class-1')
+    label_dict.add_item('class-2')
+    label_dict.add_item('class-3')
+
+    one_hot = convert_labels_to_one_hot([['class-2']], label_dict)
+
+    assert(one_hot[0][0] == 0)
+    assert(one_hot[0][1] == 1)
+    assert(one_hot[0][2] == 0)

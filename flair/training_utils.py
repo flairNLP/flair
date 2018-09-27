@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 import os
 import numpy as np
@@ -49,12 +49,11 @@ class Metric(object):
         return 0.0
 
     def __str__(self):
-        return '{0:<20}\tprecision: {1:.4f} - recall: {2:.4f} - accuracy: {3:.4f} - f1-score: {4:.4f}'.format(
-            self.name, self.precision(), self.recall(), self.accuracy(), self.f_score())
+        return '{0:<10}\ttp: {1} - fp: {2} - fn: {3} - precision: {4:.4f} - recall: {5:.4f} - accuracy: {6:.4f} - f1-score: {7:.4f}'.format(
+            self.name, self._tp, self._fp, self._fn, self.precision(), self.recall(), self.accuracy(), self.f_score())
 
     def print(self):
-        print('{0:<20}\tprecision: {1:.4f} - recall: {2:.4f} - accuracy: {3:.4f} - f1-score: {4:.4f}'.format(
-                self.name, self.precision(), self.recall(), self.accuracy(), self.f_score()))
+        print(self)
 
 
 def clear_embeddings(sentences: List[Sentence]):
@@ -87,18 +86,7 @@ def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionar
     :param label_dict: label dictionary
     :return: converted label list
     """
-    converted_label_list = []
-
-    for labels in label_list:
-        arr = np.empty(len(label_dict))
-        arr.fill(0)
-
-        for label in labels:
-            arr[label_dict.get_idx_for_item(label)] = 1
-
-        converted_label_list.append(arr.tolist())
-
-    return converted_label_list
+    return [[1 if l in labels else 0 for l in label_dict.get_items()] for labels in label_list]
 
 
 def calculate_micro_avg_metric(y_true: List[List[int]], y_pred: List[List[int]], labels: Dictionary) -> Metric:

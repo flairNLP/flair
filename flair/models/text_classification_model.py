@@ -34,6 +34,11 @@ class TextClassifier(nn.Module):
 
         self._init_weights()
 
+        if multi_label:
+            self.loss_function = nn.BCELoss()
+        else:
+            self.loss_function = nn.CrossEntropyLoss()
+
         # auto-spawn on GPU if available
         if torch.cuda.is_available():
             self.cuda()
@@ -162,13 +167,11 @@ class TextClassifier(nn.Module):
         return [Label(label, conf.item())]
 
     def _calculate_multi_label_loss(self, label_scores, sentences: List[Sentence]) -> float:
-        loss_function = nn.BCELoss()
         sigmoid = nn.Sigmoid()
-        return loss_function(sigmoid(label_scores), self._labels_to_one_hot(sentences))
+        return self.loss_function(sigmoid(label_scores), self._labels_to_one_hot(sentences))
 
     def _calculate_single_label_loss(self, label_scores, sentences: List[Sentence]) -> float:
-        loss_function = nn.CrossEntropyLoss()
-        return loss_function(label_scores, self._labels_to_indices(sentences))
+        return self.loss_function(label_scores, self._labels_to_indices(sentences))
 
     def _labels_to_one_hot(self, sentences: List[Sentence]):
         label_list = [sentence.get_label_names() for sentence in sentences]
@@ -181,7 +184,7 @@ class TextClassifier(nn.Module):
 
     def _labels_to_indices(self, sentences: List[Sentence]):
         indices = [
-            torch.LongTensor([self.label_dictionary.get_idx_for_item(label.name) for label in sentence.labels])
+            torch.LongTensor([self.label_dictionary.get_idx_for_item(label.value) for label in sentence.labels])
             for sentence in sentences
         ]
 
