@@ -8,7 +8,7 @@ import torch
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from flair.models.sequence_tagger_model import SequenceTagger
-from flair.data import Sentence, Token, TaggedCorpus
+from flair.data import Sentence, Token, TaggedCorpus, Label
 from flair.training_utils import Metric, init_output_file, WeightExtractor
 
 log = logging.getLogger(__name__)
@@ -26,10 +26,12 @@ class SequenceTaggerTrainer:
               mini_batch_size: int = 32,
               max_epochs: int = 100,
               anneal_factor: float = 0.5,
-              patience: int = 2,
-              save_model: bool = True,
+              patience: int = 4,
+              train_with_dev: bool = False,
               embeddings_in_memory: bool = True,
-              train_with_dev: bool = False):
+              checkpoint: bool = False,
+              save_final_model: bool = True,
+              ):
 
         evaluation_method = 'F1'
         if self.model.tag_type in ['pos', 'upos']: evaluation_method = 'accuracy'
@@ -79,7 +81,7 @@ class SequenceTaggerTrainer:
                     optimizer.zero_grad()
 
                     # Step 4. Compute the loss, gradients, and update the parameters by calling optimizer.step()
-                    loss = self.model.neg_log_likelihood(batch, self.model.tag_type)
+                    loss = self.model.neg_log_likelihood(batch)
 
                     current_loss += loss.item()
                     seen_sentences += len(batch)
@@ -102,6 +104,10 @@ class SequenceTaggerTrainer:
                 # switch to eval mode
                 self.model.eval()
 
+                # if checkpointing is enable, save model at each epoch
+                if checkpoint:
+                    self.model.save(base_path + "/checkpoint.pt")
+
                 log.info('-' * 100)
 
                 dev_score = dev_metric = None
@@ -113,9 +119,6 @@ class SequenceTaggerTrainer:
                 test_score, test_metric = self.evaluate(self.corpus.test, base_path,
                                                                  evaluation_method=evaluation_method,
                                                                  embeddings_in_memory=embeddings_in_memory)
-
-                # switch back to train mode
-                self.model.train()
 
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_score)
@@ -132,12 +135,14 @@ class SequenceTaggerTrainer:
                     f.write('{}\t{:%H:%M:%S}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
                         epoch, datetime.datetime.now(), '_', Metric.to_empty_tsv(), '_', dev_metric_str, '_', test_metric.to_tsv()))
 
-                # save if model is current best and we use dev data for model selection
-                if save_model and not train_with_dev and dev_score == scheduler.best:
+                # if we use dev data, remember best model based on dev evaluation score
+                if not train_with_dev and dev_score == scheduler.best:
                     self.model.save(base_path + "/best-model.pt")
 
             # if we do not use dev data for model selection, save final model
-            if save_model and train_with_dev: self.model.save(base_path + "/final-model.pt")
+            if save_final_model:
+                if train_with_dev:
+                    self.model.save(base_path + "/final-model.pt")
 
         except KeyboardInterrupt:
             log.info('-' * 100)
@@ -147,12 +152,12 @@ class SequenceTaggerTrainer:
             log.info('Done.')
 
     def evaluate(self, evaluation: List[Sentence], out_path=None, evaluation_method: str = 'F1',
+                 eval_batch_size: int = 32,
                  embeddings_in_memory: bool = True):
 
         batch_no: int = 0
-        mini_batch_size = 32
-        batches = [evaluation[x:x + mini_batch_size] for x in
-                   range(0, len(evaluation), mini_batch_size)]
+        batches = [evaluation[x:x + eval_batch_size] for x in
+                   range(0, len(evaluation), eval_batch_size)]
 
         metric = Metric('')
 
@@ -161,24 +166,29 @@ class SequenceTaggerTrainer:
         for batch in batches:
             batch_no += 1
 
-            self.model.embeddings.embed(batch)
+            scores, tag_seq = self.model._predict_scores_batch(batch)
+            predicted_ids = tag_seq
+            all_tokens = []
+            for sentence in batch:
+                all_tokens.extend(sentence.tokens)
+
+            for (token, score, predicted_id) in zip(all_tokens, scores, predicted_ids):
+                token: Token = token
+                # get the predicted tag
+                predicted_value = self.model.tag_dictionary.get_item_for_index(predicted_id)
+                token.add_tag('predicted', predicted_value, score)
 
             for sentence in batch:
 
-                sentence: Sentence = sentence
-
-                # Step 3. Run our forward pass.
-                score, tag_seq = self.model.predict_scores(sentence)
-
                 # add predicted tags
-                for (token, pred_id) in zip(sentence.tokens, tag_seq):
-                    token: Token = token
-                    # get the predicted tag
-                    predicted_tag = self.model.tag_dictionary.get_item_for_index(pred_id)
-                    token.add_tag('predicted', predicted_tag)
+                for token in sentence.tokens:
+                    predicted_tag: Label = token.get_tag('predicted')
 
                     # append both to file for evaluation
-                    eval_line = token.text + ' ' + token.get_tag(self.model.tag_type) + ' ' + predicted_tag + "\n"
+                    eval_line = '{} {} {}\n'.format(token.text,
+                                                    token.get_tag(self.model.tag_type).value,
+                                                    predicted_tag.value)
+
                     lines.append(eval_line)
                 lines.append('\n')
 

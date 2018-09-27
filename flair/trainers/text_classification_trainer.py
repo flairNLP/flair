@@ -220,7 +220,7 @@ class TextClassifierTrainer:
 
             eval_loss += loss
 
-            y_pred.extend(convert_labels_to_one_hot([[label.name for label in sent_labels] for sent_labels in labels], self.label_dict))
+            y_pred.extend(convert_labels_to_one_hot([[label.value for label in sent_labels] for sent_labels in labels], self.label_dict))
 
         metrics = [calculate_micro_avg_metric(y_true, y_pred, self.label_dict)]
         if eval_class_metrics:

@@ -1,7 +1,7 @@
 import os
 import re
 from abc import abstractmethod
-from typing import List, Union
+from typing import List, Union, Dict
 
 import gensim
 import numpy as np
@@ -100,7 +100,7 @@ class StackedEmbeddings(TokenEmbeddings):
         self.name = 'Stack'
         self.static_embeddings = True
 
-        self.__embedding_type: int = embeddings[0].embedding_type
+        self.__embedding_type: str = embeddings[0].embedding_type
 
         self.__embedding_length: int = 0
         for embedding in embeddings:
@@ -217,6 +217,55 @@ class WordEmbeddings(TokenEmbeddings):
                 word_embedding = torch.FloatTensor(word_embedding)
 
                 token.set_embedding(self.name, word_embedding)
+
+        return sentences
+
+
+class MemoryEmbeddings(TokenEmbeddings):
+
+    def __init__(self, tag_type: str, tag_dictionary: Dictionary):
+
+        self.name = "memory"
+        self.static_embeddings = False
+        self.tag_type: str = tag_type
+        self.tag_dictionary: Dictionary = tag_dictionary
+        self.__embedding_length: int = len(tag_dictionary)
+
+        self.memory: Dict[str:List] = {}
+
+        super().__init__()
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def train(self, mode=True):
+        super().train(mode=mode)
+        if mode:
+            self.memory: Dict[str:List] = {}
+
+    def update_embedding(self, text: str, tag: str):
+        self.memory[text][self.tag_dictionary.get_idx_for_item(tag)] += 1
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        for i, sentence in enumerate(sentences):
+
+            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+                token: Token = token
+
+                if token.text not in self.memory:
+                    self.memory[token.text] = [0] * self.__embedding_length
+
+                word_embedding = torch.FloatTensor(self.memory[token.text])
+                import torch.nn.functional as F
+                word_embedding = F.normalize(word_embedding, p=2, dim=0)
+
+                token.set_embedding(self.name, word_embedding)
+
+                # add label if in training mode
+                if self.training:
+                    self.update_embedding(token.text, token.get_tag(self.tag_type).value)
 
         return sentences
 

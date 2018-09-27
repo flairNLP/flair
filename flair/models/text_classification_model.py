@@ -184,7 +184,7 @@ class TextClassifier(nn.Module):
 
     def _labels_to_indices(self, sentences: List[Sentence]):
         indices = [
-            torch.LongTensor([self.label_dictionary.get_idx_for_item(label.name) for label in sentence.labels])
+            torch.LongTensor([self.label_dictionary.get_idx_for_item(label.value) for label in sentence.labels])
             for sentence in sentences
         ]
 
