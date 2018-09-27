@@ -33,7 +33,7 @@ class SequenceTaggerTrainer:
 
         evaluation_method = 'F1'
         if self.model.tag_type in ['pos', 'upos']: evaluation_method = 'accuracy'
-        log.info(evaluation_method)
+        log.info('Evaluation method: {}'.format(evaluation_method))
 
         loss_txt = init_output_file(base_path, 'loss.tsv')
         with open(loss_txt, 'a') as f:
