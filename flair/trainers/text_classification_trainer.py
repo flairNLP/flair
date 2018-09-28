@@ -122,7 +122,8 @@ class TextClassifierTrainer:
                 log.info("EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, scheduler.num_bad_epochs))
 
                 dev_metric = train_metric = None
-                dev_loss = train_loss = '_'
+                dev_loss = '_'
+                train_loss = current_loss
 
                 if eval_on_train:
                     train_metric, train_loss = self._calculate_evaluation_results_for(
