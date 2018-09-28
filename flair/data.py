@@ -623,7 +623,7 @@ class TaggedCorpus:
 
         size_dict = {}
         for l, c in classes_to_count.items():
-            size_dict = { l: c }
+            size_dict[l] = c
         size_dict['total'] = len(sentences)
 
         stats = {

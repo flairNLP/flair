@@ -540,7 +540,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
     def __init__(self, token_embeddings: List[TokenEmbeddings], hidden_states=128, num_layers=1,
                  reproject_words: bool = True, reproject_words_dimension: int = None, bidirectional: bool = False,
-                 use_first_representation: bool = False, use_word_dropout: bool = True):
+                 use_first_representation: bool = False, use_word_dropout: bool = False, use_locked_dropout: bool = False):
         """The constructor takes a list of embeddings to be combined.
         :param token_embeddings: a list of token embeddings
         :param hidden_states: the number of hidden states in the lstm
@@ -553,6 +553,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         :param use_first_representation: boolean value, indicating whether to concatenate the first and last
         representation of the lstm to be used as final document embedding.
         :param use_word_dropout: boolean value, indicating whether to use word dropout or not.
+        :param use_locked_dropout: boolean value, indicating whether to use locked dropout or not.
         """
         super().__init__()
 
@@ -586,7 +587,10 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
                                  bidirectional=self.bidirectional)
 
         # dropouts
-        self.dropout: torch.nn.Module = LockedDropout(0.5)
+        if use_locked_dropout:
+            self.dropout: torch.nn.Module = LockedDropout(0.5)
+        else:
+            self.dropout = torch.nn.Dropout(0.5)
 
         self.use_word_dropout: bool = use_word_dropout
         if self.use_word_dropout:
