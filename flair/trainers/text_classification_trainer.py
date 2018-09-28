@@ -209,7 +209,7 @@ class TextClassifierTrainer:
                    range(0, len(sentences), mini_batch_size)]
 
         y_pred = []
-        y_true = convert_labels_to_one_hot([sentence.get_label_names() for sentence in sentences], self.label_dict)
+        y_true = []
 
         for batch in batches:
             scores = self.model.forward(batch)
@@ -218,11 +218,13 @@ class TextClassifierTrainer:
 
             eval_loss += loss
 
+            y_true.extend([sentence.get_label_names() for sentence in batch])
             y_pred.extend([[label.value for label in sent_labels] for sent_labels in labels])
 
             if not embeddings_in_memory:
                 clear_embeddings(batch)
 
+        y_true = convert_labels_to_one_hot(y_true, self.label_dict)
         y_pred = convert_labels_to_one_hot(y_pred, self.label_dict)
 
         metrics = [calculate_micro_avg_metric(y_true, y_pred, self.label_dict)]
