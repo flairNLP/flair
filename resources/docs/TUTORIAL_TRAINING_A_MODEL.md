@@ -133,6 +133,13 @@ trainer.train('resources/taggers/example-ner',
               learning_rate=0.1,
               mini_batch_size=32,
               max_epochs=150)
+
+# 8. plot training curves (optional)
+from flair.visual.training_curves import Plotter
+plotter = Plotter()
+plotter.plot_training_curves('resources/taggers/example-ner/loss.tsv')
+plotter.plot_weights('resources/taggers/example-ner/weights.txt')
+
 ```
 
 Alternatively, try using a stacked embedding with charLM and glove, over the full data, for 150 epochs.
@@ -201,7 +208,10 @@ word_embeddings = [WordEmbeddings('glove'),
                    CharLMEmbeddings('news-backward')]
 
 # 4. init document embedding by passing list of word embeddings
-document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings(word_embeddings, hidden_states=512)
+document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings(word_embeddings,
+                                                                     hidden_states=512,
+                                                                     reproject_words=True,
+                                                                     reproject_words_dimension=256,)
 
 # 5. create the text classifier
 classifier = TextClassifier(document_embeddings, label_dictionary=label_dict, multi_label=False)
@@ -213,7 +223,15 @@ trainer = TextClassifierTrainer(classifier, corpus, label_dict)
 trainer.train('resources/ag_news/results',
               learning_rate=0.1,
               mini_batch_size=32,
+              anneal_factor=0.5,
+              patience=5,
               max_epochs=150)
+
+# 8. plot training curves (optional)
+from flair.visual.training_curves import Plotter
+plotter = Plotter()
+plotter.plot_training_curves('resources/ag_news/results/loss.tsv')
+plotter.plot_weights('resources/ag_news/results/weights.txt')
 ```
 
 Once the model is trained you can use it to predict the class of new sentences. Just call the `predict` method of the
