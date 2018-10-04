@@ -9,3 +9,4 @@ matplotlib==3.0.0
 mpld3==0.3
 jinja2==2.10
 sklearn==0.0
+google-compute-engine==2.8.3
