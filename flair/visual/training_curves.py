@@ -6,7 +6,6 @@ import os
 
 import matplotlib
 import math
-import sys
 
 matplotlib.use('Agg')
 
@@ -32,8 +31,8 @@ WEIGHT_VALUE = 3
 
 class Plotter(object):
     """
-    Plots training curves (loss, f-score, and accuracy) and training weights over time.
-    Input files are the output files loss.tsv and weights.txt from training either a sequence label tagger or text
+    Plots training parameters (loss, f-score, and accuracy) and training weights over time.
+    Input files are the output files 'loss.tsv' and 'weights.txt' from training either a sequence tagger or text
     classification model.
     """
 
