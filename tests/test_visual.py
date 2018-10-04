@@ -1,200 +1,141 @@
+import os
+import shutil
+
+import pytest
+
 from flair.visual import *
 from flair.data import Sentence
 from flair.embeddings import CharLMEmbeddings, StackedEmbeddings
-import unittest
 import numpy
 
+from flair.visual.training_curves import Plotter
 
-class Test(unittest.TestCase):
-    def test_prepare(self):
-        with open('resources/data/snippet.txt') as f:
-            sentences = [x for x in f.read().split('\n') if x]
 
-        sentences = [Sentence(x) for x in sentences[:100]]
+@pytest.mark.skip(reason='Skipping test by default due to long execution time.')
+def test_benchmark():
+    import time
 
-        charlm_embedding_forward = CharLMEmbeddings('news-forward')
-        charlm_embedding_backward = CharLMEmbeddings('news-backward')
+    with open('./resources/visual/snippet.txt') as f:
+        sentences = [x for x in f.read().split('\n') if x]
 
-        embeddings = StackedEmbeddings(
-            [charlm_embedding_backward, charlm_embedding_forward]
-        )
+    sentences = [Sentence(x) for x in sentences[:10]]
 
-        X = prepare_word_embeddings(embeddings, sentences)
-        contexts = word_contexts(sentences)
+    charlm_embedding_forward = CharLMEmbeddings('news-forward')
+    charlm_embedding_backward = CharLMEmbeddings('news-backward')
 
-        numpy.save('resources/data/embeddings', X)
+    embeddings = StackedEmbeddings(
+        [charlm_embedding_backward, charlm_embedding_forward]
+    )
 
-        with open('resources/data/contexts.txt', 'w') as f:
-            f.write('\n'.join(contexts))
+    tic = time.time()
 
-    def test_tSNE(self):
+    prepare_word_embeddings(embeddings, sentences)
 
-        X = numpy.load('resources/data/embeddings.npy')
-        trans_ = tSNE()
-        reduced = trans_.fit(X)
+    current_elaped = time.time() - tic
 
-        numpy.save('resources/data/tsne', reduced)
+    print('current implementation: {} sec/ sentence'.format(current_elaped / 10))
 
-    def test__prepare_char(self):
+    embeddings_f = CharLMEmbeddings('news-forward')
+    embeddings_b = CharLMEmbeddings('news-backward')
 
-        with open('resources/data/snippet.txt') as f:
-            sentences = [x for x in f.read().split('\n') if x]
+    tic = time.time()
 
-        sentences = [Sentence(x) for x in sentences[:100]]
+    prepare_char_embeddings(embeddings_f, sentences)
+    prepare_char_embeddings(embeddings_b, sentences)
 
-        embeddings = CharLMEmbeddings('news-forward')
+    current_elaped = time.time() - tic
 
-        X_forward = prepare_char_embeddings(embeddings, sentences)
+    print('pytorch implementation: {} sec/ sentence'.format(current_elaped / 10))
 
-        embeddings = CharLMEmbeddings('news-backward')
 
-        X_backward = prepare_char_embeddings(embeddings, sentences)
+@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+def test_show_word_embeddings():
 
-        X = numpy.concatenate([X_forward, X_backward], axis=1)
+    with open('./resources/visual/snippet.txt') as f:
+        sentences = [x for x in f.read().split('\n') if x]
 
-        numpy.save('resources/data/char_embeddings', X)
+    sentences = [Sentence(x) for x in sentences]
 
-    def test_tSNE_char(self):
+    charlm_embedding_forward = CharLMEmbeddings('news-forward')
+    charlm_embedding_backward = CharLMEmbeddings('news-backward')
 
-        X = numpy.load('resources/data/char_embeddings.npy')
-        trans_ = tSNE()
-        reduced = trans_.fit(X)
+    embeddings = StackedEmbeddings([charlm_embedding_backward, charlm_embedding_forward])
 
-        numpy.save('resources/data/char_tsne', reduced)
+    X = prepare_word_embeddings(embeddings, sentences)
+    contexts = word_contexts(sentences)
 
-    def test_prepare_char_uni(self):
+    trans_ = tSNE()
+    reduced = trans_.fit(X)
 
-        with open('resources/data/snippet.txt') as f:
-            sentences = [x for x in f.read().split('\n') if x]
+    show(reduced, contexts)
 
-        sentences = [Sentence(x) for x in sentences[:100]]
 
-        embeddings = CharLMEmbeddings('news-forward')
+@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+def test_show_char_embeddings():
 
-        X = prepare_char_embeddings(embeddings, sentences)
+    with open('./resources/visual/snippet.txt') as f:
+        sentences = [x for x in f.read().split('\n') if x]
 
-        numpy.save('resources/data/uni_embeddings', X)
+    sentences = [Sentence(x) for x in sentences]
 
-    def test_tSNE_char_uni(self):
+    embeddings = CharLMEmbeddings('news-forward')
 
-        X = numpy.load('resources/data/uni_embeddings.npy')
-        trans_ = tSNE()
-        reduced = trans_.fit(X)
+    X_forward = prepare_char_embeddings(embeddings, sentences)
 
-        numpy.save('resources/data/uni_tsne', reduced)
+    embeddings = CharLMEmbeddings('news-backward')
 
-    def test_char_contexts(self):
+    X_backward = prepare_char_embeddings(embeddings, sentences)
 
-        with open('resources/data/snippet.txt') as f:
-            sentences = [x for x in f.read().split('\n') if x]
+    X = numpy.concatenate([X_forward, X_backward], axis=1)
 
-        sentences = [Sentence(x) for x in sentences[:100]]
+    contexts = char_contexts(sentences)
 
-        contexts = char_contexts(sentences)
+    trans_ = tSNE()
+    reduced = trans_.fit(X)
 
-        with open('resources/data/char_contexts.txt', 'w') as f:
-            f.write('\n'.join(contexts))
+    show(reduced, contexts)
 
-    def test_benchmark(self):
 
-        import time
+@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+def test_show_uni_sentence_embeddings():
 
-        with open('resources/data/snippet.txt') as f:
-            sentences = [x for x in f.read().split('\n') if x]
+    with open('./resources/visual/snippet.txt') as f:
+        sentences = [x for x in f.read().split('\n') if x]
 
-        sentences = [Sentence(x) for x in sentences[:10]]
+    sentences = [Sentence(x) for x in sentences]
 
+    embeddings = CharLMEmbeddings('news-forward')
 
-        charlm_embedding_forward = CharLMEmbeddings('news-forward')
-        charlm_embedding_backward = CharLMEmbeddings('news-backward')
+    X = prepare_char_embeddings(embeddings, sentences)
 
-        embeddings = StackedEmbeddings(
-            [charlm_embedding_backward, charlm_embedding_forward]
-        )
+    trans_ = tSNE()
+    reduced = trans_.fit(X)
 
-        tic = time.time()
+    l = len(sentences[0])
 
-        prepare_word_embeddings(embeddings, sentences)
+    contexts = char_contexts(sentences)
 
-        current_elaped = time.time() - tic
+    show(reduced[:l], contexts[:l])
 
-        print('current implementation: {} sec/ sentence'.format(current_elaped / 10))
 
-        embeddings_f = CharLMEmbeddings('news-forward')
-        embeddings_b = CharLMEmbeddings('news-backward')
+def test_highlighter():
+    with open('./resources/visual/snippet.txt') as f:
+        sentences = [x for x in f.read().split('\n') if x]
 
-        tic = time.time()
+    embeddings = CharLMEmbeddings('news-forward')
 
-        prepare_char_embeddings(embeddings_f, sentences)
-        prepare_char_embeddings(embeddings_b, sentences)
+    features = embeddings.lm.get_representation(sentences[0]).squeeze()
 
-        current_elaped = time.time() - tic
+    Highlighter().highlight_selection(features, sentences[0], n=1000, file_='./resources/visual/data/highligh.html')
 
-        print('pytorch implementation: {} sec/ sentence'.format(current_elaped / 10))
+    shutil.rmtree('./resources/visual/data')
 
 
-class Test_show(unittest.TestCase):
-    def test_word(self):
+def test_plotting_training_curves_and_weights():
+    plotter = Plotter()
+    plotter.plot_training_curves('./resources/visual/loss.tsv')
+    plotter.plot_weights('./resources/visual/weights.txt')
 
-        reduced = numpy.load('resources/data/tsne.npy')
-
-        with open('resources/data/contexts.txt') as f:
-            contexts = f.read().split('\n')
-
-        show(reduced, contexts)
-
-    def test_char(self):
-
-        reduced = numpy.load('resources/data/char_tsne.npy')
-
-        with open('resources/data/char_contexts.txt') as f:
-            contexts = f.read().split('\n')
-
-        show(reduced, contexts)
-
-    def test_uni_sentence(self):
-
-        reduced = numpy.load('resources/data/uni_tsne.npy')
-
-        with open('resources/data/snippet.txt') as f:
-            sentences = [x for x in f.read().split('\n') if x]
-
-        l = len(sentences[0])
-
-        with open('resources/data/char_contexts.txt') as f:
-            contexts = f.read().split('\n')
-
-        show(reduced[:l], contexts[:l])
-
-    def test_uni(self):
-
-        reduced = numpy.load('resources/data/uni_tsne.npy')
-
-        with open('resources/data/char_contexts.txt') as f:
-            contexts = f.read().split('\n')
-
-        show(reduced, contexts)
-
-
-class TestHighlighter(unittest.TestCase):
-    def test(self):
-
-        i = numpy.random.choice(2048)
-
-        with open('resources/data/snippet.txt') as f:
-            sentences = [x for x in f.read().split('\n') if x]
-
-        embeddings = CharLMEmbeddings('news-forward')
-
-        features = embeddings.lm.get_representation(sentences[0]).squeeze()
-
-        Highlighter().highlight_selection(features, sentences[0], n=1000)
-
-
-
-if __name__ == '__main__':
-    unittest.main()
-
-
-
-
+    # clean up directory
+    os.remove('./resources/visual/weights.png')
+    os.remove('./resources/visual/training.png')

@@ -2,6 +2,7 @@ import numpy
 
 
 class Highlighter:
+
     def __init__(self):
         self.color_map = [
             "#ff0000",
