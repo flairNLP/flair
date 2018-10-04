@@ -1,9 +1,9 @@
 import warnings
 
 import torch.autograd as autograd
-import torch.nn as nn
+import torch.nn
+import flair.nn
 import torch
-import numpy as np
 
 import flair.embeddings
 from flair.data import Dictionary, Sentence, Token
@@ -12,7 +12,6 @@ from flair.file_utils import cached_path
 from typing import List, Tuple, Union
 
 from flair.training_utils import clear_embeddings
-
 
 START_TAG: str = '<START>'
 STOP_TAG: str = '<STOP>'
@@ -58,7 +57,7 @@ def pad_tensors(tensor_list, type_=torch.FloatTensor):
     return template, lens_
 
 
-class SequenceTagger(nn.Module):
+class SequenceTagger(torch.nn.Module):
 
     def __init__(self,
                  hidden_size: int,
@@ -67,7 +66,8 @@ class SequenceTagger(nn.Module):
                  tag_type: str,
                  use_crf: bool = True,
                  use_rnn: bool = True,
-                 rnn_layers: int = 1
+                 rnn_layers: int = 1,
+                 use_word_dropout: bool = False,
                  ):
 
         super(SequenceTagger, self).__init__()
@@ -90,40 +90,42 @@ class SequenceTagger(nn.Module):
         self.nlayers: int = rnn_layers
         self.hidden_word = None
 
-        # self.dropout = nn.Dropout(0.5)
-        self.dropout: nn.Module = LockedDropout(0.5)
+        # dropouts
+        self.dropout: torch.nn.Module = flair.nn.LockedDropout(0.5)
+
+        self.use_word_dropout: bool = use_word_dropout
+        if self.use_word_dropout:
+            self.word_dropout = flair.nn.WordDropout(0.05)
 
         rnn_input_dim: int = self.embeddings.embedding_length
 
         self.relearn_embeddings: bool = True
 
         if self.relearn_embeddings:
-            self.embedding2nn = nn.Linear(rnn_input_dim, rnn_input_dim)
+            self.embedding2nn = torch.nn.Linear(rnn_input_dim, rnn_input_dim)
 
         # bidirectional LSTM on top of embedding layer
         self.rnn_type = 'LSTM'
         if self.rnn_type in ['LSTM', 'GRU']:
 
             if self.nlayers == 1:
-                self.rnn = getattr(nn, self.rnn_type)(rnn_input_dim, hidden_size,
-                                                      num_layers=self.nlayers,
-                                                      bidirectional=True)
+                self.rnn = getattr(torch.nn, self.rnn_type)(rnn_input_dim, hidden_size,
+                                                            num_layers=self.nlayers,
+                                                            bidirectional=True)
             else:
-                self.rnn = getattr(nn, self.rnn_type)(rnn_input_dim, hidden_size,
-                                                      num_layers=self.nlayers,
-                                                      dropout=0.5,
-                                                      bidirectional=True)
-
-        self.nonlinearity = nn.Tanh()
+                self.rnn = getattr(torch.nn, self.rnn_type)(rnn_input_dim, hidden_size,
+                                                            num_layers=self.nlayers,
+                                                            dropout=0.5,
+                                                            bidirectional=True)
 
         # final linear map to tag space
         if self.use_rnn:
-            self.linear = nn.Linear(hidden_size * 2, len(tag_dictionary))
+            self.linear = torch.nn.Linear(hidden_size * 2, len(tag_dictionary))
         else:
-            self.linear = nn.Linear(self.embeddings.embedding_length, len(tag_dictionary))
+            self.linear = torch.nn.Linear(self.embeddings.embedding_length, len(tag_dictionary))
 
         if self.use_crf:
-            self.transitions = nn.Parameter(
+            self.transitions = torch.nn.Parameter(
                 torch.randn(self.tagset_size, self.tagset_size))
             self.transitions.data[self.tag_dictionary.get_idx_for_item(START_TAG), :] = -10000
             self.transitions.data[:, self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000
@@ -166,7 +168,7 @@ class SequenceTagger(nn.Module):
             model = model.cuda()
         return model
 
-    def forward(self, sentences: List[Sentence]) -> Tuple[List, List]:
+    def forward(self, sentences: List[Sentence]):
 
         self.zero_grad()
 
@@ -176,42 +178,31 @@ class SequenceTagger(nn.Module):
 
         self.embeddings.embed(sentences)
 
-        all_sentence_tensors = []
-        lengths: List[int] = []
+        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
         tag_list: List = []
 
-        padding = torch.FloatTensor(np.zeros(self.embeddings.embedding_length, dtype='float')).unsqueeze(0)
+        # initialize zero-padded word embeddings tensor
+        sentence_tensor = torch.zeros([len(sentences),
+                                       longest_token_sequence_in_batch,
+                                       self.embeddings.embedding_length],
+                                       dtype=torch.float)
 
-        for sentence in sentences:
+        for s_id, sentence in enumerate(sentences):
+
+            # fill values with word embeddings
+            sentence_tensor[s_id][:len(sentence)] = torch.cat([token.get_embedding().unsqueeze(0)
+                                               for token in sentence], 0)
 
             # get the tags in this sentence
-            tag_idx: List[int] = []
-
-            lengths.append(len(sentence.tokens))
-
-            word_embeddings = []
-
-            for token in sentence:
-                # get the tag
-                tag_idx.append(self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type)))
-                # get the word embeddings
-                word_embeddings.append(token.get_embedding().unsqueeze(0))
-
-            # pad shorter sentences out
-            for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
-                word_embeddings.append(padding)
-
-            word_embeddings_tensor = torch.cat(word_embeddings, 0)
-
+            tag_idx: List[int] = [self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value)
+                                  for token in sentence]
+            # add tags as tensor
             if torch.cuda.is_available():
                 tag_list.append(torch.cuda.LongTensor(tag_idx))
             else:
                 tag_list.append(torch.LongTensor(tag_idx))
 
-            all_sentence_tensors.append(word_embeddings_tensor.unsqueeze(1))
-
-        # padded tensor for entire batch
-        sentence_tensor = torch.cat(all_sentence_tensors, 1)
+        sentence_tensor = sentence_tensor.transpose_(0, 1)
         if torch.cuda.is_available():
             sentence_tensor = sentence_tensor.cuda()
 
@@ -219,6 +210,10 @@ class SequenceTagger(nn.Module):
         # FF PART
         # --------------------------------------------------------------------
         sentence_tensor = self.dropout(sentence_tensor)
+
+        # use word dropout if set
+        if self.use_word_dropout:
+            sentence_tensor = self.word_dropout(sentence_tensor)
 
         if self.relearn_embeddings:
             sentence_tensor = self.embedding2nn(sentence_tensor)
@@ -234,27 +229,18 @@ class SequenceTagger(nn.Module):
 
         features = self.linear(sentence_tensor)
 
-        predictions_list = []
-        for sentence_no, length in enumerate(lengths):
-            sentence_predictions = []
-            for token_no in range(length):
-                sentence_predictions.append(
-                    features[token_no, sentence_no, :].unsqueeze(0)
-                )
-            predictions_list.append(torch.cat(sentence_predictions, 0))
-
-        return predictions_list, tag_list
+        return features.transpose_(0, 1), lengths, tag_list
 
     def _score_sentence(self, feats, tags, lens_):
 
         if torch.cuda.is_available():
             start = torch.cuda.LongTensor([
-                self.tag_dictionary.get_idx_for_item(START_TAG) 
+                self.tag_dictionary.get_idx_for_item(START_TAG)
             ])
             start = start[None, :].repeat(tags.shape[0], 1)
 
             stop = torch.cuda.LongTensor([
-                self.tag_dictionary.get_idx_for_item(STOP_TAG) 
+                self.tag_dictionary.get_idx_for_item(STOP_TAG)
             ])
             stop = stop[None, :].repeat(tags.shape[0], 1)
 
@@ -264,14 +250,14 @@ class SequenceTagger(nn.Module):
                 torch.cat([tags, stop], 1)
         else:
             start = torch.LongTensor([
-                self.tag_dictionary.get_idx_for_item(START_TAG) 
+                self.tag_dictionary.get_idx_for_item(START_TAG)
             ])
             start = start[None, :].repeat(tags.shape[0], 1)
 
             stop = torch.LongTensor([
-                self.tag_dictionary.get_idx_for_item(STOP_TAG) 
+                self.tag_dictionary.get_idx_for_item(STOP_TAG)
             ])
-            
+
             stop = stop[None, :].repeat(tags.shape[0], 1)
 
             pad_start_tags = torch.cat([start, tags], 1)
@@ -300,12 +286,15 @@ class SequenceTagger(nn.Module):
 
     def viterbi_decode(self, feats):
         backpointers = []
+        backscores = []
+
         init_vvars = torch.Tensor(1, self.tagset_size).fill_(-10000.)
         init_vvars[0][self.tag_dictionary.get_idx_for_item(START_TAG)] = 0
         forward_var = autograd.Variable(init_vvars)
         if torch.cuda.is_available():
             forward_var = forward_var.cuda()
 
+        import torch.nn.functional as F
         for feat in feats:
             next_tag_var = forward_var.view(1, -1).expand(self.tagset_size, self.tagset_size) + self.transitions
             _, bptrs_t = torch.max(next_tag_var, dim=1)
@@ -316,36 +305,45 @@ class SequenceTagger(nn.Module):
             if torch.cuda.is_available():
                 viterbivars_t = viterbivars_t.cuda()
             forward_var = viterbivars_t + feat
+            backscores.append(forward_var)
             backpointers.append(bptrs_t)
 
         terminal_var = forward_var + self.transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)]
         terminal_var.data[self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000.
         terminal_var.data[self.tag_dictionary.get_idx_for_item(START_TAG)] = -10000.
         best_tag_id = argmax(terminal_var.unsqueeze(0))
-        path_score = terminal_var[best_tag_id]
+
         best_path = [best_tag_id]
+
         for bptrs_t in reversed(backpointers):
             best_tag_id = bptrs_t[best_tag_id]
             best_path.append(best_tag_id)
+
+        best_scores = []
+        for backscore in backscores:
+            softmax = F.softmax(backscore, dim=0)
+            _, idx = torch.max(backscore, 0)
+            prediction = idx.item()
+            best_scores.append(softmax[prediction].item())
+
         start = best_path.pop()
         assert start == self.tag_dictionary.get_idx_for_item(START_TAG)
         best_path.reverse()
-        return path_score, best_path
+        return best_scores, best_path
 
-    def neg_log_likelihood(self, sentences: List[Sentence], tag_type: str):
-        feats, tags = self.forward(sentences)
-
-        if torch.cuda.is_available():
-            feats, lens_ = pad_tensors(feats, torch.cuda.FloatTensor)
-            tags, _ = pad_tensors(tags, torch.cuda.LongTensor)
-        else:
-            feats, lens_ = pad_tensors(feats)
-            tags, _ = pad_tensors(tags, torch.LongTensor)
+    def neg_log_likelihood(self, sentences: List[Sentence]):
+        features, lengths, tags = self.forward(sentences)
 
         if self.use_crf:
 
-            forward_score = self._forward_alg(feats, lens_)
-            gold_score = self._score_sentence(feats, tags, lens_)
+            # pad tags if using batch-CRF decoder
+            if torch.cuda.is_available():
+                tags, _ = pad_tensors(tags, torch.cuda.LongTensor)
+            else:
+                tags, _ = pad_tensors(tags, torch.LongTensor)
+
+            forward_score = self._forward_alg(features, lengths)
+            gold_score = self._score_sentence(features, tags, lengths)
 
             score = forward_score - gold_score
 
@@ -354,15 +352,14 @@ class SequenceTagger(nn.Module):
         else:
 
             score = 0
-            for i in range(len(feats)):
-                sentence_feats = feats[i]
-                sentence_tags = tags[i]
+            for sentence_feats, sentence_tags, sentence_length in zip(features, tags, lengths):
+                sentence_feats = sentence_feats[:sentence_length]
 
                 if torch.cuda.is_available():
                     tag_tensor = autograd.Variable(torch.cuda.LongTensor(sentence_tags))
                 else:
                     tag_tensor = autograd.Variable(torch.LongTensor(sentence_tags))
-                score += nn.functional.cross_entropy(sentence_feats, tag_tensor)
+                score += torch.nn.functional.cross_entropy(sentence_feats, tag_tensor)
 
             return score
 
@@ -383,13 +380,12 @@ class SequenceTagger(nn.Module):
             forward_var = forward_var.cuda()
 
         transitions = self.transitions.view(
-            1, 
+            1,
             self.transitions.shape[0],
             self.transitions.shape[1],
         ).repeat(feats.shape[0], 1, 1)
 
         for i in range(feats.shape[1]):
-
             emit_score = feats[:, i, :]
 
             tag_var = \
@@ -400,7 +396,7 @@ class SequenceTagger(nn.Module):
             max_tag_var, _ = torch.max(tag_var, dim=2)
 
             tag_var = tag_var - \
-                max_tag_var[:, :, None].repeat(1, 1, transitions.shape[2])
+                      max_tag_var[:, :, None].repeat(1, 1, transitions.shape[2])
 
             agg_ = torch.log(torch.sum(torch.exp(tag_var), dim=2))
 
@@ -412,35 +408,12 @@ class SequenceTagger(nn.Module):
         forward_var = forward_var[range(forward_var.shape[0]), lens_, :]
 
         terminal_var = forward_var + \
-            self.transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)][None, :].repeat(forward_var.shape[0], 1)
+                       self.transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)][None, :].repeat(
+                           forward_var.shape[0], 1)
 
         alpha = log_sum_exp_batch(terminal_var)
 
         return alpha
-
-    def predict_scores(self, sentence: Sentence):
-        feats, tags = self.forward([sentence])
-        feats = feats[0]
-        tags = tags[0]
-        if self.use_crf:
-            score, tag_seq = self.viterbi_decode(feats)
-        else:
-            score, tag_seq = torch.max(feats, 1)
-            tag_seq = list(tag_seq.cpu().data)
-
-        return score, tag_seq
-
-    def predict_old(self, sentence: Sentence) -> Sentence:
-
-        score, tag_seq = self.predict_scores(sentence)
-        predicted_id = tag_seq
-        for (token, pred_id) in zip(sentence.tokens, predicted_id):
-            token: Token = token
-            # get the predicted tag
-            predicted_tag = self.tag_dictionary.get_item_for_index(pred_id)
-            token.add_tag(self.tag_type, predicted_tag)
-
-        return sentence
 
     def predict(self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32) -> List[Sentence]:
 
@@ -454,38 +427,45 @@ class SequenceTagger(nn.Module):
         batches = [sentences[x:x + mini_batch_size] for x in range(0, len(sentences), mini_batch_size)]
 
         for batch in batches:
-            score, tag_seq = self._predict_scores_batch(batch)
-            predicted_id = tag_seq
+            scores, predicted_ids = self._predict_scores_batch(batch)
             all_tokens = []
             for sentence in batch:
                 all_tokens.extend(sentence.tokens)
 
-            for (token, pred_id) in zip(all_tokens, predicted_id):
+            for (token, score, predicted_id) in zip(all_tokens, scores, predicted_ids):
                 token: Token = token
                 # get the predicted tag
-                predicted_tag = self.tag_dictionary.get_item_for_index(pred_id)
-                token.add_tag(self.tag_type, predicted_tag)
+                predicted_tag = self.tag_dictionary.get_item_for_index(predicted_id)
+                token.add_tag(self.tag_type, predicted_tag, score)
 
         return sentences
 
     def _predict_scores_batch(self, sentences: List[Sentence]):
-        all_feats, tags = self.forward(sentences)
+        feature, lengths, tags = self.forward(sentences)
 
-        overall_score = 0
+        all_confidences = []
         all_tags_seqs = []
 
-        for feats in all_feats:
-            # viterbi to get tag_seq
+        for feats, length in zip(feature, lengths):
+
             if self.use_crf:
-                score, tag_seq = self.viterbi_decode(feats)
+                confidences, tag_seq = self.viterbi_decode(feats[:length])
             else:
-                score, tag_seq = torch.max(feats, 1)
-                tag_seq = list(tag_seq.cpu().data)
+                import torch.nn.functional as F
 
-            # overall_score += score
+                tag_seq = []
+                confidences = []
+                for backscore in feats[:length]:
+                    softmax = F.softmax(backscore, dim=0)
+                    _, idx = torch.max(backscore, 0)
+                    prediction = idx.item()
+                    tag_seq.append(prediction)
+                    confidences.append(softmax[prediction].item())
+
             all_tags_seqs.extend(tag_seq)
+            all_confidences.extend(confidences)
 
-        return overall_score, all_tags_seqs
+        return all_confidences, all_tags_seqs
 
     @staticmethod
     def load(model: str):
@@ -573,18 +553,3 @@ class SequenceTagger(nn.Module):
         if model_file is not None:
             tagger: SequenceTagger = SequenceTagger.load_from_file(model_file)
             return tagger
-
-
-class LockedDropout(nn.Module):
-    def __init__(self, dropout_rate=0.5):
-        super(LockedDropout, self).__init__()
-        self.dropout_rate = dropout_rate
-
-    def forward(self, x):
-        if not self.training or not self.dropout_rate:
-            return x
-
-        m = x.data.new(1, x.size(1), x.size(2)).bernoulli_(1 - self.dropout_rate)
-        mask = torch.autograd.Variable(m, requires_grad=False) / (1 - self.dropout_rate)
-        mask = mask.expand_as(x)
-        return mask * x

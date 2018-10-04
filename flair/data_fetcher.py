@@ -1,9 +1,12 @@
 from typing import List, Dict
 import re
 import os
+import logging
 from enum import Enum
 
-from flair.data import Sentence, TaggedCorpus, Token, Label
+from flair.data import Sentence, TaggedCorpus, Token
+
+log = logging.getLogger(__name__)
 
 
 class NLPTask(Enum):
@@ -43,7 +46,7 @@ class NLPTaskDataFetcher:
         """
 
         data_folder = os.path.join('resources', 'tasks', str(task.value).lower())
-        print("reading data from {}".format(data_folder))
+        log.info("Reading data from {}".format(data_folder))
 
         # the CoNLL 2000 task on chunking has three columns: text, pos and np (chunk)
         if task == NLPTask.CONLL_2000:
@@ -64,7 +67,8 @@ class NLPTaskDataFetcher:
                                                           train_file='eng.train',
                                                           test_file='eng.testb',
                                                           dev_file='eng.testa',
-                                                          tag_to_biloes='ner')
+                                                          tag_to_biloes='ner',
+                                                          )
 
         # the CoNLL 03 task for German has an additional lemma column
         if task == NLPTask.CONLL_03_GERMAN:
@@ -245,7 +249,7 @@ class NLPTaskDataFetcher:
 
             if line == '':
                 if len(sentence) > 0:
-                    sentence._infer_space_after()
+                    sentence.infer_space_after()
                     sentences.append(sentence)
                 sentence: Sentence = Sentence()
 
@@ -259,7 +263,7 @@ class NLPTaskDataFetcher:
                 sentence.add_token(token)
 
         if len(sentence.tokens) > 0:
-            sentence._infer_space_after()
+            sentence.infer_space_after()
             sentences.append(sentence)
 
         return sentences
@@ -312,7 +316,7 @@ class NLPTaskDataFetcher:
         return sentences
 
     @staticmethod
-    def read_text_classification_file(path_to_file):
+    def read_text_classification_file(path_to_file, max_tokens_per_doc=-1):
         """
         Reads a data file for text classification. The file should contain one document/text per line.
         The line should have the following format:
@@ -320,15 +324,15 @@ class NLPTaskDataFetcher:
         If you have a multi class task, you can have as many labels as you want at the beginning of the line, e.g.,
         __label__<class_name_1> __label__<class_name_2> <text>
         :param path_to_file: the path to the data file
+        :param max_tokens_per_doc: Take only documents that contain number of tokens less or equal to this value. If
+        set to -1 all documents are taken.
         :return: list of sentences
         """
         label_prefix = '__label__'
         sentences = []
 
         with open(path_to_file) as f:
-            lines = f.readlines()
-
-            for line in lines:
+            for line in f:
                 words = line.split()
 
                 labels = []
@@ -345,7 +349,9 @@ class NLPTaskDataFetcher:
                 text = line[l_len:].strip()
 
                 if text and labels:
-                    sentences.append(Sentence(text, labels=labels, use_tokenizer=True))
+                    sentence = Sentence(text, labels=labels, use_tokenizer=True)
+                    if max_tokens_per_doc == -1 or len(sentence.tokens) <= max_tokens_per_doc:
+                        sentences.append(sentence)
 
         return sentences
 
