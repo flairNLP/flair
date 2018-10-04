@@ -1,5 +1,7 @@
 from . import data
 from . import models
+from . import visual
+from . import trainers
 
 import sys
 import logging
