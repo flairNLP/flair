@@ -332,9 +332,7 @@ class NLPTaskDataFetcher:
         sentences = []
 
         with open(path_to_file) as f:
-            lines = f.readlines()
-
-            for line in lines:
+            for line in f:
                 words = line.split()
 
                 labels = []

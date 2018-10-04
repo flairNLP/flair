@@ -1,10 +1,9 @@
 from typing import List
 
-import torch
-
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 from flair.data import TaggedCorpus
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
+from flair.visual.training_curves import Plotter
 
 # 1. get the corpus
 corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03).downsample(0.1)
@@ -49,3 +48,7 @@ from flair.trainers.sequence_tagger_trainer import SequenceTaggerTrainer
 trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
 
 trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=20)
+
+plotter = Plotter()
+plotter.plot_training_curves('resources/taggers/example-ner/loss.tsv')
+plotter.plot_weights('resources/taggers/example-ner/weights.txt')
