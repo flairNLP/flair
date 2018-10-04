@@ -1,14 +1,14 @@
 import os
-import pickle
 import re
 from abc import abstractmethod
-from typing import List, Union
+from typing import List, Union, Dict
 
 import gensim
 import numpy as np
 import torch
 
-from .data import Dictionary, Token, Sentence, TaggedCorpus
+from .nn import LockedDropout, WordDropout
+from .data import Dictionary, Token, Sentence
 from .file_utils import cached_path
 
 
@@ -100,7 +100,7 @@ class StackedEmbeddings(TokenEmbeddings):
         self.name = 'Stack'
         self.static_embeddings = True
 
-        self.__embedding_type: int = embeddings[0].embedding_type
+        self.__embedding_type: str = embeddings[0].embedding_type
 
         self.__embedding_length: int = 0
         for embedding in embeddings:
@@ -221,6 +221,55 @@ class WordEmbeddings(TokenEmbeddings):
         return sentences
 
 
+class MemoryEmbeddings(TokenEmbeddings):
+
+    def __init__(self, tag_type: str, tag_dictionary: Dictionary):
+
+        self.name = "memory"
+        self.static_embeddings = False
+        self.tag_type: str = tag_type
+        self.tag_dictionary: Dictionary = tag_dictionary
+        self.__embedding_length: int = len(tag_dictionary)
+
+        self.memory: Dict[str:List] = {}
+
+        super().__init__()
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def train(self, mode=True):
+        super().train(mode=mode)
+        if mode:
+            self.memory: Dict[str:List] = {}
+
+    def update_embedding(self, text: str, tag: str):
+        self.memory[text][self.tag_dictionary.get_idx_for_item(tag)] += 1
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        for i, sentence in enumerate(sentences):
+
+            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+                token: Token = token
+
+                if token.text not in self.memory:
+                    self.memory[token.text] = [0] * self.__embedding_length
+
+                word_embedding = torch.FloatTensor(self.memory[token.text])
+                import torch.nn.functional as F
+                word_embedding = F.normalize(word_embedding, p=2, dim=0)
+
+                token.set_embedding(self.name, word_embedding)
+
+                # add label if in training mode
+                if self.training:
+                    self.update_embedding(token.text, token.get_tag(self.tag_type).value)
+
+        return sentences
+
+
 class CharacterEmbeddings(TokenEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
 
@@ -307,8 +356,6 @@ class CharLMEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
     def __init__(self, model, detach: bool = True):
-        super().__init__()
-
         """
             Contextual string embeddings of words, as proposed in Akbik et al., 2018.
 
@@ -321,6 +368,7 @@ class CharLMEmbeddings(TokenEmbeddings):
                 if set to false, the gradient will propagate into the language model. this dramatically slows down
                 training and often leads to worse results, so not recommended.
         """
+        super().__init__()
 
         # news-english-forward
         if model.lower() == 'news-forward':
@@ -381,7 +429,6 @@ class CharLMEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         # get text sentences
         text_sentences = [sentence.to_tokenized_string() for sentence in sentences]
 
@@ -493,7 +540,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
     def __init__(self, token_embeddings: List[TokenEmbeddings], hidden_states=128, num_layers=1,
                  reproject_words: bool = True, reproject_words_dimension: int = None, bidirectional: bool = False,
-                 use_first_representation: bool = False):
+                 use_first_representation: bool = False, use_word_dropout: bool = False, use_locked_dropout: bool = False):
         """The constructor takes a list of embeddings to be combined.
         :param token_embeddings: a list of token embeddings
         :param hidden_states: the number of hidden states in the lstm
@@ -505,6 +552,8 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
         :param use_first_representation: boolean value, indicating whether to concatenate the first and last
         representation of the lstm to be used as final document embedding.
+        :param use_word_dropout: boolean value, indicating whether to use word dropout or not.
+        :param use_locked_dropout: boolean value, indicating whether to use locked dropout or not.
         """
         super().__init__()
 
@@ -536,7 +585,16 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
                                                      self.embeddings_dimension)
         self.rnn = torch.nn.GRU(self.embeddings_dimension, hidden_states, num_layers=num_layers,
                                  bidirectional=self.bidirectional)
-        self.dropout = torch.nn.Dropout(0.5)
+
+        # dropouts
+        if use_locked_dropout:
+            self.dropout: torch.nn.Module = LockedDropout(0.5)
+        else:
+            self.dropout = torch.nn.Dropout(0.5)
+
+        self.use_word_dropout: bool = use_word_dropout
+        if self.use_word_dropout:
+            self.word_dropout = WordDropout(0.05)
 
         torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
 
@@ -600,6 +658,10 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         # --------------------------------------------------------------------
         # FF PART
         # --------------------------------------------------------------------
+        # use word dropout if set
+        if self.use_word_dropout:
+            sentence_tensor = self.word_dropout(sentence_tensor)
+
         if self.reproject_words:
             sentence_tensor = self.word_reprojection_map(sentence_tensor)
 

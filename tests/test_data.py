@@ -1,8 +1,9 @@
 import os
 
 import pytest
+from typing import List
 
-from flair.data import Sentence, Label, Token, Dictionary, TaggedCorpus
+from flair.data import Sentence, Label, Token, Dictionary, TaggedCorpus, Span
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 
 
@@ -71,13 +72,13 @@ def test_sentence_infer_tokenization():
     sentence.add_token(Token('"'))
     sentence.add_token(Token('abc'))
     sentence.add_token(Token('"'))
-    sentence._infer_space_after()
+    sentence.infer_space_after()
 
     assert ('xyz " abc "' == sentence.to_tokenized_string())
     assert ('xyz "abc"' == sentence.to_plain_string())
 
     sentence: Sentence = Sentence('xyz " abc "')
-    sentence._infer_space_after()
+    sentence.infer_space_after()
     assert ('xyz " abc "' == sentence.to_tokenized_string())
     assert ('xyz "abc"' == sentence.to_plain_string())
 
@@ -229,15 +230,15 @@ def test_tagged_corpus_make_vocab_dictionary():
 def test_label_set_confidence():
     label = Label('class_1', 3.2)
 
-    assert (0.0 == label.confidence)
-    assert ('class_1' == label.name)
+    assert (1.0 == label.score)
+    assert ('class_1' == label.value)
 
-    label.confidence = 0.2
+    label.score = 0.2
 
-    assert (0.2 == label.confidence)
+    assert (0.2 == label.score)
 
-    with pytest.raises(ValueError):
-        label.name = ''
+    # with pytest.raises(ValueError):
+    #     label.name = ''
 
 
 def test_tagged_corpus_make_label_dictionary():
@@ -330,7 +331,6 @@ def test_tagged_corpus_statistics_multi_label():
     assert (4 == tokens_in_sentences[2])
 
 
-
 def test_tagged_corpus_downsample():
     sentence = Sentence('I love Berlin.', labels=[Label('class_1')], use_tokenizer=True)
 
@@ -342,3 +342,110 @@ def test_tagged_corpus_downsample():
     corpus.downsample(percentage=0.3, only_downsample_train=True)
 
     assert (3 == len(corpus.train))
+
+
+def test_spans():
+    sentence = Sentence('Zalando Research is located in Berlin .')
+
+    # bioes tags
+    sentence[0].add_tag('ner', 'B-ORG')
+    sentence[1].add_tag('ner', 'E-ORG')
+    sentence[5].add_tag('ner', 'S-LOC')
+
+    spans: List[Span] = sentence.get_spans('ner')
+
+    assert (2 == len(spans))
+    assert ('Zalando Research' == spans[0].text)
+    assert ('ORG' == spans[0].tag)
+    assert ('Berlin' == spans[1].text)
+    assert ('LOC' == spans[1].tag)
+
+    # bio tags
+    sentence[0].add_tag('ner', 'B-ORG')
+    sentence[1].add_tag('ner', 'I-ORG')
+    sentence[5].add_tag('ner', 'B-LOC')
+
+    spans: List[Span] = sentence.get_spans('ner')
+
+    assert ('Zalando Research' == spans[0].text)
+    assert ('ORG' == spans[0].tag)
+    assert ('Berlin' == spans[1].text)
+    assert ('LOC' == spans[1].tag)
+
+    # broken tags
+    sentence[0].add_tag('ner', 'I-ORG')
+    sentence[1].add_tag('ner', 'E-ORG')
+    sentence[5].add_tag('ner', 'I-LOC')
+
+    spans: List[Span] = sentence.get_spans('ner')
+
+    assert ('Zalando Research' == spans[0].text)
+    assert ('ORG' == spans[0].tag)
+    assert ('Berlin' == spans[1].text)
+    assert ('LOC' == spans[1].tag)
+
+    # all tags
+    sentence[0].add_tag('ner', 'I-ORG')
+    sentence[1].add_tag('ner', 'E-ORG')
+    sentence[2].add_tag('ner', 'aux')
+    sentence[3].add_tag('ner', 'verb')
+    sentence[4].add_tag('ner', 'preposition')
+    sentence[5].add_tag('ner', 'I-LOC')
+
+    spans: List[Span] = sentence.get_spans('ner')
+    assert (5 == len(spans))
+    assert ('Zalando Research' == spans[0].text)
+    assert ('ORG' == spans[0].tag)
+    assert ('Berlin' == spans[4].text)
+    assert ('LOC' == spans[4].tag)
+
+    # all weird tags
+    sentence[0].add_tag('ner', 'I-ORG')
+    sentence[1].add_tag('ner', 'S-LOC')
+    sentence[2].add_tag('ner', 'aux')
+    sentence[3].add_tag('ner', 'B-relation')
+    sentence[4].add_tag('ner', 'E-preposition')
+    sentence[5].add_tag('ner', 'S-LOC')
+
+    spans: List[Span] = sentence.get_spans('ner')
+    assert (5 == len(spans))
+    assert ('Zalando' == spans[0].text)
+    assert ('ORG' == spans[0].tag)
+    assert ('Research' == spans[1].text)
+    assert ('LOC' == spans[1].tag)
+    assert ('located in' == spans[3].text)
+    assert ('relation' == spans[3].tag)
+
+    sentence = Sentence(
+        'A woman was charged on Friday with terrorist offences after three Irish Republican Army mortar bombs were found in a Belfast house , police said . ')
+    sentence[11].add_tag('ner', 'S-MISC')
+    sentence[12].add_tag('ner', 'B-MISC')
+    sentence[13].add_tag('ner', 'E-MISC')
+    spans: List[Span] = sentence.get_spans('ner')
+    assert (2 == len(spans))
+    assert ('Irish' == spans[0].text)
+    assert ('Republican Army' == spans[1].text)
+
+    sentence = Sentence('Zalando Research is located in Berlin .')
+
+    # tags with confidence
+    sentence[0].add_tag('ner', 'B-ORG', 1.0)
+    sentence[1].add_tag('ner', 'E-ORG', 0.9)
+    sentence[5].add_tag('ner', 'S-LOC', 0.5)
+
+    spans: List[Span] = sentence.get_spans('ner', min_score=0.)
+
+    assert (2 == len(spans))
+    assert ('Zalando Research' == spans[0].text)
+    assert ('ORG' == spans[0].tag)
+    assert (0.95 == spans[0].score)
+
+    assert ('Berlin' == spans[1].text)
+    assert ('LOC' == spans[1].tag)
+    assert (0.5 == spans[1].score)
+
+    spans: List[Span] = sentence.get_spans('ner', min_score=0.6)
+    assert (1 == len(spans))
+
+    spans: List[Span] = sentence.get_spans('ner', min_score=0.99)
+    assert (0 == len(spans))
