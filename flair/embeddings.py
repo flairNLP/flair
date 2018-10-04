@@ -669,8 +669,6 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
         packed = torch.nn.utils.rnn.pack_padded_sequence(sentence_tensor, lengths)
 
-        self.rnn.flatten_parameters()
-
         lstm_out, hidden = self.rnn(packed)
 
         outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(lstm_out)
