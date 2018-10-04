@@ -3,8 +3,9 @@ awscli==1.14.32
 gensim==3.4.0
 typing==3.6.4
 pytest==3.6.4
-tqdm
-segtok
-matplotlib
-mpld3
-sklearn
+tqdm==4.26.0
+segtok==1.5.7
+matplotlib==3.0.0
+mpld3==0.3
+jinja2==2.10
+sklearn==0.0

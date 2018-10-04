@@ -1,7 +1,7 @@
 import numpy
 
 
-class Highlighter:
+class Highlighter(object):
 
     def __init__(self):
         self.color_map = [
