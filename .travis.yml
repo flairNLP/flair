@@ -1,6 +1,7 @@
 env:
   - TRAVIS=true
 language: python
+sudo: false
 python:
   - "3.6"
 install:
@@ -9,5 +10,5 @@ before_script: cd tests
 script:
   - pytest
 branches:
-  only: 
+  only:
     - master
