@@ -67,7 +67,10 @@ def test_show_word_embeddings():
     trans_ = tSNE()
     reduced = trans_.fit(X)
 
-    show(reduced, contexts)
+    visualize(reduced, contexts, './resources/visual/sentence_embeddings.html')
+
+    # clean up directory
+    os.remove('./resources/visual/sentence_embeddings.html')
 
 
 @pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
@@ -93,7 +96,10 @@ def test_show_char_embeddings():
     trans_ = tSNE()
     reduced = trans_.fit(X)
 
-    show(reduced, contexts)
+    visualize(reduced, contexts, './resources/visual/char_embeddings.html')
+
+    # clean up directory
+    os.remove('./resources/visual/char_embeddings.html')
 
 
 @pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
@@ -115,7 +121,10 @@ def test_show_uni_sentence_embeddings():
 
     contexts = char_contexts(sentences)
 
-    show(reduced[:l], contexts[:l])
+    visualize(reduced[:l], contexts[:l], './resources/visual/uni_sentence_embeddings.html')
+
+    # clean up directory
+    os.remove('./resources/visual/uni_sentence_embeddings.html')
 
 
 def test_highlighter():
@@ -126,9 +135,10 @@ def test_highlighter():
 
     features = embeddings.lm.get_representation(sentences[0]).squeeze()
 
-    Highlighter().highlight_selection(features, sentences[0], n=1000, file_='./resources/visual/data/highligh.html')
+    Highlighter().highlight_selection(features, sentences[0], n=1000, file_='./resources/visual/highligh.html')
 
-    shutil.rmtree('./resources/visual/data')
+    # clean up directory
+    os.remove('./resources/visual/highligh.html')
 
 
 def test_plotting_training_curves_and_weights():

@@ -38,7 +38,6 @@ def word_contexts(sentences):
 
 
 def prepare_char_embeddings(embeddings, sentences):
-
     X = []
 
     print('computing embeddings')
@@ -55,7 +54,6 @@ def prepare_char_embeddings(embeddings, sentences):
 
 
 def char_contexts(sentences):
-
     contexts = []
 
     for sentence in sentences:
@@ -89,7 +87,7 @@ class tSNE(_Transform):
             TSNE(n_components=2, verbose=1, perplexity=40, n_iter=300)
 
 
-def show(X, contexts):
+def visualize(X, contexts, file):
     import matplotlib.pyplot
     import mpld3
 
@@ -113,4 +111,4 @@ def show(X, contexts):
 
     mpld3.plugins.connect(fig, tooltip)
 
-    mpld3.show()
+    mpld3.save_html(fig, file)
