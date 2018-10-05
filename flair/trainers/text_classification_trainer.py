@@ -11,9 +11,12 @@ from flair.models.text_classification_model import TextClassifier
 from flair.training_utils import convert_labels_to_one_hot, calculate_micro_avg_metric, init_output_file, \
     clear_embeddings, calculate_class_metrics, WeightExtractor, Metric
 
+
 MICRO_AVG_METRIC = 'MICRO_AVG'
 
+
 log = logging.getLogger(__name__)
+
 
 class TextClassifierTrainer:
     """
@@ -216,16 +219,13 @@ class TextClassifierTrainer:
             labels = self.model.obtain_labels(scores)
             loss = self.model.calculate_loss(scores, batch)
 
-            eval_loss += loss
-
-            y_true.extend([sentence.get_label_names() for sentence in batch])
-            y_pred.extend([[label.value for label in sent_labels] for sent_labels in labels])
-
             if not embeddings_in_memory:
                 clear_embeddings(batch)
 
-        y_true = convert_labels_to_one_hot(y_true, self.label_dict)
-        y_pred = convert_labels_to_one_hot(y_pred, self.label_dict)
+            eval_loss += loss
+
+            y_pred.extend(convert_labels_to_one_hot([[label.value for label in sent_labels] for sent_labels in labels], self.label_dict))
+            y_true.extend(convert_labels_to_one_hot([sentence.get_label_names() for sentence in batch], self.label_dict))
 
         metrics = [calculate_micro_avg_metric(y_true, y_pred, self.label_dict)]
         if eval_class_metrics:
