@@ -142,8 +142,6 @@ class TextClassifierTrainer:
                     f.write('{}\t{:%H:%M:%S}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
                         epoch, datetime.datetime.now(), train_loss, train_metric_str, dev_loss, dev_metric_str, '_', Metric.to_empty_tsv()))
 
-                self.model.train()
-
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_metric.f_score())
 

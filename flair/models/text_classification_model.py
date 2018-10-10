@@ -64,6 +64,8 @@ class TextClassifier(nn.Module):
         Saves the current model to the provided file.
         :param model_file: the model file
         """
+        self.eval()
+
         model_state = {
             'state_dict': self.state_dict(),
             'document_embeddings': self.document_embeddings,
