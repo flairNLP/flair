@@ -169,10 +169,10 @@ class Token:
         return self.sentence.get_token(self.head_id)
 
     def __str__(self) -> str:
-        return 'Token: %d %s' % (self.idx, self.text) if self.idx is not None else 'Token: %s' % (self.text)
+        return 'Token: {} {}'.format(self.idx, self.text) if self.idx is not None else 'Token: {}'.format(self.text)
 
     def __repr__(self) -> str:
-        return 'Token: %d %s' % (self.idx, self.text) if self.idx is not None else 'Token: %s' % (self.text)
+        return 'Token: {} {}'.format(self.idx, self.text) if self.idx is not None else 'Token: {}'.format(self.text)
 
     def set_embedding(self, name: str, vector: torch.autograd.Variable):
         self._embeddings[name] = vector.cpu()
@@ -480,20 +480,20 @@ class Sentence:
         return iter(self.tokens)
 
     def __repr__(self):
-        return 'Sentence: "' + ' '.join([t.text for t in self.tokens]) + '" - %d Tokens' % len(self)
+        return 'Sentence: "{}" - {} Tokens'.format(' '.join([t.text for t in self.tokens]), len(self))
 
     def __copy__(self):
         s = Sentence()
         for token in self.tokens:
             nt = Token(token.text)
             for tag_type in token.tags:
-                nt.add_tag(tag_type, token.get_tag(tag_type))
+                nt.add_tag(tag_type, token.get_tag(tag_type).value, token.get_tag(tag_type).score)
 
             s.add_token(nt)
         return s
 
     def __str__(self) -> str:
-        return 'Sentence: "' + ' '.join([t.text for t in self.tokens]) + '" - %d Tokens' % len(self)
+        return 'Sentence: "{}" - {} Tokens'.format(' '.join([t.text for t in self.tokens]), len(self))
 
     def __len__(self) -> int:
         return len(self.tokens)

@@ -1,7 +1,7 @@
 import os
 import re
 from abc import abstractmethod
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Tuple
 
 import gensim
 import numpy as np
@@ -94,11 +94,11 @@ class StackedEmbeddings(TokenEmbeddings):
 
         # IMPORTANT: add embeddings as torch modules
         for i, embedding in enumerate(embeddings):
-            self.add_module('list_embedding_%s' % str(i), embedding)
+            self.add_module('list_embedding_{}'.format(i), embedding)
 
-        self.detach = detach
-        self.name = 'Stack'
-        self.static_embeddings = True
+        self.detach: bool = detach
+        self.name: str = 'Stack'
+        self.static_embeddings: bool = True
 
         self.__embedding_type: str = embeddings[0].embedding_type
 
@@ -111,6 +111,7 @@ class StackedEmbeddings(TokenEmbeddings):
         if type(sentences) is Sentence:
             sentences = [sentences]
 
+        # default case: do not use cache
         for embedding in self.embeddings:
             embedding.embed(sentences)
 
@@ -355,7 +356,7 @@ class CharacterEmbeddings(TokenEmbeddings):
 class CharLMEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
-    def __init__(self, model, detach: bool = True):
+    def __init__(self, model, detach: bool = True, use_cache: bool = True):
         """
             Contextual string embeddings of words, as proposed in Akbik et al., 2018.
 
@@ -419,17 +420,56 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         self.is_forward_lm: bool = self.lm.is_forward_lm
 
+        # caching variables
+        self.use_cache: bool = use_cache
+        self.cache_added: int = 0
+        self.cache = None
+
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token('hello'))
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
+
+    def __getstate__(self):
+        # Copy the object's state from self.__dict__ which contains
+        # all our instance attributes. Always use the dict.copy()
+        # method to avoid modifying the original state.
+        state = self.__dict__.copy()
+        # Remove the unpicklable entries.
+        state['cache'] = None
+        return state
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        # get text sentences
+
+        # if cache is used, try setting embeddings from cache first
+        if self.use_cache:
+
+            # lazy initialization of cache
+            if not self.cache:
+                from sqlitedict import SqliteDict
+                self.cache = SqliteDict('{}-tmp-cache.sqllite'.format(self.name), autocommit=True)
+
+            # try populating embeddings from cache
+            all_embeddings_retrieved_from_cache: bool = True
+            for sentence in sentences:
+                key = sentence.to_tokenized_string()
+                embeddings = self.cache.get(key)
+
+                if not embeddings:
+                    all_embeddings_retrieved_from_cache = False
+                    break
+                else:
+                    for token, embedding in zip(sentence, embeddings):
+                        token.set_embedding(self.name, torch.FloatTensor(embedding))
+
+            if all_embeddings_retrieved_from_cache:
+                return sentences
+
+        # if this is not possible, use LM to generate embedding. First, get text sentences
         text_sentences = [sentence.to_tokenized_string() for sentence in sentences]
 
         longest_character_sequence_in_batch: int = len(max(text_sentences, key=len))
@@ -478,6 +518,11 @@ class CharLMEmbeddings(TokenEmbeddings):
                 offset_backward -= len(token.text)
 
                 token.set_embedding(self.name, embedding)
+
+        if self.use_cache:
+            for sentence in sentences:
+                self.cache[sentence.to_tokenized_string()] = [token._embeddings[self.name].tolist() for token in sentence]
+                self.cache_added += 1
 
         return sentences
 
