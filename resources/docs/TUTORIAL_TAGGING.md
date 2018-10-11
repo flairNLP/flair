@@ -32,6 +32,46 @@ This should print:
 George <B-PER> Washington <E-PER> went to Washington <S-LOC> . 
 ```
 
+## Getting Annotated Spans
+
+Many sequence labeling methods annotate spans that consist of multiple words,
+such as "George Washington" in our example sentence.
+
+You can directly get such spans a tagged sentence like this:
+
+```python
+for entity in sentence.get_spans('ner'):
+    print(entity)
+```
+
+This should print:
+```console
+PER-span [1,2]: "George Washington"
+LOC-span [5]: "Washington"
+```
+
+Which indicates that "George Washington" is a person (PER) and "Washington" is
+a location (LOC). Each such `Span` has a text, a tag value, its position
+in the sentence and "score" that indicates how confident the tagger is that the prediction is correct.
+
+You can also get additional information, such as the position offsets of
+each entity in the sentence by calling:
+
+```python
+print(sentence.to_dict(tag_type='ner'))
+```
+
+This should print:
+```console
+{'text': 'George Washington went to Washington .',
+    'entities': [
+        {'text': 'George Washington', 'start_pos': 0, 'end_pos': 17, 'type': 'PER', 'confidence': 0.9999},
+        {'text': 'Washington', 'start_pos': 26, 'end_pos': 36, 'type': 'LOC', 'confidence': 0.9988}
+    ]}
+```
+
+## List of Pre-Trained Models
+
 You chose which pre-trained model you load by passing the appropriate 
 string to the `load()` method of the `SequenceTagger` class. Currently, the following pre-trained models
 are provided:

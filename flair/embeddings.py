@@ -456,6 +456,10 @@ class CharLMEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
+        # by default, use_cache is false (for older pre-trained models TODO: remove in version 0.4)
+        if 'cache' not in self.__dict__:
+            self.use_cache = False
+
         # if cache is used, try setting embeddings from cache first
         if self.use_cache:
 
