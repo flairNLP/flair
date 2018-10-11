@@ -56,7 +56,7 @@ are provided (more coming):
 | 'en-numberbatch' (or 'numberbatch') | English |[Numberbatch](https://github.com/commonsense/conceptnet-numberbatch) embeddings |
 | 'en-extvec' (or 'extvec') | English |Komnios embeddings |
 | 'en-crawl' (or 'crawl')  | English | FastText embeddings over Web crawls |
-| 'en-news' (or 'news')  |E nglish | FastText embeddings over news and wikipedia data |
+| 'en-news' (or 'news')  |English | FastText embeddings over news and wikipedia data |
 | 'en-twitter' (or 'twitter')  | English | GloVe embeddings computed over twitter data |
 | 'de-fasttext' | German |German FastText embeddings |
 | 'de-numberbatch' | German | German Numberbatch embeddings |
@@ -167,7 +167,8 @@ Now instantiate the `StackedEmbeddings` class and pass it a list containing thes
 from flair.embeddings import StackedEmbeddings
 
 # now create the StackedEmbedding object that combines all embeddings
-stacked_embeddings = StackedEmbeddings(embeddings=[glove_embedding, charlm_embedding_forward, charlm_embedding_backward])
+stacked_embeddings = StackedEmbeddings(
+    embeddings=[glove_embedding, charlm_embedding_forward, charlm_embedding_backward])
 ```
 
 That's it! Now just use this embedding like all the other embeddings, i.e. call the `embed()` method over your sentences.
