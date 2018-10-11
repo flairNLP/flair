@@ -111,7 +111,6 @@ class StackedEmbeddings(TokenEmbeddings):
         if type(sentences) is Sentence:
             sentences = [sentences]
 
-        # default case: do not use cache
         for embedding in self.embeddings:
             embedding.embed(sentences)
 
@@ -368,6 +367,9 @@ class CharLMEmbeddings(TokenEmbeddings):
             arg2 : detach
                 if set to false, the gradient will propagate into the language model. this dramatically slows down
                 training and often leads to worse results, so not recommended.
+            arg3 : use_cache
+                if set to false, will not write embeddings to file for later retrieval. this saves disk space but will
+                not allow re-use of once computed embeddings that do not fit into memory
         """
         super().__init__()
 

@@ -47,6 +47,7 @@ class SequenceTaggerTrainer:
 
         optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
 
+        # annealing scheduler
         anneal_mode = 'min' if train_with_dev else 'max'
         scheduler = ReduceLROnPlateau(optimizer, factor=anneal_factor, patience=patience, mode=anneal_mode, verbose=True)
 
@@ -60,23 +61,23 @@ class SequenceTaggerTrainer:
         try:
 
             previous_learning_rate = learning_rate
+
             for epoch in range(0, max_epochs):
 
                 bad_epochs = scheduler.num_bad_epochs
                 for group in optimizer.param_groups:
                     learning_rate = group['lr']
 
+                # reload last best model if annealing with restarts is enabled
                 if learning_rate != previous_learning_rate and anneal_with_restarts:
-                    print('resetting to best model')
+                    log.info('resetting to best model')
                     self.model.load_from_file(base_path + "/best-model.pt")
-                    # restart optimizer and scheduler
-                    optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
-                    scheduler = ReduceLROnPlateau(optimizer, factor=anneal_factor, patience=patience, mode=anneal_mode)
 
                 previous_learning_rate = learning_rate
 
+                # stop training if learning rate becomes too small
                 if learning_rate < 0.001:
-                    print('learning rate too small - quitting training!')
+                    log.info('learning rate too small - quitting training!')
                     break
 
                 if not self.test_mode: random.shuffle(train_data)
@@ -137,6 +138,7 @@ class SequenceTaggerTrainer:
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_score)
 
+                # logging info
                 log.info("EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, bad_epochs))
                 if not train_with_dev:
                     log.info("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
