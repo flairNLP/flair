@@ -129,6 +129,12 @@ class Label:
         else:
             self._score = 1.0
 
+    def to_dict(self):
+        return {
+            'value': self.value,
+            'confidence': self.score
+        }
+
     def __str__(self):
         return "{} ({})".format(self._value, self._score)
 
@@ -147,11 +153,15 @@ class Token:
                  idx: int = None,
                  head_id: int = None,
                  whitespace_after: bool = True,
+                 start_position: int = None
                  ):
         self.text: str = text
         self.idx: int = idx
         self.head_id: int = head_id
         self.whitespace_after: bool = whitespace_after
+
+        self.start_pos = start_position
+        self.end_pos = start_position + len(text) if start_position is not None else None
 
         self.sentence: Sentence = None
         self._embeddings: Dict = {}
@@ -167,12 +177,6 @@ class Token:
 
     def get_head(self):
         return self.sentence.get_token(self.head_id)
-
-    def __str__(self) -> str:
-        return 'Token: {} {}'.format(self.idx, self.text) if self.idx is not None else 'Token: {}'.format(self.text)
-
-    def __repr__(self) -> str:
-        return 'Token: {} {}'.format(self.idx, self.text) if self.idx is not None else 'Token: {}'.format(self.text)
 
     def set_embedding(self, name: str, vector: torch.autograd.Variable):
         self._embeddings[name] = vector.cpu()
@@ -190,8 +194,22 @@ class Token:
         return torch.FloatTensor()
 
     @property
+    def start_position(self) -> int:
+        return self.start_pos
+
+    @property
+    def end_position(self) -> int:
+        return self.end_pos
+
+    @property
     def embedding(self):
         return self.get_embedding()
+
+    def __str__(self) -> str:
+        return 'Token: {} {}'.format(self.idx, self.text) if self.idx is not None else 'Token: {}'.format(self.text)
+
+    def __repr__(self) -> str:
+        return 'Token: {} {}'.format(self.idx, self.text) if self.idx is not None else 'Token: {}'.format(self.text)
 
 
 class Span:
@@ -203,10 +221,38 @@ class Span:
         self.tokens = tokens
         self.tag = tag
         self.score = score
+        self.start_pos = None
+        self.end_pos = None
+
+        if tokens:
+            self.start_pos = tokens[0].start_position
+            self.end_pos = tokens[len(tokens) - 1].end_position
 
     @property
     def text(self) -> str:
         return ' '.join([t.text for t in self.tokens])
+
+    def to_original_text(self) -> str:
+        str = ''
+        pos = self.tokens[0].start_pos
+        for t in self.tokens:
+            while t.start_pos != pos:
+                str += ' '
+                pos += 1
+
+            str += t.text
+            pos += len(t.text)
+
+        return str
+
+    def to_dict(self):
+        return {
+            'text': self.to_original_text(),
+            'start_pos': self.start_pos,
+            'end_pos': self.end_pos,
+            'type': self.tag,
+            'confidence': self.score
+        }
 
     def __str__(self) -> str:
         ids = ','.join([str(t.idx) for t in self.tokens])
@@ -254,7 +300,7 @@ class Sentence:
                 last_word_offset = -1
                 last_token = None
                 for word in tokens:
-                    token = Token(word)
+                    token = Token(word, start_position=index(word, running_offset))
                     self.add_token(token)
                     try:
                         word_offset = index(word, running_offset)
@@ -270,10 +316,12 @@ class Sentence:
             # otherwise assumes whitespace tokenized text
             else:
                 # add each word in tokenized string as Token object to Sentence
+                offset = 0
                 for word in text.split(' '):
                     if word:
-                        token = Token(word)
+                        token = Token(word, start_position=text.index(word, offset))
                         self.add_token(token)
+                        offset += len(word) + 1
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
@@ -472,6 +520,34 @@ class Sentence:
 
             last_token = token
         return self
+
+    def to_original_text(self) -> str:
+        str = ''
+        pos = 0
+        for t in self.tokens:
+            while t.start_pos != pos:
+                str += ' '
+                pos += 1
+
+            str += t.text
+            pos += len(t.text)
+
+        return str
+
+    def to_dict(self, tag_type: str = None):
+        labels = []
+        entities = []
+
+        if tag_type:
+            entities = [span.to_dict() for span in self.get_spans(tag_type)]
+        if self.labels:
+            labels = [l.to_dict() for l in self.labels]
+
+        return {
+            'text': self.to_original_text(),
+            'labels': labels,
+            'entities': entities
+        }
 
     def __getitem__(self, idx: int) -> Token:
         return self.tokens[idx]

@@ -449,3 +449,56 @@ def test_spans():
 
     spans: List[Span] = sentence.get_spans('ner', min_score=0.99)
     assert (0 == len(spans))
+
+
+def test_token_position_in_sentence():
+    sentence = Sentence("I love Berlin .")
+
+    assert(0 == sentence.tokens[0].start_position)
+    assert(1 == sentence.tokens[0].end_position)
+    assert(2 == sentence.tokens[1].start_position)
+    assert(6 == sentence.tokens[1].end_position)
+    assert(7 == sentence.tokens[2].start_position)
+    assert(13 == sentence.tokens[2].end_position)
+
+    sentence = Sentence(" I love  Berlin.", use_tokenizer=True)
+
+    assert(1 == sentence.tokens[0].start_position)
+    assert(2 == sentence.tokens[0].end_position)
+    assert(3 == sentence.tokens[1].start_position)
+    assert(7 == sentence.tokens[1].end_position)
+    assert(9 == sentence.tokens[2].start_position)
+    assert(15 == sentence.tokens[2].end_position)
+
+
+def test_sentence_to_dict():
+    sentence = Sentence('Zalando Research is   located in Berlin, the capital of Germany.', labels=['business'], use_tokenizer=True)
+
+    # bioes tags
+    sentence[0].add_tag('ner', 'B-ORG')
+    sentence[1].add_tag('ner', 'E-ORG')
+    sentence[5].add_tag('ner', 'S-LOC')
+    sentence[10].add_tag('ner', 'S-LOC')
+
+    dict = sentence.to_dict('ner')
+
+    assert ('Zalando Research is   located in Berlin, the capital of Germany.' == dict['text'])
+    assert ('Zalando Research' == dict['entities'][0]['text'])
+    assert ('Berlin' == dict['entities'][1]['text'])
+    assert ('Germany' == dict['entities'][2]['text'])
+    assert (1 == len(dict['labels']))
+
+    sentence = Sentence('Facebook, Inc. is a company, and Google is one as well.', use_tokenizer=True)
+
+    # bioes tags
+    sentence[0].add_tag('ner', 'B-ORG')
+    sentence[1].add_tag('ner', 'I-ORG')
+    sentence[2].add_tag('ner', 'E-ORG')
+    sentence[8].add_tag('ner', 'S-ORG')
+
+    dict = sentence.to_dict('ner')
+
+    assert ('Facebook, Inc. is a company, and Google is one as well.' == dict['text'])
+    assert ('Facebook, Inc.' == dict['entities'][0]['text'])
+    assert ('Google' == dict['entities'][1]['text'])
+    assert (0 == len(dict['labels']))
