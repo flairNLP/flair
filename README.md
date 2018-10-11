@@ -31,7 +31,7 @@ Now at [version 0.2.0](https://github.com/zalandoresearch/flair/releases)!
 
 Flair outperforms the previous best methods on a range of NLP tasks:
 
-| Task | Dataset | Flair | Previous best |
+| Task | Dataset | F | Previous best |
 | -------------------------------    | ----------- | ---------------- | ------------- |
 | Named Entity Recognition (English) | Conll-03    |  **93.09** (F1)  | *92.22 [(Peters et al., 2018)](https://arxiv.org/pdf/1802.05365.pdf)* |
 | Named Entity Recognition (English) | Ontonotes   |  **89.71** (F1)  | *86.28 [(Chiu et al., 2016)](https://arxiv.org/pdf/1511.08308.pdf)* |
@@ -56,7 +56,7 @@ Alan Akbik, Duncan Blythe and Roland Vollgraf.
 ### Requirements and Installation
 
 The project is based on PyTorch 0.4+ and Python 3.6+, because methods signatures and type hints are beautiful.
-If you do not have Python 3.6, install it first. [Here is how for Ubuntu 16.04](http://ubuntuhandbook.org/index.php/2017/07/install-python-3-6-1-in-ubuntu-16-04-lts/). 
+If you do not have Python 3.6, install it first. [Here is how for Ubuntu 16.04](https://vsupalov.com/developing-with-python3-6-on-ubuntu-16-04/).
 Then, in your favorite virtual environment, simply do:
 
 ```
