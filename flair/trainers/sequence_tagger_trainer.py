@@ -31,6 +31,7 @@ class SequenceTaggerTrainer:
               embeddings_in_memory: bool = True,
               checkpoint: bool = False,
               save_final_model: bool = True,
+              anneal_with_restarts: bool = False,
               ):
 
         evaluation_method = 'F1'
@@ -46,9 +47,9 @@ class SequenceTaggerTrainer:
 
         optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
 
+        # annealing scheduler
         anneal_mode = 'min' if train_with_dev else 'max'
-        scheduler: ReduceLROnPlateau = ReduceLROnPlateau(optimizer, factor=anneal_factor, patience=patience,
-                                                         mode=anneal_mode)
+        scheduler = ReduceLROnPlateau(optimizer, factor=anneal_factor, patience=patience, mode=anneal_mode, verbose=True)
 
         train_data = self.corpus.train
 
@@ -59,8 +60,25 @@ class SequenceTaggerTrainer:
         # At any point you can hit Ctrl + C to break out of training early.
         try:
 
-            for epoch in range(max_epochs):
-                log.info('-' * 100)
+            previous_learning_rate = learning_rate
+
+            for epoch in range(0, max_epochs):
+
+                bad_epochs = scheduler.num_bad_epochs
+                for group in optimizer.param_groups:
+                    learning_rate = group['lr']
+
+                # reload last best model if annealing with restarts is enabled
+                if learning_rate != previous_learning_rate and anneal_with_restarts:
+                    log.info('resetting to best model')
+                    self.model.load_from_file(base_path + "/best-model.pt")
+
+                previous_learning_rate = learning_rate
+
+                # stop training if learning rate becomes too small
+                if learning_rate < 0.001:
+                    log.info('learning rate too small - quitting training!')
+                    break
 
                 if not self.test_mode: random.shuffle(train_data)
 
@@ -71,9 +89,6 @@ class SequenceTaggerTrainer:
                 current_loss: float = 0
                 seen_sentences = 0
                 modulo = max(1, int(len(batches) / 10))
-
-                for group in optimizer.param_groups:
-                    learning_rate = group['lr']
 
                 for batch_no, batch in enumerate(batches):
                     batch: List[Sentence] = batch
@@ -113,27 +128,31 @@ class SequenceTaggerTrainer:
                 dev_score = dev_metric = None
                 if not train_with_dev:
                     dev_score, dev_metric = self.evaluate(self.corpus.dev, base_path,
-                                                                  evaluation_method=evaluation_method,
-                                                                  embeddings_in_memory=embeddings_in_memory)
+                                                          evaluation_method=evaluation_method,
+                                                          embeddings_in_memory=embeddings_in_memory)
 
                 test_score, test_metric = self.evaluate(self.corpus.test, base_path,
-                                                                 evaluation_method=evaluation_method,
-                                                                 embeddings_in_memory=embeddings_in_memory)
+                                                        evaluation_method=evaluation_method,
+                                                        embeddings_in_memory=embeddings_in_memory)
 
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_score)
 
-                log.info("EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, scheduler.num_bad_epochs))
+                # logging info
+                log.info("EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, bad_epochs))
                 if not train_with_dev:
                     log.info("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
-                        'DEV', dev_metric.f_score(), dev_metric.accuracy(), dev_metric._tp, dev_metric._fp, dev_metric._fn, dev_metric._tn))
+                        'DEV', dev_metric.f_score(), dev_metric.accuracy(), dev_metric._tp, dev_metric._fp,
+                        dev_metric._fn, dev_metric._tn))
                 log.info("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
-                    'TEST', test_metric.f_score(), test_metric.accuracy(), test_metric._tp, test_metric._fp, test_metric._fn, test_metric._tn))
+                    'TEST', test_metric.f_score(), test_metric.accuracy(), test_metric._tp, test_metric._fp,
+                    test_metric._fn, test_metric._tn))
 
                 with open(loss_txt, 'a') as f:
                     dev_metric_str = dev_metric.to_tsv() if dev_metric is not None else Metric.to_empty_tsv()
                     f.write('{}\t{:%H:%M:%S}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
-                        epoch, datetime.datetime.now(), '_', Metric.to_empty_tsv(), '_', dev_metric_str, '_', test_metric.to_tsv()))
+                        epoch, datetime.datetime.now(), '_', Metric.to_empty_tsv(), '_', dev_metric_str, '_',
+                        test_metric.to_tsv()))
 
                 # if we use dev data, remember best model based on dev evaluation score
                 if not train_with_dev and dev_score == scheduler.best:
