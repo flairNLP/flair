@@ -463,6 +463,7 @@ class CharLMEmbeddings(TokenEmbeddings):
         # by default, use_cache is false (for older pre-trained models TODO: remove in version 0.4)
         if 'cache' not in self.__dict__:
             self.use_cache = False
+            self.cache_directory = None
 
         # if cache is used, try setting embeddings from cache first
         if self.use_cache:
