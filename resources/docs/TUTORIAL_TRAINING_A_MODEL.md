@@ -146,7 +146,7 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
 # 6. initialize trainer
 from flair.trainers import SequenceTaggerTrainer
 
-trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus)
 
 # 7. start training
 trainer.train('resources/taggers/example-ner',
@@ -175,15 +175,15 @@ The AGNews corpus can be downloaded [here](https://www.di.unipi.it/~gulli/AG_cor
 
 ### Preparing the data
 
-You need to convert the data into the following format so that the `NLPTaskDataFetcher` can read it:
+We use the [FastText format](https://fasttext.cc/docs/en/supervised-tutorial.html) for text classification data, in which
+each line in the file represents a text document. A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix
+`__label__`. This looks like this:
+
 
 ```bash
 __label__<label_1> <text>
 __label__<label_1> __label__<label_2> <text>
 ```
-
-Here, each line in the file contains a textual document. A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix
-`__label__`. (If your text classification data files have a different format, feel free to add new methods to the `NLPTaskDataFetcher`.)
 
 Point the `NLPTaskDataFetcher` to this file to convert each line to a `Sentence` object annotated with the labels. It returns a list of `Sentence`.
 
