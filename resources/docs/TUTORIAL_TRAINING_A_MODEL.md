@@ -257,15 +257,39 @@ plotter.plot_weights('resources/ag_news/results/weights.txt')
 Once the model is trained you can use it to predict the class of new sentences. Just call the `predict` method of the
 model.
 
-```
+```python
 sentences = model.predict(Sentence('France is the current world cup winner.'))
 
 ```
 The predict method adds the class labels directly to the sentences. Each label has a name and a confidence value.
-```
+```python
 for sentence in sentences:
     print(sentence.labels)
 ```
+
+
+## Plotting Training Curves and Weights
+
+Flair includes a helper method to plot training curves and weights in the neural network.
+Both the `SequenceTaggerTrainer` and `TextClassificationTrainer` automatically generate a `loss.tsv` and a `weights.txt`
+file in the result folder.
+
+After training, simple point the plotter to these files:
+
+```python
+from flair.visual.training_curves import Plotter
+plotter = Plotter()
+plotter.plot_training_curves('resources/ag_news/results/loss.tsv')
+plotter.plot_weights('resources/ag_news/results/weights.txt')
+```
+
+This generates PNG plots in the result folder.
+
+
+## Training on Large Data Sets
+
+
+
 
 ## Next
 
