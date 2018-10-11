@@ -149,7 +149,7 @@ class TextClassifierTrainer:
                 is_best_model_so_far: bool = False
                 current_score = dev_metric.f_score() if not train_with_dev else train_metric.f_score()
 
-                if current_score > best_score:
+                if current_score >= best_score:
                     best_score = current_score
                     is_best_model_so_far = True
 
