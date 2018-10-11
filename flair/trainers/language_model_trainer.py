@@ -169,9 +169,13 @@ class LanguageModelTrainer:
               anneal_factor: float = 0.25,
               patience: int = 10,
               clip=0.25,
-              max_epochs: int = 10000):
+              max_epochs: int = 1000):
 
-        number_of_splits = len(self.corpus.train_files)
+        number_of_splits: int = len(self.corpus.train_files)
+
+        # an epoch has a number, so calculate total max splits bby multiplying max_epochs with number_of_splits
+        max_splits: int = number_of_splits * max_epochs
+
         val_data = self._batchify(self.corpus.valid, mini_batch_size)
 
         os.makedirs(base_path, exist_ok=True)
@@ -186,7 +190,7 @@ class LanguageModelTrainer:
             scheduler: ReduceLROnPlateau = ReduceLROnPlateau(optimizer, verbose=True, factor=anneal_factor,
                                                              patience=patience)
 
-            for split in range(1, max_epochs + 1):
+            for split in range(1, max_splits + 1):
 
                 log.info('Split %d' % split + '\t - ({:%H:%M:%S})'.format(datetime.datetime.now()))
 
