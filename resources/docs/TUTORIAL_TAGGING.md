@@ -36,7 +36,6 @@ George <B-PER> Washington <E-PER> went to Washington <S-LOC> .
 
 Many sequence labeling methods annotate spans that consist of multiple words,
 such as "George Washington" in our example sentence.
-
 You can directly get such spans a tagged sentence like this:
 
 ```python
