@@ -31,7 +31,7 @@ Now at [version 0.2.0](https://github.com/zalandoresearch/flair/releases)!
 
 Flair outperforms the previous best methods on a range of NLP tasks:
 
-| Task | Dataset | F | Previous best |
+| Task | Dataset | Flair | Previous best |
 | -------------------------------    | ----------- | ---------------- | ------------- |
 | Named Entity Recognition (English) | Conll-03    |  **93.09** (F1)  | *92.22 [(Peters et al., 2018)](https://arxiv.org/pdf/1802.05365.pdf)* |
 | Named Entity Recognition (English) | Ontonotes   |  **89.71** (F1)  | *86.28 [(Chiu et al., 2016)](https://arxiv.org/pdf/1511.08308.pdf)* |
