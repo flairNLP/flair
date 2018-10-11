@@ -413,6 +413,16 @@ class CharLMEmbeddings(TokenEmbeddings):
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
+        # common crawl Polish forward
+        if model.lower() == 'polish-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-forward-v0.2.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+
+        # common crawl Polish backward
+        if model.lower() == 'polish-backward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-backward-v0.2.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+
         self.name = model
         self.static_embeddings = detach
 

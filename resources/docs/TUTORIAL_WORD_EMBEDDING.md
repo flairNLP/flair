@@ -108,6 +108,8 @@ Currently, the following contextual string embeddings are provided (more coming)
 | 'mix-backward'    | English | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
 | 'german-forward'  | German  | Forward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
 | 'german-backward' | German  | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
+| 'polish-forward'  | Polish  | Forward LM embeddings over web crawls (Polish part of CommonCrawl) |
+| 'polish-backward' | Polish  | Backward LM embeddings over web crawls (Polish part of CommonCrawl) |
 
 So, if you want to load embeddings from the English news backward LM model, instantiate the method as follows:
 
