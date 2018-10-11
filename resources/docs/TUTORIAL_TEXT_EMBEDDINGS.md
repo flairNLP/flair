@@ -25,8 +25,8 @@ Currently, we have two different methods to obtain a document embedding from a l
 The first method calculates the mean over all word embeddings in a document.
 The resulting embedding is taken as document embedding.
 
-To create a mean document embedding simply create any number of `TokenEmbeddings` first.
-Afterwards, initiate the `DocumentMeanEmbeddings` and pass a list containing the created `WordEmbeddings`.
+To create a mean document embedding simply create any number of `TokenEmbeddings` first and put them in a list.
+Afterwards, initiate the `DocumentMeanEmbeddings` with this list of `TokenEmbeddings`.
 So, if you want to create a document embedding using GloVe embeddings together with CharLMEmbeddings,
 use the following code:
 
@@ -91,7 +91,9 @@ print(sentence.get_embedding())
 
 The embedding dimensionality depends on the number of hidden states you are using and whether the LSTM is bidirectional or not.
 
-There are a number of hyperparameters of the LSTM you can tune to improve learning:
+Note that while MEAN embeddings are immediately meaningful, LSTM embeddings need to be tuned on the downstream task.
+This happens automatically in Flair if you train a new model with these embeddings. There are a number of hyperparameters of
+the LSTM you can tune to improve learning:
 
 ```text
 :param hidden_states: the number of hidden states in the lstm
@@ -103,9 +105,6 @@ layer before putting them into the lstm or not
 :param use_first_representation: boolean value, indicating whether to concatenate the first and last
 representation of the lstm to be used as final document embedding or not
 ```
-
-Note that while MEAN embeddings are immediately meaningful, LSTM embeddings need to be tuned on the downstream task.
-This happens automatically in Flair if you train a new model with these embeddings.
 
 
 ## Next 
