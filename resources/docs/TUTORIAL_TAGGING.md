@@ -70,7 +70,7 @@ This should print:
 
 ## List of Pre-Trained Models
 
-You chose which pre-trained model you load by passing the appropriate 
+You choose which pre-trained model you load by passing the appropriate
 string to the `load()` method of the `SequenceTagger` class. Currently, the following pre-trained models
 are provided:
 

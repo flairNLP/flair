@@ -11,7 +11,7 @@ All word embedding classes inherit from the `TokenEmbeddings` class and implemen
 call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains 
 hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
-All embeddings produced with our methods are pytorch vectors, so they can be immediately used for training and 
+All embeddings produced with our methods are Pytorch vectors, so they can be immediately used for training and
 fine-tuning.
 
 ## Classic Word Embeddings
@@ -28,9 +28,8 @@ from flair.embeddings import WordEmbeddings
 # init embedding
 glove_embedding = WordEmbeddings('glove')
 ```
-Now, create an example sentence and call the embedding's `embed()` method. You always pass a list of sentences to 
-this method since some embedding types make use of batching to increase speed. So if you only have one sentence, 
-pass a list containing only one sentence:
+Now, create an example sentence and call the embedding's `embed()` method. You can also pass a list of sentences to
+this method since some embedding types make use of batching to increase speed.
 
 ```python
 # create sentence.
