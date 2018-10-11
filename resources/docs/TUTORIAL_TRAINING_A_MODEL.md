@@ -3,6 +3,9 @@
 This part of the tutorial shows how you can train your own sequence labeling and text
 classification models using state-of-the-art word embeddings.
 
+For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_BASICS.md) of this
+library and how [word embeddings](/resources/docs/TUTORIAL_WORD_EMBEDDING.md) work.
+
 ## Reading an Evaluation Dataset
 
 Flair provides helper methods to read common NLP datasets, such as the CoNLL-03 and CoNLL-2000 evaluation datasets,
@@ -29,20 +32,44 @@ corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03)
 This gives you a `TaggedCorpus` object that contains the data.
 
 However, this only works if the relative folder structure perfectly matches the presets. If not - or you are using
-a different dataset, you can still use the inbuilt functions to read different CoNLL formats:
+a different dataset, you can still use the inbuilt functions to read different CoNLL formats.
+
+
+## Reading Any Column-Formatted Dataset
+
+Most sequence labeling datasets in NLP use some sort of column format in which each line is a word and each column is
+one level of linguistic annotation. See for instance this sentence:
+
+```console
+George N B-PER
+Washington N I-PER
+went V O
+to P O
+Washington N B-LOC
+```
+
+The first column is the word itself, the second coarse PoS tags, and the third BIO-annotated NER tags. To read such a dataset,
+define the column structure as a dictionary and use a helper method.
 
 ```python
-# use your own data path
-data_folder = 'path/to/your/data'
 
-# get training, test and dev data
-sentences_train = NLPTaskDataFetcher.read_conll_sequence_labeling_data(data_folder + '/eng.train')
-sentences_dev = NLPTaskDataFetcher.read_conll_sequence_labeling_data(data_folder + '/eng.testa')
-sentences_test = NLPTaskDataFetcher.read_conll_sequence_labeling_data(data_folder + '/eng.testb')
+# define columns
+columns = {0: 'text', 1: 'pos', 2: 'np'}
 
-# return corpus
-return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
+# this is the folder in which train, test and dev files reside
+data_folder = '/path/to/data/folder'
+
+# retrieve corpus using column format, data folder and the names of the train, dev and test files
+corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_column_corpus(data_folder, columns,
+                                                              train_file='train.txt',
+                                                              test_file='test.txt',
+                                                              dev_file='dev.txt')
 ```
+
+This again gives you a `TaggedCorpus` object that contains the data.
+
+
+## The TaggedCorpus Object
 
 The `TaggedCorpus` contains a bunch of useful helper functions. For instance, you can downsample the data by calling
 `downsample()` and passing a ratio. So, if you normally get a corpus like this:
