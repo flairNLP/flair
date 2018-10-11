@@ -192,6 +192,10 @@ class LanguageModelTrainer:
 
             for split in range(1, max_splits + 1):
 
+                # after pass over all splits, increment epoch count
+                if (split - 1) % number_of_splits == 0:
+                    epoch += 1
+
                 log.info('Split %d' % split + '\t - ({:%H:%M:%S})'.format(datetime.datetime.now()))
 
                 for group in optimizer.param_groups:
