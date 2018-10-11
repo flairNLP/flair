@@ -61,15 +61,15 @@ class Plotter(object):
             next(tsvin, None)
 
             for row in tsvin:
-                if row[TRAIN_LOSS] != '_': training_curves['train']['loss'].append(row[TRAIN_LOSS])
-                if row[TRAIN_F_SCORE] != '_': training_curves['train']['f_score'].append(row[TRAIN_F_SCORE])
-                if row[TRAIN_ACCURACY] != '_': training_curves['train']['acc'].append(row[TRAIN_ACCURACY])
-                if row[DEV_LOSS] != '_': training_curves['dev']['loss'].append(row[DEV_LOSS])
-                if row[DEV_F_SCORE] != '_': training_curves['dev']['f_score'].append(row[DEV_F_SCORE])
-                if row[DEV_ACCURACY] != '_': training_curves['dev']['acc'].append(row[DEV_ACCURACY])
-                if row[TEST_LOSS] != '_': training_curves['test']['loss'].append(row[TEST_LOSS])
-                if row[TEST_F_SCORE] != '_': training_curves['test']['f_score'].append(row[TEST_F_SCORE])
-                if row[TEST_ACCURACY] != '_': training_curves['test']['acc'].append(row[TEST_ACCURACY])
+                if row[TRAIN_LOSS] != '_': training_curves['train']['loss'].append(float(row[TRAIN_LOSS]))
+                if row[TRAIN_F_SCORE] != '_': training_curves['train']['f_score'].append(float(row[TRAIN_F_SCORE]))
+                if row[TRAIN_ACCURACY] != '_': training_curves['train']['acc'].append(float(row[TRAIN_ACCURACY]))
+                if row[DEV_LOSS] != '_': training_curves['dev']['loss'].append(float(row[DEV_LOSS]))
+                if row[DEV_F_SCORE] != '_': training_curves['dev']['f_score'].append(float(row[DEV_F_SCORE]))
+                if row[DEV_ACCURACY] != '_': training_curves['dev']['acc'].append(float(row[DEV_ACCURACY]))
+                if row[TEST_LOSS] != '_': training_curves['test']['loss'].append(float(row[TEST_LOSS]))
+                if row[TEST_F_SCORE] != '_': training_curves['test']['f_score'].append(float(row[TEST_F_SCORE]))
+                if row[TEST_ACCURACY] != '_': training_curves['test']['acc'].append(float(row[TEST_ACCURACY]))
 
         return training_curves
 
