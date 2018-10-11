@@ -355,7 +355,7 @@ class CharacterEmbeddings(TokenEmbeddings):
 class CharLMEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
-    def __init__(self, model, detach: bool = True, use_cache: bool = True):
+    def __init__(self, model, detach: bool = True, use_cache: bool = True, cache_directory: str = None):
         """
             Contextual string embeddings of words, as proposed in Akbik et al., 2018.
 
@@ -370,6 +370,9 @@ class CharLMEmbeddings(TokenEmbeddings):
             arg3 : use_cache
                 if set to false, will not write embeddings to file for later retrieval. this saves disk space but will
                 not allow re-use of once computed embeddings that do not fit into memory
+            arg3 : cache_directory
+                if cache_directory is not set, the cache will be written to ~/.flair/embeddings. otherwise the cache
+                is written to the provided directory.
         """
         super().__init__()
 
@@ -435,6 +438,7 @@ class CharLMEmbeddings(TokenEmbeddings):
         # caching variables
         self.use_cache: bool = use_cache
         self.cache = None
+        self.cache_directory: str = cache_directory
 
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token('hello'))
@@ -465,8 +469,11 @@ class CharLMEmbeddings(TokenEmbeddings):
 
             # lazy initialization of cache
             if not self.cache:
+                cache_path = '{}-tmp-cache.sqllite'.format(self.name) if self.cache_directory is None else os.path.join(
+                    self.cache_directory, '{}-tmp-cache.sqllite'.format(os.path.basename(self.name)))
+
                 from sqlitedict import SqliteDict
-                self.cache = SqliteDict('{}-tmp-cache.sqllite'.format(self.name), autocommit=True)
+                self.cache = SqliteDict(cache_path, autocommit=True)
 
             # try populating embeddings from cache
             all_embeddings_retrieved_from_cache: bool = True
