@@ -424,7 +424,6 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         # caching variables
         self.use_cache: bool = use_cache
-        self.cache_added: int = 0
         self.cache = None
 
         dummy_sentence: Sentence = Sentence()
@@ -524,7 +523,6 @@ class CharLMEmbeddings(TokenEmbeddings):
         if self.use_cache:
             for sentence in sentences:
                 self.cache[sentence.to_tokenized_string()] = [token._embeddings[self.name].tolist() for token in sentence]
-                self.cache_added += 1
 
         return sentences
 
