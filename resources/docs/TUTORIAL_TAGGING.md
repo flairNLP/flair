@@ -53,7 +53,6 @@ LOC-span [5]: "Washington"
 Which indicates that "George Washington" is a person (PER) and "Washington" is
 a location (LOC). Each such `Span` has a text, a tag value, its position
 in the sentence and "score" that indicates how confident the tagger is that the prediction is correct.
-
 You can also get additional information, such as the position offsets of
 each entity in the sentence by calling:
 
