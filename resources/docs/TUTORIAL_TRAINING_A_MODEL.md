@@ -6,36 +6,8 @@ classification models using state-of-the-art word embeddings.
 For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_BASICS.md) of this
 library and how [word embeddings](/resources/docs/TUTORIAL_WORD_EMBEDDING.md) work.
 
-## Reading an Evaluation Dataset
 
-Flair provides helper methods to read common NLP datasets, such as the CoNLL-03 and CoNLL-2000 evaluation datasets,
-and the CoNLL-U format. These might be interesting to you if you want to train your own sequence labelers.
-
-All helper methods for reading data are bundled in the `NLPTaskDataFetcher` class. One option for you is to follow
-the instructions for putting the training data in the appropriate folder structure, and use the prepared functions.
-For instance, if you want to use the CoNLL-03 data, get it from the task web site and place train, test and dev data
-in `/resources/tasks/conll_03/` as follows:
-
-```
-/resources/tasks/conll_03/eng.testa
-/resources/tasks/conll_03/eng.testb
-/resources/tasks/conll_03/eng.train
-```
-
-This allows the `NLPTaskDataFetcher` class to read the data into our data structures. Use the `NLPTask` enum to select
-the dataset, as follows:
-
-```python
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03)
-```
-
-This gives you a `TaggedCorpus` object that contains the data.
-
-However, this only works if the relative folder structure perfectly matches the presets. If not - or you are using
-a different dataset, you can still use the inbuilt functions to read different CoNLL formats.
-
-
-## Reading Any Column-Formatted Dataset
+## Reading A Column-Formatted Dataset
 
 Most sequence labeling datasets in NLP use some sort of column format in which each line is a word and each column is
 one level of linguistic annotation. See for instance this sentence:
@@ -66,7 +38,28 @@ corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_column_corpus(data_folder, colum
                                                               dev_file='dev.txt')
 ```
 
-This again gives you a `TaggedCorpus` object that contains the data.
+This gives you a `TaggedCorpus` object that contains the train, dev and test splits, each as a list of `Sentence`.
+So, to check how many sentences there are in the training split, do
+
+```python
+len(corpus.train)
+```
+
+You can also access a sentence and check out annotations. Lets assume that the first sentence in the training split is
+the example sentence from above, then executing these commands
+
+```python
+print(corpus.train[0].to_tagged_string('pos'))
+print(corpus.train[0].to_tagged_string('ner'))
+```
+
+will print the sentence with different layers of annotation:
+
+```console
+George <N> Washington <N> went <V> to <P> Washington <N>
+
+George <B-PER> Washington <I-PER> went to Washington <B-LOC> .
+```
 
 
 ## The TaggedCorpus Object
