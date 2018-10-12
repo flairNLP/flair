@@ -315,8 +315,8 @@ much faster.
 
 You benefit the most from the default behavior of storing computed embeddings on disk for later retrieval
 if your disk is large and fast. If you either do not have a lot of disk space, or a really slow hard drive,
-you should disable this option. You can do this when instantiating the embeddings by setting `use_cache=False`,
- i.e. `CharLMEmbeddings('news-forward-fast', use_cache=False')`
+you should disable this option. You can do this when instantiating the embeddings by setting `use_cache=False`. So
+instantiate like this: `CharLMEmbeddings('news-forward-fast', use_cache=False')`
 
 
 
