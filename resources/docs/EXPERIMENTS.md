@@ -59,7 +59,7 @@ embedding_types: List[TokenEmbeddings] = [
 
     # GloVe embeddings
     WordEmbeddings('glove'),
-    
+
     # contextual string embeddings, forward
     CharLMEmbeddings('news-forward'),
 
@@ -111,7 +111,7 @@ FastText embeddings (they work better on this dataset). The full code then is as
 ```python
 from flair.data import TaggedCorpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
-from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
 from typing import List
 import torch
 
@@ -129,11 +129,11 @@ print(tag_dictionary.idx2item)
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
 
-    WordEmbeddings('crawl')
-    ,
-    CharLMEmbeddings('news-forward')
-    ,
-    CharLMEmbeddings('news-backward')
+    WordEmbeddings('crawl'),
+
+    CharLMEmbeddings('news-forward'),
+
+    CharLMEmbeddings('news-backward'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
@@ -152,7 +152,12 @@ from flair.trainers import SequenceTaggerTrainer
 
 trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
+trainer.train('resources/taggers/example-ner',
+              learning_rate=0.1,
+              mini_batch_size=32,
+              max_epochs=150,
+              # it's a big dataset so maybe set embeddings_in_memory to False
+              embeddings_in_memory=False)
 ```
 
 ## CoNLL-03 Named Entity Recognition (German)
@@ -173,7 +178,7 @@ FastText word embeddings and German contextual string embeddings. The full code 
 ```python
 from flair.data import TaggedCorpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
-from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
 from typing import List
 import torch
 
@@ -191,11 +196,11 @@ print(tag_dictionary.idx2item)
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
 
-    WordEmbeddings('de-fasttext')
-    ,
-    CharLMEmbeddings('german-forward')
-    ,
-    CharLMEmbeddings('german-backward')
+    WordEmbeddings('de-fasttext'),
+
+    CharLMEmbeddings('german-forward'),
+
+    CharLMEmbeddings('german-backward'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
@@ -214,7 +219,11 @@ from flair.trainers import SequenceTaggerTrainer
 
 trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
+trainer.train('resources/taggers/example-ner',
+              learning_rate=0.1,
+              mini_batch_size=32,
+              max_epochs=150,
+              embeddings_in_memory=True)
 ```
 
 ## Germeval Named Entity Recognition (German)
@@ -235,7 +244,7 @@ Once you have the data, reproduce our experiments exactly like for the German Co
 ```python
 from flair.data import TaggedCorpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
-from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
 from typing import List
 import torch
 
@@ -253,11 +262,11 @@ print(tag_dictionary.idx2item)
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
 
-    WordEmbeddings('de-fasttext')
-    ,
-    CharLMEmbeddings('german-forward')
-    ,
-    CharLMEmbeddings('german-backward')
+    WordEmbeddings('de-fasttext'),
+
+    CharLMEmbeddings('german-forward'),
+
+    CharLMEmbeddings('german-backward'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
@@ -276,7 +285,11 @@ from flair.trainers import SequenceTaggerTrainer
 
 trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
+trainer.train('resources/taggers/example-ner',
+              learning_rate=0.1,
+              mini_batch_size=32,
+              max_epochs=150,
+              embeddings_in_memory=True)
 ```
 
 ## Penn Treebank Part-of-Speech Tagging (English)
@@ -298,7 +311,7 @@ so the algorithm knows that POS tags and not NER are to be predicted from this d
 ```python
 from flair.data import TaggedCorpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
-from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
 from typing import List
 import torch
 
@@ -316,11 +329,11 @@ print(tag_dictionary.idx2item)
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
 
-    WordEmbeddings('extvec')
-    ,
-    CharLMEmbeddings('news-forward')
-    ,
-    CharLMEmbeddings('news-backward')
+    WordEmbeddings('extvec'),
+
+    CharLMEmbeddings('news-forward'),
+
+    CharLMEmbeddings('news-backward'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
@@ -338,7 +351,12 @@ from flair.trainers import SequenceTaggerTrainer
 
 trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
+trainer.train('resources/taggers/example-ner',
+              learning_rate=0.1,
+              mini_batch_size=32,
+              max_epochs=150,
+              # its a bit dataset, so maybe set embeddings_in_memory=False
+              embeddings_in_memory=True)
 ```
 
 ## CoNLL-2000 Noun Phrase Chunking (English)
@@ -360,7 +378,7 @@ so the algorithm knows that chunking tags and not NER are to be predicted from t
 ```python
 from flair.data import TaggedCorpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
-from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
 from typing import List
 import torch
 
@@ -378,11 +396,11 @@ print(tag_dictionary.idx2item)
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
 
-    WordEmbeddings('extvec')
-    ,
-    CharLMEmbeddings('news-forward')
-    ,
-    CharLMEmbeddings('news-backward')
+    WordEmbeddings('extvec'),
+    
+    CharLMEmbeddings('news-forward'),
+
+    CharLMEmbeddings('news-backward'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
@@ -401,5 +419,10 @@ from flair.trainers import SequenceTaggerTrainer
 
 trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
 
-trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
+trainer.train('resources/taggers/example-ner',
+              learning_rate=0.1,
+              mini_batch_size=32,
+              max_epochs=150,
+              # its a bit dataset, so maybe set embeddings_in_memory=False
+              embeddings_in_memory=True)
 ```
