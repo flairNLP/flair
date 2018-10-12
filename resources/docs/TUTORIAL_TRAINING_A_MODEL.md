@@ -296,7 +296,7 @@ set options to optimize training time. There are three questions to ask:
 
 `CharLMEmbeddings` are generated using Pytorch RNNs and are thus optimized for GPUs. If you have one,
 you can set large mini-batch sizes to make use of batching. If not, you may want to use smaller language models.
-For English, we package '-fast' variants of our embeddings, loadable like this: `CharLMEmbeddings('news-forward-fast')`.
+For English, we package 'fast' variants of our embeddings, loadable like this: `CharLMEmbeddings('news-forward-fast')`.
 
 Regardless, all computed embeddings get materialized to disk upon first computation. This means that if you rerun an
 experiment on the same dataset, they will be retrieved from disk instead of re-computed, potentially saving a lot
@@ -305,7 +305,8 @@ of time.
 2. Do embeddings for the entire dataset fit into memory?
 
 In the best-case scenario, all embeddings for the dataset fit into your regular memory, which greatly increases
-training speed. If this is not the case, you must set the flag `embeddings_in_memory=False` in the trainer to
+training speed. If this is not the case, you must set the flag `embeddings_in_memory=False` in the respective trainer
+ (i.e. `SequenceTaggerTrainer` or  `TextClassifierTrainer`) to
 avoid memory problems. With the flag, embeddings are either (a) recomputed at each epoch or (b)
 retrieved from disk (where they are materialized by default). The second option is the default and is typically
 much faster.
