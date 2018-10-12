@@ -8,5 +8,5 @@ segtok==1.5.7
 matplotlib==3.0.0
 mpld3==0.3
 jinja2==2.10
-sklearn==0.0
+sklearn
 sqlitedict
