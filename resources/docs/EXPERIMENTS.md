@@ -58,13 +58,13 @@ print(tag_dictionary.idx2item)
 embedding_types: List[TokenEmbeddings] = [
 
     # GloVe embeddings
-    WordEmbeddings('glove')
-    ,
+    WordEmbeddings('glove'),
+    
     # contextual string embeddings, forward
-    CharLMEmbeddings('news-forward')
-    ,
+    CharLMEmbeddings('news-forward'),
+
     # contextual string embeddings, backward
-    CharLMEmbeddings('news-backward')
+    CharLMEmbeddings('news-backward'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
