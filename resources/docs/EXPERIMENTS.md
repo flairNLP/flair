@@ -397,7 +397,7 @@ print(tag_dictionary.idx2item)
 embedding_types: List[TokenEmbeddings] = [
 
     WordEmbeddings('extvec'),
-    
+
     CharLMEmbeddings('news-forward'),
 
     CharLMEmbeddings('news-backward'),
@@ -423,6 +423,5 @@ trainer.train('resources/taggers/example-ner',
               learning_rate=0.1,
               mini_batch_size=32,
               max_epochs=150,
-              # its a bit dataset, so maybe set embeddings_in_memory=False
               embeddings_in_memory=True)
 ```
