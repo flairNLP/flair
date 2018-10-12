@@ -39,7 +39,7 @@ The full code to get a state-of-the-art model for English NER is as follows:
 ```python
 from flair.data import TaggedCorpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
-from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
 from typing import List
 import torch
 
