@@ -201,7 +201,7 @@ sentences: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(dat
 ### Training the classifier
 
 To train a model, you need to create three files in this way: A train, dev and test file. After you converted the data you can use the
-`NLPTask.AG_NEWS` to read the data, if the data files are located in the following folder structure:
+`NLPTaskDataFetcher` to read the data, if the data files are located in the following folder structure:
 ```
 /resources/tasks/ag_news/train.txt
 /resources/tasks/ag_news/dev.txt
@@ -286,8 +286,36 @@ plotter.plot_weights('resources/ag_news/results/weights.txt')
 This generates PNG plots in the result folder.
 
 
-## Training on Large Data Sets
+## Scalability: Training on Large Data Sets
 
+The main thing to consider when using `CharLMEmbeddings` (which you should) is that they are
+somewhat costly to generate for large training data sets. Depending on your setup, you can
+set options to optimize training time. There are three questions to ask:
+
+1. Do you have a GPU?
+
+`CharLMEmbeddings` are generated using Pytorch RNNs and are thus optimized for GPUs. If you have one,
+you can set large mini-batch sizes to make use of batching. If not, you may want to use smaller language models.
+For English, we package '-fast' variants of our embeddings, loadable like this: `CharLMEmbeddings('news-forward-fast')`.
+
+Regardless, all computed embeddings get materialized to disk upon first computation. This means that if you rerun an
+experiment on the same dataset, they will be retrieved from disk instead of re-computed, potentially saving a lot
+of time.
+
+2. Do embeddings for the entire dataset fit into memory?
+
+In the best-case scenario, all embeddings for the dataset fit into your regular memory, which greatly increases
+training speed. If this is not the case, you must set the flag `embeddings_in_memory=False` in the trainer to
+avoid memory problems. With the flag, embeddings are either (a) recomputed at each epoch or (b)
+retrieved from disk (where they are materialized by default). The second option is the default and is typically
+much faster.
+
+3. Do you have a fast hard drive?
+
+You benefit the most from the default behavior of storing computed embeddings on disk for later retrieval
+if your disk is large and fast. If you either do not have a lot of disk space, or a really slow hard drive,
+you should disable this option. You can do this when instantiating the embeddings by setting `use_cache=False`,
+ i.e. `CharLMEmbeddings('news-forward-fast', use_cache=False')`
 
 
 
