@@ -81,9 +81,13 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
 # initialize trainer
 from flair.trainers import SequenceTaggerTrainer
 
-trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
+trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus)
 
-trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=150)
+trainer.train('resources/taggers/example-ner',
+              learning_rate=0.1,
+              mini_batch_size=32,
+              max_epochs=150,
+              embeddings_in_memory=True)
 ```
 
 ## Ontonotes Named Entity Recognition (English)
