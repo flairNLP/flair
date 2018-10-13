@@ -351,7 +351,8 @@ class Sentence:
             tag_value = tag.value
 
             # non-set tags are OUT tags
-            if len(tag_value) < 2: tag_value = 'O-'
+            if tag_value == '' or tag_value == 'O':
+                tag_value = 'O-'
 
             # anything that is not a BIOES tag is a SINGLE tag
             if tag_value[0:2] not in ['B-', 'I-', 'O-', 'E-', 'S-']:
