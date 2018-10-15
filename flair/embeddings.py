@@ -355,7 +355,7 @@ class CharacterEmbeddings(TokenEmbeddings):
 class CharLMEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
-    def __init__(self, model, detach: bool = True, use_cache: bool = True):
+    def __init__(self, model, detach: bool = True, use_cache: bool = True, cache_directory: str = None):
         """
             Contextual string embeddings of words, as proposed in Akbik et al., 2018.
 
@@ -370,6 +370,9 @@ class CharLMEmbeddings(TokenEmbeddings):
             arg3 : use_cache
                 if set to false, will not write embeddings to file for later retrieval. this saves disk space but will
                 not allow re-use of once computed embeddings that do not fit into memory
+            arg3 : cache_directory
+                if cache_directory is not set, the cache will be written to ~/.flair/embeddings. otherwise the cache
+                is written to the provided directory.
         """
         super().__init__()
 
@@ -413,6 +416,16 @@ class CharLMEmbeddings(TokenEmbeddings):
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
+        # common crawl Polish forward
+        if model.lower() == 'polish-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-forward-v0.2.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+
+        # common crawl Polish backward
+        if model.lower() == 'polish-backward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-backward-v0.2.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+
         self.name = model
         self.static_embeddings = detach
 
@@ -425,6 +438,7 @@ class CharLMEmbeddings(TokenEmbeddings):
         # caching variables
         self.use_cache: bool = use_cache
         self.cache = None
+        self.cache_directory: str = cache_directory
 
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token('hello'))
@@ -446,13 +460,21 @@ class CharLMEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
+        # by default, use_cache is false (for older pre-trained models TODO: remove in version 0.4)
+        if 'cache' not in self.__dict__:
+            self.use_cache = False
+            self.cache_directory = None
+
         # if cache is used, try setting embeddings from cache first
         if self.use_cache:
 
             # lazy initialization of cache
             if not self.cache:
+                cache_path = '{}-tmp-cache.sqllite'.format(self.name) if self.cache_directory is None else os.path.join(
+                    self.cache_directory, '{}-tmp-cache.sqllite'.format(os.path.basename(self.name)))
+
                 from sqlitedict import SqliteDict
-                self.cache = SqliteDict('{}-tmp-cache.sqllite'.format(self.name), autocommit=True)
+                self.cache = SqliteDict(cache_path, autocommit=True)
 
             # try populating embeddings from cache
             all_embeddings_retrieved_from_cache: bool = True

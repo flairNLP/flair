@@ -300,14 +300,19 @@ class Sentence:
                 last_word_offset = -1
                 last_token = None
                 for word in tokens:
-                    token = Token(word, start_position=index(word, running_offset))
-                    self.add_token(token)
                     try:
                         word_offset = index(word, running_offset)
+                        start_position = word_offset
                     except:
                         word_offset = last_word_offset + 1
+                        start_position = running_offset + 1 if running_offset > 0 else running_offset
+
+                    token = Token(word, start_position=start_position)
+                    self.add_token(token)
+
                     if word_offset - 1 == last_word_offset and last_token is not None:
                         last_token.whitespace_after = False
+
                     word_len = len(word)
                     running_offset = word_offset + word_len
                     last_word_offset = running_offset - 1
@@ -319,7 +324,12 @@ class Sentence:
                 offset = 0
                 for word in text.split(' '):
                     if word:
-                        token = Token(word, start_position=text.index(word, offset))
+                        try:
+                            word_offset = text.index(word, offset)
+                        except:
+                            word_offset = offset
+
+                        token = Token(word, start_position=word_offset)
                         self.add_token(token)
                         offset += len(word) + 1
 
@@ -351,7 +361,8 @@ class Sentence:
             tag_value = tag.value
 
             # non-set tags are OUT tags
-            if len(tag_value) < 2: tag_value = 'O-'
+            if tag_value == '' or tag_value == 'O':
+                tag_value = 'O-'
 
             # anything that is not a BIOES tag is a SINGLE tag
             if tag_value[0:2] not in ['B-', 'I-', 'O-', 'E-', 'S-']:

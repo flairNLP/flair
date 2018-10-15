@@ -11,9 +11,7 @@ from flair.models.text_classification_model import TextClassifier
 from flair.training_utils import convert_labels_to_one_hot, calculate_micro_avg_metric, init_output_file, \
     clear_embeddings, calculate_class_metrics, WeightExtractor, Metric
 
-
 MICRO_AVG_METRIC = 'MICRO_AVG'
-
 
 log = logging.getLogger(__name__)
 
@@ -23,7 +21,8 @@ class TextClassifierTrainer:
     Training class to train and evaluate a text classification model.
     """
 
-    def __init__(self, model: TextClassifier, corpus: TaggedCorpus, label_dict: Dictionary, test_mode: bool = False) -> None:
+    def __init__(self, model: TextClassifier, corpus: TaggedCorpus, label_dict: Dictionary,
+                 test_mode: bool = False) -> None:
         self.model: TextClassifier = model
         self.corpus: TaggedCorpus = corpus
         self.label_dict: Dictionary = label_dict
@@ -33,20 +32,20 @@ class TextClassifierTrainer:
               base_path: str,
               learning_rate: float = 0.1,
               mini_batch_size: int = 32,
-              eval_mini_batch_size: int = 8,
-              max_epochs: int = 100,
+              max_epochs: int = 50,
               anneal_factor: float = 0.5,
-              patience: int = 2,
+              patience: int = 5,
               save_model: bool = True,
-              embeddings_in_memory: bool = True,
+              embeddings_in_memory: bool = False,
               train_with_dev: bool = False,
-              eval_on_train: bool = False):
+              eval_on_train: bool = True):
         """
         Trains the model using the training data of the corpus.
+        :param patience: number of 'bad' epochs before learning rate gets decreased
+        :param anneal_factor: learning rate will be decreased by this factor
         :param base_path: the directory to which any results should be written to
         :param learning_rate: the learning rate
         :param mini_batch_size: the mini batch size
-        :param eval_mini_batch_size: the mini batch size for evaluation
         :param max_epochs: the maximum number of epochs to train
         :param save_model: boolean value indicating, whether the model should be saved or not
         :param embeddings_in_memory: boolean value indicating, if embeddings should be kept in memory or not
@@ -122,7 +121,8 @@ class TextClassifierTrainer:
                 self.model.eval()
 
                 log.info('-' * 100)
-                log.info("EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, scheduler.num_bad_epochs))
+                log.info(
+                    "EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, scheduler.num_bad_epochs))
 
                 dev_metric = train_metric = None
                 dev_loss = '_'
@@ -130,17 +130,18 @@ class TextClassifierTrainer:
 
                 if eval_on_train:
                     train_metric, train_loss = self._calculate_evaluation_results_for(
-                        'TRAIN', self.corpus.train, embeddings_in_memory, eval_mini_batch_size)
+                        'TRAIN', self.corpus.train, embeddings_in_memory, mini_batch_size)
 
                 if not train_with_dev:
                     dev_metric, dev_loss = self._calculate_evaluation_results_for(
-                        'DEV', self.corpus.dev, embeddings_in_memory, eval_mini_batch_size)
+                        'DEV', self.corpus.dev, embeddings_in_memory, mini_batch_size)
 
                 with open(loss_txt, 'a') as f:
                     train_metric_str = train_metric.to_tsv() if train_metric is not None else Metric.to_empty_tsv()
                     dev_metric_str = dev_metric.to_tsv() if dev_metric is not None else Metric.to_empty_tsv()
                     f.write('{}\t{:%H:%M:%S}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(
-                        epoch, datetime.datetime.now(), train_loss, train_metric_str, dev_loss, dev_metric_str, '_', Metric.to_empty_tsv()))
+                        epoch, datetime.datetime.now(), train_loss, train_metric_str, dev_loss, dev_metric_str, '_',
+                        Metric.to_empty_tsv()))
 
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_metric.f_score())
@@ -148,9 +149,9 @@ class TextClassifierTrainer:
                 is_best_model_so_far: bool = False
                 current_score = dev_metric.f_score() if not train_with_dev else train_metric.f_score()
 
-                if current_score > best_score:
-                   best_score = current_score
-                   is_best_model_so_far = True
+                if current_score >= best_score:
+                    best_score = current_score
+                    is_best_model_so_far = True
 
                 if is_best_model_so_far:
                     if save_model:
@@ -186,7 +187,7 @@ class TextClassifierTrainer:
 
     def _calculate_evaluation_results_for(self, dataset_name, dataset, embeddings_in_memory, mini_batch_size):
         metrics, loss = self.evaluate(dataset, mini_batch_size=mini_batch_size,
-                                                  embeddings_in_memory=embeddings_in_memory)
+                                      embeddings_in_memory=embeddings_in_memory)
 
         f_score = metrics[MICRO_AVG_METRIC].f_score()
         acc = metrics[MICRO_AVG_METRIC].accuracy()
@@ -196,12 +197,14 @@ class TextClassifierTrainer:
 
         return metrics[MICRO_AVG_METRIC], loss
 
-    def evaluate(self, sentences: List[Sentence], eval_class_metrics: bool = False, mini_batch_size: int = 16,
-                 embeddings_in_memory: bool = True) -> (dict, float):
+    def evaluate(self, sentences: List[Sentence], eval_class_metrics: bool = False, mini_batch_size: int = 32,
+                 embeddings_in_memory: bool = False) -> (dict, float):
         """
         Evaluates the model with the given list of sentences.
         :param sentences: the list of sentences
+        :param eval_class_metrics: boolean indicating whether to print class metrics or not
         :param mini_batch_size: the mini batch size to use
+        :param embeddings_in_memory: boolean value indicating, if embeddings should be kept in memory or not
         :return: list of metrics, and the loss
         """
         with torch.no_grad():
@@ -223,8 +226,11 @@ class TextClassifierTrainer:
 
                 eval_loss += loss
 
-                y_pred.extend(convert_labels_to_one_hot([[label.value for label in sent_labels] for sent_labels in labels], self.label_dict))
-                y_true.extend(convert_labels_to_one_hot([sentence.get_label_names() for sentence in batch], self.label_dict))
+                y_pred.extend(
+                    convert_labels_to_one_hot([[label.value for label in sent_labels] for sent_labels in labels],
+                                              self.label_dict))
+                y_true.extend(
+                    convert_labels_to_one_hot([sentence.get_label_names() for sentence in batch], self.label_dict))
 
             metrics = [calculate_micro_avg_metric(y_true, y_pred, self.label_dict)]
             if eval_class_metrics:

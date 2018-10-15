@@ -34,22 +34,22 @@ class Metric(object):
 
     def precision(self):
         if self._tp + self._fp > 0:
-            return self._tp / (self._tp + self._fp)
+            return round(self._tp / (self._tp + self._fp), 4)
         return 0.0
 
     def recall(self):
         if self._tp + self._fn > 0:
-            return self._tp / (self._tp + self._fn)
+            return round(self._tp / (self._tp + self._fn), 4)
         return 0.0
 
     def f_score(self):
         if self.precision() + self.recall() > 0:
-            return 2 * (self.precision() * self.recall()) / (self.precision() + self.recall())
+            return round(2 * (self.precision() * self.recall()) / (self.precision() + self.recall()), 4)
         return 0.0
 
     def accuracy(self):
         if self._tp + self._tn + self._fp + self._fn > 0:
-            return (self._tp + self._tn) / (self._tp + self._tn + self._fp + self._fn)
+            return round((self._tp + self._tn) / (self._tp + self._tn + self._fp + self._fn), 4)
         return 0.0
 
     def to_tsv(self):
