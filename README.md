@@ -14,13 +14,12 @@ A very simple framework for **state-of-the-art NLP**. Developed by [Zalando Rese
 
 Flair is:
 
-* **A powerful syntactic-semantic tagger / classifier.** Flair allows you to apply our state-of-the-art models for named entity
-recognition (NER), part-of-speech tagging (PoS), frame sense disambiguation, chunking and classification to your text.
+* **A powerful NLP library.** Flair allows you to apply our state-of-the-art natural language processing (NLP)
+models to your text, such as named entity recognition (NER), part-of-speech tagging (PoS),
+ sense disambiguation and classification.
 
 * **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and 
-document embeddings. In particular, you can try out our proposed 
-**[contextual string embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)** 
-to build your own state-of-the-art NLP methods.
+document embeddings, including our proposed **[contextual string embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)**.
 
 * **A Pytorch NLP framework.** Our framework builds directly on [Pytorch](https://pytorch.org/), making it easy to 
 train your own models and experiment with new approaches using Flair embeddings and classes.
@@ -31,15 +30,16 @@ Now at [version 0.2.0](https://github.com/zalandoresearch/flair/releases)!
 
 Flair outperforms the previous best methods on a range of NLP tasks:
 
-| Task | Dataset | Our Result | Previous best |
-| -------------------------------    | ----------- | ---------------- | ------------- |
-| Named Entity Recognition (English) | Conll-03    |  **93.09** (F1)  | *92.22 [(Peters et al., 2018)](https://arxiv.org/pdf/1802.05365.pdf)* |
-| Named Entity Recognition (English) | Ontonotes   |  **89.71** (F1)  | *86.28 [(Chiu et al., 2016)](https://arxiv.org/pdf/1511.08308.pdf)* |
-| Emerging Entity Detection (English) | WNUT-17      |  **50.20** (F1)  | *45.55 [(Aguilar et al., 2018)](http://aclweb.org/anthology/N18-1127.pdf)* |
-| Named Entity Recognition (German)  | Conll-03    |  **88.32** (F1)  | *78.76 [(Lample et al., 2016)](https://arxiv.org/abs/1603.01360)* |
-| Named Entity Recognition (German)  | Germeval    |  **84.65** (F1)  | *79.08 [(Hänig et al, 2014)](http://asv.informatik.uni-leipzig.de/publication/file/300/GermEval2014_ExB.pdf)*|
-| Part-of-Speech tagging | WSJ  | **97.85**  | *97.64 [(Choi, 2016)](https://www.aclweb.org/anthology/N16-1031)*|
-| Chunking | Conll-2000  |  **96.72** (F1) | *96.36 [(Peters et al., 2017)](https://arxiv.org/pdf/1705.00108.pdf)*
+| Task | Language | Dataset | Flair | Previous best |
+| -------------------------------  | ---  | ----------- | ---------------- | ------------- |
+| Named Entity Recognition |English | Conll-03    |  **93.09** (F1)  | *92.22 [(Peters et al., 2018)](https://arxiv.org/pdf/1802.05365.pdf)* |
+| Named Entity Recognition |English | Ontonotes   |  **89.71** (F1)  | *86.28 [(Chiu et al., 2016)](https://arxiv.org/pdf/1511.08308.pdf)* |
+| Emerging Entity Detection | English | WNUT-17      |  **50.20** (F1)  | *45.55 [(Aguilar et al., 2018)](http://aclweb.org/anthology/N18-1127.pdf)* |
+| Part-of-Speech tagging |English| WSJ  | **97.85**  | *97.64 [(Choi, 2016)](https://www.aclweb.org/anthology/N16-1031)*|
+| Chunking |English| Conll-2000  |  **96.72** (F1) | *96.36 [(Peters et al., 2017)](https://arxiv.org/pdf/1705.00108.pdf)*
+| Named Entity Recognition | German  | Conll-03    |  **88.32** (F1)  | *78.76 [(Lample et al., 2016)](https://arxiv.org/abs/1603.01360)* |
+| Named Entity Recognition |German  | Germeval    |  **84.65** (F1)  | *79.08 [(Hänig et al, 2014)](http://asv.informatik.uni-leipzig.de/publication/file/300/GermEval2014_ExB.pdf)*|
+| Named Entity Recognition |Polish  | PolEval-2018    |  **86.6** (F1) <br> [(Borchmann et al., 2018)](https://github.com/applicaai/poleval-2018) | *85.1 [(PolDeepNer)](https://github.com/CLARIN-PL/PolDeepNer/)*|
 
 
 
@@ -55,7 +55,7 @@ Alan Akbik, Duncan Blythe and Roland Vollgraf.
 ### Requirements and Installation
 
 The project is based on PyTorch 0.4+ and Python 3.6+, because methods signatures and type hints are beautiful.
-If you do not have Python 3.6, install it first. [Here is how for Ubuntu 16.04](http://ubuntuhandbook.org/index.php/2017/07/install-python-3-6-1-in-ubuntu-16-04-lts/). 
+If you do not have Python 3.6, install it first. [Here is how for Ubuntu 16.04](https://vsupalov.com/developing-with-python3-6-on-ubuntu-16-04/).
 Then, in your favorite virtual environment, simply do:
 
 ```

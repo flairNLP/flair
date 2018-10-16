@@ -1,7 +1,7 @@
 import time, datetime
 import os
 import random
-
+import logging
 import math
 import torch
 from torch.autograd import Variable
@@ -9,6 +9,10 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from flair.data import Dictionary
 from flair.models import LanguageModel
+
+
+log = logging.getLogger(__name__)
+
 
 class TextCorpus(object):
     def __init__(self, path, dictionary: Dictionary, forward: bool = True, character_level: bool = True):
@@ -70,7 +74,6 @@ class TextCorpus(object):
                 else:
                     chars = line.split()
 
-                # print(chars)
                 tokens += len(chars)
 
                 # Add chars to the dictionary
@@ -166,9 +169,13 @@ class LanguageModelTrainer:
               anneal_factor: float = 0.25,
               patience: int = 10,
               clip=0.25,
-              max_epochs: int = 10000):
+              max_epochs: int = 1000):
 
-        number_of_splits = len(self.corpus.train_files)
+        number_of_splits: int = len(self.corpus.train_files)
+
+        # an epoch has a number, so calculate total max splits bby multiplying max_epochs with number_of_splits
+        max_splits: int = number_of_splits * max_epochs
+
         val_data = self._batchify(self.corpus.valid, mini_batch_size)
 
         os.makedirs(base_path, exist_ok=True)
@@ -183,9 +190,13 @@ class LanguageModelTrainer:
             scheduler: ReduceLROnPlateau = ReduceLROnPlateau(optimizer, verbose=True, factor=anneal_factor,
                                                              patience=patience)
 
-            for split in range(1, max_epochs + 1):
+            for split in range(1, max_splits + 1):
 
-                print('Split %d' % split + '\t - ({:%H:%M:%S})'.format(datetime.datetime.now()))
+                # after pass over all splits, increment epoch count
+                if (split - 1) % number_of_splits == 0:
+                    epoch += 1
+
+                log.info('Split %d' % split + '\t - ({:%H:%M:%S})'.format(datetime.datetime.now()))
 
                 for group in optimizer.param_groups:
                     learning_rate = group['lr']
@@ -193,7 +204,7 @@ class LanguageModelTrainer:
                 train_slice = self.corpus.get_next_train_slice()
 
                 train_data = self._batchify(train_slice, mini_batch_size)
-                print('\t({:%H:%M:%S})'.format(datetime.datetime.now()))
+                log.info('\t({:%H:%M:%S})'.format(datetime.datetime.now()))
 
                 # go into train mode
                 self.model.train()
@@ -237,7 +248,7 @@ class LanguageModelTrainer:
                     if batch % self.log_interval == 0 and batch > 0:
                         cur_loss = total_loss.item() / self.log_interval
                         elapsed = time.time() - start_time
-                        print('| split {:3d} /{:3d} | {:5d}/{:5d} batches | ms/batch {:5.2f} | '
+                        log.info('| split {:3d} /{:3d} | {:5d}/{:5d} batches | ms/batch {:5.2f} | '
                               'loss {:5.2f} | ppl {:8.2f}'.format(
                             split, number_of_splits, batch, len(train_data) // sequence_length,
                                                             elapsed * 1000 / self.log_interval, cur_loss,
@@ -245,7 +256,7 @@ class LanguageModelTrainer:
                         total_loss = 0
                         start_time = time.time()
 
-                print('training done! \t({:%H:%M:%S})'.format(datetime.datetime.now()))
+                log.info('training done! \t({:%H:%M:%S})'.format(datetime.datetime.now()))
 
                 ###############################################################################
                 # TEST
@@ -254,7 +265,7 @@ class LanguageModelTrainer:
                 val_loss = self.evaluate(val_data, mini_batch_size, sequence_length)
                 scheduler.step(val_loss)
 
-                print('best loss so far {:5.2f}'.format(best_val_loss))
+                log.info('best loss so far {:5.2f}'.format(best_val_loss))
 
                 # Save the model if the validation loss is the best we've seen so far.
                 if val_loss < best_val_loss:
@@ -264,7 +275,7 @@ class LanguageModelTrainer:
                 ###############################################################################
                 # print info
                 ###############################################################################
-                print('-' * 89)
+                log.info('-' * 89)
 
                 local_split_number = split % number_of_splits
                 if local_split_number == 0: local_split_number = number_of_splits
@@ -281,12 +292,12 @@ class LanguageModelTrainer:
                 with open(loss_txt, "a") as myfile:
                     myfile.write('%s\n' % summary)
 
-                print(summary)
-                print('-' * 89)
+                log.info(summary)
+                log.info('-' * 89)
 
         except KeyboardInterrupt:
-            print('-' * 89)
-            print('Exiting from training early')
+            log.info('-' * 89)
+            log.info('Exiting from training early')
 
     def evaluate(self, data_source, eval_batch_size, sequence_length):
         # Turn on evaluation mode which disables dropout.

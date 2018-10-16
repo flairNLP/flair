@@ -1,9 +1,13 @@
-from typing import List
-
+import random
+import logging
 import os
-import numpy as np
-
+from collections import defaultdict
+from typing import List
 from flair.data import Dictionary, Sentence
+from functools import reduce
+
+
+log = logging.getLogger(__name__)
 
 
 class Metric(object):
@@ -30,31 +34,91 @@ class Metric(object):
 
     def precision(self):
         if self._tp + self._fp > 0:
-            return self._tp / (self._tp + self._fp)
+            return round(self._tp / (self._tp + self._fp), 4)
         return 0.0
 
     def recall(self):
         if self._tp + self._fn > 0:
-            return self._tp / (self._tp + self._fn)
+            return round(self._tp / (self._tp + self._fn), 4)
         return 0.0
 
     def f_score(self):
         if self.precision() + self.recall() > 0:
-            return 2 * (self.precision() * self.recall()) / (self.precision() + self.recall())
+            return round(2 * (self.precision() * self.recall()) / (self.precision() + self.recall()), 4)
         return 0.0
 
     def accuracy(self):
         if self._tp + self._tn + self._fp + self._fn > 0:
-            return (self._tp + self._tn) / (self._tp + self._tn + self._fp + self._fn)
+            return round((self._tp + self._tn) / (self._tp + self._tn + self._fp + self._fn), 4)
         return 0.0
 
-    def __str__(self):
-        return '{0:<20}\tprecision: {1:.4f} - recall: {2:.4f} - accuracy: {3:.4f} - f1-score: {4:.4f}'.format(
-            self.name, self.precision(), self.recall(), self.accuracy(), self.f_score())
+    def to_tsv(self):
+        return '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
+            self._tp, self._tn, self._fp, self._fn, self.precision(), self.recall(), self.f_score(), self.accuracy())
 
     def print(self):
-        print('{0:<20}\tprecision: {1:.4f} - recall: {2:.4f} - accuracy: {3:.4f} - f1-score: {4:.4f}'.format(
-                self.name, self.precision(), self.recall(), self.accuracy(), self.f_score()))
+        log.info(self)
+
+    @staticmethod
+    def tsv_header(prefix=None):
+        if prefix:
+            return '{0}_TP\t{0}_TN\t{0}_FP\t{0}_FN\t{0}_PRECISION\t{0}_RECALL\t{0}_F-SCORE\t{0}_ACCURACY'.format(prefix)
+
+        return 'TP\tTN\tFP\tFN\tPRECISION\tRECALL\tF-SCORE\tACCURACY'
+
+    @staticmethod
+    def to_empty_tsv():
+        return '_\t_\t_\t_\t_\t_\t_\t_'
+
+    def __str__(self):
+        return '{0:<10}\ttp: {1} - fp: {2} - fn: {3} - precision: {4:.4f} - recall: {5:.4f} - accuracy: {6:.4f} - f1-score: {7:.4f}'.format(
+            self.name, self._tp, self._fp, self._fn, self.precision(), self.recall(), self.accuracy(), self.f_score())
+
+
+class WeightExtractor(object):
+
+    def __init__(self, directory: str, number_of_weights: int = 10):
+        self.weights_file = init_output_file(directory, 'weights.txt')
+        self.weights_dict = defaultdict(lambda: defaultdict(lambda: list()))
+        self.number_of_weights = number_of_weights
+
+    def extract_weights(self, state_dict, iteration):
+        for key in state_dict.keys():
+
+            vec = state_dict[key]
+            weights_to_watch = min(self.number_of_weights, reduce(lambda x, y: x*y, list(vec.size())))
+
+            if key not in self.weights_dict:
+                self._init_weights_index(key, state_dict, weights_to_watch)
+
+            for i in range(weights_to_watch):
+                vec = state_dict[key]
+                for index in self.weights_dict[key][i]:
+                    vec = vec[index]
+
+                value = vec.item()
+
+                with open(self.weights_file, 'a') as f:
+                    f.write('{}\t{}\t{}\t{}\n'.format(iteration, key, i, float(value)))
+
+    def _init_weights_index(self, key, state_dict, weights_to_watch):
+        indices = {}
+
+        i = 0
+        while len(indices) < weights_to_watch:
+            vec = state_dict[key]
+            cur_indices = []
+
+            for x in range(len(vec.size())):
+                index = random.randint(0, len(vec) - 1)
+                vec = vec[index]
+                cur_indices.append(index)
+
+            if cur_indices not in list(indices.values()):
+                indices[i] = cur_indices
+                i += 1
+
+        self.weights_dict[key] = indices
 
 
 def clear_embeddings(sentences: List[Sentence]):
@@ -87,18 +151,7 @@ def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionar
     :param label_dict: label dictionary
     :return: converted label list
     """
-    converted_label_list = []
-
-    for labels in label_list:
-        arr = np.empty(len(label_dict))
-        arr.fill(0)
-
-        for label in labels:
-            arr[label_dict.get_idx_for_item(label)] = 1
-
-        converted_label_list.append(arr.tolist())
-
-    return converted_label_list
+    return [[1 if l in labels else 0 for l in label_dict.get_items()] for labels in label_list]
 
 
 def calculate_micro_avg_metric(y_true: List[List[int]], y_pred: List[List[int]], labels: Dictionary) -> Metric:

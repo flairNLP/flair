@@ -30,6 +30,6 @@ def test_training():
     print(sentence[1].embedding.size())
 
     # clean up results directory
-    shutil.rmtree('./results')
+    shutil.rmtree('./results', ignore_errors=True)
 
 

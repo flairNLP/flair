@@ -66,6 +66,8 @@ class LanguageModel(nn.Module):
         encoded = self.encoder(input)
         emb = self.drop(encoded)
 
+        self.rnn.flatten_parameters()
+
         output, hidden = self.rnn(emb, hidden)
 
         if self.proj is not None:
@@ -115,7 +117,12 @@ class LanguageModel(nn.Module):
 
     @classmethod
     def load_language_model(cls, model_file):
-        state = torch.load(model_file)
+
+        if not torch.cuda.is_available():
+            state = torch.load(model_file, map_location='cpu')
+        else:
+            state = torch.load(model_file)
+
         model = LanguageModel(state['dictionary'],
                                              state['is_forward_lm'],
                                              state['hidden_size'],

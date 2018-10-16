@@ -1,14 +1,14 @@
 import os
-import pickle
 import re
 from abc import abstractmethod
-from typing import List, Union
+from typing import List, Union, Dict, Tuple
 
 import gensim
 import numpy as np
 import torch
 
-from .data import Dictionary, Token, Sentence, TaggedCorpus
+from .nn import LockedDropout, WordDropout
+from .data import Dictionary, Token, Sentence
 from .file_utils import cached_path
 
 
@@ -94,13 +94,13 @@ class StackedEmbeddings(TokenEmbeddings):
 
         # IMPORTANT: add embeddings as torch modules
         for i, embedding in enumerate(embeddings):
-            self.add_module('list_embedding_%s' % str(i), embedding)
+            self.add_module('list_embedding_{}'.format(i), embedding)
 
-        self.detach = detach
-        self.name = 'Stack'
-        self.static_embeddings = True
+        self.detach: bool = detach
+        self.name: str = 'Stack'
+        self.static_embeddings: bool = True
 
-        self.__embedding_type: int = embeddings[0].embedding_type
+        self.__embedding_type: str = embeddings[0].embedding_type
 
         self.__embedding_length: int = 0
         for embedding in embeddings:
@@ -221,6 +221,55 @@ class WordEmbeddings(TokenEmbeddings):
         return sentences
 
 
+class MemoryEmbeddings(TokenEmbeddings):
+
+    def __init__(self, tag_type: str, tag_dictionary: Dictionary):
+
+        self.name = "memory"
+        self.static_embeddings = False
+        self.tag_type: str = tag_type
+        self.tag_dictionary: Dictionary = tag_dictionary
+        self.__embedding_length: int = len(tag_dictionary)
+
+        self.memory: Dict[str:List] = {}
+
+        super().__init__()
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def train(self, mode=True):
+        super().train(mode=mode)
+        if mode:
+            self.memory: Dict[str:List] = {}
+
+    def update_embedding(self, text: str, tag: str):
+        self.memory[text][self.tag_dictionary.get_idx_for_item(tag)] += 1
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        for i, sentence in enumerate(sentences):
+
+            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+                token: Token = token
+
+                if token.text not in self.memory:
+                    self.memory[token.text] = [0] * self.__embedding_length
+
+                word_embedding = torch.FloatTensor(self.memory[token.text])
+                import torch.nn.functional as F
+                word_embedding = F.normalize(word_embedding, p=2, dim=0)
+
+                token.set_embedding(self.name, word_embedding)
+
+                # add label if in training mode
+                if self.training:
+                    self.update_embedding(token.text, token.get_tag(self.tag_type).value)
+
+        return sentences
+
+
 class CharacterEmbeddings(TokenEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
 
@@ -306,9 +355,7 @@ class CharacterEmbeddings(TokenEmbeddings):
 class CharLMEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
-    def __init__(self, model, detach: bool = True):
-        super().__init__()
-
+    def __init__(self, model, detach: bool = True, use_cache: bool = True, cache_directory: str = None):
         """
             Contextual string embeddings of words, as proposed in Akbik et al., 2018.
 
@@ -320,7 +367,14 @@ class CharLMEmbeddings(TokenEmbeddings):
             arg2 : detach
                 if set to false, the gradient will propagate into the language model. this dramatically slows down
                 training and often leads to worse results, so not recommended.
+            arg3 : use_cache
+                if set to false, will not write embeddings to file for later retrieval. this saves disk space but will
+                not allow re-use of once computed embeddings that do not fit into memory
+            arg3 : cache_directory
+                if cache_directory is not set, the cache will be written to ~/.flair/embeddings. otherwise the cache
+                is written to the provided directory.
         """
+        super().__init__()
 
         # news-english-forward
         if model.lower() == 'news-forward':
@@ -362,6 +416,16 @@ class CharLMEmbeddings(TokenEmbeddings):
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
+        # common crawl Polish forward
+        if model.lower() == 'polish-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-forward-v0.2.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+
+        # common crawl Polish backward
+        if model.lower() == 'polish-backward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-backward-v0.2.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+
         self.name = model
         self.static_embeddings = detach
 
@@ -371,10 +435,24 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         self.is_forward_lm: bool = self.lm.is_forward_lm
 
+        # caching variables
+        self.use_cache: bool = use_cache
+        self.cache = None
+        self.cache_directory: str = cache_directory
+
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token('hello'))
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
+
+    def __getstate__(self):
+        # Copy the object's state from self.__dict__ which contains
+        # all our instance attributes. Always use the dict.copy()
+        # method to avoid modifying the original state.
+        state = self.__dict__.copy()
+        # Remove the unpicklable entries.
+        state['cache'] = None
+        return state
 
     @property
     def embedding_length(self) -> int:
@@ -382,7 +460,39 @@ class CharLMEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
-        # get text sentences
+        # by default, use_cache is false (for older pre-trained models TODO: remove in version 0.4)
+        if 'cache' not in self.__dict__:
+            self.use_cache = False
+            self.cache_directory = None
+
+        # if cache is used, try setting embeddings from cache first
+        if self.use_cache:
+
+            # lazy initialization of cache
+            if not self.cache:
+                cache_path = '{}-tmp-cache.sqllite'.format(self.name) if self.cache_directory is None else os.path.join(
+                    self.cache_directory, '{}-tmp-cache.sqllite'.format(os.path.basename(self.name)))
+
+                from sqlitedict import SqliteDict
+                self.cache = SqliteDict(cache_path, autocommit=True)
+
+            # try populating embeddings from cache
+            all_embeddings_retrieved_from_cache: bool = True
+            for sentence in sentences:
+                key = sentence.to_tokenized_string()
+                embeddings = self.cache.get(key)
+
+                if not embeddings:
+                    all_embeddings_retrieved_from_cache = False
+                    break
+                else:
+                    for token, embedding in zip(sentence, embeddings):
+                        token.set_embedding(self.name, torch.FloatTensor(embedding))
+
+            if all_embeddings_retrieved_from_cache:
+                return sentences
+
+        # if this is not possible, use LM to generate embedding. First, get text sentences
         text_sentences = [sentence.to_tokenized_string() for sentence in sentences]
 
         longest_character_sequence_in_batch: int = len(max(text_sentences, key=len))
@@ -431,6 +541,10 @@ class CharLMEmbeddings(TokenEmbeddings):
                 offset_backward -= len(token.text)
 
                 token.set_embedding(self.name, embedding)
+
+        if self.use_cache:
+            for sentence in sentences:
+                self.cache[sentence.to_tokenized_string()] = [token._embeddings[self.name].tolist() for token in sentence]
 
         return sentences
 
@@ -493,7 +607,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
     def __init__(self, token_embeddings: List[TokenEmbeddings], hidden_states=128, num_layers=1,
                  reproject_words: bool = True, reproject_words_dimension: int = None, bidirectional: bool = False,
-                 use_first_representation: bool = False):
+                 use_first_representation: bool = False, use_word_dropout: bool = False, use_locked_dropout: bool = False):
         """The constructor takes a list of embeddings to be combined.
         :param token_embeddings: a list of token embeddings
         :param hidden_states: the number of hidden states in the lstm
@@ -505,6 +619,8 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
         :param use_first_representation: boolean value, indicating whether to concatenate the first and last
         representation of the lstm to be used as final document embedding.
+        :param use_word_dropout: boolean value, indicating whether to use word dropout or not.
+        :param use_locked_dropout: boolean value, indicating whether to use locked dropout or not.
         """
         super().__init__()
 
@@ -536,7 +652,16 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
                                                      self.embeddings_dimension)
         self.rnn = torch.nn.GRU(self.embeddings_dimension, hidden_states, num_layers=num_layers,
                                  bidirectional=self.bidirectional)
-        self.dropout = torch.nn.Dropout(0.5)
+
+        # dropouts
+        if use_locked_dropout:
+            self.dropout: torch.nn.Module = LockedDropout(0.5)
+        else:
+            self.dropout = torch.nn.Dropout(0.5)
+
+        self.use_word_dropout: bool = use_word_dropout
+        if self.use_word_dropout:
+            self.word_dropout = WordDropout(0.05)
 
         torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
 
@@ -600,12 +725,18 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         # --------------------------------------------------------------------
         # FF PART
         # --------------------------------------------------------------------
+        # use word dropout if set
+        if self.use_word_dropout:
+            sentence_tensor = self.word_dropout(sentence_tensor)
+
         if self.reproject_words:
             sentence_tensor = self.word_reprojection_map(sentence_tensor)
 
         sentence_tensor = self.dropout(sentence_tensor)
 
         packed = torch.nn.utils.rnn.pack_padded_sequence(sentence_tensor, lengths)
+
+        self.rnn.flatten_parameters()
 
         lstm_out, hidden = self.rnn(packed)
 

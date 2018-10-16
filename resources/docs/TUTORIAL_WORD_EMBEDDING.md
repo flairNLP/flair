@@ -11,7 +11,7 @@ All word embedding classes inherit from the `TokenEmbeddings` class and implemen
 call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains 
 hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
-All embeddings produced with our methods are pytorch vectors, so they can be immediately used for training and 
+All embeddings produced with our methods are Pytorch vectors, so they can be immediately used for training and
 fine-tuning.
 
 ## Classic Word Embeddings
@@ -28,9 +28,8 @@ from flair.embeddings import WordEmbeddings
 # init embedding
 glove_embedding = WordEmbeddings('glove')
 ```
-Now, create an example sentence and call the embedding's `embed()` method. You always pass a list of sentences to 
-this method since some embedding types make use of batching to increase speed. So if you only have one sentence, 
-pass a list containing only one sentence:
+Now, create an example sentence and call the embedding's `embed()` method. You can also pass a list of sentences to
+this method since some embedding types make use of batching to increase speed.
 
 ```python
 # create sentence.
@@ -57,7 +56,7 @@ are provided (more coming):
 | 'en-numberbatch' (or 'numberbatch') | English |[Numberbatch](https://github.com/commonsense/conceptnet-numberbatch) embeddings |
 | 'en-extvec' (or 'extvec') | English |Komnios embeddings |
 | 'en-crawl' (or 'crawl')  | English | FastText embeddings over Web crawls |
-| 'en-news' (or 'news')  |E nglish | FastText embeddings over news and wikipedia data |
+| 'en-news' (or 'news')  |English | FastText embeddings over news and wikipedia data |
 | 'en-twitter' (or 'twitter')  | English | GloVe embeddings computed over twitter data |
 | 'de-fasttext' | German |German FastText embeddings |
 | 'de-numberbatch' | German | German Numberbatch embeddings |
@@ -108,6 +107,8 @@ Currently, the following contextual string embeddings are provided (more coming)
 | 'mix-backward'    | English | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
 | 'german-forward'  | German  | Forward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
 | 'german-backward' | German  | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
+| 'polish-forward'  | Polish  | Forward LM embeddings over web crawls (Polish part of CommonCrawl) |
+| 'polish-backward' | Polish  | Backward LM embeddings over web crawls (Polish part of CommonCrawl) |
 
 So, if you want to load embeddings from the English news backward LM model, instantiate the method as follows:
 
@@ -166,7 +167,8 @@ Now instantiate the `StackedEmbeddings` class and pass it a list containing thes
 from flair.embeddings import StackedEmbeddings
 
 # now create the StackedEmbedding object that combines all embeddings
-stacked_embeddings = StackedEmbeddings(embeddings=[glove_embedding, charlm_embedding_forward, charlm_embedding_backward])
+stacked_embeddings = StackedEmbeddings(
+    embeddings=[glove_embedding, charlm_embedding_forward, charlm_embedding_backward])
 ```
 
 That's it! Now just use this embedding like all the other embeddings, i.e. call the `embed()` method over your sentences.
