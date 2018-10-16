@@ -9,4 +9,4 @@ matplotlib==3.0.0
 mpld3==0.3
 jinja2==2.10
 sklearn
-sqlitedict
+sqlitedict==1.6.0
