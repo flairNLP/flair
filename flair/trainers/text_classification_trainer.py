@@ -107,8 +107,7 @@ class TextClassifierTrainer:
                     seen_sentences += len(batch)
                     current_loss += loss.item()
 
-                    if not embeddings_in_memory:
-                        clear_embeddings(batch)
+                    clear_embeddings(batch, also_clear_word_embeddings=not embeddings_in_memory)
 
                     if batch_no % modulo == 0:
                         log.info("epoch {0} - iter {1}/{2} - loss {3:.8f}".format(
@@ -221,8 +220,7 @@ class TextClassifierTrainer:
                 labels = self.model.obtain_labels(scores)
                 loss = self.model.calculate_loss(scores, batch)
 
-                if not embeddings_in_memory:
-                    clear_embeddings(batch)
+                clear_embeddings(batch, also_clear_word_embeddings=not embeddings_in_memory)
 
                 eval_loss += loss
 
