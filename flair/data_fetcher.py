@@ -350,8 +350,9 @@ class NLPTaskDataFetcher:
 
                 if text and labels:
                     sentence = Sentence(text, labels=labels, use_tokenizer=True)
-                    if max_tokens_per_doc == -1 or len(sentence.tokens) <= max_tokens_per_doc:
-                        sentences.append(sentence)
+                    if(len(sentence) > max_tokens_per_doc):
+                        sentence.tokens = sentence.tokens[:max_tokens_per_doc]
+                    sentences.append(sentence)
 
         return sentences
 
