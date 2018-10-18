@@ -1,4 +1,5 @@
 import datetime
+import os
 import random
 import logging
 from typing import List
@@ -35,21 +36,26 @@ class TextClassifierTrainer:
               max_epochs: int = 50,
               anneal_factor: float = 0.5,
               patience: int = 5,
-              save_model: bool = True,
-              embeddings_in_memory: bool = False,
               train_with_dev: bool = False,
+              embeddings_in_memory: bool = False,
+              checkpoint: bool = False,
+              save_final_model: bool = True,
+              anneal_with_restarts: bool = False,
               eval_on_train: bool = True):
         """
-        Trains the model using the training data of the corpus.
-        :param patience: number of 'bad' epochs before learning rate gets decreased
-        :param anneal_factor: learning rate will be decreased by this factor
+        Trains a text classification model using the training data of the corpus.
         :param base_path: the directory to which any results should be written to
         :param learning_rate: the learning rate
         :param mini_batch_size: the mini batch size
         :param max_epochs: the maximum number of epochs to train
-        :param save_model: boolean value indicating, whether the model should be saved or not
-        :param embeddings_in_memory: boolean value indicating, if embeddings should be kept in memory or not
-        :param train_with_dev: boolean value indicating, if the dev data set should be used for training or not
+        :param anneal_factor: learning rate will be decreased by this factor
+        :param patience: number of 'bad' epochs before learning rate gets decreased
+        :param train_with_dev: boolean indicating, if the dev data set should be used for training or not
+        :param embeddings_in_memory: boolean indicating, if embeddings should be kept in memory or not
+        :param checkpoint: boolean indicating, whether the model should be save after every epoch or not
+        :param save_final_model: boolean indicating, whether the final model should be saved or not
+        :param anneal_with_restarts: boolean indicating, whether the best model should be reloaded once the learning
+        rate changed or not
         :param eval_on_train: boolean value indicating, if evaluation metrics should be calculated on training data set
         or not
         """
@@ -68,17 +74,34 @@ class TextClassifierTrainer:
                                                          mode=anneal_mode)
 
         train_data = self.corpus.train
+
         # if training also uses dev data, include in training set
         if train_with_dev:
             train_data.extend(self.corpus.dev)
 
         # At any point you can hit Ctrl + C to break out of training early.
         try:
-            # record overall best dev scores and best loss
-            best_score = 0
+            previous_learning_rate = learning_rate
 
             for epoch in range(max_epochs):
                 log.info('-' * 100)
+
+                bad_epochs = scheduler.num_bad_epochs
+                for group in optimizer.param_groups:
+                    learning_rate = group['lr']
+
+                # reload last best model if annealing with restarts is enabled
+                if learning_rate != previous_learning_rate and anneal_with_restarts and \
+                        os.path.exists(base_path + "/best-model.pt"):
+                    log.info('Resetting to best model ...')
+                    self.model.load_from_file(base_path + "/best-model.pt")
+
+                previous_learning_rate = learning_rate
+
+                # stop training if learning rate becomes too small
+                if learning_rate < 0.001:
+                    log.info('Learning rate too small - quitting training!')
+                    break
 
                 if not self.test_mode:
                     random.shuffle(train_data)
@@ -91,9 +114,6 @@ class TextClassifierTrainer:
                 current_loss: float = 0
                 seen_sentences = 0
                 modulo = max(1, int(len(batches) / 10))
-
-                for group in optimizer.param_groups:
-                    learning_rate = group['lr']
 
                 for batch_no, batch in enumerate(batches):
                     scores = self.model.forward(batch)
@@ -119,9 +139,13 @@ class TextClassifierTrainer:
 
                 self.model.eval()
 
+                # if checkpoint is enable, save model at each epoch
+                if checkpoint:
+                    self.model.save(base_path + "/checkpoint.pt")
+
                 log.info('-' * 100)
                 log.info(
-                    "EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, scheduler.num_bad_epochs))
+                    "EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, bad_epochs))
 
                 dev_metric = train_metric = None
                 dev_loss = '_'
@@ -145,26 +169,23 @@ class TextClassifierTrainer:
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_metric.f_score())
 
-                is_best_model_so_far: bool = False
                 current_score = dev_metric.f_score() if not train_with_dev else train_metric.f_score()
 
-                if current_score >= best_score:
-                    best_score = current_score
-                    is_best_model_so_far = True
+                # if we use dev data, remember best model based on dev evaluation score
+                if not train_with_dev and current_score == scheduler.best:
+                    self.model.save(base_path + "/best-model.pt")
 
-                if is_best_model_so_far:
-                    if save_model:
-                        self.model.save(base_path + "/model.pt")
-
-            self.model.save(base_path + "/final-model.pt")
-
-            if save_model:
-                self.model = TextClassifier.load_from_file(base_path + "/model.pt")
+            if save_final_model:
+                self.model.save(base_path + "/final-model.pt")
 
             log.info('-' * 100)
             log.info('Testing using best model ...')
 
             self.model.eval()
+
+            if os.path.exists(base_path + "/best-model.pt"):
+                self.model = TextClassifier.load_from_file(base_path + "/best-model.pt")
+
             test_metrics, test_loss = self.evaluate(
                 self.corpus.test, mini_batch_size=mini_batch_size, eval_class_metrics=True,
                 embeddings_in_memory=embeddings_in_memory)
