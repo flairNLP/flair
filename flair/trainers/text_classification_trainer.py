@@ -38,9 +38,11 @@ class TextClassifierTrainer:
               save_model: bool = True,
               embeddings_in_memory: bool = False,
               train_with_dev: bool = False,
-              eval_on_train: bool = True):
+              eval_on_train: bool = True,
+              checkpoint: bool = False):
         """
         Trains the model using the training data of the corpus.
+        :param checkpoint: boolean indicating, whether the model should be save after every epoch or not
         :param patience: number of 'bad' epochs before learning rate gets decreased
         :param anneal_factor: learning rate will be decreased by this factor
         :param base_path: the directory to which any results should be written to
@@ -118,6 +120,10 @@ class TextClassifierTrainer:
                 current_loss /= len(train_data)
 
                 self.model.eval()
+
+                # if checkpointing is enable, save model at each epoch
+                if checkpoint:
+                    self.model.save(base_path + "/checkpoint.pt")
 
                 log.info('-' * 100)
                 log.info(
