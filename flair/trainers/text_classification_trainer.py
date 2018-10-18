@@ -1,4 +1,5 @@
 import datetime
+import os
 import random
 import logging
 from typing import List
@@ -35,11 +36,11 @@ class TextClassifierTrainer:
               max_epochs: int = 50,
               anneal_factor: float = 0.5,
               patience: int = 5,
-              save_model: bool = True,
-              embeddings_in_memory: bool = False,
               train_with_dev: bool = False,
-              eval_on_train: bool = True,
-              checkpoint: bool = False):
+              embeddings_in_memory: bool = False,
+              checkpoint: bool = False,
+              save_final_model: bool = True,
+              eval_on_train: bool = True):
         """
         Trains the model using the training data of the corpus.
         :param checkpoint: boolean indicating, whether the model should be save after every epoch or not
@@ -49,7 +50,7 @@ class TextClassifierTrainer:
         :param learning_rate: the learning rate
         :param mini_batch_size: the mini batch size
         :param max_epochs: the maximum number of epochs to train
-        :param save_model: boolean value indicating, whether the model should be saved or not
+        :param save_final_model: boolean value indicating, whether the model should be saved or not
         :param embeddings_in_memory: boolean value indicating, if embeddings should be kept in memory or not
         :param train_with_dev: boolean value indicating, if the dev data set should be used for training or not
         :param eval_on_train: boolean value indicating, if evaluation metrics should be calculated on training data set
@@ -151,26 +152,23 @@ class TextClassifierTrainer:
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 scheduler.step(current_loss) if train_with_dev else scheduler.step(dev_metric.f_score())
 
-                is_best_model_so_far: bool = False
                 current_score = dev_metric.f_score() if not train_with_dev else train_metric.f_score()
 
-                if current_score >= best_score:
-                    best_score = current_score
-                    is_best_model_so_far = True
+                # if we use dev data, remember best model based on dev evaluation score
+                if not train_with_dev and current_score == scheduler.best:
+                    self.model.save(base_path + "/best-model.pt")
 
-                if is_best_model_so_far:
-                    if save_model:
-                        self.model.save(base_path + "/model.pt")
-
-            self.model.save(base_path + "/final-model.pt")
-
-            if save_model:
-                self.model = TextClassifier.load_from_file(base_path + "/model.pt")
+            if save_final_model:
+                self.model.save(base_path + "/final-model.pt")
 
             log.info('-' * 100)
             log.info('Testing using best model ...')
 
             self.model.eval()
+
+            if os.path.exists(base_path + "/best-model.pt"):
+                self.model = TextClassifier.load_from_file(base_path + "/best-model.pt")
+
             test_metrics, test_loss = self.evaluate(
                 self.corpus.test, mini_batch_size=mini_batch_size, eval_class_metrics=True,
                 embeddings_in_memory=embeddings_in_memory)
