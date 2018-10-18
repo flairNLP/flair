@@ -452,6 +452,8 @@ class CharLMEmbeddings(TokenEmbeddings):
         state = self.__dict__.copy()
         # Remove the unpicklable entries.
         state['cache'] = None
+        state['use_cache'] = False
+        state['cache_directory'] = None
         return state
 
     @property
