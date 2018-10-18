@@ -71,8 +71,8 @@ class Metric(object):
         return '_\t_\t_\t_\t_\t_\t_\t_'
 
     def __str__(self):
-        return '{0:<10}\ttp: {1} - fp: {2} - fn: {3} - precision: {4:.4f} - recall: {5:.4f} - accuracy: {6:.4f} - f1-score: {7:.4f}'.format(
-            self.name, self._tp, self._fp, self._fn, self.precision(), self.recall(), self.accuracy(), self.f_score())
+        return '{0:<10}\ttp: {1} - fp: {2} - fn: {3} - tn: {4} - precision: {5:.4f} - recall: {6:.4f} - accuracy: {7:.4f} - f1-score: {8:.4f}'.format(
+            self.name, self._tp, self._fp, self._fn, self._tn, self.precision(), self.recall(), self.accuracy(), self.f_score())
 
 
 class WeightExtractor(object):

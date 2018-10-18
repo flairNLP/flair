@@ -1,4 +1,5 @@
 import warnings
+import logging
 
 import torch.autograd as autograd
 import torch.nn
@@ -12,6 +13,9 @@ from flair.file_utils import cached_path
 from typing import List, Tuple, Union
 
 from flair.training_utils import clear_embeddings
+
+log = logging.getLogger(__name__)
+
 
 START_TAG: str = '<START>'
 STOP_TAG: str = '<STOP>'
@@ -169,7 +173,6 @@ class SequenceTagger(torch.nn.Module):
         return model
 
     def forward(self, sentences: List[Sentence]):
-
         self.zero_grad()
 
         # first, sort sentences by number of tokens
@@ -420,11 +423,13 @@ class SequenceTagger(torch.nn.Module):
         if type(sentences) is Sentence:
             sentences = [sentences]
 
+        filtered_sentences = self._filter_empty_sentences(sentences)
+
         # remove previous embeddings
-        clear_embeddings(sentences)
+        clear_embeddings(filtered_sentences)
 
         # make mini-batches
-        batches = [sentences[x:x + mini_batch_size] for x in range(0, len(sentences), mini_batch_size)]
+        batches = [filtered_sentences[x:x + mini_batch_size] for x in range(0, len(filtered_sentences), mini_batch_size)]
 
         for batch in batches:
             scores, predicted_ids = self._predict_scores_batch(batch)
@@ -466,6 +471,13 @@ class SequenceTagger(torch.nn.Module):
             all_confidences.extend(confidences)
 
         return all_confidences, all_tags_seqs
+
+    @staticmethod
+    def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
+        filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
+        if len(sentences) != len(filtered_sentences):
+            log.warning('Ignore {} sentence(s) with no tokens.'.format(len(sentences) - len(filtered_sentences)))
+        return filtered_sentences
 
     @staticmethod
     def load(model: str):
