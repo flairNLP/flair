@@ -63,13 +63,15 @@ class SequenceTaggerTrainer:
             previous_learning_rate = learning_rate
 
             for epoch in range(0, max_epochs):
+                log.info('-' * 100)
 
                 bad_epochs = scheduler.num_bad_epochs
                 for group in optimizer.param_groups:
                     learning_rate = group['lr']
 
                 # reload last best model if annealing with restarts is enabled
-                if learning_rate != previous_learning_rate and anneal_with_restarts:
+                if learning_rate != previous_learning_rate and anneal_with_restarts and \
+                        os.path.exists(base_path + "/best-model.pt"):
                     log.info('resetting to best model')
                     self.model.load_from_file(base_path + "/best-model.pt")
 
@@ -80,9 +82,11 @@ class SequenceTaggerTrainer:
                     log.info('learning rate too small - quitting training!')
                     break
 
-                if not self.test_mode: random.shuffle(train_data)
+                if not self.test_mode:
+                    random.shuffle(train_data)
 
-                batches = [train_data[x:x + mini_batch_size] for x in range(0, len(train_data), mini_batch_size)]
+                batches = [train_data[x:x + mini_batch_size] for x in
+                           range(0, len(train_data), mini_batch_size)]
 
                 self.model.train()
 
@@ -160,8 +164,7 @@ class SequenceTaggerTrainer:
 
             # if we do not use dev data for model selection, save final model
             if save_final_model:
-                if train_with_dev:
-                    self.model.save(base_path + "/final-model.pt")
+                self.model.save(base_path + "/final-model.pt")
 
         except KeyboardInterrupt:
             log.info('-' * 100)
