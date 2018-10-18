@@ -460,8 +460,11 @@ class CharLMEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
+        cache_path = '{}-tmp-cache.sqllite'.format(self.name) if self.cache_directory is None else os.path.join(
+            self.cache_directory, '{}-tmp-cache.sqllite'.format(os.path.basename(self.name)))
+
         # by default, use_cache is false (for older pre-trained models TODO: remove in version 0.4)
-        if 'cache' not in self.__dict__:
+        if 'cache' not in self.__dict__ or 'cache_directory' not in self.__dict__ or not os.path.exists(cache_path):
             self.use_cache = False
             self.cache_directory = None
 
@@ -470,9 +473,6 @@ class CharLMEmbeddings(TokenEmbeddings):
 
             # lazy initialization of cache
             if not self.cache:
-                cache_path = '{}-tmp-cache.sqllite'.format(self.name) if self.cache_directory is None else os.path.join(
-                    self.cache_directory, '{}-tmp-cache.sqllite'.format(os.path.basename(self.name)))
-
                 from sqlitedict import SqliteDict
                 self.cache = SqliteDict(cache_path, autocommit=True)
 
