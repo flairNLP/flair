@@ -40,6 +40,7 @@ class TextClassifierTrainer:
               embeddings_in_memory: bool = False,
               checkpoint: bool = False,
               save_final_model: bool = True,
+              anneal_with_restarts: bool = False,
               eval_on_train: bool = True):
         """
         Trains the model using the training data of the corpus.
@@ -71,17 +72,29 @@ class TextClassifierTrainer:
                                                          mode=anneal_mode)
 
         train_data = self.corpus.train
+
         # if training also uses dev data, include in training set
         if train_with_dev:
             train_data.extend(self.corpus.dev)
 
         # At any point you can hit Ctrl + C to break out of training early.
         try:
-            # record overall best dev scores and best loss
-            best_score = 0
+            previous_learning_rate = learning_rate
 
             for epoch in range(max_epochs):
                 log.info('-' * 100)
+
+                bad_epochs = scheduler.num_bad_epochs
+                for group in optimizer.param_groups:
+                    learning_rate = group['lr']
+
+                # reload last best model if annealing with restarts is enabled
+                if learning_rate != previous_learning_rate and anneal_with_restarts and \
+                        os.path.exists(base_path + "/best-model.pt"):
+                    log.info('Resetting to best model ...')
+                    self.model.load_from_file(base_path + "/best-model.pt")
+
+                previous_learning_rate = learning_rate
 
                 if not self.test_mode:
                     random.shuffle(train_data)
@@ -94,9 +107,6 @@ class TextClassifierTrainer:
                 current_loss: float = 0
                 seen_sentences = 0
                 modulo = max(1, int(len(batches) / 10))
-
-                for group in optimizer.param_groups:
-                    learning_rate = group['lr']
 
                 for batch_no, batch in enumerate(batches):
                     scores = self.model.forward(batch)
@@ -122,13 +132,13 @@ class TextClassifierTrainer:
 
                 self.model.eval()
 
-                # if checkpointing is enable, save model at each epoch
+                # if checkpoint is enable, save model at each epoch
                 if checkpoint:
                     self.model.save(base_path + "/checkpoint.pt")
 
                 log.info('-' * 100)
                 log.info(
-                    "EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, scheduler.num_bad_epochs))
+                    "EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, bad_epochs))
 
                 dev_metric = train_metric = None
                 dev_loss = '_'
