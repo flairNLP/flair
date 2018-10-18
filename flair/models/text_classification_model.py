@@ -99,7 +99,7 @@ class TextClassifier(nn.Module):
         model.eval()
         return model
 
-    def predict(self, sentences: Union[Sentence, List[Sentence]], mini_batch_size: int = 32, embeddings_in_memory: bool = True) -> List[Sentence]:
+    def predict(self, sentences: Union[Sentence, List[Sentence]], mini_batch_size: int = 32) -> List[Sentence]:
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
         :param sentences: list of sentences
@@ -118,8 +118,7 @@ class TextClassifier(nn.Module):
             for (sentence, labels) in zip(batch, predicted_labels):
                 sentence.labels = labels
 
-            if not embeddings_in_memory:
-                clear_embeddings(batch)
+            clear_embeddings(batch)
 
         return sentences
 
