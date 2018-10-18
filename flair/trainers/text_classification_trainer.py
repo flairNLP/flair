@@ -96,6 +96,11 @@ class TextClassifierTrainer:
 
                 previous_learning_rate = learning_rate
 
+                # stop training if learning rate becomes too small
+                if learning_rate < 0.001:
+                    log.info('Learning rate too small - quitting training!')
+                    break
+
                 if not self.test_mode:
                     random.shuffle(train_data)
 
