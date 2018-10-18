@@ -605,19 +605,24 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
 
 class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
-    def __init__(self, token_embeddings: List[TokenEmbeddings], hidden_states=128, num_layers=1,
-                 reproject_words: bool = True, reproject_words_dimension: int = None, bidirectional: bool = False,
-                 use_first_representation: bool = False, use_word_dropout: bool = False, use_locked_dropout: bool = False):
+    def __init__(self,
+                 token_embeddings: List[TokenEmbeddings],
+                 hidden_states=128,
+                 num_layers=1,
+                 reproject_words: bool = True,
+                 reproject_words_dimension: int = None,
+                 bidirectional: bool = False,
+                 use_word_dropout: bool = False,
+                 use_locked_dropout: bool = False):
         """The constructor takes a list of embeddings to be combined.
         :param token_embeddings: a list of token embeddings
         :param hidden_states: the number of hidden states in the lstm
         :param num_layers: the number of layers for the lstm
-        :param reproject_words: boolean value, indicating whether to reproject the word embedding in a separate linear
+        :param reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear
         layer before putting them into the lstm or not
-        :param reproject_words_dimension: output dimension of reprojecting words. If None the same output dimension as
-        before will be taken.
+        :param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
+        dimension as before will be taken.
         :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
-        :param use_first_representation: boolean value, indicating whether to concatenate the first and last
         representation of the lstm to be used as final document embedding.
         :param use_word_dropout: boolean value, indicating whether to use word dropout or not.
         :param use_locked_dropout: boolean value, indicating whether to use locked dropout or not.
@@ -628,7 +633,6 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
         self.reproject_words = reproject_words
         self.bidirectional = bidirectional
-        self.use_first_representation = use_first_representation
 
         self.length_of_all_token_embeddings = 0
         for token_embedding in self.embeddings:
@@ -639,9 +643,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
         self.__embedding_length: int = hidden_states
         if self.bidirectional:
-            self.__embedding_length *= 2
-        if self.use_first_representation:
-            self.__embedding_length *= 2
+            self.__embedding_length *= 4
 
         self.embeddings_dimension: int = self.length_of_all_token_embeddings
         if self.reproject_words and reproject_words_dimension is not None:
@@ -751,7 +753,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
             last_rep = outputs[length - 1, sentence_no].unsqueeze(0)
 
             embedding = last_rep
-            if self.use_first_representation:
+            if self.bidirectional:
                 first_rep = outputs[0, sentence_no].unsqueeze(0)
                 embedding = torch.cat([first_rep, last_rep], 1)
 
