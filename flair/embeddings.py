@@ -631,6 +631,10 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
         self.embeddings: List[TokenEmbeddings] = token_embeddings
 
+        # IMPORTANT: add embeddings as torch modules
+        for i, embedding in enumerate(self.embeddings):
+            self.add_module('token_embedding_{}'.format(i), embedding)
+
         self.reproject_words = reproject_words
         self.bidirectional = bidirectional
 
