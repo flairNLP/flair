@@ -8,8 +8,8 @@ from flair.models.text_classification_model import TextClassifier
 
 
 @pytest.fixture
-def init() -> Tuple[TaggedCorpus, Dictionary, TextClassifier]:
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.AG_NEWS)
+def init(tasks_base_path) -> Tuple[TaggedCorpus, Dictionary, TextClassifier]:
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.AG_NEWS, tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
     glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')

@@ -6,9 +6,9 @@ from flair.models import SequenceTagger
 from flair.trainers import SequenceTaggerTrainer
 
 
-def test_training():
+def test_training(tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION)
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     embeddings = WordEmbeddings('glove')

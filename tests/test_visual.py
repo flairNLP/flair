@@ -81,7 +81,7 @@ def test_visualize():
 
 
 def test_highlighter():
-    with open('./resources/visual/snippet.txt') as f:
+    with (Path(__file__).parent / 'resources/visual/snippet.txt').open() as f:
         sentences = [x for x in f.read().split('\n') if x]
 
     embeddings = CharLMEmbeddings('news-forward')

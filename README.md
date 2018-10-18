@@ -144,6 +144,13 @@ For contributors looking to get deeper into the API we suggest cloning the repos
 tests for examples of how to call methods. Nearly all classes and methods are documented, so finding your way around 
 the code should hopefully be easy.
 
+### Running unit tests locally
+
+```
+pipenv install --dev && pipenv shell
+TRAVIS=true pytest
+```
+
 
 ## [License](/LICENSE)
 

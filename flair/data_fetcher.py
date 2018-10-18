@@ -3,6 +3,7 @@ import re
 import os
 import logging
 from enum import Enum
+from pathlib import Path
 
 from flair.data import Sentence, TaggedCorpus, Token
 
@@ -35,17 +36,22 @@ class NLPTask(Enum):
 class NLPTaskDataFetcher:
 
     @staticmethod
-    def fetch_data(task: NLPTask) -> TaggedCorpus:
+    def fetch_data(task: NLPTask, base_path: Path = None) -> TaggedCorpus:
         """
         Helper function to fetch a TaggedCorpus for a specific NLPTask. For this to work you need to first download
         and put into the appropriate folder structure the corresponsing NLP task data. The tutorials on
         https://github.com/zalandoresearch/flair give more info on how to do this. Alternatively, you can use this
         code to create your own data fetchers.
         :param task: specification of the NLPTask you wish to get
+        :param base_path: path to data folder containing tasks sub folders
         :return: a TaggedCorpus consisting of train, dev and test data
         """
 
-        data_folder = os.path.join('resources', 'tasks', str(task.value).lower())
+        if not base_path:
+            base_path = Path('resources') / 'tasks'
+
+        data_folder = str(base_path / str(task.value).lower())
+
         log.info("Reading data from {}".format(data_folder))
 
         # the CoNLL 2000 task on chunking has three columns: text, pos and np (chunk)
@@ -177,7 +183,7 @@ class NLPTaskDataFetcher:
 
     @staticmethod
     def fetch_column_corpus(
-            data_folder: str,
+            data_folder: Path,
             column_format: Dict[int, str],
             train_file: str,
             test_file: str,
@@ -194,6 +200,9 @@ class NLPTaskDataFetcher:
         :param tag_to_biloes: whether to convert to BILOES tagging scheme
         :return: a TaggedCorpus with annotated train, dev and test data
         """
+
+        # TODO: move all paths to use pathlib.Path, for now convert to str for compatibility
+        data_folder = str(data_folder)
 
         # get train and test data
         sentences_train: List[Sentence] = NLPTaskDataFetcher.read_column_data(

@@ -47,11 +47,11 @@ def test_sentence_to_plain_string():
     assert ('I love Berlin .' == sentence.to_tokenized_string())
 
 
-def test_sentence_to_real_string():
+def test_sentence_to_real_string(tasks_base_path):
     sentence: Sentence = Sentence('I love Berlin.', use_tokenizer=True)
     assert ('I love Berlin.' == sentence.to_plain_string())
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.GERMEVAL)
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.GERMEVAL, tasks_base_path)
 
     sentence = corpus.train[0]
     assert (
