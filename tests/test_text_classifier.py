@@ -20,8 +20,8 @@ def init(tasks_base_path) -> Tuple[TaggedCorpus, Dictionary, TextClassifier]:
     return corpus, label_dict, model
 
 
-def test_labels_to_indices():
-    corpus, label_dict, model = init()
+def test_labels_to_indices(tasks_base_path):
+    corpus, label_dict, model = init(tasks_base_path)
 
     result = model._labels_to_indices(corpus.train)
 
@@ -32,8 +32,8 @@ def test_labels_to_indices():
         assert(expected == actual)
 
 
-def test_labels_to_one_hot():
-    corpus, label_dict, model = init()
+def test_labels_to_one_hot(tasks_base_path):
+    corpus, label_dict, model = init(tasks_base_path)
 
     result = model._labels_to_one_hot(corpus.train)
 

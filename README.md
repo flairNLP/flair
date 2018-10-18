@@ -146,6 +146,8 @@ the code should hopefully be easy.
 
 ### Running unit tests locally
 
+You need [Pipenv](https://pipenv.readthedocs.io/) for this:
+
 ```
 pipenv install --dev && pipenv shell
 TRAVIS=true pytest
