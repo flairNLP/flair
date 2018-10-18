@@ -173,8 +173,6 @@ class SequenceTagger(torch.nn.Module):
         return model
 
     def forward(self, sentences: List[Sentence]):
-        sentences = self._filter_empty_sentences(sentences)
-
         self.zero_grad()
 
         # first, sort sentences by number of tokens
@@ -425,13 +423,13 @@ class SequenceTagger(torch.nn.Module):
         if type(sentences) is Sentence:
             sentences = [sentences]
 
-        sentences = self._filter_empty_sentences(sentences)
+        filtered_sentences = self._filter_empty_sentences(sentences)
 
         # remove previous embeddings
-        clear_embeddings(sentences)
+        clear_embeddings(filtered_sentences)
 
         # make mini-batches
-        batches = [sentences[x:x + mini_batch_size] for x in range(0, len(sentences), mini_batch_size)]
+        batches = [filtered_sentences[x:x + mini_batch_size] for x in range(0, len(filtered_sentences), mini_batch_size)]
 
         for batch in batches:
             scores, predicted_ids = self._predict_scores_batch(batch)

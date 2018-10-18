@@ -51,8 +51,6 @@ class TextClassifier(nn.Module):
         nn.init.xavier_uniform_(self.decoder.weight)
 
     def forward(self, sentences) -> List[List[float]]:
-        sentences = self._filter_empty_sentences(sentences)
-
         self.document_embeddings.embed(sentences)
 
         text_embedding_list = [sentence.get_embedding() for sentence in sentences]
@@ -115,9 +113,9 @@ class TextClassifier(nn.Module):
         if type(sentences) is Sentence:
             sentences = [sentences]
 
-        sentences = self._filter_empty_sentences(sentences)
+        filtered_sentences = self._filter_empty_sentences(sentences)
 
-        batches = [sentences[x:x + mini_batch_size] for x in range(0, len(sentences), mini_batch_size)]
+        batches = [filtered_sentences[x:x + mini_batch_size] for x in range(0, len(filtered_sentences), mini_batch_size)]
 
         for batch in batches:
             scores = self.forward(batch)
