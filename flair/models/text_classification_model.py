@@ -1,4 +1,5 @@
 import warnings
+import logging
 from typing import List, Union
 
 import torch
@@ -7,6 +8,9 @@ import torch.nn as nn
 import flair.embeddings
 from flair.data import Dictionary, Sentence, Label
 from flair.training_utils import convert_labels_to_one_hot, clear_embeddings
+
+
+log = logging.getLogger(__name__)
 
 
 class TextClassifier(nn.Module):
@@ -47,6 +51,8 @@ class TextClassifier(nn.Module):
         nn.init.xavier_uniform_(self.decoder.weight)
 
     def forward(self, sentences) -> List[List[float]]:
+        sentences = self._filter_empty_sentences(sentences)
+
         self.document_embeddings.embed(sentences)
 
         text_embedding_list = [sentence.get_embedding() for sentence in sentences]
@@ -109,6 +115,8 @@ class TextClassifier(nn.Module):
         if type(sentences) is Sentence:
             sentences = [sentences]
 
+        sentences = self._filter_empty_sentences(sentences)
+
         batches = [sentences[x:x + mini_batch_size] for x in range(0, len(sentences), mini_batch_size)]
 
         for batch in batches:
@@ -121,6 +129,13 @@ class TextClassifier(nn.Module):
             clear_embeddings(batch)
 
         return sentences
+
+    @staticmethod
+    def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
+        filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
+        if len(sentences) != len(filtered_sentences):
+            log.warning('Ignore {} sentence(s) with no tokens.'.format(len(sentences) - len(filtered_sentences)))
+        return filtered_sentences
 
     def calculate_loss(self, scores: List[List[float]], sentences: List[Sentence]) -> float:
         """

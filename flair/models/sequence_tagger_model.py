@@ -1,4 +1,5 @@
 import warnings
+import logging
 
 import torch.autograd as autograd
 import torch.nn
@@ -12,6 +13,9 @@ from flair.file_utils import cached_path
 from typing import List, Tuple, Union
 
 from flair.training_utils import clear_embeddings
+
+log = logging.getLogger(__name__)
+
 
 START_TAG: str = '<START>'
 STOP_TAG: str = '<STOP>'
@@ -169,6 +173,7 @@ class SequenceTagger(torch.nn.Module):
         return model
 
     def forward(self, sentences: List[Sentence]):
+        sentences = self._filter_empty_sentences(sentences)
 
         self.zero_grad()
 
@@ -420,6 +425,8 @@ class SequenceTagger(torch.nn.Module):
         if type(sentences) is Sentence:
             sentences = [sentences]
 
+        sentences = self._filter_empty_sentences(sentences)
+
         # remove previous embeddings
         clear_embeddings(sentences)
 
@@ -466,6 +473,13 @@ class SequenceTagger(torch.nn.Module):
             all_confidences.extend(confidences)
 
         return all_confidences, all_tags_seqs
+
+    @staticmethod
+    def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
+        filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
+        if len(sentences) != len(filtered_sentences):
+            log.warning('Ignore {} sentence(s) with no tokens.'.format(len(sentences) - len(filtered_sentences)))
+        return filtered_sentences
 
     @staticmethod
     def load(model: str):
