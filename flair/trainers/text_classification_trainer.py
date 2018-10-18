@@ -43,17 +43,19 @@ class TextClassifierTrainer:
               anneal_with_restarts: bool = False,
               eval_on_train: bool = True):
         """
-        Trains the model using the training data of the corpus.
-        :param checkpoint: boolean indicating, whether the model should be save after every epoch or not
-        :param patience: number of 'bad' epochs before learning rate gets decreased
-        :param anneal_factor: learning rate will be decreased by this factor
+        Trains a text classification model using the training data of the corpus.
         :param base_path: the directory to which any results should be written to
         :param learning_rate: the learning rate
         :param mini_batch_size: the mini batch size
         :param max_epochs: the maximum number of epochs to train
-        :param save_final_model: boolean value indicating, whether the model should be saved or not
-        :param embeddings_in_memory: boolean value indicating, if embeddings should be kept in memory or not
-        :param train_with_dev: boolean value indicating, if the dev data set should be used for training or not
+        :param anneal_factor: learning rate will be decreased by this factor
+        :param patience: number of 'bad' epochs before learning rate gets decreased
+        :param train_with_dev: boolean indicating, if the dev data set should be used for training or not
+        :param embeddings_in_memory: boolean indicating, if embeddings should be kept in memory or not
+        :param checkpoint: boolean indicating, whether the model should be save after every epoch or not
+        :param save_final_model: boolean indicating, whether the final model should be saved or not
+        :param anneal_with_restarts: boolean indicating, whether the best model should be reloaded once the learning
+        rate changed or not
         :param eval_on_train: boolean value indicating, if evaluation metrics should be calculated on training data set
         or not
         """
