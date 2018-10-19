@@ -1,3 +1,4 @@
+import itertools
 import random
 import logging
 import os
@@ -5,7 +6,6 @@ from collections import defaultdict
 from typing import List
 from flair.data import Dictionary, Sentence
 from functools import reduce
-
 
 log = logging.getLogger(__name__)
 
@@ -15,46 +15,64 @@ class Metric(object):
     def __init__(self, name):
         self.name = name
 
-        self._tp = 0.0
-        self._fp = 0.0
-        self._tn = 0.0
-        self._fn = 0.0
+        self._tps = defaultdict(int)
+        self._fps = defaultdict(int)
+        self._tns = defaultdict(int)
+        self._fns = defaultdict(int)
 
-    def tp(self):
-        self._tp += 1
+    def tp(self, cls=None):
+        self._tps[cls] += 1
 
-    def tn(self):
-        self._tn += 1
+    def tn(self, cls=None):
+        self._tns[cls] += 1
 
-    def fp(self):
-        self._fp += 1
+    def fp(self, cls=None):
+        self._fps[cls] += 1
 
-    def fn(self):
-        self._fn += 1
+    def fn(self, cls=None):
+        self._fns[cls] += 1
 
-    def precision(self):
-        if self._tp + self._fp > 0:
-            return round(self._tp / (self._tp + self._fp), 4)
+    def get_tp(self, cls=None):
+        return self._tps[cls]
+
+    def get_tn(self, cls=None):
+        return self._tns[cls]
+
+    def get_fp(self, cls=None):
+        return self._fps[cls]
+
+    def get_fn(self, cls=None):
+        return self._fns[cls]
+
+    def precision(self, cls=None):
+        if self._tps[cls] + self._fps[cls] > 0:
+            return round(self._tps[cls] / (self._tps[cls] + self._fps[cls]), 4)
         return 0.0
 
-    def recall(self):
-        if self._tp + self._fn > 0:
-            return round(self._tp / (self._tp + self._fn), 4)
+    def recall(self, cls=None):
+        if self._tps[cls] + self._fns[cls] > 0:
+            return round(self._tps[cls] / (self._tps[cls] + self._fns[cls]), 4)
         return 0.0
 
-    def f_score(self):
-        if self.precision() + self.recall() > 0:
-            return round(2 * (self.precision() * self.recall()) / (self.precision() + self.recall()), 4)
+    def f_score(self, cls=None):
+        if self.precision(cls) + self.recall(cls) > 0:
+            return round(2 * (self.precision(cls) * self.recall(cls)) / (self.precision(cls) + self.recall(cls)), 4)
         return 0.0
 
-    def accuracy(self):
-        if self._tp + self._tn + self._fp + self._fn > 0:
-            return round((self._tp + self._tn) / (self._tp + self._tn + self._fp + self._fn), 4)
+    def accuracy(self, cls=None):
+        if self._tps[cls] + self._tns[cls] + self._fps[cls] + self._fns[cls] > 0:
+            return round(
+                (self._tps[cls] + self._tns[cls]) / (self._tps[cls] + self._tns[cls] + self._fps[cls] + self._fns[cls]),
+                4)
         return 0.0
 
     def to_tsv(self):
-        return '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
-            self._tp, self._tn, self._fp, self._fn, self.precision(), self.recall(), self.f_score(), self.accuracy())
+        # gather all the classes
+        all_classes = self.get_classes()
+        all_lines = ['{}:\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
+            'ALL' if cls == None else cls, self._tps[cls], self._tns[cls], self._fps[cls], self._fns[cls],
+            self.precision(cls), self.recall(cls), self.f_score(cls), self.accuracy(cls)) for cls in all_classes]
+        return '\n'.join(all_lines)
 
     def print(self):
         log.info(self)
@@ -62,17 +80,32 @@ class Metric(object):
     @staticmethod
     def tsv_header(prefix=None):
         if prefix:
-            return '{0}_TP\t{0}_TN\t{0}_FP\t{0}_FN\t{0}_PRECISION\t{0}_RECALL\t{0}_F-SCORE\t{0}_ACCURACY'.format(prefix)
+            return 'CLS\t{0}_TP\t{0}_TN\t{0}_FP\t{0}_FN\t{0}_PRECISION\t{0}_RECALL\t{0}_F-SCORE\t{0}_ACCURACY'.format(
+                prefix)
 
-        return 'TP\tTN\tFP\tFN\tPRECISION\tRECALL\tF-SCORE\tACCURACY'
+        return 'CLS\TP\tTN\tFP\tFN\tPRECISION\tRECALL\tF-SCORE\tACCURACY'
 
     @staticmethod
     def to_empty_tsv():
         return '_\t_\t_\t_\t_\t_\t_\t_'
 
     def __str__(self):
-        return '{0:<10}\ttp: {1} - fp: {2} - fn: {3} - tn: {4} - precision: {5:.4f} - recall: {6:.4f} - accuracy: {7:.4f} - f1-score: {8:.4f}'.format(
-            self.name, self._tp, self._fp, self._fn, self._tn, self.precision(), self.recall(), self.accuracy(), self.f_score())
+        all_classes = self.get_classes()
+        all_lines = [
+            '{0:<10}\ttp: {1} - fp: {2} - fn: {3} - tn: {4} - precision: {5:.4f} - recall: {6:.4f} - accuracy: {7:.4f} - f1-score: {8:.4f}'.format(
+                self.name if cls == None else cls,
+                self._tps[cls], self._fps[cls], self._fns[cls], self._tns[cls],
+                self.precision(cls), self.recall(cls), self.accuracy(cls), self.f_score(cls))
+            for cls in all_classes]
+        return all_lines
+
+    def get_classes(self) -> List:
+        all_classes = list(set(itertools.chain(*[list(keys) for keys
+                                                 in [self._tps.keys(), self._fps.keys(), self._tns.keys(),
+                                                     self._fns.keys()]])))
+
+        all_classes.sort(key=lambda x: (x is not None, x))
+        return all_classes
 
 
 class WeightExtractor(object):
@@ -86,7 +119,7 @@ class WeightExtractor(object):
         for key in state_dict.keys():
 
             vec = state_dict[key]
-            weights_to_watch = min(self.number_of_weights, reduce(lambda x, y: x*y, list(vec.size())))
+            weights_to_watch = min(self.number_of_weights, reduce(lambda x, y: x * y, list(vec.size())))
 
             if key not in self.weights_dict:
                 self._init_weights_index(key, state_dict, weights_to_watch)
