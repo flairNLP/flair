@@ -21,10 +21,10 @@ def test_calculate_micro_avg_metric():
 
     metric = calculate_micro_avg_metric(y_true, y_pred, labels)
 
-    assert(3 == metric._tp)
-    assert(0 == metric._fp)
-    assert(4 == metric._tn)
-    assert(2 == metric._fn)
+    assert(3 == metric.get_tp())
+    assert(0 == metric.get_fp())
+    assert(4 == metric.get_tn())
+    assert(2 == metric.get_fn())
 
 
 def test_calculate_class_metrics():
@@ -36,20 +36,20 @@ def test_calculate_class_metrics():
 
     assert(3 == len(metrics))
 
-    assert(1 == metrics_dict['class-1']._tp)
-    assert(0 == metrics_dict['class-1']._fp)
-    assert(2 == metrics_dict['class-1']._tn)
-    assert(0 == metrics_dict['class-1']._fn)
+    assert(1 == metrics_dict['class-1'].get_tp())
+    assert(0 == metrics_dict['class-1'].get_fp())
+    assert(2 == metrics_dict['class-1'].get_tn())
+    assert(0 == metrics_dict['class-1'].get_fn())
 
-    assert(1 == metrics_dict['class-2']._tp)
-    assert(0 == metrics_dict['class-2']._fp)
-    assert(1 == metrics_dict['class-2']._tn)
-    assert(1 == metrics_dict['class-2']._fn)
+    assert(1 == metrics_dict['class-2'].get_tp())
+    assert(0 == metrics_dict['class-2'].get_fp())
+    assert(1 == metrics_dict['class-2'].get_tn())
+    assert(1 == metrics_dict['class-2'].get_fn())
 
-    assert(1 == metrics_dict['class-3']._tp)
-    assert(0 == metrics_dict['class-3']._fp)
-    assert(1 == metrics_dict['class-3']._tn)
-    assert(1 == metrics_dict['class-3']._fn)
+    assert(1 == metrics_dict['class-3'].get_tp())
+    assert(0 == metrics_dict['class-3'].get_fp())
+    assert(1 == metrics_dict['class-3'].get_tn())
+    assert(1 == metrics_dict['class-3'].get_fn())
 
 
 def test_convert_labels_to_one_hot():
