@@ -7,6 +7,8 @@ from typing import List
 from flair.data import Dictionary, Sentence
 from functools import reduce
 
+MICRO_AVG_METRIC = 'MICRO_AVG'
+
 log = logging.getLogger(__name__)
 
 
@@ -68,11 +70,8 @@ class Metric(object):
 
     def to_tsv(self):
         # gather all the classes
-        all_classes = self.get_classes()
-        all_lines = ['{}:\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
-            'ALL' if cls == None else cls, self._tps[cls], self._tns[cls], self._fps[cls], self._fns[cls],
-            self.precision(cls), self.recall(cls), self.f_score(cls), self.accuracy(cls)) for cls in all_classes]
-        return '\n'.join(all_lines)
+        return '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
+            self.get_tp(), self.get_tn(), self.get_fp(), self.get_fn(), self.precision(), self.recall(), self.f_score(), self.accuracy())
 
     def print(self):
         log.info(self)
@@ -93,11 +92,11 @@ class Metric(object):
         all_classes = self.get_classes()
         all_lines = [
             '{0:<10}\ttp: {1} - fp: {2} - fn: {3} - tn: {4} - precision: {5:.4f} - recall: {6:.4f} - accuracy: {7:.4f} - f1-score: {8:.4f}'.format(
-                self.name if cls == None else cls,
+                MICRO_AVG_METRIC if cls == None else cls,
                 self._tps[cls], self._fps[cls], self._fns[cls], self._tns[cls],
                 self.precision(cls), self.recall(cls), self.accuracy(cls), self.f_score(cls))
             for cls in all_classes]
-        return all_lines
+        return '\n'.join(all_lines)
 
     def get_classes(self) -> List:
         all_classes = list(set(itertools.chain(*[list(keys) for keys
@@ -185,58 +184,3 @@ def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionar
     :return: converted label list
     """
     return [[1 if l in labels else 0 for l in label_dict.get_items()] for labels in label_list]
-
-
-def calculate_micro_avg_metric(y_true: List[List[int]], y_pred: List[List[int]], labels: Dictionary) -> Metric:
-    """
-    Calculates the overall metrics (micro averaged) for the given predictions.
-    The labels should be converted into a one-hot-list.
-    :param y_true: list of true labels
-    :param y_pred: list of predicted labels
-    :param labels: the label dictionary
-    :return: the overall metrics
-    """
-    metric = Metric("MICRO_AVG")
-
-    for pred, true in zip(y_pred, y_true):
-        for i in range(len(labels)):
-            if true[i] == 1 and pred[i] == 1:
-                metric.tp()
-            elif true[i] == 1 and pred[i] == 0:
-                metric.fn()
-            elif true[i] == 0 and pred[i] == 1:
-                metric.fp()
-            elif true[i] == 0 and pred[i] == 0:
-                metric.tn()
-
-    return metric
-
-
-def calculate_class_metrics(y_true: List[List[int]], y_pred: List[List[int]], labels: Dictionary) -> List[Metric]:
-    """
-    Calculates the metrics for the individual classes for the given predictions.
-    The labels should be converted into a one-hot-list.
-    :param y_true: list of true labels
-    :param y_pred: list of predicted labels
-    :param labels: the label dictionary
-    :return: the metrics for every class
-    """
-    metrics = []
-
-    for label in labels.get_items():
-        metric = Metric(label)
-        label_idx = labels.get_idx_for_item(label)
-
-        for true, pred in zip(y_true, y_pred):
-            if true[label_idx] == 1 and pred[label_idx] == 1:
-                metric.tp()
-            elif true[label_idx] == 1 and pred[label_idx] == 0:
-                metric.fn()
-            elif true[label_idx] == 0 and pred[label_idx] == 1:
-                metric.fp()
-            elif true[label_idx] == 0 and pred[label_idx] == 0:
-                metric.tn()
-
-        metrics.append(metric)
-
-    return metrics

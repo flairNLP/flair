@@ -1,7 +1,7 @@
 import pytest
 
 from flair.data import Dictionary
-from flair.training_utils import calculate_micro_avg_metric, calculate_class_metrics, convert_labels_to_one_hot
+from flair.training_utils import convert_labels_to_one_hot
 
 
 def init():
@@ -14,42 +14,6 @@ def init():
     labels.add_item('class-3')
 
     return y_true, y_pred, labels
-
-
-def test_calculate_micro_avg_metric():
-    y_true, y_pred, labels = init()
-
-    metric = calculate_micro_avg_metric(y_true, y_pred, labels)
-
-    assert(3 == metric.get_tp())
-    assert(0 == metric.get_fp())
-    assert(4 == metric.get_tn())
-    assert(2 == metric.get_fn())
-
-
-def test_calculate_class_metrics():
-    y_true, y_pred, labels = init()
-
-    metrics = calculate_class_metrics(y_true, y_pred, labels)
-
-    metrics_dict = {metric.name: metric for metric in metrics}
-
-    assert(3 == len(metrics))
-
-    assert(1 == metrics_dict['class-1'].get_tp())
-    assert(0 == metrics_dict['class-1'].get_fp())
-    assert(2 == metrics_dict['class-1'].get_tn())
-    assert(0 == metrics_dict['class-1'].get_fn())
-
-    assert(1 == metrics_dict['class-2'].get_tp())
-    assert(0 == metrics_dict['class-2'].get_fp())
-    assert(1 == metrics_dict['class-2'].get_tn())
-    assert(1 == metrics_dict['class-2'].get_fn())
-
-    assert(1 == metrics_dict['class-3'].get_tp())
-    assert(0 == metrics_dict['class-3'].get_fp())
-    assert(1 == metrics_dict['class-3'].get_tn())
-    assert(1 == metrics_dict['class-3'].get_fn())
 
 
 def test_convert_labels_to_one_hot():

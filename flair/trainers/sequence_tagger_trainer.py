@@ -233,6 +233,9 @@ class SequenceTaggerTrainer:
                     if (tag, gold) not in predicted_tags:
                         metric.fn()
                         metric.fn(tag)
+                    else:
+                        metric.tn()
+                        metric.tn(tag)
 
             if not embeddings_in_memory:
                 self.clear_embeddings_in_batch(batch)
