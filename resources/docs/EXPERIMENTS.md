@@ -2,7 +2,7 @@
 
 Here, we detail the steps you need to take to reproduce the experiments in 
 [Akbik et. al (2018)](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)
-and how to train your own state-of-the-art sequence labelers. 
+and how to train your own state-of-the-art sequence labelers. **Note**: To exactly reproduce results, use version 0.2.1 of Flair. 
 
 **Data.** For each experiment, you need to first get the evaluation dataset. Then execute the code as provided in this 
 documentation.
