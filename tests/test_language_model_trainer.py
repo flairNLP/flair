@@ -1,4 +1,5 @@
 import shutil
+from pathlib import Path
 
 from flair.data import Dictionary, Sentence
 from flair.embeddings import CharLMEmbeddings
@@ -14,7 +15,7 @@ def test_training():
     language_model: LanguageModel = LanguageModel(dictionary, is_forward_lm=True, hidden_size=128, nlayers=1)
 
     # get the example corpus and process at character level in forward direction
-    corpus: TextCorpus = TextCorpus('resources/corpora/lorem_ipsum',
+    corpus: TextCorpus = TextCorpus(str(Path(__file__).parent / 'resources/corpora/lorem_ipsum'),
                                     dictionary,
                                     language_model.is_forward_lm,
                                     character_level=True)

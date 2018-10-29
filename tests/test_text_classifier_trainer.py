@@ -8,8 +8,8 @@ from flair.models.text_classification_model import TextClassifier
 from flair.trainers.text_classification_trainer import TextClassifierTrainer
 
 
-def test_text_classifier_single_label():
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB)
+def test_text_classifier_single_label(tasks_base_path):
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB, tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
     glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
@@ -32,8 +32,8 @@ def test_text_classifier_single_label():
     shutil.rmtree('./results')
 
 
-def test_text_classifier_mulit_label():
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB)
+def test_text_classifier_mulit_label(tasks_base_path):
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB, tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
     glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
