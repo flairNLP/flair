@@ -137,7 +137,9 @@ class WordEmbeddings(TokenEmbeddings):
     def __init__(self, embeddings: str):
         """
         Initializes classic word embeddings. Constructor downloads required files if not there.
-        :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code
+        :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code.
+        If embeddings is equal to 'custom', you need to provide a path to your custom embeddings.
+        Custom embeddings should be correctly formatted to gensim.
         """
 
         base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/'
@@ -172,6 +174,11 @@ class WordEmbeddings(TokenEmbeddings):
                         cache_dir='embeddings')
             embeddings = cached_path(os.path.join(base_path, '{}-fasttext-300d-1M'.format(embeddings)),
                                      cache_dir='embeddings')
+
+        # custom embeddings
+        if embeddings.lower() == 'custom':
+            cached_path(embeddings_path, cache_dir='embeddings')
+            embeddings = cached_path(embeddings_path, cache_dir='embeddings')
 
         self.name = embeddings
         self.static_embeddings = True

@@ -78,6 +78,22 @@ german_embedding = WordEmbeddings('de')
 
 We generally recommend the FastText embeddings, or GloVe if you want a smaller model.
 
+If you want to use any other embeddings (not listed in the list above), you can load those by calling
+```python
+custom_embedding = WordEmbeddings('custom', 'path/to/your/custom/embeddings.gensim')
+```
+If you want to load custom embeddings you need to make sure, that the custom embeddings are correctly formatted to
+[gensim](https://radimrehurek.com/gensim/models/word2vec.html).
+
+You can, for example, convert [FastText embeddings](https://fasttext.cc/docs/en/crawl-vectors.html) to gensim using the
+following code snippet:
+```python
+import gensim
+
+word_vectors = gensim.models.KeyedVectors.load_word2vec_format('/path/to/fasttext/embeddings.txt', binary=False)
+word_vectors.save('/path/to/converted')
+```
+
 ## Contextual String Embeddings
 
 Contextual string embeddings are [powerful embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)
