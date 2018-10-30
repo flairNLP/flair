@@ -185,7 +185,7 @@ class TextClassifierTrainer:
 
             test_metric, test_loss = self.evaluate(
                 self.corpus.test, mini_batch_size=mini_batch_size, eval_class_metrics=True,
-                embeddings_in_memory=embeddings_in_memory)
+                embeddings_in_memory=embeddings_in_memory, metric_name='TEST')
 
             test_metric.print()
             self.model.train()
@@ -203,7 +203,7 @@ class TextClassifierTrainer:
 
     def _calculate_evaluation_results_for(self, dataset_name, dataset, embeddings_in_memory, mini_batch_size):
         metric, loss = self.evaluate(dataset, mini_batch_size=mini_batch_size,
-                                      embeddings_in_memory=embeddings_in_memory)
+                                     embeddings_in_memory=embeddings_in_memory, metric_name=dataset_name)
 
         f_score = metric.f_score()
         acc = metric.accuracy()
@@ -214,13 +214,14 @@ class TextClassifierTrainer:
         return metric, loss
 
     def evaluate(self, sentences: List[Sentence], eval_class_metrics: bool = False, mini_batch_size: int = 32,
-                 embeddings_in_memory: bool = False) -> (dict, float):
+                 embeddings_in_memory: bool = False, metric_name: str = 'MICRO_AVG') -> (dict, float):
         """
         Evaluates the model with the given list of sentences.
         :param sentences: the list of sentences
         :param eval_class_metrics: boolean indicating whether to print class metrics or not
         :param mini_batch_size: the mini batch size to use
         :param embeddings_in_memory: boolean value indicating, if embeddings should be kept in memory or not
+        :param metric_name: the name of the metrics to compute
         :return: list of metrics, and the loss
         """
         with torch.no_grad():
@@ -229,7 +230,7 @@ class TextClassifierTrainer:
             batches = [sentences[x:x + mini_batch_size] for x in
                        range(0, len(sentences), mini_batch_size)]
 
-            metric = Metric('')
+            metric = Metric(metric_name)
 
             for batch in batches:
                 scores = self.model.forward(batch)
