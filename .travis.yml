@@ -6,4 +6,4 @@ install:
   - pip install -r requirements.txt -q
 before_script: cd tests
 script:
-  - pytest --runslow
+  - pytest
