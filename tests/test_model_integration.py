@@ -11,9 +11,9 @@ from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorp
 
 
 @pytest.mark.slow
-def test_train_load_use_tagger(results_base_path):
+def test_train_load_use_tagger(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION)
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     embeddings = WordEmbeddings('glove')
@@ -43,9 +43,9 @@ def test_train_load_use_tagger(results_base_path):
 
 
 @pytest.mark.slow
-def test_train_charlm_load_use_tagger(results_base_path):
+def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION)
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     embeddings = CharLMEmbeddings('news-forward-fast')
@@ -75,9 +75,9 @@ def test_train_charlm_load_use_tagger(results_base_path):
 
 
 @pytest.mark.slow
-def test_train_charlm_changed_chache_load_use_tagger(results_base_path):
+def test_train_charlm_changed_chache_load_use_tagger(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION)
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     # make a temporary cache directory that we remove afterwards
@@ -113,9 +113,9 @@ def test_train_charlm_changed_chache_load_use_tagger(results_base_path):
 
 
 @pytest.mark.slow
-def test_train_charlm_nochache_load_use_tagger(results_base_path):
+def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION)
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     embeddings = CharLMEmbeddings('news-forward-fast', use_cache=False)
@@ -166,8 +166,9 @@ def test_load_use_serialized_tagger():
 
 
 @pytest.mark.slow
-def test_train_load_use_classifier(results_base_path):
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB)
+def test_train_load_use_classifier(results_base_path, tasks_base_path):
+
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB, base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
     glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
@@ -201,8 +202,9 @@ def test_train_load_use_classifier(results_base_path):
 
 
 @pytest.mark.slow
-def test_train_charlm_load_use_classifier(results_base_path):
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB)
+def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
+
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB, base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
     glove_embedding: TokenEmbeddings = CharLMEmbeddings('news-forward-fast')
@@ -236,8 +238,9 @@ def test_train_charlm_load_use_classifier(results_base_path):
 
 
 @pytest.mark.slow
-def test_train_charlm_nocache_load_use_classifier(results_base_path):
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB)
+def test_train_charlm_nocache_load_use_classifier(results_base_path, tasks_base_path):
+
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB, base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
     glove_embedding: TokenEmbeddings = CharLMEmbeddings('news-forward-fast', use_cache=False)

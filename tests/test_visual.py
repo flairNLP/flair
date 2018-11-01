@@ -14,7 +14,7 @@ from flair.visual.training_curves import Plotter
 @pytest.mark.slow
 def test_visualize_word_emeddings(resources_path):
 
-    with open('./resources/visual/snippet.txt') as f:
+    with open(resources_path / 'visual/snippet.txt') as f:
         sentences = [x for x in f.read().split('\n') if x]
 
     sentences = [Sentence(x) for x in sentences]
@@ -25,16 +25,16 @@ def test_visualize_word_emeddings(resources_path):
     embeddings = StackedEmbeddings([charlm_embedding_backward, charlm_embedding_forward])
 
     visualizer = Visualizer()
-    visualizer.visualize_word_emeddings(embeddings, sentences, './resources/visual/sentence_embeddings.html')
+    visualizer.visualize_word_emeddings(embeddings, sentences, str(resources_path / 'visual/sentence_embeddings.html'))
 
     # clean up directory
-    os.remove('./resources/visual/sentence_embeddings.html')
+    os.remove(resources_path / 'visual/sentence_embeddings.html')
 
 
 @pytest.mark.slow
-def test_visualize_word_emeddings():
+def test_visualize_word_emeddings(resources_path):
 
-    with open('./resources/visual/snippet.txt') as f:
+    with open(resources_path / 'visual/snippet.txt') as f:
         sentences = [x for x in f.read().split('\n') if x]
 
     sentences = [Sentence(x) for x in sentences]
@@ -42,16 +42,16 @@ def test_visualize_word_emeddings():
     charlm_embedding_forward = CharLMEmbeddings('news-forward')
 
     visualizer = Visualizer()
-    visualizer.visualize_char_emeddings(charlm_embedding_forward, sentences, './resources/visual/sentence_embeddings.html')
+    visualizer.visualize_char_emeddings(charlm_embedding_forward, sentences, str(resources_path / 'visual/sentence_embeddings.html'))
 
     # clean up directory
-    os.remove('./resources/visual/sentence_embeddings.html')
+    os.remove(resources_path / 'visual/sentence_embeddings.html')
 
 
 @pytest.mark.slow
-def test_visualize():
+def test_visualize(resources_path):
 
-    with open('./resources/visual/snippet.txt') as f:
+    with open(resources_path / 'visual/snippet.txt') as f:
         sentences = [x for x in f.read().split('\n') if x]
 
     sentences = [Sentence(x) for x in sentences]
@@ -73,10 +73,10 @@ def test_visualize():
     trans_ = tSNE()
     reduced = trans_.fit(X)
 
-    visualizer.visualize(reduced, contexts, './resources/visual/char_embeddings.html')
+    visualizer.visualize(reduced, contexts, str(resources_path / 'visual/char_embeddings.html'))
 
     # clean up directory
-    os.remove('./resources/visual/char_embeddings.html')
+    os.remove(resources_path / 'visual/char_embeddings.html')
 
 
 def test_highlighter(resources_path):
