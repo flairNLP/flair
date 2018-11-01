@@ -148,11 +148,15 @@ the code should hopefully be easy.
 
 You need [Pipenv](https://pipenv.readthedocs.io/) for this:
 
-```
+```bash
 pipenv install --dev && pipenv shell
-TRAVIS=true pytest
+pytest
 ```
 
+If you also want to run the slow tests, execute:
+```bash
+pytest --runslow
+```
 
 ## [License](/LICENSE)
 
