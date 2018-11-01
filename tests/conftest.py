@@ -12,6 +12,11 @@ def tasks_base_path(resources_path):
     return resources_path / 'tasks'
 
 
+@pytest.fixture(scope="module")
+def results_base_path(resources_path):
+    return resources_path / 'results'
+
+
 def pytest_addoption(parser):
     parser.addoption(
         "--runslow", action="store_true", default=False, help="run slow tests"

@@ -4,7 +4,6 @@ from flair.data import Dictionary
 from flair.training_utils import calculate_micro_avg_metric, calculate_class_metrics, convert_labels_to_one_hot
 
 
-@pytest.fixture
 def init():
     y_true = [[0, 1, 1], [0, 0, 1], [1, 1, 0]]
     y_pred = [[0, 1, 1], [0, 0, 0], [1, 0, 0]]

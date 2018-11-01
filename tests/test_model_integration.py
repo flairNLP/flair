@@ -2,8 +2,6 @@ import os
 import shutil
 import pytest
 
-from pathlib import Path
-
 from flair.data import Dictionary, Sentence
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 from flair.embeddings import WordEmbeddings, CharLMEmbeddings, DocumentLSTMEmbeddings, TokenEmbeddings
@@ -13,7 +11,7 @@ from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorp
 
 
 @pytest.mark.slow
-def test_train_load_use_tagger():
+def test_train_load_use_tagger(results_base_path):
 
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION)
     tag_dictionary = corpus.make_tag_dictionary('ner')
@@ -29,9 +27,9 @@ def test_train_load_use_tagger():
     # initialize trainer
     trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
 
-    trainer.train('./results', learning_rate=0.1, mini_batch_size=2, max_epochs=3)
+    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=3)
 
-    loaded_model: SequenceTagger = SequenceTagger.load_from_file('./results/final-model.pt')
+    loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
 
     sentence = Sentence('I love Berlin')
     sentence_empty = Sentence('       ')
@@ -41,11 +39,11 @@ def test_train_load_use_tagger():
     loaded_model.predict([sentence_empty])
 
     # clean up results directory
-    shutil.rmtree('./results')
+    shutil.rmtree(results_base_path)
 
 
 @pytest.mark.slow
-def test_train_charlm_load_use_tagger():
+def test_train_charlm_load_use_tagger(results_base_path):
 
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION)
     tag_dictionary = corpus.make_tag_dictionary('ner')
@@ -61,9 +59,9 @@ def test_train_charlm_load_use_tagger():
     # initialize trainer
     trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
 
-    trainer.train('./results', learning_rate=0.1, mini_batch_size=2, max_epochs=3)
+    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=3)
 
-    loaded_model: SequenceTagger = SequenceTagger.load_from_file('./results/final-model.pt')
+    loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
 
     sentence = Sentence('I love Berlin')
     sentence_empty = Sentence('       ')
@@ -73,18 +71,19 @@ def test_train_charlm_load_use_tagger():
     loaded_model.predict([sentence_empty])
 
     # clean up results directory
-    shutil.rmtree('./results')
+    shutil.rmtree(results_base_path)
 
 
 @pytest.mark.slow
-def test_train_charlm_changed_chache_load_use_tagger():
+def test_train_charlm_changed_chache_load_use_tagger(results_base_path):
 
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     # make a temporary cache directory that we remove afterwards
-    os.makedirs('./results/cache/', exist_ok=True)
-    embeddings = CharLMEmbeddings('news-forward-fast', cache_directory='./results/cache/')
+    cache_dir = results_base_path / 'cache'
+    os.makedirs(cache_dir, exist_ok=True)
+    embeddings = CharLMEmbeddings('news-forward-fast', cache_directory=cache_dir)
 
     tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                             embeddings=embeddings,
@@ -95,12 +94,12 @@ def test_train_charlm_changed_chache_load_use_tagger():
     # initialize trainer
     trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
 
-    trainer.train('./results', learning_rate=0.1, mini_batch_size=2, max_epochs=3)
+    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=3)
 
     # remove the cache directory
-    shutil.rmtree('./results/cache')
+    shutil.rmtree(cache_dir)
 
-    loaded_model: SequenceTagger = SequenceTagger.load_from_file('./results/final-model.pt')
+    loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
 
     sentence = Sentence('I love Berlin')
     sentence_empty = Sentence('       ')
@@ -110,11 +109,11 @@ def test_train_charlm_changed_chache_load_use_tagger():
     loaded_model.predict([sentence_empty])
 
     # clean up results directory
-    shutil.rmtree('./results')
+    shutil.rmtree(results_base_path)
 
 
 @pytest.mark.slow
-def test_train_charlm_nochache_load_use_tagger():
+def test_train_charlm_nochache_load_use_tagger(results_base_path):
 
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION)
     tag_dictionary = corpus.make_tag_dictionary('ner')
@@ -130,9 +129,9 @@ def test_train_charlm_nochache_load_use_tagger():
     # initialize trainer
     trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
 
-    trainer.train('./results', learning_rate=0.1, mini_batch_size=2, max_epochs=3)
+    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=3)
 
-    loaded_model: SequenceTagger = SequenceTagger.load_from_file('./results/final-model.pt')
+    loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
 
     sentence = Sentence('I love Berlin')
     sentence_empty = Sentence('       ')
@@ -142,10 +141,9 @@ def test_train_charlm_nochache_load_use_tagger():
     loaded_model.predict([sentence_empty])
 
     # clean up results directory
-    shutil.rmtree('./results')
+    shutil.rmtree(results_base_path)
 
 
-@pytest.mark.slow
 def test_load_use_serialized_tagger():
 
     loaded_model: SequenceTagger = SequenceTagger.load('ner')
@@ -157,9 +155,18 @@ def test_load_use_serialized_tagger():
     loaded_model.predict([sentence, sentence_empty])
     loaded_model.predict([sentence_empty])
 
+    sentence.clear_embeddings()
+    sentence_empty.clear_embeddings()
+
+    loaded_model: SequenceTagger = SequenceTagger.load('pos')
+
+    loaded_model.predict(sentence)
+    loaded_model.predict([sentence, sentence_empty])
+    loaded_model.predict([sentence_empty])
+
 
 @pytest.mark.slow
-def test_train_load_use_classifier():
+def test_train_load_use_classifier(results_base_path):
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB)
     label_dict = corpus.make_label_dictionary()
 
@@ -170,7 +177,7 @@ def test_train_load_use_classifier():
     model = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = TextClassifierTrainer(model, corpus, label_dict, False)
-    trainer.train('./results', max_epochs=2)
+    trainer.train(str(results_base_path), max_epochs=2)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -180,7 +187,7 @@ def test_train_load_use_classifier():
             assert (0.0 <= l.score <= 1.0)
             assert (type(l.score) is float)
 
-    loaded_model = TextClassifier.load_from_file('./results/final-model.pt')
+    loaded_model = TextClassifier.load_from_file(results_base_path / 'final-model.pt')
 
     sentence = Sentence('I love Berlin')
     sentence_empty = Sentence('       ')
@@ -190,11 +197,11 @@ def test_train_load_use_classifier():
     loaded_model.predict([sentence_empty])
 
     # clean up results directory
-    shutil.rmtree('./results')
+    shutil.rmtree(results_base_path)
 
 
 @pytest.mark.slow
-def test_train_charlm_load_use_classifier():
+def test_train_charlm_load_use_classifier(results_base_path):
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB)
     label_dict = corpus.make_label_dictionary()
 
@@ -205,7 +212,7 @@ def test_train_charlm_load_use_classifier():
     model = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = TextClassifierTrainer(model, corpus, label_dict, False)
-    trainer.train('./results', max_epochs=2)
+    trainer.train(str(results_base_path), max_epochs=2)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -215,7 +222,7 @@ def test_train_charlm_load_use_classifier():
             assert (0.0 <= l.score <= 1.0)
             assert (type(l.score) is float)
 
-    loaded_model = TextClassifier.load_from_file('./results/final-model.pt')
+    loaded_model = TextClassifier.load_from_file(results_base_path / 'final-model.pt')
 
     sentence = Sentence('I love Berlin')
     sentence_empty = Sentence('       ')
@@ -225,11 +232,11 @@ def test_train_charlm_load_use_classifier():
     loaded_model.predict([sentence_empty])
 
     # clean up results directory
-    shutil.rmtree('./results')
+    shutil.rmtree(results_base_path)
 
 
 @pytest.mark.slow
-def test_train_charlm_nocache_load_use_classifier():
+def test_train_charlm_nocache_load_use_classifier(results_base_path):
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB)
     label_dict = corpus.make_label_dictionary()
 
@@ -241,7 +248,7 @@ def test_train_charlm_nocache_load_use_classifier():
     model = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = TextClassifierTrainer(model, corpus, label_dict, False)
-    trainer.train('./results', max_epochs=2)
+    trainer.train(str(results_base_path), max_epochs=2)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -251,7 +258,7 @@ def test_train_charlm_nocache_load_use_classifier():
             assert (0.0 <= l.score <= 1.0)
             assert (type(l.score) is float)
 
-    loaded_model = TextClassifier.load_from_file('./results/final-model.pt')
+    loaded_model = TextClassifier.load_from_file(results_base_path / 'final-model.pt')
 
     sentence = Sentence('I love Berlin')
     sentence_empty = Sentence('       ')
@@ -261,11 +268,11 @@ def test_train_charlm_nocache_load_use_classifier():
     loaded_model.predict([sentence_empty])
 
     # clean up results directory
-    shutil.rmtree('./results')
+    shutil.rmtree(results_base_path)
 
 
 @pytest.mark.slow
-def test_train_language_model():
+def test_train_language_model(results_base_path, resources_path):
     # get default dictionary
     dictionary: Dictionary = Dictionary.load('chars')
 
@@ -273,20 +280,19 @@ def test_train_language_model():
     language_model: LanguageModel = LanguageModel(dictionary, is_forward_lm=True, hidden_size=128, nlayers=1)
 
     # get the example corpus and process at character level in forward direction
-    corpus: TextCorpus = TextCorpus(str(Path(__file__).parent / 'resources/corpora/lorem_ipsum'),
+    corpus: TextCorpus = TextCorpus(str(resources_path / 'corpora/lorem_ipsum'),
                                     dictionary,
                                     language_model.is_forward_lm,
                                     character_level=True)
 
     # train the language model
     trainer: LanguageModelTrainer = LanguageModelTrainer(language_model, corpus)
-    trainer.train('./results', sequence_length=10, mini_batch_size=10, max_epochs=5)
+    trainer.train(str(results_base_path), sequence_length=10, mini_batch_size=10, max_epochs=5)
 
     # use the character LM as embeddings to embed the example sentence 'I love Berlin'
-    char_lm_embeddings = CharLMEmbeddings('./results/best-lm.pt')
+    char_lm_embeddings = CharLMEmbeddings(str(results_base_path / 'best-lm.pt'))
     sentence = Sentence('I love Berlin')
     char_lm_embeddings.embed(sentence)
-    print(sentence[1].embedding.size())
 
     # clean up results directory
-    shutil.rmtree('./results', ignore_errors=True)
+    shutil.rmtree(results_base_path, ignore_errors=True)

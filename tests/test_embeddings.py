@@ -97,17 +97,6 @@ def test_stacked_embeddings():
         assert(len(token.get_embedding()) == 0)
 
 
-@pytest.fixture
-def init_document_embeddings():
-    text = 'I love Berlin. Berlin is a great place to live.'
-    sentence: Sentence = Sentence(text)
-
-    glove: TokenEmbeddings = WordEmbeddings('en-glove')
-    charlm: TokenEmbeddings = CharLMEmbeddings('mix-backward')
-
-    return sentence, glove, charlm
-
-
 @pytest.mark.slow
 def test_document_lstm_embeddings():
     sentence, glove, charlm = init_document_embeddings()
@@ -193,6 +182,16 @@ def test_document_mean_embeddings():
     sentence.clear_embeddings()
 
     assert (len(sentence.get_embedding()) == 0)
+
+
+def init_document_embeddings():
+    text = 'I love Berlin. Berlin is a great place to live.'
+    sentence: Sentence = Sentence(text)
+
+    glove: TokenEmbeddings = WordEmbeddings('en-glove')
+    charlm: TokenEmbeddings = CharLMEmbeddings('mix-backward')
+
+    return sentence, glove, charlm
 
 
 def load_and_apply_word_embeddings(emb_type: str):

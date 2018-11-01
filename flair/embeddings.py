@@ -207,10 +207,10 @@ class WordEmbeddings(TokenEmbeddings):
                     word_embedding = self.precomputed_word_embeddings[token.text]
                 elif token.text.lower() in self.precomputed_word_embeddings:
                     word_embedding = self.precomputed_word_embeddings[token.text.lower()]
-                elif re.sub('\d', '#', token.text.lower()) in self.precomputed_word_embeddings:
-                    word_embedding = self.precomputed_word_embeddings[re.sub('\d', '#', token.text.lower())]
-                elif re.sub('\d', '0', token.text.lower()) in self.precomputed_word_embeddings:
-                    word_embedding = self.precomputed_word_embeddings[re.sub('\d', '0', token.text.lower())]
+                elif re.sub(r'\d', '#', token.text.lower()) in self.precomputed_word_embeddings:
+                    word_embedding = self.precomputed_word_embeddings[re.sub(r'\d', '#', token.text.lower())]
+                elif re.sub(r'\d', '0', token.text.lower()) in self.precomputed_word_embeddings:
+                    word_embedding = self.precomputed_word_embeddings[re.sub(r'\d', '0', token.text.lower())]
                 else:
                     word_embedding = np.zeros(self.embedding_length, dtype='float')
 
