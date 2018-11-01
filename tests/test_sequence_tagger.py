@@ -1,12 +1,7 @@
-import os
-
-import pytest
-
 from flair.data import Sentence
 from flair.models import SequenceTagger
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
 def test_tag_sentence():
 
     # test tagging
@@ -15,6 +10,8 @@ def test_tag_sentence():
     tagger = SequenceTagger.load('pos')
 
     tagger.predict(sentence)
+
+    sentence.clear_embeddings()
 
     # test re-tagging
     tagger = SequenceTagger.load('ner')

@@ -11,7 +11,7 @@ from flair.visual.manifold import Visualizer, tSNE
 from flair.visual.training_curves import Plotter
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_visualize_word_emeddings(resources_path):
 
     with open('./resources/visual/snippet.txt') as f:
@@ -31,7 +31,7 @@ def test_visualize_word_emeddings(resources_path):
     os.remove('./resources/visual/sentence_embeddings.html')
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_visualize_word_emeddings():
 
     with open('./resources/visual/snippet.txt') as f:
@@ -48,7 +48,7 @@ def test_visualize_word_emeddings():
     os.remove('./resources/visual/sentence_embeddings.html')
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_visualize():
 
     with open('./resources/visual/snippet.txt') as f:

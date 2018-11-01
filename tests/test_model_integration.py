@@ -1,4 +1,5 @@
 import os
+import pytest
 import shutil
 
 from flair.data import Sentence
@@ -8,6 +9,7 @@ from flair.models import SequenceTagger, TextClassifier
 from flair.trainers import SequenceTaggerTrainer, TextClassifierTrainer
 
 
+@pytest.mark.slow
 def test_train_load_use_tagger():
 
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION)
@@ -39,6 +41,7 @@ def test_train_load_use_tagger():
     shutil.rmtree('./results')
 
 
+@pytest.mark.slow
 def test_train_charlm_load_use_tagger():
 
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION)
@@ -70,6 +73,7 @@ def test_train_charlm_load_use_tagger():
     shutil.rmtree('./results')
 
 
+@pytest.mark.slow
 def test_train_charlm_changed_chache_load_use_tagger():
 
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION)
@@ -106,6 +110,7 @@ def test_train_charlm_changed_chache_load_use_tagger():
     shutil.rmtree('./results')
 
 
+@pytest.mark.slow
 def test_train_charlm_nochache_load_use_tagger():
 
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION)
@@ -137,6 +142,7 @@ def test_train_charlm_nochache_load_use_tagger():
     shutil.rmtree('./results')
 
 
+@pytest.mark.slow
 def test_load_use_serialized_tagger():
 
     loaded_model: SequenceTagger = SequenceTagger.load('ner')
@@ -149,6 +155,7 @@ def test_load_use_serialized_tagger():
     loaded_model.predict([sentence_empty])
 
 
+@pytest.mark.slow
 def test_train_load_use_classifier():
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB)
     label_dict = corpus.make_label_dictionary()
@@ -183,6 +190,7 @@ def test_train_load_use_classifier():
     shutil.rmtree('./results')
 
 
+@pytest.mark.slow
 def test_train_charlm_load_use_classifier():
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB)
     label_dict = corpus.make_label_dictionary()
@@ -217,6 +225,7 @@ def test_train_charlm_load_use_classifier():
     shutil.rmtree('./results')
 
 
+@pytest.mark.slow
 def test_train_charlm__nocache_load_use_classifier():
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB)
     label_dict = corpus.make_label_dictionary()

@@ -1,4 +1,6 @@
 import shutil
+import pytest
+
 from pathlib import Path
 
 from flair.data import Dictionary, Sentence
@@ -7,6 +9,7 @@ from flair.models import LanguageModel
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
 
 
+@pytest.mark.slow
 def test_training():
     # get default dictionary
     dictionary: Dictionary = Dictionary.load('chars')

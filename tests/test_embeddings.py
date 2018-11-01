@@ -1,4 +1,3 @@
-import os
 import pytest
 
 from flair.embeddings import WordEmbeddings, TokenEmbeddings, CharLMEmbeddings, StackedEmbeddings, \
@@ -7,77 +6,77 @@ from flair.embeddings import WordEmbeddings, TokenEmbeddings, CharLMEmbeddings, 
 from flair.data import Sentence
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_en_glove():
     load_and_apply_word_embeddings('en-glove')
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_en_numberbatch():
     load_and_apply_word_embeddings('en-numberbatch')
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_en_extvec():
     load_and_apply_word_embeddings('en-extvec')
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_en_crawl():
     load_and_apply_word_embeddings('en-crawl')
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_en_news():
     load_and_apply_word_embeddings('en-news')
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_de_fasttext():
     load_and_apply_word_embeddings('de-fasttext')
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_de_numberbatch():
     load_and_apply_word_embeddings('de-numberbatch')
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_sv_fasttext():
     load_and_apply_word_embeddings('sv-fasttext')
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_news_forward():
     load_and_apply_char_lm_embeddings('news-forward')
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_news_backward():
     load_and_apply_char_lm_embeddings('news-backward')
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_mix_forward():
     load_and_apply_char_lm_embeddings('mix-forward')
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_mix_backward():
     load_and_apply_char_lm_embeddings('mix-backward')
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_german_forward():
     load_and_apply_char_lm_embeddings('german-forward')
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_german_backward():
     load_and_apply_char_lm_embeddings('german-backward')
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_stacked_embeddings():
     text = 'I love Berlin.'
     sentence: Sentence = Sentence(text)
@@ -109,7 +108,7 @@ def init_document_embeddings():
     return sentence, glove, charlm
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_document_lstm_embeddings():
     sentence, glove, charlm = init_document_embeddings()
 
@@ -126,7 +125,7 @@ def test_document_lstm_embeddings():
     assert (len(sentence.get_embedding()) == 0)
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_document_bidirectional_lstm_embeddings():
     sentence, glove, charlm = init_document_embeddings()
 
@@ -143,7 +142,7 @@ def test_document_bidirectional_lstm_embeddings():
     assert (len(sentence.get_embedding()) == 0)
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_document_bidirectional_lstm_embeddings_using_first_representation():
     sentence, glove, charlm = init_document_embeddings()
 
@@ -160,7 +159,7 @@ def test_document_bidirectional_lstm_embeddings_using_first_representation():
     assert (len(sentence.get_embedding()) == 0)
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_document_lstm_embeddings_using_first_representation():
     sentence, glove, charlm = init_document_embeddings()
 
@@ -177,7 +176,7 @@ def test_document_lstm_embeddings_using_first_representation():
     assert (len(sentence.get_embedding()) == 0)
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_document_mean_embeddings():
     text = 'I love Berlin. Berlin is a great place to live.'
     sentence: Sentence = Sentence(text)
