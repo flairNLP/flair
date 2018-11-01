@@ -114,7 +114,7 @@ def test_document_lstm_embeddings():
     sentence, glove, charlm = init_document_embeddings()
 
     embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_states=128,
-                                                                bidirectional=False, use_first_representation=False)
+                                                                bidirectional=False)
 
     embeddings.embed(sentence)
 
@@ -131,7 +131,7 @@ def test_document_bidirectional_lstm_embeddings():
     sentence, glove, charlm = init_document_embeddings()
 
     embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_states=128,
-                                                                bidirectional=True, use_first_representation=False)
+                                                                bidirectional=True)
 
     embeddings.embed(sentence)
 
@@ -148,7 +148,7 @@ def test_document_bidirectional_lstm_embeddings_using_first_representation():
     sentence, glove, charlm = init_document_embeddings()
 
     embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_states=128,
-                                                                bidirectional=True, use_first_representation=True)
+                                                                bidirectional=True)
 
     embeddings.embed(sentence)
 
@@ -165,7 +165,7 @@ def test_document_lstm_embeddings_using_first_representation():
     sentence, glove, charlm = init_document_embeddings()
 
     embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_states=128,
-                                                                bidirectional=False, use_first_representation=True)
+                                                                bidirectional=False)
 
     embeddings.embed(sentence)
 

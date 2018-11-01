@@ -32,5 +32,3 @@ def test_training():
 
     # clean up results directory
     shutil.rmtree('./results', ignore_errors=True)
-
-

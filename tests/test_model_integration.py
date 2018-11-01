@@ -170,7 +170,7 @@ def test_train_load_use_classifier():
             assert (0.0 <= l.score <= 1.0)
             assert (type(l.score) is float)
 
-        loaded_model = TextClassifier.load_from_file('./results/final-model.pt')
+    loaded_model = TextClassifier.load_from_file('./results/final-model.pt')
 
     sentence = Sentence('I love Berlin')
     sentence_empty = Sentence('       ')
@@ -204,7 +204,7 @@ def test_train_charlm_load_use_classifier():
             assert (0.0 <= l.score <= 1.0)
             assert (type(l.score) is float)
 
-        loaded_model = TextClassifier.load_from_file('./results/final-model.pt')
+    loaded_model = TextClassifier.load_from_file('./results/final-model.pt')
 
     sentence = Sentence('I love Berlin')
     sentence_empty = Sentence('       ')
@@ -239,7 +239,7 @@ def test_train_charlm__nocache_load_use_classifier():
             assert (0.0 <= l.score <= 1.0)
             assert (type(l.score) is float)
 
-        loaded_model = TextClassifier.load_from_file('./results/final-model.pt')
+    loaded_model = TextClassifier.load_from_file('./results/final-model.pt')
 
     sentence = Sentence('I love Berlin')
     sentence_empty = Sentence('       ')
