@@ -1,12 +1,15 @@
 import os
-import pytest
 import shutil
+import pytest
 
-from flair.data import Sentence
+from pathlib import Path
+
+from flair.data import Dictionary, Sentence
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 from flair.embeddings import WordEmbeddings, CharLMEmbeddings, DocumentLSTMEmbeddings, TokenEmbeddings
-from flair.models import SequenceTagger, TextClassifier
+from flair.models import SequenceTagger, TextClassifier, LanguageModel
 from flair.trainers import SequenceTaggerTrainer, TextClassifierTrainer
+from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
 
 
 @pytest.mark.slow
@@ -226,7 +229,7 @@ def test_train_charlm_load_use_classifier():
 
 
 @pytest.mark.slow
-def test_train_charlm__nocache_load_use_classifier():
+def test_train_charlm_nocache_load_use_classifier():
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB)
     label_dict = corpus.make_label_dictionary()
 
@@ -259,3 +262,31 @@ def test_train_charlm__nocache_load_use_classifier():
 
     # clean up results directory
     shutil.rmtree('./results')
+
+
+@pytest.mark.slow
+def test_train_language_model():
+    # get default dictionary
+    dictionary: Dictionary = Dictionary.load('chars')
+
+    # init forward LM with 128 hidden states and 1 layer
+    language_model: LanguageModel = LanguageModel(dictionary, is_forward_lm=True, hidden_size=128, nlayers=1)
+
+    # get the example corpus and process at character level in forward direction
+    corpus: TextCorpus = TextCorpus(str(Path(__file__).parent / 'resources/corpora/lorem_ipsum'),
+                                    dictionary,
+                                    language_model.is_forward_lm,
+                                    character_level=True)
+
+    # train the language model
+    trainer: LanguageModelTrainer = LanguageModelTrainer(language_model, corpus)
+    trainer.train('./results', sequence_length=10, mini_batch_size=10, max_epochs=5)
+
+    # use the character LM as embeddings to embed the example sentence 'I love Berlin'
+    char_lm_embeddings = CharLMEmbeddings('./results/best-lm.pt')
+    sentence = Sentence('I love Berlin')
+    char_lm_embeddings.embed(sentence)
+    print(sentence[1].embedding.size())
+
+    # clean up results directory
+    shutil.rmtree('./results', ignore_errors=True)
