@@ -173,13 +173,14 @@ class SequenceTagger(torch.nn.Module):
         return model
 
     def forward(self, sentences: List[Sentence]):
+
         self.zero_grad()
+
+        self.embeddings.embed(sentences)
 
         # first, sort sentences by number of tokens
         sentences.sort(key=lambda x: len(x), reverse=True)
         longest_token_sequence_in_batch: int = len(sentences[0])
-
-        self.embeddings.embed(sentences)
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
         tag_list: List = []
@@ -426,7 +427,7 @@ class SequenceTagger(torch.nn.Module):
         filtered_sentences = self._filter_empty_sentences(sentences)
 
         # remove previous embeddings
-        clear_embeddings(filtered_sentences)
+        clear_embeddings(filtered_sentences, also_clear_word_embeddings=True)
 
         # make mini-batches
         batches = [filtered_sentences[x:x + mini_batch_size] for x in range(0, len(filtered_sentences), mini_batch_size)]
