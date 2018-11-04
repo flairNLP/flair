@@ -156,6 +156,8 @@ class TextClassifierTrainer:
                     dev_metric, dev_loss = self._calculate_evaluation_results_for(
                         'DEV', self.corpus.dev, embeddings_in_memory, mini_batch_size)
 
+                self._calculate_evaluation_results_for('TEST', self.corpus.test, embeddings_in_memory, mini_batch_size)
+
                 with open(loss_txt, 'a') as f:
                     train_metric_str = train_metric.to_tsv() if train_metric is not None else Metric.to_empty_tsv()
                     dev_metric_str = dev_metric.to_tsv() if dev_metric is not None else Metric.to_empty_tsv()
