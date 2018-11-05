@@ -144,45 +144,27 @@ class WordEmbeddings(TokenEmbeddings):
             cached_path(os.path.join(base_path, 'glove.gensim.vectors.npy'), cache_dir='embeddings')
             embeddings = cached_path(os.path.join(base_path, 'glove.gensim'), cache_dir='embeddings')
 
-        # twitter embeddings
-        if embeddings.lower() == 'twitter' or embeddings.lower() == 'en-twitter':
-            cached_path(os.path.join(base_path, 'twitter.gensim.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'twitter.gensim'), cache_dir='embeddings')
-
         # KOMNIOS embeddings
         if embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
             cached_path(os.path.join(base_path, 'extvec.gensim.vectors.npy'), cache_dir='embeddings')
             embeddings = cached_path(os.path.join(base_path, 'extvec.gensim'), cache_dir='embeddings')
 
-        # NUMBERBATCH embeddings
-        if embeddings.lower() == 'numberbatch' or embeddings.lower() == 'en-numberbatch':
-            cached_path(os.path.join(base_path, 'numberbatch-en.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'numberbatch-en'), cache_dir='embeddings')
+        base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/'
 
         # FT-CRAWL embeddings
         if embeddings.lower() == 'crawl' or embeddings.lower() == 'en-crawl':
-            cached_path(os.path.join(base_path, 'ft-crawl.gensim.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'ft-crawl.gensim'), cache_dir='embeddings')
+            cached_path(os.path.join(base_path, 'en-fasttext-crawl-300d-1M.vectors.npy'.format(embeddings)), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'en-fasttext-crawl-300d-1M'), cache_dir='embeddings')
 
         # FT-CRAWL embeddings
         if embeddings.lower() == 'news' or embeddings.lower() == 'en-news':
-            cached_path(os.path.join(base_path, 'ft-news.gensim.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'ft-news.gensim'), cache_dir='embeddings')
+            cached_path(os.path.join(base_path, 'en-fasttext-news-300d-1M.vectors.npy'.format(embeddings)), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'en-fasttext-news-300d-1M'), cache_dir='embeddings')
 
-        # GERMAN FASTTEXT embeddings
-        if embeddings.lower() == 'de-fasttext':
-            cached_path(os.path.join(base_path, 'ft-wiki-de.gensim.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'ft-wiki-de.gensim'), cache_dir='embeddings')
-
-        # NUMBERBATCH embeddings
-        if embeddings.lower() == 'de-numberbatch':
-            cached_path(os.path.join(base_path, 'de-numberbatch.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'de-numberbatch'), cache_dir='embeddings')
-
-        # SWEDISCH FASTTEXT embeddings
-        if embeddings.lower() == 'sv-fasttext':
-            cached_path(os.path.join(base_path, 'cc.sv.300.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'cc.sv.300'), cache_dir='embeddings')
+        # other language fasttext embeddings
+        if len(embeddings.lower()) == 2:
+            cached_path(os.path.join(base_path, '{}-fasttext-300d-1M.vectors.npy'.format(embeddings)), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, '{}-fasttext-300d-1M'.format(embeddings)), cache_dir='embeddings')
 
         self.name = embeddings
         self.static_embeddings = True
