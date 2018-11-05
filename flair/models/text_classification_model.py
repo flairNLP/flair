@@ -86,13 +86,14 @@ class TextClassifier(nn.Module):
 
         # ATTENTION: suppressing torch serialization warnings. This needs to be taken out once we sort out recursive
         # serialization of torch objects
-        warnings.filterwarnings("ignore")
-        if torch.cuda.is_available():
-            state = torch.load(model_file)
-        else:
-            state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
-        warnings.filterwarnings("default")
-
+        # https://docs.python.org/3/library/warnings.html#temporarily-suppressing-warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            if torch.cuda.is_available():
+                state = torch.load(model_file)
+            else:
+                state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
+            
         model = TextClassifier(
             document_embeddings=state['document_embeddings'],
             label_dictionary=state['label_dictionary'],
