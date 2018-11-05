@@ -119,6 +119,7 @@ class Metric(object):
 
     def __str__(self):
         all_classes = self.get_classes()
+        all_classes = [None] + all_classes
         all_lines = [
             '{0:<10}\ttp: {1} - fp: {2} - fn: {3} - tn: {4} - precision: {5:.4f} - recall: {6:.4f} - accuracy: {7:.4f} - f1-score: {8:.4f}'.format(
                 self.name if class_name == None else class_name,
@@ -129,11 +130,11 @@ class Metric(object):
         return '\n'.join(all_lines)
 
     def get_classes(self) -> List:
-        all_classes = list(set(itertools.chain(*[list(keys) for keys
+        all_classes = set(itertools.chain(*[list(keys) for keys
                                                  in [self._tps.keys(), self._fps.keys(), self._tns.keys(),
-                                                     self._fns.keys()]])))
-
-        all_classes.sort(key=lambda x: (x is not None, x))
+                                                     self._fns.keys()]]))
+        all_classes = [class_name for class_name in all_classes if class_name is not None]
+        all_classes.sort()
         return all_classes
 
 
