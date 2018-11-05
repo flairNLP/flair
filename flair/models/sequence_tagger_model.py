@@ -139,38 +139,6 @@ class SequenceTagger(torch.nn.Module):
         if torch.cuda.is_available():
             self.cuda()
 
-    # def save_new(self, model_file: str):
-    #     model_state = {
-    #         'state_dict': self.state_dict(),
-    #         'embeddings': self.embeddings,
-    #         'hidden_size': self.hidden_size,
-    #         'tag_dictionary': self.tag_dictionary,
-    #         'tag_type': self.tag_type,
-    #         'use_crf': self.use_crf,
-    #         'use_rnn': self.use_rnn,
-    #         'rnn_layers': self.rnn_layers,
-    #     }
-    #
-    #     def save_as_pickled_object(obj, filepath):
-    #         """
-    #         This is a defensive way to write pickle.write, allowing for very large files on all platforms
-    #         """
-    #         import pickle
-    #         max_bytes = 2 ** 31 - 1
-    #         bytes_out = pickle.dumps(obj, protocol=4)
-    #
-    #         n_bytes = sys.getsizeof(bytes_out)
-    #         with open(filepath, 'wb') as f_out:
-    #             for idx in range(0, n_bytes, max_bytes):
-    #                 f_out.write(bytes_out[idx:idx + max_bytes])
-    #
-    #     save_as_pickled_object(model_state, model_file)
-    #
-    #     # import joblib
-    #     # joblib.dump(model_state, model_file, protocol=4)
-    #
-    #     # torch.save(model_state, model_file, pickle_protocol=4)
-
     def save(self, model_file: str):
         model_state = {
             'state_dict': self.state_dict(),
@@ -186,7 +154,7 @@ class SequenceTagger(torch.nn.Module):
         torch.save(model_state, model_file, pickle_protocol=4)
 
     @classmethod
-    def load_from_file_embedding(cls, model_file, embeddings):
+    def _load_from_file_embedding(cls, model_file, embeddings):
 
         warnings.filterwarnings("ignore")
         state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
@@ -229,48 +197,6 @@ class SequenceTagger(torch.nn.Module):
         if torch.cuda.is_available():
             model = model.cuda()
         return model
-
-    # @classmethod
-    # def load_from_file_new(cls, model_file):
-    #
-    #     warnings.filterwarnings("ignore")
-    #     import pickle
-    #     # state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
-    #     # state = pickle.load(open(model_file, "rb"))
-    #     # warnings.filterwarnings("default")
-    #
-    #     def try_to_load_as_pickled_object_or_None(filepath):
-    #         """
-    #         This is a defensive way to write pickle.load, allowing for very large files on all platforms
-    #         """
-    #         max_bytes = 2 ** 31 - 1
-    #         try:
-    #             input_size = os.path.getsize(filepath)
-    #             bytes_in = bytearray(0)
-    #             with open(filepath, 'rb') as f_in:
-    #                 for _ in range(0, input_size, max_bytes):
-    #                     bytes_in += f_in.read(max_bytes)
-    #             obj = pickle.loads(bytes_in)
-    #         except:
-    #             return None
-    #         return obj
-    #
-    #     state = try_to_load_as_pickled_object_or_None(model_file)
-    #
-    #     model = SequenceTagger(
-    #         hidden_size=state['hidden_size'],
-    #         embeddings=state['embeddings'],
-    #         tag_dictionary=state['tag_dictionary'],
-    #         tag_type=state['tag_type'],
-    #         use_crf=state['use_crf'],
-    #         use_rnn=state['use_rnn'],
-    #         rnn_layers=state['rnn_layers'])
-    #
-    #     model.load_state_dict(state['state_dict'])
-    #     model.eval()
-    #     if torch.cuda.is_available():
-    #         model = model.cuda()
-    #     return model
 
     def forward(self, sentences: List[Sentence]):
         self.zero_grad()
