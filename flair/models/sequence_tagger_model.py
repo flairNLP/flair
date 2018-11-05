@@ -654,13 +654,13 @@ class SequenceTagger(torch.nn.Module):
         if model.lower() == 'de-ner':
             base_path = '/'.join([aws_resource_path,
                                   'NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2',
-                                  'de-ner-conll03-v0.2.pt'])
+                                  'de-ner-conll03-v0.3.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'de-ner-germeval':
             base_path = '/'.join([aws_resource_path,
                                   'NER-germeval--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2',
-                                  'de-ner-germeval-v0.2.pt'])
+                                  'de-ner-germeval-v0.3.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model_file is not None:
