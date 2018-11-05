@@ -152,11 +152,12 @@ class SequenceTagger(torch.nn.Module):
 
     @classmethod
     def load_from_file(cls, model_file):
-
-        warnings.filterwarnings("ignore")
-        state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
-        warnings.filterwarnings("default")
-
+        # suppress torch warnings: 
+        # https://docs.python.org/3/library/warnings.html#temporarily-suppressing-warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
+        
         model = SequenceTagger(
             hidden_size=state['hidden_size'],
             embeddings=state['embeddings'],
