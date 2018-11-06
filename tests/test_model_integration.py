@@ -10,7 +10,7 @@ from flair.trainers import SequenceTaggerTrainer, TextClassifierTrainer
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
 
 
-@pytest.mark.slow
+@pytest.mark.integration
 def test_train_load_use_tagger(results_base_path, tasks_base_path):
 
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
@@ -27,7 +27,7 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
     # initialize trainer
     trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
 
-    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=3)
+    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=2)
 
     loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
 
@@ -42,7 +42,7 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
     shutil.rmtree(results_base_path)
 
 
-@pytest.mark.slow
+@pytest.mark.integration
 def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
 
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
@@ -59,7 +59,7 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
     # initialize trainer
     trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
 
-    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=3)
+    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=2)
 
     loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
 
@@ -74,7 +74,7 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
     shutil.rmtree(results_base_path)
 
 
-@pytest.mark.slow
+@pytest.mark.integration
 def test_train_charlm_changed_chache_load_use_tagger(results_base_path, tasks_base_path):
 
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
@@ -94,7 +94,7 @@ def test_train_charlm_changed_chache_load_use_tagger(results_base_path, tasks_ba
     # initialize trainer
     trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
 
-    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=3)
+    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=2)
 
     # remove the cache directory
     shutil.rmtree(cache_dir)
@@ -112,7 +112,7 @@ def test_train_charlm_changed_chache_load_use_tagger(results_base_path, tasks_ba
     shutil.rmtree(results_base_path)
 
 
-@pytest.mark.slow
+@pytest.mark.integration
 def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_path):
 
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
@@ -129,7 +129,7 @@ def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_pat
     # initialize trainer
     trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
 
-    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=3)
+    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=2)
 
     loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
 
@@ -144,6 +144,7 @@ def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_pat
     shutil.rmtree(results_base_path)
 
 
+@pytest.mark.integration
 def test_load_use_serialized_tagger():
 
     loaded_model: SequenceTagger = SequenceTagger.load('ner')
@@ -165,7 +166,7 @@ def test_load_use_serialized_tagger():
     loaded_model.predict([sentence_empty])
 
 
-@pytest.mark.slow
+@pytest.mark.integration
 def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB, base_path=tasks_base_path)
@@ -177,7 +178,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
-    trainer = TextClassifierTrainer(model, corpus, label_dict, False)
+    trainer = TextClassifierTrainer(model, corpus, label_dict, test_mode=True)
     trainer.train(str(results_base_path), max_epochs=2)
 
     sentence = Sentence("Berlin is a really nice city.")
@@ -201,7 +202,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     shutil.rmtree(results_base_path)
 
 
-@pytest.mark.slow
+@pytest.mark.integration
 def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
 
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB, base_path=tasks_base_path)
@@ -213,7 +214,7 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
-    trainer = TextClassifierTrainer(model, corpus, label_dict, False)
+    trainer = TextClassifierTrainer(model, corpus, label_dict, test_mode=True)
     trainer.train(str(results_base_path), max_epochs=2)
 
     sentence = Sentence("Berlin is a really nice city.")
@@ -237,7 +238,7 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
     shutil.rmtree(results_base_path)
 
 
-@pytest.mark.slow
+@pytest.mark.integration
 def test_train_charlm_nocache_load_use_classifier(results_base_path, tasks_base_path):
 
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB, base_path=tasks_base_path)
@@ -250,7 +251,7 @@ def test_train_charlm_nocache_load_use_classifier(results_base_path, tasks_base_
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
-    trainer = TextClassifierTrainer(model, corpus, label_dict, False)
+    trainer = TextClassifierTrainer(model, corpus, label_dict, test_mode=True)
     trainer.train(str(results_base_path), max_epochs=2)
 
     sentence = Sentence("Berlin is a really nice city.")
@@ -274,7 +275,7 @@ def test_train_charlm_nocache_load_use_classifier(results_base_path, tasks_base_
     shutil.rmtree(results_base_path)
 
 
-@pytest.mark.slow
+@pytest.mark.integration
 def test_train_language_model(results_base_path, resources_path):
     # get default dictionary
     dictionary: Dictionary = Dictionary.load('chars')
@@ -289,8 +290,8 @@ def test_train_language_model(results_base_path, resources_path):
                                     character_level=True)
 
     # train the language model
-    trainer: LanguageModelTrainer = LanguageModelTrainer(language_model, corpus)
-    trainer.train(str(results_base_path), sequence_length=10, mini_batch_size=10, max_epochs=5)
+    trainer: LanguageModelTrainer = LanguageModelTrainer(language_model, corpus, test_mode=True)
+    trainer.train(str(results_base_path), sequence_length=10, mini_batch_size=10, max_epochs=2)
 
     # use the character LM as embeddings to embed the example sentence 'I love Berlin'
     char_lm_embeddings = CharLMEmbeddings(str(results_base_path / 'best-lm.pt'))

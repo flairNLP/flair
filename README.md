@@ -153,10 +153,19 @@ pipenv install --dev && pipenv shell
 pytest
 ```
 
-If you also want to run the slow tests, execute:
+To run integration tests execute:
+```bash
+pytest --runintegration
+```
+The integration tests will train small models.
+Afterwards, the trained model will be loaded for prediction.
+
+To also run slow tests, such as loading and using the embeddings provided by flair, you should execute:
 ```bash
 pytest --runslow
 ```
+
+
 
 ## [License](/LICENSE)
 
