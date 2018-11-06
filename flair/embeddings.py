@@ -607,6 +607,75 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
         pass
 
 
+class DocumentPoolEmbeddings(DocumentEmbeddings):
+
+    def __init__(self, token_embeddings: List[TokenEmbeddings], mode: str = 'mean'):
+        """The constructor takes a list of embeddings to be combined.
+        :param token_embeddings: a list of token embeddings
+        :param mode: a string which can any value from ['mean', 'max', 'min']
+        """
+        super().__init__()
+
+        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=token_embeddings)
+        self.name: str = 'document_pool'
+
+        self.__embedding_length: int = self.embeddings.embedding_length
+
+        if torch.cuda.is_available():
+            self.cuda()
+
+        self.mode = mode
+        if self.mode == 'mean':
+            self.pool_op = torch.mean
+        elif mode == 'max':
+            self.pool_op = torch.max
+        elif mode == 'min':
+            self.pool_op = torch.min
+        else:
+            raise ValueError(f'Pooling operation for {self.mode!r} is not defined')
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def embed(self, sentences: Union[List[Sentence], Sentence]):
+        """Add embeddings to every sentence in the given list of sentences. If embeddings are already added, updates
+        only if embeddings are non-static."""
+
+        everything_embedded: bool = True
+
+        # if only one sentence is passed, convert to list of sentence
+        if isinstace(sentences, Sentence):
+            sentences = [sentences]
+
+        for sentence in sentences:
+            if self.name not in sentence._embeddings.keys(): everything_embedded = False
+
+        if not everything_embedded:
+
+            self.embeddings.embed(sentences)
+
+            for sentence in sentences:
+                word_embeddings = []
+                for token in sentence.tokens:
+                    token: Token = token
+                    word_embeddings.append(token.get_embedding().unsqueeze(0))
+
+                word_embeddings = torch.cat(word_embeddings, dim=0)
+                if torch.cuda.is_available():
+                    word_embeddings = word_embeddings.cuda()
+
+                if self.mode == 'mean':
+                    pooled_embedding = self.pool_op(word_embeddings, 0)
+                else:
+                    pooled_embedding, _ = self.pool_op(word_embeddings, 0)
+
+                sentence.set_embedding(self.name, mean_embedding.unsqueeze(0))
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]):
+        pass
+
+
 class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
     def __init__(self,
