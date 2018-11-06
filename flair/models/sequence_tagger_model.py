@@ -16,7 +16,6 @@ from flair.training_utils import clear_embeddings
 
 log = logging.getLogger(__name__)
 
-
 START_TAG: str = '<START>'
 STOP_TAG: str = '<STOP>'
 
@@ -72,6 +71,7 @@ class SequenceTagger(torch.nn.Module):
                  use_rnn: bool = True,
                  rnn_layers: int = 1,
                  use_word_dropout: bool = False,
+                 use_locked_dropout: bool = False,
                  ):
 
         super(SequenceTagger, self).__init__()
@@ -95,7 +95,8 @@ class SequenceTagger(torch.nn.Module):
         self.hidden_word = None
 
         # dropouts
-        self.dropout: torch.nn.Module = flair.nn.LockedDropout(0.5)
+        self.use_locked_dropout: bool = use_locked_dropout
+        self.dropout: torch.nn.Module = flair.nn.LockedDropout(0.5) if use_locked_dropout else torch.nn.Dropout(0.5)
 
         self.use_word_dropout: bool = use_word_dropout
         if self.use_word_dropout:
@@ -147,6 +148,8 @@ class SequenceTagger(torch.nn.Module):
             'use_crf': self.use_crf,
             'use_rnn': self.use_rnn,
             'rnn_layers': self.rnn_layers,
+            'use_word_dropout': self.use_word_dropout,
+            'use_locked_dropout': self.use_locked_dropout,
         }
         torch.save(model_state, model_file, pickle_protocol=4)
 
@@ -157,6 +160,9 @@ class SequenceTagger(torch.nn.Module):
         state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
         warnings.filterwarnings("default")
 
+        use_word_dropout = False if not 'use_word_dropout' in state.keys() else state['use_word_dropout']
+        use_locked_dropout = False if not 'use_locked_dropout' in state.keys() else state['use_locked_dropout']
+
         model = SequenceTagger(
             hidden_size=state['hidden_size'],
             embeddings=state['embeddings'],
@@ -164,7 +170,10 @@ class SequenceTagger(torch.nn.Module):
             tag_type=state['tag_type'],
             use_crf=state['use_crf'],
             use_rnn=state['use_rnn'],
-            rnn_layers=state['rnn_layers'])
+            rnn_layers=state['rnn_layers'],
+            use_word_dropout=use_word_dropout,
+            use_locked_dropout=use_locked_dropout,
+        )
 
         model.load_state_dict(state['state_dict'])
         model.eval()
@@ -189,13 +198,13 @@ class SequenceTagger(torch.nn.Module):
         sentence_tensor = torch.zeros([len(sentences),
                                        longest_token_sequence_in_batch,
                                        self.embeddings.embedding_length],
-                                       dtype=torch.float)
+                                      dtype=torch.float)
 
         for s_id, sentence in enumerate(sentences):
 
             # fill values with word embeddings
             sentence_tensor[s_id][:len(sentence)] = torch.cat([token.get_embedding().unsqueeze(0)
-                                               for token in sentence], 0)
+                                                               for token in sentence], 0)
 
             # get the tags in this sentence
             tag_idx: List[int] = [self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value)
@@ -430,7 +439,8 @@ class SequenceTagger(torch.nn.Module):
         clear_embeddings(filtered_sentences, also_clear_word_embeddings=True)
 
         # make mini-batches
-        batches = [filtered_sentences[x:x + mini_batch_size] for x in range(0, len(filtered_sentences), mini_batch_size)]
+        batches = [filtered_sentences[x:x + mini_batch_size] for x in
+                   range(0, len(filtered_sentences), mini_batch_size)]
 
         for batch in batches:
             scores, predicted_ids = self._predict_scores_batch(batch)
