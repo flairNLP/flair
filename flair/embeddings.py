@@ -617,7 +617,6 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
         super().__init__()
 
         self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=token_embeddings)
-        self.name: str = 'document_pool'
 
         self.__embedding_length: int = self.embeddings.embedding_length
 
@@ -633,6 +632,7 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
             self.pool_op = torch.min
         else:
             raise ValueError(f'Pooling operation for {self.mode!r} is not defined')
+        self.name: str = f'document_{self.mode}'
 
     @property
     def embedding_length(self) -> int:
@@ -645,7 +645,7 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
         everything_embedded: bool = True
 
         # if only one sentence is passed, convert to list of sentence
-        if isinstace(sentences, Sentence):
+        if isinstance(sentences, Sentence):
             sentences = [sentences]
 
         for sentence in sentences:
@@ -670,7 +670,7 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
                 else:
                     pooled_embedding, _ = self.pool_op(word_embeddings, 0)
 
-                sentence.set_embedding(self.name, mean_embedding.unsqueeze(0))
+                sentence.set_embedding(self.name, pooled_embedding.unsqueeze(0))
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
