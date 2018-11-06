@@ -215,8 +215,6 @@ def test_document_pool_embeddings():
 
         assert (len(sentence.get_embedding()) == 0)
 
-        sentence.clear_embeddings(also_clear_word_embeddings=False)
-
 
 def load_and_apply_word_embeddings(emb_type: str):
     text = 'I love Berlin.'
