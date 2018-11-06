@@ -455,7 +455,6 @@ class CharLMEmbeddings(TokenEmbeddings):
 
     def train(self, mode=True):
         pass
-    
 
     def __getstate__(self):
         # Copy the object's state from self.__dict__ which contains

@@ -71,9 +71,14 @@ class SequenceTagger(torch.nn.Module):
                  use_crf: bool = True,
                  use_rnn: bool = True,
                  rnn_layers: int = 1,
+<<<<<<< 35cd93785de0d036356eb7e4fde4153bcc517edb
                  use_dropout: float = 0.0,
                  use_word_dropout: float = 0.05,
                  use_locked_dropout: float = 0.5,
+=======
+                 use_word_dropout: bool = False,
+                 use_locked_dropout: bool = False,
+>>>>>>> GH-184: add flags for locked vs normal dropout
                  ):
 
         super(SequenceTagger, self).__init__()
@@ -97,9 +102,14 @@ class SequenceTagger(torch.nn.Module):
         self.hidden_word = None
 
         # dropouts
+<<<<<<< 35cd93785de0d036356eb7e4fde4153bcc517edb
         self.use_dropout: float = use_dropout
         self.use_word_dropout: float = use_word_dropout
         self.use_locked_dropout: float = use_locked_dropout
+=======
+        self.use_locked_dropout: bool = use_locked_dropout
+        self.dropout: torch.nn.Module = flair.nn.LockedDropout(0.5) if use_locked_dropout else torch.nn.Dropout(0.5)
+>>>>>>> GH-184: add flags for locked vs normal dropout
 
         if use_dropout > 0.0:
             self.dropout = torch.nn.Dropout(use_dropout)
@@ -171,9 +181,14 @@ class SequenceTagger(torch.nn.Module):
             warnings.filterwarnings("ignore")
             state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
 
+<<<<<<< 35cd93785de0d036356eb7e4fde4153bcc517edb
         use_dropout = 0.0 if not 'use_dropout' in state.keys() else state['use_dropout']
         use_word_dropout = 0.0 if not 'use_word_dropout' in state.keys() else state['use_word_dropout']
         use_locked_dropout = 0.0 if not 'use_locked_dropout' in state.keys() else state['use_locked_dropout']
+=======
+        use_word_dropout = False if not 'use_word_dropout' in state.keys() else state['use_word_dropout']
+        use_locked_dropout = False if not 'use_locked_dropout' in state.keys() else state['use_locked_dropout']
+>>>>>>> GH-184: add flags for locked vs normal dropout
 
         model = SequenceTagger(
             hidden_size=state['hidden_size'],
@@ -183,7 +198,10 @@ class SequenceTagger(torch.nn.Module):
             use_crf=state['use_crf'],
             use_rnn=state['use_rnn'],
             rnn_layers=state['rnn_layers'],
+<<<<<<< 35cd93785de0d036356eb7e4fde4153bcc517edb
             use_dropout=use_dropout,
+=======
+>>>>>>> GH-184: add flags for locked vs normal dropout
             use_word_dropout=use_word_dropout,
             use_locked_dropout=use_locked_dropout,
         )
