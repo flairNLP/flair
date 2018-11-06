@@ -1,5 +1,3 @@
-env:
-  - TRAVIS=true
 language: python
 sudo: false
 python:
@@ -8,4 +6,5 @@ install:
   - pip install -r requirements.txt -q
 before_script: cd tests
 script:
-  - pytest
+  - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then pytest --runintegration; fi'
+  - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then pytest; fi'

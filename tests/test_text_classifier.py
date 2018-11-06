@@ -7,7 +7,6 @@ from flair.embeddings import WordEmbeddings, DocumentLSTMEmbeddings
 from flair.models.text_classification_model import TextClassifier
 
 
-@pytest.fixture
 def init(tasks_base_path) -> Tuple[TaggedCorpus, Dictionary, TextClassifier]:
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.AG_NEWS, tasks_base_path)
     label_dict = corpus.make_label_dictionary()
