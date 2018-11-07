@@ -61,7 +61,7 @@ def pad_tensors(tensor_list, type_=torch.FloatTensor):
     return template, lens_
 
 
-class SequenceTagger(torch.nn.Module):
+class SequenceTagger(flair.nn.Model):
 
     def __init__(self,
                  hidden_size: int,
@@ -382,7 +382,7 @@ class SequenceTagger(torch.nn.Module):
         best_path.reverse()
         return best_scores, best_path
 
-    def neg_log_likelihood(self, sentences: List[Sentence]):
+    def forward_return_loss(self, sentences: List[Sentence]):
         features, lengths, tags = self.forward(sentences)
 
         if self.use_crf:
@@ -401,7 +401,6 @@ class SequenceTagger(torch.nn.Module):
             return score.sum()
 
         else:
-
             score = 0
             for sentence_feats, sentence_tags, sentence_length in zip(features, tags, lengths):
                 sentence_feats = sentence_feats[:sentence_length]
