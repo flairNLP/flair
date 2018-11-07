@@ -95,8 +95,7 @@ class SequenceTagger(torch.nn.Module):
         self.hidden_word = None
 
         # dropouts
-        # self.dropout: torch.nn.Module = flair.nn.LockedDropout(0.5)
-        self.dropout: torch.nn.Module = torch.nn.Dropout(0.5)
+        self.dropout: torch.nn.Module = flair.nn.LockedDropout(0.5)
 
         self.use_word_dropout: bool = use_word_dropout
         if self.use_word_dropout:
@@ -152,34 +151,12 @@ class SequenceTagger(torch.nn.Module):
 
         torch.save(model_state, model_file, pickle_protocol=4)
 
-    @classmethod
-    def _load_from_file_embedding(cls, model_file, embeddings):
-
-        warnings.filterwarnings("ignore")
-        state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
-        warnings.filterwarnings("default")
-
-        model = SequenceTagger(
-            hidden_size=state['hidden_size'],
-            embeddings=embeddings,
-            tag_dictionary=state['tag_dictionary'],
-            tag_type=state['tag_type'],
-            use_crf=state['use_crf'],
-            use_rnn=state['use_rnn'],
-            rnn_layers=state['rnn_layers'])
-
-        model.load_state_dict(state['state_dict'])
-        model.eval()
-        if torch.cuda.is_available():
-            model = model.cuda()
-        return model
 
     @classmethod
     def load_from_file(cls, model_file):
 
         warnings.filterwarnings("ignore")
         state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
-        # state = pickle.load(open(model_file, "rb"))
         warnings.filterwarnings("default")
 
         model = SequenceTagger(
