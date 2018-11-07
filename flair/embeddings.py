@@ -138,47 +138,43 @@ class WordEmbeddings(TokenEmbeddings):
         """
         Initializes classic word embeddings. Constructor downloads required files if not there.
         :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code.
-        If embeddings is equal to 'custom', you need to provide a path to your custom embeddings.
-        Custom embeddings should be correctly formatted to gensim.
+        If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
         """
 
-        base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/'
+        old_base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/'
+        base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/'
 
         # GLOVE embeddings
         if embeddings.lower() == 'glove' or embeddings.lower() == 'en-glove':
-            cached_path(os.path.join(base_path, 'glove.gensim.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'glove.gensim'), cache_dir='embeddings')
+            cached_path(os.path.join(old_base_path, 'glove.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(old_base_path, 'glove.gensim'), cache_dir='embeddings')
 
         # KOMNIOS embeddings
-        if embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
-            cached_path(os.path.join(base_path, 'extvec.gensim.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'extvec.gensim'), cache_dir='embeddings')
-
-        base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/'
+        elif embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
+            cached_path(os.path.join(old_base_path, 'extvec.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(old_base_path, 'extvec.gensim'), cache_dir='embeddings')
 
         # FT-CRAWL embeddings
-        if embeddings.lower() == 'crawl' or embeddings.lower() == 'en-crawl':
+        elif embeddings.lower() == 'crawl' or embeddings.lower() == 'en-crawl':
             cached_path(os.path.join(base_path, 'en-fasttext-crawl-300d-1M.vectors.npy'.format(embeddings)),
                         cache_dir='embeddings')
             embeddings = cached_path(os.path.join(base_path, 'en-fasttext-crawl-300d-1M'), cache_dir='embeddings')
 
         # FT-CRAWL embeddings
-        if embeddings.lower() == 'news' or embeddings.lower() == 'en-news' or embeddings.lower() == 'en':
+        elif embeddings.lower() == 'news' or embeddings.lower() == 'en-news' or embeddings.lower() == 'en':
             cached_path(os.path.join(base_path, 'en-fasttext-news-300d-1M.vectors.npy'.format(embeddings)),
                         cache_dir='embeddings')
             embeddings = cached_path(os.path.join(base_path, 'en-fasttext-news-300d-1M'), cache_dir='embeddings')
 
         # other language fasttext embeddings
-        if len(embeddings.lower()) == 2 and not embeddings.lower() == 'en':
+        elif len(embeddings.lower()) == 2 and not embeddings.lower() == 'en':
             cached_path(os.path.join(base_path, '{}-fasttext-300d-1M.vectors.npy'.format(embeddings)),
                         cache_dir='embeddings')
             embeddings = cached_path(os.path.join(base_path, '{}-fasttext-300d-1M'.format(embeddings)),
                                      cache_dir='embeddings')
 
-        # custom embeddings
-        if embeddings.lower() == 'custom':
-            cached_path(embeddings_path, cache_dir='embeddings')
-            embeddings = cached_path(embeddings_path, cache_dir='embeddings')
+        elif not os.path.exists(embeddings):
+            raise ValueError(f'The given embeddings "{embeddings}" is not available or is not a valid path.')
 
         self.name = embeddings
         self.static_embeddings = True

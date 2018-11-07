@@ -1,5 +1,3 @@
-
-
 ![alt text](resources/docs/flair_logo.svg)
 
 [![PyPI version](https://badge.fury.io/py/flair.svg)](https://badge.fury.io/py/flair)
@@ -41,14 +39,11 @@ Flair outperforms the previous best methods on a range of NLP tasks:
 | Named Entity Recognition |German  | Germeval    |  **84.65** (F1)  | *79.08 [(Hänig et al, 2014)](http://asv.informatik.uni-leipzig.de/publication/file/300/GermEval2014_ExB.pdf)*|
 | Named Entity Recognition |Polish  | PolEval-2018    |  **86.6** (F1) <br> [(Borchmann et al., 2018)](https://github.com/applicaai/poleval-2018) | *85.1 [(PolDeepNer)](https://github.com/CLARIN-PL/PolDeepNer/)*|
 
-
-
 Here's how to [reproduce these numbers](/resources/docs/EXPERIMENTS.md) using Flair. You can also find a detailed evaluation and discussion in our paper: 
 
 *[Contextual String Embeddings for Sequence Labeling](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing).
 Alan Akbik, Duncan Blythe and Roland Vollgraf. 
 27th International Conference on Computational Linguistics, COLING 2018.* 
-
 
 ## Quick Start
 
@@ -99,7 +94,6 @@ The following NER tags are found:
 I love Berlin <S-LOC> .
 ```
 
-
 ## Tutorial
 
 We provide a set of quick tutorials to get you started with the library:
@@ -114,7 +108,6 @@ We provide a set of quick tutorials to get you started with the library:
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
 text, how you embed your text with different word or document embeddings, and how you can train your own 
 language models, sequence labeling models, and text classification models. Let us know if anything is unclear.
-
 
 ## Citing Flair
 
@@ -165,8 +158,6 @@ To also run slow tests, such as loading and using the embeddings provided by fla
 pytest --runslow
 ```
 
-
-
 ## [License](/LICENSE)
 
 The MIT License (MIT)
@@ -178,4 +169,3 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-

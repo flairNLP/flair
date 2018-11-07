@@ -80,7 +80,7 @@ We generally recommend the FastText embeddings, or GloVe if you want a smaller m
 
 If you want to use any other embeddings (not listed in the list above), you can load those by calling
 ```python
-custom_embedding = WordEmbeddings('custom', 'path/to/your/custom/embeddings.gensim')
+custom_embedding = WordEmbeddings('path/to/your/custom/embeddings.gensim')
 ```
 If you want to load custom embeddings you need to make sure, that the custom embeddings are correctly formatted to
 [gensim](https://radimrehurek.com/gensim/models/word2vec.html).

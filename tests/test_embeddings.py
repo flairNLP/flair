@@ -77,6 +77,14 @@ def test_german_backward():
     load_and_apply_char_lm_embeddings('german-backward')
 
 
+def test_loading_not_existing_embedding():
+    with pytest.raises(Exception):
+        WordEmbeddings('other')
+
+    with pytest.raises(Exception):
+        WordEmbeddings('not/existing/path/to/embeddings')
+
+
 @pytest.mark.integration
 def test_stacked_embeddings():
     sentence, glove, charlm = init_document_embeddings()
