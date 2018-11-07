@@ -555,9 +555,9 @@ class CharLMEmbeddings(TokenEmbeddings):
         return sentences
 
 
-@deprecated(reason='Functionality was moved to DocumentPoolEmbeddings', replacement='DocumentPoolEmbeddings', gone_in='release-0.4')
 class DocumentMeanEmbeddings(DocumentEmbeddings):
 
+    @deprecated(version='0.3.1', reason="The functionality of this class is moved to 'DocumentPoolEmbeddings'")
     def __init__(self, token_embeddings: List[TokenEmbeddings]):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
