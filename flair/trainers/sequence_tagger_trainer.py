@@ -174,81 +174,82 @@ class SequenceTaggerTrainer:
                  eval_batch_size: int = 32,
                  embeddings_in_memory: bool = True):
 
-        batch_no: int = 0
-        batches = [evaluation[x:x + eval_batch_size] for x in
-                   range(0, len(evaluation), eval_batch_size)]
+        with torch.no_grad():
+            batch_no: int = 0
+            batches = [evaluation[x:x + eval_batch_size] for x in
+                       range(0, len(evaluation), eval_batch_size)]
 
-        metric = Metric('')
+            metric = Metric('')
 
-        lines: List[str] = []
+            lines: List[str] = []
 
-        for batch in batches:
-            batch_no += 1
+            for batch in batches:
+                batch_no += 1
 
-            scores, tag_seq = self.model._predict_scores_batch(batch)
-            predicted_ids = tag_seq
-            all_tokens = []
-            for sentence in batch:
-                all_tokens.extend(sentence.tokens)
+                scores, tag_seq = self.model._predict_scores_batch(batch)
+                predicted_ids = tag_seq
+                all_tokens = []
+                for sentence in batch:
+                    all_tokens.extend(sentence.tokens)
 
-            for (token, score, predicted_id) in zip(all_tokens, scores, predicted_ids):
-                token: Token = token
-                # get the predicted tag
-                predicted_value = self.model.tag_dictionary.get_item_for_index(predicted_id)
-                token.add_tag('predicted', predicted_value, score)
+                for (token, score, predicted_id) in zip(all_tokens, scores, predicted_ids):
+                    token: Token = token
+                    # get the predicted tag
+                    predicted_value = self.model.tag_dictionary.get_item_for_index(predicted_id)
+                    token.add_tag('predicted', predicted_value, score)
 
-            for sentence in batch:
+                for sentence in batch:
 
-                # add predicted tags
-                for token in sentence.tokens:
-                    predicted_tag: Label = token.get_tag('predicted')
+                    # add predicted tags
+                    for token in sentence.tokens:
+                        predicted_tag: Label = token.get_tag('predicted')
 
-                    # append both to file for evaluation
-                    eval_line = '{} {} {}\n'.format(token.text,
-                                                    token.get_tag(self.model.tag_type).value,
-                                                    predicted_tag.value)
+                        # append both to file for evaluation
+                        eval_line = '{} {} {}\n'.format(token.text,
+                                                        token.get_tag(self.model.tag_type).value,
+                                                        predicted_tag.value)
 
-                    lines.append(eval_line)
-                lines.append('\n')
+                        lines.append(eval_line)
+                    lines.append('\n')
 
-                # make list of gold tags
-                gold_tags = [(tag.tag, str(tag)) for tag in sentence.get_spans(self.model.tag_type)]
+                    # make list of gold tags
+                    gold_tags = [(tag.tag, str(tag)) for tag in sentence.get_spans(self.model.tag_type)]
 
-                # make list of predicted tags
-                predicted_tags = [(tag.tag, str(tag)) for tag in sentence.get_spans('predicted')]
+                    # make list of predicted tags
+                    predicted_tags = [(tag.tag, str(tag)) for tag in sentence.get_spans('predicted')]
 
-                # check for true positives, false positives and false negatives
-                for tag, prediction in predicted_tags:
-                    if (tag, prediction) in gold_tags:
-                        metric.tp()
-                        metric.tp(tag)
-                    else:
-                        metric.fp()
-                        metric.fp(tag)
+                    # check for true positives, false positives and false negatives
+                    for tag, prediction in predicted_tags:
+                        if (tag, prediction) in gold_tags:
+                            metric.tp()
+                            metric.tp(tag)
+                        else:
+                            metric.fp()
+                            metric.fp(tag)
 
-                for tag, gold in gold_tags:
-                    if (tag, gold) not in predicted_tags:
-                        metric.fn()
-                        metric.fn(tag)
-                    else:
-                        metric.tn()
-                        metric.tn(tag)
+                    for tag, gold in gold_tags:
+                        if (tag, gold) not in predicted_tags:
+                            metric.fn()
+                            metric.fn(tag)
+                        else:
+                            metric.tn()
+                            metric.tn(tag)
 
-            if not embeddings_in_memory:
-                self.clear_embeddings_in_batch(batch)
+                if not embeddings_in_memory:
+                    self.clear_embeddings_in_batch(batch)
 
-        if out_path is not None:
-            test_tsv = os.path.join(out_path, "test.tsv")
-            with open(test_tsv, "w", encoding='utf-8') as outfile:
-                outfile.write(''.join(lines))
+            if out_path is not None:
+                test_tsv = os.path.join(out_path, "test.tsv")
+                with open(test_tsv, "w", encoding='utf-8') as outfile:
+                    outfile.write(''.join(lines))
 
-        if evaluation_method == 'accuracy':
-            score = metric.accuracy()
-            return score, metric
+            if evaluation_method == 'accuracy':
+                score = metric.accuracy()
+                return score, metric
 
-        if evaluation_method == 'F1':
-            score = metric.f_score()
-            return score, metric
+            if evaluation_method == 'F1':
+                score = metric.f_score()
+                return score, metric
 
     def log_metric(self, metric: Metric, dataset_name: str):
         log.info("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
