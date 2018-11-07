@@ -77,16 +77,11 @@ def test_german_backward():
     load_and_apply_char_lm_embeddings('german-backward')
 
 
-@pytest.mark.slow
+@pytest.mark.integration
 def test_stacked_embeddings():
-    text = 'I love Berlin.'
-    sentence: Sentence = Sentence(text)
+    sentence, glove, charlm = init_document_embeddings()
 
-    glove: TokenEmbeddings = WordEmbeddings('en-glove')
-    news: TokenEmbeddings = WordEmbeddings('en-news')
-    charlm: TokenEmbeddings = CharLMEmbeddings('mix-backward')
-
-    embeddings: StackedEmbeddings = StackedEmbeddings([glove, news, charlm])
+    embeddings: StackedEmbeddings = StackedEmbeddings([glove, charlm])
 
     embeddings.embed(sentence)
 
@@ -98,7 +93,7 @@ def test_stacked_embeddings():
         assert(len(token.get_embedding()) == 0)
 
 
-@pytest.mark.slow
+@pytest.mark.integration
 def test_document_lstm_embeddings():
     sentence, glove, charlm = init_document_embeddings()
 
@@ -115,7 +110,7 @@ def test_document_lstm_embeddings():
     assert (len(sentence.get_embedding()) == 0)
 
 
-@pytest.mark.slow
+@pytest.mark.integration
 def test_document_bidirectional_lstm_embeddings():
     sentence, glove, charlm = init_document_embeddings()
 
@@ -132,29 +127,12 @@ def test_document_bidirectional_lstm_embeddings():
     assert (len(sentence.get_embedding()) == 0)
 
 
-@pytest.mark.slow
+@pytest.mark.integration
 def test_document_bidirectional_lstm_embeddings_using_first_representation():
     sentence, glove, charlm = init_document_embeddings()
 
     embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_states=128,
                                                                 bidirectional=True)
-
-    embeddings.embed(sentence)
-
-    assert (len(sentence.get_embedding()) != 0)
-    assert (sentence.get_embedding().shape[1] == embeddings.embedding_length)
-
-    sentence.clear_embeddings()
-
-    assert (len(sentence.get_embedding()) == 0)
-
-
-@pytest.mark.slow
-def test_document_lstm_embeddings_using_first_representation():
-    sentence, glove, charlm = init_document_embeddings()
-
-    embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_states=128,
-                                                                bidirectional=False)
 
     embeddings.embed(sentence)
 
@@ -185,13 +163,9 @@ def test_document_mean_embeddings():
     assert (len(sentence.get_embedding()) == 0)
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.integration
 def test_document_pool_embeddings():
-    text = 'I love Berlin. Berlin is a great place to live.'
-    sentence: Sentence = Sentence(text)
-
-    glove: TokenEmbeddings = WordEmbeddings('en-glove')
-    charlm: TokenEmbeddings = CharLMEmbeddings('mix-backward')
+    sentence, glove, charlm = init_document_embeddings()
 
     for mode in ['mean', 'max', 'min']:
         embeddings: DocumentPoolEmbeddings = DocumentPoolEmbeddings([glove, charlm], mode=mode)
@@ -203,6 +177,16 @@ def test_document_pool_embeddings():
         sentence.clear_embeddings()
 
         assert (len(sentence.get_embedding()) == 0)
+
+
+def init_document_embeddings():
+    text = 'I love Berlin. Berlin is a great place to live.'
+    sentence: Sentence = Sentence(text)
+
+    glove: TokenEmbeddings = WordEmbeddings('en-glove')
+    charlm: TokenEmbeddings = CharLMEmbeddings('news-forward-fast')
+
+    return sentence, glove, charlm
 
 
 def load_and_apply_word_embeddings(emb_type: str):

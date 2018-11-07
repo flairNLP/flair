@@ -1,11 +1,12 @@
 import os
 import re
 from abc import abstractmethod
-from typing import List, Union, Dict, Tuple
+from typing import List, Union, Dict
 
 import gensim
 import numpy as np
 import torch
+from deprecated import deprecated
 
 from .nn import LockedDropout, WordDropout
 from .data import Dictionary, Token, Sentence
@@ -556,6 +557,7 @@ class CharLMEmbeddings(TokenEmbeddings):
 
 class DocumentMeanEmbeddings(DocumentEmbeddings):
 
+    @deprecated(version='0.3.1', reason="The functionality of this class is moved to 'DocumentPoolEmbeddings'")
     def __init__(self, token_embeddings: List[TokenEmbeddings]):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
