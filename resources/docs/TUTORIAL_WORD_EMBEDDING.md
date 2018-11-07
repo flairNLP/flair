@@ -47,25 +47,33 @@ for token in sentence:
 This prints out the tokens and their embeddings. GloVe embeddings are Pytorch vectors of dimensionality 100.
 
 You choose which pre-trained embeddings you load by passing the appropriate 
-id string to the constructor of the `WordEmbeddings` class. Currently, the following static embeddings
-are provided (more coming): 
+id string to the constructor of the `WordEmbeddings` class. Typically, you use
+the **two-letter language code** to init an embedding, so 'en' for English and
+'de' for German and so on. For English, we provide a few more options, so
+here you can choose between instantiating 'en-glove', 'en-extvec' and so on.
+
+The following embeddings are currently supported:
  
 | ID | Language | Embedding | 
 | ------------- | -------------  | ------------- |
 | 'en-glove' (or 'glove') | English | GloVe embeddings |
-| 'en-numberbatch' (or 'numberbatch') | English |[Numberbatch](https://github.com/commonsense/conceptnet-numberbatch) embeddings |
 | 'en-extvec' (or 'extvec') | English |Komnios embeddings |
 | 'en-crawl' (or 'crawl')  | English | FastText embeddings over Web crawls |
-| 'en-news' (or 'news')  |English | FastText embeddings over news and wikipedia data |
-| 'en-twitter' (or 'twitter')  | English | GloVe embeddings computed over twitter data |
-| 'de-fasttext' | German |German FastText embeddings |
-| 'de-numberbatch' | German | German Numberbatch embeddings |
-| 'sv-fasttext' | Swedish | Swedish FastText embeddings |
+| 'en' (or 'en-news' or 'news')  |English | FastText embeddings over news and wikipedia data |
+| 'de' | German |German FastText embeddings |
+| 'fr' | French | French FastText embeddings |
+| 'pl' | Polish | Polish FastText embeddings |
+| 'it' | Italian | Italian FastText embeddings |
+| 'es' | Spanish | Spanish FastText embeddings |
+| 'pt' | Portuguese | Portuguese FastText embeddings |
+| 'nl' | Dutch | Dutch FastText embeddings |
+| 'ar' | Arabic | Arabic FastText embeddings |
+| 'sv' | Swedish | Swedish FastText embeddings |
 
-So, if you want to load German FastText embeddings, instantiate the method as follows:
+So, if you want to load German FastText embeddings, instantiate as follows:
 
 ```python
-german_embedding = WordEmbeddings('de-fasttext')
+german_embedding = WordEmbeddings('de')
 ```
 
 We generally recommend the FastText embeddings, or GloVe if you want a smaller model.
