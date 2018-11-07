@@ -154,12 +154,12 @@ class SequenceTagger(torch.nn.Module):
 
     @classmethod
     def load_from_file(cls, model_file):
-        # suppress torch warnings: 
+        # suppress torch warnings:
         # https://docs.python.org/3/library/warnings.html#temporarily-suppressing-warnings
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
             state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
-        
+
         model = SequenceTagger(
             hidden_size=state['hidden_size'],
             embeddings=state['embeddings'],
@@ -423,31 +423,32 @@ class SequenceTagger(torch.nn.Module):
 
     def predict(self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32) -> List[Sentence]:
 
-        if type(sentences) is Sentence:
-            sentences = [sentences]
+        with torch.no_grad():
+            if type(sentences) is Sentence:
+                sentences = [sentences]
 
-        filtered_sentences = self._filter_empty_sentences(sentences)
+            filtered_sentences = self._filter_empty_sentences(sentences)
 
-        # remove previous embeddings
-        clear_embeddings(filtered_sentences)
+            # remove previous embeddings
+            clear_embeddings(filtered_sentences)
 
-        # make mini-batches
-        batches = [filtered_sentences[x:x + mini_batch_size] for x in
-                   range(0, len(filtered_sentences), mini_batch_size)]
+            # make mini-batches
+            batches = [filtered_sentences[x:x + mini_batch_size] for x in
+                       range(0, len(filtered_sentences), mini_batch_size)]
 
-        for batch in batches:
-            scores, predicted_ids = self._predict_scores_batch(batch)
-            all_tokens = []
-            for sentence in batch:
-                all_tokens.extend(sentence.tokens)
+            for batch in batches:
+                scores, predicted_ids = self._predict_scores_batch(batch)
+                all_tokens = []
+                for sentence in batch:
+                    all_tokens.extend(sentence.tokens)
 
-            for (token, score, predicted_id) in zip(all_tokens, scores, predicted_ids):
-                token: Token = token
-                # get the predicted tag
-                predicted_tag = self.tag_dictionary.get_item_for_index(predicted_id)
-                token.add_tag(self.tag_type, predicted_tag, score)
+                for (token, score, predicted_id) in zip(all_tokens, scores, predicted_ids):
+                    token: Token = token
+                    # get the predicted tag
+                    predicted_tag = self.tag_dictionary.get_item_for_index(predicted_id)
+                    token.add_tag(self.tag_type, predicted_tag, score)
 
-        return sentences
+            return sentences
 
     def _predict_scores_batch(self, sentences: List[Sentence]):
         feature, lengths, tags = self.forward(sentences)

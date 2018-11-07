@@ -93,7 +93,7 @@ class TextClassifier(nn.Module):
                 state = torch.load(model_file)
             else:
                 state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
-            
+
         model = TextClassifier(
             document_embeddings=state['document_embeddings'],
             label_dictionary=state['label_dictionary'],
@@ -111,23 +111,24 @@ class TextClassifier(nn.Module):
         :param mini_batch_size: mini batch size to use
         :return: the list of sentences containing the labels
         """
-        if type(sentences) is Sentence:
-            sentences = [sentences]
+        with torch.no_grad():
+            if type(sentences) is Sentence:
+                sentences = [sentences]
 
-        filtered_sentences = self._filter_empty_sentences(sentences)
+            filtered_sentences = self._filter_empty_sentences(sentences)
 
-        batches = [filtered_sentences[x:x + mini_batch_size] for x in range(0, len(filtered_sentences), mini_batch_size)]
+            batches = [filtered_sentences[x:x + mini_batch_size] for x in range(0, len(filtered_sentences), mini_batch_size)]
 
-        for batch in batches:
-            scores = self.forward(batch)
-            predicted_labels = self.obtain_labels(scores)
+            for batch in batches:
+                scores = self.forward(batch)
+                predicted_labels = self.obtain_labels(scores)
 
-            for (sentence, labels) in zip(batch, predicted_labels):
-                sentence.labels = labels
+                for (sentence, labels) in zip(batch, predicted_labels):
+                    sentence.labels = labels
 
-            clear_embeddings(batch)
+                clear_embeddings(batch)
 
-        return sentences
+            return sentences
 
     @staticmethod
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
