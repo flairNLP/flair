@@ -1,4 +1,5 @@
 import pytest
+import os
 
 from flair.embeddings import WordEmbeddings, TokenEmbeddings, CharLMEmbeddings, StackedEmbeddings, \
     DocumentLSTMEmbeddings, DocumentMeanEmbeddings, DocumentPoolEmbeddings
