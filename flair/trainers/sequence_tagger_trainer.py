@@ -145,12 +145,9 @@ class SequenceTaggerTrainer:
                 # logging info
                 log.info("EPOCH {0}: lr {1:.4f} - bad epochs {2}".format(epoch + 1, learning_rate, bad_epochs))
                 if not train_with_dev:
-                    log.info("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
-                        'DEV', dev_metric.f_score(), dev_metric.accuracy(), dev_metric._tp, dev_metric._fp,
-                        dev_metric._fn, dev_metric._tn))
-                log.info("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
-                    'TEST', test_metric.f_score(), test_metric.accuracy(), test_metric._tp, test_metric._fp,
-                    test_metric._fn, test_metric._tn))
+                    self.log_metric(dev_metric, 'DEV')
+
+                self.log_metric(test_metric, 'TEST')
 
                 with open(loss_txt, 'a') as f:
                     dev_metric_str = dev_metric.to_tsv() if dev_metric is not None else Metric.to_empty_tsv()
@@ -215,21 +212,27 @@ class SequenceTaggerTrainer:
                 lines.append('\n')
 
                 # make list of gold tags
-                gold_tags = [str(tag) for tag in sentence.get_spans(self.model.tag_type)]
+                gold_tags = [(tag.tag, str(tag)) for tag in sentence.get_spans(self.model.tag_type)]
 
                 # make list of predicted tags
-                predicted_tags = [str(tag) for tag in sentence.get_spans('predicted')]
+                predicted_tags = [(tag.tag, str(tag)) for tag in sentence.get_spans('predicted')]
 
                 # check for true positives, false positives and false negatives
-                for prediction in predicted_tags:
-                    if prediction in gold_tags:
+                for tag, prediction in predicted_tags:
+                    if (tag, prediction) in gold_tags:
                         metric.tp()
+                        metric.tp(tag)
                     else:
                         metric.fp()
+                        metric.fp(tag)
 
-                for gold in gold_tags:
-                    if gold not in predicted_tags:
+                for tag, gold in gold_tags:
+                    if (tag, gold) not in predicted_tags:
                         metric.fn()
+                        metric.fn(tag)
+                    else:
+                        metric.tn()
+                        metric.tn(tag)
 
             if not embeddings_in_memory:
                 self.clear_embeddings_in_batch(batch)
@@ -246,6 +249,16 @@ class SequenceTaggerTrainer:
         if evaluation_method == 'F1':
             score = metric.f_score()
             return score, metric
+
+    def log_metric(self, metric: Metric, dataset_name: str):
+        log.info("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
+            dataset_name, metric.f_score(), metric.accuracy(), metric.get_tp(), metric.get_fp(),
+            metric.get_fn(), metric.get_tn()))
+        for cls in metric.get_classes():
+            log.info("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
+                cls, metric.f_score(cls), metric.accuracy(cls), metric.get_tp(cls),
+                metric.get_fp(cls), metric.get_fn(cls), metric.get_tn(cls)))
+
 
     def clear_embeddings_in_batch(self, batch: List[Sentence]):
         for sentence in batch:

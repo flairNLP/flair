@@ -237,9 +237,6 @@ def test_label_set_confidence():
 
     assert (0.2 == label.score)
 
-    # with pytest.raises(ValueError):
-    #     label.name = ''
-
 
 def test_tagged_corpus_make_label_dictionary():
     sentence_1 = Sentence('sentence 1', labels=[Label('class_1')])
