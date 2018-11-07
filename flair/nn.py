@@ -1,5 +1,24 @@
 import torch.nn
 
+from abc import abstractmethod
+
+from typing import Union, List
+
+from flair.data import Sentence
+
+
+class Model(torch.nn.Module):
+    """Abstract base class for all embeddings. Every new type of embedding must implement these methods."""
+
+    @abstractmethod
+    def forward_and_loss(self) -> int:
+        """Returns the length of the embedding vector."""
+        pass
+
+    @abstractmethod
+    def predict(self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32) -> List[Sentence]:
+        pass
+
 
 class LockedDropout(torch.nn.Module):
     """
