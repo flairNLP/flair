@@ -62,6 +62,8 @@ class SequenceTaggerTrainer:
 
             previous_learning_rate = learning_rate
 
+            test_metric = Metric('')
+
             for epoch in range(0, max_epochs):
                 log.info('-' * 100)
 
@@ -159,6 +161,9 @@ class SequenceTaggerTrainer:
                 if train_with_dev and dev_score == scheduler.best:
                     self.model.save(base_path + "/best-model.pt")
 
+            log.info('-' * 100)
+            self.log_metric(test_metric, 'TEST', True)
+
             # if we do not use dev data for model selection, save final model
             if save_final_model:
                 self.model.save(base_path + "/final-model.pt")
@@ -251,14 +256,15 @@ class SequenceTaggerTrainer:
                 score = metric.f_score()
                 return score, metric
 
-    def log_metric(self, metric: Metric, dataset_name: str):
+    def log_metric(self, metric: Metric, dataset_name: str, log_class_metrics=False):
         log.info("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
             dataset_name, metric.f_score(), metric.accuracy(), metric.get_tp(), metric.get_fp(),
             metric.get_fn(), metric.get_tn()))
-        for cls in metric.get_classes():
-            log.info("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
-                cls, metric.f_score(cls), metric.accuracy(cls), metric.get_tp(cls),
-                metric.get_fp(cls), metric.get_fn(cls), metric.get_tn(cls)))
+        if log_class_metrics:
+            for cls in metric.get_classes():
+                log.info("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
+                    cls, metric.f_score(cls), metric.accuracy(cls), metric.get_tp(cls),
+                    metric.get_fp(cls), metric.get_fn(cls), metric.get_tn(cls)))
 
 
     def clear_embeddings_in_batch(self, batch: List[Sentence]):
