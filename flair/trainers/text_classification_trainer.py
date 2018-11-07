@@ -9,10 +9,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from flair.data import Sentence, TaggedCorpus, Dictionary
 from flair.models.text_classification_model import TextClassifier
-from flair.training_utils import convert_labels_to_one_hot, calculate_micro_avg_metric, init_output_file, \
-    clear_embeddings, calculate_class_metrics, WeightExtractor, Metric
-
-MICRO_AVG_METRIC = 'MICRO_AVG'
+from flair.training_utils import init_output_file, clear_embeddings, WeightExtractor, Metric
 
 log = logging.getLogger(__name__)
 
@@ -186,12 +183,11 @@ class TextClassifierTrainer:
             if os.path.exists(base_path + "/best-model.pt"):
                 self.model = TextClassifier.load_from_file(base_path + "/best-model.pt")
 
-            test_metrics, test_loss = self.evaluate(
+            test_metric, test_loss = self.evaluate(
                 self.corpus.test, mini_batch_size=mini_batch_size, eval_class_metrics=True,
-                embeddings_in_memory=embeddings_in_memory)
+                embeddings_in_memory=embeddings_in_memory, metric_name='TEST')
 
-            for metric in test_metrics.values():
-                metric.print()
+            test_metric.print()
             self.model.train()
 
             log.info('-' * 100)
@@ -206,25 +202,26 @@ class TextClassifierTrainer:
             log.info('Done.')
 
     def _calculate_evaluation_results_for(self, dataset_name, dataset, embeddings_in_memory, mini_batch_size):
-        metrics, loss = self.evaluate(dataset, mini_batch_size=mini_batch_size,
-                                      embeddings_in_memory=embeddings_in_memory)
+        metric, loss = self.evaluate(dataset, mini_batch_size=mini_batch_size,
+                                     embeddings_in_memory=embeddings_in_memory, metric_name=dataset_name)
 
-        f_score = metrics[MICRO_AVG_METRIC].f_score()
-        acc = metrics[MICRO_AVG_METRIC].accuracy()
+        f_score = metric.f_score()
+        acc = metric.accuracy()
 
         log.info("{0:<5}: loss {1:.8f} - f-score {2:.4f} - acc {3:.4f}".format(
             dataset_name, loss, f_score, acc))
 
-        return metrics[MICRO_AVG_METRIC], loss
+        return metric, loss
 
     def evaluate(self, sentences: List[Sentence], eval_class_metrics: bool = False, mini_batch_size: int = 32,
-                 embeddings_in_memory: bool = False) -> (dict, float):
+                 embeddings_in_memory: bool = False, metric_name: str = 'MICRO_AVG') -> (dict, float):
         """
         Evaluates the model with the given list of sentences.
         :param sentences: the list of sentences
         :param eval_class_metrics: boolean indicating whether to print class metrics or not
         :param mini_batch_size: the mini batch size to use
         :param embeddings_in_memory: boolean value indicating, if embeddings should be kept in memory or not
+        :param metric_name: the name of the metrics to compute
         :return: list of metrics, and the loss
         """
         with torch.no_grad():
@@ -233,8 +230,7 @@ class TextClassifierTrainer:
             batches = [sentences[x:x + mini_batch_size] for x in
                        range(0, len(sentences), mini_batch_size)]
 
-            y_pred = []
-            y_true = []
+            metric = Metric(metric_name)
 
             for batch in batches:
                 scores = self.model.forward(batch)
@@ -245,18 +241,24 @@ class TextClassifierTrainer:
 
                 eval_loss += loss
 
-                y_pred.extend(
-                    convert_labels_to_one_hot([[label.value for label in sent_labels] for sent_labels in labels],
-                                              self.label_dict))
-                y_true.extend(
-                    convert_labels_to_one_hot([sentence.get_label_names() for sentence in batch], self.label_dict))
+                for predictions, true_values in zip([[label.value for label in sent_labels] for sent_labels in labels],
+                                                    [sentence.get_label_names() for sentence in batch]):
+                    for prediction in predictions:
+                        if prediction in true_values:
+                            metric.tp()
+                            if eval_class_metrics: metric.tp(prediction)
+                        else:
+                            metric.fp()
+                            if eval_class_metrics: metric.fp(prediction)
 
-            metrics = [calculate_micro_avg_metric(y_true, y_pred, self.label_dict)]
-            if eval_class_metrics:
-                metrics.extend(calculate_class_metrics(y_true, y_pred, self.label_dict))
+                    for true_value in true_values:
+                        if true_value not in predictions:
+                            metric.fn()
+                            if eval_class_metrics: metric.fn(true_value)
+                        else:
+                            metric.tn()
+                            if eval_class_metrics: metric.tn(true_value)
 
             eval_loss /= len(sentences)
 
-            metrics_dict = {metric.name: metric for metric in metrics}
-
-            return metrics_dict, eval_loss
+            return metric, eval_loss
