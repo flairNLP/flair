@@ -156,7 +156,7 @@ class SequenceTaggerTrainer:
                         test_metric.to_tsv()))
 
                 # if we use dev data, remember best model based on dev evaluation score
-                if not train_with_dev and dev_score == scheduler.best:
+                if train_with_dev and dev_score == scheduler.best:
                     self.model.save(base_path + "/best-model.pt")
 
             # if we do not use dev data for model selection, save final model

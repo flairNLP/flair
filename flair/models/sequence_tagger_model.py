@@ -1,3 +1,4 @@
+
 import warnings
 import logging
 
@@ -15,7 +16,6 @@ from typing import List, Tuple, Union
 from flair.training_utils import clear_embeddings
 
 log = logging.getLogger(__name__)
-
 
 START_TAG: str = '<START>'
 STOP_TAG: str = '<STOP>'
@@ -148,7 +148,9 @@ class SequenceTagger(torch.nn.Module):
             'use_rnn': self.use_rnn,
             'rnn_layers': self.rnn_layers,
         }
+
         torch.save(model_state, model_file, pickle_protocol=4)
+
 
     @classmethod
     def load_from_file(cls, model_file):
@@ -189,13 +191,13 @@ class SequenceTagger(torch.nn.Module):
         sentence_tensor = torch.zeros([len(sentences),
                                        longest_token_sequence_in_batch,
                                        self.embeddings.embedding_length],
-                                       dtype=torch.float)
+                                      dtype=torch.float)
 
         for s_id, sentence in enumerate(sentences):
 
             # fill values with word embeddings
             sentence_tensor[s_id][:len(sentence)] = torch.cat([token.get_embedding().unsqueeze(0)
-                                               for token in sentence], 0)
+                                                               for token in sentence], 0)
 
             # get the tags in this sentence
             tag_idx: List[int] = [self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value)
@@ -430,7 +432,8 @@ class SequenceTagger(torch.nn.Module):
         clear_embeddings(filtered_sentences)
 
         # make mini-batches
-        batches = [filtered_sentences[x:x + mini_batch_size] for x in range(0, len(filtered_sentences), mini_batch_size)]
+        batches = [filtered_sentences[x:x + mini_batch_size] for x in
+                   range(0, len(filtered_sentences), mini_batch_size)]
 
         for batch in batches:
             scores, predicted_ids = self._predict_scores_batch(batch)
@@ -500,13 +503,13 @@ class SequenceTagger(torch.nn.Module):
         if model.lower() == 'ner-ontonotes':
             base_path = '/'.join([aws_resource_path,
                                   'NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward%2Bnews-backward--v0.2',
-                                  'en-ner-ontonotes-v0.2.pt'])
+                                  'en-ner-ontonotes-v0.3.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'ner-ontonotes-fast':
             base_path = '/'.join([aws_resource_path,
                                   'NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
-                                  'en-ner-ontonotes-fast-v0.2.pt'])
+                                  'en-ner-ontonotes-fast-v0.3.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'pos':
@@ -554,13 +557,13 @@ class SequenceTagger(torch.nn.Module):
         if model.lower() == 'de-ner':
             base_path = '/'.join([aws_resource_path,
                                   'NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2',
-                                  'de-ner-conll03-v0.2.pt'])
+                                  'de-ner-conll03-v0.3.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'de-ner-germeval':
             base_path = '/'.join([aws_resource_path,
                                   'NER-germeval--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2',
-                                  'de-ner-germeval-v0.2.pt'])
+                                  'de-ner-germeval-v0.3.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model_file is not None:
