@@ -1,7 +1,8 @@
 import pytest
+import os
 
 from flair.embeddings import WordEmbeddings, TokenEmbeddings, CharLMEmbeddings, StackedEmbeddings, \
-    DocumentLSTMEmbeddings, DocumentMeanEmbeddings
+    DocumentLSTMEmbeddings, DocumentMeanEmbeddings, DocumentPoolEmbeddings
 
 from flair.data import Sentence
 
@@ -184,14 +185,24 @@ def test_document_mean_embeddings():
     assert (len(sentence.get_embedding()) == 0)
 
 
-def init_document_embeddings():
+@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+def test_document_pool_embeddings():
     text = 'I love Berlin. Berlin is a great place to live.'
     sentence: Sentence = Sentence(text)
 
     glove: TokenEmbeddings = WordEmbeddings('en-glove')
     charlm: TokenEmbeddings = CharLMEmbeddings('mix-backward')
 
-    return sentence, glove, charlm
+    for mode in ['mean', 'max', 'min']:
+        embeddings: DocumentPoolEmbeddings = DocumentPoolEmbeddings([glove, charlm], mode=mode)
+
+        embeddings.embed(sentence)
+
+        assert (len(sentence.get_embedding()) != 0)
+
+        sentence.clear_embeddings()
+
+        assert (len(sentence.get_embedding()) == 0)
 
 
 def load_and_apply_word_embeddings(emb_type: str):
