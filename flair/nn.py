@@ -11,7 +11,7 @@ class Model(torch.nn.Module):
     """Abstract base class for all models. Every new type of model must implement these methods."""
 
     @abstractmethod
-    def forward_and_loss(self, sentences: Union[List[Sentence], Sentence]) -> float:
+    def forward_and_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
         """Performs a forward pass and returns the loss."""
         pass
 
@@ -22,7 +22,7 @@ class Model(torch.nn.Module):
         pass
 
     @abstractmethod
-    def predict_eval(self, sentences: Union[List[Sentence], Sentence]) -> (List[List[Label]], float):
+    def predict_eval(self, sentences: Union[List[Sentence], Sentence]) -> (List[List[Label]], torch.tensor):
         """Predicts the labels/tags for the given list of sentences. Returns the list of labels plus the loss."""
         pass
 

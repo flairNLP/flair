@@ -167,6 +167,9 @@ class Token:
         self._embeddings: Dict = {}
         self.tags: Dict[str, Label] = {}
 
+    def add_tag_label(self, tag_type: str, tag: Label):
+        self.tags[tag_type] = tag
+
     def add_tag(self, tag_type: str, tag_value: str, confidence=1.0):
         tag = Label(tag_value, confidence)
         self.tags[tag_type] = tag

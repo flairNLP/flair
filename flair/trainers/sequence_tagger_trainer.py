@@ -102,7 +102,7 @@ class SequenceTaggerTrainer:
                     optimizer.zero_grad()
 
                     # Step 4. Compute the loss, gradients, and update the parameters by calling optimizer.step()
-                    loss = self.model.forward_return_loss(batch)
+                    loss = self.model.forward_and_loss(batch)
 
                     current_loss += loss.item()
                     seen_sentences += len(batch)
@@ -191,20 +191,14 @@ class SequenceTaggerTrainer:
             for batch in batches:
                 batch_no += 1
 
-                scores, tag_seq = self.model._predict_scores_batch(batch)
-                predicted_ids = tag_seq
-                all_tokens = []
-                for sentence in batch:
-                    all_tokens.extend(sentence.tokens)
+                tags, loss = self.model.predict_eval(batch)
 
-                for (token, score, predicted_id) in zip(all_tokens, scores, predicted_ids):
-                    token: Token = token
-                    # get the predicted tag
-                    predicted_value = self.model.tag_dictionary.get_item_for_index(predicted_id)
-                    token.add_tag('predicted', predicted_value, score)
+                for (sentence, sent_tags) in zip(batch, tags):
+                    for (token, tag) in zip(sentence.tokens, sent_tags):
+                        token: Token = token
+                        token.add_tag_label('predicted', tag)
 
                 for sentence in batch:
-
                     # add predicted tags
                     for token in sentence.tokens:
                         predicted_tag: Label = token.get_tag('predicted')
@@ -265,7 +259,6 @@ class SequenceTaggerTrainer:
                 log.info("{0:<4}: f-score {1:.4f} - acc {2:.4f} - tp {3} - fp {4} - fn {5} - tn {6}".format(
                     cls, metric.f_score(cls), metric.accuracy(cls), metric.get_tp(cls),
                     metric.get_fp(cls), metric.get_fn(cls), metric.get_tn(cls)))
-
 
     def clear_embeddings_in_batch(self, batch: List[Sentence]):
         for sentence in batch:
