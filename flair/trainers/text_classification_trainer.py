@@ -113,8 +113,7 @@ class TextClassifierTrainer:
                 modulo = max(1, int(len(batches) / 10))
 
                 for batch_no, batch in enumerate(batches):
-                    scores = self.model.forward(batch)
-                    loss = self.model.calculate_loss(scores, batch)
+                    loss = self.model.forward_and_loss(batch)
 
                     optimizer.zero_grad()
                     loss.backward()
@@ -235,9 +234,7 @@ class TextClassifierTrainer:
             metric = Metric(metric_name)
 
             for batch in batches:
-                scores = self.model.forward(batch)
-                labels = self.model.obtain_labels(scores)
-                loss = self.model.calculate_loss(scores, batch)
+                labels, loss = self.model.predict_eval(sentences)
 
                 clear_embeddings(batch, also_clear_word_embeddings=not embeddings_in_memory)
 
