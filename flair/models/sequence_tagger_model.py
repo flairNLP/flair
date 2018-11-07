@@ -8,7 +8,7 @@ import flair.nn
 import torch
 
 import flair.embeddings
-from flair.data import Dictionary, Sentence, Token
+from flair.data import Dictionary, Sentence, Token, Label
 from flair.file_utils import cached_path
 
 from typing import List, Tuple, Union
@@ -212,8 +212,42 @@ class SequenceTagger(flair.nn.Model):
             model = model.cuda()
         return model
 
-    def forward(self, sentences: List[Sentence]):
+    def forward_and_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
+        features, lengths, tags = self.forward(sentences)
+        return self._calculate_loss(features, lengths, tags)
 
+    def predict(self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32) -> List[Sentence]:
+        with torch.no_grad():
+            if type(sentences) is Sentence:
+                sentences = [sentences]
+
+            filtered_sentences = self._filter_empty_sentences(sentences)
+
+            # remove previous embeddings
+            clear_embeddings(filtered_sentences, also_clear_word_embeddings=True)
+
+            # make mini-batches
+            batches = [filtered_sentences[x:x + mini_batch_size] for x in
+                       range(0, len(filtered_sentences), mini_batch_size)]
+
+            for batch in batches:
+                tags, _ = self.predict_eval(batch)
+
+                for (sentence, sent_tags) in zip(batch, tags):
+                    for (token, tag) in zip(sentence.tokens, sent_tags):
+                        token: Token = token
+                        token.add_tag_label(self.tag_type, tag)
+
+            return sentences
+
+    def predict_eval(self, sentences: Union[List[Sentence], Sentence]) -> (List[List[Label]], torch.tensor):
+        with torch.no_grad():
+            feature, lengths, tags = self.forward(sentences)
+            loss = self._calculate_loss(feature, lengths, tags)
+            tags = self._obtain_labels(feature, lengths)
+            return tags, loss
+
+    def forward(self, sentences: List[Sentence]):
         self.zero_grad()
 
         self.embeddings.embed(sentences)
@@ -335,7 +369,58 @@ class SequenceTagger(flair.nn.Model):
 
         return score
 
-    def viterbi_decode(self, feats):
+    def _calculate_loss(self, features, lengths, tags) -> float:
+        if self.use_crf:
+            # pad tags if using batch-CRF decoder
+            if torch.cuda.is_available():
+                tags, _ = pad_tensors(tags, torch.cuda.LongTensor)
+            else:
+                tags, _ = pad_tensors(tags, torch.LongTensor)
+
+            forward_score = self._forward_alg(features, lengths)
+            gold_score = self._score_sentence(features, tags, lengths)
+
+            score = forward_score - gold_score
+
+            return score.sum()
+
+        else:
+            score = 0
+            for sentence_feats, sentence_tags, sentence_length in zip(features, tags, lengths):
+                sentence_feats = sentence_feats[:sentence_length]
+
+                if torch.cuda.is_available():
+                    tag_tensor = autograd.Variable(torch.cuda.LongTensor(sentence_tags))
+                else:
+                    tag_tensor = autograd.Variable(torch.LongTensor(sentence_tags))
+                score += torch.nn.functional.cross_entropy(sentence_feats, tag_tensor)
+
+            return score
+
+    def _obtain_labels(self, feature, lengths) -> List[List[Label]]:
+        tags = []
+
+        for feats, length in zip(feature, lengths):
+            if self.use_crf:
+                confidences, tag_seq = self._viterbi_decode(feats[:length])
+            else:
+                import torch.nn.functional as F
+
+                tag_seq = []
+                confidences = []
+                for backscore in feats[:length]:
+                    softmax = F.softmax(backscore, dim=0)
+                    _, idx = torch.max(backscore, 0)
+                    prediction = idx.item()
+                    tag_seq.append(prediction)
+                    confidences.append(softmax[prediction].item())
+
+            tags.append([Label(self.tag_dictionary.get_item_for_index(tag), conf)
+                         for conf, tag in zip(confidences, tag_seq)])
+
+        return tags
+
+    def _viterbi_decode(self, feats):
         backpointers = []
         backscores = []
 
@@ -381,37 +466,6 @@ class SequenceTagger(flair.nn.Model):
         assert start == self.tag_dictionary.get_idx_for_item(START_TAG)
         best_path.reverse()
         return best_scores, best_path
-
-    def forward_return_loss(self, sentences: List[Sentence]):
-        features, lengths, tags = self.forward(sentences)
-
-        if self.use_crf:
-
-            # pad tags if using batch-CRF decoder
-            if torch.cuda.is_available():
-                tags, _ = pad_tensors(tags, torch.cuda.LongTensor)
-            else:
-                tags, _ = pad_tensors(tags, torch.LongTensor)
-
-            forward_score = self._forward_alg(features, lengths)
-            gold_score = self._score_sentence(features, tags, lengths)
-
-            score = forward_score - gold_score
-
-            return score.sum()
-
-        else:
-            score = 0
-            for sentence_feats, sentence_tags, sentence_length in zip(features, tags, lengths):
-                sentence_feats = sentence_feats[:sentence_length]
-
-                if torch.cuda.is_available():
-                    tag_tensor = autograd.Variable(torch.cuda.LongTensor(sentence_tags))
-                else:
-                    tag_tensor = autograd.Variable(torch.LongTensor(sentence_tags))
-                score += torch.nn.functional.cross_entropy(sentence_feats, tag_tensor)
-
-            return score
 
     def _forward_alg(self, feats, lens_):
 
@@ -464,62 +518,6 @@ class SequenceTagger(flair.nn.Model):
         alpha = log_sum_exp_batch(terminal_var)
 
         return alpha
-
-    def predict(self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32) -> List[Sentence]:
-
-        with torch.no_grad():
-            if type(sentences) is Sentence:
-                sentences = [sentences]
-
-            filtered_sentences = self._filter_empty_sentences(sentences)
-
-            # remove previous embeddings
-            clear_embeddings(filtered_sentences, also_clear_word_embeddings=True)
-
-            # make mini-batches
-            batches = [filtered_sentences[x:x + mini_batch_size] for x in
-                       range(0, len(filtered_sentences), mini_batch_size)]
-
-            for batch in batches:
-                scores, predicted_ids = self._predict_scores_batch(batch)
-                all_tokens = []
-                for sentence in batch:
-                    all_tokens.extend(sentence.tokens)
-
-                for (token, score, predicted_id) in zip(all_tokens, scores, predicted_ids):
-                    token: Token = token
-                    # get the predicted tag
-                    predicted_tag = self.tag_dictionary.get_item_for_index(predicted_id)
-                    token.add_tag(self.tag_type, predicted_tag, score)
-
-            return sentences
-
-    def _predict_scores_batch(self, sentences: List[Sentence]):
-        feature, lengths, tags = self.forward(sentences)
-
-        all_confidences = []
-        all_tags_seqs = []
-
-        for feats, length in zip(feature, lengths):
-
-            if self.use_crf:
-                confidences, tag_seq = self.viterbi_decode(feats[:length])
-            else:
-                import torch.nn.functional as F
-
-                tag_seq = []
-                confidences = []
-                for backscore in feats[:length]:
-                    softmax = F.softmax(backscore, dim=0)
-                    _, idx = torch.max(backscore, 0)
-                    prediction = idx.item()
-                    tag_seq.append(prediction)
-                    confidences.append(softmax[prediction].item())
-
-            all_tags_seqs.extend(tag_seq)
-            all_confidences.extend(confidences)
-
-        return all_confidences, all_tags_seqs
 
     @staticmethod
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
