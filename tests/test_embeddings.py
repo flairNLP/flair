@@ -185,13 +185,9 @@ def test_document_mean_embeddings():
     assert (len(sentence.get_embedding()) == 0)
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", reason="Skipping this test on Travis CI.")
+@pytest.mark.slow
 def test_document_pool_embeddings():
-    text = 'I love Berlin. Berlin is a great place to live.'
-    sentence: Sentence = Sentence(text)
-
-    glove: TokenEmbeddings = WordEmbeddings('en-glove')
-    charlm: TokenEmbeddings = CharLMEmbeddings('mix-backward')
+    sentence, glove, charlm = init_document_embeddings()
 
     for mode in ['mean', 'max', 'min']:
         embeddings: DocumentPoolEmbeddings = DocumentPoolEmbeddings([glove, charlm], mode=mode)
@@ -203,6 +199,16 @@ def test_document_pool_embeddings():
         sentence.clear_embeddings()
 
         assert (len(sentence.get_embedding()) == 0)
+
+
+def init_document_embeddings():
+    text = 'I love Berlin. Berlin is a great place to live.'
+    sentence: Sentence = Sentence(text)
+
+    glove: TokenEmbeddings = WordEmbeddings('en-glove')
+    charlm: TokenEmbeddings = CharLMEmbeddings('mix-backward')
+
+    return sentence, glove, charlm
 
 
 def load_and_apply_word_embeddings(emb_type: str):

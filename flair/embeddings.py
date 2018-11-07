@@ -1,11 +1,12 @@
 import os
 import re
 from abc import abstractmethod
-from typing import List, Union, Dict, Tuple
+from typing import List, Union, Dict
 
 import gensim
 import numpy as np
 import torch
+from deprecated import deprecated
 
 from .nn import LockedDropout, WordDropout
 from .data import Dictionary, Token, Sentence
@@ -554,6 +555,7 @@ class CharLMEmbeddings(TokenEmbeddings):
         return sentences
 
 
+@deprecated(reason='Functionality was moved to DocumentPoolEmbeddings', replacement='DocumentPoolEmbeddings', gone_in='release-0.4')
 class DocumentMeanEmbeddings(DocumentEmbeddings):
 
     def __init__(self, token_embeddings: List[TokenEmbeddings]):
