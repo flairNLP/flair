@@ -70,8 +70,9 @@ class SequenceTagger(torch.nn.Module):
                  use_crf: bool = True,
                  use_rnn: bool = True,
                  rnn_layers: int = 1,
-                 use_word_dropout: bool = False,
-                 use_locked_dropout: bool = False,
+                 use_dropout: float = 0.5,
+                 use_word_dropout: float = 0.0,
+                 use_locked_dropout: float = 0.0,
                  ):
 
         super(SequenceTagger, self).__init__()
@@ -95,12 +96,18 @@ class SequenceTagger(torch.nn.Module):
         self.hidden_word = None
 
         # dropouts
-        self.use_locked_dropout: bool = use_locked_dropout
-        self.dropout: torch.nn.Module = flair.nn.LockedDropout(0.5) if use_locked_dropout else torch.nn.Dropout(0.5)
+        self.use_dropout: float = use_dropout
+        self.use_word_dropout: float = use_word_dropout
+        self.use_locked_dropout: float = use_locked_dropout
 
-        self.use_word_dropout: bool = use_word_dropout
-        if self.use_word_dropout:
-            self.word_dropout = flair.nn.WordDropout(0.05)
+        if use_dropout > 0.0:
+            self.dropout = torch.nn.Dropout(use_dropout)
+
+        if use_word_dropout > 0.0:
+            self.word_dropout = flair.nn.WordDropout(use_word_dropout)
+
+        if use_locked_dropout > 0.0:
+            self.locked_dropout = flair.nn.LockedDropout(use_locked_dropout)
 
         rnn_input_dim: int = self.embeddings.embedding_length
 
@@ -222,11 +229,12 @@ class SequenceTagger(torch.nn.Module):
         # --------------------------------------------------------------------
         # FF PART
         # --------------------------------------------------------------------
-        sentence_tensor = self.dropout(sentence_tensor)
-
-        # use word dropout if set
-        if self.use_word_dropout:
+        if self.use_dropout > 0.0:
+            sentence_tensor = self.dropout(sentence_tensor)
+        if self.use_word_dropout > 0.0:
             sentence_tensor = self.word_dropout(sentence_tensor)
+        if self.use_locked_dropout > 0.0:
+            sentence_tensor = self.locked_dropout(sentence_tensor)
 
         if self.relearn_embeddings:
             sentence_tensor = self.embedding2nn(sentence_tensor)
@@ -238,7 +246,12 @@ class SequenceTagger(torch.nn.Module):
 
             sentence_tensor, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(rnn_output)
 
-            sentence_tensor = self.dropout(sentence_tensor)
+            if self.use_dropout > 0.0:
+                sentence_tensor = self.dropout(sentence_tensor)
+            if self.use_word_dropout > 0.0:
+                sentence_tensor = self.word_dropout(sentence_tensor)
+            if self.use_locked_dropout > 0.0:
+                sentence_tensor = self.locked_dropout(sentence_tensor)
 
         features = self.linear(sentence_tensor)
 
