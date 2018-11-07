@@ -2,7 +2,6 @@
 import warnings
 import logging
 
-import sys
 import torch.autograd as autograd
 import torch.nn
 import flair.nn
