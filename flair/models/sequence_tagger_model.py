@@ -195,7 +195,7 @@ class SequenceTagger(flair.nn.Model):
         return model
 
     def evaluation_metric(self) -> flair.nn.EvaluationMetric:
-        if self.model.tag_type in ['pos', 'upos']:
+        if self.tag_type in ['pos', 'upos']:
             return flair.nn.EvaluationMetric.ACCURACY
         return flair.nn.EvaluationMetric.F1_SCORE
 
@@ -225,7 +225,7 @@ class SequenceTagger(flair.nn.Model):
                        range(0, len(filtered_sentences), mini_batch_size)]
 
             for batch in batches:
-                tags, _ = self.predict_eval(batch)
+                tags, _ = self.forward_labels_and_loss(batch)
 
                 for (sentence, sent_tags) in zip(batch, tags):
                     for (token, tag) in zip(sentence.tokens, sent_tags):
