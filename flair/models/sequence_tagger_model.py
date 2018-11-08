@@ -70,9 +70,9 @@ class SequenceTagger(torch.nn.Module):
                  use_crf: bool = True,
                  use_rnn: bool = True,
                  rnn_layers: int = 1,
-                 use_dropout: float = 0.5,
-                 use_word_dropout: float = 0.0,
-                 use_locked_dropout: float = 0.0,
+                 use_dropout: float = 0.0,
+                 use_word_dropout: float = 0.05,
+                 use_locked_dropout: float = 0.5,
                  ):
 
         super(SequenceTagger, self).__init__()
@@ -248,8 +248,9 @@ class SequenceTagger(torch.nn.Module):
 
             if self.use_dropout > 0.0:
                 sentence_tensor = self.dropout(sentence_tensor)
-            if self.use_word_dropout > 0.0:
-                sentence_tensor = self.word_dropout(sentence_tensor)
+            # word dropout only before LSTM - TODO: more experimentation needed
+            # if self.use_word_dropout > 0.0:
+            #     sentence_tensor = self.word_dropout(sentence_tensor)
             if self.use_locked_dropout > 0.0:
                 sentence_tensor = self.locked_dropout(sentence_tensor)
 
