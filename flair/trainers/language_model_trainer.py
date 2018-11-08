@@ -299,6 +299,19 @@ class LanguageModelTrainer:
             log.info('-' * 89)
             log.info('Exiting from training early')
 
+        ###############################################################################
+        # final testing
+        ###############################################################################
+        test_data = self._batchify(self.corpus.test, mini_batch_size)
+        test_loss = self.evaluate(test_data, mini_batch_size, sequence_length)
+
+        summary = 'TEST: valid loss {:5.2f} | valid ppl {:8.2f}'.format(test_loss, math.exp(test_loss))
+        with open(loss_txt, "a") as myfile:
+            myfile.write('%s\n' % summary)
+
+        log.info(summary)
+        log.info('-' * 89)
+
     def evaluate(self, data_source, eval_batch_size, sequence_length):
         # Turn on evaluation mode which disables dropout.
         self.model.eval()
