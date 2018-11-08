@@ -105,11 +105,14 @@ class TextClassifier(flair.nn.Model):
         model.eval()
         return model
 
-    def forward_and_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
+    def evaluation_metric(self) -> flair.nn.EvaluationMetric:
+        return flair.nn.EvaluationMetric.F1_SCORE
+
+    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
         scores = self._forward(sentences)
         return self._calculate_loss(scores, sentences)
 
-    def predict_eval(self, sentences: Union[Sentence, List[Sentence]]) -> (List[List[Label]], torch.tensor):
+    def forward_labels_and_loss(self, sentences: Union[Sentence, List[Sentence]]) -> (List[List[Label]], torch.tensor):
         scores = self._forward(sentences)
         labels = self._obtain_labels(scores)
         loss = self._calculate_loss(scores, sentences)

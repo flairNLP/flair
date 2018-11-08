@@ -1,3 +1,5 @@
+from enum import Enum
+
 import torch.nn
 
 from abc import abstractmethod
@@ -7,12 +9,22 @@ from typing import Union, List
 from flair.data import Sentence, Label
 
 
+class EvaluationMetric(Enum):
+    ACCURACY = 'accuracy'
+    F1_SCORE = 'f1-score'
+
+
 class Model(torch.nn.Module):
     """Abstract base class for all models. Every new type of model must implement these methods."""
 
     @abstractmethod
-    def forward_and_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
+    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
         """Performs a forward pass and returns the loss."""
+        pass
+
+    @abstractmethod
+    def forward_labels_and_loss(self, sentences: Union[List[Sentence], Sentence]) -> (List[List[Label]], torch.tensor):
+        """Predicts the labels/tags for the given list of sentences. Returns the list of labels plus the loss."""
         pass
 
     @abstractmethod
@@ -22,8 +34,8 @@ class Model(torch.nn.Module):
         pass
 
     @abstractmethod
-    def predict_eval(self, sentences: Union[List[Sentence], Sentence]) -> (List[List[Label]], torch.tensor):
-        """Predicts the labels/tags for the given list of sentences. Returns the list of labels plus the loss."""
+    def evaluation_metric(self) -> EvaluationMetric:
+        """Should return a evaluation metric."""
         pass
 
 

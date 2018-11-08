@@ -194,9 +194,21 @@ class SequenceTagger(flair.nn.Model):
             model = model.cuda()
         return model
 
-    def forward_and_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
+    def evaluation_metric(self) -> flair.nn.EvaluationMetric:
+        if self.model.tag_type in ['pos', 'upos']:
+            return flair.nn.EvaluationMetric.ACCURACY
+        return flair.nn.EvaluationMetric.F1_SCORE
+
+    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
         features, lengths, tags = self.forward(sentences)
         return self._calculate_loss(features, lengths, tags)
+
+    def forward_labels_and_loss(self, sentences: Union[List[Sentence], Sentence]) -> (List[List[Label]], torch.tensor):
+        with torch.no_grad():
+            feature, lengths, tags = self.forward(sentences)
+            loss = self._calculate_loss(feature, lengths, tags)
+            tags = self._obtain_labels(feature, lengths)
+            return tags, loss
 
     def predict(self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32) -> List[Sentence]:
         with torch.no_grad():
@@ -221,13 +233,6 @@ class SequenceTagger(flair.nn.Model):
                         token.add_tag_label(self.tag_type, tag)
 
             return sentences
-
-    def predict_eval(self, sentences: Union[List[Sentence], Sentence]) -> (List[List[Label]], torch.tensor):
-        with torch.no_grad():
-            feature, lengths, tags = self.forward(sentences)
-            loss = self._calculate_loss(feature, lengths, tags)
-            tags = self._obtain_labels(feature, lengths)
-            return tags, loss
 
     def forward(self, sentences: List[Sentence]):
         self.zero_grad()
