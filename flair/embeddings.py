@@ -410,8 +410,8 @@ class CharLMEmbeddings(TokenEmbeddings):
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-backward-v0.2.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
-        else:
-            raise ValueError(f'The given embeddings "{model}" is not available.')
+        elif not os.path.exists(model):
+            raise ValueError(f'The given model "{model}" is not available or is not a valid path.')
 
         self.name = model
         self.static_embeddings = detach
