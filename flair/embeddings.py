@@ -432,6 +432,12 @@ class CharLMEmbeddings(TokenEmbeddings):
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
+        # set to eval mode
+        self.eval()
+
+    def train(self, mode=True):
+        pass
+
     def __getstate__(self):
         # Copy the object's state from self.__dict__ which contains
         # all our instance attributes. Always use the dict.copy()

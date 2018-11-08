@@ -21,6 +21,7 @@ setup(
         'mpld3==0.3',
         'sklearn',
         'sqlitedict==1.6.0',
+        'deprecated==1.2.4',
     ],
     include_package_data=True,
     python_requires='>=3.6',
