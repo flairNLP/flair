@@ -302,18 +302,20 @@ class LanguageModelTrainer:
     def evaluate(self, data_source, eval_batch_size, sequence_length):
         # Turn on evaluation mode which disables dropout.
         self.model.eval()
-        total_loss = 0
-        ntokens = len(self.corpus.dictionary)
 
-        hidden = self.model.init_hidden(eval_batch_size)
+        with torch.no_grad():
+            total_loss = 0
+            ntokens = len(self.corpus.dictionary)
 
-        for i in range(0, data_source.size(0) - 1, sequence_length):
-            data, targets = self._get_batch(data_source, i, sequence_length)
-            prediction, rnn_output, hidden = self.model.forward(data, hidden)
-            output_flat = prediction.view(-1, ntokens)
-            total_loss += len(data) * self.loss_function(output_flat, targets).data
-            hidden = self._repackage_hidden(hidden)
-        return total_loss.item() / len(data_source)
+            hidden = self.model.init_hidden(eval_batch_size)
+
+            for i in range(0, data_source.size(0) - 1, sequence_length):
+                data, targets = self._get_batch(data_source, i, sequence_length)
+                prediction, rnn_output, hidden = self.model.forward(data, hidden)
+                output_flat = prediction.view(-1, ntokens)
+                total_loss += len(data) * self.loss_function(output_flat, targets).data
+                hidden = self._repackage_hidden(hidden)
+            return total_loss.item() / len(data_source)
 
     @staticmethod
     def _batchify(data, batch_size):

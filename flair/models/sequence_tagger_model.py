@@ -1,3 +1,4 @@
+
 import warnings
 import logging
 
@@ -158,14 +159,17 @@ class SequenceTagger(torch.nn.Module):
             'use_word_dropout': self.use_word_dropout,
             'use_locked_dropout': self.use_locked_dropout,
         }
+
         torch.save(model_state, model_file, pickle_protocol=4)
+
 
     @classmethod
     def load_from_file(cls, model_file):
-
-        warnings.filterwarnings("ignore")
-        state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
-        warnings.filterwarnings("default")
+        # suppress torch warnings:
+        # https://docs.python.org/3/library/warnings.html#temporarily-suppressing-warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
 
         use_dropout = 0.0 if not 'use_dropout' in state.keys() else state['use_dropout']
         use_word_dropout = 0.0 if not 'use_word_dropout' in state.keys() else state['use_word_dropout']
@@ -446,31 +450,32 @@ class SequenceTagger(torch.nn.Module):
 
     def predict(self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32) -> List[Sentence]:
 
-        if type(sentences) is Sentence:
-            sentences = [sentences]
+        with torch.no_grad():
+            if type(sentences) is Sentence:
+                sentences = [sentences]
 
-        filtered_sentences = self._filter_empty_sentences(sentences)
+            filtered_sentences = self._filter_empty_sentences(sentences)
 
-        # remove previous embeddings
-        clear_embeddings(filtered_sentences, also_clear_word_embeddings=True)
+            # remove previous embeddings
+            clear_embeddings(filtered_sentences, also_clear_word_embeddings=True)
 
-        # make mini-batches
-        batches = [filtered_sentences[x:x + mini_batch_size] for x in
-                   range(0, len(filtered_sentences), mini_batch_size)]
+            # make mini-batches
+            batches = [filtered_sentences[x:x + mini_batch_size] for x in
+                       range(0, len(filtered_sentences), mini_batch_size)]
 
-        for batch in batches:
-            scores, predicted_ids = self._predict_scores_batch(batch)
-            all_tokens = []
-            for sentence in batch:
-                all_tokens.extend(sentence.tokens)
+            for batch in batches:
+                scores, predicted_ids = self._predict_scores_batch(batch)
+                all_tokens = []
+                for sentence in batch:
+                    all_tokens.extend(sentence.tokens)
 
-            for (token, score, predicted_id) in zip(all_tokens, scores, predicted_ids):
-                token: Token = token
-                # get the predicted tag
-                predicted_tag = self.tag_dictionary.get_item_for_index(predicted_id)
-                token.add_tag(self.tag_type, predicted_tag, score)
+                for (token, score, predicted_id) in zip(all_tokens, scores, predicted_ids):
+                    token: Token = token
+                    # get the predicted tag
+                    predicted_tag = self.tag_dictionary.get_item_for_index(predicted_id)
+                    token.add_tag(self.tag_type, predicted_tag, score)
 
-        return sentences
+            return sentences
 
     def _predict_scores_batch(self, sentences: List[Sentence]):
         feature, lengths, tags = self.forward(sentences)
@@ -526,13 +531,13 @@ class SequenceTagger(torch.nn.Module):
         if model.lower() == 'ner-ontonotes':
             base_path = '/'.join([aws_resource_path,
                                   'NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward%2Bnews-backward--v0.2',
-                                  'en-ner-ontonotes-v0.2.pt'])
+                                  'en-ner-ontonotes-v0.3.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'ner-ontonotes-fast':
             base_path = '/'.join([aws_resource_path,
                                   'NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
-                                  'en-ner-ontonotes-fast-v0.2.pt'])
+                                  'en-ner-ontonotes-fast-v0.3.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'pos':
@@ -580,13 +585,13 @@ class SequenceTagger(torch.nn.Module):
         if model.lower() == 'de-ner':
             base_path = '/'.join([aws_resource_path,
                                   'NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2',
-                                  'de-ner-conll03-v0.2.pt'])
+                                  'de-ner-conll03-v0.3.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model.lower() == 'de-ner-germeval':
             base_path = '/'.join([aws_resource_path,
                                   'NER-germeval--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2',
-                                  'de-ner-germeval-v0.2.pt'])
+                                  'de-ner-germeval-v0.3.pt'])
             model_file = cached_path(base_path, cache_dir='models')
 
         if model_file is not None:

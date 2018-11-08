@@ -47,11 +47,11 @@ def test_sentence_to_plain_string():
     assert ('I love Berlin .' == sentence.to_tokenized_string())
 
 
-def test_sentence_to_real_string():
+def test_sentence_to_real_string(tasks_base_path):
     sentence: Sentence = Sentence('I love Berlin.', use_tokenizer=True)
     assert ('I love Berlin.' == sentence.to_plain_string())
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.GERMEVAL)
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.GERMEVAL, tasks_base_path)
 
     sentence = corpus.train[0]
     assert (
@@ -236,9 +236,6 @@ def test_label_set_confidence():
     label.score = 0.2
 
     assert (0.2 == label.score)
-
-    # with pytest.raises(ValueError):
-    #     label.name = ''
 
 
 def test_tagged_corpus_make_label_dictionary():

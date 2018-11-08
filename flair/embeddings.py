@@ -1,11 +1,12 @@
 import os
 import re
 from abc import abstractmethod
-from typing import List, Union, Dict, Tuple
+from typing import List, Union, Dict
 
 import gensim
 import numpy as np
 import torch
+from deprecated import deprecated
 
 from .nn import LockedDropout, WordDropout
 from .data import Dictionary, Token, Sentence
@@ -133,56 +134,45 @@ class StackedEmbeddings(TokenEmbeddings):
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
-    def __init__(self, embeddings):
-        """Init one of: 'glove', 'extvec', 'ft-crawl', 'ft-german'.
-        Constructor downloads required files if not there."""
+    def __init__(self, embeddings: str):
+        """
+        Initializes classic word embeddings. Constructor downloads required files if not there.
+        :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code.
+        If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
+        """
 
-        base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/'
+        old_base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/'
+        base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/'
 
         # GLOVE embeddings
         if embeddings.lower() == 'glove' or embeddings.lower() == 'en-glove':
-            cached_path(os.path.join(base_path, 'glove.gensim.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'glove.gensim'), cache_dir='embeddings')
-
-        # twitter embeddings
-        if embeddings.lower() == 'twitter' or embeddings.lower() == 'en-twitter':
-            cached_path(os.path.join(base_path, 'twitter.gensim.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'twitter.gensim'), cache_dir='embeddings')
+            cached_path(os.path.join(old_base_path, 'glove.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(old_base_path, 'glove.gensim'), cache_dir='embeddings')
 
         # KOMNIOS embeddings
-        if embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
-            cached_path(os.path.join(base_path, 'extvec.gensim.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'extvec.gensim'), cache_dir='embeddings')
-
-        # NUMBERBATCH embeddings
-        if embeddings.lower() == 'numberbatch' or embeddings.lower() == 'en-numberbatch':
-            cached_path(os.path.join(base_path, 'numberbatch-en.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'numberbatch-en'), cache_dir='embeddings')
+        elif embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
+            cached_path(os.path.join(old_base_path, 'extvec.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(old_base_path, 'extvec.gensim'), cache_dir='embeddings')
 
         # FT-CRAWL embeddings
-        if embeddings.lower() == 'crawl' or embeddings.lower() == 'en-crawl':
-            cached_path(os.path.join(base_path, 'ft-crawl.gensim.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'ft-crawl.gensim'), cache_dir='embeddings')
+        elif embeddings.lower() == 'crawl' or embeddings.lower() == 'en-crawl':
+            cached_path(os.path.join(base_path, 'en-fasttext-crawl-300d-1M.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'en-fasttext-crawl-300d-1M'), cache_dir='embeddings')
 
         # FT-CRAWL embeddings
-        if embeddings.lower() == 'news' or embeddings.lower() == 'en-news':
-            cached_path(os.path.join(base_path, 'ft-news.gensim.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'ft-news.gensim'), cache_dir='embeddings')
+        elif embeddings.lower() == 'news' or embeddings.lower() == 'en-news' or embeddings.lower() == 'en':
+            cached_path(os.path.join(base_path, 'en-fasttext-news-300d-1M.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, 'en-fasttext-news-300d-1M'), cache_dir='embeddings')
 
-        # GERMAN FASTTEXT embeddings
-        if embeddings.lower() == 'de-fasttext':
-            cached_path(os.path.join(base_path, 'ft-wiki-de.gensim.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'ft-wiki-de.gensim'), cache_dir='embeddings')
+        # other language fasttext embeddings
+        elif len(embeddings.lower()) == 2 and not embeddings.lower() == 'en':
+            cached_path(os.path.join(base_path, '{}-fasttext-300d-1M.vectors.npy'.format(embeddings)),
+                        cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(base_path, '{}-fasttext-300d-1M'.format(embeddings)),
+                                     cache_dir='embeddings')
 
-        # NUMBERBATCH embeddings
-        if embeddings.lower() == 'de-numberbatch':
-            cached_path(os.path.join(base_path, 'de-numberbatch.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'de-numberbatch'), cache_dir='embeddings')
-
-        # SWEDISCH FASTTEXT embeddings
-        if embeddings.lower() == 'sv-fasttext':
-            cached_path(os.path.join(base_path, 'cc.sv.300.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'cc.sv.300'), cache_dir='embeddings')
+        elif not os.path.exists(embeddings):
+            raise ValueError(f'The given embeddings "{embeddings}" is not available or is not a valid path.')
 
         self.name = embeddings
         self.static_embeddings = True
@@ -207,10 +197,10 @@ class WordEmbeddings(TokenEmbeddings):
                     word_embedding = self.precomputed_word_embeddings[token.text]
                 elif token.text.lower() in self.precomputed_word_embeddings:
                     word_embedding = self.precomputed_word_embeddings[token.text.lower()]
-                elif re.sub('\d', '#', token.text.lower()) in self.precomputed_word_embeddings:
-                    word_embedding = self.precomputed_word_embeddings[re.sub('\d', '#', token.text.lower())]
-                elif re.sub('\d', '0', token.text.lower()) in self.precomputed_word_embeddings:
-                    word_embedding = self.precomputed_word_embeddings[re.sub('\d', '0', token.text.lower())]
+                elif re.sub(r'\d', '#', token.text.lower()) in self.precomputed_word_embeddings:
+                    word_embedding = self.precomputed_word_embeddings[re.sub(r'\d', '#', token.text.lower())]
+                elif re.sub(r'\d', '0', token.text.lower()) in self.precomputed_word_embeddings:
+                    word_embedding = self.precomputed_word_embeddings[re.sub(r'\d', '0', token.text.lower())]
                 else:
                     word_embedding = np.zeros(self.embedding_length, dtype='float')
 
@@ -357,21 +347,15 @@ class CharLMEmbeddings(TokenEmbeddings):
 
     def __init__(self, model, detach: bool = True, use_cache: bool = True, cache_directory: str = None):
         """
-            Contextual string embeddings of words, as proposed in Akbik et al., 2018.
-
-            Parameters
-            ----------
-            arg1 : model
-                model string, one of 'news-forward', 'news-backward', 'mix-forward', 'mix-backward', 'german-forward',
-                'german-backward' depending on which character language model is desired
-            arg2 : detach
-                if set to false, the gradient will propagate into the language model. this dramatically slows down
+        initializes contextual string embeddings using a character-level language model.
+        :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
+                'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward'
+                depending on which character language model is desired.
+        :param detach: if set to False, the gradient will propagate into the language model. this dramatically slows down
                 training and often leads to worse results, so not recommended.
-            arg3 : use_cache
-                if set to false, will not write embeddings to file for later retrieval. this saves disk space but will
+        :param use_cache: if set to False, will not write embeddings to file for later retrieval. this saves disk space but will
                 not allow re-use of once computed embeddings that do not fit into memory
-            arg3 : cache_directory
-                if cache_directory is not set, the cache will be written to ~/.flair/embeddings. otherwise the cache
+        :param cache_directory: if cache_directory is not set, the cache will be written to ~/.flair/embeddings. otherwise the cache
                 is written to the provided directory.
         """
         super().__init__()
@@ -382,49 +366,52 @@ class CharLMEmbeddings(TokenEmbeddings):
             model = cached_path(base_path, cache_dir='embeddings')
 
         # news-english-backward
-        if model.lower() == 'news-backward':
+        elif model.lower() == 'news-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # news-english-forward
-        if model.lower() == 'news-forward-fast':
+        elif model.lower() == 'news-forward-fast':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward-1024-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # news-english-backward
-        if model.lower() == 'news-backward-fast':
+        elif model.lower() == 'news-backward-fast':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward-1024-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-forward
-        if model.lower() == 'mix-forward':
+        elif model.lower() == 'mix-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-forward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-backward
-        if model.lower() == 'mix-backward':
+        elif model.lower() == 'mix-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-german-forward
-        if model.lower() == 'german-forward':
+        elif model.lower() == 'german-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-forward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-german-backward
-        if model.lower() == 'german-backward':
+        elif model.lower() == 'german-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # common crawl Polish forward
-        if model.lower() == 'polish-forward':
+        elif model.lower() == 'polish-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-forward-v0.2.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # common crawl Polish backward
-        if model.lower() == 'polish-backward':
+        elif model.lower() == 'polish-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-backward-v0.2.pt'
             model = cached_path(base_path, cache_dir='embeddings')
+
+        elif not os.path.exists(model):
+            raise ValueError(f'The given model "{model}" is not available or is not a valid path.')
 
         self.name = model
         self.static_embeddings = detach
@@ -555,13 +542,15 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         if self.use_cache:
             for sentence in sentences:
-                self.cache[sentence.to_tokenized_string()] = [token._embeddings[self.name].tolist() for token in sentence]
+                self.cache[sentence.to_tokenized_string()] = [token._embeddings[self.name].tolist() for token in
+                                                              sentence]
 
         return sentences
 
 
 class DocumentMeanEmbeddings(DocumentEmbeddings):
 
+    @deprecated(version='0.3.1', reason="The functionality of this class is moved to 'DocumentPoolEmbeddings'")
     def __init__(self, token_embeddings: List[TokenEmbeddings]):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
@@ -608,6 +597,75 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
                 mean_embedding = torch.mean(word_embeddings, 0)
 
                 sentence.set_embedding(self.name, mean_embedding.unsqueeze(0))
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]):
+        pass
+
+
+class DocumentPoolEmbeddings(DocumentEmbeddings):
+
+    def __init__(self, token_embeddings: List[TokenEmbeddings], mode: str = 'mean'):
+        """The constructor takes a list of embeddings to be combined.
+        :param token_embeddings: a list of token embeddings
+        :param mode: a string which can any value from ['mean', 'max', 'min']
+        """
+        super().__init__()
+
+        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=token_embeddings)
+
+        self.__embedding_length: int = self.embeddings.embedding_length
+
+        if torch.cuda.is_available():
+            self.cuda()
+
+        self.mode = mode
+        if self.mode == 'mean':
+            self.pool_op = torch.mean
+        elif mode == 'max':
+            self.pool_op = torch.max
+        elif mode == 'min':
+            self.pool_op = torch.min
+        else:
+            raise ValueError(f'Pooling operation for {self.mode!r} is not defined')
+        self.name: str = f'document_{self.mode}'
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def embed(self, sentences: Union[List[Sentence], Sentence]):
+        """Add embeddings to every sentence in the given list of sentences. If embeddings are already added, updates
+        only if embeddings are non-static."""
+
+        everything_embedded: bool = True
+
+        # if only one sentence is passed, convert to list of sentence
+        if isinstance(sentences, Sentence):
+            sentences = [sentences]
+
+        for sentence in sentences:
+            if self.name not in sentence._embeddings.keys(): everything_embedded = False
+
+        if not everything_embedded:
+
+            self.embeddings.embed(sentences)
+
+            for sentence in sentences:
+                word_embeddings = []
+                for token in sentence.tokens:
+                    token: Token = token
+                    word_embeddings.append(token.get_embedding().unsqueeze(0))
+
+                word_embeddings = torch.cat(word_embeddings, dim=0)
+                if torch.cuda.is_available():
+                    word_embeddings = word_embeddings.cuda()
+
+                if self.mode == 'mean':
+                    pooled_embedding = self.pool_op(word_embeddings, 0)
+                else:
+                    pooled_embedding, _ = self.pool_op(word_embeddings, 0)
+
+                sentence.set_embedding(self.name, pooled_embedding.unsqueeze(0))
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
@@ -661,7 +719,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         self.word_reprojection_map = torch.nn.Linear(self.length_of_all_token_embeddings,
                                                      self.embeddings_dimension)
         self.rnn = torch.nn.GRU(self.embeddings_dimension, hidden_states, num_layers=num_layers,
-                                 bidirectional=self.bidirectional)
+                                bidirectional=self.bidirectional)
 
         # dropouts
         if use_locked_dropout:
