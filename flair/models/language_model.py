@@ -1,13 +1,9 @@
-import logging
 import torch.nn as nn
 import torch
 import math
 from torch.autograd import Variable
-from typing import Dict, List
+from typing import List
 from flair.data import Dictionary
-
-
-log = logging.getLogger(__name__)
 
 
 class LanguageModel(nn.Module):
@@ -153,9 +149,7 @@ class LanguageModel(nn.Module):
         }
         torch.save(model_state, file, pickle_protocol=4)
 
-    def generate_text(self, number_of_characters=1000):
-        log.info('Generating text ...')
-
+    def generate_text(self, number_of_characters=1000) -> str:
         characters = []
 
         idx2item = self.dictionary.idx2item
@@ -163,6 +157,8 @@ class LanguageModel(nn.Module):
         # initial hidden state
         hidden = self.init_hidden(1)
         input = torch.rand(1, 1).mul(len(idx2item)).long()
+        if torch.cuda.is_available():
+            input = input.cuda()
 
         for i in range(number_of_characters):
             prediction, rnn_output, hidden = self.forward(input, hidden)
@@ -172,9 +168,4 @@ class LanguageModel(nn.Module):
             word = idx2item[word_idx].decode('UTF-8')
             characters.append(word)
 
-            if i % 100 == 0:
-                log.info(f'{i}/{number_of_characters} chars')
-
-        # print generated text
-        log.info('Generated text:')
-        log.info(''.join(characters))
+        return ''.join(characters)
