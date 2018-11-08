@@ -156,14 +156,12 @@ class WordEmbeddings(TokenEmbeddings):
 
         # FT-CRAWL embeddings
         elif embeddings.lower() == 'crawl' or embeddings.lower() == 'en-crawl':
-            cached_path(os.path.join(base_path, 'en-fasttext-crawl-300d-1M.vectors.npy'.format(embeddings)),
-                        cache_dir='embeddings')
+            cached_path(os.path.join(base_path, 'en-fasttext-crawl-300d-1M.vectors.npy'), cache_dir='embeddings')
             embeddings = cached_path(os.path.join(base_path, 'en-fasttext-crawl-300d-1M'), cache_dir='embeddings')
 
         # FT-CRAWL embeddings
         elif embeddings.lower() == 'news' or embeddings.lower() == 'en-news' or embeddings.lower() == 'en':
-            cached_path(os.path.join(base_path, 'en-fasttext-news-300d-1M.vectors.npy'.format(embeddings)),
-                        cache_dir='embeddings')
+            cached_path(os.path.join(base_path, 'en-fasttext-news-300d-1M.vectors.npy'), cache_dir='embeddings')
             embeddings = cached_path(os.path.join(base_path, 'en-fasttext-news-300d-1M'), cache_dir='embeddings')
 
         # other language fasttext embeddings
@@ -350,8 +348,9 @@ class CharLMEmbeddings(TokenEmbeddings):
     def __init__(self, model, detach: bool = True, use_cache: bool = True, cache_directory: str = None):
         """
         initializes contextual string embeddings using a character-level language model.
-        :param model: model string, one of 'news-forward', 'news-backward', 'mix-forward', 'mix-backward', 'german-forward',
-                'german-backward' depending on which character language model is desired
+        :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
+                'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward'
+                depending on which character language model is desired.
         :param detach: if set to False, the gradient will propagate into the language model. this dramatically slows down
                 training and often leads to worse results, so not recommended.
         :param use_cache: if set to False, will not write embeddings to file for later retrieval. this saves disk space but will
@@ -367,49 +366,52 @@ class CharLMEmbeddings(TokenEmbeddings):
             model = cached_path(base_path, cache_dir='embeddings')
 
         # news-english-backward
-        if model.lower() == 'news-backward':
+        elif model.lower() == 'news-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # news-english-forward
-        if model.lower() == 'news-forward-fast':
+        elif model.lower() == 'news-forward-fast':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward-1024-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # news-english-backward
-        if model.lower() == 'news-backward-fast':
+        elif model.lower() == 'news-backward-fast':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward-1024-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-forward
-        if model.lower() == 'mix-forward':
+        elif model.lower() == 'mix-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-forward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-backward
-        if model.lower() == 'mix-backward':
+        elif model.lower() == 'mix-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-german-forward
-        if model.lower() == 'german-forward':
+        elif model.lower() == 'german-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-forward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-german-backward
-        if model.lower() == 'german-backward':
+        elif model.lower() == 'german-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # common crawl Polish forward
-        if model.lower() == 'polish-forward':
+        elif model.lower() == 'polish-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-forward-v0.2.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # common crawl Polish backward
-        if model.lower() == 'polish-backward':
+        elif model.lower() == 'polish-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-backward-v0.2.pt'
             model = cached_path(base_path, cache_dir='embeddings')
+
+        else:
+            raise ValueError(f'The given embeddings "{model}" is not available.')
 
         self.name = model
         self.static_embeddings = detach

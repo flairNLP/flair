@@ -8,43 +8,33 @@ from flair.data import Sentence
 
 
 @pytest.mark.slow
-def test_en_glove():
-    load_and_apply_word_embeddings('en-glove')
+def test_glove():
+    load_and_apply_word_embeddings('glove')
 
 
 @pytest.mark.slow
-def test_en_numberbatch():
-    load_and_apply_word_embeddings('en-numberbatch')
+def test_extvec():
+    load_and_apply_word_embeddings('extvec')
 
 
 @pytest.mark.slow
-def test_en_extvec():
-    load_and_apply_word_embeddings('en-extvec')
+def test_crawl():
+    load_and_apply_word_embeddings('crawl')
 
 
 @pytest.mark.slow
-def test_en_crawl():
-    load_and_apply_word_embeddings('en-crawl')
+def test_news():
+    load_and_apply_word_embeddings('news')
 
 
 @pytest.mark.slow
-def test_en_news():
-    load_and_apply_word_embeddings('en-news')
+def test_fr():
+    load_and_apply_word_embeddings('fr')
 
 
 @pytest.mark.slow
-def test_de_fasttext():
-    load_and_apply_word_embeddings('de-fasttext')
-
-
-@pytest.mark.slow
-def test_de_numberbatch():
-    load_and_apply_word_embeddings('de-numberbatch')
-
-
-@pytest.mark.slow
-def test_sv_fasttext():
-    load_and_apply_word_embeddings('sv-fasttext')
+def test_it():
+    load_and_apply_word_embeddings('it')
 
 
 @pytest.mark.slow
@@ -78,11 +68,16 @@ def test_german_backward():
 
 
 def test_loading_not_existing_embedding():
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         WordEmbeddings('other')
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         WordEmbeddings('not/existing/path/to/embeddings')
+
+
+def test_loading_not_existing_char_lm_embedding():
+    with pytest.raises(ValueError):
+        CharLMEmbeddings('other')
 
 
 @pytest.mark.integration
