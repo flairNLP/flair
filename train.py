@@ -6,11 +6,11 @@ from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings,
 from flair.visual.training_curves import Plotter
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03).downsample(0.1)
+corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.UD_ENGLISH)
 print(corpus)
 
 # 2. what tag do we want to predict?
-tag_type = 'ner'
+tag_type = 'pos'
 
 # 3. make the tag dictionary from the corpus
 tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)

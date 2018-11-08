@@ -106,3 +106,5 @@ venv.bak/
 .mypy_cache/
 
 Pipfile.lock
+
+resources/taggers/

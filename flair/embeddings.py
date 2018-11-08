@@ -137,41 +137,42 @@ class WordEmbeddings(TokenEmbeddings):
     def __init__(self, embeddings: str):
         """
         Initializes classic word embeddings. Constructor downloads required files if not there.
-        :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code
+        :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code.
+        If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
         """
 
-        base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/'
+        old_base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/'
+        base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/'
 
         # GLOVE embeddings
         if embeddings.lower() == 'glove' or embeddings.lower() == 'en-glove':
-            cached_path(os.path.join(base_path, 'glove.gensim.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'glove.gensim'), cache_dir='embeddings')
+            cached_path(os.path.join(old_base_path, 'glove.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(old_base_path, 'glove.gensim'), cache_dir='embeddings')
 
         # KOMNIOS embeddings
-        if embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
-            cached_path(os.path.join(base_path, 'extvec.gensim.vectors.npy'), cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, 'extvec.gensim'), cache_dir='embeddings')
-
-        base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/'
+        elif embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
+            cached_path(os.path.join(old_base_path, 'extvec.gensim.vectors.npy'), cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(old_base_path, 'extvec.gensim'), cache_dir='embeddings')
 
         # FT-CRAWL embeddings
-        if embeddings.lower() == 'crawl' or embeddings.lower() == 'en-crawl':
-            cached_path(os.path.join(base_path, 'en-fasttext-crawl-300d-1M.vectors.npy'.format(embeddings)),
-                        cache_dir='embeddings')
+        elif embeddings.lower() == 'crawl' or embeddings.lower() == 'en-crawl':
+            cached_path(os.path.join(base_path, 'en-fasttext-crawl-300d-1M.vectors.npy'), cache_dir='embeddings')
             embeddings = cached_path(os.path.join(base_path, 'en-fasttext-crawl-300d-1M'), cache_dir='embeddings')
 
         # FT-CRAWL embeddings
-        if embeddings.lower() == 'news' or embeddings.lower() == 'en-news' or embeddings.lower() == 'en':
-            cached_path(os.path.join(base_path, 'en-fasttext-news-300d-1M.vectors.npy'.format(embeddings)),
-                        cache_dir='embeddings')
+        elif embeddings.lower() == 'news' or embeddings.lower() == 'en-news' or embeddings.lower() == 'en':
+            cached_path(os.path.join(base_path, 'en-fasttext-news-300d-1M.vectors.npy'), cache_dir='embeddings')
             embeddings = cached_path(os.path.join(base_path, 'en-fasttext-news-300d-1M'), cache_dir='embeddings')
 
         # other language fasttext embeddings
-        if len(embeddings.lower()) == 2 and not embeddings.lower() == 'en':
+        elif len(embeddings.lower()) == 2 and not embeddings.lower() == 'en':
             cached_path(os.path.join(base_path, '{}-fasttext-300d-1M.vectors.npy'.format(embeddings)),
                         cache_dir='embeddings')
             embeddings = cached_path(os.path.join(base_path, '{}-fasttext-300d-1M'.format(embeddings)),
                                      cache_dir='embeddings')
+
+        elif not os.path.exists(embeddings):
+            raise ValueError(f'The given embeddings "{embeddings}" is not available or is not a valid path.')
 
         self.name = embeddings
         self.static_embeddings = True
@@ -347,8 +348,9 @@ class CharLMEmbeddings(TokenEmbeddings):
     def __init__(self, model, detach: bool = True, use_cache: bool = True, cache_directory: str = None):
         """
         initializes contextual string embeddings using a character-level language model.
-        :param model: model string, one of 'news-forward', 'news-backward', 'mix-forward', 'mix-backward', 'german-forward',
-                'german-backward' depending on which character language model is desired
+        :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
+                'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward'
+                depending on which character language model is desired.
         :param detach: if set to False, the gradient will propagate into the language model. this dramatically slows down
                 training and often leads to worse results, so not recommended.
         :param use_cache: if set to False, will not write embeddings to file for later retrieval. this saves disk space but will
@@ -364,49 +366,52 @@ class CharLMEmbeddings(TokenEmbeddings):
             model = cached_path(base_path, cache_dir='embeddings')
 
         # news-english-backward
-        if model.lower() == 'news-backward':
+        elif model.lower() == 'news-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # news-english-forward
-        if model.lower() == 'news-forward-fast':
+        elif model.lower() == 'news-forward-fast':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward-1024-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # news-english-backward
-        if model.lower() == 'news-backward-fast':
+        elif model.lower() == 'news-backward-fast':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward-1024-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-forward
-        if model.lower() == 'mix-forward':
+        elif model.lower() == 'mix-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-forward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-english-backward
-        if model.lower() == 'mix-backward':
+        elif model.lower() == 'mix-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-german-forward
-        if model.lower() == 'german-forward':
+        elif model.lower() == 'german-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-forward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # mix-german-backward
-        if model.lower() == 'german-backward':
+        elif model.lower() == 'german-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-backward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # common crawl Polish forward
-        if model.lower() == 'polish-forward':
+        elif model.lower() == 'polish-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-forward-v0.2.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         # common crawl Polish backward
-        if model.lower() == 'polish-backward':
+        elif model.lower() == 'polish-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-backward-v0.2.pt'
             model = cached_path(base_path, cache_dir='embeddings')
+
+        elif not os.path.exists(model):
+            raise ValueError(f'The given model "{model}" is not available or is not a valid path.')
 
         self.name = model
         self.static_embeddings = detach
