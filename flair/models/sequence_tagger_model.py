@@ -167,8 +167,9 @@ class SequenceTagger(torch.nn.Module):
         state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
         warnings.filterwarnings("default")
 
-        use_word_dropout = False if not 'use_word_dropout' in state.keys() else state['use_word_dropout']
-        use_locked_dropout = False if not 'use_locked_dropout' in state.keys() else state['use_locked_dropout']
+        use_dropout = 0.0 if not 'use_dropout' in state.keys() else state['use_dropout']
+        use_word_dropout = 0.0 if not 'use_word_dropout' in state.keys() else state['use_word_dropout']
+        use_locked_dropout = 0.0 if not 'use_locked_dropout' in state.keys() else state['use_locked_dropout']
 
         model = SequenceTagger(
             hidden_size=state['hidden_size'],
@@ -178,6 +179,7 @@ class SequenceTagger(torch.nn.Module):
             use_crf=state['use_crf'],
             use_rnn=state['use_rnn'],
             rnn_layers=state['rnn_layers'],
+            use_dropout=use_dropout,
             use_word_dropout=use_word_dropout,
             use_locked_dropout=use_locked_dropout,
         )
