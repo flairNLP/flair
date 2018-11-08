@@ -102,7 +102,7 @@ class SequenceTaggerTrainer:
                     optimizer.zero_grad()
 
                     # Step 4. Compute the loss, gradients, and update the parameters by calling optimizer.step()
-                    loss = self.model.forward_and_loss(batch)
+                    loss = self.model.forward_loss(batch)
 
                     current_loss += loss.item()
                     seen_sentences += len(batch)

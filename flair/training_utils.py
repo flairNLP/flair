@@ -22,7 +22,7 @@ class Metric(object):
         self._tns = defaultdict(int)
         self._fns = defaultdict(int)
 
-    def tp(self, class_name=None):
+    def tp(self, class_name):
         self._tps[class_name] += 1
 
     def tn(self, class_name=None):
@@ -56,38 +56,60 @@ class Metric(object):
             return round(self._tps[class_name] / (self._tps[class_name] + self._fns[class_name]), 4)
         return 0.0
 
-    def f_score(self, class_name=None):
+    def f_score(self, class_name):
         if self.precision(class_name) + self.recall(class_name) > 0:
             return round(2 * (self.precision(class_name) * self.recall(class_name))
                          / (self.precision(class_name) + self.recall(class_name)), 4)
         return 0.0
 
     def micro_avg_f_score(self):
-        all_tps = sum([self.tp(class_name) for class_name in self.get_classes()])
-        all_fps = sum([self.fp(class_name) for class_name in self.get_classes()])
-        all_fns = sum([self.fn(class_name) for class_name in self.get_classes()])
+        all_tps = sum([self.get_tp(class_name) for class_name in self.get_classes()])
+        all_fps = sum([self.get_fp(class_name) for class_name in self.get_classes()])
+        all_fns = sum([self.get_fn(class_name) for class_name in self.get_classes()])
+
         micro_precision = 0.0
         micro_recall = 0.0
+
         if all_tps + all_fps > 0:
             micro_precision = round(all_tps / (all_tps + all_fps), 4)
         if all_tps + all_fns > 0:
             micro_recall = round(all_tps / (all_tps + all_fns), 4)
+
         if micro_precision + micro_recall > 0:
-            return round(2 * (micro_precision * micro_recall)
-                         / (micro_precision + micro_recall), 4)
+            return round(2 * (micro_precision * micro_recall) / (micro_precision + micro_recall), 4)
+
         return 0.0
 
     def macro_avg_f_score(self):
         class_precisions = [self.precision(class_name) for class_name in self.get_classes()]
         class_recalls = [self.precision(class_name) for class_name in self.get_classes()]
+
         macro_precision = sum(class_precisions) / len(class_precisions)
         macro_recall = sum(class_recalls) / len(class_recalls)
+
         if macro_precision + macro_recall > 0:
-            return round(2 * (macro_precision * macro_recall)
-                         / (macro_precision + macro_recall), 4)
+            return round(2 * (macro_precision * macro_recall) / (macro_precision + macro_recall), 4)
+
         return 0.0
 
+    def micro_avg_accuracy(self):
+        all_tps = sum([self.get_tp(class_name) for class_name in self.get_classes()])
+        all_tns = sum([self.get_tn(class_name) for class_name in self.get_classes()])
+        all_fps = sum([self.get_fp(class_name) for class_name in self.get_classes()])
+        all_fns = sum([self.get_fn(class_name) for class_name in self.get_classes()])
 
+        if all_tps + all_tns + all_fps + all_fns > 0:
+            return round((all_tps + all_tns) / (all_tps + all_tns + all_fps + all_fns), 4)
+
+        return 0.0
+
+    def macro_avg_accuracy(self):
+        class_accuracy = [self.accuracy(class_name) for class_name in self.get_classes()]
+
+        if len(class_accuracy) > 0:
+            return round(sum(class_accuracy) / len(class_accuracy), 4)
+
+        return 0.0
 
     def accuracy(self, class_name=None):
         if self._tps[class_name] + self._tns[class_name] + self._fps[class_name] + self._fns[class_name] > 0:

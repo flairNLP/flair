@@ -38,7 +38,7 @@ class TextClassifierTrainer:
               checkpoint: bool = False,
               save_final_model: bool = True,
               anneal_with_restarts: bool = False,
-              eval_on_train: bool = True):
+              test_mode: bool = False,):
         """
         Trains a text classification model using the training data of the corpus.
         :param base_path: the directory to which any results should be written to
@@ -113,7 +113,7 @@ class TextClassifierTrainer:
                 modulo = max(1, int(len(batches) / 10))
 
                 for batch_no, batch in enumerate(batches):
-                    loss = self.model.forward_and_loss(batch)
+                    loss = self.model.forward_loss(batch)
 
                     optimizer.zero_grad()
                     loss.backward()
