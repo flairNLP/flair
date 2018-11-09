@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch
 import math
 from torch.autograd import Variable
-from typing import Dict, List
+from typing import List
 from flair.data import Dictionary
 
 
@@ -148,3 +148,24 @@ class LanguageModel(nn.Module):
             'dropout': self.dropout
         }
         torch.save(model_state, file, pickle_protocol=4)
+
+    def generate_text(self, number_of_characters=1000) -> str:
+        characters = []
+
+        idx2item = self.dictionary.idx2item
+
+        # initial hidden state
+        hidden = self.init_hidden(1)
+        input = torch.rand(1, 1).mul(len(idx2item)).long()
+        if torch.cuda.is_available():
+            input = input.cuda()
+
+        for i in range(number_of_characters):
+            prediction, rnn_output, hidden = self.forward(input, hidden)
+            word_weights = prediction.squeeze().data.div(1.0).exp().cpu()
+            word_idx = torch.multinomial(word_weights, 1)[0]
+            input.data.fill_(word_idx)
+            word = idx2item[word_idx].decode('UTF-8')
+            characters.append(word)
+
+        return ''.join(characters)
