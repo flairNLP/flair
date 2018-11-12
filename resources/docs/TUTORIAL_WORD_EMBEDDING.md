@@ -131,8 +131,13 @@ Currently, the following contextual string embeddings are provided (more coming)
 | 'mix-backward'    | English | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
 | 'german-forward'  | German  | Forward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
 | 'german-backward' | German  | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
-| 'polish-forward'  | Polish  | Forward LM embeddings over web crawls (Polish part of CommonCrawl) |
-| 'polish-backward' | Polish  | Backward LM embeddings over web crawls (Polish part of CommonCrawl) |
+| 'polish-forward'  | Polish  | Added by [@borchmann](https://github.com/applicaai/poleval-2018): Forward LM embeddings over web crawls (Polish part of CommonCrawl) |
+| 'polish-backward' | Polish  | Added by [@borchmann](https://github.com/applicaai/poleval-2018): Backward LM embeddings over web crawls (Polish part of CommonCrawl) |
+| 'slovenian-forward'  | Slovenian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Forward LM embeddings over various sources (Europarl, Wikipedia and OpenSubtitles2018) |
+| 'slovenian-backward' | Slovenian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms):Backward LM embeddings over various sources (Europarl, Wikipedia and OpenSubtitles2018) |
+| 'bulgarian-forward'  | Bulgarian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms):Forward LM embeddings over various sources (Europarl, Wikipedia or SETimes) |
+| 'bulgarian-backward' | Bulgarian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms):Backward LM embeddings over various sources (Europarl, Wikipedia or SETimes) |
+
 
 So, if you want to load embeddings from the English news backward LM model, instantiate the method as follows:
 

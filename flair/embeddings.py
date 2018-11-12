@@ -410,6 +410,24 @@ class CharLMEmbeddings(TokenEmbeddings):
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-backward-v0.2.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
+        # Slovenian forward
+        elif model.lower() == 'slovenian-forward' or model.lower() == 'sl-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-sl-large-forward-v0.1.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+        # Slovenian backward
+        elif model.lower() == 'slovenian-backward' or model.lower() == 'sl-backward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-sl-large-backward-v0.1.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+
+        # Bulgarian forward
+        elif model.lower() == 'bulgarian-forward' or model.lower() == 'bg-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-bg-small-forward-v0.1.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+        # Bulgarian backward
+        elif model.lower() == 'bulgarian-backward' or model.lower() == 'bg-backward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-bg-small-backward-v0.1.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+
         elif not os.path.exists(model):
             raise ValueError(f'The given model "{model}" is not available or is not a valid path.')
 
