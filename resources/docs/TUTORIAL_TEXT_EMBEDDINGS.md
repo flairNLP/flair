@@ -20,9 +20,10 @@ fine-tuning.
 Our document embeddings are created from the embeddings of all words in the document.
 Currently, we have two different methods to obtain a document embedding from a list of word embeddings.
 
-### MEAN
+### Pooling
 
-The first method calculates the mean over all word embeddings in a document.
+The first method calculates a pooling operation over all word embeddings in a document.
+The default operation is 'mean' which gives us the mean of all words in the sentence. 
 The resulting embedding is taken as document embedding.
 
 To create a mean document embedding simply create any number of `TokenEmbeddings` first and put them in a list.
@@ -31,7 +32,7 @@ So, if you want to create a document embedding using GloVe embeddings together w
 use the following code:
 
 ```python
-from flair.embeddings import WordEmbeddings, CharLMEmbeddings, DocumentMeanEmbeddings
+from flair.embeddings import WordEmbeddings, CharLMEmbeddings, DocumentPoolEmbeddings
 
 # initialize the word embeddings
 glove_embedding = WordEmbeddings('glove')
@@ -39,7 +40,7 @@ charlm_embedding_forward = CharLMEmbeddings('news-forward')
 charlm_embedding_backward = CharLMEmbeddings('news-backward')
 
 # initialize the document embeddings
-document_embeddings = DocumentMeanEmbeddings([glove_embedding,
+document_embeddings = DocumentPoolEmbeddings([glove_embedding,
                                               charlm_embedding_backward,
                                               charlm_embedding_forward])
 ```
