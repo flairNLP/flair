@@ -119,16 +119,26 @@ class Metric(object):
                 4)
         return 0.0
 
-    def to_tsv(self):
+    def to_tsv_full(self):
         return '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
-            self.get_tp(), self.get_tn(), self.get_fp(), self.get_fn(), self.precision(), self.recall(), self.f_score(),
+            self.get_tp(), self.get_tn(), self.get_fp(), self.get_fn(), self.precision(), self.recall(),
+            self.micro_avg_f_score(),
             self.accuracy())
+
+    def to_tsv(self):
+        return '{}\t{}\t{}\t{}'.format(
+            self.precision(),
+            self.recall(),
+            self.accuracy(),
+            self.micro_avg_f_score(),
+        )
 
     def print(self):
         log.info(self)
 
+
     @staticmethod
-    def tsv_header(prefix=None):
+    def tsv_header_full(prefix=None):
         if prefix:
             return '{0}_TP\t{0}_TN\t{0}_FP\t{0}_FN\t{0}_PRECISION\t{0}_RECALL\t{0}_F-SCORE\t{0}_ACCURACY'.format(
                 prefix)
@@ -136,8 +146,20 @@ class Metric(object):
         return 'TP\tTN\tFP\tFN\tPRECISION\tRECALL\tF-SCORE\tACCURACY'
 
     @staticmethod
-    def to_empty_tsv():
+    def tsv_header(prefix=None):
+        if prefix:
+            return '{0}_PRECISION\t{0}_RECALL\t{0}_ACCURACY\t{0}_F-SCORE'.format(
+                prefix)
+
+        return 'PRECISION\tRECALL\tACCURACY\tF-SCORE'
+
+    @staticmethod
+    def to_empty_tsv_full():
         return '_\t_\t_\t_\t_\t_\t_\t_'
+
+    @staticmethod
+    def to_empty_tsv():
+        return '\t_\t_\t_\t_'
 
     def __str__(self):
         all_classes = self.get_classes()
@@ -153,8 +175,8 @@ class Metric(object):
 
     def get_classes(self) -> List:
         all_classes = set(itertools.chain(*[list(keys) for keys
-                                                 in [self._tps.keys(), self._fps.keys(), self._tns.keys(),
-                                                     self._fns.keys()]]))
+                                            in [self._tps.keys(), self._fps.keys(), self._tns.keys(),
+                                                self._fns.keys()]]))
         all_classes = [class_name for class_name in all_classes if class_name is not None]
         all_classes.sort()
         return all_classes

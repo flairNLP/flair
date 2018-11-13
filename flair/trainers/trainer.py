@@ -42,7 +42,7 @@ class ModelTrainer:
 
         loss_txt = init_output_file(base_path, 'loss.tsv')
         with open(loss_txt, 'a') as f:
-            f.write(f'EPOCH\tTIMESTAMP\tTRAIN_LOSS\t{Metric.tsv_header("TRAIN")}\tDEV_LOSS\t{Metric.tsv_header("DEV")}'
+            f.write(f'EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS\t{Metric.tsv_header("TRAIN")}\tDEV_LOSS\t{Metric.tsv_header("DEV")}'
                     f'\tTEST_LOSS\t{Metric.tsv_header("TEST")}\n')
 
         weight_extractor = WeightExtractor(base_path)
@@ -133,6 +133,9 @@ class ModelTrainer:
                 train_metric, train_loss = self._calculate_evaluation_results_for(
                     'TRAIN', self.corpus.train, embeddings_in_memory, mini_batch_size)
 
+                test_metric, test_loss = self._calculate_evaluation_results_for(
+                    'TEST', self.corpus.test, embeddings_in_memory, mini_batch_size)
+
                 if not train_with_dev:
                     dev_metric, dev_loss = self._calculate_evaluation_results_for(
                         'DEV', self.corpus.dev, embeddings_in_memory, mini_batch_size)
@@ -140,8 +143,9 @@ class ModelTrainer:
                 with open(loss_txt, 'a') as f:
                     train_metric_str = train_metric.to_tsv() if train_metric is not None else Metric.to_empty_tsv()
                     dev_metric_str = dev_metric.to_tsv() if dev_metric is not None else Metric.to_empty_tsv()
-                    f.write(f'{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{train_loss}\t{train_metric_str}\t{dev_loss}'
-                            f'\t{dev_metric_str}\t_\t{Metric.to_empty_tsv()}\n')
+                    test_metric_str = test_metric.to_tsv() if test_metric is not None else Metric.to_empty_tsv()
+                    f.write(f'{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}\t{train_metric_str}\t{dev_loss}'
+                            f'\t{dev_metric_str}\t_\t{test_metric_str}\n')
 
                 if train_with_dev:
                     current_score = train_metric.micro_avg_f_score() \
