@@ -1,3 +1,5 @@
+import sys
+
 import torch.nn as nn
 import torch
 import math
@@ -16,7 +18,8 @@ class LanguageModel(nn.Module):
                  nlayers: int,
                  embedding_size: int = 100,
                  nout=None,
-                 dropout=0.5):
+                 dropout=0.5,
+                 best_score=None):
 
         super(LanguageModel, self).__init__()
 
@@ -48,6 +51,8 @@ class LanguageModel(nn.Module):
             self.decoder = nn.Linear(hidden_size, len(dictionary))
 
         self.init_weights()
+
+        self.best_score = best_score
 
         # auto-spawn on GPU if available
         if torch.cuda.is_available():
@@ -123,13 +128,16 @@ class LanguageModel(nn.Module):
         else:
             state = torch.load(model_file)
 
+        best_score = state['best_score'] if 'best_score' in state else None
+
         model = LanguageModel(state['dictionary'],
                                              state['is_forward_lm'],
                                              state['hidden_size'],
                                              state['nlayers'],
                                              state['embedding_size'],
                                              state['nout'],
-                                             state['dropout'])
+                                             state['dropout'],
+                                             best_score)
         model.load_state_dict(state['state_dict'])
         model.eval()
         if torch.cuda.is_available():
@@ -145,7 +153,8 @@ class LanguageModel(nn.Module):
             'nlayers': self.nlayers,
             'embedding_size': self.embedding_size,
             'nout': self.nout,
-            'dropout': self.dropout
+            'dropout': self.dropout,
+            'best_score': self.best_score
         }
         torch.save(model_state, file, pickle_protocol=4)
 
