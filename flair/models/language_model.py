@@ -168,5 +168,5 @@ class LanguageModel(nn.Module):
                 input.data.fill_(word_idx)
                 word = idx2item[word_idx].decode('UTF-8')
                 characters.append(word)
-    
+
             return ''.join(characters)
