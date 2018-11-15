@@ -244,19 +244,19 @@ class TextClassifierTrainer:
                                                     [sentence.get_label_names() for sentence in batch]):
                     for prediction in predictions:
                         if prediction in true_values:
-                            metric.tp()
-                            if eval_class_metrics: metric.tp(prediction)
+                            metric.add_tp()
+                            if eval_class_metrics: metric.add_tp(prediction)
                         else:
-                            metric.fp()
-                            if eval_class_metrics: metric.fp(prediction)
+                            metric.add_fp()
+                            if eval_class_metrics: metric.add_fp(prediction)
 
                     for true_value in true_values:
                         if true_value not in predictions:
-                            metric.fn()
-                            if eval_class_metrics: metric.fn(true_value)
+                            metric.add_fn()
+                            if eval_class_metrics: metric.add_fn(true_value)
                         else:
-                            metric.tn()
-                            if eval_class_metrics: metric.tn(true_value)
+                            metric.add_tn()
+                            if eval_class_metrics: metric.add_tn(true_value)
 
             eval_loss /= len(sentences)
 

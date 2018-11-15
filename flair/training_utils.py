@@ -22,38 +22,46 @@ class Metric(object):
         self._tns = defaultdict(int)
         self._fns = defaultdict(int)
 
-    def tp(self, class_name):
+    def add_tp(self, class_name):
         self._tps[class_name] += 1
 
-    def tn(self, class_name=None):
+    def add_tn(self, class_name=None):
         self._tns[class_name] += 1
 
-    def fp(self, class_name=None):
+    def add_fp(self, class_name=None):
         self._fps[class_name] += 1
 
-    def fn(self, class_name=None):
+    def add_fn(self, class_name=None):
         self._fns[class_name] += 1
 
     def get_tp(self, class_name=None):
+        if class_name is None:
+            return sum([self.get_tp(class_name) for class_name in self.get_classes()])
         return self._tps[class_name]
 
     def get_tn(self, class_name=None):
+        if class_name is None:
+            return sum([self.get_tn(class_name) for class_name in self.get_classes()])
         return self._tns[class_name]
 
     def get_fp(self, class_name=None):
+        if class_name is None:
+            return sum([self.get_fp(class_name) for class_name in self.get_classes()])
         return self._fps[class_name]
 
     def get_fn(self, class_name=None):
+        if class_name is None:
+            return sum([self.get_fn(class_name) for class_name in self.get_classes()])
         return self._fns[class_name]
 
     def precision(self, class_name=None):
-        if self._tps[class_name] + self._fps[class_name] > 0:
-            return round(self._tps[class_name] / (self._tps[class_name] + self._fps[class_name]), 4)
+        if self.get_tp(class_name) + self.get_fp(class_name) > 0:
+            return round(self.get_tp(class_name) / (self.get_tp(class_name) + self.get_fp(class_name)), 4)
         return 0.0
 
     def recall(self, class_name=None):
-        if self._tps[class_name] + self._fns[class_name] > 0:
-            return round(self._tps[class_name] / (self._tps[class_name] + self._fns[class_name]), 4)
+        if self.get_tp(class_name) + self.get_fn(class_name) > 0:
+            return round(self.get_tp(class_name) / (self.get_tp(class_name) + self.get_fn(class_name)), 4)
         return 0.0
 
     def f_score(self, class_name):
@@ -112,10 +120,10 @@ class Metric(object):
         return 0.0
 
     def accuracy(self, class_name=None):
-        if self._tps[class_name] + self._tns[class_name] + self._fps[class_name] + self._fns[class_name] > 0:
+        if self.get_tp(class_name) + self.get_tn(class_name) + self.get_fp(class_name) + self.get_fn(class_name) > 0:
             return round(
-                (self._tps[class_name] + self._tns[class_name])
-                / (self._tps[class_name] + self._tns[class_name] + self._fps[class_name] + self._fns[class_name]),
+                (self.get_tp(class_name) + self.get_tn(class_name))
+                / (self.get_tp(class_name) + self.get_tn(class_name) + self.get_fp(class_name) + self.get_fn(class_name)),
                 4)
         return 0.0
 
@@ -167,7 +175,7 @@ class Metric(object):
         all_lines = [
             '{0:<10}\ttp: {1} - fp: {2} - fn: {3} - tn: {4} - precision: {5:.4f} - recall: {6:.4f} - accuracy: {7:.4f} - f1-score: {8:.4f}'.format(
                 self.name if class_name == None else class_name,
-                self._tps[class_name], self._fps[class_name], self._fns[class_name], self._tns[class_name],
+                self.get_tp(class_name), self.get_fp(class_name), self.get_fn(class_name), self.get_tn(class_name),
                 self.precision(class_name), self.recall(class_name), self.accuracy(class_name),
                 self.f_score(class_name))
             for class_name in all_classes]

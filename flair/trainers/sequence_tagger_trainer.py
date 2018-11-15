@@ -220,19 +220,19 @@ class SequenceTaggerTrainer:
                     # check for true positives, false positives and false negatives
                     for tag, prediction in predicted_tags:
                         if (tag, prediction) in gold_tags:
-                            metric.tp()
-                            metric.tp(tag)
+                            metric.add_tp()
+                            metric.add_tp(tag)
                         else:
-                            metric.fp()
-                            metric.fp(tag)
+                            metric.add_fp()
+                            metric.add_fp(tag)
 
                     for tag, gold in gold_tags:
                         if (tag, gold) not in predicted_tags:
-                            metric.fn()
-                            metric.fn(tag)
+                            metric.add_fn()
+                            metric.add_fn(tag)
                         else:
-                            metric.tn()
-                            metric.tn(tag)
+                            metric.add_tn()
+                            metric.add_tn(tag)
 
                 if not embeddings_in_memory:
                     self.clear_embeddings_in_batch(batch)
