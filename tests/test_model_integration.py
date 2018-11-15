@@ -298,5 +298,9 @@ def test_train_language_model(results_base_path, resources_path):
     sentence = Sentence('I love Berlin')
     char_lm_embeddings.embed(sentence)
 
+    text = language_model.generate_text(100)
+    assert (text is not None)
+    assert (len(text) == 100)
+
     # clean up results directory
     shutil.rmtree(results_base_path, ignore_errors=True)
