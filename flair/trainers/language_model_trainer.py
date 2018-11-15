@@ -185,7 +185,7 @@ class LanguageModelTrainer:
         try:
 
             epoch = 0
-            best_val_loss = 100000000
+            best_val_loss = self.model.best_score if self.model.best_score is not None else 100000000
             optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
             scheduler: ReduceLROnPlateau = ReduceLROnPlateau(optimizer, verbose=True, factor=anneal_factor,
                                                              patience=patience)
@@ -269,6 +269,7 @@ class LanguageModelTrainer:
 
                 # Save the model if the validation loss is the best we've seen so far.
                 if val_loss < best_val_loss:
+                    self.model.best_score = best_val_loss
                     self.model.save(savefile)
                     best_val_loss = val_loss
 
