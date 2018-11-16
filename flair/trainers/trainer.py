@@ -36,7 +36,7 @@ class ModelTrainer:
               save_final_model: bool = True,
               anneal_with_restarts: bool = False,
               test_mode: bool = False,
-              ):
+              ) -> float:
 
         self._log_line()
         log.info(f'Evaluation method: {self.model.evaluation_metric().name}')
@@ -55,6 +55,8 @@ class ModelTrainer:
         anneal_mode = 'min' if train_with_dev else 'max'
         scheduler = ReduceLROnPlateau(optimizer, factor=anneal_factor, patience=patience, mode=anneal_mode,
                                       verbose=True)
+        # scheduler = ReduceLRWDOnPlateau(optimizer, factor=anneal_factor, patience=patience, mode=anneal_mode,
+        #                               verbose=True)
 
         train_data = self.corpus.train
 
@@ -83,7 +85,7 @@ class ModelTrainer:
                 previous_learning_rate = learning_rate
 
                 # stop training if learning rate becomes too small
-                if learning_rate < 0.001:
+                if learning_rate < 0.0001:
                     self._log_line()
                     log.info('learning rate too small - quitting training!')
                     self._log_line()
@@ -201,6 +203,8 @@ class ModelTrainer:
                      f'accuracy: {test_metric.accuracy(class_name):.4f} - f1-score: '
                      f'{test_metric.f_score(class_name):.4f}')
         self._log_line()
+
+        return test_metric.micro_avg_f_score()
 
     def _calculate_evaluation_results_for(self, dataset_name, dataset, embeddings_in_memory, mini_batch_size,
                                           out_path=None):
