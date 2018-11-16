@@ -23,7 +23,7 @@ class Metric(object):
         self._tns = defaultdict(int)
         self._fns = defaultdict(int)
 
-    def add_tp(self, class_name):
+    def add_tp(self, class_name=None):
         self._tps[class_name] += 1
 
     def add_tn(self, class_name=None):
