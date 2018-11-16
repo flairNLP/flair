@@ -3,6 +3,7 @@ import random
 import logging
 import os
 from collections import defaultdict
+from enum import Enum
 from typing import List
 from flair.data import Dictionary, Sentence
 from functools import reduce
@@ -188,6 +189,11 @@ class Metric(object):
         all_classes = [class_name for class_name in all_classes if class_name is not None]
         all_classes.sort()
         return all_classes
+
+
+class EvaluationMetric(Enum):
+    ACCURACY = 'accuracy'
+    F1_SCORE = 'f1-score'
 
 
 class WeightExtractor(object):

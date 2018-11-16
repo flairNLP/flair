@@ -1,5 +1,3 @@
-from enum import Enum
-
 import torch.nn
 
 from abc import abstractmethod
@@ -7,11 +5,7 @@ from abc import abstractmethod
 from typing import Union, List
 
 from flair.data import Sentence, Label
-
-
-class EvaluationMetric(Enum):
-    ACCURACY = 'accuracy'
-    F1_SCORE = 'f1-score'
+from flair.training_utils import EvaluationMetric
 
 
 class Model(torch.nn.Module):
