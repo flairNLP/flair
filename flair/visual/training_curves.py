@@ -11,18 +11,6 @@ matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 
-
-# header for 'loss.tsv'
-# TRAIN_LOSS = 2
-# TRAIN_F_SCORE = 9
-# TRAIN_ACCURACY = 10
-# DEV_LOSS = 11
-# DEV_F_SCORE = 18
-# DEV_ACCURACY = 19
-# TEST_LOSS = 20
-# TEST_F_SCORE = 27
-# TEST_ACCURACY = 28
-
 # header for 'weights.txt'
 WEIGHT_NAME = 1
 WEIGHT_NUMBER = 2
