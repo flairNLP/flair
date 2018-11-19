@@ -6,7 +6,7 @@ from flair.data import Dictionary, Sentence
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 from flair.embeddings import WordEmbeddings, CharLMEmbeddings, DocumentLSTMEmbeddings, TokenEmbeddings
 from flair.models import SequenceTagger, TextClassifier, LanguageModel
-from flair.trainers import SequenceTaggerTrainer, TextClassifierTrainer
+from flair.trainers import SequenceTaggerTrainer, TextClassifierTrainer, ModelTrainer
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
 
 
@@ -25,9 +25,9 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
                                             use_crf=False)
 
     # initialize trainer
-    trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=2)
+    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=2, test_mode=True)
 
     loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
 
@@ -57,9 +57,9 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
                                             use_crf=False)
 
     # initialize trainer
-    trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=2)
+    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=2, test_mode=True)
 
     loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
 
@@ -92,9 +92,9 @@ def test_train_charlm_changed_chache_load_use_tagger(results_base_path, tasks_ba
                                             use_crf=False)
 
     # initialize trainer
-    trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=2)
+    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=2, test_mode=True)
 
     # remove the cache directory
     shutil.rmtree(cache_dir)
@@ -127,9 +127,9 @@ def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_pat
                                             use_crf=False)
 
     # initialize trainer
-    trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=2)
+    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=2, test_mode=True)
 
     loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
 
@@ -178,8 +178,8 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
-    trainer = TextClassifierTrainer(model, corpus, label_dict, test_mode=True)
-    trainer.train(str(results_base_path), max_epochs=2)
+    trainer = ModelTrainer(model, corpus)
+    trainer.train(str(results_base_path), max_epochs=2, test_mode=True)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -214,8 +214,8 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
-    trainer = TextClassifierTrainer(model, corpus, label_dict, test_mode=True)
-    trainer.train(str(results_base_path), max_epochs=2)
+    trainer = ModelTrainer(model, corpus)
+    trainer.train(str(results_base_path), max_epochs=2, test_mode=True)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -251,8 +251,8 @@ def test_train_charlm_nocache_load_use_classifier(results_base_path, tasks_base_
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
-    trainer = TextClassifierTrainer(model, corpus, label_dict, test_mode=True)
-    trainer.train(str(results_base_path), max_epochs=2)
+    trainer = ModelTrainer(model, corpus)
+    trainer.train(str(results_base_path), max_epochs=2, test_mode=True)
 
     sentence = Sentence("Berlin is a really nice city.")
 

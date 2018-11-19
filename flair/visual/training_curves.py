@@ -11,18 +11,6 @@ matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 
-
-# header for 'loss.tsv'
-TRAIN_LOSS = 2
-TRAIN_F_SCORE = 9
-TRAIN_ACCURACY = 10
-DEV_LOSS = 11
-DEV_F_SCORE = 18
-DEV_ACCURACY = 19
-TEST_LOSS = 20
-TEST_F_SCORE = 27
-TEST_ACCURACY = 28
-
 # header for 'weights.txt'
 WEIGHT_NAME = 1
 WEIGHT_NUMBER = 2
@@ -58,8 +46,20 @@ class Plotter(object):
 
         with open(file_name, 'r') as tsvin:
             tsvin = csv.reader(tsvin, delimiter='\t')
-            next(tsvin, None)
 
+            # determine the column index of loss, f-score and accuracy for train, dev and test split
+            row = next(tsvin, None)
+            TRAIN_LOSS = row.index('TRAIN_LOSS')
+            TRAIN_F_SCORE = row.index('TRAIN_F-SCORE')
+            TRAIN_ACCURACY = row.index('TRAIN_ACCURACY')
+            DEV_LOSS = row.index('DEV_LOSS')
+            DEV_F_SCORE = row.index('DEV_F-SCORE')
+            DEV_ACCURACY = row.index('DEV_ACCURACY')
+            TEST_LOSS = row.index('TEST_LOSS')
+            TEST_F_SCORE = row.index('TEST_F-SCORE')
+            TEST_ACCURACY = row.index('TEST_ACCURACY')
+
+            # then get all relevant values from the tsv
             for row in tsvin:
                 if row[TRAIN_LOSS] != '_': training_curves['train']['loss'].append(float(row[TRAIN_LOSS]))
                 if row[TRAIN_F_SCORE] != '_': training_curves['train']['f_score'].append(float(row[TRAIN_F_SCORE]))

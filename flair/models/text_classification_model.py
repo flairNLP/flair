@@ -5,6 +5,7 @@ from typing import List, Union
 import torch
 import torch.nn as nn
 
+import flair.nn
 import flair.embeddings
 from flair.data import Dictionary, Sentence, Label
 from flair.training_utils import convert_labels_to_one_hot, clear_embeddings
@@ -13,7 +14,7 @@ from flair.training_utils import convert_labels_to_one_hot, clear_embeddings
 log = logging.getLogger(__name__)
 
 
-class TextClassifier(nn.Module):
+class TextClassifier(flair.nn.Model):
     """
     Text Classification Model
     The model takes word embeddings, puts them into an LSTM to obtain a text representation, and puts the
@@ -104,6 +105,19 @@ class TextClassifier(nn.Module):
         model.eval()
         return model
 
+    def evaluation_metric(self) -> flair.nn.EvaluationMetric:
+        return flair.nn.EvaluationMetric.F1_SCORE
+
+    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
+        scores = self.forward(sentences)
+        return self._calculate_loss(scores, sentences)
+
+    def forward_labels_and_loss(self, sentences: Union[Sentence, List[Sentence]]) -> (List[List[Label]], torch.tensor):
+        scores = self.forward(sentences)
+        labels = self._obtain_labels(scores)
+        loss = self._calculate_loss(scores, sentences)
+        return labels, loss
+
     def predict(self, sentences: Union[Sentence, List[Sentence]], mini_batch_size: int = 32) -> List[Sentence]:
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
@@ -121,7 +135,7 @@ class TextClassifier(nn.Module):
 
             for batch in batches:
                 scores = self.forward(batch)
-                predicted_labels = self.obtain_labels(scores)
+                predicted_labels = self._obtain_labels(scores)
 
                 for (sentence, labels) in zip(batch, predicted_labels):
                     sentence.labels = labels
@@ -137,7 +151,7 @@ class TextClassifier(nn.Module):
             log.warning('Ignore {} sentence(s) with no tokens.'.format(len(sentences) - len(filtered_sentences)))
         return filtered_sentences
 
-    def calculate_loss(self, scores: List[List[float]], sentences: List[Sentence]) -> float:
+    def _calculate_loss(self, scores: List[List[float]], sentences: List[Sentence]) -> float:
         """
         Calculates the loss.
         :param scores: the prediction scores from the model
@@ -149,7 +163,7 @@ class TextClassifier(nn.Module):
 
         return self._calculate_single_label_loss(scores, sentences)
 
-    def obtain_labels(self, scores: List[List[float]]) -> List[List[Label]]:
+    def _obtain_labels(self, scores: List[List[float]]) -> List[List[Label]]:
         """
         Predicts the labels of sentences.
         :param scores: the prediction scores from the model

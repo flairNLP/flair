@@ -43,11 +43,10 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         use_crf=True)
 
 # initialize trainer
-from flair.trainers.sequence_tagger_trainer import SequenceTaggerTrainer
+from flair.trainers import ModelTrainer
+trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=True)
-
-trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=20)
+trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=20, test_mode=True)
 
 plotter = Plotter()
 plotter.plot_training_curves('resources/taggers/example-ner/loss.tsv')

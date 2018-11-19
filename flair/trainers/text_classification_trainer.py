@@ -38,7 +38,7 @@ class TextClassifierTrainer:
               checkpoint: bool = False,
               save_final_model: bool = True,
               anneal_with_restarts: bool = False,
-              eval_on_train: bool = True):
+              test_mode: bool = False,):
         """
         Trains a text classification model using the training data of the corpus.
         :param base_path: the directory to which any results should be written to
@@ -113,8 +113,7 @@ class TextClassifierTrainer:
                 modulo = max(1, int(len(batches) / 10))
 
                 for batch_no, batch in enumerate(batches):
-                    scores = self.model.forward(batch)
-                    loss = self.model.calculate_loss(scores, batch)
+                    loss = self.model.forward_loss(batch)
 
                     optimizer.zero_grad()
                     loss.backward()
@@ -155,6 +154,8 @@ class TextClassifierTrainer:
                 if not train_with_dev:
                     dev_metric, dev_loss = self._calculate_evaluation_results_for(
                         'DEV', self.corpus.dev, embeddings_in_memory, mini_batch_size)
+
+                self._calculate_evaluation_results_for('TEST', self.corpus.test, embeddings_in_memory, mini_batch_size)
 
                 with open(loss_txt, 'a') as f:
                     train_metric_str = train_metric.to_tsv() if train_metric is not None else Metric.to_empty_tsv()
@@ -233,9 +234,7 @@ class TextClassifierTrainer:
             metric = Metric(metric_name)
 
             for batch in batches:
-                scores = self.model.forward(batch)
-                labels = self.model.obtain_labels(scores)
-                loss = self.model.calculate_loss(scores, batch)
+                labels, loss = self.model.predict_eval(sentences)
 
                 clear_embeddings(batch, also_clear_word_embeddings=not embeddings_in_memory)
 
@@ -245,19 +244,19 @@ class TextClassifierTrainer:
                                                     [sentence.get_label_names() for sentence in batch]):
                     for prediction in predictions:
                         if prediction in true_values:
-                            metric.tp()
-                            if eval_class_metrics: metric.tp(prediction)
+                            metric.add_tp()
+                            if eval_class_metrics: metric.add_tp(prediction)
                         else:
-                            metric.fp()
-                            if eval_class_metrics: metric.fp(prediction)
+                            metric.add_fp()
+                            if eval_class_metrics: metric.add_fp(prediction)
 
                     for true_value in true_values:
                         if true_value not in predictions:
-                            metric.fn()
-                            if eval_class_metrics: metric.fn(true_value)
+                            metric.add_fn()
+                            if eval_class_metrics: metric.add_fn(true_value)
                         else:
-                            metric.tn()
-                            if eval_class_metrics: metric.tn(true_value)
+                            metric.add_tn()
+                            if eval_class_metrics: metric.add_tn(true_value)
 
             eval_loss /= len(sentences)
 
