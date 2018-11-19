@@ -55,8 +55,6 @@ class ModelTrainer:
         anneal_mode = 'min' if train_with_dev else 'max'
         scheduler = ReduceLROnPlateau(optimizer, factor=anneal_factor, patience=patience, mode=anneal_mode,
                                       verbose=True)
-        # scheduler = ReduceLRWDOnPlateau(optimizer, factor=anneal_factor, patience=patience, mode=anneal_mode,
-        #                               verbose=True)
 
         train_data = self.corpus.train
 
@@ -152,8 +150,8 @@ class ModelTrainer:
                     dev_metric_str = dev_metric.to_tsv() if dev_metric is not None else Metric.to_empty_tsv()
                     test_metric_str = test_metric.to_tsv() if test_metric is not None else Metric.to_empty_tsv()
                     f.write(
-                        f'{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{current_loss}\t{train_metric_str}\t{dev_loss}'
-                        f'\t{dev_metric_str}\t_\t{test_metric_str}\n')
+                        f'{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t'
+                        f'{current_loss}\t{train_metric_str}\t{dev_loss}\t{dev_metric_str}\t_\t{test_metric_str}\n')
 
                 if train_with_dev:
                     current_score = current_loss

@@ -51,7 +51,7 @@ class TextClassifier(flair.nn.Model):
     def _init_weights(self):
         nn.init.xavier_uniform_(self.decoder.weight)
 
-    def _forward(self, sentences) -> List[List[float]]:
+    def forward(self, sentences) -> List[List[float]]:
         self.document_embeddings.embed(sentences)
 
         text_embedding_list = [sentence.get_embedding() for sentence in sentences]
@@ -109,11 +109,11 @@ class TextClassifier(flair.nn.Model):
         return flair.nn.EvaluationMetric.F1_SCORE
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
-        scores = self._forward(sentences)
+        scores = self.forward(sentences)
         return self._calculate_loss(scores, sentences)
 
     def forward_labels_and_loss(self, sentences: Union[Sentence, List[Sentence]]) -> (List[List[Label]], torch.tensor):
-        scores = self._forward(sentences)
+        scores = self.forward(sentences)
         labels = self._obtain_labels(scores)
         loss = self._calculate_loss(scores, sentences)
         return labels, loss
