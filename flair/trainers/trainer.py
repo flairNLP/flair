@@ -55,8 +55,6 @@ class ModelTrainer:
         anneal_mode = 'min' if train_with_dev else 'max'
         scheduler = ReduceLROnPlateau(optimizer, factor=anneal_factor, patience=patience, mode=anneal_mode,
                                       verbose=True)
-        # scheduler = ReduceLRWDOnPlateau(optimizer, factor=anneal_factor, patience=patience, mode=anneal_mode,
-        #                               verbose=True)
 
         train_data = self.corpus.train
 
@@ -301,7 +299,8 @@ class ModelTrainer:
             metric = Metric('Evaluation')
 
             for batch in batches:
-                labels, loss = model.forward_labels_and_loss(sentences)
+
+                labels, loss = model.forward_labels_and_loss(batch)
 
                 clear_embeddings(batch, also_clear_word_embeddings=not embeddings_in_memory)
 
