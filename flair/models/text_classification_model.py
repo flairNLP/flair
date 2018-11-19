@@ -134,7 +134,7 @@ class TextClassifier(flair.nn.Model):
             batches = [filtered_sentences[x:x + mini_batch_size] for x in range(0, len(filtered_sentences), mini_batch_size)]
 
             for batch in batches:
-                scores = self._forward(batch)
+                scores = self.forward(batch)
                 predicted_labels = self._obtain_labels(scores)
 
                 for (sentence, labels) in zip(batch, predicted_labels):

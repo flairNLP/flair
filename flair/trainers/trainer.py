@@ -138,12 +138,12 @@ class ModelTrainer:
                     train_metric, train_loss = self._calculate_evaluation_results_for(
                         'TRAIN', self.corpus.train, embeddings_in_memory, mini_batch_size)
 
-                test_metric, test_loss = self._calculate_evaluation_results_for(
-                    'TEST', self.corpus.test, embeddings_in_memory, mini_batch_size, base_path + '/test.tsv')
-
                 if not train_with_dev:
                     dev_metric, dev_loss = self._calculate_evaluation_results_for(
                         'DEV', self.corpus.dev, embeddings_in_memory, mini_batch_size)
+
+                test_metric, test_loss = self._calculate_evaluation_results_for(
+                    'TEST', self.corpus.test, embeddings_in_memory, mini_batch_size, base_path + '/test.tsv')
 
                 with open(loss_txt, 'a') as f:
                     train_metric_str = train_metric.to_tsv() if train_metric is not None else Metric.to_empty_tsv()
@@ -177,8 +177,8 @@ class ModelTrainer:
             log.info('Saving model ...')
             self.model.save(base_path + "/final-model.pt")
             log.info('Done.')
-            self._log_line()
 
+        self._log_line()
         log.info('Testing using best model ...')
 
         self.model.eval()
