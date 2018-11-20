@@ -321,6 +321,10 @@ class Sentence:
             # otherwise assumes whitespace tokenized text
             else:
                 # add each word in tokenized string as Token object to Sentence
+
+                if '  ' in text:
+                    raise ValueError('Your input text is not whitespace-tokenized. Please set the `use_tokenizer` argument to True.')
+                
                 offset = 0
                 for word in text.split(' '):
                     if word:
