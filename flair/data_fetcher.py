@@ -399,7 +399,7 @@ class NLPTaskDataFetcher:
         sentence: Sentence = Sentence()
         for line in lines:
 
-            fields: List[str] = re.split("\s+", line)
+            fields: List[str] = re.split("\t+", line)
             if line == '':
                 if len(sentence) > 0:
                     sentences.append(sentence)
