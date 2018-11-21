@@ -71,6 +71,14 @@ class Metric(object):
                          / (self.precision(class_name) + self.recall(class_name)), 4)
         return 0.0
 
+    def accuracy(self, class_name=None):
+        if self.get_tp(class_name) + self.get_tn(class_name) + self.get_fp(class_name) + self.get_fn(class_name) > 0:
+            return round(
+                (self.get_tp(class_name) + self.get_tn(class_name))
+                / (self.get_tp(class_name) + self.get_tn(class_name) + self.get_fp(class_name) + self.get_fn(class_name)),
+                4)
+        return 0.0
+
     def micro_avg_f_score(self):
         all_tps = sum([self.get_tp(class_name) for class_name in self.get_classes()])
         all_fps = sum([self.get_fp(class_name) for class_name in self.get_classes()])
@@ -120,20 +128,6 @@ class Metric(object):
 
         return 0.0
 
-    def accuracy(self, class_name=None):
-        if self.get_tp(class_name) + self.get_tn(class_name) + self.get_fp(class_name) + self.get_fn(class_name) > 0:
-            return round(
-                (self.get_tp(class_name) + self.get_tn(class_name))
-                / (self.get_tp(class_name) + self.get_tn(class_name) + self.get_fp(class_name) + self.get_fn(class_name)),
-                4)
-        return 0.0
-
-    def to_tsv_full(self):
-        return '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
-            self.get_tp(), self.get_tn(), self.get_fp(), self.get_fn(), self.precision(), self.recall(),
-            self.micro_avg_f_score(),
-            self.accuracy())
-
     def to_tsv(self):
         return '{}\t{}\t{}\t{}'.format(
             self.precision(),
@@ -145,15 +139,6 @@ class Metric(object):
     def print(self):
         log.info(self)
 
-
-    @staticmethod
-    def tsv_header_full(prefix=None):
-        if prefix:
-            return '{0}_TP\t{0}_TN\t{0}_FP\t{0}_FN\t{0}_PRECISION\t{0}_RECALL\t{0}_F-SCORE\t{0}_ACCURACY'.format(
-                prefix)
-
-        return 'TP\tTN\tFP\tFN\tPRECISION\tRECALL\tF-SCORE\tACCURACY'
-
     @staticmethod
     def tsv_header(prefix=None):
         if prefix:
@@ -161,10 +146,6 @@ class Metric(object):
                 prefix)
 
         return 'PRECISION\tRECALL\tACCURACY\tF-SCORE'
-
-    @staticmethod
-    def to_empty_tsv_full():
-        return '_\t_\t_\t_\t_\t_\t_\t_'
 
     @staticmethod
     def to_empty_tsv():
