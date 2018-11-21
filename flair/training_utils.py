@@ -8,7 +8,6 @@ from typing import List
 from flair.data import Dictionary, Sentence
 from functools import reduce
 
-MICRO_AVG_METRIC = 'MICRO_AVG'
 
 log = logging.getLogger(__name__)
 

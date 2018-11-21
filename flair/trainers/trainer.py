@@ -9,7 +9,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 import flair
 import flair.nn
-from flair.data import Sentence, Token, TaggedCorpus, Label
+from flair.data import Sentence, Token, TaggedCorpus
 from flair.models import TextClassifier, SequenceTagger
 from flair.training_utils import Metric, init_output_file, WeightExtractor, clear_embeddings, EvaluationMetric
 
