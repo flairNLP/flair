@@ -35,23 +35,15 @@ class Metric(object):
         self._fns[class_name] += 1
 
     def get_tp(self, class_name=None):
-        if class_name is None:
-            return sum([self.get_tp(class_name) for class_name in self.get_classes()])
         return self._tps[class_name]
 
     def get_tn(self, class_name=None):
-        if class_name is None:
-            return sum([self.get_tn(class_name) for class_name in self.get_classes()])
         return self._tns[class_name]
 
     def get_fp(self, class_name=None):
-        if class_name is None:
-            return sum([self.get_fp(class_name) for class_name in self.get_classes()])
         return self._fps[class_name]
 
     def get_fn(self, class_name=None):
-        if class_name is None:
-            return sum([self.get_fn(class_name) for class_name in self.get_classes()])
         return self._fns[class_name]
 
     def precision(self, class_name=None):
