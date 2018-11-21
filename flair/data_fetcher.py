@@ -1,29 +1,35 @@
-from typing import List, Dict
+from typing import List, Dict, Union
 import re
 import os
 import logging
 from enum import Enum
 from pathlib import Path
 
-from flair.data import Sentence, TaggedCorpus, Token
+from flair.data import Sentence, TaggedCorpus, Token, MultiCorpus
 
 log = logging.getLogger(__name__)
 
 
 class NLPTask(Enum):
-    # conll column format
-    CONLL_03 = 'conll_03'
+    # conll 2000 column format
     CONLL_2000 = 'conll_2000'
-    CONLL_03_GERMAN = 'conll_03-ger'
-    ONTONER = 'onto-ner'
-    FASHION = 'fashion'
-    GERMEVAL = 'germeval'
-    SRL = 'srl'
-    WSD = 'wsd'
+
+    # conll 03 NER column format
+    CONLL_03 = 'conll_03'
+    CONLL_03_GERMAN = 'conll_03_german'
+    CONLL_03_DUTCH = 'conll_03_dutch'
+    CONLL_03_SPANISH = 'conll_03_spanish'
 
     # conll-u format
     UD_ENGLISH = 'ud_english'
     UD_GERMAN = 'ud_german'
+
+    # other datasets
+    ONTONER = 'ontoner'
+    FASHION = 'fashion'
+    GERMEVAL = 'germeval'
+    SRL = 'srl'
+    WSD = 'wsd'
     CONLL_12 = 'conll_12'
     PENN = 'penn'
     ONTONOTES = 'ontonotes'
@@ -36,7 +42,11 @@ class NLPTask(Enum):
 class NLPTaskDataFetcher:
 
     @staticmethod
-    def fetch_data(task: NLPTask, base_path: Path = None) -> TaggedCorpus:
+    def fetch_corpora(tasks: List[Union[NLPTask, str]], base_path: Path = None) -> MultiCorpus:
+        return MultiCorpus([NLPTaskDataFetcher.fetch_data(task, base_path) for task in tasks])
+
+    @staticmethod
+    def fetch_data(task: Union[NLPTask, str], base_path: Path = None) -> TaggedCorpus:
         """
         Helper function to fetch a TaggedCorpus for a specific NLPTask. For this to work you need to first download
         and put into the appropriate folder structure the corresponsing NLP task data. The tutorials on
@@ -50,143 +60,82 @@ class NLPTaskDataFetcher:
         if not base_path:
             base_path = Path('resources') / 'tasks'
 
-        data_folder = str(base_path / str(task.value).lower())
+        # get string value if enum is passed
+        task = task.value if type(task) is NLPTask else task
 
-        log.info("Reading data from {}".format(data_folder))
+        data_folder = str(base_path / task.lower())
 
         # the CoNLL 2000 task on chunking has three columns: text, pos and np (chunk)
-        if task == NLPTask.CONLL_2000:
+        if task == NLPTask.CONLL_2000.value:
             columns = {0: 'text', 1: 'pos', 2: 'np'}
 
             return NLPTaskDataFetcher.fetch_column_corpus(data_folder,
                                                           columns,
-                                                          train_file='train.txt',
-                                                          test_file='test.txt',
                                                           tag_to_biloes='np')
 
         # many NER tasks follow the CoNLL 03 format with four colulms: text, pos, np and ner tag
-        if task == NLPTask.CONLL_03 or task == NLPTask.ONTONER or task == NLPTask.FASHION:
+        if task == NLPTask.CONLL_03.value or task == NLPTask.ONTONER.value or task == NLPTask.FASHION.value:
             columns = {0: 'text', 1: 'pos', 2: 'np', 3: 'ner'}
 
             return NLPTaskDataFetcher.fetch_column_corpus(data_folder,
                                                           columns,
-                                                          train_file='eng.train',
-                                                          test_file='eng.testb',
-                                                          dev_file='eng.testa',
                                                           tag_to_biloes='ner',
                                                           )
 
         # the CoNLL 03 task for German has an additional lemma column
-        if task == NLPTask.CONLL_03_GERMAN:
+        if task == NLPTask.CONLL_03_GERMAN.value:
             columns = {0: 'text', 1: 'lemma', 2: 'pos', 3: 'np', 4: 'ner'}
 
             return NLPTaskDataFetcher.fetch_column_corpus(data_folder,
                                                           columns,
-                                                          train_file='deu.train',
-                                                          test_file='deu.testb',
-                                                          dev_file='deu.testa',
+                                                          tag_to_biloes='ner')
+
+        # the CoNLL 03 task for Dutch has no NP column
+        if task == NLPTask.CONLL_03_DUTCH.value:
+            columns = {0: 'text', 1: 'pos', 2: 'ner'}
+
+            return NLPTaskDataFetcher.fetch_column_corpus(data_folder,
+                                                          columns,
+                                                          tag_to_biloes='ner')
+
+        # the CoNLL 03 task for Spanish only has two columns
+        if task == NLPTask.CONLL_03_SPANISH.value:
+            columns = {0: 'text', 1: 'ner'}
+
+            return NLPTaskDataFetcher.fetch_column_corpus(data_folder,
+                                                          columns,
                                                           tag_to_biloes='ner')
 
         # the GERMEVAL task only has two columns: text and ner
-        if task == NLPTask.GERMEVAL:
+        if task == NLPTask.GERMEVAL.value:
             columns = {1: 'text', 2: 'ner'}
 
             return NLPTaskDataFetcher.fetch_column_corpus(data_folder,
                                                           columns,
-                                                          train_file='NER-de-train.tsv',
-                                                          test_file='NER-de-test.tsv',
-                                                          dev_file='NER-de-dev.tsv',
                                                           tag_to_biloes='ner')
 
         # WSD tasks may be put into this column format
-        if task == NLPTask.WSD:
+        if task == NLPTask.WSD.value:
             columns = {0: 'text', 1: 'lemma', 2: 'pos', 3: 'sense'}
-
             return NLPTaskDataFetcher.fetch_column_corpus(data_folder,
                                                           columns,
                                                           train_file='semcor.tsv',
                                                           test_file='semeval2015.tsv')
 
         # the UD corpora follow the CoNLL-U format, for which we have a special reader
-        if task == NLPTask.UD_ENGLISH:
-            # get train, test and dev data
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-                os.path.join(data_folder, 'en_ewt-ud-train.conllu'))
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-                os.path.join(data_folder, 'en_ewt-ud-test.conllu'))
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-                os.path.join(data_folder, 'en_ewt-ud-dev.conllu'))
-
-            return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
-
-        if task == NLPTask.UD_GERMAN:
-            # get train, test and dev data
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-                os.path.join(data_folder, 'de_gsd-ud-train.conllu'))
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-                os.path.join(data_folder, 'de_gsd-ud-test.conllu'))
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-                os.path.join(data_folder, 'de_gsd-ud-dev.conllu'))
-
-            return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
-
-        if task == NLPTask.ONTONOTES:
-            # get train, test and dev data
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-                os.path.join(data_folder, 'train.conllu'))
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-                os.path.join(data_folder, 'test.conllu'))
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-                os.path.join(data_folder, 'dev.conllu'))
-
-            return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
-
-        if task == NLPTask.CONLL_12:
-            # get train, test and dev data
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-                os.path.join(data_folder, 'train.propbank.conllu'))
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-                os.path.join(data_folder, 'test.propbank.conllu'))
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-                os.path.join(data_folder, 'dev.propbank.conllu'))
-            return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
-
-        if task == NLPTask.PENN:
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-                os.path.join(data_folder, 'train.conll'))
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-                os.path.join(data_folder, 'valid.conll'))
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-                os.path.join(data_folder, 'test.conll'))
-
-            return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
+        if task.startswith('ud_') or task in [NLPTask.ONTONOTES.value, NLPTask.CONLL_12.value, NLPTask.PENN.value]:
+            return NLPTaskDataFetcher.fetch_ud_corpus(data_folder)
 
         # for text classifiers, we use our own special format
-        if task == NLPTask.IMDB:
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
-                os.path.join(data_folder, 'train.txt'))
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
-                os.path.join(data_folder, 'dev.txt'))
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
-                os.path.join(data_folder, 'test.txt'))
-            return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
-
-        # for text classifiers, we use our own special format
-        if task == NLPTask.AG_NEWS:
-            sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
-                os.path.join(data_folder, 'train.txt'))
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
-                os.path.join(data_folder, 'dev.txt'))
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
-                os.path.join(data_folder, 'test.txt'))
-            return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
+        if task == NLPTask.IMDB.value or task == NLPTask.AG_NEWS.value:
+            return NLPTaskDataFetcher.fetch_classification_corpus(data_folder)
 
     @staticmethod
     def fetch_column_corpus(
             data_folder: Path,
             column_format: Dict[int, str],
-            train_file: str,
-            test_file: str,
+            train_file=None,
+            test_file=None,
             dev_file=None,
             tag_to_biloes=None) -> TaggedCorpus:
         """
@@ -203,6 +152,25 @@ class NLPTaskDataFetcher:
 
         # TODO: move all paths to use pathlib.Path, for now convert to str for compatibility
         data_folder = str(data_folder)
+
+        # automatically identify train / test / dev files
+        if train_file is None:
+            for file in os.listdir(data_folder):
+                if 'train' in file and not '54019' in file:
+                    train_file = file
+                if 'test' in file:
+                    test_file = file
+                if 'dev' in file:
+                    dev_file = file
+                if 'testa' in file:
+                    dev_file = file
+                if 'testb' in file:
+                    test_file = file
+
+        log.info("Reading data from {}".format(data_folder))
+        log.info("Train: {}".format(train_file))
+        log.info("Dev: {}".format(dev_file))
+        log.info("Test: {}".format(test_file))
 
         # get train and test data
         sentences_train: List[Sentence] = NLPTaskDataFetcher.read_column_data(
@@ -224,7 +192,142 @@ class NLPTaskDataFetcher:
                 sentence: Sentence = sentence
                 sentence.convert_tag_scheme(tag_type=tag_to_biloes, target_scheme='iobes')
 
+        return TaggedCorpus(sentences_train, sentences_dev, sentences_test, name=data_folder)
+
+    @staticmethod
+    def fetch_ud_corpus(
+            data_folder: Path,
+            train_file=None,
+            test_file=None,
+            dev_file=None) -> TaggedCorpus:
+        """
+        Helper function to get a TaggedCorpus from CoNLL-U column-formatted task data such as the UD corpora
+
+        :param data_folder: base folder with the task data
+        :param train_file: the name of the train file
+        :param test_file: the name of the test file
+        :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :return: a TaggedCorpus with annotated train, dev and test data
+        """
+
+        # TODO: move all paths to use pathlib.Path, for now convert to str for compatibility
+        data_folder = str(data_folder)
+
+        # automatically identify train / test / dev files
+        if train_file is None:
+            for file in os.listdir(data_folder):
+                if 'train' in file:
+                    train_file = file
+                if 'test' in file:
+                    test_file = file
+                if 'dev' in file:
+                    dev_file = file
+                if 'testa' in file:
+                    dev_file = file
+                if 'testb' in file:
+                    test_file = file
+
+        log.info("Reading data from {}".format(data_folder))
+        log.info("Train: {}".format(train_file))
+        log.info("Dev: {}".format(dev_file))
+        log.info("Test: {}".format(test_file))
+
+        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
+            os.path.join(data_folder, train_file))
+        sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
+            os.path.join(data_folder, test_file))
+        sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
+            os.path.join(data_folder, dev_file))
+
         return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
+
+    @staticmethod
+    def fetch_classification_corpus(
+            data_folder: Path,
+            train_file=None,
+            test_file=None,
+            dev_file=None) -> TaggedCorpus:
+        """
+        Helper function to get a TaggedCorpus from text classification-formatted task data
+
+        :param data_folder: base folder with the task data
+        :param train_file: the name of the train file
+        :param test_file: the name of the test file
+        :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :return: a TaggedCorpus with annotated train, dev and test data
+        """
+
+        # TODO: move all paths to use pathlib.Path, for now convert to str for compatibility
+        data_folder = str(data_folder)
+
+        # automatically identify train / test / dev files
+        if train_file is None:
+            for file in os.listdir(data_folder):
+                if 'train' in file:
+                    train_file = file
+                if 'test' in file:
+                    test_file = file
+                if 'dev' in file:
+                    dev_file = file
+                if 'testa' in file:
+                    dev_file = file
+                if 'testb' in file:
+                    test_file = file
+
+        log.info("Reading data from {}".format(data_folder))
+        log.info("Train: {}".format(train_file))
+        log.info("Dev: {}".format(dev_file))
+        log.info("Test: {}".format(test_file))
+
+        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
+            os.path.join(data_folder, train_file))
+        sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
+            os.path.join(data_folder, test_file))
+        sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
+            os.path.join(data_folder, dev_file))
+
+        return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
+
+    @staticmethod
+    def read_text_classification_file(path_to_file, max_tokens_per_doc=-1):
+        """
+        Reads a data file for text classification. The file should contain one document/text per line.
+        The line should have the following format:
+        __label__<class_name> <text>
+        If you have a multi class task, you can have as many labels as you want at the beginning of the line, e.g.,
+        __label__<class_name_1> __label__<class_name_2> <text>
+        :param path_to_file: the path to the data file
+        :param max_tokens_per_doc: Take only documents that contain number of tokens less or equal to this value. If
+        set to -1 all documents are taken.
+        :return: list of sentences
+        """
+        label_prefix = '__label__'
+        sentences = []
+
+        with open(path_to_file) as f:
+            for line in f:
+                words = line.split()
+
+                labels = []
+                l_len = 0
+
+                for i in range(len(words)):
+                    if words[i].startswith(label_prefix):
+                        l_len += len(words[i]) + 1
+                        label = words[i].replace(label_prefix, "")
+                        labels.append(label)
+                    else:
+                        break
+
+                text = line[l_len:].strip()
+
+                if text and labels:
+                    sentence = Sentence(text, labels=labels, use_tokenizer=True)
+                    if (len(sentence) > max_tokens_per_doc):
+                        sentence.tokens = sentence.tokens[:max_tokens_per_doc]
+                    sentences.append(sentence)
+
+        return sentences
 
     @staticmethod
     def read_column_data(path_to_column_file: str,
@@ -242,7 +345,11 @@ class NLPTaskDataFetcher:
         """
         sentences: List[Sentence] = []
 
-        lines: List[str] = open(path_to_column_file).read().strip().split('\n')
+        try:
+            lines: List[str] = open(path_to_column_file, encoding='utf-8').read().strip().split('\n')
+        except:
+            log.info('UTF-8 can\'t read: {} ... using "latin-1" instead.'.format(path_to_column_file))
+            lines: List[str] = open(path_to_column_file, encoding='latin1').read().strip().split('\n')
 
         # most data sets have the token text in the first column, if not, pass 'text' as column
         text_column: int = 0
@@ -359,7 +466,7 @@ class NLPTaskDataFetcher:
 
                 if text and labels:
                     sentence = Sentence(text, labels=labels, use_tokenizer=True)
-                    if(len(sentence) > max_tokens_per_doc):
+                    if (len(sentence) > max_tokens_per_doc):
                         sentence.tokens = sentence.tokens[:max_tokens_per_doc]
                     sentences.append(sentence)
 

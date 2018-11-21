@@ -10,7 +10,6 @@ from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
 
-
 log = logging.getLogger(__name__)
 
 
@@ -590,10 +589,11 @@ class Sentence:
 
 
 class TaggedCorpus:
-    def __init__(self, train: List[Sentence], dev: List[Sentence], test: List[Sentence]):
+    def __init__(self, train: List[Sentence], dev: List[Sentence], test: List[Sentence], name: str = 'corpus'):
         self.train: List[Sentence] = train
         self.dev: List[Sentence] = dev
         self.test: List[Sentence] = test
+        self.name: str = name
 
     def downsample(self, percentage: float = 0.1, only_downsample_train=False):
 
@@ -791,3 +791,53 @@ def iob_iobes(tags):
         else:
             raise Exception('Invalid IOB format!')
     return new_tags
+
+
+class MultiCorpus:
+    def __init__(self, corpora: List[TaggedCorpus]):
+        self.corpora: List[TaggedCorpus] = corpora
+
+    def __str__(self):
+        return '\n'.join([str(corpus) for corpus in self.corpora])
+
+    def make_tag_dictionary(self, tag_type: str) -> Dictionary:
+
+        # Make the tag dictionary
+        tag_dictionary: Dictionary = Dictionary()
+        tag_dictionary.add_item('O')
+        for corpus in self.corpora:
+            for sentence in corpus.get_all_sentences():
+                for token in sentence.tokens:
+                    token: Token = token
+                    tag_dictionary.add_item(token.get_tag(tag_type).value)
+        tag_dictionary.add_item('<START>')
+        tag_dictionary.add_item('<STOP>')
+        return tag_dictionary
+
+    def downsample(self, percentage: float = 0.1, only_downsample_train=False):
+
+        for corpus in self.corpora:
+            corpus.downsample(percentage, only_downsample_train)
+
+        return self
+
+    @property
+    def train(self) -> List[Sentence]:
+        train: List[Sentence] = []
+        for corpus in self.corpora:
+            train.extend(corpus.train)
+        return train
+
+    @property
+    def dev(self) -> List[Sentence]:
+        dev: List[Sentence] = []
+        for corpus in self.corpora:
+            dev.extend(corpus.dev)
+        return dev
+
+    @property
+    def test(self) -> List[Sentence]:
+        test: List[Sentence] = []
+        for corpus in self.corpora:
+            test.extend(corpus.test)
+        return test
