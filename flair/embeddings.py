@@ -143,6 +143,7 @@ class WordEmbeddings(TokenEmbeddings):
 
         old_base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/'
         base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/'
+        embeddings_path_v4 = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/'
 
         # GLOVE embeddings
         if embeddings.lower() == 'glove' or embeddings.lower() == 'en-glove':
@@ -164,12 +165,27 @@ class WordEmbeddings(TokenEmbeddings):
             cached_path(os.path.join(base_path, 'en-fasttext-news-300d-1M.vectors.npy'), cache_dir='embeddings')
             embeddings = cached_path(os.path.join(base_path, 'en-fasttext-news-300d-1M'), cache_dir='embeddings')
 
-        # other language fasttext embeddings
-        elif len(embeddings.lower()) == 2 and not embeddings.lower() == 'en':
-            cached_path(os.path.join(base_path, '{}-fasttext-300d-1M.vectors.npy'.format(embeddings)),
+        # two-letter language code wiki embeddings
+        elif len(embeddings.lower()) == 2:
+            cached_path(os.path.join(embeddings_path_v4, '{}-wiki-fasttext-300d-1M.vectors.npy'.format(embeddings)),
                         cache_dir='embeddings')
-            embeddings = cached_path(os.path.join(base_path, '{}-fasttext-300d-1M'.format(embeddings)),
+            embeddings = cached_path(os.path.join(embeddings_path_v4, '{}-wiki-fasttext-300d-1M'.format(embeddings)),
                                      cache_dir='embeddings')
+
+        # two-letter language code wiki embeddings
+        elif len(embeddings.lower()) == 7 and embeddings.endswith('-wiki'):
+            cached_path(os.path.join(embeddings_path_v4, '{}-wiki-fasttext-300d-1M.vectors.npy'.format(embeddings[:2])),
+                        cache_dir='embeddings')
+            embeddings = cached_path(os.path.join(embeddings_path_v4, '{}-wiki-fasttext-300d-1M'.format(embeddings[:2])),
+                                     cache_dir='embeddings')
+
+        # two-letter language code crawl embeddings
+        elif len(embeddings.lower()) == 8 and embeddings.endswith('-crawl'):
+            cached_path(os.path.join(embeddings_path_v4, '{}-crawl-fasttext-300d-1M.vectors.npy'.format(embeddings[:2])),
+                        cache_dir='embeddings')
+            embeddings = cached_path(
+                os.path.join(embeddings_path_v4, '{}-crawl-fasttext-300d-1M'.format(embeddings[:2])),
+                cache_dir='embeddings')
 
         elif not os.path.exists(embeddings):
             raise ValueError(f'The given embeddings "{embeddings}" is not available or is not a valid path.')
@@ -360,8 +376,17 @@ class CharLMEmbeddings(TokenEmbeddings):
         """
         super().__init__()
 
+        # multilingual forward (English, German, French, Italian, Dutch, Polish)
+        if model.lower() == 'multi-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-multi-forward-v0.1.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+        # multilingual backward  (English, German, French, Italian, Dutch, Polish)
+        elif model.lower() == 'multi-backward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-multi-backward-v0.1.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+
         # news-english-forward
-        if model.lower() == 'news-forward':
+        elif model.lower() == 'news-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward-v0.2rc.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
@@ -426,6 +451,15 @@ class CharLMEmbeddings(TokenEmbeddings):
         # Bulgarian backward
         elif model.lower() == 'bulgarian-backward' or model.lower() == 'bg-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-bg-small-backward-v0.1.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+
+        # Dutch forward
+        elif model.lower() == 'dutch-forward' or model.lower() == 'nl-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-nl-large-forward-v0.1.pt'
+            model = cached_path(base_path, cache_dir='embeddings')
+        # Dutch backward
+        elif model.lower() == 'dutch-backward' or model.lower() == 'nl-backward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-nl-large-backward-v0.1.pt'
             model = cached_path(base_path, cache_dir='embeddings')
 
         elif not os.path.exists(model):

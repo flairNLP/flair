@@ -36,6 +36,13 @@ def test_fr():
 def test_it():
     load_and_apply_word_embeddings('it')
 
+@pytest.mark.slow
+def test_it():
+    load_and_apply_word_embeddings('it-wiki')
+
+@pytest.mark.slow
+def test_it():
+    load_and_apply_word_embeddings('it-crawl')
 
 @pytest.mark.slow
 def test_news_forward():
