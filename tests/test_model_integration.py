@@ -133,7 +133,7 @@ def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_pat
     # initialize trainer
     trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-    trainer.train(str(results_base_path), EvaluationMetric.MACRO_F1_SCORE, learning_rate=0.1, mini_batch_size=2,
+    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2,
                   max_epochs=2, test_mode=True)
 
     loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
@@ -257,7 +257,7 @@ def test_train_charlm_nocache_load_use_classifier(results_base_path, tasks_base_
     model = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(str(results_base_path), EvaluationMetric.MICRO_ACCURACY, max_epochs=2, test_mode=True)
+    trainer.train(str(results_base_path), max_epochs=2, test_mode=True)
 
     sentence = Sentence("Berlin is a really nice city.")
 

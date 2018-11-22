@@ -24,7 +24,7 @@ class ModelTrainer:
 
     def train(self,
               base_path: str,
-              evaluation_metric: EvaluationMetric,
+              evaluation_metric: EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
               learning_rate: float = 0.1,
               mini_batch_size: int = 32,
               max_epochs: int = 100,
