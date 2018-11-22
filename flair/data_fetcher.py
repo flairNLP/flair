@@ -239,7 +239,7 @@ class NLPTaskDataFetcher:
         sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
             os.path.join(data_folder, dev_file))
 
-        return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
+        return TaggedCorpus(sentences_train, sentences_dev, sentences_test, name=data_folder)
 
     @staticmethod
     def fetch_classification_corpus(
