@@ -9,7 +9,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 import flair
 import flair.nn
-from flair.data import Sentence, Token, TaggedCorpus, Label
+from flair.data import Sentence, Token, Label, MultiCorpus, Corpus
 from flair.models import TextClassifier, SequenceTagger
 from flair.training_utils import Metric, init_output_file, WeightExtractor, clear_embeddings
 
@@ -18,9 +18,9 @@ log = logging.getLogger(__name__)
 
 class ModelTrainer:
 
-    def __init__(self, model: flair.nn.Model, corpus: TaggedCorpus) -> None:
+    def __init__(self, model: flair.nn.Model, corpus: Corpus) -> None:
         self.model: flair.nn.Model = model
-        self.corpus: TaggedCorpus = corpus
+        self.corpus: Corpus = corpus
 
     def train(self,
               base_path: str,
@@ -201,6 +201,14 @@ class ModelTrainer:
                      f'accuracy: {test_metric.accuracy(class_name):.4f} - f1-score: '
                      f'{test_metric.f_score(class_name):.4f}')
         self._log_line()
+
+        # if we are training over multiple datasets, do evaluation for each
+        if type(self.corpus) is MultiCorpus:
+            for subcorpus in self.corpus.corpora:
+                self._log_line()
+                self._log_line()
+                test_metric, test_loss = self._calculate_evaluation_results_for(
+                    subcorpus.name, subcorpus.test, embeddings_in_memory, mini_batch_size, base_path + '/test.tsv')
 
         return test_metric.micro_avg_f_score()
 
