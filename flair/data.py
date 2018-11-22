@@ -323,17 +323,22 @@ class Sentence:
             # otherwise assumes whitespace tokenized text
             else:
                 # add each word in tokenized string as Token object to Sentence
-                offset = 0
-                for word in text.split(' '):
-                    if word:
-                        try:
-                            word_offset = text.index(word, offset)
-                        except:
-                            word_offset = offset
+                word = ''
+                for index, char in enumerate(text):
+                    if char == ' ':
+                        if len(word) > 0:
+                            token = Token(word, start_position=index-len(word))
+                            self.add_token(token)
 
-                        token = Token(word, start_position=word_offset)
-                        self.add_token(token)
-                        offset += len(word) + 1
+                        word = ''
+                    else:
+                        word += char
+                # increment for last token in sentence if not followed by whtespace
+                index += 1
+                print(word)
+                if len(word) > 0:
+                    token = Token(word, start_position=index-len(word))
+                    self.add_token(token)
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
