@@ -336,7 +336,6 @@ class Sentence:
                         word += char
                 # increment for last token in sentence if not followed by whtespace
                 index += 1
-                print(word)
                 if len(word) > 0:
                     token = Token(word, start_position=index-len(word))
                     self.add_token(token)
@@ -805,7 +804,6 @@ def iob2(tags):
     Tags in IOB1 format are converted to IOB2.
     """
     for i, tag in enumerate(tags):
-        # print(tag)
         if tag.value == 'O':
             continue
         split = tag.value.split('-')
