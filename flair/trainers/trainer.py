@@ -9,7 +9,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 import flair
 import flair.nn
-from flair.data import Sentence, Token, TaggedCorpus
+from flair.data import Sentence, Token, Label, MultiCorpus, Corpus
 from flair.models import TextClassifier, SequenceTagger
 from flair.training_utils import Metric, init_output_file, WeightExtractor, clear_embeddings, EvaluationMetric
 
@@ -18,9 +18,9 @@ log = logging.getLogger(__name__)
 
 class ModelTrainer:
 
-    def __init__(self, model: flair.nn.Model, corpus: TaggedCorpus) -> None:
+    def __init__(self, model: flair.nn.Model, corpus: Corpus) -> None:
         self.model: flair.nn.Model = model
-        self.corpus: TaggedCorpus = corpus
+        self.corpus: Corpus = corpus
 
     def train(self,
               base_path: str,
@@ -144,7 +144,8 @@ class ModelTrainer:
                         'DEV', self.corpus.dev, evaluation_metric, embeddings_in_memory, mini_batch_size)
 
                 test_metric, test_loss = self._calculate_evaluation_results_for(
-                    'TEST', self.corpus.test, evaluation_metric, embeddings_in_memory, mini_batch_size, base_path + '/test.tsv')
+                    'TEST', self.corpus.test, evaluation_metric, embeddings_in_memory, mini_batch_size,
+                    base_path + '/test.tsv')
 
                 with open(loss_txt, 'a') as f:
                     train_metric_str = train_metric.to_tsv() if train_metric is not None else Metric.to_empty_tsv()
@@ -208,9 +209,27 @@ class ModelTrainer:
                      f'{test_metric.f_score(class_name):.4f}')
         self._log_line()
 
-        return test_metric.micro_avg_f_score()
+        # if we are training over multiple datasets, do evaluation for each
+        if type(self.corpus) is MultiCorpus:
+            for subcorpus in self.corpus.corpora:
+                self._log_line()
+                self._calculate_evaluation_results_for(subcorpus.name, subcorpus.test, evaluation_metric,
+                                                       embeddings_in_memory, mini_batch_size, base_path + '/test.tsv')
 
-    def _calculate_evaluation_results_for(self, dataset_name, dataset, evaluation_metric, embeddings_in_memory, mini_batch_size,
+        # get and return the final test score of best model
+        if evaluation_metric == EvaluationMetric.MACRO_ACCURACY:
+            final_score = test_metric.macro_avg_accuracy()
+        elif evaluation_metric == EvaluationMetric.MICRO_ACCURACY:
+            final_score = test_metric.micro_avg_accuracy()
+        elif evaluation_metric == EvaluationMetric.MACRO_F1_SCORE:
+            final_score = test_metric.macro_avg_f_score()
+        else:
+            final_score = test_metric.micro_avg_f_score()
+
+        return final_score
+
+    def _calculate_evaluation_results_for(self, dataset_name, dataset, evaluation_metric, embeddings_in_memory,
+                                          mini_batch_size,
                                           out_path=None):
 
         metric, loss = ModelTrainer.evaluate(self.model, dataset, mini_batch_size=mini_batch_size,

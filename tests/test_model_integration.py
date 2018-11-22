@@ -312,3 +312,35 @@ def test_train_language_model(results_base_path, resources_path):
 
     # clean up results directory
     shutil.rmtree(results_base_path, ignore_errors=True)
+
+
+@pytest.mark.integration
+def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
+
+    corpus = NLPTaskDataFetcher.fetch_corpora([NLPTask.FASHION, NLPTask.GERMEVAL], base_path=tasks_base_path)
+    tag_dictionary = corpus.make_tag_dictionary('ner')
+
+    embeddings = WordEmbeddings('glove')
+
+    tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+                                            embeddings=embeddings,
+                                            tag_dictionary=tag_dictionary,
+                                            tag_type='ner',
+                                            use_crf=False)
+
+    # initialize trainer
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
+
+    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=2, test_mode=True)
+
+    loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
+
+    sentence = Sentence('I love Berlin')
+    sentence_empty = Sentence('       ')
+
+    loaded_model.predict(sentence)
+    loaded_model.predict([sentence, sentence_empty])
+    loaded_model.predict([sentence_empty])
+
+    # clean up results directory
+    shutil.rmtree(results_base_path)

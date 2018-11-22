@@ -30,6 +30,28 @@ def test_create_sentence_without_tokenizer():
     assert ('love' == sentence.tokens[1].text)
     assert ('Berlin.' == sentence.tokens[2].text)
 
+def test_token_indices():
+
+    text = ':    nation on'
+    sentence = Sentence(text)
+    assert (text == sentence.to_original_text())
+
+    text = ':    nation on'
+    sentence = Sentence(text, use_tokenizer=True)
+    assert (text == sentence.to_original_text())
+
+    text = 'I love Berlin.'
+    sentence = Sentence(text)
+    assert (text == sentence.to_original_text())
+
+    text = 'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in einer Weise aufgetreten , die alles andere als überzeugend war " .'
+    sentence = Sentence(text)
+    assert (text == sentence.to_original_text())
+
+    text = 'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in einer Weise aufgetreten , die alles andere als überzeugend war " .'
+    sentence = Sentence(text, use_tokenizer=True)
+    assert (text == sentence.to_original_text())
+
 
 def test_create_sentence_with_tokenizer():
     sentence: Sentence = Sentence('I love Berlin.', use_tokenizer=True)

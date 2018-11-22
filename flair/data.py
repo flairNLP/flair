@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import List, Dict, Union
 
 import torch
@@ -9,7 +10,6 @@ from collections import defaultdict
 from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
-
 
 log = logging.getLogger(__name__)
 
@@ -324,17 +324,21 @@ class Sentence:
             # otherwise assumes whitespace tokenized text
             else:
                 # add each word in tokenized string as Token object to Sentence
-                offset = 0
-                for word in text.split(' '):
-                    if word:
-                        try:
-                            word_offset = text.index(word, offset)
-                        except:
-                            word_offset = offset
+                word = ''
+                for index, char in enumerate(text):
+                    if char == ' ':
+                        if len(word) > 0:
+                            token = Token(word, start_position=index-len(word))
+                            self.add_token(token)
 
-                        token = Token(word, start_position=word_offset)
-                        self.add_token(token)
-                        offset += len(word) + 1
+                        word = ''
+                    else:
+                        word += char
+                # increment for last token in sentence if not followed by whtespace
+                index += 1
+                if len(word) > 0:
+                    token = Token(word, start_position=index-len(word))
+                    self.add_token(token)
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
@@ -589,25 +593,74 @@ class Sentence:
         return len(self.tokens)
 
 
-class TaggedCorpus:
-    def __init__(self, train: List[Sentence], dev: List[Sentence], test: List[Sentence]):
-        self.train: List[Sentence] = train
-        self.dev: List[Sentence] = dev
-        self.test: List[Sentence] = test
+class Corpus:
+
+    @property
+    @abstractmethod
+    def train(self) -> List[Sentence]:
+        pass
+
+    @property
+    @abstractmethod
+    def dev(self) -> List[Sentence]:
+        pass
+
+    @property
+    @abstractmethod
+    def test(self) -> List[Sentence]:
+        pass
+
+    @abstractmethod
+    def downsample(self, percentage: float = 0.1, only_downsample_train=False):
+        """Downsamples this corpus to a percentage of the sentences."""
+        pass
+
+    @abstractmethod
+    def get_all_sentences(self) -> List[Sentence]:
+        """Gets all sentences in the corpus (train, dev and test splits together)."""
+        pass
+
+    @abstractmethod
+    def make_tag_dictionary(self, tag_type: str) -> Dictionary:
+        """Produces a dictionary of token tags of tag_type."""
+        pass
+
+    @abstractmethod
+    def make_label_dictionary(self) -> Dictionary:
+        """
+        Creates a dictionary of all labels assigned to the sentences in the corpus.
+        :return: dictionary of labels
+        """
+        pass
+
+
+class TaggedCorpus(Corpus):
+    def __init__(self, train: List[Sentence], dev: List[Sentence], test: List[Sentence], name: str = 'corpus'):
+        self._train: List[Sentence] = train
+        self._dev: List[Sentence] = dev
+        self._test: List[Sentence] = test
+        self.name: str = name
+
+    @property
+    def train(self) -> List[Sentence]:
+        return self._train
+
+    @property
+    def dev(self) -> List[Sentence]:
+        return self._dev
+
+    @property
+    def test(self) -> List[Sentence]:
+        return self._test
 
     def downsample(self, percentage: float = 0.1, only_downsample_train=False):
 
-        self.train = self._downsample_to_proportion(self.train, percentage)
+        self._train = self._downsample_to_proportion(self.train, percentage)
         if not only_downsample_train:
-            self.dev = self._downsample_to_proportion(self.dev, percentage)
-            self.test = self._downsample_to_proportion(self.test, percentage)
+            self._dev = self._downsample_to_proportion(self.dev, percentage)
+            self._test = self._downsample_to_proportion(self.test, percentage)
 
         return self
-
-    def clear_embeddings(self):
-        for sentence in self.get_all_sentences():
-            for token in sentence.tokens:
-                token.clear_embeddings()
 
     def get_all_sentences(self) -> List[Sentence]:
         all_sentences: List[Sentence] = []
@@ -751,7 +804,6 @@ def iob2(tags):
     Tags in IOB1 format are converted to IOB2.
     """
     for i, tag in enumerate(tags):
-        # print(tag)
         if tag.value == 'O':
             continue
         split = tag.value.split('-')
@@ -791,3 +843,71 @@ def iob_iobes(tags):
         else:
             raise Exception('Invalid IOB format!')
     return new_tags
+
+
+class MultiCorpus(Corpus):
+
+    def __init__(self, corpora: List[TaggedCorpus]):
+        self.corpora: List[TaggedCorpus] = corpora
+
+    @property
+    def train(self) -> List[Sentence]:
+        train: List[Sentence] = []
+        for corpus in self.corpora:
+            train.extend(corpus.train)
+        return train
+
+    @property
+    def dev(self) -> List[Sentence]:
+        dev: List[Sentence] = []
+        for corpus in self.corpora:
+            dev.extend(corpus.dev)
+        return dev
+
+    @property
+    def test(self) -> List[Sentence]:
+        test: List[Sentence] = []
+        for corpus in self.corpora:
+            test.extend(corpus.test)
+        return test
+
+    def __str__(self):
+        return '\n'.join([str(corpus) for corpus in self.corpora])
+
+    def get_all_sentences(self) -> List[Sentence]:
+        sentences = []
+        for corpus in self.corpora:
+            sentences.extend(corpus.get_all_sentences())
+        return sentences
+
+    def downsample(self, percentage: float = 0.1, only_downsample_train=False):
+
+        for corpus in self.corpora:
+            corpus.downsample(percentage, only_downsample_train)
+
+        return self
+
+    def make_tag_dictionary(self, tag_type: str) -> Dictionary:
+
+        # Make the tag dictionary
+        tag_dictionary: Dictionary = Dictionary()
+        tag_dictionary.add_item('O')
+        for corpus in self.corpora:
+            for sentence in corpus.get_all_sentences():
+                for token in sentence.tokens:
+                    token: Token = token
+                    tag_dictionary.add_item(token.get_tag(tag_type).value)
+        tag_dictionary.add_item('<START>')
+        tag_dictionary.add_item('<STOP>')
+        return tag_dictionary
+
+    def make_label_dictionary(self) -> Dictionary:
+
+        label_dictionary: Dictionary = Dictionary(add_unk=False)
+        for corpus in self.corpora:
+            labels = set(corpus._get_all_label_names())
+
+            for label in labels:
+                label_dictionary.add_item(label)
+
+        return label_dictionary
