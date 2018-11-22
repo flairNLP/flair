@@ -212,7 +212,6 @@ class ModelTrainer:
         if type(self.corpus) is MultiCorpus:
             for subcorpus in self.corpus.corpora:
                 self._log_line()
-                self._log_line()
                 test_metric, test_loss = self._calculate_evaluation_results_for(
                     subcorpus.name, subcorpus.test, embeddings_in_memory, mini_batch_size, base_path + '/test.tsv')
 
