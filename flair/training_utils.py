@@ -8,7 +8,6 @@ from typing import List
 from flair.data import Dictionary, Sentence
 from functools import reduce
 
-MICRO_AVG_METRIC = 'MICRO_AVG'
 
 log = logging.getLogger(__name__)
 
@@ -23,36 +22,36 @@ class Metric(object):
         self._tns = defaultdict(int)
         self._fns = defaultdict(int)
 
-    def add_tp(self, class_name=None):
+    def add_tp(self, class_name):
         self._tps[class_name] += 1
 
-    def add_tn(self, class_name=None):
+    def add_tn(self, class_name):
         self._tns[class_name] += 1
 
-    def add_fp(self, class_name=None):
+    def add_fp(self, class_name):
         self._fps[class_name] += 1
 
-    def add_fn(self, class_name=None):
+    def add_fn(self, class_name):
         self._fns[class_name] += 1
 
     def get_tp(self, class_name=None):
         if class_name is None:
-            return sum([self.get_tp(class_name) for class_name in self.get_classes()])
+            return sum([self._tps[class_name] for class_name in self.get_classes()])
         return self._tps[class_name]
 
-    def get_tn(self, class_name=None):
+    def get_tn(self, class_name):
         if class_name is None:
-            return sum([self.get_tn(class_name) for class_name in self.get_classes()])
+            return sum([self._tns[class_name] for class_name in self.get_classes()])
         return self._tns[class_name]
 
-    def get_fp(self, class_name=None):
+    def get_fp(self, class_name):
         if class_name is None:
-            return sum([self.get_fp(class_name) for class_name in self.get_classes()])
+            return sum([self._fps[class_name] for class_name in self.get_classes()])
         return self._fps[class_name]
 
-    def get_fn(self, class_name=None):
+    def get_fn(self, class_name):
         if class_name is None:
-            return sum([self.get_fn(class_name) for class_name in self.get_classes()])
+            return sum([self._fns[class_name] for class_name in self.get_classes()])
         return self._fns[class_name]
 
     def precision(self, class_name=None):
@@ -71,23 +70,16 @@ class Metric(object):
                          / (self.precision(class_name) + self.recall(class_name)), 4)
         return 0.0
 
-    def micro_avg_f_score(self):
-        all_tps = sum([self.get_tp(class_name) for class_name in self.get_classes()])
-        all_fps = sum([self.get_fp(class_name) for class_name in self.get_classes()])
-        all_fns = sum([self.get_fn(class_name) for class_name in self.get_classes()])
-
-        micro_precision = 0.0
-        micro_recall = 0.0
-
-        if all_tps + all_fps > 0:
-            micro_precision = round(all_tps / (all_tps + all_fps), 4)
-        if all_tps + all_fns > 0:
-            micro_recall = round(all_tps / (all_tps + all_fns), 4)
-
-        if micro_precision + micro_recall > 0:
-            return round(2 * (micro_precision * micro_recall) / (micro_precision + micro_recall), 4)
-
+    def accuracy(self, class_name=None):
+        if self.get_tp(class_name) + self.get_tn(class_name) + self.get_fp(class_name) + self.get_fn(class_name) > 0:
+            return round(
+                (self.get_tp(class_name) + self.get_tn(class_name))
+                / (self.get_tp(class_name) + self.get_tn(class_name) + self.get_fp(class_name) + self.get_fn(class_name)),
+                4)
         return 0.0
+
+    def micro_avg_f_score(self):
+        return self.f_score(None)
 
     def macro_avg_f_score(self):
         class_precisions = [self.precision(class_name) for class_name in self.get_classes()]
@@ -102,15 +94,7 @@ class Metric(object):
         return 0.0
 
     def micro_avg_accuracy(self):
-        all_tps = sum([self.get_tp(class_name) for class_name in self.get_classes()])
-        all_tns = sum([self.get_tn(class_name) for class_name in self.get_classes()])
-        all_fps = sum([self.get_fp(class_name) for class_name in self.get_classes()])
-        all_fns = sum([self.get_fn(class_name) for class_name in self.get_classes()])
-
-        if all_tps + all_tns + all_fps + all_fns > 0:
-            return round((all_tps + all_tns) / (all_tps + all_tns + all_fps + all_fns), 4)
-
-        return 0.0
+        return self.accuracy(None)
 
     def macro_avg_accuracy(self):
         class_accuracy = [self.accuracy(class_name) for class_name in self.get_classes()]
@@ -120,19 +104,13 @@ class Metric(object):
 
         return 0.0
 
-    def accuracy(self, class_name=None):
-        if self.get_tp(class_name) + self.get_tn(class_name) + self.get_fp(class_name) + self.get_fn(class_name) > 0:
-            return round(
-                (self.get_tp(class_name) + self.get_tn(class_name))
-                / (self.get_tp(class_name) + self.get_tn(class_name) + self.get_fp(class_name) + self.get_fn(class_name)),
-                4)
-        return 0.0
-
-    def to_tsv_full(self):
-        return '{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
-            self.get_tp(), self.get_tn(), self.get_fp(), self.get_fn(), self.precision(), self.recall(),
-            self.micro_avg_f_score(),
-            self.accuracy())
+    def get_classes(self) -> List:
+        all_classes = set(itertools.chain(*[list(keys) for keys
+                                            in [self._tps.keys(), self._fps.keys(), self._tns.keys(),
+                                                self._fns.keys()]]))
+        all_classes = [class_name for class_name in all_classes if class_name is not None]
+        all_classes.sort()
+        return all_classes
 
     def to_tsv(self):
         return '{}\t{}\t{}\t{}'.format(
@@ -142,18 +120,6 @@ class Metric(object):
             self.micro_avg_f_score(),
         )
 
-    def print(self):
-        log.info(self)
-
-
-    @staticmethod
-    def tsv_header_full(prefix=None):
-        if prefix:
-            return '{0}_TP\t{0}_TN\t{0}_FP\t{0}_FN\t{0}_PRECISION\t{0}_RECALL\t{0}_F-SCORE\t{0}_ACCURACY'.format(
-                prefix)
-
-        return 'TP\tTN\tFP\tFN\tPRECISION\tRECALL\tF-SCORE\tACCURACY'
-
     @staticmethod
     def tsv_header(prefix=None):
         if prefix:
@@ -161,10 +127,6 @@ class Metric(object):
                 prefix)
 
         return 'PRECISION\tRECALL\tACCURACY\tF-SCORE'
-
-    @staticmethod
-    def to_empty_tsv_full():
-        return '_\t_\t_\t_\t_\t_\t_\t_'
 
     @staticmethod
     def to_empty_tsv():
@@ -182,18 +144,12 @@ class Metric(object):
             for class_name in all_classes]
         return '\n'.join(all_lines)
 
-    def get_classes(self) -> List:
-        all_classes = set(itertools.chain(*[list(keys) for keys
-                                            in [self._tps.keys(), self._fps.keys(), self._tns.keys(),
-                                                self._fns.keys()]]))
-        all_classes = [class_name for class_name in all_classes if class_name is not None]
-        all_classes.sort()
-        return all_classes
-
 
 class EvaluationMetric(Enum):
-    ACCURACY = 'accuracy'
-    F1_SCORE = 'f1-score'
+    MICRO_ACCURACY = 'mirco-average accuracy'
+    MICRO_F1_SCORE = 'mirco-average f1-score'
+    MACRO_ACCURACY = 'marco-average accuracy'
+    MACRO_F1_SCORE = 'marco-average f1-score'
 
 
 class WeightExtractor(object):

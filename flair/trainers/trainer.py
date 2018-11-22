@@ -11,7 +11,7 @@ import flair
 import flair.nn
 from flair.data import Sentence, Token, Label, MultiCorpus, Corpus
 from flair.models import TextClassifier, SequenceTagger
-from flair.training_utils import Metric, init_output_file, WeightExtractor, clear_embeddings
+from flair.training_utils import Metric, init_output_file, WeightExtractor, clear_embeddings, EvaluationMetric
 
 log = logging.getLogger(__name__)
 
@@ -24,6 +24,7 @@ class ModelTrainer:
 
     def train(self,
               base_path: str,
+              evaluation_metric: EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
               learning_rate: float = 0.1,
               mini_batch_size: int = 32,
               max_epochs: int = 100,
@@ -39,7 +40,7 @@ class ModelTrainer:
               ) -> float:
 
         self._log_line()
-        log.info(f'Evaluation method: {self.model.evaluation_metric().name}')
+        log.info(f'Evaluation method: {evaluation_metric.name}')
 
         loss_txt = init_output_file(base_path, 'loss.tsv')
         with open(loss_txt, 'a') as f:
@@ -136,14 +137,14 @@ class ModelTrainer:
                 train_metric = None
                 if monitor_train:
                     train_metric, train_loss = self._calculate_evaluation_results_for(
-                        'TRAIN', self.corpus.train, embeddings_in_memory, mini_batch_size)
+                        'TRAIN', self.corpus.train, evaluation_metric, embeddings_in_memory, mini_batch_size)
 
                 if not train_with_dev:
                     dev_metric, dev_loss = self._calculate_evaluation_results_for(
-                        'DEV', self.corpus.dev, embeddings_in_memory, mini_batch_size)
+                        'DEV', self.corpus.dev, evaluation_metric, embeddings_in_memory, mini_batch_size)
 
                 test_metric, test_loss = self._calculate_evaluation_results_for(
-                    'TEST', self.corpus.test, embeddings_in_memory, mini_batch_size, base_path + '/test.tsv')
+                    'TEST', self.corpus.test, evaluation_metric, embeddings_in_memory, mini_batch_size, base_path + '/test.tsv')
 
                 with open(loss_txt, 'a') as f:
                     train_metric_str = train_metric.to_tsv() if train_metric is not None else Metric.to_empty_tsv()
@@ -153,15 +154,20 @@ class ModelTrainer:
                         f'{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t'
                         f'{current_loss}\t{train_metric_str}\t{dev_loss}\t{dev_metric_str}\t_\t{test_metric_str}\n')
 
+                # anneal against train loss if training with dev, otherwise anneal against dev score
                 if train_with_dev:
                     current_score = current_loss
                 else:
-                    current_score = dev_metric.micro_avg_f_score() \
-                        if self.model.evaluation_metric() == flair.nn.EvaluationMetric.ACCURACY \
-                        else dev_metric.micro_avg_accuracy()
+                    if evaluation_metric == EvaluationMetric.MACRO_ACCURACY:
+                        current_score = dev_metric.macro_avg_accuracy()
+                    elif evaluation_metric == EvaluationMetric.MICRO_ACCURACY:
+                        current_score = dev_metric.micro_avg_accuracy()
+                    elif evaluation_metric == EvaluationMetric.MACRO_F1_SCORE:
+                        current_score = dev_metric.macro_avg_f_score()
+                    else:
+                        current_score = dev_metric.micro_avg_f_score()
 
-                # anneal against train loss if training with dev, otherwise anneal against dev score
-                scheduler.step(current_loss) if train_with_dev else scheduler.step(current_score)
+                scheduler.step(current_score)
 
                 # if we use dev data, remember best model based on dev evaluation score
                 if not train_with_dev and current_score == scheduler.best:
@@ -212,14 +218,18 @@ class ModelTrainer:
 
         return test_metric.micro_avg_f_score()
 
-    def _calculate_evaluation_results_for(self, dataset_name, dataset, embeddings_in_memory, mini_batch_size,
+    def _calculate_evaluation_results_for(self, dataset_name, dataset, evaluation_metric, embeddings_in_memory, mini_batch_size,
                                           out_path=None):
 
         metric, loss = ModelTrainer.evaluate(self.model, dataset, mini_batch_size=mini_batch_size,
                                              embeddings_in_memory=embeddings_in_memory, out_path=out_path)
 
-        f_score = metric.micro_avg_f_score()
-        acc = metric.micro_avg_accuracy()
+        if evaluation_metric == EvaluationMetric.MACRO_ACCURACY or evaluation_metric == EvaluationMetric.MACRO_F1_SCORE:
+            f_score = metric.macro_avg_f_score()
+            acc = metric.macro_avg_accuracy()
+        else:
+            f_score = metric.micro_avg_f_score()
+            acc = metric.micro_avg_accuracy()
 
         log.info(f'{dataset_name:<5}: loss {loss:.8f} - f-score {f_score:.4f} - acc {acc:.4f}')
 

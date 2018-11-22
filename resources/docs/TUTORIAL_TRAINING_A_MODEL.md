@@ -144,12 +144,14 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         use_crf=True)
 
 # 6. initialize trainer
-from flair.trainers import SequenceTaggerTrainer
+from flair.trainers import ModelTrainer
+from flair.training_utils import EvaluationMetric
 
-trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus)
+trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 # 7. start training
 trainer.train('resources/taggers/example-ner',
+              EvaluationMetric.MICRO_F1_SCORE,
               learning_rate=0.1,
               mini_batch_size=32,
               max_epochs=150)
@@ -213,8 +215,9 @@ Here the example code for training the text classifier.
 from flair.data import TaggedCorpus
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 from flair.embeddings import WordEmbeddings, CharLMEmbeddings, DocumentLSTMEmbeddings
-from flair.models.text_classification_model import TextClassifier
-from flair.trainers.text_classification_trainer import TextClassifierTrainer
+from flair.models import TextClassifier
+from flair.trainers import ModelTrainer
+from flair.training_utils import EvaluationMetric
 
 # 1. get the corpus
 corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.AG_NEWS).downsample(0.1)
@@ -237,10 +240,11 @@ document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings(word_embedd
 classifier = TextClassifier(document_embeddings, label_dictionary=label_dict, multi_label=False)
 
 # 6. initialize the text classifier trainer
-trainer = TextClassifierTrainer(classifier, corpus, label_dict)
+trainer = ModelTrainer(classifier, corpus)
 
 # 7. start the trainig
 trainer.train('resources/ag_news/results',
+              EvaluationMetric.MICRO_F1_SCORE,
               learning_rate=0.1,
               mini_batch_size=32,
               anneal_factor=0.5,
@@ -271,8 +275,7 @@ for sentence in sentences:
 ## Plotting Training Curves and Weights
 
 Flair includes a helper method to plot training curves and weights in the neural network.
-Both the `SequenceTaggerTrainer` and `TextClassificationTrainer` automatically generate a `loss.tsv` and a `weights.txt`
-file in the result folder.
+The `ModelTrainer` automatically generates a `loss.tsv` and a `weights.txt` file in the result folder.
 
 After training, simple point the plotter to these files:
 
@@ -306,7 +309,7 @@ of time.
 
 In the best-case scenario, all embeddings for the dataset fit into your regular memory, which greatly increases
 training speed. If this is not the case, you must set the flag `embeddings_in_memory=False` in the respective trainer
- (i.e. `SequenceTaggerTrainer` or  `TextClassifierTrainer`) to
+ (i.e. `ModelTrainer`) to
 avoid memory problems. With the flag, embeddings are either (a) recomputed at each epoch or (b)
 retrieved from disk (where they are materialized by default). The second option is the default and is typically
 much faster.

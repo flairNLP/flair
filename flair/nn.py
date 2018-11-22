@@ -27,11 +27,6 @@ class Model(torch.nn.Module):
         sentences."""
         pass
 
-    @abstractmethod
-    def evaluation_metric(self) -> EvaluationMetric:
-        """Should return a evaluation metric."""
-        pass
-
 
 class LockedDropout(torch.nn.Module):
     """
