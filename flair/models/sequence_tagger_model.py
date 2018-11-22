@@ -194,11 +194,6 @@ class SequenceTagger(flair.nn.Model):
             model = model.cuda()
         return model
 
-    def evaluation_metric(self) -> flair.nn.EvaluationMetric:
-        if self.tag_type in ['pos', 'upos']:
-            return flair.nn.EvaluationMetric.ACCURACY
-        return flair.nn.EvaluationMetric.F1_SCORE
-
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
         features, lengths, tags = self.forward(sentences)
         return self._calculate_loss(features, lengths, tags)

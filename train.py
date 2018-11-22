@@ -3,6 +3,7 @@ from typing import List
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 from flair.data import TaggedCorpus
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
+from flair.training_utils import EvaluationMetric
 from flair.visual.training_curves import Plotter
 
 # 1. get the corpus
@@ -46,7 +47,8 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
 from flair.trainers import ModelTrainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-trainer.train('resources/taggers/example-ner', learning_rate=0.1, mini_batch_size=32, max_epochs=20, test_mode=True)
+trainer.train('resources/taggers/example-ner', EvaluationMetric.MICRO_F1_SCORE, learning_rate=0.1, mini_batch_size=32,
+              max_epochs=20, test_mode=True)
 
 plotter = Plotter()
 plotter.plot_training_curves('resources/taggers/example-ner/loss.tsv')
