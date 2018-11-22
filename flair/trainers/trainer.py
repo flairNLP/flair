@@ -213,7 +213,7 @@ class ModelTrainer:
             for subcorpus in self.corpus.corpora:
                 self._log_line()
                 test_metric, test_loss = self._calculate_evaluation_results_for(
-                    subcorpus.name, subcorpus.test, embeddings_in_memory, mini_batch_size, base_path + '/test.tsv')
+                    subcorpus.name, subcorpus.test, evaluation_metric, embeddings_in_memory, mini_batch_size, base_path + '/test.tsv')
 
         return test_metric.micro_avg_f_score()
 

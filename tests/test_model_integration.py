@@ -315,7 +315,7 @@ def test_train_language_model(results_base_path, resources_path):
 
 
 @pytest.mark.integration
-def test_train_load_use_tagger(results_base_path, tasks_base_path):
+def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
 
     corpus = NLPTaskDataFetcher.fetch_corpora([NLPTask.FASHION, NLPTask.GERMEVAL], base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
