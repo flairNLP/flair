@@ -144,7 +144,8 @@ class ModelTrainer:
                         'DEV', self.corpus.dev, evaluation_metric, embeddings_in_memory, mini_batch_size)
 
                 test_metric, test_loss = self._calculate_evaluation_results_for(
-                    'TEST', self.corpus.test, evaluation_metric, embeddings_in_memory, mini_batch_size, base_path + '/test.tsv')
+                    'TEST', self.corpus.test, evaluation_metric, embeddings_in_memory, mini_batch_size,
+                    base_path + '/test.tsv')
 
                 with open(loss_txt, 'a') as f:
                     train_metric_str = train_metric.to_tsv() if train_metric is not None else Metric.to_empty_tsv()
@@ -212,12 +213,23 @@ class ModelTrainer:
         if type(self.corpus) is MultiCorpus:
             for subcorpus in self.corpus.corpora:
                 self._log_line()
-                test_metric, test_loss = self._calculate_evaluation_results_for(
-                    subcorpus.name, subcorpus.test, evaluation_metric, embeddings_in_memory, mini_batch_size, base_path + '/test.tsv')
+                self._calculate_evaluation_results_for(subcorpus.name, subcorpus.test, evaluation_metric,
+                                                       embeddings_in_memory, mini_batch_size, base_path + '/test.tsv')
 
-        return test_metric.micro_avg_f_score()
+        # get and return the final test score of best model
+        if evaluation_metric == EvaluationMetric.MACRO_ACCURACY:
+            final_score = test_metric.macro_avg_accuracy()
+        elif evaluation_metric == EvaluationMetric.MICRO_ACCURACY:
+            final_score = test_metric.micro_avg_accuracy()
+        elif evaluation_metric == EvaluationMetric.MACRO_F1_SCORE:
+            final_score = test_metric.macro_avg_f_score()
+        else:
+            final_score = test_metric.micro_avg_f_score()
 
-    def _calculate_evaluation_results_for(self, dataset_name, dataset, evaluation_metric, embeddings_in_memory, mini_batch_size,
+        return final_score
+
+    def _calculate_evaluation_results_for(self, dataset_name, dataset, evaluation_metric, embeddings_in_memory,
+                                          mini_batch_size,
                                           out_path=None):
 
         metric, loss = ModelTrainer.evaluate(self.model, dataset, mini_batch_size=mini_batch_size,
