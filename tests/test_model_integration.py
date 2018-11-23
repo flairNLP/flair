@@ -12,6 +12,7 @@ from flair.models import SequenceTagger, TextClassifier, LanguageModel
 from flair.trainers import ModelTrainer
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
 from flair.training_utils import EvaluationMetric
+from flair.optim import AdamW
 
 
 @pytest.mark.integration
@@ -171,8 +172,46 @@ def test_train_optimizer(results_base_path, tasks_base_path):
     # initialize trainer
     trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=optimizer)
 
-    trainer.train(str(results_base_path), EvaluationMetric.MICRO_F1_SCORE, learning_rate=0.1, mini_batch_size=2,
+    trainer.train(str(results_base_path), EvaluationMetric.MICRO_F1_SCORE,
+                  learning_rate=0.1, mini_batch_size=2,
                   max_epochs=2, test_mode=True)
+
+    loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
+
+    sentence = Sentence('I love Berlin')
+    sentence_empty = Sentence('       ')
+
+    loaded_model.predict(sentence)
+    loaded_model.predict([sentence, sentence_empty])
+    loaded_model.predict([sentence_empty])
+
+    # clean up results directory
+    shutil.rmtree(results_base_path)
+
+
+
+@pytest.mark.integration
+def test_train_optimizer_arguments(results_base_path, tasks_base_path):
+
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
+    tag_dictionary = corpus.make_tag_dictionary('ner')
+
+    embeddings = WordEmbeddings('glove')
+
+    tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+                                            embeddings=embeddings,
+                                            tag_dictionary=tag_dictionary,
+                                            tag_type='ner',
+                                            use_crf=False)
+
+    optimizer: Optimizer = AdamW
+
+    # initialize trainer
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=optimizer)
+
+    trainer.train(str(results_base_path), EvaluationMetric.MICRO_F1_SCORE,
+                  learning_rate=0.1, mini_batch_size=2,
+                  max_epochs=2, test_mode=True, weight_decay=1e-3)
 
     loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
 
