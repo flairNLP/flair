@@ -153,7 +153,7 @@ def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_pat
 
 
 @pytest.mark.integration
-def test_train_load_use_optimizer(results_base_path, tasks_base_path):
+def test_train_optimizer(results_base_path, tasks_base_path):
 
     corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
@@ -169,7 +169,7 @@ def test_train_load_use_optimizer(results_base_path, tasks_base_path):
     optimizer: Optimizer = Adam
 
     # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=Optimizer)
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=optimizer)
 
     trainer.train(str(results_base_path), EvaluationMetric.MICRO_F1_SCORE, learning_rate=0.1, mini_batch_size=2,
                   max_epochs=2, test_mode=True)
