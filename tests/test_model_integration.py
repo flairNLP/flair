@@ -2,6 +2,9 @@ import os
 import shutil
 import pytest
 
+from torch.optim.optimizer import Optimizer
+from torch.optim.adam import Adam
+
 from flair.data import Dictionary, Sentence
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 from flair.embeddings import WordEmbeddings, CharLMEmbeddings, DocumentLSTMEmbeddings, TokenEmbeddings
@@ -134,6 +137,41 @@ def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_pat
     trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
     trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2,
+                  max_epochs=2, test_mode=True)
+
+    loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
+
+    sentence = Sentence('I love Berlin')
+    sentence_empty = Sentence('       ')
+
+    loaded_model.predict(sentence)
+    loaded_model.predict([sentence, sentence_empty])
+    loaded_model.predict([sentence_empty])
+
+    # clean up results directory
+    shutil.rmtree(results_base_path)
+
+
+@pytest.mark.integration
+def test_train_load_use_optimizer(results_base_path, tasks_base_path):
+
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
+    tag_dictionary = corpus.make_tag_dictionary('ner')
+
+    embeddings = WordEmbeddings('glove')
+
+    tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+                                            embeddings=embeddings,
+                                            tag_dictionary=tag_dictionary,
+                                            tag_type='ner',
+                                            use_crf=False)
+
+    optimizer: Optimizer = Adam
+
+    # initialize trainer
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=Optimizer)
+
+    trainer.train(str(results_base_path), EvaluationMetric.MICRO_F1_SCORE, learning_rate=0.1, mini_batch_size=2,
                   max_epochs=2, test_mode=True)
 
     loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
