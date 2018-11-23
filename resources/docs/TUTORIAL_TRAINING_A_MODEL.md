@@ -242,7 +242,7 @@ classifier = TextClassifier(document_embeddings, label_dictionary=label_dict, mu
 # 6. initialize the text classifier trainer
 trainer = ModelTrainer(classifier, corpus)
 
-# 7. start the trainig
+# 7. start the training
 trainer.train('resources/ag_news/results',
               EvaluationMetric.MICRO_F1_SCORE,
               learning_rate=0.1,
