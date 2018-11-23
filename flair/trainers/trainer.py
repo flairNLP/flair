@@ -5,6 +5,8 @@ import os
 import random
 import logging
 import torch
+from torch.optim.optimizer import Optimizer
+from torch.optim.sgd import SGD
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 import flair
@@ -18,9 +20,10 @@ log = logging.getLogger(__name__)
 
 class ModelTrainer:
 
-    def __init__(self, model: flair.nn.Model, corpus: Corpus) -> None:
+    def __init__(self, model: flair.nn.Model, corpus: Corpus, optimizer: Optimizer = SGD) -> None:
         self.model: flair.nn.Model = model
         self.corpus: Corpus = corpus
+        self.optimizer: Optimizer = optimizer
 
     def train(self,
               base_path: str,
@@ -50,7 +53,7 @@ class ModelTrainer:
 
         weight_extractor = WeightExtractor(base_path)
 
-        optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
+        optimizer = self.optimizer(self.model.parameters(), lr=learning_rate)
 
         # annealing scheduler
         anneal_mode = 'min' if train_with_dev else 'max'
