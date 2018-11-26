@@ -57,7 +57,7 @@ def test_load_no_dev_data(tasks_base_path):
 
 def test_multi_corpus(tasks_base_path):
     # get two corpora as one
-    corpus = NLPTaskDataFetcher.load_corpora([NLPTask.FASHION, NLPTask.GERMEVAL])
+    corpus = NLPTaskDataFetcher.load_corpora([NLPTask.FASHION, NLPTask.GERMEVAL], tasks_base_path)
 
     assert len(corpus.train) == 8
     assert len(corpus.dev) == 2
