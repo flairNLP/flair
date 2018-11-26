@@ -5,6 +5,8 @@ import os
 import random
 import logging
 import torch
+from torch.optim.optimizer import Optimizer
+from torch.optim.sgd import SGD
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 import flair
@@ -12,15 +14,17 @@ import flair.nn
 from flair.data import Sentence, Token, Label, MultiCorpus, Corpus
 from flair.models import TextClassifier, SequenceTagger
 from flair.training_utils import Metric, init_output_file, WeightExtractor, clear_embeddings, EvaluationMetric
+from flair.optim import ReduceLRWDOnPlateau
 
 log = logging.getLogger(__name__)
 
 
 class ModelTrainer:
 
-    def __init__(self, model: flair.nn.Model, corpus: Corpus) -> None:
+    def __init__(self, model: flair.nn.Model, corpus: Corpus, optimizer: Optimizer = SGD) -> None:
         self.model: flair.nn.Model = model
         self.corpus: Corpus = corpus
+        self.optimizer: Optimizer = optimizer
 
     def train(self,
               base_path: str,
@@ -37,6 +41,7 @@ class ModelTrainer:
               save_final_model: bool = True,
               anneal_with_restarts: bool = False,
               test_mode: bool = False,
+              **kwargs
               ) -> float:
 
         self._log_line()
@@ -50,12 +55,18 @@ class ModelTrainer:
 
         weight_extractor = WeightExtractor(base_path)
 
-        optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
+        optimizer = self.optimizer(self.model.parameters(), lr=learning_rate, **kwargs)
 
         # annealing scheduler
         anneal_mode = 'min' if train_with_dev else 'max'
-        scheduler = ReduceLROnPlateau(optimizer, factor=anneal_factor, patience=patience, mode=anneal_mode,
-                                      verbose=True)
+        if optimizer.__class__.__name__ in ['AdamW', 'SGDW']:
+            scheduler = ReduceLRWDOnPlateau(optimizer, factor=anneal_factor,
+                                            patience=patience, mode=anneal_mode,
+                                            verbose=True)
+        else:
+            scheduler = ReduceLROnPlateau(optimizer, factor=anneal_factor,
+                                          patience=patience, mode=anneal_mode,
+                                          verbose=True)
 
         train_data = self.corpus.train
 

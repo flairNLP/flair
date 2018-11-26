@@ -5,10 +5,13 @@ import logging
 import math
 import torch
 from torch.autograd import Variable
+from torch.optim.optimizer import Optimizer
+from torch.optim.sgd import SGD
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from flair.data import Dictionary
 from flair.models import LanguageModel
+from flair.optim import ReduceLRWDOnPlateau
 
 
 log = logging.getLogger(__name__)
@@ -153,8 +156,9 @@ class TextCorpus(object):
 
 
 class LanguageModelTrainer:
-    def __init__(self, model: LanguageModel, corpus: TextCorpus, test_mode: bool = False):
+    def __init__(self, model: LanguageModel, corpus: TextCorpus, optimizer: Optimizer = SGD, test_mode: bool = False):
         self.model: LanguageModel = model
+        self.optimzer: Optimizer = optimizer 
         self.corpus: TextCorpus = corpus
         self.test_mode: bool = test_mode
 
@@ -169,7 +173,8 @@ class LanguageModelTrainer:
               anneal_factor: float = 0.25,
               patience: int = 10,
               clip=0.25,
-              max_epochs: int = 1000):
+              max_epochs: int = 1000,
+              **kwargs):
 
         number_of_splits: int = len(self.corpus.train_files)
 
@@ -186,9 +191,15 @@ class LanguageModelTrainer:
 
             epoch = 0
             best_val_loss = self.model.best_score if self.model.best_score is not None else 100000000
-            optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
-            scheduler: ReduceLROnPlateau = ReduceLROnPlateau(optimizer, verbose=True, factor=anneal_factor,
-                                                             patience=patience)
+            optimizer = self.optimzer(self.model.parameters(), lr=learning_rate, **kwargs)
+            if optimizer.__class__.__name__ in ['AdamW', 'SGDW']:
+                scheduler: ReduceLRWDOnPlateau = ReduceLRWDOnPlateau(optimizer, verbose=True,
+                                                                     factor=anneal_factor,
+                                                                     patience=patience)
+            else:
+                scheduler: ReduceLROnPlateau = ReduceLROnPlateau(optimizer, verbose=True,
+                                                                 factor=anneal_factor,
+                                                                 patience=patience)
 
             for split in range(1, max_splits + 1):
 
