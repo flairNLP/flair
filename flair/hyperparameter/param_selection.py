@@ -1,36 +1,18 @@
 import logging
-from enum import Enum
+from abc import abstractmethod
 
 from hyperopt import hp, fmin, tpe
 
+import flair.nn
+from flair.embeddings import DocumentLSTMEmbeddings, DocumentPoolEmbeddings
+from flair.hyperparameter import Parameter
+from flair.hyperparameter.parameter import SEQUENCE_TAGGER_PARAMETERS, TRAINING_PARAMETERS, \
+    DOCUMENT_EMBEDDING_PARAMETERS
 from flair.models import SequenceTagger, TextClassifier
 from flair.trainers import ModelTrainer
 from flair.training_utils import EvaluationMetric
 
 log = logging.getLogger(__name__)
-
-TRAINING_PARAMETERS = ['learning_rate', 'mini_batch_size', 'anneal_factor', 'patience', 'anneal_with_restarts']
-SEQUENCE_TAGGER_PARAMETERS = [
-    'embeddings', 'hidden_size', 'use_crf', 'use_rnn', 'rnn_layers', 'use_dropout', 'use_word_dropout',
-    'use_locked_dropout'
-]
-TEXT_CLASSIFIER_PARAMETERS = ['embeddings']
-
-
-class ParameterName(Enum):
-    embeddings = 'embeddings'
-    hidden_size = 'hidden_size',
-    use_crf = 'use_crf',
-    use_rnn = 'use_rnn',
-    rnn_layers = 'rnn_layers',
-    use_dropout = 'use_dropout',
-    use_word_dropout = 'use_word_dropout',
-    use_locked_dropout = 'use_locked_dropout',
-    learning_rate = 'learning_rate',
-    mini_batch_size = 'mini_batch_size',
-    anneal_factor = 'anneal_factor',
-    anneal_with_restarts = 'anneal_with_restarts'
-    patience = 'patience'
 
 
 class SearchSpace(object):
@@ -38,25 +20,24 @@ class SearchSpace(object):
     def __init__(self):
         self.search_space = {}
 
-    def add(self, parameter_name: ParameterName, func, **kwargs):
-        self.search_space[parameter_name.name] = func(parameter_name.name, **kwargs)
+    def add(self, parameter_name: Parameter, func, **kwargs):
+        self.search_space[parameter_name.value] = func(parameter_name.value, **kwargs)
 
     def get_search_space(self):
         return hp.choice('parameters', [ self.search_space ])
 
 
-class SequenceTaggerParamSelector(object):
+class ParamSelector(object):
 
-    def __init__(self, corpus, tag_type, result_folder, max_epochs=50,
-                 evaluation_metric=EvaluationMetric.MICRO_F1_SCORE, anneal_with_restarts=False):
+    def __init__(self, corpus, result_folder, max_epochs=50, evaluation_metric=EvaluationMetric.MICRO_F1_SCORE):
         self.corpus = corpus
-        self.tag_type = tag_type
         self.max_epochs = max_epochs
         self.result_folder = result_folder
         self.evaluation_metric = evaluation_metric
-        self.anneal_with_restarts = anneal_with_restarts
 
-        self.tag_dictionary = self.corpus.make_tag_dictionary(self.tag_type)
+    @abstractmethod
+    def _set_up_model(self, params) -> flair.nn.Model:
+        pass
 
     def _objective(self, params):
         log.info('-' * 100)
@@ -65,105 +46,89 @@ class SequenceTaggerParamSelector(object):
             log.info(f'\t{k}: {v}')
         log.info('-' * 100)
 
-        sequence_tagger_params = {key: params[key] for key in params if key in SEQUENCE_TAGGER_PARAMETERS}
+        # clear embedding
+        for sent in self.corpus.get_all_sentences():
+            sent.clear_embeddings()
+
+        model = self._set_up_model(params)
+
         training_params = {key: params[key] for key in params if key in TRAINING_PARAMETERS}
+
+        trainer: ModelTrainer = ModelTrainer(model, self.corpus)
+
+        result = trainer.train(self.result_folder,
+                               evaluation_metric=self.evaluation_metric,
+                               max_epochs=self.max_epochs,
+                               train_with_dev=False,
+                               monitor_train=False,
+                               embeddings_in_memory=True,
+                               checkpoint=False,
+                               save_final_model=False,
+                               test_mode=True,
+                               **training_params)
+
+        score = 1 - result['dev_score']
+
+        log.info('-' * 100)
+        log.info(f'Done evaluating parameter combination:')
+        for k, v in params.items():
+            log.info(f'\t{k}: {v}')
+        log.info(f'Score: {score}')
+        log.info('-' * 100)
+
+        return score
+
+    def optimize(self, space, max_evals=100):
+        search_space = space.search_space
+        best = fmin(self._objective, search_space, algo=tpe.suggest, max_evals=max_evals)
+
+        log.info('-' * 100)
+        log.info('Optimizing parameter configuration done.')
+        log.info('Best parameter configuration found:')
+        log.info(best)
+        log.info('-' * 100)
+
+
+class SequenceTaggerParamSelector(ParamSelector):
+
+    def __init__(self, corpus, tag_type, result_folder, max_epochs=50,
+                 evaluation_metric=EvaluationMetric.MICRO_F1_SCORE):
+        super().__init__(corpus, result_folder, max_epochs, evaluation_metric)
+
+        self.tag_type = tag_type
+        self.tag_dictionary = self.corpus.make_tag_dictionary(self.tag_type)
+
+    def _set_up_model(self, params):
+        sequence_tagger_params = {key: params[key] for key in params if key in SEQUENCE_TAGGER_PARAMETERS}
 
         tagger: SequenceTagger = SequenceTagger(tag_dictionary=self.tag_dictionary,
                                                 tag_type=self.tag_type,
                                                 **sequence_tagger_params)
-
-        trainer: ModelTrainer = ModelTrainer(tagger, self.corpus)
-
-        result = trainer.train(self.result_folder,
-                               evaluation_metric=self.evaluation_metric,
-                               max_epochs=self.max_epochs,
-                               train_with_dev=False,
-                               monitor_train=False,
-                               embeddings_in_memory=True,
-                               checkpoint=False,
-                               save_final_model=False,
-                               test_mode=True,
-                               **training_params)
-
-        score = 1 - result['dev_score']
-
-        log.info('-' * 100)
-        log.info(f'Done evaluating parameter combination:')
-        for k, v in params.items():
-            log.info(f'\t{k}: {v}')
-        log.info(f'Score: {score}')
-        log.info('-' * 100)
-
-        return score
-
-    def optimize(self, space, max_evals=10):
-        search_space = space.search_space
-        best = fmin(self._objective, search_space, algo=tpe.suggest, max_evals=max_evals)
-
-        log.info('-' * 100)
-        log.info('Optimizing parameter configuration done.')
-        log.info('Best parameter configuration found:')
-        log.info(best)
-        log.info('-' * 100)
+        return tagger
 
 
-class TextClassifierParamSelector(object):
+class TextClassifierParamSelector(ParamSelector):
 
-    def __init__(self, corpus, multi_label, result_folder, max_epochs=50,
-                 evaluation_metric=EvaluationMetric.MICRO_F1_SCORE, anneal_with_restarts=False):
-        self.corpus = corpus
-        self.max_epochs = max_epochs
-        self.result_folder = result_folder
-        self.evaluation_metric = evaluation_metric
-        self.anneal_with_restarts = anneal_with_restarts
+    def __init__(self, corpus, multi_label, result_folder, document_embedding_type, max_epochs=50,
+                 evaluation_metric=EvaluationMetric.MICRO_F1_SCORE):
+        super().__init__(corpus, result_folder, max_epochs, evaluation_metric)
+
         self.multi_label = multi_label
+        self.document_embedding_type = document_embedding_type
 
         self.label_dictionary = self.corpus.make_label_dictionary()
 
-    def _objective(self, params):
-        log.info('-' * 100)
-        log.info(f'Evaluating parameter combination:')
-        for k, v in params.items():
-            log.info(f'\t{k}: {v}')
-        log.info('-' * 100)
+    def _set_up_model(self, params):
+        embdding_params = {key: params[key] for key in params if key in DOCUMENT_EMBEDDING_PARAMETERS}
 
-        text_classifier_params = {key: params[key] for key in params if key in TEXT_CLASSIFIER_PARAMETERS}
-        training_params = {key: params[key] for key in params if key in TRAINING_PARAMETERS}
+        if self.document_embedding_type == 'lstm':
+            document_embedding = DocumentLSTMEmbeddings(**embdding_params)
+        else:
+            document_embedding = DocumentPoolEmbeddings(**embdding_params)
 
-        tagger: TextClassifier = TextClassifier(label_dictionary=self.label_dictionary,
-                                                multi_label=self.multi_label,
-                                                **text_classifier_params)
+        text_classifier: TextClassifier = TextClassifier(
+            label_dictionary=self.label_dictionary,
+            multi_label=self.multi_label,
+            document_embeddings=document_embedding)
 
-        trainer: ModelTrainer = ModelTrainer(tagger, self.corpus)
-
-        result = trainer.train(self.result_folder,
-                               evaluation_metric=self.evaluation_metric,
-                               max_epochs=self.max_epochs,
-                               train_with_dev=False,
-                               monitor_train=False,
-                               embeddings_in_memory=True,
-                               checkpoint=False,
-                               save_final_model=False,
-                               test_mode=True,
-                               **training_params)
-
-        score = 1 - result['dev_score']
-
-        log.info('-' * 100)
-        log.info(f'Done evaluating parameter combination:')
-        for k, v in params.items():
-            log.info(f'\t{k}: {v}')
-        log.info(f'Score: {score}')
-        log.info('-' * 100)
-
-        return score
-
-    def optimize(self, space, max_evals=10):
-        search_space = space.search_space
-        best = fmin(self._objective, search_space, algo=tpe.suggest, max_evals=max_evals)
-
-        log.info('-' * 100)
-        log.info('Optimizing parameter configuration done.')
-        log.info('Best parameter configuration found:')
-        log.info(best)
-        log.info('-' * 100)
+        return text_classifier

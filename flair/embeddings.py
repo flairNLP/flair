@@ -656,14 +656,14 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
 
 class DocumentPoolEmbeddings(DocumentEmbeddings):
 
-    def __init__(self, token_embeddings: List[TokenEmbeddings], mode: str = 'mean'):
+    def __init__(self, embeddings: List[TokenEmbeddings], mode: str = 'mean'):
         """The constructor takes a list of embeddings to be combined.
-        :param token_embeddings: a list of token embeddings
+        :param embeddings: a list of token embeddings
         :param mode: a string which can any value from ['mean', 'max', 'min']
         """
         super().__init__()
 
-        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=token_embeddings)
+        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
 
         self.__embedding_length: int = self.embeddings.embedding_length
 
@@ -726,18 +726,18 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
 class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
     def __init__(self,
-                 token_embeddings: List[TokenEmbeddings],
-                 hidden_states=128,
-                 num_layers=1,
+                 embeddings: List[TokenEmbeddings],
+                 hidden_size=128,
+                 rnn_layers=1,
                  reproject_words: bool = True,
                  reproject_words_dimension: int = None,
                  bidirectional: bool = False,
                  use_word_dropout: bool = False,
                  use_locked_dropout: bool = False):
         """The constructor takes a list of embeddings to be combined.
-        :param token_embeddings: a list of token embeddings
-        :param hidden_states: the number of hidden states in the lstm
-        :param num_layers: the number of layers for the lstm
+        :param embeddings: a list of token embeddings
+        :param hidden_size: the number of hidden states in the lstm
+        :param rnn_layers: the number of layers for the lstm
         :param reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear
         layer before putting them into the lstm or not
         :param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
@@ -749,7 +749,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         """
         super().__init__()
 
-        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=token_embeddings)
+        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
 
         self.reproject_words = reproject_words
         self.bidirectional = bidirectional
@@ -759,7 +759,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         self.name = 'document_lstm'
         self.static_embeddings = False
 
-        self.__embedding_length: int = hidden_states
+        self.__embedding_length: int = hidden_size
         if self.bidirectional:
             self.__embedding_length *= 4
 
@@ -770,7 +770,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         # bidirectional LSTM on top of embedding layer
         self.word_reprojection_map = torch.nn.Linear(self.length_of_all_token_embeddings,
                                                      self.embeddings_dimension)
-        self.rnn = torch.nn.GRU(self.embeddings_dimension, hidden_states, num_layers=num_layers,
+        self.rnn = torch.nn.GRU(self.embeddings_dimension, hidden_size, num_layers=rnn_layers,
                                 bidirectional=self.bidirectional)
 
         # dropouts
