@@ -242,10 +242,9 @@ class ExpAnnealLR(_LRScheduler):
         last_epoch (int): The index of the last iteration. Default: -1.
     """
     def __init__(self, optimizer, end_lr, iterations, last_epoch=-1):
-        super(ExpAnnealLR, self).__init__(optimizer, last_epoch=last_epoch)
-
         self.end_lr = end_lr
         self.iterations = iterations
+        super(ExpAnnealLR, self).__init__(optimizer, last_epoch=last_epoch)
     
     def get_lr(self):
         iteration = self.last_epoch + 1

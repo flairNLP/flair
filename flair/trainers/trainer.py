@@ -35,8 +35,6 @@ class ModelTrainer:
                            stop_early: bool = True,
                            smoothing_factor: float = 0.05,
                            **kwargs):
-
-        
         loss_history = []
         best_loss = None
 
@@ -48,8 +46,7 @@ class ModelTrainer:
         
         train_data = self.corpus.train
         random.shuffle(train_data)
-        iterations = min(iterations, len(train_data))
-        batches = [train_data[x:x + mini_batch_size] for x in range(0, iterations, mini_batch_size)]
+        batches = [train_data[x:x + mini_batch_size] for x in range(0, len(train_data), mini_batch_size)][:iterations]
 
         scheduler = ExpAnnealLR(optimizer, end_learning_rate, iterations)
 
@@ -72,15 +69,14 @@ class ModelTrainer:
                 best_loss = loss_item
             else:
                 if smoothing_factor > 0:
-                    loss_item = smoothing_factor * loss_item + (1 - smoothing_factor)*loss_history[-1]
+                    loss_item = smoothing_factor * loss_item + (1 - smoothing_factor) * loss_history[-1]
                 if loss_item < best_loss:
                     best_loss = loss
-
             loss_history.append(loss_item)
             
             with open(find_lr_txt, 'a') as f:
                 f.write(
-                    f'{itr}\t{datetime.datetime.now():%H:%M:%S}\t{learning_rate:.4f}\t{loss_item}\n')
+                    f'{itr}\t{datetime.datetime.now():%H:%M:%S}\t{learning_rate}\t{loss_item}\n')
 
             if (stop_early and loss_item > 4 * best_loss):
                 break
