@@ -732,8 +732,9 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
                  reproject_words: bool = True,
                  reproject_words_dimension: int = None,
                  bidirectional: bool = False,
-                 use_word_dropout: bool = False,
-                 use_locked_dropout: bool = False):
+                 dropout: float = 0.5,
+                 word_dropout: float = 0.0,
+                 locked_dropout: float = 0.0):
         """The constructor takes a list of embeddings to be combined.
         :param embeddings: a list of token embeddings
         :param hidden_size: the number of hidden states in the lstm
@@ -744,8 +745,9 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         dimension as before will be taken.
         :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
         representation of the lstm to be used as final document embedding.
-        :param use_word_dropout: boolean value, indicating whether to use word dropout or not.
-        :param use_locked_dropout: boolean value, indicating whether to use locked dropout or not.
+        :param dropout: the dropout value to be used
+        :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
+        :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
         """
         super().__init__()
 
@@ -774,14 +776,14 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
                                 bidirectional=self.bidirectional)
 
         # dropouts
-        if use_locked_dropout:
-            self.dropout: torch.nn.Module = LockedDropout(0.5)
+        if locked_dropout > 0.0:
+            self.dropout: torch.nn.Module = LockedDropout(locked_dropout)
         else:
-            self.dropout = torch.nn.Dropout(0.5)
+            self.dropout = torch.nn.Dropout(dropout)
 
-        self.use_word_dropout: bool = use_word_dropout
+        self.use_word_dropout: bool = word_dropout > 0.0
         if self.use_word_dropout:
-            self.word_dropout = WordDropout(0.05)
+            self.word_dropout = WordDropout(word_dropout)
 
         torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
 

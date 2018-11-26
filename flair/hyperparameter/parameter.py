@@ -7,9 +7,9 @@ class Parameter(Enum):
     USE_CRF = 'use_crf'
     USE_RNN = 'use_rnn'
     RNN_LAYERS = 'rnn_layers'
-    USE_DROPOUT = 'use_dropout'
-    USE_WORD_DROPOUT = 'use_word_dropout'
-    USE_LOCKED_DROPOUT = 'use_locked_dropout'
+    DROPOUT = 'dropout'
+    WORD_DROPOUT = 'word_dropout'
+    LOCKED_DROPOUT = 'locked_dropout'
     LEARNING_RATE = 'learning_rate'
     MINI_BATCH_SIZE = 'mini_batch_size'
     ANNEAL_FACTOR = 'anneal_factor'
@@ -33,9 +33,9 @@ SEQUENCE_TAGGER_PARAMETERS = [
     Parameter.RNN_LAYERS.value,
     Parameter.USE_CRF.value,
     Parameter.USE_RNN.value,
-    Parameter.USE_DROPOUT.value,
-    Parameter.USE_LOCKED_DROPOUT.value,
-    Parameter.USE_WORD_DROPOUT.value
+    Parameter.DROPOUT.value,
+    Parameter.LOCKED_DROPOUT.value,
+    Parameter.WORD_DROPOUT.value
 ]
 DOCUMENT_EMBEDDING_PARAMETERS = [
     Parameter.EMBEDDINGS.value,
@@ -44,6 +44,7 @@ DOCUMENT_EMBEDDING_PARAMETERS = [
     Parameter.REPROJECT_WORDS.value,
     Parameter.REPROJECT_WORD_DIMENSION.value,
     Parameter.BIDIRECTIONAL.value,
-    Parameter.USE_LOCKED_DROPOUT.value,
-    Parameter.USE_WORD_DROPOUT.value
+    Parameter.DROPOUT.value,
+    Parameter.LOCKED_DROPOUT.value,
+    Parameter.WORD_DROPOUT.value
 ]
