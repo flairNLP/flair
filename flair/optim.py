@@ -4,7 +4,7 @@ from functools import partial
 import torch
 from torch.optim import Optimizer
 from torch.optim.optimizer import required
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.lr_scheduler import _LRScheduler, ReduceLROnPlateau
 
 class SGDW(Optimizer):
     r"""Implements stochastic gradient descent (optionally with momentum) with
@@ -228,6 +228,29 @@ class AdamW(Optimizer):
                 p.data.addcdiv_(-step_size, exp_avg, denom)
 
         return loss
+
+
+class ExpAnnealLR(_LRScheduler):
+    """Exponentially anneal the learning rate of each parameter group 
+    from the initial lr to end_lr over a number of iterations.
+
+    Args:
+        optimizer (Optimizer): Wrapped optimizer.
+        end_lr (float): The final learning rate.
+        iterations (int): The number of iterations over which to increase the
+            learning rate.
+        last_epoch (int): The index of the last iteration. Default: -1.
+    """
+    def __init__(self, optimizer, end_lr, iterations, last_epoch=-1):
+        super(ExpAnnealLR, self).__init__(optimizer, last_epoch=last_epoch)
+
+        self.end_lr = end_lr
+        self.iterations = iterations
+    
+    def get_lr(self):
+        iteration = self.last_epoch + 1
+        pct = iteration / self.iterations
+        return [base_lr * (self.end_lr / base_lr) ** pct for base_lr in self.base_lrs]
 
 
 class ReduceLRWDOnPlateau(ReduceLROnPlateau):

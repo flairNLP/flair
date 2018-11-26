@@ -7,14 +7,14 @@ import logging
 import torch
 from torch.optim.optimizer import Optimizer
 from torch.optim.sgd import SGD
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.lr_scheduler import ReduceLROnPlateau, ExponentialLR
 
 import flair
 import flair.nn
 from flair.data import Sentence, Token, Label, MultiCorpus, Corpus
 from flair.models import TextClassifier, SequenceTagger
 from flair.training_utils import Metric, init_output_file, WeightExtractor, clear_embeddings, EvaluationMetric
-from flair.optim import ReduceLRWDOnPlateau
+from flair.optim import *
 
 log = logging.getLogger(__name__)
 
@@ -25,6 +25,65 @@ class ModelTrainer:
         self.model: flair.nn.Model = model
         self.corpus: Corpus = corpus
         self.optimizer: Optimizer = optimizer
+
+    def find_learning_rate(self,
+                           base_path: str,
+                           start_learning_rate: float = 1e-7,
+                           end_learning_rate: float = 10,
+                           iterations: int = 100,
+                           mini_batch_size: int = 32,
+                           stop_early: bool = True,
+                           smoothing_factor: float = 0.05,
+                           **kwargs):
+
+        
+        loss_history = []
+        best_loss = None
+
+        find_lr_txt = init_output_file(base_path, 'find_lr.tsv')
+        with open(find_lr_txt, 'a') as f:
+            f.write('ITERATION\tTIMESTAMP\tLEARNING_RATE\tTRAIN_LOSS\n')
+        
+        optimizer = self.optimizer(self.model.parameters(), lr=start_learning_rate, **kwargs)
+        
+        train_data = self.corpus.train
+        random.shuffle(train_data)
+        iterations = min(iterations, len(train_data))
+        batches = [train_data[x:x + mini_batch_size] for x in range(0, iterations, mini_batch_size)]
+
+        scheduler = ExpAnnealLR(optimizer, end_learning_rate, iterations)
+
+        self.model.train()
+
+        for itr, batch in enumerate(batches):
+            loss = self.model.forward_loss(batch)
+
+            optimizer.zero_grad()
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
+            optimizer.step()
+            scheduler.step()
+            learning_rate = scheduler.get_lr()[0]
+            
+            loss_item = loss.item()
+            if itr == 0:
+                best_loss = loss_item
+            else:
+                if smoothing_factor > 0:
+                    loss_item = smoothing_factor * loss_item + (1 - smoothing_factor)*loss_history[-1]
+                if loss_item < best_loss:
+                    best_loss = loss
+
+            loss_history.append(loss_item)
+            
+            with open(find_lr_txt, 'a') as f:
+                f.write(
+                    f'{itr}\t{datetime.datetime.now():%H:%M:%S}\t{learning_rate:.4f}\t{loss_item}\n')
+
+            if (stop_early and loss_item > 4 * best_loss):
+                break
+        
+
 
     def train(self,
               base_path: str,
@@ -59,7 +118,7 @@ class ModelTrainer:
 
         # annealing scheduler
         anneal_mode = 'min' if train_with_dev else 'max'
-        if optimizer.__class__.__name__ in ['AdamW', 'SGDW']:
+        if isinstance(optimizer, (AdamW, SGDW)):
             scheduler = ReduceLRWDOnPlateau(optimizer, factor=anneal_factor,
                                             patience=patience, mode=anneal_mode,
                                             verbose=True)
