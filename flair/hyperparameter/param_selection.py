@@ -20,8 +20,8 @@ class SearchSpace(object):
     def __init__(self):
         self.search_space = {}
 
-    def add(self, parameter_name: Parameter, func, **kwargs):
-        self.search_space[parameter_name.value] = func(parameter_name.value, **kwargs)
+    def add(self, parameter: Parameter, func, **kwargs):
+        self.search_space[parameter.value] = func(parameter.value, **kwargs)
 
     def get_search_space(self):
         return hp.choice('parameters', [ self.search_space ])
@@ -46,7 +46,6 @@ class ParamSelector(object):
             log.info(f'\t{k}: {v}')
         log.info('-' * 100)
 
-        # clear embedding
         for sent in self.corpus.get_all_sentences():
             sent.clear_embeddings()
 
@@ -59,10 +58,6 @@ class ParamSelector(object):
         result = trainer.train(self.result_folder,
                                evaluation_metric=self.evaluation_metric,
                                max_epochs=self.max_epochs,
-                               train_with_dev=False,
-                               monitor_train=False,
-                               embeddings_in_memory=True,
-                               checkpoint=False,
                                save_final_model=False,
                                test_mode=True,
                                **training_params)
@@ -85,7 +80,8 @@ class ParamSelector(object):
         log.info('-' * 100)
         log.info('Optimizing parameter configuration done.')
         log.info('Best parameter configuration found:')
-        log.info(best)
+        for k, v in best.items():
+            log.info(f'\t{k}: {v}')
         log.info('-' * 100)
 
 

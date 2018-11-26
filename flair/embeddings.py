@@ -130,6 +130,9 @@ class StackedEmbeddings(TokenEmbeddings):
 
         return sentences
 
+    def __str__(self):
+        return f'StackedEmbeddings [{",".join([str(e) for e in self.embeddings])}]'
+
 
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
@@ -226,6 +229,9 @@ class WordEmbeddings(TokenEmbeddings):
 
         return sentences
 
+    def __str__(self):
+        return self.name
+
 
 class MemoryEmbeddings(TokenEmbeddings):
 
@@ -274,6 +280,9 @@ class MemoryEmbeddings(TokenEmbeddings):
                     self.update_embedding(token.text, token.get_tag(self.tag_type).value)
 
         return sentences
+
+    def __str__(self):
+        return self.name
 
 
 class CharacterEmbeddings(TokenEmbeddings):
@@ -356,6 +365,9 @@ class CharacterEmbeddings(TokenEmbeddings):
 
             for token_number, token in enumerate(sentence.tokens):
                 token.set_embedding(self.name, character_embeddings[token_number])
+
+    def __str__(self):
+        return self.name
 
 
 class CharLMEmbeddings(TokenEmbeddings):
@@ -598,6 +610,9 @@ class CharLMEmbeddings(TokenEmbeddings):
                                                               sentence]
 
         return sentences
+
+    def __str__(self):
+        return self.name
 
 
 class DocumentMeanEmbeddings(DocumentEmbeddings):
