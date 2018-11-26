@@ -1,5 +1,6 @@
 import logging
 from abc import abstractmethod
+from typing import Tuple
 
 from hyperopt import hp, fmin, tpe
 
@@ -34,6 +35,7 @@ class ParamSelector(object):
         self.max_epochs = max_epochs
         self.result_folder = result_folder
         self.evaluation_metric = evaluation_metric
+        self.run = 1
 
     @abstractmethod
     def _set_up_model(self, params) -> flair.nn.Model:
@@ -41,9 +43,12 @@ class ParamSelector(object):
 
     def _objective(self, params):
         log.info('-' * 100)
+        log.info(f'Evaluation run: {self.run}')
         log.info(f'Evaluating parameter combination:')
         for k, v in params.items():
-            log.info(f'\t{k}: {v}')
+            if isinstance(v, Tuple):
+                v = ','.join([str(x) for x in v])
+            log.info(f'\t{k}: {str(v)}')
         log.info('-' * 100)
 
         for sent in self.corpus.get_all_sentences():
@@ -67,9 +72,13 @@ class ParamSelector(object):
         log.info('-' * 100)
         log.info(f'Done evaluating parameter combination:')
         for k, v in params.items():
+            if isinstance(v, Tuple):
+                v = ','.join([str(x) for x in v])
             log.info(f'\t{k}: {v}')
         log.info(f'Score: {score}')
         log.info('-' * 100)
+
+        self.run += 1
 
         return score
 
