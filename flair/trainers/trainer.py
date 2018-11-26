@@ -53,6 +53,8 @@ class ModelTrainer:
 
         scheduler = ExpAnnealLR(optimizer, end_learning_rate, iterations)
 
+        model_state = self.model.state_dict()
+        model_device = next(self.model.parameters()).device
         self.model.train()
 
         for itr, batch in enumerate(batches):
@@ -83,6 +85,8 @@ class ModelTrainer:
             if (stop_early and loss_item > 4 * best_loss):
                 break
         
+        self.model.load_state_dict(model_state)
+        self.model.to(model_device)
 
 
     def train(self,
