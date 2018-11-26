@@ -62,3 +62,12 @@ def test_multi_corpus(tasks_base_path):
     assert len(corpus.train) == 8
     assert len(corpus.dev) == 2
     assert len(corpus.test) == 2
+
+
+def test_download_load_data(tasks_base_path):
+    # get training, test and dev data for full English UD corpus from web
+    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH)
+
+    assert len(corpus.train) == 12543
+    assert len(corpus.dev) == 2002
+    assert len(corpus.test) == 2077
