@@ -23,17 +23,17 @@ class TextClassifier(flair.nn.Model):
     """
 
     def __init__(self,
-                 document_embeddings: flair.embeddings.DocumentEmbeddings,
+                 embeddings: flair.embeddings.DocumentEmbeddings,
                  label_dictionary: Dictionary,
                  multi_label: bool):
 
         super(TextClassifier, self).__init__()
 
-        self.document_embeddings = document_embeddings
+        self.document_embeddings = embeddings
         self.label_dictionary: Dictionary = label_dictionary
         self.multi_label = multi_label
 
-        self.document_embeddings: flair.embeddings.DocumentLSTMEmbeddings = document_embeddings
+        self.document_embeddings: flair.embeddings.DocumentLSTMEmbeddings = embeddings
 
         self.decoder = nn.Linear(self.document_embeddings.embedding_length, len(self.label_dictionary))
 
@@ -96,7 +96,7 @@ class TextClassifier(flair.nn.Model):
                 state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
 
         model = TextClassifier(
-            document_embeddings=state['document_embeddings'],
+            embeddings=state['document_embeddings'],
             label_dictionary=state['label_dictionary'],
             multi_label=state['multi_label']
         )
