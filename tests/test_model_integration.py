@@ -189,7 +189,6 @@ def test_train_optimizer(results_base_path, tasks_base_path):
     shutil.rmtree(results_base_path)
 
 
-
 @pytest.mark.integration
 def test_train_optimizer_arguments(results_base_path, tasks_base_path):
 
@@ -221,6 +220,31 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
     loaded_model.predict(sentence)
     loaded_model.predict([sentence, sentence_empty])
     loaded_model.predict([sentence_empty])
+
+    # clean up results directory
+    shutil.rmtree(results_base_path)
+
+
+@pytest.mark.integration
+def test_find_learning_rate(results_base_path, tasks_base_path):
+
+    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
+    tag_dictionary = corpus.make_tag_dictionary('ner')
+
+    embeddings = WordEmbeddings('glove')
+
+    tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+                                            embeddings=embeddings,
+                                            tag_dictionary=tag_dictionary,
+                                            tag_type='ner',
+                                            use_crf=False)
+
+    optimizer: Optimizer = AdamW
+
+    # initialize trainer
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=optimizer)
+
+    trainer.find_learning_rate(str(results_base_path))
 
     # clean up results directory
     shutil.rmtree(results_base_path)

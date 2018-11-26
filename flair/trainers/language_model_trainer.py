@@ -11,7 +11,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from flair.data import Dictionary
 from flair.models import LanguageModel
-from flair.optim import ReduceLRWDOnPlateau
+from flair.optim import *
 
 
 log = logging.getLogger(__name__)
@@ -192,7 +192,7 @@ class LanguageModelTrainer:
             epoch = 0
             best_val_loss = self.model.best_score if self.model.best_score is not None else 100000000
             optimizer = self.optimzer(self.model.parameters(), lr=learning_rate, **kwargs)
-            if optimizer.__class__.__name__ in ['AdamW', 'SGDW']:
+            if isinstance(optimizer, (AdamW, SGDW)):
                 scheduler: ReduceLRWDOnPlateau = ReduceLRWDOnPlateau(optimizer, verbose=True,
                                                                      factor=anneal_factor,
                                                                      patience=patience)
