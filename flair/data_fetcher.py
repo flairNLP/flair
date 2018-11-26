@@ -135,7 +135,7 @@ class NLPTaskDataFetcher:
                                                          tag_to_biloes='ner')
 
         # the CoNLL 03 task for Dutch has no NP column
-        if task == NLPTask.CONLL_03_DUTCH.value:
+        if task == NLPTask.CONLL_03_DUTCH.value or task.startswith('wikiner'):
             columns = {0: 'text', 1: 'pos', 2: 'ner'}
 
             return NLPTaskDataFetcher.load_column_corpus(data_folder,
@@ -220,14 +220,21 @@ class NLPTaskDataFetcher:
         # get train and test data
         sentences_train: List[Sentence] = NLPTaskDataFetcher.read_column_data(
             os.path.join(data_folder, train_file), column_format)
-        sentences_test: List[Sentence] = NLPTaskDataFetcher.read_column_data(
-            os.path.join(data_folder, test_file), column_format)
 
+        # read in test file if exists, otherwise sample 10% of train data as test dataset
+        if test_file is not None:
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_column_data(
+                os.path.join(data_folder, test_file), column_format)
+        else:
+            sentences_test: List[Sentence] = [sentences_train[i] for i in
+                                             NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)]
+            sentences_train = [x for x in sentences_train if x not in sentences_test]
+
+        # read in dev file if exists, otherwise sample 10% of train data as dev dataset
         if dev_file is not None:
             sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_column_data(
                 os.path.join(data_folder, dev_file), column_format)
         else:
-            # sample 10% of training sentences as dev data
             sentences_dev: List[Sentence] = [sentences_train[i] for i in
                                              NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)]
             sentences_train = [x for x in sentences_train if x not in sentences_dev]
@@ -533,8 +540,7 @@ class NLPTaskDataFetcher:
             conll_2000_path = 'https://www.clips.uantwerpen.be/conll2000/chunking/'
             cached_path(f'{conll_2000_path}train.txt.gz', Path('datasets') / task.value)
             cached_path(f'{conll_2000_path}test.txt.gz', Path('datasets') / task.value)
-            import gzip
-            import shutil
+            import gzip, shutil
             with gzip.open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'train.txt.gz', 'rb') as f_in:
                 with open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'train.txt', 'wb') as f_out:
                     shutil.copyfileobj(f_in, f_out)
@@ -542,21 +548,23 @@ class NLPTaskDataFetcher:
                 with open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'test.txt', 'wb') as f_out:
                     shutil.copyfileobj(f_in, f_out)
 
-        # Wikiner chunking task
-        wikiner_path = 'https://github.com/dice-group/FOX/blob/master/input/Wikiner/'
+        # Wikiner NER task
+        wikiner_path = 'https://raw.githubusercontent.com/dice-group/FOX/master/input/Wikiner/'
         if task == NLPTask.WIKINER_FRENCH:
             cached_path(f'{wikiner_path}aij-wikiner-fr-wp3.bz2', Path('datasets') / task.value)
+            import bz2, shutil
 
-            import bz2
+            # unpack and write out in CoNLL column-like format
             bz_file = bz2.BZ2File(
-                Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'aij-wikiner-fr-wp3.bz2',
-                'rb')
-            import gzip
-            import shutil
-            with bz_file:
-                content = bz_file.read()
-
-        # 'https://github.com/dice-group/FOX/blob/master/input/Wikiner/aij-wikiner-fr-wp3.bz2?raw=true'
+                Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'aij-wikiner-fr-wp3.bz2', 'rb')
+            with bz_file as f, open(
+                    Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'aij-wikiner-fr-wp3.train',
+                    'w') as out:
+                for line in f:
+                    line = line.decode('utf-8')
+                    words = line.split(' ')
+                    for word in words:
+                        out.write('\t'.join(word.split('|')) + '\n')
 
         # CoNLL 02/03 NER
         conll_02_path = 'https://www.clips.uantwerpen.be/conll2002/ner/data/'
