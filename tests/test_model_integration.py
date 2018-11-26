@@ -156,7 +156,7 @@ def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_pat
 @pytest.mark.integration
 def test_train_optimizer(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     embeddings = WordEmbeddings('glove')
@@ -192,7 +192,7 @@ def test_train_optimizer(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_train_optimizer_arguments(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     embeddings = WordEmbeddings('glove')
@@ -228,7 +228,7 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_find_learning_rate(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     embeddings = WordEmbeddings('glove')
