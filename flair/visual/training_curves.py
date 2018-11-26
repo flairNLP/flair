@@ -207,7 +207,7 @@ class Plotter(object):
                 if row[TRAIN_LOSS] != '_': losses.append(float(row[TRAIN_LOSS]))
                 if row[LEARNING_RATE] != '_': lrs.append(float(row[LEARNING_RATE]))
 
-        _, ax = plt.subplots(1,1)
+        fig, ax = plt.subplots(1,1)
         ax.plot(lrs, losses)
         ax.set_ylabel("Loss")
         ax.set_xlabel("Learning Rate")
