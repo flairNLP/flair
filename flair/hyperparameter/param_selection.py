@@ -9,7 +9,7 @@ from flair.training_utils import EvaluationMetric
 
 log = logging.getLogger(__name__)
 
-TRAINING_PARAMETERS = ['learning_rate', 'mini_batch_size', 'anneal_factor', 'patience']
+TRAINING_PARAMETERS = ['learning_rate', 'mini_batch_size', 'anneal_factor', 'patience', 'anneal_with_restarts']
 SEQUENCE_TAGGER_PARAMETERS = [
     'embeddings', 'hidden_size', 'use_crf', 'use_rnn', 'rnn_layers', 'use_dropout', 'use_word_dropout',
     'use_locked_dropout'
@@ -29,6 +29,7 @@ class ParameterName(Enum):
     learning_rate = 'learning_rate',
     mini_batch_size = 'mini_batch_size',
     anneal_factor = 'anneal_factor',
+    anneal_with_restarts = 'anneal_with_restarts'
     patience = 'patience'
 
 
@@ -44,7 +45,7 @@ class SearchSpace(object):
         return hp.choice('parameters', [ self.search_space ])
 
 
-class SequenceTaggerOptimizer(object):
+class SequenceTaggerParamSelector(object):
 
     def __init__(self, corpus, tag_type, result_folder, max_epochs=50,
                  evaluation_metric=EvaluationMetric.MICRO_F1_SCORE, anneal_with_restarts=False):
@@ -81,7 +82,6 @@ class SequenceTaggerOptimizer(object):
                                   embeddings_in_memory=True,
                                   checkpoint=False,
                                   save_final_model=False,
-                                  anneal_with_restarts=self.anneal_with_restarts,
                                   test_mode=True,
                                   **training_params)
 
@@ -105,7 +105,7 @@ class SequenceTaggerOptimizer(object):
         log.info('-' * 100)
 
 
-class TextClassifierOptimizer(object):
+class TextClassifierParamSelector(object):
 
     def __init__(self, corpus, multi_label, result_folder, max_epochs=50,
                  evaluation_metric=EvaluationMetric.MICRO_F1_SCORE, anneal_with_restarts=False):
