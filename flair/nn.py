@@ -5,7 +5,6 @@ from abc import abstractmethod
 from typing import Union, List
 
 from flair.data import Sentence, Label
-from flair.training_utils import EvaluationMetric
 
 
 class Model(torch.nn.Module):
