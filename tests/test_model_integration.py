@@ -18,7 +18,7 @@ from flair.optim import AdamW
 @pytest.mark.integration
 def test_train_load_use_tagger(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     embeddings = WordEmbeddings('glove')
@@ -51,7 +51,7 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     embeddings = CharLMEmbeddings('news-forward-fast')
@@ -84,7 +84,7 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_train_charlm_changed_chache_load_use_tagger(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     # make a temporary cache directory that we remove afterwards
@@ -123,7 +123,7 @@ def test_train_charlm_changed_chache_load_use_tagger(results_base_path, tasks_ba
 @pytest.mark.integration
 def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     embeddings = CharLMEmbeddings('news-forward-fast', use_cache=False)
@@ -156,7 +156,7 @@ def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_pat
 @pytest.mark.integration
 def test_train_optimizer(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     embeddings = WordEmbeddings('glove')
@@ -192,7 +192,7 @@ def test_train_optimizer(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_train_optimizer_arguments(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     embeddings = WordEmbeddings('glove')
@@ -228,7 +228,7 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_find_learning_rate(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     embeddings = WordEmbeddings('glove')
@@ -275,7 +275,7 @@ def test_load_use_serialized_tagger():
 @pytest.mark.integration
 def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
     glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
@@ -311,7 +311,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
     glove_embedding: TokenEmbeddings = CharLMEmbeddings('news-forward-fast')
@@ -347,7 +347,7 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_train_charlm_nocache_load_use_classifier(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.IMDB, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
     glove_embedding: TokenEmbeddings = CharLMEmbeddings('news-forward-fast', use_cache=False)
@@ -418,7 +418,7 @@ def test_train_language_model(results_base_path, resources_path):
 @pytest.mark.integration
 def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.fetch_corpora([NLPTask.FASHION, NLPTask.GERMEVAL], base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpora([NLPTask.FASHION, NLPTask.GERMEVAL], base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
     embeddings = WordEmbeddings('glove')
