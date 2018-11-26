@@ -42,7 +42,7 @@ class ModelTrainer:
               anneal_with_restarts: bool = False,
               test_mode: bool = False,
               **kwargs
-              ) -> float:
+              ) -> dict:
 
         self._log_line()
         log.info(f'Evaluation method: {evaluation_metric.name}')
@@ -73,6 +73,9 @@ class ModelTrainer:
         # if training also uses dev data, include in training set
         if train_with_dev:
             train_data.extend(self.corpus.dev)
+
+        current_loss = 0.0
+        current_score = 0.0
 
         # At any point you can hit Ctrl + C to break out of training early.
         try:
@@ -237,7 +240,7 @@ class ModelTrainer:
         else:
             final_score = test_metric.micro_avg_f_score()
 
-        return final_score
+        return {'test_score': final_score, 'dev_score': current_score, 'loss': current_loss}
 
     def _calculate_evaluation_results_for(self, dataset_name, dataset, evaluation_metric, embeddings_in_memory,
                                           mini_batch_size,

@@ -74,16 +74,18 @@ class SequenceTaggerParamSelector(object):
 
         trainer: ModelTrainer = ModelTrainer(tagger, self.corpus)
 
-        score = 1 - trainer.train(self.result_folder,
-                                  evaluation_metric=self.evaluation_metric,
-                                  max_epochs=self.max_epochs,
-                                  train_with_dev=False,
-                                  monitor_train=False,
-                                  embeddings_in_memory=True,
-                                  checkpoint=False,
-                                  save_final_model=False,
-                                  test_mode=True,
-                                  **training_params)
+        result = trainer.train(self.result_folder,
+                               evaluation_metric=self.evaluation_metric,
+                               max_epochs=self.max_epochs,
+                               train_with_dev=False,
+                               monitor_train=False,
+                               embeddings_in_memory=True,
+                               checkpoint=False,
+                               save_final_model=False,
+                               test_mode=True,
+                               **training_params)
+
+        score = 1 - result['dev_score']
 
         log.info('-' * 100)
         log.info(f'Done evaluating parameter combination:')
@@ -134,17 +136,18 @@ class TextClassifierParamSelector(object):
 
         trainer: ModelTrainer = ModelTrainer(tagger, self.corpus)
 
-        score = 1 - trainer.train(self.result_folder,
-                                  evaluation_metric=self.evaluation_metric,
-                                  max_epochs=self.max_epochs,
-                                  train_with_dev=False,
-                                  monitor_train=False,
-                                  embeddings_in_memory=True,
-                                  checkpoint=False,
-                                  save_final_model=False,
-                                  anneal_with_restarts=self.anneal_with_restarts,
-                                  test_mode=True,
-                                  **training_params)
+        result = trainer.train(self.result_folder,
+                               evaluation_metric=self.evaluation_metric,
+                               max_epochs=self.max_epochs,
+                               train_with_dev=False,
+                               monitor_train=False,
+                               embeddings_in_memory=True,
+                               checkpoint=False,
+                               save_final_model=False,
+                               test_mode=True,
+                               **training_params)
+
+        score = 1 - result['dev_score']
 
         log.info('-' * 100)
         log.info(f'Done evaluating parameter combination:')
