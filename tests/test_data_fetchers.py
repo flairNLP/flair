@@ -1,3 +1,7 @@
+import shutil
+from pathlib import Path
+
+import flair
 from flair.data_fetcher import NLPTask, NLPTaskDataFetcher
 
 
@@ -71,3 +75,6 @@ def test_download_load_data(tasks_base_path):
     assert len(corpus.train) == 12543
     assert len(corpus.dev) == 2002
     assert len(corpus.test) == 2077
+
+    # clean up data directory
+    shutil.rmtree(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / 'ud_english')
