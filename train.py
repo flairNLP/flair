@@ -7,7 +7,7 @@ from flair.training_utils import EvaluationMetric
 from flair.visual.training_curves import Plotter
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.UD_ENGLISH)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH)
 print(corpus)
 
 # 2. what tag do we want to predict?
