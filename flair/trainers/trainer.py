@@ -84,6 +84,8 @@ class ModelTrainer:
         self.model.load_state_dict(model_state)
         self.model.to(model_device)
 
+        return find_lr_txt
+
     def train(self,
               base_path: str,
               evaluation_metric: EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
