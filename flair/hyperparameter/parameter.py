@@ -18,14 +18,28 @@ class Parameter(Enum):
     REPROJECT_WORDS = 'reproject_words'
     REPROJECT_WORD_DIMENSION = 'reproject_words_dimension'
     BIDIRECTIONAL = 'bidirectional'
-
+    OPTIMIZER = 'optimizer'
+    MOMENTUM = 'momentum'
+    DAMPENING = 'dampening'
+    WEIGHT_DECAY = 'weight_decay'
+    NESTEROV = 'nesterov'
+    AMSGRAD = 'amsgrad'
+    BETAS = 'betas'
+    EPS = 'eps'
 
 TRAINING_PARAMETERS = [
     Parameter.LEARNING_RATE.value,
     Parameter.MINI_BATCH_SIZE.value,
     Parameter.ANNEAL_FACTOR.value,
     Parameter.PATIENCE.value,
-    Parameter.ANNEAL_WITH_RESTARTS.value
+    Parameter.ANNEAL_WITH_RESTARTS.value,
+    Parameter.MOMENTUM.value,
+    Parameter.DAMPENING.value,
+    Parameter.WEIGHT_DECAY.value,
+    Parameter.NESTEROV.value,
+    Parameter.AMSGRAD.value,
+    Parameter.BETAS.value,
+    Parameter.EPS.value
 ]
 SEQUENCE_TAGGER_PARAMETERS = [
     Parameter.EMBEDDINGS.value,
@@ -36,6 +50,9 @@ SEQUENCE_TAGGER_PARAMETERS = [
     Parameter.DROPOUT.value,
     Parameter.LOCKED_DROPOUT.value,
     Parameter.WORD_DROPOUT.value
+]
+MODEL_TRAINER_PARAMETERS = [
+    Parameter.OPTIMIZER.value
 ]
 DOCUMENT_EMBEDDING_PARAMETERS = [
     Parameter.EMBEDDINGS.value,

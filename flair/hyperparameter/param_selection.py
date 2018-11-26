@@ -8,7 +8,7 @@ import flair.nn
 from flair.embeddings import DocumentLSTMEmbeddings, DocumentPoolEmbeddings
 from flair.hyperparameter import Parameter
 from flair.hyperparameter.parameter import SEQUENCE_TAGGER_PARAMETERS, TRAINING_PARAMETERS, \
-    DOCUMENT_EMBEDDING_PARAMETERS
+    DOCUMENT_EMBEDDING_PARAMETERS, MODEL_TRAINER_PARAMETERS
 from flair.models import SequenceTagger, TextClassifier
 from flair.trainers import ModelTrainer
 from flair.training_utils import EvaluationMetric
@@ -57,8 +57,9 @@ class ParamSelector(object):
         model = self._set_up_model(params)
 
         training_params = {key: params[key] for key in params if key in TRAINING_PARAMETERS}
+        model_trainer_parameters = {key: params[key] for key in params if key in MODEL_TRAINER_PARAMETERS}
 
-        trainer: ModelTrainer = ModelTrainer(model, self.corpus)
+        trainer: ModelTrainer = ModelTrainer(model, self.corpus, **model_trainer_parameters)
 
         result = trainer.train(self.result_folder,
                                evaluation_metric=self.evaluation_metric,

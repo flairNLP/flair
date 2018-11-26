@@ -2,10 +2,12 @@ import shutil
 
 import pytest
 from hyperopt import hp
+from torch.optim import SGD
 
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 from flair.embeddings import WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
 from flair.hyperparameter import SearchSpace, Parameter, SequenceTaggerParamSelector, TextClassifierParamSelector
+from flair.optim import AdamW
 
 
 @pytest.mark.integration
@@ -27,11 +29,15 @@ def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
     search_space.add(Parameter.HIDDEN_SIZE, hp.choice, options=[64, 128, 256, 512])
     search_space.add(Parameter.RNN_LAYERS, hp.choice, options=[1, 2])
 
+    # model trainer parameter
+    search_space.add(Parameter.OPTIMIZER, hp.choice, options=[SGD, AdamW])
+
     # training parameter
     search_space.add(Parameter.MINI_BATCH_SIZE, hp.choice, options=[4, 8, 32])
     search_space.add(Parameter.LEARNING_RATE, hp.uniform, low=0.01, high=1)
     search_space.add(Parameter.ANNEAL_FACTOR, hp.uniform, low=0.3, high=0.75)
     search_space.add(Parameter.PATIENCE, hp.choice, options=[3, 5])
+    search_space.add(Parameter.WEIGHT_DECAY, hp.uniform, low=0.01, high=1)
 
     # find best parameter settings
     optimizer = SequenceTaggerParamSelector(corpus, 'ner', str(results_base_path), max_epochs=2)
