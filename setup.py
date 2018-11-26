@@ -22,6 +22,7 @@ setup(
         'sklearn',
         'sqlitedict==1.6.0',
         'deprecated==1.2.4',
+        'hyperopt'=='0.1.1'
     ],
     include_package_data=True,
     python_requires='>=3.6',
