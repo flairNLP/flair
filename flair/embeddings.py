@@ -130,6 +130,9 @@ class StackedEmbeddings(TokenEmbeddings):
 
         return sentences
 
+    def __str__(self):
+        return f'StackedEmbeddings [{",".join([str(e) for e in self.embeddings])}]'
+
 
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
@@ -226,6 +229,9 @@ class WordEmbeddings(TokenEmbeddings):
 
         return sentences
 
+    def __str__(self):
+        return self.name
+
 
 class MemoryEmbeddings(TokenEmbeddings):
 
@@ -274,6 +280,9 @@ class MemoryEmbeddings(TokenEmbeddings):
                     self.update_embedding(token.text, token.get_tag(self.tag_type).value)
 
         return sentences
+
+    def __str__(self):
+        return self.name
 
 
 class CharacterEmbeddings(TokenEmbeddings):
@@ -356,6 +365,9 @@ class CharacterEmbeddings(TokenEmbeddings):
 
             for token_number, token in enumerate(sentence.tokens):
                 token.set_embedding(self.name, character_embeddings[token_number])
+
+    def __str__(self):
+        return self.name
 
 
 class CharLMEmbeddings(TokenEmbeddings):
@@ -599,6 +611,9 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         return sentences
 
+    def __str__(self):
+        return self.name
+
 
 class DocumentMeanEmbeddings(DocumentEmbeddings):
 
@@ -656,14 +671,14 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
 
 class DocumentPoolEmbeddings(DocumentEmbeddings):
 
-    def __init__(self, token_embeddings: List[TokenEmbeddings], mode: str = 'mean'):
+    def __init__(self, embeddings: List[TokenEmbeddings], mode: str = 'mean'):
         """The constructor takes a list of embeddings to be combined.
-        :param token_embeddings: a list of token embeddings
+        :param embeddings: a list of token embeddings
         :param mode: a string which can any value from ['mean', 'max', 'min']
         """
         super().__init__()
 
-        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=token_embeddings)
+        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
 
         self.__embedding_length: int = self.embeddings.embedding_length
 
@@ -726,30 +741,32 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
 class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
     def __init__(self,
-                 token_embeddings: List[TokenEmbeddings],
-                 hidden_states=128,
-                 num_layers=1,
+                 embeddings: List[TokenEmbeddings],
+                 hidden_size=128,
+                 rnn_layers=1,
                  reproject_words: bool = True,
                  reproject_words_dimension: int = None,
                  bidirectional: bool = False,
-                 use_word_dropout: bool = False,
-                 use_locked_dropout: bool = False):
+                 dropout: float = 0.5,
+                 word_dropout: float = 0.0,
+                 locked_dropout: float = 0.0):
         """The constructor takes a list of embeddings to be combined.
-        :param token_embeddings: a list of token embeddings
-        :param hidden_states: the number of hidden states in the lstm
-        :param num_layers: the number of layers for the lstm
+        :param embeddings: a list of token embeddings
+        :param hidden_size: the number of hidden states in the lstm
+        :param rnn_layers: the number of layers for the lstm
         :param reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear
         layer before putting them into the lstm or not
         :param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
         dimension as before will be taken.
         :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
         representation of the lstm to be used as final document embedding.
-        :param use_word_dropout: boolean value, indicating whether to use word dropout or not.
-        :param use_locked_dropout: boolean value, indicating whether to use locked dropout or not.
+        :param dropout: the dropout value to be used
+        :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
+        :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
         """
         super().__init__()
 
-        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=token_embeddings)
+        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
 
         self.reproject_words = reproject_words
         self.bidirectional = bidirectional
@@ -759,7 +776,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         self.name = 'document_lstm'
         self.static_embeddings = False
 
-        self.__embedding_length: int = hidden_states
+        self.__embedding_length: int = hidden_size
         if self.bidirectional:
             self.__embedding_length *= 4
 
@@ -770,18 +787,18 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         # bidirectional LSTM on top of embedding layer
         self.word_reprojection_map = torch.nn.Linear(self.length_of_all_token_embeddings,
                                                      self.embeddings_dimension)
-        self.rnn = torch.nn.GRU(self.embeddings_dimension, hidden_states, num_layers=num_layers,
+        self.rnn = torch.nn.GRU(self.embeddings_dimension, hidden_size, num_layers=rnn_layers,
                                 bidirectional=self.bidirectional)
 
         # dropouts
-        if use_locked_dropout:
-            self.dropout: torch.nn.Module = LockedDropout(0.5)
+        if locked_dropout > 0.0:
+            self.dropout: torch.nn.Module = LockedDropout(locked_dropout)
         else:
-            self.dropout = torch.nn.Dropout(0.5)
+            self.dropout = torch.nn.Dropout(dropout)
 
-        self.use_word_dropout: bool = use_word_dropout
+        self.use_word_dropout: bool = word_dropout > 0.0
         if self.use_word_dropout:
-            self.word_dropout = WordDropout(0.05)
+            self.word_dropout = WordDropout(word_dropout)
 
         torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
 

@@ -71,9 +71,9 @@ class SequenceTagger(flair.nn.Model):
                  use_crf: bool = True,
                  use_rnn: bool = True,
                  rnn_layers: int = 1,
-                 use_dropout: float = 0.0,
-                 use_word_dropout: float = 0.05,
-                 use_locked_dropout: float = 0.5,
+                 dropout: float = 0.0,
+                 word_dropout: float = 0.05,
+                 locked_dropout: float = 0.5,
                  ):
 
         super(SequenceTagger, self).__init__()
@@ -97,18 +97,18 @@ class SequenceTagger(flair.nn.Model):
         self.hidden_word = None
 
         # dropouts
-        self.use_dropout: float = use_dropout
-        self.use_word_dropout: float = use_word_dropout
-        self.use_locked_dropout: float = use_locked_dropout
+        self.use_dropout: float = dropout
+        self.use_word_dropout: float = word_dropout
+        self.use_locked_dropout: float = locked_dropout
 
-        if use_dropout > 0.0:
-            self.dropout = torch.nn.Dropout(use_dropout)
+        if dropout > 0.0:
+            self.dropout = torch.nn.Dropout(dropout)
 
-        if use_word_dropout > 0.0:
-            self.word_dropout = flair.nn.WordDropout(use_word_dropout)
+        if word_dropout > 0.0:
+            self.word_dropout = flair.nn.WordDropout(word_dropout)
 
-        if use_locked_dropout > 0.0:
-            self.locked_dropout = flair.nn.LockedDropout(use_locked_dropout)
+        if locked_dropout > 0.0:
+            self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
 
         rnn_input_dim: int = self.embeddings.embedding_length
 
@@ -183,9 +183,9 @@ class SequenceTagger(flair.nn.Model):
             use_crf=state['use_crf'],
             use_rnn=state['use_rnn'],
             rnn_layers=state['rnn_layers'],
-            use_dropout=use_dropout,
-            use_word_dropout=use_word_dropout,
-            use_locked_dropout=use_locked_dropout,
+            dropout=use_dropout,
+            word_dropout=use_word_dropout,
+            locked_dropout=use_locked_dropout,
         )
 
         model.load_state_dict(state['state_dict'])
