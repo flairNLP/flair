@@ -189,3 +189,34 @@ class Plotter(object):
         plt.savefig(path, dpi=300)
 
         plt.close(fig)
+
+    def plot_find_learning_rate(self, file_name):
+        lrs = []
+        losses = []
+
+        with open(file_name, 'r') as tsvin:
+            tsvin = csv.reader(tsvin, delimiter='\t')
+            row = next(tsvin, None)
+            ITERATION = row.index('ITERATION')
+            TIMESTAMP = row.index('TIMESTAMP')
+            LEARNING_RATE = row.index('LEARNING_RATE')
+            TRAIN_LOSS = row.index('TRAIN_LOSS')
+
+            # then get all relevant values from the tsv
+            for row in tsvin:
+                if row[TRAIN_LOSS] != '_': losses.append(float(row[TRAIN_LOSS]))
+                if row[LEARNING_RATE] != '_': lrs.append(float(row[LEARNING_RATE]))
+
+        _, ax = plt.subplots(1,1)
+        ax.plot(lrs, losses)
+        ax.set_ylabel("Loss")
+        ax.set_xlabel("Learning Rate")
+        ax.set_xscale('log')
+        ax.xaxis.set_major_formatter(plt.FormatStrFormatter('%.0e'))
+
+        # save plot
+        plt.tight_layout(pad=1.0)
+        path = os.path.join(os.path.dirname(file_name), 'find_lr.png')
+        plt.savefig(path, dpi=300)
+
+        plt.close(fig)
