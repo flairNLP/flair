@@ -22,7 +22,16 @@ class NLPTask(Enum):
     CONLL_03_DUTCH = 'conll_03_dutch'
     CONLL_03_SPANISH = 'conll_03_spanish'
 
+    # -- WikiNER datasets
+    WIKINER_ENGLISH = 'wikiner_english'
+    WIKINER_GERMAN = 'wikiner_german'
     WIKINER_FRENCH = 'wikiner_french'
+    WIKINER_SPANISH = 'wikiner_spanish'
+    WIKINER_ITALIAN = 'wikiner_italian'
+    WIKINER_DUTCH = 'wikiner_dutch'
+    WIKINER_POLISH = 'wikiner_polish'
+    WIKINER_PORTUGUESE = 'wikiner_portuguese'
+    WIKINER_RUSSIAN = 'wikiner_russian'
 
     # -- Universal Dependencies
     # Germanic
@@ -538,33 +547,51 @@ class NLPTaskDataFetcher:
         # conll 2000 chunking task
         if task == NLPTask.CONLL_2000:
             conll_2000_path = 'https://www.clips.uantwerpen.be/conll2000/chunking/'
-            cached_path(f'{conll_2000_path}train.txt.gz', Path('datasets') / task.value)
-            cached_path(f'{conll_2000_path}test.txt.gz', Path('datasets') / task.value)
-            import gzip, shutil
-            with gzip.open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'train.txt.gz', 'rb') as f_in:
-                with open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'train.txt', 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-            with gzip.open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'test.txt.gz', 'rb') as f_in:
-                with open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'test.txt', 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
+            data_file = Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'train.txt'
+            if not data_file.is_file():
+
+                cached_path(f'{conll_2000_path}train.txt.gz', Path('datasets') / task.value)
+                cached_path(f'{conll_2000_path}test.txt.gz', Path('datasets') / task.value)
+                import gzip, shutil
+                with gzip.open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'train.txt.gz', 'rb') as f_in:
+                    with open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'train.txt', 'wb') as f_out:
+                        shutil.copyfileobj(f_in, f_out)
+                with gzip.open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'test.txt.gz', 'rb') as f_in:
+                    with open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'test.txt', 'wb') as f_out:
+                        shutil.copyfileobj(f_in, f_out)
 
         # Wikiner NER task
         wikiner_path = 'https://raw.githubusercontent.com/dice-group/FOX/master/input/Wikiner/'
-        if task == NLPTask.WIKINER_FRENCH:
-            cached_path(f'{wikiner_path}aij-wikiner-fr-wp3.bz2', Path('datasets') / task.value)
-            import bz2, shutil
 
-            # unpack and write out in CoNLL column-like format
-            bz_file = bz2.BZ2File(
-                Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'aij-wikiner-fr-wp3.bz2', 'rb')
-            with bz_file as f, open(
-                    Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'aij-wikiner-fr-wp3.train',
-                    'w') as out:
-                for line in f:
-                    line = line.decode('utf-8')
-                    words = line.split(' ')
-                    for word in words:
-                        out.write('\t'.join(word.split('|')) + '\n')
+        if task.value.startswith('wikiner'):
+            lc = ''
+            if task == NLPTask.WIKINER_ENGLISH: lc = 'en'
+            if task == NLPTask.WIKINER_GERMAN: lc = 'de'
+            if task == NLPTask.WIKINER_DUTCH: lc = 'nl'
+            if task == NLPTask.WIKINER_FRENCH: lc = 'fr'
+            if task == NLPTask.WIKINER_ITALIAN: lc = 'it'
+            if task == NLPTask.WIKINER_SPANISH: lc = 'es'
+            if task == NLPTask.WIKINER_PORTUGUESE: lc = 'pt'
+            if task == NLPTask.WIKINER_POLISH: lc = 'pl'
+            if task == NLPTask.WIKINER_RUSSIAN: lc = 'ru'
+
+            data_file = Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / f'aij-wikiner-{lc}-wp3.train'
+            if not data_file.is_file():
+
+                cached_path(f'{wikiner_path}aij-wikiner-{lc}-wp3.bz2', Path('datasets') / task.value)
+                import bz2, shutil
+
+                # unpack and write out in CoNLL column-like format
+                bz_file = bz2.BZ2File(
+                    Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / f'aij-wikiner-{lc}-wp3.bz2', 'rb')
+                with bz_file as f, open(
+                        Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / f'aij-wikiner-{lc}-wp3.train',
+                        'w') as out:
+                    for line in f:
+                        line = line.decode('utf-8')
+                        words = line.split(' ')
+                        for word in words:
+                            out.write('\t'.join(word.split('|')) + '\n')
 
         # CoNLL 02/03 NER
         conll_02_path = 'https://www.clips.uantwerpen.be/conll2002/ner/data/'
