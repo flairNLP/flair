@@ -34,7 +34,8 @@ class ModelTrainer:
                            mini_batch_size: int = 32,
                            stop_early: bool = True,
                            smoothing_factor: float = 0.05,
-                           **kwargs):
+                           **kwargs
+                          ) -> str:
         loss_history = []
         best_loss = None
 
