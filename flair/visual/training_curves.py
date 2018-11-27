@@ -44,7 +44,7 @@ class Plotter(object):
             }
         }
 
-        with open(str(file_name), 'r') as tsvin:
+        with open(file_name, 'r') as tsvin:
             tsvin = csv.reader(tsvin, delimiter='\t')
 
             # determine the column index of loss, f-score and accuracy for train, dev and test split
@@ -77,7 +77,7 @@ class Plotter(object):
     def _extract_weight_data(file_name: Path) -> dict:
         weights = defaultdict(lambda: defaultdict(lambda: list()))
 
-        with open(str(file_name), 'r') as tsvin:
+        with open(file_name, 'r') as tsvin:
             tsvin = csv.reader(tsvin, delimiter='\t')
 
             for row in tsvin:
@@ -94,7 +94,7 @@ class Plotter(object):
         lrs = []
         losses = []
 
-        with open(str(file_name), 'r') as tsvin:
+        with open(file_name, 'r') as tsvin:
             tsvin = csv.reader(tsvin, delimiter='\t')
             row = next(tsvin, None)
             LEARNING_RATE = row.index('LEARNING_RATE')

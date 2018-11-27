@@ -65,7 +65,7 @@ class TextCorpus(object):
         assert path.exists()
 
         #
-        with open(str(path), 'r', encoding="utf-8") as f:
+        with open(path, 'r', encoding="utf-8") as f:
             tokens = 0
             for line in f:
 
@@ -83,7 +83,7 @@ class TextCorpus(object):
 
         if forward:
             # charsplit file content
-            with open(str(path), 'r', encoding="utf-8") as f:
+            with open(path, 'r', encoding="utf-8") as f:
                 ids = torch.LongTensor(tokens)
                 token = 0
                 for line in f:
@@ -100,7 +100,7 @@ class TextCorpus(object):
                         token += 1
         else:
             # charsplit file content
-            with open(str(path), 'r', encoding="utf-8") as f:
+            with open(path, 'r', encoding="utf-8") as f:
                 ids = torch.LongTensor(tokens)
                 token = tokens - 1
                 for line in f:
@@ -131,7 +131,7 @@ class TextCorpus(object):
         """Tokenizes a text file."""
         assert path.exists()
         # Add words to the dictionary
-        with open(str(path), 'r') as f:
+        with open(path, 'r') as f:
             tokens = 0
             for line in f:
                 words = line.split() + ['<eos>']
@@ -140,7 +140,7 @@ class TextCorpus(object):
                     self.dictionary.add_word(word)
 
         # Tokenize file content
-        with open(str(path), 'r') as f:
+        with open(path, 'r') as f:
             ids = torch.LongTensor(tokens)
             token = 0
             for line in f:
@@ -298,7 +298,7 @@ class LanguageModelTrainer:
                                                                              math.exp(val_loss),
                                                                              learning_rate)
 
-                with open(str(loss_txt), "a") as myfile:
+                with open(loss_txt, "a") as myfile:
                     myfile.write('%s\n' % summary)
 
                 log.info(summary)
@@ -315,7 +315,7 @@ class LanguageModelTrainer:
         test_loss = self.evaluate(test_data, mini_batch_size, sequence_length)
 
         summary = 'TEST: valid loss {:5.2f} | valid ppl {:8.2f}'.format(test_loss, math.exp(test_loss))
-        with open(str(loss_txt), "a") as myfile:
+        with open(loss_txt, "a") as myfile:
             myfile.write('%s\n' % summary)
 
         log.info(summary)

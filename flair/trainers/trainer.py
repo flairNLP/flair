@@ -391,7 +391,7 @@ class ModelTrainer:
             eval_loss /= len(sentences)
 
             if out_path is not None:
-                with open(str(out_path), "w", encoding='utf-8') as outfile:
+                with open(out_path, "w", encoding='utf-8') as outfile:
                     outfile.write(''.join(lines))
 
             return metric, eval_loss

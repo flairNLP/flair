@@ -350,7 +350,7 @@ class NLPTaskDataFetcher:
         label_prefix = '__label__'
         sentences = []
 
-        with open(str(path_to_file)) as f:
+        with open(path_to_file) as f:
             for line in f:
                 words = line.split()
 
@@ -392,10 +392,10 @@ class NLPTaskDataFetcher:
         sentences: List[Sentence] = []
 
         try:
-            lines: List[str] = open(str(path_to_column_file), encoding='utf-8').read().strip().split('\n')
+            lines: List[str] = open(path_to_column_file, encoding='utf-8').read().strip().split('\n')
         except:
             log.info('UTF-8 can\'t read: {} ... using "latin-1" instead.'.format(path_to_column_file))
-            lines: List[str] = open(str(path_to_column_file), encoding='latin1').read().strip().split('\n')
+            lines: List[str] = open(path_to_column_file, encoding='latin1').read().strip().split('\n')
 
         # most data sets have the token text in the first column, if not, pass 'text' as column
         text_column: int = 0
@@ -440,7 +440,7 @@ class NLPTaskDataFetcher:
        """
         sentences: List[Sentence] = []
 
-        lines: List[str] = open(str(path_to_conll_file), encoding='utf-8'). \
+        lines: List[str] = open(path_to_conll_file, encoding='utf-8'). \
             read().strip().split('\n')
 
         sentence: Sentence = Sentence()
@@ -494,7 +494,7 @@ class NLPTaskDataFetcher:
         label_prefix = '__label__'
         sentences = []
 
-        with open(str(path_to_file)) as f:
+        with open(path_to_file) as f:
             for line in f:
                 words = line.split()
 
