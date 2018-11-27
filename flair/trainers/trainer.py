@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import List, Union
 
 import datetime
 import random
@@ -90,7 +90,7 @@ class ModelTrainer:
         return Path(learning_rate_tsv)
 
     def train(self,
-              base_path: Path,
+              base_path: Union[Path, str],
               evaluation_metric: EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
               learning_rate: float = 0.1,
               mini_batch_size: int = 32,
@@ -110,6 +110,10 @@ class ModelTrainer:
 
         log_line()
         log.info(f'Evaluation method: {evaluation_metric.name}')
+
+        # cast string to Path
+        if type(base_path) is str:
+            base_path = Path(base_path)
 
         if not param_selection_mode:
             loss_txt = init_output_file(base_path, 'loss.tsv')
