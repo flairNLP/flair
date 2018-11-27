@@ -1,7 +1,7 @@
 """
 Utilities for working with the local dataset cache. Copied from AllenNLP
 """
-
+from pathlib import Path
 from typing import Tuple
 import os
 import base64
@@ -56,23 +56,23 @@ def filename_to_url(filename: str) -> Tuple[str, str]:
     return url_bytes.decode('utf-8'), etag
 
 
-def cached_path(url_or_filename: str, cache_dir: str) -> str:
+def cached_path(url_or_filename: str, cache_dir: Path) -> Path:
     """
     Given something that might be a URL (or might be a local path),
     determine which. If it's a URL, download the file and cache it, and
     return the path to the cached file. If it's already a local path,
     make sure the file exists and then return the path.
     """
-    dataset_cache = os.path.join(CACHE_ROOT, cache_dir)
+    dataset_cache = Path(CACHE_ROOT) / cache_dir
 
     parsed = urlparse(url_or_filename)
 
     if parsed.scheme in ('http', 'https'):
         # URL, so get it from the cache (downloading if necessary)
         return get_from_cache(url_or_filename, dataset_cache)
-    elif parsed.scheme == '' and os.path.exists(url_or_filename):
+    elif parsed.scheme == '' and Path(url_or_filename).exists():
         # File, and it exists.
-        return url_or_filename
+        return Path(url_or_filename)
     elif parsed.scheme == '':
         # File, but it doesn't exist.
         raise FileNotFoundError("file {} not found".format(url_or_filename))
@@ -82,18 +82,17 @@ def cached_path(url_or_filename: str, cache_dir: str) -> str:
 
 
 # TODO(joelgrus): do we want to do checksums or anything like that?
-def get_from_cache(url: str, cache_dir: str = None) -> str:
+def get_from_cache(url: str, cache_dir: Path = None) -> Path:
     """
     Given a URL, look for the corresponding dataset in the local cache.
     If it's not there, download it. Then return the path to the cached file.
     """
-
-    os.makedirs(cache_dir, exist_ok=True)
+    cache_dir.mkdir(parents=True, exist_ok=True)
 
     filename = re.sub(r'.+/', '', url)
     # get cache path to put the file
-    cache_path = os.path.join(cache_dir, filename)
-    if os.path.exists(cache_path):
+    cache_path = cache_dir / filename
+    if cache_path.exists():
         return cache_path
 
     # make HEAD request to check ETag
@@ -104,7 +103,7 @@ def get_from_cache(url: str, cache_dir: str = None) -> str:
     # add ETag to filename if it exists
     # etag = response.headers.get("ETag")
 
-    if not os.path.exists(cache_path):
+    if not cache_path.exists():
         # Download to temporary file, then copy to cache dir once finished.
         # Otherwise you get corrupt cache entries if the download gets interrupted.
         _, temp_filename = tempfile.mkstemp()
@@ -124,7 +123,7 @@ def get_from_cache(url: str, cache_dir: str = None) -> str:
         progress.close()
 
         logger.info("copying %s to cache at %s", temp_filename, cache_path)
-        shutil.copyfile(temp_filename, cache_path)
+        shutil.copyfile(temp_filename, str(cache_path))
         logger.info("removing temp file %s", temp_filename)
         os.remove(temp_filename)
 

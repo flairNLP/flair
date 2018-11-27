@@ -1,19 +1,16 @@
-from typing import List, Union
+from pathlib import Path
+from typing import List
 
 import datetime
-import os
 import random
 import logging
-import torch
-from torch.optim.optimizer import Optimizer
 from torch.optim.sgd import SGD
-from torch.optim.lr_scheduler import ReduceLROnPlateau, ExponentialLR
 
 import flair
 import flair.nn
-from flair.data import Sentence, Token, Label, MultiCorpus, Corpus
+from flair.data import Sentence, Token, MultiCorpus, Corpus
 from flair.models import TextClassifier, SequenceTagger
-from flair.training_utils import Metric, init_output_file, WeightExtractor, clear_embeddings, EvaluationMetric
+from flair.training_utils import Metric, init_output_file, WeightExtractor, clear_embeddings, EvaluationMetric, log_line
 from flair.optim import *
 
 log = logging.getLogger(__name__)
@@ -27,7 +24,7 @@ class ModelTrainer:
         self.optimizer: Optimizer = optimizer
 
     def find_learning_rate(self,
-                           base_path: str,
+                           base_path: Path,
                            start_learning_rate: float = 1e-7,
                            end_learning_rate: float = 10,
                            iterations: int = 100,
@@ -35,16 +32,16 @@ class ModelTrainer:
                            stop_early: bool = True,
                            smoothing_factor: float = 0.05,
                            **kwargs
-                          ) -> str:
+                           ) -> Path:
         loss_history = []
         best_loss = None
 
-        find_lr_txt = init_output_file(base_path, 'find_lr.tsv')
-        with open(find_lr_txt, 'a') as f:
+        learning_rate_tsv = init_output_file(base_path, 'learning_rate.tsv')
+        with open(learning_rate_tsv, 'a') as f:
             f.write('ITERATION\tTIMESTAMP\tLEARNING_RATE\tTRAIN_LOSS\n')
-        
+
         optimizer = self.optimizer(self.model.parameters(), lr=start_learning_rate, **kwargs)
-        
+
         train_data = self.corpus.train
         random.shuffle(train_data)
         batches = [train_data[x:x + mini_batch_size] for x in range(0, len(train_data), mini_batch_size)][:iterations]
@@ -64,7 +61,7 @@ class ModelTrainer:
             optimizer.step()
             scheduler.step()
             learning_rate = scheduler.get_lr()[0]
-            
+
             loss_item = loss.item()
             if itr == 0:
                 best_loss = loss_item
@@ -74,26 +71,26 @@ class ModelTrainer:
                 if loss_item < best_loss:
                     best_loss = loss
             loss_history.append(loss_item)
-            
-            with open(find_lr_txt, 'a') as f:
-                f.write(
-                    f'{itr}\t{datetime.datetime.now():%H:%M:%S}\t{learning_rate}\t{loss_item}\n')
 
-            if (stop_early and loss_item > 4 * best_loss):
-                self._log_line()
+            with open(learning_rate_tsv, 'a') as f:
+                f.write(f'{itr}\t{datetime.datetime.now():%H:%M:%S}\t{learning_rate}\t{loss_item}\n')
+
+            if stop_early and loss_item > 4 * best_loss:
+                log_line()
                 log.info('loss diverged - stopping early!')
                 break
-        
+
         self.model.load_state_dict(model_state)
         self.model.to(model_device)
 
-        self._log_line()
-        log.info(f'learning rate finder finished - plot {find_lr_txt}')
-        self._log_line()
-        return find_lr_txt
+        log_line()
+        log.info(f'learning rate finder finished - plot {learning_rate_tsv}')
+        log_line()
+
+        return Path(learning_rate_tsv)
 
     def train(self,
-              base_path: str,
+              base_path: Path,
               evaluation_metric: EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
               learning_rate: float = 0.1,
               mini_batch_size: int = 32,
@@ -110,7 +107,7 @@ class ModelTrainer:
               **kwargs
               ) -> dict:
 
-        self._log_line()
+        log_line()
         log.info(f'Evaluation method: {evaluation_metric.name}')
 
         loss_txt = init_output_file(base_path, 'loss.tsv')
@@ -148,7 +145,7 @@ class ModelTrainer:
             previous_learning_rate = learning_rate
 
             for epoch in range(0, max_epochs):
-                self._log_line()
+                log_line()
 
                 # bad_epochs = scheduler.num_bad_epochs
                 bad_epochs = 0
@@ -157,17 +154,17 @@ class ModelTrainer:
 
                 # reload last best model if annealing with restarts is enabled
                 if learning_rate != previous_learning_rate and anneal_with_restarts and \
-                        os.path.exists(base_path + '/best-model.pt'):
+                        (base_path / 'best-model.pt').exists():
                     log.info('resetting to best model')
-                    self.model.load_from_file(base_path + '/best-model.pt')
+                    self.model.load_from_file(base_path / 'best-model.pt')
 
                 previous_learning_rate = learning_rate
 
                 # stop training if learning rate becomes too small
                 if learning_rate < 0.0001:
-                    self._log_line()
+                    log_line()
                     log.info('learning rate too small - quitting training!')
-                    self._log_line()
+                    log_line()
                     break
 
                 if not test_mode:
@@ -206,9 +203,9 @@ class ModelTrainer:
 
                 # if checkpoint is enable, save model at each epoch
                 if checkpoint:
-                    self.model.save(base_path + '/checkpoint.pt')
+                    self.model.save(base_path / 'checkpoint.pt')
 
-                self._log_line()
+                log_line()
                 log.info(f'EPOCH {epoch + 1}: lr {learning_rate:.4f} - bad epochs {bad_epochs}')
 
                 dev_metric = None
@@ -225,7 +222,7 @@ class ModelTrainer:
 
                 test_metric, test_loss = self._calculate_evaluation_results_for(
                     'TEST', self.corpus.test, evaluation_metric, embeddings_in_memory, mini_batch_size,
-                    base_path + '/test.tsv')
+                    base_path / 'test.tsv')
 
                 with open(loss_txt, 'a') as f:
                     train_metric_str = train_metric.to_tsv() if train_metric is not None else Metric.to_empty_tsv()
@@ -252,29 +249,29 @@ class ModelTrainer:
 
                 # if we use dev data, remember best model based on dev evaluation score
                 if not train_with_dev and current_score == scheduler.best:
-                    self.model.save(base_path + '/best-model.pt')
+                    self.model.save(base_path / 'best-model.pt')
 
             # if we do not use dev data for model selection, save final model
             if save_final_model:
-                self.model.save(base_path + '/final-model.pt')
+                self.model.save(base_path / 'final-model.pt')
 
         except KeyboardInterrupt:
-            self._log_line()
+            log_line()
             log.info('Exiting from training early.')
             log.info('Saving model ...')
-            self.model.save(base_path + "/final-model.pt")
+            self.model.save(base_path / 'final-model.pt')
             log.info('Done.')
 
-        self._log_line()
+        log_line()
         log.info('Testing using best model ...')
 
         self.model.eval()
 
-        if os.path.exists(base_path + "/best-model.pt"):
+        if (base_path / 'best-model.pt').exists():
             if isinstance(self.model, TextClassifier):
-                self.model = TextClassifier.load_from_file(base_path + "/best-model.pt")
+                self.model = TextClassifier.load_from_file(base_path / 'best-model.pt')
             if isinstance(self.model, SequenceTagger):
-                self.model = SequenceTagger.load_from_file(base_path + "/best-model.pt")
+                self.model = SequenceTagger.load_from_file(base_path / 'best-model.pt')
 
         test_metric, test_loss = self.evaluate(self.model, self.corpus.test, mini_batch_size=mini_batch_size,
                                                embeddings_in_memory=embeddings_in_memory)
@@ -287,14 +284,14 @@ class ModelTrainer:
                      f'{test_metric.precision(class_name):.4f} - recall: {test_metric.recall(class_name):.4f} - '
                      f'accuracy: {test_metric.accuracy(class_name):.4f} - f1-score: '
                      f'{test_metric.f_score(class_name):.4f}')
-        self._log_line()
+        log_line()
 
         # if we are training over multiple datasets, do evaluation for each
         if type(self.corpus) is MultiCorpus:
             for subcorpus in self.corpus.corpora:
-                self._log_line()
+                log_line()
                 self._calculate_evaluation_results_for(subcorpus.name, subcorpus.test, evaluation_metric,
-                                                       embeddings_in_memory, mini_batch_size, base_path + '/test.tsv')
+                                                       embeddings_in_memory, mini_batch_size, base_path / 'test.tsv')
 
         # get and return the final test score of best model
         if evaluation_metric == EvaluationMetric.MACRO_ACCURACY:
@@ -308,9 +305,13 @@ class ModelTrainer:
 
         return {'test_score': final_score, 'dev_score': current_score, 'loss': current_loss}
 
-    def _calculate_evaluation_results_for(self, dataset_name, dataset, evaluation_metric, embeddings_in_memory,
-                                          mini_batch_size,
-                                          out_path=None):
+    def _calculate_evaluation_results_for(self,
+                                          dataset_name: str,
+                                          dataset: List[Sentence],
+                                          evaluation_metric: EvaluationMetric,
+                                          embeddings_in_memory: bool,
+                                          mini_batch_size: int,
+                                          out_path: Path = None):
 
         metric, loss = ModelTrainer.evaluate(self.model, dataset, mini_batch_size=mini_batch_size,
                                              embeddings_in_memory=embeddings_in_memory, out_path=out_path)
@@ -328,7 +329,7 @@ class ModelTrainer:
 
     @staticmethod
     def evaluate(model: flair.nn.Model, data_set: List[Sentence], mini_batch_size=32, embeddings_in_memory=True,
-                 out_path: str = None) -> (
+                 out_path: Path = None) -> (
             dict, float):
         if isinstance(model, TextClassifier):
             return ModelTrainer._evaluate_text_classifier(model, data_set, mini_batch_size, embeddings_in_memory)
@@ -338,7 +339,7 @@ class ModelTrainer:
 
     @staticmethod
     def _evaluate_sequence_tagger(model, sentences: List[Sentence], eval_batch_size: int = 32,
-                                  embeddings_in_memory: bool = True, out_path: str = None) -> (dict, float):
+                                  embeddings_in_memory: bool = True, out_path: Path = None) -> (dict, float):
 
         with torch.no_grad():
             eval_loss = 0
@@ -432,6 +433,3 @@ class ModelTrainer:
             eval_loss /= len(sentences)
 
             return metric, eval_loss
-
-    def _log_line(self):
-        log.info('-' * 100)

@@ -32,7 +32,7 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
     # initialize trainer
     trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-    trainer.train(str(results_base_path), EvaluationMetric.MICRO_F1_SCORE, learning_rate=0.1, mini_batch_size=2,
+    trainer.train(results_base_path, EvaluationMetric.MICRO_F1_SCORE, learning_rate=0.1, mini_batch_size=2,
                   max_epochs=2, test_mode=True)
 
     loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
@@ -65,7 +65,7 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
     # initialize trainer
     trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-    trainer.train(str(results_base_path), EvaluationMetric.MICRO_F1_SCORE, learning_rate=0.1, mini_batch_size=2,
+    trainer.train(results_base_path, EvaluationMetric.MICRO_F1_SCORE, learning_rate=0.1, mini_batch_size=2,
                   max_epochs=2, test_mode=True)
 
     loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
@@ -101,7 +101,7 @@ def test_train_charlm_changed_chache_load_use_tagger(results_base_path, tasks_ba
     # initialize trainer
     trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-    trainer.train(str(results_base_path), EvaluationMetric.MACRO_ACCURACY, learning_rate=0.1, mini_batch_size=2,
+    trainer.train(results_base_path, EvaluationMetric.MACRO_ACCURACY, learning_rate=0.1, mini_batch_size=2,
                   max_epochs=2, test_mode=True)
 
     # remove the cache directory
@@ -137,7 +137,7 @@ def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_pat
     # initialize trainer
     trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2,
+    trainer.train(results_base_path, learning_rate=0.1, mini_batch_size=2,
                   max_epochs=2, test_mode=True)
 
     loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
@@ -172,7 +172,7 @@ def test_train_optimizer(results_base_path, tasks_base_path):
     # initialize trainer
     trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=optimizer)
 
-    trainer.train(str(results_base_path), EvaluationMetric.MICRO_F1_SCORE,
+    trainer.train(results_base_path, EvaluationMetric.MICRO_F1_SCORE,
                   learning_rate=0.1, mini_batch_size=2,
                   max_epochs=2, test_mode=True)
 
@@ -208,7 +208,7 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
     # initialize trainer
     trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=optimizer)
 
-    trainer.train(str(results_base_path), EvaluationMetric.MICRO_F1_SCORE,
+    trainer.train(results_base_path, EvaluationMetric.MICRO_F1_SCORE,
                   learning_rate=0.1, mini_batch_size=2,
                   max_epochs=2, test_mode=True, weight_decay=1e-3)
 
@@ -244,7 +244,7 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
     # initialize trainer
     trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=optimizer)
 
-    trainer.find_learning_rate(str(results_base_path))
+    trainer.find_learning_rate(results_base_path)
 
     # clean up results directory
     shutil.rmtree(results_base_path)
@@ -285,7 +285,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     model = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(str(results_base_path), EvaluationMetric.MICRO_F1_SCORE, max_epochs=2, test_mode=True)
+    trainer.train(results_base_path, EvaluationMetric.MICRO_F1_SCORE, max_epochs=2, test_mode=True)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -321,7 +321,7 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
     model = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(str(results_base_path), EvaluationMetric.MACRO_F1_SCORE, max_epochs=2, test_mode=True)
+    trainer.train(results_base_path, EvaluationMetric.MACRO_F1_SCORE, max_epochs=2, test_mode=True)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -358,7 +358,7 @@ def test_train_charlm_nocache_load_use_classifier(results_base_path, tasks_base_
     model = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(str(results_base_path), max_epochs=2, test_mode=True)
+    trainer.train(results_base_path, max_epochs=2, test_mode=True)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -390,14 +390,14 @@ def test_train_language_model(results_base_path, resources_path):
     language_model: LanguageModel = LanguageModel(dictionary, is_forward_lm=True, hidden_size=128, nlayers=1)
 
     # get the example corpus and process at character level in forward direction
-    corpus: TextCorpus = TextCorpus(str(resources_path / 'corpora/lorem_ipsum'),
+    corpus: TextCorpus = TextCorpus(resources_path / 'corpora/lorem_ipsum',
                                     dictionary,
                                     language_model.is_forward_lm,
                                     character_level=True)
 
     # train the language model
     trainer: LanguageModelTrainer = LanguageModelTrainer(language_model, corpus, test_mode=True)
-    trainer.train(str(results_base_path), sequence_length=10, mini_batch_size=10, max_epochs=2)
+    trainer.train(results_base_path, sequence_length=10, mini_batch_size=10, max_epochs=2)
 
     # use the character LM as embeddings to embed the example sentence 'I love Berlin'
     char_lm_embeddings = CharLMEmbeddings(str(results_base_path / 'best-lm.pt'))
@@ -408,7 +408,7 @@ def test_train_language_model(results_base_path, resources_path):
     assert (text is not None)
     assert (len(text) == 100)
 
-    loaded_language_model = LanguageModel.load_language_model(str(results_base_path / 'best-lm.pt'))
+    loaded_language_model = LanguageModel.load_language_model(results_base_path / 'best-lm.pt')
     assert (loaded_language_model.best_score < 100)
 
     # clean up results directory
@@ -432,7 +432,7 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
     # initialize trainer
     trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-    trainer.train(str(results_base_path), learning_rate=0.1, mini_batch_size=2, max_epochs=2, test_mode=True)
+    trainer.train(results_base_path, learning_rate=0.1, mini_batch_size=2, max_epochs=2, test_mode=True)
 
     loaded_model: SequenceTagger = SequenceTagger.load_from_file(results_base_path / 'final-model.pt')
 

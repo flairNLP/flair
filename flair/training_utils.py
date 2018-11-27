@@ -1,9 +1,9 @@
 import itertools
 import random
 import logging
-import os
 from collections import defaultdict
 from enum import Enum
+from pathlib import Path
 from typing import List
 from flair.data import Dictionary, Sentence
 from functools import reduce
@@ -155,7 +155,7 @@ class EvaluationMetric(Enum):
 
 class WeightExtractor(object):
 
-    def __init__(self, directory: str, number_of_weights: int = 10):
+    def __init__(self, directory: Path, number_of_weights: int = 10):
         self.weights_file = init_output_file(directory, 'weights.txt')
         self.weights_dict = defaultdict(lambda: defaultdict(lambda: list()))
         self.number_of_weights = number_of_weights
@@ -208,16 +208,16 @@ def clear_embeddings(sentences: List[Sentence], also_clear_word_embeddings=False
         sentence.clear_embeddings(also_clear_word_embeddings=also_clear_word_embeddings)
 
 
-def init_output_file(base_path: str, file_name: str):
+def init_output_file(base_path: Path, file_name: str):
     """
     Creates a local file.
     :param base_path: the path to the directory
     :param file_name: the file name
     :return: the created file
     """
-    os.makedirs(base_path, exist_ok=True)
+    base_path.mkdir(parents=True, exist_ok=True)
 
-    file = os.path.join(base_path, file_name)
+    file = str(base_path / file_name)
     open(file, "w", encoding='utf-8').close()
     return file
 
@@ -230,3 +230,7 @@ def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionar
     :return: converted label list
     """
     return [[1 if l in labels else 0 for l in label_dict.get_items()] for labels in label_list]
+
+
+def log_line():
+    log.info('-' * 100)
