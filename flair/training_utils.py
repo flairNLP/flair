@@ -208,7 +208,7 @@ def clear_embeddings(sentences: List[Sentence], also_clear_word_embeddings=False
         sentence.clear_embeddings(also_clear_word_embeddings=also_clear_word_embeddings)
 
 
-def init_output_file(base_path: Path, file_name: str):
+def init_output_file(base_path: Path, file_name: str) -> Path:
     """
     Creates a local file.
     :param base_path: the path to the directory
@@ -217,7 +217,7 @@ def init_output_file(base_path: Path, file_name: str):
     """
     base_path.mkdir(parents=True, exist_ok=True)
 
-    file = str(base_path / file_name)
+    file = base_path / file_name
     open(file, "w", encoding='utf-8').close()
     return file
 

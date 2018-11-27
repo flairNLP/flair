@@ -13,7 +13,7 @@ from flair.hyperparameter.parameter import SEQUENCE_TAGGER_PARAMETERS, TRAINING_
     DOCUMENT_EMBEDDING_PARAMETERS, MODEL_TRAINER_PARAMETERS
 from flair.models import SequenceTagger, TextClassifier
 from flair.trainers import ModelTrainer
-from flair.training_utils import EvaluationMetric, log_line
+from flair.training_utils import EvaluationMetric, log_line, init_output_file
 
 log = logging.getLogger(__name__)
 
@@ -43,6 +43,8 @@ class ParamSelector(object):
         self.evaluation_metric = evaluation_metric
         self.run = 1
 
+        self.param_selection_file = init_output_file(base_path, 'param_selection.txt')
+
     @abstractmethod
     def _set_up_model(self, params: dict) -> flair.nn.Model:
         pass
@@ -70,8 +72,7 @@ class ParamSelector(object):
         result = trainer.train(self.base_path,
                                evaluation_metric=self.evaluation_metric,
                                max_epochs=self.max_epochs,
-                               save_final_model=False,
-                               test_mode=True,
+                               param_selection_mode=True,
                                **training_params)
 
         score = 1 - result['dev_score']
@@ -84,6 +85,15 @@ class ParamSelector(object):
             log.info(f'\t{k}: {v}')
         log.info(f'Score: {score}')
         log_line()
+
+        with open(self.param_selection_file, 'a') as f:
+            f.write(f'evaluation run {self.run}\n')
+            for k, v in params.items():
+                if isinstance(v, Tuple):
+                    v = ','.join([str(x) for x in v])
+                f.write(f'\t{k}: {str(v)}\n')
+            f.write(f'score: {score}\n')
+            f.write('-' * 100 + '\n')
 
         self.run += 1
 
@@ -99,6 +109,13 @@ class ParamSelector(object):
         for k, v in best.items():
             log.info(f'\t{k}: {v}')
         log_line()
+
+        with open(self.param_selection_file, 'a') as f:
+            f.write('best parameter combination\n')
+            for k, v in best.items():
+                if isinstance(v, Tuple):
+                    v = ','.join([str(x) for x in v])
+                f.write(f'\t{k}: {str(v)}\n')
 
 
 class SequenceTaggerParamSelector(ParamSelector):

@@ -104,19 +104,21 @@ class ModelTrainer:
               save_final_model: bool = True,
               anneal_with_restarts: bool = False,
               test_mode: bool = False,
+              param_selection_mode: bool = False,
               **kwargs
               ) -> dict:
 
         log_line()
         log.info(f'Evaluation method: {evaluation_metric.name}')
 
-        loss_txt = init_output_file(base_path, 'loss.tsv')
-        with open(loss_txt, 'a') as f:
-            f.write(
-                f'EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS\t{Metric.tsv_header("TRAIN")}\tDEV_LOSS\t{Metric.tsv_header("DEV")}'
-                f'\tTEST_LOSS\t{Metric.tsv_header("TEST")}\n')
+        if not param_selection_mode:
+            loss_txt = init_output_file(base_path, 'loss.tsv')
+            with open(loss_txt, 'a') as f:
+                f.write(
+                    f'EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS\t{Metric.tsv_header("TRAIN")}\tDEV_LOSS\t{Metric.tsv_header("DEV")}'
+                    f'\tTEST_LOSS\t{Metric.tsv_header("TEST")}\n')
 
-        weight_extractor = WeightExtractor(base_path)
+            weight_extractor = WeightExtractor(base_path)
 
         optimizer = self.optimizer(self.model.parameters(), lr=learning_rate, **kwargs)
 
@@ -195,14 +197,15 @@ class ModelTrainer:
                         log.info(f'epoch {epoch + 1} - iter {batch_no}/{len(batches)} - loss '
                                  f'{current_loss / seen_sentences:.8f}')
                         iteration = epoch * len(batches) + batch_no
-                        weight_extractor.extract_weights(self.model.state_dict(), iteration)
+                        if not param_selection_mode:
+                            weight_extractor.extract_weights(self.model.state_dict(), iteration)
 
                 current_loss /= len(train_data)
 
                 self.model.eval()
 
                 # if checkpoint is enable, save model at each epoch
-                if checkpoint:
+                if checkpoint and not param_selection_mode:
                     self.model.save(base_path / 'checkpoint.pt')
 
                 log_line()
@@ -224,13 +227,14 @@ class ModelTrainer:
                     'TEST', self.corpus.test, evaluation_metric, embeddings_in_memory, mini_batch_size,
                     base_path / 'test.tsv')
 
-                with open(loss_txt, 'a') as f:
-                    train_metric_str = train_metric.to_tsv() if train_metric is not None else Metric.to_empty_tsv()
-                    dev_metric_str = dev_metric.to_tsv() if dev_metric is not None else Metric.to_empty_tsv()
-                    test_metric_str = test_metric.to_tsv() if test_metric is not None else Metric.to_empty_tsv()
-                    f.write(
-                        f'{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t'
-                        f'{current_loss}\t{train_metric_str}\t{dev_loss}\t{dev_metric_str}\t_\t{test_metric_str}\n')
+                if not param_selection_mode:
+                    with open(loss_txt, 'a') as f:
+                        train_metric_str = train_metric.to_tsv() if train_metric is not None else Metric.to_empty_tsv()
+                        dev_metric_str = dev_metric.to_tsv() if dev_metric is not None else Metric.to_empty_tsv()
+                        test_metric_str = test_metric.to_tsv() if test_metric is not None else Metric.to_empty_tsv()
+                        f.write(
+                            f'{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t'
+                            f'{current_loss}\t{train_metric_str}\t{dev_loss}\t{dev_metric_str}\t_\t{test_metric_str}\n')
 
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 if train_with_dev:
@@ -248,19 +252,32 @@ class ModelTrainer:
                 scheduler.step(current_score)
 
                 # if we use dev data, remember best model based on dev evaluation score
-                if not train_with_dev and current_score == scheduler.best:
+                if not train_with_dev and not param_selection_mode and current_score == scheduler.best:
                     self.model.save(base_path / 'best-model.pt')
 
             # if we do not use dev data for model selection, save final model
-            if save_final_model:
+            if save_final_model and not param_selection_mode :
                 self.model.save(base_path / 'final-model.pt')
 
         except KeyboardInterrupt:
             log_line()
             log.info('Exiting from training early.')
-            log.info('Saving model ...')
-            self.model.save(base_path / 'final-model.pt')
-            log.info('Done.')
+            if not param_selection_mode:
+                log.info('Saving model ...')
+                self.model.save(base_path / 'final-model.pt')
+                log.info('Done.')
+
+        final_score = 0.0
+        if not param_selection_mode:
+            final_score = self.final_test(base_path, embeddings_in_memory, evaluation_metric, mini_batch_size)
+
+        return {'test_score': final_score, 'dev_score': current_score, 'loss': current_loss}
+
+    def final_test(self,
+                   base_path: Path,
+                   embeddings_in_memory: bool,
+                   evaluation_metric: EvaluationMetric,
+                   mini_batch_size: int):
 
         log_line()
         log.info('Testing using best model ...')
@@ -303,7 +320,7 @@ class ModelTrainer:
         else:
             final_score = test_metric.micro_avg_f_score()
 
-        return {'test_score': final_score, 'dev_score': current_score, 'loss': current_loss}
+        return final_score
 
     def _calculate_evaluation_results_for(self,
                                           dataset_name: str,
