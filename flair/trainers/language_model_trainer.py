@@ -1,13 +1,10 @@
 import time, datetime
-import os
 import random
 import logging
-import math
-import torch
+from pathlib import Path
+
 from torch.autograd import Variable
-from torch.optim.optimizer import Optimizer
 from torch.optim.sgd import SGD
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from flair.data import Dictionary
 from flair.models import LanguageModel
@@ -18,24 +15,24 @@ log = logging.getLogger(__name__)
 
 
 class TextCorpus(object):
-    def __init__(self, path, dictionary: Dictionary, forward: bool = True, character_level: bool = True):
+    def __init__(self, path: Path, dictionary: Dictionary, forward: bool = True, character_level: bool = True):
 
         self.forward = forward
         self.split_on_char = character_level
-        self.train_path = os.path.join(path, 'train')
+        self.train_path = path / 'train'
 
         self.train_files = sorted(
-            [f for f in os.listdir(self.train_path) if os.path.isfile(os.path.join(self.train_path, f))])
+            [f for f in self.train_path.iterdir() if (self.train_path / f).exists()])
 
         self.dictionary: Dictionary = dictionary
 
         self.current_train_file_index = len(self.train_files)
 
-        self.valid = self.charsplit(os.path.join(path, 'valid.txt'),
+        self.valid = self.charsplit(path / 'valid.txt',
                                     forward=forward,
                                     split_on_char=self.split_on_char)
 
-        self.test = self.charsplit(os.path.join(path, 'test.txt'),
+        self.test = self.charsplit(path / 'test.txt',
                                    forward=forward,
                                    split_on_char=self.split_on_char)
 
@@ -55,20 +52,20 @@ class TextCorpus(object):
 
         current_train_file = self.train_files[self.current_train_file_index]
 
-        train_slice = self.charsplit(os.path.join(self.train_path, current_train_file),
+        train_slice = self.charsplit(self.train_path / current_train_file,
                                     expand_vocab=False,
                                     forward=self.forward,
                                     split_on_char=self.split_on_char)
 
         return train_slice
 
-    def charsplit(self, path: str, expand_vocab=False, forward=True, split_on_char=True) -> torch.LongTensor:
+    def charsplit(self, path: Path, expand_vocab=False, forward=True, split_on_char=True) -> torch.LongTensor:
 
         """Tokenizes a text file on character basis."""
-        assert os.path.exists(path)
+        assert path.exists()
 
         #
-        with open(path, 'r', encoding="utf-8") as f:
+        with open(str(path), 'r', encoding="utf-8") as f:
             tokens = 0
             for line in f:
 
@@ -86,7 +83,7 @@ class TextCorpus(object):
 
         if forward:
             # charsplit file content
-            with open(path, 'r', encoding="utf-8") as f:
+            with open(str(path), 'r', encoding="utf-8") as f:
                 ids = torch.LongTensor(tokens)
                 token = 0
                 for line in f:
@@ -103,7 +100,7 @@ class TextCorpus(object):
                         token += 1
         else:
             # charsplit file content
-            with open(path, 'r', encoding="utf-8") as f:
+            with open(str(path), 'r', encoding="utf-8") as f:
                 ids = torch.LongTensor(tokens)
                 token = tokens - 1
                 for line in f:
@@ -130,11 +127,11 @@ class TextCorpus(object):
             line = line.upper()
         return line
 
-    def tokenize(self, path):
+    def tokenize(self, path: Path):
         """Tokenizes a text file."""
-        assert os.path.exists(path)
+        assert path.exists()
         # Add words to the dictionary
-        with open(path, 'r') as f:
+        with open(str(path), 'r') as f:
             tokens = 0
             for line in f:
                 words = line.split() + ['<eos>']
@@ -143,7 +140,7 @@ class TextCorpus(object):
                     self.dictionary.add_word(word)
 
         # Tokenize file content
-        with open(path, 'r') as f:
+        with open(str(path), 'r') as f:
             ids = torch.LongTensor(tokens)
             token = 0
             for line in f:
@@ -158,7 +155,7 @@ class TextCorpus(object):
 class LanguageModelTrainer:
     def __init__(self, model: LanguageModel, corpus: TextCorpus, optimizer: Optimizer = SGD, test_mode: bool = False):
         self.model: LanguageModel = model
-        self.optimzer: Optimizer = optimizer 
+        self.optimzer: Optimizer = optimizer
         self.corpus: TextCorpus = corpus
         self.test_mode: bool = test_mode
 
@@ -166,7 +163,7 @@ class LanguageModelTrainer:
         self.log_interval = 100
 
     def train(self,
-              base_path: str,
+              base_path: Path,
               sequence_length: int,
               learning_rate: float = 20,
               mini_batch_size: int = 100,
@@ -183,9 +180,9 @@ class LanguageModelTrainer:
 
         val_data = self._batchify(self.corpus.valid, mini_batch_size)
 
-        os.makedirs(base_path, exist_ok=True)
-        loss_txt = os.path.join(base_path, 'loss.txt')
-        savefile = os.path.join(base_path, 'best-lm.pt')
+        base_path.mkdir(parents=True, exist_ok=True)
+        loss_txt = base_path / 'loss.txt'
+        savefile = base_path / 'best-lm.pt'
 
         try:
 
@@ -301,7 +298,7 @@ class LanguageModelTrainer:
                                                                              math.exp(val_loss),
                                                                              learning_rate)
 
-                with open(loss_txt, "a") as myfile:
+                with open(str(loss_txt), "a") as myfile:
                     myfile.write('%s\n' % summary)
 
                 log.info(summary)
@@ -318,7 +315,7 @@ class LanguageModelTrainer:
         test_loss = self.evaluate(test_data, mini_batch_size, sequence_length)
 
         summary = 'TEST: valid loss {:5.2f} | valid ppl {:8.2f}'.format(test_loss, math.exp(test_loss))
-        with open(loss_txt, "a") as myfile:
+        with open(str(loss_txt), "a") as myfile:
             myfile.write('%s\n' % summary)
 
         log.info(summary)

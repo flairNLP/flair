@@ -32,12 +32,12 @@ class ModelTrainer:
                            stop_early: bool = True,
                            smoothing_factor: float = 0.05,
                            **kwargs
-                           ) -> str:
+                           ) -> Path:
         loss_history = []
         best_loss = None
 
-        find_lr_txt = init_output_file(base_path, 'find_lr.tsv')
-        with open(find_lr_txt, 'a') as f:
+        learning_rate_tsv = init_output_file(base_path, 'learning_rate.tsv')
+        with open(learning_rate_tsv, 'a') as f:
             f.write('ITERATION\tTIMESTAMP\tLEARNING_RATE\tTRAIN_LOSS\n')
 
         optimizer = self.optimizer(self.model.parameters(), lr=start_learning_rate, **kwargs)
@@ -72,7 +72,7 @@ class ModelTrainer:
                     best_loss = loss
             loss_history.append(loss_item)
 
-            with open(find_lr_txt, 'a') as f:
+            with open(learning_rate_tsv, 'a') as f:
                 f.write(f'{itr}\t{datetime.datetime.now():%H:%M:%S}\t{learning_rate}\t{loss_item}\n')
 
             if stop_early and loss_item > 4 * best_loss:
@@ -84,10 +84,10 @@ class ModelTrainer:
         self.model.to(model_device)
 
         log_line()
-        log.info(f'learning rate finder finished - plot {find_lr_txt}')
+        log.info(f'learning rate finder finished - plot {learning_rate_tsv}')
         log_line()
 
-        return find_lr_txt
+        return Path(learning_rate_tsv)
 
     def train(self,
               base_path: Path,
@@ -259,7 +259,7 @@ class ModelTrainer:
             log_line()
             log.info('Exiting from training early.')
             log.info('Saving model ...')
-            self.model.save(base_path + "/final-model.pt")
+            self.model.save(base_path / 'final-model.pt')
             log.info('Done.')
 
         log_line()

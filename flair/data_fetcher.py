@@ -226,13 +226,11 @@ class NLPTaskDataFetcher:
         log.info("Test: {}".format(test_file))
 
         # get train and test data
-        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_column_data(
-            data_folder /train_file, column_format)
+        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_column_data(train_file, column_format)
 
         # read in test file if exists, otherwise sample 10% of train data as test dataset
         if test_file is not None:
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_column_data(
-                data_folder / test_file, column_format)
+            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_column_data(test_file, column_format)
         else:
             sentences_test: List[Sentence] = [sentences_train[i] for i in
                                              NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)]
@@ -240,8 +238,7 @@ class NLPTaskDataFetcher:
 
         # read in dev file if exists, otherwise sample 10% of train data as dev dataset
         if dev_file is not None:
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_column_data(
-                data_folder / dev_file, column_format)
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_column_data(dev_file, column_format)
         else:
             sentences_dev: List[Sentence] = [sentences_train[i] for i in
                                              NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)]
@@ -290,12 +287,9 @@ class NLPTaskDataFetcher:
         log.info("Dev: {}".format(dev_file))
         log.info("Test: {}".format(test_file))
 
-        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-            data_folder / train_file)
-        sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-            data_folder / test_file)
-        sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-            data_folder / dev_file)
+        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(train_file)
+        sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(test_file)
+        sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(dev_file)
 
         return TaggedCorpus(sentences_train, sentences_dev, sentences_test, name=data_folder.name)
 
@@ -334,12 +328,9 @@ class NLPTaskDataFetcher:
         log.info("Dev: {}".format(dev_file))
         log.info("Test: {}".format(test_file))
 
-        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
-            data_folder / train_file)
-        sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
-            data_folder / test_file)
-        sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
-            data_folder / dev_file)
+        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(train_file)
+        sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(test_file)
+        sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(dev_file)
 
         return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
