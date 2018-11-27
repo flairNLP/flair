@@ -250,11 +250,11 @@ class ModelTrainer:
 
                 # if we use dev data, remember best model based on dev evaluation score
                 if not train_with_dev and current_score == scheduler.best:
-                    self.model.save(base_path + '/best-model.pt')
+                    self.model.save(base_path / 'best-model.pt')
 
             # if we do not use dev data for model selection, save final model
             if save_final_model:
-                self.model.save(base_path + '/final-model.pt')
+                self.model.save(base_path / 'final-model.pt')
 
         except KeyboardInterrupt:
             log_line()
@@ -268,11 +268,11 @@ class ModelTrainer:
 
         self.model.eval()
 
-        if os.path.exists(base_path + "/best-model.pt"):
+        if (base_path / 'best-model.pt').exists():
             if isinstance(self.model, TextClassifier):
-                self.model = TextClassifier.load_from_file(base_path + "/best-model.pt")
+                self.model = TextClassifier.load_from_file(base_path / 'best-model.pt')
             if isinstance(self.model, SequenceTagger):
-                self.model = SequenceTagger.load_from_file(base_path + "/best-model.pt")
+                self.model = SequenceTagger.load_from_file(base_path / 'best-model.pt')
 
         test_metric, test_loss = self.evaluate(self.model, self.corpus.test, mini_batch_size=mini_batch_size,
                                                embeddings_in_memory=embeddings_in_memory)
@@ -292,7 +292,7 @@ class ModelTrainer:
             for subcorpus in self.corpus.corpora:
                 log_line()
                 self._calculate_evaluation_results_for(subcorpus.name, subcorpus.test, evaluation_metric,
-                                                       embeddings_in_memory, mini_batch_size, base_path + '/test.tsv')
+                                                       embeddings_in_memory, mini_batch_size, base_path / 'test.tsv')
 
         # get and return the final test score of best model
         if evaluation_metric == EvaluationMetric.MACRO_ACCURACY:

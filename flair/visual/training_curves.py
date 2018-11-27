@@ -1,4 +1,5 @@
 from collections import defaultdict
+from pathlib import Path
 
 import numpy as np
 import csv
@@ -25,7 +26,7 @@ class Plotter(object):
     """
 
     @staticmethod
-    def _extract_evaluation_data(file_name) -> dict:
+    def _extract_evaluation_data(file_name: Path) -> dict:
         training_curves = {
             'train': {
                 'loss': [],
@@ -44,7 +45,7 @@ class Plotter(object):
             }
         }
 
-        with open(file_name, 'r') as tsvin:
+        with open(str(file_name), 'r') as tsvin:
             tsvin = csv.reader(tsvin, delimiter='\t')
 
             # determine the column index of loss, f-score and accuracy for train, dev and test split
@@ -74,10 +75,10 @@ class Plotter(object):
         return training_curves
 
     @staticmethod
-    def _extract_weight_data(file_name) -> dict:
+    def _extract_weight_data(file_name: Path) -> dict:
         weights = defaultdict(lambda: defaultdict(lambda: list()))
 
-        with open(file_name, 'r') as tsvin:
+        with open(str(file_name), 'r') as tsvin:
             tsvin = csv.reader(tsvin, delimiter='\t')
 
             for row in tsvin:
@@ -89,7 +90,25 @@ class Plotter(object):
 
         return weights
 
-    def plot_weights(self, file_name):
+    @staticmethod
+    def _extract_learning_rate(file_name: Path):
+        lrs = []
+        losses = []
+
+        with open(str(file_name), 'r') as tsvin:
+            tsvin = csv.reader(tsvin, delimiter='\t')
+            row = next(tsvin, None)
+            LEARNING_RATE = row.index('LEARNING_RATE')
+            TRAIN_LOSS = row.index('TRAIN_LOSS')
+
+            # then get all relevant values from the tsv
+            for row in tsvin:
+                if row[TRAIN_LOSS] != '_': losses.append(float(row[TRAIN_LOSS]))
+                if row[LEARNING_RATE] != '_': lrs.append(float(row[LEARNING_RATE]))
+
+        return lrs, losses
+
+    def plot_weights(self, file_name: Path):
         weights = self._extract_weight_data(file_name)
 
         total = len(weights)
@@ -128,12 +147,12 @@ class Plotter(object):
         # save plots
         f.subplots_adjust(hspace=0.5)
         plt.tight_layout(pad=1.0)
-        path = os.path.join(os.path.dirname(file_name), 'weights.png')
+        path = file_name.parent / 'weights.png'
         plt.savefig(path, dpi=300)
 
         plt.close(fig)
 
-    def plot_training_curves(self, file_name):
+    def plot_training_curves(self, file_name: Path):
         fig = plt.figure(figsize=(15, 10))
 
         training_curves = self._extract_evaluation_data(file_name)
@@ -185,27 +204,13 @@ class Plotter(object):
 
         # save plots
         plt.tight_layout(pad=1.0)
-        path = os.path.join(os.path.dirname(file_name), 'training.png')
+        path = file_name.parent / 'training.png'
         plt.savefig(path, dpi=300)
 
         plt.close(fig)
 
-    def plot_find_learning_rate(self, file_name):
-        lrs = []
-        losses = []
-
-        with open(file_name, 'r') as tsvin:
-            tsvin = csv.reader(tsvin, delimiter='\t')
-            row = next(tsvin, None)
-            ITERATION = row.index('ITERATION')
-            TIMESTAMP = row.index('TIMESTAMP')
-            LEARNING_RATE = row.index('LEARNING_RATE')
-            TRAIN_LOSS = row.index('TRAIN_LOSS')
-
-            # then get all relevant values from the tsv
-            for row in tsvin:
-                if row[TRAIN_LOSS] != '_': losses.append(float(row[TRAIN_LOSS]))
-                if row[LEARNING_RATE] != '_': lrs.append(float(row[LEARNING_RATE]))
+    def plot_learning_rate(self, file_name: Path):
+        lrs, losses = self._extract_learning_rate(file_name)
 
         fig, ax = plt.subplots(1,1)
         ax.plot(lrs, losses)
@@ -216,7 +221,7 @@ class Plotter(object):
 
         # save plot
         plt.tight_layout(pad=1.0)
-        path = os.path.join(os.path.dirname(file_name), 'find_lr.png')
+        path = file_name.parent / 'learning_rate.png'
         plt.savefig(path, dpi=300)
 
         plt.close(fig)
