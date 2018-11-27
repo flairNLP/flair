@@ -226,7 +226,7 @@ class WordEmbeddings(TokenEmbeddings):
         return sentences
 
     def __str__(self):
-        return self.name
+        return self.name.name
 
 
 class MemoryEmbeddings(TokenEmbeddings):
@@ -610,7 +610,7 @@ class CharLMEmbeddings(TokenEmbeddings):
         return sentences
 
     def __str__(self):
-        return self.name
+        return self.name.name
 
 
 class DocumentMeanEmbeddings(DocumentEmbeddings):
