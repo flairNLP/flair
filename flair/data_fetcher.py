@@ -1,6 +1,5 @@
 from typing import List, Dict, Union
 import re
-import os
 import logging
 from enum import Enum
 from pathlib import Path
@@ -205,23 +204,20 @@ class NLPTaskDataFetcher:
         :param tag_to_biloes: whether to convert to BILOES tagging scheme
         :return: a TaggedCorpus with annotated train, dev and test data
         """
-
-        # TODO: move all paths to use pathlib.Path, for now convert to str for compatibility
-        data_folder = str(data_folder)
-
         # automatically identify train / test / dev files
         if train_file is None:
-            for file in os.listdir(data_folder):
-                if file.endswith('.gz'): continue
-                if 'train' in file and not '54019' in file:
+            for file in data_folder.iterdir():
+                file_name = file.name
+                if file_name.endswith('.gz'): continue
+                if 'train' in file_name and not '54019' in file_name:
                     train_file = file
-                if 'test' in file:
+                if 'test' in file_name:
                     test_file = file
-                if 'dev' in file:
+                if 'dev' in file_name:
                     dev_file = file
-                if 'testa' in file:
+                if 'testa' in file_name:
                     dev_file = file
-                if 'testb' in file:
+                if 'testb' in file_name:
                     test_file = file
 
         log.info("Reading data from {}".format(data_folder))
@@ -231,12 +227,12 @@ class NLPTaskDataFetcher:
 
         # get train and test data
         sentences_train: List[Sentence] = NLPTaskDataFetcher.read_column_data(
-            os.path.join(data_folder, train_file), column_format)
+            data_folder /train_file, column_format)
 
         # read in test file if exists, otherwise sample 10% of train data as test dataset
         if test_file is not None:
             sentences_test: List[Sentence] = NLPTaskDataFetcher.read_column_data(
-                os.path.join(data_folder, test_file), column_format)
+                data_folder / test_file, column_format)
         else:
             sentences_test: List[Sentence] = [sentences_train[i] for i in
                                              NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)]
@@ -245,7 +241,7 @@ class NLPTaskDataFetcher:
         # read in dev file if exists, otherwise sample 10% of train data as dev dataset
         if dev_file is not None:
             sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_column_data(
-                os.path.join(data_folder, dev_file), column_format)
+                data_folder / dev_file, column_format)
         else:
             sentences_dev: List[Sentence] = [sentences_train[i] for i in
                                              NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)]
@@ -257,7 +253,7 @@ class NLPTaskDataFetcher:
                 sentence: Sentence = sentence
                 sentence.convert_tag_scheme(tag_type=tag_to_biloes, target_scheme='iobes')
 
-        return TaggedCorpus(sentences_train, sentences_dev, sentences_test, name=data_folder)
+        return TaggedCorpus(sentences_train, sentences_dev, sentences_test, name=data_folder.name)
 
     @staticmethod
     def load_ud_corpus(
@@ -274,22 +270,19 @@ class NLPTaskDataFetcher:
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
         :return: a TaggedCorpus with annotated train, dev and test data
         """
-
-        # TODO: move all paths to use pathlib.Path, for now convert to str for compatibility
-        data_folder = str(data_folder)
-
         # automatically identify train / test / dev files
         if train_file is None:
-            for file in os.listdir(data_folder):
-                if 'train' in file:
+            for file in data_folder.iterdir():
+                file_name = file.name
+                if 'train' in file_name:
                     train_file = file
-                if 'test' in file:
+                if 'test' in file_name:
                     test_file = file
-                if 'dev' in file:
+                if 'dev' in file_name:
                     dev_file = file
-                if 'testa' in file:
+                if 'testa' in file_name:
                     dev_file = file
-                if 'testb' in file:
+                if 'testb' in file_name:
                     test_file = file
 
         log.info("Reading data from {}".format(data_folder))
@@ -298,13 +291,13 @@ class NLPTaskDataFetcher:
         log.info("Test: {}".format(test_file))
 
         sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-            os.path.join(data_folder, train_file))
+            data_folder / train_file)
         sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-            os.path.join(data_folder, test_file))
+            data_folder / test_file)
         sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(
-            os.path.join(data_folder, dev_file))
+            data_folder / dev_file)
 
-        return TaggedCorpus(sentences_train, sentences_dev, sentences_test, name=data_folder)
+        return TaggedCorpus(sentences_train, sentences_dev, sentences_test, name=data_folder.name)
 
     @staticmethod
     def load_classification_corpus(
@@ -321,22 +314,19 @@ class NLPTaskDataFetcher:
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
         :return: a TaggedCorpus with annotated train, dev and test data
         """
-
-        # TODO: move all paths to use pathlib.Path, for now convert to str for compatibility
-        data_folder = str(data_folder)
-
         # automatically identify train / test / dev files
         if train_file is None:
-            for file in os.listdir(data_folder):
-                if 'train' in file:
+            for file in data_folder.iterdir():
+                file_name = file.name
+                if 'train' in file_name:
                     train_file = file
-                if 'test' in file:
+                if 'test' in file_name:
                     test_file = file
-                if 'dev' in file:
+                if 'dev' in file_name:
                     dev_file = file
-                if 'testa' in file:
+                if 'testa' in file_name:
                     dev_file = file
-                if 'testb' in file:
+                if 'testb' in file_name:
                     test_file = file
 
         log.info("Reading data from {}".format(data_folder))
@@ -345,16 +335,16 @@ class NLPTaskDataFetcher:
         log.info("Test: {}".format(test_file))
 
         sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
-            os.path.join(data_folder, train_file))
+            data_folder / train_file)
         sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
-            os.path.join(data_folder, test_file))
+            data_folder / test_file)
         sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(
-            os.path.join(data_folder, dev_file))
+            data_folder / dev_file)
 
         return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
     @staticmethod
-    def read_text_classification_file(path_to_file, max_tokens_per_doc=-1):
+    def read_text_classification_file(path_to_file: Path, max_tokens_per_doc=-1):
         """
         Reads a data file for text classification. The file should contain one document/text per line.
         The line should have the following format:
@@ -369,7 +359,7 @@ class NLPTaskDataFetcher:
         label_prefix = '__label__'
         sentences = []
 
-        with open(path_to_file) as f:
+        with open(str(path_to_file)) as f:
             for line in f:
                 words = line.split()
 
@@ -395,7 +385,7 @@ class NLPTaskDataFetcher:
         return sentences
 
     @staticmethod
-    def read_column_data(path_to_column_file: str,
+    def read_column_data(path_to_column_file: Path,
                          column_name_map: Dict[int, str],
                          infer_whitespace_after: bool = True):
         """
@@ -411,10 +401,10 @@ class NLPTaskDataFetcher:
         sentences: List[Sentence] = []
 
         try:
-            lines: List[str] = open(path_to_column_file, encoding='utf-8').read().strip().split('\n')
+            lines: List[str] = open(str(path_to_column_file), encoding='utf-8').read().strip().split('\n')
         except:
             log.info('UTF-8 can\'t read: {} ... using "latin-1" instead.'.format(path_to_column_file))
-            lines: List[str] = open(path_to_column_file, encoding='latin1').read().strip().split('\n')
+            lines: List[str] = open(str(path_to_column_file), encoding='latin1').read().strip().split('\n')
 
         # most data sets have the token text in the first column, if not, pass 'text' as column
         text_column: int = 0
@@ -451,7 +441,7 @@ class NLPTaskDataFetcher:
         return sentences
 
     @staticmethod
-    def read_conll_ud(path_to_conll_file: str) -> List[Sentence]:
+    def read_conll_ud(path_to_conll_file: Path) -> List[Sentence]:
         """
        Reads a file in CoNLL-U format and produces a list of Sentence with full morphosyntactic annotation
        :param path_to_conll_file: the path to the conll-u file
@@ -459,7 +449,7 @@ class NLPTaskDataFetcher:
        """
         sentences: List[Sentence] = []
 
-        lines: List[str] = open(path_to_conll_file, encoding='utf-8'). \
+        lines: List[str] = open(str(path_to_conll_file), encoding='utf-8'). \
             read().strip().split('\n')
 
         sentence: Sentence = Sentence()
@@ -498,7 +488,7 @@ class NLPTaskDataFetcher:
         return sentences
 
     @staticmethod
-    def read_text_classification_file(path_to_file, max_tokens_per_doc=-1):
+    def read_text_classification_file(path_to_file: Path, max_tokens_per_doc=-1) -> List[Sentence]:
         """
         Reads a data file for text classification. The file should contain one document/text per line.
         The line should have the following format:
@@ -513,7 +503,7 @@ class NLPTaskDataFetcher:
         label_prefix = '__label__'
         sentences = []
 
-        with open(path_to_file) as f:
+        with open(str(path_to_file)) as f:
             for line in f:
                 words = line.split()
 

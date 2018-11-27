@@ -3,7 +3,6 @@ from pathlib import Path
 
 import numpy as np
 import csv
-import os
 
 import matplotlib
 import math

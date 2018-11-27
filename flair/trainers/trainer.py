@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import List
 
 import datetime
-import os
 import random
 import logging
 from torch.optim.sgd import SGD
