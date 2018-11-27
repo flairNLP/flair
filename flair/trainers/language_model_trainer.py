@@ -290,7 +290,7 @@ class LanguageModelTrainer:
                 if local_split_number == 0: local_split_number = number_of_splits
 
                 summary = '| end of split {:3d} /{:3d} | epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | ' \
-                          'valid ppl {:8.2f} | learning rate {:3.2f}'.format(local_split_number,
+                          'valid ppl {:8.2f} | learning rate {:3.4f}'.format(local_split_number,
                                                                              number_of_splits,
                                                                              epoch,
                                                                              (time.time() - epoch_start_time),
