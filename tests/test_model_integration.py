@@ -390,14 +390,14 @@ def test_train_language_model(results_base_path, resources_path):
     language_model: LanguageModel = LanguageModel(dictionary, is_forward_lm=True, hidden_size=128, nlayers=1)
 
     # get the example corpus and process at character level in forward direction
-    corpus: TextCorpus = TextCorpus(str(resources_path / 'corpora/lorem_ipsum'),
+    corpus: TextCorpus = TextCorpus(resources_path / 'corpora/lorem_ipsum',
                                     dictionary,
                                     language_model.is_forward_lm,
                                     character_level=True)
 
     # train the language model
     trainer: LanguageModelTrainer = LanguageModelTrainer(language_model, corpus, test_mode=True)
-    trainer.train(str(results_base_path), sequence_length=10, mini_batch_size=10, max_epochs=2)
+    trainer.train(results_base_path, sequence_length=10, mini_batch_size=10, max_epochs=2)
 
     # use the character LM as embeddings to embed the example sentence 'I love Berlin'
     char_lm_embeddings = CharLMEmbeddings(str(results_base_path / 'best-lm.pt'))
