@@ -189,7 +189,7 @@ class WordEmbeddings(TokenEmbeddings):
         elif not Path(embeddings).exists():
             raise ValueError(f'The given embeddings "{embeddings}" is not available or is not a valid path.')
 
-        self.name = embeddings
+        self.name: str = str(embeddings)
         self.static_embeddings = True
 
         self.precomputed_word_embeddings = gensim.models.KeyedVectors.load(str(embeddings))
@@ -226,7 +226,7 @@ class WordEmbeddings(TokenEmbeddings):
         return sentences
 
     def __str__(self):
-        return self.name.name
+        return self.name
 
 
 class MemoryEmbeddings(TokenEmbeddings):
@@ -475,7 +475,7 @@ class CharLMEmbeddings(TokenEmbeddings):
         elif not Path(model).exists():
             raise ValueError(f'The given model "{model}" is not available or is not a valid path.')
 
-        self.name = model
+        self.name = str(model)
         self.static_embeddings = detach
 
         from flair.models import LanguageModel
@@ -487,10 +487,10 @@ class CharLMEmbeddings(TokenEmbeddings):
         # initialize cache if use_cache set
         self.cache = None
         if use_cache:
-            cache_path = Path(f'{self.name}-tmp-cache.sqllite') if not self.cache_directory else \
-                self.cache_directory / f'{self.name.name}-tmp-cache.sqllite'
+            cache_path = Path(f'{self.name}-tmp-cache.sqllite') if not cache_directory else \
+                cache_directory / f'{self.name}-tmp-cache.sqllite'
             from sqlitedict import SqliteDict
-            self.cache = SqliteDict(cache_path, autocommit=True)
+            self.cache = SqliteDict(str(cache_path), autocommit=True)
 
         # embed a dummy sentence to determine embedding_length
         dummy_sentence: Sentence = Sentence()
@@ -596,7 +596,7 @@ class CharLMEmbeddings(TokenEmbeddings):
         return sentences
 
     def __str__(self):
-        return self.name.name
+        return self.name
 
 
 class DocumentMeanEmbeddings(DocumentEmbeddings):
