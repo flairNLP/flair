@@ -22,6 +22,9 @@ class NLPTask(Enum):
     CONLL_03_DUTCH = 'conll_03_dutch'
     CONLL_03_SPANISH = 'conll_03_spanish'
 
+    # WNUT-17
+    WNUT_17 = 'wnut_17'
+
     # -- WikiNER datasets
     WIKINER_ENGLISH = 'wikiner_english'
     WIKINER_GERMAN = 'wikiner_german'
@@ -152,7 +155,7 @@ class NLPTaskDataFetcher:
                                                          tag_to_biloes='ner')
 
         # the CoNLL 03 task for Spanish only has two columns
-        if task == NLPTask.CONLL_03_SPANISH.value:
+        if task == NLPTask.CONLL_03_SPANISH.value or task == NLPTask.WNUT_17.value:
             columns = {0: 'text', 1: 'ner'}
 
             return NLPTaskDataFetcher.load_column_corpus(data_folder,
@@ -425,7 +428,7 @@ class NLPTaskDataFetcher:
             if line.startswith('#'):
                 continue
 
-            if line == '':
+            if line.strip().replace('﻿', '') == '':
                 if len(sentence) > 0:
                     sentence.infer_space_after()
                     sentences.append(sentence)
@@ -438,6 +441,7 @@ class NLPTaskDataFetcher:
                     if len(fields) > column:
                         if column != text_column:
                             token.add_tag(column_name_map[column], fields[column])
+
                 sentence.add_token(token)
 
         if len(sentence.tokens) > 0:
@@ -560,9 +564,14 @@ class NLPTaskDataFetcher:
                     with open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'test.txt', 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
 
+        if task == NLPTask.WNUT_17:
+            wnut_path = 'https://noisy-text.github.io/2017/files/'
+            cached_path(f'{wnut_path}wnut17train.conll', Path('datasets') / task.value)
+            cached_path(f'{wnut_path}emerging.dev.conll', Path('datasets') / task.value)
+            cached_path(f'{wnut_path}emerging.test.annotated', Path('datasets') / task.value)
+
         # Wikiner NER task
         wikiner_path = 'https://raw.githubusercontent.com/dice-group/FOX/master/input/Wikiner/'
-
         if task.value.startswith('wikiner'):
             lc = ''
             if task == NLPTask.WIKINER_ENGLISH: lc = 'en'
