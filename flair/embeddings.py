@@ -484,11 +484,15 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         self.is_forward_lm: bool = self.lm.is_forward_lm
 
-        # caching variables
-        self.use_cache: bool = use_cache
+        # initialize cache if use_cache set
         self.cache = None
-        self.cache_directory: str = cache_directory
+        if use_cache:
+            cache_path = Path(f'{self.name}-tmp-cache.sqllite') if not self.cache_directory else \
+                self.cache_directory / f'{self.name.name}-tmp-cache.sqllite'
+            from sqlitedict import SqliteDict
+            self.cache = SqliteDict(cache_path, autocommit=True)
 
+        # embed a dummy sentence to determine embedding_length
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token('hello'))
         embedded_dummy = self.embed(dummy_sentence)
@@ -507,8 +511,6 @@ class CharLMEmbeddings(TokenEmbeddings):
         state = self.__dict__.copy()
         # Remove the unpicklable entries.
         state['cache'] = None
-        state['use_cache'] = False
-        state['cache_directory'] = None
         return state
 
     @property
@@ -517,24 +519,8 @@ class CharLMEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
-        # this whole block is for compatibility with older serialized models  TODO: remove in version 0.4
-        if 'cache' not in self.__dict__ or 'cache_directory' not in self.__dict__:
-            self.use_cache = False
-            self.cache_directory = None
-        else:
-            cache_path = Path(f'{self.name}-tmp-cache.sqllite') if not self.cache_directory else \
-                self.cache_directory / f'{self.name.name}-tmp-cache.sqllite'
-            if not cache_path.exists:
-                self.use_cache = False
-                self.cache_directory = None
-
         # if cache is used, try setting embeddings from cache first
-        if self.use_cache:
-
-            # lazy initialization of cache
-            if not self.cache:
-                from sqlitedict import SqliteDict
-                self.cache = SqliteDict(str(cache_path), autocommit=True)
+        if 'cache' in self.__dict__ and self.cache is not None:
 
             # try populating embeddings from cache
             all_embeddings_retrieved_from_cache: bool = True
@@ -602,7 +588,7 @@ class CharLMEmbeddings(TokenEmbeddings):
 
                 token.set_embedding(self.name, embedding)
 
-        if self.use_cache:
+        if 'cache' in self.__dict__ and self.cache is not None:
             for sentence in sentences:
                 self.cache[sentence.to_tokenized_string()] = [token._embeddings[self.name].tolist() for token in
                                                               sentence]
