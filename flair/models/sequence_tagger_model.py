@@ -1,6 +1,7 @@
 
 import warnings
 import logging
+from pathlib import Path
 
 import torch.autograd as autograd
 import torch.nn
@@ -146,7 +147,7 @@ class SequenceTagger(flair.nn.Model):
         if torch.cuda.is_available():
             self.cuda()
 
-    def save(self, model_file: str):
+    def save(self, model_file: Path):
         model_state = {
             'state_dict': self.state_dict(),
             'embeddings': self.embeddings,
@@ -160,16 +161,16 @@ class SequenceTagger(flair.nn.Model):
             'use_locked_dropout': self.use_locked_dropout,
         }
 
-        torch.save(model_state, model_file, pickle_protocol=4)
+        torch.save(model_state, str(model_file), pickle_protocol=4)
 
 
     @classmethod
-    def load_from_file(cls, model_file):
+    def load_from_file(cls, model_file: Path):
         # suppress torch warnings:
         # https://docs.python.org/3/library/warnings.html#temporarily-suppressing-warnings
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
-            state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
+            state = torch.load(str(model_file), map_location={'cuda:0': 'cpu'})
 
         use_dropout = 0.0 if not 'use_dropout' in state.keys() else state['use_dropout']
         use_word_dropout = 0.0 if not 'use_word_dropout' in state.keys() else state['use_word_dropout']

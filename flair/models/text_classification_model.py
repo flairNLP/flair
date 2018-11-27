@@ -1,5 +1,6 @@
 import warnings
 import logging
+from pathlib import Path
 from typing import List, Union
 
 import torch
@@ -64,7 +65,7 @@ class TextClassifier(flair.nn.Model):
 
         return label_scores
 
-    def save(self, model_file: str):
+    def save(self, model_file: Path):
         """
         Saves the current model to the provided file.
         :param model_file: the model file
@@ -75,10 +76,10 @@ class TextClassifier(flair.nn.Model):
             'label_dictionary': self.label_dictionary,
             'multi_label': self.multi_label,
         }
-        torch.save(model_state, model_file, pickle_protocol=4)
+        torch.save(model_state, str(model_file), pickle_protocol=4)
 
     @classmethod
-    def load_from_file(cls, model_file):
+    def load_from_file(cls, model_file: Path):
         """
         Loads the model from the given file.
         :param model_file: the model file
@@ -91,9 +92,9 @@ class TextClassifier(flair.nn.Model):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
             if torch.cuda.is_available():
-                state = torch.load(model_file)
+                state = torch.load(str(model_file))
             else:
-                state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
+                state = torch.load(str(model_file), map_location={'cuda:0': 'cpu'})
 
         model = TextClassifier(
             document_embeddings=state['document_embeddings'],

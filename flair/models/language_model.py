@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import torch.nn as nn
 import torch
 import math
@@ -119,12 +121,12 @@ class LanguageModel(nn.Module):
         matrix.data.uniform_(-stdv, stdv)
 
     @classmethod
-    def load_language_model(cls, model_file):
+    def load_language_model(cls, model_file: Path):
 
         if not torch.cuda.is_available():
-            state = torch.load(model_file, map_location='cpu')
+            state = torch.load(str(model_file), map_location='cpu')
         else:
-            state = torch.load(model_file)
+            state = torch.load(str(model_file))
 
         best_score = state['best_score'] if 'best_score' in state else None
 
@@ -142,7 +144,7 @@ class LanguageModel(nn.Module):
             model.cuda()
         return model
 
-    def save(self, file):
+    def save(self, file: Path):
         model_state = {
             'state_dict': self.state_dict(),
             'dictionary': self.dictionary,
@@ -154,7 +156,7 @@ class LanguageModel(nn.Module):
             'dropout': self.dropout,
             'best_score': self.best_score
         }
-        torch.save(model_state, file, pickle_protocol=4)
+        torch.save(model_state, str(file), pickle_protocol=4)
 
     def generate_text(self, number_of_characters=1000) -> str:
         with torch.no_grad():
