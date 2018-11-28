@@ -335,7 +335,7 @@ class NLPTaskDataFetcher:
         return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
     @staticmethod
-    def read_text_classification_file(path_to_file: Path, max_tokens_per_doc=-1):
+    def read_text_classification_file(path_to_file: Path, max_tokens_per_doc=-1) -> List[Sentence]:
         """
         Reads a data file for text classification. The file should contain one document/text per line.
         The line should have the following format:
@@ -369,9 +369,10 @@ class NLPTaskDataFetcher:
 
                 if text and labels:
                     sentence = Sentence(text, labels=labels, use_tokenizer=True)
-                    if (len(sentence) > max_tokens_per_doc):
+                    if len(sentence) > max_tokens_per_doc:
                         sentence.tokens = sentence.tokens[:max_tokens_per_doc]
-                    sentences.append(sentence)
+                    if len(sentence.tokens) > 0:
+                        sentences.append(sentence)
 
         return sentences
 
@@ -475,47 +476,6 @@ class NLPTaskDataFetcher:
                 sentence.add_token(token)
 
         if len(sentence.tokens) > 0: sentences.append(sentence)
-
-        return sentences
-
-    @staticmethod
-    def read_text_classification_file(path_to_file: Path, max_tokens_per_doc=-1) -> List[Sentence]:
-        """
-        Reads a data file for text classification. The file should contain one document/text per line.
-        The line should have the following format:
-        __label__<class_name> <text>
-        If you have a multi class task, you can have as many labels as you want at the beginning of the line, e.g.,
-        __label__<class_name_1> __label__<class_name_2> <text>
-        :param path_to_file: the path to the data file
-        :param max_tokens_per_doc: Take only documents that contain number of tokens less or equal to this value. If
-        set to -1 all documents are taken.
-        :return: list of sentences
-        """
-        label_prefix = '__label__'
-        sentences = []
-
-        with open(path_to_file) as f:
-            for line in f:
-                words = line.split()
-
-                labels = []
-                l_len = 0
-
-                for i in range(len(words)):
-                    if words[i].startswith(label_prefix):
-                        l_len += len(words[i]) + 1
-                        label = words[i].replace(label_prefix, "")
-                        labels.append(label)
-                    else:
-                        break
-
-                text = line[l_len:].strip()
-
-                if text and labels:
-                    sentence = Sentence(text, labels=labels, use_tokenizer=True)
-                    if (len(sentence) > max_tokens_per_doc):
-                        sentence.tokens = sentence.tokens[:max_tokens_per_doc]
-                    sentences.append(sentence)
 
         return sentences
 
