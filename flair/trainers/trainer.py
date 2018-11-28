@@ -24,6 +24,7 @@ class ModelTrainer:
                  optimizer: Optimizer = SGD,
                  epoch:int = 0,
                  loss: float = 1.0,
+                 optimizer_state: dict = None,
                  scheduler_state: dict = None
                  ):
         self.model: flair.nn.Model = model
@@ -32,6 +33,7 @@ class ModelTrainer:
         self.epoch: int = epoch
         self.loss: float = loss
         self.scheduler_state: dict = scheduler_state
+        self.optimizer_state: dict = optimizer_state
 
     def find_learning_rate(self,
                            base_path: Path,
@@ -135,6 +137,8 @@ class ModelTrainer:
             weight_extractor = WeightExtractor(base_path)
 
         optimizer = self.optimizer(self.model.parameters(), lr=learning_rate, **kwargs)
+        if self.optimizer_state is not None:
+            optimizer.load_state_dict(self.optimizer_state)
 
         # annealing scheduler
         anneal_mode = 'min' if train_with_dev else 'max'
@@ -146,7 +150,6 @@ class ModelTrainer:
             scheduler = ReduceLROnPlateau(optimizer, factor=anneal_factor,
                                           patience=patience, mode=anneal_mode,
                                           verbose=True)
-
         if self.scheduler_state is not None:
             scheduler.load_state_dict(self.scheduler_state)
 
@@ -266,7 +269,9 @@ class ModelTrainer:
 
                 # if checkpoint is enable, save model at each epoch
                 if checkpoint and not param_selection_mode:
-                    self.model.save_checkpoint(base_path / 'checkpoint.pt', optimizer, scheduler, epoch, current_loss)
+                    self.model.save_checkpoint(base_path / 'checkpoint.pt',
+                                               optimizer.state_dict(), scheduler.state_dict(),
+                                               epoch + 1, current_loss)
 
                 # if we use dev data, remember best model based on dev evaluation score
                 if not train_with_dev and not param_selection_mode and current_score == scheduler.best:
@@ -475,12 +480,12 @@ class ModelTrainer:
 
         if model_type == 'SequenceTagger':
             checkpoint = SequenceTagger.load_checkpoint(checkpoint_file)
-            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             return ModelTrainer(checkpoint['model'], corpus, optimizer, epoch=checkpoint['epoch'],
-                                loss=checkpoint['loss'], scheduler_state=checkpoint['scheduler_state_dict'])
+                                loss=checkpoint['loss'], optimizer_state=checkpoint['optimizer_state_dict'],
+                                scheduler_state=checkpoint['scheduler_state_dict'])
 
         if model_type == 'TextClassifier':
-            checkpoint = SequenceTagger.load_checkpoint(checkpoint_file)
-            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            checkpoint = TextClassifier.load_checkpoint(checkpoint_file)
             return ModelTrainer(checkpoint['model'], corpus, optimizer, epoch=checkpoint['epoch'],
-                                loss=checkpoint['loss'], scheduler_state=checkpoint['scheduler_state_dict'])
+                                loss=checkpoint['loss'], optimizer_state=checkpoint['optimizer_state_dict'],
+                                scheduler_state=checkpoint['scheduler_state_dict'])

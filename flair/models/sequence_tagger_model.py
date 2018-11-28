@@ -164,7 +164,7 @@ class SequenceTagger(flair.nn.Model):
 
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
-    def save_checkpoint(self, model_file: Path, optimizer: Optimizer, scheduler_state: dict, epoch: int, loss: float):
+    def save_checkpoint(self, model_file: Path, optimizer_state: dict, scheduler_state: dict, epoch: int, loss: float):
         model_state = {
             'state_dict': self.state_dict(),
             'embeddings': self.embeddings,
@@ -176,7 +176,7 @@ class SequenceTagger(flair.nn.Model):
             'rnn_layers': self.rnn_layers,
             'use_word_dropout': self.use_word_dropout,
             'use_locked_dropout': self.use_locked_dropout,
-            'optimizer_state_dict': optimizer.state_dict(),
+            'optimizer_state_dict': optimizer_state,
             'scheduler_state_dict': scheduler_state,
             'epoch': epoch,
             'loss': loss

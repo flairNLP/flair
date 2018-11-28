@@ -79,7 +79,7 @@ class TextClassifier(flair.nn.Model):
         }
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
-    def save_checkpoint(self, model_file: Path, optimizer: Optimizer, scheduler_state: dict, epoch: int, loss: float):
+    def save_checkpoint(self, model_file: Path, optimizer_state: dict, scheduler_state: dict, epoch: int, loss: float):
         """
         Saves the current model to the provided file.
         :param model_file: the model file
@@ -89,7 +89,7 @@ class TextClassifier(flair.nn.Model):
             'document_embeddings': self.document_embeddings,
             'label_dictionary': self.label_dictionary,
             'multi_label': self.multi_label,
-            'optimizer_state_dict': optimizer.state_dict(),
+            'optimizer_state_dict': optimizer_state,
             'scheduler_state_dict': scheduler_state,
             'epoch': epoch,
             'loss': loss

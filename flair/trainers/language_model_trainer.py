@@ -160,7 +160,8 @@ class LanguageModelTrainer:
                  optimizer: Optimizer = SGD,
                  test_mode: bool = False,
                  epoch: int = 0,
-                 loss: float = 1
+                 loss: float = 1,
+                 optimizer_state: dict = None
                  ):
         self.model: LanguageModel = model
         self.optimzer: Optimizer = optimizer
@@ -171,6 +172,7 @@ class LanguageModelTrainer:
         self.log_interval = 100
         self.epoch = epoch
         self.loss = loss
+        self.optimizer_state = optimizer_state
 
     def train(self,
               base_path: Path,
@@ -200,6 +202,8 @@ class LanguageModelTrainer:
             epoch = self.epoch
             best_val_loss = self.loss
             optimizer = self.optimzer(self.model.parameters(), lr=learning_rate, **kwargs)
+            if self.optimizer_state is not None:
+                optimizer.load_state_dict(self.optimizer_state)
 
             if isinstance(optimizer, (AdamW, SGDW)):
                 scheduler: ReduceLRWDOnPlateau = ReduceLRWDOnPlateau(optimizer, verbose=True,
@@ -380,5 +384,5 @@ class LanguageModelTrainer:
     @staticmethod
     def load_from_checkpoint(checkpoint_file: Path, corpus: TextCorpus, optimizer: Optimizer = SGD):
         checkpoint = LanguageModel.load_checkpoint(checkpoint_file)
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        return LanguageModelTrainer(checkpoint['model'], corpus, optimizer, epoch=checkpoint['epoch'], loss=checkpoint['loss'])
+        return LanguageModelTrainer(checkpoint['model'], corpus, optimizer, epoch=checkpoint['epoch'],
+                                    loss=checkpoint['loss'], optimizer_state=checkpoint['optimizer_state_dict'])
