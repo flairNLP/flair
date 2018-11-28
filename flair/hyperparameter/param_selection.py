@@ -48,19 +48,25 @@ class ParamSelector(object):
 
         self.param_selection_file = init_output_file(base_path, 'param_selection.txt')
 
+        fh = logging.FileHandler(base_path / 'param_selection.log')
+        fh.setLevel(logging.INFO)
+        formatter = logging.Formatter('%(asctime)-15s %(message)s')
+        fh.setFormatter(formatter)
+        log.addHandler(fh)
+
     @abstractmethod
     def _set_up_model(self, params: dict) -> flair.nn.Model:
         pass
 
     def _objective(self, params: dict):
-        log_line()
+        log_line(log)
         log.info(f'Evaluation run: {self.run}')
         log.info(f'Evaluating parameter combination:')
         for k, v in params.items():
             if isinstance(v, Tuple):
                 v = ','.join([str(x) for x in v])
             log.info(f'\t{k}: {str(v)}')
-        log_line()
+        log_line(log)
 
         for sent in self.corpus.get_all_sentences():
             sent.clear_embeddings()
@@ -68,7 +74,7 @@ class ParamSelector(object):
         scores = []
 
         for i in range(0, self.training_runs):
-            log_line()
+            log_line(log)
             log.info(f'Training run: {i + 1}')
 
             model = self._set_up_model(params)
@@ -92,14 +98,14 @@ class ParamSelector(object):
         # take average over the scroes from the different training runs
         final_score = sum(scores) / float(len(scores))
 
-        log_line()
+        log_line(log)
         log.info(f'Done evaluating parameter combination:')
         for k, v in params.items():
             if isinstance(v, Tuple):
                 v = ','.join([str(x) for x in v])
             log.info(f'\t{k}: {v}')
         log.info(f'Score: {final_score}')
-        log_line()
+        log_line(log)
 
         with open(self.param_selection_file, 'a') as f:
             f.write(f'evaluation run {self.run}\n')
@@ -118,12 +124,12 @@ class ParamSelector(object):
         search_space = space.search_space
         best = fmin(self._objective, search_space, algo=tpe.suggest, max_evals=max_evals)
 
-        log_line()
+        log_line(log)
         log.info('Optimizing parameter configuration done.')
         log.info('Best parameter configuration found:')
         for k, v in best.items():
             log.info(f'\t{k}: {v}')
-        log_line()
+        log_line(log)
 
         with open(self.param_selection_file, 'a') as f:
             f.write('best parameter combination\n')
