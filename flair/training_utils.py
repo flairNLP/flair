@@ -232,5 +232,8 @@ def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionar
     return [[1 if l in labels else 0 for l in label_dict.get_items()] for labels in label_list]
 
 
-def log_line():
-    log.info('-' * 100)
+def log_line(logger = None):
+    if logger is not None:
+        logger.info('-' * 100)
+    else:
+        log.info('-' * 100)
