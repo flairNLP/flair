@@ -85,7 +85,7 @@ class ParamSelector(object):
                                    **training_params)
 
             # take the average over the last three scores of training
-            l = result['score_history'][3:] if len(result['score_history']) > 3 else result['score_history']
+            l = result['score_history'][-3:]
             score = sum(l) / float(len(l))
             scores.append(score)
 
