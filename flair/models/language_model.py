@@ -5,6 +5,9 @@ import torch
 import math
 from torch.autograd import Variable
 from typing import List
+
+from torch.optim import Optimizer
+
 from flair.data import Dictionary
 
 
@@ -18,8 +21,7 @@ class LanguageModel(nn.Module):
                  nlayers: int,
                  embedding_size: int = 100,
                  nout=None,
-                 dropout=0.5,
-                 best_score=None):
+                 dropout=0.5):
 
         super(LanguageModel, self).__init__()
 
@@ -51,8 +53,6 @@ class LanguageModel(nn.Module):
             self.decoder = nn.Linear(hidden_size, len(dictionary))
 
         self.init_weights()
-
-        self.best_score = best_score
 
         # auto-spawn on GPU if available
         if torch.cuda.is_available():
@@ -128,21 +128,61 @@ class LanguageModel(nn.Module):
         else:
             state = torch.load(str(model_file))
 
-        best_score = state['best_score'] if 'best_score' in state else None
-
         model = LanguageModel(state['dictionary'],
-                                             state['is_forward_lm'],
-                                             state['hidden_size'],
-                                             state['nlayers'],
-                                             state['embedding_size'],
-                                             state['nout'],
-                                             state['dropout'],
-                                             best_score)
+                              state['is_forward_lm'],
+                              state['hidden_size'],
+                              state['nlayers'],
+                              state['embedding_size'],
+                              state['nout'],
+                              state['dropout'])
         model.load_state_dict(state['state_dict'])
         model.eval()
         if torch.cuda.is_available():
             model.cuda()
+
         return model
+
+    @classmethod
+    def load_checkpoint(cls, model_file: Path):
+        if not torch.cuda.is_available():
+            state = torch.load(str(model_file), map_location='cpu')
+        else:
+            state = torch.load(str(model_file))
+
+        epoch = state['epoch'] if 'epoch' in state else None
+        loss = state['loss'] if 'loss' in state else None
+        optimizer_state_dict = state['optimizer_state_dict'] if 'optimizer_state_dict' in state else None
+
+        model = LanguageModel(state['dictionary'],
+                              state['is_forward_lm'],
+                              state['hidden_size'],
+                              state['nlayers'],
+                              state['embedding_size'],
+                              state['nout'],
+                              state['dropout'])
+        model.load_state_dict(state['state_dict'])
+        model.eval()
+        if torch.cuda.is_available():
+            model.cuda()
+
+        return {'model': model, 'epoch': epoch, 'loss': loss, 'optimizer_state_dict': optimizer_state_dict}
+
+    def save_checkpoint(self, file: Path, optimizer: Optimizer, epoch: int, loss: float):
+        model_state = {
+            'state_dict': self.state_dict(),
+            'dictionary': self.dictionary,
+            'is_forward_lm': self.is_forward_lm,
+            'hidden_size': self.hidden_size,
+            'nlayers': self.nlayers,
+            'embedding_size': self.embedding_size,
+            'nout': self.nout,
+            'dropout': self.dropout,
+            'optimizer_state_dict': optimizer.state_dict(),
+            'epoch': epoch,
+            'loss': loss
+        }
+
+        torch.save(model_state, str(file), pickle_protocol=4)
 
     def save(self, file: Path):
         model_state = {
@@ -153,9 +193,9 @@ class LanguageModel(nn.Module):
             'nlayers': self.nlayers,
             'embedding_size': self.embedding_size,
             'nout': self.nout,
-            'dropout': self.dropout,
-            'best_score': self.best_score
+            'dropout': self.dropout
         }
+
         torch.save(model_state, str(file), pickle_protocol=4)
 
     def generate_text(self, number_of_characters=1000) -> str:
