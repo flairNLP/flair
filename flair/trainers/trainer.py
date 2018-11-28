@@ -18,10 +18,22 @@ log = logging.getLogger(__name__)
 
 class ModelTrainer:
 
-    def __init__(self, model: flair.nn.Model, corpus: Corpus, optimizer: Optimizer = SGD) -> None:
+    def __init__(self,
+                 model: flair.nn.Model,
+                 corpus: Corpus,
+                 optimizer: Optimizer = SGD,
+                 epoch:int = 0,
+                 loss: float = 10000.0,
+                 optimizer_state: dict = None,
+                 scheduler_state: dict = None
+                 ):
         self.model: flair.nn.Model = model
         self.corpus: Corpus = corpus
         self.optimizer: Optimizer = optimizer
+        self.epoch: int = epoch
+        self.loss: float = loss
+        self.scheduler_state: dict = scheduler_state
+        self.optimizer_state: dict = optimizer_state
 
     def find_learning_rate(self,
                            base_path: Path,
@@ -125,6 +137,8 @@ class ModelTrainer:
             weight_extractor = WeightExtractor(base_path)
 
         optimizer = self.optimizer(self.model.parameters(), lr=learning_rate, **kwargs)
+        if self.optimizer_state is not None:
+            optimizer.load_state_dict(self.optimizer_state)
 
         # annealing scheduler
         anneal_mode = 'min' if train_with_dev else 'max'
@@ -136,6 +150,8 @@ class ModelTrainer:
             scheduler = ReduceLROnPlateau(optimizer, factor=anneal_factor,
                                           patience=patience, mode=anneal_mode,
                                           verbose=True)
+        if self.scheduler_state is not None:
+            scheduler.load_state_dict(self.scheduler_state)
 
         train_data = self.corpus.train
 
@@ -150,7 +166,7 @@ class ModelTrainer:
         try:
             previous_learning_rate = learning_rate
 
-            for epoch in range(0, max_epochs):
+            for epoch in range(0 + self.epoch, max_epochs + self.epoch):
                 log_line()
 
                 # bad_epochs = scheduler.num_bad_epochs
@@ -208,10 +224,6 @@ class ModelTrainer:
 
                 self.model.eval()
 
-                # if checkpoint is enable, save model at each epoch
-                if checkpoint and not param_selection_mode:
-                    self.model.save(base_path / 'checkpoint.pt')
-
                 log_line()
                 log.info(f'EPOCH {epoch + 1}: lr {learning_rate:.4f} - bad epochs {bad_epochs}')
 
@@ -254,6 +266,12 @@ class ModelTrainer:
                         current_score = dev_metric.micro_avg_f_score()
 
                 scheduler.step(current_score)
+
+                # if checkpoint is enable, save model at each epoch
+                if checkpoint and not param_selection_mode:
+                    self.model.save_checkpoint(base_path / 'checkpoint.pt',
+                                               optimizer.state_dict(), scheduler.state_dict(),
+                                               epoch + 1, current_loss)
 
                 # if we use dev data, remember best model based on dev evaluation score
                 if not train_with_dev and not param_selection_mode and current_score == scheduler.best:
@@ -454,3 +472,19 @@ class ModelTrainer:
             eval_loss /= len(sentences)
 
             return metric, eval_loss
+
+    @staticmethod
+    def load_from_checkpoint(checkpoint_file: Path, model_type: str, corpus: Corpus, optimizer: Optimizer = SGD):
+        if model_type == 'SequenceTagger':
+            checkpoint = SequenceTagger.load_checkpoint(checkpoint_file)
+            return ModelTrainer(checkpoint['model'], corpus, optimizer, epoch=checkpoint['epoch'],
+                                loss=checkpoint['loss'], optimizer_state=checkpoint['optimizer_state_dict'],
+                                scheduler_state=checkpoint['scheduler_state_dict'])
+
+        if model_type == 'TextClassifier':
+            checkpoint = TextClassifier.load_checkpoint(checkpoint_file)
+            return ModelTrainer(checkpoint['model'], corpus, optimizer, epoch=checkpoint['epoch'],
+                                loss=checkpoint['loss'], optimizer_state=checkpoint['optimizer_state_dict'],
+                                scheduler_state=checkpoint['scheduler_state_dict'])
+
+        raise ValueError('Incorrect model type! Use one of the following: "SequenceTagger", "TextClassifier".')

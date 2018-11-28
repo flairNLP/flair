@@ -153,7 +153,17 @@ class TextCorpus(object):
 
 
 class LanguageModelTrainer:
-    def __init__(self, model: LanguageModel, corpus: TextCorpus, optimizer: Optimizer = SGD, test_mode: bool = False):
+
+    def __init__(self,
+                 model: LanguageModel,
+                 corpus: TextCorpus,
+                 optimizer: Optimizer = SGD,
+                 test_mode: bool = False,
+                 epoch: int = 0,
+                 split: int = 0,
+                 loss: float = 10000,
+                 optimizer_state: dict = None
+                 ):
         self.model: LanguageModel = model
         self.optimzer: Optimizer = optimizer
         self.corpus: TextCorpus = corpus
@@ -161,6 +171,10 @@ class LanguageModelTrainer:
 
         self.loss_function = torch.nn.CrossEntropyLoss()
         self.log_interval = 100
+        self.epoch = epoch
+        self.split = split
+        self.loss = loss
+        self.optimizer_state = optimizer_state
 
     def train(self,
               base_path: Path,
@@ -171,6 +185,7 @@ class LanguageModelTrainer:
               patience: int = 10,
               clip=0.25,
               max_epochs: int = 1000,
+              checkpoint: bool = False,
               **kwargs):
 
         number_of_splits: int = len(self.corpus.train_files)
@@ -186,9 +201,12 @@ class LanguageModelTrainer:
 
         try:
 
-            epoch = 0
-            best_val_loss = self.model.best_score if self.model.best_score is not None else 100000000
+            epoch = self.epoch
+            best_val_loss = self.loss
             optimizer = self.optimzer(self.model.parameters(), lr=learning_rate, **kwargs)
+            if self.optimizer_state is not None:
+                optimizer.load_state_dict(self.optimizer_state)
+
             if isinstance(optimizer, (AdamW, SGDW)):
                 scheduler: ReduceLRWDOnPlateau = ReduceLRWDOnPlateau(optimizer, verbose=True,
                                                                      factor=anneal_factor,
@@ -198,7 +216,7 @@ class LanguageModelTrainer:
                                                                  factor=anneal_factor,
                                                                  patience=patience)
 
-            for split in range(1, max_splits + 1):
+            for split in range(1 + self.split, max_splits + 1):
 
                 # after pass over all splits, increment epoch count
                 if (split - 1) % number_of_splits == 0:
@@ -274,6 +292,9 @@ class LanguageModelTrainer:
                 scheduler.step(val_loss)
 
                 log.info('best loss so far {:5.2f}'.format(best_val_loss))
+
+                if checkpoint:
+                    self.model.save_checkpoint(base_path / 'checkpoint.pt', optimizer, epoch, split, best_val_loss)
 
                 # Save the model if the validation loss is the best we've seen so far.
                 if val_loss < best_val_loss:
@@ -363,4 +384,9 @@ class LanguageModelTrainer:
         """Wraps hidden states in new Variables, to detach them from their history."""
         return tuple(Variable(v) for v in h)
 
-
+    @staticmethod
+    def load_from_checkpoint(checkpoint_file: Path, corpus: TextCorpus, optimizer: Optimizer = SGD):
+        checkpoint = LanguageModel.load_checkpoint(checkpoint_file)
+        return LanguageModelTrainer(checkpoint['model'], corpus, optimizer, epoch=checkpoint['epoch'],
+                                    split=checkpoint['split'], loss=checkpoint['loss'],
+                                    optimizer_state=checkpoint['optimizer_state_dict'])

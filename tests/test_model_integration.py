@@ -408,9 +408,6 @@ def test_train_language_model(results_base_path, resources_path):
     assert (text is not None)
     assert (len(text) == 100)
 
-    loaded_language_model = LanguageModel.load_language_model(results_base_path / 'best-lm.pt')
-    assert (loaded_language_model.best_score < 100)
-
     # clean up results directory
     shutil.rmtree(results_base_path, ignore_errors=True)
 
@@ -445,3 +442,74 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+
+
+@pytest.mark.integration
+def test_train_resume_text_classification_training(results_base_path, tasks_base_path):
+    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path=tasks_base_path)
+    label_dict = corpus.make_label_dictionary()
+
+    embeddings: TokenEmbeddings = CharLMEmbeddings('news-forward-fast', use_cache=False)
+    document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([embeddings], 128, 1, False)
+
+    model = TextClassifier(document_embeddings, label_dict, False)
+
+    trainer = ModelTrainer(model, corpus)
+    trainer.train(results_base_path, max_epochs=2, test_mode=True, checkpoint=True)
+
+    trainer = ModelTrainer.load_from_checkpoint(results_base_path / 'checkpoint.pt', 'TextClassifier', corpus)
+    trainer.train(results_base_path, max_epochs=2, test_mode=True, checkpoint=True)
+
+    # clean up results directory
+    shutil.rmtree(results_base_path)
+
+
+@pytest.mark.integration
+def test_train_resume_sequence_tagging_training(results_base_path, tasks_base_path):
+    corpus = NLPTaskDataFetcher.load_corpora([NLPTask.FASHION, NLPTask.GERMEVAL], base_path=tasks_base_path)
+    tag_dictionary = corpus.make_tag_dictionary('ner')
+
+    embeddings = WordEmbeddings('glove')
+
+    model: SequenceTagger = SequenceTagger(hidden_size=256,
+                                            embeddings=embeddings,
+                                            tag_dictionary=tag_dictionary,
+                                            tag_type='ner',
+                                            use_crf=False)
+
+    trainer = ModelTrainer(model, corpus)
+    trainer.train(results_base_path, max_epochs=2, test_mode=True, checkpoint=True)
+
+    trainer = ModelTrainer.load_from_checkpoint(results_base_path / 'checkpoint.pt', 'SequenceTagger', corpus)
+    trainer.train(results_base_path, max_epochs=2, test_mode=True, checkpoint=True)
+
+    # clean up results directory
+    shutil.rmtree(results_base_path)
+
+
+@pytest.mark.integration
+def test_train_resume_language_model_training(resources_path, results_base_path, tasks_base_path):
+    # get default dictionary
+    dictionary: Dictionary = Dictionary.load('chars')
+
+    # init forward LM with 128 hidden states and 1 layer
+    language_model: LanguageModel = LanguageModel(dictionary, is_forward_lm=True, hidden_size=128, nlayers=1)
+
+    # get the example corpus and process at character level in forward direction
+    corpus: TextCorpus = TextCorpus(resources_path / 'corpora/lorem_ipsum',
+                                    dictionary,
+                                    language_model.is_forward_lm,
+                                    character_level=True)
+
+    # train the language model
+    trainer: LanguageModelTrainer = LanguageModelTrainer(language_model, corpus, test_mode=True)
+    trainer.train(results_base_path, sequence_length=10, mini_batch_size=10, max_epochs=2, checkpoint=True)
+
+    trainer = LanguageModelTrainer.load_from_checkpoint(results_base_path / 'checkpoint.pt', corpus)
+    trainer.train(results_base_path, sequence_length=10, mini_batch_size=10, max_epochs=2)
+
+    # clean up results directory
+    shutil.rmtree(results_base_path)
+
+
+
