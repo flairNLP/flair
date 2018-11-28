@@ -1,4 +1,3 @@
-
 import warnings
 import logging
 from pathlib import Path
@@ -163,9 +162,8 @@ class SequenceTagger(flair.nn.Model):
 
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
-
     @classmethod
-    def load_from_file(cls, model_file: Path):
+    def load_from_file(cls, model_file: Union[str, Path]):
         # suppress torch warnings:
         # https://docs.python.org/3/library/warnings.html#temporarily-suppressing-warnings
         with warnings.catch_warnings():
