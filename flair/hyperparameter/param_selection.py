@@ -68,6 +68,9 @@ class ParamSelector(object):
         scores = []
 
         for i in range(0, self.training_runs):
+            log_line()
+            log.info(f'Training run: {i + 1}')
+
             model = self._set_up_model(params)
 
             training_params = {key: params[key] for key in params if key in TRAINING_PARAMETERS}
