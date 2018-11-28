@@ -5,6 +5,7 @@ from typing import List, Union
 
 import torch
 import torch.nn as nn
+from torch.optim import Optimizer
 
 import flair.nn
 import flair.embeddings
@@ -78,6 +79,23 @@ class TextClassifier(flair.nn.Model):
         }
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
+    def save_checkpoint(self, model_file: Path, optimizer: Optimizer, scheduler_state: dict, epoch: int, loss: float):
+        """
+        Saves the current model to the provided file.
+        :param model_file: the model file
+        """
+        model_state = {
+            'state_dict': self.state_dict(),
+            'document_embeddings': self.document_embeddings,
+            'label_dictionary': self.label_dictionary,
+            'multi_label': self.multi_label,
+            'optimizer_state_dict': optimizer.state_dict(),
+            'scheduler_state_dict': scheduler_state,
+            'epoch': epoch,
+            'loss': loss
+        }
+        torch.save(model_state, str(model_file), pickle_protocol=4)
+
     @classmethod
     def load_from_file(cls, model_file: Path):
         """
@@ -105,6 +123,37 @@ class TextClassifier(flair.nn.Model):
         model.load_state_dict(state['state_dict'])
         model.eval()
         return model
+
+    @classmethod
+    def load_checkpoint(cls, model_file: Path):
+        # ATTENTION: suppressing torch serialization warnings. This needs to be taken out once we sort out recursive
+        # serialization of torch objects
+        # https://docs.python.org/3/library/warnings.html#temporarily-suppressing-warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            if torch.cuda.is_available():
+                state = torch.load(str(model_file))
+            else:
+                state = torch.load(str(model_file), map_location={'cuda:0': 'cpu'})
+
+        epoch = state['epoch'] if 'epoch' in state else None
+        loss = state['loss'] if 'loss' in state else None
+        optimizer_state_dict = state['optimizer_state_dict'] if 'optimizer_state_dict' in state else None
+        scheduler_state_dict = state['scheduler_state_dict'] if 'scheduler_state_dict' in state else None
+
+        model = TextClassifier(
+            document_embeddings=state['document_embeddings'],
+            label_dictionary=state['label_dictionary'],
+            multi_label=state['multi_label']
+        )
+
+        model.load_state_dict(state['state_dict'])
+        model.eval()
+
+        return {
+            'model': model, 'epoch': epoch, 'loss': loss,
+            'optimizer_state_dict': optimizer_state_dict, 'scheduler_state_dict': scheduler_state_dict
+        }
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
         scores = self.forward(sentences)

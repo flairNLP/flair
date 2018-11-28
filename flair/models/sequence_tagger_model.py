@@ -4,6 +4,8 @@ from pathlib import Path
 
 import torch.autograd as autograd
 import torch.nn
+from torch.optim import Optimizer
+
 import flair.nn
 import torch
 
@@ -162,6 +164,26 @@ class SequenceTagger(flair.nn.Model):
 
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
+    def save_checkpoint(self, model_file: Path, optimizer: Optimizer, scheduler_state: dict, epoch: int, loss: float):
+        model_state = {
+            'state_dict': self.state_dict(),
+            'embeddings': self.embeddings,
+            'hidden_size': self.hidden_size,
+            'tag_dictionary': self.tag_dictionary,
+            'tag_type': self.tag_type,
+            'use_crf': self.use_crf,
+            'use_rnn': self.use_rnn,
+            'rnn_layers': self.rnn_layers,
+            'use_word_dropout': self.use_word_dropout,
+            'use_locked_dropout': self.use_locked_dropout,
+            'optimizer_state_dict': optimizer.state_dict(),
+            'scheduler_state_dict': scheduler_state,
+            'epoch': epoch,
+            'loss': loss
+        }
+
+        torch.save(model_state, str(model_file), pickle_protocol=4)
+
     @classmethod
     def load_from_file(cls, model_file: Union[str, Path]):
         # suppress torch warnings:
@@ -192,6 +214,46 @@ class SequenceTagger(flair.nn.Model):
         if torch.cuda.is_available():
             model = model.cuda()
         return model
+
+    @classmethod
+    def load_checkpoint(cls, model_file: Union[str, Path]):
+        # suppress torch warnings:
+        # https://docs.python.org/3/library/warnings.html#temporarily-suppressing-warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            state = torch.load(str(model_file), map_location={'cuda:0': 'cpu'})
+
+        use_dropout = 0.0 if not 'use_dropout' in state.keys() else state['use_dropout']
+        use_word_dropout = 0.0 if not 'use_word_dropout' in state.keys() else state['use_word_dropout']
+        use_locked_dropout = 0.0 if not 'use_locked_dropout' in state.keys() else state['use_locked_dropout']
+
+        epoch = state['epoch'] if 'epoch' in state else None
+        loss = state['loss'] if 'loss' in state else None
+        optimizer_state_dict = state['optimizer_state_dict'] if 'optimizer_state_dict' in state else None
+        scheduler_state_dict = state['scheduler_state_dict'] if 'scheduler_state_dict' in state else None
+
+        model = SequenceTagger(
+            hidden_size=state['hidden_size'],
+            embeddings=state['embeddings'],
+            tag_dictionary=state['tag_dictionary'],
+            tag_type=state['tag_type'],
+            use_crf=state['use_crf'],
+            use_rnn=state['use_rnn'],
+            rnn_layers=state['rnn_layers'],
+            dropout=use_dropout,
+            word_dropout=use_word_dropout,
+            locked_dropout=use_locked_dropout,
+        )
+
+        model.load_state_dict(state['state_dict'])
+        model.eval()
+        if torch.cuda.is_available():
+            model = model.cuda()
+
+        return {
+            'model': model, 'epoch': epoch, 'loss': loss,
+            'optimizer_state_dict': optimizer_state_dict, 'scheduler_state_dict': scheduler_state_dict
+        }
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
         features, lengths, tags = self.forward(sentences)

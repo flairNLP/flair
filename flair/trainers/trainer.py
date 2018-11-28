@@ -18,10 +18,20 @@ log = logging.getLogger(__name__)
 
 class ModelTrainer:
 
-    def __init__(self, model: flair.nn.Model, corpus: Corpus, optimizer: Optimizer = SGD) -> None:
+    def __init__(self,
+                 model: flair.nn.Model,
+                 corpus: Corpus,
+                 optimizer: Optimizer = SGD,
+                 epoch:int = 0,
+                 loss: float = 1.0,
+                 scheduler_state: dict = None
+                 ):
         self.model: flair.nn.Model = model
         self.corpus: Corpus = corpus
         self.optimizer: Optimizer = optimizer
+        self.epoch: int = epoch
+        self.loss: float = loss
+        self.scheduler_state: dict = scheduler_state
 
     def find_learning_rate(self,
                            base_path: Path,
@@ -34,7 +44,7 @@ class ModelTrainer:
                            **kwargs
                            ) -> Path:
         loss_history = []
-        best_loss = None
+        best_loss = 0
 
         learning_rate_tsv = init_output_file(base_path, 'learning_rate.tsv')
         with open(learning_rate_tsv, 'a') as f:
@@ -137,20 +147,23 @@ class ModelTrainer:
                                           patience=patience, mode=anneal_mode,
                                           verbose=True)
 
+        if self.scheduler_state is not None:
+            scheduler.load_state_dict(self.scheduler_state)
+
         train_data = self.corpus.train
 
         # if training also uses dev data, include in training set
         if train_with_dev:
             train_data.extend(self.corpus.dev)
 
-        current_loss = 0.0
-        current_score = 0.0
+        current_loss = 0
+        current_score = 0
 
         # At any point you can hit Ctrl + C to break out of training early.
         try:
             previous_learning_rate = learning_rate
 
-            for epoch in range(0, max_epochs):
+            for epoch in range(0 + self.epoch, max_epochs + self.epoch):
                 log_line()
 
                 # bad_epochs = scheduler.num_bad_epochs
@@ -208,10 +221,6 @@ class ModelTrainer:
 
                 self.model.eval()
 
-                # if checkpoint is enable, save model at each epoch
-                if checkpoint and not param_selection_mode:
-                    self.model.save(base_path / 'checkpoint.pt')
-
                 log_line()
                 log.info(f'EPOCH {epoch + 1}: lr {learning_rate:.4f} - bad epochs {bad_epochs}')
 
@@ -254,6 +263,10 @@ class ModelTrainer:
                         current_score = dev_metric.micro_avg_f_score()
 
                 scheduler.step(current_score)
+
+                # if checkpoint is enable, save model at each epoch
+                if checkpoint and not param_selection_mode:
+                    self.model.save_checkpoint(base_path / 'checkpoint.pt', optimizer, scheduler, epoch, current_loss)
 
                 # if we use dev data, remember best model based on dev evaluation score
                 if not train_with_dev and not param_selection_mode and current_score == scheduler.best:
@@ -454,3 +467,20 @@ class ModelTrainer:
             eval_loss /= len(sentences)
 
             return metric, eval_loss
+
+    @staticmethod
+    def load_from_checkpoint(checkpoint_file: Path, model_type: str, corpus: Corpus, optimizer: Optimizer = SGD):
+        if model_type not in ['SequenceTagger', 'TextClassifier']:
+            raise ValueError('Incorrect model type! Use one of the following: "SequenceTagger", "TextClassifier".')
+
+        if model_type == 'SequenceTagger':
+            checkpoint = SequenceTagger.load_checkpoint(checkpoint_file)
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            return ModelTrainer(checkpoint['model'], corpus, optimizer, epoch=checkpoint['epoch'],
+                                loss=checkpoint['loss'], scheduler_state=checkpoint['scheduler_state_dict'])
+
+        if model_type == 'TextClassifier':
+            checkpoint = SequenceTagger.load_checkpoint(checkpoint_file)
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            return ModelTrainer(checkpoint['model'], corpus, optimizer, epoch=checkpoint['epoch'],
+                                loss=checkpoint['loss'], scheduler_state=checkpoint['scheduler_state_dict'])
