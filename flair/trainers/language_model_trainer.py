@@ -160,7 +160,7 @@ class LanguageModelTrainer:
                  optimizer: Optimizer = SGD,
                  test_mode: bool = False,
                  epoch: int = 0,
-                 loss: float = 1,
+                 loss: float = 10000,
                  optimizer_state: dict = None
                  ):
         self.model: LanguageModel = model

@@ -23,7 +23,7 @@ class ModelTrainer:
                  corpus: Corpus,
                  optimizer: Optimizer = SGD,
                  epoch:int = 0,
-                 loss: float = 1.0,
+                 loss: float = 10000.0,
                  optimizer_state: dict = None,
                  scheduler_state: dict = None
                  ):
@@ -46,7 +46,7 @@ class ModelTrainer:
                            **kwargs
                            ) -> Path:
         loss_history = []
-        best_loss = 0
+        best_loss = None
 
         learning_rate_tsv = init_output_file(base_path, 'learning_rate.tsv')
         with open(learning_rate_tsv, 'a') as f:
@@ -159,8 +159,8 @@ class ModelTrainer:
         if train_with_dev:
             train_data.extend(self.corpus.dev)
 
-        current_loss = 0
-        current_score = 0
+        current_loss = 0.0
+        current_score = 0.0
 
         # At any point you can hit Ctrl + C to break out of training early.
         try:
@@ -475,9 +475,6 @@ class ModelTrainer:
 
     @staticmethod
     def load_from_checkpoint(checkpoint_file: Path, model_type: str, corpus: Corpus, optimizer: Optimizer = SGD):
-        if model_type not in ['SequenceTagger', 'TextClassifier']:
-            raise ValueError('Incorrect model type! Use one of the following: "SequenceTagger", "TextClassifier".')
-
         if model_type == 'SequenceTagger':
             checkpoint = SequenceTagger.load_checkpoint(checkpoint_file)
             return ModelTrainer(checkpoint['model'], corpus, optimizer, epoch=checkpoint['epoch'],
@@ -489,3 +486,5 @@ class ModelTrainer:
             return ModelTrainer(checkpoint['model'], corpus, optimizer, epoch=checkpoint['epoch'],
                                 loss=checkpoint['loss'], optimizer_state=checkpoint['optimizer_state_dict'],
                                 scheduler_state=checkpoint['scheduler_state_dict'])
+
+        raise ValueError('Incorrect model type! Use one of the following: "SequenceTagger", "TextClassifier".')

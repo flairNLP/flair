@@ -408,9 +408,6 @@ def test_train_language_model(results_base_path, resources_path):
     assert (text is not None)
     assert (len(text) == 100)
 
-    loaded_language_model = LanguageModel.load_language_model(results_base_path / 'best-lm.pt')
-    assert (loaded_language_model.best_score < 100)
-
     # clean up results directory
     shutil.rmtree(results_base_path, ignore_errors=True)
 
