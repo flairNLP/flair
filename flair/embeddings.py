@@ -229,57 +229,142 @@ class WordEmbeddings(TokenEmbeddings):
         return self.name
 
 
-class MemoryEmbeddings(TokenEmbeddings):
+class FlairEmbeddings(TokenEmbeddings):
 
-    def __init__(self, tag_type: str, tag_dictionary: Dictionary):
-
-        self.name = "memory"
-        self.static_embeddings = False
-        self.tag_type: str = tag_type
-        self.tag_dictionary: Dictionary = tag_dictionary
-        self.__embedding_length: int = len(tag_dictionary)
-
-        self.memory: Dict[str:List] = {}
-
+    def __init__(self, model:str):
         super().__init__()
+
+        # first, make pass over corpus to produce embeddings
+        self.word_embeddings = {}
+        self.word_count = {}
+
+        # since our statistics change, we re-compute embeddings dynamically
+        self.static_embeddings = False
+
+        # internally use CharLM embeddings
+        self.context_embeddings: CharLMEmbeddings = CharLMEmbeddings(model)
+        self.embedding_length = self.context_embeddings.embedding_length * 2
+        self.name = self.context_embeddings.name + '-flair'
+
+    def train(self, mode=True):
+        super().train(mode=mode)
+        if mode:
+            # if embeddings are dynamic, they need to be recomputed from scratch each time we do a training run
+            print('train mode resetting embeddings')
+            self.word_embeddings = {}
+            self.word_count = {}
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        self.context_embeddings.embed(sentences)
+
+        # first, update embeddings of entire batch
+        for sentence in sentences:
+            for token in sentence.tokens:
+                if token.text not in self.word_embeddings:
+                    self.word_embeddings[token.text] = token._embeddings[self.context_embeddings.name].cpu()
+                    self.word_count[token.text] = 1
+                else:
+                    self.word_embeddings[token.text] = torch.add(self.word_embeddings[token.text],
+                                                                 token._embeddings[self.context_embeddings.name])
+                    self.word_count[token.text] += 1
+
+        # add embeddings
+        for sentence in sentences:
+            for token in sentence.tokens:
+                if token.text in self.word_embeddings:
+                    base = self.word_embeddings[token.text] / self.word_count[token.text]
+                else:
+                    base = token._embeddings[self.context_embeddings.name]
+
+                token.set_embedding(self.name, base)
+
+        return sentences
+
+    def embedding_length(self) -> int:
+        return self.embedding_length
+
+    def __str__(self):
+        return self.name
+
+
+class ELMoEmbeddings(TokenEmbeddings):
+    """Contextual word embeddings using word-level LM, as proposed in Peters et al., 2018."""
+
+    def __init__(self, model: str = 'original'):
+        super().__init__()
+
+        try:
+            import allennlp.commands.elmo
+        except:
+            print('\n\n----------------------------------------')
+            print('ACHTUNG! The library "allennlp" is not installed!\n')
+            print('To use ELMoEmbeddings, please first install with "pip install allennlp"')
+            print('----------------------------------------\n\n')
+            pass
+
+        self.name = 'elmo-' + model
+        self.static_embeddings = True
+
+        # the default model for ELMo is the 'original' model, which is very large
+        options_file = allennlp.commands.elmo.DEFAULT_OPTIONS_FILE
+        weight_file = allennlp.commands.elmo.DEFAULT_WEIGHT_FILE
+        # alternatively, a small, medium or portuguese model can be selected by passing the appropriate mode name
+        if model == 'small':
+            options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x1024_128_2048cnn_1xhighway/elmo_2x1024_128_2048cnn_1xhighway_options.json'
+            weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x1024_128_2048cnn_1xhighway/elmo_2x1024_128_2048cnn_1xhighway_weights.hdf5'
+        if model == 'medium':
+            options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_options.json'
+            weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_weights.hdf5'
+        if model == 'pt' or model == 'portuguese':
+            options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_options.json'
+            weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_weights.hdf5'
+
+        # put on Cuda if available
+        cuda_device = 0 if torch.cuda.is_available() else -1
+        self.ee = allennlp.commands.elmo.ElmoEmbedder(options_file=options_file,
+                                                      weight_file=weight_file,
+                                                      cuda_device=cuda_device)
+
+        # embed a dummy sentence to determine embedding_length
+        dummy_sentence: Sentence = Sentence()
+        dummy_sentence.add_token(Token('hello'))
+        embedded_dummy = self.embed(dummy_sentence)
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def train(self, mode=True):
-        super().train(mode=mode)
-        if mode:
-            self.memory: Dict[str:List] = {}
-
-    def update_embedding(self, text: str, tag: str):
-        self.memory[text][self.tag_dictionary.get_idx_for_item(tag)] += 1
-
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
+        sentence_words: List[List[str]] = []
+        for sentence in sentences:
+            sentence_words.append([token.text for token in sentence])
+
+        embeddings = self.ee.embed_batch(sentence_words)
+
         for i, sentence in enumerate(sentences):
+
+            sentence_embeddings = embeddings[i]
 
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
                 token: Token = token
 
-                if token.text not in self.memory:
-                    self.memory[token.text] = [0] * self.__embedding_length
+                embedding = torch.cat([torch.FloatTensor(sentence_embeddings[0, token_idx, :]),
+                                       torch.FloatTensor(sentence_embeddings[1, token_idx, :]),
+                                       torch.FloatTensor(sentence_embeddings[2, token_idx, :])], 0)
 
-                word_embedding = torch.FloatTensor(self.memory[token.text])
-                import torch.nn.functional as F
-                word_embedding = F.normalize(word_embedding, p=2, dim=0)
-
+                word_embedding = torch.autograd.Variable(embedding)
                 token.set_embedding(self.name, word_embedding)
-
-                # add label if in training mode
-                if self.training:
-                    self.update_embedding(token.text, token.get_tag(self.tag_type).value)
 
         return sentences
 
+    def extra_repr(self):
+        return 'model={}'.format(self.name)
+
     def __str__(self):
         return self.name
-
 
 class CharacterEmbeddings(TokenEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
@@ -436,12 +521,12 @@ class CharLMEmbeddings(TokenEmbeddings):
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # common crawl Polish forward
-        elif model.lower() == 'polish-forward':
+        elif model.lower() == 'polish-forward' or model.lower() == 'pl-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-forward-v0.2.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # common crawl Polish backward
-        elif model.lower() == 'polish-backward':
+        elif model.lower() == 'polish-backward' or model.lower() == 'pl-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-backward-v0.2.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
 
@@ -470,6 +555,15 @@ class CharLMEmbeddings(TokenEmbeddings):
         # Dutch backward
         elif model.lower() == 'dutch-backward' or model.lower() == 'nl-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-nl-large-backward-v0.1.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+
+        # Swedish forward
+        elif model.lower() == 'swedish-forward' or model.lower() == 'sv-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-sv-large-forward-v0.1.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+        # Swedish backward
+        elif model.lower() == 'swedish-backward' or model.lower() == 'sv-backward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-sv-large-backward-v0.1.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
 
         elif not Path(model).exists():
