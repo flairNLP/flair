@@ -148,7 +148,7 @@ class SequenceTagger(flair.nn.Model):
         if torch.cuda.is_available():
             self.cuda()
 
-    def save(self, model_file: Path):
+    def save(self, model_file: Union[str, Path]):
         model_state = {
             'state_dict': self.state_dict(),
             'embeddings': self.embeddings,
@@ -164,7 +164,7 @@ class SequenceTagger(flair.nn.Model):
 
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
-    def save_checkpoint(self, model_file: Path, optimizer_state: dict, scheduler_state: dict, epoch: int, loss: float):
+    def save_checkpoint(self, model_file: Union[str, Path], optimizer_state: dict, scheduler_state: dict, epoch: int, loss: float):
         model_state = {
             'state_dict': self.state_dict(),
             'embeddings': self.embeddings,
@@ -228,7 +228,7 @@ class SequenceTagger(flair.nn.Model):
         }
 
     @classmethod
-    def _load_state(cls, model_file):
+    def _load_state(cls, model_file: Union[str, Path]):
         # ATTENTION: suppressing torch serialization warnings. This needs to be taken out once we sort out recursive
         # serialization of torch objects
         # https://docs.python.org/3/library/warnings.html#temporarily-suppressing-warnings

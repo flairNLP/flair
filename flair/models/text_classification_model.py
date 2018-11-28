@@ -66,7 +66,7 @@ class TextClassifier(flair.nn.Model):
 
         return label_scores
 
-    def save(self, model_file: Path):
+    def save(self, model_file: Union[str, Path]):
         """
         Saves the current model to the provided file.
         :param model_file: the model file
@@ -79,7 +79,7 @@ class TextClassifier(flair.nn.Model):
         }
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
-    def save_checkpoint(self, model_file: Path, optimizer_state: dict, scheduler_state: dict, epoch: int, loss: float):
+    def save_checkpoint(self, model_file: Union[str, Path], optimizer_state: dict, scheduler_state: dict, epoch: int, loss: float):
         """
         Saves the current model to the provided file.
         :param model_file: the model file
@@ -97,7 +97,7 @@ class TextClassifier(flair.nn.Model):
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
     @classmethod
-    def load_from_file(cls, model_file: [str, Path]):
+    def load_from_file(cls, model_file: Union[str, Path]):
         """
         Loads the model from the given file.
         :param model_file: the model file
@@ -119,7 +119,7 @@ class TextClassifier(flair.nn.Model):
         return model
 
     @classmethod
-    def load_checkpoint(cls, model_file: [str, Path]):
+    def load_checkpoint(cls, model_file: Union[str, Path]):
         state = TextClassifier._load_state(model_file)
         model = TextClassifier.load_from_file(model_file)
 
@@ -134,7 +134,7 @@ class TextClassifier(flair.nn.Model):
         }
 
     @classmethod
-    def _load_state(cls, model_file):
+    def _load_state(cls, model_file: Union[str, Path]):
         # ATTENTION: suppressing torch serialization warnings. This needs to be taken out once we sort out recursive
         # serialization of torch objects
         # https://docs.python.org/3/library/warnings.html#temporarily-suppressing-warnings
