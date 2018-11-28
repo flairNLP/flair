@@ -160,6 +160,7 @@ class LanguageModelTrainer:
                  optimizer: Optimizer = SGD,
                  test_mode: bool = False,
                  epoch: int = 0,
+                 split: int = 0,
                  loss: float = 10000,
                  optimizer_state: dict = None
                  ):
@@ -171,6 +172,7 @@ class LanguageModelTrainer:
         self.loss_function = torch.nn.CrossEntropyLoss()
         self.log_interval = 100
         self.epoch = epoch
+        self.split = split
         self.loss = loss
         self.optimizer_state = optimizer_state
 
@@ -214,12 +216,10 @@ class LanguageModelTrainer:
                                                                  factor=anneal_factor,
                                                                  patience=patience)
 
-            for split in range(1, max_splits + 1):
+            for split in range(1 + self.split, max_splits + 1):
 
                 # after pass over all splits, increment epoch count
                 if (split - 1) % number_of_splits == 0:
-                    if checkpoint:
-                        self.model.save_checkpoint(base_path / 'checkpoint.pt', optimizer, epoch, best_val_loss)
                     epoch += 1
 
                 log.info('Split %d' % split + '\t - ({:%H:%M:%S})'.format(datetime.datetime.now()))
@@ -292,6 +292,9 @@ class LanguageModelTrainer:
                 scheduler.step(val_loss)
 
                 log.info('best loss so far {:5.2f}'.format(best_val_loss))
+
+                if checkpoint:
+                    self.model.save_checkpoint(base_path / 'checkpoint.pt', optimizer, epoch, split, best_val_loss)
 
                 # Save the model if the validation loss is the best we've seen so far.
                 if val_loss < best_val_loss:
@@ -385,4 +388,5 @@ class LanguageModelTrainer:
     def load_from_checkpoint(checkpoint_file: Path, corpus: TextCorpus, optimizer: Optimizer = SGD):
         checkpoint = LanguageModel.load_checkpoint(checkpoint_file)
         return LanguageModelTrainer(checkpoint['model'], corpus, optimizer, epoch=checkpoint['epoch'],
-                                    loss=checkpoint['loss'], optimizer_state=checkpoint['optimizer_state_dict'])
+                                    split=checkpoint['split'], loss=checkpoint['loss'],
+                                    optimizer_state=checkpoint['optimizer_state_dict'])

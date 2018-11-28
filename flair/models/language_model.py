@@ -150,6 +150,7 @@ class LanguageModel(nn.Module):
             state = torch.load(str(model_file))
 
         epoch = state['epoch'] if 'epoch' in state else None
+        split = state['split'] if 'split' in state else None
         loss = state['loss'] if 'loss' in state else None
         optimizer_state_dict = state['optimizer_state_dict'] if 'optimizer_state_dict' in state else None
 
@@ -165,9 +166,9 @@ class LanguageModel(nn.Module):
         if torch.cuda.is_available():
             model.cuda()
 
-        return {'model': model, 'epoch': epoch, 'loss': loss, 'optimizer_state_dict': optimizer_state_dict}
+        return {'model': model, 'epoch': epoch, 'split': split, 'loss': loss, 'optimizer_state_dict': optimizer_state_dict}
 
-    def save_checkpoint(self, file: Path, optimizer: Optimizer, epoch: int, loss: float):
+    def save_checkpoint(self, file: Path, optimizer: Optimizer, epoch: int, split: int, loss: float):
         model_state = {
             'state_dict': self.state_dict(),
             'dictionary': self.dictionary,
@@ -179,6 +180,7 @@ class LanguageModel(nn.Module):
             'dropout': self.dropout,
             'optimizer_state_dict': optimizer.state_dict(),
             'epoch': epoch,
+            'split': split,
             'loss': loss
         }
 
