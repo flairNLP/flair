@@ -162,6 +162,9 @@ class ModelTrainer:
         current_loss = 0.0
         current_score = 0.0
 
+        loss_history = []
+        score_history = []
+
         # At any point you can hit Ctrl + C to break out of training early.
         try:
             previous_learning_rate = learning_rate
@@ -267,6 +270,9 @@ class ModelTrainer:
 
                 scheduler.step(current_score)
 
+                score_history.append(current_score)
+                loss_history.append(current_loss)
+
                 # if checkpoint is enable, save model at each epoch
                 if checkpoint and not param_selection_mode:
                     self.model.save_checkpoint(base_path / 'checkpoint.pt',
@@ -293,7 +299,7 @@ class ModelTrainer:
         if not param_selection_mode:
             final_score = self.final_test(base_path, embeddings_in_memory, evaluation_metric, mini_batch_size)
 
-        return {'test_score': final_score, 'dev_score': current_score, 'loss': current_loss}
+        return {'test_score': final_score, 'score_history': score_history, 'loss_history': loss_history}
 
     def final_test(self,
                    base_path: Path,
