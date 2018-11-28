@@ -6,7 +6,11 @@ from typing import List, Union, Dict
 import gensim
 import numpy as np
 import torch
+from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 from deprecated import deprecated
+
+from pytorch_pretrained_bert.tokenization import BertTokenizer
+from pytorch_pretrained_bert.modeling import BertModel
 
 from .nn import LockedDropout, WordDropout
 from .data import Dictionary, Token, Sentence
@@ -598,6 +602,105 @@ class CharLMEmbeddings(TokenEmbeddings):
     def __str__(self):
         return self.name
 
+
+class BertInputFeatures(object):
+    def __init__(self, unique_id, tokens, input_ids, input_mask, input_type_ids):
+        self.unique_id = unique_id
+        self.tokens = tokens
+        self.input_ids = input_ids
+        self.input_mask = input_mask
+        self.input_type_ids = input_type_ids
+
+
+class BertWordEmbeddings(TokenEmbeddings):
+    def __init__(self,
+                 bert_model: str = 'bert-base-uncased',
+                 layers: str = "-1,-2,-3,-4",
+                 max_seq_length: int = 128,
+                 batch_size: int = 32):
+        
+        self.tokenizer = BertTokenizer.from_pretrained(bert_model)
+        self.model = BertModel.from_pretrained(bert_model)
+        self.layer_indexes = [int(x) for x in layers.split(",")]
+        self.batch_size = batch_size
+
+    def _convert_sentences_to_features(self, sentences) -> [BertInputFeatures]:
+        features = []
+        for (sentence_index, sentence) in enumerate(sentences):
+            tokens_sentence = self.tokenizer.tokenizer(sentence.to_original_text())
+            if len(tokens_sentence) > self.max_seq_length - 2:
+                tokens_sentence = tokens_sentence[0:(self.max_seq_length - 2)]
+            
+            tokens = []
+            input_type_ids = []
+            tokens.append("[CLS]")
+            input_type_ids.append(0)
+            for token in tokens_sentence:
+                tokens.append(token)
+                input_type_ids.append(0)
+            tokens.append("[SEP]")
+            input_type_ids.append(0)
+
+            input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
+            # The mask has 1 for real tokens and 0 for padding tokens. Only real
+            # tokens are attended to.
+            input_mask = [1] * len(input_ids)
+            
+            # Zero-pad up to the sequence length.
+            while len(input_ids) < self.max_seq_length:
+                input_ids.append(0)
+                input_mask.append(0)
+                input_type_ids.append(0)
+
+            features.append(BertInputFeatures(
+                unique_id=sentence_index,
+                tokens=tokens,
+                input_ids=input_ids,
+                input_mask=input_mask,
+                input_type_ids=input_type_ids))
+
+        return features
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]):
+        """Add embeddings to all words in a list of sentences. If embeddings are already added,
+        updates only if embeddings are non-static."""
+
+        features = self._convert_sentences_to_features(sentences)
+        # unique_id_to_feature = {}
+        # for feature in features:
+        #     unique_id_to_feature[feature.unique_id] = feature
+
+        all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
+        all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
+        all_sentence_index = torch.arange(all_input_ids.size(0), dtype=torch.long)
+
+        dataset = TensorDataset(all_input_ids, all_input_mask, all_sentence_index)
+        sampler = SequentialSampler(dataset)
+        dataloader = DataLoader(dataset, sampler=sampler, batch_size=self.batch_size)
+
+        self.model.eval()
+        for input_ids, input_mask, sentence_indices in dataloader:
+            all_encoder_layers, _ = self.model(input_ids, token_type_ids=None, attention_mask=input_mask)
+
+            for b, sentence_index in enumerate(sentence_indices):
+                feature = features[sentence_index.item()]
+
+                all_out_features = []
+                for (i, _) in enumerate(feature.tokens):
+                    all_layers = []
+                    for (j, layer_index) in enumerate(self.layer_indexes):
+                        layer_output = all_encoder_layers[int(layer_index)].detach().cpu().numpy()[b]
+                        all_layers.append(layer_output[i])
+                    
+                    all_out_features.append(all_layers)
+
+
+    @property
+    @abstractmethod
+    def embedding_length(self) -> int:
+        """Returns the length of the embedding vector."""
+        pass
+    
 
 class DocumentMeanEmbeddings(DocumentEmbeddings):
 
