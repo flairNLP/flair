@@ -9,7 +9,7 @@ from torch.optim.sgd import SGD
 from flair.data import Dictionary
 from flair.models import LanguageModel
 from flair.optim import *
-
+from flair.training_utils import add_file_handler
 
 log = logging.getLogger(__name__)
 
@@ -188,11 +188,7 @@ class LanguageModelTrainer:
               checkpoint: bool = False,
               **kwargs):
 
-        fh = logging.FileHandler(base_path / 'training.log')
-        fh.setLevel(logging.INFO)
-        formatter = logging.Formatter('%(asctime)-15s %(message)s')
-        fh.setFormatter(formatter)
-        log.addHandler(fh)
+        add_file_handler(log, base_path / 'training.log')
 
         number_of_splits: int = len(self.corpus.train_files)
 

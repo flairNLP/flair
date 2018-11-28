@@ -10,7 +10,8 @@ import flair
 import flair.nn
 from flair.data import Sentence, Token, MultiCorpus, Corpus
 from flair.models import TextClassifier, SequenceTagger
-from flair.training_utils import Metric, init_output_file, WeightExtractor, clear_embeddings, EvaluationMetric, log_line
+from flair.training_utils import Metric, init_output_file, WeightExtractor, clear_embeddings, EvaluationMetric, \
+    log_line, add_file_handler
 from flair.optim import *
 
 log = logging.getLogger(__name__)
@@ -120,11 +121,7 @@ class ModelTrainer:
               **kwargs
               ) -> dict:
 
-        fh = logging.FileHandler(base_path / 'training.log')
-        fh.setLevel(logging.INFO)
-        formatter = logging.Formatter('%(asctime)-15s %(message)s')
-        fh.setFormatter(formatter)
-        log.addHandler(fh)
+        add_file_handler(log, base_path / 'training.log')
 
         log_line(log)
         log.info(f'Evaluation method: {evaluation_metric.name}')

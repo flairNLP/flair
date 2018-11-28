@@ -13,7 +13,7 @@ from flair.hyperparameter.parameter import SEQUENCE_TAGGER_PARAMETERS, TRAINING_
     DOCUMENT_EMBEDDING_PARAMETERS, MODEL_TRAINER_PARAMETERS
 from flair.models import SequenceTagger, TextClassifier
 from flair.trainers import ModelTrainer
-from flair.training_utils import EvaluationMetric, log_line, init_output_file
+from flair.training_utils import EvaluationMetric, log_line, init_output_file, add_file_handler
 
 log = logging.getLogger(__name__)
 
@@ -48,11 +48,7 @@ class ParamSelector(object):
 
         self.param_selection_file = init_output_file(base_path, 'param_selection.txt')
 
-        fh = logging.FileHandler(base_path / 'param_selection.log')
-        fh.setLevel(logging.INFO)
-        formatter = logging.Formatter('%(asctime)-15s %(message)s')
-        fh.setFormatter(formatter)
-        log.addHandler(fh)
+        add_file_handler(log, base_path / 'param_selection.log')
 
     @abstractmethod
     def _set_up_model(self, params: dict) -> flair.nn.Model:
