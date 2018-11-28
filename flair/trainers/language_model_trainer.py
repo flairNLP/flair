@@ -188,6 +188,12 @@ class LanguageModelTrainer:
               checkpoint: bool = False,
               **kwargs):
 
+        fh = logging.FileHandler(base_path / 'training.log')
+        fh.setLevel(logging.INFO)
+        formatter = logging.Formatter('%(asctime)-15s %(message)s')
+        fh.setFormatter(formatter)
+        log.addHandler(fh)
+
         number_of_splits: int = len(self.corpus.train_files)
 
         # an epoch has a number, so calculate total max splits bby multiplying max_epochs with number_of_splits
