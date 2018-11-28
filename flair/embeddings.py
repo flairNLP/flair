@@ -613,21 +613,26 @@ class BertInputFeatures(object):
 
 
 class BertWordEmbeddings(TokenEmbeddings):
+
     def __init__(self,
                  bert_model: str = 'bert-base-uncased',
                  layers: str = "-1,-2,-3,-4",
                  max_seq_length: int = 128,
                  batch_size: int = 32):
+
+        super().__init__()
         
         self.tokenizer = BertTokenizer.from_pretrained(bert_model)
         self.model = BertModel.from_pretrained(bert_model)
         self.layer_indexes = [int(x) for x in layers.split(",")]
+        self.max_seq_length: int = max_seq_length
         self.batch_size = batch_size
+        self.name = str(bert_model)
 
     def _convert_sentences_to_features(self, sentences) -> [BertInputFeatures]:
         features = []
         for (sentence_index, sentence) in enumerate(sentences):
-            tokens_sentence = self.tokenizer.tokenizer(sentence.to_original_text())
+            tokens_sentence = self.tokenizer.tokenize(sentence.to_original_text())
             if len(tokens_sentence) > self.max_seq_length - 2:
                 tokens_sentence = tokens_sentence[0:(self.max_seq_length - 2)]
             
@@ -661,11 +666,12 @@ class BertWordEmbeddings(TokenEmbeddings):
 
         return features
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
         """Add embeddings to all words in a list of sentences. If embeddings are already added,
         updates only if embeddings are non-static."""
 
         features = self._convert_sentences_to_features(sentences)
+        print(features)
         # unique_id_to_feature = {}
         # for feature in features:
         #     unique_id_to_feature[feature.unique_id] = feature
@@ -694,6 +700,7 @@ class BertWordEmbeddings(TokenEmbeddings):
                     
                     all_out_features.append(all_layers)
 
+        return sentences
 
     @property
     @abstractmethod
