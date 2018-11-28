@@ -88,16 +88,16 @@ class ModelTrainer:
                 f.write(f'{itr}\t{datetime.datetime.now():%H:%M:%S}\t{learning_rate}\t{loss_item}\n')
 
             if stop_early and loss_item > 4 * best_loss:
-                log_line()
+                log_line(log)
                 log.info('loss diverged - stopping early!')
                 break
 
         self.model.load_state_dict(model_state)
         self.model.to(model_device)
 
-        log_line()
+        log_line(log)
         log.info(f'learning rate finder finished - plot {learning_rate_tsv}')
-        log_line()
+        log_line(log)
 
         return Path(learning_rate_tsv)
 
