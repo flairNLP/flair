@@ -11,8 +11,7 @@ setup(
     url='https://github.com/zalandoresearch/flair',
     packages=find_packages(exclude='test'),  # same as name
     license='MIT',
-    install_requires=[
-        'torch==0.4.1',
+    install_requires=['torch==0.4.1',
         'gensim==3.4.0',
         'typing==3.6.4',
         'tqdm==4.26.0',
@@ -22,7 +21,8 @@ setup(
         'sklearn',
         'sqlitedict==1.6.0',
         'deprecated==1.2.4',
-        'hyperopt==0.1.1'
+        'hyperopt==0.1.1',
+        'pytorch-pretrained-bert==0.2.0'
     ],
     include_package_data=True,
     python_requires='>=3.6',
