@@ -608,10 +608,10 @@ class BertEmbeddings(TokenEmbeddings):
     def __init__(self,
                  bert_model: str = 'bert-base-uncased',
                  layers: str = '-1,-2,-3,-4',
-                 pooling_operation: str = 'mean'):
+                 pooling_operation: str = 'first'):
         """
         Bidirectional transformer embeddings of words, as proposed in Devlin et al., 2018.
-        :param bert_model: name of BERT model
+        :param bert_model: name of BERT model ('')
         :param layers: string indicating which layers to take for embedding
         :param pooling_operation: how to get from token piece embeddings to token embedding. Either pool them and take
         the average ('mean') or use first word piece embedding as token embedding ('first)
@@ -626,14 +626,15 @@ class BertEmbeddings(TokenEmbeddings):
         self.static_embeddings = True
 
     class BertInputFeatures(object):
-        """Private class for holding BERT-formatted features"""
+        """Private helper class for holding BERT-formatted features"""
 
-        def __init__(self, unique_id, tokens, input_ids, input_mask, input_type_ids):
+        def __init__(self, unique_id, tokens, input_ids, input_mask, input_type_ids, token_subtoken_count):
             self.unique_id = unique_id
             self.tokens = tokens
             self.input_ids = input_ids
             self.input_mask = input_mask
             self.input_type_ids = input_type_ids
+            self.token_subtoken_count = token_subtoken_count
 
     def _convert_sentences_to_features(self, sentences, max_sequence_length: int) -> [BertInputFeatures]:
 
@@ -642,19 +643,22 @@ class BertEmbeddings(TokenEmbeddings):
         features: List[BertEmbeddings.BertInputFeatures] = []
         for (sentence_index, sentence) in enumerate(sentences):
 
-            # tokens_sentence = self.tokenizer.tokenize(sentence.to_original_text())
-            tokens_sentence = sentence.to_tokenized_string().lower().split(' ')
-            for index, token in enumerate(tokens_sentence):
-                tokens_sentence[index] = self.tokenizer.tokenize(token)[0]
+            bert_tokenization: List[str] = []
+            token_subtoken_count: Dict[int, int] = {}
 
-            if len(tokens_sentence) > max_sequence_length - 2:
-                tokens_sentence = tokens_sentence[0:(max_sequence_length - 2)]
+            for token in sentence:
+                subtokens = self.tokenizer.tokenize(token.text)
+                bert_tokenization.extend(subtokens)
+                token_subtoken_count[token.idx] = len(subtokens)
+
+            if len(bert_tokenization) > max_sequence_length - 2:
+                bert_tokenization = bert_tokenization[0:(max_sequence_length - 2)]
 
             tokens = []
             input_type_ids = []
             tokens.append("[CLS]")
             input_type_ids.append(0)
-            for token in tokens_sentence:
+            for token in bert_tokenization:
                 tokens.append(token)
                 input_type_ids.append(0)
             tokens.append("[SEP]")
@@ -676,7 +680,8 @@ class BertEmbeddings(TokenEmbeddings):
                 tokens=tokens,
                 input_ids=input_ids,
                 input_mask=input_mask,
-                input_type_ids=input_type_ids))
+                input_type_ids=input_type_ids,
+                token_subtoken_count=token_subtoken_count))
 
         return features
 
@@ -685,41 +690,55 @@ class BertEmbeddings(TokenEmbeddings):
         updates only if embeddings are non-static."""
 
         # first, find longest sentence in batch
-        longest_sentence_in_batch: int = len(max(sentences, key=len))
+        longest_sentence_in_batch: int = len(
+            max([self.tokenizer.tokenize(sentence.to_tokenized_string()) for sentence in sentences], key=len))
 
         # prepare id maps for BERT model
         features = self._convert_sentences_to_features(sentences, longest_sentence_in_batch)
-
         if torch.cuda.is_available():
             all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long).cuda()
             all_input_masks = torch.tensor([f.input_mask for f in features], dtype=torch.long).cuda()
-            all_sentence_indices = torch.arange(all_input_ids.size(0), dtype=torch.long)
         else:
             all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
             all_input_masks = torch.tensor([f.input_mask for f in features], dtype=torch.long)
-            all_sentence_indices = torch.arange(all_input_ids.size(0), dtype=torch.long)
 
+        # put encoded batch through BERT model to get all hidden states of all encoder layers
         self.model.eval()
-        # for input_ids, input_mask, sentence_indices in zip(all_input_ids, all_input_masks, all_sentence_indices):
         all_encoder_layers, _ = self.model(all_input_ids, token_type_ids=None, attention_mask=all_input_masks)
+
+        all_sentence_indices = torch.arange(all_input_ids.size(0), dtype=torch.long)
 
         for b, sentence_index in enumerate(all_sentence_indices):
             feature = features[sentence_index.item()]
 
-            # get the current sentence object
-            sentence: Sentence = sentences[sentence_index]
-
+            # get aggregated embeddings for each BERT-subtoken in sentence
+            subtoken_embeddings = []
             for (i, _) in enumerate(feature.tokens):
                 all_layers = []
                 for (j, layer_index) in enumerate(self.layer_indexes):
                     layer_output = all_encoder_layers[int(layer_index)].detach().cpu()[b]
                     all_layers.append(layer_output[i])
 
-                if i >= len(sentence.tokens): continue
+                subtoken_embeddings.append(torch.cat(all_layers))
 
+            # get the current sentence object
+            sentence: Sentence = sentences[sentence_index]
+            token_idx = 0
+            for token in sentence:
                 # add concatenated embedding to sentence
-                current_token: Token = sentence[i]
-                current_token.set_embedding(self.name, torch.cat(all_layers))
+                token_idx += 1
+                # use first subword embedding if pooling operation is 'first'
+                if self.pooling_operation == 'first':
+                    token.set_embedding(self.name, subtoken_embeddings[token_idx])
+                    token_idx += feature.token_subtoken_count[token.idx] - 1
+
+                # otherwise, do a mean over all subwords in token
+                else:
+                    embedding = subtoken_embeddings[token_idx]
+                    for subtoken_idx in range(token_idx + 1, token_idx + feature.token_subtoken_count[token.idx]):
+                        embedding += subtoken_embeddings[subtoken_idx]
+                        token_idx += 1
+                    token.set_embedding(self.name, embedding / feature.token_subtoken_count[token.idx])
 
         return sentences
 
