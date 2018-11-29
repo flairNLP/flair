@@ -603,35 +603,45 @@ class CharLMEmbeddings(TokenEmbeddings):
         return self.name
 
 
-class BertInputFeatures(object):
-    def __init__(self, unique_id, tokens, input_ids, input_mask, input_type_ids):
-        self.unique_id = unique_id
-        self.tokens = tokens
-        self.input_ids = input_ids
-        self.input_mask = input_mask
-        self.input_type_ids = input_type_ids
-
-
-class BertWordEmbeddings(TokenEmbeddings):
+class BertEmbeddings(TokenEmbeddings):
 
     def __init__(self,
                  bert_model: str = 'bert-base-uncased',
-                 layers: str = "-1,-2,-3,-4"):
-
+                 layers: str = '-1,-2,-3,-4',
+                 pooling_operation: str = 'mean'):
+        """
+        Bidirectional transformer embeddings of words, as proposed in Devlin et al., 2018.
+        :param bert_model: name of BERT model
+        :param layers: string indicating which layers to take for embedding
+        :param pooling_operation: how to get from token piece embeddings to token embedding. Either pool them and take
+        the average ('mean') or use first word piece embedding as token embedding ('first)
+        """
         super().__init__()
 
         self.tokenizer = BertTokenizer.from_pretrained(bert_model)
         self.model = BertModel.from_pretrained(bert_model)
         self.layer_indexes = [int(x) for x in layers.split(",")]
+        self.pooling_operation = pooling_operation
         self.name = str(bert_model)
         self.static_embeddings = True
+
+    class BertInputFeatures(object):
+        """Private class for holding BERT-formatted features"""
+
+        def __init__(self, unique_id, tokens, input_ids, input_mask, input_type_ids):
+            self.unique_id = unique_id
+            self.tokens = tokens
+            self.input_ids = input_ids
+            self.input_mask = input_mask
+            self.input_type_ids = input_type_ids
 
     def _convert_sentences_to_features(self, sentences, max_sequence_length: int) -> [BertInputFeatures]:
 
         max_sequence_length = max_sequence_length + 2
 
-        features = []
+        features: List[BertEmbeddings.BertInputFeatures] = []
         for (sentence_index, sentence) in enumerate(sentences):
+
             # tokens_sentence = self.tokenizer.tokenize(sentence.to_original_text())
             tokens_sentence = sentence.to_tokenized_string().lower().split(' ')
             for index, token in enumerate(tokens_sentence):
@@ -661,7 +671,7 @@ class BertWordEmbeddings(TokenEmbeddings):
                 input_mask.append(0)
                 input_type_ids.append(0)
 
-            features.append(BertInputFeatures(
+            features.append(BertEmbeddings.BertInputFeatures(
                 unique_id=sentence_index,
                 tokens=tokens,
                 input_ids=input_ids,
@@ -677,6 +687,7 @@ class BertWordEmbeddings(TokenEmbeddings):
         # first, find longest sentence in batch
         longest_sentence_in_batch: int = len(max(sentences, key=len))
 
+        # prepare id maps for BERT model
         features = self._convert_sentences_to_features(sentences, longest_sentence_in_batch)
 
         if torch.cuda.is_available():
