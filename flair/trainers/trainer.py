@@ -121,14 +121,14 @@ class ModelTrainer:
               **kwargs
               ) -> dict:
 
+        # cast string to Path
+        if type(base_path) is str:
+            base_path = Path(base_path)
+
         add_file_handler(log, base_path / 'training-log.txt')
 
         log_line(log)
         log.info(f'Evaluation method: {evaluation_metric.name}')
-
-        # cast string to Path
-        if type(base_path) is str:
-            base_path = Path(base_path)
 
         if not param_selection_mode:
             loss_txt = init_output_file(base_path, 'loss.tsv')
@@ -161,9 +161,6 @@ class ModelTrainer:
         # if training also uses dev data, include in training set
         if train_with_dev:
             train_data.extend(self.corpus.dev)
-
-        current_loss = 0.0
-        current_score = 0.0
 
         loss_history = []
         score_history = []
