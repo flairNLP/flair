@@ -2,6 +2,7 @@ import time, datetime
 import random
 import logging
 from pathlib import Path
+from typing import Union
 
 from torch.autograd import Variable
 from torch.optim.sgd import SGD
@@ -177,7 +178,7 @@ class LanguageModelTrainer:
         self.optimizer_state = optimizer_state
 
     def train(self,
-              base_path: Path,
+              base_path: Union[Path, str],
               sequence_length: int,
               learning_rate: float = 20,
               mini_batch_size: int = 100,
@@ -187,6 +188,10 @@ class LanguageModelTrainer:
               max_epochs: int = 1000,
               checkpoint: bool = False,
               **kwargs):
+
+        # cast string to Path
+        if type(base_path) is str:
+            base_path = Path(base_path)
 
         add_file_handler(log, base_path / 'training-log.txt')
 
