@@ -10,6 +10,7 @@ from torch.optim import Optimizer
 import flair.nn
 import flair.embeddings
 from flair.data import Dictionary, Sentence, Label
+from flair.file_utils import cached_path
 from flair.training_utils import convert_labels_to_one_hot, clear_embeddings
 
 
@@ -259,3 +260,17 @@ class TextClassifier(flair.nn.Model):
             vec = vec.cuda()
 
         return vec
+
+    @staticmethod
+    def load(model: str):
+        model_file = None
+        aws_resource_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4'
+        cache_dir = Path('models')
+
+        if model.lower() == 'de-offensive-language':
+            base_path = '/'.join([aws_resource_path, 'TEXT-CLASSIFICATION_germ-eval-2018_task-1',
+                                  'germ-eval-2018-task-1.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
+        if model_file is not None:
+            return TextClassifier.load_from_file(model_file)
