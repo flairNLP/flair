@@ -13,7 +13,7 @@ from flair.hyperparameter.parameter import SEQUENCE_TAGGER_PARAMETERS, TRAINING_
     DOCUMENT_EMBEDDING_PARAMETERS, MODEL_TRAINER_PARAMETERS
 from flair.models import SequenceTagger, TextClassifier
 from flair.trainers import ModelTrainer
-from flair.training_utils import EvaluationMetric, log_line, init_output_file
+from flair.training_utils import EvaluationMetric, log_line, init_output_file, add_file_handler
 
 log = logging.getLogger(__name__)
 
@@ -48,19 +48,21 @@ class ParamSelector(object):
 
         self.param_selection_file = init_output_file(base_path, 'param_selection.txt')
 
+        add_file_handler(log, base_path / 'param_selection.log')
+
     @abstractmethod
     def _set_up_model(self, params: dict) -> flair.nn.Model:
         pass
 
     def _objective(self, params: dict):
-        log_line()
+        log_line(log)
         log.info(f'Evaluation run: {self.run}')
         log.info(f'Evaluating parameter combination:')
         for k, v in params.items():
             if isinstance(v, Tuple):
                 v = ','.join([str(x) for x in v])
             log.info(f'\t{k}: {str(v)}')
-        log_line()
+        log_line(log)
 
         for sent in self.corpus.get_all_sentences():
             sent.clear_embeddings()
@@ -68,7 +70,7 @@ class ParamSelector(object):
         scores = []
 
         for i in range(0, self.training_runs):
-            log_line()
+            log_line(log)
             log.info(f'Training run: {i + 1}')
 
             model = self._set_up_model(params)
@@ -89,17 +91,17 @@ class ParamSelector(object):
             score = sum(l) / float(len(l))
             scores.append(score)
 
-        # take average over the scroes from the different training runs
-        final_score = sum(scores) / float(len(scores))
+        # take average over the scores from the different training runs
+        final_score = 1 - (sum(scores) / float(len(scores)))
 
-        log_line()
+        log_line(log)
         log.info(f'Done evaluating parameter combination:')
         for k, v in params.items():
             if isinstance(v, Tuple):
                 v = ','.join([str(x) for x in v])
             log.info(f'\t{k}: {v}')
         log.info(f'Score: {final_score}')
-        log_line()
+        log_line(log)
 
         with open(self.param_selection_file, 'a') as f:
             f.write(f'evaluation run {self.run}\n')
@@ -118,12 +120,12 @@ class ParamSelector(object):
         search_space = space.search_space
         best = fmin(self._objective, search_space, algo=tpe.suggest, max_evals=max_evals)
 
-        log_line()
+        log_line(log)
         log.info('Optimizing parameter configuration done.')
         log.info('Best parameter configuration found:')
         for k, v in best.items():
             log.info(f'\t{k}: {v}')
-        log_line()
+        log_line(log)
 
         with open(self.param_selection_file, 'a') as f:
             f.write('best parameter combination\n')

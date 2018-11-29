@@ -10,7 +10,8 @@ import flair
 import flair.nn
 from flair.data import Sentence, Token, MultiCorpus, Corpus
 from flair.models import TextClassifier, SequenceTagger
-from flair.training_utils import Metric, init_output_file, WeightExtractor, clear_embeddings, EvaluationMetric, log_line
+from flair.training_utils import Metric, init_output_file, WeightExtractor, clear_embeddings, EvaluationMetric, \
+    log_line, add_file_handler
 from flair.optim import *
 
 log = logging.getLogger(__name__)
@@ -88,16 +89,16 @@ class ModelTrainer:
                 f.write(f'{itr}\t{datetime.datetime.now():%H:%M:%S}\t{learning_rate}\t{loss_item}\n')
 
             if stop_early and loss_item > 4 * best_loss:
-                log_line()
+                log_line(log)
                 log.info('loss diverged - stopping early!')
                 break
 
         self.model.load_state_dict(model_state)
         self.model.to(model_device)
 
-        log_line()
+        log_line(log)
         log.info(f'learning rate finder finished - plot {learning_rate_tsv}')
-        log_line()
+        log_line(log)
 
         return Path(learning_rate_tsv)
 
@@ -120,7 +121,9 @@ class ModelTrainer:
               **kwargs
               ) -> dict:
 
-        log_line()
+        add_file_handler(log, base_path / 'training-log.txt')
+
+        log_line(log)
         log.info(f'Evaluation method: {evaluation_metric.name}')
 
         # cast string to Path
@@ -170,7 +173,7 @@ class ModelTrainer:
             previous_learning_rate = learning_rate
 
             for epoch in range(0 + self.epoch, max_epochs + self.epoch):
-                log_line()
+                log_line(log)
 
                 # bad_epochs = scheduler.num_bad_epochs
                 bad_epochs = 0
@@ -187,9 +190,9 @@ class ModelTrainer:
 
                 # stop training if learning rate becomes too small
                 if learning_rate < 0.0001:
-                    log_line()
+                    log_line(log)
                     log.info('learning rate too small - quitting training!')
-                    log_line()
+                    log_line(log)
                     break
 
                 if not test_mode:
@@ -227,7 +230,7 @@ class ModelTrainer:
 
                 self.model.eval()
 
-                log_line()
+                log_line(log)
                 log.info(f'EPOCH {epoch + 1}: lr {learning_rate:.4f} - bad epochs {bad_epochs}')
 
                 dev_metric = None
@@ -288,7 +291,7 @@ class ModelTrainer:
                 self.model.save(base_path / 'final-model.pt')
 
         except KeyboardInterrupt:
-            log_line()
+            log_line(log)
             log.info('Exiting from training early.')
             if not param_selection_mode:
                 log.info('Saving model ...')
@@ -307,7 +310,7 @@ class ModelTrainer:
                    evaluation_metric: EvaluationMetric,
                    mini_batch_size: int):
 
-        log_line()
+        log_line(log)
         log.info('Testing using best model ...')
 
         self.model.eval()
@@ -329,12 +332,12 @@ class ModelTrainer:
                      f'{test_metric.precision(class_name):.4f} - recall: {test_metric.recall(class_name):.4f} - '
                      f'accuracy: {test_metric.accuracy(class_name):.4f} - f1-score: '
                      f'{test_metric.f_score(class_name):.4f}')
-        log_line()
+        log_line(log)
 
         # if we are training over multiple datasets, do evaluation for each
         if type(self.corpus) is MultiCorpus:
             for subcorpus in self.corpus.corpora:
-                log_line()
+                log_line(log)
                 self._calculate_evaluation_results_for(subcorpus.name, subcorpus.test, evaluation_metric,
                                                        embeddings_in_memory, mini_batch_size, base_path / 'test.tsv')
 

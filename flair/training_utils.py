@@ -9,9 +9,6 @@ from flair.data import Dictionary, Sentence
 from functools import reduce
 
 
-log = logging.getLogger(__name__)
-
-
 class Metric(object):
 
     def __init__(self, name):
@@ -232,5 +229,14 @@ def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionar
     return [[1 if l in labels else 0 for l in label_dict.get_items()] for labels in label_list]
 
 
-def log_line():
+def log_line(log):
     log.info('-' * 100)
+
+
+def add_file_handler(log, output_file):
+    init_output_file(output_file.parents[0], output_file.name)
+    fh = logging.FileHandler(output_file)
+    fh.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)-15s %(message)s')
+    fh.setFormatter(formatter)
+    log.addHandler(fh)
