@@ -91,8 +91,8 @@ class ParamSelector(object):
             score = sum(l) / float(len(l))
             scores.append(score)
 
-        # take average over the scroes from the different training runs
-        final_score = sum(scores) / float(len(scores))
+        # take average over the scores from the different training runs
+        final_score = 1 - (sum(scores) / float(len(scores)))
 
         log_line(log)
         log.info(f'Done evaluating parameter combination:')
