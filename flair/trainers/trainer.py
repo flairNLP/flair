@@ -121,7 +121,7 @@ class ModelTrainer:
               **kwargs
               ) -> dict:
 
-        add_file_handler(log, base_path / 'training.log')
+        add_file_handler(log, base_path / 'training-log.txt')
 
         log_line(log)
         log.info(f'Evaluation method: {evaluation_metric.name}')

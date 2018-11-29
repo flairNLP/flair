@@ -188,7 +188,7 @@ class LanguageModelTrainer:
               checkpoint: bool = False,
               **kwargs):
 
-        add_file_handler(log, base_path / 'training.log')
+        add_file_handler(log, base_path / 'training-log.txt')
 
         number_of_splits: int = len(self.corpus.train_files)
 
