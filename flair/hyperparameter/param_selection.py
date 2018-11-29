@@ -48,8 +48,6 @@ class ParamSelector(object):
 
         self.param_selection_file = init_output_file(base_path, 'param_selection.txt')
 
-        add_file_handler(log, base_path / 'param_selection.log')
-
     @abstractmethod
     def _set_up_model(self, params: dict) -> flair.nn.Model:
         pass
