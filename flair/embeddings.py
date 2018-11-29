@@ -706,39 +706,39 @@ class BertEmbeddings(TokenEmbeddings):
         self.model.eval()
         all_encoder_layers, _ = self.model(all_input_ids, token_type_ids=None, attention_mask=all_input_masks)
 
-        all_sentence_indices = torch.arange(all_input_ids.size(0), dtype=torch.long)
+        with torch.no_grad():
 
-        for b, sentence_index in enumerate(all_sentence_indices):
-            feature = features[sentence_index.item()]
+            for sentence_index, sentence in enumerate(sentences):
 
-            # get aggregated embeddings for each BERT-subtoken in sentence
-            subtoken_embeddings = []
-            for (i, _) in enumerate(feature.tokens):
-                all_layers = []
-                for (j, layer_index) in enumerate(self.layer_indexes):
-                    layer_output = all_encoder_layers[int(layer_index)].detach().cpu()[b]
-                    all_layers.append(layer_output[i])
+                feature = features[sentence_index]
 
-                subtoken_embeddings.append(torch.cat(all_layers))
+                # get aggregated embeddings for each BERT-subtoken in sentence
+                subtoken_embeddings = []
+                for token_index, _ in enumerate(feature.tokens):
+                    all_layers = []
+                    for layer_index in self.layer_indexes:
+                        layer_output = all_encoder_layers[int(layer_index)].detach().cpu()[sentence_index]
+                        all_layers.append(layer_output[token_index])
 
-            # get the current sentence object
-            sentence: Sentence = sentences[sentence_index]
-            token_idx = 0
-            for token in sentence:
-                # add concatenated embedding to sentence
-                token_idx += 1
-                # use first subword embedding if pooling operation is 'first'
-                if self.pooling_operation == 'first':
-                    token.set_embedding(self.name, subtoken_embeddings[token_idx])
+                    subtoken_embeddings.append(torch.cat(all_layers))
+
+                # get the current sentence object
+                token_idx = 0
+                for token in sentence:
+                    # add concatenated embedding to sentence
+                    token_idx += 1
+
+                    if self.pooling_operation == 'first':
+                        # use first subword embedding if pooling operation is 'first'
+                        token.set_embedding(self.name, subtoken_embeddings[token_idx])
+                    else:
+                        # otherwise, do a mean over all subwords in token
+                        embeddings = subtoken_embeddings[token_idx:token_idx + feature.token_subtoken_count[token.idx]]
+                        embeddings = [embedding.unsqueeze(0) for embedding in embeddings]
+                        mean = torch.mean(torch.cat(embeddings, dim=0), dim=0)
+                        token.set_embedding(self.name, mean)
+
                     token_idx += feature.token_subtoken_count[token.idx] - 1
-
-                # otherwise, do a mean over all subwords in token
-                else:
-                    embedding = subtoken_embeddings[token_idx]
-                    for subtoken_idx in range(token_idx + 1, token_idx + feature.token_subtoken_count[token.idx]):
-                        embedding += subtoken_embeddings[subtoken_idx]
-                        token_idx += 1
-                    token.set_embedding(self.name, embedding / feature.token_subtoken_count[token.idx])
 
         return sentences
 
