@@ -18,11 +18,6 @@ from flair.optim import *
 log = logging.getLogger(__name__)
 
 
-class AnnealAgainst(Enum):
-    TRAIN_LOSS: str = 'train_loss'
-    DEV_SCORE: str = 'dev_score'
-
-
 class ModelTrainer:
 
     def __init__(self,
@@ -42,71 +37,6 @@ class ModelTrainer:
         self.scheduler_state: dict = scheduler_state
         self.optimizer_state: dict = optimizer_state
 
-    def find_learning_rate(self,
-                           base_path: Path,
-                           start_learning_rate: float = 1e-7,
-                           end_learning_rate: float = 10,
-                           iterations: int = 100,
-                           mini_batch_size: int = 32,
-                           stop_early: bool = True,
-                           smoothing_factor: float = 0.05,
-                           **kwargs
-                           ) -> Path:
-        loss_history = []
-        best_loss = None
-
-        learning_rate_tsv = init_output_file(base_path, 'learning_rate.tsv')
-        with open(learning_rate_tsv, 'a') as f:
-            f.write('ITERATION\tTIMESTAMP\tLEARNING_RATE\tTRAIN_LOSS\n')
-
-        optimizer = self.optimizer(self.model.parameters(), lr=start_learning_rate, **kwargs)
-
-        train_data = self.corpus.train
-        random.shuffle(train_data)
-        batches = [train_data[x:x + mini_batch_size] for x in range(0, len(train_data), mini_batch_size)][:iterations]
-
-        scheduler = ExpAnnealLR(optimizer, end_learning_rate, iterations)
-
-        model_state = self.model.state_dict()
-        model_device = next(self.model.parameters()).device
-        self.model.train()
-
-        for itr, batch in enumerate(batches):
-            loss = self.model.forward_loss(batch)
-
-            optimizer.zero_grad()
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
-            optimizer.step()
-            scheduler.step()
-            learning_rate = scheduler.get_lr()[0]
-
-            loss_item = loss.item()
-            if itr == 0:
-                best_loss = loss_item
-            else:
-                if smoothing_factor > 0:
-                    loss_item = smoothing_factor * loss_item + (1 - smoothing_factor) * loss_history[-1]
-                if loss_item < best_loss:
-                    best_loss = loss
-            loss_history.append(loss_item)
-
-            with open(learning_rate_tsv, 'a') as f:
-                f.write(f'{itr}\t{datetime.datetime.now():%H:%M:%S}\t{learning_rate}\t{loss_item}\n')
-
-            if stop_early and loss_item > 4 * best_loss:
-                log_line(log)
-                log.info('loss diverged - stopping early!')
-                break
-
-        self.model.load_state_dict(model_state)
-        self.model.to(model_device)
-
-        log_line(log)
-        log.info(f'learning rate finder finished - plot {learning_rate_tsv}')
-        log_line(log)
-
-        return Path(learning_rate_tsv)
 
     def train(self,
               base_path: Union[Path, str],
@@ -116,7 +46,7 @@ class ModelTrainer:
               max_epochs: int = 100,
               anneal_factor: float = 0.5,
               patience: int = 3,
-              anneal_against: AnnealAgainst = AnnealAgainst.TRAIN_LOSS,
+              anneal_against_train_loss: bool = True,
               train_with_dev: bool = False,
               monitor_train: bool = False,
               embeddings_in_memory: bool = True,
@@ -151,7 +81,7 @@ class ModelTrainer:
             optimizer.load_state_dict(self.optimizer_state)
 
         # annealing scheduler
-        anneal_mode = 'min' if anneal_against == AnnealAgainst.TRAIN_LOSS else 'max'
+        anneal_mode = 'min' if anneal_against_train_loss else 'max'
         if isinstance(optimizer, (AdamW, SGDW)):
             scheduler = ReduceLRWDOnPlateau(optimizer, factor=anneal_factor,
                                             patience=patience, mode=anneal_mode,
@@ -279,9 +209,7 @@ class ModelTrainer:
                     dev_loss_history.append(dev_loss.item())
 
                 # anneal against train loss if training with dev, otherwise anneal against dev score
-                current_score = train_loss
-                if anneal_against == AnnealAgainst.DEV_SCORE:
-                    current_score = dev_score
+                current_score = train_loss if anneal_against_train_loss else dev_score
 
                 scheduler.step(current_score)
 
@@ -511,3 +439,69 @@ class ModelTrainer:
                                 scheduler_state=checkpoint['scheduler_state_dict'])
 
         raise ValueError('Incorrect model type! Use one of the following: "SequenceTagger", "TextClassifier".')
+
+    def find_learning_rate(self,
+                           base_path: Path,
+                           start_learning_rate: float = 1e-7,
+                           end_learning_rate: float = 10,
+                           iterations: int = 100,
+                           mini_batch_size: int = 32,
+                           stop_early: bool = True,
+                           smoothing_factor: float = 0.05,
+                           **kwargs
+                           ) -> Path:
+        loss_history = []
+        best_loss = None
+
+        learning_rate_tsv = init_output_file(base_path, 'learning_rate.tsv')
+        with open(learning_rate_tsv, 'a') as f:
+            f.write('ITERATION\tTIMESTAMP\tLEARNING_RATE\tTRAIN_LOSS\n')
+
+        optimizer = self.optimizer(self.model.parameters(), lr=start_learning_rate, **kwargs)
+
+        train_data = self.corpus.train
+        random.shuffle(train_data)
+        batches = [train_data[x:x + mini_batch_size] for x in range(0, len(train_data), mini_batch_size)][:iterations]
+
+        scheduler = ExpAnnealLR(optimizer, end_learning_rate, iterations)
+
+        model_state = self.model.state_dict()
+        model_device = next(self.model.parameters()).device
+        self.model.train()
+
+        for itr, batch in enumerate(batches):
+            loss = self.model.forward_loss(batch)
+
+            optimizer.zero_grad()
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
+            optimizer.step()
+            scheduler.step()
+            learning_rate = scheduler.get_lr()[0]
+
+            loss_item = loss.item()
+            if itr == 0:
+                best_loss = loss_item
+            else:
+                if smoothing_factor > 0:
+                    loss_item = smoothing_factor * loss_item + (1 - smoothing_factor) * loss_history[-1]
+                if loss_item < best_loss:
+                    best_loss = loss
+            loss_history.append(loss_item)
+
+            with open(learning_rate_tsv, 'a') as f:
+                f.write(f'{itr}\t{datetime.datetime.now():%H:%M:%S}\t{learning_rate}\t{loss_item}\n')
+
+            if stop_early and loss_item > 4 * best_loss:
+                log_line(log)
+                log.info('loss diverged - stopping early!')
+                break
+
+        self.model.load_state_dict(model_state)
+        self.model.to(model_device)
+
+        log_line(log)
+        log.info(f'learning rate finder finished - plot {learning_rate_tsv}')
+        log_line(log)
+
+        return Path(learning_rate_tsv)
