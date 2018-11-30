@@ -74,7 +74,7 @@ class ParamSelector(object):
         for sent in self.corpus.get_all_sentences():
             sent.clear_embeddings()
 
-        losses = []
+        scores = []
         vars = []
 
         for i in range(0, self.training_runs):
@@ -99,13 +99,13 @@ class ParamSelector(object):
                 curr_scores = result['loss_history'][-3:]
             else:
                 curr_scores = list(map(lambda s: 1 - s, result['score_history'][-3:]))
-            loss = sum(curr_scores) / float(len(curr_scores))
+            score = sum(curr_scores) / float(len(curr_scores))
             var = np.var(curr_scores)
-            losses.append(loss)
+            scores.append(score)
             vars.append(var)
 
         # take average over the scores from the different training runs
-        final_loss = (sum(losses) / float(len(losses)))
+        final_score = (sum(scores) / float(len(scores)))
         final_var = (sum(vars) / float(len(vars)))
 
         log_line(log)
@@ -114,7 +114,7 @@ class ParamSelector(object):
             if isinstance(v, Tuple):
                 v = ','.join([str(x) for x in v])
             log.info(f'\t{k}: {v}')
-        log.info(f'{self.optimization_value.value}: {final_loss}')
+        log.info(f'{self.optimization_value.value}: {final_score}')
         log.info(f'variance: {final_var}')
         log_line(log)
 
@@ -124,7 +124,7 @@ class ParamSelector(object):
                 if isinstance(v, Tuple):
                     v = ','.join([str(x) for x in v])
                 f.write(f'\t{k}: {str(v)}\n')
-            f.write(f'{self.optimization_value.value}: {final_loss}\n')
+            f.write(f'{self.optimization_value.value}: {final_score}\n')
             f.write(f'variance: {final_var}\n')
             f.write('-' * 100 + '\n')
 
@@ -132,7 +132,7 @@ class ParamSelector(object):
 
         return {
             'status': 'ok',
-            'loss': final_loss,
+            'loss': final_score,
             'loss_variance': final_var
         }
 
