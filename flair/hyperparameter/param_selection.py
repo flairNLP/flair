@@ -1,5 +1,6 @@
 import logging
 from abc import abstractmethod
+from enum import Enum
 from pathlib import Path
 from typing import Tuple
 import numpy as np
@@ -19,6 +20,11 @@ from flair.training_utils import EvaluationMetric, log_line, init_output_file, a
 log = logging.getLogger(__name__)
 
 
+class OptimizationValue(Enum):
+    DEV_LOSS = 'loss'
+    DEV_SCORE = 'score'
+
+
 class SearchSpace(object):
 
     def __init__(self):
@@ -36,9 +42,10 @@ class ParamSelector(object):
     def __init__(self,
                  corpus: Corpus,
                  base_path: Path,
-                 max_epochs: int = 50,
-                 evaluation_metric:EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
-                 training_runs: int = 1
+                 max_epochs: int,
+                 evaluation_metric: EvaluationMetric,
+                 training_runs: int,
+                 optimization_value: OptimizationValue
                  ):
         self.corpus = corpus
         self.max_epochs = max_epochs
@@ -46,6 +53,7 @@ class ParamSelector(object):
         self.evaluation_metric = evaluation_metric
         self.run = 1
         self.training_runs = training_runs
+        self.optimization_value = optimization_value
 
         self.param_selection_file = init_output_file(base_path, 'param_selection.txt')
 
@@ -87,9 +95,12 @@ class ParamSelector(object):
                                    **training_params)
 
             # take the average over the last three scores of training
-            last_losses = result['loss_history'][-3:]
-            loss = sum(last_losses) / float(len(last_losses))
-            var = np.var(last_losses)
+            if self.optimization_value == OptimizationValue.DEV_LOSS:
+                curr_scores = result['loss_history'][-3:]
+            else:
+                curr_scores = list(map(lambda s: 1 - s, result['score_history'][-3:]))
+            loss = sum(curr_scores) / float(len(curr_scores))
+            var = np.var(curr_scores)
             losses.append(loss)
             vars.append(var)
 
@@ -103,8 +114,8 @@ class ParamSelector(object):
             if isinstance(v, Tuple):
                 v = ','.join([str(x) for x in v])
             log.info(f'\t{k}: {v}')
-        log.info(f'Loss: {final_loss}')
-        log.info(f'Variance: {final_var}')
+        log.info(f'{self.optimization_value.value}: {final_loss}')
+        log.info(f'variance: {final_var}')
         log_line(log)
 
         with open(self.param_selection_file, 'a') as f:
@@ -113,8 +124,8 @@ class ParamSelector(object):
                 if isinstance(v, Tuple):
                     v = ','.join([str(x) for x in v])
                 f.write(f'\t{k}: {str(v)}\n')
-            f.write(f'loss: {final_loss}\n')
-            f.write(f'var: {final_var}\n')
+            f.write(f'{self.optimization_value.value}: {final_loss}\n')
+            f.write(f'variance: {final_var}\n')
             f.write('-' * 100 + '\n')
 
         self.run += 1
@@ -152,8 +163,9 @@ class SequenceTaggerParamSelector(ParamSelector):
                  base_path: Path,
                  max_epochs: int = 50,
                  evaluation_metric:EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
-                 training_runs: int = 1):
-        super().__init__(corpus, base_path, max_epochs, evaluation_metric, training_runs)
+                 training_runs: int = 1,
+                 optimization_value: OptimizationValue = OptimizationValue.DEV_LOSS):
+        super().__init__(corpus, base_path, max_epochs, evaluation_metric, training_runs, optimization_value)
 
         self.tag_type = tag_type
         self.tag_dictionary = self.corpus.make_tag_dictionary(self.tag_type)
@@ -176,8 +188,9 @@ class TextClassifierParamSelector(ParamSelector):
                  document_embedding_type: str,
                  max_epochs: int = 50,
                  evaluation_metric:EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
-                 training_runs: int = 1):
-        super().__init__(corpus, base_path, max_epochs, evaluation_metric, training_runs)
+                 training_runs: int = 1,
+                 optimization_value: OptimizationValue = OptimizationValue.DEV_LOSS):
+        super().__init__(corpus, base_path, max_epochs, evaluation_metric, training_runs, optimization_value)
 
         self.multi_label = multi_label
         self.document_embedding_type = document_embedding_type
