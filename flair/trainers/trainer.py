@@ -1,3 +1,4 @@
+from enum import Enum
 from pathlib import Path
 from typing import List, Union
 
@@ -15,6 +16,11 @@ from flair.training_utils import Metric, init_output_file, WeightExtractor, clea
 from flair.optim import *
 
 log = logging.getLogger(__name__)
+
+
+class AnnealAgainst(Enum):
+    TRAIN_LOSS: str = 'train_loss'
+    DEV_SCORE: str = 'dev_score'
 
 
 class ModelTrainer:
@@ -109,7 +115,8 @@ class ModelTrainer:
               mini_batch_size: int = 32,
               max_epochs: int = 100,
               anneal_factor: float = 0.5,
-              patience: int = 4,
+              patience: int = 3,
+              anneal_against: AnnealAgainst = AnnealAgainst.TRAIN_LOSS,
               train_with_dev: bool = False,
               monitor_train: bool = False,
               embeddings_in_memory: bool = True,
@@ -144,7 +151,7 @@ class ModelTrainer:
             optimizer.load_state_dict(self.optimizer_state)
 
         # annealing scheduler
-        anneal_mode = 'min' if train_with_dev else 'max'
+        anneal_mode = 'min' if anneal_against == AnnealAgainst.TRAIN_LOSS else 'max'
         if isinstance(optimizer, (AdamW, SGDW)):
             scheduler = ReduceLRWDOnPlateau(optimizer, factor=anneal_factor,
                                             patience=patience, mode=anneal_mode,
@@ -162,8 +169,9 @@ class ModelTrainer:
         if train_with_dev:
             train_data.extend(self.corpus.dev)
 
-        loss_history = []
         score_history = []
+        dev_loss_history = []
+        train_loss_history = []
 
         # At any point you can hit Ctrl + C to break out of training early.
         try:
@@ -172,8 +180,7 @@ class ModelTrainer:
             for epoch in range(0 + self.epoch, max_epochs + self.epoch):
                 log_line(log)
 
-                # bad_epochs = scheduler.num_bad_epochs
-                bad_epochs = 0
+                bad_epochs = scheduler.num_bad_epochs
                 for group in optimizer.param_groups:
                     learning_rate = group['lr']
 
@@ -199,7 +206,7 @@ class ModelTrainer:
 
                 self.model.train()
 
-                current_loss: float = 0
+                train_loss: float = 0
                 seen_sentences = 0
                 modulo = max(1, int(len(batches) / 10))
 
@@ -212,23 +219,23 @@ class ModelTrainer:
                     optimizer.step()
 
                     seen_sentences += len(batch)
-                    current_loss += loss.item()
+                    train_loss += loss.item()
 
                     clear_embeddings(batch, also_clear_word_embeddings=not embeddings_in_memory)
 
                     if batch_no % modulo == 0:
                         log.info(f'epoch {epoch + 1} - iter {batch_no}/{len(batches)} - loss '
-                                 f'{current_loss / seen_sentences:.8f}')
+                                 f'{train_loss / seen_sentences:.8f}')
                         iteration = epoch * len(batches) + batch_no
                         if not param_selection_mode:
                             weight_extractor.extract_weights(self.model.state_dict(), iteration)
 
-                current_loss /= len(train_data)
+                train_loss /= len(train_data)
 
                 self.model.eval()
 
                 log_line(log)
-                log.info(f'EPOCH {epoch + 1}: lr {learning_rate:.4f} - bad epochs {bad_epochs}')
+                log.info(f'EPOCH {epoch + 1} done: loss {train_loss:.4f} - lr {learning_rate:.4f} - bad epochs {bad_epochs}')
 
                 dev_metric = None
                 dev_loss = '_'
@@ -253,34 +260,38 @@ class ModelTrainer:
                         test_metric_str = test_metric.to_tsv() if test_metric is not None else Metric.to_empty_tsv()
                         f.write(
                             f'{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t'
-                            f'{current_loss}\t{train_metric_str}\t{dev_loss}\t{dev_metric_str}\t_\t{test_metric_str}\n')
+                            f'{train_loss}\t{train_metric_str}\t{dev_loss}\t{dev_metric_str}\t_\t{test_metric_str}\n')
+
+                # calculate scores using dev data if available
+                dev_score = 0.
+                if not train_with_dev:
+                    if evaluation_metric == EvaluationMetric.MACRO_ACCURACY:
+                        dev_score = dev_metric.macro_avg_accuracy()
+                    elif evaluation_metric == EvaluationMetric.MICRO_ACCURACY:
+                        dev_score = dev_metric.micro_avg_accuracy()
+                    elif evaluation_metric == EvaluationMetric.MACRO_F1_SCORE:
+                        dev_score = dev_metric.macro_avg_f_score()
+                    else:
+                        dev_score = dev_metric.micro_avg_f_score()
+
+                    # append dev score to score history
+                    score_history.append(dev_score)
+                    dev_loss_history.append(dev_loss.item())
 
                 # anneal against train loss if training with dev, otherwise anneal against dev score
-                if train_with_dev:
-                    current_score = current_loss
-                else:
-                    if evaluation_metric == EvaluationMetric.MACRO_ACCURACY:
-                        current_score = dev_metric.macro_avg_accuracy()
-                    elif evaluation_metric == EvaluationMetric.MICRO_ACCURACY:
-                        current_score = dev_metric.micro_avg_accuracy()
-                    elif evaluation_metric == EvaluationMetric.MACRO_F1_SCORE:
-                        current_score = dev_metric.macro_avg_f_score()
-                    else:
-                        current_score = dev_metric.micro_avg_f_score()
+                current_score = train_loss
+                if anneal_against == AnnealAgainst.DEV_SCORE:
+                    current_score = dev_score
 
                 scheduler.step(current_score)
 
-                score_history.append(current_score)
-                if not train_with_dev:
-                    loss_history.append(dev_loss)
-                else:
-                    loss_history.append(current_loss)
+                train_loss_history.append(train_loss)
 
                 # if checkpoint is enable, save model at each epoch
                 if checkpoint and not param_selection_mode:
                     self.model.save_checkpoint(base_path / 'checkpoint.pt',
                                                optimizer.state_dict(), scheduler.state_dict(),
-                                               epoch + 1, current_loss)
+                                               epoch + 1, train_loss)
 
                 # if we use dev data, remember best model based on dev evaluation score
                 if not train_with_dev and not param_selection_mode and current_score == scheduler.best:
@@ -302,7 +313,10 @@ class ModelTrainer:
         if not param_selection_mode:
             final_score = self.final_test(base_path, embeddings_in_memory, evaluation_metric, mini_batch_size)
 
-        return {'test_score': final_score, 'score_history': score_history, 'loss_history': loss_history}
+        return {'test_score': final_score,
+                'score_history': score_history,
+                'train_loss_history': train_loss_history,
+                'dev_loss_history': dev_loss_history}
 
     def final_test(self,
                    base_path: Path,
