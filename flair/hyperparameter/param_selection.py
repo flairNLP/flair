@@ -2,6 +2,7 @@ import logging
 from abc import abstractmethod
 from pathlib import Path
 from typing import Tuple
+import numpy as np
 
 from hyperopt import hp, fmin, tpe
 
@@ -65,7 +66,8 @@ class ParamSelector(object):
         for sent in self.corpus.get_all_sentences():
             sent.clear_embeddings()
 
-        scores = []
+        losses = []
+        vars = []
 
         for i in range(0, self.training_runs):
             log_line(log)
@@ -85,12 +87,15 @@ class ParamSelector(object):
                                    **training_params)
 
             # take the average over the last three scores of training
-            l = result['score_history'][-3:]
-            score = sum(l) / float(len(l))
-            scores.append(score)
+            last_losses = result['loss_history'][-3:]
+            loss = sum(last_losses) / float(len(last_losses))
+            var = np.var(last_losses)
+            losses.append(loss)
+            vars.append(var)
 
         # take average over the scores from the different training runs
-        final_score = 1 - (sum(scores) / float(len(scores)))
+        final_loss = (sum(losses) / float(len(losses)))
+        final_var = (sum(vars) / float(len(vars)))
 
         log_line(log)
         log.info(f'Done evaluating parameter combination:')
@@ -98,7 +103,8 @@ class ParamSelector(object):
             if isinstance(v, Tuple):
                 v = ','.join([str(x) for x in v])
             log.info(f'\t{k}: {v}')
-        log.info(f'Score: {final_score}')
+        log.info(f'Loss: {final_loss}')
+        log.info(f'Variance: {final_var}')
         log_line(log)
 
         with open(self.param_selection_file, 'a') as f:
@@ -107,12 +113,17 @@ class ParamSelector(object):
                 if isinstance(v, Tuple):
                     v = ','.join([str(x) for x in v])
                 f.write(f'\t{k}: {str(v)}\n')
-            f.write(f'score: {final_score}\n')
+            f.write(f'loss: {final_loss}\n')
+            f.write(f'var: {final_var}\n')
             f.write('-' * 100 + '\n')
 
         self.run += 1
 
-        return final_score
+        return {
+            'status': 'ok',
+            'loss': final_loss,
+            'loss_variance': final_var
+        }
 
     def optimize(self, space: SearchSpace, max_evals=100):
         search_space = space.search_space

@@ -271,7 +271,10 @@ class ModelTrainer:
                 scheduler.step(current_score)
 
                 score_history.append(current_score)
-                loss_history.append(current_loss)
+                if not train_with_dev:
+                    loss_history.append(dev_loss)
+                else:
+                    loss_history.append(current_loss)
 
                 # if checkpoint is enable, save model at each epoch
                 if checkpoint and not param_selection_mode:
