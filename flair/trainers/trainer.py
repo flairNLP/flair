@@ -37,19 +37,24 @@ class ModelTrainer:
         self.optimizer_state: dict = optimizer_state
 
     def find_learning_rate(self,
-                           base_path: Path,
+                           base_path: Union[Path, str],
+                           file_name: str = 'learning_rate.tsv',
                            start_learning_rate: float = 1e-7,
                            end_learning_rate: float = 10,
                            iterations: int = 100,
                            mini_batch_size: int = 32,
                            stop_early: bool = True,
-                           smoothing_factor: float = 0.05,
+                           smoothing_factor: float = 0.98,
                            **kwargs
                            ) -> Path:
-        loss_history = []
         best_loss = None
+        moving_avg_loss = 0
 
-        learning_rate_tsv = init_output_file(base_path, 'learning_rate.tsv')
+        # cast string to Path
+        if type(base_path) is str:
+            base_path = Path(base_path)
+        learning_rate_tsv = init_output_file(base_path, file_name)
+
         with open(learning_rate_tsv, 'a') as f:
             f.write('ITERATION\tTIMESTAMP\tLEARNING_RATE\tTRAIN_LOSS\n')
 
@@ -80,18 +85,18 @@ class ModelTrainer:
                 best_loss = loss_item
             else:
                 if smoothing_factor > 0:
-                    loss_item = smoothing_factor * loss_item + (1 - smoothing_factor) * loss_history[-1]
+                    moving_avg_loss = smoothing_factor * moving_avg_loss + (1 - smoothing_factor) * loss_item
+                    loss_item = moving_avg_loss / (1 - smoothing_factor ** (itr+1))
                 if loss_item < best_loss:
                     best_loss = loss
-            loss_history.append(loss_item)
 
-            with open(learning_rate_tsv, 'a') as f:
-                f.write(f'{itr}\t{datetime.datetime.now():%H:%M:%S}\t{learning_rate}\t{loss_item}\n')
-
-            if stop_early and loss_item > 4 * best_loss:
+            if stop_early and (loss_item > 4 * best_loss or torch.isnan(loss)):
                 log_line(log)
                 log.info('loss diverged - stopping early!')
                 break
+
+            with open(learning_rate_tsv, 'a') as f:
+                f.write(f'{itr}\t{datetime.datetime.now():%H:%M:%S}\t{learning_rate}\t{loss_item}\n')
 
         self.model.load_state_dict(model_state)
         self.model.to(model_device)

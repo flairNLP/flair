@@ -208,8 +208,13 @@ class Plotter(object):
 
         plt.close(fig)
 
-    def plot_learning_rate(self, file_name: Path):
+    def plot_learning_rate(self,
+                           file_name: Path,
+                           skip_first: int =10,
+                           skip_last: int = 5):
         lrs, losses = self._extract_learning_rate(file_name)
+        lrs = lrs[skip_first:-skip_last] if skip_last > 0 else lrs[skip_first:]
+        losses = losses[skip_first:-skip_last] if skip_last > 0 else losses[skip_first:]
 
         fig, ax = plt.subplots(1,1)
         ax.plot(lrs, losses)
