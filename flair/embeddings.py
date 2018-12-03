@@ -1,4 +1,5 @@
 import re
+import logging
 from abc import abstractmethod
 from pathlib import Path
 from typing import List, Union, Dict
@@ -14,6 +15,9 @@ from pytorch_pretrained_bert.modeling import BertModel, PRETRAINED_MODEL_ARCHIVE
 from .nn import LockedDropout, WordDropout
 from .data import Dictionary, Token, Sentence
 from .file_utils import cached_path
+
+
+log = logging.getLogger('flair')
 
 
 class Embeddings(torch.nn.Module):
@@ -258,12 +262,11 @@ class FlairEmbeddings(TokenEmbeddings):
         super().train(mode=mode)
         if mode:
             # if embeddings are dynamic, they need to be recomputed from scratch each time we do a training run
-            print('train mode resetting embeddings')
+            log.debug('train mode resetting embeddings')
             self.word_embeddings = {}
             self.word_count = {}
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         self.context_embeddings.embed(sentences)
 
         # first, update embeddings of entire batch
@@ -305,10 +308,10 @@ class ELMoEmbeddings(TokenEmbeddings):
         try:
             import allennlp.commands.elmo
         except:
-            print('\n\n----------------------------------------')
-            print('ACHTUNG! The library "allennlp" is not installed!\n')
-            print('To use ELMoEmbeddings, please first install with "pip install allennlp"')
-            print('----------------------------------------\n\n')
+            log.warning('-' * 100)
+            log.warning('ATTENTION! The library "allennlp" is not installed!')
+            log.warning('To use ELMoEmbeddings, please first install with "pip install allennlp"')
+            log.warning('-' * 100)
             pass
 
         self.name = 'elmo-' + model
