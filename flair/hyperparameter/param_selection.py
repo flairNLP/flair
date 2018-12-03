@@ -98,7 +98,7 @@ class ParamSelector(object):
             if self.optimization_value == OptimizationValue.DEV_LOSS:
                 curr_scores = result['dev_loss_history'][-3:]
             else:
-                curr_scores = list(map(lambda s: 1 - s, result['score_history'][-3:]))
+                curr_scores = list(map(lambda s: 1 - s, result['dev_score_history'][-3:]))
             score = sum(curr_scores) / float(len(curr_scores))
             var = np.var(curr_scores)
             scores.append(score)

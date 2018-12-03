@@ -99,7 +99,7 @@ class ModelTrainer:
         if train_with_dev:
             train_data.extend(self.corpus.dev)
 
-        score_history = []
+        dev_score_history = []
         dev_loss_history = []
         train_loss_history = []
 
@@ -179,9 +179,10 @@ class ModelTrainer:
                     dev_metric, dev_loss = self._calculate_evaluation_results_for(
                         'DEV', self.corpus.dev, evaluation_metric, embeddings_in_memory, mini_batch_size)
 
-                test_metric, test_loss = self._calculate_evaluation_results_for(
-                    'TEST', self.corpus.test, evaluation_metric, embeddings_in_memory, mini_batch_size,
-                    base_path / 'test.tsv')
+                if not param_selection_mode:
+                    test_metric, test_loss = self._calculate_evaluation_results_for(
+                        'TEST', self.corpus.test, evaluation_metric, embeddings_in_memory, mini_batch_size,
+                        base_path / 'test.tsv')
 
                 if not param_selection_mode:
                     with open(loss_txt, 'a') as f:
@@ -205,7 +206,7 @@ class ModelTrainer:
                         dev_score = dev_metric.micro_avg_f_score()
 
                     # append dev score to score history
-                    score_history.append(dev_score)
+                    dev_score_history.append(dev_score)
                     dev_loss_history.append(dev_loss.item())
 
                 # anneal against train loss if training with dev, otherwise anneal against dev score
@@ -242,7 +243,7 @@ class ModelTrainer:
             final_score = self.final_test(base_path, embeddings_in_memory, evaluation_metric, mini_batch_size)
 
         return {'test_score': final_score,
-                'score_history': score_history,
+                'dev_score_history': dev_score_history,
                 'train_loss_history': train_loss_history,
                 'dev_loss_history': dev_loss_history}
 
