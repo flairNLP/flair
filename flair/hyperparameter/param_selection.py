@@ -17,7 +17,7 @@ from flair.models import SequenceTagger, TextClassifier
 from flair.trainers import ModelTrainer
 from flair.training_utils import EvaluationMetric, log_line, init_output_file, add_file_handler
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('flair')
 
 
 class OptimizationValue(Enum):

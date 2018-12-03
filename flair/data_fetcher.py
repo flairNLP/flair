@@ -8,7 +8,8 @@ import flair
 from flair.data import Sentence, TaggedCorpus, Token, MultiCorpus
 from flair.file_utils import cached_path
 
-log = logging.getLogger(__name__)
+
+log = logging.getLogger('flair')
 
 
 class NLPTask(Enum):

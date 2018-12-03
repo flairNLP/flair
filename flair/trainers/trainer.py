@@ -15,7 +15,8 @@ from flair.training_utils import Metric, init_output_file, WeightExtractor, clea
     log_line, add_file_handler
 from flair.optim import *
 
-log = logging.getLogger(__name__)
+
+log = logging.getLogger('flair')
 
 
 class ModelTrainer:
@@ -61,7 +62,7 @@ class ModelTrainer:
         if type(base_path) is str:
             base_path = Path(base_path)
 
-        add_file_handler(log, base_path / 'training-log.txt')
+        add_file_handler(log, base_path / 'training.log')
 
         log_line(log)
         log.info(f'Evaluation method: {evaluation_metric.name}')
