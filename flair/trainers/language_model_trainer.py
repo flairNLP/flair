@@ -194,7 +194,7 @@ class LanguageModelTrainer:
         if type(base_path) is str:
             base_path = Path(base_path)
 
-        add_file_handler(log, base_path / 'training-log.txt')
+        add_file_handler(log, base_path / 'training.log')
 
         number_of_splits: int = len(self.corpus.train_files)
 

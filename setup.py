@@ -23,8 +23,7 @@ setup(
         'sqlitedict==1.6.0',
         'deprecated==1.2.4',
         'hyperopt==0.1.1',
-        'pytorch-pretrained-bert==0.3.0',
-        'pyyaml==3.13'
+        'pytorch-pretrained-bert==0.3.0'
     ],
     include_package_data=True,
     python_requires='>=3.6',

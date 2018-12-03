@@ -131,7 +131,7 @@ class ModelTrainer:
         if type(base_path) is str:
             base_path = Path(base_path)
 
-        add_file_handler(log, base_path / 'training-log.txt')
+        add_file_handler(log, base_path / 'training.log')
 
         log_line(log)
         log.info(f'Evaluation method: {evaluation_metric.name}')
