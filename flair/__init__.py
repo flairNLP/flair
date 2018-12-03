@@ -3,12 +3,12 @@ from . import models
 from . import visual
 from . import trainers
 
-import sys
-import logging
+import logging.config
+import yaml
 
-logger = logging.getLogger(__name__)
 
-FORMAT = '%(asctime)-15s %(message)s'
+with open('logging-config.yaml', 'r') as f:
+    config = yaml.safe_load(f.read())
+    logging.config.dictConfig(config)
 
-logging.basicConfig(level=logging.WARNING, format=FORMAT, stream=sys.stdout)
-logging.getLogger('flair').setLevel(logging.INFO)
+logger = logging.getLogger('flair')

@@ -14,7 +14,8 @@ from flair.training_utils import Metric, init_output_file, WeightExtractor, clea
     log_line, add_file_handler
 from flair.optim import *
 
-log = logging.getLogger(__name__)
+
+log = logging.getLogger('flair')
 
 
 class ModelTrainer:

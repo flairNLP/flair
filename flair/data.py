@@ -11,7 +11,8 @@ from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
 
-log = logging.getLogger(__name__)
+
+log = logging.getLogger('flair')
 
 
 class Dictionary:

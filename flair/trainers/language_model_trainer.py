@@ -12,7 +12,8 @@ from flair.models import LanguageModel
 from flair.optim import *
 from flair.training_utils import add_file_handler
 
-log = logging.getLogger(__name__)
+
+log = logging.getLogger('flair')
 
 
 class TextCorpus(object):
