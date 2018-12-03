@@ -23,7 +23,7 @@ class TextCorpus(object):
         self.train_path = path / 'train'
 
         self.train_files = sorted(
-            [f for f in self.train_path.iterdir() if (self.train_path / f).exists()])
+            [f for f in self.train_path.iterdir() if f.exists()])
 
         self.dictionary: Dictionary = dictionary
 
@@ -53,7 +53,7 @@ class TextCorpus(object):
 
         current_train_file = self.train_files[self.current_train_file_index]
 
-        train_slice = self.charsplit(self.train_path / current_train_file,
+        train_slice = self.charsplit(current_train_file,
                                     expand_vocab=False,
                                     forward=self.forward,
                                     split_on_char=self.split_on_char)
