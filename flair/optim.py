@@ -230,6 +230,29 @@ class AdamW(Optimizer):
         return loss
 
 
+class OneCycle(_LRScheduler):
+    """Perform one cycle learning rate, momentum and weight decay policy
+    from the paper `A Disciplined approach to Neural Network
+    Hyper-Parameters`_ by L. Smith.
+
+    .. _A Disciplined approach to Neural Network Hyper-Parameters:
+    https://arxiv.org/abs/1803.09820
+
+    Args:
+        optimizer (Optimizer): Wrapped optimizer.
+        max_lr (float):
+        min_max_momentum (float, float):
+        total_iterations (int):
+        last_epoch (int): The index of the last iteration. Default: -1.
+    """
+    def __init__(self, optimizer: Optimizer,
+                 max_lr: float,
+                 start_end_momentum: tuple(float,float) = (0.95, 0.85),
+                 last_epoch=-1):
+        pass
+
+
+
 class ExpAnnealLR(_LRScheduler):
     """Exponentially anneal the learning rate of each parameter group 
     from the initial lr to end_lr over a number of iterations.
@@ -241,7 +264,11 @@ class ExpAnnealLR(_LRScheduler):
             learning rate.
         last_epoch (int): The index of the last iteration. Default: -1.
     """
-    def __init__(self, optimizer, end_lr, iterations, last_epoch=-1):
+    def __init__(self,
+                 optimizer: Optimizer,
+                 end_lr: float,
+                 iterations: int,
+                 last_epoch: int = -1):
         self.end_lr = end_lr
         self.iterations = iterations
         super(ExpAnnealLR, self).__init__(optimizer, last_epoch=last_epoch)

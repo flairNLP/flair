@@ -102,6 +102,24 @@ class ModelTrainer:
 
         return Path(learning_rate_tsv)
 
+    def train_one_cycle(self,
+                        base_path: Union[Path, str],
+                        evaluation_metric: EvaluationMetric = EvaluationMetric.MACRO_F1_SCORE,
+                        learning_rate: float = 0.1,
+                        mini_batch_size: int = 32,
+                        max_epochs: int = 100,
+                        train_with_dev: bool = False,
+                        **kwargs):
+        if type(base_path) is str:
+            base_path = Path(base_path)
+
+        train_data = self.corpus.train
+
+        # if training also uses dev data, include in training set
+        if train_with_dev:
+            train_data.extend(self.corpus.dev)
+
+
     def train(self,
               base_path: Union[Path, str],
               evaluation_metric: EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
