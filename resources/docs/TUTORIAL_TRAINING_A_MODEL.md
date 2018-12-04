@@ -282,11 +282,80 @@ After training, simple point the plotter to these files:
 ```python
 from flair.visual.training_curves import Plotter
 plotter = Plotter()
-plotter.plot_training_curves('resources/ag_news/results/loss.tsv')
-plotter.plot_weights('resources/ag_news/results/weights.txt')
+plotter.plot_training_curves('loss.tsv')
+plotter.plot_weights('weights.txt')
 ```
 
 This generates PNG plots in the result folder.
+
+
+## Resuming Training
+
+If you want to stop the training at some point and resume it at a later point, you should train with the parameter
+`checkpoint` set to `True`.
+This will save the model plus training parameters after every epoch.
+Thus, you can load the model plus trainer at any later point and continue the training exactly there where you have
+left.
+
+The example code below shows how to train, stop, and continue training of a `SequenceTagger`.
+Same can be done for `TextClassifier`.
+
+```python
+from flair.data import TaggedCorpus
+from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
+from typing import List
+
+# 1. get the corpus
+corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03).downsample(0.1)
+
+# 2. what tag do we want to predict?
+tag_type = 'ner'
+
+# 3. make the tag dictionary from the corpus
+tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+
+# 4. initialize embeddings
+embedding_types: List[TokenEmbeddings] = [
+    WordEmbeddings('glove')
+]
+
+embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
+
+# 5. initialize sequence tagger
+from flair.models import SequenceTagger
+
+tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+                                        embeddings=embeddings,
+                                        tag_dictionary=tag_dictionary,
+                                        tag_type=tag_type,
+                                        use_crf=True)
+
+# 6. initialize trainer
+from flair.trainers import ModelTrainer
+from flair.training_utils import EvaluationMetric
+
+trainer: ModelTrainer = ModelTrainer(tagger, corpus)
+
+# 7. start training
+trainer.train('resources/taggers/example-ner',
+              EvaluationMetric.MICRO_F1_SCORE,
+              learning_rate=0.1,
+              mini_batch_size=32,
+              max_epochs=150,
+              checkpoint=True)
+
+# 8. stop training at any point
+
+# 9. continue trainer at later point
+trainer = ModelTrainer.load_from_checkpoint('resources/taggers/example-ner/checkpoint.pt', 'SequenceTagger', corpus)
+trainer.train('resources/taggers/example-ner',
+              EvaluationMetric.MICRO_F1_SCORE,
+              learning_rate=0.1,
+              mini_batch_size=32,
+              max_epochs=150,
+              checkpoint=True)
+```
 
 
 ## Scalability: Training on Large Data Sets
