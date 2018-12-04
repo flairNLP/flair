@@ -1,10 +1,12 @@
 import math
 from functools import partial
 
+import numpy as np
 import torch
 from torch.optim import Optimizer
 from torch.optim.optimizer import required
 from torch.optim.lr_scheduler import _LRScheduler, ReduceLROnPlateau
+from typing import Tuple, List
 
 
 class SGDW(Optimizer):
@@ -246,12 +248,49 @@ class OneCycle(_LRScheduler):
         total_iterations (int):
         last_epoch (int): The index of the last iteration. Default: -1.
     """
-    def __init__(self, optimizer: Optimizer,
-                 max_lr: float,
-                 start_end_momentum: tuple(float,float) = (0.95, 0.85),
-                 last_epoch=-1):
-        pass
 
+    def __init__(self,
+                 optimizer: Optimizer,
+                 max_lr: float,
+                 total_number_of_iterations: int,
+                 min_lr_magnitude: int = 10,
+                 start_end_momentum: Tuple[float, float] = (0.95, 0.85),
+                 ramp_up_phase_percentage: float = 0.3,
+                 last_epoch=-1):
+
+        self.a1 = int(total_number_of_iterations * ramp_up_phase_percentage)
+        self.a2 = total_number_of_iterations - self.a1
+        self.last_epoch = last_epoch
+
+        # calculate learning rates at each iteration
+        low_lr = max_lr / min_lr_magnitude
+        phase_1_learning_rates: List = np.linspace(low_lr, max_lr, self.a1, endpoint=False)
+        phase_2_learning_rates: List = np.linspace(max_lr, low_lr / 1e4, self.a2)
+        self.learning_rates = np.append(phase_1_learning_rates, phase_2_learning_rates)
+
+        # calculate momentum at each iteration
+        phase_1_momentums: List = np.linspace(start_end_momentum[0], start_end_momentum[1], self.a1, endpoint=False)
+        phase_2_momentums: List = np.linspace(start_end_momentum[1], start_end_momentum[0], self.a2)
+        self.momentums = np.append(phase_1_momentums, phase_2_momentums)
+
+        super(OneCycle, self).__init__(optimizer, last_epoch=last_epoch)
+
+        # first step to initialize the learning rates
+        self.step()
+
+    def step(self, epoch=None):
+        # by default, update 'last_epoch' by one each time it's called
+        if epoch is None:
+            epoch = self.last_epoch + 1
+
+        self.last_epoch = epoch
+
+        for param_group in self.optimizer.param_groups:
+            param_group['lr'] = self.learning_rates[epoch]
+
+        for param_group in self.optimizer.param_groups:
+            if param_group['momentum'] != 0:
+                param_group['momentum'] = self.momentums[epoch]
 
 
 class ExpAnnealLR(_LRScheduler):
@@ -265,6 +304,7 @@ class ExpAnnealLR(_LRScheduler):
             learning rate.
         last_epoch (int): The index of the last iteration. Default: -1.
     """
+
     def __init__(self,
                  optimizer: Optimizer,
                  end_lr: float,
@@ -333,6 +373,7 @@ class ReduceLRWDOnPlateau(ReduceLROnPlateau):
         >>>     # Note that step should be called after validate()
         >>>     scheduler.step(val_loss)
     """
+
     def step(self, metrics, epoch=None):
         current = metrics
         if epoch is None:
@@ -365,4 +406,3 @@ class ReduceLRWDOnPlateau(ReduceLROnPlateau):
                     if self.verbose:
                         print('Epoch {:5d}: reducing weight decay factor'
                               ' of group {} to {:.4e}.'.format(epoch, i, new_weight_decay))
-
