@@ -173,6 +173,11 @@ class WordEmbeddings(TokenEmbeddings):
             cached_path(f'{base_path}en-fasttext-news-300d-1M.vectors.npy', cache_dir=cache_dir)
             embeddings = cached_path(f'{base_path}en-fasttext-news-300d-1M', cache_dir=cache_dir)
 
+        # twitter embeddings
+        elif embeddings.lower() == 'twitter' or embeddings.lower() == 'en-twitter':
+            cached_path(f'{old_base_path}twitter.gensim.vectors.npy', cache_dir=cache_dir)
+            embeddings = cached_path(f'{old_base_path}twitter.gensim', cache_dir=cache_dir)
+
         # two-letter language code wiki embeddings
         elif len(embeddings.lower()) == 2:
             cached_path(f'{embeddings_path_v4}{embeddings}-wiki-fasttext-300d-1M.vectors.npy', cache_dir=cache_dir)
