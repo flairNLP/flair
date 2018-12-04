@@ -1,5 +1,6 @@
 from collections import defaultdict
 from pathlib import Path
+from typing import Union
 
 import numpy as np
 import csv
@@ -107,7 +108,10 @@ class Plotter(object):
 
         return lrs, losses
 
-    def plot_weights(self, file_name: Path):
+    def plot_weights(self, file_name: Union[str, Path]):
+        if type(file_name) is str:
+            file_name = Path(file_name)
+
         weights = self._extract_weight_data(file_name)
 
         total = len(weights)
@@ -151,7 +155,10 @@ class Plotter(object):
 
         plt.close(fig)
 
-    def plot_training_curves(self, file_name: Path):
+    def plot_training_curves(self, file_name: Union[str, Path]):
+        if type(file_name) is str:
+            file_name = Path(file_name)
+
         fig = plt.figure(figsize=(15, 10))
 
         training_curves = self._extract_evaluation_data(file_name)
@@ -209,9 +216,12 @@ class Plotter(object):
         plt.close(fig)
 
     def plot_learning_rate(self,
-                           file_name: Path,
+                           file_name: Union[str, Path],
                            skip_first: int = 10,
                            skip_last: int = 5):
+        if type(file_name) is str:
+            file_name = Path(file_name)
+
         lrs, losses = self._extract_learning_rate(file_name)
         lrs = lrs[skip_first:-skip_last] if skip_last > 0 else lrs[skip_first:]
         losses = losses[skip_first:-skip_last] if skip_last > 0 else losses[skip_first:]

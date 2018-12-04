@@ -24,15 +24,18 @@ The first column is the word itself, the second coarse PoS tags, and the third B
 define the column structure as a dictionary and use a helper method.
 
 ```python
+from flair.data import TaggedCorpus
+from flair.data_fetcher import NLPTaskDataFetcher
+from pathlib import Path
 
 # define columns
 columns = {0: 'text', 1: 'pos', 2: 'np'}
 
 # this is the folder in which train, test and dev files reside
-data_folder = '/path/to/data/folder'
+data_folder = Path('/path/to/data/folder')
 
 # retrieve corpus using column format, data folder and the names of the train, dev and test files
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_column_corpus(data_folder, columns,
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_column_corpus(data_folder, columns,
                                                               train_file='train.txt',
                                                               test_file='test.txt',
                                                               dev_file='dev.txt')
@@ -61,6 +64,36 @@ George <N> Washington <N> went <V> to <P> Washington <N>
 George <B-PER> Washington <I-PER> went to Washington <B-LOC> .
 ```
 
+## Downloading A Dataset
+
+Flair also supports a couple of datasets out of the box.
+You can simple load your preferred dataset by calling, for example
+```python
+corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH)
+```
+This line of code will download the UD_ENGLISH dataset and puts it into `~/.flair/datasets/ud_english`.
+The method returns a `TaggedCorpus` which can be directly used to train your model.
+
+The following datasets are supported:
+
+| `NLPTask` | `NLPTask` | `NLPTask` |
+|---|---|---|
+| [CONLL_2000](https://www.clips.uantwerpen.be/conll2000/chunking/) | [UD_DUTCH](https://github.com/UniversalDependencies/UD_Dutch-Alpino) | [UD_CROATIAN](https://github.com/UniversalDependencies/UD_Croatian-SET) |
+| [CONLL_03_DUTCH](https://www.clips.uantwerpen.be/conll2002/ner/) | [UD_FRENCH](https://github.com/UniversalDependencies/UD_French-GSD) | [UD_SERBIAN](https://github.com/UniversalDependencies/UD_Serbian-SET) |
+| [CONLL_03_SPANISH](https://www.clips.uantwerpen.be/conll2002/ner/) | [UD_ITALIAN](https://github.com/UniversalDependencies/UD_Italian-ISDT) | [UD_BULGARIAN](https://github.com/UniversalDependencies/UD_Bulgarian-BTB) |
+| [WNUT_17](https://noisy-text.github.io/2017/files/) | [UD_SPANISH](https://github.com/UniversalDependencies/UD_Spanish-GSD) | [UD_ARABIC](https://github.com/UniversalDependencies/UD_Arabic-PADT) |
+| [WIKINER_ENGLISH](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_PORTUGUESE](https://github.com/UniversalDependencies/UD_Portuguese-Bosque) | [UD_HEBREW](https://github.com/UniversalDependencies/UD_Hebrew-HTB) |
+| [WIKINER_GERMAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_ROMANIAN](https://github.com/UniversalDependencies/UD_Romanian-RRT) | [UD_TURKISH](https://github.com/UniversalDependencies/UD_Turkish-IMST) |
+| [WIKINER_DUTCH](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_CATALAN](https://github.com/UniversalDependencies/UD_Catalan-AnCora) | [UD_PERSIAN](https://github.com/UniversalDependencies/UD_Persian-Seraji) |
+| [WIKINER_FRENCH](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_POLISH](https://github.com/UniversalDependencies/UD_Polish-LFG) | [UD_RUSSIAN](https://github.com/UniversalDependencies/UD_Russian-SynTagRus) |
+| [WIKINER_ITALIAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_CZECH](https://github.com/UniversalDependencies/UD_Czech-PDT) | [UD_HINDI](https://github.com/UniversalDependencies/UD_Hindi-HDTB) |
+| [WIKINER_SPANISH](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_SLOVAK](https://github.com/UniversalDependencies/UD_Slovak-SNK) | [UD_INDONESIAN](https://github.com/UniversalDependencies/UD_Indonesian-GSD) |
+| [WIKINER_PORTUGUESE](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_SWEDISH](https://github.com/UniversalDependencies/UD_Swedish-Talbanken) | [UD_JAPANESE](https://github.com/UniversalDependencies/UD_Japanese-GSD) |
+| [WIKINER_POLISH](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_DANISH](https://github.com/UniversalDependencies/UD_Danish-DDT) | [UD_CHINESE](https://github.com/UniversalDependencies/UD_Chinese-GSD) |
+| [WIKINER_RUSSIAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_NORWEGIAN](https://github.com/UniversalDependencies/UD_Norwegian-Bokmaal) | [UD_KOREAN](https://github.com/UniversalDependencies/UD_Korean-Kaist) |
+| [UD_ENGLISH](https://github.com/UniversalDependencies/UD_English-EWT) | [UD_FINNISH](https://github.com/UniversalDependencies/UD_Finnish-TDT) |
+| [UD_GERMAN](https://github.com/UniversalDependencies/UD_German-GSD) | [UD_SLOVENIAN](https://github.com/UniversalDependencies/UD_Slovenian-SSJ) |
+
 
 ## The TaggedCorpus Object
 
@@ -68,13 +101,13 @@ The `TaggedCorpus` contains a bunch of useful helper functions. For instance, yo
 `downsample()` and passing a ratio. So, if you normally get a corpus like this:
 
 ```python
-original_corpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03)
+original_corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03)
 ```
 
 then you can downsample the corpus, simply like this:
 
 ```python
-downsampled_corpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03).downsample(0.1)
+downsampled_corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03).downsample(0.1)
 ```
 
 If you print both corpora, you see that the second one has been downsampled to 10% of the data.
@@ -109,7 +142,7 @@ from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
 from typing import List
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03).downsample(0.1)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03).downsample(0.1)
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -191,12 +224,13 @@ Point the `NLPTaskDataFetcher` to this file to convert each line to a `Sentence`
 
 ```python
 from flair.data_fetcher import NLPTaskDataFetcher
+from pathlib import Path
 
 # use your own data path
-data_folder = 'path/to/text-classification/formatted/data'
+data_folder = Path('path/to/text-classification/formatted/data')
 
 # get training, test and dev data
-sentences: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(data_folder)
+sentences: List[Sentence] = NLPTaskDataFetcher.load_classification_corpus(data_folder)
 ```
 
 
@@ -220,7 +254,7 @@ from flair.trainers import ModelTrainer
 from flair.training_utils import EvaluationMetric
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.AG_NEWS).downsample(0.1)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.AG_NEWS).downsample(0.1)
 
 # 2. create the label dictionary
 label_dict = corpus.make_label_dictionary()
@@ -232,7 +266,7 @@ word_embeddings = [WordEmbeddings('glove'),
 
 # 4. init document embedding by passing list of word embeddings
 document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings(word_embeddings,
-                                                                     hidden_states=512,
+                                                                     hidden_size=512,
                                                                      reproject_words=True,
                                                                      reproject_words_dimension=256,)
 
@@ -307,7 +341,7 @@ from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
 from typing import List
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03).downsample(0.1)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03).downsample(0.1)
 
 # 2. what tag do we want to predict?
 tag_type = 'ner'
@@ -348,7 +382,9 @@ trainer.train('resources/taggers/example-ner',
 # 8. stop training at any point
 
 # 9. continue trainer at later point
-trainer = ModelTrainer.load_from_checkpoint('resources/taggers/example-ner/checkpoint.pt', 'SequenceTagger', corpus)
+from pathlib import Path
+
+trainer = ModelTrainer.load_from_checkpoint(Path('resources/taggers/example-ner/checkpoint.pt'), 'SequenceTagger', corpus)
 trainer.train('resources/taggers/example-ner',
               EvaluationMetric.MICRO_F1_SCORE,
               learning_rate=0.1,
