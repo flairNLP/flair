@@ -229,14 +229,14 @@ def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionar
     return [[1 if l in labels else 0 for l in label_dict.get_items()] for labels in label_list]
 
 
-def log_line(logger):
-    logger.info('-' * 100)
+def log_line(log):
+    log.info('-' * 100)
 
 
-def add_file_handler(logger, output_file):
+def add_file_handler(log, output_file):
     init_output_file(output_file.parents[0], output_file.name)
     fh = logging.FileHandler(output_file)
     fh.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)-15s %(message)s')
     fh.setFormatter(formatter)
-    logger.addHandler(fh)
+    log.addHandler(fh)

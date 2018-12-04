@@ -5,7 +5,6 @@ from typing import List, Union
 
 import torch
 import torch.nn as nn
-from torch.optim import Optimizer
 
 import flair.nn
 import flair.embeddings
@@ -14,7 +13,7 @@ from flair.file_utils import cached_path
 from flair.training_utils import convert_labels_to_one_hot, clear_embeddings
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('flair')
 
 
 class TextClassifier(flair.nn.Model):

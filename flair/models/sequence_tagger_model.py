@@ -17,7 +17,9 @@ from typing import List, Tuple, Union
 
 from flair.training_utils import clear_embeddings
 
-log = logging.getLogger(__name__)
+
+log = logging.getLogger('flair')
+
 
 START_TAG: str = '<START>'
 STOP_TAG: str = '<STOP>'

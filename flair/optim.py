@@ -6,6 +6,7 @@ from torch.optim import Optimizer
 from torch.optim.optimizer import required
 from torch.optim.lr_scheduler import _LRScheduler, ReduceLROnPlateau
 
+
 class SGDW(Optimizer):
     r"""Implements stochastic gradient descent (optionally with momentum) with
     weight decay from the paper `Fixing Weight Decay Regularization in Adam`_.
@@ -254,7 +255,7 @@ class OneCycle(_LRScheduler):
 
 
 class ExpAnnealLR(_LRScheduler):
-    """Exponentially anneal the learning rate of each parameter group 
+    """Exponentially anneal the learning rate of each parameter group
     from the initial lr to end_lr over a number of iterations.
 
     Args:
@@ -272,7 +273,7 @@ class ExpAnnealLR(_LRScheduler):
         self.end_lr = end_lr
         self.iterations = iterations
         super(ExpAnnealLR, self).__init__(optimizer, last_epoch=last_epoch)
-    
+
     def get_lr(self):
         iteration = self.last_epoch + 1
         pct = iteration / self.iterations
@@ -364,4 +365,4 @@ class ReduceLRWDOnPlateau(ReduceLROnPlateau):
                     if self.verbose:
                         print('Epoch {:5d}: reducing weight decay factor'
                               ' of group {} to {:.4e}.'.format(epoch, i, new_weight_decay))
-    
+

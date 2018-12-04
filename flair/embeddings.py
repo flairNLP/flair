@@ -6,7 +6,6 @@ from typing import List, Union, Dict
 import gensim
 import numpy as np
 import torch
-from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 from deprecated import deprecated
 
 from pytorch_pretrained_bert.tokenization import BertTokenizer

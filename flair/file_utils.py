@@ -15,7 +15,9 @@ import requests
 
 # from allennlp.common.tqdm import Tqdm
 
-logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
+
+logger = logging.getLogger('flair')
+
 
 CACHE_ROOT = os.path.expanduser(os.path.join('~', '.flair'))
 
