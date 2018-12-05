@@ -2,7 +2,7 @@ import logging
 from abc import abstractmethod
 from enum import Enum
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Union
 import numpy as np
 
 from hyperopt import hp, fmin, tpe
@@ -41,12 +41,15 @@ class ParamSelector(object):
 
     def __init__(self,
                  corpus: Corpus,
-                 base_path: Path,
+                 base_path: Union[str, Path],
                  max_epochs: int,
                  evaluation_metric: EvaluationMetric,
                  training_runs: int,
                  optimization_value: OptimizationValue
                  ):
+        if type(base_path) is str:
+            base_path = Path(base_path)
+
         self.corpus = corpus
         self.max_epochs = max_epochs
         self.base_path = base_path
@@ -163,7 +166,7 @@ class SequenceTaggerParamSelector(ParamSelector):
     def __init__(self,
                  corpus: Corpus,
                  tag_type: str,
-                 base_path: Path,
+                 base_path: Union[str, Path],
                  max_epochs: int = 50,
                  evaluation_metric:EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
                  training_runs: int = 1,
@@ -187,7 +190,7 @@ class TextClassifierParamSelector(ParamSelector):
     def __init__(self,
                  corpus: Corpus,
                  multi_label: bool,
-                 base_path: Path,
+                 base_path: Union[str, Path],
                  document_embedding_type: str,
                  max_epochs: int = 50,
                  evaluation_metric:EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,

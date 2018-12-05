@@ -1,151 +1,63 @@
-# Tutorial 1: NLP Base Types
+# Tutorial 7: Model Tuning
 
-This is part 1 of the tutorial, in which we look into some of the base types used in this library.
+This is part 7 of the tutorial, in which we look into how we can improve the quality of our model by selecting
+the right set of model and hyper parameters.
 
-## Creating a Sentence
+## Selecting Hyper Parameters
 
-There are two types of objects that are central to this library, namely the `Sentence` and `Token` objects. A
-`Sentence` holds a textual sentence and is essentially a list of `Token`.
+Flair includes a wrapper for the well-known hyper parameter selection tool [hyperopt](https://github.com/hyperopt/hyperopt).
 
-Let's start by making a `Sentence` object for an example sentence.
+First you need to load your corpus:
+```python
+from flair.data import TaggedCorpus
+from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
+
+# load your corpus
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.AG_NEWS)
+```
+
+Second you need to define the search space of parameters.
+Therefore, you can use all [parameter expressions](https://github.com/hyperopt/hyperopt/wiki/FMin#21-parameter-expressions) defined by hyperopt.
 
 ```python
-# The sentence objects holds a sentence that we may want to embed or tag
-from flair.data import Sentence
+from hyperopt import hp
+from flair.hyperparameter.param_selection import SearchSpace, Parameter
 
-# Make a sentence object by passing a whitespace tokenized string
-sentence = Sentence('The grass is green .')
-
-# Print the object to see what's in there
-print(sentence)
+# define your search space
+search_space = SearchSpace()
+search_space.add(Parameter.HIDDEN_SIZE, hp.choice, options=[32, 64, 128])
+search_space.add(Parameter.RNN_LAYERS, hp.choice, options=[1, 2])
+search_space.add(Parameter.DROPOUT, hp.uniform, low=0.0, high=0.5)
+search_space.add(Parameter.LEARNING_RATE, hp.choice, options=[0.05, 0.1, 0.15, 0.2])
+search_space.add(Parameter.MINI_BATCH_SIZE, hp.choice, options=[8, 16, 32])
 ```
 
-This should print:
-
-```console
-Sentence: "The grass is green ." - 5 Tokens
-```
-
-The print-out tells us that the sentence consists of 5 tokens.
-You can access the tokens of a sentence via their token id or with their index:
+In the last step you have to create the actual parameter selector. 
+Depending on the task you need either to define a `TextClassifierParamSelector` or a `SequenceTaggerParamSelector` and 
+start the optimization.
+You can define the maximum number of evaluation runs hyperopt should perform (`max_evals`).
+A evaluation run performs the specified number of epochs (`max_epochs`). 
+To overcome the issue of noisy evaluation scores, we take the evaluation scores (either `dev_score` or `dev_loss`) from 
+the last three epochs of the evaluation run and take the average over those as final score, which will be passed to 
+hyperopt.
+Additionally, you can specify the number of runs per evaluation run (`training_runs`). 
+If you specify more than one training run, one evaluation run will be executed the specified number of times.
+The final evaluation score will be the average over all those runs.
 
 ```python
-# using the token id
-print(sentence.get_token(4))
-# using the index itself
-print(sentence[3])
+from flair.hyperparameter.param_selection import TextClassifierParamSelector, OptimizationValue
+
+# create the parameter selector
+param_selector = TextClassifierParamSelector(
+    corpus, 
+    False, 
+    'resources/results', 
+    'lstm',
+    max_epochs=50, 
+    training_runs=3,
+    optimization_value=OptimizationValue.DEV_SCORE
+)
+
+# start the optimization
+param_selector.optimize(search_space, max_evals=100)
 ```
-
-which should print in both cases
-
-```console
-Token: 4 green
-```
-
-This print-out includes the token id (4) and the lexical value of the token ("green"). You can also iterate over all
-tokens in a sentence.
-
-```python
-for token in sentence:
-    print(token)
-```
-
-This should print:
-
-```console
-Token: 1 The
-Token: 2 grass
-Token: 3 is
-Token: 4 green
-Token: 5 .
-```
-
-## Tokenization
-
-In some use cases, you might not have your text already tokenized. For this case, we added a simple tokenizer using the
-lightweight [segtok library](https://pypi.org/project/segtok/).
-
-Simply use the `use_tokenizer` flag when instantiating your `Sentence` with an untokenized string:
-
-```python
-from flair.data import Sentence
-
-# Make a sentence object by passing an untokenized string and the 'use_tokenizer' flag
-sentence = Sentence('The grass is green.', use_tokenizer=True)
-
-# Print the object to see what's in there
-print(sentence)
-```
-
-This should print:
-
-```console
-Sentence: "The grass is green ." - 5 Tokens
-```
-
-## Adding Tags to Tokens
-
-A `Token` has fields for linguistic annotation, such as lemmas, part-of-speech tags or named entity tags. You can
-add a tag by specifying the tag type and the tag value. In this example, we're adding an NER tag of type 'color' to
-the word 'green'. This means that we've tagged this word as an entity of type color.
-
-```python
-# add a tag to a word in the sentence
-sentence[3].add_tag('ner', 'color')
-
-# print the sentence with all tags of this type
-print(sentence.to_tagged_string())
-```
-
-This should print:
-
-```console
-The grass is green <color> .
-```
-
-## Adding Labels to Sentences
-
-A `Sentence` can have one or multiple labels that can for example be used in text classification tasks.
-For instance, the example below shows how we add the label 'sports' to a sentence, thereby labeling it
-as belonging to the sports category.
-
-```python
-sentence = Sentence('France is the current world cup winner.')
-
-# add a label to a sentence
-sentence.add_label('sports')
-
-# a sentence can also belong to multiple classes
-sentence.add_labels(['sports', 'world cup'])
-
-# you can also set the labels while initializing the sentence
-Sentence('France is the current world cup winner.', labels=['sports', 'world cup'])
-```
-
-
-## Reading CoNLL-formatted Files
-
-We provide a set of helper methods to read CoNLL parsed files as a list of `Sentence` objects. For instance, you can
-use the popular CoNLL-U format introduced by the Universal Dependencies project.
-
-Simply point the `NLPTaskDataFetcher` to the file containing the parsed sentences. It will read the sentences into a
-list of `Sentence`.
-
-```python
-from flair.data_fetcher import NLPTaskDataFetcher
-
-# use your own data path
-data_folder = 'path/to/conll/formatted/data'
-
-# get training, test and dev data
-sentences: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder)
-```
-
-Importantly, these sentences now contain a wealth of `Token` level annotations.
-In the case of CoNLL-U, they should contain information including a token lemma, its part-of-speech, morphological
-annotation, its dependency relation and its head token.
-You can access this information using the tag fields of the `Token`.
-
-## Next
-
-Now, let us look at how to use [pre-trained models](/resources/docs/TUTORIAL_2_TAGGING.md) to tag your text.
