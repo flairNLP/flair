@@ -1,7 +1,7 @@
 # Tutorial 3: Word Embeddings
 
 We provide a set of classes with which you can embed the words in sentences in various ways. This tutorial explains
-how that works. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_BASICS.md) of this 
+how that works. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this 
 library.  
 
 
@@ -219,7 +219,7 @@ vector is still a single Pytorch vector.
 
 ## Next 
 
-You can now either look into [document embeddings](/resources/docs/TUTORIAL_TEXT_EMBEDDINGS.md) to embed entire text 
+You can now either look into [document embeddings](/resources/docs/TUTORIAL_4_DOCUMENT_EMBEDDINGS.md) to embed entire text 
 passages with one vector for tasks such as text classification, or go directly to the tutorial about 
-[training your own models](/resources/docs/TUTORIAL_TRAINING_A_MODEL.md). 
+[training your own models](/resources/docs/TUTORIAL_5_TRAINING_A_MODEL.md). 
 

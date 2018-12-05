@@ -3,8 +3,8 @@
 This part of the tutorial shows how you can train your own sequence labeling and text
 classification models using state-of-the-art word embeddings.
 
-For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_BASICS.md) of this
-library and how [word embeddings](/resources/docs/TUTORIAL_WORD_EMBEDDING.md) work.
+For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this
+library and how [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) work.
 
 
 ## Reading A Column-Formatted Dataset
@@ -430,4 +430,4 @@ instantiate like this: `CharLMEmbeddings('news-forward-fast', use_cache=False')`
 
 ## Next
 
-You can now look into [training your own embeddings](/resources/docs/TUTORIAL_TRAINING_LM_EMBEDDINGS.md).
+You can now look into [training your own embeddings](/resources/docs/TUTORIAL_6_TRAINING_LM_EMBEDDINGS.md).

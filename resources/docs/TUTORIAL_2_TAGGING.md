@@ -1,6 +1,6 @@
 # Tutorial 2: Tagging your Text
 
-This is part 2 of the tutorial. It assumes that you're familiar with the [base types](/resources/docs/TUTORIAL_BASICS.md) of this library. Here, we show how to use our pre-trained models to tag your text. 
+This is part 2 of the tutorial. It assumes that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library. Here, we show how to use our pre-trained models to tag your text. 
 
 ## Tagging with Pre-Trained Models
 
@@ -200,4 +200,4 @@ Using the `mini_batch_size` parameter of the `.predict()` method, you can set th
 
 ## Next 
 
-Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_WORD_EMBEDDING.md) to embed your text.
+Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) to embed your text.

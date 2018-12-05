@@ -1,10 +1,10 @@
 # Tutorial 4: Document Embeddings
 
-Document embeddings are different from [word embeddings](/resources/docs/TUTORIAL_WORD_EMBEDDING.md) in that they 
+Document embeddings are different from [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) in that they 
 give you one embedding for an entire text, whereas word embeddings give you embeddings for individual words. 
 
-For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_BASICS.md) of this
-library and how [word embeddings](/resources/docs/TUTORIAL_WORD_EMBEDDING.md) work.
+For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this
+library and how [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) work.
 
 # Embeddings
 
@@ -110,4 +110,4 @@ representation of the lstm to be used as final document embedding or not
 
 ## Next 
 
-You can now either look into the tutorial about [training your own models](/resources/docs/TUTORIAL_TRAINING_A_MODEL.md) or into [training your own embeddings](/resources/docs/TUTORIAL_TRAINING_LM_EMBEDDINGS.md).
+You can now either look into the tutorial about [training your own models](/resources/docs/TUTORIAL_5_TRAINING_A_MODEL.md) or into [training your own embeddings](/resources/docs/TUTORIAL_6_TRAINING_LM_EMBEDDINGS.md).
