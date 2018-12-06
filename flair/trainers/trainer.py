@@ -37,12 +37,13 @@ class ModelTrainer:
         self.loss: float = loss
         self.scheduler_state: dict = scheduler_state
         self.optimizer_state: dict = optimizer_state
-         
+
     def train(self,
               base_path: Union[Path, str],
               evaluation_metric: EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
               learning_rate: float = 0.1,
               mini_batch_size: int = 32,
+              eval_mini_batch_size: int = None,
               max_epochs: int = 100,
               anneal_factor: float = 0.5,
               patience: int = 3,
@@ -57,6 +58,9 @@ class ModelTrainer:
               param_selection_mode: bool = False,
               **kwargs
               ) -> dict:
+
+        if eval_mini_batch_size is None:
+            eval_mini_batch_size = mini_batch_size
 
         # cast string to Path
         if type(base_path) is str:
@@ -173,15 +177,15 @@ class ModelTrainer:
                 train_metric = None
                 if monitor_train:
                     train_metric, train_loss = self._calculate_evaluation_results_for(
-                        'TRAIN', self.corpus.train, evaluation_metric, embeddings_in_memory, mini_batch_size)
+                        'TRAIN', self.corpus.train, evaluation_metric, embeddings_in_memory, eval_mini_batch_size)
 
                 if not train_with_dev:
                     dev_metric, dev_loss = self._calculate_evaluation_results_for(
-                        'DEV', self.corpus.dev, evaluation_metric, embeddings_in_memory, mini_batch_size)
+                        'DEV', self.corpus.dev, evaluation_metric, embeddings_in_memory, eval_mini_batch_size)
 
                 if not param_selection_mode:
                     test_metric, test_loss = self._calculate_evaluation_results_for(
-                        'TEST', self.corpus.test, evaluation_metric, embeddings_in_memory, mini_batch_size,
+                        'TEST', self.corpus.test, evaluation_metric, embeddings_in_memory, eval_mini_batch_size,
                         base_path / 'test.tsv')
 
                 if not param_selection_mode:
@@ -240,7 +244,7 @@ class ModelTrainer:
 
         final_score = 0.0
         if not param_selection_mode:
-            final_score = self.final_test(base_path, embeddings_in_memory, evaluation_metric, mini_batch_size)
+            final_score = self.final_test(base_path, embeddings_in_memory, evaluation_metric, eval_mini_batch_size)
 
         return {'test_score': final_score,
                 'dev_score_history': dev_score_history,
@@ -251,7 +255,7 @@ class ModelTrainer:
                    base_path: Path,
                    embeddings_in_memory: bool,
                    evaluation_metric: EvaluationMetric,
-                   mini_batch_size: int):
+                   eval_mini_batch_size: int):
 
         log_line(log)
         log.info('Testing using best model ...')
@@ -264,7 +268,7 @@ class ModelTrainer:
             if isinstance(self.model, SequenceTagger):
                 self.model = SequenceTagger.load_from_file(base_path / 'best-model.pt')
 
-        test_metric, test_loss = self.evaluate(self.model, self.corpus.test, mini_batch_size=mini_batch_size,
+        test_metric, test_loss = self.evaluate(self.model, self.corpus.test, eval_mini_batch_size=eval_mini_batch_size,
                                                embeddings_in_memory=embeddings_in_memory)
 
         log.info(f'MICRO_AVG: acc {test_metric.micro_avg_accuracy()} - f1-score {test_metric.micro_avg_f_score()}')
@@ -281,8 +285,12 @@ class ModelTrainer:
         if type(self.corpus) is MultiCorpus:
             for subcorpus in self.corpus.corpora:
                 log_line(log)
-                self._calculate_evaluation_results_for(subcorpus.name, subcorpus.test, evaluation_metric,
-                                                       embeddings_in_memory, mini_batch_size, base_path / 'test.tsv')
+                self._calculate_evaluation_results_for(subcorpus.name,
+                                                       subcorpus.test,
+                                                       evaluation_metric,
+                                                       embeddings_in_memory,
+                                                       eval_mini_batch_size,
+                                                       base_path / 'test.tsv')
 
         # get and return the final test score of best model
         if evaluation_metric == EvaluationMetric.MACRO_ACCURACY:
@@ -301,10 +309,10 @@ class ModelTrainer:
                                           dataset: List[Sentence],
                                           evaluation_metric: EvaluationMetric,
                                           embeddings_in_memory: bool,
-                                          mini_batch_size: int,
+                                          eval_mini_batch_size: int,
                                           out_path: Path = None):
 
-        metric, loss = ModelTrainer.evaluate(self.model, dataset, mini_batch_size=mini_batch_size,
+        metric, loss = ModelTrainer.evaluate(self.model, dataset, eval_mini_batch_size=eval_mini_batch_size,
                                              embeddings_in_memory=embeddings_in_memory, out_path=out_path)
 
         if evaluation_metric == EvaluationMetric.MACRO_ACCURACY or evaluation_metric == EvaluationMetric.MACRO_F1_SCORE:
@@ -319,24 +327,29 @@ class ModelTrainer:
         return metric, loss
 
     @staticmethod
-    def evaluate(model: flair.nn.Model, data_set: List[Sentence], mini_batch_size=32, embeddings_in_memory=True,
+    def evaluate(model: flair.nn.Model, data_set: List[Sentence],
+                 eval_mini_batch_size: int = 32,
+                 embeddings_in_memory: bool = True,
                  out_path: Path = None) -> (
             dict, float):
         if isinstance(model, TextClassifier):
-            return ModelTrainer._evaluate_text_classifier(model, data_set, mini_batch_size, embeddings_in_memory)
+            return ModelTrainer._evaluate_text_classifier(model, data_set, eval_mini_batch_size, embeddings_in_memory)
         elif isinstance(model, SequenceTagger):
-            return ModelTrainer._evaluate_sequence_tagger(model, data_set, mini_batch_size, embeddings_in_memory,
+            return ModelTrainer._evaluate_sequence_tagger(model, data_set, eval_mini_batch_size, embeddings_in_memory,
                                                           out_path)
 
     @staticmethod
-    def _evaluate_sequence_tagger(model, sentences: List[Sentence], eval_batch_size: int = 32,
-                                  embeddings_in_memory: bool = True, out_path: Path = None) -> (dict, float):
+    def _evaluate_sequence_tagger(model,
+                                  sentences: List[Sentence],
+                                  eval_mini_batch_size: int = 32,
+                                  embeddings_in_memory: bool = True,
+                                  out_path: Path = None) -> (dict, float):
 
         with torch.no_grad():
             eval_loss = 0
 
             batch_no: int = 0
-            batches = [sentences[x:x + eval_batch_size] for x in range(0, len(sentences), eval_batch_size)]
+            batches = [sentences[x:x + eval_mini_batch_size] for x in range(0, len(sentences), eval_mini_batch_size)]
 
             metric = Metric('Evaluation')
 
@@ -388,14 +401,16 @@ class ModelTrainer:
             return metric, eval_loss
 
     @staticmethod
-    def _evaluate_text_classifier(model: flair.nn.Model, sentences: List[Sentence], mini_batch_size: int = 32,
+    def _evaluate_text_classifier(model: flair.nn.Model,
+                                  sentences: List[Sentence],
+                                  eval_mini_batch_size: int = 32,
                                   embeddings_in_memory: bool = False) -> (dict, float):
 
         with torch.no_grad():
             eval_loss = 0
 
-            batches = [sentences[x:x + mini_batch_size] for x in
-                       range(0, len(sentences), mini_batch_size)]
+            batches = [sentences[x:x + eval_mini_batch_size] for x in
+                       range(0, len(sentences), eval_mini_batch_size)]
 
             metric = Metric('Evaluation')
 
