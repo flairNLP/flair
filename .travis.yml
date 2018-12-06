@@ -1,5 +1,7 @@
 language: python
 sudo: false
+env:
+  - BOTO_CONFIG=/dev/null
 python:
   - "3.6"
 install:
