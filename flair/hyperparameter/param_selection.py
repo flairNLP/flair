@@ -108,6 +108,7 @@ class ParamSelector(object):
         final_score = (sum(scores) / float(len(scores)))
         final_var = (sum(vars) / float(len(vars)))
 
+        test_score = result['test_score']
         log_line(log)
         log.info(f'Done evaluating parameter combination:')
         for k, v in params.items():
@@ -116,6 +117,7 @@ class ParamSelector(object):
             log.info(f'\t{k}: {v}')
         log.info(f'{self.optimization_value.value}: {final_score}')
         log.info(f'variance: {final_var}')
+        log.info(f'test_score: {test_score}\n')
         log_line(log)
 
         with open(self.param_selection_file, 'a') as f:
@@ -126,6 +128,7 @@ class ParamSelector(object):
                 f.write(f'\t{k}: {str(v)}\n')
             f.write(f'{self.optimization_value.value}: {final_score}\n')
             f.write(f'variance: {final_var}\n')
+            f.write(f'test_score: {test_score}\n')
             f.write('-' * 100 + '\n')
 
         self.run += 1

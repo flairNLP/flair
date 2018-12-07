@@ -1,4 +1,3 @@
-from enum import Enum
 from pathlib import Path
 from typing import List, Union
 
@@ -114,7 +113,10 @@ class ModelTrainer:
             for epoch in range(0 + self.epoch, max_epochs + self.epoch):
                 log_line(log)
 
-                bad_epochs = scheduler.num_bad_epochs
+                try:
+                    bad_epochs = scheduler.num_bad_epochs
+                except:
+                    bad_epochs = 0
                 for group in optimizer.param_groups:
                     learning_rate = group['lr']
 
@@ -242,9 +244,8 @@ class ModelTrainer:
                 self.model.save(base_path / 'final-model.pt')
                 log.info('Done.')
 
-        final_score = 0.0
-        if not param_selection_mode:
-            final_score = self.final_test(base_path, embeddings_in_memory, evaluation_metric, eval_mini_batch_size)
+        # test best model on test data
+        final_score = self.final_test(base_path, embeddings_in_memory, evaluation_metric, eval_mini_batch_size)
 
         return {'test_score': final_score,
                 'dev_score_history': dev_score_history,
