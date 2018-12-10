@@ -216,6 +216,25 @@ outputs the following information
 }
 ```
 
+## The MultiCorpus Object
+
+If you want to train multiple tasks at once, you can use the `MultiCorpus` object.
+To initiate the `MultiCorpus` you first need to create any number of `TaggedCorpus` objects. Afterwards, you can pass
+a list of `TaggedCorpus` to the `MultiCorpus` object.
+
+```text
+english_corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH)
+german_corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_GERMAN)
+dutch_corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_DUTCH)
+
+multi_corpus = MultiCorpus([english_corpus, german_corpus, dutch_corpus])
+```
+
+The `MultiCorpus` object has the same interface as the `TaggedCorpus`.
+You can simple pass a `MultiCorpus` to a trainer instead of a `TaggedCorpus`, the trainer will not know the difference
+and training operates as usual.
+
+
 ## Next
 
-You can now look into [training your own embeddings](/resources/docs/TUTORIAL_8_TRAINING_LM_EMBEDDINGS.md).
+You can now look into [training your own models](/resources/docs/TUTORIAL_6_TRAINING_A_MODEL.md).

@@ -285,5 +285,6 @@ vector is still a single Pytorch vector.
 
 You can now either look into [document embeddings](/resources/docs/TUTORIAL_4_DOCUMENT_EMBEDDINGS.md) to embed entire text 
 passages with one vector for tasks such as text classification, or go directly to the tutorial about 
+[loading your corpus](/resources/docs/TUTORIAL_5_CORPUS.md), which is a pre-requirement for
 [training your own models](/resources/docs/TUTORIAL_6_TRAINING_A_MODEL.md).
 

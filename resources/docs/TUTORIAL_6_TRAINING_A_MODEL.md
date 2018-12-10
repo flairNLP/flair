@@ -4,131 +4,9 @@ This part of the tutorial shows how you can train your own sequence labeling and
 classification models using state-of-the-art word embeddings.
 
 For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this
-library and how [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) work.
+library and how [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) work. You should also know how to [load
+a corpus](/resources/docs/TUTORIAL_5_CORPUS.md)
 
-
-## Reading A Column-Formatted Dataset
-
-Most sequence labeling datasets in NLP use some sort of column format in which each line is a word and each column is
-one level of linguistic annotation. See for instance this sentence:
-
-```console
-George N B-PER
-Washington N I-PER
-went V O
-to P O
-Washington N B-LOC
-```
-
-The first column is the word itself, the second coarse PoS tags, and the third BIO-annotated NER tags. To read such a dataset,
-define the column structure as a dictionary and use a helper method.
-
-```python
-from flair.data import TaggedCorpus
-from flair.data_fetcher import NLPTaskDataFetcher
-from pathlib import Path
-
-# define columns
-columns = {0: 'text', 1: 'pos', 2: 'np'}
-
-# this is the folder in which train, test and dev files reside
-data_folder = Path('/path/to/data/folder')
-
-# retrieve corpus using column format, data folder and the names of the train, dev and test files
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_column_corpus(data_folder, columns,
-                                                              train_file='train.txt',
-                                                              test_file='test.txt',
-                                                              dev_file='dev.txt')
-```
-
-This gives you a `TaggedCorpus` object that contains the train, dev and test splits, each as a list of `Sentence`.
-So, to check how many sentences there are in the training split, do
-
-```python
-len(corpus.train)
-```
-
-You can also access a sentence and check out annotations. Lets assume that the first sentence in the training split is
-the example sentence from above, then executing these commands
-
-```python
-print(corpus.train[0].to_tagged_string('pos'))
-print(corpus.train[0].to_tagged_string('ner'))
-```
-
-will print the sentence with different layers of annotation:
-
-```console
-George <N> Washington <N> went <V> to <P> Washington <N>
-
-George <B-PER> Washington <I-PER> went to Washington <B-LOC> .
-```
-
-## Downloading A Dataset
-
-Flair also supports a couple of datasets out of the box.
-You can simple load your preferred dataset by calling, for example
-```python
-corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH)
-```
-This line of code will download the UD_ENGLISH dataset and puts it into `~/.flair/datasets/ud_english`.
-The method returns a `TaggedCorpus` which can be directly used to train your model.
-
-The following datasets are supported:
-
-| `NLPTask` | `NLPTask` | `NLPTask` |
-|---|---|---|
-| [CONLL_2000](https://www.clips.uantwerpen.be/conll2000/chunking/) | [UD_DUTCH](https://github.com/UniversalDependencies/UD_Dutch-Alpino) | [UD_CROATIAN](https://github.com/UniversalDependencies/UD_Croatian-SET) |
-| [CONLL_03_DUTCH](https://www.clips.uantwerpen.be/conll2002/ner/) | [UD_FRENCH](https://github.com/UniversalDependencies/UD_French-GSD) | [UD_SERBIAN](https://github.com/UniversalDependencies/UD_Serbian-SET) |
-| [CONLL_03_SPANISH](https://www.clips.uantwerpen.be/conll2002/ner/) | [UD_ITALIAN](https://github.com/UniversalDependencies/UD_Italian-ISDT) | [UD_BULGARIAN](https://github.com/UniversalDependencies/UD_Bulgarian-BTB) |
-| [WNUT_17](https://noisy-text.github.io/2017/files/) | [UD_SPANISH](https://github.com/UniversalDependencies/UD_Spanish-GSD) | [UD_ARABIC](https://github.com/UniversalDependencies/UD_Arabic-PADT) |
-| [WIKINER_ENGLISH](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_PORTUGUESE](https://github.com/UniversalDependencies/UD_Portuguese-Bosque) | [UD_HEBREW](https://github.com/UniversalDependencies/UD_Hebrew-HTB) |
-| [WIKINER_GERMAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_ROMANIAN](https://github.com/UniversalDependencies/UD_Romanian-RRT) | [UD_TURKISH](https://github.com/UniversalDependencies/UD_Turkish-IMST) |
-| [WIKINER_DUTCH](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_CATALAN](https://github.com/UniversalDependencies/UD_Catalan-AnCora) | [UD_PERSIAN](https://github.com/UniversalDependencies/UD_Persian-Seraji) |
-| [WIKINER_FRENCH](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_POLISH](https://github.com/UniversalDependencies/UD_Polish-LFG) | [UD_RUSSIAN](https://github.com/UniversalDependencies/UD_Russian-SynTagRus) |
-| [WIKINER_ITALIAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_CZECH](https://github.com/UniversalDependencies/UD_Czech-PDT) | [UD_HINDI](https://github.com/UniversalDependencies/UD_Hindi-HDTB) |
-| [WIKINER_SPANISH](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_SLOVAK](https://github.com/UniversalDependencies/UD_Slovak-SNK) | [UD_INDONESIAN](https://github.com/UniversalDependencies/UD_Indonesian-GSD) |
-| [WIKINER_PORTUGUESE](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_SWEDISH](https://github.com/UniversalDependencies/UD_Swedish-Talbanken) | [UD_JAPANESE](https://github.com/UniversalDependencies/UD_Japanese-GSD) |
-| [WIKINER_POLISH](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_DANISH](https://github.com/UniversalDependencies/UD_Danish-DDT) | [UD_CHINESE](https://github.com/UniversalDependencies/UD_Chinese-GSD) |
-| [WIKINER_RUSSIAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_NORWEGIAN](https://github.com/UniversalDependencies/UD_Norwegian-Bokmaal) | [UD_KOREAN](https://github.com/UniversalDependencies/UD_Korean-Kaist) |
-| [UD_ENGLISH](https://github.com/UniversalDependencies/UD_English-EWT) | [UD_FINNISH](https://github.com/UniversalDependencies/UD_Finnish-TDT) |
-| [UD_GERMAN](https://github.com/UniversalDependencies/UD_German-GSD) | [UD_SLOVENIAN](https://github.com/UniversalDependencies/UD_Slovenian-SSJ) |
-
-
-## The TaggedCorpus Object
-
-The `TaggedCorpus` contains a bunch of useful helper functions. For instance, you can downsample the data by calling
-`downsample()` and passing a ratio. So, if you normally get a corpus like this:
-
-```python
-original_corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03)
-```
-
-then you can downsample the corpus, simply like this:
-
-```python
-downsampled_corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03).downsample(0.1)
-```
-
-If you print both corpora, you see that the second one has been downsampled to 10% of the data.
-
-```python
-print("--- 1 Original ---")
-print(original_corpus)
-
-print("--- 2 Downsampled ---")
-print(downsampled_corpus)
-```
-
-This should print:
-
-```console
---- 1 Original ---
-TaggedCorpus: 14987 train + 3466 dev + 3684 test sentences
-
---- 2 Downsampled ---
-TaggedCorpus: 1499 train + 347 dev + 369 test sentences
-```
 
 ## Training a Sequence Labeling Model
 
@@ -201,6 +79,7 @@ Alternatively, try using a stacked embedding with charLM and glove, over the ful
 This will give you the state-of-the-art accuracy we report in the paper. To see the full code to reproduce experiments,
 check [here](/resources/docs/EXPERIMENTS.md).
 
+
 ## Training a Text Classification Model
 
 Here is example code for training a text classifier over the AGNews corpus, using  a combination of simple GloVe
@@ -208,43 +87,6 @@ embeddings and contextual string embeddings. In this example, we downsample the 
 
 The AGNews corpus can be downloaded [here](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html).
 
-### Preparing the data
-
-We use the [FastText format](https://fasttext.cc/docs/en/supervised-tutorial.html) for text classification data, in which
-each line in the file represents a text document. A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix
-`__label__`. This looks like this:
-
-
-```bash
-__label__<label_1> <text>
-__label__<label_1> __label__<label_2> <text>
-```
-
-Point the `NLPTaskDataFetcher` to this file to convert each line to a `Sentence` object annotated with the labels. It returns a list of `Sentence`.
-
-```python
-from flair.data_fetcher import NLPTaskDataFetcher
-from pathlib import Path
-
-# use your own data path
-data_folder = Path('path/to/text-classification/formatted/data')
-
-# get training, test and dev data
-sentences: List[Sentence] = NLPTaskDataFetcher.load_classification_corpus(data_folder)
-```
-
-
-### Training the classifier
-
-To train a model, you need to create three files in this way: A train, dev and test file. After you converted the data you can use the
-`NLPTaskDataFetcher` to read the data, if the data files are located in the following folder structure:
-```
-/resources/tasks/ag_news/train.txt
-/resources/tasks/ag_news/dev.txt
-/resources/tasks/ag_news/test.txt
-```
-
-Here the example code for training the text classifier.
 ```python
 from flair.data import TaggedCorpus
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
@@ -252,9 +94,11 @@ from flair.embeddings import WordEmbeddings, CharLMEmbeddings, DocumentLSTMEmbed
 from flair.models import TextClassifier
 from flair.trainers import ModelTrainer
 from flair.training_utils import EvaluationMetric
+from pathlib import Path
+
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.AG_NEWS).downsample(0.1)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.AG_NEWS, Path('path/to/data/folder')).downsample(0.1)
 
 # 2. create the label dictionary
 label_dict = corpus.make_label_dictionary()
@@ -425,7 +269,6 @@ You benefit the most from the default behavior of storing computed embeddings on
 if your disk is large and fast. If you either do not have a lot of disk space, or a really slow hard drive,
 you should disable this option. You can do this when instantiating the embeddings by setting `use_cache=False`. So
 instantiate like this: `CharLMEmbeddings('news-forward-fast', use_cache=False')`
-
 
 
 ## Next
