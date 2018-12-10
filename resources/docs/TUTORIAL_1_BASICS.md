@@ -122,30 +122,6 @@ sentence.add_labels(['sports', 'world cup'])
 Sentence('France is the current world cup winner.', labels=['sports', 'world cup'])
 ```
 
-
-## Reading CoNLL-formatted Files
-
-We provide a set of helper methods to read CoNLL parsed files as a list of `Sentence` objects. For instance, you can
-use the popular CoNLL-U format introduced by the Universal Dependencies project.
-
-Simply point the `NLPTaskDataFetcher` to the file containing the parsed sentences. It will read the sentences into a
-list of `Sentence`.
-
-```python
-from flair.data_fetcher import NLPTaskDataFetcher
-
-# use your own data path
-data_folder = Path('path/to/conll/formatted/data')
-
-# get training, test and dev data
-sentences: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder)
-```
-
-Importantly, these sentences now contain a wealth of `Token` level annotations.
-In the case of CoNLL-U, they should contain information including a token lemma, its part-of-speech, morphological
-annotation, its dependency relation and its head token.
-You can access this information using the tag fields of the `Token`.
-
 ## Next
 
 Now, let us look at how to use [pre-trained models](/resources/docs/TUTORIAL_2_TAGGING.md) to tag your text.
