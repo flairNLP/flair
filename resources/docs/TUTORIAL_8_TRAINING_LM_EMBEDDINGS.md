@@ -93,9 +93,6 @@ You might to play around with some of the learning parameters in the `LanguageMo
 For instance, we generally find that an initial learning rate of 20, and an annealing factor of 4 is pretty good for most corpora.
 You might also want to modify the 'patience' value of the learning rate scheduler. We currently have it at 25, meaning that if the training loss does not improve for 25 splits, it decreases the learning rate.
 
-
-
-
 ## Consider Contributing your LM
 
 If you train a good LM for a language or domain we don't yet have in Flair, consider contacting us! We would be happy to integrate more LMs into the library so that other people can use them!

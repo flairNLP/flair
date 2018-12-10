@@ -149,6 +149,10 @@ for sentence in sentences:
     print(sentence.labels)
 ```
 
+## Multi-Dataset Training
+
+TODO
+
 
 ## Plotting Training Curves and Weights
 
@@ -273,4 +277,5 @@ instantiate like this: `CharLMEmbeddings('news-forward-fast', use_cache=False')`
 
 ## Next
 
-You can now look into [training your own embeddings](/resources/docs/TUTORIAL_8_TRAINING_LM_EMBEDDINGS.md).
+You can now either look into [optimizing your model](/resources/docs/TUTORIAL_7_MODEL_OPTIMIZATION.md) or
+[training your own embeddings](/resources/docs/TUTORIAL_8_TRAINING_LM_EMBEDDINGS.md).

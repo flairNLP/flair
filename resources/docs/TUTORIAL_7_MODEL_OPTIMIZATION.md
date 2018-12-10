@@ -37,9 +37,8 @@ Depending on the task you need either to define a `TextClassifierParamSelector` 
 start the optimization.
 You can define the maximum number of evaluation runs hyperopt should perform (`max_evals`).
 A evaluation run performs the specified number of epochs (`max_epochs`). 
-To overcome the issue of noisy evaluation scores, we take the evaluation scores (either `dev_score` or `dev_loss`) from 
-the last three epochs of the evaluation run and take the average over those as final score, which will be passed to 
-hyperopt.
+To overcome the issue of noisy evaluation scores, we take the average over the last three the evaluation scores (either 
+`dev_score` or `dev_loss`) from the evaluation run, which represents the final score and will be passed to hyperopt.
 Additionally, you can specify the number of runs per evaluation run (`training_runs`). 
 If you specify more than one training run, one evaluation run will be executed the specified number of times.
 The final evaluation score will be the average over all those runs.
@@ -61,3 +60,20 @@ param_selector = TextClassifierParamSelector(
 # start the optimization
 param_selector.optimize(search_space, max_evals=100)
 ```
+
+The parameter settings and the evaluation scores will be written to `param_selection.txt` in the result directory.
+While selecting the best parameter combination we do not store any model to disk. We also do not perform a test run
+during training, we just evaluate the model once after training on the test set for logging purpose.
+
+## Finding the best Learning Rate
+
+TODO
+
+## Custom Optimizers
+
+TODO
+
+
+## Next
+
+The last tutorial is about [training your own embeddings](/resources/docs/TUTORIAL_8_TRAINING_LM_EMBEDDINGS.md).

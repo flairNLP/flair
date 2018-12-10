@@ -102,8 +102,10 @@ We provide a set of quick tutorials to get you started with the library:
 * [Tutorial 2: Tagging your Text](/resources/docs/TUTORIAL_2_TAGGING.md)
 * [Tutorial 3: Using Word Embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)
 * [Tutorial 4: Using Document Embeddings](/resources/docs/TUTORIAL_4_DOCUMENT_EMBEDDINGS.md)
-* [Tutorial 5: Training your own Models](/resources/docs/TUTORIAL_6_TRAINING_A_MODEL.md)
-* [Tutorial 6: Training your own Embeddings](/resources/docs/TUTORIAL_8_TRAINING_LM_EMBEDDINGS.md)
+* [Tutorial 5: Loading your own Corpus](/resources/docs/TUTORIAL_5_CORPUS.md)
+* [Tutorial 6: Training your own Models](/resources/docs/TUTORIAL_6_TRAINING_A_MODEL.md)
+* [Tutorial 7: Optimizing your own Models](/resources/docs/TUTORIAL_7_MODEL_OPTIMIZATION.md)
+* [Tutorial 8: Training your own Embeddings](/resources/docs/TUTORIAL_8_TRAINING_LM_EMBEDDINGS.md)
  
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
 text, how you embed your text with different word or document embeddings, and how you can train your own 
