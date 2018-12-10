@@ -216,12 +216,11 @@ sentence = Sentence('This is very much overrated. I guess it carries some nostal
 classifier.predict(sentence)
 
 # print sentence with predicted labels
-print(sentence.to_dict())
+print(sentence.labels)
 ```
 
 This should print:
 ```console
-
 ```
 
 ### List of Pre-Trained Text Classification Models

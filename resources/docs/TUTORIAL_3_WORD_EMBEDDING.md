@@ -145,6 +145,70 @@ So, if you want to load embeddings from the English news backward LM model, inst
 charlm_embedding_backward = CharLMEmbeddings('news-backward')
 ```
 
+## BERT Embeddings
+
+[BERT embeddings](https://arxiv.org/pdf/1810.04805.pdf) were developed by Devlin et al. (2018) and are a different kind
+of powerful word embedding based on a bidirectional transformer architecture.
+We are using the implementation of [huggingface](https://github.com/huggingface/pytorch-pretrained-BERT) in Flair.
+The embeddings itself are wrapped into our simple embedding interface, so that they can be used like any other
+embedding.
+
+```python
+from flair.embeddings import BertEmbeddings
+
+# init embedding
+embedding = BertEmbeddings()
+
+# create a sentence
+sentence = Sentence('The grass is green .')
+
+# embed words in sentence
+embedding.embed(sentence)
+```
+
+You can load any of the pre-trained BERT models by providing the model string during initialization:
+
+| ID | Language | Embedding |
+| -------------     | ------------- | ------------- |
+| 'bert-base-uncased' | English | 12-layer, 768-hidden, 12-heads, 110M parameters |
+| 'bert-large-uncased'   | English | 24-layer, 1024-hidden, 16-heads, 340M parameters |
+| 'bert-base-cased'    | English | 12-layer, 768-hidden, 12-heads , 110M parameters |
+| 'bert-large-cased'   | English | 24-layer, 1024-hidden, 16-heads, 340M parameters |
+| 'bert-base-multilingual-cased'     | 102 languages | 12-layer, 768-hidden, 12-heads, 110M parameters |
+| 'bert-base-chinese'    | Chinese Simplified and Traditional | 12-layer, 768-hidden, 12-heads, 110M parameters |
+
+
+## ELMo Embeddings
+
+[ELMo embeddings](http://www.aclweb.org/anthology/N18-1202) were presented by Peters et al. in 2018. They are using
+a bidirectional recurrent neural network to predict the next word in a text.
+We are using the implementation of [AllenNLP](https://allennlp.org/elmo). As this implementation comes with a lot of
+sub-dependencies, you need to first install the library via `pip install allennlp` before you can use it in Flair.
+Using the embeddings is as simple as using any other embedding type:
+
+```python
+from flair.embeddings import ELMoEmbeddings
+
+# init embedding
+embedding = ELMoEmbeddings()
+
+# create a sentence
+sentence = Sentence('The grass is green .')
+
+# embed words in sentence
+embedding.embed(sentence)
+```
+
+AllenNLP provides the following pre-trained models, that can be used. To use any of the following models inside Flair
+simple specify the embedding id when initializing the `ELMoEmbeddings`.
+
+| ID | Language | Embedding |
+| ------------- | ------------- | ------------- |
+| 'small' | English | 1024-hidden, 1 layer, 14.6M parameters |
+| 'medium'   | English | 2048-hidden, 1 layer, 28.0M parameters |
+| 'original'    | English | 4096-hidden, 2 layers, 93.6M parameters |
+| 'pt'   | Portuguese | |
+
 
 ## Character Embeddings
 
