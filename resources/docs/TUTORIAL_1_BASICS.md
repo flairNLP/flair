@@ -135,7 +135,7 @@ list of `Sentence`.
 from flair.data_fetcher import NLPTaskDataFetcher
 
 # use your own data path
-data_folder = 'path/to/conll/formatted/data'
+data_folder = Path('path/to/conll/formatted/data')
 
 # get training, test and dev data
 sentences: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder)
