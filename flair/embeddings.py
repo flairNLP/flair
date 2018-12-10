@@ -1024,7 +1024,6 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         :param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
         dimension as before will be taken.
         :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
-        representation of the lstm to be used as final document embedding.
         :param dropout: the dropout value to be used
         :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
         :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used

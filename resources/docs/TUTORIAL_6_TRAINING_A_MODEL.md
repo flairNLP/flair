@@ -430,4 +430,4 @@ instantiate like this: `CharLMEmbeddings('news-forward-fast', use_cache=False')`
 
 ## Next
 
-You can now look into [training your own embeddings](/resources/docs/TUTORIAL_6_TRAINING_LM_EMBEDDINGS.md).
+You can now look into [training your own embeddings](/resources/docs/TUTORIAL_8_TRAINING_LM_EMBEDDINGS.md).
