@@ -59,6 +59,7 @@ The following embeddings are currently supported:
 | 'en-glove' (or 'glove') | English | GloVe embeddings |
 | 'en-extvec' (or 'extvec') | English |Komnios embeddings |
 | 'en-crawl' (or 'crawl')  | English | FastText embeddings over Web crawls |
+| 'en-twitter' (or 'twitter')  | English | Twitter embeddings |
 | 'en' (or 'en-news' or 'news')  |English | FastText embeddings over news and wikipedia data |
 | 'de' | German |German FastText embeddings |
 | 'fr' | French | French FastText embeddings |
@@ -123,6 +124,8 @@ Currently, the following contextual string embeddings are provided (more coming)
  
 | ID | Language | Embedding | 
 | -------------     | ------------- | ------------- |
+| 'multi-forward'    | English, German, French, Italian, Dutch, Polish |  |
+| 'multi-backward'    | English, German, French, Italian, Dutch, Polish |  |
 | 'news-forward'    | English | Forward LM embeddings over 1 billion word corpus |
 | 'news-backward'   | English | Backward LM embeddings over 1 billion word corpus |
 | 'news-forward-fast'    | English | Smaller, CPU-friendly forward LM embeddings over 1 billion word corpus |
@@ -137,7 +140,10 @@ Currently, the following contextual string embeddings are provided (more coming)
 | 'slovenian-backward' | Slovenian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms):Backward LM embeddings over various sources (Europarl, Wikipedia and OpenSubtitles2018) |
 | 'bulgarian-forward'  | Bulgarian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms):Forward LM embeddings over various sources (Europarl, Wikipedia or SETimes) |
 | 'bulgarian-backward' | Bulgarian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms):Backward LM embeddings over various sources (Europarl, Wikipedia or SETimes) |
-
+| 'dutch-forward'    | Dutch |  |
+| 'dutch-backward'    | Dutch |  |
+| 'swedish-forward'    | Swedish |  |
+| 'swedish-backward'    | Swedish |  |
 
 So, if you want to load embeddings from the English news backward LM model, instantiate the method as follows:
 
