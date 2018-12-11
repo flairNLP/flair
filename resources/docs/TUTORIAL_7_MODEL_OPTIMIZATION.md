@@ -67,12 +67,91 @@ during training, we just evaluate the model once after training on the test set 
 
 ## Finding the best Learning Rate
 
-TODO
+The learning rate is one of the most important hype parameter and it fundamentally depends on the topology of the loss landscape via the architecture of your model and the training data it consumes. An optimal learning will improve your training speed and hopefully give more performant models. A simple technique described by Leslie Smith's [Cyclical Learning Rates for Training](https://arxiv.org/abs/1506.01186) paper trains your model starting with a very low learning rate and increases the learning rate exponentially at every batch update of SGD. By plotting the loss with respect to the learning rate we will typically observe three distinct phases: for low learning rates the loss does not improve, an optimal learning rate range where the loss drops the steepest and the final phase where the loss explodes as the learning rate becomes too big. With such a plot, the optimal learning rate selection is as easy as looking at the plot.
+
+In order to run such an experiment start with your initialized `ModelTrainer` and call  `find_learning_rate()` with the `base_path` and the file name in which we records the learning rates and loss. Then plot the generated results via the `Plotter`'s `plot_learning_rate()` function and have a look at the `learning_rate.png` image.
+
+```python
+from flair.data import TaggedCorpus
+from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
+from typing import List
+
+# 1. get the corpus
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03).downsample(0.1)
+print(corpus)
+
+# 2. what tag do we want to predict?
+tag_type = 'ner'
+
+# 3. make the tag dictionary from the corpus
+tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+print(tag_dictionary.idx2item)
+
+# 4. initialize embeddings
+embedding_types: List[TokenEmbeddings] = [
+
+    WordEmbeddings('glove'),
+
+    # comment in this line to use character embeddings
+    # CharacterEmbeddings(),
+
+    # comment in these lines to use contextual string embeddings
+    # CharLMEmbeddings('news-forward'),
+    # CharLMEmbeddings('news-backward'),
+]
+
+embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
+
+# 5. initialize sequence tagger
+from flair.models import SequenceTagger
+
+tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+                                        embeddings=embeddings,
+                                        tag_dictionary=tag_dictionary,
+                                        tag_type=tag_type,
+                                        use_crf=True)
+
+# 6. initialize trainer
+from flair.trainers import ModelTrainer
+from flair.training_utils import EvaluationMetric
+
+trainer: ModelTrainer = ModelTrainer(tagger, corpus)
+
+# 7. find learning rate
+learning_rate_tsv = ModelTrainer.find_learning_rate('resources/taggers/example-ner',
+                                                    'learning_rate.tsv')
+
+
+# 8. plot the learning rate finder curve
+plotter = Plotter()
+plotter.plot_learning_rate(learning_rate_tsv)
+```
 
 ## Custom Optimizers
 
-TODO
+You can use any of PyTorch optimizer when intializing a `ModelTrainer`  and initialize it with any extra parameters as shown here:
 
+```python
+from torch.optim.adam import Adam
+
+trainer: ModelTrainer = ModelTrainer(tagger, corpus,
+                                     optimizer=Adam, weight_decay=1e-4)
+```
+
+### AdamW and SGDW
+
+L2 regularization is typically used by optimization methods to reduce over-fitting and it essentially adds a weight regularizer to the loss function via the `weight_decay` parameter of the optimizer. The way it is implemented in PyTorch this factor is confounded with the `learning_rate` and is essentially implementing 
+L2 regularization. In the paper from Ilya Loshchilov and Frank Hutter [Fixing Weight Decay Regularization in Adam](https://arxiv.org/abs/1711.05101) the authors suggest to actually do weight decay rather than L2 regularization and they call their method AdamW and SGDW for the corresponding Adam and SGD versions. Empirically the results via these optimizers are better than their corresponding L2 regularized versions. However as the learning rate and weight decay are decoupled in these methods, one has to remember to anneal both these terms and we switch schedulers that do this when these optimizers are used.
+
+To use the optimizer just create the `ModelTrainer` with `AdamW` or `SGDW` optimizers:
+
+```python
+from flair.optim import SGDW
+
+trainer: ModelTrainer = ModelTrainer(tagger, corpus,
+                                     optimizer=SGDW, momentum=0.9)
+```
 
 ## Next
 
