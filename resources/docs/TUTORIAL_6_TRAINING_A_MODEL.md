@@ -1,4 +1,4 @@
-# Tutorial 5: Training a Model
+# Tutorial 6: Training a Model
 
 This part of the tutorial shows how you can train your own sequence labeling and text
 classification models using state-of-the-art word embeddings.
