@@ -67,9 +67,9 @@ during training, we just evaluate the model once after training on the test set 
 
 ## Finding the best Learning Rate
 
-The learning rate is one of the most important hype parameter and it fundamentally depends on the topology of the loss landscape via the architecture of your model and the training data it consumes. An optimal learning will improve your training speed and hopefully give more performant models. A simple technique described by Leslie Smith's [Cyclical Learning Rates for Training](https://arxiv.org/abs/1506.01186) paper trains your model starting with a very low learning rate and increases the learning rate exponentially at every batch update of SGD. By plotting the loss with respect to the learning rate we will typically observe three distinct phases: for low learning rates the loss does not improve, an optimal learning rate range where the loss drops the steepest and the final phase where the loss explodes as the learning rate becomes too big. With such a plot, the optimal learning rate selection is as easy as looking at the plot.
+The learning rate is one of the most important hype parameter and it fundamentally depends on the topology of the loss landscape via the architecture of your model and the training data it consumes. An optimal learning will improve your training speed and hopefully give more performant models. A simple technique described by Leslie Smith's [Cyclical Learning Rates for Training](https://arxiv.org/abs/1506.01186) paper is to train your model starting with a very low learning rate and increases the learning rate exponentially at every batch update of SGD. By plotting the loss with respect to the learning rate we will typically observe three distinct phases: for low learning rates the loss does not improve, an optimal learning rate range where the loss drops the steepest and the final phase where the loss explodes as the learning rate becomes too big. With such a plot, the optimal learning rate selection is as easy as selecting the optimal phase.
 
-In order to run such an experiment start with your initialized `ModelTrainer` and call  `find_learning_rate()` with the `base_path` and the file name in which we records the learning rates and loss. Then plot the generated results via the `Plotter`'s `plot_learning_rate()` function and have a look at the `learning_rate.png` image.
+In order to run such an experiment start with your initialized `ModelTrainer` and call  `find_learning_rate()` with the `base_path` and the file name in which we records the learning rates and loss. Then plot the generated results via the `Plotter`'s `plot_learning_rate()` function and have a look at the `learning_rate.png` image to select the optimal learning rate:
 
 ```python
 from flair.data import TaggedCorpus
@@ -130,7 +130,7 @@ plotter.plot_learning_rate(learning_rate_tsv)
 
 ## Custom Optimizers
 
-You can use any of PyTorch optimizer when intializing a `ModelTrainer`  and initialize it with any extra parameters as shown here:
+You can now use any of PyTorch's optimizers for training when intializing a `ModelTrainer`. To give the optimizer any extra options just specify it as shown with the `weight_decay` option:
 
 ```python
 from torch.optim.adam import Adam
@@ -141,10 +141,9 @@ trainer: ModelTrainer = ModelTrainer(tagger, corpus,
 
 ### AdamW and SGDW
 
-L2 regularization is typically used by optimization methods to reduce over-fitting and it essentially adds a weight regularizer to the loss function via the `weight_decay` parameter of the optimizer. The way it is implemented in PyTorch this factor is confounded with the `learning_rate` and is essentially implementing 
-L2 regularization. In the paper from Ilya Loshchilov and Frank Hutter [Fixing Weight Decay Regularization in Adam](https://arxiv.org/abs/1711.05101) the authors suggest to actually do weight decay rather than L2 regularization and they call their method AdamW and SGDW for the corresponding Adam and SGD versions. Empirically the results via these optimizers are better than their corresponding L2 regularized versions. However as the learning rate and weight decay are decoupled in these methods, one has to remember to anneal both these terms and we switch schedulers that do this when these optimizers are used.
+L2 regularization is typically used by optimization methods to reduce over-fitting and it essentially adds a weight regularizer to the loss function via the `weight_decay` parameter of the optimizer. The way it is implemented in PyTorch this factor is confounded with the `learning_rate` and is essentially implementing L2 regularization. In the paper from Ilya Loshchilov and Frank Hutter [Fixing Weight Decay Regularization in Adam](https://arxiv.org/abs/1711.05101) the authors suggest to actually do weight decay rather than L2 regularization and they call their method AdamW and SGDW for the corresponding Adam and SGD versions. Empirically the results via these optimizers are better than their corresponding L2 regularized versions. However as the learning rate and weight decay are decoupled in these methods, one has to remember to anneal both these terms and we switch schedulers that do this when these optimizers are used.
 
-To use the optimizer just create the `ModelTrainer` with `AdamW` or `SGDW` optimizers:
+To use these optimizers just create the `ModelTrainer` with `AdamW` or `SGDW` together with any extra options as shown:
 
 ```python
 from flair.optim import SGDW
