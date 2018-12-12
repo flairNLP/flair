@@ -220,7 +220,7 @@ All you need to do is use the `predict()` method of the classifier on a sentence
 the sentence. Lets use a sentence with negative sentiment:
 
 ```python
-sentence = Sentence('This is very much overrated. I guess it carries some nostalgic value for many people. It has its moments, but every scene is heavily overacted and the plot is quite shallow. With this cast it could have been much better.')
+sentence = Sentence('This film hurts. It is so bad that I am confused.')
 
 # predict NER tags
 classifier.predict(sentence)
@@ -231,6 +231,7 @@ print(sentence.labels)
 
 This should print:
 ```console
+[NEGATIVE (1.0)]
 ```
 
 ### List of Pre-Trained Text Classification Models
@@ -241,9 +242,8 @@ are provided:
 
 | ID | Language | Task | Training Dataset | Accuracy |
 | ------------- | ---- | ------------- |------------- |------------- |
-| 'en-sentiment' | English | detecting positive and negative sentiment |  [IMDB](http://ai.stanford.edu/~amaas/data/sentiment/)  |  **xx.xx** (F1) |
-| 'de-offensive-language' | German | detecting offensive language |  [GermEval 2018 Task 1](https://projects.fzai.h-da.de/iggsa/projekt/) |  **75.71** (Marco F1) |
-
+| 'en-sentiment' | English | detecting positive and negative sentiment | movie reviews from [IMDB](http://ai.stanford.edu/~amaas/data/sentiment/)  |  **xx.xx** (F1) |
+| 'de-offensive-language' | German | detecting offensive language | [GermEval 2018 Task 1](https://projects.fzai.h-da.de/iggsa/projekt/) |  **75.71** (Marco F1) |
 
 
 ## Next 

@@ -271,5 +271,9 @@ class TextClassifier(flair.nn.Model):
                                   'germ-eval-2018-task-1.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
+        elif model.lower() == 'en-sentiment':
+            base_path = '/'.join([aws_resource_path, 'TEXT-CLASSIFICATION_imdb', 'imdb.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
         if model_file is not None:
             return TextClassifier.load_from_file(model_file)
