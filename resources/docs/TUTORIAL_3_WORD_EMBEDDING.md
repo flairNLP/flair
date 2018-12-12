@@ -137,13 +137,15 @@ Currently, the following contextual string embeddings are provided (more coming)
 | 'polish-forward'  | Polish  | Added by [@borchmann](https://github.com/applicaai/poleval-2018): Forward LM embeddings over web crawls (Polish part of CommonCrawl) |
 | 'polish-backward' | Polish  | Added by [@borchmann](https://github.com/applicaai/poleval-2018): Backward LM embeddings over web crawls (Polish part of CommonCrawl) |
 | 'slovenian-forward'  | Slovenian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Forward LM embeddings over various sources (Europarl, Wikipedia and OpenSubtitles2018) |
-| 'slovenian-backward' | Slovenian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms):Backward LM embeddings over various sources (Europarl, Wikipedia and OpenSubtitles2018) |
-| 'bulgarian-forward'  | Bulgarian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms):Forward LM embeddings over various sources (Europarl, Wikipedia or SETimes) |
-| 'bulgarian-backward' | Bulgarian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms):Backward LM embeddings over various sources (Europarl, Wikipedia or SETimes) |
+| 'slovenian-backward' | Slovenian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings over various sources (Europarl, Wikipedia and OpenSubtitles2018) |
+| 'bulgarian-forward'  | Bulgarian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Forward LM embeddings over various sources (Europarl, Wikipedia or SETimes) |
+| 'bulgarian-backward' | Bulgarian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings over various sources (Europarl, Wikipedia or SETimes) |
 | 'dutch-forward'    | Dutch |  |
 | 'dutch-backward'    | Dutch |  |
 | 'swedish-forward'    | Swedish |  |
 | 'swedish-backward'    | Swedish |  |
+| 'french-forward'    | French | Added by [@mhham](https://github.com/mhham): Forward LM embeddings over French Wikipedia |
+| 'french-backward'    | French | Added by [@mhham](https://github.com/mhham): Backward LM embeddings over French Wikipedia |
 
 So, if you want to load embeddings from the English news backward LM model, instantiate the method as follows:
 

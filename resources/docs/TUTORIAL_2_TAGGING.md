@@ -108,6 +108,15 @@ We also distribute German models.
 | 'de-ner-germeval' | 4+4-class Named Entity Recognition |  Germeval  |  **84.90** (F1) |
 | 'de-pos' | Part-of-Speech Tagging |  Universal Dependency Treebank  |  **94.77** (Accuracy) |
 
+#### Models for other Languages
+
+Thanks to our contributors we are also able to distribute a couple of models for other languages.
+
+| ID | Task | Training Dataset | Accuracy | Contributor |
+| -------------    | ------------- |------------- |------------- |------------- |
+| 'fr-ner' | Named Entity Recognition |  [WikiNER (aij-wikiner-fr-wp3)](https://github.com/dice-group/FOX/tree/master/input/Wikiner)  |  **87,80** (F1) | [mhham](https://github.com/mhham) |
+
+
 ### Tagging a German sentence
 
 As indicated in the list above, we also provide pre-trained models for languages other than English. Currently, we
