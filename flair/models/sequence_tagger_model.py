@@ -568,76 +568,80 @@ class SequenceTagger(flair.nn.Model):
                                   'en-ner-conll03-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'ner-fast':
+        elif model.lower() == 'ner-fast':
             base_path = '/'.join([aws_resource_path,
                                   'NER-conll03--h256-l1-b32-experimental--fast-v0.2',
                                   'en-ner-fast-conll03-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'ner-ontonotes':
+        elif model.lower() == 'ner-ontonotes':
             base_path = '/'.join([aws_resource_path,
                                   'NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward%2Bnews-backward--v0.2',
                                   'en-ner-ontonotes-v0.3.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'ner-ontonotes-fast':
+        elif model.lower() == 'ner-ontonotes-fast':
             base_path = '/'.join([aws_resource_path,
                                   'NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
                                   'en-ner-ontonotes-fast-v0.3.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'pos':
+        elif model.lower() == 'pos':
             base_path = '/'.join([aws_resource_path,
                                   'POS-ontonotes--h256-l1-b32-%2Bmix-forward%2Bmix-backward--v0.2',
                                   'en-pos-ontonotes-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'pos-fast':
+        elif model.lower() == 'pos-fast':
             base_path = '/'.join([aws_resource_path,
                                   'POS-ontonotes--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
                                   'en-pos-ontonotes-fast-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'frame':
+        elif model.lower() == 'frame':
             base_path = '/'.join([aws_resource_path,
                                   'FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward%2Bnews-backward--v0.2',
                                   'en-frame-ontonotes-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'frame-fast':
+        elif model.lower() == 'frame-fast':
             base_path = '/'.join([aws_resource_path,
                                   'FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
                                   'en-frame-ontonotes-fast-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'chunk':
+        elif model.lower() == 'chunk':
             base_path = '/'.join([aws_resource_path,
                                   'NP-conll2000--h256-l1-b32-%2Bnews-forward%2Bnews-backward--v0.2',
                                   'en-chunk-conll2000-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'chunk-fast':
+        elif model.lower() == 'chunk-fast':
             base_path = '/'.join([aws_resource_path,
                                   'NP-conll2000--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
                                   'en-chunk-conll2000-fast-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'de-pos':
+        elif model.lower() == 'de-pos':
             base_path = '/'.join([aws_resource_path,
                                   'UPOS-udgerman--h256-l1-b8-%2Bgerman-forward%2Bgerman-backward--v0.2',
                                   'de-pos-ud-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'de-ner':
+        elif model.lower() == 'de-ner':
             base_path = '/'.join([aws_resource_path,
                                   'NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2',
                                   'de-ner-conll03-v0.3.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'de-ner-germeval':
+        elif model.lower() == 'de-ner-germeval':
             base_path = '/'.join([aws_resource_path,
                                   'NER-germeval--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2',
                                   'de-ner-germeval-v0.3.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
+        elif model.lower() == 'fr-ner':
+            base_path = '/'.join([aws_resource_path, 'NER-aij-wikiner-fr-wp3', 'fr-ner.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
         if model_file is not None:
