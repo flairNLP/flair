@@ -9,7 +9,7 @@ import torch
 from deprecated import deprecated
 
 from pytorch_pretrained_bert.tokenization import BertTokenizer
-from pytorch_pretrained_bert.modeling import BertModel
+from pytorch_pretrained_bert.modeling import BertModel, PRETRAINED_MODEL_ARCHIVE_MAP
 
 from .nn import LockedDropout, WordDropout
 from .data import Dictionary, Token, Sentence
@@ -734,8 +734,7 @@ class BertEmbeddings(TokenEmbeddings):
         """
         super().__init__()
 
-        if bert_model not in ['bert-base-uncased', 'bert-large-uncased', 'bert-base-cased', 'bert-large-cased',
-                              'bert-base-multilingual-cased', 'bert-base-multilingual-uncased', 'bert-base-chinese']:
+        if bert_model not in PRETRAINED_MODEL_ARCHIVE_MAP.keys():
             raise ValueError('Provided bert-model is not available.')
 
         self.tokenizer = BertTokenizer.from_pretrained(bert_model)
