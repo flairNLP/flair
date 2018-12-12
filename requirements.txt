@@ -1,4 +1,4 @@
-torch==0.4.1
+torch==1.0.0
 gensim==3.4.0
 typing==3.6.4
 pytest==3.6.4
