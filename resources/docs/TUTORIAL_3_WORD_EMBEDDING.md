@@ -146,6 +146,8 @@ Currently, the following contextual string embeddings are provided (more coming)
 | 'swedish-backward'    | Swedish |  |
 | 'french-forward'    | French | Added by [@mhham](https://github.com/mhham): Forward LM embeddings over French Wikipedia |
 | 'french-backward'    | French | Added by [@mhham](https://github.com/mhham): Backward LM embeddings over French Wikipedia |
+| 'czech-forward'    | French | Added by [@stefan-it](https://github.com/stefan-it): Forward LM embeddings |
+| 'czech-backward'    | French | Added by [@stefan-it](https://github.com/stefan-it): Backward LM embeddings |
 
 So, if you want to load embeddings from the English news backward LM model, instantiate the method as follows:
 
