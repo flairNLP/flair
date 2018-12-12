@@ -583,6 +583,15 @@ class CharLMEmbeddings(TokenEmbeddings):
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-fr-charlm-backward.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
 
+        # Czech forward
+        elif model.lower() == 'czech-forward' or model.lower() == 'cs-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-cs-large-forward-v0.1.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+        # Czech backward
+        elif model.lower() == 'czech-backward' or model.lower() == 'cs-backward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-cs-large-backward-v0.1.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+
         elif not Path(model).exists():
             raise ValueError(f'The given model "{model}" is not available or is not a valid path.')
 
