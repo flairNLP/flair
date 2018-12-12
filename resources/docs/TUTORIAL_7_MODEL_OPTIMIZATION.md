@@ -75,6 +75,8 @@ In order to run such an experiment start with your initialized `ModelTrainer` an
 from flair.data import TaggedCorpus
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
+from flair.trainers import ModelTrainer
+from flair.training_utils import EvaluationMetric
 from typing import List
 
 # 1. get the corpus
@@ -90,15 +92,7 @@ print(tag_dictionary.idx2item)
 
 # 4. initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
-
     WordEmbeddings('glove'),
-
-    # comment in this line to use character embeddings
-    # CharacterEmbeddings(),
-
-    # comment in these lines to use contextual string embeddings
-    # CharLMEmbeddings('news-forward'),
-    # CharLMEmbeddings('news-backward'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
@@ -113,15 +107,11 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         use_crf=True)
 
 # 6. initialize trainer
-from flair.trainers import ModelTrainer
-from flair.training_utils import EvaluationMetric
-
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 # 7. find learning rate
 learning_rate_tsv = ModelTrainer.find_learning_rate('resources/taggers/example-ner',
                                                     'learning_rate.tsv')
-
 
 # 8. plot the learning rate finder curve
 plotter = Plotter()
