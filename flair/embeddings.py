@@ -734,6 +734,10 @@ class BertEmbeddings(TokenEmbeddings):
         """
         super().__init__()
 
+        if bert_model not in ['bert-base-uncased', 'bert-large-uncased', 'bert-base-cased', 'bert-large-cased',
+                              'bert-base-multilingual-cased', 'bert-base-multilingual-uncased', 'bert-base-chinese']:
+            raise ValueError('Provided bert-model is not available.')
+
         self.tokenizer = BertTokenizer.from_pretrained(bert_model)
         self.model = BertModel.from_pretrained(bert_model)
         self.layer_indexes = [int(x) for x in layers.split(",")]
