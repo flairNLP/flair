@@ -560,6 +560,7 @@ class SequenceTagger(flair.nn.Model):
     def load(model: str):
         model_file = None
         aws_resource_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.2'
+        aws_resource_path_v04 = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4'
         cache_dir = Path('models')
 
         if model.lower() == 'ner':
@@ -642,6 +643,10 @@ class SequenceTagger(flair.nn.Model):
 
         elif model.lower() == 'fr-ner':
             base_path = '/'.join([aws_resource_path, 'NER-aij-wikiner-fr-wp3', 'fr-ner.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
+        elif model.lower() == 'nl-ner':
+            base_path = '/'.join([aws_resource_path_v04, 'NER-conll2002-dutch', 'nl-ner-conll02-v0.1.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
         if model_file is not None:
