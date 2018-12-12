@@ -140,14 +140,14 @@ Currently, the following contextual string embeddings are provided (more coming)
 | 'slovenian-backward' | Slovenian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings over various sources (Europarl, Wikipedia and OpenSubtitles2018) |
 | 'bulgarian-forward'  | Bulgarian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Forward LM embeddings over various sources (Europarl, Wikipedia or SETimes) |
 | 'bulgarian-backward' | Bulgarian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings over various sources (Europarl, Wikipedia or SETimes) |
-| 'dutch-forward'    | Dutch |  |
-| 'dutch-backward'    | Dutch |  |
-| 'swedish-forward'    | Swedish |  |
-| 'swedish-backward'    | Swedish |  |
+| 'dutch-forward'    | Dutch | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings over various sources (Europarl, Wikipedia or OpenSubtitles2018) |
+| 'dutch-backward'    | Dutch | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings over various sources (Europarl, Wikipedia or OpenSubtitles2018) |
+| 'swedish-forward'    | Swedish | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings over various sources (Europarl, Wikipedia or OpenSubtitles2018) |
+| 'swedish-backward'    | Swedish | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings over various sources (Europarl, Wikipedia or OpenSubtitles2018) |
 | 'french-forward'    | French | Added by [@mhham](https://github.com/mhham): Forward LM embeddings over French Wikipedia |
 | 'french-backward'    | French | Added by [@mhham](https://github.com/mhham): Backward LM embeddings over French Wikipedia |
-| 'czech-forward'    | French | Added by [@stefan-it](https://github.com/stefan-it): Forward LM embeddings |
-| 'czech-backward'    | French | Added by [@stefan-it](https://github.com/stefan-it): Backward LM embeddings |
+| 'czech-forward'    | French | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings over various sources (Europarl, Wikipedia or OpenSubtitles2018) |
+| 'czech-backward'    | French | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings over various sources (Europarl, Wikipedia or OpenSubtitles2018) |
 
 So, if you want to load embeddings from the English news backward LM model, instantiate the method as follows:
 
