@@ -27,11 +27,24 @@ from flair.hyperparameter.param_selection import SearchSpace, Parameter
 
 # define your search space
 search_space = SearchSpace()
+search_space.add(Parameter.EMBEDDINGS, hp.choice, options=[
+    [ WordEmbeddings('en') ], 
+    [ CharLMEmbeddings('news-forward'), CharLMEmbeddings('news-backward') ]
+])
 search_space.add(Parameter.HIDDEN_SIZE, hp.choice, options=[32, 64, 128])
 search_space.add(Parameter.RNN_LAYERS, hp.choice, options=[1, 2])
 search_space.add(Parameter.DROPOUT, hp.uniform, low=0.0, high=0.5)
 search_space.add(Parameter.LEARNING_RATE, hp.choice, options=[0.05, 0.1, 0.15, 0.2])
 search_space.add(Parameter.MINI_BATCH_SIZE, hp.choice, options=[8, 16, 32])
+```
+
+Attention: You should always add your embeddings to the search space (as shown above). If you don't want to test
+different kind of embeddings, simply pass just one embedding option to the search space, which will than be used in
+every test run. Here is an example:
+```python
+search_space.add(Parameter.EMBEDDINGS, hp.choice, options=[
+    [ CharLMEmbeddings('news-forward'), CharLMEmbeddings('news-backward') ]
+])
 ```
 
 In the last step you have to create the actual parameter selector. 
