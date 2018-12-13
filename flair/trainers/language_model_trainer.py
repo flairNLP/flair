@@ -7,6 +7,7 @@ from typing import Union
 from torch.autograd import Variable
 from torch.optim.sgd import SGD
 
+import flair
 from flair.data import Dictionary
 from flair.models import LanguageModel
 from flair.optim import *
@@ -65,7 +66,7 @@ class TextCorpus(object):
 
         return train_slice
 
-    def charsplit(self, path: Path, expand_vocab=False, forward=True, split_on_char=True, random_case_flip=True) -> torch.LongTensor:
+    def charsplit(self, path: Path, expand_vocab=False, forward=True, split_on_char=True, random_case_flip=True) -> torch.tensor:
 
         """Tokenizes a text file on character basis."""
         assert path.exists()
@@ -90,7 +91,9 @@ class TextCorpus(object):
         if forward:
             # charsplit file content
             with open(path, 'r', encoding="utf-8") as f:
-                ids = torch.LongTensor(tokens)
+                i = torch.LongTensor(tokens)
+                a = torch.LongTensor(tokens)
+                ids = torch.tensor(tokens, dtype=torch.long)
                 token = 0
                 for line in f:
                     if random_case_flip:
@@ -108,7 +111,7 @@ class TextCorpus(object):
         else:
             # charsplit file content
             with open(path, 'r', encoding="utf-8") as f:
-                ids = torch.LongTensor(tokens)
+                ids = torch.tensor(tokens, dtype=torch.long)
                 token = tokens - 1
                 for line in f:
                     if random_case_flip:
@@ -149,7 +152,7 @@ class TextCorpus(object):
 
         # Tokenize file content
         with open(path, 'r') as f:
-            ids = torch.LongTensor(tokens)
+            ids = torch.tensor(tokens, dtype=torch.long)
             token = 0
             for line in f:
                 words = line.split() + ['<eos>']
@@ -385,7 +388,7 @@ class LanguageModelTrainer:
         # Trim off any extra elements that wouldn't cleanly fit (remainders).
         data = data.narrow(0, 0, nbatch * batch_size)
         # Evenly divide the data across the bsz batches.
-        data = data.view(batch_size, -1).t().contiguous()
+        data = data.view(batch_size, -1, device=flair.device).t().contiguous()
         return data
 
     @staticmethod

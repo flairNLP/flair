@@ -477,7 +477,7 @@ class SequenceTagger(flair.nn.Model):
 
     def _forward_alg(self, feats, lens_):
 
-        init_alphas = torch.Tensor(self.tagset_size).fill_(-10000.)
+        init_alphas = torch.tensor(self.tagset_size, dtype=torch.float).fill_(-10000.)
         init_alphas[self.tag_dictionary.get_idx_for_item(START_TAG)] = 0.
 
         forward_var = torch.tensor(
