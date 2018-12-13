@@ -152,8 +152,8 @@ Ilya Loshchilov and Frank Hutter [Fixing Weight Decay Regularization in Adam](ht
 authors suggest to actually do weight decay rather than L2 regularization and they call their method AdamW and SGDW for
 the corresponding Adam and SGD versions. Empirically the results via these optimizers are better than their
 corresponding L2 regularized versions. However as the learning rate and weight decay are decoupled in these methods,
-any learning rate scheduling has to anneal both these terms. Not to worry, we switch schedulers that do this 
-when these optimizers are used automatically.
+any learning rate scheduling has to change both these terms. Not to worry, we automatically switch 
+schedulers that do this when these optimizers are used.
 
 To use these optimizers just create the `ModelTrainer` with `AdamW` or `SGDW` together with any extra options as shown:
 
