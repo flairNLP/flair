@@ -1,3 +1,5 @@
+import torch
+
 from . import data
 from . import models
 from . import visual
@@ -36,3 +38,10 @@ logging.config.dictConfig({
 })
 
 logger = logging.getLogger('flair')
+
+
+device = None
+if torch.cuda.is_available():
+    device = torch.device('cuda')
+else:
+    device = torch.device('cpu')

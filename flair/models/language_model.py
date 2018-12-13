@@ -8,6 +8,7 @@ from typing import List, Union, Tuple
 
 from torch.optim import Optimizer
 
+import flair
 from flair.data import Dictionary
 
 
@@ -55,8 +56,7 @@ class LanguageModel(nn.Module):
         self.init_weights()
 
         # auto-spawn on GPU if available
-        if torch.cuda.is_available():
-            self.cuda()
+        self.to(flair.device)
 
     def init_weights(self):
         initrange = 0.1
@@ -96,10 +96,7 @@ class LanguageModel(nn.Module):
             char_indices = [self.dictionary.get_idx_for_item(char) for char in string]
             sequences_as_char_indices.append(char_indices)
 
-        batch = Variable(torch.LongTensor(sequences_as_char_indices).transpose(0, 1))
-
-        if torch.cuda.is_available():
-            batch = batch.cuda()
+        batch = Variable(torch.LongTensor(sequences_as_char_indices, device=flair.device).transpose(0, 1))
 
         hidden = self.init_hidden(len(strings))
         prediction, rnn_output, hidden = self.forward(batch, hidden)
@@ -132,10 +129,7 @@ class LanguageModel(nn.Module):
     @classmethod
     def load_language_model(cls, model_file: Union[Path, str]):
 
-        if not torch.cuda.is_available():
-            state = torch.load(str(model_file), map_location='cpu')
-        else:
-            state = torch.load(str(model_file))
+        state = torch.load(str(model_file), map_location=flair.device)
 
         model = LanguageModel(state['dictionary'],
                               state['is_forward_lm'],
@@ -146,17 +140,13 @@ class LanguageModel(nn.Module):
                               state['dropout'])
         model.load_state_dict(state['state_dict'])
         model.eval()
-        if torch.cuda.is_available():
-            model.cuda()
+        model.to(flair.device)
 
         return model
 
     @classmethod
     def load_checkpoint(cls, model_file: Path):
-        if not torch.cuda.is_available():
-            state = torch.load(str(model_file), map_location='cpu')
-        else:
-            state = torch.load(str(model_file))
+        state = torch.load(str(model_file), map_location=flair.device)
 
         epoch = state['epoch'] if 'epoch' in state else None
         split = state['split'] if 'split' in state else None
@@ -172,8 +162,7 @@ class LanguageModel(nn.Module):
                               state['dropout'])
         model.load_state_dict(state['state_dict'])
         model.eval()
-        if torch.cuda.is_available():
-            model.cuda()
+        model.to(flair.device)
 
         return {'model': model, 'epoch': epoch, 'split': split, 'loss': loss,
                 'optimizer_state_dict': optimizer_state_dict}
