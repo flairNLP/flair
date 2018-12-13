@@ -171,6 +171,15 @@ class SequenceTaggerParamSelector(ParamSelector):
                  evaluation_metric:EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
                  training_runs: int = 1,
                  optimization_value: OptimizationValue = OptimizationValue.DEV_LOSS):
+        """
+        :param corpus: the corpus
+        :param tag_type: tag type to use
+        :param base_path: the path to the result folder (results will be written to that folder)
+        :param max_epochs: number of epochs to perform on every evaluation run
+        :param evaluation_metric: evaluation metric used during training
+        :param training_runs: number of training runs per evaluation run
+        :param optimization_value: value to optimize
+        """
         super().__init__(corpus, base_path, max_epochs, evaluation_metric, training_runs, optimization_value)
 
         self.tag_type = tag_type
@@ -196,6 +205,16 @@ class TextClassifierParamSelector(ParamSelector):
                  evaluation_metric:EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
                  training_runs: int = 1,
                  optimization_value: OptimizationValue = OptimizationValue.DEV_LOSS):
+        """
+        :param corpus: the corpus
+        :param multi_label: true, if the dataset is multi label, false otherwise
+        :param base_path: the path to the result folder (results will be written to that folder)
+        :param document_embedding_type: either 'lstm', 'mean', 'min', or 'max'
+        :param max_epochs: number of epochs to perform on every evaluation run
+        :param evaluation_metric: evaluation metric used during training
+        :param training_runs: number of training runs per evaluation run
+        :param optimization_value: value to optimize
+        """
         super().__init__(corpus, base_path, max_epochs, evaluation_metric, training_runs, optimization_value)
 
         self.multi_label = multi_label
