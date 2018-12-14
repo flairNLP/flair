@@ -239,7 +239,7 @@ class WordEmbeddings(TokenEmbeddings):
                 else:
                     word_embedding = np.zeros(self.embedding_length, dtype='float')
 
-                word_embedding = torch.FloatTensor(word_embedding)
+                word_embedding = torch.tensor(word_embedding, dtype=torch.float)
 
                 token.set_embedding(self.name, word_embedding)
 
@@ -313,11 +313,12 @@ class ELMoEmbeddings(TokenEmbeddings):
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
                 token: Token = token
 
-                embedding = torch.cat([torch.FloatTensor(sentence_embeddings[0, token_idx, :]),
-                                       torch.FloatTensor(sentence_embeddings[1, token_idx, :]),
-                                       torch.FloatTensor(sentence_embeddings[2, token_idx, :])], 0)
+                word_embedding = torch.cat([
+                    torch.tesnor(sentence_embeddings[0, token_idx, :], dtype=torch.float),
+                    torch.tensor(sentence_embeddings[1, token_idx, :], dtype=torch.float),
+                    torch.tensor(sentence_embeddings[2, token_idx, :], dtype=torch.float)
+                ], 0)
 
-                word_embedding = torch.autograd.Variable(embedding)
                 token.set_embedding(self.name, word_embedding)
 
         return sentences
@@ -382,7 +383,7 @@ class CharacterEmbeddings(TokenEmbeddings):
             for i, c in enumerate(tokens_sorted_by_length):
                 tokens_mask[i, :chars2_length[i]] = c
 
-            tokens_mask = torch.LongTensor(tokens_mask, device=flair.device)
+            tokens_mask = torch.tensor(tokens_mask, dtype=torch.long, device=flair.device)
 
             # chars for rnn processing
             chars = tokens_mask
@@ -395,7 +396,7 @@ class CharacterEmbeddings(TokenEmbeddings):
 
             outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(lstm_out)
             outputs = outputs.transpose(0, 1)
-            chars_embeds_temp = torch.FloatTensor(torch.zeros((outputs.size(0), outputs.size(2))), device=flair.device)
+            chars_embeds_temp = torch.tensor(torch.zeros((outputs.size(0), outputs.size(2))), dtype=torch.float, device=flair.device)
             for i, index in enumerate(output_lengths):
                 chars_embeds_temp[i] = outputs[i, index - 1]
             character_embeddings = chars_embeds_temp.clone()
@@ -648,7 +649,7 @@ class FlairEmbeddings(TokenEmbeddings):
                     break
                 else:
                     for token, embedding in zip(sentence, embeddings):
-                        token.set_embedding(self.name, torch.FloatTensor(embedding))
+                        token.set_embedding(self.name, torch.tensor(embedding, dtype=torch.float, device=flair.device))
 
             if all_embeddings_retrieved_from_cache:
                 return sentences
@@ -1265,7 +1266,8 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
                     token: Token = token
                     word_embeddings.append(token.get_embedding().unsqueeze(0))
 
-                word_embeddings = torch.cat(word_embeddings, dim=0, device=flair.device)
+                word_embeddings = torch.cat(word_embeddings, dim=0)
+                word_embeddings = word_embeddings.to(flair.device)
 
                 mean_embedding = torch.mean(word_embeddings, 0)
 
@@ -1328,7 +1330,8 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
                     token: Token = token
                     word_embeddings.append(token.get_embedding().unsqueeze(0))
 
-                word_embeddings = torch.cat(word_embeddings, dim=0, device=flair.device)
+                word_embeddings = torch.cat(word_embeddings, dim=0)
+                word_embeddings = word_embeddings.to(flair.device)
 
                 if self.mode == 'mean':
                     pooled_embedding = self.pool_op(word_embeddings, 0)
@@ -1443,7 +1446,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
             # PADDING: pad shorter sentences out
             for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
                 word_embeddings.append(
-                    torch.FloatTensor(np.zeros(self.length_of_all_token_embeddings, dtype='float')).unsqueeze(0))
+                    torch.tensor(np.zeros(self.length_of_all_token_embeddings, dtype='float'), dtype=torch.float).unsqueeze(0))
 
             word_embeddings_tensor = torch.cat(word_embeddings, 0)
 
@@ -1455,7 +1458,8 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         # --------------------------------------------------------------------
         # GET REPRESENTATION FOR ENTIRE BATCH
         # --------------------------------------------------------------------
-        sentence_tensor = torch.cat(all_sentence_tensors, 1, device=flair.device)
+        sentence_tensor = torch.cat(all_sentence_tensors, 1)
+        sentence_tensor = sentence_tensor.to(flair.device)
 
         # --------------------------------------------------------------------
         # FF PART

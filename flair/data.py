@@ -188,14 +188,13 @@ class Token:
     def clear_embeddings(self):
         self._embeddings: Dict = {}
 
-    def get_embedding(self) -> torch.FloatTensor:
-
+    def get_embedding(self) -> torch.tensor:
         embeddings = [self._embeddings[embed] for embed in sorted(self._embeddings.keys())]
 
         if embeddings:
             return torch.cat(embeddings, dim=0)
 
-        return torch.FloatTensor()
+        return torch.Tensor()
 
     @property
     def start_position(self) -> int:
@@ -442,7 +441,7 @@ class Sentence:
     def set_embedding(self, name: str, vector):
         self._embeddings[name] = vector.cpu()
 
-    def get_embedding(self) -> torch.autograd.Variable:
+    def get_embedding(self) -> torch.tensor:
         embeddings = []
         for embed in sorted(self._embeddings.keys()):
             embedding = self._embeddings[embed]
@@ -451,7 +450,7 @@ class Sentence:
         if embeddings:
             return torch.cat(embeddings, dim=0)
 
-        return torch.FloatTensor()
+        return torch.Tensor()
 
     def clear_embeddings(self, also_clear_word_embeddings: bool = True):
         self._embeddings: Dict = {}
