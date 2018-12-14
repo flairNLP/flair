@@ -1,4 +1,5 @@
 import re
+import logging
 from abc import abstractmethod
 from pathlib import Path
 from typing import List, Union, Dict
@@ -14,6 +15,9 @@ from pytorch_pretrained_bert.modeling import BertModel, PRETRAINED_MODEL_ARCHIVE
 from .nn import LockedDropout, WordDropout
 from .data import Dictionary, Token, Sentence
 from .file_utils import cached_path
+
+
+log = logging.getLogger('flair')
 
 
 class Embeddings(torch.nn.Module):
@@ -258,12 +262,11 @@ class FlairEmbeddings(TokenEmbeddings):
         super().train(mode=mode)
         if mode:
             # if embeddings are dynamic, they need to be recomputed from scratch each time we do a training run
-            print('train mode resetting embeddings')
+            log.debug('train mode resetting embeddings')
             self.word_embeddings = {}
             self.word_count = {}
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         self.context_embeddings.embed(sentences)
 
         # first, update embeddings of entire batch
@@ -305,10 +308,10 @@ class ELMoEmbeddings(TokenEmbeddings):
         try:
             import allennlp.commands.elmo
         except:
-            print('\n\n----------------------------------------')
-            print('ACHTUNG! The library "allennlp" is not installed!\n')
-            print('To use ELMoEmbeddings, please first install with "pip install allennlp"')
-            print('----------------------------------------\n\n')
+            log.warning('-' * 100)
+            log.warning('ATTENTION! The library "allennlp" is not installed!')
+            log.warning('To use ELMoEmbeddings, please first install with "pip install allennlp"')
+            log.warning('-' * 100)
             pass
 
         self.name = 'elmo-' + model
@@ -1021,7 +1024,6 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         :param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
         dimension as before will be taken.
         :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
-        representation of the lstm to be used as final document embedding.
         :param dropout: the dropout value to be used
         :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
         :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used

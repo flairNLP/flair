@@ -748,31 +748,39 @@ class TaggedCorpus(Corpus):
                 last_counter = int(counter)
         return downsampled
 
-    def print_statistics(self):
+    def obtain_statistics(self, tag_type: str = None) -> dict:
         """
         Print statistics about the class distribution (only labels of sentences are taken into account) and sentence
         sizes.
         """
-        self._print_statistics_for(self.train, "TRAIN")
-        self._print_statistics_for(self.test, "TEST")
-        self._print_statistics_for(self.dev, "DEV")
+        return {
+            "TRAIN": self._obtain_statistics_for(self.train, "TRAIN", tag_type),
+            "TEST": self._obtain_statistics_for(self.test, "TEST", tag_type),
+            "DEV": self._obtain_statistics_for(self.dev, "DEV", tag_type),
+        }
 
     @staticmethod
-    def _print_statistics_for(sentences, name):
+    def _obtain_statistics_for(sentences, name, tag_type) -> dict:
         if len(sentences) == 0:
-            return
+            return {}
 
-        classes_to_count = TaggedCorpus._get_classes_to_count(sentences)
+        classes_to_count = TaggedCorpus._get_class_to_count(sentences)
+        tags_to_count = TaggedCorpus._get_tag_to_count(sentences, tag_type)
         tokens_per_sentence = TaggedCorpus._get_tokens_per_sentence(sentences)
 
-        size_dict = {}
+        label_size_dict = {}
         for l, c in classes_to_count.items():
-            size_dict[l] = c
-        size_dict['total'] = len(sentences)
+            label_size_dict[l] = c
 
-        stats = {
+        tag_size_dict = {}
+        for l, c in tags_to_count.items():
+            tag_size_dict[l] = c
+
+        return {
             'dataset': name,
-            'number_of_documents': size_dict,
+            'total_number_of_documents': len(sentences),
+            'number_of_documents_per_class': label_size_dict,
+            'number_of_tokens_per_tag': tag_size_dict,
             'number_of_tokens': {
                 'total': sum(tokens_per_sentence),
                 'min': min(tokens_per_sentence),
@@ -781,19 +789,27 @@ class TaggedCorpus(Corpus):
             }
         }
 
-        log.info(stats)
-
     @staticmethod
     def _get_tokens_per_sentence(sentences):
         return list(map(lambda x: len(x.tokens), sentences))
 
     @staticmethod
-    def _get_classes_to_count(sentences):
-        classes_to_count = defaultdict(lambda: 0)
+    def _get_class_to_count(sentences):
+        class_to_count = defaultdict(lambda: 0)
         for sent in sentences:
             for label in sent.labels:
-                classes_to_count[label.value] += 1
-        return classes_to_count
+                class_to_count[label.value] += 1
+        return class_to_count
+
+    @staticmethod
+    def _get_tag_to_count(sentences, tag_type):
+        tag_to_count = defaultdict(lambda: 0)
+        for sent in sentences:
+            for word in sent.tokens:
+                if tag_type in word.tags:
+                    label = word.tags[tag_type]
+                    tag_to_count[label.value] += 1
+        return tag_to_count
 
     def __str__(self) -> str:
         return 'TaggedCorpus: %d train + %d dev + %d test sentences' % (len(self.train), len(self.dev), len(self.test))

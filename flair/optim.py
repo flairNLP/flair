@@ -1,3 +1,4 @@
+import logging
 import math
 from functools import partial
 
@@ -5,6 +6,9 @@ import torch
 from torch.optim import Optimizer
 from torch.optim.optimizer import required
 from torch.optim.lr_scheduler import _LRScheduler, ReduceLROnPlateau
+
+
+log = logging.getLogger('flair')
 
 
 class SGDW(Optimizer):
@@ -336,5 +340,4 @@ class ReduceLRWDOnPlateau(ReduceLROnPlateau):
                 if old_weight_decay - new_weight_decay > self.eps:
                     param_group['weight_decay'] = new_weight_decay
                     if self.verbose:
-                        print('Epoch {:5d}: reducing weight decay factor'
-                              ' of group {} to {:.4e}.'.format(epoch, i, new_weight_decay))
+                        log.info(f'Epoch {epoch}: reducing weight decay factor of group {i} to {new_weight_decay:.4e}.')
