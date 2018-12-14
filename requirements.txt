@@ -10,4 +10,4 @@ sklearn
 sqlitedict==1.6.0
 deprecated==1.2.4
 hyperopt==0.1.1
-pytorch-pretrained-bert==0.3.0
+pytorch-pretrained-bert==0.4.0
