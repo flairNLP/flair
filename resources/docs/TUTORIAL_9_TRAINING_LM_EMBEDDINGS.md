@@ -10,7 +10,7 @@ to new languages or domains.
 
 Language models are trained with plain text. In the case of character LMs, we train them to predict the next character
 in a sequence of characters.
-To train your own model, you first need to identify a suitably large corpus. In our eperiments, we used corpora that
+To train your own model, you first need to identify a suitably large corpus. In our experiments, we used corpora that
 have about 1 billion words.
 
 You need to split your corpus into train, validation and test portions.

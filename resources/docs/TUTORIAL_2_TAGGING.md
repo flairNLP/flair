@@ -247,7 +247,7 @@ are provided:
 | ID | Language | Task | Training Dataset | Accuracy |
 | ------------- | ---- | ------------- |------------- |------------- |
 | 'en-sentiment' | English | detecting positive and negative sentiment | movie reviews from [IMDB](http://ai.stanford.edu/~amaas/data/sentiment/)  |  **90.54** (Micro F1) |
-| 'de-offensive-language' | German | detecting offensive language | [GermEval 2018 Task 1](https://projects.fzai.h-da.de/iggsa/projekt/) |  **75.71** (Marco F1) |
+| 'de-offensive-language' | German | detecting offensive language | [GermEval 2018 Task 1](https://projects.fzai.h-da.de/iggsa/projekt/) |  **75.71** (Macro F1) |
 
 
 ## Next 

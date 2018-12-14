@@ -104,7 +104,7 @@ You can load any of the pre-trained BERT models by providing the model string du
 | 'bert-large-uncased'   | English | 24-layer, 1024-hidden, 16-heads, 340M parameters |
 | 'bert-base-cased'    | English | 12-layer, 768-hidden, 12-heads , 110M parameters |
 | 'bert-large-cased'   | English | 24-layer, 1024-hidden, 16-heads, 340M parameters |
-| 'bert-base-multilingual-cased'     | 102 languages | 12-layer, 768-hidden, 12-heads, 110M parameters |
+| 'bert-base-multilingual-cased'     | 104 languages | 12-layer, 768-hidden, 12-heads, 110M parameters |
 | 'bert-base-chinese'    | Chinese Simplified and Traditional | 12-layer, 768-hidden, 12-heads, 110M parameters |
 
 

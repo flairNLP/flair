@@ -145,7 +145,7 @@ plotter.plot_learning_rate(learning_rate_tsv)
 
 ## Custom Optimizers
 
-You can now use any of PyTorch's optimizers for training when intializing a `ModelTrainer`. To give the optimizer any
+You can now use any of PyTorch's optimizers for training when initializing a `ModelTrainer`. To give the optimizer any
 extra options just specify it as shown with the `weight_decay` example:
 
 ```python
