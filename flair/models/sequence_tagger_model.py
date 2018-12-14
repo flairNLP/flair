@@ -485,7 +485,6 @@ class SequenceTagger(flair.nn.Model):
             feats.shape[1] + 1,
             feats.shape[2],
             device=flair.device
-
         ).fill_(0)
 
         forward_var[:, 0, :] = init_alphas[None, :].repeat(feats.shape[0], 1)

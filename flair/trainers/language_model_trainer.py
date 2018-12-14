@@ -403,8 +403,8 @@ class LanguageModelTrainer:
 
     @staticmethod
     def _repackage_hidden(h):
-        """Wraps hidden states in new Variables, to detach them from their history."""
-        return tuple(v.clone().detach().requires_grad_(True) for v in h)
+        """Wraps hidden states in new tensors, to detach them from their history."""
+        return tuple(v.clone().detach() for v in h)
 
     @staticmethod
     def load_from_checkpoint(checkpoint_file: Path, corpus: TextCorpus, optimizer: Optimizer = SGD):

@@ -383,10 +383,8 @@ class CharacterEmbeddings(TokenEmbeddings):
             for i, c in enumerate(tokens_sorted_by_length):
                 tokens_mask[i, :chars2_length[i]] = c
 
-            tokens_mask = torch.LongTensor(tokens_mask, device=flair.device)
-
             # chars for rnn processing
-            chars = tokens_mask
+            chars = torch.LongTensor(tokens_mask, device=flair.device)
 
             character_embeddings = self.char_embedding(chars).transpose(0, 1)
 
@@ -649,7 +647,7 @@ class FlairEmbeddings(TokenEmbeddings):
                     break
                 else:
                     for token, embedding in zip(sentence, embeddings):
-                        token.set_embedding(self.name, torch.FloatTensor(embedding, device=flair.device))
+                        token.set_embedding(self.name, torch.FloatTensor(embedding))
 
             if all_embeddings_retrieved_from_cache:
                 return sentences
