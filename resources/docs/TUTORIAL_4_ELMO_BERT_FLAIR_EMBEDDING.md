@@ -1,8 +1,17 @@
-# Tutorial 3: Word Embeddings
+# Tutorial 4: BERT, ELMo, and Flair Embeddings
 
 We provide a set of classes with which you can embed the words in sentences in various ways. This tutorial explains
 how that works. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this 
 library.  
+
+## Embeddings
+
+All word embedding classes inherit from the `TokenEmbeddings` class and implement the `embed()` method which you need to
+call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains
+hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
+
+All embeddings produced with our methods are Pytorch vectors, so they can be immediately used for training and
+fine-tuning.
 
 ## Flair Embeddings
 
@@ -104,7 +113,8 @@ You can load any of the pre-trained BERT models by providing the model string du
 [ELMo embeddings](http://www.aclweb.org/anthology/N18-1202) were presented by Peters et al. in 2018. They are using
 a bidirectional recurrent neural network to predict the next word in a text.
 We are using the implementation of [AllenNLP](https://allennlp.org/elmo). As this implementation comes with a lot of
-sub-dependencies, you need to first install the library via `pip install allennlp` before you can use it in Flair.
+sub-dependencies, which we don't want to include in Flair, you need to first install the library via
+`pip install allennlp` before you can use it in Flair.
 Using the embeddings is as simple as using any other embedding type:
 
 ```python
@@ -120,7 +130,7 @@ sentence = Sentence('The grass is green .')
 embedding.embed(sentence)
 ```
 
-AllenNLP provides the following pre-trained models, that can be used. To use any of the following models inside Flair
+AllenNLP provides the following pre-trained models. To use any of the following models inside Flair
 simple specify the embedding id when initializing the `ELMoEmbeddings`.
 
 | ID | Language | Embedding |

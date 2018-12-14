@@ -1,4 +1,4 @@
-# Tutorial 6: Training a Model
+# Tutorial 7: Training a Model
 
 This part of the tutorial shows how you can train your own sequence labeling and text
 classification models using state-of-the-art word embeddings.
@@ -75,7 +75,7 @@ plotter.plot_weights('resources/taggers/example-ner/weights.txt')
 
 ```
 
-Alternatively, try using a stacked embedding with charLM and glove, over the full data, for 150 epochs.
+Alternatively, try using a stacked embedding with CharLM and GloVe, over the full data, for 150 epochs.
 This will give you the state-of-the-art accuracy we report in the paper. To see the full code to reproduce experiments,
 check [here](/resources/docs/EXPERIMENTS.md).
 

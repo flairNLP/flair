@@ -1,6 +1,6 @@
-# Tutorial 7: Model Tuning
+# Tutorial 8: Model Tuning
 
-This is part 7 of the tutorial, in which we look into how we can improve the quality of our model by selecting
+This is part 8 of the tutorial, in which we look into how we can improve the quality of our model by selecting
 the right set of model and hyper parameters.
 
 ## Selecting Hyper Parameters
@@ -52,7 +52,7 @@ Depending on the task you need either to define a `TextClassifierParamSelector` 
 start the optimization.
 You can define the maximum number of evaluation runs hyperopt should perform (`max_evals`).
 A evaluation run performs the specified number of epochs (`max_epochs`). 
-To overcome the issue of noisy evaluation scores, we take the average over the last three the evaluation scores (either 
+To overcome the issue of noisy evaluation scores, we take the average over the last three evaluation scores (either
 `dev_score` or `dev_loss`) from the evaluation run, which represents the final score and will be passed to hyperopt.
 Additionally, you can specify the number of runs per evaluation run (`training_runs`). 
 If you specify more than one training run, one evaluation run will be executed the specified number of times.
@@ -92,7 +92,7 @@ not improve, an optimal learning rate range where the loss drops the steepest an
 explodes as the learning rate becomes too big. With such a plot, the optimal learning rate selection is as easy as
 picking the highest one from the optimal phase.
 
-In order to run such an experiment start with your initialized `ModelTrainer` and call  `find_learning_rate()` with the
+In order to run such an experiment start with your initialized `ModelTrainer` and call `find_learning_rate()` with the
 `base_path` and the file name in which to records the learning rates and losses. Then plot the generated results via the
 `Plotter`'s `plot_learning_rate()` function and have a look at the `learning_rate.png` image to select the optimal
 learning rate:
@@ -102,7 +102,6 @@ from flair.data import TaggedCorpus
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
 from flair.trainers import ModelTrainer
-from flair.training_utils import EvaluationMetric
 from typing import List
 
 # 1. get the corpus

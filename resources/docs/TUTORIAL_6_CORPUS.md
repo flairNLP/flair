@@ -1,4 +1,4 @@
-# Tutorial 5: Creating a Corpus
+# Tutorial 6: Creating a Corpus
 
 This part of the tutorial shows how you can load your own corpus for training your own model later on.
 
@@ -85,6 +85,9 @@ above format located in one folder. This data folder structure could, for exampl
 If you now point the `NLPTaskDataFetcher` to this folder (`/resources/tasks/imdb`), it will create a `TaggedCorpus` out of 
 the three different files. Thereby, each line in a file is converted to a `Sentence` object annotated with the labels.
 
+Attention: A text in a line can have multiple sentences. Thus, a `Sentence` object can actually consist of multiple
+sentences.
+
 ```python
 from flair.data_fetcher import NLPTaskDataFetcher
 from pathlib import Path
@@ -97,7 +100,7 @@ corpus: TaggedCorpus = NLPTaskDataFetcher.load_classification_corpus(data_folder
 ```
 
 If you just want to read a single file, you can use 
-`NLPTaskDataFetcher.read_text_classification_file('path/to/file.txt)`, which returns a list of sentences.
+`NLPTaskDataFetcher.read_text_classification_file('path/to/file.txt)`, which returns a list of `Sentence` objects.
 
 
 ## Downloading A Dataset
@@ -134,7 +137,9 @@ The following datasets are supported:
 ## The TaggedCorpus Object
 
 The `TaggedCorpus` represents your entire dataset. A `TaggedCorpus` consists of a list of `train` sentences,
-a list of `dev` sentences, and a list of `test` sentences. A `TaggedCorpus` contains a bunch of useful helper functions. 
+a list of `dev` sentences, and a list of `test` sentences.
+
+A `TaggedCorpus` contains a bunch of useful helper functions.
 For instance, you can downsample the data by calling `downsample()` and passing a ratio. So, if you normally get a 
 corpus like this:
 
@@ -191,7 +196,6 @@ corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, Path('path/to/your/dataset
 stats = corpus.obtain_statistics()
 print(stats)
 ```
-
 outputs the following information
 
 ```text

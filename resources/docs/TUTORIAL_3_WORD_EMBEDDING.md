@@ -2,10 +2,10 @@
 
 We provide a set of classes with which you can embed the words in sentences in various ways. This tutorial explains
 how that works. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this 
-library.  
+library.
 
 
-# Embeddings
+## Embeddings
 
 All word embedding classes inherit from the `TokenEmbeddings` class and implement the `embed()` method which you need to 
 call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains 
@@ -13,6 +13,7 @@ hidden behind this interface. Simply instantiate the embedding class you require
 
 All embeddings produced with our methods are Pytorch vectors, so they can be immediately used for training and
 fine-tuning.
+
 
 ## Classic Word Embeddings
 
@@ -116,14 +117,15 @@ sentence = Sentence('The grass is green .')
 embedding.embed(sentence)
 ```
 
-# Stacked Embeddings
+## Stacked Embeddings
 
-Stacked embeddings are one of the most important concepts of this library. You can use them to combine different embeddings
-together, for instance if you want to use both traditional embeddings together with contextual sting embeddings. 
+Stacked embeddings are one of the most important concepts of this library. You can use them to combine different
+embeddings together, for instance if you want to use both traditional embeddings together with contextual sting
+embeddings (see next chapter).
 Stacked embeddings allow you to mix and match. We find that a combination of embeddings often gives best results. 
 
 All you need to do is use the `StackedEmbeddings` class and instantiate it by passing a list of embeddings that you wish 
-to combine. For instance, lets combine classic GloVe embeddings with embeddings from a forward and backward 
+to combine. For instance, lets combine classic GloVe embeddings with embeddings from a forward and backward
 character language model.
 
 First, instantiate the three embeddings you wish to combine: 
@@ -168,8 +170,7 @@ vector is still a single Pytorch vector.
 
 ## Next 
 
-You can now either look into [document embeddings](/resources/docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md) to embed entire text 
-passages with one vector for tasks such as text classification, or go directly to the tutorial about 
-[loading your corpus](/resources/docs/TUTORIAL_6_CORPUS.md), which is a pre-requirement for
-[training your own models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md).
+You can now either look into [BERT, ELMo, and Flair embeddings](/resources/docs/TUTORIAL_6_ELMO_BERT_FLAIR_EMBEDDINGS.md),
+or go directly to the tutorial about [loading your corpus](/resources/docs/TUTORIAL_6_CORPUS.md), which is a
+pre-requirement for [training your own models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md).
 

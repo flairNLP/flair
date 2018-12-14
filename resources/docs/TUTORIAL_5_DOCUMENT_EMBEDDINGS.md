@@ -1,4 +1,4 @@
-# Tutorial 4: Document Embeddings
+# Tutorial 5: Document Embeddings
 
 Document embeddings are different from [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) in that they 
 give you one embedding for an entire text, whereas word embeddings give you embeddings for individual words. 
@@ -6,7 +6,7 @@ give you one embedding for an entire text, whereas word embeddings give you embe
 For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this
 library and how [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) work.
 
-# Embeddings
+## Embeddings
 
 All document embedding classes inherit from the `DocumentEmbeddings` class and implement the `embed()` method which you
 need to call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains
@@ -15,7 +15,7 @@ hidden behind this interface. Simply instantiate the embedding class you require
 All embeddings produced with our methods are Pytorch vectors, so they can be immediately used for training and
 fine-tuning.
 
-# Document Embeddings
+## Document Embeddings
 
 Our document embeddings are created from the embeddings of all words in the document.
 Currently, we have two different methods to obtain a document embedding from a list of word embeddings.

@@ -1,6 +1,8 @@
 # Tutorial 2: Tagging your Text
 
-This is part 2 of the tutorial. It assumes that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library. Here, we show how to use our pre-trained models to tag your text. 
+This is part 2 of the tutorial. It assumes that you're familiar with the
+[base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library. Here, we show how to use our pre-trained models to
+tag your text.
 
 ## Tagging with Pre-Trained Sequence Tagging Models
 
@@ -14,8 +16,7 @@ from flair.models import SequenceTagger
 tagger = SequenceTagger.load('ner')
 ```
 All you need to do is use the `predict()` method of the tagger on a sentence. This will add predicted tags to the tokens
-in the sentence. Lets use a sentence with two named
-entities: 
+in the sentence. Lets use a sentence with two named entities:
 
 ```python
 sentence = Sentence('George Washington went to Washington .')
@@ -36,7 +37,7 @@ George <B-PER> Washington <E-PER> went to Washington <S-LOC> .
 
 Many sequence labeling methods annotate spans that consist of multiple words,
 such as "George Washington" in our example sentence.
-You can directly get such spans a tagged sentence like this:
+You can directly get such spans in a tagged sentence like this:
 
 ```python
 for entity in sentence.get_spans('ner'):
@@ -121,7 +122,8 @@ Thanks to our contributors we are also able to distribute a couple of models for
 ### Tagging a German sentence
 
 As indicated in the list above, we also provide pre-trained models for languages other than English. Currently, we
-support German and other languages are forthcoming. To tag a German sentence, just load the appropriate model:
+support German, French, and Dutch other languages are forthcoming. To tag a German sentence, just load the appropriate
+model:
 
 ```python
 
@@ -145,11 +147,11 @@ George <B-PER> Washington <E-PER> ging nach Washington <S-LOC> .
 
 ### Experimental: Semantic Frame Detection
 
-For English, we now provide a pre-trained model that detects semantic frames in text, trained using Propbank 3.0 frames. 
+For English, we provide a pre-trained model that detects semantic frames in text, trained using Propbank 3.0 frames.
 This provides a sort of word sense disambiguation for frame evoking words, and we are curious what researchers might
 do with this. 
 
-Here's an example: 
+Here's an example:
 
 ```python
 # load model
@@ -176,14 +178,15 @@ He had <have.LV> a look <look.01> at different hats .
 ```
 
 As we can see, the frame detector makes a distinction in sentence 1 between two different meanings of the word 'return'.
-'return.01' means returning to a location, while 'return.02' means giving something back. 
+'return.01' means returning to a location, while 'return.02' means giving something back.
 
-Similarly, in sentence 2 the frame detector finds a light verb construction in which 'have' is the light verb and 
+Similarly, in sentence 2 the frame detector finds a light verb construction in which 'have' is the light verb and
 'look' is a frame evoking word.
 
 ### Tagging a List of Sentences
 
-Often, you may want to tag an entire text corpus. In this case, you need to split the corpus into sentences and pass a list of `Sentence` objects to the `.predict()` method.
+Often, you may want to tag an entire text corpus. In this case, you need to split the corpus into sentences and pass a
+list of `Sentence` objects to the `.predict()` method.
 
 For instance, you can use the sentence splitter of segtok to split your text:
 
@@ -201,7 +204,8 @@ tagger: SequenceTagger = SequenceTagger.load('ner')
 tagger.predict(sentences)
 ```
 
-Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the tagger. Depending on your resources, you might want to play around with this parameter to optimize speed.
+Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the
+tagger. Depending on your resources, you might want to play around with this parameter to optimize speed.
 
 
 ## Tagging with Pre-Trained Text Classification Models
@@ -248,4 +252,5 @@ are provided:
 
 ## Next 
 
-Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) to embed your text.
+Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) to embed your
+text.
