@@ -123,6 +123,6 @@ dimension as before will be taken.
 
 ## Next 
 
-You can now either look into the tutorial about [loading your corpus](/resources/docs/TUTORIAL_5_CORPUS.md), which
-is a pre-requirement for [training your own models](/resources/docs/TUTORIAL_6_TRAINING_A_MODEL.md)
-or into [training your own embeddings](/resources/docs/TUTORIAL_8_TRAINING_LM_EMBEDDINGS.md).
+You can now either look into the tutorial about [loading your corpus](/resources/docs/TUTORIAL_6_CORPUS.md), which
+is a pre-requirement for [training your own models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
+or into [training your own embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md).

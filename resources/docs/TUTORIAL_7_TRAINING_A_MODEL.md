@@ -5,7 +5,7 @@ classification models using state-of-the-art word embeddings.
 
 For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this
 library and how [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) work. You should also know how to [load
-a corpus](/resources/docs/TUTORIAL_5_CORPUS.md)
+a corpus](/resources/docs/TUTORIAL_6_CORPUS.md)
 
 
 ## Training a Sequence Labeling Model
@@ -277,5 +277,5 @@ instantiate like this: `CharLMEmbeddings('news-forward-fast', use_cache=False')`
 
 ## Next
 
-You can now either look into [optimizing your model](/resources/docs/TUTORIAL_7_MODEL_OPTIMIZATION.md) or
-[training your own embeddings](/resources/docs/TUTORIAL_8_TRAINING_LM_EMBEDDINGS.md).
+You can now either look into [optimizing your model](/resources/docs/TUTORIAL_8_MODEL_OPTIMIZATION.md) or
+[training your own embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md).

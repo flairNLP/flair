@@ -237,4 +237,4 @@ and training operates as usual.
 
 ## Next
 
-You can now look into [training your own models](/resources/docs/TUTORIAL_6_TRAINING_A_MODEL.md).
+You can now look into [training your own models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md).

@@ -179,4 +179,4 @@ trainer: ModelTrainer = ModelTrainer(tagger, corpus,
 
 ## Next
 
-The last tutorial is about [training your own embeddings](/resources/docs/TUTORIAL_8_TRAINING_LM_EMBEDDINGS.md).
+The last tutorial is about [training your own embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md).
