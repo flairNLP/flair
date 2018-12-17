@@ -103,11 +103,13 @@ In case you do not have a GPU available, we also distribute smaller models that 
 
 We also distribute German models.
 
-| ID | Task | Training Dataset | Accuracy |
-| -------------    | ------------- |------------- |------------- |
-| 'de-ner' | 4-class Named Entity Recognition |  Conll-03  |  **87.99** (F1) |
-| 'de-ner-germeval' | 4+4-class Named Entity Recognition |  Germeval  |  **84.90** (F1) |
-| 'de-pos' | Part-of-Speech Tagging |  Universal Dependency Treebank  |  **94.77** (Accuracy) |
+| ID | Task | Training Dataset | Accuracy | Contributor |
+| -------------    | ------------- |------------- |------------- |------------- |
+| 'de-ner' | 4-class Named Entity Recognition |  Conll-03  |  **87.99** (F1) | |
+| 'de-ner-germeval' | 4+4-class Named Entity Recognition |  Germeval  |  **84.90** (F1) | |
+| 'de-pos' | Part-of-Speech Tagging |  Universal Dependency Treebank  |  **94.77** (Accuracy) | |
+| 'de-pos-fine-grained' | Part-of-Speech Tagging |  German Tweets  |  **93.06** (Accuracy) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/pos-twitter-german) |
+
 
 #### Models for other Languages
 

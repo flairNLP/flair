@@ -629,6 +629,12 @@ class SequenceTagger(flair.nn.Model):
                                   'de-pos-ud-v0.2.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
+        elif model.lower() == 'de-pos-fine-grained':
+            base_path = '/'.join([aws_resource_path_v04,
+                                  'POS-fine-grained-german-tweets',
+                                  'de-pos-twitter-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
         elif model.lower() == 'de-ner':
             base_path = '/'.join([aws_resource_path,
                                   'NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2',
