@@ -406,7 +406,7 @@ def test_train_language_model(results_base_path, resources_path):
 
     text = language_model.generate_text(100)
     assert (text is not None)
-    assert (len(text) == 100)
+    assert (len(text) >= 100)
 
     # clean up results directory
     shutil.rmtree(results_base_path, ignore_errors=True)
