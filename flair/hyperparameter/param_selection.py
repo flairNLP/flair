@@ -2,7 +2,7 @@ import logging
 from abc import abstractmethod
 from enum import Enum
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Union
 import numpy as np
 
 from hyperopt import hp, fmin, tpe
@@ -41,12 +41,15 @@ class ParamSelector(object):
 
     def __init__(self,
                  corpus: Corpus,
-                 base_path: Path,
+                 base_path: Union[str, Path],
                  max_epochs: int,
                  evaluation_metric: EvaluationMetric,
                  training_runs: int,
                  optimization_value: OptimizationValue
                  ):
+        if type(base_path) is str:
+            base_path = Path(base_path)
+
         self.corpus = corpus
         self.max_epochs = max_epochs
         self.base_path = base_path
@@ -163,11 +166,20 @@ class SequenceTaggerParamSelector(ParamSelector):
     def __init__(self,
                  corpus: Corpus,
                  tag_type: str,
-                 base_path: Path,
+                 base_path: Union[str, Path],
                  max_epochs: int = 50,
                  evaluation_metric:EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
                  training_runs: int = 1,
                  optimization_value: OptimizationValue = OptimizationValue.DEV_LOSS):
+        """
+        :param corpus: the corpus
+        :param tag_type: tag type to use
+        :param base_path: the path to the result folder (results will be written to that folder)
+        :param max_epochs: number of epochs to perform on every evaluation run
+        :param evaluation_metric: evaluation metric used during training
+        :param training_runs: number of training runs per evaluation run
+        :param optimization_value: value to optimize
+        """
         super().__init__(corpus, base_path, max_epochs, evaluation_metric, training_runs, optimization_value)
 
         self.tag_type = tag_type
@@ -187,12 +199,22 @@ class TextClassifierParamSelector(ParamSelector):
     def __init__(self,
                  corpus: Corpus,
                  multi_label: bool,
-                 base_path: Path,
+                 base_path: Union[str, Path],
                  document_embedding_type: str,
                  max_epochs: int = 50,
                  evaluation_metric:EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
                  training_runs: int = 1,
                  optimization_value: OptimizationValue = OptimizationValue.DEV_LOSS):
+        """
+        :param corpus: the corpus
+        :param multi_label: true, if the dataset is multi label, false otherwise
+        :param base_path: the path to the result folder (results will be written to that folder)
+        :param document_embedding_type: either 'lstm', 'mean', 'min', or 'max'
+        :param max_epochs: number of epochs to perform on every evaluation run
+        :param evaluation_metric: evaluation metric used during training
+        :param training_runs: number of training runs per evaluation run
+        :param optimization_value: value to optimize
+        """
         super().__init__(corpus, base_path, max_epochs, evaluation_metric, training_runs, optimization_value)
 
         self.multi_label = multi_label

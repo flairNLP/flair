@@ -1,101 +1,12 @@
-# Tutorial 5: Training a Model
+# Tutorial 7: Training a Model
 
 This part of the tutorial shows how you can train your own sequence labeling and text
 classification models using state-of-the-art word embeddings.
 
-For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_BASICS.md) of this
-library and how [word embeddings](/resources/docs/TUTORIAL_WORD_EMBEDDING.md) work.
+For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this
+library and how [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) work. You should also know how to [load
+a corpus](/resources/docs/TUTORIAL_6_CORPUS.md)
 
-
-## Reading A Column-Formatted Dataset
-
-Most sequence labeling datasets in NLP use some sort of column format in which each line is a word and each column is
-one level of linguistic annotation. See for instance this sentence:
-
-```console
-George N B-PER
-Washington N I-PER
-went V O
-to P O
-Washington N B-LOC
-```
-
-The first column is the word itself, the second coarse PoS tags, and the third BIO-annotated NER tags. To read such a dataset,
-define the column structure as a dictionary and use a helper method.
-
-```python
-
-# define columns
-columns = {0: 'text', 1: 'pos', 2: 'np'}
-
-# this is the folder in which train, test and dev files reside
-data_folder = '/path/to/data/folder'
-
-# retrieve corpus using column format, data folder and the names of the train, dev and test files
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_column_corpus(data_folder, columns,
-                                                              train_file='train.txt',
-                                                              test_file='test.txt',
-                                                              dev_file='dev.txt')
-```
-
-This gives you a `TaggedCorpus` object that contains the train, dev and test splits, each as a list of `Sentence`.
-So, to check how many sentences there are in the training split, do
-
-```python
-len(corpus.train)
-```
-
-You can also access a sentence and check out annotations. Lets assume that the first sentence in the training split is
-the example sentence from above, then executing these commands
-
-```python
-print(corpus.train[0].to_tagged_string('pos'))
-print(corpus.train[0].to_tagged_string('ner'))
-```
-
-will print the sentence with different layers of annotation:
-
-```console
-George <N> Washington <N> went <V> to <P> Washington <N>
-
-George <B-PER> Washington <I-PER> went to Washington <B-LOC> .
-```
-
-
-## The TaggedCorpus Object
-
-The `TaggedCorpus` contains a bunch of useful helper functions. For instance, you can downsample the data by calling
-`downsample()` and passing a ratio. So, if you normally get a corpus like this:
-
-```python
-original_corpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03)
-```
-
-then you can downsample the corpus, simply like this:
-
-```python
-downsampled_corpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03).downsample(0.1)
-```
-
-If you print both corpora, you see that the second one has been downsampled to 10% of the data.
-
-```python
-print("--- 1 Original ---")
-print(original_corpus)
-
-print("--- 2 Downsampled ---")
-print(downsampled_corpus)
-```
-
-This should print:
-
-```console
---- 1 Original ---
-TaggedCorpus: 14987 train + 3466 dev + 3684 test sentences
-
---- 2 Downsampled ---
-TaggedCorpus: 1499 train + 347 dev + 369 test sentences
-```
 
 ## Training a Sequence Labeling Model
 
@@ -109,7 +20,7 @@ from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
 from typing import List
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03).downsample(0.1)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03).downsample(0.1)
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -164,9 +75,10 @@ plotter.plot_weights('resources/taggers/example-ner/weights.txt')
 
 ```
 
-Alternatively, try using a stacked embedding with charLM and glove, over the full data, for 150 epochs.
+Alternatively, try using a stacked embedding with CharLM and GloVe, over the full data, for 150 epochs.
 This will give you the state-of-the-art accuracy we report in the paper. To see the full code to reproduce experiments,
 check [here](/resources/docs/EXPERIMENTS.md).
+
 
 ## Training a Text Classification Model
 
@@ -175,42 +87,6 @@ embeddings and contextual string embeddings. In this example, we downsample the 
 
 The AGNews corpus can be downloaded [here](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html).
 
-### Preparing the data
-
-We use the [FastText format](https://fasttext.cc/docs/en/supervised-tutorial.html) for text classification data, in which
-each line in the file represents a text document. A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix
-`__label__`. This looks like this:
-
-
-```bash
-__label__<label_1> <text>
-__label__<label_1> __label__<label_2> <text>
-```
-
-Point the `NLPTaskDataFetcher` to this file to convert each line to a `Sentence` object annotated with the labels. It returns a list of `Sentence`.
-
-```python
-from flair.data_fetcher import NLPTaskDataFetcher
-
-# use your own data path
-data_folder = 'path/to/text-classification/formatted/data'
-
-# get training, test and dev data
-sentences: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(data_folder)
-```
-
-
-### Training the classifier
-
-To train a model, you need to create three files in this way: A train, dev and test file. After you converted the data you can use the
-`NLPTaskDataFetcher` to read the data, if the data files are located in the following folder structure:
-```
-/resources/tasks/ag_news/train.txt
-/resources/tasks/ag_news/dev.txt
-/resources/tasks/ag_news/test.txt
-```
-
-Here the example code for training the text classifier.
 ```python
 from flair.data import TaggedCorpus
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
@@ -218,9 +94,11 @@ from flair.embeddings import WordEmbeddings, CharLMEmbeddings, DocumentLSTMEmbed
 from flair.models import TextClassifier
 from flair.trainers import ModelTrainer
 from flair.training_utils import EvaluationMetric
+from pathlib import Path
+
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.AG_NEWS).downsample(0.1)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.AG_NEWS, Path('path/to/data/folder')).downsample(0.1)
 
 # 2. create the label dictionary
 label_dict = corpus.make_label_dictionary()
@@ -232,7 +110,7 @@ word_embeddings = [WordEmbeddings('glove'),
 
 # 4. init document embedding by passing list of word embeddings
 document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings(word_embeddings,
-                                                                     hidden_states=512,
+                                                                     hidden_size=512,
                                                                      reproject_words=True,
                                                                      reproject_words_dimension=256,)
 
@@ -271,6 +149,10 @@ for sentence in sentences:
     print(sentence.labels)
 ```
 
+## Multi-Dataset Training
+
+TODO
+
 
 ## Plotting Training Curves and Weights
 
@@ -282,11 +164,82 @@ After training, simple point the plotter to these files:
 ```python
 from flair.visual.training_curves import Plotter
 plotter = Plotter()
-plotter.plot_training_curves('resources/ag_news/results/loss.tsv')
-plotter.plot_weights('resources/ag_news/results/weights.txt')
+plotter.plot_training_curves('loss.tsv')
+plotter.plot_weights('weights.txt')
 ```
 
 This generates PNG plots in the result folder.
+
+
+## Resuming Training
+
+If you want to stop the training at some point and resume it at a later point, you should train with the parameter
+`checkpoint` set to `True`.
+This will save the model plus training parameters after every epoch.
+Thus, you can load the model plus trainer at any later point and continue the training exactly there where you have
+left.
+
+The example code below shows how to train, stop, and continue training of a `SequenceTagger`.
+Same can be done for `TextClassifier`.
+
+```python
+from flair.data import TaggedCorpus
+from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
+from typing import List
+
+# 1. get the corpus
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03).downsample(0.1)
+
+# 2. what tag do we want to predict?
+tag_type = 'ner'
+
+# 3. make the tag dictionary from the corpus
+tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+
+# 4. initialize embeddings
+embedding_types: List[TokenEmbeddings] = [
+    WordEmbeddings('glove')
+]
+
+embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
+
+# 5. initialize sequence tagger
+from flair.models import SequenceTagger
+
+tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+                                        embeddings=embeddings,
+                                        tag_dictionary=tag_dictionary,
+                                        tag_type=tag_type,
+                                        use_crf=True)
+
+# 6. initialize trainer
+from flair.trainers import ModelTrainer
+from flair.training_utils import EvaluationMetric
+
+trainer: ModelTrainer = ModelTrainer(tagger, corpus)
+
+# 7. start training
+trainer.train('resources/taggers/example-ner',
+              EvaluationMetric.MICRO_F1_SCORE,
+              learning_rate=0.1,
+              mini_batch_size=32,
+              max_epochs=150,
+              checkpoint=True)
+
+# 8. stop training at any point
+
+# 9. continue trainer at later point
+from pathlib import Path
+
+trainer = ModelTrainer.load_from_checkpoint(Path('resources/taggers/example-ner/checkpoint.pt'), 'SequenceTagger', corpus)
+trainer.train('resources/taggers/example-ner',
+              EvaluationMetric.MICRO_F1_SCORE,
+              learning_rate=0.1,
+              mini_batch_size=32,
+              max_epochs=150,
+              checkpoint=True)
+```
 
 
 ## Scalability: Training on Large Data Sets
@@ -322,7 +275,7 @@ you should disable this option. You can do this when instantiating the embedding
 instantiate like this: `CharLMEmbeddings('news-forward-fast', use_cache=False')`
 
 
-
 ## Next
 
-You can now look into [training your own embeddings](/resources/docs/TUTORIAL_TRAINING_LM_EMBEDDINGS.md).
+You can now either look into [optimizing your model](/resources/docs/TUTORIAL_8_MODEL_OPTIMIZATION.md) or
+[training your own embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md).

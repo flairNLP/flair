@@ -1,8 +1,10 @@
 # Tutorial 2: Tagging your Text
 
-This is part 2 of the tutorial. It assumes that you're familiar with the [base types](/resources/docs/TUTORIAL_BASICS.md) of this library. Here, we show how to use our pre-trained models to tag your text. 
+This is part 2 of the tutorial. It assumes that you're familiar with the
+[base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library. Here, we show how to use our pre-trained models to
+tag your text.
 
-## Tagging with Pre-Trained Models
+## Tagging with Pre-Trained Sequence Tagging Models
 
 Let's use a pre-trained model for named entity recognition (NER). 
 This model was trained over the English CoNLL-03 task and can recognize 4 different entity
@@ -14,8 +16,7 @@ from flair.models import SequenceTagger
 tagger = SequenceTagger.load('ner')
 ```
 All you need to do is use the `predict()` method of the tagger on a sentence. This will add predicted tags to the tokens
-in the sentence. Lets use a sentence with two named
-entities: 
+in the sentence. Lets use a sentence with two named entities:
 
 ```python
 sentence = Sentence('George Washington went to Washington .')
@@ -32,11 +33,11 @@ This should print:
 George <B-PER> Washington <E-PER> went to Washington <S-LOC> . 
 ```
 
-## Getting Annotated Spans
+### Getting Annotated Spans
 
 Many sequence labeling methods annotate spans that consist of multiple words,
 such as "George Washington" in our example sentence.
-You can directly get such spans a tagged sentence like this:
+You can directly get such spans in a tagged sentence like this:
 
 ```python
 for entity in sentence.get_spans('ner'):
@@ -68,13 +69,13 @@ This should print:
     ]}
 ```
 
-## List of Pre-Trained Models
+### List of Pre-Trained Sequence Tagger Models
 
 You choose which pre-trained model you load by passing the appropriate
 string to the `load()` method of the `SequenceTagger` class. Currently, the following pre-trained models
 are provided:
 
-### English Models
+#### English Models
 
 | ID | Task | Training Dataset | Accuracy |
 | -------------    | ------------- |------------- |------------- |
@@ -85,7 +86,7 @@ are provided:
 | 'frame'  |   Semantic Frame Detection  (***Experimental***)|  Propbank 3.0     |  **93.92** (F1) |
 
 
-### Fast English Models
+#### Fast English Models
 
 In case you do not have a GPU available, we also distribute smaller models that run faster on CPU.
 
@@ -98,7 +99,7 @@ In case you do not have a GPU available, we also distribute smaller models that 
 | 'pos-fast' |  Part-of-Speech Tagging |  Ontonotes     |  **97.93** (Accuracy) |
 | 'frame-fast'  |   Semantic Frame Detection  (***Experimental***)| Propbank 3.0     |  **93.50** (F1) |
 
-### German Models
+#### German Models
 
 We also distribute German models.
 
@@ -108,12 +109,21 @@ We also distribute German models.
 | 'de-ner-germeval' | 4+4-class Named Entity Recognition |  Germeval  |  **84.90** (F1) |
 | 'de-pos' | Part-of-Speech Tagging |  Universal Dependency Treebank  |  **94.77** (Accuracy) |
 
+#### Models for other Languages
+
+Thanks to our contributors we are also able to distribute a couple of models for other languages.
+
+| ID | Task | Training Dataset | Accuracy | Contributor |
+| -------------    | ------------- |------------- |------------- |------------- |
+| 'fr-ner' | Named Entity Recognition |  [WikiNER (aij-wikiner-fr-wp3)](https://github.com/dice-group/FOX/tree/master/input/Wikiner)  |  **87,80** (F1) | [mhham](https://github.com/mhham) |
+| 'nl-ner' | Named Entity Recognition |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **89.56** (F1) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/conll2002-ner-dutch) |
 
 
-## Tagging a German sentence
+### Tagging a German sentence
 
 As indicated in the list above, we also provide pre-trained models for languages other than English. Currently, we
-support German and other languages are forthcoming. To tag a German sentence, just load the appropriate model:
+support German, French, and Dutch other languages are forthcoming. To tag a German sentence, just load the appropriate
+model:
 
 ```python
 
@@ -129,18 +139,19 @@ tagger.predict(sentence)
 # print sentence with predicted tags
 print(sentence.to_tagged_string())
 ```
+
 This should print: 
 ```console
 George <B-PER> Washington <E-PER> ging nach Washington <S-LOC> .
 ```
 
-## Experimental: Semantic Frame Detection
+### Experimental: Semantic Frame Detection
 
-For English, we now provide a pre-trained model that detects semantic frames in text, trained using Propbank 3.0 frames. 
+For English, we provide a pre-trained model that detects semantic frames in text, trained using Propbank 3.0 frames.
 This provides a sort of word sense disambiguation for frame evoking words, and we are curious what researchers might
 do with this. 
 
-Here's an example: 
+Here's an example:
 
 ```python
 # load model
@@ -167,16 +178,15 @@ He had <have.LV> a look <look.01> at different hats .
 ```
 
 As we can see, the frame detector makes a distinction in sentence 1 between two different meanings of the word 'return'.
-'return.01' means returning to a location, while 'return.02' means giving something back. 
+'return.01' means returning to a location, while 'return.02' means giving something back.
 
-Similarly, in sentence 2 the frame detector finds a light verb construction in which 'have' is the light verb and 
+Similarly, in sentence 2 the frame detector finds a light verb construction in which 'have' is the light verb and
 'look' is a frame evoking word.
 
+### Tagging a List of Sentences
 
-
-## Tagging a List of Sentences
-
-Often, you may want to tag an entire text corpus. In this case, you need to split the corpus into sentences and pass a list of `Sentence` objects to the `.predict()` method.
+Often, you may want to tag an entire text corpus. In this case, you need to split the corpus into sentences and pass a
+list of `Sentence` objects to the `.predict()` method.
 
 For instance, you can use the sentence splitter of segtok to split your text:
 
@@ -194,10 +204,53 @@ tagger: SequenceTagger = SequenceTagger.load('ner')
 tagger.predict(sentences)
 ```
 
-Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the tagger. Depending on your resources, you might want to play around with this parameter to optimize speed.
+Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the
+tagger. Depending on your resources, you might want to play around with this parameter to optimize speed.
 
+
+## Tagging with Pre-Trained Text Classification Models
+
+Let's use a pre-trained model for detecting positive or negative comments.
+This model was trained over the [IMDB](http://ai.stanford.edu/~amaas/data/sentiment/) dataset and can recognize positive
+and negative sentiment in English text.
+
+```python
+from flair.models import TextClassifier
+
+classifier = TextClassifier.load('en-sentiment')
+```
+
+All you need to do is use the `predict()` method of the classifier on a sentence. This will add the predicted label to
+the sentence. Lets use a sentence with negative sentiment:
+
+```python
+sentence = Sentence('This film hurts. It is so bad that I am confused.')
+
+# predict NER tags
+classifier.predict(sentence)
+
+# print sentence with predicted labels
+print(sentence.labels)
+```
+
+This should print:
+```console
+[NEGATIVE (1.0)]
+```
+
+### List of Pre-Trained Text Classification Models
+
+You choose which pre-trained model you load by passing the appropriate
+string to the `load()` method of the `TextClassifier` class. Currently, the following pre-trained models
+are provided:
+
+| ID | Language | Task | Training Dataset | Accuracy |
+| ------------- | ---- | ------------- |------------- |------------- |
+| 'en-sentiment' | English | detecting positive and negative sentiment | movie reviews from [IMDB](http://ai.stanford.edu/~amaas/data/sentiment/)  |  **90.54** (Micro F1) |
+| 'de-offensive-language' | German | detecting offensive language | [GermEval 2018 Task 1](https://projects.fzai.h-da.de/iggsa/projekt/) |  **75.71** (Macro F1) |
 
 
 ## Next 
 
-Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_WORD_EMBEDDING.md) to embed your text.
+Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) to embed your
+text.

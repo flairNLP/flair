@@ -1,4 +1,5 @@
 import re
+import logging
 from abc import abstractmethod
 from pathlib import Path
 from typing import List, Union, Dict
@@ -14,6 +15,9 @@ from pytorch_pretrained_bert.modeling import BertModel, PRETRAINED_MODEL_ARCHIVE
 from .nn import LockedDropout, WordDropout
 from .data import Dictionary, Token, Sentence
 from .file_utils import cached_path
+
+
+log = logging.getLogger('flair')
 
 
 class Embeddings(torch.nn.Module):
@@ -237,6 +241,84 @@ class WordEmbeddings(TokenEmbeddings):
         return self.name
 
 
+class ELMoEmbeddings(TokenEmbeddings):
+    """Contextual word embeddings using word-level LM, as proposed in Peters et al., 2018."""
+
+    def __init__(self, model: str = 'original'):
+        super().__init__()
+
+        try:
+            import allennlp.commands.elmo
+        except:
+            log.warning('-' * 100)
+            log.warning('ATTENTION! The library "allennlp" is not installed!')
+            log.warning('To use ELMoEmbeddings, please first install with "pip install allennlp"')
+            log.warning('-' * 100)
+            pass
+
+        self.name = 'elmo-' + model
+        self.static_embeddings = True
+
+        # the default model for ELMo is the 'original' model, which is very large
+        options_file = allennlp.commands.elmo.DEFAULT_OPTIONS_FILE
+        weight_file = allennlp.commands.elmo.DEFAULT_WEIGHT_FILE
+        # alternatively, a small, medium or portuguese model can be selected by passing the appropriate mode name
+        if model == 'small':
+            options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x1024_128_2048cnn_1xhighway/elmo_2x1024_128_2048cnn_1xhighway_options.json'
+            weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x1024_128_2048cnn_1xhighway/elmo_2x1024_128_2048cnn_1xhighway_weights.hdf5'
+        if model == 'medium':
+            options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_options.json'
+            weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_weights.hdf5'
+        if model == 'pt' or model == 'portuguese':
+            options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_options.json'
+            weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_weights.hdf5'
+
+        # put on Cuda if available
+        cuda_device = 0 if torch.cuda.is_available() else -1
+        self.ee = allennlp.commands.elmo.ElmoEmbedder(options_file=options_file,
+                                                      weight_file=weight_file,
+                                                      cuda_device=cuda_device)
+
+        # embed a dummy sentence to determine embedding_length
+        dummy_sentence: Sentence = Sentence()
+        dummy_sentence.add_token(Token('hello'))
+        embedded_dummy = self.embed(dummy_sentence)
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        sentence_words: List[List[str]] = []
+        for sentence in sentences:
+            sentence_words.append([token.text for token in sentence])
+
+        embeddings = self.ee.embed_batch(sentence_words)
+
+        for i, sentence in enumerate(sentences):
+
+            sentence_embeddings = embeddings[i]
+
+            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+                token: Token = token
+
+                embedding = torch.cat([torch.FloatTensor(sentence_embeddings[0, token_idx, :]),
+                                       torch.FloatTensor(sentence_embeddings[1, token_idx, :]),
+                                       torch.FloatTensor(sentence_embeddings[2, token_idx, :])], 0)
+
+                word_embedding = torch.autograd.Variable(embedding)
+                token.set_embedding(self.name, word_embedding)
+
+        return sentences
+
+    def extra_repr(self):
+        return 'model={}'.format(self.name)
+
+    def __str__(self):
+        return self.name
+
 class CharacterEmbeddings(TokenEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
 
@@ -325,7 +407,7 @@ class CharacterEmbeddings(TokenEmbeddings):
 class FlairEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
-    def __init__(self, model: str, detach: bool = True, use_cache: bool = False, cache_directory: Path = None):
+    def __init__(self, model: str, detach: bool = True, use_cache: bool = True, cache_directory: Path = None):
         """
         initializes contextual string embeddings using a character-level language model.
         :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
@@ -1324,7 +1406,6 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         :param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
         dimension as before will be taken.
         :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
-        representation of the lstm to be used as final document embedding.
         :param dropout: the dropout value to be used
         :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
         :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used

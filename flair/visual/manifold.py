@@ -43,7 +43,6 @@ class Visualizer(object):
     def prepare_word_embeddings(embeddings, sentences):
         X = []
 
-        print('computing embeddings')
         for sentence in tqdm.tqdm(sentences):
             embeddings.embed(sentence)
 
@@ -77,7 +76,6 @@ class Visualizer(object):
     def prepare_char_embeddings(embeddings, sentences):
         X = []
 
-        print('computing embeddings')
         for sentence in tqdm.tqdm(sentences):
 
             sentence = ' '.join([x.text for x in sentence])
