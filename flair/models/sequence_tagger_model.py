@@ -563,6 +563,12 @@ class SequenceTagger(flair.nn.Model):
         aws_resource_path_v04 = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4'
         cache_dir = Path('models')
 
+        if model.lower() == 'multi-ner':
+            base_path = '/'.join([aws_resource_path_v04,
+                                  'release-quadner-512-l2-multi-embed',
+                                  'quadner-large.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
         if model.lower() == 'ner':
             base_path = '/'.join([aws_resource_path,
                                   'NER-conll03--h256-l1-b32-%2Bglove%2Bnews-forward%2Bnews-backward--v0.2',
