@@ -143,19 +143,19 @@ You need [Pipenv](https://pipenv.readthedocs.io/) for this:
 
 ```bash
 pipenv install --dev && pipenv shell
-pytest
+pytest tests/
 ```
 
 To run integration tests execute:
 ```bash
-pytest --runintegration
+pytest --runintegration tests/
 ```
 The integration tests will train small models.
 Afterwards, the trained model will be loaded for prediction.
 
 To also run slow tests, such as loading and using the embeddings provided by flair, you should execute:
 ```bash
-pytest --runslow
+pytest --runslow tests/
 ```
 
 ## [License](/LICENSE)
