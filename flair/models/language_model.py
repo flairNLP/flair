@@ -201,7 +201,7 @@ class LanguageModel(nn.Module):
 
         torch.save(model_state, str(file), pickle_protocol=4)
 
-    def generate_text(self, prefix: str = '', number_of_characters: int = 1000, temperature: float = 0.6) -> str:
+    def generate_text(self, prefix: str = '', number_of_characters: int = 1000, temperature: float = 0.6, break_on_suffix = None) -> str:
 
         if prefix == '':
             prefix = '\n'
@@ -222,13 +222,11 @@ class LanguageModel(nn.Module):
             prediction, _, hidden = self.forward(input, hidden)
 
             hidden = hidden
-            print(hidden)
 
             input = torch.tensor(self.dictionary.get_idx_for_item(prefix[-1])).unsqueeze(0).unsqueeze(0)
-            print(input)
             if torch.cuda.is_available():
                 input = input.cuda()
-            #
+
             for i in range(number_of_characters):
                 prediction, _, hidden = self.forward(input, hidden)
                 prediction /= temperature
@@ -237,6 +235,10 @@ class LanguageModel(nn.Module):
                 input = word_idx.clone().detach().unsqueeze(0).unsqueeze(0)
                 word = idx2item[word_idx].decode('UTF-8')
                 characters.append(word)
+
+                if break_on_suffix is not None:
+                    if ''.join(characters).endswith(break_on_suffix):
+                        break
 
             text = prefix + ''.join(characters)
 
