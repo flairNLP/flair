@@ -183,12 +183,12 @@ simple specify the embedding id when initializing the `ELMoEmbeddings`.
 
 You can very easily mix and match Flair, ELMo, BERT and classic word embeddings. All you need to do is instantiate each embedding you wish to combine and use them in a StackedEmbedding. 
 
-For instance, let's say we want to combine the multilingual Flair and BERT embeddings to train a powerful multilingual downstream task model. 
+For instance, let's say we want to combine the multilingual Flair and BERT embeddings to train a hyper-powerful multilingual downstream task model. 
 
 First, instantiate the embeddings you wish to combine: 
-
+FlairEmbeddings
 ```python
-from flair.embeddings import WordEmbeddings, CharacterEmbeddings
+from flair.embeddings import FlairEmbeddings, BertEmbeddings
 
 # init Flair embeddings
 flair_forward_embedding = FlairEmbeddings('multi-forward')
