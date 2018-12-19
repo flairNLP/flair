@@ -2,7 +2,7 @@
 
 Next to standard WordEmbeddings and CharacterEmbeddings, we also provide classes for BERT, ELMo and Flair embeddings. These embeddings enable you to train truly state-of-the-art NLP models.
 
-This tutorial explains how these embeddings. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library as well as [standard word embeddings] (/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md), in particular the `StackedEmbeddings` class.
+This tutorial explains how these embeddings. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library as well as [standard word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md), in particular the `StackedEmbeddings` class.
 
 ## Embeddings
 
