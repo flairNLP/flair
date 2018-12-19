@@ -186,7 +186,7 @@ You can very easily mix and match Flair, ELMo, BERT and classic word embeddings.
 For instance, let's say we want to combine the multilingual Flair and BERT embeddings to train a hyper-powerful multilingual downstream task model. 
 
 First, instantiate the embeddings you wish to combine: 
-FlairEmbeddings
+
 ```python
 from flair.embeddings import FlairEmbeddings, BertEmbeddings
 
