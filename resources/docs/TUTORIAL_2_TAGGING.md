@@ -99,6 +99,25 @@ In case you do not have a GPU available, we also distribute smaller models that 
 | 'pos-fast' |  Part-of-Speech Tagging |  Ontonotes     |  **97.93** (Accuracy) |
 | 'frame-fast'  |   Semantic Frame Detection  (***Experimental***)| Propbank 3.0     |  **93.50** (F1) |
 
+
+#### Experimental: Multilingual Models
+
+We distribute new models that are capable of handling text in multiple languages within a singular model. 
+
+The NER models are trained over 4 languages (English, German, Dutch and Spanish) and the PoS models over 12 languages (English, German, French, Italian, Dutch, Polish, Spanish, Swedish, Danish, Norwegian, Finnish and Czech).
+
+| ID | Task | Training Dataset | Accuracy |
+| -------------    | ------------- |------------- |------------- |
+| 'ner-multi' | 4-class Named Entity Recognition |  Conll-03 (4 languages)  |  **89.27**  (average F1) |
+| 'ner-multi-fast' | 4-class Named Entity Recognition |  Conll-03 (4 languages)  |  **87.91**  (average F1) |
+| 'ner-multi-fast-learn' | 4-class Named Entity Recognition |  Conll-03 (4 languages)  |  **88.18**  (average F1) |
+| 'pos-multi' |  Part-of-Speech Tagging   |  Universal Dependency Treebank (12 languages)  |  **96.41** (average acc.) |
+| 'pos-multi-fast' |  Part-of-Speech Tagging |  Universal Dependency Treebank (12 languages)  |  **92.88** (average acc.) |
+
+You can pass text in any of these languages to the model. In particular, the NER also kind of works for languages it was not trained on, such as French.
+
+The 'ner-multi-fast-learn' model is an experimental model that accumulates entity representations over time. 
+
 #### German Models
 
 We also distribute German models.
