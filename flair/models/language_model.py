@@ -1,8 +1,13 @@
+from pathlib import Path
+
 import torch.nn as nn
 import torch
 import math
 from torch.autograd import Variable
-from typing import List
+from typing import List, Union
+
+from torch.optim import Optimizer
+
 from flair.data import Dictionary
 
 
@@ -16,8 +21,7 @@ class LanguageModel(nn.Module):
                  nlayers: int,
                  embedding_size: int = 100,
                  nout=None,
-                 dropout=0.5,
-                 best_score=None):
+                 dropout=0.5):
 
         super(LanguageModel, self).__init__()
 
@@ -49,8 +53,6 @@ class LanguageModel(nn.Module):
             self.decoder = nn.Linear(hidden_size, len(dictionary))
 
         self.init_weights()
-
-        self.best_score = best_score
 
         # auto-spawn on GPU if available
         if torch.cuda.is_available():
@@ -119,30 +121,55 @@ class LanguageModel(nn.Module):
         matrix.data.uniform_(-stdv, stdv)
 
     @classmethod
-    def load_language_model(cls, model_file):
+    def load_language_model(cls, model_file: Union[Path, str]):
 
         if not torch.cuda.is_available():
-            state = torch.load(model_file, map_location='cpu')
+            state = torch.load(str(model_file), map_location='cpu')
         else:
-            state = torch.load(model_file)
-
-        best_score = state['best_score'] if 'best_score' in state else None
+            state = torch.load(str(model_file))
 
         model = LanguageModel(state['dictionary'],
-                                             state['is_forward_lm'],
-                                             state['hidden_size'],
-                                             state['nlayers'],
-                                             state['embedding_size'],
-                                             state['nout'],
-                                             state['dropout'],
-                                             best_score)
+                              state['is_forward_lm'],
+                              state['hidden_size'],
+                              state['nlayers'],
+                              state['embedding_size'],
+                              state['nout'],
+                              state['dropout'])
         model.load_state_dict(state['state_dict'])
         model.eval()
         if torch.cuda.is_available():
             model.cuda()
+
         return model
 
-    def save(self, file):
+    @classmethod
+    def load_checkpoint(cls, model_file: Path):
+        if not torch.cuda.is_available():
+            state = torch.load(str(model_file), map_location='cpu')
+        else:
+            state = torch.load(str(model_file))
+
+        epoch = state['epoch'] if 'epoch' in state else None
+        split = state['split'] if 'split' in state else None
+        loss = state['loss'] if 'loss' in state else None
+        optimizer_state_dict = state['optimizer_state_dict'] if 'optimizer_state_dict' in state else None
+
+        model = LanguageModel(state['dictionary'],
+                              state['is_forward_lm'],
+                              state['hidden_size'],
+                              state['nlayers'],
+                              state['embedding_size'],
+                              state['nout'],
+                              state['dropout'])
+        model.load_state_dict(state['state_dict'])
+        model.eval()
+        if torch.cuda.is_available():
+            model.cuda()
+
+        return {'model': model, 'epoch': epoch, 'split': split, 'loss': loss,
+                'optimizer_state_dict': optimizer_state_dict}
+
+    def save_checkpoint(self, file: Path, optimizer: Optimizer, epoch: int, split: int, loss: float):
         model_state = {
             'state_dict': self.state_dict(),
             'dictionary': self.dictionary,
@@ -152,28 +179,74 @@ class LanguageModel(nn.Module):
             'embedding_size': self.embedding_size,
             'nout': self.nout,
             'dropout': self.dropout,
-            'best_score': self.best_score
+            'optimizer_state_dict': optimizer.state_dict(),
+            'epoch': epoch,
+            'split': split,
+            'loss': loss
         }
-        torch.save(model_state, file, pickle_protocol=4)
 
-    def generate_text(self, number_of_characters=1000) -> str:
+        torch.save(model_state, str(file), pickle_protocol=4)
+
+    def save(self, file: Path):
+        model_state = {
+            'state_dict': self.state_dict(),
+            'dictionary': self.dictionary,
+            'is_forward_lm': self.is_forward_lm,
+            'hidden_size': self.hidden_size,
+            'nlayers': self.nlayers,
+            'embedding_size': self.embedding_size,
+            'nout': self.nout,
+            'dropout': self.dropout
+        }
+
+        torch.save(model_state, str(file), pickle_protocol=4)
+
+    def generate_text(self, prefix: str = '', number_of_characters: int = 1000, temperature: float = 0.6, break_on_suffix = None) -> str:
+
+        if prefix == '':
+            prefix = '\n'
+
         with torch.no_grad():
             characters = []
 
             idx2item = self.dictionary.idx2item
 
-            # initial hidden state
-            hidden = self.init_hidden(1)
-            input = torch.rand(1, 1).mul(len(idx2item)).long()
+            char_tensors = [torch.tensor(self.dictionary.get_idx_for_item('\n')).unsqueeze(0).unsqueeze(0)]
+            for character in prefix[:-1]:
+                char_tensors.append(
+                    torch.tensor(self.dictionary.get_idx_for_item(character)).unsqueeze(0).unsqueeze(0))
+
+            input = torch.cat(char_tensors)
             if torch.cuda.is_available():
                 input = input.cuda()
 
+            hidden = self.init_hidden(1)
+            prediction, _, hidden = self.forward(input, hidden)
+
+            hidden = hidden
+
+            input = torch.tensor(self.dictionary.get_idx_for_item(prefix[-1])).unsqueeze(0).unsqueeze(0)
+
             for i in range(number_of_characters):
-                prediction, rnn_output, hidden = self.forward(input, hidden)
+
+                if torch.cuda.is_available():
+                    input = input.cuda()
+
+                prediction, _, hidden = self.forward(input, hidden)
+                prediction /= temperature
                 word_weights = prediction.squeeze().data.div(1.0).exp().cpu()
                 word_idx = torch.multinomial(word_weights, 1)[0]
-                input.data.fill_(word_idx)
+                input = word_idx.clone().detach().unsqueeze(0).unsqueeze(0)
                 word = idx2item[word_idx].decode('UTF-8')
                 characters.append(word)
 
-            return ''.join(characters)
+                if break_on_suffix is not None:
+                    if ''.join(characters).endswith(break_on_suffix):
+                        break
+
+            text = prefix + ''.join(characters)
+
+            if not self.is_forward_lm:
+                text = text[::-1]
+
+            return text

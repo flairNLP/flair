@@ -103,6 +103,25 @@ This should print:
 The grass is green <color> .
 ```
 
+Each tag is of class `Label` which next to the value has a score indicating confidence. Print like this: 
+
+```python
+from flair.data import Label
+
+tag: Label = sentence[3].get_tag('ner')
+
+print(f'"{sentence[3]}" is tagged as "{tag.value}" with confidence score "{tag.score}"')
+```
+
+This should print:
+
+```console
+"Token: 4 green" is tagged as "color" with confidence score "1.0"
+```
+
+Our color tag has a score of 1.0 since we manually added it. If a tag is predicted by our
+sequence labeler, the score value will indicate classifier confidence.
+
 ## Adding Labels to Sentences
 
 A `Sentence` can have one or multiple labels that can for example be used in text classification tasks.
@@ -119,33 +138,28 @@ sentence.add_label('sports')
 sentence.add_labels(['sports', 'world cup'])
 
 # you can also set the labels while initializing the sentence
-Sentence('France is the current world cup winner.', labels=['sports', 'world cup'])
+sentence = Sentence('France is the current world cup winner.', labels=['sports', 'world cup'])
 ```
 
-
-## Reading CoNLL-formatted Files
-
-We provide a set of helper methods to read CoNLL parsed files as a list of `Sentence` objects. For instance, you can
-use the popular CoNLL-U format introduced by the Universal Dependencies project.
-
-Simply point the `NLPTaskDataFetcher` to the file containing the parsed sentences. It will read the sentences into a
-list of `Sentence`.
+Labels are also of the `Label` class. So, you can print a sentence's labels like this: 
 
 ```python
-from flair.data_fetcher import NLPTaskDataFetcher
+sentence = Sentence('France is the current world cup winner.', labels=['sports', 'world cup'])
 
-# use your own data path
-data_folder = 'path/to/conll/formatted/data'
-
-# get training, test and dev data
-sentences: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(data_folder)
+print(sentence)
+for label in sentence.labels:
+    print(label)
 ```
 
-Importantly, these sentences now contain a wealth of `Token` level annotations.
-In the case of CoNLL-U, they should contain information including a token lemma, its part-of-speech, morphological
-annotation, its dependency relation and its head token.
-You can access this information using the tag fields of the `Token`.
+This should print:
+
+```console
+sports (1.0)
+world cup (1.0)
+```
+
+This indicates that the sentence belongs to these two classes, each with confidence score 1.0.
 
 ## Next
 
-Now, let us look at how to use [pre-trained models](/resources/docs/TUTORIAL_TAGGING.md) to tag your text.
+Now, let us look at how to use [pre-trained models](/resources/docs/TUTORIAL_2_TAGGING.md) to tag your text.

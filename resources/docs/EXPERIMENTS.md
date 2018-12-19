@@ -4,12 +4,13 @@ Here, we detail the steps you need to take to reproduce the experiments in
 [Akbik et. al (2018)](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)
 and how to train your own state-of-the-art sequence labelers. 
 
-**Note**: If you want to exactly reproduce the results of the paper, either install version 0.2.1 of Flair from pip, or checkout tag 0.2.0 from the repo. If you just want to train a model, always use the latest version!
+**Note**: If you want to exactly reproduce the results of the paper, either install version 0.2.1 of Flair from pip, or
+checkout tag 0.2.0 from the repo. If you just want to train a model, always use the latest version!
 
 **Data.** For each experiment, you need to first get the evaluation dataset. Then execute the code as provided in this 
 documentation.
 
-**More info.** Also do check out the [tutorial](/resources/docs/TUTORIAL_BASICS.md)  to get a better overview of 
+**More info.** Also do check out the [tutorial](/resources/docs/TUTORIAL_1_BASICS.md) to get a better overview of
 how Flair works.
 
 
@@ -17,19 +18,19 @@ how Flair works.
 
 **Data.** The [CoNLL-03 data set for English](https://www.clips.uantwerpen.be/conll2003/ner/) is probably the most 
 well-known dataset to evaluate NER on. It contains 4 entity classes. Follows the steps on the task Web site to 
-get the dataset and place train, test and dev data in `/resources/tasks/conll_03/` as follows: 
+get the dataset and place train, test and dev data in `/resources/tasks/conll_03/` as follows:
 
 ```
-/resources/tasks/conll_03/eng.testa
-/resources/tasks/conll_03/eng.testb
-/resources/tasks/conll_03/eng.train
+resources/tasks/conll_03/eng.testa
+resources/tasks/conll_03/eng.testb
+resources/tasks/conll_03/eng.train
 ```
 
 This allows the `NLPTaskDataFetcher` class to read the data into our data structures. Use the `NLPTask` enum to select 
 the dataset, as follows: 
 
 ```python
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03, base_path='resources/tasks')
 ```
 
 This gives you a `TaggedCorpus` object that contains the data. 
@@ -43,10 +44,9 @@ from flair.data import TaggedCorpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
 from typing import List
-import torch
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03, base_path='resources/tasks')
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -81,9 +81,9 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         use_crf=True)
 
 # initialize trainer
-from flair.trainers import SequenceTaggerTrainer
+from flair.trainers import ModelTrainer
 
-trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus)
+trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-ner',
               learning_rate=0.1,
@@ -98,12 +98,12 @@ trainer.train('resources/taggers/example-ner',
 for different types of NLP and contains rich NER annotation. Get the corpus and split it into train, test and dev 
 splits using the scripts provided by the [CoNLL-12 shared task](http://conll.cemantix.org/2012/data.html). 
 
-Place train, test and dev data in CoNLL-03 format in  `/resources/tasks/onto-ner/` as follows: 
+Place train, test and dev data in CoNLL-03 format in  `resources/tasks/onto-ner/` as follows:
 
 ```
-/resources/tasks/onto-ner/eng.testa
-/resources/tasks/onto-ner/eng.testb
-/resources/tasks/onto-ner/eng.train
+resources/tasks/onto-ner/eng.testa
+resources/tasks/onto-ner/eng.testb
+resources/tasks/onto-ner/eng.train
 ```
 
 Once you have the data, reproduce our experiments exactly like for CoNLL-03, just with a different dataset and with 
@@ -115,10 +115,9 @@ from flair.data import TaggedCorpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
 from typing import List
-import torch
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.ONTONER)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.ONTONER, base_path='resources/tasks')
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -130,11 +129,8 @@ print(tag_dictionary.idx2item)
 
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
-
     WordEmbeddings('crawl'),
-
     CharLMEmbeddings('news-forward'),
-
     CharLMEmbeddings('news-backward'),
 ]
 
@@ -150,9 +146,9 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         use_crf=True)
 
 # initialize trainer
-from flair.trainers import SequenceTaggerTrainer
+from flair.trainers import ModelTrainer
 
-trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
+trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-ner',
               learning_rate=0.1,
@@ -166,12 +162,12 @@ trainer.train('resources/taggers/example-ner',
 
 **Data.** Get the [CoNLL-03 data set for German](https://www.clips.uantwerpen.be/conll2003/ner/). 
 It contains 4 entity classes. Follows the steps on the task Web site to 
-get the dataset and place train, test and dev data in `/resources/tasks/conll_03-ger/` as follows: 
+get the dataset and place train, test and dev data in `resources/tasks/conll_03-ger/` as follows:
 
 ```
-/resources/tasks/conll_03-ger/deu.testa
-/resources/tasks/conll_03-ger/deu.testb
-/resources/tasks/conll_03-ger/deu.train
+resources/tasks/conll_03-ger/deu.testa
+resources/tasks/conll_03-ger/deu.testb
+resources/tasks/conll_03-ger/deu.train
 ```
 
 Once you have the data, reproduce our experiments exactly like for CoNLL-03, just with a different dataset and with 
@@ -182,10 +178,9 @@ from flair.data import TaggedCorpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
 from typing import List
-import torch
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_03_GERMAN)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03_GERMAN, base_path='resources/tasks')
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -197,11 +192,8 @@ print(tag_dictionary.idx2item)
 
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
-
     WordEmbeddings('de-fasttext'),
-
     CharLMEmbeddings('german-forward'),
-
     CharLMEmbeddings('german-backward'),
 ]
 
@@ -217,9 +209,9 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         use_crf=True)
 
 # initialize trainer
-from flair.trainers import SequenceTaggerTrainer
+from flair.trainers import ModelTrainer
 
-trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
+trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-ner',
               learning_rate=0.1,
@@ -233,12 +225,12 @@ trainer.train('resources/taggers/example-ner',
 **Data.** The [Germeval data set](https://sites.google.com/site/germeval2014ner/data) is a more recent and more accessible 
 NER data for German. It contains 4 entity classes, plus extra derivative classes. 
 Follows the steps on the task Web site to 
-get the dataset and place train, test and dev data in `/resources/tasks/germeval/` as follows: 
+get the dataset and place train, test and dev data in `resources/tasks/germeval/` as follows:
 
 ```
-/resources/tasks/germeval/NER-de-dev.tsv
-/resources/tasks/germeval/NER-de-test.tsv
-/resources/tasks/germeval/NER-de-train.tsv
+resources/tasks/germeval/NER-de-dev.tsv
+resources/tasks/germeval/NER-de-test.tsv
+resources/tasks/germeval/NER-de-train.tsv
 ```
 
 Once you have the data, reproduce our experiments exactly like for the German CoNLL-03: 
@@ -248,10 +240,9 @@ from flair.data import TaggedCorpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
 from typing import List
-import torch
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.GERMEVAL)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.GERMEVAL, base_path='resources/tasks')
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -263,11 +254,8 @@ print(tag_dictionary.idx2item)
 
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
-
     WordEmbeddings('de-fasttext'),
-
     CharLMEmbeddings('german-forward'),
-
     CharLMEmbeddings('german-backward'),
 ]
 
@@ -283,9 +271,9 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         use_crf=True)
 
 # initialize trainer
-from flair.trainers import SequenceTaggerTrainer
+from flair.trainers import ModelTrainer
 
-trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
+trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-ner',
               learning_rate=0.1,
@@ -298,12 +286,12 @@ trainer.train('resources/taggers/example-ner',
 
 **Data.** Get the [Penn treebank](https://catalog.ldc.upenn.edu/ldc99t42) and follow the guidelines 
 in [Collins (2002)](http://www.cs.columbia.edu/~mcollins/papers/tagperc.pdf) to produce train, dev and test splits.
-Convert splits into CoNLLU-U format and place train, test and dev data in `/resources/tasks/penn/` as follows: 
+Convert splits into CoNLLU-U format and place train, test and dev data in `resources/tasks/penn/` as follows: 
 
 ```
-/resources/tasks/penn/test.conll
-/resources/tasks/penn/train.conll
-/resources/tasks/penn/valid.conll
+resources/tasks/penn/test.conll
+resources/tasks/penn/train.conll
+resources/tasks/penn/valid.conll
 ```
 
 Then, run the experiments with extec embeddings and contextual string embeddings. Also, select 'pos' as `tag_type`, 
@@ -315,10 +303,9 @@ from flair.data import TaggedCorpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
 from typing import List
-import torch
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.PENN)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.PENN, base_path='resources/tasks')
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -330,11 +317,8 @@ print(tag_dictionary.idx2item)
 
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
-
     WordEmbeddings('extvec'),
-
     CharLMEmbeddings('news-forward'),
-
     CharLMEmbeddings('news-backward'),
 ]
 
@@ -349,9 +333,9 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         tag_type=tag_type,
                                         use_crf=True)
 # initialize trainer
-from flair.trainers import SequenceTaggerTrainer
+from flair.trainers import ModelTrainer
 
-trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
+trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-ner',
               learning_rate=0.1,
@@ -365,11 +349,11 @@ trainer.train('resources/taggers/example-ner',
 
 **Data.** Get the [CoNLL-2000 data set for English](https://www.clips.uantwerpen.be/conll2000/chunking/), the most 
 well-known dataset to evaluate chunking on. Follows the steps on the task Web site to 
-get the dataset and place train and test data in `/resources/tasks/conll_2000/` as follows: 
+get the dataset and place train and test data in `resources/tasks/conll_2000/` as follows:
 
 ```
-/resources/tasks/conll_2000/test.txt
-/resources/tasks/conll_2000/train.txt
+resources/tasks/conll_2000/test.txt
+resources/tasks/conll_2000/train.txt
 ```
 
 Our data loader class automatically samples a dev dataset. 
@@ -382,10 +366,9 @@ from flair.data import TaggedCorpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
 from typing import List
-import torch
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.fetch_data(NLPTask.CONLL_2000)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_2000, base_path='resources/tasks')
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -397,11 +380,8 @@ print(tag_dictionary.idx2item)
 
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
-
     WordEmbeddings('extvec'),
-
     CharLMEmbeddings('news-forward'),
-
     CharLMEmbeddings('news-backward'),
 ]
 
@@ -417,9 +397,9 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         use_crf=True)
 
 # initialize trainer
-from flair.trainers import SequenceTaggerTrainer
+from flair.trainers import ModelTrainer
 
-trainer: SequenceTaggerTrainer = SequenceTaggerTrainer(tagger, corpus, test_mode=False)
+trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-ner',
               learning_rate=0.1,

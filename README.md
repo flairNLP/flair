@@ -16,6 +16,9 @@ Flair is:
 models to your text, such as named entity recognition (NER), part-of-speech tagging (PoS),
  sense disambiguation and classification.
 
+* **Multilingual.** Thanks to the Flair community, we support a rapidly growing number of languages. We also now include
+'*one model, many languages*' taggers, i.e. single models that predict PoS or NER tags for input text in various languages.
+
 * **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and 
 document embeddings, including our proposed **[Flair embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)**, BERT embeddings and ELMo embeddings.
 
@@ -81,7 +84,10 @@ Done! The `Sentence` now has entity annotations. Print the sentence to see what 
 ```python
 print(sentence)
 print('The following NER tags are found:')
-print(sentence.to_tagged_string())
+
+# iterate over entities and print
+for entity in sentence.get_spans('ner'):
+    print(entity)
 ```
 
 This should print: 
@@ -91,19 +97,22 @@ Sentence: "I love Berlin ." - 4 Tokens
 
 The following NER tags are found: 
 
-I love Berlin <S-LOC> .
+LOC-span [3]: "Berlin"
 ```
 
 ## Tutorial
 
 We provide a set of quick tutorials to get you started with the library:
 
-* [Tutorial 1: Basics](/resources/docs/TUTORIAL_BASICS.md)
-* [Tutorial 2: Tagging your Text](/resources/docs/TUTORIAL_TAGGING.md)
-* [Tutorial 3: Using Word Embeddings](/resources/docs/TUTORIAL_WORD_EMBEDDING.md)
-* [Tutorial 4: Using Document Embeddings](/resources/docs/TUTORIAL_TEXT_EMBEDDINGS.md)
-* [Tutorial 5: Training your own Models](/resources/docs/TUTORIAL_TRAINING_A_MODEL.md)
-* [Tutorial 6: Training your own Embeddings](/resources/docs/TUTORIAL_TRAINING_LM_EMBEDDINGS.md)
+* [Tutorial 1: Basics](/resources/docs/TUTORIAL_1_BASICS.md)
+* [Tutorial 2: Tagging your Text](/resources/docs/TUTORIAL_2_TAGGING.md)
+* [Tutorial 3: Using Word Embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)
+* [Tutorial 4: Using BERT, ELMo, and Flair Embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md)
+* [Tutorial 5: Using Document Embeddings](/resources/docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md)
+* [Tutorial 6: Loading your own Corpus](/resources/docs/TUTORIAL_6_CORPUS.md)
+* [Tutorial 7: Training your own Models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
+* [Tutorial 8: Optimizing your own Models](/resources/docs/TUTORIAL_8_MODEL_OPTIMIZATION.md)
+* [Tutorial 9: Training your own Flair Embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
  
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
 text, how you embed your text with different word or document embeddings, and how you can train your own 

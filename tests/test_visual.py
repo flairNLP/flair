@@ -28,7 +28,7 @@ def test_visualize_word_emeddings(resources_path):
     visualizer.visualize_word_emeddings(embeddings, sentences, str(resources_path / 'visual/sentence_embeddings.html'))
 
     # clean up directory
-    os.remove(resources_path / 'visual/sentence_embeddings.html')
+    (resources_path / 'visual/sentence_embeddings.html').unlink()
 
 
 @pytest.mark.slow
@@ -45,7 +45,7 @@ def test_visualize_word_emeddings(resources_path):
     visualizer.visualize_char_emeddings(charlm_embedding_forward, sentences, str(resources_path / 'visual/sentence_embeddings.html'))
 
     # clean up directory
-    os.remove(resources_path / 'visual/sentence_embeddings.html')
+    (resources_path / 'visual/sentence_embeddings.html').unlink()
 
 
 @pytest.mark.slow
@@ -76,7 +76,7 @@ def test_visualize(resources_path):
     visualizer.visualize(reduced, contexts, str(resources_path / 'visual/char_embeddings.html'))
 
     # clean up directory
-    os.remove(resources_path / 'visual/char_embeddings.html')
+    (resources_path / 'visual/char_embeddings.html').unlink()
 
 
 def test_highlighter(resources_path):

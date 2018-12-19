@@ -1,38 +1,40 @@
 import time, datetime
-import os
 import random
 import logging
-import math
-import torch
+from pathlib import Path
+from typing import Union
+
 from torch.autograd import Variable
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.sgd import SGD
 
 from flair.data import Dictionary
 from flair.models import LanguageModel
+from flair.optim import *
+from flair.training_utils import add_file_handler
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('flair')
 
 
 class TextCorpus(object):
-    def __init__(self, path, dictionary: Dictionary, forward: bool = True, character_level: bool = True):
+    def __init__(self, path: Path, dictionary: Dictionary, forward: bool = True, character_level: bool = True):
 
         self.forward = forward
         self.split_on_char = character_level
-        self.train_path = os.path.join(path, 'train')
+        self.train_path = path / 'train'
 
         self.train_files = sorted(
-            [f for f in os.listdir(self.train_path) if os.path.isfile(os.path.join(self.train_path, f))])
+            [f for f in self.train_path.iterdir() if f.exists()])
 
         self.dictionary: Dictionary = dictionary
 
         self.current_train_file_index = len(self.train_files)
 
-        self.valid = self.charsplit(os.path.join(path, 'valid.txt'),
+        self.valid = self.charsplit(path / 'valid.txt',
                                     forward=forward,
                                     split_on_char=self.split_on_char)
 
-        self.test = self.charsplit(os.path.join(path, 'test.txt'),
+        self.test = self.charsplit(path / 'test.txt',
                                    forward=forward,
                                    split_on_char=self.split_on_char)
 
@@ -52,17 +54,17 @@ class TextCorpus(object):
 
         current_train_file = self.train_files[self.current_train_file_index]
 
-        train_slice = self.charsplit(os.path.join(self.train_path, current_train_file),
+        train_slice = self.charsplit(current_train_file,
                                     expand_vocab=False,
                                     forward=self.forward,
                                     split_on_char=self.split_on_char)
 
         return train_slice
 
-    def charsplit(self, path: str, expand_vocab=False, forward=True, split_on_char=True) -> torch.LongTensor:
+    def charsplit(self, path: Path, expand_vocab=False, forward=True, split_on_char=True) -> torch.LongTensor:
 
         """Tokenizes a text file on character basis."""
-        assert os.path.exists(path)
+        assert path.exists()
 
         #
         with open(path, 'r', encoding="utf-8") as f:
@@ -127,9 +129,9 @@ class TextCorpus(object):
             line = line.upper()
         return line
 
-    def tokenize(self, path):
+    def tokenize(self, path: Path):
         """Tokenizes a text file."""
-        assert os.path.exists(path)
+        assert path.exists()
         # Add words to the dictionary
         with open(path, 'r') as f:
             tokens = 0
@@ -153,23 +155,46 @@ class TextCorpus(object):
 
 
 class LanguageModelTrainer:
-    def __init__(self, model: LanguageModel, corpus: TextCorpus, test_mode: bool = False):
+
+    def __init__(self,
+                 model: LanguageModel,
+                 corpus: TextCorpus,
+                 optimizer: Optimizer = SGD,
+                 test_mode: bool = False,
+                 epoch: int = 0,
+                 split: int = 0,
+                 loss: float = 10000,
+                 optimizer_state: dict = None
+                 ):
         self.model: LanguageModel = model
+        self.optimzer: Optimizer = optimizer
         self.corpus: TextCorpus = corpus
         self.test_mode: bool = test_mode
 
         self.loss_function = torch.nn.CrossEntropyLoss()
         self.log_interval = 100
+        self.epoch = epoch
+        self.split = split
+        self.loss = loss
+        self.optimizer_state = optimizer_state
 
     def train(self,
-              base_path: str,
+              base_path: Union[Path, str],
               sequence_length: int,
               learning_rate: float = 20,
               mini_batch_size: int = 100,
               anneal_factor: float = 0.25,
               patience: int = 10,
               clip=0.25,
-              max_epochs: int = 1000):
+              max_epochs: int = 1000,
+              checkpoint: bool = False,
+              **kwargs):
+
+        # cast string to Path
+        if type(base_path) is str:
+            base_path = Path(base_path)
+
+        add_file_handler(log, base_path / 'training.log')
 
         number_of_splits: int = len(self.corpus.train_files)
 
@@ -178,19 +203,28 @@ class LanguageModelTrainer:
 
         val_data = self._batchify(self.corpus.valid, mini_batch_size)
 
-        os.makedirs(base_path, exist_ok=True)
-        loss_txt = os.path.join(base_path, 'loss.txt')
-        savefile = os.path.join(base_path, 'best-lm.pt')
+        base_path.mkdir(parents=True, exist_ok=True)
+        loss_txt = base_path / 'loss.txt'
+        savefile = base_path / 'best-lm.pt'
 
         try:
 
-            epoch = 0
-            best_val_loss = self.model.best_score if self.model.best_score is not None else 100000000
-            optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
-            scheduler: ReduceLROnPlateau = ReduceLROnPlateau(optimizer, verbose=True, factor=anneal_factor,
-                                                             patience=patience)
+            epoch = self.epoch
+            best_val_loss = self.loss
+            optimizer = self.optimzer(self.model.parameters(), lr=learning_rate, **kwargs)
+            if self.optimizer_state is not None:
+                optimizer.load_state_dict(self.optimizer_state)
 
-            for split in range(1, max_splits + 1):
+            if isinstance(optimizer, (AdamW, SGDW)):
+                scheduler: ReduceLRWDOnPlateau = ReduceLRWDOnPlateau(optimizer, verbose=True,
+                                                                     factor=anneal_factor,
+                                                                     patience=patience)
+            else:
+                scheduler: ReduceLROnPlateau = ReduceLROnPlateau(optimizer, verbose=True,
+                                                                 factor=anneal_factor,
+                                                                 patience=patience)
+
+            for split in range(1 + self.split, max_splits + 1):
 
                 # after pass over all splits, increment epoch count
                 if (split - 1) % number_of_splits == 0:
@@ -267,6 +301,11 @@ class LanguageModelTrainer:
 
                 log.info('best loss so far {:5.2f}'.format(best_val_loss))
 
+                log.info(self.model.generate_text())
+
+                if checkpoint:
+                    self.model.save_checkpoint(base_path / 'checkpoint.pt', optimizer, epoch, split, best_val_loss)
+
                 # Save the model if the validation loss is the best we've seen so far.
                 if val_loss < best_val_loss:
                     self.model.best_score = best_val_loss
@@ -282,7 +321,7 @@ class LanguageModelTrainer:
                 if local_split_number == 0: local_split_number = number_of_splits
 
                 summary = '| end of split {:3d} /{:3d} | epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | ' \
-                          'valid ppl {:8.2f} | learning rate {:3.2f}'.format(local_split_number,
+                          'valid ppl {:8.2f} | learning rate {:3.4f}'.format(local_split_number,
                                                                              number_of_splits,
                                                                              epoch,
                                                                              (time.time() - epoch_start_time),
@@ -355,4 +394,9 @@ class LanguageModelTrainer:
         """Wraps hidden states in new Variables, to detach them from their history."""
         return tuple(Variable(v) for v in h)
 
-
+    @staticmethod
+    def load_from_checkpoint(checkpoint_file: Path, corpus: TextCorpus, optimizer: Optimizer = SGD):
+        checkpoint = LanguageModel.load_checkpoint(checkpoint_file)
+        return LanguageModelTrainer(checkpoint['model'], corpus, optimizer, epoch=checkpoint['epoch'],
+                                    split=checkpoint['split'], loss=checkpoint['loss'],
+                                    optimizer_state=checkpoint['optimizer_state_dict'])

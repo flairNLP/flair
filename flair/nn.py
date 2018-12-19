@@ -1,5 +1,31 @@
 import torch.nn
 
+from abc import abstractmethod
+
+from typing import Union, List
+
+from flair.data import Sentence, Label
+
+
+class Model(torch.nn.Module):
+    """Abstract base class for all models. Every new type of model must implement these methods."""
+
+    @abstractmethod
+    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
+        """Performs a forward pass and returns the loss."""
+        pass
+
+    @abstractmethod
+    def forward_labels_and_loss(self, sentences: Union[List[Sentence], Sentence]) -> (List[List[Label]], torch.tensor):
+        """Predicts the labels/tags for the given list of sentences. Returns the list of labels plus the loss."""
+        pass
+
+    @abstractmethod
+    def predict(self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32) -> List[Sentence]:
+        """Predicts the labels/tags for the given list of sentences. The labels/tags are added directly to the
+        sentences."""
+        pass
+
 
 class LockedDropout(torch.nn.Module):
     """

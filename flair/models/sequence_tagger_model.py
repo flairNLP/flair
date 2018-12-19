@@ -1,21 +1,23 @@
-
 import warnings
 import logging
+from pathlib import Path
 
 import torch.autograd as autograd
 import torch.nn
+from torch.optim import Optimizer
+
 import flair.nn
 import torch
 
 import flair.embeddings
-from flair.data import Dictionary, Sentence, Token
+from flair.data import Dictionary, Sentence, Token, Label
 from flair.file_utils import cached_path
 
 from typing import List, Tuple, Union
 
 from flair.training_utils import clear_embeddings
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('flair')
 
 START_TAG: str = '<START>'
 STOP_TAG: str = '<STOP>'
@@ -61,7 +63,7 @@ def pad_tensors(tensor_list, type_=torch.FloatTensor):
     return template, lens_
 
 
-class SequenceTagger(torch.nn.Module):
+class SequenceTagger(flair.nn.Model):
 
     def __init__(self,
                  hidden_size: int,
@@ -71,9 +73,9 @@ class SequenceTagger(torch.nn.Module):
                  use_crf: bool = True,
                  use_rnn: bool = True,
                  rnn_layers: int = 1,
-                 use_dropout: float = 0.0,
-                 use_word_dropout: float = 0.05,
-                 use_locked_dropout: float = 0.5,
+                 dropout: float = 0.0,
+                 word_dropout: float = 0.05,
+                 locked_dropout: float = 0.5,
                  ):
 
         super(SequenceTagger, self).__init__()
@@ -97,18 +99,18 @@ class SequenceTagger(torch.nn.Module):
         self.hidden_word = None
 
         # dropouts
-        self.use_dropout: float = use_dropout
-        self.use_word_dropout: float = use_word_dropout
-        self.use_locked_dropout: float = use_locked_dropout
+        self.use_dropout: float = dropout
+        self.use_word_dropout: float = word_dropout
+        self.use_locked_dropout: float = locked_dropout
 
-        if use_dropout > 0.0:
-            self.dropout = torch.nn.Dropout(use_dropout)
+        if dropout > 0.0:
+            self.dropout = torch.nn.Dropout(dropout)
 
-        if use_word_dropout > 0.0:
-            self.word_dropout = flair.nn.WordDropout(use_word_dropout)
+        if word_dropout > 0.0:
+            self.word_dropout = flair.nn.WordDropout(word_dropout)
 
-        if use_locked_dropout > 0.0:
-            self.locked_dropout = flair.nn.LockedDropout(use_locked_dropout)
+        if locked_dropout > 0.0:
+            self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
 
         rnn_input_dim: int = self.embeddings.embedding_length
 
@@ -146,7 +148,7 @@ class SequenceTagger(torch.nn.Module):
         if torch.cuda.is_available():
             self.cuda()
 
-    def save(self, model_file: str):
+    def save(self, model_file: Union[str, Path]):
         model_state = {
             'state_dict': self.state_dict(),
             'embeddings': self.embeddings,
@@ -160,16 +162,32 @@ class SequenceTagger(torch.nn.Module):
             'use_locked_dropout': self.use_locked_dropout,
         }
 
-        torch.save(model_state, model_file, pickle_protocol=4)
+        torch.save(model_state, str(model_file), pickle_protocol=4)
 
+    def save_checkpoint(self, model_file: Union[str, Path], optimizer_state: dict, scheduler_state: dict, epoch: int,
+                        loss: float):
+        model_state = {
+            'state_dict': self.state_dict(),
+            'embeddings': self.embeddings,
+            'hidden_size': self.hidden_size,
+            'tag_dictionary': self.tag_dictionary,
+            'tag_type': self.tag_type,
+            'use_crf': self.use_crf,
+            'use_rnn': self.use_rnn,
+            'rnn_layers': self.rnn_layers,
+            'use_word_dropout': self.use_word_dropout,
+            'use_locked_dropout': self.use_locked_dropout,
+            'optimizer_state_dict': optimizer_state,
+            'scheduler_state_dict': scheduler_state,
+            'epoch': epoch,
+            'loss': loss
+        }
+
+        torch.save(model_state, str(model_file), pickle_protocol=4)
 
     @classmethod
-    def load_from_file(cls, model_file):
-        # suppress torch warnings:
-        # https://docs.python.org/3/library/warnings.html#temporarily-suppressing-warnings
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore")
-            state = torch.load(model_file, map_location={'cuda:0': 'cpu'})
+    def load_from_file(cls, model_file: Union[str, Path]):
+        state = SequenceTagger._load_state(model_file)
 
         use_dropout = 0.0 if not 'use_dropout' in state.keys() else state['use_dropout']
         use_word_dropout = 0.0 if not 'use_word_dropout' in state.keys() else state['use_word_dropout']
@@ -183,19 +201,82 @@ class SequenceTagger(torch.nn.Module):
             use_crf=state['use_crf'],
             use_rnn=state['use_rnn'],
             rnn_layers=state['rnn_layers'],
-            use_dropout=use_dropout,
-            use_word_dropout=use_word_dropout,
-            use_locked_dropout=use_locked_dropout,
+            dropout=use_dropout,
+            word_dropout=use_word_dropout,
+            locked_dropout=use_locked_dropout,
         )
-
         model.load_state_dict(state['state_dict'])
         model.eval()
+
         if torch.cuda.is_available():
             model = model.cuda()
+
         return model
 
-    def forward(self, sentences: List[Sentence]):
+    @classmethod
+    def load_checkpoint(cls, model_file: Union[str, Path]):
+        state = SequenceTagger._load_state(model_file)
+        model = SequenceTagger.load_from_file(model_file)
 
+        epoch = state['epoch'] if 'epoch' in state else None
+        loss = state['loss'] if 'loss' in state else None
+        optimizer_state_dict = state['optimizer_state_dict'] if 'optimizer_state_dict' in state else None
+        scheduler_state_dict = state['scheduler_state_dict'] if 'scheduler_state_dict' in state else None
+
+        return {
+            'model': model, 'epoch': epoch, 'loss': loss,
+            'optimizer_state_dict': optimizer_state_dict, 'scheduler_state_dict': scheduler_state_dict
+        }
+
+    @classmethod
+    def _load_state(cls, model_file: Union[str, Path]):
+        # ATTENTION: suppressing torch serialization warnings. This needs to be taken out once we sort out recursive
+        # serialization of torch objects
+        # https://docs.python.org/3/library/warnings.html#temporarily-suppressing-warnings
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            if torch.cuda.is_available():
+                state = torch.load(str(model_file))
+            else:
+                state = torch.load(str(model_file), map_location={'cuda:0': 'cpu'})
+        return state
+
+    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
+        features, lengths, tags = self.forward(sentences)
+        return self._calculate_loss(features, lengths, tags)
+
+    def forward_labels_and_loss(self, sentences: Union[List[Sentence], Sentence]) -> (List[List[Label]], torch.tensor):
+        with torch.no_grad():
+            feature, lengths, tags = self.forward(sentences)
+            loss = self._calculate_loss(feature, lengths, tags)
+            tags = self._obtain_labels(feature, lengths)
+            return tags, loss
+
+    def predict(self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32) -> List[Sentence]:
+        with torch.no_grad():
+            if type(sentences) is Sentence:
+                sentences = [sentences]
+
+            filtered_sentences = self._filter_empty_sentences(sentences)
+
+            # remove previous embeddings
+            clear_embeddings(filtered_sentences, also_clear_word_embeddings=True)
+
+            # make mini-batches
+            batches = [filtered_sentences[x:x + mini_batch_size] for x in
+                       range(0, len(filtered_sentences), mini_batch_size)]
+
+            for batch in batches:
+                tags, _ = self.forward_labels_and_loss(batch)
+
+                for (sentence, sent_tags) in zip(batch, tags):
+                    for (token, tag) in zip(sentence.tokens, sent_tags):
+                        token: Token = token
+                        token.add_tag_label(self.tag_type, tag)
+
+            return sentences
+
+    def forward(self, sentences: List[Sentence]):
         self.zero_grad()
 
         self.embeddings.embed(sentences)
@@ -317,7 +398,58 @@ class SequenceTagger(torch.nn.Module):
 
         return score
 
-    def viterbi_decode(self, feats):
+    def _calculate_loss(self, features, lengths, tags) -> float:
+        if self.use_crf:
+            # pad tags if using batch-CRF decoder
+            if torch.cuda.is_available():
+                tags, _ = pad_tensors(tags, torch.cuda.LongTensor)
+            else:
+                tags, _ = pad_tensors(tags, torch.LongTensor)
+
+            forward_score = self._forward_alg(features, lengths)
+            gold_score = self._score_sentence(features, tags, lengths)
+
+            score = forward_score - gold_score
+
+            return score.sum()
+
+        else:
+            score = 0
+            for sentence_feats, sentence_tags, sentence_length in zip(features, tags, lengths):
+                sentence_feats = sentence_feats[:sentence_length]
+
+                if torch.cuda.is_available():
+                    tag_tensor = autograd.Variable(torch.cuda.LongTensor(sentence_tags))
+                else:
+                    tag_tensor = autograd.Variable(torch.LongTensor(sentence_tags))
+                score += torch.nn.functional.cross_entropy(sentence_feats, tag_tensor)
+
+            return score
+
+    def _obtain_labels(self, feature, lengths) -> List[List[Label]]:
+        tags = []
+
+        for feats, length in zip(feature, lengths):
+            if self.use_crf:
+                confidences, tag_seq = self._viterbi_decode(feats[:length])
+            else:
+                import torch.nn.functional as F
+
+                tag_seq = []
+                confidences = []
+                for backscore in feats[:length]:
+                    softmax = F.softmax(backscore, dim=0)
+                    _, idx = torch.max(backscore, 0)
+                    prediction = idx.item()
+                    tag_seq.append(prediction)
+                    confidences.append(softmax[prediction].item())
+
+            tags.append([Label(self.tag_dictionary.get_item_for_index(tag), conf)
+                         for conf, tag in zip(confidences, tag_seq)])
+
+        return tags
+
+    def _viterbi_decode(self, feats):
         backpointers = []
         backscores = []
 
@@ -363,38 +495,6 @@ class SequenceTagger(torch.nn.Module):
         assert start == self.tag_dictionary.get_idx_for_item(START_TAG)
         best_path.reverse()
         return best_scores, best_path
-
-    def neg_log_likelihood(self, sentences: List[Sentence]):
-        features, lengths, tags = self.forward(sentences)
-
-        if self.use_crf:
-
-            # pad tags if using batch-CRF decoder
-            if torch.cuda.is_available():
-                tags, _ = pad_tensors(tags, torch.cuda.LongTensor)
-            else:
-                tags, _ = pad_tensors(tags, torch.LongTensor)
-
-            forward_score = self._forward_alg(features, lengths)
-            gold_score = self._score_sentence(features, tags, lengths)
-
-            score = forward_score - gold_score
-
-            return score.sum()
-
-        else:
-
-            score = 0
-            for sentence_feats, sentence_tags, sentence_length in zip(features, tags, lengths):
-                sentence_feats = sentence_feats[:sentence_length]
-
-                if torch.cuda.is_available():
-                    tag_tensor = autograd.Variable(torch.cuda.LongTensor(sentence_tags))
-                else:
-                    tag_tensor = autograd.Variable(torch.LongTensor(sentence_tags))
-                score += torch.nn.functional.cross_entropy(sentence_feats, tag_tensor)
-
-            return score
 
     def _forward_alg(self, feats, lens_):
 
@@ -448,62 +548,6 @@ class SequenceTagger(torch.nn.Module):
 
         return alpha
 
-    def predict(self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32) -> List[Sentence]:
-
-        with torch.no_grad():
-            if type(sentences) is Sentence:
-                sentences = [sentences]
-
-            filtered_sentences = self._filter_empty_sentences(sentences)
-
-            # remove previous embeddings
-            clear_embeddings(filtered_sentences, also_clear_word_embeddings=True)
-
-            # make mini-batches
-            batches = [filtered_sentences[x:x + mini_batch_size] for x in
-                       range(0, len(filtered_sentences), mini_batch_size)]
-
-            for batch in batches:
-                scores, predicted_ids = self._predict_scores_batch(batch)
-                all_tokens = []
-                for sentence in batch:
-                    all_tokens.extend(sentence.tokens)
-
-                for (token, score, predicted_id) in zip(all_tokens, scores, predicted_ids):
-                    token: Token = token
-                    # get the predicted tag
-                    predicted_tag = self.tag_dictionary.get_item_for_index(predicted_id)
-                    token.add_tag(self.tag_type, predicted_tag, score)
-
-            return sentences
-
-    def _predict_scores_batch(self, sentences: List[Sentence]):
-        feature, lengths, tags = self.forward(sentences)
-
-        all_confidences = []
-        all_tags_seqs = []
-
-        for feats, length in zip(feature, lengths):
-
-            if self.use_crf:
-                confidences, tag_seq = self.viterbi_decode(feats[:length])
-            else:
-                import torch.nn.functional as F
-
-                tag_seq = []
-                confidences = []
-                for backscore in feats[:length]:
-                    softmax = F.softmax(backscore, dim=0)
-                    _, idx = torch.max(backscore, 0)
-                    prediction = idx.item()
-                    tag_seq.append(prediction)
-                    confidences.append(softmax[prediction].item())
-
-            all_tags_seqs.extend(tag_seq)
-            all_confidences.extend(confidences)
-
-        return all_confidences, all_tags_seqs
-
     @staticmethod
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
         filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
@@ -515,84 +559,130 @@ class SequenceTagger(torch.nn.Module):
     def load(model: str):
         model_file = None
         aws_resource_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.2'
+        aws_resource_path_v04 = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4'
+        cache_dir = Path('models')
+
+        if model.lower() == 'ner-multi' or model.lower() == 'multi-ner':
+            base_path = '/'.join([aws_resource_path_v04,
+                                  'release-quadner-512-l2-multi-embed',
+                                  'quadner-large.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
+        if model.lower() == 'ner-multi-fast' or model.lower() == 'multi-ner-fast':
+            base_path = '/'.join([aws_resource_path_v04,
+                                  'NER-multi-fast',
+                                  'ner-multi-fast.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
+        if model.lower() == 'ner-multi-fast-learn' or model.lower() == 'multi-ner-fast-learn':
+            base_path = '/'.join([aws_resource_path_v04,
+                                  'NER-multi-fast-evolve',
+                                  'ner-multi-fast-learn.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
 
         if model.lower() == 'ner':
             base_path = '/'.join([aws_resource_path,
                                   'NER-conll03--h256-l1-b32-%2Bglove%2Bnews-forward%2Bnews-backward--v0.2',
                                   'en-ner-conll03-v0.2.pt'])
-            model_file = cached_path(base_path, cache_dir='models')
+            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'ner-fast':
+        elif model.lower() == 'ner-fast':
             base_path = '/'.join([aws_resource_path,
                                   'NER-conll03--h256-l1-b32-experimental--fast-v0.2',
                                   'en-ner-fast-conll03-v0.2.pt'])
-            model_file = cached_path(base_path, cache_dir='models')
+            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'ner-ontonotes':
+        elif model.lower() == 'ner-ontonotes':
             base_path = '/'.join([aws_resource_path,
                                   'NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward%2Bnews-backward--v0.2',
                                   'en-ner-ontonotes-v0.3.pt'])
-            model_file = cached_path(base_path, cache_dir='models')
+            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'ner-ontonotes-fast':
+        elif model.lower() == 'ner-ontonotes-fast':
             base_path = '/'.join([aws_resource_path,
                                   'NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
                                   'en-ner-ontonotes-fast-v0.3.pt'])
-            model_file = cached_path(base_path, cache_dir='models')
+            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'pos':
+        elif model.lower() == 'pos-multi' or model.lower() == 'multi-pos':
+            base_path = '/'.join([aws_resource_path_v04,
+                                  'release-dodekapos-512-l2-multi',
+                                  'pos-multi-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
+        elif model.lower() == 'pos-multi-fast' or model.lower() == 'multi-pos-fast':
+            base_path = '/'.join([aws_resource_path_v04,
+                                  'UPOS-multi-fast',
+                                  'pos-multi-fast.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
+        elif model.lower() == 'pos':
             base_path = '/'.join([aws_resource_path,
                                   'POS-ontonotes--h256-l1-b32-%2Bmix-forward%2Bmix-backward--v0.2',
                                   'en-pos-ontonotes-v0.2.pt'])
-            model_file = cached_path(base_path, cache_dir='models')
+            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'pos-fast':
+        elif model.lower() == 'pos-fast':
             base_path = '/'.join([aws_resource_path,
                                   'POS-ontonotes--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
                                   'en-pos-ontonotes-fast-v0.2.pt'])
-            model_file = cached_path(base_path, cache_dir='models')
+            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'frame':
+        elif model.lower() == 'frame':
             base_path = '/'.join([aws_resource_path,
                                   'FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward%2Bnews-backward--v0.2',
                                   'en-frame-ontonotes-v0.2.pt'])
-            model_file = cached_path(base_path, cache_dir='models')
+            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'frame-fast':
+        elif model.lower() == 'frame-fast':
             base_path = '/'.join([aws_resource_path,
                                   'FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
                                   'en-frame-ontonotes-fast-v0.2.pt'])
-            model_file = cached_path(base_path, cache_dir='models')
+            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'chunk':
+        elif model.lower() == 'chunk':
             base_path = '/'.join([aws_resource_path,
                                   'NP-conll2000--h256-l1-b32-%2Bnews-forward%2Bnews-backward--v0.2',
                                   'en-chunk-conll2000-v0.2.pt'])
-            model_file = cached_path(base_path, cache_dir='models')
+            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'chunk-fast':
+        elif model.lower() == 'chunk-fast':
             base_path = '/'.join([aws_resource_path,
                                   'NP-conll2000--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
                                   'en-chunk-conll2000-fast-v0.2.pt'])
-            model_file = cached_path(base_path, cache_dir='models')
+            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'de-pos':
+        elif model.lower() == 'de-pos':
             base_path = '/'.join([aws_resource_path,
                                   'UPOS-udgerman--h256-l1-b8-%2Bgerman-forward%2Bgerman-backward--v0.2',
                                   'de-pos-ud-v0.2.pt'])
-            model_file = cached_path(base_path, cache_dir='models')
+            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'de-ner':
+        elif model.lower() == 'de-pos-fine-grained':
+            base_path = '/'.join([aws_resource_path_v04,
+                                  'POS-fine-grained-german-tweets',
+                                  'de-pos-twitter-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
+        elif model.lower() == 'de-ner':
             base_path = '/'.join([aws_resource_path,
                                   'NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2',
                                   'de-ner-conll03-v0.3.pt'])
-            model_file = cached_path(base_path, cache_dir='models')
+            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'de-ner-germeval':
+        elif model.lower() == 'de-ner-germeval':
             base_path = '/'.join([aws_resource_path,
                                   'NER-germeval--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2',
                                   'de-ner-germeval-v0.3.pt'])
-            model_file = cached_path(base_path, cache_dir='models')
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
+        elif model.lower() == 'fr-ner':
+            base_path = '/'.join([aws_resource_path, 'NER-aij-wikiner-fr-wp3', 'fr-ner.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
+        elif model.lower() == 'nl-ner':
+            base_path = '/'.join([aws_resource_path_v04, 'NER-conll2002-dutch', 'nl-ner-conll02-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
 
         if model_file is not None:
             tagger: SequenceTagger = SequenceTagger.load_from_file(model_file)

@@ -36,6 +36,13 @@ def test_fr():
 def test_it():
     load_and_apply_word_embeddings('it')
 
+@pytest.mark.slow
+def test_it():
+    load_and_apply_word_embeddings('it-wiki')
+
+@pytest.mark.slow
+def test_it():
+    load_and_apply_word_embeddings('it-crawl')
 
 @pytest.mark.slow
 def test_news_forward():
@@ -100,7 +107,7 @@ def test_stacked_embeddings():
 def test_document_lstm_embeddings():
     sentence, glove, charlm = init_document_embeddings()
 
-    embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_states=128,
+    embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_size=128,
                                                                 bidirectional=False)
 
     embeddings.embed(sentence)
@@ -117,7 +124,7 @@ def test_document_lstm_embeddings():
 def test_document_bidirectional_lstm_embeddings():
     sentence, glove, charlm = init_document_embeddings()
 
-    embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_states=128,
+    embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_size=128,
                                                                 bidirectional=True)
 
     embeddings.embed(sentence)
@@ -134,7 +141,7 @@ def test_document_bidirectional_lstm_embeddings():
 def test_document_bidirectional_lstm_embeddings_using_first_representation():
     sentence, glove, charlm = init_document_embeddings()
 
-    embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_states=128,
+    embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_size=128,
                                                                 bidirectional=True)
 
     embeddings.embed(sentence)

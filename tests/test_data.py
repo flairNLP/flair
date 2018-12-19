@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import pytest
 from typing import List
@@ -30,6 +31,28 @@ def test_create_sentence_without_tokenizer():
     assert ('love' == sentence.tokens[1].text)
     assert ('Berlin.' == sentence.tokens[2].text)
 
+def test_token_indices():
+
+    text = ':    nation on'
+    sentence = Sentence(text)
+    assert (text == sentence.to_original_text())
+
+    text = ':    nation on'
+    sentence = Sentence(text, use_tokenizer=True)
+    assert (text == sentence.to_original_text())
+
+    text = 'I love Berlin.'
+    sentence = Sentence(text)
+    assert (text == sentence.to_original_text())
+
+    text = 'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in einer Weise aufgetreten , die alles andere als überzeugend war " .'
+    sentence = Sentence(text)
+    assert (text == sentence.to_original_text())
+
+    text = 'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in einer Weise aufgetreten , die alles andere als überzeugend war " .'
+    sentence = Sentence(text, use_tokenizer=True)
+    assert (text == sentence.to_original_text())
+
 
 def test_create_sentence_with_tokenizer():
     sentence: Sentence = Sentence('I love Berlin.', use_tokenizer=True)
@@ -51,7 +74,7 @@ def test_sentence_to_real_string(tasks_base_path):
     sentence: Sentence = Sentence('I love Berlin.', use_tokenizer=True)
     assert ('I love Berlin.' == sentence.to_plain_string())
 
-    corpus = NLPTaskDataFetcher.fetch_data(NLPTask.GERMEVAL, tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.GERMEVAL, tasks_base_path)
 
     sentence = corpus.train[0]
     assert (
@@ -273,7 +296,7 @@ def test_tagged_corpus_statistics():
     dev_sentence = Sentence('The sun is shining.', labels=[Label('class_2')], use_tokenizer=True)
     test_sentence = Sentence('Berlin is sunny.', labels=[Label('class_1')], use_tokenizer=True)
 
-    class_to_count_dict = TaggedCorpus._get_classes_to_count([train_sentence, dev_sentence, test_sentence])
+    class_to_count_dict = TaggedCorpus._get_class_to_count([train_sentence, dev_sentence, test_sentence])
 
     assert ('class_1' in class_to_count_dict)
     assert ('class_2' in class_to_count_dict)
@@ -293,7 +316,7 @@ def test_tagged_corpus_statistics_string_label():
     dev_sentence = Sentence('The sun is shining.', labels=['class_2'], use_tokenizer=True)
     test_sentence = Sentence('Berlin is sunny.', labels=['class_1'], use_tokenizer=True)
 
-    class_to_count_dict = TaggedCorpus._get_classes_to_count([train_sentence, dev_sentence, test_sentence])
+    class_to_count_dict = TaggedCorpus._get_class_to_count([train_sentence, dev_sentence, test_sentence])
 
     assert ('class_1' in class_to_count_dict)
     assert ('class_2' in class_to_count_dict)
@@ -313,7 +336,7 @@ def test_tagged_corpus_statistics_multi_label():
     dev_sentence = Sentence('The sun is shining.', labels=['class_2'], use_tokenizer=True)
     test_sentence = Sentence('Berlin is sunny.', labels=['class_1', 'class_2'], use_tokenizer=True)
 
-    class_to_count_dict = TaggedCorpus._get_classes_to_count([train_sentence, dev_sentence, test_sentence])
+    class_to_count_dict = TaggedCorpus._get_class_to_count([train_sentence, dev_sentence, test_sentence])
 
     assert ('class_1' in class_to_count_dict)
     assert ('class_2' in class_to_count_dict)
@@ -326,6 +349,29 @@ def test_tagged_corpus_statistics_multi_label():
     assert (4 == tokens_in_sentences[0])
     assert (5 == tokens_in_sentences[1])
     assert (4 == tokens_in_sentences[2])
+
+
+def test_tagged_corpus_get_tag_statistic():
+    train_sentence = Sentence('Zalando Research is located in Berlin .')
+    train_sentence[0].add_tag('ner', 'B-ORG')
+    train_sentence[1].add_tag('ner', 'E-ORG')
+    train_sentence[5].add_tag('ner', 'S-LOC')
+
+    dev_sentence = Sentence('Facebook, Inc. is a company, and Google is one as well.', use_tokenizer=True)
+    dev_sentence[0].add_tag('ner', 'B-ORG')
+    dev_sentence[1].add_tag('ner', 'I-ORG')
+    dev_sentence[2].add_tag('ner', 'E-ORG')
+    dev_sentence[8].add_tag('ner', 'S-ORG')
+
+    test_sentence = Sentence('Nothing to do with companies.')
+
+    tag_to_count_dict = TaggedCorpus._get_tag_to_count([train_sentence, dev_sentence, test_sentence], 'ner')
+
+    assert (1 == tag_to_count_dict['S-ORG'])
+    assert (1 == tag_to_count_dict['S-LOC'])
+    assert (2 == tag_to_count_dict['B-ORG'])
+    assert (2 == tag_to_count_dict['E-ORG'])
+    assert (1 == tag_to_count_dict['I-ORG'])
 
 
 def test_tagged_corpus_downsample():
