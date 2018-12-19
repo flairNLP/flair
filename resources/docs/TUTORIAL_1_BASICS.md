@@ -103,7 +103,7 @@ This should print:
 The grass is green <color> .
 ```
 
-Each tag is of class Label which next to the value has a score indicating confidence. Print like this: 
+Each tag is of class `Label` which next to the value has a score indicating confidence. Print like this: 
 
 ```python
 from flair.data import Label
@@ -141,7 +141,7 @@ sentence.add_labels(['sports', 'world cup'])
 sentence = Sentence('France is the current world cup winner.', labels=['sports', 'world cup'])
 ```
 
-Labels are also of the Label class. So, you can print a sentence's labels like this: 
+Labels are also of the `Label` class. So, you can print a sentence's labels like this: 
 
 ```python
 sentence = Sentence('France is the current world cup winner.', labels=['sports', 'world cup'])
