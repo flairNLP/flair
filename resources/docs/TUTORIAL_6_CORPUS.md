@@ -6,7 +6,7 @@ For this tutorial, we assume that you're familiar with the [base types](/resourc
 library.
 
 
-## Reading A Column-Formatted Dataset
+## Reading A Sequence Labeling Dataset
 
 Most sequence labeling datasets in NLP use some sort of column format in which each line is a word and each column is
 one level of linguistic annotation. See for instance this sentence:
@@ -25,13 +25,12 @@ dataset, define the column structure as a dictionary and use a helper method.
 ```python
 from flair.data import TaggedCorpus
 from flair.data_fetcher import NLPTaskDataFetcher
-from pathlib import Path
 
 # define columns
 columns = {0: 'text', 1: 'pos', 2: 'np'}
 
 # this is the folder in which train, test and dev files reside
-data_folder = Path('/path/to/data/folder')
+data_folder = '/path/to/data/folder'
 
 # retrieve corpus using column format, data folder and the names of the train, dev and test files
 corpus: TaggedCorpus = NLPTaskDataFetcher.load_column_corpus(data_folder, columns,
