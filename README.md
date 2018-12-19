@@ -84,7 +84,10 @@ Done! The `Sentence` now has entity annotations. Print the sentence to see what 
 ```python
 print(sentence)
 print('The following NER tags are found:')
-print(sentence.to_tagged_string())
+
+# iterate over entities and print
+for entity in sentence.get_spans('ner'):
+    print(entity)
 ```
 
 This should print: 
@@ -94,7 +97,7 @@ Sentence: "I love Berlin ." - 4 Tokens
 
 The following NER tags are found: 
 
-I love Berlin <S-LOC> .
+LOC-span [3]: "Berlin"
 ```
 
 ## Tutorial
