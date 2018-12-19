@@ -562,19 +562,19 @@ class SequenceTagger(flair.nn.Model):
         aws_resource_path_v04 = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4'
         cache_dir = Path('models')
 
-        if model.lower() == 'multi-ner':
+        if model.lower() == 'ner-multi' or model.lower() == 'multi-ner':
             base_path = '/'.join([aws_resource_path_v04,
                                   'release-quadner-512-l2-multi-embed',
                                   'quadner-large.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'multi-ner-fast':
+        if model.lower() == 'ner-multi-fast' or model.lower() == 'multi-ner-fast':
             base_path = '/'.join([aws_resource_path_v04,
                                   'NER-multi-fast',
                                   'ner-multi-fast.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == 'multi-ner-fast-learn':
+        if model.lower() == 'ner-multi-fast-learn' or model.lower() == 'multi-ner-fast-learn':
             base_path = '/'.join([aws_resource_path_v04,
                                   'NER-multi-fast-evolve',
                                   'ner-multi-fast-learn.pt'])
@@ -602,6 +602,12 @@ class SequenceTagger(flair.nn.Model):
             base_path = '/'.join([aws_resource_path,
                                   'NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
                                   'en-ner-ontonotes-fast-v0.3.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
+        elif model.lower() == 'pos-multi':
+            base_path = '/'.join([aws_resource_path_v04,
+                                  'release-dodekapos-512-l2-multi',
+                                  'pos-multi-v0.1.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
         elif model.lower() == 'pos-multi-fast':
