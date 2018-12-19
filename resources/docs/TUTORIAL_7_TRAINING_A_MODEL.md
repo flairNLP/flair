@@ -321,7 +321,7 @@ trainer.train('resources/taggers/example-ner',
 
 ## Scalability: Training on Large Data Sets
 
-The main thing to consider when using `CharLMEmbeddings` (which you should) is that they are
+The main thing to consider when using `FlairEmbeddings` (which you should) is that they are
 somewhat costly to generate for large training data sets. Depending on your setup, you can
 set options to optimize training time. There are three questions to ask:
 
@@ -329,11 +329,7 @@ set options to optimize training time. There are three questions to ask:
 
 `CharLMEmbeddings` are generated using Pytorch RNNs and are thus optimized for GPUs. If you have one,
 you can set large mini-batch sizes to make use of batching. If not, you may want to use smaller language models.
-For English, we package 'fast' variants of our embeddings, loadable like this: `CharLMEmbeddings('news-forward-fast')`.
-
-Regardless, all computed embeddings get materialized to disk upon first computation. This means that if you rerun an
-experiment on the same dataset, they will be retrieved from disk instead of re-computed, potentially saving a lot
-of time.
+For English, we package 'fast' variants of our embeddings, loadable like this: `FlairEmbeddings('news-forward-fast')`.
 
 2. Do embeddings for the entire dataset fit into memory?
 
@@ -341,15 +337,11 @@ In the best-case scenario, all embeddings for the dataset fit into your regular 
 training speed. If this is not the case, you must set the flag `embeddings_in_memory=False` in the respective trainer
  (i.e. `ModelTrainer`) to
 avoid memory problems. With the flag, embeddings are either (a) recomputed at each epoch or (b)
-retrieved from disk (where they are materialized by default). The second option is the default and is typically
-much faster.
+retrieved from disk if you choose to materialize to disk. 
 
 3. Do you have a fast hard drive?
 
-You benefit the most from the default behavior of storing computed embeddings on disk for later retrieval
-if your disk is large and fast. If you either do not have a lot of disk space, or a really slow hard drive,
-you should disable this option. You can do this when instantiating the embeddings by setting `use_cache=False`. So
-instantiate like this: `CharLMEmbeddings('news-forward-fast', use_cache=False')`
+If you have a fast hard drive, consider materializing the embeddings to disk. You can do this my instantiating FlairEmbeddings as follows: `FlairEmbeddings('news-forward-fast', use_cache=True)`. This can help if embeddings do not fit into memory. Also if you do not have a GPU and want to do repeat experiments on the same dataset, this helps because embeddings need only be computed once and will then always be retrieved from disk. 
 
 
 ## Next
