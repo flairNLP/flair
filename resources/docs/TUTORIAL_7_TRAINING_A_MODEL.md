@@ -4,8 +4,8 @@ This part of the tutorial shows how you can train your own sequence labeling and
 classification models using state-of-the-art word embeddings.
 
 For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this
-library and how [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) work. You should also know how to [load
-a corpus](/resources/docs/TUTORIAL_6_CORPUS.md)
+library and how [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) work (ideally, you also know how [flair embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md) work). You should also know how to [load
+a corpus](/resources/docs/TUTORIAL_6_CORPUS.md).
 
 
 ## Training a Sequence Labeling Model
