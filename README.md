@@ -16,7 +16,7 @@ Flair is:
 models to your text, such as named entity recognition (NER), part-of-speech tagging (PoS),
  sense disambiguation and classification.
 
-* **Multilingual!** Thanks to the Flair community, we support a rapidly growing number of languages. We also now include
+* **Multilingual.** Thanks to the Flair community, we support a rapidly growing number of languages. We also now include
 '*one model, many languages*' taggers, i.e. single models that predict PoS or NER tags for input text in various languages.
 
 * **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and 
