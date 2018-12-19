@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch
 import math
 from torch.autograd import Variable
-from typing import List
+from typing import List, Union
 
 from torch.optim import Optimizer
 
@@ -121,7 +121,7 @@ class LanguageModel(nn.Module):
         matrix.data.uniform_(-stdv, stdv)
 
     @classmethod
-    def load_language_model(cls, model_file: Path):
+    def load_language_model(cls, model_file: Union[Path, str]):
 
         if not torch.cuda.is_available():
             state = torch.load(str(model_file), map_location='cpu')
@@ -166,7 +166,8 @@ class LanguageModel(nn.Module):
         if torch.cuda.is_available():
             model.cuda()
 
-        return {'model': model, 'epoch': epoch, 'split': split, 'loss': loss, 'optimizer_state_dict': optimizer_state_dict}
+        return {'model': model, 'epoch': epoch, 'split': split, 'loss': loss,
+                'optimizer_state_dict': optimizer_state_dict}
 
     def save_checkpoint(self, file: Path, optimizer: Optimizer, epoch: int, split: int, loss: float):
         model_state = {
@@ -200,24 +201,48 @@ class LanguageModel(nn.Module):
 
         torch.save(model_state, str(file), pickle_protocol=4)
 
-    def generate_text(self, number_of_characters=1000) -> str:
+    def generate_text(self, prefix: str = '', number_of_characters: int = 1000, temperature: float = 0.6, break_on_suffix = None) -> str:
+
+        if prefix == '':
+            prefix = '\n'
+
         with torch.no_grad():
             characters = []
 
             idx2item = self.dictionary.idx2item
 
-            # initial hidden state
+            char_tensors = [torch.tensor(self.dictionary.get_idx_for_item('\n')).unsqueeze(0).unsqueeze(0)]
+            for character in prefix[:-1]:
+                char_tensors.append(
+                    torch.tensor(self.dictionary.get_idx_for_item(character)).unsqueeze(0).unsqueeze(0))
+
+            input = torch.cat(char_tensors)
+
             hidden = self.init_hidden(1)
-            input = torch.rand(1, 1).mul(len(idx2item)).long()
+            prediction, _, hidden = self.forward(input, hidden)
+
+            hidden = hidden
+
+            input = torch.tensor(self.dictionary.get_idx_for_item(prefix[-1])).unsqueeze(0).unsqueeze(0)
             if torch.cuda.is_available():
                 input = input.cuda()
 
             for i in range(number_of_characters):
-                prediction, rnn_output, hidden = self.forward(input, hidden)
+                prediction, _, hidden = self.forward(input, hidden)
+                prediction /= temperature
                 word_weights = prediction.squeeze().data.div(1.0).exp().cpu()
                 word_idx = torch.multinomial(word_weights, 1)[0]
-                input.data.fill_(word_idx)
+                input = word_idx.clone().detach().unsqueeze(0).unsqueeze(0)
                 word = idx2item[word_idx].decode('UTF-8')
                 characters.append(word)
 
-            return ''.join(characters)
+                if break_on_suffix is not None:
+                    if ''.join(characters).endswith(break_on_suffix):
+                        break
+
+            text = prefix + ''.join(characters)
+
+            if not self.is_forward_lm:
+                text = text[::-1]
+
+            return text

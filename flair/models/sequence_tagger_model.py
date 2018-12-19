@@ -17,9 +17,7 @@ from typing import List, Tuple, Union
 
 from flair.training_utils import clear_embeddings
 
-
 log = logging.getLogger('flair')
-
 
 START_TAG: str = '<START>'
 STOP_TAG: str = '<STOP>'
@@ -166,7 +164,8 @@ class SequenceTagger(flair.nn.Model):
 
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
-    def save_checkpoint(self, model_file: Union[str, Path], optimizer_state: dict, scheduler_state: dict, epoch: int, loss: float):
+    def save_checkpoint(self, model_file: Union[str, Path], optimizer_state: dict, scheduler_state: dict, epoch: int,
+                        loss: float):
         model_state = {
             'state_dict': self.state_dict(),
             'embeddings': self.embeddings,
@@ -563,6 +562,24 @@ class SequenceTagger(flair.nn.Model):
         aws_resource_path_v04 = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4'
         cache_dir = Path('models')
 
+        if model.lower() == 'ner-multi' or model.lower() == 'multi-ner':
+            base_path = '/'.join([aws_resource_path_v04,
+                                  'release-quadner-512-l2-multi-embed',
+                                  'quadner-large.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
+        if model.lower() == 'ner-multi-fast' or model.lower() == 'multi-ner-fast':
+            base_path = '/'.join([aws_resource_path_v04,
+                                  'NER-multi-fast',
+                                  'ner-multi-fast.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
+        if model.lower() == 'ner-multi-fast-learn' or model.lower() == 'multi-ner-fast-learn':
+            base_path = '/'.join([aws_resource_path_v04,
+                                  'NER-multi-fast-evolve',
+                                  'ner-multi-fast-learn.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
         if model.lower() == 'ner':
             base_path = '/'.join([aws_resource_path,
                                   'NER-conll03--h256-l1-b32-%2Bglove%2Bnews-forward%2Bnews-backward--v0.2',
@@ -585,6 +602,18 @@ class SequenceTagger(flair.nn.Model):
             base_path = '/'.join([aws_resource_path,
                                   'NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward-fast%2Bnews-backward-fast--v0.2',
                                   'en-ner-ontonotes-fast-v0.3.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
+        elif model.lower() == 'pos-multi':
+            base_path = '/'.join([aws_resource_path_v04,
+                                  'release-dodekapos-512-l2-multi',
+                                  'pos-multi-v0.1.pt'])
+            model_file = cached_path(base_path, cache_dir=cache_dir)
+
+        elif model.lower() == 'pos-multi-fast':
+            base_path = '/'.join([aws_resource_path_v04,
+                                  'UPOS-multi-fast',
+                                  'pos-multi-fast.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
         elif model.lower() == 'pos':

@@ -212,14 +212,20 @@ class NLPTaskDataFetcher:
                 if file_name.endswith('.gz'): continue
                 if 'train' in file_name and not '54019' in file_name:
                     train_file = file
-                if 'test' in file_name:
-                    test_file = file
                 if 'dev' in file_name:
                     dev_file = file
                 if 'testa' in file_name:
                     dev_file = file
                 if 'testb' in file_name:
                     test_file = file
+
+            # if no test file is found, take any file with 'test' in name
+            if test_file is None:
+                for file in data_folder.iterdir():
+                    file_name = file.name
+                    if file_name.endswith('.gz'): continue
+                    if 'test' in file_name:
+                        test_file = file
 
         log.info("Reading data from {}".format(data_folder))
         log.info("Train: {}".format(train_file))
