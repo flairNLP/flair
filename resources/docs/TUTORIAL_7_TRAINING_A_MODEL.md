@@ -57,13 +57,11 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
 
 # 6. initialize trainer
 from flair.trainers import ModelTrainer
-from flair.training_utils import EvaluationMetric
 
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 # 7. start training
 trainer.train('resources/taggers/example-ner',
-              EvaluationMetric.MICRO_F1_SCORE,
               learning_rate=0.1,
               mini_batch_size=32,
               max_epochs=150)
@@ -113,7 +111,6 @@ from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 from flair.embeddings import WordEmbeddings, FlairEmbeddings, DocumentLSTMEmbeddings
 from flair.models import TextClassifier
 from flair.trainers import ModelTrainer
-from flair.training_utils import EvaluationMetric
 
 
 # 1. get the corpus
@@ -145,7 +142,6 @@ trainer = ModelTrainer(classifier, corpus)
 
 # 7. start the training
 trainer.train('resources/taggers/ag_news',
-              EvaluationMetric.MICRO_F1_SCORE,
               learning_rate=0.1,
               mini_batch_size=32,
               anneal_factor=0.5,
@@ -177,7 +173,62 @@ print(sentence.labels)
 
 ## Multi-Dataset Training
 
-TODO
+Now, let us train a single model that can PoS tag text in both English and German. To do this, we load both the English and German UD corpora and create a MultiCorpus object. We also use the new multilingual Flair embeddings for this task. 
+
+All the rest is same as before, e.g.: 
+
+```python
+from typing import List
+from flair.data import MultiCorpus
+from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
+from flair.embeddings import FlairEmbeddings, TokenEmbeddings, StackedEmbeddings
+from flair.training_utils import EvaluationMetric
+
+
+# 1. get the corpora - English and German UD
+corpus: MultiCorpus = NLPTaskDataFetcher.load_corpora([NLPTask.UD_ENGLISH, NLPTask.UD_GERMAN]).downsample(0.1)
+
+# 2. what tag do we want to predict?
+tag_type = 'upos'
+
+# 3. make the tag dictionary from the corpus
+tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+print(tag_dictionary.idx2item)
+
+# 4. initialize embeddings
+embedding_types: List[TokenEmbeddings] = [
+
+    # we use multilingual Flair embeddings in this task
+    FlairEmbeddings('multi-forward'),
+    FlairEmbeddings('multi-backward'),
+]
+
+embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
+
+# 5. initialize sequence tagger
+from flair.models import SequenceTagger
+
+tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+                                        embeddings=embeddings,
+                                        tag_dictionary=tag_dictionary,
+                                        tag_type=tag_type,
+                                        use_crf=True)
+
+# 6. initialize trainer
+from flair.trainers import ModelTrainer
+
+trainer: ModelTrainer = ModelTrainer(tagger, corpus)
+
+# 7. start training
+trainer.train('resources/taggers/example-universal-pos',
+              learning_rate=0.1,
+              mini_batch_size=32,
+              max_epochs=150,
+              evaluation_metric=EvaluationMetric.MICRO_ACCURACY)
+```
+
+Note that here we use the MICRO_ACCURACY evaluation metric instead of the default MICRO_F1_SCORE. This gives you a multilingual model. Try experimenting with more languages!
+
 
 
 ## Plotting Training Curves and Weights
