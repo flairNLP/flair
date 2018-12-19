@@ -10,8 +10,9 @@ a corpus](/resources/docs/TUTORIAL_6_CORPUS.md).
 
 ## Training a Sequence Labeling Model
 
-Here is example code for a small NER model trained over CoNLL-03 data, using simple GloVe embeddings.
-In this example, we downsample the data to 10% of the original data.
+Here is example code for a small NER model trained over CoNLL-03 data, using simple GloVe embeddings. To run this code, you first need to obtain the CoNLL-03 English dataset (alternatively, use `NLPTaskDataFetcher.load_corpus(NLPTask.WNUT)` instead for a task with freely available data).
+
+In this example, we downsample the data to 10% of the original data:
 
 ```python
 from flair.data import TaggedCorpus
@@ -38,9 +39,9 @@ embedding_types: List[TokenEmbeddings] = [
     # comment in this line to use character embeddings
     # CharacterEmbeddings(),
 
-    # comment in these lines to use contextual string embeddings
-    # CharLMEmbeddings('news-forward'),
-    # CharLMEmbeddings('news-backward'),
+    # comment in these lines to use flair embeddings
+    # FlairEmbeddings('news-forward'),
+    # FlairEmbeddings('news-backward'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
@@ -75,17 +76,36 @@ plotter.plot_weights('resources/taggers/example-ner/weights.txt')
 
 ```
 
-Alternatively, try using a stacked embedding with CharLM and GloVe, over the full data, for 150 epochs.
+Alternatively, try using a stacked embedding with FlairEmbeddings and GloVe, over the full data, for 150 epochs.
 This will give you the state-of-the-art accuracy we report in the paper. To see the full code to reproduce experiments,
 check [here](/resources/docs/EXPERIMENTS.md).
+
+Once the model is trained you can use it to predict the class of new sentences. Just call the `predict` method of the
+model.
+
+```python
+# load the model you trained
+model = SequenceTagger.load_from_file('resources/taggers/example-ner/final-model.pt')
+
+# create example sentence
+sentence = Sentence('I love Berlin')
+
+# predict tags and print
+model.predict(sentence)
+
+print(sentence.to_tagged_string())
+```
+
+If the model works well, it will correctly tag 'Berlin' as a location in this example.
 
 
 ## Training a Text Classification Model
 
 Here is example code for training a text classifier over the AGNews corpus, using  a combination of simple GloVe
-embeddings and contextual string embeddings. In this example, we downsample the data to 10% of the original data.
-
+embeddings and contextual string embeddings. You need to download the AGNews first to run this code. 
 The AGNews corpus can be downloaded [here](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html).
+
+In this example, we downsample the data to 10% of the original data.
 
 ```python
 from flair.data import TaggedCorpus
@@ -98,7 +118,7 @@ from pathlib import Path
 
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.AG_NEWS, Path('path/to/data/folder')).downsample(0.1)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.AG_NEWS, 'path/to/data/folder').downsample(0.1)
 
 # 2. create the label dictionary
 label_dict = corpus.make_label_dictionary()
