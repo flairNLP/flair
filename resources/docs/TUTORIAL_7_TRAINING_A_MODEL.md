@@ -102,7 +102,7 @@ If the model works well, it will correctly tag 'Berlin' as a location in this ex
 ## Training a Text Classification Model
 
 Here is example code for training a text classifier over the AGNews corpus, using  a combination of simple GloVe
-embeddings and contextual string embeddings. You need to download the AGNews first to run this code. 
+embeddings and Flair embeddings. You need to download the AGNews first to run this code. 
 The AGNews corpus can be downloaded [here](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html).
 
 In this example, we downsample the data to 10% of the original data.
@@ -110,7 +110,7 @@ In this example, we downsample the data to 10% of the original data.
 ```python
 from flair.data import TaggedCorpus
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
-from flair.embeddings import WordEmbeddings, CharLMEmbeddings, DocumentLSTMEmbeddings
+from flair.embeddings import WordEmbeddings, FlairEmbeddings, DocumentLSTMEmbeddings
 from flair.models import TextClassifier
 from flair.trainers import ModelTrainer
 from flair.training_utils import EvaluationMetric
@@ -125,8 +125,8 @@ label_dict = corpus.make_label_dictionary()
 
 # 3. make a list of word embeddings
 word_embeddings = [WordEmbeddings('glove'),
-                   CharLMEmbeddings('news-forward'),
-                   CharLMEmbeddings('news-backward')]
+                   FlairEmbeddings('news-forward'),
+                   FlairEmbeddings('news-backward')]
 
 # 4. init document embedding by passing list of word embeddings
 document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings(word_embeddings,
