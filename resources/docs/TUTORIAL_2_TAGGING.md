@@ -187,9 +187,9 @@ print(sentence.to_tagged_string())
 
 This should print: 
 ```console
-George <PROPN> Washington <PROPN> went <VERB> to <ADP> Washington <PROPN> .
+George <PROPN> Washington <PROPN> went <VERB> to <ADP> Washington <PROPN> . <PUNCT>
 
-<PUNCT> Dort <ADV> kaufte <VERB> er <PRON> einen <DET> Hut <NOUN> . <PUNCT>
+Dort <ADV> kaufte <VERB> er <PRON> einen <DET> Hut <NOUN> . <PUNCT>
 ```
 
 So, both 'went' and 'kaufte' are identified as VERBs in these sentences.
