@@ -102,7 +102,7 @@ So, if you want to load German FastText embeddings, instantiate as follows:
 german_embedding = WordEmbeddings('de')
 ```
 
-So, if you want to load German FastText embeddings trained over crawls, instantiate as follows:
+Alternatively, if you want to load German FastText embeddings trained over crawls, instantiate as follows:
 
 ```python
 german_embedding = WordEmbeddings('de-crawl')
