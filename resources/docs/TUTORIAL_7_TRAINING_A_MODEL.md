@@ -114,7 +114,6 @@ from flair.embeddings import WordEmbeddings, FlairEmbeddings, DocumentLSTMEmbedd
 from flair.models import TextClassifier
 from flair.trainers import ModelTrainer
 from flair.training_utils import EvaluationMetric
-from pathlib import Path
 
 
 # 1. get the corpus
@@ -125,14 +124,18 @@ label_dict = corpus.make_label_dictionary()
 
 # 3. make a list of word embeddings
 word_embeddings = [WordEmbeddings('glove'),
-                   FlairEmbeddings('news-forward'),
-                   FlairEmbeddings('news-backward')]
+
+                   # comment in flair embeddings for state-of-the-art results 
+                   # FlairEmbeddings('news-forward'),
+                   # FlairEmbeddings('news-backward'),
+                   ]
 
 # 4. init document embedding by passing list of word embeddings
 document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings(word_embeddings,
                                                                      hidden_size=512,
                                                                      reproject_words=True,
-                                                                     reproject_words_dimension=256,)
+                                                                     reproject_words_dimension=256,
+                                                                     )
 
 # 5. create the text classifier
 classifier = TextClassifier(document_embeddings, label_dictionary=label_dict, multi_label=False)
@@ -141,7 +144,7 @@ classifier = TextClassifier(document_embeddings, label_dictionary=label_dict, mu
 trainer = ModelTrainer(classifier, corpus)
 
 # 7. start the training
-trainer.train('resources/ag_news/results',
+trainer.train('resources/taggers/ag_news',
               EvaluationMetric.MICRO_F1_SCORE,
               learning_rate=0.1,
               mini_batch_size=32,
