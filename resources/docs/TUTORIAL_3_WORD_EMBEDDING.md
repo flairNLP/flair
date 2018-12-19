@@ -50,7 +50,11 @@ This prints out the tokens and their embeddings. GloVe embeddings are Pytorch ve
 You choose which pre-trained embeddings you load by passing the appropriate 
 id string to the constructor of the `WordEmbeddings` class. Typically, you use
 the **two-letter language code** to init an embedding, so 'en' for English and
-'de' for German and so on. For English, we provide a few more options, so
+'de' for German and so on. By default, this will initialize FastText embeddings trained over Wikipedia.
+You can also always use FastText embeddings over Web crawls, by instantiating with '-crawl'. So 'de-crawl' 
+to use embeddings trained over German web crawls. 
+
+For English, we provide a few more options, so
 here you can choose between instantiating 'en-glove', 'en-extvec' and so on.
 
 The following embeddings are currently supported:
@@ -63,19 +67,45 @@ The following embeddings are currently supported:
 | 'en-twitter' (or 'twitter')  | English | Twitter embeddings |
 | 'en' (or 'en-news' or 'news')  |English | FastText embeddings over news and wikipedia data |
 | 'de' | German |German FastText embeddings |
+| 'nl' | Dutch | Dutch FastText embeddings |
 | 'fr' | French | French FastText embeddings |
-| 'pl' | Polish | Polish FastText embeddings |
 | 'it' | Italian | Italian FastText embeddings |
 | 'es' | Spanish | Spanish FastText embeddings |
 | 'pt' | Portuguese | Portuguese FastText embeddings |
-| 'nl' | Dutch | Dutch FastText embeddings |
-| 'ar' | Arabic | Arabic FastText embeddings |
+| 'ro' | Romanian | Romanian FastText embeddings |
+| 'ca' | Catalan | Catalan FastText embeddings |
 | 'sv' | Swedish | Swedish FastText embeddings |
+| 'da' | Danish | Danish FastText embeddings |
+| 'no' | Norwegian | Norwegian FastText embeddings |
+| 'fi' | Finnish | Finnish FastText embeddings |
+| 'pl' | Polish | Polish FastText embeddings |
+| 'cz' | Czech | Czech FastText embeddings |
+| 'sk' | Slovak | Slovak FastText embeddings |
+| 'pl' | Slovenian | Slovenian FastText embeddings |
+| 'sr' | Serbian | Serbian FastText embeddings |
+| 'hr' | Croatian | Croatian FastText embeddings |
+| 'bg' | Bulgarian | CroatBulgarianian FastText embeddings |
+| 'ru' | Russian | Russian FastText embeddings |
+| 'ar' | Arabic | Arabic FastText embeddings |
+| 'he' | Hebrew | Hebrew FastText embeddings |
+| 'tr' | Turkish | Turkish FastText embeddings |
+| 'pa' | Persian | Persian FastText embeddings |
+| 'ja' | Japanese | Japanese FastText embeddings |
+| 'ko' | Korean | Korean FastText embeddings |
+| 'zh' | Chinese | Chinese FastText embeddings |
+| 'hi' | Hindi | Hindi FastText embeddings |
+| 'id' | Indonesian | Indonesian FastText embeddings |
 
 So, if you want to load German FastText embeddings, instantiate as follows:
 
 ```python
 german_embedding = WordEmbeddings('de')
+```
+
+So, if you want to load German FastText embeddings trained over crawls, instantiate as follows:
+
+```python
+german_embedding = WordEmbeddings('de-crawl')
 ```
 
 We generally recommend the FastText embeddings, or GloVe if you want a smaller model.
