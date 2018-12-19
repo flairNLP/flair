@@ -20,7 +20,7 @@ models to your text, such as named entity recognition (NER), part-of-speech tagg
 '*one model, many languages*' taggers, i.e. single models that predict PoS or NER tags for input text in various languages.
 
 * **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and 
-document embeddings, including our proposed **[contextual string embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)**.
+document embeddings, including our proposed **[Flair embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)**, BERT embeddings and ELMo embeddings.
 
 * **A Pytorch NLP framework.** Our framework builds directly on [Pytorch](https://pytorch.org/), making it easy to 
 train your own models and experiment with new approaches using Flair embeddings and classes.
