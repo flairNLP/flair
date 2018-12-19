@@ -146,13 +146,13 @@ For instance, you can downsample the data by calling `downsample()` and passing 
 corpus like this:
 
 ```python
-original_corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03)
+original_corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH)
 ```
 
 then you can downsample the corpus, simply like this:
 
 ```python
-downsampled_corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03).downsample(0.1)
+downsampled_corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH).downsample(0.1)
 ```
 
 If you print both corpora, you see that the second one has been downsampled to 10% of the data.
@@ -169,23 +169,27 @@ This should print:
 
 ```console
 --- 1 Original ---
-TaggedCorpus: 14987 train + 3466 dev + 3684 test sentences
+TaggedCorpus: 12543 train + 2002 dev + 2077 test sentences
 
 --- 2 Downsampled ---
-TaggedCorpus: 1499 train + 347 dev + 369 test sentences
+TaggedCorpus: 1255 train + 201 dev + 208 test sentences
 ```
 
 For many learning task you need to create a target dictionary. Thus, the `TaggedCorpus` enables you to create your
 tag or label dictionary, depending on the task you want to learn. Simple execute the following code snippet to do so:
 
 ```python
+# create tag dictionary for a PoS task
+corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH)
+print(corpus.make_tag_dictionary('upos'))
+
 # create tag dictionary for an NER task
-corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03)
-corpus.make_tag_dictionary('ner')
+corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03_DUTCH)
+print(corpus.make_tag_dictionary('ner'))
 
 # create label dictionary for a text classification task
-corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB)
-corpus.make_label_dictionary()
+corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path='path/to/data/folder')
+print(corpus.make_label_dictionary())
 ```
 
 Another useful function is `obtain_statistics()` which returns you a python dictionary with useful statistics about your
@@ -194,7 +198,7 @@ dataset. Using it, for example, on the IMDB dataset like this
 ```python
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
  
-corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, Path('path/to/your/dataset'))
+corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path='path/to/data/folder')
 stats = corpus.obtain_statistics()
 print(stats)
 ```
