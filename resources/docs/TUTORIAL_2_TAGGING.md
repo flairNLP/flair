@@ -166,6 +166,34 @@ This should print:
 George <B-PER> Washington <E-PER> ging nach Washington <S-LOC> .
 ```
 
+### Tagging Multilingual Text
+
+If you have text in many languages, you can use our new multilingual models: 
+
+```python
+
+# load model
+tagger = SequenceTagger.load('pos-multi')
+
+# make German sentence
+sentence = Sentence('George Washington went to Washington . Dort kaufte er einen Hut .')
+
+# predict NER tags
+tagger.predict(sentence)
+
+# print sentence with predicted tags
+print(sentence.to_tagged_string())
+```
+
+This should print: 
+```console
+George <PROPN> Washington <PROPN> went <VERB> to <ADP> Washington <PROPN> .
+
+<PUNCT> Dort <ADV> kaufte <VERB> er <PRON> einen <DET> Hut <NOUN> . <PUNCT>
+```
+
+So, both 'went' and 'kaufte' are identified as VERBs in these sentences.
+
 ### Experimental: Semantic Frame Detection
 
 For English, we provide a pre-trained model that detects semantic frames in text, trained using Propbank 3.0 frames.
