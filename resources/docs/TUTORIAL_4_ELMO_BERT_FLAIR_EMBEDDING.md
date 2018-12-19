@@ -178,6 +178,54 @@ simple specify the embedding id when initializing the `ELMoEmbeddings`.
 | 'original'    | English | 4096-hidden, 2 layers, 93.6M parameters |
 | 'pt'   | Portuguese | |
 
+
+## Combining BERT and Flair
+
+You can very easily mix and match Flair, ELMo, BERT and classic word embeddings. All you need to do is instantiate each embedding you wish to combine and use them in a StackedEmbedding. 
+
+For instance, let's say we want to combine the multilingual Flair and BERT embeddings to train a powerful multilingual downstream task model. 
+
+First, instantiate the embeddings you wish to combine: 
+
+```python
+from flair.embeddings import WordEmbeddings, CharacterEmbeddings
+
+# init Flair embeddings
+flair_forward_embedding = FlairEmbeddings('multi-forward')
+flair_backward_embedding = FlairEmbeddings('multi-backward')
+
+# init multilingual BERT
+bert_embedding = BertEmbeddings('bert-base-multilingual-cased')
+```
+
+Now instantiate the `StackedEmbeddings` class and pass it a list containing these three embeddings.
+
+```python
+from flair.embeddings import StackedEmbeddings
+
+# now create the StackedEmbedding object that combines all embeddings
+stacked_embeddings = StackedEmbeddings(
+    embeddings=[flair_forward_embedding, flair_backward_embedding, bert_embedding])
+```
+
+That's it! Now just use this embedding like all the other embeddings, i.e. call the `embed()` method over your sentences.
+
+```python
+sentence = Sentence('The grass is green .')
+
+# just embed a sentence using the StackedEmbedding as you would with any single embedding.
+stacked_embeddings.embed(sentence)
+
+# now check out the embedded tokens.
+for token in sentence:
+    print(token)
+    print(token.embedding)
+```
+
+Words are now embedded using a concatenation of three different embeddings. This means that the resulting embedding
+vector is still a single Pytorch vector. 
+
+
 ## Next 
 
 You can now either look into [document embeddings](/resources/docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md) to embed entire text 
