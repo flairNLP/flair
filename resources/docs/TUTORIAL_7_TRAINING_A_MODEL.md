@@ -155,22 +155,25 @@ trainer.train('resources/taggers/ag_news',
 # 8. plot training curves (optional)
 from flair.visual.training_curves import Plotter
 plotter = Plotter()
-plotter.plot_training_curves('resources/ag_news/results/loss.tsv')
-plotter.plot_weights('resources/ag_news/results/weights.txt')
+plotter.plot_training_curves('resources/taggers/ag_news/loss.tsv')
+plotter.plot_weights('resources/taggers/ag_news/weights.txt')
 ```
 
-Once the model is trained you can use it to predict the class of new sentences. Just call the `predict` method of the
+Once the model is trained you can load it to predict the class of new sentences. Just call the `predict` method of the
 model.
 
 ```python
-sentences = model.predict(Sentence('France is the current world cup winner.'))
+classifier = TextClassifier.load_from_file('resources/taggers/ag_news/final-model.pt')
 
+# create example sentence
+sentence = Sentence('France is the current world cup winner.')
+
+# predict tags and print
+classifier.predict(sentence)
+
+print(sentence.labels)
 ```
-The predict method adds the class labels directly to the sentences. Each label has a name and a confidence value.
-```python
-for sentence in sentences:
-    print(sentence.labels)
-```
+
 
 ## Multi-Dataset Training
 
