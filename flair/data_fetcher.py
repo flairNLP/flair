@@ -8,7 +8,6 @@ import flair
 from flair.data import Sentence, TaggedCorpus, Token, MultiCorpus
 from flair.file_utils import cached_path
 
-
 log = logging.getLogger('flair')
 
 
@@ -188,7 +187,7 @@ class NLPTaskDataFetcher:
 
     @staticmethod
     def load_column_corpus(
-            data_folder: Path,
+            data_folder: Union[str, Path],
             column_format: Dict[int, str],
             train_file=None,
             test_file=None,
@@ -205,6 +204,17 @@ class NLPTaskDataFetcher:
         :param tag_to_biloes: whether to convert to BILOES tagging scheme
         :return: a TaggedCorpus with annotated train, dev and test data
         """
+
+        if type(data_folder) == str:
+            data_folder: Path = Path(data_folder)
+
+        if train_file is not None:
+            train_file = data_folder / train_file
+        if test_file is not None:
+            test_file = data_folder / test_file
+        if dev_file is not None:
+            dev_file = data_folder / dev_file
+
         # automatically identify train / test / dev files
         if train_file is None:
             for file in data_folder.iterdir():
@@ -240,7 +250,7 @@ class NLPTaskDataFetcher:
             sentences_test: List[Sentence] = NLPTaskDataFetcher.read_column_data(test_file, column_format)
         else:
             sentences_test: List[Sentence] = [sentences_train[i] for i in
-                                             NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)]
+                                              NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)]
             sentences_train = [x for x in sentences_train if x not in sentences_test]
 
         # read in dev file if exists, otherwise sample 10% of train data as dev dataset
@@ -400,10 +410,10 @@ class NLPTaskDataFetcher:
         sentences: List[Sentence] = []
 
         try:
-            lines: List[str] = open(path_to_column_file, encoding='utf-8').read().strip().split('\n')
+            lines: List[str] = open(str(path_to_column_file), encoding='utf-8').read().strip().split('\n')
         except:
             log.info('UTF-8 can\'t read: {} ... using "latin-1" instead.'.format(path_to_column_file))
-            lines: List[str] = open(path_to_column_file, encoding='latin1').read().strip().split('\n')
+            lines: List[str] = open(str(path_to_column_file), encoding='latin1').read().strip().split('\n')
 
         # most data sets have the token text in the first column, if not, pass 'text' as column
         text_column: int = 0
@@ -501,14 +511,15 @@ class NLPTaskDataFetcher:
             conll_2000_path = 'https://www.clips.uantwerpen.be/conll2000/chunking/'
             data_file = Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'train.txt'
             if not data_file.is_file():
-
                 cached_path(f'{conll_2000_path}train.txt.gz', Path('datasets') / task.value)
                 cached_path(f'{conll_2000_path}test.txt.gz', Path('datasets') / task.value)
                 import gzip, shutil
-                with gzip.open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'train.txt.gz', 'rb') as f_in:
+                with gzip.open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'train.txt.gz',
+                               'rb') as f_in:
                     with open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'train.txt', 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
-                with gzip.open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'test.txt.gz', 'rb') as f_in:
+                with gzip.open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'test.txt.gz',
+                               'rb') as f_in:
                     with open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'test.txt', 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
 

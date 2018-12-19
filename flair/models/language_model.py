@@ -224,10 +224,12 @@ class LanguageModel(nn.Module):
             hidden = hidden
 
             input = torch.tensor(self.dictionary.get_idx_for_item(prefix[-1])).unsqueeze(0).unsqueeze(0)
-            if torch.cuda.is_available():
-                input = input.cuda()
 
             for i in range(number_of_characters):
+
+                if torch.cuda.is_available():
+                    input = input.cuda()
+
                 prediction, _, hidden = self.forward(input, hidden)
                 prediction /= temperature
                 word_weights = prediction.squeeze().data.div(1.0).exp().cpu()

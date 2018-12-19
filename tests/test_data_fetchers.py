@@ -59,6 +59,14 @@ def test_load_no_dev_data(tasks_base_path):
     assert len(corpus.test) == 1
 
 
+def test_load_no_dev_data_explicit(tasks_base_path):
+    # get training, test and dev data
+    corpus = NLPTaskDataFetcher.load_column_corpus(tasks_base_path / 'fashion_nodev', {0: 'text', 2: 'ner'}, train_file='train.tsv', test_file='test.tsv')
+
+    assert len(corpus.train) == 5
+    assert len(corpus.dev) == 1
+    assert len(corpus.test) == 1
+
 def test_multi_corpus(tasks_base_path):
     # get two corpora as one
     corpus = NLPTaskDataFetcher.load_corpora([NLPTask.FASHION, NLPTask.GERMEVAL], tasks_base_path)

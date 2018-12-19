@@ -604,13 +604,13 @@ class SequenceTagger(flair.nn.Model):
                                   'en-ner-ontonotes-fast-v0.3.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        elif model.lower() == 'pos-multi':
+        elif model.lower() == 'pos-multi' or model.lower() == 'multi-pos':
             base_path = '/'.join([aws_resource_path_v04,
                                   'release-dodekapos-512-l2-multi',
                                   'pos-multi-v0.1.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        elif model.lower() == 'pos-multi-fast':
+        elif model.lower() == 'pos-multi-fast' or model.lower() == 'multi-pos-fast':
             base_path = '/'.join([aws_resource_path_v04,
                                   'UPOS-multi-fast',
                                   'pos-multi-fast.pt'])
