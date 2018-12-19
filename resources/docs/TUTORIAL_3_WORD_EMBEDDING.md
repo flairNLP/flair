@@ -155,20 +155,18 @@ embeddings (see next chapter).
 Stacked embeddings allow you to mix and match. We find that a combination of embeddings often gives best results. 
 
 All you need to do is use the `StackedEmbeddings` class and instantiate it by passing a list of embeddings that you wish 
-to combine. For instance, lets combine classic GloVe embeddings with embeddings from a forward and backward
-character language model.
+to combine. For instance, lets combine classic GloVe embeddings with character embeddings. This is effectively the architecture proposed in (Lample et al., 2016).
 
-First, instantiate the three embeddings you wish to combine: 
+First, instantiate the two embeddings you wish to combine: 
 
 ```python
-from flair.embeddings import WordEmbeddings, CharLMEmbeddings
+from flair.embeddings import WordEmbeddings, CharacterEmbeddings
 
-# init GloVe embedding
+# init standard GloVe embedding
 glove_embedding = WordEmbeddings('glove')
 
-# init CharLM embeddings
-charlm_embedding_forward = CharLMEmbeddings('news-forward')
-charlm_embedding_backward = CharLMEmbeddings('news-backward')
+# init standard character embeddings
+character_embeddings = CharacterEmbeddings()
 ```
 
 Now instantiate the `StackedEmbeddings` class and pass it a list containing these three embeddings.
@@ -178,7 +176,7 @@ from flair.embeddings import StackedEmbeddings
 
 # now create the StackedEmbedding object that combines all embeddings
 stacked_embeddings = StackedEmbeddings(
-    embeddings=[glove_embedding, charlm_embedding_forward, charlm_embedding_backward])
+    embeddings=[glove_embedding, character_embeddings])
 ```
 
 That's it! Now just use this embedding like all the other embeddings, i.e. call the `embed()` method over your sentences.
@@ -195,7 +193,7 @@ for token in sentence:
     print(token.embedding)
 ```
 
-Words are now embedded using a concatenation of three different embeddings. This means that the resulting embedding
+Words are now embedded using a concatenation of two different embeddings. This means that the resulting embedding
 vector is still a single Pytorch vector. 
 
 ## Next 
