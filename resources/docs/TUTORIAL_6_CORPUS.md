@@ -95,7 +95,10 @@ from pathlib import Path
 data_folder = Path('/resources/tasks/imdb')
 
 # load corpus containing training, test and dev data
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_classification_corpus(data_folder)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_classification_corpus(data_folder,
+                                                                     test_file='test.txt',
+                                                                     dev_file='dev.txt',
+                                                                     train_file='train.txt')
 ```
 
 If you just want to read a single file, you can use 
