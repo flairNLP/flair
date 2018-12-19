@@ -178,7 +178,7 @@ tagger = SequenceTagger.load('pos-multi')
 # text with English and German sentences
 sentence = Sentence('George Washington went to Washington . Dort kaufte er einen Hut .')
 
-# predict NER tags
+# predict PoS tags
 tagger.predict(sentence)
 
 # print sentence with predicted tags
