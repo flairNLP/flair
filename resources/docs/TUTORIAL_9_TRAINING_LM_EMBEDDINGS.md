@@ -1,8 +1,8 @@
-# Tutorial 9: Training your own Character LM Embeddings
+# Tutorial 9: Training your own Flair Embeddings
 
-Character LM Embeddings are the secret sauce in Flair, allowing us to achieve state-of-the-art accuracies across a
+Flair Embeddings are the secret sauce in Flair, allowing us to achieve state-of-the-art accuracies across a
 range of NLP tasks.
-This tutorial shows you how to train your own CharLM embeddings, which may come in handy if you want to apply Flair
+This tutorial shows you how to train your own Flair embeddings, which may come in handy if you want to apply Flair
 to new languages or domains.
 
 
