@@ -103,6 +103,25 @@ This should print:
 The grass is green <color> .
 ```
 
+Each tag is of class Label which next to the value has a score indicating confidence. Print like this: 
+
+```python
+from flair.data import Label
+
+tag: Label = sentence[3].get_tag('ner')
+
+print(f'"{sentence[3]}" is tagged as "{tag.value}" with confidence score "{tag.score}"')
+```
+
+This should print:
+
+```console
+"Token: 4 green" is tagged as "color" with confidence score "1.0"
+```
+
+Our color tag has a score of 1.0 since we manually added it. If a tag is predicted by our
+sequence labeler, the score value will indicate classifier confidence.
+
 ## Adding Labels to Sentences
 
 A `Sentence` can have one or multiple labels that can for example be used in text classification tasks.
@@ -119,8 +138,27 @@ sentence.add_label('sports')
 sentence.add_labels(['sports', 'world cup'])
 
 # you can also set the labels while initializing the sentence
-Sentence('France is the current world cup winner.', labels=['sports', 'world cup'])
+sentence = Sentence('France is the current world cup winner.', labels=['sports', 'world cup'])
 ```
+
+Labels are also of the Label class. So, you can print a sentence's labels like this: 
+
+```python
+sentence = Sentence('France is the current world cup winner.', labels=['sports', 'world cup'])
+
+print(sentence)
+for label in sentence.labels:
+    print(label)
+```
+
+This should print:
+
+```console
+sports (1.0)
+world cup (1.0)
+```
+
+This indicates that the sentence belongs to these two classes, each with confidence score 1.0.
 
 ## Next
 
