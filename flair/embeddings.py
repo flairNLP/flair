@@ -434,7 +434,7 @@ class FlairEmbeddings(TokenEmbeddings):
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # multilingual forward fast (English, German, French, Italian, Dutch, Polish)
-        if model.lower() == 'multi-forward-fast':
+        elif model.lower() == 'multi-forward-fast':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-multi-forward-fast-v0.1.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
         # multilingual backward fast (English, German, French, Italian, Dutch, Polish)
