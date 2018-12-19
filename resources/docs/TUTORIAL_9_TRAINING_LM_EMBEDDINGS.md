@@ -87,13 +87,92 @@ use as you would any other embedding in Flair:
 sentence = Sentence('I love Berlin')
 
 # init embeddings from your trained LM
-char_lm_embeddings = CharLMEmbeddings('resources/taggers/language_model/best-lm.pt')
+char_lm_embeddings = FlairEmbeddings('resources/taggers/language_model/best-lm.pt')
 
 # embed sentence
 char_lm_embeddings.embed(sentence)
 ```
 
 Done!
+
+
+## Non-Latin Alphabets
+
+If you train embeddings for a language that uses a non-latin alphabet such as Arabic or Japanese, you need to create your own character dictionary first. You can do this with the following code snippet: 
+
+```python
+
+# make an empty character dictionary
+from flair.data import Dictionary
+char_dictionary: Dictionary = Dictionary()
+
+# counter object
+import collections
+counter = collections.Counter()
+
+processed = 0
+
+import glob
+files = glob.glob('/path/to/your/corpus/files/*.*')
+
+print(files)
+for file in files:
+    print(file)
+
+    with open(file, 'r', encoding='utf-8') as f:
+        tokens = 0
+        for line in f:
+
+            processed += 1            
+            chars = list(line)
+            tokens += len(chars)
+
+            # Add chars to the dictionary
+            counter.update(chars)
+
+            # comment this line in to speed things up (if the corpus is too large)
+            # if tokens > 50000000: break
+
+    # break
+
+total_count = 0
+for letter, count in counter.most_common():
+    total_count += count
+
+print(total_count)
+print(processed)
+
+sum = 0
+idx = 0
+for letter, count in counter.most_common():
+    sum += count
+    percentile = (sum / total_count)
+
+    # comment this line in to use only top X percentile of chars, otherwise filter later
+    # if percentile < 0.00001: break
+
+    char_dictionary.add_item(letter)
+    idx += 1
+    print('%d\t%s\t%7d\t%7d\t%f' % (idx, letter, count, sum, percentile))
+
+print(char_dictionary.item2idx)
+
+import pickle
+with open('/path/to/your_char_mappings', 'wb') as f:
+    mappings = {
+        'idx2item': char_dictionary.idx2item,
+        'item2idx': char_dictionary.item2idx
+    }
+    pickle.dump(mappings, f)
+```
+
+You can then use this dictionary instead of the default one in your code for training the language model: 
+
+```python
+import pickle
+dictionary = Dictionary.load_from_file('/path/to/your_char_mappings')
+```
+
 
 
 ## Parameters
