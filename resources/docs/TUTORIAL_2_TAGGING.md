@@ -168,14 +168,14 @@ George <B-PER> Washington <E-PER> ging nach Washington <S-LOC> .
 
 ### Tagging Multilingual Text
 
-If you have text in many languages, you can use our new multilingual models: 
+If you have text in many languages (such as English and German), you can use our new multilingual models: 
 
 ```python
 
 # load model
 tagger = SequenceTagger.load('pos-multi')
 
-# make German sentence
+# text with English and German sentences
 sentence = Sentence('George Washington went to Washington . Dort kaufte er einen Hut .')
 
 # predict NER tags
