@@ -22,28 +22,30 @@ thus fundamentally model words as sequences of characters. And (2) they are **co
 surrounding text, meaning that the *same word will have different embeddings depending on its
 contextual use*.
 
-With Flair, you can use these embeddings simply by instantiating the appropriate embedding class, same as before:
+With Flair, you can use these embeddings simply by instantiating the appropriate embedding class, same as standard word embeddings:
 
 ```python
-from flair.embeddings import CharLMEmbeddings
+from flair.embeddings import FlairEmbeddings
 
 # init embedding
-charlm_embedding_forward = CharLMEmbeddings('news-forward')
+flair_embedding_forward = FlairEmbeddings('news-forward')
 
 # create a sentence
 sentence = Sentence('The grass is green .')
 
 # embed words in sentence
-charlm_embedding_forward.embed(sentence)
+flair_embedding_forward.embed(sentence)
 ```
 
-You choose which embeddings you load by passing the appropriate string to the constructor of the `CharLMEmbeddings` class. 
+You choose which embeddings you load by passing the appropriate string to the constructor of the `FlairEmbeddings` class. 
 Currently, the following contextual string embeddings are provided (more coming):
  
 | ID | Language | Embedding | 
 | -------------     | ------------- | ------------- |
-| 'multi-forward'    | English, German, French, Italian, Dutch, Polish |  |
-| 'multi-backward'    | English, German, French, Italian, Dutch, Polish |  |
+| 'multi-forward'    | English, German, French, Italian, Dutch, Polish | Mix of corpora (Web, Wikipedia, Subtitles, News) |
+| 'multi-backward'    | English, German, French, Italian, Dutch, Polish | Mix of corpora (Web, Wikipedia, Subtitles, News) |
+| 'multi-forward-fast'    | English, German, French, Italian, Dutch, Polish | Mix of corpora (Web, Wikipedia, Subtitles, News) |
+| 'multi-backward-fast'    | English, German, French, Italian, Dutch, Polish | Mix of corpora (Web, Wikipedia, Subtitles, News) |
 | 'news-forward'    | English | Forward LM embeddings over 1 billion word corpus |
 | 'news-backward'   | English | Backward LM embeddings over 1 billion word corpus |
 | 'news-forward-fast'    | English | Smaller, CPU-friendly forward LM embeddings over 1 billion word corpus |
@@ -72,8 +74,44 @@ Currently, the following contextual string embeddings are provided (more coming)
 So, if you want to load embeddings from the English news backward LM model, instantiate the method as follows:
 
 ```python
-charlm_embedding_backward = CharLMEmbeddings('news-backward')
+flair_backward = FlairEmbeddings('news-backward')
 ```
+
+## Recommended Flair Usage
+
+We recommend combining both forward and backward Flair embeddings. Depending on the task, we also recommend adding standard word embeddings into the mix. So, our recommended `StackedEmbedding` for most English tasks is: 
+
+
+```python
+from flair.embeddings import WordEmbeddings, FlairEmbeddings, StackedEmbeddings
+
+# init standard GloVe embedding
+glove_embedding = WordEmbeddings('glove')
+
+# init forward and backward flair
+flair_forward = FlairEmbeddings('news-forward')
+flair_backward = FlairEmbeddings('news-backward')
+
+# now create the StackedEmbedding object that combines all three embeddings
+stacked_embeddings = StackedEmbeddings(
+    embeddings=[glove_embedding, flair_forward, flair_backward])
+```
+
+That's it! Now just use this embedding like all the other embeddings, i.e. call the `embed()` method over your sentences.
+
+```python
+sentence = Sentence('The grass is green .')
+
+# just embed a sentence using the StackedEmbedding as you would with any single embedding.
+stacked_embeddings.embed(sentence)
+
+# now check out the embedded tokens.
+for token in sentence:
+    print(token)
+    print(token.embedding)
+```
+Words are now embedded using a concatenation of three different embeddings. This combination often gives state-of-the-art accuracy.
+
 
 ## BERT Embeddings
 
