@@ -96,7 +96,7 @@ class NLPTaskDataFetcher:
         return MultiCorpus([NLPTaskDataFetcher.load_corpus(task, base_path) for task in tasks])
 
     @staticmethod
-    def load_corpus(task: Union[NLPTask, str], base_path: Path = None) -> TaggedCorpus:
+    def load_corpus(task: Union[NLPTask, str], base_path: [str, Path] = None) -> TaggedCorpus:
         """
         Helper function to fetch a TaggedCorpus for a specific NLPTask. For this to work you need to first download
         and put into the appropriate folder structure the corresponsing NLP task data. The tutorials on
@@ -114,6 +114,9 @@ class NLPTaskDataFetcher:
         # default dataset folder is the cache root
         if not base_path:
             base_path = Path(flair.file_utils.CACHE_ROOT) / 'datasets'
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
 
         # get string value if enum is passed
         task = task.value if type(task) is NLPTask else task
@@ -271,7 +274,7 @@ class NLPTaskDataFetcher:
 
     @staticmethod
     def load_ud_corpus(
-            data_folder: Path,
+            data_folder: Union[str,Path],
             train_file=None,
             test_file=None,
             dev_file=None) -> TaggedCorpus:
@@ -312,7 +315,7 @@ class NLPTaskDataFetcher:
 
     @staticmethod
     def load_classification_corpus(
-            data_folder: Path,
+            data_folder: Union[str,Path],
             train_file=None,
             test_file=None,
             dev_file=None) -> TaggedCorpus:
@@ -325,6 +328,17 @@ class NLPTaskDataFetcher:
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
         :return: a TaggedCorpus with annotated train, dev and test data
         """
+
+        if type(data_folder) == str:
+            data_folder: Path = Path(data_folder)
+
+        if train_file is not None:
+            train_file = data_folder / train_file
+        if test_file is not None:
+            test_file = data_folder / test_file
+        if dev_file is not None:
+            dev_file = data_folder / dev_file
+
         # automatically identify train / test / dev files
         if train_file is None:
             for file in data_folder.iterdir():
@@ -352,7 +366,7 @@ class NLPTaskDataFetcher:
         return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
     @staticmethod
-    def read_text_classification_file(path_to_file: Path, max_tokens_per_doc=-1) -> List[Sentence]:
+    def read_text_classification_file(path_to_file: Union[str,Path], max_tokens_per_doc=-1) -> List[Sentence]:
         """
         Reads a data file for text classification. The file should contain one document/text per line.
         The line should have the following format:
@@ -367,7 +381,7 @@ class NLPTaskDataFetcher:
         label_prefix = '__label__'
         sentences = []
 
-        with open(path_to_file) as f:
+        with open(str(path_to_file)) as f:
             for line in f:
                 words = line.split()
 

@@ -217,6 +217,8 @@ class LanguageModel(nn.Module):
                     torch.tensor(self.dictionary.get_idx_for_item(character)).unsqueeze(0).unsqueeze(0))
 
             input = torch.cat(char_tensors)
+            if torch.cuda.is_available():
+                input = input.cuda()
 
             hidden = self.init_hidden(1)
             prediction, _, hidden = self.forward(input, hidden)
