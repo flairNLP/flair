@@ -44,7 +44,7 @@ Flair outperforms the previous best methods on a range of NLP tasks:
 
 Here's how to [reproduce these numbers](/resources/docs/EXPERIMENTS.md) using Flair. You can also find a detailed evaluation and discussion in our paper: 
 
-*[Contextual String Embeddings for Sequence Labeling](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing).
+*[Contextual String Embeddings for Sequence Labeling](https://aclanthology.coli.uni-saarland.de/papers/C18-1139/c18-1139).
 Alan Akbik, Duncan Blythe and Roland Vollgraf. 
 27th International Conference on Computational Linguistics, COLING 2018.* 
 
