@@ -85,16 +85,12 @@ We recommend combining both forward and backward Flair embeddings. Depending on 
 ```python
 from flair.embeddings import WordEmbeddings, FlairEmbeddings, StackedEmbeddings
 
-# init standard GloVe embedding
-glove_embedding = WordEmbeddings('glove')
-
-# init forward and backward flair
-flair_forward = FlairEmbeddings('news-forward')
-flair_backward = FlairEmbeddings('news-backward')
-
-# now create the StackedEmbedding object that combines all three embeddings
-stacked_embeddings = StackedEmbeddings(
-    embeddings=[glove_embedding, flair_forward, flair_backward])
+# create a StackedEmbedding object that combines glove and forward/backward flair embeddings
+stacked_embeddings = StackedEmbeddings([
+                                        WordEmbeddings('glove'), 
+                                        FlairEmbeddings('news-forward'), 
+                                        FlairEmbeddings('news-backward'),
+                                       ])
 ```
 
 That's it! Now just use this embedding like all the other embeddings, i.e. call the `embed()` method over your sentences.
