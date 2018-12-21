@@ -24,7 +24,7 @@ STOP_TAG: str = '<STOP>'
 
 
 def to_scalar(var):
-    return var.view(-1).data.tolist()[0]
+    return var.view(-1).detach().tolist()[0]
 
 
 def argmax(vec):
@@ -142,8 +142,8 @@ class SequenceTagger(flair.nn.Model):
         if self.use_crf:
             self.transitions = torch.nn.Parameter(
                 torch.randn(self.tagset_size, self.tagset_size))
-            self.transitions.data[self.tag_dictionary.get_idx_for_item(START_TAG), :] = -10000
-            self.transitions.data[:, self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000
+            self.transitions.detach()[self.tag_dictionary.get_idx_for_item(START_TAG), :] = -10000
+            self.transitions.detach()[:, self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000
 
         if torch.cuda.is_available():
             self.cuda()
@@ -463,8 +463,8 @@ class SequenceTagger(flair.nn.Model):
         for feat in feats:
             next_tag_var = forward_var.view(1, -1).expand(self.tagset_size, self.tagset_size) + self.transitions
             _, bptrs_t = torch.max(next_tag_var, dim=1)
-            bptrs_t = bptrs_t.squeeze().data.cpu().numpy()
-            next_tag_var = next_tag_var.data.cpu().numpy()
+            bptrs_t = bptrs_t.squeeze().detach().cpu().numpy()
+            next_tag_var = next_tag_var.detach().cpu().numpy()
             viterbivars_t = next_tag_var[range(len(bptrs_t)), bptrs_t]
             viterbivars_t = autograd.Variable(torch.FloatTensor(viterbivars_t))
             if torch.cuda.is_available():
@@ -474,8 +474,8 @@ class SequenceTagger(flair.nn.Model):
             backpointers.append(bptrs_t)
 
         terminal_var = forward_var + self.transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)]
-        terminal_var.data[self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000.
-        terminal_var.data[self.tag_dictionary.get_idx_for_item(START_TAG)] = -10000.
+        terminal_var.detach()[self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000.
+        terminal_var.detach()[self.tag_dictionary.get_idx_for_item(START_TAG)] = -10000.
         best_tag_id = argmax(terminal_var.unsqueeze(0))
 
         best_path = [best_tag_id]
