@@ -18,3 +18,14 @@ def test_train_resume_language_model_training(resources_path, results_base_path,
     assert (corpus.train_files is not None)
     assert (corpus.valid is not None)
     assert (len(corpus.train_files) == 2)
+
+
+def test_generate_text_with_small_temperatures():
+
+    from flair.embeddings import FlairEmbeddings
+
+    language_model = FlairEmbeddings('news-forward-fast').lm
+
+    text = language_model.generate_text(temperature=0.01, number_of_characters=100)
+    assert (text is not None)
+    assert (len(text) >= 100)

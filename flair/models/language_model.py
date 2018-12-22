@@ -60,9 +60,9 @@ class LanguageModel(nn.Module):
 
     def init_weights(self):
         initrange = 0.1
-        self.encoder.weight.data.uniform_(-initrange, initrange)
-        self.decoder.bias.data.fill_(0)
-        self.decoder.weight.data.uniform_(-initrange, initrange)
+        self.encoder.weight.detach().uniform_(-initrange, initrange)
+        self.decoder.bias.detach().fill_(0)
+        self.decoder.weight.detach().uniform_(-initrange, initrange)
 
     def set_hidden(self, hidden):
         self.hidden = hidden
@@ -85,7 +85,7 @@ class LanguageModel(nn.Module):
         return decoded.view(output.size(0), output.size(1), decoded.size(1)), output, hidden
 
     def init_hidden(self, bsz):
-        weight = next(self.parameters()).data
+        weight = next(self.parameters()).detach()
         return (Variable(weight.new(self.nlayers, bsz, self.hidden_size).zero_()),
                 Variable(weight.new(self.nlayers, bsz, self.hidden_size).zero_()))
 
@@ -111,14 +111,14 @@ class LanguageModel(nn.Module):
     def repackage_hidden(self, h):
         """Wraps hidden states in new Variables, to detach them from their history."""
         if type(h) == torch.Tensor:
-            return Variable(h.data)
+            return Variable(h.detach())
         else:
             return tuple(self.repackage_hidden(v) for v in h)
 
     def initialize(self, matrix):
         in_, out_ = matrix.size()
         stdv = math.sqrt(3. / (in_ + out_))
-        matrix.data.uniform_(-stdv, stdv)
+        matrix.detach().uniform_(-stdv, stdv)
 
     @classmethod
     def load_language_model(cls, model_file: Union[Path, str]):
@@ -201,7 +201,7 @@ class LanguageModel(nn.Module):
 
         torch.save(model_state, str(file), pickle_protocol=4)
 
-    def generate_text(self, prefix: str = '', number_of_characters: int = 1000, temperature: float = 0.6, break_on_suffix = None) -> str:
+    def generate_text(self, prefix: str = '', number_of_characters: int = 1000, temperature: float = 1.0, break_on_suffix = None) -> str:
 
         if prefix == '':
             prefix = '\n'
@@ -223,8 +223,6 @@ class LanguageModel(nn.Module):
             hidden = self.init_hidden(1)
             prediction, _, hidden = self.forward(input, hidden)
 
-            hidden = hidden
-
             input = torch.tensor(self.dictionary.get_idx_for_item(prefix[-1])).unsqueeze(0).unsqueeze(0)
 
             for i in range(number_of_characters):
@@ -232,11 +230,25 @@ class LanguageModel(nn.Module):
                 if torch.cuda.is_available():
                     input = input.cuda()
 
+                # get predicted weights
                 prediction, _, hidden = self.forward(input, hidden)
-                prediction /= temperature
-                word_weights = prediction.squeeze().data.div(1.0).exp().cpu()
+                prediction = prediction.squeeze().detach()
+
+                # divide by temperature
+                prediction = prediction.div(temperature)
+
+                # to prevent overflow problem with small temperature values, substract largest value from all
+                # this makes a vector in which the largest value is 0
+                max = torch.max(prediction)
+                prediction -= max
+
+                # compute word weights with exponential function
+                word_weights = prediction.exp().cpu()
+
+                # sample multinomial distribution for next character
                 word_idx = torch.multinomial(word_weights, 1)[0]
-                input = word_idx.clone().detach().unsqueeze(0).unsqueeze(0)
+
+                input = word_idx.detach().unsqueeze(0).unsqueeze(0)
                 word = idx2item[word_idx].decode('UTF-8')
                 characters.append(word)
 
