@@ -144,10 +144,10 @@ class Metric(object):
 
 
 class EvaluationMetric(Enum):
-    MICRO_ACCURACY = 'mirco-average accuracy'
-    MICRO_F1_SCORE = 'mirco-average f1-score'
-    MACRO_ACCURACY = 'marco-average accuracy'
-    MACRO_F1_SCORE = 'marco-average f1-score'
+    MICRO_ACCURACY = 'micro-average accuracy'
+    MICRO_F1_SCORE = 'micro-average f1-score'
+    MACRO_ACCURACY = 'macro-average accuracy'
+    MACRO_F1_SCORE = 'macro-average f1-score'
 
 
 class WeightExtractor(object):
