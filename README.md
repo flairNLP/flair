@@ -100,7 +100,7 @@ The following NER tags are found:
 LOC-span [3]: "Berlin"
 ```
 
-## Tutorial
+## Tutorials
 
 We provide a set of quick tutorials to get you started with the library:
 
@@ -117,6 +117,10 @@ We provide a set of quick tutorials to get you started with the library:
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
 text, how you embed your text with different word or document embeddings, and how you can train your own 
 language models, sequence labeling models, and text classification models. Let us know if anything is unclear.
+
+Here also a link to a useful article: 
+* [How to build a text classifier with Flair](https://towardsdatascience.com/text-classification-with-state-of-the-art-nlp-library-flair-b541d7add21f)
+
 
 ## Citing Flair
 
