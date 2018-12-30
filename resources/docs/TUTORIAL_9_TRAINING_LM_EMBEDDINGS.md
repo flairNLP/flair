@@ -40,6 +40,8 @@ corpus/valid.txt
 Once you have this folder structure, simply point the `LanguageModelTrainer` class to it to start learning a model.
 
 ```python
+from pathlib import Path
+
 from flair.data import Dictionary
 from flair.models import LanguageModel
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
@@ -51,7 +53,7 @@ is_forward_lm = True
 dictionary: Dictionary = Dictionary.load('chars')
 
 # get your corpus, process forward and at the character level
-corpus = TextCorpus('/path/to/your/corpus',
+corpus = TextCorpus(Path('/path/to/your/corpus'),
                     dictionary,
                     is_forward_lm,
                     character_level=True)
