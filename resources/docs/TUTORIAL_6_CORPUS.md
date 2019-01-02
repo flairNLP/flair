@@ -132,7 +132,7 @@ The following datasets are supported:
 | [WIKINER_PORTUGUESE](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_SWEDISH](https://github.com/UniversalDependencies/UD_Swedish-Talbanken) | [UD_JAPANESE](https://github.com/UniversalDependencies/UD_Japanese-GSD) |
 | [WIKINER_POLISH](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_DANISH](https://github.com/UniversalDependencies/UD_Danish-DDT) | [UD_CHINESE](https://github.com/UniversalDependencies/UD_Chinese-GSD) |
 | [WIKINER_RUSSIAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_NORWEGIAN](https://github.com/UniversalDependencies/UD_Norwegian-Bokmaal) | [UD_KOREAN](https://github.com/UniversalDependencies/UD_Korean-Kaist) |
-| [UD_ENGLISH](https://github.com/UniversalDependencies/UD_English-EWT) | [UD_FINNISH](https://github.com/UniversalDependencies/UD_Finnish-TDT) |
+| [UD_ENGLISH](https://github.com/UniversalDependencies/UD_English-EWT) | [UD_FINNISH](https://github.com/UniversalDependencies/UD_Finnish-TDT) |  [UD_BASQUE](https://github.com/UniversalDependencies/UD_Basque-BDT) |
 | [UD_GERMAN](https://github.com/UniversalDependencies/UD_German-GSD) | [UD_SLOVENIAN](https://github.com/UniversalDependencies/UD_Slovenian-SSJ) |
 
 
