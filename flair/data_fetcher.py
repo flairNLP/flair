@@ -99,7 +99,7 @@ class NLPTaskDataFetcher:
     def load_corpus(task: Union[NLPTask, str], base_path: [str, Path] = None) -> TaggedCorpus:
         """
         Helper function to fetch a TaggedCorpus for a specific NLPTask. For this to work you need to first download
-        and put into the appropriate folder structure the corresponsing NLP task data. The tutorials on
+        and put into the appropriate folder structure the corresponding NLP task data. The tutorials on
         https://github.com/zalandoresearch/flair give more info on how to do this. Alternatively, you can use this
         code to create your own data fetchers.
         :param task: specification of the NLPTask you wish to get

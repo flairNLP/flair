@@ -294,7 +294,7 @@ resources/tasks/penn/train.conll
 resources/tasks/penn/valid.conll
 ```
 
-Then, run the experiments with extec embeddings and contextual string embeddings. Also, select 'pos' as `tag_type`, 
+Then, run the experiments with extvec embeddings and contextual string embeddings. Also, select 'pos' as `tag_type`, 
 so the algorithm knows that POS tags and not NER are to be predicted from this data. 
 
 
