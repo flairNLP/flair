@@ -274,6 +274,8 @@ class SequenceTagger(flair.nn.Model):
                         token: Token = token
                         token.add_tag_label(self.tag_type, tag)
 
+                clear_embeddings(batch, also_clear_word_embeddings=True)
+                
             return sentences
 
     def forward(self, sentences: List[Sentence]):
