@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch
 import math
 from torch.autograd import Variable
-from typing import List, Union
+from typing import List, Union, Tuple
 
 from torch.optim import Optimizer
 
@@ -202,7 +202,7 @@ class LanguageModel(nn.Module):
         torch.save(model_state, str(file), pickle_protocol=4)
 
     def generate_text(self, prefix: str = '\n', number_of_characters: int = 1000, temperature: float = 1.0,
-                      break_on_suffix=None) -> str:
+                      break_on_suffix=None) -> Tuple[str, float]:
 
         if prefix == '':
             prefix = '\n'
@@ -241,7 +241,6 @@ class LanguageModel(nn.Module):
                 prediction, _, hidden = self.forward(input, hidden)
                 prediction = prediction.squeeze().detach()
                 decoder_output = prediction
-                # print(decoder_output)
 
                 # divide by temperature
                 prediction = prediction.div(temperature)
@@ -260,8 +259,6 @@ class LanguageModel(nn.Module):
                 # print(word_idx)
                 prob = decoder_output[word_idx]
                 log_prob += prob
-                # print(prob)
-                # asd
 
                 input = word_idx.detach().unsqueeze(0).unsqueeze(0)
                 word = idx2item[word_idx].decode('UTF-8')
@@ -272,6 +269,8 @@ class LanguageModel(nn.Module):
                         break
 
             text = prefix + ''.join(characters)
+
+            log_prob = log_prob.item()
             log_prob /= len(characters)
 
             if not self.is_forward_lm:
