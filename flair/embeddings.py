@@ -643,11 +643,6 @@ class FlairEmbeddings(TokenEmbeddings):
             append_padded_sentence = sentences_padded.append
 
             start_marker = '\n'
-            if 'en->de' in self.name or 'en-de' in self.name:
-                start_marker = '.<e>\n<s>'
-
-            if 'de->en' in self.name or 'de-en' in self.name:
-                start_marker = '>s<\n>e<'
 
             end_marker = ' '
             extra_offset = len(start_marker)
