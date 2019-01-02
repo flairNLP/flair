@@ -27,7 +27,7 @@ from flair.data import TaggedCorpus
 from flair.data_fetcher import NLPTaskDataFetcher
 
 # define columns
-columns = {0: 'text', 1: 'pos', 2: 'np'}
+columns = {0: 'text', 1: 'pos', 2: 'ner'}
 
 # this is the folder in which train, test and dev files reside
 data_folder = '/path/to/data/folder'
