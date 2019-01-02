@@ -407,7 +407,7 @@ class CharacterEmbeddings(TokenEmbeddings):
 class FlairEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
-    def __init__(self, model: str, detach: bool = True, use_cache: bool = True, cache_directory: Path = None):
+    def __init__(self, model: str, detach: bool = True, use_cache: bool = False, cache_directory: Path = None):
         """
         initializes contextual string embeddings using a character-level language model.
         :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
@@ -555,6 +555,16 @@ class FlairEmbeddings(TokenEmbeddings):
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-pt-backward.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
 
+        # Basque forward
+        elif model.lower() == 'basque-forward' or model.lower() == 'eu-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-eu-large-forward-v0.1.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+        # Basque backward
+        elif model.lower() == 'basque-backward' or model.lower() == 'eu-backward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-eu-large-backward-v0.1.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+
+
         elif not Path(model).exists():
             raise ValueError(f'The given model "{model}" is not available or is not a valid path.')
 
@@ -632,15 +642,22 @@ class FlairEmbeddings(TokenEmbeddings):
             sentences_padded: List[str] = []
             append_padded_sentence = sentences_padded.append
 
+            start_marker = '\n'
+            if 'en->de' in self.name or 'en-de' in self.name:
+                start_marker = '.<e>\n<s>'
+
+            if 'de->en' in self.name or 'de-en' in self.name:
+                start_marker = '>s<\n>e<'
+
             end_marker = ' '
-            extra_offset = 1
+            extra_offset = len(start_marker)
             for sentence_text in text_sentences:
                 pad_by = longest_character_sequence_in_batch - len(sentence_text)
                 if self.is_forward_lm:
-                    padded = '\n{}{}{}'.format(sentence_text, end_marker, pad_by * ' ')
+                    padded = '{}{}{}{}'.format(start_marker, sentence_text, end_marker, pad_by * ' ')
                     append_padded_sentence(padded)
                 else:
-                    padded = '\n{}{}{}'.format(sentence_text[::-1], end_marker, pad_by * ' ')
+                    padded = '{}{}{}{}'.format(start_marker, sentence_text[::-1], end_marker, pad_by * ' ')
                     append_padded_sentence(padded)
 
             # get hidden states from language model
