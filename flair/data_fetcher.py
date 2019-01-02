@@ -74,6 +74,9 @@ class NLPTask(Enum):
     UD_CHINESE = 'ud_chinese'
     UD_KOREAN = 'ud_korean'
 
+    # Language isolates
+    UD_BASQUE = 'ud_basque'
+
     # other datasets
     ONTONER = 'ontoner'
     FASHION = 'fashion'
@@ -754,3 +757,8 @@ class NLPTaskDataFetcher:
             cached_path(f'{ud_path}UD_Korean-Kaist/master/ko_kaist-ud-dev.conllu', Path('datasets') / task.value)
             cached_path(f'{ud_path}UD_Korean-Kaist/master/ko_kaist-ud-test.conllu', Path('datasets') / task.value)
             cached_path(f'{ud_path}UD_Korean-Kaist/master/ko_kaist-ud-train.conllu', Path('datasets') / task.value)
+
+        if task == NLPTask.UD_BASQUE:
+            cached_path(f'{ud_path}UD_Basque-BDT/master/eu_bdt-ud-dev.conllu', Path('datasets') / task.value)
+            cached_path(f'{ud_path}UD_Basque-BDT/master/eu_bdt-ud-test.conllu', Path('datasets') / task.value)
+            cached_path(f'{ud_path}UD_Basque-BDT/master/eu_bdt-ud-train.conllu', Path('datasets') / task.value)
