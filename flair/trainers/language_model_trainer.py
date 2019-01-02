@@ -380,8 +380,6 @@ class LanguageModelTrainer:
         data = data.narrow(0, 0, nbatch * batch_size)
         # Evenly divide the data across the bsz batches.
         data = data.view(batch_size, -1).t().contiguous()
-        if torch.cuda.is_available():
-            data = data.cuda()
         return data
 
     @staticmethod
@@ -389,6 +387,11 @@ class LanguageModelTrainer:
         seq_len = min(sequence_length, len(source) - 1 - i)
         data = Variable(source[i:i + seq_len])
         target = Variable(source[i + 1:i + 1 + seq_len].view(-1))
+
+        if torch.cuda.is_available():
+            data = data.cuda()
+            target = target.cuda()
+
         return data, target
 
     @staticmethod
