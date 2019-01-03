@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch
 import math
 from torch.autograd import Variable
-from typing import List, Union
+from typing import List, Union, Tuple
 
 from torch.optim import Optimizer
 
@@ -21,7 +21,7 @@ class LanguageModel(nn.Module):
                  nlayers: int,
                  embedding_size: int = 100,
                  nout=None,
-                 dropout=0.5):
+                 dropout=0.1):
 
         super(LanguageModel, self).__init__()
 
@@ -201,7 +201,8 @@ class LanguageModel(nn.Module):
 
         torch.save(model_state, str(file), pickle_protocol=4)
 
-    def generate_text(self, prefix: str = '', number_of_characters: int = 1000, temperature: float = 1.0, break_on_suffix = None) -> str:
+    def generate_text(self, prefix: str = '\n', number_of_characters: int = 1000, temperature: float = 1.0,
+                      break_on_suffix=None) -> Tuple[str, float]:
 
         if prefix == '':
             prefix = '\n'
@@ -211,19 +212,25 @@ class LanguageModel(nn.Module):
 
             idx2item = self.dictionary.idx2item
 
-            char_tensors = [torch.tensor(self.dictionary.get_idx_for_item('\n')).unsqueeze(0).unsqueeze(0)]
-            for character in prefix[:-1]:
-                char_tensors.append(
-                    torch.tensor(self.dictionary.get_idx_for_item(character)).unsqueeze(0).unsqueeze(0))
-
-            input = torch.cat(char_tensors)
-            if torch.cuda.is_available():
-                input = input.cuda()
-
+            # initial hidden state
             hidden = self.init_hidden(1)
-            prediction, _, hidden = self.forward(input, hidden)
+
+            if len(prefix) > 1:
+
+                char_tensors = []
+                for character in prefix[:-1]:
+                    char_tensors.append(
+                        torch.tensor(self.dictionary.get_idx_for_item(character)).unsqueeze(0).unsqueeze(0))
+
+                input = torch.cat(char_tensors)
+                if torch.cuda.is_available():
+                    input = input.cuda()
+
+                prediction, _, hidden = self.forward(input, hidden)
 
             input = torch.tensor(self.dictionary.get_idx_for_item(prefix[-1])).unsqueeze(0).unsqueeze(0)
+
+            log_prob = 0.
 
             for i in range(number_of_characters):
 
@@ -233,6 +240,7 @@ class LanguageModel(nn.Module):
                 # get predicted weights
                 prediction, _, hidden = self.forward(input, hidden)
                 prediction = prediction.squeeze().detach()
+                decoder_output = prediction
 
                 # divide by temperature
                 prediction = prediction.div(temperature)
@@ -248,6 +256,10 @@ class LanguageModel(nn.Module):
                 # sample multinomial distribution for next character
                 word_idx = torch.multinomial(word_weights, 1)[0]
 
+                # print(word_idx)
+                prob = decoder_output[word_idx]
+                log_prob += prob
+
                 input = word_idx.detach().unsqueeze(0).unsqueeze(0)
                 word = idx2item[word_idx].decode('UTF-8')
                 characters.append(word)
@@ -258,7 +270,10 @@ class LanguageModel(nn.Module):
 
             text = prefix + ''.join(characters)
 
+            log_prob = log_prob.item()
+            log_prob /= len(characters)
+
             if not self.is_forward_lm:
                 text = text[::-1]
 
-            return text
+            return text, log_prob

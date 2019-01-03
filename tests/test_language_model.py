@@ -26,6 +26,6 @@ def test_generate_text_with_small_temperatures():
 
     language_model = FlairEmbeddings('news-forward-fast').lm
 
-    text = language_model.generate_text(temperature=0.01, number_of_characters=100)
+    text, likelihood = language_model.generate_text(temperature=0.01, number_of_characters=100)
     assert (text is not None)
     assert (len(text) >= 100)
