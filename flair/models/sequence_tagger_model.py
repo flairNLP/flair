@@ -17,6 +17,7 @@ from typing import List, Tuple, Union
 
 from flair.training_utils import clear_embeddings
 
+
 log = logging.getLogger('flair')
 
 START_TAG: str = '<START>'
@@ -254,13 +255,16 @@ class SequenceTagger(flair.nn.Model):
 
     def predict(self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32) -> List[Sentence]:
         with torch.no_grad():
-            if type(sentences) is Sentence:
+            if isinstance(sentences, Sentence):
                 sentences = [sentences]
 
             filtered_sentences = self._filter_empty_sentences(sentences)
 
             # remove previous embeddings
             clear_embeddings(filtered_sentences, also_clear_word_embeddings=True)
+
+            # revere sort all sequences by their length
+            filtered_sentences.sort(key=lambda x: len(x), reverse=True)
 
             # make mini-batches
             batches = [filtered_sentences[x:x + mini_batch_size] for x in
@@ -275,7 +279,7 @@ class SequenceTagger(flair.nn.Model):
                         token.add_tag_label(self.tag_type, tag)
 
                 clear_embeddings(batch, also_clear_word_embeddings=True)
-                
+
             return sentences
 
     def forward(self, sentences: List[Sentence]):
@@ -283,12 +287,13 @@ class SequenceTagger(flair.nn.Model):
 
         self.embeddings.embed(sentences)
 
-        # first, sort sentences by number of tokens
-        sentences.sort(key=lambda x: len(x), reverse=True)
-        longest_token_sequence_in_batch: int = len(sentences[0])
+        # if grad is enabled, sort sentences by number of tokens
+        if torch.is_grad_enabled():
+            sentences.sort(key=lambda x: len(x), reverse=True)
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
         tag_list: List = []
+        longest_token_sequence_in_batch: int = len(sentences[0])
 
         # initialize zero-padded word embeddings tensor
         sentence_tensor = torch.zeros([len(sentences),
