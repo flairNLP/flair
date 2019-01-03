@@ -272,12 +272,16 @@ class SequenceTagger(flair.nn.Model):
             # make mini-batches
             batches = [filtered_sentences[x:x + mini_batch_size] for x in
                        range(0, len(filtered_sentences), mini_batch_size)]
+
+            # progress bar for verbosity
             if verbose:
                 batches = tqdm(batches)
 
             for i, batch in enumerate(batches):
+
                 if verbose:
                     batches.set_description(f'Inferencing on batch {i}')
+
                 tags, _ = self.forward_labels_and_loss(batch)
 
                 for (sentence, sent_tags) in zip(batch, tags):
@@ -285,6 +289,7 @@ class SequenceTagger(flair.nn.Model):
                         token: Token = token
                         token.add_tag_label(self.tag_type, tag)
 
+                # clearing token embeddings to save memory
                 clear_embeddings(batch, also_clear_word_embeddings=True)
 
             return sentences
