@@ -244,13 +244,14 @@ class SequenceTagger(flair.nn.Model):
                 state = torch.load(str(model_file), map_location={'cuda:0': 'cpu'})
         return state
 
-    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
-        features, lengths, tags = self.forward(sentences)
+    def forward_loss(self, sentences: Union[List[Sentence], Sentence], sort=True) -> torch.tensor:
+        features, lengths, tags = self.forward(sentences, sort=sort)
         return self._calculate_loss(features, lengths, tags)
 
-    def forward_labels_and_loss(self, sentences: Union[List[Sentence], Sentence]) -> (List[List[Label]], torch.tensor):
+    def forward_labels_and_loss(self, sentences: Union[List[Sentence], Sentence],
+                                sort=True) -> (List[List[Label]], torch.tensor):
         with torch.no_grad():
-            feature, lengths, tags = self.forward(sentences)
+            feature, lengths, tags = self.forward(sentences, sort=sort)
             loss = self._calculate_loss(feature, lengths, tags)
             tags = self._obtain_labels(feature, lengths)
             return tags, loss
@@ -282,7 +283,7 @@ class SequenceTagger(flair.nn.Model):
                 if verbose:
                     batches.set_description(f'Inferencing on batch {i}')
 
-                tags, _ = self.forward_labels_and_loss(batch)
+                tags, _ = self.forward_labels_and_loss(batch, sort=False)
 
                 for (sentence, sent_tags) in zip(batch, tags):
                     for (token, tag) in zip(sentence.tokens, sent_tags):
@@ -294,18 +295,18 @@ class SequenceTagger(flair.nn.Model):
 
             return sentences
 
-    def forward(self, sentences: List[Sentence]):
+    def forward(self, sentences: List[Sentence], sort=True):
         self.zero_grad()
 
         self.embeddings.embed(sentences)
 
-        # if grad is enabled, sort sentences by number of tokens
-        if torch.is_grad_enabled():
+        # if sorting is enabled, sort sentences by number of tokens
+        if sort:
             sentences.sort(key=lambda x: len(x), reverse=True)
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
         tag_list: List = []
-        longest_token_sequence_in_batch: int = len(sentences[0])
+        longest_token_sequence_in_batch: int = lengths[0]
 
         # initialize zero-padded word embeddings tensor
         sentence_tensor = torch.zeros([len(sentences),
