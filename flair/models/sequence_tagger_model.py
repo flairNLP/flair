@@ -17,6 +17,8 @@ from typing import List, Tuple, Union
 
 from flair.training_utils import clear_embeddings
 
+from tqdm import tqdm
+
 
 log = logging.getLogger('flair')
 
@@ -253,7 +255,8 @@ class SequenceTagger(flair.nn.Model):
             tags = self._obtain_labels(feature, lengths)
             return tags, loss
 
-    def predict(self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32) -> List[Sentence]:
+    def predict(self, sentences: Union[List[Sentence], Sentence],
+                mini_batch_size=32, verbose=False) -> List[Sentence]:
         with torch.no_grad():
             if isinstance(sentences, Sentence):
                 sentences = [sentences]
@@ -269,8 +272,12 @@ class SequenceTagger(flair.nn.Model):
             # make mini-batches
             batches = [filtered_sentences[x:x + mini_batch_size] for x in
                        range(0, len(filtered_sentences), mini_batch_size)]
+            if verbose:
+                batches = tqdm(batches)
 
-            for batch in batches:
+            for i, batch in enumerate(batches):
+                if verbose:
+                    batches.set_description(f'Inferencing on batch {i}')
                 tags, _ = self.forward_labels_and_loss(batch)
 
                 for (sentence, sent_tags) in zip(batch, tags):
