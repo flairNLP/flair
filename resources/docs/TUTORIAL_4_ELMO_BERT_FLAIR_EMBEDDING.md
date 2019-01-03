@@ -70,6 +70,8 @@ Currently, the following contextual string embeddings are provided (more coming)
 | 'czech-backward'    | Czech | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings over various sources (Europarl, Wikipedia or OpenSubtitles2018) |
 | 'portuguese-forward'    | Portuguese | Added by [@ericlief](https://github.com/ericlief/language_models): Forward LM embeddings |
 | 'portuguese-backward'    | Portuguese | Added by [@ericlief](https://github.com/ericlief/language_models): Backward LM embeddings |
+| 'basque-forward'    | Basque | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Forward LM embeddings |
+| 'basque-backward'    | Basque | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings |
 
 So, if you want to load embeddings from the English news backward LM model, instantiate the method as follows:
 

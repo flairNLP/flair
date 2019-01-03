@@ -95,6 +95,7 @@ The following embeddings are currently supported:
 | 'zh' | Chinese | Chinese FastText embeddings |
 | 'hi' | Hindi | Hindi FastText embeddings |
 | 'id' | Indonesian | Indonesian FastText embeddings |
+| 'eu' | Basque | Basque FastText embeddings |
 
 So, if you want to load German FastText embeddings, instantiate as follows:
 
