@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/flair.svg)](https://badge.fury.io/py/flair)
 [![GitHub Issues](https://img.shields.io/github/issues/zalandoresearch/flair.svg)](https://github.com/zalandoresearch/flair/issues)
-[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](resources/docs/CONTRIBUTING.md)
+[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 [![Travis](https://img.shields.io/travis/zalandoresearch/flair.svg)](https://travis-ci.org/zalandoresearch/flair)
 
@@ -143,7 +143,7 @@ Please email your questions or comments to [Alan Akbik](http://alanakbik.github.
 ## Contributing
 
 Thanks for your interest in contributing! There are many ways to get involved; 
-start with our [contributor guidelines](/resources/docs/CONTRIBUTING.md) and then 
+start with our [contributor guidelines](CONTRIBUTING.md) and then 
 check these [open issues](https://github.com/zalandoresearch/flair/issues) for specific tasks.
 
 For contributors looking to get deeper into the API we suggest cloning the repository and checking out the unit 
