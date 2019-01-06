@@ -32,7 +32,7 @@ So, if you want to create a document embedding using GloVe embeddings together w
 use the following code:
 
 ```python
-from flair.embeddings import WordEmbeddings, CharLMEmbeddings, DocumentPoolEmbeddings
+from flair.embeddings import WordEmbeddings, CharLMEmbeddings, DocumentPoolEmbeddings, Sentence
 
 # initialize the word embeddings
 glove_embedding = WordEmbeddings('glove')
