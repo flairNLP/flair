@@ -222,7 +222,7 @@ class WordEmbeddings(TokenEmbeddings):
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
                 token: Token = token
 
-                if self.field is None:
+                if 'field' not in self.__dict__ or self.field is None:
                     word = token.text
                 else:
                     word = token.get_tag(self.field).value
