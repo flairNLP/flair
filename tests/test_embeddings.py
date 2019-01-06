@@ -96,7 +96,7 @@ def test_stacked_embeddings():
     embeddings.embed(sentence)
 
     for token in sentence.tokens:
-        assert(len(token.get_embedding()) != 0)
+        assert(len(token.get_embedding()) == 1124)
 
         token.clear_embeddings()
 
@@ -112,8 +112,8 @@ def test_document_lstm_embeddings():
 
     embeddings.embed(sentence)
 
-    assert (len(sentence.get_embedding()) != 0)
-    assert (sentence.get_embedding().shape[1] == embeddings.embedding_length)
+    assert (len(sentence.get_embedding()) == 128)
+    assert (len(sentence.get_embedding()) == embeddings.embedding_length)
 
     sentence.clear_embeddings()
 
@@ -129,44 +129,8 @@ def test_document_bidirectional_lstm_embeddings():
 
     embeddings.embed(sentence)
 
-    assert (len(sentence.get_embedding()) != 0)
-    assert (sentence.get_embedding().shape[1] == embeddings.embedding_length)
-
-    sentence.clear_embeddings()
-
-    assert (len(sentence.get_embedding()) == 0)
-
-
-@pytest.mark.integration
-def test_document_bidirectional_lstm_embeddings_using_first_representation():
-    sentence, glove, charlm = init_document_embeddings()
-
-    embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_size=128,
-                                                                bidirectional=True)
-
-    embeddings.embed(sentence)
-
-    assert (len(sentence.get_embedding()) != 0)
-    assert (sentence.get_embedding().shape[1] == embeddings.embedding_length)
-
-    sentence.clear_embeddings()
-
-    assert (len(sentence.get_embedding()) == 0)
-
-
-@pytest.mark.slow
-def test_document_mean_embeddings():
-    text = 'I love Berlin. Berlin is a great place to live.'
-    sentence: Sentence = Sentence(text)
-
-    glove: TokenEmbeddings = WordEmbeddings('en-glove')
-    charlm: TokenEmbeddings = CharLMEmbeddings('mix-backward')
-
-    embeddings: DocumentMeanEmbeddings = DocumentMeanEmbeddings([glove, charlm])
-
-    embeddings.embed(sentence)
-
-    assert (len(sentence.get_embedding()) != 0)
+    assert (len(sentence.get_embedding()) == 512)
+    assert (len(sentence.get_embedding()) == embeddings.embedding_length)
 
     sentence.clear_embeddings()
 
@@ -182,7 +146,7 @@ def test_document_pool_embeddings():
 
         embeddings.embed(sentence)
 
-        assert (len(sentence.get_embedding()) != 0)
+        assert (len(sentence.get_embedding()) == 1124)
 
         sentence.clear_embeddings()
 
