@@ -144,7 +144,7 @@ class StackedEmbeddings(TokenEmbeddings):
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
-    def __init__(self, embeddings: str):
+    def __init__(self, embeddings: str, field: str = None):
         """
         Initializes classic word embeddings. Constructor downloads required files if not there.
         :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code.
@@ -206,6 +206,8 @@ class WordEmbeddings(TokenEmbeddings):
 
         self.precomputed_word_embeddings = gensim.models.KeyedVectors.load(str(embeddings))
 
+        self.field = field
+
         self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
         super().__init__()
 
@@ -220,14 +222,19 @@ class WordEmbeddings(TokenEmbeddings):
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
                 token: Token = token
 
-                if token.text in self.precomputed_word_embeddings:
-                    word_embedding = self.precomputed_word_embeddings[token.text]
-                elif token.text.lower() in self.precomputed_word_embeddings:
-                    word_embedding = self.precomputed_word_embeddings[token.text.lower()]
-                elif re.sub(r'\d', '#', token.text.lower()) in self.precomputed_word_embeddings:
-                    word_embedding = self.precomputed_word_embeddings[re.sub(r'\d', '#', token.text.lower())]
-                elif re.sub(r'\d', '0', token.text.lower()) in self.precomputed_word_embeddings:
-                    word_embedding = self.precomputed_word_embeddings[re.sub(r'\d', '0', token.text.lower())]
+                if 'field' not in self.__dict__ or self.field is None:
+                    word = token.text
+                else:
+                    word = token.get_tag(self.field).value
+
+                if word in self.precomputed_word_embeddings:
+                    word_embedding = self.precomputed_word_embeddings[word]
+                elif word.lower() in self.precomputed_word_embeddings:
+                    word_embedding = self.precomputed_word_embeddings[word.lower()]
+                elif re.sub(r'\d', '#', word.lower()) in self.precomputed_word_embeddings:
+                    word_embedding = self.precomputed_word_embeddings[re.sub(r'\d', '#', word.lower())]
+                elif re.sub(r'\d', '0', word.lower()) in self.precomputed_word_embeddings:
+                    word_embedding = self.precomputed_word_embeddings[re.sub(r'\d', '0', word.lower())]
                 else:
                     word_embedding = np.zeros(self.embedding_length, dtype='float')
 
