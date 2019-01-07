@@ -108,6 +108,15 @@ class LanguageModel(nn.Module):
 
         return rnn_output
 
+    def get_output(self, text: str):
+        char_indices = [self.dictionary.get_idx_for_item(char) for char in text]
+        input_vector = torch.LongTensor([char_indices]).transpose(0, 1)
+
+        hidden = self.init_hidden(1)
+        prediction, rnn_output, hidden = self.forward(input_vector, hidden)
+
+        return self.repackage_hidden(hidden)
+
     def repackage_hidden(self, h):
         """Wraps hidden states in new Variables, to detach them from their history."""
         if type(h) == torch.Tensor:
@@ -253,8 +262,11 @@ class LanguageModel(nn.Module):
                 # compute word weights with exponential function
                 word_weights = prediction.exp().cpu()
 
-                # sample multinomial distribution for next character
-                word_idx = torch.multinomial(word_weights, 1)[0]
+                # try sampling multinomial distribution for next character
+                try:
+                    word_idx = torch.multinomial(word_weights, 1)[0]
+                except:
+                    word_idx = torch.tensor(0)
 
                 # print(word_idx)
                 prob = decoder_output[word_idx]
