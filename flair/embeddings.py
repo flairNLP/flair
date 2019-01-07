@@ -1328,7 +1328,7 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
                 else:
                     pooled_embedding, _ = self.pool_op(word_embeddings, 0)
 
-                sentence.set_embedding(self.name, pooled_embedding.unsqueeze(0))
+                sentence.set_embedding(self.name, pooled_embedding)
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
@@ -1479,12 +1479,12 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         # EXTRACT EMBEDDINGS FROM LSTM
         # --------------------------------------------------------------------
         for sentence_no, length in enumerate(lengths):
-            last_rep = outputs[length - 1, sentence_no].unsqueeze(0)
+            last_rep = outputs[length - 1, sentence_no]
 
             embedding = last_rep
             if self.bidirectional:
-                first_rep = outputs[0, sentence_no].unsqueeze(0)
-                embedding = torch.cat([first_rep, last_rep], 1)
+                first_rep = outputs[0, sentence_no]
+                embedding = torch.cat([first_rep, last_rep], 0)
 
             sentence = sentences[sentence_no]
             sentence.set_embedding(self.name, embedding)
@@ -1494,23 +1494,22 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
 
 class DocumentLMEmbeddings(DocumentEmbeddings):
-    def __init__(self, charlm_embeddings: List[CharLMEmbeddings], detach: bool = True):
+    def __init__(self, flair_embeddings: List[FlairEmbeddings], detach: bool = True):
         super().__init__()
 
-        self.embeddings = charlm_embeddings
+        self.embeddings = flair_embeddings
+        self.name = 'document_lm'
 
         self.static_embeddings = detach
         self.detach = detach
 
-        dummy: Sentence = Sentence('jo')
-        self.embed([dummy])
-        self._embedding_length: int = len(dummy.embedding)
+        self._embedding_length: int = sum(embedding.embedding_length for embedding in flair_embeddings)
 
     @property
     def embedding_length(self) -> int:
         return self._embedding_length
 
-    def embed(self, sentences: Union[List[Sentence], Sentence]):
+    def _add_embeddings_internal(self, sentences: List[Sentence]):
         if type(sentences) is Sentence:
             sentences = [sentences]
 
@@ -1527,6 +1526,3 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
                     sentence.set_embedding(embedding.name, sentence[1]._embeddings[embedding.name])
 
         return sentences
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
-        pass

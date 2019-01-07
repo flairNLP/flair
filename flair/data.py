@@ -588,7 +588,11 @@ class Sentence:
         return s
 
     def __str__(self) -> str:
-        return 'Sentence: "{}" - {} Tokens'.format(' '.join([t.text for t in self.tokens]), len(self))
+
+        if self.labels:
+            return f'Sentence: "{self.to_tokenized_string()}" - {len(self)} Tokens - Labels: {self.labels} '
+        else:
+            return f'Sentence: "{self.to_tokenized_string()}" - {len(self)} Tokens'
 
     def __len__(self) -> int:
         return len(self.tokens)
@@ -748,16 +752,20 @@ class TaggedCorpus(Corpus):
                 last_counter = int(counter)
         return downsampled
 
-    def obtain_statistics(self, tag_type: str = None) -> dict:
+    def obtain_statistics(self, tag_type: str = None, pretty_print: bool = True) -> dict:
         """
         Print statistics about the class distribution (only labels of sentences are taken into account) and sentence
         sizes.
         """
-        return {
+        json_string = {
             "TRAIN": self._obtain_statistics_for(self.train, "TRAIN", tag_type),
             "TEST": self._obtain_statistics_for(self.test, "TEST", tag_type),
             "DEV": self._obtain_statistics_for(self.dev, "DEV", tag_type),
         }
+        if pretty_print:
+            import json
+            json_string = json.dumps(json_string, indent=4)
+        return json_string
 
     @staticmethod
     def _obtain_statistics_for(sentences, name, tag_type) -> dict:
