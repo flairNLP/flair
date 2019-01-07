@@ -589,11 +589,10 @@ class Sentence:
 
     def __str__(self) -> str:
 
-        if len(self.labels) == 0:
-            return f'Sentence: "{self.to_tokenized_string()}" - {len(self)} Tokens'
-        else:
+        if self.labels:
             return f'Sentence: "{self.to_tokenized_string()}" - {len(self)} Tokens - Labels: {self.labels} '
-
+        else:
+            return f'Sentence: "{self.to_tokenized_string()}" - {len(self)} Tokens'
 
     def __len__(self) -> int:
         return len(self.tokens)
