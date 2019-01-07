@@ -135,7 +135,7 @@ class Metric(object):
         all_classes = [None] + all_classes
         all_lines = [
             '{0:<10}\ttp: {1} - fp: {2} - fn: {3} - tn: {4} - precision: {5:.4f} - recall: {6:.4f} - accuracy: {7:.4f} - f1-score: {8:.4f}'.format(
-                self.name if class_name == None else class_name,
+                self.name if class_name is None else class_name,
                 self.get_tp(class_name), self.get_fp(class_name), self.get_fn(class_name), self.get_tn(class_name),
                 self.precision(class_name), self.recall(class_name), self.accuracy(class_name),
                 self.f_score(class_name))
