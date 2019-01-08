@@ -8,13 +8,15 @@ the right set of model and hyper parameters.
 Flair includes a wrapper for the well-known hyper parameter selection tool
 [hyperopt](https://github.com/hyperopt/hyperopt).
 
-First you need to load your corpus:
+First you need to load your corpus. If you want to load the [AGNews corpus](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html)
+used in the following example, you first need to download it and convert it into the correct format. Please
+check [tutorial 6](/resources/docs/TUTORIAL_6_CORPUS.md) for more details.
 ```python
 from flair.data import TaggedCorpus
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 
 # load your corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.AG_NEWS)
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.AG_NEWS, base_path='/resources/tasks/ag_news')
 ```
 
 Second you need to define the search space of parameters.
