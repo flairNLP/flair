@@ -895,6 +895,8 @@ class BertEmbeddings(TokenEmbeddings):
             all_input_masks = torch.tensor([f.input_mask for f in features], dtype=torch.long)
 
         # put encoded batch through BERT model to get all hidden states of all encoder layers
+        if torch.cuda.is_available():
+            self.model.cuda()
         self.model.eval()
         all_encoder_layers, _ = self.model(all_input_ids, token_type_ids=None, attention_mask=all_input_masks)
 
