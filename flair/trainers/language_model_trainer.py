@@ -17,10 +17,11 @@ log = logging.getLogger('flair')
 
 
 class TextCorpus(object):
-    def __init__(self, path: Path, dictionary: Dictionary, forward: bool = True, character_level: bool = True):
+    def __init__(self, path: Path, dictionary: Dictionary, forward: bool = True, character_level: bool = True, random_case_flip : bool = True):
 
         self.forward = forward
         self.split_on_char = character_level
+        self.random_case_flip = random_case_flip
         self.train_path = path / 'train'
 
         self.train_files = sorted(
@@ -32,11 +33,13 @@ class TextCorpus(object):
 
         self.valid = self.charsplit(path / 'valid.txt',
                                     forward=forward,
-                                    split_on_char=self.split_on_char)
+                                    split_on_char=self.split_on_char,
+                                    random_case_flip=self.random_case_flip)
 
         self.test = self.charsplit(path / 'test.txt',
                                    forward=forward,
-                                   split_on_char=self.split_on_char)
+                                   split_on_char=self.split_on_char,
+                                   random_case_flip=self.random_case_flip)
 
     @property
     def is_last_slice(self) -> bool:
@@ -55,13 +58,14 @@ class TextCorpus(object):
         current_train_file = self.train_files[self.current_train_file_index]
 
         train_slice = self.charsplit(current_train_file,
-                                    expand_vocab=False,
-                                    forward=self.forward,
-                                    split_on_char=self.split_on_char)
+                                     expand_vocab=False,
+                                     forward=self.forward,
+                                     split_on_char=self.split_on_char,
+                                     random_case_flip=self.random_case_flip)
 
         return train_slice
 
-    def charsplit(self, path: Path, expand_vocab=False, forward=True, split_on_char=True) -> torch.LongTensor:
+    def charsplit(self, path: Path, expand_vocab=False, forward=True, split_on_char=True, random_case_flip=True) -> torch.LongTensor:
 
         """Tokenizes a text file on character basis."""
         assert path.exists()
@@ -89,7 +93,8 @@ class TextCorpus(object):
                 ids = torch.LongTensor(tokens)
                 token = 0
                 for line in f:
-                    line = self.random_casechange(line)
+                    if random_case_flip:
+                        line = self.random_casechange(line)
 
                     if split_on_char:
                         chars = list(line)
@@ -106,7 +111,8 @@ class TextCorpus(object):
                 ids = torch.LongTensor(tokens)
                 token = tokens - 1
                 for line in f:
-                    line = self.random_casechange(line)
+                    if random_case_flip:
+                        line = self.random_casechange(line)
 
                     if split_on_char:
                         chars = list(line)
