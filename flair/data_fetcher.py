@@ -384,7 +384,7 @@ class NLPTaskDataFetcher:
         label_prefix = '__label__'
         sentences = []
 
-        with open(str(path_to_file)) as f:
+        with open(str(path_to_file), encoding='utf-8') as f:
             for line in f:
                 words = line.split()
 
