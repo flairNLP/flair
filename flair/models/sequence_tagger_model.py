@@ -238,10 +238,14 @@ class SequenceTagger(flair.nn.Model):
         # https://docs.python.org/3/library/warnings.html#temporarily-suppressing-warnings
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
+            # load_big_file is a workaround by https://github.com/highway11git to load models on some Mac/Windows setups
+            # see https://github.com/zalandoresearch/flair/issues/351
             if torch.cuda.is_available():
-                state = torch.load(str(model_file))
+                f = flair.file_utils.load_big_file(str(model_file))
+                state = torch.load(f)
             else:
-                state = torch.load(str(model_file), map_location={'cuda:0': 'cpu'})
+                f = flair.file_utils.load_big_file(str(model_file))
+                state = torch.load(f, map_location={'cuda:0': 'cpu'})
         return state
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence], sort=True) -> torch.tensor:
