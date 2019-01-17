@@ -132,7 +132,7 @@ word_vectors.save('/path/to/converted')
 Some embeddings - such as character-features - are not pre-trained but rather trained on the downstream task. Normally
 this requires you to implement a [hierarchical embedding architecture](http://neuroner.com/NeuroNERengine_with_caption_no_figure.png). 
 
-With Flair, you need not worry about such things. Just choose the appropriate
+With Flair, you don't need to worry about such things. Just choose the appropriate
 embedding class and character features will then automatically train during downstream task training. 
 
 ```python
@@ -170,7 +170,7 @@ glove_embedding = WordEmbeddings('glove')
 character_embeddings = CharacterEmbeddings()
 ```
 
-Now instantiate the `StackedEmbeddings` class and pass it a list containing these three embeddings.
+Now instantiate the `StackedEmbeddings` class and pass it a list containing these two embeddings.
 
 ```python
 from flair.embeddings import StackedEmbeddings
