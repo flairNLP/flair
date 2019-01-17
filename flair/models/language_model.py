@@ -3,8 +3,7 @@ from pathlib import Path
 import torch.nn as nn
 import torch
 import math
-from torch.autograd import Variable
-from typing import List, Union, Tuple
+from typing import Union, Tuple
 from typing import List
 
 from torch.optim import Optimizer
