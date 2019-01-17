@@ -72,6 +72,10 @@ Currently, the following contextual string embeddings are provided (more coming)
 | 'portuguese-backward'    | Portuguese | Added by [@ericlief](https://github.com/ericlief/language_models): Backward LM embeddings |
 | 'basque-forward'    | Basque | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Forward LM embeddings |
 | 'basque-backward'    | Basque | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings |
+| 'spanish-forward'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): Forward LM embeddings over Wikipedia |
+| 'spanish-backward'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): Backward LM embeddings over Wikipedia |
+| 'spanish-forward-fast'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): CPU-friendly forward LM embeddings over Wikipedia |
+| 'spanish-backward-fast'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): CPU-friendly backward LM embeddings over Wikipedia |
 
 So, if you want to load embeddings from the English news backward LM model, instantiate the method as follows:
 
