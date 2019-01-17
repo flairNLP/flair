@@ -571,6 +571,23 @@ class FlairEmbeddings(TokenEmbeddings):
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-eu-large-backward-v0.1.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
 
+        # Spanish forward fast
+        elif model.lower() == 'spanish-forward-fast' or model.lower() == 'es-forward-fast':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/language_model_es_forward/lm-es-forward-fast.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+        # Spanish backward fast
+        elif model.lower() == 'spanish-backward-fast' or model.lower() == 'es-backward-fast':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/language_model_es_backward/lm-es-backward-fast.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+
+        # Spanish forward
+        elif model.lower() == 'spanish-forward' or model.lower() == 'es-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/language_model_es_forward_long/lm-es-forward.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+        # Spanish backward
+        elif model.lower() == 'spanish-backward' or model.lower() == 'es-backward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/language_model_es_backward_long/lm-es-backward.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
 
         elif not Path(model).exists():
             raise ValueError(f'The given model "{model}" is not available or is not a valid path.')
