@@ -119,7 +119,7 @@ class LanguageModel(nn.Module):
     def repackage_hidden(self, h):
         """Wraps hidden states in new Variables, to detach them from their history."""
         if type(h) == torch.Tensor:
-            return torch.tensor(h.detach())
+            return h.clone().detach()
         else:
             return tuple(self.repackage_hidden(v) for v in h)
 
