@@ -54,10 +54,11 @@ def log_sum_exp_batch(vecs):
     return maxi + recti_
 
 
-def pad_tensors(tensor_list, type_=torch.FloatTensor):
+def pad_tensors(tensor_list):
     ml = max([x.shape[0] for x in tensor_list])
     shape = [len(tensor_list), ml] + list(tensor_list[0].shape[1:])
-    template = type_(*shape)
+    template = torch.LongTensor(*shape)
+    template = template.to(flair.device)
     template.fill_(0)
     lens_ = [x.shape[0] for x in tensor_list]
     for i, tensor in enumerate(tensor_list):
@@ -148,8 +149,7 @@ class SequenceTagger(flair.nn.Model):
             self.transitions.detach()[self.tag_dictionary.get_idx_for_item(START_TAG), :] = -10000
             self.transitions.detach()[:, self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000
 
-        if torch.cuda.is_available():
-            self.cuda()
+        self.to(flair.device)
 
     def save(self, model_file: Union[str, Path]):
         model_state = {
@@ -210,9 +210,7 @@ class SequenceTagger(flair.nn.Model):
         )
         model.load_state_dict(state['state_dict'])
         model.eval()
-
-        if torch.cuda.is_available():
-            model = model.cuda()
+        model.to(flair.device)
 
         return model
 
@@ -240,13 +238,9 @@ class SequenceTagger(flair.nn.Model):
             warnings.filterwarnings("ignore")
             # load_big_file is a workaround by https://github.com/highway11git to load models on some Mac/Windows setups
             # see https://github.com/zalandoresearch/flair/issues/351
-            if torch.cuda.is_available():
-                f = flair.file_utils.load_big_file(str(model_file))
-                state = torch.load(f)
-            else:
-                f = flair.file_utils.load_big_file(str(model_file))
-                state = torch.load(f, map_location={'cuda:0': 'cpu'})
-        return state
+            f = flair.file_utils.load_big_file(str(model_file))
+            state = torch.load(f, map_location=flair.device)
+            return state
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence], sort=True) -> torch.tensor:
         features, lengths, tags = self.forward(sentences, sort=sort)
@@ -317,6 +311,7 @@ class SequenceTagger(flair.nn.Model):
                                        longest_token_sequence_in_batch,
                                        self.embeddings.embedding_length],
                                       dtype=torch.float)
+        sentence_tensor = sentence_tensor.to(flair.device)
 
         for s_id, sentence in enumerate(sentences):
 
@@ -328,14 +323,12 @@ class SequenceTagger(flair.nn.Model):
             tag_idx: List[int] = [self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value)
                                   for token in sentence]
             # add tags as tensor
-            if torch.cuda.is_available():
-                tag_list.append(torch.cuda.LongTensor(tag_idx))
-            else:
-                tag_list.append(torch.LongTensor(tag_idx))
+            tag = torch.LongTensor(tag_idx)
+            tag = tag.to(flair.device)
+            tag_list.append(tag)
 
         sentence_tensor = sentence_tensor.transpose_(0, 1)
-        if torch.cuda.is_available():
-            sentence_tensor = sentence_tensor.cuda()
+        sentence_tensor = sentence_tensor.to(flair.device)
 
         # --------------------------------------------------------------------
         # FF PART
@@ -371,48 +364,27 @@ class SequenceTagger(flair.nn.Model):
 
     def _score_sentence(self, feats, tags, lens_):
 
-        if torch.cuda.is_available():
-            start = torch.cuda.LongTensor([
-                self.tag_dictionary.get_idx_for_item(START_TAG)
-            ])
-            start = start[None, :].repeat(tags.shape[0], 1)
+        start = torch.LongTensor([self.tag_dictionary.get_idx_for_item(START_TAG)])
+        start = start.to(flair.device)
+        start = start[None, :].repeat(tags.shape[0], 1)
 
-            stop = torch.cuda.LongTensor([
-                self.tag_dictionary.get_idx_for_item(STOP_TAG)
-            ])
-            stop = stop[None, :].repeat(tags.shape[0], 1)
+        stop = torch.LongTensor([self.tag_dictionary.get_idx_for_item(STOP_TAG)])
+        stop = stop.to(flair.device)
+        stop = stop[None, :].repeat(tags.shape[0], 1)
 
-            pad_start_tags = \
-                torch.cat([start, tags], 1)
-            pad_stop_tags = \
-                torch.cat([tags, stop], 1)
-        else:
-            start = torch.LongTensor([
-                self.tag_dictionary.get_idx_for_item(START_TAG)
-            ])
-            start = start[None, :].repeat(tags.shape[0], 1)
-
-            stop = torch.LongTensor([
-                self.tag_dictionary.get_idx_for_item(STOP_TAG)
-            ])
-
-            stop = stop[None, :].repeat(tags.shape[0], 1)
-
-            pad_start_tags = torch.cat([start, tags], 1)
-            pad_stop_tags = torch.cat([tags, stop], 1)
+        pad_start_tags = torch.cat([start, tags], 1)
+        pad_stop_tags = torch.cat([tags, stop], 1)
 
         for i in range(len(lens_)):
             pad_stop_tags[i, lens_[i]:] = \
                 self.tag_dictionary.get_idx_for_item(STOP_TAG)
 
         score = torch.FloatTensor(feats.shape[0])
-        if torch.cuda.is_available():
-            score = score.cuda()
+        score = score.to(flair.device)
 
         for i in range(feats.shape[0]):
             r = torch.LongTensor(range(lens_[i]))
-            if torch.cuda.is_available():
-                r = r.cuda()
+            r = r.to(flair.device)
 
             score[i] = \
                 torch.sum(
@@ -425,10 +397,7 @@ class SequenceTagger(flair.nn.Model):
     def _calculate_loss(self, features, lengths, tags) -> float:
         if self.use_crf:
             # pad tags if using batch-CRF decoder
-            if torch.cuda.is_available():
-                tags, _ = pad_tensors(tags, torch.cuda.LongTensor)
-            else:
-                tags, _ = pad_tensors(tags, torch.LongTensor)
+            tags, _ = pad_tensors(tags)
 
             forward_score = self._forward_alg(features, lengths)
             gold_score = self._score_sentence(features, tags, lengths)
@@ -442,10 +411,9 @@ class SequenceTagger(flair.nn.Model):
             for sentence_feats, sentence_tags, sentence_length in zip(features, tags, lengths):
                 sentence_feats = sentence_feats[:sentence_length]
 
-                if torch.cuda.is_available():
-                    tag_tensor = autograd.Variable(torch.cuda.LongTensor(sentence_tags))
-                else:
-                    tag_tensor = autograd.Variable(torch.LongTensor(sentence_tags))
+                tag_tensor = torch.LongTensor(sentence_tags)
+                tag_tensor = tag_tensor.to(flair.device)
+
                 score += torch.nn.functional.cross_entropy(sentence_feats, tag_tensor)
 
             return score
@@ -477,11 +445,10 @@ class SequenceTagger(flair.nn.Model):
         backpointers = []
         backscores = []
 
-        init_vvars = torch.Tensor(1, self.tagset_size).fill_(-10000.)
+        init_vvars = torch.FloatTensor(1, self.tagset_size).fill_(-10000.)
+        init_vvars = init_vvars.to(flair.device)
         init_vvars[0][self.tag_dictionary.get_idx_for_item(START_TAG)] = 0
-        forward_var = autograd.Variable(init_vvars)
-        if torch.cuda.is_available():
-            forward_var = forward_var.cuda()
+        forward_var = init_vvars
 
         import torch.nn.functional as F
         for feat in feats:
@@ -490,9 +457,8 @@ class SequenceTagger(flair.nn.Model):
             bptrs_t = bptrs_t.squeeze().detach().cpu().numpy()
             next_tag_var = next_tag_var.detach().cpu().numpy()
             viterbivars_t = next_tag_var[range(len(bptrs_t)), bptrs_t]
-            viterbivars_t = autograd.Variable(torch.FloatTensor(viterbivars_t))
-            if torch.cuda.is_available():
-                viterbivars_t = viterbivars_t.cuda()
+            viterbivars_t = torch.FloatTensor(viterbivars_t)
+            viterbivars_t = viterbivars_t.to(flair.device)
             forward_var = viterbivars_t + feat
             backscores.append(forward_var)
             backpointers.append(bptrs_t)
@@ -522,19 +488,17 @@ class SequenceTagger(flair.nn.Model):
 
     def _forward_alg(self, feats, lens_):
 
-        init_alphas = torch.Tensor(self.tagset_size).fill_(-10000.)
+        init_alphas = torch.FloatTensor(self.tagset_size).fill_(-10000.)
         init_alphas[self.tag_dictionary.get_idx_for_item(START_TAG)] = 0.
 
         forward_var = torch.FloatTensor(
             feats.shape[0],
             feats.shape[1] + 1,
-            feats.shape[2],
+            feats.shape[2]
         ).fill_(0)
+        forward_var = forward_var.to(flair.device)
 
         forward_var[:, 0, :] = init_alphas[None, :].repeat(feats.shape[0], 1)
-
-        if torch.cuda.is_available():
-            forward_var = forward_var.cuda()
 
         transitions = self.transitions.view(
             1,

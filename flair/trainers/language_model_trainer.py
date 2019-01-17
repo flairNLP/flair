@@ -4,9 +4,9 @@ import logging
 from pathlib import Path
 from typing import Union
 
-from torch.autograd import Variable
 from torch.optim.sgd import SGD
 
+import flair
 from flair.data import Dictionary
 from flair.models import LanguageModel
 from flair.optim import *
@@ -65,7 +65,7 @@ class TextCorpus(object):
 
         return train_slice
 
-    def charsplit(self, path: Path, expand_vocab=False, forward=True, split_on_char=True, random_case_flip=True) -> torch.LongTensor:
+    def charsplit(self, path: Path, expand_vocab=False, forward=True, split_on_char=True, random_case_flip=True) -> torch.tensor:
 
         """Tokenizes a text file on character basis."""
         assert path.exists()
@@ -90,7 +90,8 @@ class TextCorpus(object):
         if forward:
             # charsplit file content
             with open(path, 'r', encoding="utf-8") as f:
-                ids = torch.LongTensor(tokens)
+                ids = torch.zeros(tokens, dtype=torch.long)
+                ids = ids.to(flair.device)
                 token = 0
                 for line in f:
                     if random_case_flip:
@@ -108,7 +109,8 @@ class TextCorpus(object):
         else:
             # charsplit file content
             with open(path, 'r', encoding="utf-8") as f:
-                ids = torch.LongTensor(tokens)
+                ids = torch.zeros(tokens, dtype=torch.long)
+                ids = ids.to(flair.device)
                 token = tokens - 1
                 for line in f:
                     if random_case_flip:
@@ -149,7 +151,8 @@ class TextCorpus(object):
 
         # Tokenize file content
         with open(path, 'r') as f:
-            ids = torch.LongTensor(tokens)
+            ids = torch.zeros(tokens, dtype=torch.long)
+            ids = ids.to(flair.device)
             token = 0
             for line in f:
                 words = line.split() + ['<eos>']
@@ -386,24 +389,25 @@ class LanguageModelTrainer:
         data = data.narrow(0, 0, nbatch * batch_size)
         # Evenly divide the data across the bsz batches.
         data = data.view(batch_size, -1).t().contiguous()
+        data = data.to(flair.device)
         return data
 
     @staticmethod
     def _get_batch(source, i, sequence_length):
         seq_len = min(sequence_length, len(source) - 1 - i)
-        data = Variable(source[i:i + seq_len])
-        target = Variable(source[i + 1:i + 1 + seq_len].view(-1))
 
-        if torch.cuda.is_available():
-            data = data.cuda()
-            target = target.cuda()
+        data = source[i:i + seq_len].clone().detach()
+        target = source[i + 1:i + 1 + seq_len].view(-1).clone().detach()
+
+        data = data.to(flair.device)
+        target = target.to(flair.device)
 
         return data, target
 
     @staticmethod
     def _repackage_hidden(h):
-        """Wraps hidden states in new Variables, to detach them from their history."""
-        return tuple(Variable(v) for v in h)
+        """Wraps hidden states in new tensors, to detach them from their history."""
+        return tuple(v.clone().detach() for v in h)
 
     @staticmethod
     def load_from_checkpoint(checkpoint_file: Path, corpus: TextCorpus, optimizer: Optimizer = SGD):

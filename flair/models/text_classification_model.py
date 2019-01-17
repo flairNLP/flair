@@ -47,8 +47,7 @@ class TextClassifier(flair.nn.Model):
             self.loss_function = nn.CrossEntropyLoss()
 
         # auto-spawn on GPU if available
-        if torch.cuda.is_available():
-            self.cuda()
+        self.to(flair.device)
 
     def _init_weights(self):
         nn.init.xavier_uniform_(self.decoder.weight)
@@ -58,9 +57,7 @@ class TextClassifier(flair.nn.Model):
 
         text_embedding_list = [sentence.get_embedding().unsqueeze(0) for sentence in sentences]
         text_embedding_tensor = torch.cat(text_embedding_list, 0)
-
-        if torch.cuda.is_available():
-            text_embedding_tensor = text_embedding_tensor.cuda()
+        text_embedding_tensor = text_embedding_tensor.to(flair.device)
 
         label_scores = self.decoder(text_embedding_tensor)
 
@@ -112,9 +109,7 @@ class TextClassifier(flair.nn.Model):
         )
         model.load_state_dict(state['state_dict'])
         model.eval()
-
-        if torch.cuda.is_available():
-            model = model.cuda()
+        model.to(flair.device)
 
         return model
 
@@ -142,13 +137,9 @@ class TextClassifier(flair.nn.Model):
             warnings.filterwarnings("ignore")
             # load_big_file is a workaround by https://github.com/highway11git to load models on some Mac/Windows setups
             # see https://github.com/zalandoresearch/flair/issues/351
-            if torch.cuda.is_available():
-                f = flair.file_utils.load_big_file(str(model_file))
-                state = torch.load(f)
-            else:
-                f = flair.file_utils.load_big_file(str(model_file))
-                state = torch.load(f, map_location={'cuda:0': 'cpu'})
-        return state
+            f = flair.file_utils.load_big_file(str(model_file))
+            state = torch.load(f, map_location=flair.device)
+            return state
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
         scores = self.forward(sentences)
@@ -248,8 +239,7 @@ class TextClassifier(flair.nn.Model):
         one_hot = convert_labels_to_one_hot(label_list, self.label_dictionary)
         one_hot = [torch.FloatTensor(l).unsqueeze(0) for l in one_hot]
         one_hot = torch.cat(one_hot, 0)
-        if torch.cuda.is_available():
-            one_hot = one_hot.cuda()
+        one_hot = one_hot.to(flair.device)
         return one_hot
 
     def _labels_to_indices(self, sentences: List[Sentence]):
@@ -259,8 +249,7 @@ class TextClassifier(flair.nn.Model):
         ]
 
         vec = torch.cat(indices, 0)
-        if torch.cuda.is_available():
-            vec = vec.cuda()
+        vec = vec.to(flair.device)
 
         return vec
 
