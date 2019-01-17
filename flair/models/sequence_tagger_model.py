@@ -324,6 +324,7 @@ class SequenceTagger(flair.nn.Model):
             tag_list.append(torch.LongTensor(tag_idx, device=flair.device))
 
         sentence_tensor = sentence_tensor.transpose_(0, 1)
+        sentence_tensor = sentence_tensor.to(flair.device)
 
         # --------------------------------------------------------------------
         # FF PART
