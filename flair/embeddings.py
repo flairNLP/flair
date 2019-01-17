@@ -283,7 +283,7 @@ class ELMoEmbeddings(TokenEmbeddings):
 
         # put on Cuda if available
         from flair import device
-        cuda_device = 0 if str(device) == 'cuda' else -1
+        cuda_device = 0 if str(device) != 'cpu' else -1
         self.ee = allennlp.commands.elmo.ElmoEmbedder(options_file=options_file,
                                                       weight_file=weight_file,
                                                       cuda_device=cuda_device)
