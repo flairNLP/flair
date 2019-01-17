@@ -97,7 +97,8 @@ class LanguageModel(nn.Module):
             char_indices = [self.dictionary.get_idx_for_item(char) for char in string]
             sequences_as_char_indices.append(char_indices)
 
-        batch = torch.LongTensor(sequences_as_char_indices, device=flair.device).transpose(0, 1)
+        batch = torch.LongTensor(sequences_as_char_indices).transpose(0, 1)
+        batch = batch.to(flair.device)
 
         hidden = self.init_hidden(len(strings))
         prediction, rnn_output, hidden = self.forward(batch, hidden)

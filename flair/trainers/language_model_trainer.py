@@ -90,7 +90,8 @@ class TextCorpus(object):
         if forward:
             # charsplit file content
             with open(path, 'r', encoding="utf-8") as f:
-                ids = torch.zeros(tokens, dtype=torch.long, device=flair.device)
+                ids = torch.zeros(tokens, dtype=torch.long)
+                ids = ids.to(flair.device)
                 token = 0
                 for line in f:
                     if random_case_flip:
@@ -108,7 +109,8 @@ class TextCorpus(object):
         else:
             # charsplit file content
             with open(path, 'r', encoding="utf-8") as f:
-                ids = torch.zeros(tokens, dtype=torch.long, device=flair.device)
+                ids = torch.zeros(tokens, dtype=torch.long)
+                ids = ids.to(flair.device)
                 token = tokens - 1
                 for line in f:
                     if random_case_flip:
@@ -149,7 +151,8 @@ class TextCorpus(object):
 
         # Tokenize file content
         with open(path, 'r') as f:
-            ids = torch.zeros(tokens, dtype=torch.long, device=flair.device)
+            ids = torch.zeros(tokens, dtype=torch.long)
+            ids = ids.to(flair.device)
             token = 0
             for line in f:
                 words = line.split() + ['<eos>']
@@ -386,7 +389,7 @@ class LanguageModelTrainer:
         data = data.narrow(0, 0, nbatch * batch_size)
         # Evenly divide the data across the bsz batches.
         data = data.view(batch_size, -1).t().contiguous()
-        data = data.to(device=flair.device)
+        data = data.to(flair.device)
         return data
 
     @staticmethod

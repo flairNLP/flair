@@ -384,7 +384,8 @@ class CharacterEmbeddings(TokenEmbeddings):
                 tokens_mask[i, :chars2_length[i]] = c
 
             # chars for rnn processing
-            chars = torch.LongTensor(tokens_mask, device=flair.device)
+            chars = torch.LongTensor(tokens_mask)
+            chars = chars.to(flair.device)
 
             character_embeddings = self.char_embedding(chars).transpose(0, 1)
 
@@ -394,7 +395,8 @@ class CharacterEmbeddings(TokenEmbeddings):
 
             outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(lstm_out)
             outputs = outputs.transpose(0, 1)
-            chars_embeds_temp = torch.FloatTensor(torch.zeros((outputs.size(0), outputs.size(2))), device=flair.device)
+            chars_embeds_temp = torch.FloatTensor(torch.zeros((outputs.size(0), outputs.size(2))))
+            chars_embeds_temp = chars_embeds_temp.to(flair.device)
             for i, index in enumerate(output_lengths):
                 chars_embeds_temp[i] = outputs[i, index - 1]
             character_embeddings = chars_embeds_temp.clone()
@@ -901,8 +903,10 @@ class BertEmbeddings(TokenEmbeddings):
 
         # prepare id maps for BERT model
         features = self._convert_sentences_to_features(sentences, longest_sentence_in_batch)
-        all_input_ids = torch.LongTensor([f.input_ids for f in features], device=flair.device)
-        all_input_masks = torch.LongTensor([f.input_mask for f in features], device=flair.device)
+        all_input_ids = torch.LongTensor([f.input_ids for f in features])
+        all_input_ids = all_input_ids.to(flair.device)
+        all_input_masks = torch.LongTensor([f.input_mask for f in features])
+        all_input_masks = all_input_masks.to(flair.device)
 
         # put encoded batch through BERT model to get all hidden states of all encoder layers
         if torch.cuda.is_available():
