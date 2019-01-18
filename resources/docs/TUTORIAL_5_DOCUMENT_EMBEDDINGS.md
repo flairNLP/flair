@@ -32,17 +32,17 @@ So, if you want to create a document embedding using GloVe embeddings together w
 use the following code:
 
 ```python
-from flair.embeddings import WordEmbeddings, CharLMEmbeddings, DocumentPoolEmbeddings, Sentence
+from flair.embeddings import WordEmbeddings, FlairEmbeddings, DocumentPoolEmbeddings, Sentence
 
 # initialize the word embeddings
 glove_embedding = WordEmbeddings('glove')
-charlm_embedding_forward = CharLMEmbeddings('news-forward')
-charlm_embedding_backward = CharLMEmbeddings('news-backward')
+flair_embedding_forward = FlairEmbeddings('news-forward')
+flair_embedding_backward = FlairEmbeddings('news-backward')
 
-# initialize the document embeddings
+# initialize the document embeddings, mode = mean
 document_embeddings = DocumentPoolEmbeddings([glove_embedding,
-                                              charlm_embedding_backward,
-                                              charlm_embedding_forward])
+                                              flair_embedding_backward,
+                                              flair_embedding_forward])
 ```
 
 Now, create an example sentence and call the embedding's `embed()` method.
@@ -66,8 +66,8 @@ Next to the `mean` pooling operation you can also use `min` or `max` pooling. Si
 to use to the initialization of the `DocumentPoolEmbeddings`:
 ```python
 document_embeddings = DocumentPoolEmbeddings([glove_embedding,
-                                              charlm_embedding_backward,
-                                              charlm_embedding_forward],
+                                             flair_embedding_backward,
+                                             flair_embedding_backward],
                                              mode='min')
 ```
 
