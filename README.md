@@ -118,8 +118,9 @@ The tutorials explain how the base NLP classes work, how you can load pre-traine
 text, how you embed your text with different word or document embeddings, and how you can train your own 
 language models, sequence labeling models, and text classification models. Let us know if anything is unclear.
 
-Here also a link to a useful article: 
+There are also good third-party articles and posts that illustrate how to use Flair: 
 * [How to build a text classifier with Flair](https://towardsdatascience.com/text-classification-with-state-of-the-art-nlp-library-flair-b541d7add21f)
+* [How to build a microservice with Flair and Flask](https://shekhargulati.com/2019/01/04/building-a-sentiment-analysis-python-microservice-with-flair-and-flask/)
 
 
 ## Citing Flair
