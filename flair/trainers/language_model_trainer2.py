@@ -42,7 +42,7 @@ class TextDataset(Dataset):
         return self.charsplit(self.files[index], self.expand_vocab, self.forward,self.split_on_char, self.random_case_flip)
     
     def charsplit(self, path: Path, expand_vocab=False, forward=True, split_on_char=True, random_case_flip=True) -> torch.LongTensor:
-        print ("Splitting",path)
+        start_time = time.time()
         """Tokenizes a text file on character basis."""
         assert path.exists()
 
@@ -98,6 +98,7 @@ class TextDataset(Dataset):
                         if token >= tokens: break
                         ids[token] = self.dictionary.get_idx_for_item(char)
                         token -= 1
+        #log.info("Time to load %s:%d" % ( str(path),time.time() - start_time))
         return ids
 
     @staticmethod
@@ -137,7 +138,6 @@ class TextDataset(Dataset):
     
 class TextCorpus2(object):
     def __init__(self, path: Path, dictionary: Dictionary, forward: bool = True, character_level: bool = True, random_case_flip : bool = True):
-
         self.dictionary: Dictionary = dictionary
         self.forward                = forward
         self.split_on_char          = character_level
@@ -165,8 +165,8 @@ class LanguageModelTrainer2:
         self.test_mode: bool = test_mode
 
         self.loss_function = torch.nn.CrossEntropyLoss()
-        self.log_interval = 10
-        self.num_workers = 2
+        self.log_interval = 100
+        self.num_workers = 4
         self.epoch = epoch
         self.split = split
         self.loss = loss
@@ -220,18 +220,17 @@ class LanguageModelTrainer2:
             train_data = None
             training_generator = DataLoader(self.corpus.train,shuffle=False,num_workers=self.num_workers)
             
-            for epoch in range(self.epoch, max_epochs+1):
-                epoch_start_time = time.time()
+            for epoch in range(self.epoch, max_epochs):
+                epoch_start_time = time.time()                
                 # Shuffle training files randomly after serially iterating through corpus one
                 if epoch > 0:
                     training_generator = DataLoader(self.corpus.train,shuffle=True,num_workers=self.num_workers)
 
                 # iterate through training data, starting at self.split (for checkpointing)
                 for curr_split, train_slice in enumerate(training_generator, self.split):
-
+                    split_start_time = time.time()
                     # off by one for printing                    
                     curr_split += 1
-                    split_start_time = time.time()
                     train_data = self._batchify(train_slice.flatten(), mini_batch_size)
 
                     log.info('Split %d' % curr_split + '\t - ({:%H:%M:%S})'.format(datetime.datetime.now()))
@@ -242,19 +241,21 @@ class LanguageModelTrainer2:
                     # go into train mode
                     self.model.train()
 
-                    total_loss = 0
-                    start_time = time.time()                    
                     # reset variables 
                     hidden = self.model.init_hidden(mini_batch_size)
 
                     # not really sure what this does
                     ntokens = len(self.corpus.dictionary)
-                    
+
+                    total_loss = 0
+                    start_time = time.time()                    
+
                     for batch, i in enumerate(range(0, train_data.size(0) - 1, sequence_length)):
-
-
                         data, targets = self._get_batch(train_data, i, sequence_length)
 
+                        if not data.is_cuda:
+                            print("data isn't on CUDA!")
+                            raise Exception("data isnt on cuda")
                         # Starting each batch, we detach the hidden state from how it was previously produced.
                         # If we didn't, the model would try backpropagating all the way to start of the dataset.
                         hidden = self._repackage_hidden(hidden)
@@ -265,9 +266,11 @@ class LanguageModelTrainer2:
                         # do the forward pass in the model
                         output, rnn_output, hidden = self.model.forward(data, hidden)
 
+
                         # try to predict the targets
                         loss = self.loss_function(output.view(-1, ntokens), targets)
                         loss.backward()
+
 
                         # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
                         torch.nn.utils.clip_grad_norm_(self.model.parameters(), clip)
@@ -287,7 +290,6 @@ class LanguageModelTrainer2:
                             total_loss = 0
                             start_time = time.time()
 
-                    log.info('training done! \t({:%H:%M:%S})'.format(datetime.datetime.now()))
                     log.info("Seconds to train:%d" % (time.time() - split_start_time))
                     
                     ###############################################################################
@@ -302,11 +304,11 @@ class LanguageModelTrainer2:
                     if checkpoint:
                         self.model.save_checkpoint(base_path / 'checkpoint.pt', optimizer, epoch, curr_split, best_val_loss)
 
-                        # Save the model if the validation loss is the best we've seen so far.
-                        if val_loss < best_val_loss:
-                            self.model.best_score = best_val_loss
-                            self.model.save(savefile)
-                            best_val_loss = val_loss
+                    # Save the model if the validation loss is the best we've seen so far.
+                    if val_loss < best_val_loss:
+                        self.model.best_score = best_val_loss
+                        self.model.save(savefile)
+                        best_val_loss = val_loss
 
                     ###############################################################################
                     # print info
@@ -316,8 +318,8 @@ class LanguageModelTrainer2:
                     summary = '| end of split {:3d} /{:3d} | epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | ' \
                               'valid ppl {:8.2f} | learning rate {:3.4f}'.format(curr_split,
                                                                                  number_of_splits,
-                                                                                 epoch,
-                                                                                 (time.time() - epoch_start_time),
+                                                                                 epoch+1,
+                                                                                 (time.time() - split_start_time),
                                                                                  val_loss,
                                                                                  math.exp(val_loss),
                                                                                  learning_rate)
@@ -327,6 +329,8 @@ class LanguageModelTrainer2:
 
                     log.info(summary)
                     log.info('-' * 89)
+
+                log.info("Epoch time: %.2f" % (time.time() - epoch_start_time))
 
         except KeyboardInterrupt:
             log.info('-' * 89)
@@ -379,7 +383,6 @@ class LanguageModelTrainer2:
         seq_len = min(sequence_length, len(source) - 1 - i)
         data = Variable(source[i:i + seq_len])
         target = Variable(source[i + 1:i + 1 + seq_len].view(-1))
-
         if torch.cuda.is_available():
             data = data.cuda()
             target = target.cuda()
