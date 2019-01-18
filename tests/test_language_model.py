@@ -15,9 +15,9 @@ def test_train_resume_language_model_training(resources_path, results_base_path,
                                 character_level=True)
 
     assert (corpus.test is not None)
-    assert (corpus.train_files is not None)
+    assert (corpus.train is not None)
     assert (corpus.valid is not None)
-    assert (len(corpus.train_files) == 2)
+    assert (len(corpus.train) == 2)
 
 
 def test_generate_text_with_small_temperatures():

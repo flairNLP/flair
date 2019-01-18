@@ -4,6 +4,9 @@ import logging
 from pathlib import Path
 from typing import Union
 
+from torch import cuda
+from torch.utils.data import Dataset, DataLoader
+from torch.autograd import Variable
 from torch.optim.sgd import SGD
 
 import flair
@@ -12,65 +15,38 @@ from flair.models import LanguageModel
 from flair.optim import *
 from flair.training_utils import add_file_handler
 
-
 log = logging.getLogger('flair')
 
+class TextDataset(Dataset):
+    def __init__(self,path : Path, dictionary: Dictionary, expand_vocab=False, forward=True, split_on_char=True, random_case_flip=True):
 
-class TextCorpus(object):
-    def __init__(self, path: Path, dictionary: Dictionary, forward: bool = True, character_level: bool = True, random_case_flip : bool = True):
-
-        self.forward = forward
-        self.split_on_char = character_level
+        assert path.exists()
+        
+        self.files            = None
+        self.path             = path
+        self.dictionary       = dictionary
+        self.split_on_char    = split_on_char
+        self.forward          = forward
         self.random_case_flip = random_case_flip
-        self.train_path = path / 'train'
+        self.expand_vocab     = expand_vocab
 
-        self.train_files = sorted(
-            [f for f in self.train_path.iterdir() if f.exists()])
+        
+        if path.is_dir():
+            self.files = sorted([f for f in path.iterdir() if f.exists()])
+        else:
+            self.files = [path]
+        
+    def __len__(self):
+        return len(self.files)
 
-        self.dictionary: Dictionary = dictionary
-
-        self.current_train_file_index = len(self.train_files)
-
-        self.valid = self.charsplit(path / 'valid.txt',
-                                    forward=forward,
-                                    split_on_char=self.split_on_char,
-                                    random_case_flip=self.random_case_flip)
-
-        self.test = self.charsplit(path / 'test.txt',
-                                   forward=forward,
-                                   split_on_char=self.split_on_char,
-                                   random_case_flip=self.random_case_flip)
-
-    @property
-    def is_last_slice(self) -> bool:
-        if self.current_train_file_index >= len(self.train_files) - 1:
-            return True
-        return False
-
-    def get_next_train_slice(self):
-
-        self.current_train_file_index += 1
-
-        if self.current_train_file_index >= len(self.train_files):
-            self.current_train_file_index = 0
-            random.shuffle(self.train_files)
-
-        current_train_file = self.train_files[self.current_train_file_index]
-
-        train_slice = self.charsplit(current_train_file,
-                                     expand_vocab=False,
-                                     forward=self.forward,
-                                     split_on_char=self.split_on_char,
-                                     random_case_flip=self.random_case_flip)
-
-        return train_slice
-
-    def charsplit(self, path: Path, expand_vocab=False, forward=True, split_on_char=True, random_case_flip=True) -> torch.tensor:
-
+    def __getitem__(self,index=0) -> torch.LongTensor:
+        return self.charsplit(self.files[index], self.expand_vocab, self.forward,self.split_on_char, self.random_case_flip)
+    
+    def charsplit(self, path: Path, expand_vocab=False, forward=True, split_on_char=True, random_case_flip=True) -> torch.LongTensor:
+        start_time = time.time()
         """Tokenizes a text file on character basis."""
         assert path.exists()
 
-        #
         with open(path, 'r', encoding="utf-8") as f:
             tokens = 0
             for line in f:
@@ -101,7 +77,7 @@ class TextCorpus(object):
                         chars = list(line)
                     else:
                         chars = line.split()
-
+                        
                     for char in chars:
                         if token >= tokens: break
                         ids[token] = self.dictionary.get_idx_for_item(char)
@@ -125,7 +101,7 @@ class TextCorpus(object):
                         if token >= tokens: break
                         ids[token] = self.dictionary.get_idx_for_item(char)
                         token -= 1
-
+        #log.info("Time to load %s:%d" % ( str(path),time.time() - start_time))
         return ids
 
     @staticmethod
@@ -161,8 +137,21 @@ class TextCorpus(object):
                     token += 1
 
         return ids
+        
+    
+class TextCorpus(object):
+    def __init__(self, path: Path, dictionary: Dictionary, forward: bool = True, character_level: bool = True, random_case_flip : bool = True):
+        self.dictionary: Dictionary = dictionary
+        self.forward                = forward
+        self.split_on_char          = character_level
+        self.random_case_flip       = random_case_flip
+        
+        self.train = TextDataset(path / 'train',dictionary, True,self.forward,self.split_on_char,self.random_case_flip)
 
-
+        # TextDataset returns a list. valid and test are only one file, so return the first elemetn
+        self.valid = TextDataset(path / 'valid.txt',dictionary, False,self.forward,self.split_on_char,self.random_case_flip)[0]
+        self.test  = TextDataset(path / 'test.txt',dictionary,False,self.forward,self.split_on_char,self.random_case_flip)[0]
+    
 class LanguageModelTrainer:
 
     def __init__(self,
@@ -182,6 +171,7 @@ class LanguageModelTrainer:
 
         self.loss_function = torch.nn.CrossEntropyLoss()
         self.log_interval = 100
+        self.num_workers = 4
         self.epoch = epoch
         self.split = split
         self.loss = loss
@@ -205,9 +195,9 @@ class LanguageModelTrainer:
 
         add_file_handler(log, base_path / 'training.log')
 
-        number_of_splits: int = len(self.corpus.train_files)
+        number_of_splits: int = len(self.corpus.train)
 
-        # an epoch has a number, so calculate total max splits bby multiplying max_epochs with number_of_splits
+        # an epoch has a number, so calculate total max splits by multiplying max_epochs with number_of_splits
         max_splits: int = number_of_splits * max_epochs
 
         val_data = self._batchify(self.corpus.valid, mini_batch_size)
@@ -217,7 +207,6 @@ class LanguageModelTrainer:
         savefile = base_path / 'best-lm.pt'
 
         try:
-
             epoch = self.epoch
             best_val_loss = self.loss
             optimizer = self.optimizer(self.model.parameters(), lr=learning_rate, **kwargs)
@@ -234,117 +223,121 @@ class LanguageModelTrainer:
                                                                  patience=patience)
 
             train_data = None
-            for split in range(1 + self.split, max_splits + 1):
+            training_generator = DataLoader(self.corpus.train,shuffle=False,num_workers=self.num_workers)
+            
+            for epoch in range(self.epoch, max_epochs):
+                epoch_start_time = time.time()                
+                # Shuffle training files randomly after serially iterating through corpus one
+                if epoch > 0:
+                    training_generator = DataLoader(self.corpus.train,shuffle=True,num_workers=self.num_workers)
 
-                # after pass over all splits, increment epoch count
-                if (split - 1) % number_of_splits == 0:
-                    epoch += 1
+                # iterate through training data, starting at self.split (for checkpointing)
+                for curr_split, train_slice in enumerate(training_generator, self.split):
+                    split_start_time = time.time()
+                    # off by one for printing                    
+                    curr_split += 1
+                    train_data = self._batchify(train_slice.flatten(), mini_batch_size)
 
-                log.info('Split %d' % split + '\t - ({:%H:%M:%S})'.format(datetime.datetime.now()))
+                    log.info('Split %d' % curr_split + '\t - ({:%H:%M:%S})'.format(datetime.datetime.now()))
 
-                for group in optimizer.param_groups:
-                    learning_rate = group['lr']
+                    for group in optimizer.param_groups:
+                        learning_rate = group['lr']
 
-                if train_data is None or len(self.corpus.train_files) > 1:
-                    train_slice = self.corpus.get_next_train_slice()
-                    train_data = self._batchify(train_slice, mini_batch_size)
+                    # go into train mode
+                    self.model.train()
 
-                log.info('\t({:%H:%M:%S})'.format(datetime.datetime.now()))
+                    # reset variables 
+                    hidden = self.model.init_hidden(mini_batch_size)
 
-                # go into train mode
-                self.model.train()
+                    # not really sure what this does
+                    ntokens = len(self.corpus.dictionary)
 
-                # reset variables
-                epoch_start_time = time.time()
-                total_loss = 0
-                start_time = time.time()
+                    total_loss = 0
+                    start_time = time.time()                    
 
-                hidden = self.model.init_hidden(mini_batch_size)
+                    for batch, i in enumerate(range(0, train_data.size(0) - 1, sequence_length)):
+                        data, targets = self._get_batch(train_data, i, sequence_length)
 
-                # not really sure what this does
-                ntokens = len(self.corpus.dictionary)
+                        if not data.is_cuda and cuda.is_available():
+                            log.info("Batch %d is not on CUDA, training will be very slow" % (batch))
+                            raise Exception("data isnt on cuda")
+                        
 
-                # do batches
-                for batch, i in enumerate(range(0, train_data.size(0) - 1, sequence_length)):
+                        # Starting each batch, we detach the hidden state from how it was previously produced.
+                        # If we didn't, the model would try backpropagating all the way to start of the dataset.
+                        hidden = self._repackage_hidden(hidden)
 
-                    data, targets = self._get_batch(train_data, i, sequence_length)
+                        self.model.zero_grad()
+                        optimizer.zero_grad()
 
-                    # Starting each batch, we detach the hidden state from how it was previously produced.
-                    # If we didn't, the model would try backpropagating all the way to start of the dataset.
-                    hidden = self._repackage_hidden(hidden)
+                        # do the forward pass in the model
+                        output, rnn_output, hidden = self.model.forward(data, hidden)
 
-                    self.model.zero_grad()
-                    optimizer.zero_grad()
 
-                    # do the forward pass in the model
-                    output, rnn_output, hidden = self.model.forward(data, hidden)
+                        # try to predict the targets
+                        loss = self.loss_function(output.view(-1, ntokens), targets)
+                        loss.backward()
 
-                    # try to predict the targets
-                    loss = self.loss_function(output.view(-1, ntokens), targets)
-                    loss.backward()
 
-                    # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), clip)
+                        # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
+                        torch.nn.utils.clip_grad_norm_(self.model.parameters(), clip)
 
-                    optimizer.step()
+                        optimizer.step()
 
-                    total_loss += loss.data
+                        total_loss += loss.data
 
-                    if batch % self.log_interval == 0 and batch > 0:
-                        cur_loss = total_loss.item() / self.log_interval
-                        elapsed = time.time() - start_time
-                        log.info('| split {:3d} /{:3d} | {:5d}/{:5d} batches | ms/batch {:5.2f} | '
-                              'loss {:5.2f} | ppl {:8.2f}'.format(
-                            split, number_of_splits, batch, len(train_data) // sequence_length,
-                                                            elapsed * 1000 / self.log_interval, cur_loss,
-                            math.exp(cur_loss)))
-                        total_loss = 0
-                        start_time = time.time()
+                        if batch % self.log_interval == 0 and batch > 0:
+                            cur_loss = total_loss.item() / self.log_interval
+                            elapsed = time.time() - start_time
+                            log.info('| split {:3d} /{:3d} | {:5d}/{:5d} batches | ms/batch {:5.2f} | '
+                                     'loss {:5.2f} | ppl {:8.2f}'.format(
+                                    curr_split, number_of_splits, batch, len(train_data) // sequence_length,
+                                    elapsed * 1000 / self.log_interval, cur_loss,
+                                    math.exp(cur_loss)))
+                            total_loss = 0
+                            start_time = time.time()
 
-                log.info('training done! \t({:%H:%M:%S})'.format(datetime.datetime.now()))
+                    log.info("Seconds to train:%d" % (time.time() - split_start_time))
+                    
+                    ###############################################################################
+                    self.model.eval()
+                    val_loss = self.evaluate(val_data, mini_batch_size, sequence_length)
+                    scheduler.step(val_loss)
 
-                ###############################################################################
-                # TEST
-                ###############################################################################
-                self.model.eval()
-                val_loss = self.evaluate(val_data, mini_batch_size, sequence_length)
-                scheduler.step(val_loss)
+                    log.info('best loss so far {:5.2f}'.format(best_val_loss))
 
-                log.info('best loss so far {:5.2f}'.format(best_val_loss))
+                    log.info(self.model.generate_text())
 
-                log.info(self.model.generate_text())
+                    if checkpoint:
+                        self.model.save_checkpoint(base_path / 'checkpoint.pt', optimizer, epoch, curr_split, best_val_loss)
 
-                if checkpoint:
-                    self.model.save_checkpoint(base_path / 'checkpoint.pt', optimizer, epoch, split, best_val_loss)
+                    # Save the model if the validation loss is the best we've seen so far.
+                    if val_loss < best_val_loss:
+                        self.model.best_score = best_val_loss
+                        self.model.save(savefile)
+                        best_val_loss = val_loss
 
-                # Save the model if the validation loss is the best we've seen so far.
-                if val_loss < best_val_loss:
-                    self.model.best_score = best_val_loss
-                    self.model.save(savefile)
-                    best_val_loss = val_loss
+                    ###############################################################################
+                    # print info
+                    ###############################################################################
+                    log.info('-' * 89)
+                    
+                    summary = '| end of split {:3d} /{:3d} | epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | ' \
+                              'valid ppl {:8.2f} | learning rate {:3.4f}'.format(curr_split,
+                                                                                 number_of_splits,
+                                                                                 epoch+1,
+                                                                                 (time.time() - split_start_time),
+                                                                                 val_loss,
+                                                                                 math.exp(val_loss),
+                                                                                 learning_rate)
 
-                ###############################################################################
-                # print info
-                ###############################################################################
-                log.info('-' * 89)
+                    with open(loss_txt, "a") as myfile:
+                        myfile.write('%s\n' % summary)
 
-                local_split_number = split % number_of_splits
-                if local_split_number == 0: local_split_number = number_of_splits
+                    log.info(summary)
+                    log.info('-' * 89)
 
-                summary = '| end of split {:3d} /{:3d} | epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | ' \
-                          'valid ppl {:8.2f} | learning rate {:3.4f}'.format(local_split_number,
-                                                                             number_of_splits,
-                                                                             epoch,
-                                                                             (time.time() - epoch_start_time),
-                                                                             val_loss,
-                                                                             math.exp(val_loss),
-                                                                             learning_rate)
-
-                with open(loss_txt, "a") as myfile:
-                    myfile.write('%s\n' % summary)
-
-                log.info(summary)
-                log.info('-' * 89)
+                log.info("Epoch time: %.2f" % (time.time() - epoch_start_time))
 
         except KeyboardInterrupt:
             log.info('-' * 89)
@@ -415,3 +408,6 @@ class LanguageModelTrainer:
         return LanguageModelTrainer(checkpoint['model'], corpus, optimizer, epoch=checkpoint['epoch'],
                                     split=checkpoint['split'], loss=checkpoint['loss'],
                                     optimizer_state=checkpoint['optimizer_state_dict'])
+    
+
+    
