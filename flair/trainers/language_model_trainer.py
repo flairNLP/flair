@@ -67,7 +67,6 @@ class TextDataset(Dataset):
             # charsplit file content
             with open(path, 'r', encoding="utf-8") as f:
                 ids = torch.zeros(tokens, dtype=torch.long)
-                ids = ids.to(flair.device)
                 token = 0
                 for line in f:
                     if random_case_flip:
@@ -86,7 +85,6 @@ class TextDataset(Dataset):
             # charsplit file content
             with open(path, 'r', encoding="utf-8") as f:
                 ids = torch.zeros(tokens, dtype=torch.long)
-                ids = ids.to(flair.device)
                 token = tokens - 1
                 for line in f:
                     if random_case_flip:
@@ -153,7 +151,6 @@ class TextCorpus(object):
         self.test  = TextDataset(path / 'test.txt',dictionary,False,self.forward,self.split_on_char,self.random_case_flip)[0]
     
 class LanguageModelTrainer:
-
     def __init__(self,
                  model: LanguageModel,
                  corpus: TextCorpus,
@@ -199,6 +196,7 @@ class LanguageModelTrainer:
 
         # an epoch has a number, so calculate total max splits by multiplying max_epochs with number_of_splits
         max_splits: int = number_of_splits * max_epochs
+
 
         val_data = self._batchify(self.corpus.valid, mini_batch_size)
 
@@ -297,10 +295,11 @@ class LanguageModelTrainer:
                             total_loss = 0
                             start_time = time.time()
 
-                    log.info("Seconds to train:%d" % (time.time() - split_start_time))
+                    log.info("%d seconds for train split %d" % (time.time() - split_start_time, curr_split))
                     
                     ###############################################################################
                     self.model.eval()
+
                     val_loss = self.evaluate(val_data, mini_batch_size, sequence_length)
                     scheduler.step(val_loss)
 
