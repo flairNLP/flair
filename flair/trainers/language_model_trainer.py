@@ -144,7 +144,7 @@ class TextCorpus(object):
         self.split_on_char          = character_level
         self.random_case_flip       = random_case_flip
         
-        self.train = TextDataset(path / 'train',dictionary, True,self.forward,self.split_on_char,self.random_case_flip)
+        self.train = TextDataset(path / 'train',dictionary, False,self.forward,self.split_on_char,self.random_case_flip)
 
         # TextDataset returns a list. valid and test are only one file, so return the first elemetn
         self.valid = TextDataset(path / 'valid.txt',dictionary, False,self.forward,self.split_on_char,self.random_case_flip)[0]
