@@ -86,6 +86,7 @@ class NLPTask(Enum):
     CONLL_12 = 'conll_12'
     PENN = 'penn'
     ONTONOTES = 'ontonotes'
+    NER_BASQUE = 'eiec'
 
     # text classification format
     IMDB = 'imdb'
@@ -190,6 +191,11 @@ class NLPTaskDataFetcher:
         # for text classifiers, we use our own special format
         if task == NLPTask.IMDB.value or task == NLPTask.AG_NEWS.value:
             return NLPTaskDataFetcher.load_classification_corpus(data_folder)
+
+        # NER corpus for Basque
+        if task == NLPTask.NER_BASQUE.value:
+            columns = {0: 'text', 1: 'ner'}
+            return NLPTaskDataFetcher.load_column_corpus(data_folder, columns, tag_to_biloes='ner')
 
     @staticmethod
     def load_column_corpus(
@@ -539,6 +545,20 @@ class NLPTaskDataFetcher:
                                'rb') as f_in:
                     with open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'test.txt', 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
+
+        if task == NLPTask.NER_BASQUE:
+            ner_basque_path = 'http://ixa2.si.ehu.eus/eiec/'
+            data_path = Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value
+            data_file = data_path / 'named_ent_eu.train'
+            if not data_file.is_file():
+                cached_path(f'{ner_basque_path}/eiec_v1.0.tgz', Path('datasets') / task.value)
+                import tarfile, shutil
+                with tarfile.open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'eiec_v1.0.tgz',
+                                  'r:gz') as f_in:
+                    corpus_files = ('eiec_v1.0/named_ent_eu.train', 'eiec_v1.0/named_ent_eu.test')
+                    for corpus_file in corpus_files:
+                        f_in.extract(corpus_file, data_path)
+                        shutil.move(f'{data_path}/{corpus_file}', data_path)
 
         if task == NLPTask.WNUT_17:
             wnut_path = 'https://noisy-text.github.io/2017/files/'
