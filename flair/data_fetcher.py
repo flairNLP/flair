@@ -370,7 +370,13 @@ class NLPTaskDataFetcher:
 
         sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(train_file)
         sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(test_file)
-        sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(dev_file)
+
+        if dev_file is not None:
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(dev_file)
+        else:
+            sentences_dev: List[Sentence] = [sentences_train[i] for i in
+                                             NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)]
+            sentences_train = [x for x in sentences_train if x not in sentences_dev]
 
         return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
@@ -559,6 +565,29 @@ class NLPTaskDataFetcher:
                     for corpus_file in corpus_files:
                         f_in.extract(corpus_file, data_path)
                         shutil.move(f'{data_path}/{corpus_file}', data_path)
+
+        if task == NLPTask.IMDB:
+            imdb_acl_path = 'http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz'
+            data_path = Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value
+            data_file = data_path / 'train.txt'
+            if not data_file.is_file():
+                cached_path(imdb_acl_path, Path('datasets') / task.value)
+                import tarfile
+                with tarfile.open(Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value / 'aclImdb_v1.tar.gz',
+                                  'r:gz') as f_in:
+                    datasets = ['train', 'test']
+                    labels = ['pos', 'neg']
+
+                    for label in labels:
+                        for dataset in datasets:
+                            f_in.extractall(data_path, members=[m for m in f_in.getmembers()
+                                                                if f'{dataset}/{label}' in m.name])
+                            with open(f'{data_path}/{dataset}.txt', 'at') as f_p:
+                                current_path = data_path / 'aclImdb' / dataset / label
+                                for file_name in current_path.iterdir():
+                                    if file_name.is_file() and file_name.name.endswith('.txt'):
+                                        f_p.write(f'__label__{label} '
+                                                  + file_name.open('rt', encoding='utf-8').read() + '\n')
 
         if task == NLPTask.WNUT_17:
             wnut_path = 'https://noisy-text.github.io/2017/files/'
