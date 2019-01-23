@@ -80,7 +80,7 @@ class Metric(object):
 
     def macro_avg_f_score(self):
         class_precisions = [self.precision(class_name) for class_name in self.get_classes()]
-        class_recalls = [self.precision(class_name) for class_name in self.get_classes()]
+        class_recalls = [self.recall(class_name) for class_name in self.get_classes()]
 
         if len(class_precisions) > 0 and len(class_recalls) > 0:
             macro_precision = sum(class_precisions) / len(class_precisions)
