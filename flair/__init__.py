@@ -10,6 +10,7 @@ import logging.config
 
 logging.config.dictConfig({
     'version': 1,
+    'disable_existing_loggers': False,
     'formatters': {
         'standard': {
             'format': '%(asctime)-15s %(message)s'
