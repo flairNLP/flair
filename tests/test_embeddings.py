@@ -1,8 +1,7 @@
 import pytest
-import os
 
-from flair.embeddings import WordEmbeddings, TokenEmbeddings, CharLMEmbeddings, StackedEmbeddings, \
-    DocumentLSTMEmbeddings, DocumentMeanEmbeddings, DocumentPoolEmbeddings
+from flair.embeddings import WordEmbeddings, TokenEmbeddings, StackedEmbeddings, DocumentLSTMEmbeddings, \
+    DocumentPoolEmbeddings, FlairEmbeddings
 
 from flair.data import Sentence
 
@@ -84,7 +83,7 @@ def test_loading_not_existing_embedding():
 
 def test_loading_not_existing_char_lm_embedding():
     with pytest.raises(ValueError):
-        CharLMEmbeddings('other')
+        FlairEmbeddings('other')
 
 
 @pytest.mark.integration
@@ -158,7 +157,7 @@ def init_document_embeddings():
     sentence: Sentence = Sentence(text)
 
     glove: TokenEmbeddings = WordEmbeddings('en-glove')
-    charlm: TokenEmbeddings = CharLMEmbeddings('news-forward-fast')
+    charlm: TokenEmbeddings = FlairEmbeddings('news-forward-fast')
 
     return sentence, glove, charlm
 
@@ -180,7 +179,7 @@ def load_and_apply_word_embeddings(emb_type: str):
 def load_and_apply_char_lm_embeddings(emb_type: str):
     text = 'I love Berlin.'
     sentence: Sentence = Sentence(text)
-    embeddings: TokenEmbeddings = CharLMEmbeddings(emb_type)
+    embeddings: TokenEmbeddings = FlairEmbeddings(emb_type)
     embeddings.embed(sentence)
 
     for token in sentence.tokens:
