@@ -389,8 +389,7 @@ class CharacterEmbeddings(TokenEmbeddings):
             chars = torch.LongTensor(tokens_mask)
             chars = chars.to(flair.device)
 
-            character_embeddings = self.char_embedding(chars)
-            character_embeddings = character_embeddings.transpose(0, 1)
+            character_embeddings = self.char_embedding(chars).transpose(0, 1)
 
             packed = torch.nn.utils.rnn.pack_padded_sequence(character_embeddings, chars2_length)
 
