@@ -17,7 +17,6 @@ from .nn import LockedDropout, WordDropout
 from .data import Dictionary, Token, Sentence
 from .file_utils import cached_path
 
-
 log = logging.getLogger('flair')
 
 
@@ -329,13 +328,14 @@ class ELMoEmbeddings(TokenEmbeddings):
     def __str__(self):
         return self.name
 
+
 class CharacterEmbeddings(TokenEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
 
     def __init__(self, path_to_char_dict: str = None):
         """Uses the default character dictionary if none provided."""
 
-        super(CharacterEmbeddings, self).__init__()
+        super().__init__()
         self.name = 'Char'
         self.static_embeddings = False
 
@@ -352,6 +352,8 @@ class CharacterEmbeddings(TokenEmbeddings):
                                       bidirectional=True)
 
         self.__embedding_length = self.char_embedding_dim * 2
+
+        self.to(flair.device)
 
     @property
     def embedding_length(self) -> int:
@@ -909,8 +911,7 @@ class BertEmbeddings(TokenEmbeddings):
         all_input_masks = all_input_masks.to(flair.device)
 
         # put encoded batch through BERT model to get all hidden states of all encoder layers
-        if torch.cuda.is_available():
-            self.model.cuda()
+        self.model.to(flair.device)
         self.model.eval()
         all_encoder_layers, _ = self.model(all_input_ids, token_type_ids=None, attention_mask=all_input_masks)
 
