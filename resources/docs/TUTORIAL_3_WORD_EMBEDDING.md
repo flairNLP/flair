@@ -151,7 +151,7 @@ embedding.embed(sentence)
 ## Stacked Embeddings
 
 Stacked embeddings are one of the most important concepts of this library. You can use them to combine different
-embeddings together, for instance if you want to use both traditional embeddings together with contextual sting
+embeddings together, for instance if you want to use both traditional embeddings together with contextual string
 embeddings (see next chapter).
 Stacked embeddings allow you to mix and match. We find that a combination of embeddings often gives best results. 
 
