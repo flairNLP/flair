@@ -16,7 +16,7 @@ setup(
         'gensim>=3.4.0',
         'tqdm>=4.26.0',
         'segtok>=1.5.7',
-        'matplotlib>=3.0.0',
+        'matplotlib>=2.2.3',
         'mpld3>=0.3',
         'sklearn',
         'sqlitedict>=1.6.0',
