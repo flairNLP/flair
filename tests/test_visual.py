@@ -4,7 +4,7 @@ import pytest
 
 from flair.visual import *
 from flair.data import Sentence
-from flair.embeddings import CharLMEmbeddings, StackedEmbeddings
+from flair.embeddings import FlairEmbeddings, StackedEmbeddings
 import numpy
 
 from flair.visual.manifold import Visualizer, tSNE
@@ -19,8 +19,8 @@ def test_visualize_word_emeddings(resources_path):
 
     sentences = [Sentence(x) for x in sentences]
 
-    charlm_embedding_forward = CharLMEmbeddings('news-forward')
-    charlm_embedding_backward = CharLMEmbeddings('news-backward')
+    charlm_embedding_forward = FlairEmbeddings('news-forward')
+    charlm_embedding_backward = FlairEmbeddings('news-backward')
 
     embeddings = StackedEmbeddings([charlm_embedding_backward, charlm_embedding_forward])
 
@@ -39,7 +39,7 @@ def test_visualize_word_emeddings(resources_path):
 
     sentences = [Sentence(x) for x in sentences]
 
-    charlm_embedding_forward = CharLMEmbeddings('news-forward')
+    charlm_embedding_forward = FlairEmbeddings('news-forward')
 
     visualizer = Visualizer()
     visualizer.visualize_char_emeddings(charlm_embedding_forward, sentences, str(resources_path / 'visual/sentence_embeddings.html'))
@@ -56,13 +56,13 @@ def test_visualize(resources_path):
 
     sentences = [Sentence(x) for x in sentences]
 
-    embeddings = CharLMEmbeddings('news-forward')
+    embeddings = FlairEmbeddings('news-forward')
 
     visualizer = Visualizer()
 
     X_forward = visualizer.prepare_char_embeddings(embeddings, sentences)
 
-    embeddings = CharLMEmbeddings('news-backward')
+    embeddings = FlairEmbeddings('news-backward')
 
     X_backward = visualizer.prepare_char_embeddings(embeddings, sentences)
 
@@ -83,7 +83,7 @@ def test_highlighter(resources_path):
     with (resources_path / 'visual/snippet.txt').open() as f:
         sentences = [x for x in f.read().split('\n') if x]
 
-    embeddings = CharLMEmbeddings('news-forward')
+    embeddings = FlairEmbeddings('news-forward')
 
     features = embeddings.lm.get_representation(sentences[0]).squeeze()
 
