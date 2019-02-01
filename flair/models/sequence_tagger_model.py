@@ -80,6 +80,7 @@ class SequenceTagger(flair.nn.Model):
                  dropout: float = 0.0,
                  word_dropout: float = 0.05,
                  locked_dropout: float = 0.5,
+                 pickle_module: str = 'pickle'
                  ):
 
         super(SequenceTagger, self).__init__()
@@ -106,6 +107,8 @@ class SequenceTagger(flair.nn.Model):
         self.use_dropout: float = dropout
         self.use_word_dropout: float = word_dropout
         self.use_locked_dropout: float = locked_dropout
+
+        self.pickle_module = pickle_module
 
         if dropout > 0.0:
             self.dropout = torch.nn.Dropout(dropout)
@@ -151,6 +154,21 @@ class SequenceTagger(flair.nn.Model):
 
         self.to(flair.device)
 
+    @staticmethod
+    def save_torch_model(model_state: dict, model_file: str, pickle_module: str = 'pickle', pickle_protocol: int = 4):
+        if pickle_module == 'dill':
+            try:
+                import dill
+                torch.save(model_state, str(model_file), pickle_module=dill)
+            except:
+                log.warning('-' * 100)
+                log.warning('ATTENTION! The library "dill" is not installed!')
+                log.warning('Please first install "dill" with "pip install dill" to save the model!')
+                log.warning('-' * 100)
+                pass
+        else:
+            torch.save(model_state, str(model_file), pickle_protocol=pickle_protocol)
+
     def save(self, model_file: Union[str, Path]):
         model_state = {
             'state_dict': self.state_dict(),
@@ -165,7 +183,7 @@ class SequenceTagger(flair.nn.Model):
             'use_locked_dropout': self.use_locked_dropout,
         }
 
-        torch.save(model_state, str(model_file), pickle_protocol=4)
+        self.save_torch_model(model_state, str(model_file), self.pickle_module)
 
     def save_checkpoint(self, model_file: Union[str, Path], optimizer_state: dict, scheduler_state: dict, epoch: int,
                         loss: float):
@@ -186,7 +204,7 @@ class SequenceTagger(flair.nn.Model):
             'loss': loss
         }
 
-        torch.save(model_state, str(model_file), pickle_protocol=4)
+        self.save_torch_model(model_state, str(model_file), self.pickle_module)
 
     @classmethod
     def load_from_file(cls, model_file: Union[str, Path]):
@@ -569,9 +587,9 @@ class SequenceTagger(flair.nn.Model):
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
         if model.lower() == 'ner':
-            base_path = '/'.join([aws_resource_path,
-                                  'NER-conll03--h256-l1-b32-%2Bglove%2Bnews-forward%2Bnews-backward--v0.2',
-                                  'en-ner-conll03-v0.2.pt'])
+            base_path = '/'.join([aws_resource_path_v04,
+                                  'NER-conll03-english',
+                                  'en-ner-conll03-v0.4.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
         elif model.lower() == 'ner-fast':
