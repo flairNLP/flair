@@ -1190,7 +1190,7 @@ class CharLMEmbeddings(TokenEmbeddings):
                 append_padded_sentence(padded)
 
         # get hidden states from language model
-        all_hidden_states_in_lm = self.lm.get_representation(sentences_padded, self.detach)
+        all_hidden_states_in_lm = self.lm.get_representation(sentences_padded)
 
         # take first or last hidden states from language model as word representation
         for i, sentence in enumerate(sentences):
