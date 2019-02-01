@@ -425,11 +425,11 @@ class ModelTrainer:
 
                 predictions_for_batch = [[label.value for label in sent_labels] for sent_labels in labels]
                 true_values_for_batch = [sentence.get_label_names() for sentence in batch]
-                label_dictionary = model.label_dictionary.get_items()
+                available_labels = model.label_dictionary.get_items()
 
                 for predictions_for_sentence, true_values_for_sentence in zip(predictions_for_batch, true_values_for_batch):
                     ModelTrainer._evaluate_sentence_for_text_classification(metric,
-                                                                            label_dictionary,
+                                                                            available_labels,
                                                                             predictions_for_sentence,
                                                                             true_values_for_sentence)
 
@@ -440,11 +440,11 @@ class ModelTrainer:
 
     @staticmethod
     def _evaluate_sentence_for_text_classification(metric: Metric,
-                                                   label_dict: List[str],
+                                                   available_labels: List[str],
                                                    predictions: List[str],
                                                    true_values: List[str]):
 
-        for label in label_dict:
+        for label in available_labels:
             if label in predictions and label in true_values:
                 metric.add_tp(label)
             elif label in predictions and label not in true_values:
