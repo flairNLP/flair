@@ -637,6 +637,10 @@ class FlairEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
+        # make compatible with serialized models
+        if 'chars_per_chunk' not in self.__dict__:
+            self.chars_per_chunk = 512
+
         # if cache is used, try setting embeddings from cache first
         if 'cache' in self.__dict__ and self.cache is not None:
 
