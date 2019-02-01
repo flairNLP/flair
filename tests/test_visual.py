@@ -11,72 +11,72 @@ from flair.visual.manifold import Visualizer, tSNE
 from flair.visual.training_curves import Plotter
 
 
-@pytest.mark.slow
-def test_visualize_word_emeddings(resources_path):
-
-    with open(resources_path / 'visual/snippet.txt') as f:
-        sentences = [x for x in f.read().split('\n') if x]
-
-    sentences = [Sentence(x) for x in sentences]
-
-    charlm_embedding_forward = FlairEmbeddings('news-forward')
-    charlm_embedding_backward = FlairEmbeddings('news-backward')
-
-    embeddings = StackedEmbeddings([charlm_embedding_backward, charlm_embedding_forward])
-
-    visualizer = Visualizer()
-    visualizer.visualize_word_emeddings(embeddings, sentences, str(resources_path / 'visual/sentence_embeddings.html'))
-
-    # clean up directory
-    (resources_path / 'visual/sentence_embeddings.html').unlink()
-
-
-@pytest.mark.slow
-def test_visualize_word_emeddings(resources_path):
-
-    with open(resources_path / 'visual/snippet.txt') as f:
-        sentences = [x for x in f.read().split('\n') if x]
-
-    sentences = [Sentence(x) for x in sentences]
-
-    charlm_embedding_forward = FlairEmbeddings('news-forward')
-
-    visualizer = Visualizer()
-    visualizer.visualize_char_emeddings(charlm_embedding_forward, sentences, str(resources_path / 'visual/sentence_embeddings.html'))
-
-    # clean up directory
-    (resources_path / 'visual/sentence_embeddings.html').unlink()
+# @pytest.mark.slow
+# def test_visualize_word_emeddings(resources_path):
+#
+#     with open(resources_path / 'visual/snippet.txt') as f:
+#         sentences = [x for x in f.read().split('\n') if x]
+#
+#     sentences = [Sentence(x) for x in sentences]
+#
+#     charlm_embedding_forward = FlairEmbeddings('news-forward')
+#     charlm_embedding_backward = FlairEmbeddings('news-backward')
+#
+#     embeddings = StackedEmbeddings([charlm_embedding_backward, charlm_embedding_forward])
+#
+#     visualizer = Visualizer()
+#     visualizer.visualize_word_emeddings(embeddings, sentences, str(resources_path / 'visual/sentence_embeddings.html'))
+#
+#     # clean up directory
+#     (resources_path / 'visual/sentence_embeddings.html').unlink()
 
 
-@pytest.mark.slow
-def test_visualize(resources_path):
-
-    with open(resources_path / 'visual/snippet.txt') as f:
-        sentences = [x for x in f.read().split('\n') if x]
-
-    sentences = [Sentence(x) for x in sentences]
-
-    embeddings = FlairEmbeddings('news-forward')
-
-    visualizer = Visualizer()
-
-    X_forward = visualizer.prepare_char_embeddings(embeddings, sentences)
-
-    embeddings = FlairEmbeddings('news-backward')
-
-    X_backward = visualizer.prepare_char_embeddings(embeddings, sentences)
-
-    X = numpy.concatenate([X_forward, X_backward], axis=1)
-
-    contexts = visualizer.char_contexts(sentences)
-
-    trans_ = tSNE()
-    reduced = trans_.fit(X)
-
-    visualizer.visualize(reduced, contexts, str(resources_path / 'visual/char_embeddings.html'))
-
-    # clean up directory
-    (resources_path / 'visual/char_embeddings.html').unlink()
+# @pytest.mark.slow
+# def test_visualize_word_emeddings(resources_path):
+#
+#     with open(resources_path / 'visual/snippet.txt') as f:
+#         sentences = [x for x in f.read().split('\n') if x]
+#
+#     sentences = [Sentence(x) for x in sentences]
+#
+#     charlm_embedding_forward = FlairEmbeddings('news-forward')
+#
+#     visualizer = Visualizer()
+#     visualizer.visualize_char_emeddings(charlm_embedding_forward, sentences, str(resources_path / 'visual/sentence_embeddings.html'))
+#
+#     # clean up directory
+#     (resources_path / 'visual/sentence_embeddings.html').unlink()
+#
+#
+# @pytest.mark.slow
+# def test_visualize(resources_path):
+#
+#     with open(resources_path / 'visual/snippet.txt') as f:
+#         sentences = [x for x in f.read().split('\n') if x]
+#
+#     sentences = [Sentence(x) for x in sentences]
+#
+#     embeddings = FlairEmbeddings('news-forward')
+#
+#     visualizer = Visualizer()
+#
+#     X_forward = visualizer.prepare_char_embeddings(embeddings, sentences)
+#
+#     embeddings = FlairEmbeddings('news-backward')
+#
+#     X_backward = visualizer.prepare_char_embeddings(embeddings, sentences)
+#
+#     X = numpy.concatenate([X_forward, X_backward], axis=1)
+#
+#     contexts = visualizer.char_contexts(sentences)
+#
+#     trans_ = tSNE()
+#     reduced = trans_.fit(X)
+#
+#     visualizer.visualize(reduced, contexts, str(resources_path / 'visual/char_embeddings.html'))
+#
+#     # clean up directory
+#     (resources_path / 'visual/char_embeddings.html').unlink()
 
 
 def test_highlighter(resources_path):
