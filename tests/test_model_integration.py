@@ -7,7 +7,7 @@ from torch.optim.adam import Adam
 
 from flair.data import Dictionary, Sentence
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
-from flair.embeddings import WordEmbeddings, CharLMEmbeddings, DocumentLSTMEmbeddings, TokenEmbeddings
+from flair.embeddings import WordEmbeddings, DocumentLSTMEmbeddings, TokenEmbeddings
 from flair.models import SequenceTagger, TextClassifier, LanguageModel
 from flair.trainers import ModelTrainer
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
