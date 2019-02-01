@@ -427,8 +427,7 @@ class ModelTrainer:
                 true_values_for_batch = [sentence.get_label_names() for sentence in batch]
                 available_labels = model.label_dictionary.get_items()
 
-                for predictions_for_sentence, true_values_for_sentence in zip(predictions_for_batch,
-                                                                              true_values_for_batch):
+                for predictions_for_sentence, true_values_for_sentence in zip(predictions_for_batch, true_values_for_batch):
                     ModelTrainer._evaluate_sentence_for_text_classification(metric,
                                                                             available_labels,
                                                                             predictions_for_sentence,
@@ -437,6 +436,7 @@ class ModelTrainer:
             eval_loss /= len(sentences)
 
             return metric, eval_loss
+
 
     @staticmethod
     def _evaluate_sentence_for_text_classification(metric: Metric,
@@ -453,6 +453,7 @@ class ModelTrainer:
                 metric.add_fn(label)
             elif label not in predictions and label not in true_values:
                 metric.add_tn(label)
+
 
     @staticmethod
     def load_from_checkpoint(checkpoint_file: Path, model_type: str, corpus: Corpus, optimizer: Optimizer = SGD):

@@ -221,6 +221,7 @@ class LanguageModelTrainer:
         # an epoch has a number, so calculate total max splits by multiplying max_epochs with number_of_splits
         max_splits: int = number_of_splits * max_epochs
 
+
         val_data = self._batchify(self.corpus.valid, mini_batch_size)
 
         base_path.mkdir(parents=True, exist_ok=True)

@@ -175,7 +175,7 @@ TaggedCorpus: 12543 train + 2002 dev + 2077 test sentences
 TaggedCorpus: 1255 train + 201 dev + 208 test sentences
 ```
 
-For many learning task you need to create a target dictionary. Thus, the `TaggedCorpus` enables you to create your
+For many learning tasks you need to create a target dictionary. Thus, the `TaggedCorpus` enables you to create your
 tag or label dictionary, depending on the task you want to learn. Simple execute the following code snippet to do so:
 
 ```python
