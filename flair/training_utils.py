@@ -36,17 +36,17 @@ class Metric(object):
             return sum([self._tps[class_name] for class_name in self.get_classes()])
         return self._tps[class_name]
 
-    def get_tn(self, class_name=None):
+    def get_tn(self, class_name):
         if class_name is None:
             return sum([self._tns[class_name] for class_name in self.get_classes()])
         return self._tns[class_name]
 
-    def get_fp(self, class_name=None):
+    def get_fp(self, class_name):
         if class_name is None:
             return sum([self._fps[class_name] for class_name in self.get_classes()])
         return self._fps[class_name]
 
-    def get_fn(self, class_name=None):
+    def get_fn(self, class_name):
         if class_name is None:
             return sum([self._fns[class_name] for class_name in self.get_classes()])
         return self._fns[class_name]

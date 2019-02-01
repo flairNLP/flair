@@ -423,37 +423,23 @@ class ModelTrainer:
 
                 eval_loss += loss
 
-                predictions_for_batch = [[label.value for label in sent_labels] for sent_labels in labels]
-                true_values_for_batch = [sentence.get_label_names() for sentence in batch]
-                available_labels = model.label_dictionary.get_items()
+                for predictions, true_values in zip([[label.value for label in sent_labels] for sent_labels in labels],
+                                                    [sentence.get_label_names() for sentence in batch]):
+                    for prediction in predictions:
+                        if prediction in true_values:
+                            metric.add_tp(prediction)
+                        else:
+                            metric.add_fp(prediction)
 
-                for predictions_for_sentence, true_values_for_sentence in zip(predictions_for_batch, true_values_for_batch):
-                    ModelTrainer._evaluate_sentence_for_text_classification(metric,
-                                                                            available_labels,
-                                                                            predictions_for_sentence,
-                                                                            true_values_for_sentence)
+                    for true_value in true_values:
+                        if true_value not in predictions:
+                            metric.add_fn(true_value)
+                        else:
+                            metric.add_tn(true_value)
 
             eval_loss /= len(sentences)
 
             return metric, eval_loss
-
-
-    @staticmethod
-    def _evaluate_sentence_for_text_classification(metric: Metric,
-                                                   available_labels: List[str],
-                                                   predictions: List[str],
-                                                   true_values: List[str]):
-
-        for label in available_labels:
-            if label in predictions and label in true_values:
-                metric.add_tp(label)
-            elif label in predictions and label not in true_values:
-                metric.add_fp(label)
-            elif label not in predictions and label in true_values:
-                metric.add_fn(label)
-            elif label not in predictions and label not in true_values:
-                metric.add_tn(label)
-
 
     @staticmethod
     def load_from_checkpoint(checkpoint_file: Path, model_type: str, corpus: Corpus, optimizer: Optimizer = SGD):
