@@ -7,6 +7,7 @@ from . import trainers
 
 import logging.config
 
+__version__ = "0.4.1"
 
 logging.config.dictConfig({
     'version': 1,
