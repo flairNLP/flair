@@ -89,22 +89,41 @@ class LanguageModel(nn.Module):
         return (weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
                 weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach())
 
-    def get_representation(self, strings: List[str], detach_from_lm=True):
+    def get_representation(self, strings: List[str], chunk_size: int = 512):
 
-        sequences_as_char_indices: List[List[int]] = []
-        for string in strings:
-            char_indices = [self.dictionary.get_idx_for_item(char) for char in string]
-            sequences_as_char_indices.append(char_indices)
+        # cut up the input into chunks of max charlength = chunk_size
+        longest = len(strings[0])
+        chunks = []
+        splice_begin = 0
+        for splice_end in range(chunk_size, longest, chunk_size):
+            chunks.append([text[splice_begin:splice_end] for text in strings])
+            splice_begin = splice_end
 
-        batch = torch.LongTensor(sequences_as_char_indices).transpose(0, 1)
-        batch = batch.to(flair.device)
+        chunks.append([text[splice_begin:longest] for text in strings])
+        hidden = self.init_hidden(len(chunks[0]))
 
-        hidden = self.init_hidden(len(strings))
-        prediction, rnn_output, hidden = self.forward(batch, hidden)
+        output_parts = []
 
-        if detach_from_lm: rnn_output = self.repackage_hidden(rnn_output)
+        # push each chunk through the RNN language model
+        for chunk in chunks:
 
-        return rnn_output
+            sequences_as_char_indices: List[List[int]] = []
+            for string in chunk:
+                char_indices = [self.dictionary.get_idx_for_item(char) for char in string]
+                sequences_as_char_indices.append(char_indices)
+
+            batch = torch.LongTensor(sequences_as_char_indices).transpose(0, 1)
+            batch = batch.to(flair.device)
+
+            prediction, rnn_output, hidden = self.forward(batch, hidden)
+            rnn_output = rnn_output.detach()
+
+            output_parts.append(rnn_output)
+
+        # concatenage all chunks to make final output
+        output = torch.cat(output_parts)
+
+        return output
 
     def get_output(self, text: str):
         char_indices = [self.dictionary.get_idx_for_item(char) for char in text]
