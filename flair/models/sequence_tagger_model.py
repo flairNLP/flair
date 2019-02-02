@@ -587,9 +587,9 @@ class SequenceTagger(flair.nn.Model):
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
         if model.lower() == 'ner':
-            base_path = '/'.join([aws_resource_path,
-                                  'NER-conll03--h256-l1-b32-%2Bglove%2Bnews-forward%2Bnews-backward--v0.2',
-                                  'en-ner-conll03-v0.2.pt'])
+            base_path = '/'.join([aws_resource_path_v04,
+                                  'NER-conll03-english',
+                                  'en-ner-conll03-v0.4.pt'])
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
         elif model.lower() == 'ner-fast':

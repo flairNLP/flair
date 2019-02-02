@@ -7,7 +7,7 @@ from torch.optim.adam import Adam
 
 from flair.data import Dictionary, Sentence
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
-from flair.embeddings import WordEmbeddings, CharLMEmbeddings, DocumentLSTMEmbeddings, TokenEmbeddings
+from flair.embeddings import WordEmbeddings, DocumentLSTMEmbeddings, TokenEmbeddings, FlairEmbeddings
 from flair.models import SequenceTagger, TextClassifier, LanguageModel
 from flair.trainers import ModelTrainer
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
@@ -87,7 +87,7 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
-    embeddings = CharLMEmbeddings('news-forward-fast')
+    embeddings = FlairEmbeddings('news-forward-fast')
 
     tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                             embeddings=embeddings,
@@ -123,7 +123,7 @@ def test_train_charlm_changed_chache_load_use_tagger(results_base_path, tasks_ba
     # make a temporary cache directory that we remove afterwards
     cache_dir = results_base_path / 'cache'
     os.makedirs(cache_dir, exist_ok=True)
-    embeddings = CharLMEmbeddings('news-forward-fast', cache_directory=cache_dir)
+    embeddings = FlairEmbeddings('news-forward-fast', cache_directory=cache_dir)
 
     tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                             embeddings=embeddings,
@@ -159,7 +159,7 @@ def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_pat
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
-    embeddings = CharLMEmbeddings('news-forward-fast', use_cache=False)
+    embeddings = FlairEmbeddings('news-forward-fast', use_cache=False)
 
     tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                             embeddings=embeddings,
@@ -347,7 +347,7 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
-    glove_embedding: TokenEmbeddings = CharLMEmbeddings('news-forward-fast')
+    glove_embedding: TokenEmbeddings = FlairEmbeddings('news-forward-fast')
     document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove_embedding], 128, 1, False, 64, False,
                                                                          False)
 
@@ -383,7 +383,7 @@ def test_train_charlm_nocache_load_use_classifier(results_base_path, tasks_base_
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
-    glove_embedding: TokenEmbeddings = CharLMEmbeddings('news-forward-fast', use_cache=False)
+    glove_embedding: TokenEmbeddings = FlairEmbeddings('news-forward-fast', use_cache=False)
     document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove_embedding], 128, 1, False, 64,
                                                                          False,
                                                                          False)
@@ -433,7 +433,7 @@ def test_train_language_model(results_base_path, resources_path):
     trainer.train(results_base_path, sequence_length=10, mini_batch_size=10, max_epochs=2)
 
     # use the character LM as embeddings to embed the example sentence 'I love Berlin'
-    char_lm_embeddings = CharLMEmbeddings(str(results_base_path / 'best-lm.pt'))
+    char_lm_embeddings = FlairEmbeddings(str(results_base_path / 'best-lm.pt'))
     sentence = Sentence('I love Berlin')
     char_lm_embeddings.embed(sentence)
 
@@ -482,7 +482,7 @@ def test_train_resume_text_classification_training(results_base_path, tasks_base
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
-    embeddings: TokenEmbeddings = CharLMEmbeddings('news-forward-fast', use_cache=False)
+    embeddings: TokenEmbeddings = FlairEmbeddings('news-forward-fast', use_cache=False)
     document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([embeddings], 128, 1, False)
 
     model = TextClassifier(document_embeddings, label_dict, False)

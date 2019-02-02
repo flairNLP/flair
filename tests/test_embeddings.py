@@ -6,71 +6,71 @@ from flair.embeddings import WordEmbeddings, TokenEmbeddings, StackedEmbeddings,
 from flair.data import Sentence
 
 
-@pytest.mark.slow
-def test_glove():
-    load_and_apply_word_embeddings('glove')
-
-
-@pytest.mark.slow
-def test_extvec():
-    load_and_apply_word_embeddings('extvec')
-
-
-@pytest.mark.slow
-def test_crawl():
-    load_and_apply_word_embeddings('crawl')
-
-
-@pytest.mark.slow
-def test_news():
-    load_and_apply_word_embeddings('news')
-
-
-@pytest.mark.slow
-def test_fr():
-    load_and_apply_word_embeddings('fr')
-
-
-@pytest.mark.slow
-def test_it():
-    load_and_apply_word_embeddings('it')
-
-@pytest.mark.slow
-def test_it():
-    load_and_apply_word_embeddings('it-wiki')
-
-@pytest.mark.slow
-def test_it():
-    load_and_apply_word_embeddings('it-crawl')
-
-@pytest.mark.slow
-def test_news_forward():
-    load_and_apply_char_lm_embeddings('news-forward')
-
-
-@pytest.mark.slow
-def test_news_backward():
-    load_and_apply_char_lm_embeddings('news-backward')
-
-
-@pytest.mark.slow
-def test_mix_forward():
-    load_and_apply_char_lm_embeddings('mix-forward')
-
-
-@pytest.mark.slow
-def test_mix_backward():
-    load_and_apply_char_lm_embeddings('mix-backward')
-
-
-@pytest.mark.slow
-def test_german_forward():
-    load_and_apply_char_lm_embeddings('german-forward')
-
-
-@pytest.mark.slow
-def test_german_backward():
-    load_and_apply_char_lm_embeddings('german-backward')
+# @pytest.mark.slow
+# def test_glove():
+#     load_and_apply_word_embeddings('glove')
+#
+#
+# @pytest.mark.slow
+# def test_extvec():
+#     load_and_apply_word_embeddings('extvec')
+#
+#
+# @pytest.mark.slow
+# def test_crawl():
+#     load_and_apply_word_embeddings('crawl')
+#
+#
+# @pytest.mark.slow
+# def test_news():
+#     load_and_apply_word_embeddings('news')
+#
+#
+# @pytest.mark.slow
+# def test_fr():
+#     load_and_apply_word_embeddings('fr')
+#
+#
+# @pytest.mark.slow
+# def test_it():
+#     load_and_apply_word_embeddings('it')
+#
+# @pytest.mark.slow
+# def test_it():
+#     load_and_apply_word_embeddings('it-wiki')
+#
+# @pytest.mark.slow
+# def test_it():
+#     load_and_apply_word_embeddings('it-crawl')
+#
+# @pytest.mark.slow
+# def test_news_forward():
+#     load_and_apply_char_lm_embeddings('news-forward')
+#
+#
+# @pytest.mark.slow
+# def test_news_backward():
+#     load_and_apply_char_lm_embeddings('news-backward')
+#
+#
+# @pytest.mark.slow
+# def test_mix_forward():
+#     load_and_apply_char_lm_embeddings('mix-forward')
+#
+#
+# @pytest.mark.slow
+# def test_mix_backward():
+#     load_and_apply_char_lm_embeddings('mix-backward')
+#
+#
+# @pytest.mark.slow
+# def test_german_forward():
+#     load_and_apply_char_lm_embeddings('german-forward')
+#
+#
+# @pytest.mark.slow
+# def test_german_backward():
+#     load_and_apply_char_lm_embeddings('german-backward')
 
 
 def test_loading_not_existing_embedding():

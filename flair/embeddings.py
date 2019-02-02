@@ -485,18 +485,18 @@ class CharacterEmbeddings(TokenEmbeddings):
 class FlairEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
-    def __init__(self, model: str, detach: bool = True, use_cache: bool = False, cache_directory: Path = None):
+    def __init__(self, model: str, use_cache: bool = False, cache_directory: Path = None, chars_per_chunk: int = 512):
         """
         initializes contextual string embeddings using a character-level language model.
         :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
                 'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward'
                 depending on which character language model is desired.
-        :param detach: if set to False, the gradient will propagate into the language model. this dramatically slows down
-                training and often leads to worse results, so not recommended.
         :param use_cache: if set to False, will not write embeddings to file for later retrieval. this saves disk space but will
                 not allow re-use of once computed embeddings that do not fit into memory
         :param cache_directory: if cache_directory is not set, the cache will be written to ~/.flair/embeddings. otherwise the cache
                 is written to the provided directory.
+        :param  chars_per_chunk: max number of chars per rnn pass to control speed/memory tradeoff. Higher means faster but requires
+                more memory. Lower means slower but less memory.
         """
         super().__init__()
 
@@ -664,13 +664,13 @@ class FlairEmbeddings(TokenEmbeddings):
             raise ValueError(f'The given model "{model}" is not available or is not a valid path.')
 
         self.name = str(model)
-        self.static_embeddings = detach
+        self.static_embeddings = True
 
         from flair.models import LanguageModel
         self.lm = LanguageModel.load_language_model(model)
-        self.detach = detach
 
         self.is_forward_lm: bool = self.lm.is_forward_lm
+        self.chars_per_chunk: int = chars_per_chunk
 
         # initialize cache if use_cache set
         self.cache = None
@@ -706,6 +706,10 @@ class FlairEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        # make compatible with serialized models
+        if 'chars_per_chunk' not in self.__dict__:
+            self.chars_per_chunk = 512
 
         # if cache is used, try setting embeddings from cache first
         if 'cache' in self.__dict__ and self.cache is not None:
@@ -751,7 +755,7 @@ class FlairEmbeddings(TokenEmbeddings):
                     append_padded_sentence(padded)
 
             # get hidden states from language model
-            all_hidden_states_in_lm = self.lm.get_representation(sentences_padded, self.detach)
+            all_hidden_states_in_lm = self.lm.get_representation(sentences_padded, self.chars_per_chunk)
 
             # take first or last hidden states from language model as word representation
             for i, sentence in enumerate(sentences):
@@ -778,7 +782,9 @@ class FlairEmbeddings(TokenEmbeddings):
 
                     offset_backward -= len(token.text)
 
-                    token.set_embedding(self.name, embedding)
+                    token.set_embedding(self.name, embedding.clone().detach())
+
+            all_hidden_states_in_lm = None
 
         if 'cache' in self.__dict__ and self.cache is not None:
             for sentence in sentences:
@@ -1258,7 +1264,7 @@ class CharLMEmbeddings(TokenEmbeddings):
                 append_padded_sentence(padded)
 
         # get hidden states from language model
-        all_hidden_states_in_lm = self.lm.get_representation(sentences_padded, self.detach)
+        all_hidden_states_in_lm = self.lm.get_representation(sentences_padded)
 
         # take first or last hidden states from language model as word representation
         for i, sentence in enumerate(sentences):
@@ -1344,7 +1350,7 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
 
                 mean_embedding = torch.mean(word_embeddings, 0)
 
-                sentence.set_embedding(self.name, mean_embedding.unsqueeze(0))
+                sentence.set_embedding(self.name, mean_embedding)
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
