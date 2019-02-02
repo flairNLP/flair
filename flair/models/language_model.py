@@ -89,13 +89,13 @@ class LanguageModel(nn.Module):
         return (weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
                 weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach())
 
-    def get_representation(self, strings: List[str], chunk_size: int = 512):
+    def get_representation(self, strings: List[str], chars_per_chunk: int = 512):
 
         # cut up the input into chunks of max charlength = chunk_size
         longest = len(strings[0])
         chunks = []
         splice_begin = 0
-        for splice_end in range(chunk_size, longest, chunk_size):
+        for splice_end in range(chars_per_chunk, longest, chars_per_chunk):
             chunks.append([text[splice_begin:splice_end] for text in strings])
             splice_begin = splice_end
 
@@ -120,7 +120,7 @@ class LanguageModel(nn.Module):
 
             output_parts.append(rnn_output)
 
-        # concatenage all chunks to make final output
+        # concatenate all chunks to make final output
         output = torch.cat(output_parts)
 
         return output
