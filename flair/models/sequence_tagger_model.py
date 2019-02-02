@@ -429,10 +429,11 @@ class SequenceTagger(flair.nn.Model):
             for sentence_feats, sentence_tags, sentence_length in zip(features, tags, lengths):
                 sentence_feats = sentence_feats[:sentence_length]
 
-                tag_tensor = torch.LongTensor(sentence_tags)
-                tag_tensor = tag_tensor.to(flair.device)
+                # print(sentence_tags)
+                # tag_tensor = torch.LongTensor(sentence_tags)
+                # tag_tensor = tag_tensor.to(flair.device)
 
-                score += torch.nn.functional.cross_entropy(sentence_feats, tag_tensor)
+                score += torch.nn.functional.cross_entropy(sentence_feats, sentence_tags)
 
             return score
 
