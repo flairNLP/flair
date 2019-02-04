@@ -368,8 +368,8 @@ class ModelTrainer:
                         token.add_tag_label('predicted', tag)
 
                         # append both to file for evaluation
-                        eval_line = '{} {} {}\n'.format(token.text,
-                                                        token.get_tag(model.tag_type).value, tag.value)
+                        eval_line = '{} {} {} {}\n'.format(token.text,
+                                                           token.get_tag(model.tag_type).value, tag.value, tag.score)
                         lines.append(eval_line)
                     lines.append('\n')
                 for sentence in batch:
