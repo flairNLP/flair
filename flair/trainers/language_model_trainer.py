@@ -6,7 +6,6 @@ from typing import Union
 
 from torch import cuda
 from torch.utils.data import Dataset, DataLoader
-from torch.autograd import Variable
 from torch.optim.sgd import SGD
 
 import flair

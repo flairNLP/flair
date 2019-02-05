@@ -2,9 +2,9 @@ import warnings
 import logging
 from pathlib import Path
 
-import torch.autograd as autograd
 import torch.nn
 from torch.optim import Optimizer
+import torch.nn.functional as F
 
 import flair.nn
 import torch
@@ -431,8 +431,6 @@ class SequenceTagger(flair.nn.Model):
             if self.use_crf:
                 confidences, tag_seq = self._viterbi_decode(feats[:length])
             else:
-                import torch.nn.functional as F
-
                 tag_seq = []
                 confidences = []
                 for backscore in feats[:length]:
@@ -455,14 +453,11 @@ class SequenceTagger(flair.nn.Model):
         init_vvars[0][self.tag_dictionary.get_idx_for_item(START_TAG)] = 0
         forward_var = init_vvars
 
-        import torch.nn.functional as F
+
         for feat in feats:
             next_tag_var = forward_var.view(1, -1).expand(self.tagset_size, self.tagset_size) + self.transitions
             _, bptrs_t = torch.max(next_tag_var, dim=1)
-            bptrs_t = bptrs_t.squeeze().detach().cpu().numpy()
-            next_tag_var = next_tag_var.detach().cpu().numpy()
             viterbivars_t = next_tag_var[range(len(bptrs_t)), bptrs_t]
-            viterbivars_t = torch.FloatTensor(viterbivars_t).to(flair.device)
             forward_var = viterbivars_t + feat
             backscores.append(forward_var)
             backpointers.append(bptrs_t)
