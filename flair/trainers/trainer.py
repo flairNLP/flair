@@ -334,7 +334,8 @@ class ModelTrainer:
                  out_path: Path = None) -> (
             dict, float):
         if isinstance(model, TextClassifier):
-            return ModelTrainer._evaluate_text_classifier(model, data_set, eval_mini_batch_size, embeddings_in_memory)
+            return ModelTrainer._evaluate_text_classifier(model, data_set, eval_mini_batch_size, embeddings_in_memory,
+                                                          out_path)
         elif isinstance(model, SequenceTagger):
             return ModelTrainer._evaluate_sequence_tagger(model, data_set, eval_mini_batch_size, embeddings_in_memory,
                                                           out_path)
@@ -405,7 +406,8 @@ class ModelTrainer:
     def _evaluate_text_classifier(model: flair.nn.Model,
                                   sentences: List[Sentence],
                                   eval_mini_batch_size: int = 32,
-                                  embeddings_in_memory: bool = False) -> (dict, float):
+                                  embeddings_in_memory: bool = False,
+                                  out_path: Path = None) -> (dict, float):
 
         with torch.no_grad():
             eval_loss = 0
@@ -415,6 +417,7 @@ class ModelTrainer:
 
             metric = Metric('Evaluation')
 
+            lines: List[str] = []
             for batch in batches:
 
                 labels, loss = model.forward_labels_and_loss(batch)
@@ -423,9 +426,16 @@ class ModelTrainer:
 
                 eval_loss += loss
 
+                sentences_for_batch = [sent.to_plain_string() for sent in batch]
+                confidences_for_batch = [[label.score for label in sent_labels] for sent_labels in labels]
                 predictions_for_batch = [[label.value for label in sent_labels] for sent_labels in labels]
                 true_values_for_batch = [sentence.get_label_names() for sentence in batch]
                 available_labels = model.label_dictionary.get_items()
+
+                for sentence, confidence, prediction, true_value in zip(sentences_for_batch, confidences_for_batch,
+                                                                        predictions_for_batch, true_values_for_batch):
+                    eval_line = '{}\t{}\t{}\t{}\n'.format(sentence, true_value, prediction, confidence)
+                    lines.append(eval_line)
 
                 for predictions_for_sentence, true_values_for_sentence in zip(predictions_for_batch, true_values_for_batch):
                     ModelTrainer._evaluate_sentence_for_text_classification(metric,
@@ -434,6 +444,10 @@ class ModelTrainer:
                                                                             true_values_for_sentence)
 
             eval_loss /= len(sentences)
+
+            if out_path is not None:
+                with open(out_path, "w", encoding='utf-8') as outfile:
+                    outfile.write(''.join(lines))
 
             return metric, eval_loss
 
