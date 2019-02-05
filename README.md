@@ -52,7 +52,7 @@ Alan Akbik, Duncan Blythe and Roland Vollgraf.
 
 ### Requirements and Installation
 
-The project is based on PyTorch 0.4+ and Python 3.6+, because methods signatures and type hints are beautiful.
+The project is based on PyTorch 0.4+ and Python 3.6+, because method signatures and type hints are beautiful.
 If you do not have Python 3.6, install it first. [Here is how for Ubuntu 16.04](https://vsupalov.com/developing-with-python3-6-on-ubuntu-16-04/).
 Then, in your favorite virtual environment, simply do:
 
@@ -115,7 +115,7 @@ We provide a set of quick tutorials to get you started with the library:
 * [Tutorial 9: Training your own Flair Embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
  
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
-text, how you embed your text with different word or document embeddings, and how you can train your own 
+text, how you can embed your text with different word or document embeddings, and how you can train your own 
 language models, sequence labeling models, and text classification models. Let us know if anything is unclear.
 
 There are also good third-party articles and posts that illustrate how to use Flair: 
@@ -184,12 +184,4 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-### Code Visualization:
-
-Here is a cool visualization of the code evolution
-
- [![Watch the video](https://img.youtube.com/vi/PsbaD9MZ4Xk/0.jpg)](https://www.youtube.com/watch?v=PsbaD9MZ4Xk)
-
- [https://www.youtube.com/watch?v=PsbaD9MZ4Xk](https://www.youtube.com/watch?v=PsbaD9MZ4Xk)
 
