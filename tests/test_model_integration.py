@@ -308,7 +308,7 @@ def test_load_use_serialized_tagger():
 @pytest.mark.integration
 def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus('imdb', base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
     glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
@@ -344,7 +344,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus('imdb', base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
     glove_embedding: TokenEmbeddings = FlairEmbeddings('news-forward-fast')
@@ -380,7 +380,7 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_train_charlm_nocache_load_use_classifier(results_base_path, tasks_base_path):
 
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus('imdb', base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
     glove_embedding: TokenEmbeddings = FlairEmbeddings('news-forward-fast', use_cache=False)
@@ -479,7 +479,7 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_resume_text_classification_training(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus('imdb', base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
     embeddings: TokenEmbeddings = FlairEmbeddings('news-forward-fast', use_cache=False)

@@ -49,7 +49,7 @@ def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_text_classifier_param_selector(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus('imdb', base_path=tasks_base_path)
 
     glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
 
