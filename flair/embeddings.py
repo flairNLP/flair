@@ -451,13 +451,13 @@ class CharacterEmbeddings(TokenEmbeddings):
                         continue
             chars2_length = [len(c) for c in tokens_sorted_by_length]
             longest_token_in_sentence = max(chars2_length)
-            tokens_mask = np.zeros((len(tokens_sorted_by_length), longest_token_in_sentence), dtype='int')
+            tokens_mask = torch.zeros((len(tokens_sorted_by_length), longest_token_in_sentence),
+                                      dtype=torch.long, device=flair.device)
             for i, c in enumerate(tokens_sorted_by_length):
                 tokens_mask[i, :chars2_length[i]] = c
 
             # chars for rnn processing
-            chars = torch.LongTensor(tokens_mask)
-            chars = chars.to(flair.device)
+            chars = tokens_mask
 
             character_embeddings = self.char_embedding(chars).transpose(0, 1)
 
@@ -467,8 +467,8 @@ class CharacterEmbeddings(TokenEmbeddings):
 
             outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(lstm_out)
             outputs = outputs.transpose(0, 1)
-            chars_embeds_temp = torch.FloatTensor(torch.zeros((outputs.size(0), outputs.size(2))))
-            chars_embeds_temp = chars_embeds_temp.to(flair.device)
+            chars_embeds_temp = torch.zeros((outputs.size(0), outputs.size(2)),
+                                            dtype=torch.float, device=flair.device)
             for i, index in enumerate(output_lengths):
                 chars_embeds_temp[i] = outputs[i, index - 1]
             character_embeddings = chars_embeds_temp.clone()
@@ -981,10 +981,8 @@ class BertEmbeddings(TokenEmbeddings):
 
         # prepare id maps for BERT model
         features = self._convert_sentences_to_features(sentences, longest_sentence_in_batch)
-        all_input_ids = torch.LongTensor([f.input_ids for f in features])
-        all_input_ids = all_input_ids.to(flair.device)
-        all_input_masks = torch.LongTensor([f.input_mask for f in features])
-        all_input_masks = all_input_masks.to(flair.device)
+        all_input_ids = torch.LongTensor([f.input_ids for f in features]).to(flair.device)
+        all_input_masks = torch.LongTensor([f.input_mask for f in features]).to(flair.device)
 
         # put encoded batch through BERT model to get all hidden states of all encoder layers
         self.model.to(flair.device)
@@ -1345,8 +1343,7 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
                     token: Token = token
                     word_embeddings.append(token.get_embedding().unsqueeze(0))
 
-                word_embeddings = torch.cat(word_embeddings, dim=0)
-                word_embeddings = word_embeddings.to(flair.device)
+                word_embeddings = torch.cat(word_embeddings, dim=0).to(flair.device)
 
                 mean_embedding = torch.mean(word_embeddings, 0)
 
@@ -1409,8 +1406,7 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
                     token: Token = token
                     word_embeddings.append(token.get_embedding().unsqueeze(0))
 
-                word_embeddings = torch.cat(word_embeddings, dim=0)
-                word_embeddings = word_embeddings.to(flair.device)
+                word_embeddings = torch.cat(word_embeddings, dim=0).to(flair.device)
 
                 if self.mode == 'mean':
                     pooled_embedding = self.pool_op(word_embeddings, 0)
@@ -1525,7 +1521,9 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
             # PADDING: pad shorter sentences out
             for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
                 word_embeddings.append(
-                    torch.FloatTensor(np.zeros(self.length_of_all_token_embeddings, dtype='float')).unsqueeze(0))
+                    torch.zeros(self.length_of_all_token_embeddings,
+                                dtype=torch.float, device=flair.device).unsqueeze(0)
+                )
 
             word_embeddings_tensor = torch.cat(word_embeddings, 0)
 
@@ -1538,7 +1536,6 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         # GET REPRESENTATION FOR ENTIRE BATCH
         # --------------------------------------------------------------------
         sentence_tensor = torch.cat(all_sentence_tensors, 1)
-        sentence_tensor = sentence_tensor.to(flair.device)
 
         # --------------------------------------------------------------------
         # FF PART
