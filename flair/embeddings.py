@@ -1522,10 +1522,10 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
             for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
                 word_embeddings.append(
                     torch.zeros(self.length_of_all_token_embeddings,
-                                dtype=torch.float, device=flair.device).unsqueeze(0)
+                                dtype=torch.float).unsqueeze(0)
                 )
 
-            word_embeddings_tensor = torch.cat(word_embeddings, 0)
+            word_embeddings_tensor = torch.cat(word_embeddings, 0).to(flair.device)
 
             sentence_states = word_embeddings_tensor
 
