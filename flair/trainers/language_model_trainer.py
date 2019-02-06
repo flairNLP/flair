@@ -189,7 +189,7 @@ class LanguageModelTrainer:
 
         self.loss_function = torch.nn.CrossEntropyLoss()
         self.log_interval = 100
-        self.num_workers = 4
+        self.num_workers = 2
         self.epoch = epoch
         self.split = split
         self.loss = loss
@@ -215,10 +215,6 @@ class LanguageModelTrainer:
         add_file_handler(log, base_path / 'training.log')
 
         number_of_splits: int = len(self.corpus.train)
-
-        # an epoch has a number, so calculate total max splits by multiplying max_epochs with number_of_splits
-        max_splits: int = number_of_splits * max_epochs
-
 
         val_data = self._batchify(self.corpus.valid, mini_batch_size)
 
@@ -287,10 +283,6 @@ class LanguageModelTrainer:
                             log.info("Batch %d is not on CUDA, training will be very slow" % (batch))
                             raise Exception("data isnt on cuda")
 
-                        # Starting each batch, we detach the hidden state from how it was previously produced.
-                        # If we didn't, the model would try backpropagating all the way to start of the dataset.
-                        hidden = self._repackage_hidden(hidden)
-
                         self.model.zero_grad()
                         optimizer.zero_grad()
 
@@ -307,6 +299,13 @@ class LanguageModelTrainer:
                         optimizer.step()
 
                         total_loss += loss.data
+
+                        # We detach the hidden state from how it was previously produced.
+                        # If we didn't, the model would try backpropagating all the way to start of the dataset.
+                        hidden = self._repackage_hidden(hidden)
+
+                        # explicitly remove loss to clear up memory
+                        del loss, output, rnn_output
 
                         if batch % self.log_interval == 0 and batch > 0:
                             cur_loss = total_loss.item() / self.log_interval

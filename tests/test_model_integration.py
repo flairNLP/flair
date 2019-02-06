@@ -278,7 +278,7 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
     # initialize trainer
     trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=optimizer)
 
-    trainer.find_learning_rate(results_base_path)
+    trainer.find_learning_rate(results_base_path, iterations=5)
 
     # clean up results directory
     shutil.rmtree(results_base_path)
