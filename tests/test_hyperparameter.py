@@ -30,7 +30,7 @@ def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
     search_space.add(Parameter.RNN_LAYERS, hp.choice, options=[1, 2])
 
     # model trainer parameter
-    search_space.add(Parameter.OPTIMIZER, hp.choice, options=[SGD, AdamW])
+    search_space.add(Parameter.OPTIMIZER, hp.choice, options=[SGD])
 
     # training parameter
     search_space.add(Parameter.MINI_BATCH_SIZE, hp.choice, options=[4, 8, 32])

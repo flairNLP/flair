@@ -1,6 +1,7 @@
 import os
 import shutil
 import pytest
+from torch.optim import SGD
 
 from torch.optim.optimizer import Optimizer
 from torch.optim.adam import Adam
@@ -272,7 +273,7 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
                                             tag_type='ner',
                                             use_crf=False)
 
-    optimizer: Optimizer = AdamW
+    optimizer: Optimizer = SGD
 
     # initialize trainer
     trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=optimizer)
