@@ -26,7 +26,7 @@ def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
     search_space.add(Parameter.DROPOUT, hp.uniform, low=0.25, high=0.75)
     search_space.add(Parameter.WORD_DROPOUT, hp.uniform, low=0.0, high=0.25)
     search_space.add(Parameter.LOCKED_DROPOUT, hp.uniform, low=0.0, high=0.5)
-    search_space.add(Parameter.HIDDEN_SIZE, hp.choice, options=[64, 128, 256, 512])
+    search_space.add(Parameter.HIDDEN_SIZE, hp.choice, options=[64, 128])
     search_space.add(Parameter.RNN_LAYERS, hp.choice, options=[1, 2])
 
     # model trainer parameter
@@ -60,7 +60,7 @@ def test_text_classifier_param_selector(results_base_path, tasks_base_path):
     search_space.add(Parameter.HIDDEN_SIZE, hp.choice, options=[64, 128, 256, 512])
     search_space.add(Parameter.RNN_LAYERS, hp.choice, options=[1, 2])
     search_space.add(Parameter.REPROJECT_WORDS, hp.choice, options=[True, False])
-    search_space.add(Parameter.REPROJECT_WORD_DIMENSION, hp.choice, options=[64, 128, 256, 512])
+    search_space.add(Parameter.REPROJECT_WORD_DIMENSION, hp.choice, options=[64, 128])
     search_space.add(Parameter.BIDIRECTIONAL, hp.choice, options=[True, False])
     search_space.add(Parameter.DROPOUT, hp.uniform, low=0.25, high=0.75)
     search_space.add(Parameter.WORD_DROPOUT, hp.uniform, low=0.25, high=0.75)

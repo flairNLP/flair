@@ -23,7 +23,7 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
 
     embeddings = WordEmbeddings('glove')
 
-    tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+    tagger: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,
                                             tag_dictionary=tag_dictionary,
                                             tag_type='ner',
@@ -56,7 +56,7 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
 
     embeddings = WordEmbeddings('glove')
 
-    tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+    tagger: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,
                                             tag_dictionary=tag_dictionary,
                                             tag_type='pos',
@@ -89,7 +89,7 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
 
     embeddings = FlairEmbeddings('news-forward-fast')
 
-    tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+    tagger: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,
                                             tag_dictionary=tag_dictionary,
                                             tag_type='ner',
@@ -125,7 +125,7 @@ def test_train_charlm_changed_chache_load_use_tagger(results_base_path, tasks_ba
     os.makedirs(cache_dir, exist_ok=True)
     embeddings = FlairEmbeddings('news-forward-fast', cache_directory=cache_dir)
 
-    tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+    tagger: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,
                                             tag_dictionary=tag_dictionary,
                                             tag_type='ner',
@@ -161,7 +161,7 @@ def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_pat
 
     embeddings = FlairEmbeddings('news-forward-fast', use_cache=False)
 
-    tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+    tagger: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,
                                             tag_dictionary=tag_dictionary,
                                             tag_type='ner',
@@ -194,7 +194,7 @@ def test_train_optimizer(results_base_path, tasks_base_path):
 
     embeddings = WordEmbeddings('glove')
 
-    tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+    tagger: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,
                                             tag_dictionary=tag_dictionary,
                                             tag_type='ner',
@@ -230,7 +230,7 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
 
     embeddings = WordEmbeddings('glove')
 
-    tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+    tagger: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,
                                             tag_dictionary=tag_dictionary,
                                             tag_type='ner',
@@ -266,7 +266,7 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
 
     embeddings = WordEmbeddings('glove')
 
-    tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+    tagger: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,
                                             tag_dictionary=tag_dictionary,
                                             tag_type='ner',
@@ -453,7 +453,7 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
 
     embeddings = WordEmbeddings('glove')
 
-    tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+    tagger: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,
                                             tag_dictionary=tag_dictionary,
                                             tag_type='ner',
@@ -504,7 +504,7 @@ def test_train_resume_sequence_tagging_training(results_base_path, tasks_base_pa
 
     embeddings = WordEmbeddings('glove')
 
-    model: SequenceTagger = SequenceTagger(hidden_size=256,
+    model: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,
                                             tag_dictionary=tag_dictionary,
                                             tag_type='ner',
