@@ -6,7 +6,6 @@ from typing import Union
 
 from torch import cuda
 from torch.utils.data import Dataset, DataLoader
-from torch.autograd import Variable
 from torch.optim.sgd import SGD
 
 import flair
@@ -136,8 +135,7 @@ class TextDataset(Dataset):
 
         # Tokenize file content
         with open(path, 'r') as f:
-            ids = torch.zeros(tokens, dtype=torch.long)
-            ids = ids.to(flair.device)
+            ids = torch.zeros(tokens, dtype=torch.long, device=flair.device)
             token = 0
             for line in f:
                 words = line.split() + ['<eos>']

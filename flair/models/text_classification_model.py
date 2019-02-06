@@ -57,7 +57,6 @@ class TextClassifier(flair.nn.Model):
 
         text_embedding_list = [sentence.get_embedding().unsqueeze(0) for sentence in sentences]
         text_embedding_tensor = torch.cat(text_embedding_list, 0)
-        text_embedding_tensor = text_embedding_tensor.to(flair.device)
 
         label_scores = self.decoder(text_embedding_tensor)
 
@@ -238,8 +237,7 @@ class TextClassifier(flair.nn.Model):
         label_list = [sentence.get_label_names() for sentence in sentences]
         one_hot = convert_labels_to_one_hot(label_list, self.label_dictionary)
         one_hot = [torch.FloatTensor(l).unsqueeze(0) for l in one_hot]
-        one_hot = torch.cat(one_hot, 0)
-        one_hot = one_hot.to(flair.device)
+        one_hot = torch.cat(one_hot, 0).to(flair.device)
         return one_hot
 
     def _labels_to_indices(self, sentences: List[Sentence]):
@@ -248,8 +246,7 @@ class TextClassifier(flair.nn.Model):
             for sentence in sentences
         ]
 
-        vec = torch.cat(indices, 0)
-        vec = vec.to(flair.device)
+        vec = torch.cat(indices, 0).to(flair.device)
 
         return vec
 
