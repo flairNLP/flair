@@ -1427,7 +1427,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
                  rnn_layers=1,
                  reproject_words: bool = True,
                  reproject_words_dimension: int = None,
-                 bidirectional: bool = False,
+                 bidirectional: bool = True,
                  dropout: float = 0.5,
                  word_dropout: float = 0.0,
                  locked_dropout: float = 0.0):
@@ -1446,19 +1446,20 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         """
         super().__init__()
 
-        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
+        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings) 
 
         self.reproject_words = reproject_words
         self.bidirectional = bidirectional
+        self.return_sequences = return_sequences
 
-        self.length_of_all_token_embeddings: int = self.embeddings.embedding_length
+        self.length_of_all_token_embeddings: int = self.embeddings.embedding_length 
 
         self.name = 'document_lstm'
         self.static_embeddings = False
 
         self.__embedding_length: int = hidden_size
         if self.bidirectional:
-            self.__embedding_length *= 4
+            self.__embedding_length *= 4 
 
         self.embeddings_dimension: int = self.length_of_all_token_embeddings
         if self.reproject_words and reproject_words_dimension is not None:
@@ -1485,19 +1486,19 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         self.to(flair.device)
 
     @property
-    def embedding_length(self) -> int:
+    def embedding_length(self) -> int:   
         return self.__embedding_length
 
-    def embed(self, sentences: Union[List[Sentence], Sentence]):
+    def embed(self, sentences: Union[List[Sentence], Sentence], return_sequences: bool = False):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
          only if embeddings are non-static."""
 
-        if type(sentences) is Sentence:
+        if type(sentences) is Sentence:   
             sentences = [sentences]
 
         self.rnn.zero_grad()
 
-        sentences.sort(key=lambda x: len(x), reverse=True)
+        sentences.sort(key=lambda x: len(x), reverse=True) 
 
         self.embeddings.embed(sentences)
 
@@ -1562,16 +1563,27 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         # --------------------------------------------------------------------
         # EXTRACT EMBEDDINGS FROM LSTM
         # --------------------------------------------------------------------
-        for sentence_no, length in enumerate(lengths):
-            last_rep = outputs[length - 1, sentence_no]
+        
+        if not return_sequences:
+            for sentence_no, length in enumerate(lengths):
+            
 
-            embedding = last_rep
-            if self.bidirectional:
-                first_rep = outputs[0, sentence_no]
-                embedding = torch.cat([first_rep, last_rep], 0)
+            
+                last_rep = outputs[length - 1, sentence_no]    
 
-            sentence = sentences[sentence_no]
-            sentence.set_embedding(self.name, embedding)
+                embedding = last_rep
+                if self.bidirectional:
+                    first_rep = outputs[0, sentence_no]
+                    embedding = torch.cat([first_rep, last_rep], 0)
+
+                sentence = sentences[sentence_no]
+                sentence.set_embedding(self.name, embedding)
+
+        else:
+            return outputs
+
+
+           
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
