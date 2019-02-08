@@ -244,8 +244,12 @@ class ModelTrainer:
                 self.model.save(base_path / 'final-model.pt')
                 log.info('Done.')
 
-        # test best model on test data
-        final_score = self.final_test(base_path, embeddings_in_memory, evaluation_metric, eval_mini_batch_size)
+        # test best model if test data is present
+        if corpus.test:
+            final_score = self.final_test(base_path, embeddings_in_memory, evaluation_metric, eval_mini_batch_size)
+        else:
+            final_score = 0
+            log.info('Test data not provided setting final score to 0')
 
         return {'test_score': final_score,
                 'dev_score_history': dev_score_history,
