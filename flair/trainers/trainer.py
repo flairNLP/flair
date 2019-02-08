@@ -245,7 +245,7 @@ class ModelTrainer:
                 log.info('Done.')
 
         # test best model if test data is present
-        if corpus.test:
+        if self.corpus.test:
             final_score = self.final_test(base_path, embeddings_in_memory, evaluation_metric, eval_mini_batch_size)
         else:
             final_score = 0
