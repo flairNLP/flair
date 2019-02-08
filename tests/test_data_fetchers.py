@@ -7,7 +7,7 @@ from flair.data_fetcher import NLPTask, NLPTaskDataFetcher
 
 def test_load_imdb_data(tasks_base_path):
     # get training, test and dev data
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus('imdb', tasks_base_path)
 
     assert len(corpus.train) == 5
     assert len(corpus.dev) == 5

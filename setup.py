@@ -16,13 +16,13 @@ setup(
         'gensim>=3.4.0',
         'tqdm>=4.26.0',
         'segtok>=1.5.7',
-        'matplotlib>=3.0.0',
+        'matplotlib>=2.2.3',
         'mpld3>=0.3',
         'sklearn',
         'sqlitedict>=1.6.0',
         'deprecated>=1.2.4',
         'hyperopt>=0.1.1',
-        'pytorch-pretrained-bert>=0.3.0'
+        'pytorch-pretrained-bert>=0.4.0'
     ],
     include_package_data=True,
     python_requires='>=3.6',

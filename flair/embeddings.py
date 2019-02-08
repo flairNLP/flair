@@ -17,7 +17,6 @@ from .nn import LockedDropout, WordDropout
 from .data import Dictionary, Token, Sentence
 from .file_utils import cached_path
 
-
 log = logging.getLogger('flair')
 
 
@@ -329,13 +328,84 @@ class ELMoEmbeddings(TokenEmbeddings):
     def __str__(self):
         return self.name
 
+
+class ELMoTransformerEmbeddings(TokenEmbeddings):
+    """Contextual word embeddings using word-level Transformer-based LM, as proposed in Peters et al., 2018."""
+
+    def __init__(self, model_file: str):
+        super().__init__()
+
+        try:
+            from allennlp.modules.token_embedders.bidirectional_language_model_token_embedder import \
+                BidirectionalLanguageModelTokenEmbedder
+            from allennlp.data.token_indexers.elmo_indexer import ELMoTokenCharactersIndexer
+        except:
+            log.warning('-' * 100)
+            log.warning('ATTENTION! The library "allennlp" is not installed!')
+            log.warning('To use ELMoTransformerEmbeddings, please first install a recent version from https://github.com/allenai/allennlp')
+            log.warning('-' * 100)
+            pass
+
+        self.name = 'elmo-transformer'
+        self.static_embeddings = True
+        self.lm_embedder = BidirectionalLanguageModelTokenEmbedder(
+            archive_file=model_file,
+            dropout=0.2,
+            bos_eos_tokens=("<S>", "</S>"),
+            remove_bos_eos=True,
+            requires_grad=False
+        )
+        self.lm_embedder = self.lm_embedder.to(device=flair.device)
+        self.vocab = self.lm_embedder._lm.vocab
+        self.indexer = ELMoTokenCharactersIndexer()
+
+        # embed a dummy sentence to determine embedding_length
+        dummy_sentence: Sentence = Sentence()
+        dummy_sentence.add_token(Token('hello'))
+        embedded_dummy = self.embed(dummy_sentence)
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        # Avoid conflicts with flair's Token class
+        import allennlp.data.tokenizers.token as allen_nlp_token
+
+        indexer = self.indexer
+        vocab = self.vocab
+
+        for sentence in sentences:
+            character_indices = indexer.tokens_to_indices([allen_nlp_token.Token(token.text) for token in sentence],
+                                                          vocab, "elmo")["elmo"]
+
+            indices_tensor = torch.LongTensor([character_indices])
+            indices_tensor = indices_tensor.to(device=flair.device)
+            embeddings = self.lm_embedder(indices_tensor)[0].detach().cpu().numpy()
+
+            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+                token: Token = token
+                embedding = embeddings[token_idx]
+                word_embedding = torch.FloatTensor(embedding)
+                token.set_embedding(self.name, word_embedding)
+
+        return sentences
+
+    def extra_repr(self):
+        return 'model={}'.format(self.name)
+
+    def __str__(self):
+        return self.name
+
+
 class CharacterEmbeddings(TokenEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
 
     def __init__(self, path_to_char_dict: str = None):
         """Uses the default character dictionary if none provided."""
 
-        super(CharacterEmbeddings, self).__init__()
+        super().__init__()
         self.name = 'Char'
         self.static_embeddings = False
 
@@ -352,6 +422,8 @@ class CharacterEmbeddings(TokenEmbeddings):
                                       bidirectional=True)
 
         self.__embedding_length = self.char_embedding_dim * 2
+
+        self.to(flair.device)
 
     @property
     def embedding_length(self) -> int:
@@ -379,13 +451,13 @@ class CharacterEmbeddings(TokenEmbeddings):
                         continue
             chars2_length = [len(c) for c in tokens_sorted_by_length]
             longest_token_in_sentence = max(chars2_length)
-            tokens_mask = np.zeros((len(tokens_sorted_by_length), longest_token_in_sentence), dtype='int')
+            tokens_mask = torch.zeros((len(tokens_sorted_by_length), longest_token_in_sentence),
+                                      dtype=torch.long, device=flair.device)
             for i, c in enumerate(tokens_sorted_by_length):
                 tokens_mask[i, :chars2_length[i]] = c
 
             # chars for rnn processing
-            chars = torch.LongTensor(tokens_mask)
-            chars = chars.to(flair.device)
+            chars = tokens_mask
 
             character_embeddings = self.char_embedding(chars).transpose(0, 1)
 
@@ -395,8 +467,8 @@ class CharacterEmbeddings(TokenEmbeddings):
 
             outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(lstm_out)
             outputs = outputs.transpose(0, 1)
-            chars_embeds_temp = torch.FloatTensor(torch.zeros((outputs.size(0), outputs.size(2))))
-            chars_embeds_temp = chars_embeds_temp.to(flair.device)
+            chars_embeds_temp = torch.zeros((outputs.size(0), outputs.size(2)),
+                                            dtype=torch.float, device=flair.device)
             for i, index in enumerate(output_lengths):
                 chars_embeds_temp[i] = outputs[i, index - 1]
             character_embeddings = chars_embeds_temp.clone()
@@ -413,18 +485,18 @@ class CharacterEmbeddings(TokenEmbeddings):
 class FlairEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
-    def __init__(self, model: str, detach: bool = True, use_cache: bool = False, cache_directory: Path = None):
+    def __init__(self, model: str, use_cache: bool = False, cache_directory: Path = None, chars_per_chunk: int = 512):
         """
         initializes contextual string embeddings using a character-level language model.
         :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
                 'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward'
                 depending on which character language model is desired.
-        :param detach: if set to False, the gradient will propagate into the language model. this dramatically slows down
-                training and often leads to worse results, so not recommended.
         :param use_cache: if set to False, will not write embeddings to file for later retrieval. this saves disk space but will
                 not allow re-use of once computed embeddings that do not fit into memory
         :param cache_directory: if cache_directory is not set, the cache will be written to ~/.flair/embeddings. otherwise the cache
                 is written to the provided directory.
+        :param  chars_per_chunk: max number of chars per rnn pass to control speed/memory tradeoff. Higher means faster but requires
+                more memory. Lower means slower but less memory.
         """
         super().__init__()
 
@@ -592,13 +664,13 @@ class FlairEmbeddings(TokenEmbeddings):
             raise ValueError(f'The given model "{model}" is not available or is not a valid path.')
 
         self.name = str(model)
-        self.static_embeddings = detach
+        self.static_embeddings = True
 
         from flair.models import LanguageModel
         self.lm = LanguageModel.load_language_model(model)
-        self.detach = detach
 
         self.is_forward_lm: bool = self.lm.is_forward_lm
+        self.chars_per_chunk: int = chars_per_chunk
 
         # initialize cache if use_cache set
         self.cache = None
@@ -634,6 +706,10 @@ class FlairEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        # make compatible with serialized models
+        if 'chars_per_chunk' not in self.__dict__:
+            self.chars_per_chunk = 512
 
         # if cache is used, try setting embeddings from cache first
         if 'cache' in self.__dict__ and self.cache is not None:
@@ -679,7 +755,7 @@ class FlairEmbeddings(TokenEmbeddings):
                     append_padded_sentence(padded)
 
             # get hidden states from language model
-            all_hidden_states_in_lm = self.lm.get_representation(sentences_padded, self.detach)
+            all_hidden_states_in_lm = self.lm.get_representation(sentences_padded, self.chars_per_chunk)
 
             # take first or last hidden states from language model as word representation
             for i, sentence in enumerate(sentences):
@@ -706,7 +782,9 @@ class FlairEmbeddings(TokenEmbeddings):
 
                     offset_backward -= len(token.text)
 
-                    token.set_embedding(self.name, embedding)
+                    token.set_embedding(self.name, embedding.clone().detach())
+
+            all_hidden_states_in_lm = None
 
         if 'cache' in self.__dict__ and self.cache is not None:
             for sentence in sentences:
@@ -903,14 +981,11 @@ class BertEmbeddings(TokenEmbeddings):
 
         # prepare id maps for BERT model
         features = self._convert_sentences_to_features(sentences, longest_sentence_in_batch)
-        all_input_ids = torch.LongTensor([f.input_ids for f in features])
-        all_input_ids = all_input_ids.to(flair.device)
-        all_input_masks = torch.LongTensor([f.input_mask for f in features])
-        all_input_masks = all_input_masks.to(flair.device)
+        all_input_ids = torch.LongTensor([f.input_ids for f in features]).to(flair.device)
+        all_input_masks = torch.LongTensor([f.input_mask for f in features]).to(flair.device)
 
         # put encoded batch through BERT model to get all hidden states of all encoder layers
-        if torch.cuda.is_available():
-            self.model.cuda()
+        self.model.to(flair.device)
         self.model.eval()
         all_encoder_layers, _ = self.model(all_input_ids, token_type_ids=None, attention_mask=all_input_masks)
 
@@ -1187,7 +1262,7 @@ class CharLMEmbeddings(TokenEmbeddings):
                 append_padded_sentence(padded)
 
         # get hidden states from language model
-        all_hidden_states_in_lm = self.lm.get_representation(sentences_padded, self.detach)
+        all_hidden_states_in_lm = self.lm.get_representation(sentences_padded)
 
         # take first or last hidden states from language model as word representation
         for i, sentence in enumerate(sentences):
@@ -1268,12 +1343,11 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
                     token: Token = token
                     word_embeddings.append(token.get_embedding().unsqueeze(0))
 
-                word_embeddings = torch.cat(word_embeddings, dim=0)
-                word_embeddings = word_embeddings.to(flair.device)
+                word_embeddings = torch.cat(word_embeddings, dim=0).to(flair.device)
 
                 mean_embedding = torch.mean(word_embeddings, 0)
 
-                sentence.set_embedding(self.name, mean_embedding.unsqueeze(0))
+                sentence.set_embedding(self.name, mean_embedding)
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
@@ -1332,8 +1406,7 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
                     token: Token = token
                     word_embeddings.append(token.get_embedding().unsqueeze(0))
 
-                word_embeddings = torch.cat(word_embeddings, dim=0)
-                word_embeddings = word_embeddings.to(flair.device)
+                word_embeddings = torch.cat(word_embeddings, dim=0).to(flair.device)
 
                 if self.mode == 'mean':
                     pooled_embedding = self.pool_op(word_embeddings, 0)
@@ -1448,9 +1521,11 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
             # PADDING: pad shorter sentences out
             for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
                 word_embeddings.append(
-                    torch.FloatTensor(np.zeros(self.length_of_all_token_embeddings, dtype='float')).unsqueeze(0))
+                    torch.zeros(self.length_of_all_token_embeddings,
+                                dtype=torch.float).unsqueeze(0)
+                )
 
-            word_embeddings_tensor = torch.cat(word_embeddings, 0)
+            word_embeddings_tensor = torch.cat(word_embeddings, 0).to(flair.device)
 
             sentence_states = word_embeddings_tensor
 
@@ -1461,7 +1536,6 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         # GET REPRESENTATION FOR ENTIRE BATCH
         # --------------------------------------------------------------------
         sentence_tensor = torch.cat(all_sentence_tensors, 1)
-        sentence_tensor = sentence_tensor.to(flair.device)
 
         # --------------------------------------------------------------------
         # FF PART

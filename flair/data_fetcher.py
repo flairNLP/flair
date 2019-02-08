@@ -91,6 +91,8 @@ class NLPTask(Enum):
     # text classification format
     IMDB = 'imdb'
     AG_NEWS = 'ag_news'
+    TREC_6 = 'trec-6'
+    TREC_50 = 'trec-50'
 
 
 class NLPTaskDataFetcher:
@@ -189,7 +191,7 @@ class NLPTaskDataFetcher:
             return NLPTaskDataFetcher.load_ud_corpus(data_folder)
 
         # for text classifiers, we use our own special format
-        if task == NLPTask.IMDB.value or task == NLPTask.AG_NEWS.value:
+        if task in [NLPTask.IMDB.value, NLPTask.AG_NEWS.value, NLPTask.TREC_6.value, NLPTask.TREC_50.value]:
             return NLPTaskDataFetcher.load_classification_corpus(data_folder)
 
         # NER corpus for Basque
@@ -588,6 +590,36 @@ class NLPTaskDataFetcher:
                                     if file_name.is_file() and file_name.name.endswith('.txt'):
                                         f_p.write(f'__label__{label} '
                                                   + file_name.open('rt', encoding='utf-8').read() + '\n')
+
+        # Support both TREC-6 and TREC-50
+        if task.value.startswith('trec'):
+            trec_path = 'http://cogcomp.org/Data/QA/QC/'
+
+            original_filenames = ['train_5500.label', 'TREC_10.label']
+            new_filenames = ['train.txt', 'test.txt']
+            for original_filename in original_filenames:
+                cached_path(f'{trec_path}{original_filename}', Path('datasets') / task.value / "original")
+
+            data_path = Path(flair.file_utils.CACHE_ROOT) / 'datasets' / task.value
+            data_file = data_path / new_filenames[0]
+
+            if not data_file.is_file():
+                for original_filename, new_filename in zip(original_filenames, new_filenames):
+                    with open(data_path / "original" / original_filename, 'rt', encoding="latin1") as open_fp:
+                        with open(data_path / new_filename, 'wt', encoding="utf-8") as write_fp:
+                            for line in open_fp:
+                                line = line.rstrip()
+                                fields = line.split()
+                                old_label = fields[0]
+                                question = " ".join(fields[1:])
+
+                                # Create flair compatible labels
+                                # TREC-6 : NUM:dist -> __label__NUM
+                                # TREC-50: NUM:dist -> __label__NUM:dist
+                                new_label = "__label__"
+                                new_label += old_label.split(":")[0] if task.value == "trec-6" else old_label
+
+                                write_fp.write(f'{new_label} {question}\n')
 
         if task == NLPTask.WNUT_17:
             wnut_path = 'https://noisy-text.github.io/2017/files/'

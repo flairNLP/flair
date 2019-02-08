@@ -5,7 +5,7 @@ from hyperopt import hp
 from torch.optim import SGD
 
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
-from flair.embeddings import WordEmbeddings, StackedEmbeddings, CharLMEmbeddings
+from flair.embeddings import WordEmbeddings, StackedEmbeddings, FlairEmbeddings
 from flair.hyperparameter import SearchSpace, Parameter, SequenceTaggerParamSelector, TextClassifierParamSelector
 from flair.optim import AdamW
 
@@ -20,17 +20,17 @@ def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
     # sequence tagger parameter
     search_space.add(Parameter.EMBEDDINGS, hp.choice, options=[
         StackedEmbeddings([WordEmbeddings('glove')]),
-        StackedEmbeddings([WordEmbeddings('glove'), CharLMEmbeddings('news-forward'), CharLMEmbeddings('news-backward')])
+        StackedEmbeddings([WordEmbeddings('glove'), FlairEmbeddings('news-forward'), FlairEmbeddings('news-backward')])
     ])
     search_space.add(Parameter.USE_CRF, hp.choice, options=[True, False])
     search_space.add(Parameter.DROPOUT, hp.uniform, low=0.25, high=0.75)
     search_space.add(Parameter.WORD_DROPOUT, hp.uniform, low=0.0, high=0.25)
     search_space.add(Parameter.LOCKED_DROPOUT, hp.uniform, low=0.0, high=0.5)
-    search_space.add(Parameter.HIDDEN_SIZE, hp.choice, options=[64, 128, 256, 512])
+    search_space.add(Parameter.HIDDEN_SIZE, hp.choice, options=[64, 128])
     search_space.add(Parameter.RNN_LAYERS, hp.choice, options=[1, 2])
 
     # model trainer parameter
-    search_space.add(Parameter.OPTIMIZER, hp.choice, options=[SGD, AdamW])
+    search_space.add(Parameter.OPTIMIZER, hp.choice, options=[SGD])
 
     # training parameter
     search_space.add(Parameter.MINI_BATCH_SIZE, hp.choice, options=[4, 8, 32])
@@ -49,7 +49,7 @@ def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_text_classifier_param_selector(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_corpus('imdb', base_path=tasks_base_path)
 
     glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
 
@@ -60,7 +60,7 @@ def test_text_classifier_param_selector(results_base_path, tasks_base_path):
     search_space.add(Parameter.HIDDEN_SIZE, hp.choice, options=[64, 128, 256, 512])
     search_space.add(Parameter.RNN_LAYERS, hp.choice, options=[1, 2])
     search_space.add(Parameter.REPROJECT_WORDS, hp.choice, options=[True, False])
-    search_space.add(Parameter.REPROJECT_WORD_DIMENSION, hp.choice, options=[64, 128, 256, 512])
+    search_space.add(Parameter.REPROJECT_WORD_DIMENSION, hp.choice, options=[64, 128])
     search_space.add(Parameter.BIDIRECTIONAL, hp.choice, options=[True, False])
     search_space.add(Parameter.DROPOUT, hp.uniform, low=0.25, high=0.75)
     search_space.add(Parameter.WORD_DROPOUT, hp.uniform, low=0.25, high=0.75)

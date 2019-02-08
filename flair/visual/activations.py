@@ -33,8 +33,7 @@ class Highlighter(object):
         ]
 
     def highlight(self, activation, text):
-
-        activation = activation.detach().numpy()
+        activation = activation.detach().cpu().numpy()
 
         step_size = (max(activation) - min(activation)) / len(self.color_map)
 
