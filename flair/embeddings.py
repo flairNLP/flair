@@ -7,6 +7,7 @@ from typing import List, Union, Dict
 import gensim
 import numpy as np
 import torch
+from bpemb import BPEmb
 from deprecated import deprecated
 
 from pytorch_pretrained_bert.tokenization import BertTokenizer
@@ -248,6 +249,59 @@ class WordEmbeddings(TokenEmbeddings):
         return self.name
 
 
+class BPEmbSerializable(BPEmb):
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state['spm'] = None
+        return state
+
+    def __setstate__(self, state):
+        from bpemb.util import sentencepiece_load
+        state['spm'] = sentencepiece_load(state['model_file'])
+        self.__dict__ = state
+
+
+class BytePairEmbeddings(TokenEmbeddings):
+
+    def __init__(self, language: str, dim: int = 50, syllables: int = 100000, cache_dir = Path(flair.file_utils.CACHE_ROOT) / 'embeddings'):
+        """
+        Initializes BP embeddings. Constructor downloads required files if not there.
+        """
+
+        self.name: str = f'bpe-{language}-{syllables}-{dim}'
+        self.static_embeddings = True
+        self.embedder = BPEmbSerializable(lang=language, vs=syllables, dim=dim, cache_dir=cache_dir)
+
+        self.__embedding_length: int = self.embedder.emb.vector_size * 2
+        super().__init__()
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        for i, sentence in enumerate(sentences):
+
+            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+                token: Token = token
+
+                if 'field' not in self.__dict__ or self.field is None:
+                    word = token.text
+                else:
+                    word = token.get_tag(self.field).value
+
+                embeddings = self.embedder.embed(word.lower())
+                embedding = np.concatenate((embeddings[0], embeddings[len(embeddings)-1]))
+                token.set_embedding(self.name, torch.tensor(embedding, dtype=torch.float))
+
+        return sentences
+
+    def __str__(self):
+        return self.name
+
+
 class ELMoEmbeddings(TokenEmbeddings):
     """Contextual word embeddings using word-level LM, as proposed in Peters et al., 2018."""
 
@@ -342,7 +396,8 @@ class ELMoTransformerEmbeddings(TokenEmbeddings):
         except:
             log.warning('-' * 100)
             log.warning('ATTENTION! The library "allennlp" is not installed!')
-            log.warning('To use ELMoTransformerEmbeddings, please first install a recent version from https://github.com/allenai/allennlp')
+            log.warning(
+                'To use ELMoTransformerEmbeddings, please first install a recent version from https://github.com/allenai/allennlp')
             log.warning('-' * 100)
             pass
 
