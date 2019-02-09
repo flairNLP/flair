@@ -177,6 +177,7 @@ class ModelTrainer:
                 dev_loss = '_'
 
                 train_metric = None
+                test_metric = None
                 if monitor_train:
                     train_metric, train_loss = self._calculate_evaluation_results_for(
                         'TRAIN', self.corpus.train, evaluation_metric, embeddings_in_memory, eval_mini_batch_size)
@@ -185,7 +186,7 @@ class ModelTrainer:
                     dev_metric, dev_loss = self._calculate_evaluation_results_for(
                         'DEV', self.corpus.dev, evaluation_metric, embeddings_in_memory, eval_mini_batch_size)
 
-                if not param_selection_mode:
+                if not param_selection_mode and self.corpus.test:
                     test_metric, test_loss = self._calculate_evaluation_results_for(
                         'TEST', self.corpus.test, evaluation_metric, embeddings_in_memory, eval_mini_batch_size,
                         base_path / 'test.tsv')
