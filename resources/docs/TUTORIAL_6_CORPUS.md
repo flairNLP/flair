@@ -104,6 +104,12 @@ corpus: TaggedCorpus = NLPTaskDataFetcher.load_classification_corpus(data_folder
 If you just want to read a single file, you can use 
 `NLPTaskDataFetcher.read_text_classification_file('path/to/file.txt)`, which returns a list of `Sentence` objects.
 
+**Notice**: In order to download and preprocess the IMDB dataset automatically, you can use the `load_corpus()` method
+that will execute all necessary steps to get a `flair` compatible text classification format:
+
+```python
+corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB)
+```
 
 ## Downloading A Dataset
 
