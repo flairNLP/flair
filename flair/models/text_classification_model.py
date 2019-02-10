@@ -16,6 +16,46 @@ from flair.training_utils import convert_labels_to_one_hot, clear_embeddings
 log = logging.getLogger('flair')
 
 
+import torch
+import torch.nn as nn
+import torch.nn.functional as F 
+
+class Attention(flair.nn.Model):
+
+    '''
+    This class implements soft-attention
+    '''
+
+    def __init__(self, batch_first: bool = True):
+
+        super(Attention, self).__init__()
+        self.batch_first: bool = batch_first
+        
+    def forward(self, , attention_size: int, attention_candidates: torch.Tensor, weighted_sum_candidates: torch.Tensor = None) -> torch.Tensor:
+
+        self.attention_tensor: torch.Tensor = torch.empty(attention_candidates.size(0), attention_size, 1) 
+        torch.nn.init.ones_(self.attention_tensor)
+
+        if self.batch_first:
+            weights = F.softmax(torch.matmul(attention_candidates, self.attention_tensor), dim=1)
+        else:
+            dummy = torch.empty(attention_candidates.size(1), attention_candidates.size(0), attention_candidates.size(2))
+            
+            for i in range(attention_candidates.size(1)):
+                dummy[i] = torch.cat([attention_candidates[j, i, :] for j in range(attention_candidates.size(0))],
+                                     dim=0).view(attention_candidates.size(0), attention_candidates.size(2))
+
+            weights = F.softmax(torch.matmul(dummy, self.attention_tensor), dim=1)  
+
+        
+        if weighted_sum_candidates is None:
+            weighting = torch.matmul(weights, attention_candidates)
+        else:
+            weighting = torch.matmul(weights, weighted_sum_candidates)  
+
+        return weighting
+
+
 class TextClassifier(flair.nn.Model):
     """
     Text Classification Model
@@ -27,14 +67,18 @@ class TextClassifier(flair.nn.Model):
     def __init__(self,
                  document_embeddings: flair.embeddings.DocumentEmbeddings,
                  label_dictionary: Dictionary,
-                 multi_label: bool,
-                 attention: bool):
+                 multi_label: bool, 
+                 attention: bool = False):
 
         super(TextClassifier, self).__init__()
 
         self.document_embeddings = document_embeddings
         self.label_dictionary: Dictionary = label_dictionary
         self.multi_label = multi_label
+        self.attention = attention
+
+        if self.attention:
+            self.attention_model = Attention()
 
         self.document_embeddings: flair.embeddings.DocumentLSTMEmbeddings = document_embeddings
 
@@ -54,13 +98,18 @@ class TextClassifier(flair.nn.Model):
         nn.init.xavier_uniform_(self.decoder.weight)
 
     def forward(self, sentences) -> List[List[float]]:
-        self.document_embeddings.embed(sentences)
-
-        text_embedding_list = [sentence.get_embedding().unsqueeze(0) for sentence in sentences]
-        text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
-
         
-        label_scores = self.decoder(text_embedding_tensor)
+        if not self.attention:
+            self.document_embeddings.embed(sentences)
+            text_embedding_list = [sentence.get_embedding().unsqueeze(0) for sentence in sentences]
+            text_embedding_tensor = torch.cat(text_embedding_list, 0)
+            label_scores = self.decoder(text_embedding_tensor)
+        
+        else:
+            print('USING ATTENTION')
+            lstm_outputs = self.document_embeddings.embed(sentences, return_sequences = True) 
+            text_embedding_tensor = self.attention_model.forward(attention_candidates = lstm_outputs, attention_size=lstm_outputs.size(-1) ,batch_first = False)
+            label_scores = self.decoder(text_embedding_tensor)
 
         return label_scores
 
