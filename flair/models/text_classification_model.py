@@ -27,7 +27,8 @@ class TextClassifier(flair.nn.Model):
     def __init__(self,
                  document_embeddings: flair.embeddings.DocumentEmbeddings,
                  label_dictionary: Dictionary,
-                 multi_label: bool):
+                 multi_label: bool,
+                 attention: bool):
 
         super(TextClassifier, self).__init__()
 
@@ -58,6 +59,7 @@ class TextClassifier(flair.nn.Model):
         text_embedding_list = [sentence.get_embedding().unsqueeze(0) for sentence in sentences]
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
+        
         label_scores = self.decoder(text_embedding_tensor)
 
         return label_scores
