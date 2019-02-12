@@ -1,7 +1,7 @@
 # Tutorial 5: Document Embeddings
 
-Document embeddings are different from [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) in that they 
-give you one embedding for an entire text, whereas word embeddings give you embeddings for individual words. 
+Document embeddings are different from [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) in that they
+give you one embedding for an entire text, whereas word embeddings give you embeddings for individual words.
 
 For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this
 library and how [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) work.
@@ -12,7 +12,7 @@ All document embedding classes inherit from the `DocumentEmbeddings` class and i
 need to call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains
 hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
-All embeddings produced with our methods are Pytorch vectors, so they can be immediately used for training and
+All embeddings produced with our methods are PyTorch vectors, so they can be immediately used for training and
 fine-tuning.
 
 ## Document Embeddings
@@ -121,7 +121,7 @@ dimension as before will be taken.
 :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used.
 ```
 
-## Next 
+## Next
 
 You can now either look into the tutorial about [loading your corpus](/resources/docs/TUTORIAL_6_CORPUS.md), which
 is a pre-requirement for [training your own models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)

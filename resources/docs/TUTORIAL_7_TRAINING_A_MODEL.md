@@ -100,7 +100,7 @@ If the model works well, it will correctly tag 'Berlin' as a location in this ex
 ## Training a Text Classification Model
 
 Here is example code for training a text classifier over the AGNews corpus, using  a combination of simple GloVe
-embeddings and Flair embeddings. You need to download the AGNews first to run this code. 
+embeddings and Flair embeddings. You need to download the AGNews first to run this code.
 The AGNews corpus can be downloaded [here](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html).
 
 In this example, we downsample the data to 10% of the original data.
@@ -122,7 +122,7 @@ label_dict = corpus.make_label_dictionary()
 # 3. make a list of word embeddings
 word_embeddings = [WordEmbeddings('glove'),
 
-                   # comment in flair embeddings for state-of-the-art results 
+                   # comment in flair embeddings for state-of-the-art results
                    # FlairEmbeddings('news-forward'),
                    # FlairEmbeddings('news-backward'),
                    ]
@@ -173,9 +173,9 @@ print(sentence.labels)
 
 ## Multi-Dataset Training
 
-Now, let us train a single model that can PoS tag text in both English and German. To do this, we load both the English and German UD corpora and create a MultiCorpus object. We also use the new multilingual Flair embeddings for this task. 
+Now, let us train a single model that can PoS tag text in both English and German. To do this, we load both the English and German UD corpora and create a MultiCorpus object. We also use the new multilingual Flair embeddings for this task.
 
-All the rest is same as before, e.g.: 
+All the rest is same as before, e.g.:
 
 ```python
 from typing import List
@@ -327,7 +327,7 @@ set options to optimize training time. There are three questions to ask:
 
 1. Do you have a GPU?
 
-`CharLMEmbeddings` are generated using Pytorch RNNs and are thus optimized for GPUs. If you have one,
+`CharLMEmbeddings` are generated using PyTorch RNNs and are thus optimized for GPUs. If you have one,
 you can set large mini-batch sizes to make use of batching. If not, you may want to use smaller language models.
 For English, we package 'fast' variants of our embeddings, loadable like this: `FlairEmbeddings('news-forward-fast')`.
 
@@ -337,11 +337,11 @@ In the best-case scenario, all embeddings for the dataset fit into your regular 
 training speed. If this is not the case, you must set the flag `embeddings_in_memory=False` in the respective trainer
  (i.e. `ModelTrainer`) to
 avoid memory problems. With the flag, embeddings are either (a) recomputed at each epoch or (b)
-retrieved from disk if you choose to materialize to disk. 
+retrieved from disk if you choose to materialize to disk.
 
 3. Do you have a fast hard drive?
 
-If you have a fast hard drive, consider materializing the embeddings to disk. You can do this my instantiating FlairEmbeddings as follows: `FlairEmbeddings('news-forward-fast', use_cache=True)`. This can help if embeddings do not fit into memory. Also if you do not have a GPU and want to do repeat experiments on the same dataset, this helps because embeddings need only be computed once and will then always be retrieved from disk. 
+If you have a fast hard drive, consider materializing the embeddings to disk. You can do this my instantiating FlairEmbeddings as follows: `FlairEmbeddings('news-forward-fast', use_cache=True)`. This can help if embeddings do not fit into memory. Also if you do not have a GPU and want to do repeat experiments on the same dataset, this helps because embeddings need only be computed once and will then always be retrieved from disk.
 
 
 ## Next

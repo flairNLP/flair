@@ -1,27 +1,27 @@
 # Tutorial 3: Word Embeddings
 
 We provide a set of classes with which you can embed the words in sentences in various ways. This tutorial explains
-how that works. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this 
+how that works. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this
 library.
 
 
 ## Embeddings
 
-All word embedding classes inherit from the `TokenEmbeddings` class and implement the `embed()` method which you need to 
-call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains 
+All word embedding classes inherit from the `TokenEmbeddings` class and implement the `embed()` method which you need to
+call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains
 hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
-All embeddings produced with our methods are Pytorch vectors, so they can be immediately used for training and
+All embeddings produced with our methods are PyTorch vectors, so they can be immediately used for training and
 fine-tuning.
 
 
 ## Classic Word Embeddings
 
-Classic word embeddings are static and word-level, meaning that each distinct word gets exactly one pre-computed 
-embedding. Most embeddings fall under this class, including the popular GloVe or Komnios embeddings. 
+Classic word embeddings are static and word-level, meaning that each distinct word gets exactly one pre-computed
+embedding. Most embeddings fall under this class, including the popular GloVe or Komnios embeddings.
 
-Simply instantiate the WordEmbeddings class and pass a string identifier of the embedding you wish to load. So, if 
-you want to use GloVe embeddings, pass the string 'glove' to the constructor: 
+Simply instantiate the WordEmbeddings class and pass a string identifier of the embedding you wish to load. So, if
+you want to use GloVe embeddings, pass the string 'glove' to the constructor:
 
 ```python
 from flair.embeddings import WordEmbeddings
@@ -45,21 +45,21 @@ for token in sentence:
     print(token.embedding)
 ```
 
-This prints out the tokens and their embeddings. GloVe embeddings are Pytorch vectors of dimensionality 100.
+This prints out the tokens and their embeddings. GloVe embeddings are PyTorch vectors of dimensionality 100.
 
-You choose which pre-trained embeddings you load by passing the appropriate 
+You choose which pre-trained embeddings you load by passing the appropriate
 id string to the constructor of the `WordEmbeddings` class. Typically, you use
 the **two-letter language code** to init an embedding, so 'en' for English and
 'de' for German and so on. By default, this will initialize FastText embeddings trained over Wikipedia.
-You can also always use FastText embeddings over Web crawls, by instantiating with '-crawl'. So 'de-crawl' 
-to use embeddings trained over German web crawls. 
+You can also always use FastText embeddings over Web crawls, by instantiating with '-crawl'. So 'de-crawl'
+to use embeddings trained over German web crawls.
 
 For English, we provide a few more options, so
 here you can choose between instantiating 'en-glove', 'en-extvec' and so on.
 
 The following embeddings are currently supported:
- 
-| ID | Language | Embedding | 
+
+| ID | Language | Embedding |
 | ------------- | -------------  | ------------- |
 | 'en-glove' (or 'glove') | English | GloVe embeddings |
 | 'en-extvec' (or 'extvec') | English |Komnios embeddings |
@@ -130,10 +130,10 @@ word_vectors.save('/path/to/converted')
 ## Character Embeddings
 
 Some embeddings - such as character-features - are not pre-trained but rather trained on the downstream task. Normally
-this requires you to implement a [hierarchical embedding architecture](http://neuroner.com/NeuroNERengine_with_caption_no_figure.png). 
+this requires you to implement a [hierarchical embedding architecture](http://neuroner.com/NeuroNERengine_with_caption_no_figure.png).
 
 With Flair, you don't need to worry about such things. Just choose the appropriate
-embedding class and character features will then automatically train during downstream task training. 
+embedding class and character features will then automatically train during downstream task training.
 
 ```python
 from flair.embeddings import CharacterEmbeddings
@@ -153,12 +153,12 @@ embedding.embed(sentence)
 Stacked embeddings are one of the most important concepts of this library. You can use them to combine different
 embeddings together, for instance if you want to use both traditional embeddings together with contextual string
 embeddings (see next chapter).
-Stacked embeddings allow you to mix and match. We find that a combination of embeddings often gives best results. 
+Stacked embeddings allow you to mix and match. We find that a combination of embeddings often gives best results.
 
-All you need to do is use the `StackedEmbeddings` class and instantiate it by passing a list of embeddings that you wish 
+All you need to do is use the `StackedEmbeddings` class and instantiate it by passing a list of embeddings that you wish
 to combine. For instance, lets combine classic GloVe embeddings with character embeddings. This is effectively the architecture proposed in (Lample et al., 2016).
 
-First, instantiate the two embeddings you wish to combine: 
+First, instantiate the two embeddings you wish to combine:
 
 ```python
 from flair.embeddings import WordEmbeddings, CharacterEmbeddings
@@ -195,9 +195,9 @@ for token in sentence:
 ```
 
 Words are now embedded using a concatenation of two different embeddings. This means that the resulting embedding
-vector is still a single Pytorch vector. 
+vector is still a single PyTorch vector.
 
-## Next 
+## Next
 
 You can now either look into [BERT, ELMo, and Flair embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md),
 or go directly to the tutorial about [loading your corpus](/resources/docs/TUTORIAL_6_CORPUS.md), which is a

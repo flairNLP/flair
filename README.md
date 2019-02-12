@@ -19,10 +19,10 @@ models to your text, such as named entity recognition (NER), part-of-speech tagg
 * **Multilingual.** Thanks to the Flair community, we support a rapidly growing number of languages. We also now include
 '*one model, many languages*' taggers, i.e. single models that predict PoS or NER tags for input text in various languages.
 
-* **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and 
+* **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and
 document embeddings, including our proposed **[Flair embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)**, BERT embeddings and ELMo embeddings.
 
-* **A Pytorch NLP framework.** Our framework builds directly on [Pytorch](https://pytorch.org/), making it easy to 
+* **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
 Now at [version 0.4.0](https://github.com/zalandoresearch/flair/releases)!
@@ -42,11 +42,11 @@ Flair outperforms the previous best methods on a range of NLP tasks:
 | Named Entity Recognition |German  | Germeval    |  **84.65** (F1)  | *79.08 [(Hänig et al, 2014)](http://asv.informatik.uni-leipzig.de/publication/file/300/GermEval2014_ExB.pdf)*|
 | Named Entity Recognition |Polish  | PolEval-2018    |  **86.6** (F1) <br> [(Borchmann et al., 2018)](https://github.com/applicaai/poleval-2018) | *85.1 [(PolDeepNer)](https://github.com/CLARIN-PL/PolDeepNer/)*|
 
-Here's how to [reproduce these numbers](/resources/docs/EXPERIMENTS.md) using Flair. You can also find a detailed evaluation and discussion in our paper: 
+Here's how to [reproduce these numbers](/resources/docs/EXPERIMENTS.md) using Flair. You can also find a detailed evaluation and discussion in our paper:
 
 *[Contextual String Embeddings for Sequence Labeling](https://aclanthology.coli.uni-saarland.de/papers/C18-1139/c18-1139).
-Alan Akbik, Duncan Blythe and Roland Vollgraf. 
-27th International Conference on Computational Linguistics, COLING 2018.* 
+Alan Akbik, Duncan Blythe and Roland Vollgraf.
+27th International Conference on Computational Linguistics, COLING 2018.*
 
 ## Quick Start
 
@@ -62,7 +62,7 @@ pip install flair
 
 ### Example Usage
 
-Let's run named entity recognition (NER) over an example sentence. All you need to do is make a `Sentence`, load 
+Let's run named entity recognition (NER) over an example sentence. All you need to do is make a `Sentence`, load
 a pre-trained model and use it to predict tags for the sentence:
 
 ```python
@@ -90,12 +90,12 @@ for entity in sentence.get_spans('ner'):
     print(entity)
 ```
 
-This should print: 
+This should print:
 
 ```console
 Sentence: "I love Berlin ." - 4 Tokens
 
-The following NER tags are found: 
+The following NER tags are found:
 
 LOC-span [3]: "Berlin"
 ```
@@ -113,12 +113,12 @@ We provide a set of quick tutorials to get you started with the library:
 * [Tutorial 7: Training your own Models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
 * [Tutorial 8: Optimizing your own Models](/resources/docs/TUTORIAL_8_MODEL_OPTIMIZATION.md)
 * [Tutorial 9: Training your own Flair Embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
- 
+
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
-text, how you can embed your text with different word or document embeddings, and how you can train your own 
+text, how you can embed your text with different word or document embeddings, and how you can train your own
 language models, sequence labeling models, and text classification models. Let us know if anything is unclear.
 
-There are also good third-party articles and posts that illustrate how to use Flair: 
+There are also good third-party articles and posts that illustrate how to use Flair:
 * [How to build a text classifier with Flair](https://towardsdatascience.com/text-classification-with-state-of-the-art-nlp-library-flair-b541d7add21f)
 * [How to build a microservice with Flair and Flask](https://shekhargulati.com/2019/01/04/building-a-sentiment-analysis-python-microservice-with-flair-and-flask/)
 * [A docker image for Flair](https://towardsdatascience.com/docker-image-for-nlp-5402c9a9069e)
@@ -127,7 +127,7 @@ There are also good third-party articles and posts that illustrate how to use Fl
 
 ## Citing Flair
 
-Please cite the following paper when using Flair: 
+Please cite the following paper when using Flair:
 
 ```
 @inproceedings{akbik2018coling,
@@ -139,18 +139,18 @@ Please cite the following paper when using Flair:
 }
 ```
 
-## Contact 
+## Contact
 
 Please email your questions or comments to [Alan Akbik](http://alanakbik.github.io/).
 
 ## Contributing
 
-Thanks for your interest in contributing! There are many ways to get involved; 
-start with our [contributor guidelines](CONTRIBUTING.md) and then 
+Thanks for your interest in contributing! There are many ways to get involved;
+start with our [contributor guidelines](CONTRIBUTING.md) and then
 check these [open issues](https://github.com/zalandoresearch/flair/issues) for specific tasks.
 
-For contributors looking to get deeper into the API we suggest cloning the repository and checking out the unit 
-tests for examples of how to call methods. Nearly all classes and methods are documented, so finding your way around 
+For contributors looking to get deeper into the API we suggest cloning the repository and checking out the unit
+tests for examples of how to call methods. Nearly all classes and methods are documented, so finding your way around
 the code should hopefully be easy.
 
 ### Running unit tests locally

@@ -10,7 +10,7 @@ All word embedding classes inherit from the `TokenEmbeddings` class and implemen
 call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains
 hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
-All embeddings produced with our methods are Pytorch vectors, so they can be immediately used for training and
+All embeddings produced with our methods are PyTorch vectors, so they can be immediately used for training and
 fine-tuning.
 
 ## Flair Embeddings
@@ -37,10 +37,10 @@ sentence = Sentence('The grass is green .')
 flair_embedding_forward.embed(sentence)
 ```
 
-You choose which embeddings you load by passing the appropriate string to the constructor of the `FlairEmbeddings` class. 
+You choose which embeddings you load by passing the appropriate string to the constructor of the `FlairEmbeddings` class.
 Currently, the following contextual string embeddings are provided (more coming):
- 
-| ID | Language | Embedding | 
+
+| ID | Language | Embedding |
 | -------------     | ------------- | ------------- |
 | 'multi-forward'    | English, German, French, Italian, Dutch, Polish | Mix of corpora (Web, Wikipedia, Subtitles, News) |
 | 'multi-backward'    | English, German, French, Italian, Dutch, Polish | Mix of corpora (Web, Wikipedia, Subtitles, News) |
@@ -85,7 +85,7 @@ flair_backward = FlairEmbeddings('news-backward')
 
 ## Recommended Flair Usage
 
-We recommend combining both forward and backward Flair embeddings. Depending on the task, we also recommend adding standard word embeddings into the mix. So, our recommended `StackedEmbedding` for most English tasks is: 
+We recommend combining both forward and backward Flair embeddings. Depending on the task, we also recommend adding standard word embeddings into the mix. So, our recommended `StackedEmbedding` for most English tasks is:
 
 
 ```python
@@ -93,8 +93,8 @@ from flair.embeddings import WordEmbeddings, FlairEmbeddings, StackedEmbeddings
 
 # create a StackedEmbedding object that combines glove and forward/backward flair embeddings
 stacked_embeddings = StackedEmbeddings([
-                                        WordEmbeddings('glove'), 
-                                        FlairEmbeddings('news-forward'), 
+                                        WordEmbeddings('glove'),
+                                        FlairEmbeddings('news-forward'),
                                         FlairEmbeddings('news-backward'),
                                        ])
 ```
@@ -183,11 +183,11 @@ simple specify the embedding id when initializing the `ELMoEmbeddings`.
 
 ## Combining BERT and Flair
 
-You can very easily mix and match Flair, ELMo, BERT and classic word embeddings. All you need to do is instantiate each embedding you wish to combine and use them in a StackedEmbedding. 
+You can very easily mix and match Flair, ELMo, BERT and classic word embeddings. All you need to do is instantiate each embedding you wish to combine and use them in a StackedEmbedding.
 
-For instance, let's say we want to combine the multilingual Flair and BERT embeddings to train a hyper-powerful multilingual downstream task model. 
+For instance, let's say we want to combine the multilingual Flair and BERT embeddings to train a hyper-powerful multilingual downstream task model.
 
-First, instantiate the embeddings you wish to combine: 
+First, instantiate the embeddings you wish to combine:
 
 ```python
 from flair.embeddings import FlairEmbeddings, BertEmbeddings
@@ -225,13 +225,13 @@ for token in sentence:
 ```
 
 Words are now embedded using a concatenation of three different embeddings. This means that the resulting embedding
-vector is still a single Pytorch vector. 
+vector is still a single Pytorch vector.
 
 
-## Next 
+## Next
 
-You can now either look into [document embeddings](/resources/docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md) to embed entire text 
-passages with one vector for tasks such as text classification, or go directly to the tutorial about 
+You can now either look into [document embeddings](/resources/docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md) to embed entire text
+passages with one vector for tasks such as text classification, or go directly to the tutorial about
 [loading your corpus](/resources/docs/TUTORIAL_6_CORPUS.md), which is a pre-requirement for
 [training your own models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md).
 
