@@ -63,7 +63,7 @@ def test_metric_with_classes():
     assert(metric.accuracy('class-4') == 0.75)
 
     assert(metric.micro_avg_f_score() == 0.2184)
-    assert(metric.macro_avg_f_score() == 0.5714)
+    assert(metric.macro_avg_f_score() == 0.5454749999999999)
 
     assert(metric.micro_avg_accuracy() == 0.1696)
     assert(metric.macro_avg_accuracy() == 0.5875)
