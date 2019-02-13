@@ -82,10 +82,12 @@ class Metric(object):
         class_precisions = [self.precision(class_name) for class_name in self.get_classes()]
         class_recalls = [self.recall(class_name) for class_name in self.get_classes()]
 
-        if len(class_precisions) > 0 and len(class_recalls) > 0:
-            class_f_scores = [
-                round(2 * (precision * recall) / (precision + recall), 4) for precision, recall in zip(class_precisions, class_recalls)]
-            return sum(class_f_scores)/ len(class_f_scores)
+        class_f_scores = []
+        for precision , recall in zip(class_precisions, class_recalls):
+            if precision + recall > 0:
+                class_f_scores.append(round(2 * (precision * recall) / (precision + recall), 4))
+        if len(class_f_scores) > 0:
+            return sum(class_f_scores) / len(class_f_scores)
 
         return 0.0
 
