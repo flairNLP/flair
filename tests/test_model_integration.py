@@ -343,6 +343,57 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
 
 @pytest.mark.integration
+def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_path):
+
+    # corpus = NLPTaskDataFetcher.load_corpus('multi_class', base_path=tasks_base_path)
+    corpus = NLPTaskDataFetcher.load_classification_corpus(data_folder=tasks_base_path / 'multi_class')
+    label_dict = corpus.make_label_dictionary()
+
+    glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
+    document_embeddings = DocumentLSTMEmbeddings(embeddings=[glove_embedding], hidden_size=32, reproject_words=False,
+                                                 bidirectional=False)
+
+    model = TextClassifier(document_embeddings, label_dict, multi_label=True)
+
+    trainer = ModelTrainer(model, corpus)
+    trainer.train(results_base_path, EvaluationMetric.MICRO_F1_SCORE, max_epochs=100, test_mode=True, checkpoint=False)
+
+    sentence = Sentence('apple tv')
+
+    for s in model.predict(sentence):
+        for l in s.labels:
+            print(l)
+            assert (l.value is not None)
+            assert (0.0 <= l.score <= 1.0)
+            assert (type(l.score) is float)
+
+    sentence = Sentence("apple tv")
+
+    for s in model.predict(sentence):
+
+        assert ('apple' in sentence.get_label_names())
+        assert ('tv' in sentence.get_label_names())
+
+        for l in s.labels:
+            print(l)
+            assert (l.value is not None)
+            assert (0.0 <= l.score <= 1.0)
+            assert (type(l.score) is float)
+
+    loaded_model = TextClassifier.load_from_file(results_base_path / 'final-model.pt')
+
+    sentence = Sentence('I love Berlin')
+    sentence_empty = Sentence('       ')
+
+    loaded_model.predict(sentence)
+    loaded_model.predict([sentence, sentence_empty])
+    loaded_model.predict([sentence_empty])
+
+    # clean up results directory
+    shutil.rmtree(results_base_path)
+
+
+@pytest.mark.integration
 def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
 
     corpus = NLPTaskDataFetcher.load_corpus('imdb', base_path=tasks_base_path)

@@ -147,8 +147,10 @@ class TextDataset(Dataset):
 
 
 class TextCorpus(object):
+
     def __init__(self,
-                 path: Path, dictionary: Dictionary,
+                 path: Union[Path,str],
+                 dictionary: Dictionary,
                  forward: bool = True,
                  character_level: bool = True,
                  random_case_flip: bool = True,
@@ -158,6 +160,9 @@ class TextCorpus(object):
         self.split_on_char = character_level
         self.random_case_flip = random_case_flip
         self.shuffle_lines = shuffle_lines
+
+        if type(path) == str:
+            path = Path(path)
 
         self.train = TextDataset(path / 'train', dictionary, False, self.forward, self.split_on_char,
                                  self.random_case_flip, shuffle_lines=self.shuffle_lines)
