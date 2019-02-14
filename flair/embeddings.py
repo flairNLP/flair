@@ -333,6 +333,9 @@ class ELMoEmbeddings(TokenEmbeddings):
         if model == 'pt' or model == 'portuguese':
             options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_options.json'
             weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_weights.hdf5'
+        if model == 'pubmed':
+            options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_options.json'
+            weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_weights_PubMed_only.hdf5'
 
         # put on Cuda if available
         from flair import device
@@ -508,7 +511,7 @@ class CharacterEmbeddings(TokenEmbeddings):
             longest_token_in_sentence = max(chars2_length)
             tokens_mask = torch.zeros((len(tokens_sorted_by_length), longest_token_in_sentence),
                                       dtype=torch.long, device=flair.device)
-            
+
             for i, c in enumerate(tokens_sorted_by_length):
                 tokens_mask[i, :chars2_length[i]] = torch.tensor(c, dtype=torch.long, device=flair.device)
 
