@@ -5,8 +5,9 @@ env:
 python:
   - "3.6"
 install:
-  - pip install -r requirements.txt -v
+  - pip install -r requirements.txt -q
 before_script: cd tests
 script:
+  - pip freeze
   - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then pytest --runintegration; fi'
   - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then pytest; fi'
