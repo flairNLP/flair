@@ -192,7 +192,7 @@ class NLPTaskDataFetcher:
 
         # for text classifiers, we use our own special format
         if task in [NLPTask.IMDB.value, NLPTask.AG_NEWS.value, NLPTask.TREC_6.value, NLPTask.TREC_50.value]:
-            use_tokenizer: bool = True if task in [NLPTask.TREC_6.value, NLPTask.TREC_50.value] else False
+            use_tokenizer: bool = False if task in [NLPTask.TREC_6.value, NLPTask.TREC_50.value] else True
 
             return NLPTaskDataFetcher.load_classification_corpus(data_folder, use_tokenizer=use_tokenizer)
 
