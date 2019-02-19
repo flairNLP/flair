@@ -612,12 +612,12 @@ class FlairEmbeddings(TokenEmbeddings):
 
         # news-english-forward
         elif model.lower() == 'news-forward':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward-v0.2rc.pt'
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/big-news-forward--h2048-l1-d0.05-lr30-0.25-20/news-forward-0.4.1.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # news-english-backward
         elif model.lower() == 'news-backward':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward-v0.2rc.pt'
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/big-news-backward--h2048-l1-d0.05-lr30-0.25-20/news-backward-0.4.1.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # news-english-forward

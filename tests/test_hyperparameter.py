@@ -20,7 +20,7 @@ def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
     # sequence tagger parameter
     search_space.add(Parameter.EMBEDDINGS, hp.choice, options=[
         StackedEmbeddings([WordEmbeddings('glove')]),
-        StackedEmbeddings([WordEmbeddings('glove'), FlairEmbeddings('news-forward'), FlairEmbeddings('news-backward')])
+        StackedEmbeddings([WordEmbeddings('glove'), FlairEmbeddings('news-forward-fast'), FlairEmbeddings('news-backward-fast')])
     ])
     search_space.add(Parameter.USE_CRF, hp.choice, options=[True, False])
     search_space.add(Parameter.DROPOUT, hp.uniform, low=0.25, high=0.75)
@@ -51,7 +51,7 @@ def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
 def test_text_classifier_param_selector(results_base_path, tasks_base_path):
     corpus = NLPTaskDataFetcher.load_corpus('imdb', base_path=tasks_base_path)
 
-    glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
+    glove_embedding: WordEmbeddings = WordEmbeddings('glove')
 
     search_space = SearchSpace()
 

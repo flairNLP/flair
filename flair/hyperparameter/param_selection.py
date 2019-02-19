@@ -9,7 +9,7 @@ from hyperopt import hp, fmin, tpe
 
 import flair.nn
 from flair.data import Corpus
-from flair.embeddings import DocumentLSTMEmbeddings, DocumentPoolEmbeddings
+from flair.embeddings import DocumentPoolEmbeddings, DocumentRNNEmbeddings
 from flair.hyperparameter import Parameter
 from flair.hyperparameter.parameter import SEQUENCE_TAGGER_PARAMETERS, TRAINING_PARAMETERS, \
     DOCUMENT_EMBEDDING_PARAMETERS, MODEL_TRAINER_PARAMETERS
@@ -226,7 +226,7 @@ class TextClassifierParamSelector(ParamSelector):
         embdding_params = {key: params[key] for key in params if key in DOCUMENT_EMBEDDING_PARAMETERS}
 
         if self.document_embedding_type == 'lstm':
-            document_embedding = DocumentLSTMEmbeddings(**embdding_params)
+            document_embedding = DocumentRNNEmbeddings(**embdding_params)
         else:
             document_embedding = DocumentPoolEmbeddings(**embdding_params)
 

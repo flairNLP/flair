@@ -1,4 +1,5 @@
 from flair.data import Dictionary
+from flair.trainers import ModelTrainer
 from flair.training_utils import convert_labels_to_one_hot, Metric
 
 
@@ -14,6 +15,22 @@ def test_metric_get_classes():
     assert('class-1' in metric.get_classes())
     assert('class-2' in metric.get_classes())
     assert('class-3' in metric.get_classes())
+
+
+def test_multiclass_metrics():
+
+    metric = Metric('Test')
+    available_labels = ['A', 'B', 'C']
+
+    predictions = ['A', 'B']
+    true_values = ['A']
+    ModelTrainer._evaluate_sentence_for_text_classification(metric, available_labels, predictions, true_values)
+
+    predictions = ['C', 'B']
+    true_values = ['A', 'B']
+    ModelTrainer._evaluate_sentence_for_text_classification(metric, available_labels, predictions, true_values)
+
+    print(metric)
 
 
 def test_metric_with_classes():
@@ -63,7 +80,7 @@ def test_metric_with_classes():
     assert(metric.accuracy('class-4') == 0.75)
 
     assert(metric.micro_avg_f_score() == 0.2184)
-    assert(metric.macro_avg_f_score() == 0.5714)
+    assert(metric.macro_avg_f_score() == 0.5454749999999999)
 
     assert(metric.micro_avg_accuracy() == 0.1696)
     assert(metric.macro_avg_accuracy() == 0.5875)

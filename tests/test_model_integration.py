@@ -8,7 +8,7 @@ from torch.optim.adam import Adam
 
 from flair.data import Dictionary, Sentence
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
-from flair.embeddings import WordEmbeddings, DocumentLSTMEmbeddings, TokenEmbeddings, FlairEmbeddings
+from flair.embeddings import WordEmbeddings, TokenEmbeddings, FlairEmbeddings, DocumentRNNEmbeddings
 from flair.models import SequenceTagger, TextClassifier, LanguageModel
 from flair.trainers import ModelTrainer
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
@@ -18,7 +18,6 @@ from flair.optim import AdamW
 
 @pytest.mark.integration
 def test_train_load_use_tagger(results_base_path, tasks_base_path):
-
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
@@ -51,7 +50,6 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
-
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH).downsample(0.05)
     tag_dictionary = corpus.make_tag_dictionary('pos')
 
@@ -84,7 +82,6 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
-
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
@@ -117,7 +114,6 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_charlm_changed_chache_load_use_tagger(results_base_path, tasks_base_path):
-
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
@@ -156,7 +152,6 @@ def test_train_charlm_changed_chache_load_use_tagger(results_base_path, tasks_ba
 
 @pytest.mark.integration
 def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_path):
-
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
@@ -189,7 +184,6 @@ def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_pat
 
 @pytest.mark.integration
 def test_train_optimizer(results_base_path, tasks_base_path):
-
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
@@ -225,7 +219,6 @@ def test_train_optimizer(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_optimizer_arguments(results_base_path, tasks_base_path):
-
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
@@ -261,7 +254,6 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_find_learning_rate(results_base_path, tasks_base_path):
-
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
@@ -286,7 +278,6 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_load_use_serialized_tagger():
-
     loaded_model: SequenceTagger = SequenceTagger.load('ner')
 
     sentence = Sentence('I love Berlin')
@@ -308,13 +299,12 @@ def test_load_use_serialized_tagger():
 
 @pytest.mark.integration
 def test_train_load_use_classifier(results_base_path, tasks_base_path):
-
     corpus = NLPTaskDataFetcher.load_corpus('imdb', base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
     word_embedding: WordEmbeddings = WordEmbeddings('turian')
-    document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([word_embedding], 128, 1, False, 64, False,
-                                                                         False)
+    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings([word_embedding], 128, 1, False, 64, False,
+                                                                       False)
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
@@ -344,19 +334,25 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_path):
-
     # corpus = NLPTaskDataFetcher.load_corpus('multi_class', base_path=tasks_base_path)
     corpus = NLPTaskDataFetcher.load_classification_corpus(data_folder=tasks_base_path / 'multi_class')
     label_dict = corpus.make_label_dictionary()
 
     word_embedding: WordEmbeddings = WordEmbeddings('turian')
-    document_embeddings = DocumentLSTMEmbeddings(embeddings=[word_embedding], hidden_size=32, reproject_words=False,
-                                                 bidirectional=False)
+    document_embeddings = DocumentRNNEmbeddings(embeddings=[word_embedding],
+                                                hidden_size=32,
+                                                reproject_words=False,
+                                                bidirectional=False)
 
     model = TextClassifier(document_embeddings, label_dict, multi_label=True)
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(results_base_path, EvaluationMetric.MICRO_F1_SCORE, max_epochs=100, test_mode=True, checkpoint=False)
+    trainer.train(results_base_path,
+                  EvaluationMetric.MICRO_F1_SCORE,
+                  mini_batch_size=1,
+                  max_epochs=100,
+                  test_mode=True,
+                  checkpoint=False)
 
     sentence = Sentence('apple tv')
 
@@ -395,13 +391,12 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
 
 @pytest.mark.integration
 def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
-
     corpus = NLPTaskDataFetcher.load_corpus('imdb', base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
     embedding: TokenEmbeddings = FlairEmbeddings('news-forward-fast')
-    document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([embedding], 128, 1, False, 64, False,
-                                                                         False)
+    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings([embedding], 128, 1, False, 64, False,
+                                                                       False)
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
@@ -431,12 +426,11 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_charlm_nocache_load_use_classifier(results_base_path, tasks_base_path):
-
     corpus = NLPTaskDataFetcher.load_corpus('imdb', base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
     embedding: TokenEmbeddings = FlairEmbeddings('news-forward-fast', use_cache=False)
-    document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([embedding], 128, 1, False, 64,
+    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings([embedding], 128, 1, False, 64,
                                                                          False,
                                                                          False)
 
@@ -499,7 +493,6 @@ def test_train_language_model(results_base_path, resources_path):
 
 @pytest.mark.integration
 def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
-
     corpus = NLPTaskDataFetcher.load_corpora([NLPTask.FASHION, NLPTask.GERMEVAL], base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
@@ -535,7 +528,7 @@ def test_train_resume_text_classification_training(results_base_path, tasks_base
     label_dict = corpus.make_label_dictionary()
 
     embeddings: TokenEmbeddings = FlairEmbeddings('news-forward-fast', use_cache=False)
-    document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([embeddings], 128, 1, False)
+    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings([embeddings], 128, 1, False)
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
@@ -557,10 +550,10 @@ def test_train_resume_sequence_tagging_training(results_base_path, tasks_base_pa
     embeddings = WordEmbeddings('turian')
 
     model: SequenceTagger = SequenceTagger(hidden_size=64,
-                                            embeddings=embeddings,
-                                            tag_dictionary=tag_dictionary,
-                                            tag_type='ner',
-                                            use_crf=False)
+                                           embeddings=embeddings,
+                                           tag_dictionary=tag_dictionary,
+                                           tag_type='ner',
+                                           use_crf=False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, test_mode=True, checkpoint=True)
@@ -595,6 +588,3 @@ def test_train_resume_language_model_training(resources_path, results_base_path,
 
     # clean up results directory
     shutil.rmtree(results_base_path)
-
-
-
