@@ -22,7 +22,7 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
-    embeddings = WordEmbeddings('glove')
+    embeddings = WordEmbeddings('turian')
 
     tagger: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,
@@ -55,7 +55,7 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH).downsample(0.05)
     tag_dictionary = corpus.make_tag_dictionary('pos')
 
-    embeddings = WordEmbeddings('glove')
+    embeddings = WordEmbeddings('turian')
 
     tagger: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,
@@ -193,7 +193,7 @@ def test_train_optimizer(results_base_path, tasks_base_path):
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
-    embeddings = WordEmbeddings('glove')
+    embeddings = WordEmbeddings('turian')
 
     tagger: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,
@@ -229,7 +229,7 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
-    embeddings = WordEmbeddings('glove')
+    embeddings = WordEmbeddings('turian')
 
     tagger: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,
@@ -265,7 +265,7 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
-    embeddings = WordEmbeddings('glove')
+    embeddings = WordEmbeddings('turian')
 
     tagger: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,
@@ -312,8 +312,8 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     corpus = NLPTaskDataFetcher.load_corpus('imdb', base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
-    glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
-    document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove_embedding], 128, 1, False, 64, False,
+    word_embedding: WordEmbeddings = WordEmbeddings('turian')
+    document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([word_embedding], 128, 1, False, 64, False,
                                                                          False)
 
     model = TextClassifier(document_embeddings, label_dict, False)
@@ -349,8 +349,8 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
     corpus = NLPTaskDataFetcher.load_classification_corpus(data_folder=tasks_base_path / 'multi_class')
     label_dict = corpus.make_label_dictionary()
 
-    glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
-    document_embeddings = DocumentLSTMEmbeddings(embeddings=[glove_embedding], hidden_size=32, reproject_words=False,
+    word_embedding: WordEmbeddings = WordEmbeddings('turian')
+    document_embeddings = DocumentLSTMEmbeddings(embeddings=[word_embedding], hidden_size=32, reproject_words=False,
                                                  bidirectional=False)
 
     model = TextClassifier(document_embeddings, label_dict, multi_label=True)
@@ -399,8 +399,8 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
     corpus = NLPTaskDataFetcher.load_corpus('imdb', base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
-    glove_embedding: TokenEmbeddings = FlairEmbeddings('news-forward-fast')
-    document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove_embedding], 128, 1, False, 64, False,
+    embedding: TokenEmbeddings = FlairEmbeddings('news-forward-fast')
+    document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([embedding], 128, 1, False, 64, False,
                                                                          False)
 
     model = TextClassifier(document_embeddings, label_dict, False)
@@ -435,8 +435,8 @@ def test_train_charlm_nocache_load_use_classifier(results_base_path, tasks_base_
     corpus = NLPTaskDataFetcher.load_corpus('imdb', base_path=tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
-    glove_embedding: TokenEmbeddings = FlairEmbeddings('news-forward-fast', use_cache=False)
-    document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove_embedding], 128, 1, False, 64,
+    embedding: TokenEmbeddings = FlairEmbeddings('news-forward-fast', use_cache=False)
+    document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([embedding], 128, 1, False, 64,
                                                                          False,
                                                                          False)
 
@@ -503,7 +503,7 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
     corpus = NLPTaskDataFetcher.load_corpora([NLPTask.FASHION, NLPTask.GERMEVAL], base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
-    embeddings = WordEmbeddings('glove')
+    embeddings = WordEmbeddings('turian')
 
     tagger: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,
@@ -554,7 +554,7 @@ def test_train_resume_sequence_tagging_training(results_base_path, tasks_base_pa
     corpus = NLPTaskDataFetcher.load_corpora([NLPTask.FASHION, NLPTask.GERMEVAL], base_path=tasks_base_path)
     tag_dictionary = corpus.make_tag_dictionary('ner')
 
-    embeddings = WordEmbeddings('glove')
+    embeddings = WordEmbeddings('turian')
 
     model: SequenceTagger = SequenceTagger(hidden_size=64,
                                             embeddings=embeddings,

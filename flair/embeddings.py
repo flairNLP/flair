@@ -156,6 +156,7 @@ class WordEmbeddings(TokenEmbeddings):
         old_base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/'
         base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/'
         embeddings_path_v4 = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/'
+        embeddings_path_v4_1 = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/'
 
         cache_dir = Path('embeddings')
 
@@ -163,6 +164,11 @@ class WordEmbeddings(TokenEmbeddings):
         if embeddings.lower() == 'glove' or embeddings.lower() == 'en-glove':
             cached_path(f'{old_base_path}glove.gensim.vectors.npy', cache_dir=cache_dir)
             embeddings = cached_path(f'{old_base_path}glove.gensim', cache_dir=cache_dir)
+
+        # TURIAN embeddings
+        elif embeddings.lower() == 'turian' or embeddings.lower() == 'en-turian':
+            cached_path(f'{embeddings_path_v4_1}turian.vectors.npy', cache_dir=cache_dir)
+            embeddings = cached_path(f'{embeddings_path_v4_1}turian', cache_dir=cache_dir)
 
         # KOMNIOS embeddings
         elif embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
