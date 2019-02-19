@@ -11,7 +11,7 @@ def init(tasks_base_path) -> Tuple[TaggedCorpus, Dictionary, TextClassifier]:
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.AG_NEWS, tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
-    glove_embedding: WordEmbeddings = WordEmbeddings('en-glove')
+    glove_embedding: WordEmbeddings = WordEmbeddings('turian')
     document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove_embedding], 128, 1, False, 64, False, False)
 
     model = TextClassifier(document_embeddings, label_dict, False)

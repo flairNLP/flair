@@ -350,13 +350,20 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
     label_dict = corpus.make_label_dictionary()
 
     word_embedding: WordEmbeddings = WordEmbeddings('turian')
-    document_embeddings = DocumentLSTMEmbeddings(embeddings=[word_embedding], hidden_size=32, reproject_words=False,
+    document_embeddings = DocumentLSTMEmbeddings(embeddings=[word_embedding],
+                                                 hidden_size=32,
+                                                 reproject_words=False,
                                                  bidirectional=False)
 
     model = TextClassifier(document_embeddings, label_dict, multi_label=True)
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(results_base_path, EvaluationMetric.MICRO_F1_SCORE, max_epochs=100, test_mode=True, checkpoint=False)
+    trainer.train(results_base_path,
+                  EvaluationMetric.MICRO_F1_SCORE,
+                  mini_batch_size=1,
+                  max_epochs=100,
+                  test_mode=True,
+                  checkpoint=False)
 
     sentence = Sentence('apple tv')
 
