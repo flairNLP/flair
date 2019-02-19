@@ -79,17 +79,9 @@ class Metric(object):
         return self.f_score(None)
 
     def macro_avg_f_score(self):
-        class_precisions = [self.precision(class_name) for class_name in self.get_classes()]
-        class_recalls = [self.recall(class_name) for class_name in self.get_classes()]
-
-        if len(class_precisions) > 0 and len(class_recalls) > 0:
-            macro_precision = sum(class_precisions) / len(class_precisions)
-            macro_recall = sum(class_recalls) / len(class_recalls)
-
-            if macro_precision + macro_recall > 0:
-                return round(2 * (macro_precision * macro_recall) / (macro_precision + macro_recall), 4)
-
-        return 0.0
+        class_f_scores = [self.f_score(class_name) for class_name in self.get_classes()]
+        macro_f_score = sum(class_f_scores) / len(class_f_scores)
+        return macro_f_score
 
     def micro_avg_accuracy(self):
         return self.accuracy(None)
