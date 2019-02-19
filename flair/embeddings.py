@@ -156,6 +156,7 @@ class WordEmbeddings(TokenEmbeddings):
         old_base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/'
         base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/'
         embeddings_path_v4 = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/'
+        embeddings_path_v4_1 = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/'
 
         cache_dir = Path('embeddings')
 
@@ -163,6 +164,11 @@ class WordEmbeddings(TokenEmbeddings):
         if embeddings.lower() == 'glove' or embeddings.lower() == 'en-glove':
             cached_path(f'{old_base_path}glove.gensim.vectors.npy', cache_dir=cache_dir)
             embeddings = cached_path(f'{old_base_path}glove.gensim', cache_dir=cache_dir)
+
+        # TURIAN embeddings
+        elif embeddings.lower() == 'turian' or embeddings.lower() == 'en-turian':
+            cached_path(f'{embeddings_path_v4_1}turian.vectors.npy', cache_dir=cache_dir)
+            embeddings = cached_path(f'{embeddings_path_v4_1}turian', cache_dir=cache_dir)
 
         # KOMNIOS embeddings
         elif embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
@@ -283,7 +289,8 @@ class BPEmbSerializable(BPEmb):
 
 class BytePairEmbeddings(TokenEmbeddings):
 
-    def __init__(self, language: str, dim: int = 50, syllables: int = 100000, cache_dir = Path(flair.file_utils.CACHE_ROOT) / 'embeddings'):
+    def __init__(self, language: str, dim: int = 50, syllables: int = 100000,
+                 cache_dir=Path(flair.file_utils.CACHE_ROOT) / 'embeddings'):
         """
         Initializes BP embeddings. Constructor downloads required files if not there.
         """
@@ -311,9 +318,14 @@ class BytePairEmbeddings(TokenEmbeddings):
                 else:
                     word = token.get_tag(self.field).value
 
-                embeddings = self.embedder.embed(word.lower())
-                embedding = np.concatenate((embeddings[0], embeddings[len(embeddings)-1]))
-                token.set_embedding(self.name, torch.tensor(embedding, dtype=torch.float))
+                if word.strip() == '':
+                    # empty words get no embedding
+                    token.set_embedding(self.name, torch.zeros(self.embedding_length, dtype=torch.float))
+                else:
+                    # all other words get embedded
+                    embeddings = self.embedder.embed(word.lower())
+                    embedding = np.concatenate((embeddings[0], embeddings[len(embeddings) - 1]))
+                    token.set_embedding(self.name, torch.tensor(embedding, dtype=torch.float))
 
         return sentences
 
@@ -1518,7 +1530,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
                  dropout: float = 0.5,
                  word_dropout: float = 0.0,
                  locked_dropout: float = 0.0,
-                 rnn_type = 'GRU'):
+                 rnn_type='GRU'):
         """The constructor takes a list of embeddings to be combined.
         :param embeddings: a list of token embeddings
         :param hidden_size: the number of hidden states in the rnn
@@ -1558,7 +1570,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         self.word_reprojection_map = torch.nn.Linear(self.length_of_all_token_embeddings,
                                                      self.embeddings_dimension)
         self.rnn = torch.nn.RNNBase(rnn_type, self.embeddings_dimension, hidden_size, num_layers=rnn_layers,
-                                bidirectional=self.bidirectional)
+                                    bidirectional=self.bidirectional)
 
         self.name = 'document_' + self.rnn._get_name()
 
@@ -1669,24 +1681,163 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         pass
 
 
-class DocumentLSTMEmbeddings(DocumentRNNEmbeddings):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, rnn_type = 'LSTM')
+@deprecated(version='0.4', reason="The functionality of this class is moved to 'DocumentRNNEmbeddings'")
+class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
+    def __init__(self,
+                 embeddings: List[TokenEmbeddings],
+                 hidden_size=128,
+                 rnn_layers=1,
+                 reproject_words: bool = True,
+                 reproject_words_dimension: int = None,
+                 bidirectional: bool = False,
+                 dropout: float = 0.5,
+                 word_dropout: float = 0.0,
+                 locked_dropout: float = 0.0):
+        """The constructor takes a list of embeddings to be combined.
+        :param embeddings: a list of token embeddings
+        :param hidden_size: the number of hidden states in the lstm
+        :param rnn_layers: the number of layers for the lstm
+        :param reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear
+        layer before putting them into the lstm or not
+        :param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
+        dimension as before will be taken.
+        :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
+        :param dropout: the dropout value to be used
+        :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
+        :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
+        """
+        super().__init__()
 
-class DocumentGRUEmbeddings(DocumentRNNEmbeddings):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, rnn_type = 'GRU')
+        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
 
+        self.reproject_words = reproject_words
+        self.bidirectional = bidirectional
 
-class DocumentRNNTANHEmbeddings(DocumentRNNEmbeddings):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, rnn_type = 'RNN_TANH')
+        self.length_of_all_token_embeddings: int = self.embeddings.embedding_length
 
+        self.name = 'document_lstm'
+        self.static_embeddings = False
 
-class DocumentRNNRELUEmbeddings(DocumentRNNEmbeddings):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, rnn_type = 'RNN_RELU')
+        self.__embedding_length: int = hidden_size
+        if self.bidirectional:
+            self.__embedding_length *= 4
+
+        self.embeddings_dimension: int = self.length_of_all_token_embeddings
+        if self.reproject_words and reproject_words_dimension is not None:
+            self.embeddings_dimension = reproject_words_dimension
+
+        # bidirectional LSTM on top of embedding layer
+        self.word_reprojection_map = torch.nn.Linear(self.length_of_all_token_embeddings,
+                                                     self.embeddings_dimension)
+        self.rnn = torch.nn.GRU(self.embeddings_dimension, hidden_size, num_layers=rnn_layers,
+                                bidirectional=self.bidirectional)
+
+        # dropouts
+        if locked_dropout > 0.0:
+            self.dropout: torch.nn.Module = LockedDropout(locked_dropout)
+        else:
+            self.dropout = torch.nn.Dropout(dropout)
+
+        self.use_word_dropout: bool = word_dropout > 0.0
+        if self.use_word_dropout:
+            self.word_dropout = WordDropout(word_dropout)
+
+        torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
+
+        self.to(flair.device)
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def embed(self, sentences: Union[List[Sentence], Sentence]):
+        """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
+         only if embeddings are non-static."""
+
+        if type(sentences) is Sentence:
+            sentences = [sentences]
+
+        self.rnn.zero_grad()
+
+        sentences.sort(key=lambda x: len(x), reverse=True)
+
+        self.embeddings.embed(sentences)
+
+        # first, sort sentences by number of tokens
+        longest_token_sequence_in_batch: int = len(sentences[0])
+
+        all_sentence_tensors = []
+        lengths: List[int] = []
+
+        # go through each sentence in batch
+        for i, sentence in enumerate(sentences):
+
+            lengths.append(len(sentence.tokens))
+
+            word_embeddings = []
+
+            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+                token: Token = token
+                word_embeddings.append(token.get_embedding().unsqueeze(0))
+
+            # PADDING: pad shorter sentences out
+            for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
+                word_embeddings.append(
+                    torch.zeros(self.length_of_all_token_embeddings,
+                                dtype=torch.float).unsqueeze(0)
+                )
+
+            word_embeddings_tensor = torch.cat(word_embeddings, 0).to(flair.device)
+
+            sentence_states = word_embeddings_tensor
+
+            # ADD TO SENTENCE LIST: add the representation
+            all_sentence_tensors.append(sentence_states.unsqueeze(1))
+
+        # --------------------------------------------------------------------
+        # GET REPRESENTATION FOR ENTIRE BATCH
+        # --------------------------------------------------------------------
+        sentence_tensor = torch.cat(all_sentence_tensors, 1)
+
+        # --------------------------------------------------------------------
+        # FF PART
+        # --------------------------------------------------------------------
+        # use word dropout if set
+        if self.use_word_dropout:
+            sentence_tensor = self.word_dropout(sentence_tensor)
+
+        if self.reproject_words:
+            sentence_tensor = self.word_reprojection_map(sentence_tensor)
+
+        sentence_tensor = self.dropout(sentence_tensor)
+
+        packed = torch.nn.utils.rnn.pack_padded_sequence(sentence_tensor, lengths)
+
+        self.rnn.flatten_parameters()
+
+        lstm_out, hidden = self.rnn(packed)
+
+        outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(lstm_out)
+
+        outputs = self.dropout(outputs)
+
+        # --------------------------------------------------------------------
+        # EXTRACT EMBEDDINGS FROM LSTM
+        # --------------------------------------------------------------------
+        for sentence_no, length in enumerate(lengths):
+            last_rep = outputs[length - 1, sentence_no]
+
+            embedding = last_rep
+            if self.bidirectional:
+                first_rep = outputs[0, sentence_no]
+                embedding = torch.cat([first_rep, last_rep], 0)
+
+            sentence = sentences[sentence_no]
+            sentence.set_embedding(self.name, embedding)
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]):
+        pass
 
 
 class DocumentLMEmbeddings(DocumentEmbeddings):
