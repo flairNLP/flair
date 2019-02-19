@@ -738,6 +738,15 @@ class FlairEmbeddings(TokenEmbeddings):
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/language_model_es_backward_long/lm-es-backward.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
 
+        # Pubmed forward
+        elif model.lower() == 'pubmed-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/pubmed-2015-fw-lm.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+        # Spanish backward
+        elif model.lower() == 'pubmed-backward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/pubmed-2015-bw-lm.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+
         elif not Path(model).exists():
             raise ValueError(f'The given model "{model}" is not available or is not a valid path.')
 
