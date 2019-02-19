@@ -1,5 +1,4 @@
 from flair.data import Dictionary
-from flair.models import TextClassifier
 from flair.trainers import ModelTrainer
 from flair.training_utils import convert_labels_to_one_hot, Metric
 

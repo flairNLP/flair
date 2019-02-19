@@ -3,7 +3,7 @@ from typing import Tuple
 
 from flair.data import Dictionary, TaggedCorpus
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
-from flair.embeddings import WordEmbeddings, DocumentLSTMEmbeddings
+from flair.embeddings import WordEmbeddings, DocumentRNNEmbeddings
 from flair.models.text_classification_model import TextClassifier
 
 
@@ -12,7 +12,7 @@ def init(tasks_base_path) -> Tuple[TaggedCorpus, Dictionary, TextClassifier]:
     label_dict = corpus.make_label_dictionary()
 
     glove_embedding: WordEmbeddings = WordEmbeddings('turian')
-    document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove_embedding], 128, 1, False, 64, False, False)
+    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings([glove_embedding], 128, 1, False, 64, False, False)
 
     model = TextClassifier(document_embeddings, label_dict, False)
 

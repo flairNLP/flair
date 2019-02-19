@@ -1,10 +1,6 @@
-import os
-import pytest
-
 from flair.visual import *
 from flair.data import Sentence
 from flair.embeddings import FlairEmbeddings, StackedEmbeddings
-import numpy
 
 from flair.visual.training_curves import Plotter
 

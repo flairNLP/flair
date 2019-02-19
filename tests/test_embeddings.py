@@ -1,7 +1,7 @@
 import pytest
 
-from flair.embeddings import WordEmbeddings, TokenEmbeddings, StackedEmbeddings, DocumentLSTMEmbeddings, \
-    DocumentPoolEmbeddings, FlairEmbeddings
+from flair.embeddings import WordEmbeddings, TokenEmbeddings, StackedEmbeddings, \
+    DocumentPoolEmbeddings, FlairEmbeddings, DocumentRNNEmbeddings
 
 from flair.data import Sentence
 
@@ -39,7 +39,7 @@ def test_stacked_embeddings():
 def test_document_lstm_embeddings():
     sentence, glove, charlm = init_document_embeddings()
 
-    embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_size=128,
+    embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings([glove, charlm], hidden_size=128,
                                                                 bidirectional=False)
 
     embeddings.embed(sentence)
@@ -56,7 +56,7 @@ def test_document_lstm_embeddings():
 def test_document_bidirectional_lstm_embeddings():
     sentence, glove, charlm = init_document_embeddings()
 
-    embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings([glove, charlm], hidden_size=128,
+    embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings([glove, charlm], hidden_size=128,
                                                                 bidirectional=True)
 
     embeddings.embed(sentence)
