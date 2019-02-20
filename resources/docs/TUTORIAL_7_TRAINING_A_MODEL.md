@@ -324,7 +324,7 @@ set options to optimize training time. There are three questions to ask:
 
 1. Do you have a GPU?
 
-`FlairEmbeddings` are generated using Pytorch RNNs and are thus optimized for GPUs. If you have one,
+`FlairEmbeddings` are generated using PyTorch RNNs and are thus optimized for GPUs. If you have one,
 you can set large mini-batch sizes to make use of batching. If not, you may want to use smaller language models.
 For English, we package 'fast' variants of our embeddings, loadable like this: `FlairEmbeddings('news-forward-fast')`.
 

@@ -223,7 +223,7 @@ for token in sentence:
 ```
 
 Words are now embedded using a concatenation of two different embeddings. This means that the resulting embedding
-vector is still a single Pytorch vector. 
+vector is still a single PyTorch vector.
 
 ## Next 
 
