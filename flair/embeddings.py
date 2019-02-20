@@ -988,26 +988,24 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 class BertEmbeddings(TokenEmbeddings):
 
     def __init__(self,
-                 bert_model: str = 'bert-base-uncased',
+                 bert_model_or_path: str = 'bert-base-uncased',
                  layers: str = '-1,-2,-3,-4',
                  pooling_operation: str = 'first'):
         """
         Bidirectional transformer embeddings of words, as proposed in Devlin et al., 2018.
-        :param bert_model: name of BERT model ('')
+        :param bert_model_or_path: name of BERT model ('') or directory path containing custom model, configuration file
+        and vocab file (names of three files should be - bert_config.json, pytorch_model.bin/model.chkpt, vocab.txt)
         :param layers: string indicating which layers to take for embedding
         :param pooling_operation: how to get from token piece embeddings to token embedding. Either pool them and take
         the average ('mean') or use first word piece embedding as token embedding ('first)
         """
         super().__init__()
 
-        if bert_model not in PRETRAINED_MODEL_ARCHIVE_MAP.keys():
-            raise ValueError('Provided bert-model is not available.')
-
-        self.tokenizer = BertTokenizer.from_pretrained(bert_model)
-        self.model = BertModel.from_pretrained(bert_model)
+        self.tokenizer = BertTokenizer.from_pretrained(bert_model_or_path)
+        self.model = BertModel.from_pretrained(bert_model_or_path)
         self.layer_indexes = [int(x) for x in layers.split(",")]
         self.pooling_operation = pooling_operation
-        self.name = str(bert_model)
+        self.name = str(bert_model_or_path)
         self.static_embeddings = True
 
     class BertInputFeatures(object):
