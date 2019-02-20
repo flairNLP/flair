@@ -759,6 +759,15 @@ class FlairEmbeddings(TokenEmbeddings):
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/pubmed-2015-bw-lm.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
 
+        # Japanese forward
+        elif model.lower() == 'japanese-forward' or model.lower() == 'ja-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/lm__char-forward__ja-wikipedia-3GB/japanese-forward.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+        # Japanese backward
+        elif model.lower() == 'japanese-backward' or model.lower() == 'ja-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/lm__char-backward__ja-wikipedia-3GB/japanese-backward.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+
         elif not Path(model).exists():
             raise ValueError(f'The given model "{model}" is not available or is not a valid path.')
 
