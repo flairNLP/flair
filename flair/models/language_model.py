@@ -298,3 +298,27 @@ class LanguageModel(nn.Module):
                 text = text[::-1]
 
             return text, log_prob
+
+    def calculate_perplexity(self, text: str) -> float:
+
+        if not self.is_forward_lm:
+            text = text[::-1]
+
+        # input ids
+        input = torch.tensor([self.dictionary.get_idx_for_item(char) for char in text[:-1]]).unsqueeze(1)
+
+        # push list of character IDs through model
+        hidden = self.init_hidden(1)
+        prediction, _, hidden = self.forward(input, hidden)
+
+        # the target is always the next character
+        targets = torch.tensor([self.dictionary.get_idx_for_item(char) for char in text[1:]])
+
+        # use cross entropy loss to compare output of forward pass with targets
+        cross_entroy_loss = torch.nn.CrossEntropyLoss()
+        loss = cross_entroy_loss(prediction.view(-1, len(self.dictionary)), targets).item()
+
+        # exponentiate cross-entropy loss to calculate perplexity
+        perplexity = math.exp(loss)
+
+        return perplexity
