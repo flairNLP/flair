@@ -11,8 +11,13 @@ import torch
 from bpemb import BPEmb
 from deprecated import deprecated
 
-from pytorch_pretrained_bert.tokenization import BertTokenizer
-from pytorch_pretrained_bert.modeling import BertModel, PRETRAINED_MODEL_ARCHIVE_MAP
+from pytorch_pretrained_bert import BertTokenizer, BertModel, TransfoXLTokenizer, TransfoXLModel
+
+from pytorch_pretrained_bert.modeling import \
+    PRETRAINED_MODEL_ARCHIVE_MAP as BERT_PRETRAINED_MODEL_ARCHIVE_MAP
+
+from pytorch_pretrained_bert.modeling_transfo_xl import \
+            PRETRAINED_MODEL_ARCHIVE_MAP as TRANSFORMER_XL_PRETRAINED_MODEL_ARCHIVE_MAP
 
 import flair
 from .nn import LockedDropout, WordDropout
@@ -478,6 +483,58 @@ class ELMoTransformerEmbeddings(TokenEmbeddings):
                 embedding = embeddings[token_idx]
                 word_embedding = torch.FloatTensor(embedding)
                 token.set_embedding(self.name, word_embedding)
+
+        return sentences
+
+    def extra_repr(self):
+        return 'model={}'.format(self.name)
+
+    def __str__(self):
+        return self.name
+
+
+class TransformerXLEmbeddings(TokenEmbeddings):
+    def __init__(self,
+                 model: str = 'transfo-xl-wt103'):
+        """Transformer-XL embeddings, as proposed in Dai et al., 2019.
+        :param model: name of Transformer-XL model
+        """
+        super().__init__()
+
+        if model not in TRANSFORMER_XL_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
+            raise ValueError('Provided Transformer-XL model is not available.')
+
+        self.tokenizer = TransfoXLTokenizer.from_pretrained(model)
+        self.model = TransfoXLModel.from_pretrained(model)
+        self.name = model
+        self.static_embeddings = True
+
+        dummy_sentence: Sentence = Sentence()
+        dummy_sentence.add_token(Token('hello'))
+        embedded_dummy = self.embed(dummy_sentence)
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        self.model.to(flair.device)
+        self.model.eval()
+
+        with torch.no_grad():
+            for sentence in sentences:
+                token_strings = [token.text for token in sentence.tokens]
+                indexed_tokens = self.tokenizer.convert_tokens_to_ids(token_strings)
+
+                tokens_tensor = torch.tensor([indexed_tokens])
+                tokens_tensor = tokens_tensor.to(flair.device)
+
+                hidden_states, _ = self.model(tokens_tensor)
+
+                for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+                    token: Token = token
+                    token.set_embedding(self.name, hidden_states[0][token_idx])
 
         return sentences
 
@@ -1009,6 +1066,9 @@ class BertEmbeddings(TokenEmbeddings):
         the average ('mean') or use first word piece embedding as token embedding ('first)
         """
         super().__init__()
+
+        if bert_model not in BERT_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
+            raise ValueError('Provided bert-model is not available.')
 
         self.tokenizer = BertTokenizer.from_pretrained(bert_model_or_path)
         self.model = BertModel.from_pretrained(bert_model_or_path)
