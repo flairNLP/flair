@@ -100,10 +100,7 @@ If the model works well, it will correctly tag 'Berlin' as a location in this ex
 ## Training a Text Classification Model
 
 Here is example code for training a text classifier over the AGNews corpus, using  a combination of simple GloVe
-embeddings and Flair embeddings. You need to download the AGNews first to run this code. 
-The AGNews corpus can be downloaded [here](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html).
-
-In this example, we downsample the data to 10% of the original data.
+embeddings and Flair embeddings. In this example, we downsample the data to 10% of the original data.
 
 ```python
 from flair.data import TaggedCorpus
@@ -327,7 +324,7 @@ set options to optimize training time. There are three questions to ask:
 
 1. Do you have a GPU?
 
-`CharLMEmbeddings` are generated using Pytorch RNNs and are thus optimized for GPUs. If you have one,
+`FlairEmbeddings` are generated using PyTorch RNNs and are thus optimized for GPUs. If you have one,
 you can set large mini-batch sizes to make use of batching. If not, you may want to use smaller language models.
 For English, we package 'fast' variants of our embeddings, loadable like this: `FlairEmbeddings('news-forward-fast')`.
 
