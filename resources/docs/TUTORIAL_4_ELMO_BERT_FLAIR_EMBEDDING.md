@@ -76,6 +76,11 @@ Currently, the following contextual string embeddings are provided (more coming)
 | 'spanish-backward'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): Backward LM embeddings over Wikipedia |
 | 'spanish-forward-fast'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): CPU-friendly forward LM embeddings over Wikipedia |
 | 'spanish-backward-fast'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): CPU-friendly backward LM embeddings over Wikipedia |
+| 'japanese-forward'    | Japanese | Added by [@frtacoa](https://github.com/zalandoresearch/flair/issues/527): Forward LM embeddings over 439M words of Japanese Web crawls (2048 hidden states, 2 layers)|
+| 'japanese-backward'    | Japanese | Added by [@frtacoa](https://github.com/zalandoresearch/flair/issues/527): Backward LM embeddings over 439M words of Japanese Web crawls (2048 hidden states, 2 layers)|
+| 'pubmed-forward'    | English | Added by [@jessepeng](https://github.com/zalandoresearch/flair/pull/519): Forward LM embeddings over 5% of PubMed abstracts until 2015 (1150 hidden states, 3 layers)|
+| 'pubmed-backward'    | English | Added by [@jessepeng](https://github.com/zalandoresearch/flair/pull/519): Backward LM embeddings over 5% of PubMed abstracts until 2015 (1150 hidden states, 3 layers)|
+
 
 So, if you want to load embeddings from the English news backward LM model, instantiate the method as follows:
 
@@ -179,6 +184,7 @@ simple specify the embedding id when initializing the `ELMoEmbeddings`.
 | 'medium'   | English | 2048-hidden, 1 layer, 28.0M parameters |
 | 'original'    | English | 4096-hidden, 2 layers, 93.6M parameters |
 | 'pt'   | Portuguese | |
+| 'pubmed' | English biomedical data | [more information](https://allennlp.org/elmo) |
 
 
 ## Combining BERT and Flair
