@@ -306,6 +306,7 @@ class LanguageModel(nn.Module):
 
         # input ids
         input = torch.tensor([self.dictionary.get_idx_for_item(char) for char in text[:-1]]).unsqueeze(1)
+        input = input.to(flair.device)
 
         # push list of character IDs through model
         hidden = self.init_hidden(1)
@@ -313,6 +314,7 @@ class LanguageModel(nn.Module):
 
         # the target is always the next character
         targets = torch.tensor([self.dictionary.get_idx_for_item(char) for char in text[1:]])
+        targets = targets.to(flair.device)
 
         # use cross entropy loss to compare output of forward pass with targets
         cross_entroy_loss = torch.nn.CrossEntropyLoss()
