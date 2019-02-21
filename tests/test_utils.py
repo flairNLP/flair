@@ -74,16 +74,16 @@ def test_metric_with_classes():
     assert(metric.f_score('class-3') == 0.1818)
     assert(metric.f_score('class-4') == 0.6667)
 
-    assert(metric.accuracy('class-1') == 0.75)
-    assert(metric.accuracy('class-2') == 0.75)
+    assert(metric.accuracy('class-1') == 0.5)
+    assert(metric.accuracy('class-2') == 0.5)
     assert(metric.accuracy('class-3') == 0.1)
-    assert(metric.accuracy('class-4') == 0.75)
+    assert(metric.accuracy('class-4') == 0.5)
 
     assert(metric.micro_avg_f_score() == 0.2184)
     assert(metric.macro_avg_f_score() == 0.5454749999999999)
 
-    assert(metric.micro_avg_accuracy() == 0.1696)
-    assert(metric.macro_avg_accuracy() == 0.5875)
+    assert(metric.micro_avg_accuracy() == 0.1226)
+    assert(metric.macro_avg_accuracy() == 0.4)
 
     assert(metric.precision() == 0.1226)
     assert(metric.recall() == 1)
