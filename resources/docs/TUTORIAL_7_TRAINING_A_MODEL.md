@@ -127,7 +127,7 @@ word_embeddings = [WordEmbeddings('glove'),
                    # FlairEmbeddings('news-backward'),
                    ]
 
-# 4. init document embedding by passing list of word embeddings
+# 4. initialize document embedding by passing list of word embeddings
 document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings(word_embeddings,
                                                                      hidden_size=512,
                                                                      reproject_words=True,
