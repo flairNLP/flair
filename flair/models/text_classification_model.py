@@ -15,7 +15,7 @@ import torch.nn.functional as F
 
 log = logging.getLogger('flair')
 
-class Attention(nn.Module):
+class Attention(flair.nn.Model):
 
     '''
     This class implements soft-attention
@@ -76,8 +76,10 @@ class TextClassifier(flair.nn.Model):
         self.attention = attention
 
         if self.attention:
+
             self.attention_model = Attention(batch_first=False)
             print('USING ATTENTION')
+
 
         self.document_embeddings: flair.embeddings.DocumentLSTMEmbeddings = document_embeddings
 
@@ -103,6 +105,7 @@ class TextClassifier(flair.nn.Model):
             text_embedding_list = [sentence.get_embedding().unsqueeze(0) for sentence in sentences]
             text_embedding_tensor = torch.cat(text_embedding_list, 0)
             label_scores = self.decoder(text_embedding_tensor)
+
         else:
             lstm_outputs = self.document_embeddings.embed(sentences, return_sequences = True) 
             text_embedding_tensor = self.attention_model.forward(attention_candidates = lstm_outputs, attention_size=lstm_outputs.size(-1)).squeeze()
@@ -132,6 +135,7 @@ class TextClassifier(flair.nn.Model):
             'state_dict': self.state_dict(),
             'document_embeddings': self.document_embeddings,
             'label_dictionary': self.label_dictionary,
+        
             'multi_label': self.multi_label,
             'optimizer_state_dict': optimizer_state,
             'scheduler_state_dict': scheduler_state,
