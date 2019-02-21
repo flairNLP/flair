@@ -1528,8 +1528,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
         self.reproject_words = reproject_words
         self.bidirectional = bidirectional
-        self.return_sequences = return_sequences
-
+        
         self.length_of_all_token_embeddings: int = self.embeddings.embedding_length 
 
         self.name = 'document_lstm'
