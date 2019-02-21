@@ -1,6 +1,6 @@
 # Tutorial 7: Training a Model
 
-This part of the tutorial shows how you can train your own sequence labeling and text
+This part of the tutorial shows how you can train your own sequence labelling and text
 classification models using state-of-the-art word embeddings.
 
 For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this
