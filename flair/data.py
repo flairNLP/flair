@@ -45,7 +45,7 @@ class Dictionary:
         """
         returns the ID of the string, otherwise 0
         :param item: string for which ID is requested
-        :return: ID of string, otherwise 0
+        :return: ID of string, otherwise 0......
         """
         item = item.encode('utf-8')
         if item in self.item2idx.keys():
