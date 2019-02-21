@@ -1641,7 +1641,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         # --------------------------------------------------------------------
         # EXTRACT EMBEDDINGS FROM LSTM
         # --------------------------------------------------------------------
-<<<<<<< HEAD
+
         if return_sequences:
             
             return outputs
@@ -1658,30 +1658,8 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
                 sentence = sentences[sentence_no]
                 sentence.set_embedding(self.name, embedding)
-=======
-        
-        if not return_sequences:
-            for sentence_no, length in enumerate(lengths):
-            
-
-            
-                last_rep = outputs[length - 1, sentence_no]    
-
-                embedding = last_rep
-                if self.bidirectional:
-                    first_rep = outputs[0, sentence_no]
-                    embedding = torch.cat([first_rep, last_rep], 0)
-
-                sentence = sentences[sentence_no]
-                sentence.set_embedding(self.name, embedding)
-
-        else:
-            return outputs
-
 
            
->>>>>>> c6107f80c944d95a9cdf9a1928e4b678d499d0f2
-
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
 

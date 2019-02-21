@@ -6,7 +6,6 @@ from . import visual
 from . import trainers
 
 import logging.config
-print('custom')
 
 __version__ = "0.4.1"
 
