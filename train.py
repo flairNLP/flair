@@ -2,7 +2,7 @@ from typing import List
 
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 from flair.data import TaggedCorpus
-from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings
+from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, CharLMEmbeddings, CharacterEmbeddings, ELMoEmbeddings, FlairEmbeddings
 from flair.training_utils import EvaluationMetric
 from flair.visual.training_curves import Plotter
 
@@ -20,16 +20,16 @@ print(tag_dictionary.idx2item)
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
 
-    WordEmbeddings('glove'),
+    #WordEmbeddings('glove'),
 
     # comment in this line to use character embeddings
-    # CharacterEmbeddings(),
+     ELMoEmbeddings('pubmed'),
 
     # comment in these lines to use contextual string embeddings
     #
-    # CharLMEmbeddings('news-forward'),
+     #FlairEmbeddings('news-forward'),
     #
-    # CharLMEmbeddings('news-backward'),
+     #FlairEmbeddings('news-backward'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
