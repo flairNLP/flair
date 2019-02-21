@@ -2,6 +2,13 @@
 # a more exhaustive description is at
 # https://zappr.readthedocs.io/en/latest/setup
 
+# just an example how to configure it
+approvals:
+  pattern: "^(:\\+1:|👍)" # must start with thumbs up
+  minimum: 2 # at least two approvals from other people necessary
+  from: # has to be either one of the following
+    collaborators: true
+
 # uncomment this if you want to change anything
 # approvals:
 #   by default, an approval is the thumbs up emoji only: ^:\\+1:$
