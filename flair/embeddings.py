@@ -811,7 +811,7 @@ class FlairEmbeddings(TokenEmbeddings):
         elif model.lower() == 'pubmed-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/pubmed-2015-fw-lm.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
-        # Spanish backward
+        # Pubmed backward
         elif model.lower() == 'pubmed-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/pubmed-2015-bw-lm.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
