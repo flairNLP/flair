@@ -1067,7 +1067,7 @@ class BertEmbeddings(TokenEmbeddings):
         """
         super().__init__()
 
-        if bert_model not in BERT_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
+        if bert_model_or_path not in BERT_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
             raise ValueError('Provided bert-model is not available.')
 
         self.tokenizer = BertTokenizer.from_pretrained(bert_model_or_path)
