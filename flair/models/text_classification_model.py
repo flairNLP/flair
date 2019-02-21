@@ -108,9 +108,10 @@ class TextClassifier(flair.nn.Model):
 
         else:
             lstm_outputs = self.document_embeddings.embed(sentences, return_sequences = True) 
-            text_embedding_tensor = self.attention_model.forward(attention_candidates = lstm_outputs, attention_size=lstm_outputs.size(-1)).squeeze()
+            text_embedding_tensor = self.attention_model.forward(attention_candidates = lstm_outputs, attention_size=lstm_outputs.size(-1)).squeeze(dim=1)
             label_scores = self.decoder(text_embedding_tensor)
-        
+            
+
         return label_scores
 
     def save(self, model_file: Union[str, Path]):
