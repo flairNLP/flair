@@ -23,13 +23,13 @@ embedding_types: List[TokenEmbeddings] = [
     #WordEmbeddings('glove'),
 
     # comment in this line to use character embeddings
-     ELMoEmbeddings('pubmed'),
+     #ELMoEmbeddings('pubmed'),
 
     # comment in these lines to use contextual string embeddings
     #
-     #FlairEmbeddings('news-forward'),
+     FlairEmbeddings('pubmed-forward'),
     #
-     #FlairEmbeddings('news-backward'),
+     FlairEmbeddings('pubmed-backward'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
