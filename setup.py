@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='flair',
-    version='0.4.0',
+    version='0.4.1',
     description='A very simple framework for state-of-the-art NLP',
     long_description=open("README.md", encoding='utf-8').read(),
     long_description_content_type="text/markdown",
@@ -22,8 +22,9 @@ setup(
         'sqlitedict>=1.6.0',
         'deprecated>=1.2.4',
         'hyperopt>=0.1.1',
-        'pytorch-pretrained-bert>=0.4.0',
-        'bpemb>=0.2.9'
+        'pytorch-pretrained-bert>=0.6.1',
+        'bpemb>=0.2.9',
+        'regex==2018.1.10'
     ],
     include_package_data=True,
     python_requires='>=3.6',

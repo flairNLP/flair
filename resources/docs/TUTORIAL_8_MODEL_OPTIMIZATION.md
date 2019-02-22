@@ -41,7 +41,7 @@ search_space.add(Parameter.MINI_BATCH_SIZE, hp.choice, options=[8, 16, 32])
 ```
 
 Attention: You should always add your embeddings to the search space (as shown above). If you don't want to test
-different kind of embeddings, simply pass just one embedding option to the search space, which will than be used in
+different kind of embeddings, simply pass just one embedding option to the search space, which will then be used in
 every test run. Here is an example:
 ```python
 search_space.add(Parameter.EMBEDDINGS, hp.choice, options=[
