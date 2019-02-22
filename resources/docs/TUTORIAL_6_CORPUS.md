@@ -140,6 +140,8 @@ The following datasets are supported:
 | [WIKINER_RUSSIAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_NORWEGIAN](https://github.com/UniversalDependencies/UD_Norwegian-Bokmaal) | [UD_KOREAN](https://github.com/UniversalDependencies/UD_Korean-Kaist) |
 | [UD_ENGLISH](https://github.com/UniversalDependencies/UD_English-EWT) | [UD_FINNISH](https://github.com/UniversalDependencies/UD_Finnish-TDT) |  [UD_BASQUE](https://github.com/UniversalDependencies/UD_Basque-BDT) |
 | [UD_GERMAN](https://github.com/UniversalDependencies/UD_German-GSD) | [UD_SLOVENIAN](https://github.com/UniversalDependencies/UD_Slovenian-SSJ) |
+| [IMDB](http://ai.stanford.edu/~amaas/data/sentiment/) | [TREC_6](http://cogcomp.org/Data/QA/QC/) | [TREC_50](http://cogcomp.org/Data/QA/QC/)
+| [NER_BASQUE](http://ixa2.si.ehu.eus/eiec/)
 
 
 ## The TaggedCorpus Object

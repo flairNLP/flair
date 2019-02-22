@@ -11,8 +11,13 @@ import torch
 from bpemb import BPEmb
 from deprecated import deprecated
 
-from pytorch_pretrained_bert.tokenization import BertTokenizer
-from pytorch_pretrained_bert.modeling import BertModel, PRETRAINED_MODEL_ARCHIVE_MAP
+from pytorch_pretrained_bert import BertTokenizer, BertModel, TransfoXLTokenizer, TransfoXLModel
+
+from pytorch_pretrained_bert.modeling import \
+    PRETRAINED_MODEL_ARCHIVE_MAP as BERT_PRETRAINED_MODEL_ARCHIVE_MAP
+
+from pytorch_pretrained_bert.modeling_transfo_xl import \
+            PRETRAINED_MODEL_ARCHIVE_MAP as TRANSFORMER_XL_PRETRAINED_MODEL_ARCHIVE_MAP
 
 import flair
 from .nn import LockedDropout, WordDropout
@@ -488,6 +493,58 @@ class ELMoTransformerEmbeddings(TokenEmbeddings):
         return self.name
 
 
+class TransformerXLEmbeddings(TokenEmbeddings):
+    def __init__(self,
+                 model: str = 'transfo-xl-wt103'):
+        """Transformer-XL embeddings, as proposed in Dai et al., 2019.
+        :param model: name of Transformer-XL model
+        """
+        super().__init__()
+
+        if model not in TRANSFORMER_XL_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
+            raise ValueError('Provided Transformer-XL model is not available.')
+
+        self.tokenizer = TransfoXLTokenizer.from_pretrained(model)
+        self.model = TransfoXLModel.from_pretrained(model)
+        self.name = model
+        self.static_embeddings = True
+
+        dummy_sentence: Sentence = Sentence()
+        dummy_sentence.add_token(Token('hello'))
+        embedded_dummy = self.embed(dummy_sentence)
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        self.model.to(flair.device)
+        self.model.eval()
+
+        with torch.no_grad():
+            for sentence in sentences:
+                token_strings = [token.text for token in sentence.tokens]
+                indexed_tokens = self.tokenizer.convert_tokens_to_ids(token_strings)
+
+                tokens_tensor = torch.tensor([indexed_tokens])
+                tokens_tensor = tokens_tensor.to(flair.device)
+
+                hidden_states, _ = self.model(tokens_tensor)
+
+                for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+                    token: Token = token
+                    token.set_embedding(self.name, hidden_states[0][token_idx])
+
+        return sentences
+
+    def extra_repr(self):
+        return 'model={}'.format(self.name)
+
+    def __str__(self):
+        return self.name
+
+
 class CharacterEmbeddings(TokenEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
 
@@ -754,9 +811,18 @@ class FlairEmbeddings(TokenEmbeddings):
         elif model.lower() == 'pubmed-forward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/pubmed-2015-fw-lm.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
-        # Spanish backward
+        # Pubmed backward
         elif model.lower() == 'pubmed-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/pubmed-2015-bw-lm.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+
+        # Japanese forward
+        elif model.lower() == 'japanese-forward' or model.lower() == 'ja-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/lm__char-forward__ja-wikipedia-3GB/japanese-forward.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+        # Japanese backward
+        elif model.lower() == 'japanese-backward' or model.lower() == 'ja-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/lm__char-backward__ja-wikipedia-3GB/japanese-backward.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
 
         elif not Path(model).exists():
@@ -988,26 +1054,27 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 class BertEmbeddings(TokenEmbeddings):
 
     def __init__(self,
-                 bert_model: str = 'bert-base-uncased',
+                 bert_model_or_path: str = 'bert-base-uncased',
                  layers: str = '-1,-2,-3,-4',
                  pooling_operation: str = 'first'):
         """
         Bidirectional transformer embeddings of words, as proposed in Devlin et al., 2018.
-        :param bert_model: name of BERT model ('')
+        :param bert_model_or_path: name of BERT model ('') or directory path containing custom model, configuration file
+        and vocab file (names of three files should be - bert_config.json, pytorch_model.bin/model.chkpt, vocab.txt)
         :param layers: string indicating which layers to take for embedding
         :param pooling_operation: how to get from token piece embeddings to token embedding. Either pool them and take
         the average ('mean') or use first word piece embedding as token embedding ('first)
         """
         super().__init__()
 
-        if bert_model not in PRETRAINED_MODEL_ARCHIVE_MAP.keys():
+        if bert_model_or_path not in BERT_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
             raise ValueError('Provided bert-model is not available.')
 
-        self.tokenizer = BertTokenizer.from_pretrained(bert_model)
-        self.model = BertModel.from_pretrained(bert_model)
+        self.tokenizer = BertTokenizer.from_pretrained(bert_model_or_path)
+        self.model = BertModel.from_pretrained(bert_model_or_path)
         self.layer_indexes = [int(x) for x in layers.split(",")]
         self.pooling_operation = pooling_operation
-        self.name = str(bert_model)
+        self.name = str(bert_model_or_path)
         self.static_embeddings = True
 
     class BertInputFeatures(object):

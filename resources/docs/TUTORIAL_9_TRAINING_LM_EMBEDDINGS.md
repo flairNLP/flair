@@ -82,7 +82,7 @@ of time to train a model (we train for > 1 week).
 
 ## Using the LM as Embeddings
 
-Once you have the LM trained, using it as embeddings is easy. Just load the model into the `CharLMEmbeddings` class and
+Once you have the LM trained, using it as embeddings is easy. Just load the model into the `FlairEmbeddings` class and
 use as you would any other embedding in Flair:
 
 ```python

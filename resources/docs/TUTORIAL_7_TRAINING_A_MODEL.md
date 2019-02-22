@@ -1,6 +1,6 @@
 # Tutorial 7: Training a Model
 
-This part of the tutorial shows how you can train your own sequence labeling and text
+This part of the tutorial shows how you can train your own sequence labelling and text
 classification models using state-of-the-art word embeddings.
 
 For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this
@@ -100,10 +100,7 @@ If the model works well, it will correctly tag 'Berlin' as a location in this ex
 ## Training a Text Classification Model
 
 Here is example code for training a text classifier over the AGNews corpus, using  a combination of simple GloVe
-embeddings and Flair embeddings. You need to download the AGNews first to run this code. 
-The AGNews corpus can be downloaded [here](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html).
-
-In this example, we downsample the data to 10% of the original data.
+embeddings and Flair embeddings. In this example, we downsample the data to 10% of the original data.
 
 ```python
 from flair.data import TaggedCorpus
@@ -127,7 +124,7 @@ word_embeddings = [WordEmbeddings('glove'),
                    # FlairEmbeddings('news-backward'),
                    ]
 
-# 4. init document embedding by passing list of word embeddings
+# 4. initialize document embedding by passing list of word embeddings
 document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings(word_embeddings,
                                                                      hidden_size=512,
                                                                      reproject_words=True,
@@ -327,7 +324,7 @@ set options to optimize training time. There are three questions to ask:
 
 1. Do you have a GPU?
 
-`CharLMEmbeddings` are generated using Pytorch RNNs and are thus optimized for GPUs. If you have one,
+`FlairEmbeddings` are generated using PyTorch RNNs and are thus optimized for GPUs. If you have one,
 you can set large mini-batch sizes to make use of batching. If not, you may want to use smaller language models.
 For English, we package 'fast' variants of our embeddings, loadable like this: `FlairEmbeddings('news-forward-fast')`.
 
@@ -341,7 +338,7 @@ retrieved from disk if you choose to materialize to disk.
 
 3. Do you have a fast hard drive?
 
-If you have a fast hard drive, consider materializing the embeddings to disk. You can do this my instantiating FlairEmbeddings as follows: `FlairEmbeddings('news-forward-fast', use_cache=True)`. This can help if embeddings do not fit into memory. Also if you do not have a GPU and want to do repeat experiments on the same dataset, this helps because embeddings need only be computed once and will then always be retrieved from disk. 
+If you have a fast hard drive, consider materializing the embeddings to disk. You can do this by instantiating FlairEmbeddings as follows: `FlairEmbeddings('news-forward-fast', use_cache=True)`. This can help if embeddings do not fit into memory. Also if you do not have a GPU and want to do repeat experiments on the same dataset, this helps because embeddings need only be computed once and will then always be retrieved from disk. 
 
 
 ## Next
