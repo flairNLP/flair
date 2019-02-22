@@ -192,7 +192,9 @@ class NLPTaskDataFetcher:
 
         # for text classifiers, we use our own special format
         if task in [NLPTask.IMDB.value, NLPTask.AG_NEWS.value, NLPTask.TREC_6.value, NLPTask.TREC_50.value]:
-            return NLPTaskDataFetcher.load_classification_corpus(data_folder)
+            use_tokenizer: bool = False if task in [NLPTask.TREC_6.value, NLPTask.TREC_50.value] else True
+
+            return NLPTaskDataFetcher.load_classification_corpus(data_folder, use_tokenizer=use_tokenizer)
 
         # NER corpus for Basque
         if task == NLPTask.NER_BASQUE.value:
@@ -285,7 +287,7 @@ class NLPTaskDataFetcher:
 
     @staticmethod
     def load_ud_corpus(
-            data_folder: Union[str,Path],
+            data_folder: Union[str, Path],
             train_file=None,
             test_file=None,
             dev_file=None) -> TaggedCorpus:
@@ -326,10 +328,11 @@ class NLPTaskDataFetcher:
 
     @staticmethod
     def load_classification_corpus(
-            data_folder: Union[str,Path],
+            data_folder: Union[str, Path],
             train_file=None,
             test_file=None,
-            dev_file=None) -> TaggedCorpus:
+            dev_file=None,
+            use_tokenizer: bool = True) -> TaggedCorpus:
         """
         Helper function to get a TaggedCorpus from text classification-formatted task data
 
@@ -370,11 +373,14 @@ class NLPTaskDataFetcher:
         log.info("Dev: {}".format(dev_file))
         log.info("Test: {}".format(test_file))
 
-        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(train_file)
-        sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(test_file)
+        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(train_file,
+                                                                                           use_tokenizer=use_tokenizer)
+        sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(test_file,
+                                                                                          use_tokenizer=use_tokenizer)
 
         if dev_file is not None:
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(dev_file)
+            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(dev_file,
+                                                                                             use_tokenizer=use_tokenizer)
         else:
             sentences_dev: List[Sentence] = [sentences_train[i] for i in
                                              NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)]
@@ -383,7 +389,8 @@ class NLPTaskDataFetcher:
         return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
     @staticmethod
-    def read_text_classification_file(path_to_file: Union[str,Path], max_tokens_per_doc=-1) -> List[Sentence]:
+    def read_text_classification_file(path_to_file: Union[str, Path], max_tokens_per_doc=-1, use_tokenizer=True) -> \
+            List[Sentence]:
         """
         Reads a data file for text classification. The file should contain one document/text per line.
         The line should have the following format:
@@ -416,7 +423,7 @@ class NLPTaskDataFetcher:
                 text = line[l_len:].strip()
 
                 if text and labels:
-                    sentence = Sentence(text, labels=labels, use_tokenizer=True)
+                    sentence = Sentence(text, labels=labels, use_tokenizer=use_tokenizer)
                     if len(sentence) > max_tokens_per_doc and max_tokens_per_doc > 0:
                         sentence.tokens = sentence.tokens[:max_tokens_per_doc]
                     if len(sentence.tokens) > 0:

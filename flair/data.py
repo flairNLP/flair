@@ -32,7 +32,7 @@ class Dictionary:
     def add_item(self, item: str) -> int:
         """
         add string - if already in dictionary returns its ID. if not in dictionary, it will get a new ID.
-        :param item: a string for which to assign an id
+        :param item: a string for which to assign an id.
         :return: ID of string
         """
         item = item.encode('utf-8')

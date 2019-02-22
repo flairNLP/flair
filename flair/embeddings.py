@@ -11,8 +11,13 @@ import torch
 from bpemb import BPEmb
 from deprecated import deprecated
 
-from pytorch_pretrained_bert.tokenization import BertTokenizer
-from pytorch_pretrained_bert.modeling import BertModel, PRETRAINED_MODEL_ARCHIVE_MAP
+from pytorch_pretrained_bert import BertTokenizer, BertModel, TransfoXLTokenizer, TransfoXLModel
+
+from pytorch_pretrained_bert.modeling import \
+    PRETRAINED_MODEL_ARCHIVE_MAP as BERT_PRETRAINED_MODEL_ARCHIVE_MAP
+
+from pytorch_pretrained_bert.modeling_transfo_xl import \
+            PRETRAINED_MODEL_ARCHIVE_MAP as TRANSFORMER_XL_PRETRAINED_MODEL_ARCHIVE_MAP
 
 import flair
 from .nn import LockedDropout, WordDropout
@@ -156,6 +161,7 @@ class WordEmbeddings(TokenEmbeddings):
         old_base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/'
         base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/'
         embeddings_path_v4 = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/'
+        embeddings_path_v4_1 = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/'
 
         cache_dir = Path('embeddings')
 
@@ -163,6 +169,11 @@ class WordEmbeddings(TokenEmbeddings):
         if embeddings.lower() == 'glove' or embeddings.lower() == 'en-glove':
             cached_path(f'{old_base_path}glove.gensim.vectors.npy', cache_dir=cache_dir)
             embeddings = cached_path(f'{old_base_path}glove.gensim', cache_dir=cache_dir)
+
+        # TURIAN embeddings
+        elif embeddings.lower() == 'turian' or embeddings.lower() == 'en-turian':
+            cached_path(f'{embeddings_path_v4_1}turian.vectors.npy', cache_dir=cache_dir)
+            embeddings = cached_path(f'{embeddings_path_v4_1}turian', cache_dir=cache_dir)
 
         # KOMNIOS embeddings
         elif embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
@@ -283,7 +294,8 @@ class BPEmbSerializable(BPEmb):
 
 class BytePairEmbeddings(TokenEmbeddings):
 
-    def __init__(self, language: str, dim: int = 50, syllables: int = 100000, cache_dir = Path(flair.file_utils.CACHE_ROOT) / 'embeddings'):
+    def __init__(self, language: str, dim: int = 50, syllables: int = 100000,
+                 cache_dir=Path(flair.file_utils.CACHE_ROOT) / 'embeddings'):
         """
         Initializes BP embeddings. Constructor downloads required files if not there.
         """
@@ -311,9 +323,14 @@ class BytePairEmbeddings(TokenEmbeddings):
                 else:
                     word = token.get_tag(self.field).value
 
-                embeddings = self.embedder.embed(word.lower())
-                embedding = np.concatenate((embeddings[0], embeddings[len(embeddings)-1]))
-                token.set_embedding(self.name, torch.tensor(embedding, dtype=torch.float))
+                if word.strip() == '':
+                    # empty words get no embedding
+                    token.set_embedding(self.name, torch.zeros(self.embedding_length, dtype=torch.float))
+                else:
+                    # all other words get embedded
+                    embeddings = self.embedder.embed(word.lower())
+                    embedding = np.concatenate((embeddings[0], embeddings[len(embeddings) - 1]))
+                    token.set_embedding(self.name, torch.tensor(embedding, dtype=torch.float))
 
         return sentences
 
@@ -476,6 +493,58 @@ class ELMoTransformerEmbeddings(TokenEmbeddings):
         return self.name
 
 
+class TransformerXLEmbeddings(TokenEmbeddings):
+    def __init__(self,
+                 model: str = 'transfo-xl-wt103'):
+        """Transformer-XL embeddings, as proposed in Dai et al., 2019.
+        :param model: name of Transformer-XL model
+        """
+        super().__init__()
+
+        if model not in TRANSFORMER_XL_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
+            raise ValueError('Provided Transformer-XL model is not available.')
+
+        self.tokenizer = TransfoXLTokenizer.from_pretrained(model)
+        self.model = TransfoXLModel.from_pretrained(model)
+        self.name = model
+        self.static_embeddings = True
+
+        dummy_sentence: Sentence = Sentence()
+        dummy_sentence.add_token(Token('hello'))
+        embedded_dummy = self.embed(dummy_sentence)
+        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        self.model.to(flair.device)
+        self.model.eval()
+
+        with torch.no_grad():
+            for sentence in sentences:
+                token_strings = [token.text for token in sentence.tokens]
+                indexed_tokens = self.tokenizer.convert_tokens_to_ids(token_strings)
+
+                tokens_tensor = torch.tensor([indexed_tokens])
+                tokens_tensor = tokens_tensor.to(flair.device)
+
+                hidden_states, _ = self.model(tokens_tensor)
+
+                for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+                    token: Token = token
+                    token.set_embedding(self.name, hidden_states[0][token_idx])
+
+        return sentences
+
+    def extra_repr(self):
+        return 'model={}'.format(self.name)
+
+    def __str__(self):
+        return self.name
+
+
 class CharacterEmbeddings(TokenEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
 
@@ -600,12 +669,12 @@ class FlairEmbeddings(TokenEmbeddings):
 
         # news-english-forward
         elif model.lower() == 'news-forward':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward-v0.2rc.pt'
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/big-news-forward--h2048-l1-d0.05-lr30-0.25-20/news-forward-0.4.1.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # news-english-backward
         elif model.lower() == 'news-backward':
-            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward-v0.2rc.pt'
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/big-news-backward--h2048-l1-d0.05-lr30-0.25-20/news-backward-0.4.1.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # news-english-forward
@@ -736,6 +805,24 @@ class FlairEmbeddings(TokenEmbeddings):
         # Spanish backward
         elif model.lower() == 'spanish-backward' or model.lower() == 'es-backward':
             base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/language_model_es_backward_long/lm-es-backward.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+
+        # Pubmed forward
+        elif model.lower() == 'pubmed-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/pubmed-2015-fw-lm.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+        # Pubmed backward
+        elif model.lower() == 'pubmed-backward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/pubmed-2015-bw-lm.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+
+        # Japanese forward
+        elif model.lower() == 'japanese-forward' or model.lower() == 'ja-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/lm__char-forward__ja-wikipedia-3GB/japanese-forward.pt'
+            model = cached_path(base_path, cache_dir=cache_dir)
+        # Japanese backward
+        elif model.lower() == 'japanese-backward' or model.lower() == 'ja-forward':
+            base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/lm__char-backward__ja-wikipedia-3GB/japanese-backward.pt'
             model = cached_path(base_path, cache_dir=cache_dir)
 
         elif not Path(model).exists():
@@ -967,26 +1054,24 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 class BertEmbeddings(TokenEmbeddings):
 
     def __init__(self,
-                 bert_model: str = 'bert-base-uncased',
+                 bert_model_or_path: str = 'bert-base-uncased',
                  layers: str = '-1,-2,-3,-4',
                  pooling_operation: str = 'first'):
         """
         Bidirectional transformer embeddings of words, as proposed in Devlin et al., 2018.
-        :param bert_model: name of BERT model ('')
+        :param bert_model_or_path: name of BERT model ('') or directory path containing custom model, configuration file
+        and vocab file (names of three files should be - bert_config.json, pytorch_model.bin/model.chkpt, vocab.txt)
         :param layers: string indicating which layers to take for embedding
         :param pooling_operation: how to get from token piece embeddings to token embedding. Either pool them and take
         the average ('mean') or use first word piece embedding as token embedding ('first)
         """
         super().__init__()
 
-        if bert_model not in PRETRAINED_MODEL_ARCHIVE_MAP.keys():
-            raise ValueError('Provided bert-model is not available.')
-
-        self.tokenizer = BertTokenizer.from_pretrained(bert_model)
-        self.model = BertModel.from_pretrained(bert_model)
+        self.tokenizer = BertTokenizer.from_pretrained(bert_model_or_path)
+        self.model = BertModel.from_pretrained(bert_model_or_path)
         self.layer_indexes = [int(x) for x in layers.split(",")]
         self.pooling_operation = pooling_operation
-        self.name = str(bert_model)
+        self.name = str(bert_model_or_path)
         self.static_embeddings = True
 
     class BertInputFeatures(object):
@@ -1497,6 +1582,170 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
         pass
 
 
+class DocumentRNNEmbeddings(DocumentEmbeddings):
+
+    def __init__(self,
+                 embeddings: List[TokenEmbeddings],
+                 hidden_size=128,
+                 rnn_layers=1,
+                 reproject_words: bool = True,
+                 reproject_words_dimension: int = None,
+                 bidirectional: bool = False,
+                 dropout: float = 0.5,
+                 word_dropout: float = 0.0,
+                 locked_dropout: float = 0.0,
+                 rnn_type='GRU'):
+        """The constructor takes a list of embeddings to be combined.
+        :param embeddings: a list of token embeddings
+        :param hidden_size: the number of hidden states in the rnn
+        :param rnn_layers: the number of layers for the rnn
+        :param reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear
+        layer before putting them into the rnn or not
+        :param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
+        dimension as before will be taken.
+        :param bidirectional: boolean value, indicating whether to use a bidirectional rnn or not
+        :param dropout: the dropout value to be used
+        :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
+        :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
+        :param rnn_type: 'GRU', 'LSTM',  'RNN_TANH' or 'RNN_RELU'
+        """
+        super().__init__()
+
+        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
+
+        self.rnn_type = rnn_type
+
+        self.reproject_words = reproject_words
+        self.bidirectional = bidirectional
+
+        self.length_of_all_token_embeddings: int = self.embeddings.embedding_length
+
+        self.static_embeddings = False
+
+        self.__embedding_length: int = hidden_size
+        if self.bidirectional:
+            self.__embedding_length *= 4
+
+        self.embeddings_dimension: int = self.length_of_all_token_embeddings
+        if self.reproject_words and reproject_words_dimension is not None:
+            self.embeddings_dimension = reproject_words_dimension
+
+        # bidirectional RNN on top of embedding layer
+        self.word_reprojection_map = torch.nn.Linear(self.length_of_all_token_embeddings,
+                                                     self.embeddings_dimension)
+        self.rnn = torch.nn.RNNBase(rnn_type, self.embeddings_dimension, hidden_size, num_layers=rnn_layers,
+                                    bidirectional=self.bidirectional)
+
+        self.name = 'document_' + self.rnn._get_name()
+
+        # dropouts
+        if locked_dropout > 0.0:
+            self.dropout: torch.nn.Module = LockedDropout(locked_dropout)
+        else:
+            self.dropout = torch.nn.Dropout(dropout)
+
+        self.use_word_dropout: bool = word_dropout > 0.0
+        if self.use_word_dropout:
+            self.word_dropout = WordDropout(word_dropout)
+
+        torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
+
+        self.to(flair.device)
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def embed(self, sentences: Union[List[Sentence], Sentence]):
+        """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
+         only if embeddings are non-static."""
+
+        if type(sentences) is Sentence:
+            sentences = [sentences]
+
+        self.rnn.zero_grad()
+
+        sentences.sort(key=lambda x: len(x), reverse=True)
+
+        self.embeddings.embed(sentences)
+
+        # first, sort sentences by number of tokens
+        longest_token_sequence_in_batch: int = len(sentences[0])
+
+        all_sentence_tensors = []
+        lengths: List[int] = []
+
+        # go through each sentence in batch
+        for i, sentence in enumerate(sentences):
+
+            lengths.append(len(sentence.tokens))
+
+            word_embeddings = []
+
+            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+                token: Token = token
+                word_embeddings.append(token.get_embedding().unsqueeze(0))
+
+            # PADDING: pad shorter sentences out
+            for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
+                word_embeddings.append(
+                    torch.zeros(self.length_of_all_token_embeddings,
+                                dtype=torch.float).unsqueeze(0)
+                )
+
+            word_embeddings_tensor = torch.cat(word_embeddings, 0).to(flair.device)
+
+            sentence_states = word_embeddings_tensor
+
+            # ADD TO SENTENCE LIST: add the representation
+            all_sentence_tensors.append(sentence_states.unsqueeze(1))
+
+        # --------------------------------------------------------------------
+        # GET REPRESENTATION FOR ENTIRE BATCH
+        # --------------------------------------------------------------------
+        sentence_tensor = torch.cat(all_sentence_tensors, 1)
+
+        # --------------------------------------------------------------------
+        # FF PART
+        # --------------------------------------------------------------------
+        # use word dropout if set
+        if self.use_word_dropout:
+            sentence_tensor = self.word_dropout(sentence_tensor)
+
+        if self.reproject_words:
+            sentence_tensor = self.word_reprojection_map(sentence_tensor)
+
+        sentence_tensor = self.dropout(sentence_tensor)
+
+        packed = torch.nn.utils.rnn.pack_padded_sequence(sentence_tensor, lengths)
+
+        self.rnn.flatten_parameters()
+
+        rnn_out, hidden = self.rnn(packed)
+
+        outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(rnn_out)
+
+        outputs = self.dropout(outputs)
+
+        # --------------------------------------------------------------------
+        # EXTRACT EMBEDDINGS FROM RNN
+        # --------------------------------------------------------------------
+        for sentence_no, length in enumerate(lengths):
+            last_rep = outputs[length - 1, sentence_no]
+
+            embedding = last_rep
+            if self.bidirectional:
+                first_rep = outputs[0, sentence_no]
+                embedding = torch.cat([first_rep, last_rep], 0)
+
+            sentence = sentences[sentence_no]
+            sentence.set_embedding(self.name, embedding)
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]):
+        pass
+
+
+@deprecated(version='0.4', reason="The functionality of this class is moved to 'DocumentRNNEmbeddings'")
 class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
     def __init__(self,

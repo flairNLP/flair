@@ -22,8 +22,9 @@ setup(
         'sqlitedict>=1.6.0',
         'deprecated>=1.2.4',
         'hyperopt>=0.1.1',
-        'pytorch-pretrained-bert>=0.4.0',
-        'bpemb>=0.2.9'
+        'pytorch-pretrained-bert>=0.6.1',
+        'bpemb>=0.2.9',
+        'regex==2018.1.10'
     ],
     include_package_data=True,
     python_requires='>=3.6',
