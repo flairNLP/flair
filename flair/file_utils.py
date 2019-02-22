@@ -123,7 +123,7 @@ def get_from_cache(url: str, cache_dir: Path = None) -> Path:
     if not cache_path.exists():
         # Download to temporary file, then copy to cache dir once finished.
         # Otherwise you get corrupt cache entries if the download gets interrupted.
-        _, temp_filename = tempfile.mkstemp()
+        temp_filename = tempfile.mktemp()
         logger.info("%s not found in cache, downloading to %s", url, temp_filename)
 
         # GET file object
