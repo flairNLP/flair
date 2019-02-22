@@ -11,7 +11,7 @@ how Flair works.
 
 ## CoNLL-03 Named Entity Recognition (English)
 
-#### Current best score
+#### Current best score with Flair
 
 **93.16** F1-score, averaged over 5 runs.
 
@@ -88,7 +88,7 @@ trainer.train('resources/taggers/example-ner',
 
 ## CoNLL-03 Named Entity Recognition (German)
 
-#### Current best score
+#### Current best score with Flair
 
 **88.27** F1-score, averaged over 5 runs.
 
@@ -151,7 +151,7 @@ trainer.train('resources/taggers/example-ner',
 
 ## CoNLL-03 Named Entity Recognition (Dutch)
 
-#### Current best score
+#### Current best score with Flair
 
 **90.44** F1-score, averaged over 5 runs.
 
@@ -206,7 +206,7 @@ trainer.train('resources/taggers/example-ner',
 
 ## WNUT-17 Emerging Entity Detection (English)
 
-#### Current best score
+#### Current best score with Flair
 
 **49.49** F1-score, averaged over 5 runs.
 
@@ -262,7 +262,7 @@ trainer.train('resources/taggers/example-ner',
 
 ## Ontonotes Named Entity Recognition (English)
 
-#### Current best score
+#### Current best score with Flair
 
 **89.3** F1-score, averaged over 2 runs.
 
@@ -332,7 +332,7 @@ trainer.train('resources/taggers/example-ner',
 
 ## Penn Treebank Part-of-Speech Tagging (English)
 
-#### Current best score
+#### Current best score with Flair
 
 **97.85** accuracy, averaged over 5 runs.
 
@@ -397,7 +397,7 @@ trainer.train('resources/taggers/example-ner',
 
 ## CoNLL-2000 Noun Phrase Chunking (English)
 
-#### Current best score
+#### Current best score with Flair
 
 **96.72** F1-score, averaged over 5 runs.
 
