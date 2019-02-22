@@ -196,7 +196,7 @@ corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03_DUTCH)
 print(corpus.make_tag_dictionary('ner'))
 
 # create label dictionary for a text classification task
-corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path='path/to/data/folder')
+corpus = NLPTaskDataFetcher.load_corpus(NLPTask.TREC_6)
 print(corpus.make_label_dictionary())
 ```
 
@@ -206,33 +206,11 @@ dataset. Using it, for example, on the IMDB dataset like this
 ```python
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
  
-corpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB, base_path='path/to/data/folder')
+corpus = NLPTaskDataFetcher.load_corpus(NLPTask.TREC_6)
 stats = corpus.obtain_statistics()
 print(stats)
 ```
-outputs the following information
-
-```text
-{
-  'TRAIN': {
-    'dataset': 'TRAIN', 
-    'total_number_of_documents': 25000, 
-    'number_of_documents_per_class': {'POSITIVE': 12500, 'NEGATIVE': 12500}, 
-    'number_of_tokens': {'total': 6868314, 'min': 10, 'max': 2786, 'avg': 274.73256}
-  }, 
-  'TEST': {
-    'dataset': 'TEST', 
-    'total_number_of_documents': 12500, 
-    'number_of_documents_per_class': {'NEGATIVE': 6245, 'POSITIVE': 6255}, 
-    'number_of_tokens': {'total': 3379510, 'min': 8, 'max': 2768, 'avg': 270.3608}
-  }, 'DEV': {
-    'dataset': 'DEV', 
-    'total_number_of_documents': 12500, 
-    'number_of_documents_per_class': {'POSITIVE': 6245, 'NEGATIVE': 6255}, 
-    'number_of_tokens': {'total': 3334898, 'min': 7, 'max': 2574, 'avg': 266.79184}
-  }
-}
-```
+outputs detailed information on the dataset, each split, and the distribution of class labels.
 
 ## The MultiCorpus Object
 

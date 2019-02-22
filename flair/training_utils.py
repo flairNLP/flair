@@ -68,10 +68,10 @@ class Metric(object):
         return 0.0
 
     def accuracy(self, class_name=None):
-        if self.get_tp(class_name) + self.get_tn(class_name) + self.get_fp(class_name) + self.get_fn(class_name) > 0:
+        if self.get_tp(class_name) + self.get_fp(class_name) + self.get_fn(class_name) > 0:
             return round(
-                (self.get_tp(class_name) + self.get_tn(class_name))
-                / (self.get_tp(class_name) + self.get_tn(class_name) + self.get_fp(class_name) + self.get_fn(class_name)),
+                (self.get_tp(class_name))
+                / (self.get_tp(class_name) + self.get_fp(class_name) + self.get_fn(class_name)),
                 4)
         return 0.0
 
