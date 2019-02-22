@@ -43,11 +43,15 @@ Flair outperforms the previous best methods on a range of NLP tasks:
 | Named Entity Recognition | Dutch  | Conll-03    |  **90.44** (F1)  | *81.74 [(Lample et al., 2016)](https://arxiv.org/abs/1603.01360)* |
 | Named Entity Recognition |Polish  | PolEval-2018    |  **86.6** (F1) <br> [(Borchmann et al., 2018)](https://github.com/applicaai/poleval-2018) | *85.1 [(PolDeepNer)](https://github.com/CLARIN-PL/PolDeepNer/)*|
 
-Here's how to [reproduce these numbers](/resources/docs/EXPERIMENTS.md) using Flair. You can also find a detailed evaluation and discussion in our paper: 
+Here's how to [reproduce these numbers](/resources/docs/EXPERIMENTS.md) using Flair. You can also find detailed evaluations and discussions in our papers:
 
-*[Contextual String Embeddings for Sequence Labeling](https://aclanthology.coli.uni-saarland.de/papers/C18-1139/c18-1139).
+* *[Contextual String Embeddings for Sequence Labeling](https://aclanthology.coli.uni-saarland.de/papers/C18-1139/c18-1139).
 Alan Akbik, Duncan Blythe and Roland Vollgraf. 
-27th International Conference on Computational Linguistics, COLING 2018.* 
+27th International Conference on Computational Linguistics, **COLING 2018**.*
+
+* *Pooled Contextualized Embeddings for Named Entity Recognition (to appear).
+Alan Akbik, Tanja Bergmann and Roland Vollgraf.
+2019 Annual Conference of the North American Chapter of the Association for Computational Linguistics, **NAACL 2019**.*
 
 ## Quick Start
 
