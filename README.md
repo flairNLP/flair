@@ -144,6 +144,18 @@ Please cite the following paper when using Flair:
 }
 ```
 
+If you use the pooled version of the Flair embeddings (PooledFlairEmbeddings), please cite:
+
+```
+@inproceedings{akbik2019naacl,
+  title={Pooled Contextualized Embeddings for Named Entity Recognition},
+  author={Akbik, Alan and Bergmann, Tanja and Vollgraf, Roland},
+  booktitle = {{NAACL} 2019, 2019 Annual Conference of the North American Chapter of the Association for Computational Linguistics},
+  pages     = {to appear},
+  year      = {2019}
+}
+```
+
 ## Contact 
 
 Please email your questions or comments to [Alan Akbik](http://alanakbik.github.io/).
