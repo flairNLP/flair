@@ -334,7 +334,7 @@ trainer.train('resources/taggers/example-ner',
 
 #### Current best score
 
-**97.85	** accuracy, averaged over 5 runs.
+**97.85** accuracy, averaged over 5 runs.
 
 #### Data
 
