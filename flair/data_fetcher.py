@@ -94,6 +94,9 @@ class NLPTask(Enum):
     TREC_6 = 'trec-6'
     TREC_50 = 'trec-50'
 
+    # text regression format
+    REGRESSION = 'regression'
+
 
 class NLPTaskDataFetcher:
 
@@ -191,7 +194,7 @@ class NLPTaskDataFetcher:
             return NLPTaskDataFetcher.load_ud_corpus(data_folder)
 
         # for text classifiers, we use our own special format
-        if task in [NLPTask.IMDB.value, NLPTask.AG_NEWS.value, NLPTask.TREC_6.value, NLPTask.TREC_50.value]:
+        if task in [NLPTask.IMDB.value, NLPTask.AG_NEWS.value, NLPTask.TREC_6.value, NLPTask.TREC_50.value, NLPTask.REGRESSION.value]:
             use_tokenizer: bool = False if task in [NLPTask.TREC_6.value, NLPTask.TREC_50.value] else True
 
             return NLPTaskDataFetcher.load_classification_corpus(data_folder, use_tokenizer=use_tokenizer)
