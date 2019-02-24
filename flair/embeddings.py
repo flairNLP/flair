@@ -1818,16 +1818,16 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:   
         return self.__embedding_length
 
-    def embed(self, sentences: Union[List[Sentence], Sentence]):
+    def embed(self, sentences: Union[List[Sentence], Sentence], return_sequences: bool = False):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
          only if embeddings are non-static."""
 
-        if type(sentences) is Sentence:   
+        if type(sentences) is Sentence:
             sentences = [sentences]
 
         self.rnn.zero_grad()
 
-        sentences.sort(key=lambda x: len(x), reverse=True) 
+        sentences.sort(key=lambda x: len(x), reverse=True)
 
         self.embeddings.embed(sentences)
 
@@ -1892,16 +1892,23 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         # --------------------------------------------------------------------
         # EXTRACT EMBEDDINGS FROM LSTM
         # --------------------------------------------------------------------
-        for sentence_no, length in enumerate(lengths):
-            last_rep = outputs[length - 1, sentence_no]
 
-            embedding = last_rep
-            if self.bidirectional:
-                first_rep = outputs[0, sentence_no]
-                embedding = torch.cat([first_rep, last_rep], 0)
+        if return_sequences:
 
-            sentence = sentences[sentence_no]
-            sentence.set_embedding(self.name, embedding)
+            return outputs
+
+        else:
+
+            for sentence_no, length in enumerate(lengths):
+                last_rep = outputs[length - 1, sentence_no]
+
+                embedding = last_rep
+                if self.bidirectional:
+                    first_rep = outputs[0, sentence_no]
+                    embedding = torch.cat([first_rep, last_rep], 0)
+
+                sentence = sentences[sentence_no]
+                sentence.set_embedding(self.name, embedding)
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass

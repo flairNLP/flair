@@ -48,12 +48,12 @@ class Attention(flair.nn.Model):
 
         if weighted_sum_candidates is None:
             if self.batch_first:
-                weighting = torch.sum(weights * attention_candidates, dim=1, keepdim=True)
+                weighting = torch.sum(weights * attention_candidates, dim=1, keepdim=True).to(flair.device)
             else:
-                weighting = torch.sum(weights * dummy, dim=1, keepdim=True)
+                weighting = torch.sum(weights * dummy, dim=1, keepdim=True).to(flair.device)
 
         else:
-            weighting = torch.sum(weights * weighted_sum_candidates, dim=1, keepdim=True)
+            weighting = torch.sum(weights * weighted_sum_candidates, dim=1, keepdim=True).to(flair.device)
 
         return weighting
 
@@ -122,16 +122,17 @@ class TextClassifier(flair.nn.Model):
         if not self.attention:
             self.document_embeddings.embed(sentences)
             text_embedding_list = [sentence.get_embedding().unsqueeze(0) for sentence in sentences]
-            text_embedding_tensor = torch.cat(text_embedding_list, 0)
+            text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
             label_scores = self.decoder(text_embedding_tensor)
 
         # experimental - use attention
         else:
+
             # define and register a hook that is called during the forward pass to get internal RNN states
             self.rnn_output = None
 
             def hook(m, i, o):
-                self.rnn_output = o.data
+                self.rnn_output = o
 
             handle = self.document_embeddings.dropout.register_forward_hook(hook)
 
