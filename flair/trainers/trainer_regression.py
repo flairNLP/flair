@@ -1,4 +1,7 @@
 import flair
+import torch
+import torch.nn as nn
+
 from typing import List, Union
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from flair.training_utils import Metric, EvaluationMetric, clear_embeddings
