@@ -38,3 +38,13 @@ def test_trainer_evaluation(tasks_base_path):
     expected = trainer._evaluate_text_regressor(model, corpus.dev)
 
     assert(expected is not None)
+
+def test_trainer_results(tasks_base_path):
+    corpus, model, trainer = init(tasks_base_path)
+
+    results = trainer.train('regression_train/', max_epochs=1)
+
+    assert(results['test_score'] > 0)
+    assert(len(results['dev_loss_history']) == 1)
+    assert(len(results['dev_score_history']) == 1)
+    assert(len(results['train_loss_history']) == 1)
