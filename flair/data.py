@@ -323,6 +323,9 @@ class Sentence:
 
             # otherwise assumes whitespace tokenized text
             else:
+                # catch the empty string case
+                if not text:
+                    raise ValueError("Cannot convert empty string to a Sentence object.")
                 # add each word in tokenized string as Token object to Sentence
                 word = ''
                 for index, char in enumerate(text):
