@@ -18,11 +18,11 @@ def init(tasks_base_path) -> Tuple[TaggedCorpus, TextRegressor]:
 
     trainer = RegressorTrainer(model, corpus)
 
-    return corpus, model
+    return corpus, model, trainer
 
 
 def test_labels_to_indices(tasks_base_path):
-    corpus, model = init(tasks_base_path)
+    corpus, model, trainer = init(tasks_base_path)
 
     result = model._labels_to_indices(corpus.train)
 
@@ -31,3 +31,10 @@ def test_labels_to_indices(tasks_base_path):
         actual = round(float(result[i].item()),3)
 
         assert(expected == actual)
+
+def test_trainer_evaluation(tasks_base_path):
+    corpus, model, trainer = init(tasks_base_path)
+
+    expected = trainer._evaluate_text_regressor(model, corpus.dev)
+
+    assert(expected == True)

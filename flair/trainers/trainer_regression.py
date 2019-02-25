@@ -36,7 +36,7 @@ class RegressorTrainer(flair.trainers.ModelTrainer):
                   for label in sentence.labels:
                     indices.append(torch.FloatTensor([float(label.value)]))
 
-                true_values = torch.cat(indices, 0).cuda()
+                true_values = torch.cat(indices, 0)
                 
                 clear_embeddings(batch, also_clear_word_embeddings=not embeddings_in_memory)
 
