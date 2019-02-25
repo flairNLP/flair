@@ -37,4 +37,4 @@ def test_trainer_evaluation(tasks_base_path):
 
     expected = trainer._evaluate_text_regressor(model, corpus.dev)
 
-    assert(expected == True)
+    assert(expected is not None)
