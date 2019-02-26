@@ -4,6 +4,7 @@ import torch.nn as nn
 
 from typing import List, Union
 from sklearn.metrics import mean_squared_error, mean_absolute_error
+from scipy.stats import pearsonr, spearmanr
 from flair.training_utils import Metric, EvaluationMetric, clear_embeddings, log_line
 from flair.models.text_regression_model import TextRegressor
 from flair.data import Sentence, Label
@@ -50,6 +51,9 @@ class RegressorTrainer(flair.trainers.ModelTrainer):
 
                 metric['mae'] = mean_absolute_error(results, true_values)
                 metric['mse'] = mean_squared_error(results, true_values)
+                metric['pearson'] = pearsonr(results, true_values)[0]
+                metric['spearman'] = spearmanr(results, true_values)[0]
+
 
             eval_loss /= len(sentences)
 
@@ -93,8 +97,10 @@ class RegressorTrainer(flair.trainers.ModelTrainer):
 
         mae = test_metric['mae']
         mse = test_metric['mse']
+        pearson = test_metric['pearson']
+        spearman = test_metric['spearman']
 
-        log.info(f'AVG: mse {mse} - mae {mae}')
+        log.info(f'AVG: mse {mse} - mae {mae} - pearson {pearson} - spearman {spearman}')
 
         log_line(log)
 
