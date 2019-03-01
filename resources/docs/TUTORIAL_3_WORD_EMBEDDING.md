@@ -18,7 +18,7 @@ fine-tuning.
 ## Classic Word Embeddings
 
 Classic word embeddings are static and word-level, meaning that each distinct word gets exactly one pre-computed 
-embedding. Most embeddings fall under this class, including the popular GloVe or Komnios embeddings. 
+embedding. Most embeddings fall under this class, including the popular GloVe or Komninos embeddings. 
 
 Simply instantiate the WordEmbeddings class and pass a string identifier of the embedding you wish to load. So, if 
 you want to use GloVe embeddings, pass the string 'glove' to the constructor: 
@@ -62,7 +62,7 @@ The following embeddings are currently supported:
 | ID | Language | Embedding | 
 | ------------- | -------------  | ------------- |
 | 'en-glove' (or 'glove') | English | GloVe embeddings |
-| 'en-extvec' (or 'extvec') | English |Komnios embeddings |
+| 'en-extvec' (or 'extvec') | English |Komninos embeddings |
 | 'en-crawl' (or 'crawl')  | English | FastText embeddings over Web crawls |
 | 'en-twitter' (or 'twitter')  | English | Twitter embeddings |
 | 'en-turian' (or 'turian')  | English | Turian embeddings (small) |
