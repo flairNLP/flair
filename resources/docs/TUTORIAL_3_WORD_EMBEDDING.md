@@ -85,7 +85,7 @@ The following embeddings are currently supported:
 | 'pl' | Slovenian | Slovenian FastText embeddings |
 | 'sr' | Serbian | Serbian FastText embeddings |
 | 'hr' | Croatian | Croatian FastText embeddings |
-| 'bg' | Bulgarian | CroatBulgarianian FastText embeddings |
+| 'bg' | Bulgarian | Bulgarian FastText embeddings |
 | 'ru' | Russian | Russian FastText embeddings |
 | 'ar' | Arabic | Arabic FastText embeddings |
 | 'he' | Hebrew | Hebrew FastText embeddings |
@@ -230,4 +230,3 @@ vector is still a single PyTorch vector.
 You can now either look into [BERT, ELMo, and Flair embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md),
 or go directly to the tutorial about [loading your corpus](/resources/docs/TUTORIAL_6_CORPUS.md), which is a
 pre-requirement for [training your own models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md).
-
