@@ -31,11 +31,9 @@ class TextClassifier(flair.nn.Model):
 
         super(TextClassifier, self).__init__()
 
-        self.document_embeddings = document_embeddings
+        self.document_embeddings: flair.embeddings.DocumentLSTMEmbeddings = document_embeddings
         self.label_dictionary: Dictionary = label_dictionary
         self.multi_label = multi_label
-
-        self.document_embeddings: flair.embeddings.DocumentLSTMEmbeddings = document_embeddings
 
         self.decoder = nn.Linear(self.document_embeddings.embedding_length, len(self.label_dictionary))
 
