@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Iterable
 
 import torch
 import logging
@@ -11,6 +11,8 @@ from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
 
+import itertools
+from inspect import isgeneratorfunction
 
 log = logging.getLogger('flair')
 
@@ -602,19 +604,16 @@ class Sentence:
 
 class Corpus:
 
-    @property
     @abstractmethod
-    def train(self) -> List[Sentence]:
+    def train(self) -> Iterable[Sentence]:
         pass
 
-    @property
     @abstractmethod
-    def dev(self) -> List[Sentence]:
+    def dev(self) -> Iterable[Sentence]:
         pass
 
-    @property
     @abstractmethod
-    def test(self) -> List[Sentence]:
+    def test(self) -> Iterable[Sentence]:
         pass
 
     @abstractmethod
@@ -623,7 +622,7 @@ class Corpus:
         pass
 
     @abstractmethod
-    def get_all_sentences(self) -> List[Sentence]:
+    def get_all_sentences(self) -> Iterable[Sentence]:
         """Gets all sentences in the corpus (train, dev and test splits together)."""
         pass
 
@@ -641,40 +640,40 @@ class Corpus:
         pass
 
 
+def wrapper(obj):
+        if callable(obj):
+            return obj()
+        else:
+            return iter(obj)
+
+
 class TaggedCorpus(Corpus):
-    def __init__(self, train: List[Sentence], dev: List[Sentence], test: List[Sentence], name: str = 'corpus'):
-        self._train: List[Sentence] = train
-        self._dev: List[Sentence] = dev
-        self._test: List[Sentence] = test
+    def __init__(self, train: Iterable[Sentence], dev: Iterable[Sentence], test: Iterable[Sentence], name: str = 'corpus'):
+        self._train: Iterable[Sentence] = train
+        self._dev: Iterable[Sentence] = dev
+        self._test: Iterable[Sentence] = test
         self.name: str = name
 
-    @property
-    def train(self) -> List[Sentence]:
-        return self._train
+    def train(self) -> Iterable[Sentence]:
+        return wrapper(self._train)
 
-    @property
-    def dev(self) -> List[Sentence]:
-        return self._dev
+    def dev(self) -> Iterable[Sentence]:
+        return wrapper(self._dev)
 
-    @property
-    def test(self) -> List[Sentence]:
-        return self._test
+    def test(self) -> Iterable[Sentence]:
+        return wrapper(self._test)
 
     def downsample(self, percentage: float = 0.1, only_downsample_train=False):
 
-        self._train = self._downsample_to_proportion(self.train, percentage)
+        self._train = self._downsample_to_proportion(self.train(), percentage)
         if not only_downsample_train:
-            self._dev = self._downsample_to_proportion(self.dev, percentage)
-            self._test = self._downsample_to_proportion(self.test, percentage)
+            self._dev = self._downsample_to_proportion(self.dev(), percentage)
+            self._test = self._downsample_to_proportion(self.test(), percentage)
 
         return self
 
-    def get_all_sentences(self) -> List[Sentence]:
-        all_sentences: List[Sentence] = []
-        all_sentences.extend(self.train)
-        all_sentences.extend(self.dev)
-        all_sentences.extend(self.test)
-        return all_sentences
+    def get_all_sentences(self) -> Iterable[Sentence]:
+        return itertools.chain(self.train(), self.dev(), self.test())
 
     def make_tag_dictionary(self, tag_type: str) -> Dictionary:
 
@@ -734,14 +733,14 @@ class TaggedCorpus(Corpus):
         return tokens
 
     def _get_all_label_names(self) -> List[str]:
-        return [label.value for sent in self.train for label in sent.labels]
+        return [label.value for sent in self.train() for label in sent.labels]
 
     def _get_all_tokens(self) -> List[str]:
-        tokens = list(map((lambda s: s.tokens), self.train))
+        tokens = list(map((lambda s: s.tokens), self.train()))
         tokens = [token for sublist in tokens for token in sublist]
         return list(map((lambda t: t.text), tokens))
 
-    def _downsample_to_proportion(self, list: List, proportion: float):
+    def _downsample_to_proportion(self, list: Iterable, proportion: float):
 
         counter = 0.0
         last_counter = None
@@ -877,35 +876,32 @@ class MultiCorpus(Corpus):
     def __init__(self, corpora: List[TaggedCorpus]):
         self.corpora: List[TaggedCorpus] = corpora
 
-    @property
-    def train(self) -> List[Sentence]:
-        train: List[Sentence] = []
+    def train(self) -> Iterable[Sentence]:
+        iters = []
         for corpus in self.corpora:
-            train.extend(corpus.train)
-        return train
+            iters.append(corpus.train())
+        return itertools.chain(*iters)
 
-    @property
-    def dev(self) -> List[Sentence]:
-        dev: List[Sentence] = []
+    def dev(self) -> Iterable[Sentence]:
+        iters = []
         for corpus in self.corpora:
-            dev.extend(corpus.dev)
-        return dev
+            iters.append(corpus.dev())
+        return itertools.chain(*iters)
 
-    @property
-    def test(self) -> List[Sentence]:
-        test: List[Sentence] = []
+    def test(self) -> Iterable[Sentence]:
+        iters = []
         for corpus in self.corpora:
-            test.extend(corpus.test)
-        return test
+            iters.append(corpus.test())
+        return itertools.chain(*iters)
 
     def __str__(self):
         return '\n'.join([str(corpus) for corpus in self.corpora])
 
     def get_all_sentences(self) -> List[Sentence]:
-        sentences = []
+        iters = []
         for corpus in self.corpora:
-            sentences.extend(corpus.get_all_sentences())
-        return sentences
+            iters.append(corpus.get_all_sentences())
+        return itertools.chain(*iters)
 
     def downsample(self, percentage: float = 0.1, only_downsample_train=False):
 

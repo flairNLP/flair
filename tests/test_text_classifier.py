@@ -22,10 +22,11 @@ def init(tasks_base_path) -> Tuple[TaggedCorpus, Dictionary, TextClassifier]:
 def test_labels_to_indices(tasks_base_path):
     corpus, label_dict, model = init(tasks_base_path)
 
-    result = model._labels_to_indices(corpus.train)
+    result = model._labels_to_indices(corpus.train())
+    train = list(corpus.train())
 
-    for i in range(len(corpus.train)):
-        expected = label_dict.get_idx_for_item(corpus.train[i].labels[0].value)
+    for i in range(len(train)):
+        expected = label_dict.get_idx_for_item(train[i].labels[0].value)
         actual = result[i].item()
 
         assert(expected == actual)
@@ -34,10 +35,11 @@ def test_labels_to_indices(tasks_base_path):
 def test_labels_to_one_hot(tasks_base_path):
     corpus, label_dict, model = init(tasks_base_path)
 
-    result = model._labels_to_one_hot(corpus.train)
+    result = model._labels_to_one_hot(corpus.train())
+    train = list(corpus.train())
 
-    for i in range(len(corpus.train)):
-        expected = label_dict.get_idx_for_item(corpus.train[i].labels[0].value)
+    for i in range(len(train)):
+        expected = label_dict.get_idx_for_item(train[i].labels[0].value)
         actual = result[i]
 
         for idx in range(len(label_dict)):

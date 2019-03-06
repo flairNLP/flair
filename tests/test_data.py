@@ -83,13 +83,14 @@ def test_sentence_to_real_string(tasks_base_path):
 
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.GERMEVAL, tasks_base_path)
 
-    sentence = corpus.train[0]
+    it = corpus.train()
+    sentence = next(it)
     assert (
                 'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in einer Weise aufgetreten , die alles andere als überzeugend war " .' == sentence.to_tokenized_string())
     assert (
                 'Schartau sagte dem "Tagesspiegel" vom Freitag, Fischer sei "in einer Weise aufgetreten, die alles andere als überzeugend war".' == sentence.to_plain_string())
 
-    sentence = corpus.train[1]
+    sentence = next(it)
     assert (
                 'Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf .' == sentence.to_tokenized_string())
     assert (
@@ -230,7 +231,7 @@ def test_tagged_corpus_get_all_sentences():
 
     all_sentences = corpus.get_all_sentences()
 
-    assert (3 == len(all_sentences))
+    assert (3 == len(list(all_sentences)))
 
 
 def test_tagged_corpus_make_vocab_dictionary():
@@ -387,11 +388,11 @@ def test_tagged_corpus_downsample():
     corpus: TaggedCorpus = TaggedCorpus(
         [sentence, sentence, sentence, sentence, sentence, sentence, sentence, sentence, sentence, sentence], [], [])
 
-    assert (10 == len(corpus.train))
+    assert (10 == len(list(corpus.train())))
 
     corpus.downsample(percentage=0.3, only_downsample_train=True)
 
-    assert (3 == len(corpus.train))
+    assert (3 == len(list(corpus.train())))
 
 
 def test_spans():

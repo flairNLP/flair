@@ -1,7 +1,7 @@
 import warnings
 import logging
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Iterable
 
 import torch
 import torch.nn as nn
@@ -231,14 +231,14 @@ class TextClassifier(flair.nn.Model):
     def _calculate_single_label_loss(self, label_scores, sentences: List[Sentence]) -> float:
         return self.loss_function(label_scores, self._labels_to_indices(sentences))
 
-    def _labels_to_one_hot(self, sentences: List[Sentence]):
+    def _labels_to_one_hot(self, sentences: Iterable[Sentence]):
         label_list = [sentence.get_label_names() for sentence in sentences]
         one_hot = convert_labels_to_one_hot(label_list, self.label_dictionary)
         one_hot = [torch.FloatTensor(l).unsqueeze(0) for l in one_hot]
         one_hot = torch.cat(one_hot, 0).to(flair.device)
         return one_hot
 
-    def _labels_to_indices(self, sentences: List[Sentence]):
+    def _labels_to_indices(self, sentences: Iterable[Sentence]):
         indices = [
             torch.LongTensor([self.label_dictionary.get_idx_for_item(label.value) for label in sentence.labels])
             for sentence in sentences

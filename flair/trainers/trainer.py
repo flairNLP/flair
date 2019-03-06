@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Iterable
 
 import datetime
 import random
@@ -16,6 +16,17 @@ from flair.optim import *
 
 
 log = logging.getLogger('flair')
+
+
+def iter_batch(l, batch_size):
+    curr_batch = []
+    for e in l:
+        curr_batch.append(e)
+        if len(curr_batch) == batch_size:
+            yield curr_batch
+            curr_batch = []
+    if curr_batch:
+        yield curr_batch
 
 
 class ModelTrainer:
@@ -135,18 +146,21 @@ class ModelTrainer:
                     log_line(log)
                     break
 
-                if not test_mode:
-                    random.shuffle(train_data)
+                #if not test_mode:
+                #    random.shuffle(train_data)
 
-                batches = [train_data[x:x + mini_batch_size] for x in range(0, len(train_data), mini_batch_size)]
+                #batches = [train_data[x:x + mini_batch_size] for x in range(0, len(train_data), mini_batch_size)]
+                batches = iter_batch(train_data(), mini_batch_size)
 
                 self.model.train()
 
                 train_loss: float = 0
                 seen_sentences = 0
-                modulo = max(1, int(len(batches) / 10))
+                #modulo = max(1, int(len(batches) / 10))
 
+                train_data_count = 0
                 for batch_no, batch in enumerate(batches):
+                    train_data_count += len(batch)
                     loss = self.model.forward_loss(batch)
 
                     optimizer.zero_grad()
@@ -159,14 +173,14 @@ class ModelTrainer:
 
                     clear_embeddings(batch, also_clear_word_embeddings=not embeddings_in_memory)
 
-                    if batch_no % modulo == 0:
-                        log.info(f'epoch {epoch + 1} - iter {batch_no}/{len(batches)} - loss '
-                                 f'{train_loss / seen_sentences:.8f}')
-                        iteration = epoch * len(batches) + batch_no
-                        if not param_selection_mode:
-                            weight_extractor.extract_weights(self.model.state_dict(), iteration)
+                    #if batch_no % modulo == 0:
+                    #    log.info(f'epoch {epoch + 1} - iter {batch_no}/{len(batches)} - loss '
+                    #             f'{train_loss / seen_sentences:.8f}')
+                    #    iteration = epoch * len(batches) + batch_no
+                    #    if not param_selection_mode:
+                    #        weight_extractor.extract_weights(self.model.state_dict(), iteration)
 
-                train_loss /= len(train_data)
+                train_loss /= train_data_count
 
                 self.model.eval()
 
@@ -180,15 +194,15 @@ class ModelTrainer:
                 test_metric = None
                 if monitor_train:
                     train_metric, train_loss = self._calculate_evaluation_results_for(
-                        'TRAIN', self.corpus.train, evaluation_metric, embeddings_in_memory, eval_mini_batch_size)
+                        'TRAIN', self.corpus.train(), evaluation_metric, embeddings_in_memory, eval_mini_batch_size)
 
                 if not train_with_dev:
                     dev_metric, dev_loss = self._calculate_evaluation_results_for(
-                        'DEV', self.corpus.dev, evaluation_metric, embeddings_in_memory, eval_mini_batch_size)
+                        'DEV', self.corpus.dev(), evaluation_metric, embeddings_in_memory, eval_mini_batch_size)
 
                 if not param_selection_mode and self.corpus.test:
                     test_metric, test_loss = self._calculate_evaluation_results_for(
-                        'TEST', self.corpus.test, evaluation_metric, embeddings_in_memory, eval_mini_batch_size,
+                        'TEST', self.corpus.test(), evaluation_metric, embeddings_in_memory, eval_mini_batch_size,
                         base_path / 'test.tsv')
 
                 if not param_selection_mode:
@@ -214,7 +228,7 @@ class ModelTrainer:
 
                     # append dev score to score history
                     dev_score_history.append(dev_score)
-                    dev_loss_history.append(dev_loss.item())
+                    dev_loss_history.append(dev_loss)
 
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 current_score = train_loss if anneal_against_train_loss else dev_score
@@ -274,7 +288,7 @@ class ModelTrainer:
             if isinstance(self.model, SequenceTagger):
                 self.model = SequenceTagger.load_from_file(base_path / 'best-model.pt')
 
-        test_metric, test_loss = self.evaluate(self.model, self.corpus.test, eval_mini_batch_size=eval_mini_batch_size,
+        test_metric, test_loss = self.evaluate(self.model, self.corpus.test(), eval_mini_batch_size=eval_mini_batch_size,
                                                embeddings_in_memory=embeddings_in_memory)
 
         log.info(f'MICRO_AVG: acc {test_metric.micro_avg_accuracy()} - f1-score {test_metric.micro_avg_f_score()}')
@@ -312,7 +326,7 @@ class ModelTrainer:
 
     def _calculate_evaluation_results_for(self,
                                           dataset_name: str,
-                                          dataset: List[Sentence],
+                                          dataset: Iterable[Sentence],
                                           evaluation_metric: EvaluationMetric,
                                           embeddings_in_memory: bool,
                                           eval_mini_batch_size: int,
@@ -333,7 +347,7 @@ class ModelTrainer:
         return metric, loss
 
     @staticmethod
-    def evaluate(model: flair.nn.Model, data_set: List[Sentence],
+    def evaluate(model: flair.nn.Model, data_set: Iterable[Sentence],
                  eval_mini_batch_size: int = 32,
                  embeddings_in_memory: bool = True,
                  out_path: Path = None) -> (
@@ -409,7 +423,7 @@ class ModelTrainer:
 
     @staticmethod
     def _evaluate_text_classifier(model: flair.nn.Model,
-                                  sentences: List[Sentence],
+                                  sentences: Iterable[Sentence],
                                   eval_mini_batch_size: int = 32,
                                   embeddings_in_memory: bool = False,
                                   out_path: Path = None) -> (dict, float):
@@ -417,14 +431,15 @@ class ModelTrainer:
         with torch.no_grad():
             eval_loss = 0
 
-            batches = [sentences[x:x + eval_mini_batch_size] for x in
-                       range(0, len(sentences), eval_mini_batch_size)]
+            #batches = [sentences[x:x + eval_mini_batch_size] for x in
+            #           range(0, len(sentences), eval_mini_batch_size)]
+            batches = iter_batch(sentences, eval_mini_batch_size)
 
             metric = Metric('Evaluation')
-
+            sentences_len = 0
             lines: List[str] = []
             for batch in batches:
-
+                sentences_len += len(batch)
                 labels, loss = model.forward_labels_and_loss(batch)
 
                 clear_embeddings(batch, also_clear_word_embeddings=not embeddings_in_memory)
@@ -448,7 +463,7 @@ class ModelTrainer:
                                                                             predictions_for_sentence,
                                                                             true_values_for_sentence)
 
-            eval_loss /= len(sentences)
+            eval_loss /= sentences_len
 
             if out_path is not None:
                 with open(out_path, "w", encoding='utf-8') as outfile:

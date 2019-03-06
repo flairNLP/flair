@@ -1,4 +1,4 @@
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Iterator, Iterable
 import re
 import logging
 from enum import Enum
@@ -373,14 +373,15 @@ class NLPTaskDataFetcher:
         log.info("Dev: {}".format(dev_file))
         log.info("Test: {}".format(test_file))
 
-        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(train_file,
-                                                                                           use_tokenizer=use_tokenizer)
-        sentences_test: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(test_file,
-                                                                                          use_tokenizer=use_tokenizer)
+        def make_read_text_classification_file(f):
+            return lambda: NLPTaskDataFetcher.read_text_classification_file(f,
+                                                                            use_tokenizer=use_tokenizer)
+
+        sentences_train: Iterable[Sentence] = make_read_text_classification_file(train_file)
+        sentences_test: Iterable[Sentence] = make_read_text_classification_file(test_file)
 
         if dev_file is not None:
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_text_classification_file(dev_file,
-                                                                                             use_tokenizer=use_tokenizer)
+            sentences_dev: Iterable[Sentence] = make_read_text_classification_file(dev_file)
         else:
             sentences_dev: List[Sentence] = [sentences_train[i] for i in
                                              NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)]
@@ -390,7 +391,7 @@ class NLPTaskDataFetcher:
 
     @staticmethod
     def read_text_classification_file(path_to_file: Union[str, Path], max_tokens_per_doc=-1, use_tokenizer=True) -> \
-            List[Sentence]:
+            Iterable[Sentence]:
         """
         Reads a data file for text classification. The file should contain one document/text per line.
         The line should have the following format:
@@ -427,9 +428,7 @@ class NLPTaskDataFetcher:
                     if len(sentence) > max_tokens_per_doc and max_tokens_per_doc > 0:
                         sentence.tokens = sentence.tokens[:max_tokens_per_doc]
                     if len(sentence.tokens) > 0:
-                        sentences.append(sentence)
-
-        return sentences
+                        yield sentence
 
     @staticmethod
     def read_column_data(path_to_column_file: Path,
