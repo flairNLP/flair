@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import List
 from flair.data import Dictionary, Sentence
 from functools import reduce
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+from scipy.stats import pearsonr, spearmanr
 
 
 class Metric(object):
@@ -133,6 +135,59 @@ class Metric(object):
                 self.f_score(class_name))
             for class_name in all_classes]
         return '\n'.join(all_lines)
+
+
+class MetricRegression(object):
+
+    def __init__(self, name):
+        self.name = name
+
+        self.true = []
+        self.pred = []
+
+    def mean_squared_error(self):
+        return mean_squared_error(self.true, self.pred)
+
+    def mean_absolute_error(self):
+        return mean_absolute_error(self.true, self.pred)
+
+    def pearsonr(self):
+        return pearsonr(self.true, self.pred)[0]
+
+    def spearmanr(self):
+        return spearmanr(self.true, self.pred)[0]
+
+    ## dummy return to fulfill trainer.train() needs
+    def micro_avg_f_score(self):
+        return self.mean_squared_error()
+
+    def to_tsv(self):
+        return '{}\t{}\t{}\t{}'.format(
+            self.mean_squared_error(),
+            self.mean_absolute_error(),
+            self.pearsonr(),
+            self.spearmanr(),
+        )
+
+    @staticmethod
+    def tsv_header(prefix=None):
+        if prefix:
+            return '{0}_MEAN_SQUARED_ERROR\t{0}_MEAN_ABSOLUTE_ERROR\t{0}_PEARSON\t{0}_SPEARMAN'.format(
+                prefix)
+
+        return 'MEAN_SQUARED_ERROR\tMEAN_ABSOLUTE_ERROR\tPEARSON\tSPEARMAN'
+
+    @staticmethod
+    def to_empty_tsv():
+        return '\t_\t_\t_\t_'
+
+    def __str__(self):
+        line = 'mean squared error: {0:.4f} - mean absolute error: {1:.4f} - pearson: {2:.4f} - spearman: {3:.4f}'.format(
+                self.mean_squared_error(),
+                self.mean_absolute_error(),
+                self.pearsonr(),
+                self.spearmanr())
+        return line
 
 
 class EvaluationMetric(Enum):

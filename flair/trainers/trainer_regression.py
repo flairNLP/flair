@@ -3,9 +3,7 @@ import torch
 import torch.nn as nn
 
 from typing import List, Union
-from sklearn.metrics import mean_squared_error, mean_absolute_error
-from scipy.stats import pearsonr, spearmanr
-from flair.training_utils import Metric, EvaluationMetric, clear_embeddings, log_line
+from flair.training_utils import MetricRegression, EvaluationMetric, clear_embeddings, log_line
 from flair.models.text_regression_model import TextRegressor
 from flair.data import Sentence, Label
 from pathlib import Path
@@ -59,7 +57,8 @@ class RegressorTrainer(flair.trainers.ModelTrainer):
     def _evaluate_text_regressor(model: flair.nn.Model,
                                   sentences: List[Sentence],
                                   eval_mini_batch_size: int = 32,
-                                  embeddings_in_memory: bool = False) -> (dict, float):
+                                  embeddings_in_memory: bool = False,
+                                  out_path: Path = None) -> (dict, float):
 
         with torch.no_grad():
             eval_loss = 0
@@ -67,8 +66,9 @@ class RegressorTrainer(flair.trainers.ModelTrainer):
             batches = [sentences[x:x + eval_mini_batch_size] for x in
                        range(0, len(sentences), eval_mini_batch_size)]
 
-            metric = {}
+            metric = MetricRegression('Evaluation')
 
+            lines: List[str] = []
             for batch in batches:
               
                 scores, loss = model.forward_labels_and_loss(batch)
@@ -89,13 +89,15 @@ class RegressorTrainer(flair.trainers.ModelTrainer):
 
                 eval_loss += loss
 
-                metric['mae'] = mean_absolute_error(results, true_values)
-                metric['mse'] = mean_squared_error(results, true_values)
-                metric['pearson'] = pearsonr(results, true_values)[0]
-                metric['spearman'] = spearmanr(results, true_values)[0]
-
+                metric.true.extend(true_values)
+                metric.pred.extend(results)
 
             eval_loss /= len(sentences)
+
+            ##TODO: not saving lines yet
+            if out_path is not None:
+                with open(out_path, "w", encoding='utf-8') as outfile:
+                    outfile.write(''.join(lines))
 
             return metric, eval_loss
 
@@ -109,14 +111,14 @@ class RegressorTrainer(flair.trainers.ModelTrainer):
                                           out_path: Path = None):
 
         metric, loss = RegressorTrainer._evaluate_text_regressor(self.model, dataset, eval_mini_batch_size=eval_mini_batch_size,
-                                             embeddings_in_memory=embeddings_in_memory)
+                                             embeddings_in_memory=embeddings_in_memory, out_path=out_path)
 
-        mae = metric['mae']
-        mse = metric['mse']
+        mse = metric.mean_squared_error()
+        mae = metric.mean_absolute_error()
 
         log.info(f'{dataset_name:<5}: loss {loss:.8f} - mse {mse:.4f} - mae {mae:.4f}')
 
-        return Metric('Evaluation'), loss
+        return metric, loss
 
     def final_test(self,
                    base_path: Path,
@@ -135,13 +137,11 @@ class RegressorTrainer(flair.trainers.ModelTrainer):
         test_metric, test_loss = self._evaluate_text_regressor(self.model, self.corpus.test, eval_mini_batch_size=eval_mini_batch_size,
                                                embeddings_in_memory=embeddings_in_memory)
 
-        mae = test_metric['mae']
-        mse = test_metric['mse']
-        pearson = test_metric['pearson']
-        spearman = test_metric['spearman']
-
-        log.info(f'AVG: mse {mse} - mae {mae} - pearson {pearson} - spearman {spearman}')
+        log.info(f'AVG: mse: {test_metric.mean_squared_error():.4f} - '
+                 f'mae: {test_metric.mean_absolute_error():.4f} - '
+                 f'pearson: {test_metric.pearsonr():.4f} - '
+                 f'spearman: {test_metric.spearmanr():.4f} - ')
 
         log_line(log)
 
-        return mse
+        return test_metric.mean_squared_error()
