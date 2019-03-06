@@ -140,7 +140,7 @@ class RegressorTrainer(flair.trainers.ModelTrainer):
         log.info(f'AVG: mse: {test_metric.mean_squared_error():.4f} - '
                  f'mae: {test_metric.mean_absolute_error():.4f} - '
                  f'pearson: {test_metric.pearsonr():.4f} - '
-                 f'spearman: {test_metric.spearmanr():.4f} - ')
+                 f'spearman: {test_metric.spearmanr():.4f}')
 
         log_line(log)
 
