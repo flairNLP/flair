@@ -14,6 +14,8 @@ class TextRegressor(flair.models.TextClassifier):
 
         super(TextRegressor, self).__init__(document_embeddings=document_embeddings, label_dictionary=flair.data.Dictionary(), multi_label=multi_label)
 
+        log.info('Using REGRESSION - experimental')
+
         self.loss_function = nn.MSELoss()
 
     def _labels_to_indices(self, sentences: List[Sentence]):
