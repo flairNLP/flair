@@ -175,7 +175,7 @@ class WordEmbeddings(TokenEmbeddings):
             cached_path(f'{embeddings_path_v4_1}turian.vectors.npy', cache_dir=cache_dir)
             embeddings = cached_path(f'{embeddings_path_v4_1}turian', cache_dir=cache_dir)
 
-        # KOMNIOS embeddings
+        # KOMNINOS embeddings
         elif embeddings.lower() == 'extvec' or embeddings.lower() == 'en-extvec':
             cached_path(f'{old_base_path}extvec.gensim.vectors.npy', cache_dir=cache_dir)
             embeddings = cached_path(f'{old_base_path}extvec.gensim', cache_dir=cache_dir)
@@ -1066,9 +1066,6 @@ class BertEmbeddings(TokenEmbeddings):
         the average ('mean') or use first word piece embedding as token embedding ('first)
         """
         super().__init__()
-
-        if bert_model_or_path not in BERT_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
-            raise ValueError('Provided bert-model is not available.')
 
         self.tokenizer = BertTokenizer.from_pretrained(bert_model_or_path)
         self.model = BertModel.from_pretrained(bert_model_or_path)

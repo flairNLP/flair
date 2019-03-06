@@ -18,7 +18,7 @@ fine-tuning.
 ## Classic Word Embeddings
 
 Classic word embeddings are static and word-level, meaning that each distinct word gets exactly one pre-computed 
-embedding. Most embeddings fall under this class, including the popular GloVe or Komnios embeddings. 
+embedding. Most embeddings fall under this class, including the popular GloVe or Komninos embeddings. 
 
 Simply instantiate the WordEmbeddings class and pass a string identifier of the embedding you wish to load. So, if 
 you want to use GloVe embeddings, pass the string 'glove' to the constructor: 
@@ -62,7 +62,7 @@ The following embeddings are currently supported:
 | ID | Language | Embedding | 
 | ------------- | -------------  | ------------- |
 | 'en-glove' (or 'glove') | English | GloVe embeddings |
-| 'en-extvec' (or 'extvec') | English |Komnios embeddings |
+| 'en-extvec' (or 'extvec') | English |Komninos embeddings |
 | 'en-crawl' (or 'crawl')  | English | FastText embeddings over Web crawls |
 | 'en-twitter' (or 'twitter')  | English | Twitter embeddings |
 | 'en-turian' (or 'turian')  | English | Turian embeddings (small) |
@@ -85,7 +85,7 @@ The following embeddings are currently supported:
 | 'pl' | Slovenian | Slovenian FastText embeddings |
 | 'sr' | Serbian | Serbian FastText embeddings |
 | 'hr' | Croatian | Croatian FastText embeddings |
-| 'bg' | Bulgarian | CroatBulgarianian FastText embeddings |
+| 'bg' | Bulgarian | Bulgarian FastText embeddings |
 | 'ru' | Russian | Russian FastText embeddings |
 | 'ar' | Arabic | Arabic FastText embeddings |
 | 'he' | Hebrew | Hebrew FastText embeddings |
@@ -230,4 +230,3 @@ vector is still a single PyTorch vector.
 You can now either look into [BERT, ELMo, and Flair embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md),
 or go directly to the tutorial about [loading your corpus](/resources/docs/TUTORIAL_6_CORPUS.md), which is a
 pre-requirement for [training your own models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md).
-
