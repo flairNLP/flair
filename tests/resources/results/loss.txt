@@ -1,0 +1,8 @@
+| end of split   1 /  2 | epoch   1 | time:  1.99s | valid loss  2.59 | valid ppl    13.28 | learning rate 20.0000
+| end of split   2 /  2 | epoch   1 | time:  2.00s | valid loss  2.22 | valid ppl     9.17 | learning rate 20.0000
+| end of split   1 /  2 | epoch   2 | time:  2.07s | valid loss  2.00 | valid ppl     7.42 | learning rate 20.0000
+| end of split   2 /  2 | epoch   2 | time:  2.12s | valid loss  1.66 | valid ppl     5.28 | learning rate 20.0000
+TEST: valid loss  1.83 | valid ppl     6.22
+| end of split   3 /  2 | epoch   2 | time:  2.06s | valid loss  1.40 | valid ppl     4.07 | learning rate 20.0000
+| end of split   4 /  2 | epoch   2 | time:  2.05s | valid loss  1.38 | valid ppl     3.98 | learning rate 20.0000
+TEST: valid loss  1.48 | valid ppl     4.38

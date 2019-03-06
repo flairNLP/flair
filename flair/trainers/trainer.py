@@ -306,7 +306,7 @@ class ModelTrainer:
             for subcorpus in self.corpus.corpora:
                 log_line(log)
                 self._calculate_evaluation_results_for(subcorpus.name,
-                                                       subcorpus.test,
+                                                       subcorpus.test(),
                                                        evaluation_metric,
                                                        embeddings_in_memory,
                                                        eval_mini_batch_size,
@@ -361,7 +361,7 @@ class ModelTrainer:
 
     @staticmethod
     def _evaluate_sequence_tagger(model,
-                                  sentences: List[Sentence],
+                                  sentences: Iterable[Sentence],
                                   eval_mini_batch_size: int = 32,
                                   embeddings_in_memory: bool = True,
                                   out_path: Path = None) -> (dict, float):
@@ -370,12 +370,15 @@ class ModelTrainer:
             eval_loss = 0
 
             batch_no: int = 0
-            batches = [sentences[x:x + eval_mini_batch_size] for x in range(0, len(sentences), eval_mini_batch_size)]
+            #batches = [sentences[x:x + eval_mini_batch_size] for x in range(0, len(sentences), eval_mini_batch_size)]
+            batches = iter_batch(sentences, eval_mini_batch_size)
 
             metric = Metric('Evaluation')
 
             lines: List[str] = []
+            sentences_len = 0
             for batch in batches:
+                sentences_len += len(batch)
                 batch_no += 1
 
                 tags, loss = model.forward_labels_and_loss(batch)
@@ -413,7 +416,7 @@ class ModelTrainer:
 
                 clear_embeddings(batch, also_clear_word_embeddings=not embeddings_in_memory)
 
-            eval_loss /= len(sentences)
+            eval_loss /= sentences_len
 
             if out_path is not None:
                 with open(out_path, "w", encoding='utf-8') as outfile:
@@ -530,7 +533,7 @@ class ModelTrainer:
         optimizer = self.optimizer(self.model.parameters(), lr=start_learning_rate, **kwargs)
 
         train_data = self.corpus.train
-        random.shuffle(train_data)
+        #random.shuffle(train_data)
         batches = [train_data[x:x + mini_batch_size] for x in range(0, len(train_data), mini_batch_size)][:iterations]
 
         scheduler = ExpAnnealLR(optimizer, end_learning_rate, iterations)
