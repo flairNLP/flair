@@ -532,9 +532,10 @@ class ModelTrainer:
 
         optimizer = self.optimizer(self.model.parameters(), lr=start_learning_rate, **kwargs)
 
-        train_data = self.corpus.train
+        train_data = self.corpus.train()
         #random.shuffle(train_data)
-        batches = [train_data[x:x + mini_batch_size] for x in range(0, len(train_data), mini_batch_size)][:iterations]
+        #batches = [train_data[x:x + mini_batch_size] for x in range(0, len(train_data), mini_batch_size)][:iterations]
+        batches = iter_batch(train_data, mini_batch_size)
 
         scheduler = ExpAnnealLR(optimizer, end_learning_rate, iterations)
 
