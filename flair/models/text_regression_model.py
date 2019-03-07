@@ -4,6 +4,9 @@ import torch.nn as nn
 from typing import List, Union
 from flair.training_utils import clear_embeddings
 from flair.data import Sentence, Label
+import logging
+
+log = logging.getLogger('flair')
 
 class TextRegressor(flair.models.TextClassifier):
   
