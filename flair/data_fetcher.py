@@ -320,9 +320,12 @@ class NLPTaskDataFetcher:
         log.info("Dev: {}".format(dev_file))
         log.info("Test: {}".format(test_file))
 
-        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(train_file)
-        sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(test_file)
-        sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(dev_file)
+        def make_read_conll_ud(f):
+            return lambda: NLPTaskDataFetcher.read_conll_ud(f)
+        
+        sentences_train: Iterable[Sentence] = make_read_conll_ud(train_file)
+        sentences_test: Iterable[Sentence] = make_read_conll_ud(test_file)
+        sentences_dev: Iterable[Sentence] = make_read_conll_ud(dev_file)
 
         return TaggedCorpus(sentences_train, sentences_dev, sentences_test, name=data_folder.name)
 
@@ -487,51 +490,47 @@ class NLPTaskDataFetcher:
         return sentences
 
     @staticmethod
-    def read_conll_ud(path_to_conll_file: Path) -> List[Sentence]:
+    def read_conll_ud(path_to_conll_file: Path) -> Iterable[Sentence]:
         """
        Reads a file in CoNLL-U format and produces a list of Sentence with full morphosyntactic annotation
        :param path_to_conll_file: the path to the conll-u file
        :return: list of sentences
        """
-        sentences: List[Sentence] = []
 
-        lines: List[str] = open(path_to_conll_file, encoding='utf-8'). \
-            read().strip().split('\n')
+        with open(str(path_to_conll_file), encoding='utf-8') as f:
+            sentence: Sentence = Sentence()
+            for line_raw in f:
+                line = line_raw.strip()
+                fields: List[str] = re.split("\t+", line)
+                if line == '':
+                    if len(sentence) > 0:
+                        yield sentence
+                    sentence: Sentence = Sentence()
 
-        sentence: Sentence = Sentence()
-        for line in lines:
+                elif line.startswith('#'):
+                    continue
+                elif '.' in fields[0]:
+                    continue
+                elif '-' in fields[0]:
+                    continue
+                else:
+                    token = Token(fields[1], head_id=int(fields[6]))
+                    token.add_tag('lemma', str(fields[2]))
+                    token.add_tag('upos', str(fields[3]))
+                    token.add_tag('pos', str(fields[4]))
+                    token.add_tag('dependency', str(fields[7]))
 
-            fields: List[str] = re.split("\t+", line)
-            if line == '':
-                if len(sentence) > 0:
-                    sentences.append(sentence)
-                sentence: Sentence = Sentence()
+                    for morph in str(fields[5]).split('|'):
+                        if not "=" in morph: continue;
+                        token.add_tag(morph.split('=')[0].lower(), morph.split('=')[1])
 
-            elif line.startswith('#'):
-                continue
-            elif '.' in fields[0]:
-                continue
-            elif '-' in fields[0]:
-                continue
-            else:
-                token = Token(fields[1], head_id=int(fields[6]))
-                token.add_tag('lemma', str(fields[2]))
-                token.add_tag('upos', str(fields[3]))
-                token.add_tag('pos', str(fields[4]))
-                token.add_tag('dependency', str(fields[7]))
+                    if len(fields) > 10 and str(fields[10]) == 'Y':
+                        token.add_tag('frame', str(fields[11]))
 
-                for morph in str(fields[5]).split('|'):
-                    if not "=" in morph: continue;
-                    token.add_tag(morph.split('=')[0].lower(), morph.split('=')[1])
+                    sentence.add_token(token)
 
-                if len(fields) > 10 and str(fields[10]) == 'Y':
-                    token.add_tag('frame', str(fields[11]))
+            if len(sentence.tokens) > 0: yield sentence
 
-                sentence.add_token(token)
-
-        if len(sentence.tokens) > 0: sentences.append(sentence)
-
-        return sentences
 
     @staticmethod
     def __sample(total_number_of_sentences: int, percentage: float = 0.1) -> List[int]:

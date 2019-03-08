@@ -111,7 +111,7 @@ class ModelTrainer:
 
         # if training also uses dev data, include in training set
         if train_with_dev:
-            train_data.extend(self.corpus.dev)
+            train_data = lambda: itertools.chain(self.corpus.train(), self.corpus.dev())
 
         dev_score_history = []
         dev_loss_history = []
@@ -120,7 +120,8 @@ class ModelTrainer:
         # At any point you can hit Ctrl + C to break out of training early.
         try:
             previous_learning_rate = learning_rate
-
+            batches_count = 0
+            train_data_count = 0
             for epoch in range(0 + self.epoch, max_epochs + self.epoch):
                 log_line(log)
 
@@ -156,11 +157,12 @@ class ModelTrainer:
 
                 train_loss: float = 0
                 seen_sentences = 0
-                #modulo = max(1, int(len(batches) / 10))
+                modulo = max(1, int(batches_count / 10))
 
-                train_data_count = 0
                 for batch_no, batch in enumerate(batches):
-                    train_data_count += len(batch)
+                    if epoch == self.epoch: 
+                        train_data_count += len(batch)
+                        batches_count += 1
                     loss = self.model.forward_loss(batch)
 
                     optimizer.zero_grad()
@@ -173,12 +175,12 @@ class ModelTrainer:
 
                     clear_embeddings(batch, also_clear_word_embeddings=not embeddings_in_memory)
 
-                    #if batch_no % modulo == 0:
-                    #    log.info(f'epoch {epoch + 1} - iter {batch_no}/{len(batches)} - loss '
-                    #             f'{train_loss / seen_sentences:.8f}')
-                    #    iteration = epoch * len(batches) + batch_no
-                    #    if not param_selection_mode:
-                    #        weight_extractor.extract_weights(self.model.state_dict(), iteration)
+                    if batch_no % modulo == 0 and epoch > self.epoch:
+                        log.info(f'epoch {epoch + 1} - iter {batch_no}/{batches_count} - loss '
+                                 f'{train_loss / seen_sentences:.8f}')
+                        iteration = epoch * batches_count + batch_no
+                        if not param_selection_mode:
+                            weight_extractor.extract_weights(self.model.state_dict(), iteration)
 
                 train_loss /= train_data_count
 
