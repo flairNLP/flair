@@ -105,7 +105,7 @@ embeddings and Flair embeddings. In this example, we downsample the data to 10% 
 ```python
 from flair.data import TaggedCorpus
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
-from flair.embeddings import WordEmbeddings, FlairEmbeddings, DocumentLSTMEmbeddings
+from flair.embeddings import WordEmbeddings, FlairEmbeddings, DocumentRNNEmbeddings
 from flair.models import TextClassifier
 from flair.trainers import ModelTrainer
 
@@ -125,7 +125,8 @@ word_embeddings = [WordEmbeddings('glove'),
                    ]
 
 # 4. initialize document embedding by passing list of word embeddings
-document_embeddings: DocumentLSTMEmbeddings = DocumentLSTMEmbeddings(word_embeddings,
+# Can choose between many RNN types (GRU by default, to change use rnn_type parameter)
+document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(word_embeddings,
                                                                      hidden_size=512,
                                                                      reproject_words=True,
                                                                      reproject_words_dimension=256,
