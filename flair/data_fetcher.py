@@ -1,4 +1,4 @@
-from typing import List, Dict, Union, Iterator, Iterable
+from typing import List, Dict, Union, Iterable, Set, Collection
 import re
 import logging
 from enum import Enum
@@ -265,26 +265,29 @@ class NLPTaskDataFetcher:
         sentences_train: Iterable[Sentence] = make_read_column_data(train_file)
 
         # read in test file if exists, otherwise sample 10% of train data as test dataset
-        if test_file is not None:
-            sentences_test: Iterable[Sentence] = make_read_column_data(test_file)
-        else:
+
+        if test_file is None or dev_file is None:
             total_number_of_sentences = 0
             for sentence in sentences_train():
                 total_number_of_sentences += 1
-            indexes, not_indexes = NLPTaskDataFetcher.__sample(total_number_of_sentences, 0.1)
-            sentences_test: Iterable[Sentence] = NLPTaskDataFetcher.make_sample(sentences_train, indexes)
-            sentences_train = NLPTaskDataFetcher.make_sample(sentences_train, not_indexes)
+            train_indexes = set(range(0, total_number_of_sentences))
+
+        if test_file is not None:
+            sentences_test: Iterable[Sentence] = make_read_column_data(test_file)
+        else:
+            test_indexes = NLPTaskDataFetcher.__sample(train_indexes, 0.1)
+            train_indexes = sorted(train_indexes - test_indexes)
+            sentences_test: Iterable[Sentence] = NLPTaskDataFetcher.make_sample(sentences_train, test_indexes)
+            sentences_train = NLPTaskDataFetcher.make_sample(sentences_train, train_indexes)
 
         # read in dev file if exists, otherwise sample 10% of train data as dev dataset
         if dev_file is not None:
             sentences_dev: List[Sentence] = make_read_column_data(dev_file)
         else:
-            total_number_of_sentences = 0
-            for sentence in sentences_train():
-                total_number_of_sentences += 1
-            indexes, not_indexes = NLPTaskDataFetcher.__sample(total_number_of_sentences, 0.1)
-            sentences_dev: Iterable[Sentence] = NLPTaskDataFetcher.make_sample(sentences_train, indexes)
-            sentences_train = NLPTaskDataFetcher.make_sample(sentences_train, not_indexes)
+            dev_indexes = NLPTaskDataFetcher.__sample(train_indexes, 0.1)
+            train_indexes = sorted(train_indexes - dev_indexes)
+            sentences_dev: Iterable[Sentence] = NLPTaskDataFetcher.make_sample(sentences_train, dev_indexes)
+            sentences_train = NLPTaskDataFetcher.make_sample(sentences_train, train_indexes)
 
         corpus = TaggedCorpus(sentences_train, sentences_dev, sentences_test, name=data_folder.name)
 
@@ -393,15 +396,19 @@ class NLPTaskDataFetcher:
         sentences_train: Iterable[Sentence] = make_read_text_classification_file(train_file)
         sentences_test: Iterable[Sentence] = make_read_text_classification_file(test_file)
 
-        if dev_file is not None:
-            sentences_dev: Iterable[Sentence] = make_read_text_classification_file(dev_file)
-        else:
+        if test_file is None or dev_file is None:
             total_number_of_sentences = 0
             for sentence in sentences_train():
                 total_number_of_sentences += 1
-            indexes, not_indexes = NLPTaskDataFetcher.__sample(total_number_of_sentences, 0.1)
-            sentences_dev: Iterable[Sentence] = NLPTaskDataFetcher.make_sample(sentences_train, indexes)
-            sentences_train = NLPTaskDataFetcher.make_sample(sentences_train, not_indexes)
+            train_indexes = set(range(0, total_number_of_sentences))
+
+        if dev_file is not None:
+            sentences_dev: Iterable[Sentence] = make_read_text_classification_file(dev_file)
+        else:
+            dev_indexes = NLPTaskDataFetcher.__sample(train_indexes, 0.1)
+            train_indexes = sorted(train_indexes - dev_indexes)
+            sentences_dev: Iterable[Sentence] = NLPTaskDataFetcher.make_sample(sentences_train, dev_indexes)
+            sentences_train = NLPTaskDataFetcher.make_sample(sentences_train, train_indexes)
 
         return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
@@ -537,15 +544,13 @@ class NLPTaskDataFetcher:
 
 
     @staticmethod
-    def __sample(total_number_of_sentences: int, percentage: float = 0.1) -> List[int]:
+    def __sample(population: Collection[int], percentage: float = 0.1) -> Set[int]:
         import random
-        all = range(0, total_number_of_sentences)
-        sample_size: int = round(total_number_of_sentences * percentage)
-        sample = random.sample(all, sample_size)
-        not_sample = set(all) - set(sample)
-        return sorted(sample), sorted(not_sample)
+        sample_size: int = round(len(population) * percentage)
+        sample = random.sample(population, sample_size)
+        return set(sorted(sample))
     @staticmethod
-    def sample(data: Iterable[Sentence], indexes: List[int]) -> Iterable[Sentence]:
+    def sample(data: Iterable[Sentence], indexes: Iterable[int]) -> Iterable[Sentence]:
         it = iter(indexes)
         current_index = next(it)
         for i, sentence in enumerate(data):
