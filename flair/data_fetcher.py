@@ -258,32 +258,42 @@ class NLPTaskDataFetcher:
         log.info("Dev: {}".format(dev_file))
         log.info("Test: {}".format(test_file))
 
+        def make_read_column_data(f):
+            return lambda: NLPTaskDataFetcher.read_column_data(f, column_format)
+
         # get train and test data
-        sentences_train: List[Sentence] = NLPTaskDataFetcher.read_column_data(train_file, column_format)
+        sentences_train: Iterable[Sentence] = make_read_column_data(train_file)
 
         # read in test file if exists, otherwise sample 10% of train data as test dataset
         if test_file is not None:
-            sentences_test: List[Sentence] = NLPTaskDataFetcher.read_column_data(test_file, column_format)
+            sentences_test: Iterable[Sentence] = make_read_column_data(test_file)
         else:
-            sentences_test: List[Sentence] = [sentences_train[i] for i in
-                                              NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)]
-            sentences_train = [x for x in sentences_train if x not in sentences_test]
+            total_number_of_sentences = 0
+            for sentence in sentences_train():
+                total_number_of_sentences += 1
+            indexes, not_indexes = NLPTaskDataFetcher.__sample(total_number_of_sentences, 0.1)
+            sentences_test: Iterable[Sentence] = NLPTaskDataFetcher.make_sample(sentences_train, indexes)
+            sentences_train = NLPTaskDataFetcher.make_sample(sentences_train, not_indexes)
 
         # read in dev file if exists, otherwise sample 10% of train data as dev dataset
         if dev_file is not None:
-            sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_column_data(dev_file, column_format)
+            sentences_dev: List[Sentence] = make_read_column_data(dev_file)
         else:
-            sentences_dev: List[Sentence] = [sentences_train[i] for i in
-                                             NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)]
-            sentences_train = [x for x in sentences_train if x not in sentences_dev]
+            total_number_of_sentences = 0
+            for sentence in sentences_train():
+                total_number_of_sentences += 1
+            indexes, not_indexes = NLPTaskDataFetcher.__sample(total_number_of_sentences, 0.1)
+            sentences_dev: Iterable[Sentence] = NLPTaskDataFetcher.make_sample(sentences_train, indexes)
+            sentences_train = NLPTaskDataFetcher.make_sample(sentences_train, not_indexes)
+
+        corpus = TaggedCorpus(sentences_train, sentences_dev, sentences_test, name=data_folder.name)
 
         if tag_to_biloes is not None:
             # convert tag scheme to iobes
-            for sentence in sentences_train + sentences_test + sentences_dev:
-                sentence: Sentence = sentence
+            for sentence in corpus.get_all_sentences():
                 sentence.convert_tag_scheme(tag_type=tag_to_biloes, target_scheme='iobes')
 
-        return TaggedCorpus(sentences_train, sentences_dev, sentences_test, name=data_folder.name)
+        return corpus
 
     @staticmethod
     def load_ud_corpus(
@@ -386,9 +396,12 @@ class NLPTaskDataFetcher:
         if dev_file is not None:
             sentences_dev: Iterable[Sentence] = make_read_text_classification_file(dev_file)
         else:
-            sentences_dev: List[Sentence] = [sentences_train[i] for i in
-                                             NLPTaskDataFetcher.__sample(len(sentences_train), 0.1)]
-            sentences_train = [x for x in sentences_train if x not in sentences_dev]
+            total_number_of_sentences = 0
+            for sentence in sentences_train():
+                total_number_of_sentences += 1
+            indexes, not_indexes = NLPTaskDataFetcher.__sample(total_number_of_sentences, 0.1)
+            sentences_dev: Iterable[Sentence] = NLPTaskDataFetcher.make_sample(sentences_train, indexes)
+            sentences_train = NLPTaskDataFetcher.make_sample(sentences_train, not_indexes)
 
         return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
 
@@ -407,7 +420,6 @@ class NLPTaskDataFetcher:
         :return: list of sentences
         """
         label_prefix = '__label__'
-        sentences = []
 
         with open(str(path_to_file), encoding='utf-8') as f:
             for line in f:
@@ -436,7 +448,7 @@ class NLPTaskDataFetcher:
     @staticmethod
     def read_column_data(path_to_column_file: Path,
                          column_name_map: Dict[int, str],
-                         infer_whitespace_after: bool = True):
+                         infer_whitespace_after: bool = True) -> Iterable[Sentence]:
         """
         Reads a file in column format and produces a list of Sentence with tokenlevel annotation as specified in the
         column_name_map. For instance, by passing "{0: 'text', 1: 'pos', 2: 'np', 3: 'ner'}" as column_name_map you
@@ -447,13 +459,6 @@ class NLPTaskDataFetcher:
         :param infer_whitespace_after: if True, tries to infer whitespace_after field for Token
         :return: list of sentences
         """
-        sentences: List[Sentence] = []
-
-        try:
-            lines: List[str] = open(str(path_to_column_file), encoding='utf-8').read().strip().split('\n')
-        except:
-            log.info('UTF-8 can\'t read: {} ... using "latin-1" instead.'.format(path_to_column_file))
-            lines: List[str] = open(str(path_to_column_file), encoding='latin1').read().strip().split('\n')
 
         # most data sets have the token text in the first column, if not, pass 'text' as column
         text_column: int = 0
@@ -461,33 +466,32 @@ class NLPTaskDataFetcher:
             if column_name_map[column] == 'text':
                 text_column = column
 
-        sentence: Sentence = Sentence()
-        for line in lines:
+        with open(str(path_to_column_file), encoding='utf-8') as f:
+            sentence: Sentence = Sentence()
+            for line_raw in f:
+                line = line_raw.strip()
+                if line.startswith('#'):
+                    continue
 
-            if line.startswith('#'):
-                continue
+                if line.strip().replace('﻿', '') == '':
+                    if len(sentence) > 0:
+                        sentence.infer_space_after()
+                        yield sentence
+                    sentence: Sentence = Sentence()
 
-            if line.strip().replace('﻿', '') == '':
-                if len(sentence) > 0:
-                    sentence.infer_space_after()
-                    sentences.append(sentence)
-                sentence: Sentence = Sentence()
+                else:
+                    fields: List[str] = re.split(r"\s+", line)
+                    token = Token(fields[text_column])
+                    for column in column_name_map:
+                        if len(fields) > column:
+                            if column != text_column:
+                                token.add_tag(column_name_map[column], fields[column])
 
-            else:
-                fields: List[str] = re.split("\s+", line)
-                token = Token(fields[text_column])
-                for column in column_name_map:
-                    if len(fields) > column:
-                        if column != text_column:
-                            token.add_tag(column_name_map[column], fields[column])
+                    sentence.add_token(token)
 
-                sentence.add_token(token)
-
-        if len(sentence.tokens) > 0:
-            sentence.infer_space_after()
-            sentences.append(sentence)
-
-        return sentences
+            if len(sentence.tokens) > 0:
+                sentence.infer_space_after()
+                yield sentence
 
     @staticmethod
     def read_conll_ud(path_to_conll_file: Path) -> Iterable[Sentence]:
@@ -535,9 +539,25 @@ class NLPTaskDataFetcher:
     @staticmethod
     def __sample(total_number_of_sentences: int, percentage: float = 0.1) -> List[int]:
         import random
+        all = range(0, total_number_of_sentences)
         sample_size: int = round(total_number_of_sentences * percentage)
-        sample = random.sample(range(1, total_number_of_sentences), sample_size)
-        return sample
+        sample = random.sample(all, sample_size)
+        not_sample = set(all) - set(sample)
+        return sorted(sample), sorted(not_sample)
+    @staticmethod
+    def sample(data: Iterable[Sentence], indexes: List[int]) -> Iterable[Sentence]:
+        it = iter(indexes)
+        current_index = next(it)
+        for i, sentence in enumerate(data):
+            if i == current_index:
+                yield sentence
+                try:
+                    current_index = next(it)
+                except StopIteration:
+                    return
+    @staticmethod
+    def make_sample(data, indexes):
+            return lambda: NLPTaskDataFetcher.sample(data(), indexes)
 
     @staticmethod
     def download_dataset(task: NLPTask):
