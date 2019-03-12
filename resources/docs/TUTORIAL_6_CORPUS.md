@@ -39,19 +39,20 @@ corpus: TaggedCorpus = NLPTaskDataFetcher.load_column_corpus(data_folder, column
                                                               dev_file='dev.txt')
 ```
 
-This gives you a `TaggedCorpus` object that contains the train, dev and test splits, each has a list of `Sentence`.
+This gives you a `TaggedCorpus` object that contains the train(), dev() and test() splits, each has an iterable of `Sentence`.
 So, to check how many sentences there are in the training split, do
 
 ```python
-len(corpus.train)
+sum(1 for _ in corpus.train())
 ```
 
 You can also access a sentence and check out annotations. Lets assume that the first sentence in the training split is
 the example sentence from above, then executing these commands
 
 ```python
-print(corpus.train[0].to_tagged_string('pos'))
-print(corpus.train[0].to_tagged_string('ner'))
+it: Iterable[Sentence] = corpus.train()
+print(next(it).to_tagged_string('pos'))
+print(next(it).train[0].to_tagged_string('ner'))
 ```
 
 will print the sentence with different layers of annotation:
