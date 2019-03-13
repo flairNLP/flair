@@ -19,7 +19,7 @@ log = logging.getLogger('flair')
 class TextClassifier(flair.nn.Model):
     """
     Text Classification Model
-    The model takes word embeddings, puts them into an LSTM to obtain a text representation, and puts the
+    The model takes word embeddings, puts them into an RNN to obtain a text representation, and puts the
     text representation in the end into a linear layer to get the actual class label.
     The model can handle single and multi class data sets.
     """
@@ -31,7 +31,7 @@ class TextClassifier(flair.nn.Model):
 
         super(TextClassifier, self).__init__()
 
-        self.document_embeddings: flair.embeddings.DocumentLSTMEmbeddings = document_embeddings
+        self.document_embeddings: flair.embeddings.DocumentRNNEmbeddings = document_embeddings
         self.label_dictionary: Dictionary = label_dictionary
         self.multi_label = multi_label
 
