@@ -301,7 +301,6 @@ class SequenceTagger(flair.nn.Model):
 
                 for (sentence, sent_tags) in zip(batch, tags):
                     for (token, tag) in zip(sentence.tokens, sent_tags):
-                        token: Token = token
                         token.add_tag_label(self.tag_type, tag)
 
                 # clearing token embeddings to save memory
