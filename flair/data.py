@@ -497,7 +497,6 @@ class Sentence:
 
         tags: List[Label] = []
         for token in self.tokens:
-            #token: Token = token
             tags.append(token.get_tag(tag_type))
 
         if target_scheme == 'iob':
@@ -683,7 +682,6 @@ class TaggedCorpus(Corpus):
         tag_dictionary.add_item('O')
         for sentence in self.get_all_sentences():
             for token in sentence.tokens:
-                #token: Token = token
                 tag_dictionary.add_item(token.get_tag(tag_type).value)
         tag_dictionary.add_item('<START>')
         tag_dictionary.add_item('<STOP>')
@@ -922,7 +920,6 @@ class MultiCorpus(Corpus):
         for corpus in self.corpora:
             for sentence in corpus.get_all_sentences():
                 for token in sentence.tokens:
-                    #token: Token = token
                     tag_dictionary.add_item(token.get_tag(tag_type).value)
         tag_dictionary.add_item('<START>')
         tag_dictionary.add_item('<STOP>')
