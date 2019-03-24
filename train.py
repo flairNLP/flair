@@ -11,7 +11,7 @@ corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH)
 print(corpus)
 
 # 2. what tag do we want to predict?
-tag_type = 'pos'
+tag_type = 'upos'
 
 # 3. make the tag dictionary from the corpus
 tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
