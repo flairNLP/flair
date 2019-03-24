@@ -233,7 +233,6 @@ class WordEmbeddings(TokenEmbeddings):
         for i, sentence in enumerate(sentences):
 
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                token: Token = token
 
                 if 'field' not in self.__dict__ or self.field is None:
                     word = token.text
@@ -316,7 +315,6 @@ class BytePairEmbeddings(TokenEmbeddings):
         for i, sentence in enumerate(sentences):
 
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                token: Token = token
 
                 if 'field' not in self.__dict__ or self.field is None:
                     word = token.text
@@ -403,7 +401,6 @@ class ELMoEmbeddings(TokenEmbeddings):
             sentence_embeddings = embeddings[i]
 
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                token: Token = token
 
                 word_embedding = torch.cat([
                     torch.FloatTensor(sentence_embeddings[0, token_idx, :]),
@@ -479,7 +476,6 @@ class ELMoTransformerEmbeddings(TokenEmbeddings):
             embeddings = self.lm_embedder(indices_tensor)[0].detach().cpu().numpy()
 
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                token: Token = token
                 embedding = embeddings[token_idx]
                 word_embedding = torch.FloatTensor(embedding)
                 token.set_embedding(self.name, word_embedding)
@@ -533,7 +529,6 @@ class TransformerXLEmbeddings(TokenEmbeddings):
                 hidden_states, _ = self.model(tokens_tensor)
 
                 for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                    token: Token = token
                     token.set_embedding(self.name, hidden_states[0][token_idx])
 
         return sentences
@@ -583,7 +578,6 @@ class CharacterEmbeddings(TokenEmbeddings):
 
             # translate words in sentence into ints using dictionary
             for token in sentence.tokens:
-                token: Token = token
                 char_indices = [self.char_dictionary.get_idx_for_item(char) for char in token.text]
                 tokens_char_indices.append(char_indices)
 
@@ -930,7 +924,6 @@ class FlairEmbeddings(TokenEmbeddings):
                 offset_backward: int = len(sentence_text) + extra_offset
 
                 for token in sentence.tokens:
-                    token: Token = token
 
                     offset_forward += len(token.text)
 
@@ -1435,7 +1428,6 @@ class CharLMEmbeddings(TokenEmbeddings):
             offset_backward: int = len(sentence_text) + extra_offset
 
             for token in sentence.tokens:
-                token: Token = token
 
                 offset_forward += len(token.text)
 
@@ -1503,7 +1495,6 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
             for sentence in sentences:
                 word_embeddings = []
                 for token in sentence.tokens:
-                    token: Token = token
                     word_embeddings.append(token.get_embedding().unsqueeze(0))
 
                 word_embeddings = torch.cat(word_embeddings, dim=0).to(flair.device)
@@ -1566,7 +1557,6 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
             for sentence in sentences:
                 word_embeddings = []
                 for token in sentence.tokens:
-                    token: Token = token
                     word_embeddings.append(token.get_embedding().unsqueeze(0))
 
                 word_embeddings = torch.cat(word_embeddings, dim=0).to(flair.device)
@@ -1683,7 +1673,6 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             word_embeddings = []
 
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                token: Token = token
                 word_embeddings.append(token.get_embedding().unsqueeze(0))
 
             # PADDING: pad shorter sentences out
@@ -1842,7 +1831,6 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
             word_embeddings = []
 
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                token: Token = token
                 word_embeddings.append(token.get_embedding().unsqueeze(0))
 
             # PADDING: pad shorter sentences out

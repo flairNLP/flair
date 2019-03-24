@@ -370,7 +370,6 @@ class ModelTrainer:
 
                 for (sentence, sent_tags) in zip(batch, tags):
                     for (token, tag) in zip(sentence.tokens, sent_tags):
-                        token: Token = token
                         token.add_tag_label('predicted', tag)
 
                         # append both to file for evaluation
