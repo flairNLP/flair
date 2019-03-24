@@ -1014,6 +1014,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
                 # update embedding
                 local_embedding = token._embeddings[self.context_embeddings.name]
+                local_embedding = local_embedding.to(flair.device)
 
                 if token.text[0].isupper() or not self.only_capitalized:
 
