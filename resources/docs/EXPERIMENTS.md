@@ -61,10 +61,10 @@ embedding_types: List[TokenEmbeddings] = [
     WordEmbeddings('glove'),
 
     # contextual string embeddings, forward
-    PooledFlairEmbeddings('news-forward', mode='min),
+    PooledFlairEmbeddings('news-forward', mode='min'),
 
     # contextual string embeddings, backward
-    PooledFlairEmbeddings('news-backward', mode='min),
+    PooledFlairEmbeddings('news-backward', mode='min'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
