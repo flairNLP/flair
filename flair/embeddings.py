@@ -591,6 +591,9 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
                     if self.pooling_operation == 'first':
                         # Use embedding of first subword
                         token.set_embedding(self.name, hidden_states[0][0])
+                    elif self.pooling_operation == 'last':
+                        last_embedding = hidden_states[0][len(hidden_states[0]) - 1]
+                        token.set_embedding(self.name, last_embedding)
                     elif self.pooling_operation == 'first_last':
                         # Use embedding of first and last subword
                         first_embedding = hidden_states[0][0]
