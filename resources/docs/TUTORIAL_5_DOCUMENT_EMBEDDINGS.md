@@ -1,7 +1,7 @@
 # Tutorial 5: Document Embeddings
 
-Document embeddings are different from [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) in that they 
-give you one embedding for an entire text, whereas word embeddings give you embeddings for individual words. 
+Document embeddings are different from [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) in that they
+give you one embedding for an entire text, whereas word embeddings give you embeddings for individual words.
 
 For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this
 library and how [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) work.
@@ -116,7 +116,18 @@ document_lstm_embeddings = DocumentRNNEmbeddings([glove_embedding], rnn_type='LS
 ```
 
 Note that while `DocumentPoolEmbeddings` are immediately meaningful, `DocumentRNNEmbeddings` need to be tuned on the
-downstream task. This happens automatically in Flair if you train a new model with these embeddings.
+downstream task. This happens automatically in Flair if you train a new model with these embeddings. You can find an example of training a text classification model [here](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md#training-a-text-classification-model). Once the model is trained, you can access the tuned `DocumentRNNEmbeddings` object directly from the classifier object and use it to embed sentences.
+
+```python
+document_embeddings = classifier.document_embeddings
+
+sentence = Sentence('The grass is green . And the sky is blue .')
+
+document_embeddings.embed(sentence)
+
+print(sentence.get_embedding())
+```
+
 `DocumentRNNEmbeddings` have a number of hyper-parameters that can be tuned to improve learning:
 
 ```text
@@ -133,7 +144,7 @@ dimension as before will be taken.
 :param rnn_type: one of 'RNN', 'LSTM', 'RNN_TANH' or 'RNN_RELU'
 ```
 
-## Next 
+## Next
 
 You can now either look into the tutorial about [loading your corpus](/resources/docs/TUTORIAL_6_CORPUS.md), which
 is a pre-requirement for [training your own models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
