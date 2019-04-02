@@ -273,7 +273,7 @@ class Sentence:
     A Sentence is a list of Tokens and is used to represent a sentence or text fragment.
     """
 
-    def __init__(self, text: str = None, use_tokenizer: bool = False, labels: Union[List[Label], List[str]] = None):
+    def __init__(self, text: str = None, use_tokenizer: bool = False, tokens_from_list: List[str] = None, labels: Union[List[Label], List[str]] = None):
 
         super(Sentence, self).__init__()
 
@@ -290,12 +290,17 @@ class Sentence:
             # tokenize the text first if option selected
             if use_tokenizer:
 
+                if tokens_from_list is not None and len(tokens_from_list) > 0:
+                # use a list of tokens obtained by any tokenizer of your choice
+                    tokens = tokens_from_list
+                
+                else:
                 # use segtok for tokenization
-                tokens = []
-                sentences = split_single(text)
-                for sentence in sentences:
-                    contractions = split_contractions(word_tokenizer(sentence))
-                    tokens.extend(contractions)
+                    tokens = []
+                    sentences = split_single(text)
+                    for sentence in sentences:
+                        contractions = split_contractions(word_tokenizer(sentence))
+                        tokens.extend(contractions)
 
                 # determine offsets for whitespace_after field
                 index = text.index
