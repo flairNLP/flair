@@ -10,7 +10,7 @@ a corpus](/resources/docs/TUTORIAL_6_CORPUS.md).
 
 ## Training a Sequence Labeling Model
 
-Here is example code for a small NER model trained over CoNLL-03 data, using simple GloVe embeddings. To run this code, you first need to obtain the CoNLL-03 English dataset (alternatively, use `NLPTaskDataFetcher.load_corpus(NLPTask.WNUT)` instead for a task with freely available data).
+Here is example code for a small NER model trained over CoNLL-03 data, using simple GloVe embeddings. To run this code, you first need to obtain the CoNLL-03 English dataset (alternatively, use `NLPTaskDataFetcher.load_corpus(NLPTask.WNUT_17)` instead for a task with freely available data).
 
 In this example, we downsample the data to 10% of the original data:
 
@@ -119,7 +119,7 @@ label_dict = corpus.make_label_dictionary()
 # 3. make a list of word embeddings
 word_embeddings = [WordEmbeddings('glove'),
 
-                   # comment in flair embeddings for state-of-the-art results 
+                   # comment in flair embeddings for state-of-the-art results
                    # FlairEmbeddings('news-forward'),
                    # FlairEmbeddings('news-backward'),
                    ]
@@ -171,9 +171,9 @@ print(sentence.labels)
 
 ## Multi-Dataset Training
 
-Now, let us train a single model that can PoS tag text in both English and German. To do this, we load both the English and German UD corpora and create a MultiCorpus object. We also use the new multilingual Flair embeddings for this task. 
+Now, let us train a single model that can PoS tag text in both English and German. To do this, we load both the English and German UD corpora and create a MultiCorpus object. We also use the new multilingual Flair embeddings for this task.
 
-All the rest is same as before, e.g.: 
+All the rest is same as before, e.g.:
 
 ```python
 from typing import List
@@ -335,11 +335,11 @@ In the best-case scenario, all embeddings for the dataset fit into your regular 
 training speed. If this is not the case, you must set the flag `embeddings_in_memory=False` in the respective trainer
  (i.e. `ModelTrainer`) to
 avoid memory problems. With the flag, embeddings are either (a) recomputed at each epoch or (b)
-retrieved from disk if you choose to materialize to disk. 
+retrieved from disk if you choose to materialize to disk.
 
 3. Do you have a fast hard drive?
 
-If you have a fast hard drive, consider materializing the embeddings to disk. You can do this by instantiating FlairEmbeddings as follows: `FlairEmbeddings('news-forward-fast', use_cache=True)`. This can help if embeddings do not fit into memory. Also if you do not have a GPU and want to do repeat experiments on the same dataset, this helps because embeddings need only be computed once and will then always be retrieved from disk. 
+If you have a fast hard drive, consider materializing the embeddings to disk. You can do this by instantiating FlairEmbeddings as follows: `FlairEmbeddings('news-forward-fast', use_cache=True)`. This can help if embeddings do not fit into memory. Also if you do not have a GPU and want to do repeat experiments on the same dataset, this helps because embeddings need only be computed once and will then always be retrieved from disk.
 
 
 ## Next
