@@ -91,6 +91,9 @@ class SequenceTagger(flair.nn.Model):
         self.trained_epochs: int = 0
 
         self.embeddings = embeddings
+        
+        # get scores for all tags
+        self.scores = []
 
         # set the dictionaries
         self.tag_dictionary: Dictionary = tag_dictionary
@@ -478,6 +481,7 @@ class SequenceTagger(flair.nn.Model):
             _, idx = torch.max(backscore, 0)
             prediction = idx.item()
             best_scores.append(softmax[prediction].item())
+            self.scores.append([elem.item() for elem in softmax.flatten()])
 
         start = best_path.pop()
         assert start == self.tag_dictionary.get_idx_for_item(START_TAG)
