@@ -450,6 +450,8 @@ class SequenceTagger(flair.nn.Model):
     def _viterbi_decode(self, feats):
         backpointers = []
         backscores = []
+        if len(self.scores) > 0:
+            self.scores = []
 
         init_vvars = torch.FloatTensor(1, self.tagset_size).to(flair.device).fill_(-10000.)
         init_vvars[0][self.tag_dictionary.get_idx_for_item(START_TAG)] = 0
