@@ -19,6 +19,7 @@ from flair.training_utils import clear_embeddings
 
 from tqdm import tqdm
 
+import numpy as np
 
 log = logging.getLogger('flair')
 
@@ -484,6 +485,11 @@ class SequenceTagger(flair.nn.Model):
             prediction = idx.item()
             best_scores.append(softmax[prediction].item())
             self.scores.append([elem.item() for elem in softmax.flatten()])
+
+        switch_score = self.scores[-1][best_path[0]]
+        index_max_score = np.argmax(self.scores[-1])
+        self.scores[-1][best_path[0]] = self.scores[-1][index_max_score]
+        self.scores[-1][index_max_score] = switch_score
 
         start = best_path.pop()
         assert start == self.tag_dictionary.get_idx_for_item(START_TAG)
