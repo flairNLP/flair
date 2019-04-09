@@ -348,7 +348,11 @@ class Sentence:
             if token.idx == token_id:
                 return token
 
-    def add_token(self, token: Token):
+    def add_token(self, token: Union[Token, str]):
+
+        if type(token) is str:
+            token = Token(token)
+
         self.tokens.append(token)
 
         # set token idx if not set

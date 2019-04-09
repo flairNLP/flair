@@ -147,6 +147,27 @@ def test_sentence_to_tagged_string():
     assert ('I love Berlin <LOC>' == sentence.to_tagged_string())
 
 
+def test_sentence_add_token():
+    token1: Token = Token("Munich")
+    token2: Token = Token("and")
+    token3: Token = Token("Berlin")
+    token4: Token = Token("are")
+    token5: Token = Token("nice")
+
+    sentence: Sentence = Sentence()
+
+    sentence.add_token(token1)
+    sentence.add_token(token2)
+    sentence.add_token(token3)
+    sentence.add_token(token4)
+    sentence.add_token(token5)
+
+    sentence.add_token("cities")
+    sentence.add_token(Token("."))
+
+    assert ('Munich and Berlin are nice cities .' == sentence.to_tokenized_string())
+
+
 def test_dictionary_get_items_with_unk():
     dictionary: Dictionary = Dictionary()
 
