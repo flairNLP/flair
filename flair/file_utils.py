@@ -2,7 +2,7 @@
 Utilities for working with the local dataset cache. Copied from AllenNLP
 """
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Optional, Sequence, cast
 import os
 import base64
 import logging
@@ -13,6 +13,8 @@ from urllib.parse import urlparse
 
 import mmap
 import requests
+import zipfile
+import io
 
 # from allennlp.common.tqdm import Tqdm
 
@@ -146,6 +148,33 @@ def get_from_cache(url: str, cache_dir: Path = None) -> Path:
         os.remove(temp_filename)
 
     return cache_path
+
+
+def open_inside_zip(archive_path: str, cache_dir: Path, member_path: Optional[str] = None, encoding: str = 'utf8') -> iter:
+    cached_archive_path = cached_path(archive_path, cache_dir=cache_dir)
+    archive = zipfile.ZipFile(cached_archive_path, 'r')
+    if member_path is None:
+        members_list = archive.namelist()
+        member_path = get_the_only_file_in_the_archive(members_list, archive_path)
+    member_path = cast(str, member_path)
+    member_file = archive.open(member_path, 'r')
+    return io.TextIOWrapper(member_file, encoding=encoding)
+
+
+def get_the_only_file_in_the_archive(members_list: Sequence[str], archive_path: str) -> str:
+    if len(members_list) > 1:
+        raise ValueError('The archive %s contains multiple files, so you must select '
+                         'one of the files inside providing a uri of the type: %s'
+                         % (archive_path, format_embeddings_file_uri('path_or_url_to_archive',
+                                                                     'path_inside_archive')))
+    return members_list[0]
+
+
+def format_embeddings_file_uri(main_file_path_or_url: str,
+                               path_inside_archive: Optional[str] = None) -> str:
+    if path_inside_archive:
+        return "({})#{}".format(main_file_path_or_url, path_inside_archive)
+    return main_file_path_or_url
 
 
 from tqdm import tqdm as _tqdm
