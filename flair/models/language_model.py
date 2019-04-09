@@ -15,14 +15,16 @@ from flair.data import Dictionary
 class LanguageModel(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
 
-    def __init__(self,
-                 dictionary: Dictionary,
-                 is_forward_lm: bool,
-                 hidden_size: int,
-                 nlayers: int,
-                 embedding_size: int = 100,
-                 nout=None,
-                 dropout=0.1):
+    def __init__(
+        self,
+        dictionary: Dictionary,
+        is_forward_lm: bool,
+        hidden_size: int,
+        nlayers: int,
+        embedding_size: int = 100,
+        nout=None,
+        dropout=0.1,
+    ):
 
         super(LanguageModel, self).__init__()
 
@@ -80,14 +82,22 @@ class LanguageModel(nn.Module):
 
         output = self.drop(output)
 
-        decoded = self.decoder(output.view(output.size(0) * output.size(1), output.size(2)))
+        decoded = self.decoder(
+            output.view(output.size(0) * output.size(1), output.size(2))
+        )
 
-        return decoded.view(output.size(0), output.size(1), decoded.size(1)), output, hidden
+        return (
+            decoded.view(output.size(0), output.size(1), decoded.size(1)),
+            output,
+            hidden,
+        )
 
     def init_hidden(self, bsz):
         weight = next(self.parameters()).detach()
-        return (weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
-                weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach())
+        return (
+            weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
+            weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
+        )
 
     def get_representation(self, strings: List[str], chars_per_chunk: int = 512):
 
@@ -109,7 +119,9 @@ class LanguageModel(nn.Module):
 
             sequences_as_char_indices: List[List[int]] = []
             for string in chunk:
-                char_indices = [self.dictionary.get_idx_for_item(char) for char in string]
+                char_indices = [
+                    self.dictionary.get_idx_for_item(char) for char in string
+                ]
                 sequences_as_char_indices.append(char_indices)
 
             batch = torch.LongTensor(sequences_as_char_indices).transpose(0, 1)
@@ -143,7 +155,7 @@ class LanguageModel(nn.Module):
 
     def initialize(self, matrix):
         in_, out_ = matrix.size()
-        stdv = math.sqrt(3. / (in_ + out_))
+        stdv = math.sqrt(3.0 / (in_ + out_))
         matrix.detach().uniform_(-stdv, stdv)
 
     @classmethod
@@ -151,14 +163,16 @@ class LanguageModel(nn.Module):
 
         state = torch.load(str(model_file), map_location=flair.device)
 
-        model = LanguageModel(state['dictionary'],
-                              state['is_forward_lm'],
-                              state['hidden_size'],
-                              state['nlayers'],
-                              state['embedding_size'],
-                              state['nout'],
-                              state['dropout'])
-        model.load_state_dict(state['state_dict'])
+        model = LanguageModel(
+            state["dictionary"],
+            state["is_forward_lm"],
+            state["hidden_size"],
+            state["nlayers"],
+            state["embedding_size"],
+            state["nout"],
+            state["dropout"],
+        )
+        model.load_state_dict(state["state_dict"])
         model.eval()
         model.to(flair.device)
 
@@ -168,62 +182,78 @@ class LanguageModel(nn.Module):
     def load_checkpoint(cls, model_file: Path):
         state = torch.load(str(model_file), map_location=flair.device)
 
-        epoch = state['epoch'] if 'epoch' in state else None
-        split = state['split'] if 'split' in state else None
-        loss = state['loss'] if 'loss' in state else None
-        optimizer_state_dict = state['optimizer_state_dict'] if 'optimizer_state_dict' in state else None
+        epoch = state["epoch"] if "epoch" in state else None
+        split = state["split"] if "split" in state else None
+        loss = state["loss"] if "loss" in state else None
+        optimizer_state_dict = (
+            state["optimizer_state_dict"] if "optimizer_state_dict" in state else None
+        )
 
-        model = LanguageModel(state['dictionary'],
-                              state['is_forward_lm'],
-                              state['hidden_size'],
-                              state['nlayers'],
-                              state['embedding_size'],
-                              state['nout'],
-                              state['dropout'])
-        model.load_state_dict(state['state_dict'])
+        model = LanguageModel(
+            state["dictionary"],
+            state["is_forward_lm"],
+            state["hidden_size"],
+            state["nlayers"],
+            state["embedding_size"],
+            state["nout"],
+            state["dropout"],
+        )
+        model.load_state_dict(state["state_dict"])
         model.eval()
         model.to(flair.device)
 
-        return {'model': model, 'epoch': epoch, 'split': split, 'loss': loss,
-                'optimizer_state_dict': optimizer_state_dict}
+        return {
+            "model": model,
+            "epoch": epoch,
+            "split": split,
+            "loss": loss,
+            "optimizer_state_dict": optimizer_state_dict,
+        }
 
-    def save_checkpoint(self, file: Path, optimizer: Optimizer, epoch: int, split: int, loss: float):
+    def save_checkpoint(
+        self, file: Path, optimizer: Optimizer, epoch: int, split: int, loss: float
+    ):
         model_state = {
-            'state_dict': self.state_dict(),
-            'dictionary': self.dictionary,
-            'is_forward_lm': self.is_forward_lm,
-            'hidden_size': self.hidden_size,
-            'nlayers': self.nlayers,
-            'embedding_size': self.embedding_size,
-            'nout': self.nout,
-            'dropout': self.dropout,
-            'optimizer_state_dict': optimizer.state_dict(),
-            'epoch': epoch,
-            'split': split,
-            'loss': loss
+            "state_dict": self.state_dict(),
+            "dictionary": self.dictionary,
+            "is_forward_lm": self.is_forward_lm,
+            "hidden_size": self.hidden_size,
+            "nlayers": self.nlayers,
+            "embedding_size": self.embedding_size,
+            "nout": self.nout,
+            "dropout": self.dropout,
+            "optimizer_state_dict": optimizer.state_dict(),
+            "epoch": epoch,
+            "split": split,
+            "loss": loss,
         }
 
         torch.save(model_state, str(file), pickle_protocol=4)
 
     def save(self, file: Path):
         model_state = {
-            'state_dict': self.state_dict(),
-            'dictionary': self.dictionary,
-            'is_forward_lm': self.is_forward_lm,
-            'hidden_size': self.hidden_size,
-            'nlayers': self.nlayers,
-            'embedding_size': self.embedding_size,
-            'nout': self.nout,
-            'dropout': self.dropout
+            "state_dict": self.state_dict(),
+            "dictionary": self.dictionary,
+            "is_forward_lm": self.is_forward_lm,
+            "hidden_size": self.hidden_size,
+            "nlayers": self.nlayers,
+            "embedding_size": self.embedding_size,
+            "nout": self.nout,
+            "dropout": self.dropout,
         }
 
         torch.save(model_state, str(file), pickle_protocol=4)
 
-    def generate_text(self, prefix: str = '\n', number_of_characters: int = 1000, temperature: float = 1.0,
-                      break_on_suffix=None) -> Tuple[str, float]:
+    def generate_text(
+        self,
+        prefix: str = "\n",
+        number_of_characters: int = 1000,
+        temperature: float = 1.0,
+        break_on_suffix=None,
+    ) -> Tuple[str, float]:
 
-        if prefix == '':
-            prefix = '\n'
+        if prefix == "":
+            prefix = "\n"
 
         with torch.no_grad():
             characters = []
@@ -238,7 +268,10 @@ class LanguageModel(nn.Module):
                 char_tensors = []
                 for character in prefix[:-1]:
                     char_tensors.append(
-                        torch.tensor(self.dictionary.get_idx_for_item(character)).unsqueeze(0).unsqueeze(0))
+                        torch.tensor(self.dictionary.get_idx_for_item(character))
+                        .unsqueeze(0)
+                        .unsqueeze(0)
+                    )
 
                 input = torch.cat(char_tensors)
                 if torch.cuda.is_available():
@@ -246,9 +279,13 @@ class LanguageModel(nn.Module):
 
                 prediction, _, hidden = self.forward(input, hidden)
 
-            input = torch.tensor(self.dictionary.get_idx_for_item(prefix[-1])).unsqueeze(0).unsqueeze(0)
+            input = (
+                torch.tensor(self.dictionary.get_idx_for_item(prefix[-1]))
+                .unsqueeze(0)
+                .unsqueeze(0)
+            )
 
-            log_prob = 0.
+            log_prob = 0.0
 
             for i in range(number_of_characters):
 
@@ -282,14 +319,14 @@ class LanguageModel(nn.Module):
                 log_prob += prob
 
                 input = word_idx.detach().unsqueeze(0).unsqueeze(0)
-                word = idx2item[word_idx].decode('UTF-8')
+                word = idx2item[word_idx].decode("UTF-8")
                 characters.append(word)
 
                 if break_on_suffix is not None:
-                    if ''.join(characters).endswith(break_on_suffix):
+                    if "".join(characters).endswith(break_on_suffix):
                         break
 
-            text = prefix + ''.join(characters)
+            text = prefix + "".join(characters)
 
             log_prob = log_prob.item()
             log_prob /= len(characters)
@@ -305,7 +342,9 @@ class LanguageModel(nn.Module):
             text = text[::-1]
 
         # input ids
-        input = torch.tensor([self.dictionary.get_idx_for_item(char) for char in text[:-1]]).unsqueeze(1)
+        input = torch.tensor(
+            [self.dictionary.get_idx_for_item(char) for char in text[:-1]]
+        ).unsqueeze(1)
         input = input.to(flair.device)
 
         # push list of character IDs through model
@@ -313,12 +352,16 @@ class LanguageModel(nn.Module):
         prediction, _, hidden = self.forward(input, hidden)
 
         # the target is always the next character
-        targets = torch.tensor([self.dictionary.get_idx_for_item(char) for char in text[1:]])
+        targets = torch.tensor(
+            [self.dictionary.get_idx_for_item(char) for char in text[1:]]
+        )
         targets = targets.to(flair.device)
 
         # use cross entropy loss to compare output of forward pass with targets
         cross_entroy_loss = torch.nn.CrossEntropyLoss()
-        loss = cross_entroy_loss(prediction.view(-1, len(self.dictionary)), targets).item()
+        loss = cross_entroy_loss(
+            prediction.view(-1, len(self.dictionary)), targets
+        ).item()
 
         # exponentiate cross-entropy loss to calculate perplexity
         perplexity = math.exp(loss)

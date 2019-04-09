@@ -8,7 +8,7 @@ from torch.optim.optimizer import required
 from torch.optim.lr_scheduler import _LRScheduler, ReduceLROnPlateau
 
 
-log = logging.getLogger('flair')
+log = logging.getLogger("flair")
 
 
 class SGDW(Optimizer):
@@ -62,8 +62,15 @@ class SGDW(Optimizer):
         The Nesterov version is analogously modified.
     """
 
-    def __init__(self, params, lr=required, momentum=0, dampening=0,
-                 weight_decay=0, nesterov=False):
+    def __init__(
+        self,
+        params,
+        lr=required,
+        momentum=0,
+        dampening=0,
+        weight_decay=0,
+        nesterov=False,
+    ):
         if lr is not required and lr < 0.0:
             raise ValueError("Invalid learning rate: {}".format(lr))
         if momentum < 0.0:
@@ -71,8 +78,13 @@ class SGDW(Optimizer):
         if weight_decay < 0.0:
             raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
 
-        defaults = dict(lr=lr, momentum=momentum, dampening=dampening,
-                        weight_decay=weight_decay, nesterov=nesterov)
+        defaults = dict(
+            lr=lr,
+            momentum=momentum,
+            dampening=dampening,
+            weight_decay=weight_decay,
+            nesterov=nesterov,
+        )
         if nesterov and (momentum <= 0 or dampening != 0):
             raise ValueError("Nesterov momentum requires a momentum and zero dampening")
         super(SGDW, self).__init__(params, defaults)
@@ -80,7 +92,7 @@ class SGDW(Optimizer):
     def __setstate__(self, state):
         super(SGDW, self).__setstate__(state)
         for group in self.param_groups:
-            group.setdefault('nesterov', False)
+            group.setdefault("nesterov", False)
 
     def step(self, closure=None):
         """Performs a single optimization step.
@@ -94,23 +106,23 @@ class SGDW(Optimizer):
             loss = closure()
 
         for group in self.param_groups:
-            weight_decay = group['weight_decay']
-            momentum = group['momentum']
-            dampening = group['dampening']
-            nesterov = group['nesterov']
+            weight_decay = group["weight_decay"]
+            momentum = group["momentum"]
+            dampening = group["dampening"]
+            nesterov = group["nesterov"]
 
-            for p in group['params']:
+            for p in group["params"]:
                 if p.grad is None:
                     continue
                 d_p = p.grad.data
 
                 if momentum != 0:
                     param_state = self.state[p]
-                    if 'momentum_buffer' not in param_state:
-                        buf = param_state['momentum_buffer'] = torch.zeros_like(p.data)
+                    if "momentum_buffer" not in param_state:
+                        buf = param_state["momentum_buffer"] = torch.zeros_like(p.data)
                         buf.mul_(momentum).add_(d_p)
                     else:
-                        buf = param_state['momentum_buffer']
+                        buf = param_state["momentum_buffer"]
                         buf.mul_(momentum).add_(1 - dampening, d_p)
                     if nesterov:
                         d_p = d_p.add(momentum, buf)
@@ -120,7 +132,7 @@ class SGDW(Optimizer):
                 if weight_decay != 0:
                     p.data.add_(-weight_decay, p.data)
 
-                p.data.add_(-group['lr'], d_p)
+                p.data.add_(-group["lr"], d_p)
 
         return loss
 
@@ -153,8 +165,15 @@ class AdamW(Optimizer):
         https://openreview.net/forum?id=ryQu7f-RZ
     """
 
-    def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-8,
-                 weight_decay=0, amsgrad=False):
+    def __init__(
+        self,
+        params,
+        lr=1e-3,
+        betas=(0.9, 0.999),
+        eps=1e-8,
+        weight_decay=0,
+        amsgrad=False,
+    ):
         if not 0.0 <= lr:
             raise ValueError("Invalid learning rate: {}".format(lr))
         if not 0.0 <= eps:
@@ -163,14 +182,15 @@ class AdamW(Optimizer):
             raise ValueError("Invalid beta parameter at index 0: {}".format(betas[0]))
         if not 0.0 <= betas[1] < 1.0:
             raise ValueError("Invalid beta parameter at index 1: {}".format(betas[1]))
-        defaults = dict(lr=lr, betas=betas, eps=eps,
-                        weight_decay=weight_decay, amsgrad=amsgrad)
+        defaults = dict(
+            lr=lr, betas=betas, eps=eps, weight_decay=weight_decay, amsgrad=amsgrad
+        )
         super(AdamW, self).__init__(params, defaults)
 
     def __setstate__(self, state):
         super(AdamW, self).__setstate__(state)
         for group in self.param_groups:
-            group.setdefault('amsgrad', False)
+            group.setdefault("amsgrad", False)
 
     def step(self, closure=None):
         """Performs a single optimization step.
@@ -184,33 +204,35 @@ class AdamW(Optimizer):
             loss = closure()
 
         for group in self.param_groups:
-            for p in group['params']:
+            for p in group["params"]:
                 if p.grad is None:
                     continue
                 grad = p.grad.data
                 if grad.is_sparse:
-                    raise RuntimeError('Adam does not support sparse gradients, please consider SparseAdam instead')
-                amsgrad = group['amsgrad']
+                    raise RuntimeError(
+                        "Adam does not support sparse gradients, please consider SparseAdam instead"
+                    )
+                amsgrad = group["amsgrad"]
 
                 state = self.state[p]
 
                 # State initialization
                 if len(state) == 0:
-                    state['step'] = 0
+                    state["step"] = 0
                     # Exponential moving average of gradient values
-                    state['exp_avg'] = torch.zeros_like(p.data)
+                    state["exp_avg"] = torch.zeros_like(p.data)
                     # Exponential moving average of squared gradient values
-                    state['exp_avg_sq'] = torch.zeros_like(p.data)
+                    state["exp_avg_sq"] = torch.zeros_like(p.data)
                     if amsgrad:
                         # Maintains max of all exp. moving avg. of sq. grad. values
-                        state['max_exp_avg_sq'] = torch.zeros_like(p.data)
+                        state["max_exp_avg_sq"] = torch.zeros_like(p.data)
 
-                exp_avg, exp_avg_sq = state['exp_avg'], state['exp_avg_sq']
+                exp_avg, exp_avg_sq = state["exp_avg"], state["exp_avg_sq"]
                 if amsgrad:
-                    max_exp_avg_sq = state['max_exp_avg_sq']
-                beta1, beta2 = group['betas']
+                    max_exp_avg_sq = state["max_exp_avg_sq"]
+                beta1, beta2 = group["betas"]
 
-                state['step'] += 1
+                state["step"] += 1
 
                 # Decay the first and second moment running average coefficient
                 exp_avg.mul_(beta1).add_(1 - beta1, grad)
@@ -219,16 +241,16 @@ class AdamW(Optimizer):
                     # Maintains the maximum of all 2nd moment running avg. till now
                     torch.max(max_exp_avg_sq, exp_avg_sq, out=max_exp_avg_sq)
                     # Use the max. for normalizing running avg. of gradient
-                    denom = max_exp_avg_sq.sqrt().add_(group['eps'])
+                    denom = max_exp_avg_sq.sqrt().add_(group["eps"])
                 else:
-                    denom = exp_avg_sq.sqrt().add_(group['eps'])
+                    denom = exp_avg_sq.sqrt().add_(group["eps"])
 
-                bias_correction1 = 1 - beta1 ** state['step']
-                bias_correction2 = 1 - beta2 ** state['step']
-                step_size = group['lr'] * math.sqrt(bias_correction2) / bias_correction1
+                bias_correction1 = 1 - beta1 ** state["step"]
+                bias_correction2 = 1 - beta2 ** state["step"]
+                step_size = group["lr"] * math.sqrt(bias_correction2) / bias_correction1
 
-                if group['weight_decay'] != 0:
-                    p.data.add_(-group['weight_decay'], p.data)
+                if group["weight_decay"] != 0:
+                    p.data.add_(-group["weight_decay"], p.data)
 
                 p.data.addcdiv_(-step_size, exp_avg, denom)
 
@@ -246,6 +268,7 @@ class ExpAnnealLR(_LRScheduler):
             learning rate.
         last_epoch (int): The index of the last iteration. Default: -1.
     """
+
     def __init__(self, optimizer, end_lr, iterations, last_epoch=-1):
         self.end_lr = end_lr
         self.iterations = iterations
@@ -310,6 +333,7 @@ class ReduceLRWDOnPlateau(ReduceLROnPlateau):
         >>>     # Note that step should be called after validate()
         >>>     scheduler.step(val_loss)
     """
+
     def step(self, metrics, epoch=None):
         current = metrics
         if epoch is None:
@@ -334,10 +358,12 @@ class ReduceLRWDOnPlateau(ReduceLROnPlateau):
 
     def _reduce_weight_decay(self, epoch):
         for i, param_group in enumerate(self.optimizer.param_groups):
-            if param_group['weight_decay'] != 0:
-                old_weight_decay = float(param_group['weight_decay'])
+            if param_group["weight_decay"] != 0:
+                old_weight_decay = float(param_group["weight_decay"])
                 new_weight_decay = max(old_weight_decay * self.factor, self.min_lrs[i])
                 if old_weight_decay - new_weight_decay > self.eps:
-                    param_group['weight_decay'] = new_weight_decay
+                    param_group["weight_decay"] = new_weight_decay
                     if self.verbose:
-                        log.info(f'Epoch {epoch}: reducing weight decay factor of group {i} to {new_weight_decay:.4e}.')
+                        log.info(
+                            f"Epoch {epoch}: reducing weight decay factor of group {i} to {new_weight_decay:.4e}."
+                        )
