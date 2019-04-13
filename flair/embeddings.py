@@ -340,7 +340,7 @@ class BytePairEmbeddings(TokenEmbeddings):
 class ELMoEmbeddings(TokenEmbeddings):
     """Contextual word embeddings using word-level LM, as proposed in Peters et al., 2018."""
 
-    def __init__(self, model: str = 'original'):
+    def __init__(self, model: str = 'original', options_file: str = None, weight_file: str = None):
         super().__init__()
 
         try:
@@ -354,23 +354,23 @@ class ELMoEmbeddings(TokenEmbeddings):
 
         self.name = 'elmo-' + model
         self.static_embeddings = True
-
-        # the default model for ELMo is the 'original' model, which is very large
-        options_file = allennlp.commands.elmo.DEFAULT_OPTIONS_FILE
-        weight_file = allennlp.commands.elmo.DEFAULT_WEIGHT_FILE
-        # alternatively, a small, medium or portuguese model can be selected by passing the appropriate mode name
-        if model == 'small':
-            options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x1024_128_2048cnn_1xhighway/elmo_2x1024_128_2048cnn_1xhighway_options.json'
-            weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x1024_128_2048cnn_1xhighway/elmo_2x1024_128_2048cnn_1xhighway_weights.hdf5'
-        if model == 'medium':
-            options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_options.json'
-            weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_weights.hdf5'
-        if model == 'pt' or model == 'portuguese':
-            options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_options.json'
-            weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_weights.hdf5'
-        if model == 'pubmed':
-            options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_options.json'
-            weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_weights_PubMed_only.hdf5'
+        if not options_file or not weight_file:
+            # the default model for ELMo is the 'original' model, which is very large
+            options_file = allennlp.commands.elmo.DEFAULT_OPTIONS_FILE
+            weight_file = allennlp.commands.elmo.DEFAULT_WEIGHT_FILE
+            # alternatively, a small, medium or portuguese model can be selected by passing the appropriate mode name
+            if model == 'small':
+                options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x1024_128_2048cnn_1xhighway/elmo_2x1024_128_2048cnn_1xhighway_options.json'
+                weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x1024_128_2048cnn_1xhighway/elmo_2x1024_128_2048cnn_1xhighway_weights.hdf5'
+            if model == 'medium':
+                options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_options.json'
+                weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_weights.hdf5'
+            if model == 'pt' or model == 'portuguese':
+                options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_options.json'
+                weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_weights.hdf5'
+            if model == 'pubmed':
+                options_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_options.json'
+                weight_file = 'https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_weights_PubMed_only.hdf5'
 
         # put on Cuda if available
         from flair import device
