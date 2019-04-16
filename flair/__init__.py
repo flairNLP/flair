@@ -1,4 +1,15 @@
 import torch
+import os
+
+# global variable: cache_root
+cache_root = os.path.expanduser(os.path.join("~", ".flair"))
+
+# global variable: device
+device = None
+if torch.cuda.is_available():
+    device = torch.device("cuda:0")
+else:
+    device = torch.device("cpu")
 
 from . import data
 from . import models
@@ -30,10 +41,3 @@ logging.config.dictConfig(
 )
 
 logger = logging.getLogger("flair")
-
-
-device = None
-if torch.cuda.is_available():
-    device = torch.device("cuda:0")
-else:
-    device = torch.device("cpu")

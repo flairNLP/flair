@@ -17,12 +17,9 @@ import zipfile
 import io
 
 # from allennlp.common.tqdm import Tqdm
-
+import flair
 
 logger = logging.getLogger("flair")
-
-
-CACHE_ROOT = os.path.expanduser(os.path.join("~", ".flair"))
 
 
 def load_big_file(f):
@@ -82,7 +79,7 @@ def cached_path(url_or_filename: str, cache_dir: Path) -> Path:
     return the path to the cached file. If it's already a local path,
     make sure the file exists and then return the path.
     """
-    dataset_cache = Path(CACHE_ROOT) / cache_dir
+    dataset_cache = Path(flair.cache_root) / cache_dir
 
     parsed = urlparse(url_or_filename)
 
