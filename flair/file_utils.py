@@ -2,7 +2,7 @@
 Utilities for working with the local dataset cache. Copied from AllenNLP
 """
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Optional, Sequence, cast
 import os
 import base64
 import logging
@@ -13,14 +13,16 @@ from urllib.parse import urlparse
 
 import mmap
 import requests
+import zipfile
+import io
 
 # from allennlp.common.tqdm import Tqdm
 
 
-logger = logging.getLogger('flair')
+logger = logging.getLogger("flair")
 
 
-CACHE_ROOT = os.path.expanduser(os.path.join('~', '.flair'))
+CACHE_ROOT = os.path.expanduser(os.path.join("~", ".flair"))
 
 
 def load_big_file(f):
@@ -29,8 +31,8 @@ def load_big_file(f):
     :param f:
     :return:
     """
-    logger.info(f'loading file {f}')
-    with open(f, 'r+b') as f_in:
+    logger.info(f"loading file {f}")
+    with open(f, "r+b") as f_in:
         # mmap seems to be much more memory efficient
         bf = mmap.mmap(f_in.fileno(), 0)
         f_in.close()
@@ -44,13 +46,13 @@ def url_to_filename(url: str, etag: str = None) -> str:
     (which necessarily won't appear in the base64-encoded filename).
     Get rid of the quotes in the etag, since Windows doesn't like them.
     """
-    url_bytes = url.encode('utf-8')
+    url_bytes = url.encode("utf-8")
     b64_bytes = base64.b64encode(url_bytes)
-    decoded = b64_bytes.decode('utf-8')
+    decoded = b64_bytes.decode("utf-8")
 
     if etag:
         # Remove quotes from etag
-        etag = etag.replace('"', '')
+        etag = etag.replace('"', "")
         return f"{decoded}.{etag}"
     else:
         return decoded
@@ -68,9 +70,9 @@ def filename_to_url(filename: str) -> Tuple[str, str]:
         # Otherwise, use None
         decoded, etag = filename, None
 
-    filename_bytes = decoded.encode('utf-8')
+    filename_bytes = decoded.encode("utf-8")
     url_bytes = base64.b64decode(filename_bytes)
-    return url_bytes.decode('utf-8'), etag
+    return url_bytes.decode("utf-8"), etag
 
 
 def cached_path(url_or_filename: str, cache_dir: Path) -> Path:
@@ -84,18 +86,20 @@ def cached_path(url_or_filename: str, cache_dir: Path) -> Path:
 
     parsed = urlparse(url_or_filename)
 
-    if parsed.scheme in ('http', 'https'):
+    if parsed.scheme in ("http", "https"):
         # URL, so get it from the cache (downloading if necessary)
         return get_from_cache(url_or_filename, dataset_cache)
-    elif parsed.scheme == '' and Path(url_or_filename).exists():
+    elif parsed.scheme == "" and Path(url_or_filename).exists():
         # File, and it exists.
         return Path(url_or_filename)
-    elif parsed.scheme == '':
+    elif parsed.scheme == "":
         # File, but it doesn't exist.
         raise FileNotFoundError("file {} not found".format(url_or_filename))
     else:
         # Something unknown
-        raise ValueError("unable to parse {} as a URL or as a local path".format(url_or_filename))
+        raise ValueError(
+            "unable to parse {} as a URL or as a local path".format(url_or_filename)
+        )
 
 
 # TODO(joelgrus): do we want to do checksums or anything like that?
@@ -106,7 +110,7 @@ def get_from_cache(url: str, cache_dir: Path = None) -> Path:
     """
     cache_dir.mkdir(parents=True, exist_ok=True)
 
-    filename = re.sub(r'.+/', '', url)
+    filename = re.sub(r".+/", "", url)
     # get cache path to put the file
     cache_path = cache_dir / filename
     if cache_path.exists():
@@ -128,12 +132,12 @@ def get_from_cache(url: str, cache_dir: Path = None) -> Path:
 
         # GET file object
         req = requests.get(url, stream=True)
-        content_length = req.headers.get('Content-Length')
+        content_length = req.headers.get("Content-Length")
         total = int(content_length) if content_length is not None else None
         progress = Tqdm.tqdm(unit="B", total=total)
-        with open(temp_filename, 'wb') as temp_file:
+        with open(temp_filename, "wb") as temp_file:
             for chunk in req.iter_content(chunk_size=1024):
-                if chunk: # filter out keep-alive new chunks
+                if chunk:  # filter out keep-alive new chunks
                     progress.update(len(chunk))
                     temp_file.write(chunk)
 
@@ -146,6 +150,47 @@ def get_from_cache(url: str, cache_dir: Path = None) -> Path:
         os.remove(temp_filename)
 
     return cache_path
+
+
+def open_inside_zip(
+    archive_path: str,
+    cache_dir: Path,
+    member_path: Optional[str] = None,
+    encoding: str = "utf8",
+) -> iter:
+    cached_archive_path = cached_path(archive_path, cache_dir=cache_dir)
+    archive = zipfile.ZipFile(cached_archive_path, "r")
+    if member_path is None:
+        members_list = archive.namelist()
+        member_path = get_the_only_file_in_the_archive(members_list, archive_path)
+    member_path = cast(str, member_path)
+    member_file = archive.open(member_path, "r")
+    return io.TextIOWrapper(member_file, encoding=encoding)
+
+
+def get_the_only_file_in_the_archive(
+    members_list: Sequence[str], archive_path: str
+) -> str:
+    if len(members_list) > 1:
+        raise ValueError(
+            "The archive %s contains multiple files, so you must select "
+            "one of the files inside providing a uri of the type: %s"
+            % (
+                archive_path,
+                format_embeddings_file_uri(
+                    "path_or_url_to_archive", "path_inside_archive"
+                ),
+            )
+        )
+    return members_list[0]
+
+
+def format_embeddings_file_uri(
+    main_file_path_or_url: str, path_inside_archive: Optional[str] = None
+) -> str:
+    if path_inside_archive:
+        return "({})#{}".format(main_file_path_or_url, path_inside_archive)
+    return main_file_path_or_url
 
 
 from tqdm import tqdm as _tqdm
@@ -174,9 +219,6 @@ class Tqdm:
 
     @staticmethod
     def tqdm(*args, **kwargs):
-        new_kwargs = {
-                'mininterval': Tqdm.default_mininterval,
-                **kwargs
-        }
+        new_kwargs = {"mininterval": Tqdm.default_mininterval, **kwargs}
 
         return _tqdm(*args, **new_kwargs)

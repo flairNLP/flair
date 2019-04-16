@@ -12,7 +12,6 @@ from scipy.stats import pearsonr, spearmanr
 
 
 class Metric(object):
-
     def __init__(self, name):
         self.name = name
 
@@ -55,26 +54,46 @@ class Metric(object):
 
     def precision(self, class_name=None):
         if self.get_tp(class_name) + self.get_fp(class_name) > 0:
-            return round(self.get_tp(class_name) / (self.get_tp(class_name) + self.get_fp(class_name)), 4)
+            return round(
+                self.get_tp(class_name)
+                / (self.get_tp(class_name) + self.get_fp(class_name)),
+                4,
+            )
         return 0.0
 
     def recall(self, class_name=None):
         if self.get_tp(class_name) + self.get_fn(class_name) > 0:
-            return round(self.get_tp(class_name) / (self.get_tp(class_name) + self.get_fn(class_name)), 4)
+            return round(
+                self.get_tp(class_name)
+                / (self.get_tp(class_name) + self.get_fn(class_name)),
+                4,
+            )
         return 0.0
 
     def f_score(self, class_name=None):
         if self.precision(class_name) + self.recall(class_name) > 0:
-            return round(2 * (self.precision(class_name) * self.recall(class_name))
-                         / (self.precision(class_name) + self.recall(class_name)), 4)
+            return round(
+                2
+                * (self.precision(class_name) * self.recall(class_name))
+                / (self.precision(class_name) + self.recall(class_name)),
+                4,
+            )
         return 0.0
 
     def accuracy(self, class_name=None):
-        if self.get_tp(class_name) + self.get_fp(class_name) + self.get_fn(class_name) > 0:
+        if (
+            self.get_tp(class_name) + self.get_fp(class_name) + self.get_fn(class_name)
+            > 0
+        ):
             return round(
                 (self.get_tp(class_name))
-                / (self.get_tp(class_name) + self.get_fp(class_name) + self.get_fn(class_name)),
-                4)
+                / (
+                    self.get_tp(class_name)
+                    + self.get_fp(class_name)
+                    + self.get_fn(class_name)
+                ),
+                4,
+            )
         return 0.0
 
     def micro_avg_f_score(self):
@@ -89,7 +108,9 @@ class Metric(object):
         return self.accuracy(None)
 
     def macro_avg_accuracy(self):
-        class_accuracy = [self.accuracy(class_name) for class_name in self.get_classes()]
+        class_accuracy = [
+            self.accuracy(class_name) for class_name in self.get_classes()
+        ]
 
         if len(class_accuracy) > 0:
             return round(sum(class_accuracy) / len(class_accuracy), 4)
@@ -97,44 +118,59 @@ class Metric(object):
         return 0.0
 
     def get_classes(self) -> List:
-        all_classes = set(itertools.chain(*[list(keys) for keys
-                                            in [self._tps.keys(), self._fps.keys(), self._tns.keys(),
-                                                self._fns.keys()]]))
-        all_classes = [class_name for class_name in all_classes if class_name is not None]
+        all_classes = set(
+            itertools.chain(
+                *[
+                    list(keys)
+                    for keys in [
+                        self._tps.keys(),
+                        self._fps.keys(),
+                        self._tns.keys(),
+                        self._fns.keys(),
+                    ]
+                ]
+            )
+        )
+        all_classes = [
+            class_name for class_name in all_classes if class_name is not None
+        ]
         all_classes.sort()
         return all_classes
 
     def to_tsv(self):
-        return '{}\t{}\t{}\t{}'.format(
-            self.precision(),
-            self.recall(),
-            self.accuracy(),
-            self.micro_avg_f_score(),
+        return "{}\t{}\t{}\t{}".format(
+            self.precision(), self.recall(), self.accuracy(), self.micro_avg_f_score()
         )
 
     @staticmethod
     def tsv_header(prefix=None):
         if prefix:
-            return '{0}_PRECISION\t{0}_RECALL\t{0}_ACCURACY\t{0}_F-SCORE'.format(
-                prefix)
+            return "{0}_PRECISION\t{0}_RECALL\t{0}_ACCURACY\t{0}_F-SCORE".format(prefix)
 
-        return 'PRECISION\tRECALL\tACCURACY\tF-SCORE'
+        return "PRECISION\tRECALL\tACCURACY\tF-SCORE"
 
     @staticmethod
     def to_empty_tsv():
-        return '\t_\t_\t_\t_'
+        return "\t_\t_\t_\t_"
 
     def __str__(self):
         all_classes = self.get_classes()
         all_classes = [None] + all_classes
         all_lines = [
-            '{0:<10}\ttp: {1} - fp: {2} - fn: {3} - tn: {4} - precision: {5:.4f} - recall: {6:.4f} - accuracy: {7:.4f} - f1-score: {8:.4f}'.format(
+            "{0:<10}\ttp: {1} - fp: {2} - fn: {3} - tn: {4} - precision: {5:.4f} - recall: {6:.4f} - accuracy: {7:.4f} - f1-score: {8:.4f}".format(
                 self.name if class_name is None else class_name,
-                self.get_tp(class_name), self.get_fp(class_name), self.get_fn(class_name), self.get_tn(class_name),
-                self.precision(class_name), self.recall(class_name), self.accuracy(class_name),
-                self.f_score(class_name))
-            for class_name in all_classes]
-        return '\n'.join(all_lines)
+                self.get_tp(class_name),
+                self.get_fp(class_name),
+                self.get_fn(class_name),
+                self.get_tn(class_name),
+                self.precision(class_name),
+                self.recall(class_name),
+                self.accuracy(class_name),
+                self.f_score(class_name),
+            )
+            for class_name in all_classes
+        ]
+        return "\n".join(all_lines)
 
 
 class MetricRegression(object):
@@ -199,9 +235,8 @@ class EvaluationMetric(Enum):
 
 
 class WeightExtractor(object):
-
     def __init__(self, directory: Path, number_of_weights: int = 10):
-        self.weights_file = init_output_file(directory, 'weights.txt')
+        self.weights_file = init_output_file(directory, "weights.txt")
         self.weights_dict = defaultdict(lambda: defaultdict(lambda: list()))
         self.number_of_weights = number_of_weights
 
@@ -209,7 +244,9 @@ class WeightExtractor(object):
         for key in state_dict.keys():
 
             vec = state_dict[key]
-            weights_to_watch = min(self.number_of_weights, reduce(lambda x, y: x * y, list(vec.size())))
+            weights_to_watch = min(
+                self.number_of_weights, reduce(lambda x, y: x * y, list(vec.size()))
+            )
 
             if key not in self.weights_dict:
                 self._init_weights_index(key, state_dict, weights_to_watch)
@@ -221,8 +258,8 @@ class WeightExtractor(object):
 
                 value = vec.item()
 
-                with open(self.weights_file, 'a') as f:
-                    f.write('{}\t{}\t{}\t{}\n'.format(iteration, key, i, float(value)))
+                with open(self.weights_file, "a") as f:
+                    f.write("{}\t{}\t{}\t{}\n".format(iteration, key, i, float(value)))
 
     def _init_weights_index(self, key, state_dict, weights_to_watch):
         indices = {}
@@ -263,28 +300,33 @@ def init_output_file(base_path: Path, file_name: str) -> Path:
     base_path.mkdir(parents=True, exist_ok=True)
 
     file = base_path / file_name
-    open(file, "w", encoding='utf-8').close()
+    open(file, "w", encoding="utf-8").close()
     return file
 
 
-def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionary) -> List[List[int]]:
+def convert_labels_to_one_hot(
+    label_list: List[List[str]], label_dict: Dictionary
+) -> List[List[int]]:
     """
     Convert list of labels (strings) to a one hot list.
     :param label_list: list of labels
     :param label_dict: label dictionary
     :return: converted label list
     """
-    return [[1 if l in labels else 0 for l in label_dict.get_items()] for labels in label_list]
+    return [
+        [1 if l in labels else 0 for l in label_dict.get_items()]
+        for labels in label_list
+    ]
 
 
 def log_line(log):
-    log.info('-' * 100)
+    log.info("-" * 100)
 
 
 def add_file_handler(log, output_file):
     init_output_file(output_file.parents[0], output_file.name)
     fh = logging.FileHandler(output_file)
     fh.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)-15s %(message)s')
+    formatter = logging.Formatter("%(asctime)-15s %(message)s")
     fh.setFormatter(formatter)
     log.addHandler(fh)
