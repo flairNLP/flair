@@ -213,7 +213,7 @@ class NLPTaskDataFetcher:
             NLPTask.AG_NEWS.value,
             NLPTask.TREC_6.value,
             NLPTask.TREC_50.value,
-            NLPTask.REGRESSION.value.
+            NLPTask.REGRESSION.value,
         ]:
             use_tokenizer: bool = False if task in [
                 NLPTask.TREC_6.value,
