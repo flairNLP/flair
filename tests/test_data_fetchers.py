@@ -95,4 +95,4 @@ def test_download_load_data(tasks_base_path):
     assert len(corpus.test) == 2077
 
     # clean up data directory
-    shutil.rmtree(Path(flair.file_utils.CACHE_ROOT) / "datasets" / "ud_english")
+    shutil.rmtree(Path(flair.cache_root) / "datasets" / "ud_english")
