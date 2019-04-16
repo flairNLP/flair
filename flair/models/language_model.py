@@ -273,9 +273,7 @@ class LanguageModel(nn.Module):
                         .unsqueeze(0)
                     )
 
-                input = torch.cat(char_tensors)
-                if torch.cuda.is_available():
-                    input = input.cuda()
+                input = torch.cat(char_tensors).to(flair.device)
 
                 prediction, _, hidden = self.forward(input, hidden)
 
@@ -289,8 +287,7 @@ class LanguageModel(nn.Module):
 
             for i in range(number_of_characters):
 
-                if torch.cuda.is_available():
-                    input = input.cuda()
+                input = input.to(flair.device)
 
                 # get predicted weights
                 prediction, _, hidden = self.forward(input, hidden)
