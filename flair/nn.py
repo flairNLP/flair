@@ -16,12 +16,16 @@ class Model(torch.nn.Module):
         pass
 
     @abstractmethod
-    def forward_labels_and_loss(self, sentences: Union[List[Sentence], Sentence]) -> (List[List[Label]], torch.tensor):
+    def forward_labels_and_loss(
+        self, sentences: Union[List[Sentence], Sentence]
+    ) -> (List[List[Label]], torch.tensor):
         """Predicts the labels/tags for the given list of sentences. Returns the list of labels plus the loss."""
         pass
 
     @abstractmethod
-    def predict(self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32) -> List[Sentence]:
+    def predict(
+        self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32
+    ) -> List[Sentence]:
         """Predicts the labels/tags for the given list of sentences. The labels/tags are added directly to the
         sentences."""
         pass
@@ -31,6 +35,7 @@ class LockedDropout(torch.nn.Module):
     """
     Implementation of locked (or variational) dropout. Randomly drops out entire parameters in embedding space.
     """
+
     def __init__(self, dropout_rate=0.5):
         super(LockedDropout, self).__init__()
         self.dropout_rate = dropout_rate
@@ -49,6 +54,7 @@ class WordDropout(torch.nn.Module):
     """
     Implementation of word dropout. Randomly drops out entire words (or characters) in embedding space.
     """
+
     def __init__(self, dropout_rate=0.05):
         super(WordDropout, self).__init__()
         self.dropout_rate = dropout_rate
