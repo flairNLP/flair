@@ -94,6 +94,9 @@ class NLPTask(Enum):
     TREC_6 = "trec-6"
     TREC_50 = "trec-50"
 
+    # text regression format
+    REGRESSION = 'regression'
+
 
 class NLPTaskDataFetcher:
     @staticmethod
@@ -210,6 +213,7 @@ class NLPTaskDataFetcher:
             NLPTask.AG_NEWS.value,
             NLPTask.TREC_6.value,
             NLPTask.TREC_50.value,
+            NLPTask.REGRESSION.value,
         ]:
             use_tokenizer: bool = False if task in [
                 NLPTask.TREC_6.value,
