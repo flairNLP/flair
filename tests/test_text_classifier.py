@@ -11,8 +11,10 @@ def init(tasks_base_path) -> Tuple[TaggedCorpus, Dictionary, TextClassifier]:
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.AG_NEWS, tasks_base_path)
     label_dict = corpus.make_label_dictionary()
 
-    glove_embedding: WordEmbeddings = WordEmbeddings('turian')
-    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings([glove_embedding], 128, 1, False, 64, False, False)
+    glove_embedding: WordEmbeddings = WordEmbeddings("turian")
+    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
+        [glove_embedding], 128, 1, False, 64, False, False
+    )
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
@@ -28,7 +30,7 @@ def test_labels_to_indices(tasks_base_path):
         expected = label_dict.get_idx_for_item(corpus.train[i].labels[0].value)
         actual = result[i].item()
 
-        assert(expected == actual)
+        assert expected == actual
 
 
 def test_labels_to_one_hot(tasks_base_path):
@@ -42,6 +44,6 @@ def test_labels_to_one_hot(tasks_base_path):
 
         for idx in range(len(label_dict)):
             if idx == expected:
-                assert(actual[idx] == 1)
+                assert actual[idx] == 1
             else:
-                assert(actual[idx] == 0)
+                assert actual[idx] == 0

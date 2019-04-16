@@ -2,30 +2,31 @@ from enum import Enum
 
 
 class Parameter(Enum):
-    EMBEDDINGS = 'embeddings'
-    HIDDEN_SIZE = 'hidden_size'
-    USE_CRF = 'use_crf'
-    USE_RNN = 'use_rnn'
-    RNN_LAYERS = 'rnn_layers'
-    DROPOUT = 'dropout'
-    WORD_DROPOUT = 'word_dropout'
-    LOCKED_DROPOUT = 'locked_dropout'
-    LEARNING_RATE = 'learning_rate'
-    MINI_BATCH_SIZE = 'mini_batch_size'
-    ANNEAL_FACTOR = 'anneal_factor'
-    ANNEAL_WITH_RESTARTS = 'anneal_with_restarts'
-    PATIENCE = 'patience'
-    REPROJECT_WORDS = 'reproject_words'
-    REPROJECT_WORD_DIMENSION = 'reproject_words_dimension'
-    BIDIRECTIONAL = 'bidirectional'
-    OPTIMIZER = 'optimizer'
-    MOMENTUM = 'momentum'
-    DAMPENING = 'dampening'
-    WEIGHT_DECAY = 'weight_decay'
-    NESTEROV = 'nesterov'
-    AMSGRAD = 'amsgrad'
-    BETAS = 'betas'
-    EPS = 'eps'
+    EMBEDDINGS = "embeddings"
+    HIDDEN_SIZE = "hidden_size"
+    USE_CRF = "use_crf"
+    USE_RNN = "use_rnn"
+    RNN_LAYERS = "rnn_layers"
+    DROPOUT = "dropout"
+    WORD_DROPOUT = "word_dropout"
+    LOCKED_DROPOUT = "locked_dropout"
+    LEARNING_RATE = "learning_rate"
+    MINI_BATCH_SIZE = "mini_batch_size"
+    ANNEAL_FACTOR = "anneal_factor"
+    ANNEAL_WITH_RESTARTS = "anneal_with_restarts"
+    PATIENCE = "patience"
+    REPROJECT_WORDS = "reproject_words"
+    REPROJECT_WORD_DIMENSION = "reproject_words_dimension"
+    BIDIRECTIONAL = "bidirectional"
+    OPTIMIZER = "optimizer"
+    MOMENTUM = "momentum"
+    DAMPENING = "dampening"
+    WEIGHT_DECAY = "weight_decay"
+    NESTEROV = "nesterov"
+    AMSGRAD = "amsgrad"
+    BETAS = "betas"
+    EPS = "eps"
+
 
 TRAINING_PARAMETERS = [
     Parameter.LEARNING_RATE.value,
@@ -39,7 +40,7 @@ TRAINING_PARAMETERS = [
     Parameter.NESTEROV.value,
     Parameter.AMSGRAD.value,
     Parameter.BETAS.value,
-    Parameter.EPS.value
+    Parameter.EPS.value,
 ]
 SEQUENCE_TAGGER_PARAMETERS = [
     Parameter.EMBEDDINGS.value,
@@ -49,11 +50,9 @@ SEQUENCE_TAGGER_PARAMETERS = [
     Parameter.USE_RNN.value,
     Parameter.DROPOUT.value,
     Parameter.LOCKED_DROPOUT.value,
-    Parameter.WORD_DROPOUT.value
+    Parameter.WORD_DROPOUT.value,
 ]
-MODEL_TRAINER_PARAMETERS = [
-    Parameter.OPTIMIZER.value
-]
+MODEL_TRAINER_PARAMETERS = [Parameter.OPTIMIZER.value]
 DOCUMENT_EMBEDDING_PARAMETERS = [
     Parameter.EMBEDDINGS.value,
     Parameter.HIDDEN_SIZE.value,
@@ -63,5 +62,5 @@ DOCUMENT_EMBEDDING_PARAMETERS = [
     Parameter.BIDIRECTIONAL.value,
     Parameter.DROPOUT.value,
     Parameter.LOCKED_DROPOUT.value,
-    Parameter.WORD_DROPOUT.value
+    Parameter.WORD_DROPOUT.value,
 ]

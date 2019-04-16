@@ -15,12 +15,10 @@ class tSNE(_Transform):
     def __init__(self):
         super().__init__()
 
-        self.transform = \
-            TSNE(n_components=2, verbose=1, perplexity=40, n_iter=300)
+        self.transform = TSNE(n_components=2, verbose=1, perplexity=40, n_iter=300)
 
 
 class Visualizer(object):
-
     def visualize_word_emeddings(self, embeddings, sentences, output_file):
         X = self.prepare_word_embeddings(embeddings, sentences)
         contexts = self.word_contexts(sentences)
@@ -62,13 +60,12 @@ class Visualizer(object):
             strs = [x.text for x in sentence.tokens]
 
             for i, token in enumerate(strs):
-                prop = '<b><font color="red"> {token} </font></b>'.format(
-                    token=token)
+                prop = '<b><font color="red"> {token} </font></b>'.format(token=token)
 
-                prop = ' '.join(strs[max(i - 4, 0):i]) + prop
-                prop = prop + ' '.join(strs[i + 1:min(len(strs), i + 5)])
+                prop = " ".join(strs[max(i - 4, 0) : i]) + prop
+                prop = prop + " ".join(strs[i + 1 : min(len(strs), i + 5)])
 
-                contexts.append('<p>' + prop + '</p>')
+                contexts.append("<p>" + prop + "</p>")
 
         return contexts
 
@@ -78,7 +75,7 @@ class Visualizer(object):
 
         for sentence in tqdm.tqdm(sentences):
 
-            sentence = ' '.join([x.text for x in sentence])
+            sentence = " ".join([x.text for x in sentence])
 
             hidden = embeddings.lm.get_representation([sentence])
             X.append(hidden.squeeze().detach().numpy())
@@ -92,13 +89,17 @@ class Visualizer(object):
         contexts = []
 
         for sentence in sentences:
-            sentence = ' '.join([token.text for token in sentence])
+            sentence = " ".join([token.text for token in sentence])
 
             for i, char in enumerate(sentence):
 
-                context = '<span style="background-color: yellow"><b>{}</b></span>'.format(char)
-                context = ''.join(sentence[max(i - 30, 0):i]) + context
-                context = context + ''.join(sentence[i + 1:min(len(sentence), i + 30)])
+                context = '<span style="background-color: yellow"><b>{}</b></span>'.format(
+                    char
+                )
+                context = "".join(sentence[max(i - 30, 0) : i]) + context
+                context = context + "".join(
+                    sentence[i + 1 : min(len(sentence), i + 30)]
+                )
 
                 contexts.append(context)
 
@@ -113,18 +114,16 @@ class Visualizer(object):
 
         ax.grid(True, alpha=0.3)
 
-        points = ax.plot(X[:, 0], X[:, 1], 'o', color='b',
-                         mec='k', ms=5, mew=1, alpha=.6)
+        points = ax.plot(
+            X[:, 0], X[:, 1], "o", color="b", mec="k", ms=5, mew=1, alpha=0.6
+        )
 
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-        ax.set_title('Hover mouse to reveal context', size=20)
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_title("Hover mouse to reveal context", size=20)
 
         tooltip = mpld3.plugins.PointHTMLTooltip(
-            points[0],
-            contexts,
-            voffset=10,
-            hoffset=10
+            points[0], contexts, voffset=10, hoffset=10
         )
 
         mpld3.plugins.connect(fig, tooltip)
