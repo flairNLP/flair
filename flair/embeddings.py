@@ -349,7 +349,7 @@ class BPEmbSerializable(BPEmb):
         self.__dict__ = state
 
         # write out the binary sentence piece model into the expected directory
-        self.cache_dir: Path = Path(flair.file_utils.CACHE_ROOT) / "embeddings"
+        self.cache_dir: Path = Path(flair.cache_root) / "embeddings"
         if "spm_model_binary" in self.__dict__:
             # if the model was saved as binary and it is not found on disk, write to appropriate path
             if not os.path.exists(self.cache_dir / state["lang"]):
@@ -371,7 +371,7 @@ class BytePairEmbeddings(TokenEmbeddings):
         language: str,
         dim: int = 50,
         syllables: int = 100000,
-        cache_dir=Path(flair.file_utils.CACHE_ROOT) / "embeddings",
+        cache_dir=Path(flair.cache_root) / "embeddings",
     ):
         """
         Initializes BP embeddings. Constructor downloads required files if not there.
