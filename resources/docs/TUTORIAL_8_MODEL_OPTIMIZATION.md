@@ -137,10 +137,11 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 # 7. find learning rate
-learning_rate_tsv = ModelTrainer.find_learning_rate('resources/taggers/example-ner',
+learning_rate_tsv = trainer.find_learning_rate('resources/taggers/example-ner',
                                                     'learning_rate.tsv')
 
 # 8. plot the learning rate finder curve
+from flair.visual.training_curves import Plotter
 plotter = Plotter()
 plotter.plot_learning_rate(learning_rate_tsv)
 ```
