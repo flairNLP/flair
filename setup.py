@@ -24,7 +24,7 @@ setup(
         "hyperopt>=0.1.1",
         "pytorch-pretrained-bert>=0.6.1",
         "bpemb>=0.2.9",
-        "regex==2018.1.10",
+        "regex",
     ],
     include_package_data=True,
     python_requires=">=3.6",
