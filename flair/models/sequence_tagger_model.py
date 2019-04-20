@@ -15,10 +15,9 @@ from flair.file_utils import cached_path
 
 from typing import List, Tuple, Union
 
-from flair.training_utils import clear_embeddings
+from flair.training_utils import clear_embeddings, Metric, Result
 
 from tqdm import tqdm
-
 
 log = logging.getLogger("flair")
 
@@ -164,30 +163,7 @@ class SequenceTagger(flair.nn.Model):
 
         self.to(flair.device)
 
-    @staticmethod
-    def save_torch_model(
-        model_state: dict,
-        model_file: str,
-        pickle_module: str = "pickle",
-        pickle_protocol: int = 4,
-    ):
-        if pickle_module == "dill":
-            try:
-                import dill
-
-                torch.save(model_state, str(model_file), pickle_module=dill)
-            except:
-                log.warning("-" * 100)
-                log.warning('ATTENTION! The library "dill" is not installed!')
-                log.warning(
-                    'Please first install "dill" with "pip install dill" to save the model!'
-                )
-                log.warning("-" * 100)
-                pass
-        else:
-            torch.save(model_state, str(model_file), pickle_protocol=pickle_protocol)
-
-    def save(self, model_file: Union[str, Path]):
+    def _get_state_dict(self):
         model_state = {
             "state_dict": self.state_dict(),
             "embeddings": self.embeddings,
@@ -200,39 +176,9 @@ class SequenceTagger(flair.nn.Model):
             "use_word_dropout": self.use_word_dropout,
             "use_locked_dropout": self.use_locked_dropout,
         }
+        return model_state
 
-        self.save_torch_model(model_state, str(model_file), self.pickle_module)
-
-    def save_checkpoint(
-        self,
-        model_file: Union[str, Path],
-        optimizer_state: dict,
-        scheduler_state: dict,
-        epoch: int,
-        loss: float,
-    ):
-        model_state = {
-            "state_dict": self.state_dict(),
-            "embeddings": self.embeddings,
-            "hidden_size": self.hidden_size,
-            "tag_dictionary": self.tag_dictionary,
-            "tag_type": self.tag_type,
-            "use_crf": self.use_crf,
-            "use_rnn": self.use_rnn,
-            "rnn_layers": self.rnn_layers,
-            "use_word_dropout": self.use_word_dropout,
-            "use_locked_dropout": self.use_locked_dropout,
-            "optimizer_state_dict": optimizer_state,
-            "scheduler_state_dict": scheduler_state,
-            "epoch": epoch,
-            "loss": loss,
-        }
-
-        self.save_torch_model(model_state, str(model_file), self.pickle_module)
-
-    @classmethod
-    def load_from_file(cls, model_file: Union[str, Path]):
-        state = SequenceTagger._load_state(model_file)
+    def _init_model_with_state_dict(state):
 
         use_dropout = 0.0 if not "use_dropout" in state.keys() else state["use_dropout"]
         use_word_dropout = (
@@ -257,60 +203,112 @@ class SequenceTagger(flair.nn.Model):
             locked_dropout=use_locked_dropout,
         )
         model.load_state_dict(state["state_dict"])
-        model.eval()
-        model.to(flair.device)
-
         return model
 
-    @classmethod
-    def load_checkpoint(cls, model_file: Union[str, Path]):
-        state = SequenceTagger._load_state(model_file)
-        model = SequenceTagger.load_from_file(model_file)
+    def evaluate(
+        self,
+        sentences: List[Sentence],
+        eval_mini_batch_size: int = 32,
+        embeddings_in_memory: bool = True,
+        out_path: Path = None,
+    ) -> (Result, float):
 
-        epoch = state["epoch"] if "epoch" in state else None
-        loss = state["loss"] if "loss" in state else None
-        optimizer_state_dict = (
-            state["optimizer_state_dict"] if "optimizer_state_dict" in state else None
-        )
-        scheduler_state_dict = (
-            state["scheduler_state_dict"] if "scheduler_state_dict" in state else None
-        )
+        with torch.no_grad():
+            eval_loss = 0
 
-        return {
-            "model": model,
-            "epoch": epoch,
-            "loss": loss,
-            "optimizer_state_dict": optimizer_state_dict,
-            "scheduler_state_dict": scheduler_state_dict,
-        }
+            batch_no: int = 0
+            batches = [
+                sentences[x : x + eval_mini_batch_size]
+                for x in range(0, len(sentences), eval_mini_batch_size)
+            ]
 
-    @classmethod
-    def _load_state(cls, model_file: Union[str, Path]):
-        # ATTENTION: suppressing torch serialization warnings. This needs to be taken out once we sort out recursive
-        # serialization of torch objects
-        # https://docs.python.org/3/library/warnings.html#temporarily-suppressing-warnings
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore")
-            # load_big_file is a workaround by https://github.com/highway11git to load models on some Mac/Windows setups
-            # see https://github.com/zalandoresearch/flair/issues/351
-            f = flair.file_utils.load_big_file(str(model_file))
-            state = torch.load(f, map_location=flair.device)
-            return state
+            metric = Metric("Evaluation")
+
+            lines: List[str] = []
+            for batch in batches:
+                batch_no += 1
+
+                with torch.no_grad():
+                    features = self.forward(batch)
+                    loss = self._calculate_loss(features, batch)
+                    tags = self._obtain_labels(features, batch)
+
+                eval_loss += loss
+
+                for (sentence, sent_tags) in zip(batch, tags):
+                    for (token, tag) in zip(sentence.tokens, sent_tags):
+                        token: Token = token
+                        token.add_tag_label("predicted", tag)
+
+                        # append both to file for evaluation
+                        eval_line = "{} {} {} {}\n".format(
+                            token.text,
+                            token.get_tag(self.tag_type).value,
+                            tag.value,
+                            tag.score,
+                        )
+                        lines.append(eval_line)
+                    lines.append("\n")
+                for sentence in batch:
+                    # make list of gold tags
+                    gold_tags = [
+                        (tag.tag, str(tag)) for tag in sentence.get_spans(self.tag_type)
+                    ]
+                    # make list of predicted tags
+                    predicted_tags = [
+                        (tag.tag, str(tag)) for tag in sentence.get_spans("predicted")
+                    ]
+
+                    # check for true positives, false positives and false negatives
+                    for tag, prediction in predicted_tags:
+                        if (tag, prediction) in gold_tags:
+                            metric.add_tp(tag)
+                        else:
+                            metric.add_fp(tag)
+
+                    for tag, gold in gold_tags:
+                        if (tag, gold) not in predicted_tags:
+                            metric.add_fn(tag)
+                        else:
+                            metric.add_tn(tag)
+
+                clear_embeddings(
+                    batch, also_clear_word_embeddings=not embeddings_in_memory
+                )
+
+            eval_loss /= len(sentences)
+
+            if out_path is not None:
+                with open(out_path, "w", encoding="utf-8") as outfile:
+                    outfile.write("".join(lines))
+
+            detailed_result = (
+                f"\nMICRO_AVG: acc {metric.micro_avg_accuracy()} - f1-score {metric.micro_avg_f_score()}"
+                f"\nMACRO_AVG: acc {metric.macro_avg_accuracy()} - f1-score {metric.macro_avg_f_score()}"
+            )
+            for class_name in metric.get_classes():
+                detailed_result += (
+                    f"\n{class_name:<10} tp: {metric.get_tp(class_name)} - fp: {metric.get_fp(class_name)} - "
+                    f"fn: {metric.get_fn(class_name)} - tn: {metric.get_tn(class_name)} - precision: "
+                    f"{metric.precision(class_name):.4f} - recall: {metric.recall(class_name):.4f} - "
+                    f"accuracy: {metric.accuracy(class_name):.4f} - f1-score: "
+                    f"{metric.f_score(class_name):.4f}"
+                )
+
+            result = Result(
+                main_score=metric.micro_avg_f_score(),
+                log_line=f"{metric.precision()}\t{metric.recall()}\t{metric.micro_avg_f_score()}",
+                log_header="PRECISION\tRECALL\tF1",
+                detailed_results=detailed_result,
+            )
+
+            return result, eval_loss
 
     def forward_loss(
         self, sentences: Union[List[Sentence], Sentence], sort=True
     ) -> torch.tensor:
-        features, lengths, tags = self.forward(sentences, sort=sort)
-        return self._calculate_loss(features, lengths, tags)
-
-    def forward_labels_and_loss(
-        self, sentences: Union[List[Sentence], Sentence], sort=True
-    ) -> (List[List[Label]], torch.tensor):
-        with torch.no_grad():
-            feature, lengths, tags = self.forward(sentences, sort=sort)
-            loss = self._calculate_loss(feature, lengths, tags)
-            tags = self._obtain_labels(feature, lengths)
-            return tags, loss
+        features = self.forward(sentences)
+        return self._calculate_loss(features, sentences)
 
     def predict(
         self,
@@ -345,7 +343,9 @@ class SequenceTagger(flair.nn.Model):
                 if verbose:
                     batches.set_description(f"Inferencing on batch {i}")
 
-                tags, _ = self.forward_labels_and_loss(batch, sort=False)
+                with torch.no_grad():
+                    feature = self.forward(batch)
+                    tags = self._obtain_labels(feature, batch)
 
                 for (sentence, sent_tags) in zip(batch, tags):
                     for (token, tag) in zip(sentence.tokens, sent_tags):
@@ -356,14 +356,12 @@ class SequenceTagger(flair.nn.Model):
 
             return sentences
 
-    def forward(self, sentences: List[Sentence], sort=True):
+    def forward(self, sentences: List[Sentence]):
         self.zero_grad()
 
         self.embeddings.embed(sentences)
 
-        # if sorting is enabled, sort sentences by number of tokens
-        if sort:
-            sentences.sort(key=lambda x: len(x), reverse=True)
+        sentences.sort(key=lambda x: len(x), reverse=True)
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
         tag_list: List = []
@@ -381,7 +379,6 @@ class SequenceTagger(flair.nn.Model):
         )
 
         for s_id, sentence in enumerate(sentences):
-
             # fill values with word embeddings
             sentence_tensor[s_id][: len(sentence)] = torch.cat(
                 [token.get_embedding().unsqueeze(0) for token in sentence], 0
@@ -430,7 +427,7 @@ class SequenceTagger(flair.nn.Model):
 
         features = self.linear(sentence_tensor)
 
-        return features.transpose_(0, 1), lengths, tag_list
+        return features.transpose_(0, 1)
 
     def _score_sentence(self, feats, tags, lens_):
 
@@ -465,7 +462,28 @@ class SequenceTagger(flair.nn.Model):
 
         return score
 
-    def _calculate_loss(self, features, lengths, tags) -> float:
+    def _calculate_loss(
+        self, scores: torch.tensor, sentences: List[Sentence]
+    ) -> torch.tensor:
+
+        sentences.sort(key=lambda x: len(x), reverse=True)
+
+        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        tag_list: List = []
+
+        for s_id, sentence in enumerate(sentences):
+            # get the tags in this sentence
+            tag_idx: List[int] = [
+                self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value)
+                for token in sentence
+            ]
+            # add tags as tensor
+            tag = torch.LongTensor(tag_idx).to(flair.device)
+            tag_list.append(tag)
+
+        return self._calculate_loss_old(scores, lengths, tag_list)
+
+    def _calculate_loss_old(self, features, lengths, tags) -> float:
         if self.use_crf:
             # pad tags if using batch-CRF decoder
             tags, _ = pad_tensors(tags)
@@ -490,7 +508,12 @@ class SequenceTagger(flair.nn.Model):
 
             return score
 
-    def _obtain_labels(self, feature, lengths) -> List[List[Label]]:
+    def _obtain_labels(self, feature, sentences) -> List[List[Label]]:
+
+        sentences.sort(key=lambda x: len(x), reverse=True)
+
+        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+
         tags = []
 
         for feats, length in zip(feature, lengths):
@@ -628,210 +651,170 @@ class SequenceTagger(flair.nn.Model):
             )
         return filtered_sentences
 
-    @staticmethod
-    def load(model: str):
-        model_file = None
+    def _fetch_model(model_name) -> str:
+
+        model_map = {}
         aws_resource_path = (
             "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.2"
         )
         aws_resource_path_v04 = (
             "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4"
         )
-        cache_dir = Path("models")
 
-        if model.lower() == "ner-multi" or model.lower() == "multi-ner":
-            base_path = "/".join(
+        model_map["ner"] = "/".join(
+            [aws_resource_path_v04, "NER-conll03-english", "en-ner-conll03-v0.4.pt"]
+        )
+
+        model_map["ner-fast"] = "/".join(
+            [
+                aws_resource_path,
+                "NER-conll03--h256-l1-b32-experimental--fast-v0.2",
+                "en-ner-fast-conll03-v0.2.pt",
+            ]
+        )
+
+        model_map["ner-ontonotes"] = "/".join(
+            [
+                aws_resource_path,
+                "NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward%2Bnews-backward--v0.2",
+                "en-ner-ontonotes-v0.3.pt",
+            ]
+        )
+
+        model_map["ner-ontonotes-fast"] = "/".join(
+            [
+                aws_resource_path,
+                "NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
+                "en-ner-ontonotes-fast-v0.3.pt",
+            ]
+        )
+
+        for key in ["ner-multi", "multi-ner"]:
+            model_map[key] = "/".join(
                 [
                     aws_resource_path_v04,
                     "release-quadner-512-l2-multi-embed",
                     "quadner-large.pt",
                 ]
             )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == "ner-multi-fast" or model.lower() == "multi-ner-fast":
-            base_path = "/".join(
+        for key in ["ner-multi-fast", "multi-ner-fast"]:
+            model_map[key] = "/".join(
                 [aws_resource_path_v04, "NER-multi-fast", "ner-multi-fast.pt"]
             )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if (
-            model.lower() == "ner-multi-fast-learn"
-            or model.lower() == "multi-ner-fast-learn"
-        ):
-            base_path = "/".join(
+        for key in ["ner-multi-fast-learn", "multi-ner-fast-learn"]:
+            model_map[key] = "/".join(
                 [
                     aws_resource_path_v04,
                     "NER-multi-fast-evolve",
                     "ner-multi-fast-learn.pt",
                 ]
             )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        if model.lower() == "ner":
-            base_path = "/".join(
-                [aws_resource_path_v04, "NER-conll03-english", "en-ner-conll03-v0.4.pt"]
-            )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
+        model_map["pos"] = "/".join(
+            [
+                aws_resource_path,
+                "POS-ontonotes--h256-l1-b32-%2Bmix-forward%2Bmix-backward--v0.2",
+                "en-pos-ontonotes-v0.2.pt",
+            ]
+        )
 
-        elif model.lower() == "ner-fast":
-            base_path = "/".join(
-                [
-                    aws_resource_path,
-                    "NER-conll03--h256-l1-b32-experimental--fast-v0.2",
-                    "en-ner-fast-conll03-v0.2.pt",
-                ]
-            )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
+        model_map["pos-fast"] = "/".join(
+            [
+                aws_resource_path,
+                "POS-ontonotes--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
+                "en-pos-ontonotes-fast-v0.2.pt",
+            ]
+        )
 
-        elif model.lower() == "ner-ontonotes":
-            base_path = "/".join(
-                [
-                    aws_resource_path,
-                    "NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward%2Bnews-backward--v0.2",
-                    "en-ner-ontonotes-v0.3.pt",
-                ]
-            )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
-
-        elif model.lower() == "ner-ontonotes-fast":
-            base_path = "/".join(
-                [
-                    aws_resource_path,
-                    "NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
-                    "en-ner-ontonotes-fast-v0.3.pt",
-                ]
-            )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
-
-        elif model.lower() == "pos-multi" or model.lower() == "multi-pos":
-            base_path = "/".join(
+        for key in ["pos-multi", "multi-pos"]:
+            model_map[key] = "/".join(
                 [
                     aws_resource_path_v04,
                     "release-dodekapos-512-l2-multi",
                     "pos-multi-v0.1.pt",
                 ]
             )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        elif model.lower() == "pos-multi-fast" or model.lower() == "multi-pos-fast":
-            base_path = "/".join(
+        for key in ["pos-multi-fast", "multi-pos-fast"]:
+            model_map[key] = "/".join(
                 [aws_resource_path_v04, "UPOS-multi-fast", "pos-multi-fast.pt"]
             )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
 
-        elif model.lower() == "pos":
-            base_path = "/".join(
-                [
-                    aws_resource_path,
-                    "POS-ontonotes--h256-l1-b32-%2Bmix-forward%2Bmix-backward--v0.2",
-                    "en-pos-ontonotes-v0.2.pt",
-                ]
-            )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
+        model_map["frame"] = "/".join(
+            [
+                aws_resource_path,
+                "FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward%2Bnews-backward--v0.2",
+                "en-frame-ontonotes-v0.2.pt",
+            ]
+        )
 
-        elif model.lower() == "pos-fast":
-            base_path = "/".join(
-                [
-                    aws_resource_path,
-                    "POS-ontonotes--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
-                    "en-pos-ontonotes-fast-v0.2.pt",
-                ]
-            )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
+        model_map["frame-fast"] = "/".join(
+            [
+                aws_resource_path,
+                "FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
+                "en-frame-ontonotes-fast-v0.2.pt",
+            ]
+        )
 
-        elif model.lower() == "frame":
-            base_path = "/".join(
-                [
-                    aws_resource_path,
-                    "FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward%2Bnews-backward--v0.2",
-                    "en-frame-ontonotes-v0.2.pt",
-                ]
-            )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
+        model_map["chunk"] = "/".join(
+            [
+                aws_resource_path,
+                "NP-conll2000--h256-l1-b32-%2Bnews-forward%2Bnews-backward--v0.2",
+                "en-chunk-conll2000-v0.2.pt",
+            ]
+        )
 
-        elif model.lower() == "frame-fast":
-            base_path = "/".join(
-                [
-                    aws_resource_path,
-                    "FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
-                    "en-frame-ontonotes-fast-v0.2.pt",
-                ]
-            )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
+        model_map["chunk-fast"] = "/".join(
+            [
+                aws_resource_path,
+                "NP-conll2000--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
+                "en-chunk-conll2000-fast-v0.2.pt",
+            ]
+        )
 
-        elif model.lower() == "chunk":
-            base_path = "/".join(
-                [
-                    aws_resource_path,
-                    "NP-conll2000--h256-l1-b32-%2Bnews-forward%2Bnews-backward--v0.2",
-                    "en-chunk-conll2000-v0.2.pt",
-                ]
-            )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
+        model_map["de-pos"] = "/".join(
+            [
+                aws_resource_path,
+                "UPOS-udgerman--h256-l1-b8-%2Bgerman-forward%2Bgerman-backward--v0.2",
+                "de-pos-ud-v0.2.pt",
+            ]
+        )
 
-        elif model.lower() == "chunk-fast":
-            base_path = "/".join(
-                [
-                    aws_resource_path,
-                    "NP-conll2000--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
-                    "en-chunk-conll2000-fast-v0.2.pt",
-                ]
-            )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
+        model_map["de-pos-fine-grained"] = "/".join(
+            [
+                aws_resource_path_v04,
+                "POS-fine-grained-german-tweets",
+                "de-pos-twitter-v0.1.pt",
+            ]
+        )
 
-        elif model.lower() == "de-pos":
-            base_path = "/".join(
-                [
-                    aws_resource_path,
-                    "UPOS-udgerman--h256-l1-b8-%2Bgerman-forward%2Bgerman-backward--v0.2",
-                    "de-pos-ud-v0.2.pt",
-                ]
-            )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
+        model_map["de-ner"] = "/".join(
+            [
+                aws_resource_path,
+                "NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2",
+                "de-ner-conll03-v0.3.pt",
+            ]
+        )
 
-        elif model.lower() == "de-pos-fine-grained":
-            base_path = "/".join(
-                [
-                    aws_resource_path_v04,
-                    "POS-fine-grained-german-tweets",
-                    "de-pos-twitter-v0.1.pt",
-                ]
-            )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
+        model_map["de-ner-germeval"] = "/".join(
+            [
+                aws_resource_path,
+                "NER-germeval--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2",
+                "de-ner-germeval-v0.3.pt",
+            ]
+        )
 
-        elif model.lower() == "de-ner":
-            base_path = "/".join(
-                [
-                    aws_resource_path,
-                    "NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2",
-                    "de-ner-conll03-v0.3.pt",
-                ]
-            )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
+        model_map["fr-ner"] = "/".join(
+            [aws_resource_path, "NER-aij-wikiner-fr-wp3", "fr-ner.pt"]
+        )
+        model_map["nl-ner"] = "/".join(
+            [aws_resource_path_v04, "NER-conll2002-dutch", "nl-ner-conll02-v0.1.pt"]
+        )
 
-        elif model.lower() == "de-ner-germeval":
-            base_path = "/".join(
-                [
-                    aws_resource_path,
-                    "NER-germeval--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2",
-                    "de-ner-germeval-v0.3.pt",
-                ]
-            )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
+        cache_dir = Path("models")
+        if model_name in model_map:
+            model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
 
-        elif model.lower() == "fr-ner":
-            base_path = "/".join(
-                [aws_resource_path, "NER-aij-wikiner-fr-wp3", "fr-ner.pt"]
-            )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
-
-        elif model.lower() == "nl-ner":
-            base_path = "/".join(
-                [aws_resource_path_v04, "NER-conll2002-dutch", "nl-ner-conll02-v0.1.pt"]
-            )
-            model_file = cached_path(base_path, cache_dir=cache_dir)
-
-        if model_file is not None:
-            tagger: SequenceTagger = SequenceTagger.load_from_file(model_file)
-            return tagger
+        return model_name
