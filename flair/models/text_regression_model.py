@@ -1,4 +1,4 @@
-from pymagnitude.third_party_mock.pathlib import Path
+from pathlib import Path
 
 import flair
 import torch
