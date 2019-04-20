@@ -112,6 +112,8 @@ class Metric(object):
 
     def macro_avg_f_score(self):
         class_f_scores = [self.f_score(class_name) for class_name in self.get_classes()]
+        if len(class_f_scores) == 0:
+            return 0.0
         macro_f_score = sum(class_f_scores) / len(class_f_scores)
         return macro_f_score
 

@@ -52,7 +52,6 @@ class ModelTrainer:
         max_epochs: int = 100,
         anneal_factor: float = 0.5,
         patience: int = 3,
-        anneal_against_train_loss: bool = True,
         train_with_dev: bool = False,
         monitor_train: bool = False,
         embeddings_in_memory: bool = True,
@@ -81,31 +80,29 @@ class ModelTrainer:
         log_test = True if (not param_selection_mode and self.corpus.test) else False
         log_dev = True if not train_with_dev else False
 
-        if not param_selection_mode:
-            loss_txt = init_output_file(base_path, "loss.tsv")
-            with open(loss_txt, "a") as f:
-                f.write(f"EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS")
+        loss_txt = init_output_file(base_path, "loss.tsv")
+        with open(loss_txt, "a") as f:
+            f.write(f"EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS")
 
-                dummy_result, _ = self.model.evaluate(
-                    [Sentence("d", labels=["0.1"])],
-                    eval_mini_batch_size,
-                    embeddings_in_memory,
+            dummy_result, _ = self.model.evaluate(
+                [Sentence("d", labels=["0.1"])],
+                eval_mini_batch_size,
+                embeddings_in_memory,
+            )
+            if log_train:
+                f.write(
+                    "\tTRAIN_" + "\tTRAIN_".join(dummy_result.log_header.split("\t"))
                 )
-                if log_train:
-                    f.write(
-                        "\tTRAIN_"
-                        + "\tTRAIN_".join(dummy_result.log_header.split("\t"))
-                    )
-                if log_dev:
-                    f.write(
-                        "\tDEV_LOSS\tDEV_"
-                        + "\tDEV_".join(dummy_result.log_header.split("\t"))
-                    )
-                if log_test:
-                    f.write(
-                        "\tTEST_LOSS\tTEST_"
-                        + "\tTEST_".join(dummy_result.log_header.split("\t"))
-                    )
+            if log_dev:
+                f.write(
+                    "\tDEV_LOSS\tDEV_"
+                    + "\tDEV_".join(dummy_result.log_header.split("\t"))
+                )
+            if log_test:
+                f.write(
+                    "\tTEST_LOSS\tTEST_"
+                    + "\tTEST_".join(dummy_result.log_header.split("\t"))
+                )
 
             weight_extractor = WeightExtractor(base_path)
 
@@ -113,8 +110,9 @@ class ModelTrainer:
         if self.optimizer_state is not None:
             optimizer.load_state_dict(self.optimizer_state)
 
-        # annealing scheduler
-        anneal_mode = "min" if anneal_against_train_loss else "max"
+        # minimize training loss if training with dev data, else maximize dev score
+        anneal_mode = "min" if train_with_dev else "max"
+
         if isinstance(optimizer, (AdamW, SGDW)):
             scheduler = ReduceLRWDOnPlateau(
                 optimizer,
@@ -224,51 +222,47 @@ class ModelTrainer:
                     f"EPOCH {epoch + 1} done: loss {train_loss:.4f} - lr {learning_rate:.4f} - bad epochs {bad_epochs}"
                 )
 
-                dev_loss = "_"
-                if not param_selection_mode:
-                    with open(loss_txt, "a") as f:
-
-                        f.write(
-                            f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
-                        )
-
-                        if log_train:
-                            train_eval_result, train_loss = self.model.evaluate(
-                                self.corpus.train,
-                                eval_mini_batch_size,
-                                embeddings_in_memory,
-                            )
-                            f.write(f"\t{train_eval_result.log_line}")
-
-                        if log_dev:
-                            dev_eval_result, dev_loss = self.model.evaluate(
-                                self.corpus.dev,
-                                eval_mini_batch_size,
-                                embeddings_in_memory,
-                            )
-                            f.write(f"\t{dev_loss}\t{dev_eval_result.log_line}")
-
-                        if log_test:
-                            test_eval_result, test_loss = self.model.evaluate(
-                                self.corpus.test,
-                                eval_mini_batch_size,
-                                embeddings_in_memory,
-                                base_path / "test.tsv",
-                            )
-                            f.write(f"\t{test_loss}\t{test_eval_result.log_line}")
-                            log.info(
-                                f"TEST : loss {test_loss} - score {test_eval_result.main_score}"
-                            )
-
-                # calculate scores using dev data if available
-                dev_score = 0.0
-                if not train_with_dev:
-                    # append dev score to score history
-                    dev_score_history.append(dev_score)
-                    dev_loss_history.append(dev_loss.item())
-
                 # anneal against train loss if training with dev, otherwise anneal against dev score
-                current_score = train_loss if anneal_against_train_loss else dev_score
+                current_score = train_loss
+
+                with open(loss_txt, "a") as f:
+
+                    f.write(
+                        f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
+                    )
+
+                    if log_train:
+                        train_eval_result, train_loss = self.model.evaluate(
+                            self.corpus.train,
+                            eval_mini_batch_size,
+                            embeddings_in_memory,
+                        )
+                        f.write(f"\t{train_eval_result.log_line}")
+
+                    if log_dev:
+                        dev_eval_result, dev_loss = self.model.evaluate(
+                            self.corpus.dev, eval_mini_batch_size, embeddings_in_memory
+                        )
+                        f.write(f"\t{dev_loss}\t{dev_eval_result.log_line}")
+
+                        # calculate scores using dev data if available
+                        # append dev score to score history
+                        dev_score_history.append(dev_eval_result.main_score)
+                        dev_loss_history.append(dev_loss)
+
+                        current_score = dev_eval_result.main_score
+
+                    if log_test:
+                        test_eval_result, test_loss = self.model.evaluate(
+                            self.corpus.test,
+                            eval_mini_batch_size,
+                            embeddings_in_memory,
+                            base_path / "test.tsv",
+                        )
+                        f.write(f"\t{test_loss}\t{test_eval_result.log_line}")
+                        log.info(
+                            f"TEST : loss {test_loss} - score {test_eval_result.main_score}"
+                        )
 
                 scheduler.step(current_score)
 
@@ -351,13 +345,11 @@ class ModelTrainer:
         if type(self.corpus) is MultiCorpus:
             for subcorpus in self.corpus.corpora:
                 log_line(log)
-                self._calculate_evaluation_results_for(
-                    subcorpus.name,
+                self.model.evaluate(
                     subcorpus.test,
-                    evaluation_metric,
-                    embeddings_in_memory,
                     eval_mini_batch_size,
-                    base_path / "test.tsv",
+                    embeddings_in_memory,
+                    base_path / f"{subcorpus.name}-test.tsv",
                 )
 
         # get and return the final test score of best model

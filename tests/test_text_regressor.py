@@ -10,7 +10,7 @@ from flair.models.text_regression_model import TextRegressor
 from flair.trainers import ModelTrainer
 
 
-def init(tasks_base_path) -> Tuple[TaggedCorpus, TextRegressor]:
+def init(tasks_base_path) -> Tuple[TaggedCorpus, TextRegressor, ModelTrainer]:
     corpus = NLPTaskDataFetcher.load_corpus(NLPTask.REGRESSION, tasks_base_path)
 
     glove_embedding: WordEmbeddings = WordEmbeddings("glove")
@@ -18,7 +18,7 @@ def init(tasks_base_path) -> Tuple[TaggedCorpus, TextRegressor]:
         [glove_embedding], 128, 1, False, 64, False, False
     )
 
-    model = TextRegressor(document_embeddings, Dictionary(), False)
+    model = TextRegressor(document_embeddings)
 
     trainer = ModelTrainer(model, corpus)
 
@@ -40,7 +40,7 @@ def test_labels_to_indices(tasks_base_path):
 def test_trainer_evaluation(tasks_base_path):
     corpus, model, trainer = init(tasks_base_path)
 
-    expected = trainer._evaluate_text_regressor(model, corpus.dev)
+    expected = model.evaluate(corpus.dev)
 
     assert expected is not None
 

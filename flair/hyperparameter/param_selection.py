@@ -120,6 +120,8 @@ class ParamSelector(object):
                 curr_scores = list(
                     map(lambda s: 1 - s, result["dev_score_history"][-3:])
                 )
+            print(result)
+            print(curr_scores)
             score = sum(curr_scores) / float(len(curr_scores))
             var = np.var(curr_scores)
             scores.append(score)
