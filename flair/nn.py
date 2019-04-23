@@ -13,11 +13,12 @@ from flair.training_utils import Result
 
 
 class Model(torch.nn.Module):
-    """Abstract base class for all models. Every new type of model must implement these methods."""
+    """Abstract base class for all downstream task models in Flair, such as SequenceTagger and TextClassifier.
+    Every new type of model must implement these methods."""
 
     @abstractmethod
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
-        """Performs a forward pass and returns the loss."""
+        """Performs a forward pass and returns a loss tensor for backpropagation. Implement this to enable training."""
         pass
 
     @abstractmethod
@@ -25,7 +26,7 @@ class Model(torch.nn.Module):
         self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32
     ) -> List[Sentence]:
         """Predicts the labels/tags for the given list of sentences. The labels/tags are added directly to the
-        sentences."""
+        sentences. Implement this to enable prediction."""
         pass
 
     @abstractmethod
@@ -36,14 +37,20 @@ class Model(torch.nn.Module):
         embeddings_in_memory: bool = False,
         out_path: Path = None,
     ) -> (Result, float):
+        """Evaluates the model on a list of gold-labeled Sentences. Returns a Result object containing evaluation
+        results and a loss value. Implement this to enable evaluation."""
         pass
 
     @abstractmethod
     def _get_state_dict(self):
+        """Returns the state dictionary for this model. Implementing this enables the save() and save_checkpoint()
+        functionality."""
         pass
 
     @abstractmethod
     def _init_model_with_state_dict(state):
+        """Initialize the model from a state dictionary. Implementing this enables the load() and load_checkpoint()
+        functionality."""
         pass
 
     @abstractmethod

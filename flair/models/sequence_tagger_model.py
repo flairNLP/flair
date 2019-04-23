@@ -282,8 +282,6 @@ class SequenceTagger(flair.nn.Model):
                 with open(out_path, "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
 
-            print(metric)
-
             detailed_result = (
                 f"\nMICRO_AVG: acc {metric.micro_avg_accuracy()} - f1-score {metric.micro_avg_f_score()}"
                 f"\nMACRO_AVG: acc {metric.macro_avg_accuracy()} - f1-score {metric.macro_avg_f_score()}"
