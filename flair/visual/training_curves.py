@@ -29,7 +29,7 @@ class Plotter(object):
     """
 
     @staticmethod
-    def _extract_evaluation_data(file_name: Path, score: str = "PEARSON") -> dict:
+    def _extract_evaluation_data(file_name: Path, score: str = "F1") -> dict:
         training_curves = {
             "train": {"loss": [], "score": []},
             "test": {"loss": [], "score": []},
@@ -48,7 +48,7 @@ class Plotter(object):
                 log.warning("-" * 100)
                 log.warning(f"WARNING: No {score} found for test split in this data.")
                 log.warning(
-                    f"Are you sure you want to plot {score} and not another value such as PEARSON?"
+                    f"Are you sure you want to plot {score} and not another value?"
                 )
                 log.warning("-" * 100)
 
