@@ -379,6 +379,7 @@ class NLPTaskDataFetcher:
         test_file=None,
         dev_file=None,
         use_tokenizer: bool = True,
+        max_tokens_per_doc=-1
     ) -> TaggedCorpus:
         """
         Helper function to get a TaggedCorpus from text classification-formatted task data
@@ -423,19 +424,19 @@ class NLPTaskDataFetcher:
         sentences_train: List[
             Sentence
         ] = NLPTaskDataFetcher.read_text_classification_file(
-            train_file, use_tokenizer=use_tokenizer
+            train_file, use_tokenizer=use_tokenizer, max_tokens_per_doc=max_tokens_per_doc
         )
         sentences_test: List[
             Sentence
         ] = NLPTaskDataFetcher.read_text_classification_file(
-            test_file, use_tokenizer=use_tokenizer
+            test_file, use_tokenizer=use_tokenizer, max_tokens_per_doc=max_tokens_per_doc
         )
 
         if dev_file is not None:
             sentences_dev: List[
                 Sentence
             ] = NLPTaskDataFetcher.read_text_classification_file(
-                dev_file, use_tokenizer=use_tokenizer
+                dev_file, use_tokenizer=use_tokenizer, max_tokens_per_doc=max_tokens_per_doc
             )
         else:
             sentences_dev: List[Sentence] = [
@@ -457,8 +458,7 @@ class NLPTaskDataFetcher:
         If you have a multi class task, you can have as many labels as you want at the beginning of the line, e.g.,
         __label__<class_name_1> __label__<class_name_2> <text>
         :param path_to_file: the path to the data file
-        :param max_tokens_per_doc: Take only documents that contain number of tokens less or equal to this value. If
-        set to -1 all documents are taken.
+        :param max_tokens_per_doc: Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.
         :return: list of sentences
         """
         label_prefix = "__label__"
