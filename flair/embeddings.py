@@ -164,12 +164,10 @@ class StackedEmbeddings(TokenEmbeddings):
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
-    def __init__(self, embeddings: str, field: str = None, path: str = None, load_binary: bool = False):
+    def __init__(self, embeddings: str, field: str = None):
         """
         Initializes classic word embeddings. Constructor downloads required files if not there.
-        :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code.
-        :param path(defaults to None): path of custom word2vec model (can also be a binary file)
-        :param load_binary(defaults to False): True in case custom word2vec model is a binary file
+        :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or custom
         If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
         """
 
@@ -276,13 +274,6 @@ class WordEmbeddings(TokenEmbeddings):
             )
 
         elif not Path(embeddings).exists():
-            if path is not None:
-                if Path(path).exists:
-                    embeddings = path
-                else:
-                    raise ValueError(
-                        f'The given custom path "{path}" is not available or is not a valid path.'
-                    )
             raise ValueError(
                 f'The given embeddings "{embeddings}" is not available or is not a valid path.'
             )
@@ -290,7 +281,7 @@ class WordEmbeddings(TokenEmbeddings):
         self.name: str = str(embeddings)
         self.static_embeddings = True
 
-        if load_binary:
+        if str(embeddings).endswith(".bin"):
             self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
                 str(embeddings), binary=True
             )
