@@ -256,7 +256,7 @@ class ModelTrainer:
                         )
                         f.write(
                             f"{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t"
-                            f"{train_loss}\t{train_metric_str}\t{dev_loss}\t{dev_metric_str}\t_\t{test_metric_str}\n"
+                            f"{train_loss}\t{train_metric_str}\t{dev_loss}\t{dev_metric_str}\t{test_loss}\t{test_metric_str}\n"
                         )
 
                 # calculate scores using dev data if available
