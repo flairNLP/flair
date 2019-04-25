@@ -1190,7 +1190,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
     def __init__(
         self,
         contextual_embeddings: Union[str, FlairEmbeddings],
-        pooling: str = "fade",
+        pooling: str = "min",
         only_capitalized: bool = False,
         **kwargs,
     ):
