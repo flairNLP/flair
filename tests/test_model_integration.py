@@ -48,7 +48,7 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
         test_mode=True,
     )
 
-    loaded_model: SequenceTagger = SequenceTagger.load_from_file(
+    loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
     )
 
@@ -90,7 +90,7 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
         test_mode=True,
     )
 
-    loaded_model: SequenceTagger = SequenceTagger.load_from_file(
+    loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
     )
 
@@ -132,7 +132,7 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
         test_mode=True,
     )
 
-    loaded_model: SequenceTagger = SequenceTagger.load_from_file(
+    loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
     )
 
@@ -182,7 +182,7 @@ def test_train_charlm_changed_chache_load_use_tagger(
     # remove the cache directory
     shutil.rmtree(cache_dir)
 
-    loaded_model: SequenceTagger = SequenceTagger.load_from_file(
+    loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
     )
 
@@ -223,7 +223,7 @@ def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_pat
         test_mode=True,
     )
 
-    loaded_model: SequenceTagger = SequenceTagger.load_from_file(
+    loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
     )
 
@@ -267,7 +267,7 @@ def test_train_optimizer(results_base_path, tasks_base_path):
         test_mode=True,
     )
 
-    loaded_model: SequenceTagger = SequenceTagger.load_from_file(
+    loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
     )
 
@@ -312,7 +312,7 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
         weight_decay=1e-3,
     )
 
-    loaded_model: SequenceTagger = SequenceTagger.load_from_file(
+    loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
     )
 
@@ -399,7 +399,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
             assert 0.0 <= l.score <= 1.0
             assert type(l.score) is float
 
-    loaded_model = TextClassifier.load_from_file(results_base_path / "final-model.pt")
+    loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("I love Berlin")
     sentence_empty = Sentence("       ")
@@ -462,7 +462,7 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
             assert 0.0 <= l.score <= 1.0
             assert type(l.score) is float
 
-    loaded_model = TextClassifier.load_from_file(results_base_path / "final-model.pt")
+    loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("I love Berlin")
     sentence_empty = Sentence("       ")
@@ -500,7 +500,7 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
             assert 0.0 <= l.score <= 1.0
             assert type(l.score) is float
 
-    loaded_model = TextClassifier.load_from_file(results_base_path / "final-model.pt")
+    loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("I love Berlin")
     sentence_empty = Sentence("       ")
@@ -536,7 +536,7 @@ def test_train_charlm_nocache_load_use_classifier(results_base_path, tasks_base_
             assert 0.0 <= l.score <= 1.0
             assert type(l.score) is float
 
-    loaded_model = TextClassifier.load_from_file(results_base_path / "final-model.pt")
+    loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("I love Berlin")
     sentence_empty = Sentence("       ")
@@ -616,7 +616,7 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
         test_mode=True,
     )
 
-    loaded_model: SequenceTagger = SequenceTagger.load_from_file(
+    loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
     )
 
@@ -646,9 +646,8 @@ def test_train_resume_text_classification_training(results_base_path, tasks_base
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, test_mode=True, checkpoint=True)
 
-    trainer = ModelTrainer.load_from_checkpoint(
-        results_base_path / "checkpoint.pt", "TextClassifier", corpus
-    )
+    checkpoint = TextClassifier.load_checkpoint(results_base_path / "checkpoint.pt")
+    trainer = ModelTrainer.load_from_checkpoint(checkpoint, corpus)
     trainer.train(results_base_path, max_epochs=2, test_mode=True, checkpoint=True)
 
     # clean up results directory
@@ -675,9 +674,9 @@ def test_train_resume_sequence_tagging_training(results_base_path, tasks_base_pa
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, test_mode=True, checkpoint=True)
 
-    trainer = ModelTrainer.load_from_checkpoint(
-        results_base_path / "checkpoint.pt", "SequenceTagger", corpus
-    )
+    checkpoint = SequenceTagger.load_checkpoint(results_base_path / "checkpoint.pt")
+    trainer = ModelTrainer.load_from_checkpoint(checkpoint, corpus)
+
     trainer.train(results_base_path, max_epochs=2, test_mode=True, checkpoint=True)
 
     # clean up results directory

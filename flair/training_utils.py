@@ -9,6 +9,17 @@ from flair.data import Dictionary, Sentence
 from functools import reduce
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from scipy.stats import pearsonr, spearmanr
+from abc import abstractmethod
+
+
+class Result(object):
+    def __init__(
+        self, main_score: float, log_header: str, log_line: str, detailed_results: str
+    ):
+        self.main_score: float = main_score
+        self.log_header: str = log_header
+        self.log_line: str = log_line
+        self.detailed_results: str = detailed_results
 
 
 class Metric(object):
@@ -101,6 +112,8 @@ class Metric(object):
 
     def macro_avg_f_score(self):
         class_f_scores = [self.f_score(class_name) for class_name in self.get_classes()]
+        if len(class_f_scores) == 0:
+            return 0.0
         macro_f_score = sum(class_f_scores) / len(class_f_scores)
         return macro_f_score
 
@@ -174,7 +187,6 @@ class Metric(object):
 
 
 class MetricRegression(object):
-
     def __init__(self, name):
         self.name = name
 
@@ -198,7 +210,7 @@ class MetricRegression(object):
         return self.mean_squared_error()
 
     def to_tsv(self):
-        return '{}\t{}\t{}\t{}'.format(
+        return "{}\t{}\t{}\t{}".format(
             self.mean_squared_error(),
             self.mean_absolute_error(),
             self.pearsonr(),
@@ -208,30 +220,32 @@ class MetricRegression(object):
     @staticmethod
     def tsv_header(prefix=None):
         if prefix:
-            return '{0}_MEAN_SQUARED_ERROR\t{0}_MEAN_ABSOLUTE_ERROR\t{0}_PEARSON\t{0}_SPEARMAN'.format(
-                prefix)
+            return "{0}_MEAN_SQUARED_ERROR\t{0}_MEAN_ABSOLUTE_ERROR\t{0}_PEARSON\t{0}_SPEARMAN".format(
+                prefix
+            )
 
-        return 'MEAN_SQUARED_ERROR\tMEAN_ABSOLUTE_ERROR\tPEARSON\tSPEARMAN'
+        return "MEAN_SQUARED_ERROR\tMEAN_ABSOLUTE_ERROR\tPEARSON\tSPEARMAN"
 
     @staticmethod
     def to_empty_tsv():
-        return '\t_\t_\t_\t_'
+        return "\t_\t_\t_\t_"
 
     def __str__(self):
-        line = 'mean squared error: {0:.4f} - mean absolute error: {1:.4f} - pearson: {2:.4f} - spearman: {3:.4f}'.format(
-                self.mean_squared_error(),
-                self.mean_absolute_error(),
-                self.pearsonr(),
-                self.spearmanr())
+        line = "mean squared error: {0:.4f} - mean absolute error: {1:.4f} - pearson: {2:.4f} - spearman: {3:.4f}".format(
+            self.mean_squared_error(),
+            self.mean_absolute_error(),
+            self.pearsonr(),
+            self.spearmanr(),
+        )
         return line
 
 
 class EvaluationMetric(Enum):
-    MICRO_ACCURACY = 'micro-average accuracy'
-    MICRO_F1_SCORE = 'micro-average f1-score'
-    MACRO_ACCURACY = 'macro-average accuracy'
-    MACRO_F1_SCORE = 'macro-average f1-score'
-    MEAN_SQUARED_ERROR = 'mean squared error'
+    MICRO_ACCURACY = "micro-average accuracy"
+    MICRO_F1_SCORE = "micro-average f1-score"
+    MACRO_ACCURACY = "macro-average accuracy"
+    MACRO_F1_SCORE = "macro-average f1-score"
+    MEAN_SQUARED_ERROR = "mean squared error"
 
 
 class WeightExtractor(object):
