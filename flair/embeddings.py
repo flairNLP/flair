@@ -167,7 +167,7 @@ class WordEmbeddings(TokenEmbeddings):
     def __init__(self, embeddings: str, field: str = None):
         """
         Initializes classic word embeddings. Constructor downloads required files if not there.
-        :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code.
+        :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or custom
         If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
         """
 
@@ -281,9 +281,14 @@ class WordEmbeddings(TokenEmbeddings):
         self.name: str = str(embeddings)
         self.static_embeddings = True
 
-        self.precomputed_word_embeddings = gensim.models.KeyedVectors.load(
-            str(embeddings)
-        )
+        if str(embeddings).endswith(".bin"):
+            self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
+                str(embeddings), binary=True
+            )
+        else:
+            self.precomputed_word_embeddings = gensim.models.KeyedVectors.load(
+                str(embeddings)
+            )
 
         self.field = field
 
