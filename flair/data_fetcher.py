@@ -1,3 +1,4 @@
+import os
 from typing import List, Dict, Union
 import re
 import logging
@@ -96,6 +97,10 @@ class NLPTask(Enum):
 
     # text regression format
     REGRESSION = "regression"
+    WASSA_ANGER = "wassa-anger"
+    WASSA_FEAR = "wassa-fear"
+    WASSA_JOY = "wassa-joy"
+    WASSA_SADNESS = "wassa-sadness"
 
 
 class NLPTaskDataFetcher:
@@ -229,6 +234,11 @@ class NLPTaskDataFetcher:
             columns = {0: "text", 1: "ner"}
             return NLPTaskDataFetcher.load_column_corpus(
                 data_folder, columns, tag_to_biloes="ner"
+            )
+
+        if task.startswith("wassa"):
+            return NLPTaskDataFetcher.load_classification_corpus(
+                data_folder, use_tokenizer=True
             )
 
     @staticmethod
@@ -379,7 +389,7 @@ class NLPTaskDataFetcher:
         test_file=None,
         dev_file=None,
         use_tokenizer: bool = True,
-        max_tokens_per_doc=-1
+        max_tokens_per_doc=-1,
     ) -> TaggedCorpus:
         """
         Helper function to get a TaggedCorpus from text classification-formatted task data
@@ -424,19 +434,25 @@ class NLPTaskDataFetcher:
         sentences_train: List[
             Sentence
         ] = NLPTaskDataFetcher.read_text_classification_file(
-            train_file, use_tokenizer=use_tokenizer, max_tokens_per_doc=max_tokens_per_doc
+            train_file,
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
         )
         sentences_test: List[
             Sentence
         ] = NLPTaskDataFetcher.read_text_classification_file(
-            test_file, use_tokenizer=use_tokenizer, max_tokens_per_doc=max_tokens_per_doc
+            test_file,
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
         )
 
         if dev_file is not None:
             sentences_dev: List[
                 Sentence
             ] = NLPTaskDataFetcher.read_text_classification_file(
-                dev_file, use_tokenizer=use_tokenizer, max_tokens_per_doc=max_tokens_per_doc
+                dev_file,
+                use_tokenizer=use_tokenizer,
+                max_tokens_per_doc=max_tokens_per_doc,
             )
         else:
             sentences_dev: List[Sentence] = [
@@ -1282,3 +1298,39 @@ class NLPTaskDataFetcher:
                 f"{ud_path}UD_Basque-BDT/master/eu_bdt-ud-train.conllu",
                 Path("datasets") / task.value,
             )
+
+        if task.value.startswith("wassa"):
+
+            emotion = task.value[6:]
+            print(emotion)
+
+            for split in ["train", "dev", "test"]:
+
+                data_file = (
+                    Path(flair.cache_root)
+                    / "datasets"
+                    / task.value
+                    / f"{emotion}-{split}.txt"
+                )
+
+                if not data_file.is_file():
+
+                    if split == "train":
+                        url = f"http://saifmohammad.com/WebDocs/EmoInt%20Train%20Data/{emotion}-ratings-0to1.train.txt"
+                    if split == "dev":
+                        url = f"http://saifmohammad.com/WebDocs/EmoInt%20Dev%20Data%20With%20Gold/{emotion}-ratings-0to1.dev.gold.txt"
+                    if split == "test":
+                        url = f"http://saifmohammad.com/WebDocs/EmoInt%20Test%20Gold%20Data/{emotion}-ratings-0to1.test.gold.txt"
+
+                    path = cached_path(url, Path("datasets") / task.value)
+
+                    with open(path, "r") as f:
+                        with open(data_file, "w") as out:
+                            next(f)
+                            for line in f:
+                                fields = line.split("\t")
+                                out.write(
+                                    f"__label__{fields[3].rstrip()} {fields[1]}\n"
+                                )
+
+                    os.remove(path)
