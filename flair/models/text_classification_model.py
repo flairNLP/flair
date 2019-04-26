@@ -264,7 +264,6 @@ class TextClassifier(flair.nn.Model):
     def _predict_label_probab(self, label_scores) -> List[Label]:
         softmax = torch.nn.functional.softmax(label_scores, dim=0)
         label_probabs = []
-        index = 0
         for idx, conf in enumerate(softmax):
             label = self.label_dictionary.get_item_for_index(idx)
             label_probabs.append(Label(label, conf.item()))
