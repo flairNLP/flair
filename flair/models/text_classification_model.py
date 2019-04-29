@@ -171,12 +171,13 @@ class TextClassifier(flair.nn.Model):
         return labels, loss
 
     def predict(
-        self, sentences: Union[Sentence, List[Sentence]], mini_batch_size: int = 32
+        self, sentences: Union[Sentence, List[Sentence]], mini_batch_size: int = 32, multi_class_prob: bool = False,
     ) -> List[Sentence]:
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
         :param sentences: list of sentences
         :param mini_batch_size: mini batch size to use
+        :param multi_class_prob : return probability for all class for multiclass
         :return: the list of sentences containing the labels
         """
         with torch.no_grad():
@@ -192,7 +193,7 @@ class TextClassifier(flair.nn.Model):
 
             for batch in batches:
                 scores = self.forward(batch)
-                predicted_labels = self._obtain_labels(scores)
+                predicted_labels = self._obtain_labels(scores, predict_prob=multi_class_prob)
 
                 for (sentence, labels) in zip(batch, predicted_labels):
                     sentence.labels = labels
