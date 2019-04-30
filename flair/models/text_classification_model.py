@@ -238,7 +238,7 @@ class TextClassifier(flair.nn.Model):
             return [self._get_multi_label(s) for s in scores]
 
         elif predict_prob:
-            return [self._predict_label_probab(s) for s in scores]
+            return [self._predict_label_prob(s) for s in scores]
 
         return [self._get_single_label(s) for s in scores]
 
@@ -262,13 +262,13 @@ class TextClassifier(flair.nn.Model):
 
         return [Label(label, conf.item())]
 
-    def _predict_label_probab(self, label_scores) -> List[Label]:
+    def _predict_label_prob(self, label_scores) -> List[Label]:
         softmax = torch.nn.functional.softmax(label_scores, dim=0)
-        label_probabs = []
+        label_probs = []
         for idx, conf in enumerate(softmax):
             label = self.label_dictionary.get_item_for_index(idx)
-            label_probabs.append(Label(label, conf.item()))
-        return label_probabs
+            label_probs.append(Label(label, conf.item()))
+        return label_probs
 
     def _calculate_multi_label_loss(
         self, label_scores, sentences: List[Sentence]
