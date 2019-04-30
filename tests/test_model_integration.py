@@ -413,6 +413,43 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
 
 @pytest.mark.integration
+def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path):
+    corpus = NLPTaskDataFetcher.load_corpus("imdb", base_path=tasks_base_path)
+    label_dict = corpus.make_label_dictionary()
+
+    word_embedding: WordEmbeddings = WordEmbeddings("turian")
+    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
+        [word_embedding], 128, 1, False, 64, False, False
+    )
+
+    model = TextClassifier(document_embeddings, label_dict, False)
+
+    trainer = ModelTrainer(model, corpus)
+    trainer.train(
+        results_base_path, EvaluationMetric.MICRO_F1_SCORE, max_epochs=2, test_mode=True
+    )
+
+    sentence = Sentence("Berlin is a really nice city.")
+
+    for s in model.predict(sentence, multi_class_prob=True):
+        for l in s.labels:
+            assert l.value is not None
+            assert 0.0 <= l.score <= 1.0
+            assert type(l.score) is float
+
+    loaded_model = TextClassifier.load_from_file(results_base_path / "final-model.pt")
+
+    sentence = Sentence("I love Berlin")
+    sentence_empty = Sentence("       ")
+
+    loaded_model.predict(sentence, multi_class_prob=True)
+    loaded_model.predict([sentence, sentence_empty], multi_class_prob=True)
+    loaded_model.predict([sentence_empty], multi_class_prob=True)
+
+    # clean up results directory
+    shutil.rmtree(results_base_path)
+
+@pytest.mark.integration
 def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_path):
     # corpus = NLPTaskDataFetcher.load_corpus('multi_class', base_path=tasks_base_path)
     corpus = NLPTaskDataFetcher.load_classification_corpus(
