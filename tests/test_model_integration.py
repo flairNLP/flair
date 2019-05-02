@@ -449,6 +449,7 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
     # clean up results directory
     shutil.rmtree(results_base_path)
 
+
 @pytest.mark.integration
 def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_path):
     # corpus = NLPTaskDataFetcher.load_corpus('multi_class', base_path=tasks_base_path)
