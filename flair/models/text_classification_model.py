@@ -103,12 +103,13 @@ class TextClassifier(flair.nn.Model):
         return labels, loss
 
     def predict(
-        self, sentences: Union[Sentence, List[Sentence]], mini_batch_size: int = 32
+        self, sentences: Union[Sentence, List[Sentence]], mini_batch_size: int = 32, multi_class_prob: bool = False,
     ) -> List[Sentence]:
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
         :param sentences: list of sentences
         :param mini_batch_size: mini batch size to use
+        :param multi_class_prob : return probability for all class for multiclass
         :return: the list of sentences containing the labels
         """
         with torch.no_grad():
@@ -124,7 +125,7 @@ class TextClassifier(flair.nn.Model):
 
             for batch in batches:
                 scores = self.forward(batch)
-                predicted_labels = self._obtain_labels(scores)
+                predicted_labels = self._obtain_labels(scores, predict_prob=multi_class_prob)
 
                 for (sentence, labels) in zip(batch, predicted_labels):
                     sentence.labels = labels
@@ -264,7 +265,7 @@ class TextClassifier(flair.nn.Model):
 
         return self._calculate_single_label_loss(scores, sentences)
 
-    def _obtain_labels(self, scores: List[List[float]]) -> List[List[Label]]:
+    def _obtain_labels(self, scores: List[List[float]], predict_prob: bool = False) -> List[List[Label]]:
         """
         Predicts the labels of sentences.
         :param scores: the prediction scores from the model
@@ -273,6 +274,9 @@ class TextClassifier(flair.nn.Model):
 
         if self.multi_label:
             return [self._get_multi_label(s) for s in scores]
+
+        elif predict_prob:
+            return [self._predict_label_prob(s) for s in scores]
 
         return [self._get_single_label(s) for s in scores]
 
@@ -295,6 +299,14 @@ class TextClassifier(flair.nn.Model):
         label = self.label_dictionary.get_item_for_index(idx.item())
 
         return [Label(label, conf.item())]
+
+    def _predict_label_prob(self, label_scores) -> List[Label]:
+        softmax = torch.nn.functional.softmax(label_scores, dim=0)
+        label_probs = []
+        for idx, conf in enumerate(softmax):
+            label = self.label_dictionary.get_item_for_index(idx)
+            label_probs.append(Label(label, conf.item()))
+        return label_probs
 
     def _calculate_multi_label_loss(
         self, label_scores, sentences: List[Sentence]
