@@ -77,6 +77,9 @@ class NLPTask(Enum):
     # Language isolates
     UD_BASQUE = "ud_basque"
 
+    # recent Universal Dependencies
+    UD_GERMAN_HDT = "ud_german_hdt"
+
     # other datasets
     ONTONER = "ontoner"
     FASHION = "fashion"
@@ -379,7 +382,7 @@ class NLPTaskDataFetcher:
         test_file=None,
         dev_file=None,
         use_tokenizer: bool = True,
-        max_tokens_per_doc=-1
+        max_tokens_per_doc=-1,
     ) -> TaggedCorpus:
         """
         Helper function to get a TaggedCorpus from text classification-formatted task data
@@ -424,19 +427,25 @@ class NLPTaskDataFetcher:
         sentences_train: List[
             Sentence
         ] = NLPTaskDataFetcher.read_text_classification_file(
-            train_file, use_tokenizer=use_tokenizer, max_tokens_per_doc=max_tokens_per_doc
+            train_file,
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
         )
         sentences_test: List[
             Sentence
         ] = NLPTaskDataFetcher.read_text_classification_file(
-            test_file, use_tokenizer=use_tokenizer, max_tokens_per_doc=max_tokens_per_doc
+            test_file,
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
         )
 
         if dev_file is not None:
             sentences_dev: List[
                 Sentence
             ] = NLPTaskDataFetcher.read_text_classification_file(
-                dev_file, use_tokenizer=use_tokenizer, max_tokens_per_doc=max_tokens_per_doc
+                dev_file,
+                use_tokenizer=use_tokenizer,
+                max_tokens_per_doc=max_tokens_per_doc,
             )
         else:
             sentences_dev: List[Sentence] = [
@@ -1282,3 +1291,34 @@ class NLPTaskDataFetcher:
                 f"{ud_path}UD_Basque-BDT/master/eu_bdt-ud-train.conllu",
                 Path("datasets") / task.value,
             )
+
+        if task == NLPTask.UD_GERMAN_HDT:
+            cached_path(
+                f"{ud_path}UD_German-HDT/dev/de_hdt-ud-dev.conllu",
+                Path("datasets") / task.value,
+            )
+            cached_path(
+                f"{ud_path}UD_German-HDT/dev/de_hdt-ud-test.conllu",
+                Path("datasets") / task.value,
+            )
+            cached_path(
+                f"{ud_path}UD_German-HDT/dev/de_hdt-ud-train-a.conllu",
+                Path("datasets") / task.value / "original",
+            )
+            cached_path(
+                f"{ud_path}UD_German-HDT/dev/de_hdt-ud-train-b.conllu",
+                Path("datasets") / task.value / "original",
+            )
+            data_path = Path(flair.cache_root) / "datasets" / task.value
+
+            train_filenames = ["de_hdt-ud-train-a.conllu", "de_hdt-ud-train-b.conllu"]
+
+            new_train_file: Path = data_path / "de_hdt-ud-train-all.conllu"
+
+            if not new_train_file.is_file():
+                with open(new_train_file, "wt") as f_out:
+                    for train_filename in train_filenames:
+                        with open(
+                            data_path / "original" / train_filename, "rt"
+                        ) as f_in:
+                            f_out.write(f_in.read())
