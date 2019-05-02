@@ -386,11 +386,6 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
-    trainer = ModelTrainer(model, corpus)
-    trainer.train(
-        results_base_path, EvaluationMetric.MICRO_F1_SCORE, max_epochs=2, test_mode=True
-    )
-
     sentence = Sentence("Berlin is a really nice city.")
 
     for s in model.predict(sentence):
@@ -399,14 +394,12 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
             assert 0.0 <= l.score <= 1.0
             assert type(l.score) is float
 
-    loaded_model = TextClassifier.load_from_file(results_base_path / "final-model.pt")
-
     sentence = Sentence("I love Berlin")
     sentence_empty = Sentence("       ")
 
-    loaded_model.predict(sentence)
-    loaded_model.predict([sentence, sentence_empty])
-    loaded_model.predict([sentence_empty])
+    model.predict(sentence)
+    model.predict([sentence, sentence_empty])
+    model.predict([sentence_empty])
 
     # clean up results directory
     shutil.rmtree(results_base_path)
