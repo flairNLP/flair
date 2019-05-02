@@ -1302,7 +1302,6 @@ class NLPTaskDataFetcher:
         if task.value.startswith("wassa"):
 
             emotion = task.value[6:]
-            print(emotion)
 
             for split in ["train", "dev", "test"]:
 
