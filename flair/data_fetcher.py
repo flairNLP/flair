@@ -78,6 +78,9 @@ class NLPTask(Enum):
     # Language isolates
     UD_BASQUE = "ud_basque"
 
+    # recent Universal Dependencies
+    UD_GERMAN_HDT = "ud_german_hdt"
+
     # other datasets
     ONTONER = "ontoner"
     FASHION = "fashion"
@@ -1333,3 +1336,34 @@ class NLPTaskDataFetcher:
                                 )
 
                     os.remove(path)
+                    
+        if task == NLPTask.UD_GERMAN_HDT:
+            cached_path(
+                f"{ud_path}UD_German-HDT/dev/de_hdt-ud-dev.conllu",
+                Path("datasets") / task.value,
+            )
+            cached_path(
+                f"{ud_path}UD_German-HDT/dev/de_hdt-ud-test.conllu",
+                Path("datasets") / task.value,
+            )
+            cached_path(
+                f"{ud_path}UD_German-HDT/dev/de_hdt-ud-train-a.conllu",
+                Path("datasets") / task.value / "original",
+            )
+            cached_path(
+                f"{ud_path}UD_German-HDT/dev/de_hdt-ud-train-b.conllu",
+                Path("datasets") / task.value / "original",
+            )
+            data_path = Path(flair.cache_root) / "datasets" / task.value
+
+            train_filenames = ["de_hdt-ud-train-a.conllu", "de_hdt-ud-train-b.conllu"]
+
+            new_train_file: Path = data_path / "de_hdt-ud-train-all.conllu"
+
+            if not new_train_file.is_file():
+                with open(new_train_file, "wt") as f_out:
+                    for train_filename in train_filenames:
+                        with open(
+                            data_path / "original" / train_filename, "rt"
+                        ) as f_in:
+                            f_out.write(f_in.read())
