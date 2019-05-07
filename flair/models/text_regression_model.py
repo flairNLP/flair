@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import flair
+import flair.embeddings
 import torch
 import torch.nn as nn
 from typing import List, Union
@@ -26,13 +27,13 @@ class TextRegressor(flair.models.TextClassifier):
 
     def _labels_to_indices(self, sentences: List[Sentence]):
         indices = [
-            torch.FloatTensor([float(label.value) for label in sentence.labels])
+            torch.tensor(
+                [float(label.value) for label in sentence.labels], dtype=torch.float
+            )
             for sentence in sentences
         ]
 
-        vec = torch.cat(indices, 0)
-        if torch.cuda.is_available():
-            vec = vec.cuda()
+        vec = torch.cat(indices, 0).to(flair.device)
 
         return vec
 

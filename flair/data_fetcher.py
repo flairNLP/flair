@@ -1,3 +1,4 @@
+import os
 from typing import List, Dict, Union
 import re
 import logging
@@ -99,6 +100,10 @@ class NLPTask(Enum):
 
     # text regression format
     REGRESSION = "regression"
+    WASSA_ANGER = "wassa-anger"
+    WASSA_FEAR = "wassa-fear"
+    WASSA_JOY = "wassa-joy"
+    WASSA_SADNESS = "wassa-sadness"
 
 
 class NLPTaskDataFetcher:
@@ -232,6 +237,11 @@ class NLPTaskDataFetcher:
             columns = {0: "text", 1: "ner"}
             return NLPTaskDataFetcher.load_column_corpus(
                 data_folder, columns, tag_to_biloes="ner"
+            )
+
+        if task.startswith("wassa"):
+            return NLPTaskDataFetcher.load_classification_corpus(
+                data_folder, use_tokenizer=True
             )
 
     @staticmethod
@@ -1292,6 +1302,41 @@ class NLPTaskDataFetcher:
                 Path("datasets") / task.value,
             )
 
+        if task.value.startswith("wassa"):
+
+            emotion = task.value[6:]
+
+            for split in ["train", "dev", "test"]:
+
+                data_file = (
+                    Path(flair.cache_root)
+                    / "datasets"
+                    / task.value
+                    / f"{emotion}-{split}.txt"
+                )
+
+                if not data_file.is_file():
+
+                    if split == "train":
+                        url = f"http://saifmohammad.com/WebDocs/EmoInt%20Train%20Data/{emotion}-ratings-0to1.train.txt"
+                    if split == "dev":
+                        url = f"http://saifmohammad.com/WebDocs/EmoInt%20Dev%20Data%20With%20Gold/{emotion}-ratings-0to1.dev.gold.txt"
+                    if split == "test":
+                        url = f"http://saifmohammad.com/WebDocs/EmoInt%20Test%20Gold%20Data/{emotion}-ratings-0to1.test.gold.txt"
+
+                    path = cached_path(url, Path("datasets") / task.value)
+
+                    with open(path, "r") as f:
+                        with open(data_file, "w") as out:
+                            next(f)
+                            for line in f:
+                                fields = line.split("\t")
+                                out.write(
+                                    f"__label__{fields[3].rstrip()} {fields[1]}\n"
+                                )
+
+                    os.remove(path)
+                    
         if task == NLPTask.UD_GERMAN_HDT:
             cached_path(
                 f"{ud_path}UD_German-HDT/dev/de_hdt-ud-dev.conllu",
