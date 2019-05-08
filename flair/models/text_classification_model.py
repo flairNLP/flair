@@ -33,6 +33,7 @@ class TextClassifier(flair.nn.Model):
         document_embeddings: flair.embeddings.DocumentEmbeddings,
         label_dictionary: Dictionary,
         multi_label: bool,
+        multi_label_threshold: float = 0.5
     ):
 
         super(TextClassifier, self).__init__()
@@ -40,6 +41,7 @@ class TextClassifier(flair.nn.Model):
         self.document_embeddings: flair.embeddings.DocumentRNNEmbeddings = document_embeddings
         self.label_dictionary: Dictionary = label_dictionary
         self.multi_label = multi_label
+        self.multi_label_threshold = multi_label_threshold
 
         self.decoder = nn.Linear(
             self.document_embeddings.embedding_length, len(self.label_dictionary)
@@ -287,7 +289,7 @@ class TextClassifier(flair.nn.Model):
 
         results = list(map(lambda x: sigmoid(x), label_scores))
         for idx, conf in enumerate(results):
-            if conf > 0.5:
+            if conf > self.multi_label_threshold:
                 label = self.label_dictionary.get_item_for_index(idx)
                 labels.append(Label(label, conf.item()))
 
