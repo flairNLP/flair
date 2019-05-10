@@ -1,6 +1,6 @@
 from typing import List
 
-from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
+import flair.datasets
 from flair.data import TaggedCorpus
 from flair.embeddings import (
     TokenEmbeddings,
@@ -13,7 +13,7 @@ from flair.training_utils import EvaluationMetric
 from flair.visual.training_curves import Plotter
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH)
+corpus: TaggedCorpus = flair.datasets.UD_ENGLISH()
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -59,7 +59,7 @@ trainer.train(
     learning_rate=0.1,
     mini_batch_size=32,
     max_epochs=20,
-    test_mode=True,
+    shuffle=False,
 )
 
 plotter = Plotter()
