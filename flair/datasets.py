@@ -1,18 +1,12 @@
 from torch.utils.data import Dataset, random_split
 from torch.utils.data.dataset import Subset
-
-from flair.data import Corpus
-import os
 from typing import List, Dict, Union
 import re
 import logging
-from enum import Enum
 from pathlib import Path
 
 import flair
-from flair.data import Sentence, TaggedCorpus, Token, MultiCorpus
-from flair.data_fetcher import NLPTaskDataFetcher
-from flair.file_utils import cached_path
+from flair.data import Sentence, TaggedCorpus, Token
 
 log = logging.getLogger("flair")
 
