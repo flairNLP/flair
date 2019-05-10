@@ -45,7 +45,7 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
         learning_rate=0.1,
         mini_batch_size=2,
         max_epochs=2,
-        test_mode=True,
+        shuffle=False,
     )
 
     loaded_model: SequenceTagger = SequenceTagger.load(
@@ -87,7 +87,7 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
         learning_rate=0.1,
         mini_batch_size=32,
         max_epochs=2,
-        test_mode=True,
+        shuffle=False,
     )
 
     loaded_model: SequenceTagger = SequenceTagger.load(
@@ -129,7 +129,7 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
         learning_rate=0.1,
         mini_batch_size=2,
         max_epochs=2,
-        test_mode=True,
+        shuffle=False,
     )
 
     loaded_model: SequenceTagger = SequenceTagger.load(
@@ -176,7 +176,7 @@ def test_train_charlm_changed_chache_load_use_tagger(
         learning_rate=0.1,
         mini_batch_size=2,
         max_epochs=2,
-        test_mode=True,
+        shuffle=False,
     )
 
     # remove the cache directory
@@ -220,7 +220,7 @@ def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_pat
         learning_rate=0.1,
         mini_batch_size=2,
         max_epochs=2,
-        test_mode=True,
+        shuffle=False,
     )
 
     loaded_model: SequenceTagger = SequenceTagger.load(
@@ -264,7 +264,7 @@ def test_train_optimizer(results_base_path, tasks_base_path):
         learning_rate=0.1,
         mini_batch_size=2,
         max_epochs=2,
-        test_mode=True,
+        shuffle=False,
     )
 
     loaded_model: SequenceTagger = SequenceTagger.load(
@@ -308,7 +308,7 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
         learning_rate=0.1,
         mini_batch_size=2,
         max_epochs=2,
-        test_mode=True,
+        shuffle=False,
         weight_decay=1e-3,
     )
 
@@ -388,7 +388,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(
-        results_base_path, EvaluationMetric.MICRO_F1_SCORE, max_epochs=2, test_mode=True
+        results_base_path, EvaluationMetric.MICRO_F1_SCORE, max_epochs=2, shuffle=False
     )
 
     sentence = Sentence("Berlin is a really nice city.")
@@ -426,7 +426,7 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(
-        results_base_path, EvaluationMetric.MICRO_F1_SCORE, max_epochs=2, test_mode=True
+        results_base_path, EvaluationMetric.MICRO_F1_SCORE, max_epochs=2, shuffle=False
     )
 
     sentence = Sentence("Berlin is a really nice city.")
@@ -474,7 +474,7 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
         EvaluationMetric.MICRO_F1_SCORE,
         mini_batch_size=1,
         max_epochs=100,
-        test_mode=True,
+        shuffle=False,
         checkpoint=False,
     )
 
@@ -527,7 +527,7 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(
-        results_base_path, EvaluationMetric.MACRO_F1_SCORE, max_epochs=2, test_mode=True
+        results_base_path, EvaluationMetric.MACRO_F1_SCORE, max_epochs=2, shuffle=False
     )
 
     sentence = Sentence("Berlin is a really nice city.")
@@ -564,7 +564,7 @@ def test_train_charlm_nocache_load_use_classifier(results_base_path, tasks_base_
     model = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(results_base_path, max_epochs=2, test_mode=True)
+    trainer.train(results_base_path, max_epochs=2, shuffle=False)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -651,7 +651,7 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
         learning_rate=0.1,
         mini_batch_size=2,
         max_epochs=2,
-        test_mode=True,
+        shuffle=False,
     )
 
     loaded_model: SequenceTagger = SequenceTagger.load(
@@ -682,11 +682,11 @@ def test_train_resume_text_classification_training(results_base_path, tasks_base
     model = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(results_base_path, max_epochs=2, test_mode=True, checkpoint=True)
+    trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
 
     checkpoint = TextClassifier.load_checkpoint(results_base_path / "checkpoint.pt")
     trainer = ModelTrainer.load_from_checkpoint(checkpoint, corpus)
-    trainer.train(results_base_path, max_epochs=2, test_mode=True, checkpoint=True)
+    trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
 
     # clean up results directory
     shutil.rmtree(results_base_path)
@@ -710,12 +710,12 @@ def test_train_resume_sequence_tagging_training(results_base_path, tasks_base_pa
     )
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(results_base_path, max_epochs=2, test_mode=True, checkpoint=True)
+    trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
 
     checkpoint = SequenceTagger.load_checkpoint(results_base_path / "checkpoint.pt")
     trainer = ModelTrainer.load_from_checkpoint(checkpoint, corpus)
 
-    trainer.train(results_base_path, max_epochs=2, test_mode=True, checkpoint=True)
+    trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
 
     # clean up results directory
     shutil.rmtree(results_base_path)

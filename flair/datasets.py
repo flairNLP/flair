@@ -1,5 +1,4 @@
 from torch.utils.data import Dataset, random_split
-from torch.utils.data.dataset import Subset
 from typing import List, Dict, Union
 import re
 import logging
@@ -7,6 +6,7 @@ from pathlib import Path
 
 import flair
 from flair.data import Sentence, TaggedCorpus, Token
+from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
 
@@ -20,7 +20,7 @@ class ColumnCorpus(TaggedCorpus):
         test_file=None,
         dev_file=None,
         tag_to_biloes=None,
-    ) -> TaggedCorpus:
+    ):
         """
         Helper function to get a TaggedCorpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
 
@@ -72,7 +72,7 @@ class ColumnCorpus(TaggedCorpus):
         log.info("Dev: {}".format(dev_file))
         log.info("Test: {}".format(test_file))
 
-        # get train and test data
+        # get train data
         train = ColumnDataset(train_file, column_format, tag_to_biloes)
 
         # read in test file if exists, otherwise sample 10% of train data as test dataset
@@ -96,6 +96,57 @@ class ColumnCorpus(TaggedCorpus):
             dev = splits[1]
 
         super(ColumnCorpus, self).__init__(train, dev, test, name=data_folder.name)
+
+
+class UniversalDependenciesCorpus(TaggedCorpus):
+    def __init__(
+        self,
+        data_folder: Union[str, Path],
+        train_file=None,
+        test_file=None,
+        dev_file=None,
+    ):
+        """
+        Helper function to get a TaggedCorpus from CoNLL-U column-formatted task data such as the UD corpora
+
+        :param data_folder: base folder with the task data
+        :param train_file: the name of the train file
+        :param test_file: the name of the test file
+        :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :return: a TaggedCorpus with annotated train, dev and test data
+        """
+        # automatically identify train / test / dev files
+        if train_file is None:
+            for file in data_folder.iterdir():
+                file_name = file.name
+                if "train" in file_name:
+                    train_file = file
+                if "test" in file_name:
+                    test_file = file
+                if "dev" in file_name:
+                    dev_file = file
+                if "testa" in file_name:
+                    dev_file = file
+                if "testb" in file_name:
+                    test_file = file
+
+        log.info("Reading data from {}".format(data_folder))
+        log.info("Train: {}".format(train_file))
+        log.info("Test: {}".format(test_file))
+        log.info("Dev: {}".format(dev_file))
+
+        # get train data
+        train = UniversalDependenciesDataset(train_file)
+
+        # get test data
+        test = UniversalDependenciesDataset(test_file)
+
+        # get dev data
+        dev = UniversalDependenciesDataset(dev_file)
+
+        super(UniversalDependenciesCorpus, self).__init__(
+            train, dev, test, name=data_folder.name
+        )
 
 
 class ColumnDataset(Dataset):
@@ -172,6 +223,61 @@ class ColumnDataset(Dataset):
         return iter(self.sentences)
 
 
+class UniversalDependenciesDataset(Dataset):
+    def __init__(self, path_to_conll_file: Path):
+        assert path_to_conll_file.exists()
+
+        self.sentences: List[Sentence] = []
+
+        lines: List[str] = open(
+            path_to_conll_file, encoding="utf-8"
+        ).read().strip().split("\n")
+
+        sentence: Sentence = Sentence()
+        for line in lines:
+
+            fields: List[str] = re.split("\t+", line)
+            if line == "":
+                if len(sentence) > 0:
+                    self.sentences.append(sentence)
+                sentence: Sentence = Sentence()
+
+            elif line.startswith("#"):
+                continue
+            elif "." in fields[0]:
+                continue
+            elif "-" in fields[0]:
+                continue
+            else:
+                token = Token(fields[1], head_id=int(fields[6]))
+                token.add_tag("lemma", str(fields[2]))
+                token.add_tag("upos", str(fields[3]))
+                token.add_tag("pos", str(fields[4]))
+                token.add_tag("dependency", str(fields[7]))
+
+                for morph in str(fields[5]).split("|"):
+                    if not "=" in morph:
+                        continue
+                    token.add_tag(morph.split("=")[0].lower(), morph.split("=")[1])
+
+                if len(fields) > 10 and str(fields[10]) == "Y":
+                    token.add_tag("frame", str(fields[11]))
+
+                sentence.add_token(token)
+
+        if len(sentence.tokens) > 0:
+            self.sentences.append(sentence)
+
+    def __len__(self):
+        return len(self.sentences)
+
+    def __getitem__(self, index: int = 0) -> Sentence:
+        return self.sentences[index]
+
+    def __iter__(self):
+        return iter(self.sentences)
+
+
 class CONLL_03(ColumnCorpus):
     def __init__(self, base_path=None, tag_to_biloes: str = "ner"):
         columns = {0: "text", 1: "pos", 2: "np", 3: "ner"}
@@ -198,3 +304,39 @@ class CONLL_2000(ColumnCorpus):
         super(CONLL_2000, self).__init__(
             data_folder, columns, tag_to_biloes=tag_to_biloes
         )
+
+
+class UD_ENGLISH(UniversalDependenciesCorpus):
+    def __init__(self, base_path=None):
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / "ud_english"
+
+        # download data if necessary
+        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_English-EWT/master"
+        cached_path(f"{web_path}/en_ewt-ud-dev.conllu", Path("datasets") / "ud_english")
+        cached_path(
+            f"{web_path}/en_ewt-ud-test.conllu", Path("datasets") / "ud_english"
+        )
+        cached_path(
+            f"{web_path}/en_ewt-ud-train.conllu", Path("datasets") / "ud_english"
+        )
+
+        super(UD_ENGLISH, self).__init__(data_folder)
+
+
+class UD_GERMAN(UniversalDependenciesCorpus):
+    def __init__(self, base_path=None):
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / "ud_german"
+
+        # download data if necessary
+        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_German-GSD/master"
+        cached_path(f"{ud_path}/de_gsd-ud-dev.conllu", Path("datasets") / "ud_german")
+        cached_path(f"{ud_path}/de_gsd-ud-test.conllu", Path("datasets") / "ud_german")
+        cached_path(f"{ud_path}/de_gsd-ud-train.conllu", Path("datasets") / "ud_german")
+
+        super(UD_GERMAN, self).__init__(data_folder)
