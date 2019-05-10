@@ -4,7 +4,9 @@ from typing import List, Union
 import datetime
 import random
 import logging
+
 from torch.optim.sgd import SGD
+from torch.utils.data.dataset import ConcatDataset
 
 import flair
 import flair.nn
@@ -58,7 +60,7 @@ class ModelTrainer:
         checkpoint: bool = False,
         save_final_model: bool = True,
         anneal_with_restarts: bool = False,
-        test_mode: bool = False,
+        shuffle: bool = True,
         param_selection_mode: bool = False,
         **kwargs,
     ) -> dict:
@@ -136,7 +138,7 @@ class ModelTrainer:
 
         # if training also uses dev data, include in training set
         if train_with_dev:
-            train_data.extend(self.corpus.dev)
+            train_data = ConcatDataset([self.corpus.train, self.corpus.dev])
 
         dev_score_history = []
         dev_loss_history = []
@@ -173,21 +175,24 @@ class ModelTrainer:
                     log_line(log)
                     break
 
-                if not test_mode:
-                    random.shuffle(train_data)
-
-                batches = [
-                    train_data[x : x + mini_batch_size]
-                    for x in range(0, len(train_data), mini_batch_size)
-                ]
+                batch_loader = torch.utils.data.DataLoader(
+                    train_data,
+                    batch_size=mini_batch_size,
+                    shuffle=shuffle,
+                    num_workers=4,
+                    collate_fn=list,
+                )
 
                 self.model.train()
 
                 train_loss: float = 0
                 seen_sentences = 0
-                modulo = max(1, int(len(batches) / 10))
+                total_number_of_batches = len(batch_loader)
 
-                for batch_no, batch in enumerate(batches):
+                modulo = max(1, int(total_number_of_batches / 10))
+
+                for batch_no, batch in enumerate(batch_loader):
+
                     loss = self.model.forward_loss(batch)
 
                     optimizer.zero_grad()
@@ -204,10 +209,10 @@ class ModelTrainer:
 
                     if batch_no % modulo == 0:
                         log.info(
-                            f"epoch {epoch + 1} - iter {batch_no}/{len(batches)} - loss "
+                            f"epoch {epoch + 1} - iter {batch_no}/{total_number_of_batches} - loss "
                             f"{train_loss / seen_sentences:.8f}"
                         )
-                        iteration = epoch * len(batches) + batch_no
+                        iteration = epoch * total_number_of_batches + batch_no
                         if not param_selection_mode:
                             weight_extractor.extract_weights(
                                 self.model.state_dict(), iteration

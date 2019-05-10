@@ -5,6 +5,7 @@ from pathlib import Path
 import torch.nn
 from torch.optim import Optimizer
 import torch.nn.functional as F
+from torch.utils.data.dataset import Dataset
 
 import flair.nn
 import torch
@@ -207,7 +208,7 @@ class SequenceTagger(flair.nn.Model):
 
     def evaluate(
         self,
-        sentences: List[Sentence],
+        sentences: Dataset,
         eval_mini_batch_size: int = 32,
         embeddings_in_memory: bool = True,
         out_path: Path = None,
@@ -217,15 +218,19 @@ class SequenceTagger(flair.nn.Model):
             eval_loss = 0
 
             batch_no: int = 0
-            batches = [
-                sentences[x : x + eval_mini_batch_size]
-                for x in range(0, len(sentences), eval_mini_batch_size)
-            ]
+
+            batch_loader = torch.utils.data.DataLoader(
+                sentences,
+                batch_size=eval_mini_batch_size,
+                shuffle=False,
+                num_workers=4,
+                collate_fn=list,
+            )
 
             metric = Metric("Evaluation")
 
             lines: List[str] = []
-            for batch in batches:
+            for batch in batch_loader:
                 batch_no += 1
 
                 with torch.no_grad():

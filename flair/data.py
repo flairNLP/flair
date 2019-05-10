@@ -10,7 +10,7 @@ from collections import defaultdict
 from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
-
+from torch.utils.data import Dataset
 
 log = logging.getLogger("flair")
 
@@ -694,27 +694,23 @@ class Corpus:
 
 class TaggedCorpus(Corpus):
     def __init__(
-        self,
-        train: List[Sentence],
-        dev: List[Sentence],
-        test: List[Sentence],
-        name: str = "corpus",
+        self, train: Dataset, dev: Dataset, test: Dataset, name: str = "corpus"
     ):
-        self._train: List[Sentence] = train
-        self._dev: List[Sentence] = dev
-        self._test: List[Sentence] = test
+        self._train: Dataset = train
+        self._dev: Dataset = dev
+        self._test: Dataset = test
         self.name: str = name
 
     @property
-    def train(self) -> List[Sentence]:
+    def train(self) -> Dataset:
         return self._train
 
     @property
-    def dev(self) -> List[Sentence]:
+    def dev(self) -> Dataset:
         return self._dev
 
     @property
-    def test(self) -> List[Sentence]:
+    def test(self) -> Dataset:
         return self._test
 
     def downsample(self, percentage: float = 0.1, only_downsample_train=False):
