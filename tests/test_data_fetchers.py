@@ -2,6 +2,8 @@ import shutil
 from pathlib import Path
 
 import flair
+import flair.datasets
+
 from flair.data_fetcher import NLPTask, NLPTaskDataFetcher
 
 
@@ -43,7 +45,7 @@ def test_load_germeval_data(tasks_base_path):
 
 def test_load_ud_english_data(tasks_base_path):
     # get training, test and dev data
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH, tasks_base_path)
+    corpus = flair.datasets.UD_ENGLISH(tasks_base_path)
 
     assert len(corpus.train) == 6
     assert len(corpus.test) == 4
@@ -52,9 +54,12 @@ def test_load_ud_english_data(tasks_base_path):
 
 def test_load_no_dev_data(tasks_base_path):
     # get training, test and dev data
-    corpus = NLPTaskDataFetcher.load_column_corpus(
-        tasks_base_path / "fashion_nodev", {0: "text", 2: "ner"}
+    corpus = flair.datasets.ColumnCorpus(
+        tasks_base_path / "fashion_nodev", column_format={0: "text", 2: "ner"}
     )
+    # corpus = NLPTaskDataFetcher.load_column_corpus(
+    #     tasks_base_path / "fashion_nodev", {0: "text", 2: "ner"}
+    # )
 
     assert len(corpus.train) == 5
     assert len(corpus.dev) == 1

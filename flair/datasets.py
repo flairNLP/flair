@@ -80,7 +80,7 @@ class ColumnCorpus(TaggedCorpus):
             test = ColumnDataset(test_file, column_format, tag_to_biloes)
         else:
             train_length = len(train)
-            test_size: int = train_length // 10
+            test_size: int = round(train_length / 10)
             splits = random_split(train, [train_length - test_size, test_size])
             train = splits[0]
             test = splits[1]
@@ -90,7 +90,7 @@ class ColumnCorpus(TaggedCorpus):
             dev = ColumnDataset(dev_file, column_format, tag_to_biloes)
         else:
             train_length = len(train)
-            dev_size: int = train_length // 10
+            dev_size: int = round(train_length / 10)
             splits = random_split(train, [train_length - dev_size, dev_size])
             train = splits[0]
             dev = splits[1]
