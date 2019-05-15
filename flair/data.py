@@ -11,6 +11,7 @@ from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
 from torch.utils.data import Dataset
+from torch.utils.data.dataset import ConcatDataset
 
 log = logging.getLogger("flair")
 
@@ -937,24 +938,15 @@ class MultiCorpus(Corpus):
 
     @property
     def train(self) -> List[Sentence]:
-        train: List[Sentence] = []
-        for corpus in self.corpora:
-            train.extend(corpus.train)
-        return train
+        return ConcatDataset([corpus.train for corpus in self.corpora])
 
     @property
     def dev(self) -> List[Sentence]:
-        dev: List[Sentence] = []
-        for corpus in self.corpora:
-            dev.extend(corpus.dev)
-        return dev
+        return ConcatDataset([corpus.dev for corpus in self.corpora])
 
     @property
     def test(self) -> List[Sentence]:
-        test: List[Sentence] = []
-        for corpus in self.corpora:
-            test.extend(corpus.test)
-        return test
+        return ConcatDataset([corpus.test for corpus in self.corpora])
 
     def __str__(self):
         return "\n".join([str(corpus) for corpus in self.corpora])

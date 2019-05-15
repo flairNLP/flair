@@ -3,6 +3,7 @@ from pathlib import Path
 
 import flair
 import flair.datasets
+from flair.data import MultiCorpus
 
 from flair.data_fetcher import NLPTask, NLPTaskDataFetcher
 
@@ -39,7 +40,6 @@ def test_load_ag_news_data(tasks_base_path):
 
 
 def test_load_sequence_labeling_data(tasks_base_path):
-
     # get training, test and dev data
     corpus = flair.datasets.ColumnCorpus(
         tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
@@ -94,10 +94,14 @@ def test_load_no_dev_data_explicit(tasks_base_path):
 
 
 def test_multi_corpus(tasks_base_path):
-    # get two corpora as one
-    corpus = NLPTaskDataFetcher.load_corpora(
-        [NLPTask.FASHION, NLPTask.GERMEVAL], tasks_base_path
+
+    corpus_1 = flair.datasets.GERMEVAL(tasks_base_path)
+
+    corpus_2 = flair.datasets.ColumnCorpus(
+        tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
     )
+    # get two corpora as one
+    corpus = MultiCorpus([corpus_1, corpus_2])
 
     assert len(corpus.train) == 8
     assert len(corpus.dev) == 2
