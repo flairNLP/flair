@@ -2,12 +2,12 @@ import pytest
 import flair.datasets
 from typing import Tuple
 
-from flair.data import Dictionary, TaggedCorpus
+from flair.data import Dictionary, Corpus
 from flair.embeddings import WordEmbeddings, DocumentRNNEmbeddings
 from flair.models.text_classification_model import TextClassifier
 
 
-def init(tasks_base_path) -> Tuple[TaggedCorpus, Dictionary, TextClassifier]:
+def init(tasks_base_path) -> Tuple[Corpus, Dictionary, TextClassifier]:
     # get training, test and dev data
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "ag_news")
     label_dict = corpus.make_label_dictionary()

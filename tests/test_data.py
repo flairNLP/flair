@@ -5,7 +5,7 @@ import pytest
 from typing import List
 
 import flair.datasets
-from flair.data import Sentence, Label, Token, Dictionary, TaggedCorpus, Span
+from flair.data import Sentence, Label, Token, Dictionary, Corpus, Span
 
 
 def test_get_head():
@@ -258,9 +258,7 @@ def test_tagged_corpus_get_all_sentences():
     dev_sentence = Sentence("I'm a dev sentence.", use_tokenizer=True)
     test_sentence = Sentence("I will be only used for testing.", use_tokenizer=True)
 
-    corpus: TaggedCorpus = TaggedCorpus(
-        [train_sentence], [dev_sentence], [test_sentence]
-    )
+    corpus: Corpus = Corpus([train_sentence], [dev_sentence], [test_sentence])
 
     all_sentences = corpus.get_all_sentences()
 
@@ -270,7 +268,7 @@ def test_tagged_corpus_get_all_sentences():
 def test_tagged_corpus_make_vocab_dictionary():
     train_sentence = Sentence("used in training. training is cool.", use_tokenizer=True)
 
-    corpus: TaggedCorpus = TaggedCorpus([train_sentence], [], [])
+    corpus: Corpus = Corpus([train_sentence], [], [])
 
     vocab = corpus.make_vocab_dictionary(max_tokens=2, min_freq=-1)
 
@@ -307,7 +305,7 @@ def test_tagged_corpus_make_label_dictionary():
     sentence_2 = Sentence("sentence 2", labels=[Label("class_2")])
     sentence_3 = Sentence("sentence 3", labels=[Label("class_1")])
 
-    corpus: TaggedCorpus = TaggedCorpus([sentence_1, sentence_2, sentence_3], [], [])
+    corpus: Corpus = Corpus([sentence_1, sentence_2, sentence_3], [], [])
 
     label_dict = corpus.make_label_dictionary()
 
@@ -322,7 +320,7 @@ def test_tagged_corpus_make_label_dictionary_string():
     sentence_2 = Sentence("sentence 2", labels=["class_2"])
     sentence_3 = Sentence("sentence 3", labels=["class_1"])
 
-    corpus: TaggedCorpus = TaggedCorpus([sentence_1, sentence_2, sentence_3], [], [])
+    corpus: Corpus = Corpus([sentence_1, sentence_2, sentence_3], [], [])
 
     label_dict = corpus.make_label_dictionary()
 
@@ -343,7 +341,7 @@ def test_tagged_corpus_statistics():
         "Berlin is sunny.", labels=[Label("class_1")], use_tokenizer=True
     )
 
-    class_to_count_dict = TaggedCorpus._get_class_to_count(
+    class_to_count_dict = Corpus._get_class_to_count(
         [train_sentence, dev_sentence, test_sentence]
     )
 
@@ -352,7 +350,7 @@ def test_tagged_corpus_statistics():
     assert 2 == class_to_count_dict["class_1"]
     assert 1 == class_to_count_dict["class_2"]
 
-    tokens_in_sentences = TaggedCorpus._get_tokens_per_sentence(
+    tokens_in_sentences = Corpus._get_tokens_per_sentence(
         [train_sentence, dev_sentence, test_sentence]
     )
 
@@ -369,7 +367,7 @@ def test_tagged_corpus_statistics_string_label():
     )
     test_sentence = Sentence("Berlin is sunny.", labels=["class_1"], use_tokenizer=True)
 
-    class_to_count_dict = TaggedCorpus._get_class_to_count(
+    class_to_count_dict = Corpus._get_class_to_count(
         [train_sentence, dev_sentence, test_sentence]
     )
 
@@ -378,7 +376,7 @@ def test_tagged_corpus_statistics_string_label():
     assert 2 == class_to_count_dict["class_1"]
     assert 1 == class_to_count_dict["class_2"]
 
-    tokens_in_sentences = TaggedCorpus._get_tokens_per_sentence(
+    tokens_in_sentences = Corpus._get_tokens_per_sentence(
         [train_sentence, dev_sentence, test_sentence]
     )
 
@@ -397,7 +395,7 @@ def test_tagged_corpus_statistics_multi_label():
         "Berlin is sunny.", labels=["class_1", "class_2"], use_tokenizer=True
     )
 
-    class_to_count_dict = TaggedCorpus._get_class_to_count(
+    class_to_count_dict = Corpus._get_class_to_count(
         [train_sentence, dev_sentence, test_sentence]
     )
 
@@ -406,7 +404,7 @@ def test_tagged_corpus_statistics_multi_label():
     assert 2 == class_to_count_dict["class_1"]
     assert 2 == class_to_count_dict["class_2"]
 
-    tokens_in_sentences = TaggedCorpus._get_tokens_per_sentence(
+    tokens_in_sentences = Corpus._get_tokens_per_sentence(
         [train_sentence, dev_sentence, test_sentence]
     )
 
@@ -432,7 +430,7 @@ def test_tagged_corpus_get_tag_statistic():
 
     test_sentence = Sentence("Nothing to do with companies.")
 
-    tag_to_count_dict = TaggedCorpus._get_tag_to_count(
+    tag_to_count_dict = Corpus._get_tag_to_count(
         [train_sentence, dev_sentence, test_sentence], "ner"
     )
 
@@ -446,7 +444,7 @@ def test_tagged_corpus_get_tag_statistic():
 def test_tagged_corpus_downsample():
     sentence = Sentence("I love Berlin.", labels=[Label("class_1")], use_tokenizer=True)
 
-    corpus: TaggedCorpus = TaggedCorpus(
+    corpus: Corpus = Corpus(
         [
             sentence,
             sentence,

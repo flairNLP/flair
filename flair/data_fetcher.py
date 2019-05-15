@@ -6,7 +6,7 @@ from enum import Enum
 from pathlib import Path
 
 import flair
-from flair.data import Sentence, TaggedCorpus, Token, MultiCorpus
+from flair.data import Sentence, Corpus, Token, MultiCorpus
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -116,9 +116,7 @@ class NLPTaskDataFetcher:
         )
 
     @staticmethod
-    def load_corpus(
-        task: Union[NLPTask, str], base_path: [str, Path] = None
-    ) -> TaggedCorpus:
+    def load_corpus(task: Union[NLPTask, str], base_path: [str, Path] = None) -> Corpus:
         """
         Helper function to fetch a TaggedCorpus for a specific NLPTask. For this to work you need to first download
         and put into the appropriate folder structure the corresponding NLP task data. The tutorials on
@@ -252,7 +250,7 @@ class NLPTaskDataFetcher:
         test_file=None,
         dev_file=None,
         tag_to_biloes=None,
-    ) -> TaggedCorpus:
+    ) -> Corpus:
         """
         Helper function to get a TaggedCorpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
 
@@ -340,14 +338,14 @@ class NLPTaskDataFetcher:
                     tag_type=tag_to_biloes, target_scheme="iobes"
                 )
 
-        return TaggedCorpus(
+        return Corpus(
             sentences_train, sentences_dev, sentences_test, name=data_folder.name
         )
 
     @staticmethod
     def load_ud_corpus(
         data_folder: Union[str, Path], train_file=None, test_file=None, dev_file=None
-    ) -> TaggedCorpus:
+    ) -> Corpus:
         """
         Helper function to get a TaggedCorpus from CoNLL-U column-formatted task data such as the UD corpora
 
@@ -381,7 +379,7 @@ class NLPTaskDataFetcher:
         sentences_test: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(test_file)
         sentences_dev: List[Sentence] = NLPTaskDataFetcher.read_conll_ud(dev_file)
 
-        return TaggedCorpus(
+        return Corpus(
             sentences_train, sentences_dev, sentences_test, name=data_folder.name
         )
 
@@ -393,7 +391,7 @@ class NLPTaskDataFetcher:
         dev_file=None,
         use_tokenizer: bool = True,
         max_tokens_per_doc=-1,
-    ) -> TaggedCorpus:
+    ) -> Corpus:
         """
         Helper function to get a TaggedCorpus from text classification-formatted task data
 
@@ -464,7 +462,7 @@ class NLPTaskDataFetcher:
             ]
             sentences_train = [x for x in sentences_train if x not in sentences_dev]
 
-        return TaggedCorpus(sentences_train, sentences_dev, sentences_test)
+        return Corpus(sentences_train, sentences_dev, sentences_test)
 
     @staticmethod
     def read_text_classification_file(
@@ -1336,7 +1334,7 @@ class NLPTaskDataFetcher:
                                 )
 
                     os.remove(path)
-                    
+
         if task == NLPTask.UD_GERMAN_HDT:
             cached_path(
                 f"{ud_path}UD_German-HDT/dev/de_hdt-ud-dev.conllu",

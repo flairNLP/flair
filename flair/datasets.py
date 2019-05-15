@@ -5,13 +5,13 @@ import logging
 from pathlib import Path
 
 import flair
-from flair.data import Sentence, TaggedCorpus, Token
+from flair.data import Sentence, Corpus, Token
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
 
 
-class ColumnCorpus(TaggedCorpus):
+class ColumnCorpus(Corpus):
     def __init__(
         self,
         data_folder: Union[str, Path],
@@ -98,7 +98,7 @@ class ColumnCorpus(TaggedCorpus):
         super(ColumnCorpus, self).__init__(train, dev, test, name=data_folder.name)
 
 
-class UniversalDependenciesCorpus(TaggedCorpus):
+class UniversalDependenciesCorpus(Corpus):
     def __init__(
         self,
         data_folder: Union[str, Path],
@@ -149,7 +149,7 @@ class UniversalDependenciesCorpus(TaggedCorpus):
         )
 
 
-class ClassificationCorpus(TaggedCorpus):
+class ClassificationCorpus(Corpus):
     def __init__(
         self,
         data_folder: Union[str, Path],

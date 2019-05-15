@@ -1,7 +1,7 @@
 from typing import List
 
 import flair.datasets
-from flair.data import TaggedCorpus
+from flair.data import Corpus
 from flair.embeddings import (
     TokenEmbeddings,
     WordEmbeddings,
@@ -13,7 +13,7 @@ from flair.training_utils import EvaluationMetric
 from flair.visual.training_curves import Plotter
 
 # 1. get the corpus
-corpus: TaggedCorpus = flair.datasets.UD_ENGLISH()
+corpus: Corpus = flair.datasets.UD_ENGLISH()
 print(corpus)
 
 # 2. what tag do we want to predict?
