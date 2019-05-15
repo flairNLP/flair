@@ -25,6 +25,7 @@ setup(
         "pytorch-pretrained-bert>=0.6.1",
         "bpemb>=0.2.9",
         "regex",
+        "tabulate"
     ],
     include_package_data=True,
     python_requires=">=3.6",
