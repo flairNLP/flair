@@ -9,7 +9,20 @@ from flair.data_fetcher import NLPTask, NLPTaskDataFetcher
 
 def test_load_imdb_data(tasks_base_path):
     # get training, test and dev data
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
+    corpus = flair.datasets.ClassificationCorpus(
+        tasks_base_path / "imdb", in_memory=True
+    )
+
+    assert len(corpus.train) == 5
+    assert len(corpus.dev) == 5
+    assert len(corpus.test) == 5
+
+
+def test_load_imdb_data_streaming(tasks_base_path):
+    # get training, test and dev data
+    corpus = flair.datasets.ClassificationCorpus(
+        tasks_base_path / "imdb", in_memory=False
+    )
 
     assert len(corpus.train) == 5
     assert len(corpus.dev) == 5
@@ -18,7 +31,7 @@ def test_load_imdb_data(tasks_base_path):
 
 def test_load_ag_news_data(tasks_base_path):
     # get training, test and dev data
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.AG_NEWS, tasks_base_path)
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "ag_news")
 
     assert len(corpus.train) == 10
     assert len(corpus.dev) == 10

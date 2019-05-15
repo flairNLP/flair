@@ -4,8 +4,8 @@ from pathlib import Path
 import pytest
 from typing import List
 
+import flair.datasets
 from flair.data import Sentence, Label, Token, Dictionary, TaggedCorpus, Span
-from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 
 
 def test_get_head():
@@ -84,7 +84,7 @@ def test_sentence_to_real_string(tasks_base_path):
     sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=True)
     assert "I love Berlin." == sentence.to_plain_string()
 
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.GERMEVAL, tasks_base_path)
+    corpus = flair.datasets.GERMEVAL(base_path=tasks_base_path)
 
     sentence = corpus.train[0]
     assert (

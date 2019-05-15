@@ -406,11 +406,14 @@ class ModelTrainer:
         )
 
         train_data = self.corpus.train
-        random.shuffle(train_data)
-        batches = [
-            train_data[x : x + mini_batch_size]
-            for x in range(0, len(train_data), mini_batch_size)
-        ][:iterations]
+
+        batch_loader = torch.utils.data.DataLoader(
+            train_data,
+            batch_size=mini_batch_size,
+            shuffle=True,
+            num_workers=4,
+            collate_fn=list,
+        )
 
         scheduler = ExpAnnealLR(optimizer, end_learning_rate, iterations)
 
@@ -418,7 +421,7 @@ class ModelTrainer:
         model_device = next(self.model.parameters()).device
         self.model.train()
 
-        for itr, batch in enumerate(batches):
+        for itr, batch in enumerate(batch_loader):
             loss = self.model.forward_loss(batch)
 
             optimizer.zero_grad()
@@ -444,6 +447,9 @@ class ModelTrainer:
             if stop_early and (loss_item > 4 * best_loss or torch.isnan(loss)):
                 log_line(log)
                 log.info("loss diverged - stopping early!")
+                break
+
+            if itr > iterations:
                 break
 
             with open(learning_rate_tsv, "a") as f:

@@ -6,6 +6,7 @@ from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
 from torch.optim.adam import Adam
 
+import flair.datasets
 from flair.data import Dictionary, Sentence
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 from flair.embeddings import (
@@ -23,7 +24,9 @@ from flair.optim import AdamW
 
 @pytest.mark.integration
 def test_train_load_use_tagger(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = flair.datasets.ColumnCorpus(
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+    )
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
     embeddings = WordEmbeddings("turian")
@@ -65,7 +68,7 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH).downsample(0.05)
+    corpus = flair.datasets.UD_ENGLISH().downsample(0.05)
     tag_dictionary = corpus.make_tag_dictionary("pos")
 
     embeddings = WordEmbeddings("turian")
@@ -107,7 +110,9 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = flair.datasets.ColumnCorpus(
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+    )
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
     embeddings = FlairEmbeddings("news-forward-fast")
@@ -151,7 +156,9 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
 def test_train_charlm_changed_chache_load_use_tagger(
     results_base_path, tasks_base_path
 ):
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = flair.datasets.ColumnCorpus(
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+    )
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
     # make a temporary cache directory that we remove afterwards
@@ -199,7 +206,9 @@ def test_train_charlm_changed_chache_load_use_tagger(
 
 @pytest.mark.integration
 def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = flair.datasets.ColumnCorpus(
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+    )
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
     embeddings = FlairEmbeddings("news-forward-fast", use_cache=False)
@@ -240,7 +249,9 @@ def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_pat
 
 @pytest.mark.integration
 def test_train_optimizer(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = flair.datasets.ColumnCorpus(
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+    )
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
     embeddings = WordEmbeddings("turian")
@@ -284,7 +295,9 @@ def test_train_optimizer(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_optimizer_arguments(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = flair.datasets.ColumnCorpus(
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+    )
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
     embeddings = WordEmbeddings("turian")
@@ -329,7 +342,9 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_find_learning_rate(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = flair.datasets.ColumnCorpus(
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+    )
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
     embeddings = WordEmbeddings("turian")
@@ -376,7 +391,7 @@ def test_load_use_serialized_tagger():
 
 @pytest.mark.integration
 def test_train_load_use_classifier(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus("imdb", base_path=tasks_base_path)
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
     label_dict = corpus.make_label_dictionary()
 
     word_embedding: WordEmbeddings = WordEmbeddings("turian")
@@ -414,7 +429,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus("imdb", base_path=tasks_base_path)
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
     label_dict = corpus.make_label_dictionary()
 
     word_embedding: WordEmbeddings = WordEmbeddings("turian")
@@ -452,10 +467,8 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
 
 @pytest.mark.integration
 def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_path):
-    # corpus = NLPTaskDataFetcher.load_corpus('multi_class', base_path=tasks_base_path)
-    corpus = NLPTaskDataFetcher.load_classification_corpus(
-        data_folder=tasks_base_path / "multi_class"
-    )
+
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "multi_class")
     label_dict = corpus.make_label_dictionary()
 
     word_embedding: WordEmbeddings = WordEmbeddings("turian")
@@ -515,7 +528,7 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
 
 @pytest.mark.integration
 def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus("imdb", base_path=tasks_base_path)
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
     label_dict = corpus.make_label_dictionary()
 
     embedding: TokenEmbeddings = FlairEmbeddings("news-forward-fast")
@@ -553,7 +566,7 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_charlm_nocache_load_use_classifier(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus("imdb", base_path=tasks_base_path)
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
     label_dict = corpus.make_label_dictionary()
 
     embedding: TokenEmbeddings = FlairEmbeddings("news-forward-fast", use_cache=False)
@@ -671,7 +684,7 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_resume_text_classification_training(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus("imdb", base_path=tasks_base_path)
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
     label_dict = corpus.make_label_dictionary()
 
     embeddings: TokenEmbeddings = FlairEmbeddings("news-forward-fast", use_cache=False)
