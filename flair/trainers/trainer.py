@@ -249,7 +249,9 @@ class ModelTrainer:
                             self.corpus.dev, eval_mini_batch_size, embeddings_in_memory
                         )
                         f.write(f"\t{dev_loss}\t{dev_eval_result.log_line}")
-
+                        log.info(
+                            f"DEV : loss {dev_loss} - score {dev_eval_result.main_score}"
+                        )
                         # calculate scores using dev data if available
                         # append dev score to score history
                         dev_score_history.append(dev_eval_result.main_score)

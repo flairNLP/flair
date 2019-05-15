@@ -158,6 +158,7 @@ class ClassificationCorpus(TaggedCorpus):
         dev_file=None,
         use_tokenizer: bool = True,
         max_tokens_per_doc=-1,
+        in_memory: bool = False,
     ):
         """
         Helper function to get a TaggedCorpus from text classification-formatted task data
@@ -203,11 +204,13 @@ class ClassificationCorpus(TaggedCorpus):
             train_file,
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
+            in_memory=in_memory,
         )
         test: Dataset = ClassificationDataset(
             test_file,
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
+            in_memory=in_memory,
         )
 
         if dev_file is not None:
@@ -215,6 +218,7 @@ class ClassificationCorpus(TaggedCorpus):
                 dev_file,
                 use_tokenizer=use_tokenizer,
                 max_tokens_per_doc=max_tokens_per_doc,
+                in_memory=in_memory,
             )
         else:
             train_length = len(train)
@@ -353,7 +357,11 @@ class UniversalDependenciesDataset(Dataset):
 
 class ClassificationDataset(Dataset):
     def __init__(
-        self, path_to_file: Union[str, Path], max_tokens_per_doc=-1, use_tokenizer=True
+        self,
+        path_to_file: Union[str, Path],
+        max_tokens_per_doc=-1,
+        use_tokenizer=True,
+        in_memory: bool = True,
     ):
         """
         Reads a data file for text classification. The file should contain one document/text per line.
@@ -370,40 +378,84 @@ class ClassificationDataset(Dataset):
 
         assert path_to_file.exists()
 
-        label_prefix = "__label__"
-        self.sentences = []
+        self.label_prefix = "__label__"
+
+        self.in_memory = in_memory
+        self.use_tokenizer = use_tokenizer
+
+        if self.in_memory:
+            self.sentences = []
+        else:
+            self.indices = []
+
+        self.total_sentence_count: int = 0
+
+        self.path_to_file = path_to_file
+
+        # self.file = open(str(path_to_file), encoding="utf-8")
 
         with open(str(path_to_file), encoding="utf-8") as f:
-            for line in f:
-                words = line.split()
+            line = f.readline()
+            position = 0
+            while line:
+                sentence = self._parse_line_to_sentence(
+                    line, self.label_prefix, use_tokenizer
+                )
 
-                labels = []
-                l_len = 0
-
-                for i in range(len(words)):
-                    if words[i].startswith(label_prefix):
-                        l_len += len(words[i]) + 1
-                        label = words[i].replace(label_prefix, "")
-                        labels.append(label)
-                    else:
-                        break
-
-                text = line[l_len:].strip()
-
-                if text and labels:
-                    sentence = Sentence(
-                        text, labels=labels, use_tokenizer=use_tokenizer
-                    )
-                    if len(sentence) > max_tokens_per_doc and max_tokens_per_doc > 0:
-                        sentence.tokens = sentence.tokens[:max_tokens_per_doc]
-                    if len(sentence.tokens) > 0:
+                if (
+                    sentence is not None
+                    and len(sentence) > max_tokens_per_doc
+                    and max_tokens_per_doc > 0
+                ):
+                    sentence.tokens = sentence.tokens[:max_tokens_per_doc]
+                if sentence is not None and len(sentence.tokens) > 0:
+                    if self.in_memory:
                         self.sentences.append(sentence)
+                    else:
+                        self.indices.append(position)
+                    self.total_sentence_count += 1
+
+                position = f.tell()
+                line = f.readline()
+
+    def _parse_line_to_sentence(
+        self, line: str, label_prefix: str, use_tokenizer: bool = True
+    ):
+        words = line.split()
+
+        labels = []
+        l_len = 0
+
+        for i in range(len(words)):
+            if words[i].startswith(label_prefix):
+                l_len += len(words[i]) + 1
+                label = words[i].replace(label_prefix, "")
+                labels.append(label)
+            else:
+                break
+
+        text = line[l_len:].strip()
+
+        if text and labels:
+            sentence = Sentence(text, labels=labels, use_tokenizer=use_tokenizer)
+            return sentence
+        return None
 
     def __len__(self):
-        return len(self.sentences)
+        return self.total_sentence_count
 
     def __getitem__(self, index: int = 0) -> Sentence:
-        return self.sentences[index]
+        if self.in_memory:
+            return self.sentences[index]
+        else:
+
+            with open(str(self.path_to_file), encoding="utf-8") as file:
+                file.seek(self.indices[index])
+                line = file.readline()
+                sentence = self._parse_line_to_sentence(
+                    line, self.label_prefix, self.use_tokenizer
+                )
+                return sentence
 
 
 class CONLL_03(ColumnCorpus):

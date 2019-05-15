@@ -33,7 +33,7 @@ class TextClassifier(flair.nn.Model):
         document_embeddings: flair.embeddings.DocumentEmbeddings,
         label_dictionary: Dictionary,
         multi_label: bool,
-        multi_label_threshold: float = 0.5
+        multi_label_threshold: float = 0.5,
     ):
 
         super(TextClassifier, self).__init__()
@@ -105,7 +105,10 @@ class TextClassifier(flair.nn.Model):
         return labels, loss
 
     def predict(
-        self, sentences: Union[Sentence, List[Sentence]], mini_batch_size: int = 32, multi_class_prob: bool = False,
+        self,
+        sentences: Union[Sentence, List[Sentence]],
+        mini_batch_size: int = 32,
+        multi_class_prob: bool = False,
     ) -> List[Sentence]:
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
@@ -127,7 +130,9 @@ class TextClassifier(flair.nn.Model):
 
             for batch in batches:
                 scores = self.forward(batch)
-                predicted_labels = self._obtain_labels(scores, predict_prob=multi_class_prob)
+                predicted_labels = self._obtain_labels(
+                    scores, predict_prob=multi_class_prob
+                )
 
                 for (sentence, labels) in zip(batch, predicted_labels):
                     sentence.labels = labels
@@ -147,15 +152,18 @@ class TextClassifier(flair.nn.Model):
         with torch.no_grad():
             eval_loss = 0
 
-            batches = [
-                sentences[x : x + eval_mini_batch_size]
-                for x in range(0, len(sentences), eval_mini_batch_size)
-            ]
+            batch_loader = torch.utils.data.DataLoader(
+                sentences,
+                batch_size=eval_mini_batch_size,
+                shuffle=False,
+                num_workers=4,
+                collate_fn=list,
+            )
 
             metric = Metric("Evaluation")
 
             lines: List[str] = []
-            for batch in batches:
+            for batch in batch_loader:
 
                 labels, loss = self.forward_labels_and_loss(batch)
 
@@ -267,7 +275,9 @@ class TextClassifier(flair.nn.Model):
 
         return self._calculate_single_label_loss(scores, sentences)
 
-    def _obtain_labels(self, scores: List[List[float]], predict_prob: bool = False) -> List[List[Label]]:
+    def _obtain_labels(
+        self, scores: List[List[float]], predict_prob: bool = False
+    ) -> List[List[Label]]:
         """
         Predicts the labels of sentences.
         :param scores: the prediction scores from the model
