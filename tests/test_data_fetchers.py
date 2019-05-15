@@ -5,8 +5,6 @@ import flair
 import flair.datasets
 from flair.data import MultiCorpus
 
-from flair.data_fetcher import NLPTask, NLPTaskDataFetcher
-
 
 def test_load_imdb_data(tasks_base_path):
     # get training, test and dev data
