@@ -80,15 +80,18 @@ class TextRegressor(flair.models.TextClassifier):
         with torch.no_grad():
             eval_loss = 0
 
-            batches = [
-                sentences[x : x + eval_mini_batch_size]
-                for x in range(0, len(sentences), eval_mini_batch_size)
-            ]
+            batch_loader = torch.utils.data.DataLoader(
+                sentences,
+                batch_size=eval_mini_batch_size,
+                shuffle=False,
+                num_workers=4,
+                collate_fn=list,
+            )
 
             metric = MetricRegression("Evaluation")
 
             lines: List[str] = []
-            for batch in batches:
+            for batch in batch_loader:
 
                 scores, loss = self.forward_labels_and_loss(batch)
 
@@ -121,7 +124,7 @@ class TextRegressor(flair.models.TextClassifier):
                     )
                     lines.append(eval_line)
 
-            eval_loss /= len(batches)
+            eval_loss /= len(sentences)
 
             ##TODO: not saving lines yet
             if out_path is not None:
