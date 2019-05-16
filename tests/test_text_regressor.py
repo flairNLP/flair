@@ -45,7 +45,7 @@ def test_trainer_evaluation(tasks_base_path):
     assert expected is not None
 
 
-#def test_trainer_results(tasks_base_path):
+# def test_trainer_results(tasks_base_path):
 #    corpus, model, trainer = init(tasks_base_path)
 
 #    results = trainer.train("regression_train/", max_epochs=1)
