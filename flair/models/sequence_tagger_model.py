@@ -18,6 +18,7 @@ from typing import List, Tuple, Union
 from flair.training_utils import clear_embeddings, Metric, Result
 
 from tqdm import tqdm
+from tabulate import tabulate
 
 log = logging.getLogger("flair")
 
@@ -818,3 +819,14 @@ class SequenceTagger(flair.nn.Model):
             model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
 
         return model_name
+
+    def get_transition_matrix(self):
+        data = []
+        for to_idx, row in enumerate(self.transitions):
+            for from_idx, column in enumerate(row):
+                row = [self.tag_dictionary.get_item_for_index(from_idx),
+                       self.tag_dictionary.get_item_for_index(to_idx),
+                       column.item()]
+                data.append(row)
+            data.append(["----"])
+        print(tabulate(data, headers=['FROM', 'TO', 'SCORE']))
