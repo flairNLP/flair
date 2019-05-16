@@ -91,7 +91,6 @@ class ModelTrainer:
                 eval_mini_batch_size,
                 embeddings_in_memory,
             )
-            asd
             if log_train:
                 f.write(
                     "\tTRAIN_" + "\tTRAIN_".join(dummy_result.log_header.split("\t"))
