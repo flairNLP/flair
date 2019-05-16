@@ -460,26 +460,86 @@ class ClassificationDataset(Dataset):
 
 class CONLL_03(ColumnCorpus):
     def __init__(self, base_path=None, tag_to_biloes: str = "ner"):
+
+        # column format
         columns = {0: "text", 1: "pos", 2: "np", 3: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
 
         # default dataset folder is the cache root
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / "conll_03"
+        data_folder = base_path / dataset_name
 
         super(CONLL_03, self).__init__(
             data_folder, columns, tag_to_biloes=tag_to_biloes
         )
 
 
-class GERMEVAL(ColumnCorpus):
+class CONLL_03_DUTCH(ColumnCorpus):
     def __init__(self, base_path=None, tag_to_biloes: str = "ner"):
-        columns = {1: "text", 2: "ner"}
+
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
 
         # default dataset folder is the cache root
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / "germeval"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        conll_02_path = "https://www.clips.uantwerpen.be/conll2002/ner/data/"
+        cached_path(f"{conll_02_path}ned.testa", Path("datasets") / dataset_name)
+        cached_path(f"{conll_02_path}ned.testb", Path("datasets") / dataset_name)
+        cached_path(f"{conll_02_path}ned.train", Path("datasets") / dataset_name)
+
+        super(CONLL_03_DUTCH, self).__init__(
+            data_folder, columns, tag_to_biloes=tag_to_biloes
+        )
+
+
+class CONLL_03_SPANISH(ColumnCorpus):
+    def __init__(self, base_path=None, tag_to_biloes: str = "ner"):
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        conll_02_path = "https://www.clips.uantwerpen.be/conll2002/ner/data/"
+        cached_path(f"{conll_02_path}esp.testa", Path("datasets") / dataset_name)
+        cached_path(f"{conll_02_path}esp.testb", Path("datasets") / dataset_name)
+        cached_path(f"{conll_02_path}esp.train", Path("datasets") / dataset_name)
+
+        super(CONLL_03_SPANISH, self).__init__(
+            data_folder, columns, tag_to_biloes=tag_to_biloes
+        )
+
+
+class GERMEVAL(ColumnCorpus):
+    def __init__(self, base_path=None, tag_to_biloes: str = "ner"):
+
+        # column format
+        columns = {1: "text", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
 
         super(GERMEVAL, self).__init__(
             data_folder, columns, tag_to_biloes=tag_to_biloes
@@ -488,12 +548,17 @@ class GERMEVAL(ColumnCorpus):
 
 class CONLL_2000(ColumnCorpus):
     def __init__(self, base_path=None, tag_to_biloes: str = "np"):
+
+        # column format
         columns = {0: "text", 1: "pos", 2: "np"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
 
         # default dataset folder is the cache root
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / "conll_2000"
+        data_folder = base_path / dataset_name
 
         super(CONLL_2000, self).__init__(
             data_folder, columns, tag_to_biloes=tag_to_biloes
@@ -502,19 +567,23 @@ class CONLL_2000(ColumnCorpus):
 
 class UD_ENGLISH(UniversalDependenciesCorpus):
     def __init__(self, base_path=None):
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
         # default dataset folder is the cache root
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / "ud_english"
+        data_folder = base_path / dataset_name
 
         # download data if necessary
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_English-EWT/master"
-        cached_path(f"{web_path}/en_ewt-ud-dev.conllu", Path("datasets") / "ud_english")
+        cached_path(f"{web_path}/en_ewt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(
-            f"{web_path}/en_ewt-ud-test.conllu", Path("datasets") / "ud_english"
+            f"{web_path}/en_ewt-ud-test.conllu", Path("datasets") / dataset_name
         )
         cached_path(
-            f"{web_path}/en_ewt-ud-train.conllu", Path("datasets") / "ud_english"
+            f"{web_path}/en_ewt-ud-train.conllu", Path("datasets") / dataset_name
         )
 
         super(UD_ENGLISH, self).__init__(data_folder)
@@ -522,15 +591,21 @@ class UD_ENGLISH(UniversalDependenciesCorpus):
 
 class UD_GERMAN(UniversalDependenciesCorpus):
     def __init__(self, base_path=None):
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
         # default dataset folder is the cache root
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / "ud_german"
+        data_folder = base_path / dataset_name
 
         # download data if necessary
         ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_German-GSD/master"
-        cached_path(f"{ud_path}/de_gsd-ud-dev.conllu", Path("datasets") / "ud_german")
-        cached_path(f"{ud_path}/de_gsd-ud-test.conllu", Path("datasets") / "ud_german")
-        cached_path(f"{ud_path}/de_gsd-ud-train.conllu", Path("datasets") / "ud_german")
+        cached_path(f"{ud_path}/de_gsd-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/de_gsd-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(
+            f"{ud_path}/de_gsd-ud-train.conllu", Path("datasets") / dataset_name
+        )
 
         super(UD_GERMAN, self).__init__(data_folder)
