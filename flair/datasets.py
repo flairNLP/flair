@@ -20,6 +20,7 @@ class ColumnCorpus(Corpus):
         test_file=None,
         dev_file=None,
         tag_to_biloes=None,
+        in_memory: bool = True,
     ):
         """
         Helper function to get a TaggedCorpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
@@ -73,11 +74,15 @@ class ColumnCorpus(Corpus):
         log.info("Test: {}".format(test_file))
 
         # get train data
-        train = ColumnDataset(train_file, column_format, tag_to_biloes)
+        train = ColumnDataset(
+            train_file, column_format, tag_to_biloes, in_memory=in_memory
+        )
 
         # read in test file if exists, otherwise sample 10% of train data as test dataset
         if test_file is not None:
-            test = ColumnDataset(test_file, column_format, tag_to_biloes)
+            test = ColumnDataset(
+                test_file, column_format, tag_to_biloes, in_memory=in_memory
+            )
         else:
             train_length = len(train)
             test_size: int = round(train_length / 10)
@@ -87,7 +92,9 @@ class ColumnCorpus(Corpus):
 
         # read in dev file if exists, otherwise sample 10% of train data as dev dataset
         if dev_file is not None:
-            dev = ColumnDataset(dev_file, column_format, tag_to_biloes)
+            dev = ColumnDataset(
+                dev_file, column_format, tag_to_biloes, in_memory=in_memory
+            )
         else:
             train_length = len(train)
             dev_size: int = round(train_length / 10)
@@ -237,70 +244,128 @@ class ColumnDataset(Dataset):
         self,
         path_to_column_file: Path,
         column_name_map: Dict[int, str],
-        tag_to_biloes=None,
+        tag_to_bioes: str = None,
+        in_memory: bool = True,
     ):
         assert path_to_column_file.exists()
+        self.path_to_column_file = path_to_column_file
+        self.tag_to_bioes = tag_to_bioes
+        self.column_name_map = column_name_map
 
-        self.sentences: List[Sentence] = []
+        # store either Sentence objects in memory, or only file offsets
+        self.in_memory = in_memory
+        if self.in_memory:
+            self.sentences: List[Sentence] = []
+        else:
+            self.indices: List[int] = []
 
+        self.total_sentence_count: int = 0
+
+        # most data sets have the token text in the first column, if not, pass 'text' as column
+        self.text_column: int = 0
+        for column in self.column_name_map:
+            if column_name_map[column] == "text":
+                self.text_column = column
+
+        # determine encoding of text file
+        encoding = "utf-8"
         try:
-            lines: List[str] = open(
-                str(path_to_column_file), encoding="utf-8"
-            ).read().strip().split("\n")
+            lines: List[str] = open(str(path_to_column_file), encoding="utf-8").read(
+                10
+            ).strip().split("\n")
         except:
             log.info(
                 'UTF-8 can\'t read: {} ... using "latin-1" instead.'.format(
                     path_to_column_file
                 )
             )
-            lines: List[str] = open(
-                str(path_to_column_file), encoding="latin1"
-            ).read().strip().split("\n")
-
-        # most data sets have the token text in the first column, if not, pass 'text' as column
-        text_column: int = 0
-        for column in column_name_map:
-            if column_name_map[column] == "text":
-                text_column = column
+            encoding = "latin1"
 
         sentence: Sentence = Sentence()
-        for line in lines:
+        with open(str(self.path_to_column_file), encoding=encoding) as f:
 
-            if line.startswith("#"):
-                continue
+            line = f.readline()
+            position = 0
 
-            if line.strip().replace("﻿", "") == "":
-                if len(sentence) > 0:
-                    sentence.infer_space_after()
-                    self.sentences.append(sentence)
-                sentence: Sentence = Sentence()
+            while line:
 
-            else:
-                fields: List[str] = re.split("\s+", line)
-                token = Token(fields[text_column])
-                for column in column_name_map:
-                    if len(fields) > column:
-                        if column != text_column:
-                            token.add_tag(column_name_map[column], fields[column])
+                if line.startswith("#"):
+                    line = f.readline()
+                    continue
 
-                sentence.add_token(token)
+                if line.strip().replace("﻿", "") == "":
+                    if len(sentence) > 0:
+                        sentence.infer_space_after()
+                        if self.in_memory:
+                            self.sentences.append(sentence)
+                        else:
+                            self.indices.append(position)
+                            position = f.tell()
+                        self.total_sentence_count += 1
+                    sentence: Sentence = Sentence()
+
+                else:
+                    fields: List[str] = re.split("\s+", line)
+                    token = Token(fields[self.text_column])
+                    for column in column_name_map:
+                        if len(fields) > column:
+                            if column != self.text_column:
+                                token.add_tag(
+                                    self.column_name_map[column], fields[column]
+                                )
+
+                    sentence.add_token(token)
+
+                line = f.readline()
 
         if len(sentence.tokens) > 0:
             sentence.infer_space_after()
-            self.sentences.append(sentence)
-
-        if tag_to_biloes is not None:
-            # convert tag scheme to iobes
-            for sentence in self.sentences:
-                sentence.convert_tag_scheme(
-                    tag_type=tag_to_biloes, target_scheme="iobes"
-                )
+            if self.in_memory:
+                self.sentences.append(sentence)
+            else:
+                self.indices.append(position)
+            self.total_sentence_count += 1
 
     def __len__(self):
-        return len(self.sentences)
+        return self.total_sentence_count
 
     def __getitem__(self, index: int = 0) -> Sentence:
-        return self.sentences[index]
+
+        if self.in_memory:
+            sentence = self.sentences[index]
+        else:
+            with open(str(self.path_to_column_file), encoding="utf-8") as file:
+                file.seek(self.indices[index])
+                line = file.readline()
+                sentence: Sentence = Sentence()
+                while line:
+                    if line.startswith("#"):
+                        line = file.readline()
+                        continue
+
+                    if line.strip().replace("﻿", "") == "":
+                        if len(sentence) > 0:
+                            sentence.infer_space_after()
+                            break
+                    else:
+                        fields: List[str] = re.split("\s+", line)
+                        token = Token(fields[self.text_column])
+                        for column in self.column_name_map:
+                            if len(fields) > column:
+                                if column != self.text_column:
+                                    token.add_tag(
+                                        self.column_name_map[column], fields[column]
+                                    )
+
+                        sentence.add_token(token)
+                    line = file.readline()
+
+        if self.tag_to_bioes is not None:
+            sentence.convert_tag_scheme(
+                tag_type=self.tag_to_bioes, target_scheme="iobes"
+            )
+
+        return sentence
 
 
 class UniversalDependenciesDataset(Dataset):
@@ -459,7 +524,9 @@ class ClassificationDataset(Dataset):
 
 
 class CONLL_03(ColumnCorpus):
-    def __init__(self, base_path=None, tag_to_biloes: str = "ner"):
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = True
+    ):
 
         # column format
         columns = {0: "text", 1: "pos", 2: "np", 3: "ner"}
@@ -472,14 +539,54 @@ class CONLL_03(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
+        # check if data there
+        if not data_folder.exists():
+            log.warning("-" * 100)
+            log.warning(f'ACHTUNG: CoNLL-03 dataset not found at "{data_folder}".')
+            log.warning(
+                'Instructions for obtaining the data can be found here: https://www.clips.uantwerpen.be/conll2003/ner/"'
+            )
+            log.warning("-" * 100)
+
         super(CONLL_03, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+        )
+
+
+class CONLL_03_GERMAN(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = True
+    ):
+
+        # column format
+        columns = {0: "text", 1: "lemma", 2: "pos", 3: "np", 4: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # check if data there
+        if not data_folder.exists():
+            log.warning("-" * 100)
+            log.warning(f'ACHTUNG: CoNLL-03 dataset not found at "{data_folder}".')
+            log.warning(
+                'Instructions for obtaining the data can be found here: https://www.clips.uantwerpen.be/conll2003/ner/"'
+            )
+            log.warning("-" * 100)
+
+        super(CONLL_03_GERMAN, self).__init__(
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
         )
 
 
 class CONLL_03_DUTCH(ColumnCorpus):
-    def __init__(self, base_path=None, tag_to_biloes: str = "ner"):
-
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = True
+    ):
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
 
@@ -498,13 +605,14 @@ class CONLL_03_DUTCH(ColumnCorpus):
         cached_path(f"{conll_02_path}ned.train", Path("datasets") / dataset_name)
 
         super(CONLL_03_DUTCH, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
         )
 
 
 class CONLL_03_SPANISH(ColumnCorpus):
-    def __init__(self, base_path=None, tag_to_biloes: str = "ner"):
-
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = True
+    ):
         # column format
         columns = {0: "text", 1: "ner"}
 
@@ -523,15 +631,16 @@ class CONLL_03_SPANISH(ColumnCorpus):
         cached_path(f"{conll_02_path}esp.train", Path("datasets") / dataset_name)
 
         super(CONLL_03_SPANISH, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
         )
 
 
-class GERMEVAL(ColumnCorpus):
-    def __init__(self, base_path=None, tag_to_biloes: str = "ner"):
-
+class WNUT_17(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = True
+    ):
         # column format
-        columns = {1: "text", 2: "ner"}
+        columns = {0: "text", 1: "ner"}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -541,13 +650,23 @@ class GERMEVAL(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        super(GERMEVAL, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes
+        # download data if necessary
+        wnut_path = "https://noisy-text.github.io/2017/files/"
+        cached_path(f"{wnut_path}wnut17train.conll", Path("datasets") / dataset_name)
+        cached_path(f"{wnut_path}emerging.dev.conll", Path("datasets") / dataset_name)
+        cached_path(
+            f"{wnut_path}emerging.test.annotated", Path("datasets") / dataset_name
+        )
+
+        super(WNUT_17, self).__init__(
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
         )
 
 
 class CONLL_2000(ColumnCorpus):
-    def __init__(self, base_path=None, tag_to_biloes: str = "np"):
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "np", in_memory: bool = True
+    ):
 
         # column format
         columns = {0: "text", 1: "pos", 2: "np"}
@@ -560,14 +679,364 @@ class CONLL_2000(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
+        # download data if necessary
+        conll_2000_path = "https://www.clips.uantwerpen.be/conll2000/chunking/"
+        data_file = Path(flair.cache_root) / "datasets" / dataset_name / "train.txt"
+        if not data_file.is_file():
+            cached_path(
+                f"{conll_2000_path}train.txt.gz", Path("datasets") / dataset_name
+            )
+            cached_path(
+                f"{conll_2000_path}test.txt.gz", Path("datasets") / dataset_name
+            )
+            import gzip, shutil
+
+            with gzip.open(
+                Path(flair.cache_root) / "datasets" / dataset_name / "train.txt.gz",
+                "rb",
+            ) as f_in:
+                with open(
+                    Path(flair.cache_root) / "datasets" / dataset_name / "train.txt",
+                    "wb",
+                ) as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+            with gzip.open(
+                Path(flair.cache_root) / "datasets" / dataset_name / "test.txt.gz", "rb"
+            ) as f_in:
+                with open(
+                    Path(flair.cache_root) / "datasets" / dataset_name / "test.txt",
+                    "wb",
+                ) as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+
         super(CONLL_2000, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+        )
+
+
+def _download_wikiner(language_code: str, dataset_name: str):
+    # download data if necessary
+    wikiner_path = (
+        "https://raw.githubusercontent.com/dice-group/FOX/master/input/Wikiner/"
+    )
+    lc = language_code
+
+    data_file = (
+        Path(flair.cache_root)
+        / "datasets"
+        / dataset_name
+        / f"aij-wikiner-{lc}-wp3.train"
+    )
+    if not data_file.is_file():
+
+        cached_path(
+            f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2", Path("datasets") / dataset_name
+        )
+        import bz2, shutil
+
+        # unpack and write out in CoNLL column-like format
+        bz_file = bz2.BZ2File(
+            Path(flair.cache_root)
+            / "datasets"
+            / dataset_name
+            / f"aij-wikiner-{lc}-wp3.bz2",
+            "rb",
+        )
+        with bz_file as f, open(
+            Path(flair.cache_root)
+            / "datasets"
+            / dataset_name
+            / f"aij-wikiner-{lc}-wp3.train",
+            "w",
+        ) as out:
+            for line in f:
+                line = line.decode("utf-8")
+                words = line.split(" ")
+                for word in words:
+                    out.write("\t".join(word.split("|")) + "\n")
+
+
+class WIKINER_ENGLISH(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wikiner("en", dataset_name)
+
+        super(WIKINER_ENGLISH, self).__init__(
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+        )
+
+
+class WIKINER_GERMAN(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wikiner("en", dataset_name)
+
+        super(WIKINER_GERMAN, self).__init__(
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+        )
+
+
+class WIKINER_DUTCH(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wikiner("nl", dataset_name)
+
+        super(WIKINER_DUTCH, self).__init__(
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+        )
+
+
+class WIKINER_FRENCH(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wikiner("fr", dataset_name)
+
+        super(WIKINER_FRENCH, self).__init__(
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+        )
+
+
+class WIKINER_ITALIAN(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wikiner("it", dataset_name)
+
+        super(WIKINER_ITALIAN, self).__init__(
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+        )
+
+
+class WIKINER_SPANISH(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wikiner("es", dataset_name)
+
+        super(WIKINER_SPANISH, self).__init__(
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+        )
+
+
+class WIKINER_PORTUGUESE(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wikiner("pt", dataset_name)
+
+        super(WIKINER_PORTUGUESE, self).__init__(
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+        )
+
+
+class WIKINER_POLISH(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wikiner("pl", dataset_name)
+
+        super(WIKINER_POLISH, self).__init__(
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+        )
+
+
+class WIKINER_RUSSIAN(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wikiner("ru", dataset_name)
+
+        super(WIKINER_RUSSIAN, self).__init__(
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+        )
+
+
+class GERMEVAL(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = True
+    ):
+
+        # column format
+        columns = {1: "text", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # check if data there
+        if not data_folder.exists():
+            log.warning("-" * 100)
+            log.warning(f'ACHTUNG: GermEval-14 dataset not found at "{data_folder}".')
+            log.warning(
+                'Instructions for obtaining the data can be found here: https://sites.google.com/site/germeval2014ner/home/"'
+            )
+            log.warning("-" * 100)
+        super(GERMEVAL, self).__init__(
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+        )
+
+
+class NER_BASQUE(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = True
+    ):
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ner_basque_path = "http://ixa2.si.ehu.eus/eiec/"
+        data_path = Path(flair.cache_root) / "datasets" / dataset_name
+        data_file = data_path / "named_ent_eu.train"
+        if not data_file.is_file():
+            cached_path(
+                f"{ner_basque_path}/eiec_v1.0.tgz", Path("datasets") / dataset_name
+            )
+            import tarfile, shutil
+
+            with tarfile.open(
+                Path(flair.cache_root) / "datasets" / dataset_name / "eiec_v1.0.tgz",
+                "r:gz",
+            ) as f_in:
+                corpus_files = (
+                    "eiec_v1.0/named_ent_eu.train",
+                    "eiec_v1.0/named_ent_eu.test",
+                )
+                for corpus_file in corpus_files:
+                    f_in.extract(corpus_file, data_path)
+                    shutil.move(f"{data_path}/{corpus_file}", data_path)
+
+        super(NER_BASQUE, self).__init__(
+            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
         )
 
 
 class UD_ENGLISH(UniversalDependenciesCorpus):
     def __init__(self, base_path=None):
-
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -591,7 +1060,6 @@ class UD_ENGLISH(UniversalDependenciesCorpus):
 
 class UD_GERMAN(UniversalDependenciesCorpus):
     def __init__(self, base_path=None):
-
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
