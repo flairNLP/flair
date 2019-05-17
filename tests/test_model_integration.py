@@ -7,8 +7,7 @@ from torch.optim.optimizer import Optimizer
 from torch.optim.adam import Adam
 
 import flair.datasets
-from flair.data import Dictionary, Sentence
-from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
+from flair.data import Dictionary, Sentence, MultiCorpus
 from flair.embeddings import (
     WordEmbeddings,
     TokenEmbeddings,
@@ -467,7 +466,6 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
 
 @pytest.mark.integration
 def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_path):
-
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "multi_class")
     label_dict = corpus.make_label_dictionary()
 
@@ -641,9 +639,12 @@ def test_train_language_model(results_base_path, resources_path):
 
 @pytest.mark.integration
 def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpora(
-        [NLPTask.FASHION, NLPTask.GERMEVAL], base_path=tasks_base_path
+    corpus_1 = flair.datasets.ColumnCorpus(
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
     )
+    corpus_2 = flair.datasets.GERMEVAL(base_path=tasks_base_path)
+
+    corpus = MultiCorpus([corpus_1, corpus_2])
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
     embeddings = WordEmbeddings("turian")
@@ -707,9 +708,12 @@ def test_train_resume_text_classification_training(results_base_path, tasks_base
 
 @pytest.mark.integration
 def test_train_resume_sequence_tagging_training(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpora(
-        [NLPTask.FASHION, NLPTask.GERMEVAL], base_path=tasks_base_path
+    corpus_1 = flair.datasets.ColumnCorpus(
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
     )
+    corpus_2 = flair.datasets.GERMEVAL(base_path=tasks_base_path)
+
+    corpus = MultiCorpus([corpus_1, corpus_2])
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
     embeddings = WordEmbeddings("turian")

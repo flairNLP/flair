@@ -19,7 +19,7 @@ class ColumnCorpus(Corpus):
         train_file=None,
         test_file=None,
         dev_file=None,
-        tag_to_biloes=None,
+        tag_to_bioes=None,
         in_memory: bool = True,
     ):
         """
@@ -30,7 +30,7 @@ class ColumnCorpus(Corpus):
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
-        :param tag_to_biloes: whether to convert to BILOES tagging scheme
+        :param tag_to_bioes: whether to convert to BIOES tagging scheme
         :return: a TaggedCorpus with annotated train, dev and test data
         """
 
@@ -75,13 +75,13 @@ class ColumnCorpus(Corpus):
 
         # get train data
         train = ColumnDataset(
-            train_file, column_format, tag_to_biloes, in_memory=in_memory
+            train_file, column_format, tag_to_bioes, in_memory=in_memory
         )
 
         # read in test file if exists, otherwise sample 10% of train data as test dataset
         if test_file is not None:
             test = ColumnDataset(
-                test_file, column_format, tag_to_biloes, in_memory=in_memory
+                test_file, column_format, tag_to_bioes, in_memory=in_memory
             )
         else:
             train_length = len(train)
@@ -93,7 +93,7 @@ class ColumnCorpus(Corpus):
         # read in dev file if exists, otherwise sample 10% of train data as dev dataset
         if dev_file is not None:
             dev = ColumnDataset(
-                dev_file, column_format, tag_to_biloes, in_memory=in_memory
+                dev_file, column_format, tag_to_bioes, in_memory=in_memory
             )
         else:
             train_length = len(train)
@@ -298,6 +298,10 @@ class ColumnDataset(Dataset):
                     if len(sentence) > 0:
                         sentence.infer_space_after()
                         if self.in_memory:
+                            if self.tag_to_bioes is not None:
+                                sentence.convert_tag_scheme(
+                                    tag_type=self.tag_to_bioes, target_scheme="iobes"
+                                )
                             self.sentences.append(sentence)
                         else:
                             self.indices.append(position)
@@ -347,6 +351,11 @@ class ColumnDataset(Dataset):
                     if line.strip().replace("﻿", "") == "":
                         if len(sentence) > 0:
                             sentence.infer_space_after()
+
+                            if self.tag_to_bioes is not None:
+                                sentence.convert_tag_scheme(
+                                    tag_type=self.tag_to_bioes, target_scheme="iobes"
+                                )
                             break
                     else:
                         fields: List[str] = re.split("\s+", line)
@@ -360,11 +369,6 @@ class ColumnDataset(Dataset):
 
                         sentence.add_token(token)
                     line = file.readline()
-
-        if self.tag_to_bioes is not None:
-            sentence.convert_tag_scheme(
-                tag_type=self.tag_to_bioes, target_scheme="iobes"
-            )
 
         return sentence
 
@@ -596,7 +600,7 @@ class ClassificationDataset(Dataset):
 
 class CONLL_03(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = True
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
     ):
 
         # column format
@@ -620,13 +624,13 @@ class CONLL_03(ColumnCorpus):
             log.warning("-" * 100)
 
         super(CONLL_03, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
 class CONLL_03_GERMAN(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = True
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
     ):
 
         # column format
@@ -650,13 +654,13 @@ class CONLL_03_GERMAN(ColumnCorpus):
             log.warning("-" * 100)
 
         super(CONLL_03_GERMAN, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
 class CONLL_03_DUTCH(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = True
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
     ):
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
@@ -676,13 +680,13 @@ class CONLL_03_DUTCH(ColumnCorpus):
         cached_path(f"{conll_02_path}ned.train", Path("datasets") / dataset_name)
 
         super(CONLL_03_DUTCH, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
 class CONLL_03_SPANISH(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = True
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
     ):
         # column format
         columns = {0: "text", 1: "ner"}
@@ -702,13 +706,13 @@ class CONLL_03_SPANISH(ColumnCorpus):
         cached_path(f"{conll_02_path}esp.train", Path("datasets") / dataset_name)
 
         super(CONLL_03_SPANISH, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
 class WNUT_17(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = True
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
     ):
         # column format
         columns = {0: "text", 1: "ner"}
@@ -730,13 +734,13 @@ class WNUT_17(ColumnCorpus):
         )
 
         super(WNUT_17, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
 class CONLL_2000(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "np", in_memory: bool = True
+        self, base_path=None, tag_to_bioes: str = "np", in_memory: bool = True
     ):
 
         # column format
@@ -781,7 +785,7 @@ class CONLL_2000(ColumnCorpus):
                     shutil.copyfileobj(f_in, f_out)
 
         super(CONLL_2000, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
@@ -829,7 +833,7 @@ def _download_wikiner(language_code: str, dataset_name: str):
 
 class WIKINER_ENGLISH(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
     ):
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
@@ -846,13 +850,13 @@ class WIKINER_ENGLISH(ColumnCorpus):
         _download_wikiner("en", dataset_name)
 
         super(WIKINER_ENGLISH, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
 class WIKINER_GERMAN(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
     ):
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
@@ -869,13 +873,13 @@ class WIKINER_GERMAN(ColumnCorpus):
         _download_wikiner("en", dataset_name)
 
         super(WIKINER_GERMAN, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
 class WIKINER_DUTCH(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
     ):
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
@@ -892,13 +896,13 @@ class WIKINER_DUTCH(ColumnCorpus):
         _download_wikiner("nl", dataset_name)
 
         super(WIKINER_DUTCH, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
 class WIKINER_FRENCH(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
     ):
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
@@ -915,13 +919,13 @@ class WIKINER_FRENCH(ColumnCorpus):
         _download_wikiner("fr", dataset_name)
 
         super(WIKINER_FRENCH, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
 class WIKINER_ITALIAN(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
     ):
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
@@ -938,13 +942,13 @@ class WIKINER_ITALIAN(ColumnCorpus):
         _download_wikiner("it", dataset_name)
 
         super(WIKINER_ITALIAN, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
 class WIKINER_SPANISH(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
     ):
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
@@ -961,13 +965,13 @@ class WIKINER_SPANISH(ColumnCorpus):
         _download_wikiner("es", dataset_name)
 
         super(WIKINER_SPANISH, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
 class WIKINER_PORTUGUESE(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
     ):
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
@@ -984,13 +988,13 @@ class WIKINER_PORTUGUESE(ColumnCorpus):
         _download_wikiner("pt", dataset_name)
 
         super(WIKINER_PORTUGUESE, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
 class WIKINER_POLISH(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
     ):
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
@@ -1007,13 +1011,13 @@ class WIKINER_POLISH(ColumnCorpus):
         _download_wikiner("pl", dataset_name)
 
         super(WIKINER_POLISH, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
 class WIKINER_RUSSIAN(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = False
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
     ):
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
@@ -1030,13 +1034,13 @@ class WIKINER_RUSSIAN(ColumnCorpus):
         _download_wikiner("ru", dataset_name)
 
         super(WIKINER_RUSSIAN, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
 class GERMEVAL(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = True
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
     ):
 
         # column format
@@ -1059,13 +1063,13 @@ class GERMEVAL(ColumnCorpus):
             )
             log.warning("-" * 100)
         super(GERMEVAL, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
 class NER_BASQUE(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_biloes: str = "ner", in_memory: bool = True
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
     ):
 
         # column format
@@ -1102,7 +1106,7 @@ class NER_BASQUE(ColumnCorpus):
                     shutil.move(f"{data_path}/{corpus_file}", data_path)
 
         super(NER_BASQUE, self).__init__(
-            data_folder, columns, tag_to_biloes=tag_to_biloes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
