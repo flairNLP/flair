@@ -10,7 +10,7 @@ from collections import defaultdict
 from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, random_split
 from torch.utils.data.dataset import ConcatDataset
 
 log = logging.getLogger("flair")
@@ -720,18 +720,11 @@ class Corpus:
         tokens = [token for sublist in tokens for token in sublist]
         return list(map((lambda t: t.text), tokens))
 
-    def _downsample_to_proportion(self, list: List, proportion: float):
+    def _downsample_to_proportion(self, dataset: Dataset, proportion: float):
 
-        counter = 0.0
-        last_counter = None
-        downsampled: List = []
-
-        for item in list:
-            counter += proportion
-            if int(counter) != last_counter:
-                downsampled.append(item)
-                last_counter = int(counter)
-        return downsampled
+        sampled_size: int = round(len(dataset) * proportion)
+        splits = random_split(dataset, [len(dataset) - sampled_size, sampled_size])
+        return splits[1]
 
     def obtain_statistics(
         self, tag_type: str = None, pretty_print: bool = True
@@ -804,7 +797,7 @@ class Corpus:
         return tag_to_count
 
     def __str__(self) -> str:
-        return "TaggedCorpus: %d train + %d dev + %d test sentences" % (
+        return "Corpus: %d train + %d dev + %d test sentences" % (
             len(self.train),
             len(self.dev),
             len(self.test),
