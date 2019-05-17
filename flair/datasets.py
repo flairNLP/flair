@@ -1320,3 +1320,196 @@ class UD_SWEDISH(UniversalDependenciesCorpus):
         )
 
         super(UD_SWEDISH, self).__init__(data_folder)
+
+
+class UD_DANISH(UniversalDependenciesCorpus):
+    def __init__(self, base_path=None):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Danish-DDT/master"
+        cached_path(f"{ud_path}/da_ddt-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/da_ddt-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(
+            f"{ud_path}/da_ddt-ud-train.conllu", Path("datasets") / dataset_name
+        )
+
+        super(UD_DANISH, self).__init__(data_folder)
+
+
+class UD_NORWEGIAN(UniversalDependenciesCorpus):
+    def __init__(self, base_path=None):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Norwegian-Bokmaal/master"
+        cached_path(
+            f"{ud_path}/no_bokmaal-ud-dev.conllu", Path("datasets") / dataset_name
+        )
+        cached_path(
+            f"{ud_path}/no_bokmaal-ud-test.conllu", Path("datasets") / dataset_name
+        )
+        cached_path(
+            f"{ud_path}/no_bokmaal-ud-train.conllu", Path("datasets") / dataset_name
+        )
+
+        super(UD_NORWEGIAN, self).__init__(data_folder)
+
+
+class UD_FINNISH(UniversalDependenciesCorpus):
+    def __init__(self, base_path=None):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Finnish-TDT/master"
+        cached_path(f"{ud_path}/fi_tdt-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/fi_tdt-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(
+            f"{ud_path}/fi_tdt-ud-train.conllu", Path("datasets") / dataset_name
+        )
+
+        super(UD_FINNISH, self).__init__(data_folder)
+
+
+class UD_SLOVENIAN(UniversalDependenciesCorpus):
+    def __init__(self, base_path=None):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Slovenian-SSJ/master"
+        cached_path(f"{ud_path}/sl_ssj-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/sl_ssj-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(
+            f"{ud_path}/sl_ssj-ud-train.conllu", Path("datasets") / dataset_name
+        )
+
+        super(UD_SLOVENIAN, self).__init__(data_folder)
+
+
+class UD_CROATIAN(UniversalDependenciesCorpus):
+    def __init__(self, base_path=None):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Croatian-SET/master"
+        cached_path(f"{ud_path}/hr_set-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/hr_set-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(
+            f"{ud_path}/hr_set-ud-train.conllu", Path("datasets") / dataset_name
+        )
+
+        super(UD_CROATIAN, self).__init__(data_folder)
+
+
+class UD_SERBIAN(UniversalDependenciesCorpus):
+    def __init__(self, base_path=None):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Serbian-SET/master"
+        cached_path(f"{ud_path}/sr_set-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/sr_set-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(
+            f"{ud_path}/sr_set-ud-train.conllu", Path("datasets") / dataset_name
+        )
+
+        super(UD_SERBIAN, self).__init__(data_folder)
+
+
+class UD_BULGARIAN(UniversalDependenciesCorpus):
+    def __init__(self, base_path=None):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Bulgarian-BTB/master"
+        cached_path(f"{ud_path}/bg_btb-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/bg_btb-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(
+            f"{ud_path}/bg_btb-ud-train.conllu", Path("datasets") / dataset_name
+        )
+
+        super(UD_BULGARIAN, self).__init__(data_folder)
+
+
+class UD_ARABIC(UniversalDependenciesCorpus):
+    def __init__(self, base_path=None):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Arabic-PADT/master"
+        cached_path(f"{ud_path}/ar_padt-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(
+            f"{ud_path}/ar_padt-ud-test.conllu", Path("datasets") / dataset_name
+        )
+        cached_path(
+            f"{ud_path}/ar_padt-ud-train.conllu", Path("datasets") / dataset_name
+        )
+        super(UD_ARABIC, self).__init__(data_folder)
+
+
+class UD_HEBREW(UniversalDependenciesCorpus):
+    def __init__(self, base_path=None):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Hebrew-HTB/master"
+        cached_path(f"{ud_path}/he_htb-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{ud_path}/he_htb-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(
+            f"{ud_path}/he_htb-ud-train.conllu", Path("datasets") / dataset_name
+        )
+        super(UD_HEBREW, self).__init__(data_folder)
