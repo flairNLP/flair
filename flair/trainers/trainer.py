@@ -62,6 +62,7 @@ class ModelTrainer:
         anneal_with_restarts: bool = False,
         shuffle: bool = True,
         param_selection_mode: bool = False,
+        num_workers: int = 8,
         **kwargs,
     ) -> dict:
 
@@ -179,7 +180,7 @@ class ModelTrainer:
                     train_data,
                     batch_size=mini_batch_size,
                     shuffle=shuffle,
-                    num_workers=4,
+                    num_workers=num_workers,
                     collate_fn=list,
                 )
 
@@ -411,7 +412,7 @@ class ModelTrainer:
             train_data,
             batch_size=mini_batch_size,
             shuffle=True,
-            num_workers=4,
+            num_workers=8,
             collate_fn=list,
         )
 
