@@ -2,12 +2,26 @@ import shutil
 from pathlib import Path
 
 import flair
-from flair.data_fetcher import NLPTask, NLPTaskDataFetcher
+import flair.datasets
+from flair.data import MultiCorpus
 
 
 def test_load_imdb_data(tasks_base_path):
     # get training, test and dev data
-    corpus = NLPTaskDataFetcher.load_corpus("imdb", tasks_base_path)
+    corpus = flair.datasets.ClassificationCorpus(
+        tasks_base_path / "imdb", in_memory=True
+    )
+
+    assert len(corpus.train) == 5
+    assert len(corpus.dev) == 5
+    assert len(corpus.test) == 5
+
+
+def test_load_imdb_data_streaming(tasks_base_path):
+    # get training, test and dev data
+    corpus = flair.datasets.ClassificationCorpus(
+        tasks_base_path / "imdb", in_memory=False
+    )
 
     assert len(corpus.train) == 5
     assert len(corpus.dev) == 5
@@ -16,7 +30,7 @@ def test_load_imdb_data(tasks_base_path):
 
 def test_load_ag_news_data(tasks_base_path):
     # get training, test and dev data
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.AG_NEWS, tasks_base_path)
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "ag_news")
 
     assert len(corpus.train) == 10
     assert len(corpus.dev) == 10
@@ -25,7 +39,9 @@ def test_load_ag_news_data(tasks_base_path):
 
 def test_load_sequence_labeling_data(tasks_base_path):
     # get training, test and dev data
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, tasks_base_path)
+    corpus = flair.datasets.ColumnCorpus(
+        tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+    )
 
     assert len(corpus.train) == 6
     assert len(corpus.dev) == 1
@@ -34,7 +50,7 @@ def test_load_sequence_labeling_data(tasks_base_path):
 
 def test_load_germeval_data(tasks_base_path):
     # get training, test and dev data
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.GERMEVAL, tasks_base_path)
+    corpus = flair.datasets.GERMEVAL(tasks_base_path)
 
     assert len(corpus.train) == 2
     assert len(corpus.dev) == 1
@@ -43,7 +59,7 @@ def test_load_germeval_data(tasks_base_path):
 
 def test_load_ud_english_data(tasks_base_path):
     # get training, test and dev data
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH, tasks_base_path)
+    corpus = flair.datasets.UD_ENGLISH(tasks_base_path)
 
     assert len(corpus.train) == 6
     assert len(corpus.test) == 4
@@ -52,8 +68,8 @@ def test_load_ud_english_data(tasks_base_path):
 
 def test_load_no_dev_data(tasks_base_path):
     # get training, test and dev data
-    corpus = NLPTaskDataFetcher.load_column_corpus(
-        tasks_base_path / "fashion_nodev", {0: "text", 2: "ner"}
+    corpus = flair.datasets.ColumnCorpus(
+        tasks_base_path / "fashion_nodev", column_format={0: "text", 2: "ner"}
     )
 
     assert len(corpus.train) == 5
@@ -63,9 +79,9 @@ def test_load_no_dev_data(tasks_base_path):
 
 def test_load_no_dev_data_explicit(tasks_base_path):
     # get training, test and dev data
-    corpus = NLPTaskDataFetcher.load_column_corpus(
+    corpus = flair.datasets.ColumnCorpus(
         tasks_base_path / "fashion_nodev",
-        {0: "text", 2: "ner"},
+        column_format={0: "text", 2: "ner"},
         train_file="train.tsv",
         test_file="test.tsv",
     )
@@ -76,10 +92,14 @@ def test_load_no_dev_data_explicit(tasks_base_path):
 
 
 def test_multi_corpus(tasks_base_path):
-    # get two corpora as one
-    corpus = NLPTaskDataFetcher.load_corpora(
-        [NLPTask.FASHION, NLPTask.GERMEVAL], tasks_base_path
+
+    corpus_1 = flair.datasets.GERMEVAL(tasks_base_path)
+
+    corpus_2 = flair.datasets.ColumnCorpus(
+        tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
     )
+    # get two corpora as one
+    corpus = MultiCorpus([corpus_1, corpus_2])
 
     assert len(corpus.train) == 8
     assert len(corpus.dev) == 2
@@ -88,7 +108,7 @@ def test_multi_corpus(tasks_base_path):
 
 def test_download_load_data(tasks_base_path):
     # get training, test and dev data for full English UD corpus from web
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH)
+    corpus = flair.datasets.UD_ENGLISH()
 
     assert len(corpus.train) == 12543
     assert len(corpus.dev) == 2002

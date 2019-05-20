@@ -4,7 +4,6 @@ import pytest
 from hyperopt import hp
 from torch.optim import SGD
 
-from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 from flair.embeddings import WordEmbeddings, StackedEmbeddings, FlairEmbeddings
 from flair.hyperparameter import (
     SearchSpace,
@@ -12,12 +11,14 @@ from flair.hyperparameter import (
     SequenceTaggerParamSelector,
     TextClassifierParamSelector,
 )
-from flair.optim import AdamW
+import flair.datasets
 
 
 @pytest.mark.integration
 def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus(NLPTask.FASHION, base_path=tasks_base_path)
+    corpus = flair.datasets.ColumnCorpus(
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+    )
 
     # define search space
     search_space = SearchSpace()
@@ -66,7 +67,7 @@ def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_text_classifier_param_selector(results_base_path, tasks_base_path):
-    corpus = NLPTaskDataFetcher.load_corpus("imdb", base_path=tasks_base_path)
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
 
     glove_embedding: WordEmbeddings = WordEmbeddings("glove")
 

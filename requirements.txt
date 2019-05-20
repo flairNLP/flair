@@ -13,3 +13,4 @@ pytorch-pretrained-bert>=0.6.1
 bpemb>=0.2.9
 regex
 tabulate
+urllib3<1.25,>=1.20

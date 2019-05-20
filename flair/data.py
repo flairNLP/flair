@@ -10,7 +10,8 @@ from collections import defaultdict
 from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
-
+from torch.utils.data import Dataset, random_split
+from torch.utils.data.dataset import ConcatDataset
 
 log = logging.getLogger("flair")
 
@@ -653,68 +654,24 @@ class Sentence:
 
 
 class Corpus:
-    @property
-    @abstractmethod
-    def train(self) -> List[Sentence]:
-        pass
-
-    @property
-    @abstractmethod
-    def dev(self) -> List[Sentence]:
-        pass
-
-    @property
-    @abstractmethod
-    def test(self) -> List[Sentence]:
-        pass
-
-    @abstractmethod
-    def downsample(self, percentage: float = 0.1, only_downsample_train=False):
-        """Downsamples this corpus to a percentage of the sentences."""
-        pass
-
-    @abstractmethod
-    def get_all_sentences(self) -> List[Sentence]:
-        """Gets all sentences in the corpus (train, dev and test splits together)."""
-        pass
-
-    @abstractmethod
-    def make_tag_dictionary(self, tag_type: str) -> Dictionary:
-        """Produces a dictionary of token tags of tag_type."""
-        pass
-
-    @abstractmethod
-    def make_label_dictionary(self) -> Dictionary:
-        """
-        Creates a dictionary of all labels assigned to the sentences in the corpus.
-        :return: dictionary of labels
-        """
-        pass
-
-
-class TaggedCorpus(Corpus):
     def __init__(
-        self,
-        train: List[Sentence],
-        dev: List[Sentence],
-        test: List[Sentence],
-        name: str = "corpus",
+        self, train: Dataset, dev: Dataset, test: Dataset, name: str = "corpus"
     ):
-        self._train: List[Sentence] = train
-        self._dev: List[Sentence] = dev
-        self._test: List[Sentence] = test
+        self._train: Dataset = train
+        self._dev: Dataset = dev
+        self._test: Dataset = test
         self.name: str = name
 
     @property
-    def train(self) -> List[Sentence]:
+    def train(self) -> Dataset:
         return self._train
 
     @property
-    def dev(self) -> List[Sentence]:
+    def dev(self) -> Dataset:
         return self._dev
 
     @property
-    def test(self) -> List[Sentence]:
+    def test(self) -> Dataset:
         return self._test
 
     def downsample(self, percentage: float = 0.1, only_downsample_train=False):
@@ -725,39 +682,6 @@ class TaggedCorpus(Corpus):
             self._test = self._downsample_to_proportion(self.test, percentage)
 
         return self
-
-    def get_all_sentences(self) -> List[Sentence]:
-        all_sentences: List[Sentence] = []
-        all_sentences.extend(self.train)
-        all_sentences.extend(self.dev)
-        all_sentences.extend(self.test)
-        return all_sentences
-
-    def make_tag_dictionary(self, tag_type: str) -> Dictionary:
-
-        # Make the tag dictionary
-        tag_dictionary: Dictionary = Dictionary()
-        tag_dictionary.add_item("O")
-        for sentence in self.get_all_sentences():
-            for token in sentence.tokens:
-                tag_dictionary.add_item(token.get_tag(tag_type).value)
-        tag_dictionary.add_item("<START>")
-        tag_dictionary.add_item("<STOP>")
-        return tag_dictionary
-
-    def make_label_dictionary(self) -> Dictionary:
-        """
-        Creates a dictionary of all labels assigned to the sentences in the corpus.
-        :return: dictionary of labels
-        """
-
-        labels = set(self._get_all_label_names())
-
-        label_dictionary: Dictionary = Dictionary(add_unk=False)
-        for label in labels:
-            label_dictionary.add_item(label)
-
-        return label_dictionary
 
     def make_vocab_dictionary(self, max_tokens=-1, min_freq=1) -> Dictionary:
         """
@@ -791,26 +715,16 @@ class TaggedCorpus(Corpus):
             tokens.append(token)
         return tokens
 
-    def _get_all_label_names(self) -> List[str]:
-        return [label.value for sent in self.train for label in sent.labels]
-
     def _get_all_tokens(self) -> List[str]:
         tokens = list(map((lambda s: s.tokens), self.train))
         tokens = [token for sublist in tokens for token in sublist]
         return list(map((lambda t: t.text), tokens))
 
-    def _downsample_to_proportion(self, list: List, proportion: float):
+    def _downsample_to_proportion(self, dataset: Dataset, proportion: float):
 
-        counter = 0.0
-        last_counter = None
-        downsampled: List = []
-
-        for item in list:
-            counter += proportion
-            if int(counter) != last_counter:
-                downsampled.append(item)
-                last_counter = int(counter)
-        return downsampled
+        sampled_size: int = round(len(dataset) * proportion)
+        splits = random_split(dataset, [len(dataset) - sampled_size, sampled_size])
+        return splits[1]
 
     def obtain_statistics(
         self, tag_type: str = None, pretty_print: bool = True
@@ -835,9 +749,9 @@ class TaggedCorpus(Corpus):
         if len(sentences) == 0:
             return {}
 
-        classes_to_count = TaggedCorpus._get_class_to_count(sentences)
-        tags_to_count = TaggedCorpus._get_tag_to_count(sentences, tag_type)
-        tokens_per_sentence = TaggedCorpus._get_tokens_per_sentence(sentences)
+        classes_to_count = Corpus._get_class_to_count(sentences)
+        tags_to_count = Corpus._get_tag_to_count(sentences, tag_type)
+        tokens_per_sentence = Corpus._get_tokens_per_sentence(sentences)
 
         label_size_dict = {}
         for l, c in classes_to_count.items():
@@ -883,11 +797,54 @@ class TaggedCorpus(Corpus):
         return tag_to_count
 
     def __str__(self) -> str:
-        return "TaggedCorpus: %d train + %d dev + %d test sentences" % (
+        return "Corpus: %d train + %d dev + %d test sentences" % (
             len(self.train),
             len(self.dev),
             len(self.test),
         )
+
+    def make_label_dictionary(self) -> Dictionary:
+        """
+        Creates a dictionary of all labels assigned to the sentences in the corpus.
+        :return: dictionary of labels
+        """
+        labels = set([label.value for sent in self.train for label in sent.labels])
+
+        label_dictionary: Dictionary = Dictionary(add_unk=False)
+        for label in labels:
+            label_dictionary.add_item(label)
+
+        return label_dictionary
+
+    def get_all_sentences(self) -> Dataset:
+        return ConcatDataset([self.train, self.dev, self.test])
+
+    def make_tag_dictionary(self, tag_type: str) -> Dictionary:
+
+        # Make the tag dictionary
+        tag_dictionary: Dictionary = Dictionary()
+        tag_dictionary.add_item("O")
+        for sentence in self.get_all_sentences():
+            for token in sentence.tokens:
+                tag_dictionary.add_item(token.get_tag(tag_type).value)
+        tag_dictionary.add_item("<START>")
+        tag_dictionary.add_item("<STOP>")
+        return tag_dictionary
+
+
+class MultiCorpus(Corpus):
+    def __init__(self, corpora: List[Corpus], name: str = "multicorpus"):
+        self.corpora: List[Corpus] = corpora
+
+        super(MultiCorpus, self).__init__(
+            ConcatDataset([corpus.train for corpus in self.corpora]),
+            ConcatDataset([corpus.dev for corpus in self.corpora]),
+            ConcatDataset([corpus.test for corpus in self.corpora]),
+            name=name,
+        )
+
+    def __str__(self):
+        return "\n".join([str(corpus) for corpus in self.corpora])
 
 
 def iob2(tags):
@@ -933,69 +890,3 @@ def iob_iobes(tags):
         else:
             raise Exception("Invalid IOB format!")
     return new_tags
-
-
-class MultiCorpus(Corpus):
-    def __init__(self, corpora: List[TaggedCorpus]):
-        self.corpora: List[TaggedCorpus] = corpora
-
-    @property
-    def train(self) -> List[Sentence]:
-        train: List[Sentence] = []
-        for corpus in self.corpora:
-            train.extend(corpus.train)
-        return train
-
-    @property
-    def dev(self) -> List[Sentence]:
-        dev: List[Sentence] = []
-        for corpus in self.corpora:
-            dev.extend(corpus.dev)
-        return dev
-
-    @property
-    def test(self) -> List[Sentence]:
-        test: List[Sentence] = []
-        for corpus in self.corpora:
-            test.extend(corpus.test)
-        return test
-
-    def __str__(self):
-        return "\n".join([str(corpus) for corpus in self.corpora])
-
-    def get_all_sentences(self) -> List[Sentence]:
-        sentences = []
-        for corpus in self.corpora:
-            sentences.extend(corpus.get_all_sentences())
-        return sentences
-
-    def downsample(self, percentage: float = 0.1, only_downsample_train=False):
-
-        for corpus in self.corpora:
-            corpus.downsample(percentage, only_downsample_train)
-
-        return self
-
-    def make_tag_dictionary(self, tag_type: str) -> Dictionary:
-
-        # Make the tag dictionary
-        tag_dictionary: Dictionary = Dictionary()
-        tag_dictionary.add_item("O")
-        for corpus in self.corpora:
-            for sentence in corpus.get_all_sentences():
-                for token in sentence.tokens:
-                    tag_dictionary.add_item(token.get_tag(tag_type).value)
-        tag_dictionary.add_item("<START>")
-        tag_dictionary.add_item("<STOP>")
-        return tag_dictionary
-
-    def make_label_dictionary(self) -> Dictionary:
-
-        label_dictionary: Dictionary = Dictionary(add_unk=False)
-        for corpus in self.corpora:
-            labels = set(corpus._get_all_label_names())
-
-            for label in labels:
-                label_dictionary.add_item(label)
-
-        return label_dictionary
