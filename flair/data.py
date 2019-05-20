@@ -25,6 +25,7 @@ class Dictionary:
         # init dictionaries
         self.item2idx: Dict[str, int] = {}
         self.idx2item: List[str] = []
+        self.multi_label: bool = False
 
         # in order to deal with unknown tokens, add <unk>
         if add_unk:
@@ -809,10 +810,15 @@ class Corpus:
         :return: dictionary of labels
         """
         labels = set([label.value for sent in self.train for label in sent.labels])
-
+        log.info(labels)
         label_dictionary: Dictionary = Dictionary(add_unk=False)
         for label in labels:
             label_dictionary.add_item(label)
+
+        max_labels = max([len(sent.labels) for sent in self.train])
+        log.info(max_labels)
+        if max_labels > 1:
+            label_dictionary.multi_label = True
 
         return label_dictionary
 
