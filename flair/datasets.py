@@ -386,10 +386,6 @@ class UniversalDependenciesDataset(Dataset):
         else:
             self.indices: List[int] = []
 
-        # lines: List[str] = open(
-        #     path_to_conll_file, encoding="utf-8"
-        # ).read().strip().split("\n")
-
         with open(str(self.path_to_conll_file), encoding="utf-8") as file:
 
             line = file.readline()
@@ -532,28 +528,37 @@ class ClassificationDataset(Dataset):
 
         self.path_to_file = path_to_file
 
-        # self.file = open(str(path_to_file), encoding="utf-8")
-
         with open(str(path_to_file), encoding="utf-8") as f:
             line = f.readline()
             position = 0
             while line:
-                sentence = self._parse_line_to_sentence(
-                    line, self.label_prefix, use_tokenizer
-                )
+                if "__label__" not in line:
+                    position = f.tell()
+                    # print(line)
+                    line = f.readline()
+                    continue
 
-                if (
-                    sentence is not None
-                    and len(sentence) > max_tokens_per_doc
-                    and max_tokens_per_doc > 0
-                ):
-                    sentence.tokens = sentence.tokens[:max_tokens_per_doc]
-                if sentence is not None and len(sentence.tokens) > 0:
-                    if self.in_memory:
+                # print(self.in_memory)
+                if self.in_memory:
+                    sentence = self._parse_line_to_sentence(
+                        line, self.label_prefix, use_tokenizer
+                    )
+                    if (
+                        sentence is not None
+                        and len(sentence) > max_tokens_per_doc
+                        and max_tokens_per_doc > 0
+                    ):
+                        sentence.tokens = sentence.tokens[:max_tokens_per_doc]
+                    if sentence is not None and len(sentence.tokens) > 0:
                         self.sentences.append(sentence)
-                    else:
-                        self.indices.append(position)
-                    self.total_sentence_count += 1
+                else:
+                    # print('appending')
+                    self.indices.append(position)
+
+                # print('counting')
+                self.total_sentence_count += 1
+                if self.total_sentence_count % 10000 == 0:
+                    print(self.total_sentence_count)
 
                 position = f.tell()
                 line = f.readline()
