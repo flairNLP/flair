@@ -345,81 +345,6 @@ class WordEmbeddings(TokenEmbeddings):
         return f"'{self.embeddings}'"
 
 
-class FineTuneWordEmbeddings(WordEmbeddings):
-    def __init__(self, embeddings, fine_tune_mode="nonlinear"):
-
-        super().__init__(embeddings=embeddings)
-
-        self.name = f"{self.name}-{fine_tune_mode}"
-
-        self.fine_tune_mode = fine_tune_mode
-        if self.fine_tune_mode in ["nonlinear", "linear"]:
-            self.embedding_flex = torch.nn.Linear(
-                self.embedding_length, self.embedding_length, bias=False
-            )
-            self.embedding_flex.weight.data.copy_(torch.eye(self.embedding_length))
-
-        if self.fine_tune_mode in ["nonlinear"]:
-            self.embedding_flex_nonlinear = torch.nn.ReLU(self.embedding_length)
-            self.embedding_flex_nonlinear_map = torch.nn.Linear(
-                self.embedding_length, self.embedding_length
-            )
-            # torch.nn.init.xavier_uniform_(self.embedding_flex_nonlinear_map.weight)
-
-        self.static_embeddings = False
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
-        for i, sentence in enumerate(sentences):
-
-            word_embeddings = []
-
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-
-                if "field" not in self.__dict__ or self.field is None:
-                    word = token.text
-                else:
-                    word = token.get_tag(self.field).value
-
-                if word in self.precomputed_word_embeddings:
-                    word_embedding = self.precomputed_word_embeddings[word]
-                elif word.lower() in self.precomputed_word_embeddings:
-                    word_embedding = self.precomputed_word_embeddings[word.lower()]
-                elif (
-                    re.sub(r"\d", "#", word.lower()) in self.precomputed_word_embeddings
-                ):
-                    word_embedding = self.precomputed_word_embeddings[
-                        re.sub(r"\d", "#", word.lower())
-                    ]
-                elif (
-                    re.sub(r"\d", "0", word.lower()) in self.precomputed_word_embeddings
-                ):
-                    word_embedding = self.precomputed_word_embeddings[
-                        re.sub(r"\d", "0", word.lower())
-                    ]
-                else:
-                    word_embedding = np.zeros(self.embedding_length, dtype="float")
-
-                word_embeddings.append(torch.FloatTensor(word_embedding).unsqueeze(0))
-
-            word_embeddings = torch.cat(word_embeddings, dim=0).to(flair.device)
-
-            if self.fine_tune_mode in ["nonlinear", "linear"]:
-                word_embeddings = self.embedding_flex(word_embeddings)
-
-            if self.fine_tune_mode in ["nonlinear"]:
-                word_embeddings = self.embedding_flex_nonlinear(word_embeddings)
-                word_embeddings = self.embedding_flex_nonlinear_map(word_embeddings)
-
-            if self.static_embeddings:
-                word_embeddings = word_embeddings.detach()
-
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                token.set_embedding(self.name, word_embeddings[token_idx])
-
-        return sentences
-
-
 class OneHotEmbeddings(TokenEmbeddings):
     """One-hot encoded embeddings."""
 
@@ -434,6 +359,7 @@ class OneHotEmbeddings(TokenEmbeddings):
         super().__init__()
         self.name = "one-hot"
         self.static_embeddings = False
+        self.min_freq = min_freq
 
         tokens = list(map((lambda s: s.tokens), corpus.train))
         tokens = [token for sublist in tokens for token in sublist]
@@ -502,6 +428,9 @@ class OneHotEmbeddings(TokenEmbeddings):
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
+
+    def extra_repr(self):
+        return "min_freq={}".format(self.min_freq)
 
 
 class BPEmbSerializable(BPEmb):
@@ -590,6 +519,9 @@ class BytePairEmbeddings(TokenEmbeddings):
 
     def __str__(self):
         return self.name
+
+    def extra_repr(self):
+        return "model={}".format(self.name)
 
 
 class ELMoEmbeddings(TokenEmbeddings):
