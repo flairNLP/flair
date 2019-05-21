@@ -532,13 +532,11 @@ class ClassificationDataset(Dataset):
             line = f.readline()
             position = 0
             while line:
-                if "__label__" not in line:
+                if "__label__" not in line or " " not in line:
                     position = f.tell()
-                    # print(line)
                     line = f.readline()
                     continue
 
-                # print(self.in_memory)
                 if self.in_memory:
                     sentence = self._parse_line_to_sentence(
                         line, self.label_prefix, use_tokenizer
@@ -551,14 +549,10 @@ class ClassificationDataset(Dataset):
                         sentence.tokens = sentence.tokens[:max_tokens_per_doc]
                     if sentence is not None and len(sentence.tokens) > 0:
                         self.sentences.append(sentence)
+                        self.total_sentence_count += 1
                 else:
-                    # print('appending')
                     self.indices.append(position)
-
-                # print('counting')
-                self.total_sentence_count += 1
-                if self.total_sentence_count % 10000 == 0:
-                    print(self.total_sentence_count)
+                    self.total_sentence_count += 1
 
                 position = f.tell()
                 line = f.readline()
