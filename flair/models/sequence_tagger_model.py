@@ -282,7 +282,7 @@ class SequenceTagger(flair.nn.Model):
                     batch, also_clear_word_embeddings=not embeddings_in_memory
                 )
 
-            eval_loss /= len(sentences)
+            eval_loss /= batch_no
 
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
@@ -499,7 +499,7 @@ class SequenceTagger(flair.nn.Model):
 
             score = forward_score - gold_score
 
-            return score.sum()
+            return score.mean()
 
         else:
             score = 0
@@ -511,7 +511,7 @@ class SequenceTagger(flair.nn.Model):
                 score += torch.nn.functional.cross_entropy(
                     sentence_feats, sentence_tags
                 )
-
+            score /= len(features)
             return score
 
     def _obtain_labels(self, feature, sentences) -> List[List[Label]]:
@@ -829,9 +829,11 @@ class SequenceTagger(flair.nn.Model):
         data = []
         for to_idx, row in enumerate(self.transitions):
             for from_idx, column in enumerate(row):
-                row = [self.tag_dictionary.get_item_for_index(from_idx),
-                       self.tag_dictionary.get_item_for_index(to_idx),
-                       column.item()]
+                row = [
+                    self.tag_dictionary.get_item_for_index(from_idx),
+                    self.tag_dictionary.get_item_for_index(to_idx),
+                    column.item(),
+                ]
                 data.append(row)
             data.append(["----"])
-        print(tabulate(data, headers=['FROM', 'TO', 'SCORE']))
+        print(tabulate(data, headers=["FROM", "TO", "SCORE"]))
