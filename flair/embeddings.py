@@ -2248,11 +2248,11 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
                 if embedding.is_forward_lm:
                     sentence.set_embedding(
                         embedding.name,
-                        sentence[len(sentence)]._embeddings[embedding.name],
+                        sentence[len(sentence)-1]._embeddings[embedding.name],
                     )
                 else:
                     sentence.set_embedding(
-                        embedding.name, sentence[1]._embeddings[embedding.name]
+                        embedding.name, sentence[0]._embeddings[embedding.name]
                     )
 
         return sentences
