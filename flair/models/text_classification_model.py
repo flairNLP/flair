@@ -66,15 +66,15 @@ class TextClassifier(flair.nn.Model):
 
             for item in distribution:
                 # proportion = distribution[item] / total_count
-                proportion = math.sqrt(
+                proportion = math.log(
                     (total_count - distribution[item]) / distribution[item]
                 )
 
                 pos_weight[self.label_dictionary.get_idx_for_item(item)] = proportion
 
-            # print(pos_weight)
+            print(pos_weight)
 
-            self.loss_function = nn.BCEWithLogitsLoss()
+            self.loss_function = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
         else:
             self.loss_function = nn.CrossEntropyLoss()
 
