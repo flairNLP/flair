@@ -172,6 +172,7 @@ class WordEmbeddings(TokenEmbeddings):
         :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or custom
         If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
         """
+        self.embeddings = embeddings
 
         old_base_path = (
             "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/"
@@ -339,6 +340,9 @@ class WordEmbeddings(TokenEmbeddings):
 
     def __str__(self):
         return self.name
+
+    def extra_repr(self):
+        return f"'{self.embeddings}'"
 
 
 class FineTuneWordEmbeddings(WordEmbeddings):
@@ -2056,6 +2060,9 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
+
+    def extra_repr(self):
+        return f"fine_tune_mode={self.fine_tune_mode}, pooling={self.pooling}"
 
 
 class DocumentRNNEmbeddings(DocumentEmbeddings):
