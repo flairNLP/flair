@@ -1859,3 +1859,57 @@ class UD_BASQUE(UniversalDependenciesCorpus):
         )
 
         super(UD_BASQUE, self).__init__(data_folder, in_memory=in_memory)
+
+
+class TREC_6(ClassificationCorpus):
+    def __init__(self, base_path=None, in_memory: bool = True):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        trec_path = "http://cogcomp.org/Data/QA/QC/"
+
+        original_filenames = ["train_5500.label", "TREC_10.label"]
+        new_filenames = ["train.txt", "test.txt"]
+        for original_filename in original_filenames:
+            cached_path(
+                f"{trec_path}{original_filename}",
+                Path("datasets") / dataset_name / "original",
+            )
+
+        data_file = data_folder / new_filenames[0]
+
+        if not data_file.is_file():
+            for original_filename, new_filename in zip(
+                original_filenames, new_filenames
+            ):
+                with open(
+                    data_folder / "original" / original_filename,
+                    "rt",
+                    encoding="latin1",
+                ) as open_fp:
+                    with open(
+                        data_folder / new_filename, "wt", encoding="utf-8"
+                    ) as write_fp:
+                        for line in open_fp:
+                            line = line.rstrip()
+                            fields = line.split()
+                            old_label = fields[0]
+                            question = " ".join(fields[1:])
+
+                            # Create flair compatible labels
+                            # TREC-6 : NUM:dist -> __label__NUM
+                            # TREC-50: NUM:dist -> __label__NUM:dist
+                            new_label = "__label__"
+                            new_label += old_label.split(":")[0]
+
+                            write_fp.write(f"{new_label} {question}\n")
+
+        super(TREC_6, self).__init__(
+            data_folder, use_tokenizer=False, in_memory=in_memory
+        )
