@@ -33,7 +33,6 @@ class TextClassifier(flair.nn.Model):
         self,
         document_embeddings: flair.embeddings.DocumentEmbeddings,
         label_dictionary: Dictionary,
-        corpus,
         multi_label: bool = None,
         multi_label_threshold: float = 0.5,
     ):
@@ -57,24 +56,7 @@ class TextClassifier(flair.nn.Model):
         self._init_weights()
 
         if self.multi_label:
-            pos_weight = torch.ones([len(self.label_dictionary)])
-
-            distribution = corpus.get_label_distribution()
-            total_count = 0
-            for item in distribution:
-                total_count += distribution[item]
-
-            for item in distribution:
-                # proportion = distribution[item] / total_count
-                proportion = math.log(
-                    (total_count - distribution[item]) / distribution[item]
-                )
-
-                pos_weight[self.label_dictionary.get_idx_for_item(item)] = proportion
-
-            print(pos_weight)
-
-            self.loss_function = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+            self.loss_function = nn.BCEWithLogitsLoss()
         else:
             self.loss_function = nn.CrossEntropyLoss()
 
