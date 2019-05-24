@@ -6,7 +6,7 @@ from flair.embeddings import (
     TokenEmbeddings,
     WordEmbeddings,
     StackedEmbeddings,
-    CharLMEmbeddings,
+    FlairEmbeddings,
     CharacterEmbeddings,
 )
 from flair.training_utils import EvaluationMetric
@@ -30,9 +30,9 @@ embedding_types: List[TokenEmbeddings] = [
     # CharacterEmbeddings(),
     # comment in these lines to use contextual string embeddings
     #
-    # CharLMEmbeddings('news-forward'),
+    # FlairEmbeddings('news-forward'),
     #
-    # CharLMEmbeddings('news-backward'),
+    # FlairEmbeddings('news-backward'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)

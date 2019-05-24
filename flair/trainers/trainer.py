@@ -187,7 +187,7 @@ class ModelTrainer:
                 self.model.train()
 
                 train_loss: float = 0
-                seen_sentences = 0
+                seen_batches = 0
                 total_number_of_batches = len(batch_loader)
 
                 modulo = max(1, int(total_number_of_batches / 10))
@@ -201,7 +201,7 @@ class ModelTrainer:
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
                     optimizer.step()
 
-                    seen_sentences += len(batch)
+                    seen_batches += 1
                     train_loss += loss.item()
 
                     clear_embeddings(
@@ -211,7 +211,7 @@ class ModelTrainer:
                     if batch_no % modulo == 0:
                         log.info(
                             f"epoch {epoch + 1} - iter {batch_no}/{total_number_of_batches} - loss "
-                            f"{train_loss / seen_sentences:.8f}"
+                            f"{train_loss / seen_batches:.8f}"
                         )
                         iteration = epoch * total_number_of_batches + batch_no
                         if not param_selection_mode:
@@ -219,7 +219,7 @@ class ModelTrainer:
                                 self.model.state_dict(), iteration
                             )
 
-                train_loss /= len(train_data)
+                train_loss /= seen_batches
 
                 self.model.eval()
 

@@ -1,3 +1,4 @@
+import math
 import warnings
 import logging
 from pathlib import Path
@@ -32,7 +33,7 @@ class TextClassifier(flair.nn.Model):
         self,
         document_embeddings: flair.embeddings.DocumentEmbeddings,
         label_dictionary: Dictionary,
-        multi_label: bool,
+        multi_label: bool = None,
         multi_label_threshold: float = 0.5,
     ):
 
@@ -40,7 +41,12 @@ class TextClassifier(flair.nn.Model):
 
         self.document_embeddings: flair.embeddings.DocumentRNNEmbeddings = document_embeddings
         self.label_dictionary: Dictionary = label_dictionary
-        self.multi_label = multi_label
+
+        if multi_label is not None:
+            self.multi_label = multi_label
+        else:
+            self.multi_label = self.label_dictionary.multi_label
+
         self.multi_label_threshold = multi_label_threshold
 
         self.decoder = nn.Linear(
@@ -49,8 +55,8 @@ class TextClassifier(flair.nn.Model):
 
         self._init_weights()
 
-        if multi_label:
-            self.loss_function = nn.BCELoss()
+        if self.multi_label:
+            self.loss_function = nn.BCEWithLogitsLoss()
         else:
             self.loss_function = nn.CrossEntropyLoss()
 
@@ -163,7 +169,10 @@ class TextClassifier(flair.nn.Model):
             metric = Metric("Evaluation")
 
             lines: List[str] = []
+            batch_count: int = 0
             for batch in batch_loader:
+
+                batch_count += 1
 
                 labels, loss = self.forward_labels_and_loss(batch)
 
@@ -222,7 +231,7 @@ class TextClassifier(flair.nn.Model):
                         ):
                             metric.add_tn(label)
 
-            eval_loss /= len(sentences)
+            eval_loss /= batch_count
 
             detailed_result = (
                 f"\nMICRO_AVG: acc {metric.micro_avg_accuracy()} - f1-score {metric.micro_avg_f_score()}"
@@ -323,10 +332,7 @@ class TextClassifier(flair.nn.Model):
     def _calculate_multi_label_loss(
         self, label_scores, sentences: List[Sentence]
     ) -> float:
-        sigmoid = nn.Sigmoid()
-        return self.loss_function(
-            sigmoid(label_scores), self._labels_to_one_hot(sentences)
-        )
+        return self.loss_function(label_scores, self._labels_to_one_hot(sentences))
 
     def _calculate_single_label_loss(
         self, label_scores, sentences: List[Sentence]

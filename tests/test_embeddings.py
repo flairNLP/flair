@@ -83,7 +83,25 @@ def test_document_pool_embeddings():
 
     for mode in ["mean", "max", "min"]:
         embeddings: DocumentPoolEmbeddings = DocumentPoolEmbeddings(
-            [glove, charlm], mode=mode
+            [glove, charlm], pooling=mode, fine_tune_mode="none"
+        )
+
+        embeddings.embed(sentence)
+
+        assert len(sentence.get_embedding()) == 1074
+
+        sentence.clear_embeddings()
+
+        assert len(sentence.get_embedding()) == 0
+
+
+@pytest.mark.integration
+def test_document_pool_embeddings_nonlinear():
+    sentence, glove, charlm = init_document_embeddings()
+
+    for mode in ["mean", "max", "min"]:
+        embeddings: DocumentPoolEmbeddings = DocumentPoolEmbeddings(
+            [glove, charlm], pooling=mode, fine_tune_mode="nonlinear"
         )
 
         embeddings.embed(sentence)
