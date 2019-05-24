@@ -709,34 +709,6 @@ class CONLL_03_SPANISH(ColumnCorpus):
         )
 
 
-class WNUT_17(ColumnCorpus):
-    def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
-    ):
-        # column format
-        columns = {0: "text", 1: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        wnut_path = "https://noisy-text.github.io/2017/files/"
-        cached_path(f"{wnut_path}wnut17train.conll", Path("datasets") / dataset_name)
-        cached_path(f"{wnut_path}emerging.dev.conll", Path("datasets") / dataset_name)
-        cached_path(
-            f"{wnut_path}emerging.test.annotated", Path("datasets") / dataset_name
-        )
-
-        super(WNUT_17, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
-        )
-
-
 class CONLL_2000(ColumnCorpus):
     def __init__(
         self, base_path=None, tag_to_bioes: str = "np", in_memory: bool = True
@@ -788,255 +760,6 @@ class CONLL_2000(ColumnCorpus):
         )
 
 
-def _download_wikiner(language_code: str, dataset_name: str):
-    # download data if necessary
-    wikiner_path = (
-        "https://raw.githubusercontent.com/dice-group/FOX/master/input/Wikiner/"
-    )
-    lc = language_code
-
-    data_file = (
-        Path(flair.cache_root)
-        / "datasets"
-        / dataset_name
-        / f"aij-wikiner-{lc}-wp3.train"
-    )
-    if not data_file.is_file():
-
-        cached_path(
-            f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2", Path("datasets") / dataset_name
-        )
-        import bz2, shutil
-
-        # unpack and write out in CoNLL column-like format
-        bz_file = bz2.BZ2File(
-            Path(flair.cache_root)
-            / "datasets"
-            / dataset_name
-            / f"aij-wikiner-{lc}-wp3.bz2",
-            "rb",
-        )
-        with bz_file as f, open(
-            Path(flair.cache_root)
-            / "datasets"
-            / dataset_name
-            / f"aij-wikiner-{lc}-wp3.train",
-            "w",
-        ) as out:
-            for line in f:
-                line = line.decode("utf-8")
-                words = line.split(" ")
-                for word in words:
-                    out.write("\t".join(word.split("|")) + "\n")
-
-
-class WIKINER_ENGLISH(ColumnCorpus):
-    def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
-    ):
-        # column format
-        columns = {0: "text", 1: "pos", 2: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        _download_wikiner("en", dataset_name)
-
-        super(WIKINER_ENGLISH, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
-        )
-
-
-class WIKINER_GERMAN(ColumnCorpus):
-    def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
-    ):
-        # column format
-        columns = {0: "text", 1: "pos", 2: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        _download_wikiner("en", dataset_name)
-
-        super(WIKINER_GERMAN, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
-        )
-
-
-class WIKINER_DUTCH(ColumnCorpus):
-    def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
-    ):
-        # column format
-        columns = {0: "text", 1: "pos", 2: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        _download_wikiner("nl", dataset_name)
-
-        super(WIKINER_DUTCH, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
-        )
-
-
-class WIKINER_FRENCH(ColumnCorpus):
-    def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
-    ):
-        # column format
-        columns = {0: "text", 1: "pos", 2: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        _download_wikiner("fr", dataset_name)
-
-        super(WIKINER_FRENCH, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
-        )
-
-
-class WIKINER_ITALIAN(ColumnCorpus):
-    def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
-    ):
-        # column format
-        columns = {0: "text", 1: "pos", 2: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        _download_wikiner("it", dataset_name)
-
-        super(WIKINER_ITALIAN, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
-        )
-
-
-class WIKINER_SPANISH(ColumnCorpus):
-    def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
-    ):
-        # column format
-        columns = {0: "text", 1: "pos", 2: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        _download_wikiner("es", dataset_name)
-
-        super(WIKINER_SPANISH, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
-        )
-
-
-class WIKINER_PORTUGUESE(ColumnCorpus):
-    def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
-    ):
-        # column format
-        columns = {0: "text", 1: "pos", 2: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        _download_wikiner("pt", dataset_name)
-
-        super(WIKINER_PORTUGUESE, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
-        )
-
-
-class WIKINER_POLISH(ColumnCorpus):
-    def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
-    ):
-        # column format
-        columns = {0: "text", 1: "pos", 2: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        _download_wikiner("pl", dataset_name)
-
-        super(WIKINER_POLISH, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
-        )
-
-
-class WIKINER_RUSSIAN(ColumnCorpus):
-    def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
-    ):
-        # column format
-        columns = {0: "text", 1: "pos", 2: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        _download_wikiner("ru", dataset_name)
-
-        super(WIKINER_RUSSIAN, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
-        )
-
-
 class GERMEVAL(ColumnCorpus):
     def __init__(
         self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
@@ -1063,6 +786,144 @@ class GERMEVAL(ColumnCorpus):
             log.warning("-" * 100)
         super(GERMEVAL, self).__init__(
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
+
+
+class IMDB(ClassificationCorpus):
+    def __init__(self, base_path=None, in_memory: bool = False):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        imdb_acl_path = "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
+        data_path = Path(flair.cache_root) / "datasets" / dataset_name
+        data_file = data_path / "train.txt"
+        if not data_file.is_file():
+            cached_path(imdb_acl_path, Path("datasets") / dataset_name)
+            import tarfile
+
+            with tarfile.open(
+                Path(flair.cache_root)
+                / "datasets"
+                / dataset_name
+                / "aclImdb_v1.tar.gz",
+                "r:gz",
+            ) as f_in:
+                datasets = ["train", "test"]
+                labels = ["pos", "neg"]
+
+                for label in labels:
+                    for dataset in datasets:
+                        f_in.extractall(
+                            data_path,
+                            members=[
+                                m
+                                for m in f_in.getmembers()
+                                if f"{dataset}/{label}" in m.name
+                            ],
+                        )
+                        with open(f"{data_path}/{dataset}.txt", "at") as f_p:
+                            current_path = data_path / "aclImdb" / dataset / label
+                            for file_name in current_path.iterdir():
+                                if file_name.is_file() and file_name.name.endswith(
+                                    ".txt"
+                                ):
+                                    f_p.write(
+                                        f"__label__{label} "
+                                        + file_name.open("rt", encoding="utf-8").read()
+                                        + "\n"
+                                    )
+
+        super(IMDB, self).__init__(
+            data_folder, use_tokenizer=False, in_memory=in_memory
+        )
+
+
+class NEWSGROUPS(ClassificationCorpus):
+    def __init__(self, base_path=None, in_memory: bool = False):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        twenty_newsgroups_path = (
+            "http://qwone.com/~jason/20Newsgroups/20news-bydate.tar.gz"
+        )
+        data_path = Path(flair.cache_root) / "datasets" / dataset_name
+        data_file = data_path / "20news-bydate-train.txt"
+        if not data_file.is_file():
+            cached_path(
+                twenty_newsgroups_path, Path("datasets") / dataset_name / "original"
+            )
+
+            import tarfile
+
+            with tarfile.open(
+                Path(flair.cache_root)
+                / "datasets"
+                / dataset_name
+                / "original"
+                / "20news-bydate.tar.gz",
+                "r:gz",
+            ) as f_in:
+                datasets = ["20news-bydate-test", "20news-bydate-train"]
+                labels = [
+                    "alt.atheism",
+                    "comp.graphics",
+                    "comp.os.ms-windows.misc",
+                    "comp.sys.ibm.pc.hardware",
+                    "comp.sys.mac.hardware",
+                    "comp.windows.x",
+                    "misc.forsale",
+                    "rec.autos",
+                    "rec.motorcycles",
+                    "rec.sport.baseball",
+                    "rec.sport.hockey",
+                    "sci.crypt",
+                    "sci.electronics",
+                    "sci.med",
+                    "sci.space",
+                    "soc.religion.christian",
+                    "talk.politics.guns",
+                    "talk.politics.mideast",
+                    "talk.politics.misc",
+                    "talk.religion.misc",
+                ]
+
+                for label in labels:
+                    for dataset in datasets:
+                        f_in.extractall(
+                            data_path / "original",
+                            members=[
+                                m
+                                for m in f_in.getmembers()
+                                if f"{dataset}/{label}" in m.name
+                            ],
+                        )
+                        with open(f"{data_path}/{dataset}.txt", "at") as f_p:
+                            current_path = data_path / "original" / dataset / label
+                            print(current_path)
+                            for file_name in current_path.iterdir():
+                                if file_name.is_file():
+                                    f_p.write(
+                                        f"__label__{label} "
+                                        + file_name.open("rt", encoding="latin1")
+                                        .read()
+                                        .replace("\n", " <n> ")
+                                        + "\n"
+                                    )
+
+        super(NEWSGROUPS, self).__init__(
+            data_folder, use_tokenizer=False, in_memory=in_memory
         )
 
 
@@ -1106,6 +967,114 @@ class NER_BASQUE(ColumnCorpus):
 
         super(NER_BASQUE, self).__init__(
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
+
+
+class TREC_50(ClassificationCorpus):
+    def __init__(self, base_path=None, in_memory: bool = True):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        trec_path = "http://cogcomp.org/Data/QA/QC/"
+
+        original_filenames = ["train_5500.label", "TREC_10.label"]
+        new_filenames = ["train.txt", "test.txt"]
+        for original_filename in original_filenames:
+            cached_path(
+                f"{trec_path}{original_filename}",
+                Path("datasets") / dataset_name / "original",
+            )
+
+        data_file = data_folder / new_filenames[0]
+
+        if not data_file.is_file():
+            for original_filename, new_filename in zip(
+                original_filenames, new_filenames
+            ):
+                with open(
+                    data_folder / "original" / original_filename,
+                    "rt",
+                    encoding="latin1",
+                ) as open_fp:
+                    with open(
+                        data_folder / new_filename, "wt", encoding="utf-8"
+                    ) as write_fp:
+                        for line in open_fp:
+                            line = line.rstrip()
+                            fields = line.split()
+                            old_label = fields[0]
+                            question = " ".join(fields[1:])
+
+                            # Create flair compatible labels
+                            # TREC-6 : NUM:dist -> __label__NUM
+                            # TREC-50: NUM:dist -> __label__NUM:dist
+                            new_label = "__label__"
+                            new_label += old_label
+
+                            write_fp.write(f"{new_label} {question}\n")
+
+        super(TREC_50, self).__init__(
+            data_folder, use_tokenizer=False, in_memory=in_memory
+        )
+
+
+class TREC_6(ClassificationCorpus):
+    def __init__(self, base_path=None, in_memory: bool = True):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        trec_path = "http://cogcomp.org/Data/QA/QC/"
+
+        original_filenames = ["train_5500.label", "TREC_10.label"]
+        new_filenames = ["train.txt", "test.txt"]
+        for original_filename in original_filenames:
+            cached_path(
+                f"{trec_path}{original_filename}",
+                Path("datasets") / dataset_name / "original",
+            )
+
+        data_file = data_folder / new_filenames[0]
+
+        if not data_file.is_file():
+            for original_filename, new_filename in zip(
+                original_filenames, new_filenames
+            ):
+                with open(
+                    data_folder / "original" / original_filename,
+                    "rt",
+                    encoding="latin1",
+                ) as open_fp:
+                    with open(
+                        data_folder / new_filename, "wt", encoding="utf-8"
+                    ) as write_fp:
+                        for line in open_fp:
+                            line = line.rstrip()
+                            fields = line.split()
+                            old_label = fields[0]
+                            question = " ".join(fields[1:])
+
+                            # Create flair compatible labels
+                            # TREC-6 : NUM:dist -> __label__NUM
+                            # TREC-50: NUM:dist -> __label__NUM:dist
+                            new_label = "__label__"
+                            new_label += old_label.split(":")[0]
+
+                            write_fp.write(f"{new_label} {question}\n")
+
+        super(TREC_6, self).__init__(
+            data_folder, use_tokenizer=False, in_memory=in_memory
         )
 
 
@@ -1861,8 +1830,55 @@ class UD_BASQUE(UniversalDependenciesCorpus):
         super(UD_BASQUE, self).__init__(data_folder, in_memory=in_memory)
 
 
-class TREC_6(ClassificationCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+def _download_wikiner(language_code: str, dataset_name: str):
+    # download data if necessary
+    wikiner_path = (
+        "https://raw.githubusercontent.com/dice-group/FOX/master/input/Wikiner/"
+    )
+    lc = language_code
+
+    data_file = (
+        Path(flair.cache_root)
+        / "datasets"
+        / dataset_name
+        / f"aij-wikiner-{lc}-wp3.train"
+    )
+    if not data_file.is_file():
+
+        cached_path(
+            f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2", Path("datasets") / dataset_name
+        )
+        import bz2, shutil
+
+        # unpack and write out in CoNLL column-like format
+        bz_file = bz2.BZ2File(
+            Path(flair.cache_root)
+            / "datasets"
+            / dataset_name
+            / f"aij-wikiner-{lc}-wp3.bz2",
+            "rb",
+        )
+        with bz_file as f, open(
+            Path(flair.cache_root)
+            / "datasets"
+            / dataset_name
+            / f"aij-wikiner-{lc}-wp3.train",
+            "w",
+        ) as out:
+            for line in f:
+                line = line.decode("utf-8")
+                words = line.split(" ")
+                for word in words:
+                    out.write("\t".join(word.split("|")) + "\n")
+
+
+class WIKINER_ENGLISH(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1872,44 +1888,220 @@ class TREC_6(ClassificationCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        trec_path = "http://cogcomp.org/Data/QA/QC/"
+        _download_wikiner("en", dataset_name)
 
-        original_filenames = ["train_5500.label", "TREC_10.label"]
-        new_filenames = ["train.txt", "test.txt"]
-        for original_filename in original_filenames:
-            cached_path(
-                f"{trec_path}{original_filename}",
-                Path("datasets") / dataset_name / "original",
-            )
+        super(WIKINER_ENGLISH, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
 
-        data_file = data_folder / new_filenames[0]
 
-        if not data_file.is_file():
-            for original_filename, new_filename in zip(
-                original_filenames, new_filenames
-            ):
-                with open(
-                    data_folder / "original" / original_filename,
-                    "rt",
-                    encoding="latin1",
-                ) as open_fp:
-                    with open(
-                        data_folder / new_filename, "wt", encoding="utf-8"
-                    ) as write_fp:
-                        for line in open_fp:
-                            line = line.rstrip()
-                            fields = line.split()
-                            old_label = fields[0]
-                            question = " ".join(fields[1:])
+class WIKINER_GERMAN(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
 
-                            # Create flair compatible labels
-                            # TREC-6 : NUM:dist -> __label__NUM
-                            # TREC-50: NUM:dist -> __label__NUM:dist
-                            new_label = "__label__"
-                            new_label += old_label.split(":")[0]
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
 
-                            write_fp.write(f"{new_label} {question}\n")
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
 
-        super(TREC_6, self).__init__(
-            data_folder, use_tokenizer=False, in_memory=in_memory
+        # download data if necessary
+        _download_wikiner("en", dataset_name)
+
+        super(WIKINER_GERMAN, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
+
+
+class WIKINER_DUTCH(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wikiner("nl", dataset_name)
+
+        super(WIKINER_DUTCH, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
+
+
+class WIKINER_FRENCH(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wikiner("fr", dataset_name)
+
+        super(WIKINER_FRENCH, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
+
+
+class WIKINER_ITALIAN(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wikiner("it", dataset_name)
+
+        super(WIKINER_ITALIAN, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
+
+
+class WIKINER_SPANISH(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wikiner("es", dataset_name)
+
+        super(WIKINER_SPANISH, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
+
+
+class WIKINER_PORTUGUESE(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wikiner("pt", dataset_name)
+
+        super(WIKINER_PORTUGUESE, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
+
+
+class WIKINER_POLISH(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wikiner("pl", dataset_name)
+
+        super(WIKINER_POLISH, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
+
+
+class WIKINER_RUSSIAN(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+    ):
+        # column format
+        columns = {0: "text", 1: "pos", 2: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wikiner("ru", dataset_name)
+
+        super(WIKINER_RUSSIAN, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
+
+
+class WNUT_17(ColumnCorpus):
+    def __init__(
+        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
+    ):
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        wnut_path = "https://noisy-text.github.io/2017/files/"
+        cached_path(f"{wnut_path}wnut17train.conll", Path("datasets") / dataset_name)
+        cached_path(f"{wnut_path}emerging.dev.conll", Path("datasets") / dataset_name)
+        cached_path(
+            f"{wnut_path}emerging.test.annotated", Path("datasets") / dataset_name
+        )
+
+        super(WNUT_17, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
