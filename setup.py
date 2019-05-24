@@ -12,7 +12,7 @@ setup(
     author="Alan Akbik",
     author_email="alan.akbik@zalando.de",
     url="https://github.com/zalandoresearch/flair",
-    packages=find_packages(exclude="test"),  # same as name
+    packages=find_packages(exclude="tests"),  # same as name
     license="MIT",
     install_requires=required,
     include_package_data=True,
