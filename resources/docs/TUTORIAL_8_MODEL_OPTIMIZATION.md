@@ -12,11 +12,10 @@ First you need to load your corpus. If you want to load the [AGNews corpus](http
 used in the following example, you first need to download it and convert it into the correct format. Please
 check [tutorial 6](/resources/docs/TUTORIAL_6_CORPUS.md) for more details.
 ```python
-from flair.data import TaggedCorpus
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 
 # load your corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.AG_NEWS, base_path='/resources/tasks/ag_news')
+corpus = NLPTaskDataFetcher.load_corpus(NLPTask.TREC_6)
 ```
 
 Second you need to define the search space of parameters.
@@ -31,7 +30,7 @@ from flair.hyperparameter.param_selection import SearchSpace, Parameter
 search_space = SearchSpace()
 search_space.add(Parameter.EMBEDDINGS, hp.choice, options=[
     [ WordEmbeddings('en') ], 
-    [ CharLMEmbeddings('news-forward'), CharLMEmbeddings('news-backward') ]
+    [ FlairEmbeddings('news-forward'), FlairEmbeddings('news-backward') ]
 ])
 search_space.add(Parameter.HIDDEN_SIZE, hp.choice, options=[32, 64, 128])
 search_space.add(Parameter.RNN_LAYERS, hp.choice, options=[1, 2])
@@ -45,7 +44,7 @@ different kind of embeddings, simply pass just one embedding option to the searc
 every test run. Here is an example:
 ```python
 search_space.add(Parameter.EMBEDDINGS, hp.choice, options=[
-    [ CharLMEmbeddings('news-forward'), CharLMEmbeddings('news-backward') ]
+    [ FlairEmbeddings('news-forward'), FlairEmbeddings('news-backward') ]
 ])
 ```
 
@@ -100,14 +99,13 @@ In order to run such an experiment start with your initialized `ModelTrainer` an
 learning rate:
 
 ```python
-from flair.data import TaggedCorpus
 from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
 from flair.trainers import ModelTrainer
 from typing import List
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03).downsample(0.1)
+corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03).downsample(0.1)
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -155,7 +153,12 @@ extra options just specify it as shown with the `weight_decay` example:
 from torch.optim.adam import Adam
 
 trainer: ModelTrainer = ModelTrainer(tagger, corpus,
-                                     optimizer=Adam, weight_decay=1e-4)
+                                     optimizer=Adam)
+                                     
+trainer.train(
+    "resources/taggers/example",
+    weight_decay=1e-4
+)
 ```
 
 ### AdamW and SGDW
