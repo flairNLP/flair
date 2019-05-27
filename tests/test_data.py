@@ -25,8 +25,8 @@ def test_get_head():
 
 def test_create_sentence_on_empty_string():
 
-    with pytest.raises(ValueError) as e:
-        sentence: Sentence = Sentence("")
+    sentence: Sentence = Sentence("")
+    assert 0 == len(sentence.tokens)
 
 
 def test_create_sentence_without_tokenizer():
