@@ -160,7 +160,9 @@ def get_from_cache(url: str, cache_dir: Path = None) -> Path:
     # make HEAD request to check ETag
     response = requests.head(url)
     if response.status_code != 200:
-        raise IOError("HEAD request failed for url {}".format(url))
+        raise IOError(
+            f"HEAD request failed for url {url} with status code {response.status_code}."
+        )
 
     # add ETag to filename if it exists
     # etag = response.headers.get("ETag")
