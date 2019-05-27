@@ -158,9 +158,11 @@ def get_from_cache(url: str, cache_dir: Path = None) -> Path:
         return cache_path
 
     # make HEAD request to check ETag
-    response = requests.head(url)
+    response = requests.head(url, headers={"User-Agent": "Flair"})
     if response.status_code != 200:
-        raise IOError("HEAD request failed for url {}".format(url))
+        raise IOError(
+            f"HEAD request failed for url {url} with status code {response.status_code}."
+        )
 
     # add ETag to filename if it exists
     # etag = response.headers.get("ETag")
@@ -172,7 +174,7 @@ def get_from_cache(url: str, cache_dir: Path = None) -> Path:
         logger.info("%s not found in cache, downloading to %s", url, temp_filename)
 
         # GET file object
-        req = requests.get(url, stream=True)
+        req = requests.get(url, stream=True, headers={"User-Agent": "Flair"})
         content_length = req.headers.get("Content-Length")
         total = int(content_length) if content_length is not None else None
         progress = Tqdm.tqdm(unit="B", total=total)

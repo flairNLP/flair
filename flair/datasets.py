@@ -1,3 +1,5 @@
+import os
+
 from torch.utils.data import Dataset, random_split
 from typing import List, Dict, Union
 import re
@@ -1828,6 +1830,104 @@ class UD_BASQUE(UniversalDependenciesCorpus):
         )
 
         super(UD_BASQUE, self).__init__(data_folder, in_memory=in_memory)
+
+
+def _download_wassa_if_not_there(emotion, data_folder, dataset_name):
+    for split in ["train", "dev", "test"]:
+
+        data_file = data_folder / f"{emotion}-{split}.txt"
+
+        if not data_file.is_file():
+
+            if split == "train":
+                url = f"http://saifmohammad.com/WebDocs/EmoInt%20Train%20Data/{emotion}-ratings-0to1.train.txt"
+            if split == "dev":
+                url = f"http://saifmohammad.com/WebDocs/EmoInt%20Dev%20Data%20With%20Gold/{emotion}-ratings-0to1.dev.gold.txt"
+            if split == "test":
+                url = f"http://saifmohammad.com/WebDocs/EmoInt%20Test%20Gold%20Data/{emotion}-ratings-0to1.test.gold.txt"
+
+            path = cached_path(url, Path("datasets") / dataset_name)
+
+            with open(path, "r") as f:
+                with open(data_file, "w") as out:
+                    next(f)
+                    for line in f:
+                        fields = line.split("\t")
+                        out.write(f"__label__{fields[3].rstrip()} {fields[1]}\n")
+
+            os.remove(path)
+
+
+class WASSA_ANGER(ClassificationCorpus):
+    def __init__(self, base_path=None, in_memory: bool = False):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wassa_if_not_there("anger", data_folder, dataset_name)
+
+        super(WASSA_ANGER, self).__init__(
+            data_folder, use_tokenizer=False, in_memory=in_memory
+        )
+
+
+class WASSA_FEAR(ClassificationCorpus):
+    def __init__(self, base_path=None, in_memory: bool = False):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wassa_if_not_there("fear", data_folder, dataset_name)
+
+        super(WASSA_FEAR, self).__init__(
+            data_folder, use_tokenizer=False, in_memory=in_memory
+        )
+
+
+class WASSA_JOY(ClassificationCorpus):
+    def __init__(self, base_path=None, in_memory: bool = False):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wassa_if_not_there("joy", data_folder, dataset_name)
+
+        super(WASSA_JOY, self).__init__(
+            data_folder, use_tokenizer=False, in_memory=in_memory
+        )
+
+
+class WASSA_SADNESS(ClassificationCorpus):
+    def __init__(self, base_path=None, in_memory: bool = False):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wassa_if_not_there("sadness", data_folder, dataset_name)
+
+        super(WASSA_SADNESS, self).__init__(
+            data_folder, use_tokenizer=False, in_memory=in_memory
+        )
 
 
 def _download_wikiner(language_code: str, dataset_name: str):

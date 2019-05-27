@@ -62,6 +62,17 @@ class TextRegressor(flair.models.TextClassifier):
 
             return sentences
 
+    def _calculate_loss(
+        self, scores: torch.tensor, sentences: List[Sentence]
+    ) -> torch.tensor:
+        """
+        Calculates the loss.
+        :param scores: the prediction scores from the model
+        :param sentences: list of sentences
+        :return: loss value
+        """
+        return self.loss_function(scores.squeeze(1), self._labels_to_indices(sentences))
+
     def forward_labels_and_loss(
         self, sentences: Union[Sentence, List[Sentence]]
     ) -> (List[List[float]], torch.tensor):
