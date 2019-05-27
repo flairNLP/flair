@@ -28,9 +28,6 @@ def test_create_sentence_on_empty_string():
     with pytest.raises(ValueError) as e:
         sentence: Sentence = Sentence("")
 
-        assert e.type is ValueError
-        assert e.value.args[0] == "Cannot convert empty string to a Sentence object."
-
 
 def test_create_sentence_without_tokenizer():
     sentence: Sentence = Sentence("I love Berlin.")
