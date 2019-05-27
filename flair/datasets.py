@@ -1876,6 +1876,60 @@ class WASSA_ANGER(ClassificationCorpus):
         )
 
 
+class WASSA_FEAR(ClassificationCorpus):
+    def __init__(self, base_path=None, in_memory: bool = False):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wassa_if_not_there("fear", data_folder, dataset_name)
+
+        super(WASSA_FEAR, self).__init__(
+            data_folder, use_tokenizer=False, in_memory=in_memory
+        )
+
+
+class WASSA_JOY(ClassificationCorpus):
+    def __init__(self, base_path=None, in_memory: bool = False):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wassa_if_not_there("joy", data_folder, dataset_name)
+
+        super(WASSA_JOY, self).__init__(
+            data_folder, use_tokenizer=False, in_memory=in_memory
+        )
+
+
+class WASSA_SADNESS(ClassificationCorpus):
+    def __init__(self, base_path=None, in_memory: bool = False):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        _download_wassa_if_not_there("sadness", data_folder, dataset_name)
+
+        super(WASSA_SADNESS, self).__init__(
+            data_folder, use_tokenizer=False, in_memory=in_memory
+        )
+
+
 def _download_wikiner(language_code: str, dataset_name: str):
     # download data if necessary
     wikiner_path = (
