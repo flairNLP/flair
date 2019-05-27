@@ -352,13 +352,9 @@ class Sentence:
 
             # otherwise assumes whitespace tokenized text
             else:
-                # catch the empty string case
-                if not text:
-                    raise ValueError(
-                        "Cannot convert empty string to a Sentence object."
-                    )
                 # add each word in tokenized string as Token object to Sentence
                 word = ""
+                index = -1
                 for index, char in enumerate(text):
                     if char == " ":
                         if len(word) > 0:
@@ -373,6 +369,12 @@ class Sentence:
                 if len(word) > 0:
                     token = Token(word, start_position=index - len(word))
                     self.add_token(token)
+
+        # log a warning if the dataset is empty
+        if not text:
+            log.warn(
+                "ACHTUNG: An empty Sentence was created! Are there empty strings in your dataset?"
+            )
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
