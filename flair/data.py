@@ -371,7 +371,7 @@ class Sentence:
                     self.add_token(token)
 
         # log a warning if the dataset is empty
-        if not text:
+        if text == "":
             log.warn(
                 "ACHTUNG: An empty Sentence was created! Are there empty strings in your dataset?"
             )

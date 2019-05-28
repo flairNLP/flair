@@ -954,186 +954,109 @@ class FlairEmbeddings(TokenEmbeddings):
 
         cache_dir = Path("embeddings")
 
-        # multilingual forward (English, German, French, Italian, Dutch, Polish)
-        if model.lower() == "multi-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-multi-forward-v0.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-        # multilingual backward  (English, German, French, Italian, Dutch, Polish)
-        elif model.lower() == "multi-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-multi-backward-v0.1.pt"
+        aws_path: str = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources"
+
+        self.PRETRAINED_MODEL_ARCHIVE_MAP = {
+            # multilingual models
+            "multi-forward": f"{aws_path}/embeddings-v0.4/lm-multi-forward-v0.1.pt",
+            "multi-backward": f"{aws_path}/embeddings-v0.4/lm-multi-backward-v0.1.pt",
+            "multi-forward-fast": f"{aws_path}/embeddings-v0.4/lm-multi-forward-fast-v0.1.pt",
+            "multi-backward-fast": f"{aws_path}/embeddings-v0.4/lm-multi-backward-fast-v0.1.pt",
+            # English models
+            "news-forward": f"{aws_path}/embeddings-v0.4.1/big-news-forward--h2048-l1-d0.05-lr30-0.25-20/news-forward-0.4.1.pt",
+            "news-backward": f"{aws_path}/embeddings-v0.4.1/big-news-backward--h2048-l1-d0.05-lr30-0.25-20/news-backward-0.4.1.pt",
+            "news-forward-fast": f"{aws_path}/embeddings/lm-news-english-forward-1024-v0.2rc.pt",
+            "news-backward-fast": f"{aws_path}/embeddings/lm-news-english-backward-1024-v0.2rc.pt",
+            "mix-forward": f"{aws_path}/embeddings/lm-mix-english-forward-v0.2rc.pt",
+            "mix-backward": f"{aws_path}/embeddings/lm-mix-english-backward-v0.2rc.pt",
+            # Arabic
+            "ar-forward": f"{aws_path}/embeddings-stefan-it/lm-ar-opus-large-forward-v0.1.pt",
+            "ar-backward": f"{aws_path}/embeddings-stefan-it/lm-ar-opus-large-backward-v0.1.pt",
+            # Bulgarian
+            "bg-forward-fast": f"{aws_path}/embeddings-v0.3/lm-bg-small-forward-v0.1.pt",
+            "bg-backward-fast": f"{aws_path}/embeddings-v0.3/lm-bg-small-backward-v0.1.pt",
+            "bg-forward": f"{aws_path}/embeddings-stefan-it/lm-bg-opus-large-forward-v0.1.pt",
+            "bg-backward": f"{aws_path}/embeddings-stefan-it/lm-bg-opus-large-backward-v0.1.pt",
+            # Czech
+            "cs-forward": f"{aws_path}/embeddings-stefan-it/lm-cs-opus-large-forward-v0.1.pt",
+            "cs-backward": f"{aws_path}/embeddings-stefan-it/lm-cs-opus-large-backward-v0.1.pt",
+            # Danish
+            "da-forward": f"{aws_path}/embeddings-stefan-it/lm-da-opus-large-forward-v0.1.pt",
+            "da-backward": f"{aws_path}/embeddings-stefan-it/lm-da-opus-large-backward-v0.1.pt",
+            # German
+            "de-forward": f"{aws_path}/embeddings/lm-mix-german-forward-v0.2rc.pt",
+            "de-backward": f"{aws_path}/embeddings/lm-mix-german-backward-v0.2rc.pt",
+            "de-historic-ha-forward": f"{aws_path}/embeddings-stefan-it/lm-historic-hamburger-anzeiger-forward-v0.1.pt",
+            "de-historic-ha-backward": f"{aws_path}/embeddings-stefan-it/lm-historic-hamburger-anzeiger-backward-v0.1.pt",
+            "de-historic-wz-forward": f"{aws_path}/embeddings-stefan-it/lm-historic-wiener-zeitung-forward-v0.1.pt",
+            "de-historic-wz-backward": f"{aws_path}/embeddings-stefan-it/lm-historic-wiener-zeitung-backward-v0.1.pt",
+            # Spanish
+            "es-forward": f"{aws_path}/embeddings-v0.4/language_model_es_forward_long/lm-es-forward.pt",
+            "es-backward": f"{aws_path}/embeddings-v0.4/language_model_es_backward_long/lm-es-backward.pt",
+            "es-forward-fast": f"{aws_path}/embeddings-v0.4/language_model_es_forward/lm-es-forward-fast.pt",
+            "es-backward-fast": f"{aws_path}/embeddings-v0.4/language_model_es_backward/lm-es-backward-fast.pt",
+            # Basque
+            "eu-forward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-forward-v0.1.pt",
+            "eu-backward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-backward-v0.1.pt",
+            # Farsi
+            "fa-forward": f"{aws_path}/embeddings-stefan-it/lm-fa-opus-large-forward-v0.1.pt",
+            "fa-backward": f"{aws_path}/embeddings-stefan-it/lm-fa-opus-large-backward-v0.1.pt",
+            # Finnish
+            "fi-forward": f"{aws_path}/embeddings-stefan-it/lm-fi-opus-large-forward-v0.1.pt",
+            "fi-backward": f"{aws_path}/embeddings-stefan-it/lm-fi-opus-large-backward-v0.1.pt",
+            # French
+            "fr-forward": f"{aws_path}/embeddings/lm-fr-charlm-forward.pt",
+            "fr-backward": f"{aws_path}/embeddings/lm-fr-charlm-backward.pt",
+            # Hebrew
+            "he-forward": f"{aws_path}/embeddings-stefan-it/lm-he-opus-large-forward-v0.1.pt",
+            "he-backward": f"{aws_path}/embeddings-stefan-it/lm-he-opus-large-backward-v0.1.pt",
+            # Hindi
+            "hi-forward": f"{aws_path}/embeddings-stefan-it/lm-hi-opus-large-forward-v0.1.pt",
+            "hi-backward": f"{aws_path}/embeddings-stefan-it/lm-hi-opus-large-backward-v0.1.pt",
+            # Croatian
+            "hr-forward": f"{aws_path}/embeddings-stefan-it/lm-hr-opus-large-forward-v0.1.pt",
+            "hr-backward": f"{aws_path}/embeddings-stefan-it/lm-hr-opus-large-backward-v0.1.pt",
+            # Indonesian
+            "id-forward": f"{aws_path}/embeddings-stefan-it/lm-id-opus-large-forward-v0.1.pt",
+            "id-backward": f"{aws_path}/embeddings-stefan-it/lm-id-opus-large-backward-v0.1.pt",
+            # Italian
+            "it-forward": f"{aws_path}/embeddings-stefan-it/lm-it-opus-large-forward-v0.1.pt",
+            "it-backward": f"{aws_path}/embeddings-stefan-it/lm-it-opus-large-backward-v0.1.pt",
+            # Japanese
+            "ja-forward": f"{aws_path}/embeddings-v0.4.1/lm__char-forward__ja-wikipedia-3GB/japanese-forward.pt",
+            "ja-backward": f"{aws_path}/embeddings-v0.4.1/lm__char-backward__ja-wikipedia-3GB/japanese-backward.pt",
+            # Dutch
+            "nl-forward": f"{aws_path}/embeddings-stefan-it/lm-nl-opus-large-forward-v0.1.pt",
+            "nl-backward": f"{aws_path}/embeddings-stefan-it/lm-nl-opus-large-backward-v0.1.pt",
+            # Norwegian
+            "no-forward": f"{aws_path}/embeddings-stefan-it/lm-no-opus-large-forward-v0.1.pt",
+            "no-backward": f"{aws_path}/embeddings-stefan-it/lm-no-opus-large-backward-v0.1.pt",
+            # Polish
+            "pl-forward": f"{aws_path}/embeddings/lm-polish-forward-v0.2.pt",
+            "pl-backward": f"{aws_path}/embeddings/lm-polish-backward-v0.2.pt",
+            # Portuguese
+            "pt-forward": f"{aws_path}/embeddings-v0.4/lm-pt-forward.pt",
+            "pt-backward": f"{aws_path}/embeddings-v0.4/lm-pt-backward.pt",
+            # Pubmed
+            "pubmed-forward": f"{aws_path}/embeddings-v0.4.1/pubmed-2015-fw-lm.pt",
+            "pubmed-backward": f"{aws_path}/embeddings-v0.4.1/pubmed-2015-bw-lm.pt",
+            # Slovenian
+            "sl-forward": f"{aws_path}/embeddings-stefan-it/lm-sl-opus-large-forward-v0.1.pt",
+            "sl-backward": f"{aws_path}/embeddings-stefan-it/lm-sl-opus-large-backward-v0.1.pt",
+            # Swedish
+            "sv-forward": f"{aws_path}/embeddings-stefan-it/lm-sv-opus-large-forward-v0.1.pt",
+            "sv-backward": f"{aws_path}/embeddings-stefan-it/lm-sv-opus-large-backward-v0.1.pt",
+        }
+
+        # load model if in pretrained model map
+        if model.lower() in self.PRETRAINED_MODEL_ARCHIVE_MAP:
+            base_path = self.PRETRAINED_MODEL_ARCHIVE_MAP[model.lower()]
             model = cached_path(base_path, cache_dir=cache_dir)
 
-        # multilingual forward fast (English, German, French, Italian, Dutch, Polish)
-        elif model.lower() == "multi-forward-fast":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-multi-forward-fast-v0.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-        # multilingual backward fast (English, German, French, Italian, Dutch, Polish)
-        elif model.lower() == "multi-backward-fast":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-multi-backward-fast-v0.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # news-english-forward
-        elif model.lower() == "news-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/big-news-forward--h2048-l1-d0.05-lr30-0.25-20/news-forward-0.4.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # news-english-backward
-        elif model.lower() == "news-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/big-news-backward--h2048-l1-d0.05-lr30-0.25-20/news-backward-0.4.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # news-english-forward
-        elif model.lower() == "news-forward-fast":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-forward-1024-v0.2rc.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # news-english-backward
-        elif model.lower() == "news-backward-fast":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-news-english-backward-1024-v0.2rc.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # mix-english-forward
-        elif model.lower() == "mix-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-forward-v0.2rc.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # mix-english-backward
-        elif model.lower() == "mix-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-backward-v0.2rc.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # mix-german-forward
-        elif model.lower() == "german-forward" or model.lower() == "de-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-forward-v0.2rc.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # mix-german-backward
-        elif model.lower() == "german-backward" or model.lower() == "de-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-german-backward-v0.2rc.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # common crawl Polish forward
-        elif model.lower() == "polish-forward" or model.lower() == "pl-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-forward-v0.2.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # common crawl Polish backward
-        elif model.lower() == "polish-backward" or model.lower() == "pl-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-polish-backward-v0.2.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # Slovenian forward
-        elif model.lower() == "slovenian-forward" or model.lower() == "sl-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-sl-large-forward-v0.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-        # Slovenian backward
-        elif model.lower() == "slovenian-backward" or model.lower() == "sl-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-sl-large-backward-v0.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # Bulgarian forward
-        elif model.lower() == "bulgarian-forward" or model.lower() == "bg-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-bg-small-forward-v0.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-        # Bulgarian backward
-        elif model.lower() == "bulgarian-backward" or model.lower() == "bg-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/lm-bg-small-backward-v0.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # Dutch forward
-        elif model.lower() == "dutch-forward" or model.lower() == "nl-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-nl-large-forward-v0.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-        # Dutch backward
-        elif model.lower() == "dutch-backward" or model.lower() == "nl-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-nl-large-backward-v0.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # Swedish forward
-        elif model.lower() == "swedish-forward" or model.lower() == "sv-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-sv-large-forward-v0.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-        # Swedish backward
-        elif model.lower() == "swedish-backward" or model.lower() == "sv-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-sv-large-backward-v0.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # French forward
-        elif model.lower() == "french-forward" or model.lower() == "fr-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-fr-charlm-forward.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-        # French backward
-        elif model.lower() == "french-backward" or model.lower() == "fr-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-fr-charlm-backward.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # Czech forward
-        elif model.lower() == "czech-forward" or model.lower() == "cs-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-cs-large-forward-v0.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-        # Czech backward
-        elif model.lower() == "czech-backward" or model.lower() == "cs-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-cs-large-backward-v0.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # Portuguese forward
-        elif model.lower() == "portuguese-forward" or model.lower() == "pt-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-pt-forward.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-        # Portuguese backward
-        elif model.lower() == "portuguese-backward" or model.lower() == "pt-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-pt-backward.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # Basque forward
-        elif model.lower() == "basque-forward" or model.lower() == "eu-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-eu-large-forward-v0.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-        # Basque backward
-        elif model.lower() == "basque-backward" or model.lower() == "eu-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/lm-eu-large-backward-v0.1.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # Spanish forward fast
-        elif (
-            model.lower() == "spanish-forward-fast"
-            or model.lower() == "es-forward-fast"
-        ):
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/language_model_es_forward/lm-es-forward-fast.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-        # Spanish backward fast
-        elif (
-            model.lower() == "spanish-backward-fast"
-            or model.lower() == "es-backward-fast"
-        ):
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/language_model_es_backward/lm-es-backward-fast.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # Spanish forward
-        elif model.lower() == "spanish-forward" or model.lower() == "es-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/language_model_es_forward_long/lm-es-forward.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-        # Spanish backward
-        elif model.lower() == "spanish-backward" or model.lower() == "es-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/language_model_es_backward_long/lm-es-backward.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # Pubmed forward
-        elif model.lower() == "pubmed-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/pubmed-2015-fw-lm.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-        # Pubmed backward
-        elif model.lower() == "pubmed-backward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/pubmed-2015-bw-lm.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-
-        # Japanese forward
-        elif model.lower() == "japanese-forward" or model.lower() == "ja-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/lm__char-forward__ja-wikipedia-3GB/japanese-forward.pt"
-            model = cached_path(base_path, cache_dir=cache_dir)
-        # Japanese backward
-        elif model.lower() == "japanese-backward" or model.lower() == "ja-forward":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/lm__char-backward__ja-wikipedia-3GB/japanese-backward.pt"
+        elif replace_with_language_code(model) in self.PRETRAINED_MODEL_ARCHIVE_MAP:
+            base_path = self.PRETRAINED_MODEL_ARCHIVE_MAP[
+                replace_with_language_code(model)
+            ]
             model = cached_path(base_path, cache_dir=cache_dir)
 
         elif not Path(model).exists():
@@ -2367,7 +2290,7 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
                 if embedding.is_forward_lm:
                     sentence.set_embedding(
                         embedding.name,
-                        sentence[len(sentence)-1]._embeddings[embedding.name],
+                        sentence[len(sentence) - 1]._embeddings[embedding.name],
                     )
                 else:
                     sentence.set_embedding(
@@ -2430,3 +2353,29 @@ class NILCEmbeddings(WordEmbeddings):
 
     def __str__(self):
         return self.name
+
+
+def replace_with_language_code(string: str):
+    string = string.replace("arabic-", "ar-")
+    string = string.replace("basque-", "eu-")
+    string = string.replace("bulgarian-", "bg-")
+    string = string.replace("croatian-", "hr-")
+    string = string.replace("czech-", "cs-")
+    string = string.replace("danish-", "da-")
+    string = string.replace("dutch-", "nl-")
+    string = string.replace("farsi-", "fa-")
+    string = string.replace("finnish-", "fi-")
+    string = string.replace("french-", "fr-")
+    string = string.replace("german-", "de-")
+    string = string.replace("hebrew-", "he-")
+    string = string.replace("hindi-", "hi-")
+    string = string.replace("indonesian-", "id-")
+    string = string.replace("italian-", "it-")
+    string = string.replace("japanese-", "ja-")
+    string = string.replace("norwegian-", "no")
+    string = string.replace("polish-", "pl-")
+    string = string.replace("portuguese-", "pt-")
+    string = string.replace("slovenian-", "sl-")
+    string = string.replace("spanish-", "es-")
+    string = string.replace("swedish-", "sv-")
+    return string
