@@ -978,8 +978,8 @@ class FlairEmbeddings(TokenEmbeddings):
             "bg-forward": f"{aws_path}/embeddings-stefan-it/lm-bg-opus-large-forward-v0.1.pt",
             "bg-backward": f"{aws_path}/embeddings-stefan-it/lm-bg-opus-large-backward-v0.1.pt",
             # Czech
-            "cs-forward": f"{aws_path}/embeddings-v0.4/lm-cs-large-forward-v0.1.pt",
-            "cs-backward": f"{aws_path}/embeddings-v0.4/lm-cs-large-backward-v0.1.pt",
+            "cs-forward": f"{aws_path}/embeddings-stefan-it/lm-cs-opus-large-forward-v0.1.pt",
+            "cs-backward": f"{aws_path}/embeddings-stefan-it/lm-cs-opus-large-backward-v0.1.pt",
             # Danish
             "da-forward": f"{aws_path}/embeddings-stefan-it/lm-da-opus-large-forward-v0.1.pt",
             "da-backward": f"{aws_path}/embeddings-stefan-it/lm-da-opus-large-backward-v0.1.pt",
@@ -996,8 +996,8 @@ class FlairEmbeddings(TokenEmbeddings):
             "es-forward-fast": f"{aws_path}/embeddings-v0.4/language_model_es_forward/lm-es-forward-fast.pt",
             "es-backward-fast": f"{aws_path}/embeddings-v0.4/language_model_es_backward/lm-es-backward-fast.pt",
             # Basque
-            "eu-forward": f"{aws_path}/embeddings-v0.4/lm-eu-large-forward-v0.1.pt",
-            "eu-backward": f"{aws_path}/embeddings-v0.4/lm-eu-large-backward-v0.1.pt",
+            "eu-forward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-forward-v0.1.pt",
+            "eu-backward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-backward-v0.1.pt",
             # Farsi
             "fa-forward": f"{aws_path}/embeddings-stefan-it/lm-fa-opus-large-forward-v0.1.pt",
             "fa-backward": f"{aws_path}/embeddings-stefan-it/lm-fa-opus-large-backward-v0.1.pt",
@@ -1026,8 +1026,8 @@ class FlairEmbeddings(TokenEmbeddings):
             "ja-forward": f"{aws_path}/embeddings-v0.4.1/lm__char-forward__ja-wikipedia-3GB/japanese-forward.pt",
             "ja-backward": f"{aws_path}/embeddings-v0.4.1/lm__char-backward__ja-wikipedia-3GB/japanese-backward.pt",
             # Dutch
-            "nl-forward": f"{aws_path}/embeddings-v0.4/lm-nl-large-forward-v0.1.pt",
-            "nl-backward": f"{aws_path}/embeddings-v0.4/lm-nl-large-backward-v0.1.pt",
+            "nl-forward": f"{aws_path}/embeddings-stefan-it/lm-nl-opus-large-forward-v0.1.pt",
+            "nl-backward": f"{aws_path}/embeddings-stefan-it/lm-nl-opus-large-backward-v0.1.pt",
             # Norwegian
             "no-forward": f"{aws_path}/embeddings-stefan-it/lm-no-opus-large-forward-v0.1.pt",
             "no-backward": f"{aws_path}/embeddings-stefan-it/lm-no-opus-large-backward-v0.1.pt",
@@ -1041,11 +1041,11 @@ class FlairEmbeddings(TokenEmbeddings):
             "pubmed-forward": f"{aws_path}/embeddings-v0.4.1/pubmed-2015-fw-lm.pt",
             "pubmed-backward": f"{aws_path}/embeddings-v0.4.1/pubmed-2015-bw-lm.pt",
             # Slovenian
-            "sl-forward": f"{aws_path}/embeddings-v0.3/lm-sl-large-forward-v0.1.pt",
-            "sl-backward": f"{aws_path}/embeddings-v0.3/lm-sl-large-backward-v0.1.pt",
+            "sl-forward": f"{aws_path}/embeddings-stefan-it/lm-sl-opus-large-forward-v0.1.pt",
+            "sl-backward": f"{aws_path}/embeddings-stefan-it/lm-sl-opus-large-backward-v0.1.pt",
             # Swedish
-            "sv-forward": f"{aws_path}/embeddings-v0.4/lm-sv-large-forward-v0.1.pt",
-            "sv-backward": f"{aws_path}/embeddings-v0.4/lm-sv-large-backward-v0.1.pt",
+            "sv-forward": f"{aws_path}/embeddings-stefan-it/lm-sv-opus-large-forward-v0.1.pt",
+            "sv-backward": f"{aws_path}/embeddings-stefan-it/lm-sv-opus-large-backward-v0.1.pt",
         }
 
         # load model if in pretrained model map
@@ -2353,8 +2353,6 @@ class NILCEmbeddings(WordEmbeddings):
 
     def __str__(self):
         return self.name
-
-        #     opus_language_codes = ['cs', 'eu', 'nl', 'pl', 'sl', 'sv']
 
 
 def replace_with_language_code(string: str):
