@@ -1550,7 +1550,7 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         # mix-english-backward
         elif model.lower() == "mix-backward":
-            base_path = "{aws_path}/embeddings/lm-mix-english-backward-v0.2rc.pt"
+            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/lm-mix-english-backward-v0.2rc.pt"
             model = cached_path(base_path, cache_dir=cache_dir)
 
         # mix-german-forward
