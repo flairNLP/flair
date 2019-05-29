@@ -10,18 +10,18 @@ a corpus](/resources/docs/TUTORIAL_6_CORPUS.md).
 
 ## Training a Sequence Labeling Model
 
-Here is example code for a small NER model trained over CoNLL-03 data, using simple GloVe embeddings. To run this code, you first need to obtain the CoNLL-03 English dataset (alternatively, use `NLPTaskDataFetcher.load_corpus(NLPTask.WNUT_17)` instead for a task with freely available data).
+Here is example code for a small NER model trained over WikiNER data, using simple GloVe embeddings. To run this code, you first need to obtain the CoNLL-03 English dataset (alternatively, use `NLPTaskDataFetcher.load_corpus(NLPTask.WNUT_17)` instead for a task with freely available data).
 
-In this example, we downsample the data to 10% of the original data:
+In this example, we downsample the data to 10% of the original data because the WikiNER dataset is huge:
 
 ```python
-from flair.data import TaggedCorpus
-from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
+from flair.data import Corpus
+from flair.datasets import WIKINER_ENGLISH
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
 from typing import List
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03).downsample(0.1)
+corpus: Corpus = WIKINER_ENGLISH().downsample(0.1)
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -99,19 +99,19 @@ If the model works well, it will correctly tag 'Berlin' as a location in this ex
 
 ## Training a Text Classification Model
 
-Here is example code for training a text classifier over the AGNews corpus, using  a combination of simple GloVe
-embeddings and Flair embeddings. In this example, we downsample the data to 10% of the original data.
+Here is example code for training a text classifier over the TREC-6 corpus, using  a combination of simple GloVe
+embeddings and Flair embeddings. 
 
 ```python
-from flair.data import TaggedCorpus
-from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
+from flair.data import Corpus
+from flair.datasets import TREC_6
 from flair.embeddings import WordEmbeddings, FlairEmbeddings, DocumentRNNEmbeddings
 from flair.models import TextClassifier
 from flair.trainers import ModelTrainer
 
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.AG_NEWS, 'path/to/data/folder').downsample(0.1)
+corpus: Corpus = TREC_6()
 
 # 2. create the label dictionary
 label_dict = corpus.make_label_dictionary()
@@ -133,7 +133,7 @@ document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(word_embeddin
                                                                      )
 
 # 5. create the text classifier
-classifier = TextClassifier(document_embeddings, label_dictionary=label_dict, multi_label=False)
+classifier = TextClassifier(document_embeddings, label_dictionary=label_dict)
 
 # 6. initialize the text classifier trainer
 trainer = ModelTrainer(classifier, corpus)
@@ -178,13 +178,13 @@ All the rest is same as before, e.g.:
 ```python
 from typing import List
 from flair.data import MultiCorpus
-from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
+from flair.datasets import UD_ENGLISH, UD_GERMAN
 from flair.embeddings import FlairEmbeddings, TokenEmbeddings, StackedEmbeddings
 from flair.training_utils import EvaluationMetric
 
 
 # 1. get the corpora - English and German UD
-corpus: MultiCorpus = NLPTaskDataFetcher.load_corpora([NLPTask.UD_ENGLISH, NLPTask.UD_GERMAN]).downsample(0.1)
+corpus: MultiCorpus = MultiCorpus([UD_ENGLISH(), UD_GERMAN()]).downsample(0.1)
 
 # 2. what tag do we want to predict?
 tag_type = 'upos'
@@ -258,13 +258,13 @@ The example code below shows how to train, stop, and continue training of a `Seq
 Same can be done for `TextClassifier`.
 
 ```python
-from flair.data import TaggedCorpus
-from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
+from flair.data import Corpus
+from flair.datasets import WNUT_17
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
 from typing import List
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03).downsample(0.1)
+corpus: Corpus = WNUT_17().downsample(0.1)
 
 # 2. what tag do we want to predict?
 tag_type = 'ner'
@@ -307,7 +307,7 @@ trainer.train('resources/taggers/example-ner',
 # 9. continue trainer at later point
 from pathlib import Path
 
-trainer = ModelTrainer.load_from_checkpoint(Path('resources/taggers/example-ner/checkpoint.pt'), 'SequenceTagger', corpus)
+trainer = ModelTrainer.load_from_checkpoint(Path('resources/taggers/example-ner/checkpoint.pt'), corpus)
 trainer.train('resources/taggers/example-ner',
               EvaluationMetric.MICRO_F1_SCORE,
               learning_rate=0.1,

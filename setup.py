@@ -1,11 +1,11 @@
 from setuptools import setup, find_packages
 
-with open('requirements.txt') as f:
+with open("requirements.txt") as f:
     required = f.read().splitlines()
 
 setup(
     name="flair",
-    version="0.4.1",
+    version="0.4.2",
     description="A very simple framework for state-of-the-art NLP",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",

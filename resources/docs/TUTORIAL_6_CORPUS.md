@@ -20,11 +20,11 @@ Washington N B-LOC
 ```
 
 The first column is the word itself, the second coarse PoS tags, and the third BIO-annotated NER tags. To read such a 
-dataset, define the column structure as a dictionary and use a helper method.
+dataset, define the column structure as a dictionary and instantiate a `ColumnCorpus`.
 
 ```python
-from flair.data import TaggedCorpus
-from flair.data_fetcher import NLPTaskDataFetcher
+from flair.data import Corpus
+from flair.datasets import ColumnCorpus
 
 # define columns
 columns = {0: 'text', 1: 'pos', 2: 'ner'}
@@ -32,14 +32,15 @@ columns = {0: 'text', 1: 'pos', 2: 'ner'}
 # this is the folder in which train, test and dev files reside
 data_folder = '/path/to/data/folder'
 
-# retrieve corpus using column format, data folder and the names of the train, dev and test files
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_column_corpus(data_folder, columns,
-                                                              train_file='train.txt',
-                                                              test_file='test.txt',
-                                                              dev_file='dev.txt')
+# init a corpus using column format, data folder and the names of the train, dev and test files
+corpus: Corpus = ColumnCorpus(data_folder, columns,
+                              train_file='train.txt',
+                              test_file='test.txt',
+                              dev_file='dev.txt')
+
 ```
 
-This gives you a `TaggedCorpus` object that contains the train, dev and test splits, each has a list of `Sentence`.
+This gives you a `Corpus` object that contains the train, dev and test splits, each has a list of `Sentence`.
 So, to check how many sentences there are in the training split, do
 
 ```python
@@ -74,93 +75,137 @@ __label__<label_1> <text>
 __label__<label_1> __label__<label_2> <text>
 ```
 
-To create a `TaggedCorpus` for a text classification task, you need to have three files (train, dev, and test) in the 
+To create a `Corpus` for a text classification task, you need to have three files (train, dev, and test) in the 
 above format located in one folder. This data folder structure could, for example, look like this for the IMDB task:
 ```text
 /resources/tasks/imdb/train.txt
 /resources/tasks/imdb/dev.txt
 /resources/tasks/imdb/test.txt
 ```
-If you now point the `NLPTaskDataFetcher` to this folder (`/resources/tasks/imdb`), it will create a `TaggedCorpus` out of 
-the three different files. Thereby, each line in a file is converted to a `Sentence` object annotated with the labels.
+Now create a `ClassificationCorpus` by pointing to this folder (`/resources/tasks/imdb`). 
+Thereby, each line in a file is converted to a `Sentence` object annotated with the labels.
 
 Attention: A text in a line can have multiple sentences. Thus, a `Sentence` object can actually consist of multiple
 sentences.
 
 ```python
-from flair.data_fetcher import NLPTaskDataFetcher
-from pathlib import Path
+from flair.data import Corpus
+from flair.datasets import ClassificationCorpus
 
-# use your own data path
-data_folder = Path('/resources/tasks/imdb')
+# this is the folder in which train, test and dev files reside
+data_folder = '/path/to/data/folder'
 
 # load corpus containing training, test and dev data
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_classification_corpus(data_folder,
-                                                                     test_file='test.txt',
-                                                                     dev_file='dev.txt',
-                                                                     train_file='train.txt')
+corpus: Corpus = ClassificationCorpus(data_folder,
+                                      test_file='test.txt',
+                                      dev_file='dev.txt',
+                                      train_file='train.txt')
 ```
 
-If you just want to read a single file, you can use 
-`NLPTaskDataFetcher.read_text_classification_file('path/to/file.txt)`, which returns a list of `Sentence` objects.
-
-**Notice**: In order to download and preprocess the IMDB dataset automatically, you can use the `load_corpus()` method
-that will execute all necessary steps to get a `flair` compatible text classification format:
+Note that our corpus initializers have methods to automatically look for train, dev and test splits in a folder. So in 
+most cases you don't need to specify the file names yourself. Often, this is enough: 
 
 ```python
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.IMDB)
+# this is the folder in which train, test and dev files reside
+data_folder = '/path/to/data/folder'
+
+# load corpus by pointing to folder. Train, dev and test gets identified automatically. 
+corpus: Corpus = ClassificationCorpus(data_folder)
 ```
 
 ## Downloading A Dataset
 
-Flair also supports a couple of datasets out of the box.
-You can simple load your preferred dataset by calling, for example
+Flair also supports a growing list of datasets out of the box. You can simply load your preferred 
+dataset by calling a dataset name, such as:
+
 ```python
-corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH)
+corpus = flair.datasets.UD_ENGLISH()
 ```
-This line of code will download the UD_ENGLISH dataset and puts it into `~/.flair/datasets/ud_english`.
-The method returns a `TaggedCorpus` which can be directly used to train your model.
 
-The following datasets are supported:
+This line of code will download the Universal Dependency Treebank for English and put it into `~/.flair/datasets/ud_english`.
+The method returns a `Corpus` which can be directly used to train your model.
 
-| `NLPTask` | `NLPTask` | `NLPTask` |
-|---|---|---|
-| [CONLL_2000](https://www.clips.uantwerpen.be/conll2000/chunking/) | [UD_DUTCH](https://github.com/UniversalDependencies/UD_Dutch-Alpino) | [UD_CROATIAN](https://github.com/UniversalDependencies/UD_Croatian-SET) |
-| [CONLL_03_DUTCH](https://www.clips.uantwerpen.be/conll2002/ner/) | [UD_FRENCH](https://github.com/UniversalDependencies/UD_French-GSD) | [UD_SERBIAN](https://github.com/UniversalDependencies/UD_Serbian-SET) |
-| [CONLL_03_SPANISH](https://www.clips.uantwerpen.be/conll2002/ner/) | [UD_ITALIAN](https://github.com/UniversalDependencies/UD_Italian-ISDT) | [UD_BULGARIAN](https://github.com/UniversalDependencies/UD_Bulgarian-BTB) |
-| [WNUT_17](https://noisy-text.github.io/2017/files/) | [UD_SPANISH](https://github.com/UniversalDependencies/UD_Spanish-GSD) | [UD_ARABIC](https://github.com/UniversalDependencies/UD_Arabic-PADT) |
-| [WIKINER_ENGLISH](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_PORTUGUESE](https://github.com/UniversalDependencies/UD_Portuguese-Bosque) | [UD_HEBREW](https://github.com/UniversalDependencies/UD_Hebrew-HTB) |
-| [WIKINER_GERMAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_ROMANIAN](https://github.com/UniversalDependencies/UD_Romanian-RRT) | [UD_TURKISH](https://github.com/UniversalDependencies/UD_Turkish-IMST) |
-| [WIKINER_DUTCH](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_CATALAN](https://github.com/UniversalDependencies/UD_Catalan-AnCora) | [UD_PERSIAN](https://github.com/UniversalDependencies/UD_Persian-Seraji) |
-| [WIKINER_FRENCH](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_POLISH](https://github.com/UniversalDependencies/UD_Polish-LFG) | [UD_RUSSIAN](https://github.com/UniversalDependencies/UD_Russian-SynTagRus) |
-| [WIKINER_ITALIAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_CZECH](https://github.com/UniversalDependencies/UD_Czech-PDT) | [UD_HINDI](https://github.com/UniversalDependencies/UD_Hindi-HDTB) |
-| [WIKINER_SPANISH](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_SLOVAK](https://github.com/UniversalDependencies/UD_Slovak-SNK) | [UD_INDONESIAN](https://github.com/UniversalDependencies/UD_Indonesian-GSD) |
-| [WIKINER_PORTUGUESE](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_SWEDISH](https://github.com/UniversalDependencies/UD_Swedish-Talbanken) | [UD_JAPANESE](https://github.com/UniversalDependencies/UD_Japanese-GSD) |
-| [WIKINER_POLISH](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_DANISH](https://github.com/UniversalDependencies/UD_Danish-DDT) | [UD_CHINESE](https://github.com/UniversalDependencies/UD_Chinese-GSD) |
-| [WIKINER_RUSSIAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner) | [UD_NORWEGIAN](https://github.com/UniversalDependencies/UD_Norwegian-Bokmaal) | [UD_KOREAN](https://github.com/UniversalDependencies/UD_Korean-Kaist) |
-| [UD_ENGLISH](https://github.com/UniversalDependencies/UD_English-EWT) | [UD_FINNISH](https://github.com/UniversalDependencies/UD_Finnish-TDT) |  [UD_BASQUE](https://github.com/UniversalDependencies/UD_Basque-BDT) |
-| [UD_GERMAN](https://github.com/UniversalDependencies/UD_German-GSD) | [UD_SLOVENIAN](https://github.com/UniversalDependencies/UD_Slovenian-SSJ) |
-| [IMDB](http://ai.stanford.edu/~amaas/data/sentiment/) | [TREC_6](http://cogcomp.org/Data/QA/QC/) | [TREC_50](http://cogcomp.org/Data/QA/QC/)
-| [NER_BASQUE](http://ixa2.si.ehu.eus/eiec/)
+The following datasets are supported: 
 
+Chunking: [CONLL_2000](https://www.clips.uantwerpen.be/conll2000/chunking/)
 
-## The TaggedCorpus Object
+Named Entity Recognition:
+[CONLL_03_DUTCH](https://www.clips.uantwerpen.be/conll2002/ner/), 
+[CONLL_03_SPANISH](https://www.clips.uantwerpen.be/conll2002/ner/),
+[WNUT_17](https://noisy-text.github.io/2017/files/),
+[NER_BASQUE](http://ixa2.si.ehu.eus/eiec/),
+[WIKINER_ENGLISH](https://github.com/dice-group/FOX/tree/master/input/Wikiner),
+[WIKINER_GERMAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner),
+[WIKINER_DUTCH](https://github.com/dice-group/FOX/tree/master/input/Wikiner),
+[WIKINER_FRENCH](https://github.com/dice-group/FOX/tree/master/input/Wikiner), 
+[WIKINER_ITALIAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner), 
+[WIKINER_SPANISH](https://github.com/dice-group/FOX/tree/master/input/Wikiner), 
+[WIKINER_PORTUGUESE](https://github.com/dice-group/FOX/tree/master/input/Wikiner), 
+[WIKINER_POLISH](https://github.com/dice-group/FOX/tree/master/input/Wikiner), 
+[WIKINER_RUSSIAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner), 
 
-The `TaggedCorpus` represents your entire dataset. A `TaggedCorpus` consists of a list of `train` sentences,
+Universal Dependency Treebanks:
+[UD_DUTCH](https://github.com/UniversalDependencies/UD_Dutch-Alpino),
+[UD_CROATIAN](https://github.com/UniversalDependencies/UD_Croatian-SET) ,
+[UD_FRENCH](https://github.com/UniversalDependencies/UD_French-GSD),
+[UD_SERBIAN](https://github.com/UniversalDependencies/UD_Serbian-SET),
+[UD_ITALIAN](https://github.com/UniversalDependencies/UD_Italian-ISDT),
+[UD_BULGARIAN](https://github.com/UniversalDependencies/UD_Bulgarian-BTB),
+[UD_SPANISH](https://github.com/UniversalDependencies/UD_Spanish-GSD),
+[UD_ARABIC](https://github.com/UniversalDependencies/UD_Arabic-PADT),
+[UD_PORTUGUESE](https://github.com/UniversalDependencies/UD_Portuguese-Bosque),
+[UD_HEBREW](https://github.com/UniversalDependencies/UD_Hebrew-HTB),
+[UD_ROMANIAN](https://github.com/UniversalDependencies/UD_Romanian-RRT),
+[UD_TURKISH](https://github.com/UniversalDependencies/UD_Turkish-IMST),
+[UD_CATALAN](https://github.com/UniversalDependencies/UD_Catalan-AnCora), 
+[UD_PERSIAN](https://github.com/UniversalDependencies/UD_Persian-Seraji),
+[UD_POLISH](https://github.com/UniversalDependencies/UD_Polish-LFG), 
+[UD_RUSSIAN](https://github.com/UniversalDependencies/UD_Russian-SynTagRus),
+[UD_CZECH](https://github.com/UniversalDependencies/UD_Czech-PDT), 
+[UD_HINDI](https://github.com/UniversalDependencies/UD_Hindi-HDTB),
+[UD_SLOVAK](https://github.com/UniversalDependencies/UD_Slovak-SNK), 
+[UD_INDONESIAN](https://github.com/UniversalDependencies/UD_Indonesian-GSD),
+[UD_SWEDISH](https://github.com/UniversalDependencies/UD_Swedish-Talbanken), 
+[UD_JAPANESE](https://github.com/UniversalDependencies/UD_Japanese-GSD),
+[UD_DANISH](https://github.com/UniversalDependencies/UD_Danish-DDT), 
+[UD_CHINESE](https://github.com/UniversalDependencies/UD_Chinese-GSD),
+[UD_NORWEGIAN](https://github.com/UniversalDependencies/UD_Norwegian-Bokmaal), 
+[UD_KOREAN](https://github.com/UniversalDependencies/UD_Korean-Kaist),
+[UD_ENGLISH](https://github.com/UniversalDependencies/UD_English-EWT), 
+[UD_FINNISH](https://github.com/UniversalDependencies/UD_Finnish-TDT), 
+[UD_BASQUE](https://github.com/UniversalDependencies/UD_Basque-BDT),
+[UD_GERMAN](https://github.com/UniversalDependencies/UD_German-GSD),
+[UD_SLOVENIAN](https://github.com/UniversalDependencies/UD_Slovenian-SSJ),
+
+Text Classification:
+[IMDB](http://ai.stanford.edu/~amaas/data/sentiment/), 
+[NEWSGROUPS](http://qwone.com/~jason/20Newsgroups/), 
+[TREC_6](http://cogcomp.org/Data/QA/QC/), 
+[TREC_50](http://cogcomp.org/Data/QA/QC/),
+
+Text Regression:
+[WASSA_ANGER](https://competitions.codalab.org/competitions/16380#learn_the_details), 
+[WASSA_FEAR](https://competitions.codalab.org/competitions/16380#learn_the_details), 
+[WASSA_JOY](https://competitions.codalab.org/competitions/16380#learn_the_details), 
+[WASSA_SADNESS](https://competitions.codalab.org/competitions/16380#learn_the_details), 
+
+## The Corpus Object
+
+The `Corpus` represents your entire dataset. A `Corpus` consists of a list of `train` sentences,
 a list of `dev` sentences, and a list of `test` sentences.
 
-A `TaggedCorpus` contains a bunch of useful helper functions.
+A `Corpus` contains a bunch of useful helper functions.
 For instance, you can downsample the data by calling `downsample()` and passing a ratio. So, if you normally get a 
 corpus like this:
 
 ```python
-original_corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH)
+original_corpus = flair.datasets.UD_ENGLISH()
 ```
 
 then you can downsample the corpus, simply like this:
 
 ```python
-downsampled_corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH).downsample(0.1)
+downsampled_corpus = flair.datasets.UD_ENGLISH().downsample(0.1)
 ```
 
 If you print both corpora, you see that the second one has been downsampled to 10% of the data.
@@ -183,20 +228,20 @@ TaggedCorpus: 12543 train + 2002 dev + 2077 test sentences
 TaggedCorpus: 1255 train + 201 dev + 208 test sentences
 ```
 
-For many learning tasks you need to create a target dictionary. Thus, the `TaggedCorpus` enables you to create your
+For many learning tasks you need to create a target dictionary. Thus, the `Corpus` enables you to create your
 tag or label dictionary, depending on the task you want to learn. Simple execute the following code snippet to do so:
 
 ```python
 # create tag dictionary for a PoS task
-corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH)
+corpus = flair.datasets.UD_ENGLISH()
 print(corpus.make_tag_dictionary('upos'))
 
 # create tag dictionary for an NER task
-corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03_DUTCH)
+corpus = flair.datasets.CONLL_03_DUTCH()
 print(corpus.make_tag_dictionary('ner'))
 
 # create label dictionary for a text classification task
-corpus = NLPTaskDataFetcher.load_corpus(NLPTask.TREC_6)
+corpus = flair.datasets.NLPTask.TREC_6()
 print(corpus.make_label_dictionary())
 ```
 
@@ -204,9 +249,8 @@ Another useful function is `obtain_statistics()` which returns you a python dict
 dataset. Using it, for example, on the IMDB dataset like this
 
 ```python
-from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
- 
-corpus = NLPTaskDataFetcher.load_corpus(NLPTask.TREC_6)
+import flair.datasets 
+corpus = flair.datasets.TREC_6()
 stats = corpus.obtain_statistics()
 print(stats)
 ```
@@ -215,20 +259,18 @@ outputs detailed information on the dataset, each split, and the distribution of
 ## The MultiCorpus Object
 
 If you want to train multiple tasks at once, you can use the `MultiCorpus` object.
-To initiate the `MultiCorpus` you first need to create any number of `TaggedCorpus` objects. Afterwards, you can pass
-a list of `TaggedCorpus` to the `MultiCorpus` object.
+To initiate the `MultiCorpus` you first need to create any number of `Corpus` objects. Afterwards, you can pass
+a list of `Corpus` to the `MultiCorpus` object.
 
 ```text
-english_corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_ENGLISH)
-german_corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_GERMAN)
-dutch_corpus = NLPTaskDataFetcher.load_corpus(NLPTask.UD_DUTCH)
+english_corpus = flair.datasets.UD_ENGLISH()
+german_corpus = flair.datasets.UD_GERMAN()
+dutch_corpus = flair.datasets.UD_DUTCH()
 
 multi_corpus = MultiCorpus([english_corpus, german_corpus, dutch_corpus])
 ```
 
-The `MultiCorpus` object has the same interface as the `TaggedCorpus`.
-You can simple pass a `MultiCorpus` to a trainer instead of a `TaggedCorpus`, the trainer will not know the difference
-and training operates as usual.
+The `MultiCorpus` inherits from `Corpus`, so you can use it like any other corpus to train your models. 
 
 
 ## Next
