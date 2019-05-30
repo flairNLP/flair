@@ -913,7 +913,6 @@ class NEWSGROUPS(ClassificationCorpus):
                         )
                         with open(f"{data_path}/{dataset}.txt", "at") as f_p:
                             current_path = data_path / "original" / dataset / label
-                            print(current_path)
                             for file_name in current_path.iterdir():
                                 if file_name.is_file():
                                     f_p.write(
