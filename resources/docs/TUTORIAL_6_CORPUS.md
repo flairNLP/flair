@@ -106,7 +106,7 @@ corpus = flair.datasets.CONLL_03_DUTCH()
 print(corpus.make_tag_dictionary('ner'))
 
 # create label dictionary for a text classification task
-corpus = flair.datasets.NLPTask.TREC_6()
+corpus = flair.datasets.TREC_6()
 print(corpus.make_label_dictionary())
 ```
 
