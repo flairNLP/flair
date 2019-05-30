@@ -25,7 +25,7 @@ document embeddings, including our proposed **[Flair embeddings](https://drive.g
 * **A Pytorch NLP framework.** Our framework builds directly on [Pytorch](https://pytorch.org/), making it easy to 
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.4.1](https://github.com/zalandoresearch/flair/releases)!
+Now at [version 0.4.2](https://github.com/zalandoresearch/flair/releases)!
 
 ## Comparison with State-of-the-Art
 
