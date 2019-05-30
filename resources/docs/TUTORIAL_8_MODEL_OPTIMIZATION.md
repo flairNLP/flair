@@ -12,10 +12,10 @@ First you need to load your corpus. If you want to load the [AGNews corpus](http
 used in the following example, you first need to download it and convert it into the correct format. Please
 check [tutorial 6](/resources/docs/TUTORIAL_6_CORPUS.md) for more details.
 ```python
-from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
+from flair.datasets import TREC_6
 
 # load your corpus
-corpus = NLPTaskDataFetcher.load_corpus(NLPTask.TREC_6)
+corpus = TREC_6()
 ```
 
 Second you need to define the search space of parameters.
