@@ -157,7 +157,40 @@ The following datasets are supported:
 
 | ID(s) | Languages | Description |
 | -------------    | ------------- |------------- |
-| 'UD_ARABIC', 'UD_BASQUE', 'UD_BULGARIAN', 'UD_CATALAN', 'UD_CHINESE', 'UD_CROATIAN', 'UD_CZECH', 'UD_DANISH', 'UD_DUTCH',  'UD_ENGLISH', 'UD_FINNISH', 'UD_FRENCH', 'UD_GERMAN', 'UD_GERMAN-HDT', 'UD_HEBREW', 'UD_HINDI',   'UD_INDONESIAN', 'UD_ITALIAN', 'UD_JAPANESE', 'UD_KOREAN', 'UD_NORWEGIAN',   'UD_PERSIAN', 'UD_POLISH', 'UD_PORTUGUESE', 'UD_ROMANIAN', 'UD_RUSSIAN', 'UD_SERBIAN', 'UD_SLOVAK', 'UD_SLOVENIAN', 'UD_SPANISH', 'UD_SWEDISH', 'UD_TURKISH' | 30 languages  |  Universal Dependency Treebanks for [Arabic](https://github.com/UniversalDependencies/UD_Arabic-PADT),  [Basque](https://github.com/UniversalDependencies/UD_Basque-BDT),  [Bulgarian](https://github.com/UniversalDependencies/UD_Bulgarian-BTB),  [Catalan](https://github.com/UniversalDependencies/UD_Catalan-AnCora),   [Chinese](https://github.com/UniversalDependencies/UD_Chinese-GSD),  [Croatian](https://github.com/UniversalDependencies/UD_Croatian-SET),  [Czech](https://github.com/UniversalDependencies/UD_Czech-PDT),   [Danish](https://github.com/UniversalDependencies/UD_Danish-DDT), [Dutch](https://github.com/UniversalDependencies/UD_Dutch-Alpino),  [English](https://github.com/UniversalDependencies/UD_English-EWT), [Finnish](https://github.com/UniversalDependencies/UD_Finnish-TDT), [French](https://github.com/UniversalDependencies/UD_French-GSD), [German](https://github.com/UniversalDependencies/UD_German-GSD), [Hebrew](https://github.com/UniversalDependencies/UD_Hebrew-HTB), [Hindi](https://github.com/UniversalDependencies/UD_Hindi-HDTB), [Indonesian](https://github.com/UniversalDependencies/UD_Indonesian-GSD), [Italian](https://github.com/UniversalDependencies/UD_Italian-ISDT), [Japanese](https://github.com/UniversalDependencies/UD_Japanese-GSD), [Korean](https://github.com/UniversalDependencies/UD_Korean-Kaist), [Norwegian](https://github.com/UniversalDependencies/UD_Norwegian-Bokmaal), [Persian](https://github.com/UniversalDependencies/UD_Persian-Seraji), [Polish](https://github.com/UniversalDependencies/UD_Polish-LFG),  [Portuguese](https://github.com/UniversalDependencies/UD_Portuguese-Bosque), [Romanian](https://github.com/UniversalDependencies/UD_Romanian-RRT), [Russian](https://github.com/UniversalDependencies/UD_Russian-SynTagRus), [Serbian](https://github.com/UniversalDependencies/UD_Serbian-SET), [Slovak](https://github.com/UniversalDependencies/UD_Slovak-SNK),  [Slovenian](https://github.com/UniversalDependencies/UD_Slovenian-SSJ), [Spanish](https://github.com/UniversalDependencies/UD_Spanish-GSD), [Sswedish](https://github.com/UniversalDependencies/UD_Swedish-Talbanken), [Tturkish](https://github.com/UniversalDependencies/UD_Turkish-IMST),
+| 'UD_ARABIC'| Arabic  |  Universal Dependency Treebank for [Arabic](https://github.com/UniversalDependencies/UD_Arabic-PADT) |
+| 'UD_BASQUE'| Basque  |  Universal Dependency Treebank for [Basque](https://github.com/UniversalDependencies/UD_Basque-BDT) |
+| 'UD_BULGARIAN'| Bulgarian  |  Universal Dependency Treebank for [Bulgarian](https://github.com/UniversalDependencies/UD_Bulgarian-BTB)
+| 'UD_CATALAN', | Catalan  |  Universal Dependency Treebank for [Catalan](https://github.com/UniversalDependencies/UD_Catalan-AnCora) |
+| 'UD_CHINESE' | Chinese  |  Universal Dependency Treebank for [Chinese](https://github.com/UniversalDependencies/UD_Chinese-GSD) |
+| 'UD_CROATIAN' | Croatian  |  Universal Dependency Treebank for [Croatian](https://github.com/UniversalDependencies/UD_Croatian-SET) |
+| 'UD_CZECH' | Czech  |  Very large Universal Dependency Treebank for [Czech](https://github.com/UniversalDependencies/UD_Czech-PDT) |
+| 'UD_DANISH' | Danish  |  Universal Dependency Treebank for [Danish](https://github.com/UniversalDependencies/UD_Danish-DDT) |
+| 'UD_DUTCH' | Dutch  |  Universal Dependency Treebank for [Dutch](https://github.com/UniversalDependencies/UD_Dutch-Alpino) |
+| 'UD_ENGLISH' | English  |  Universal Dependency Treebank for [English](https://github.com/UniversalDependencies/UD_English-EWT) |
+| 'UD_FINNISH' | Finnish  |  Universal Dependency Treebank for [Finnish](https://github.com/UniversalDependencies/UD_Finnish-TDT) |
+| 'UD_FRENCH' | French  |  Universal Dependency Treebank for [French](https://github.com/UniversalDependencies/UD_French-GSD) |
+|'UD_GERMAN' | German  |  Universal Dependency Treebank for [German](https://github.com/UniversalDependencies/UD_German-GSD) |
+|'UD_GERMAN-HDT' | German  |  Very large Universal Dependency Treebank for [German](https://github.com/UniversalDependencies/UD_German-HDT) |
+|'UD_HEBREW' | Hebrew  |  Universal Dependency Treebank for [Hebrew](https://github.com/UniversalDependencies/UD_Hebrew-HTB) |
+|'UD_HINDI' | Hindi  |  Universal Dependency Treebank for [Hindi](https://github.com/UniversalDependencies/UD_Hindi-HDTB) |
+|'UD_INDONESIAN' | Indonesian  |  Universal Dependency Treebank for [Indonesian](https://github.com/UniversalDependencies/UD_Indonesian-GSD) |
+| 'UD_ITALIAN' | Italian  |  Universal Dependency Treebank for [Italian](https://github.com/UniversalDependencies/UD_Italian-ISDT) |
+| 'UD_JAPANESE'| Japanese  |  Universal Dependency Treebank for [Japanese](https://github.com/UniversalDependencies/UD_Japanese-GSD) |
+|'UD_KOREAN' | Korean  |  Universal Dependency Treebank for [Korean](https://github.com/UniversalDependencies/UD_Korean-Kaist) |
+| 'UD_NORWEGIAN',  | Norwegian  |  Universal Dependency Treebank for [Norwegian](https://github.com/UniversalDependencies/UD_Norwegian-Bokmaal) |
+|  'UD_PERSIAN' | Persian / Farsi  |  Universal Dependency Treebank for [Persian](https://github.com/UniversalDependencies/UD_Persian-Seraji) |
+| 'UD_POLISH'  |  Polish |  Universal Dependency Treebank for [Polish](https://github.com/UniversalDependencies/UD_Polish-LFG) |
+|'UD_PORTUGUESE' | Portuguese  |  Universal Dependency Treebank for [Portuguese](https://github.com/UniversalDependencies/UD_Portuguese-Bosque) |
+| 'UD_ROMANIAN' | Romanian  |  Universal Dependency Treebank for [Romanian](https://github.com/UniversalDependencies/UD_Romanian-RRT)  |
+| 'UD_RUSSIAN' | Russian  |  Universal Dependency Treebank for [Russian](https://github.com/UniversalDependencies/UD_Russian-SynTagRus) |
+| 'UD_SERBIAN' | Serbian  |  Universal Dependency Treebank for [Serbian](https://github.com/UniversalDependencies/UD_Serbian-SET)|
+| 'UD_SLOVAK' | Slovak  |  Universal Dependency Treebank for [Slovak](https://github.com/UniversalDependencies/UD_Slovak-SNK) |
+| 'UD_SLOVENIAN' | Slovenian  |  Universal Dependency Treebank for [Slovenian](https://github.com/UniversalDependencies/UD_Slovenian-SSJ) |
+| 'UD_SPANISH'  | Spanish  |  Universal Dependency Treebank for [Spanish](https://github.com/UniversalDependencies/UD_Spanish-GSD) |
+|  'UD_SWEDISH' | Swedish  |  Universal Dependency Treebank for [Swedish](https://github.com/UniversalDependencies/UD_Swedish-Talbanken) |
+|  'UD_TURKISH' | Turkish  |  Universal Dependency Treebank for [Tturkish](https://github.com/UniversalDependencies/UD_Turkish-IMST) |
+
+
 
 #### Text Classification
 | ID(s) | Languages | Description |
