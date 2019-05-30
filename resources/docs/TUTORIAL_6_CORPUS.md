@@ -127,67 +127,44 @@ The method returns a `Corpus` which can be directly used to train your model.
 
 The following datasets are supported: 
 
-Chunking: [CONLL_2000](https://www.clips.uantwerpen.be/conll2000/chunking/)
 
-Named Entity Recognition:
-[CONLL_03_DUTCH](https://www.clips.uantwerpen.be/conll2002/ner/), 
-[CONLL_03_SPANISH](https://www.clips.uantwerpen.be/conll2002/ner/),
-[WNUT_17](https://noisy-text.github.io/2017/files/),
-[NER_BASQUE](http://ixa2.si.ehu.eus/eiec/),
-[WIKINER_ENGLISH](https://github.com/dice-group/FOX/tree/master/input/Wikiner),
-[WIKINER_GERMAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner),
-[WIKINER_DUTCH](https://github.com/dice-group/FOX/tree/master/input/Wikiner),
-[WIKINER_FRENCH](https://github.com/dice-group/FOX/tree/master/input/Wikiner), 
-[WIKINER_ITALIAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner), 
-[WIKINER_SPANISH](https://github.com/dice-group/FOX/tree/master/input/Wikiner), 
-[WIKINER_PORTUGUESE](https://github.com/dice-group/FOX/tree/master/input/Wikiner), 
-[WIKINER_POLISH](https://github.com/dice-group/FOX/tree/master/input/Wikiner), 
-[WIKINER_RUSSIAN](https://github.com/dice-group/FOX/tree/master/input/Wikiner), 
+#### Chunking
 
-Universal Dependency Treebanks:
-[UD_DUTCH](https://github.com/UniversalDependencies/UD_Dutch-Alpino),
-[UD_CROATIAN](https://github.com/UniversalDependencies/UD_Croatian-SET) ,
-[UD_FRENCH](https://github.com/UniversalDependencies/UD_French-GSD),
-[UD_SERBIAN](https://github.com/UniversalDependencies/UD_Serbian-SET),
-[UD_ITALIAN](https://github.com/UniversalDependencies/UD_Italian-ISDT),
-[UD_BULGARIAN](https://github.com/UniversalDependencies/UD_Bulgarian-BTB),
-[UD_SPANISH](https://github.com/UniversalDependencies/UD_Spanish-GSD),
-[UD_ARABIC](https://github.com/UniversalDependencies/UD_Arabic-PADT),
-[UD_PORTUGUESE](https://github.com/UniversalDependencies/UD_Portuguese-Bosque),
-[UD_HEBREW](https://github.com/UniversalDependencies/UD_Hebrew-HTB),
-[UD_ROMANIAN](https://github.com/UniversalDependencies/UD_Romanian-RRT),
-[UD_TURKISH](https://github.com/UniversalDependencies/UD_Turkish-IMST),
-[UD_CATALAN](https://github.com/UniversalDependencies/UD_Catalan-AnCora), 
-[UD_PERSIAN](https://github.com/UniversalDependencies/UD_Persian-Seraji),
-[UD_POLISH](https://github.com/UniversalDependencies/UD_Polish-LFG), 
-[UD_RUSSIAN](https://github.com/UniversalDependencies/UD_Russian-SynTagRus),
-[UD_CZECH](https://github.com/UniversalDependencies/UD_Czech-PDT), 
-[UD_HINDI](https://github.com/UniversalDependencies/UD_Hindi-HDTB),
-[UD_SLOVAK](https://github.com/UniversalDependencies/UD_Slovak-SNK), 
-[UD_INDONESIAN](https://github.com/UniversalDependencies/UD_Indonesian-GSD),
-[UD_SWEDISH](https://github.com/UniversalDependencies/UD_Swedish-Talbanken), 
-[UD_JAPANESE](https://github.com/UniversalDependencies/UD_Japanese-GSD),
-[UD_DANISH](https://github.com/UniversalDependencies/UD_Danish-DDT), 
-[UD_CHINESE](https://github.com/UniversalDependencies/UD_Chinese-GSD),
-[UD_NORWEGIAN](https://github.com/UniversalDependencies/UD_Norwegian-Bokmaal), 
-[UD_KOREAN](https://github.com/UniversalDependencies/UD_Korean-Kaist),
-[UD_ENGLISH](https://github.com/UniversalDependencies/UD_English-EWT), 
-[UD_FINNISH](https://github.com/UniversalDependencies/UD_Finnish-TDT), 
-[UD_BASQUE](https://github.com/UniversalDependencies/UD_Basque-BDT),
-[UD_GERMAN](https://github.com/UniversalDependencies/UD_German-GSD),
-[UD_SLOVENIAN](https://github.com/UniversalDependencies/UD_Slovenian-SSJ),
+| ID(s) | Languages | Description |
+| -------------    | ------------- |------------- |
+| 'CONLL_2000' | English  |  [CoNLL-2000]((https://www.clips.uantwerpen.be/conll2000/chunking/)) syntactic chunking |
 
-Text Classification:
-[IMDB](http://ai.stanford.edu/~amaas/data/sentiment/), 
-[NEWSGROUPS](http://qwone.com/~jason/20Newsgroups/), 
-[TREC_6](http://cogcomp.org/Data/QA/QC/), 
-[TREC_50](http://cogcomp.org/Data/QA/QC/),
 
-Text Regression:
-[WASSA_ANGER](https://competitions.codalab.org/competitions/16380#learn_the_details), 
-[WASSA_FEAR](https://competitions.codalab.org/competitions/16380#learn_the_details), 
-[WASSA_JOY](https://competitions.codalab.org/competitions/16380#learn_the_details), 
-[WASSA_SADNESS](https://competitions.codalab.org/competitions/16380#learn_the_details), 
+#### Named Entity Recognition
+
+| ID(s) | Languages | Description |
+| -------------    | ------------- |------------- |
+| 'CONLL_03_DUTCH', 'CONLL_03_SPANISH' | Dutch, Spanish  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER |
+| 'WNUT_17' | English  |  [WNUT-17](https://noisy-text.github.io/2017/files/) emerging entity detection |
+| 'WIKINER_ENGLISH', 'WIKINER_GERMAN', 'WIKINER_DUTCH', 'WIKINER_FRENCH', 'WIKINER_ITALIAN', 'WIKINER_SPANISH', 'WIKINER_PORTUGUESE', 'WIKINER_POLISH', 'WIKINER_RUSSIAN'  | 9 Languages  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER datasets automatically generated from Wikipedia |
+| 'NER_BASQUE' | Basque  |  [NER dataset for Basque](http://ixa2.si.ehu.eus/eiec/) |
+
+
+#### Universal Dependency Treebanks
+
+| ID(s) | Languages | Description |
+| -------------    | ------------- |------------- |
+| 'UD_ARABIC', 'UD_BASQUE', 'UD_BULGARIAN', 'UD_CATALAN', 'UD_CHINESE', 'UD_CROATIAN', 'UD_CZECH', 'UD_DANISH', 'UD_DUTCH',  'UD_ENGLISH', 'UD_FINNISH', 'UD_FRENCH', 'UD_GERMAN', 'UD_GERMAN-HDT', 'UD_HEBREW', 'UD_HINDI',   'UD_INDONESIAN', 'UD_ITALIAN', 'UD_JAPANESE', 'UD_KOREAN', 'UD_NORWEGIAN',   'UD_PERSIAN', 'UD_POLISH', 'UD_PORTUGUESE', 'UD_ROMANIAN', 'UD_RUSSIAN', 'UD_SERBIAN', 'UD_SLOVAK', 'UD_SLOVENIAN', 'UD_SPANISH', 'UD_SWEDISH', 'UD_TURKISH' | 30 languages  |  Universal Dependency Treebanks for [Arabic](https://github.com/UniversalDependencies/UD_Arabic-PADT),  [Basque](https://github.com/UniversalDependencies/UD_Basque-BDT),  [Bulgarian](https://github.com/UniversalDependencies/UD_Bulgarian-BTB),  [Catalan](https://github.com/UniversalDependencies/UD_Catalan-AnCora),   [Chinese](https://github.com/UniversalDependencies/UD_Chinese-GSD),  [Croatian](https://github.com/UniversalDependencies/UD_Croatian-SET),  [Czech](https://github.com/UniversalDependencies/UD_Czech-PDT),   [Danish](https://github.com/UniversalDependencies/UD_Danish-DDT), [Dutch](https://github.com/UniversalDependencies/UD_Dutch-Alpino),  [English](https://github.com/UniversalDependencies/UD_English-EWT), [Finnish](https://github.com/UniversalDependencies/UD_Finnish-TDT), [French](https://github.com/UniversalDependencies/UD_French-GSD), [German](https://github.com/UniversalDependencies/UD_German-GSD), [Hebrew](https://github.com/UniversalDependencies/UD_Hebrew-HTB), [Hindi](https://github.com/UniversalDependencies/UD_Hindi-HDTB), [Indonesian](https://github.com/UniversalDependencies/UD_Indonesian-GSD), [Italian](https://github.com/UniversalDependencies/UD_Italian-ISDT), [Japanese](https://github.com/UniversalDependencies/UD_Japanese-GSD), [Korean](https://github.com/UniversalDependencies/UD_Korean-Kaist), [Norwegian](https://github.com/UniversalDependencies/UD_Norwegian-Bokmaal), [Persian](https://github.com/UniversalDependencies/UD_Persian-Seraji), [Polish](https://github.com/UniversalDependencies/UD_Polish-LFG),  [Portuguese](https://github.com/UniversalDependencies/UD_Portuguese-Bosque), [Romanian](https://github.com/UniversalDependencies/UD_Romanian-RRT), [Russian](https://github.com/UniversalDependencies/UD_Russian-SynTagRus), [Serbian](https://github.com/UniversalDependencies/UD_Serbian-SET), [Slovak](https://github.com/UniversalDependencies/UD_Slovak-SNK),  [Slovenian](https://github.com/UniversalDependencies/UD_Slovenian-SSJ), [Spanish](https://github.com/UniversalDependencies/UD_Spanish-GSD), [Sswedish](https://github.com/UniversalDependencies/UD_Swedish-Talbanken), [Tturkish](https://github.com/UniversalDependencies/UD_Turkish-IMST),
+
+#### Text Classification
+| ID(s) | Languages | Description |
+| -------------    | ------------- |------------- |
+| 'IMDB' | English |  [IMDB](http://ai.stanford.edu/~amaas/data/sentiment/) dataset of movie reviews and sentiment  |
+| 'NEWSGROUPS' | English | The popular [20 newsgroups](http://qwone.com/~jason/20Newsgroups/) classification dataset |
+| 'TREC_6', 'TREC_50' | English | The [TREC](http://cogcomp.org/Data/QA/QC/) question classification dataset |
+
+
+#### Text Regression
+| ID(s) | Languages | Description |
+| -------------    | ------------- |------------- |
+| 'WASSA_ANGER', 'WASSA_FEAR', 'WASSA_JOY', 'WASSA_SADNESS' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge  |
+
+
 
 ## The Corpus Object
 
@@ -199,12 +176,14 @@ For instance, you can downsample the data by calling `downsample()` and passing 
 corpus like this:
 
 ```python
+import flair.datasets
 original_corpus = flair.datasets.UD_ENGLISH()
 ```
 
 then you can downsample the corpus, simply like this:
 
 ```python
+import flair.datasets
 downsampled_corpus = flair.datasets.UD_ENGLISH().downsample(0.1)
 ```
 

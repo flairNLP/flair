@@ -53,6 +53,8 @@ Currently, the following contextual string embeddings are provided (note: replac
 | 'cs-X'     | Arabic | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
 | 'cs-v0-X'    | Czech | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): LM embeddings (earlier version) |
 | 'de-X'  | German  | Trained with mixed corpus (Web, Wikipedia, Subtitles) |
+| 'de-historic-ha-X'  | German (historical) | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Historical German trained over *Hamburger Anzeiger* |
+| 'de-historic-wz-X'  | German (historical) | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Historical German trained over *Wiener Zeitung* |
 | 'es-X'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): Trained with Wikipedia |
 | 'es-X-fast'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): Trained with Wikipediam CPU-friendly |
 | 'eu-X'    | Basque | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
@@ -79,10 +81,16 @@ Currently, the following contextual string embeddings are provided (note: replac
 | 'pubmed-X'    | English | Added by [@jessepeng](https://github.com/zalandoresearch/flair/pull/519): Trained with 5% of PubMed abstracts until 2015 (1150 hidden states, 3 layers)|
 
 
-So, if you want to load embeddings from the English news backward LM model, instantiate the method as follows:
+So, if you want to load embeddings from the German forward LM model, instantiate the method as follows:
 
 ```python
-flair_backward = FlairEmbeddings('news-backward')
+flair_de_forward = FlairEmbeddings('de-forward')
+```
+
+And if you want to load embeddings from the Bulgarian backward LM model, instantiate the method as follows:
+
+```python
+flair_bg_backward = FlairEmbeddings('bg-backward')
 ```
 
 ## Recommended Flair Usage
