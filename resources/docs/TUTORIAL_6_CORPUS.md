@@ -128,7 +128,7 @@ To initiate the `MultiCorpus` you first need to create any number of `Corpus` ob
 a list of `Corpus` to the `MultiCorpus` object. For instance, the following snippet loads a combination corpus
 consisting of the English, German and Dutch Universal Dependency Treebanks.
 
-```text
+```python
 english_corpus = flair.datasets.UD_ENGLISH()
 german_corpus = flair.datasets.UD_GERMAN()
 dutch_corpus = flair.datasets.UD_DUTCH()
