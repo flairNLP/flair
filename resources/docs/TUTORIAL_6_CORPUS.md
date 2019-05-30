@@ -133,6 +133,8 @@ english_corpus = flair.datasets.UD_ENGLISH()
 german_corpus = flair.datasets.UD_GERMAN()
 dutch_corpus = flair.datasets.UD_DUTCH()
 
+# make a multi corpus consisting of three UDs
+from flair.data import MultiCorpus
 multi_corpus = MultiCorpus([english_corpus, german_corpus, dutch_corpus])
 ```
 
