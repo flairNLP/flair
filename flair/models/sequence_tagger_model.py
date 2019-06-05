@@ -529,13 +529,14 @@ class SequenceTagger(flair.nn.Model):
             else:
                 tag_seq = []
                 confidences = []
+                scores = []
                 for backscore in feats[:length]:
                     softmax = F.softmax(backscore, dim=0)
                     _, idx = torch.max(backscore, 0)
                     prediction = idx.item()
                     tag_seq.append(prediction)
                     confidences.append(softmax[prediction].item())
-                    scores = softmax.tolist()
+                    scores.append(softmax.tolist())
 
             tags.append(
                 [
