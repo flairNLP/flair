@@ -119,7 +119,7 @@ class Label:
         if not value and value != "":
             raise ValueError(
                 "Incorrect label value provided. Label value needs to be set."
-                )
+            )
         else:
             self._value = value
 

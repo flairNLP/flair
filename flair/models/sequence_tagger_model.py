@@ -523,7 +523,6 @@ class SequenceTagger(flair.nn.Model):
 
         tags = []
         all_tags = []
-
         for feats, length in zip(feature, lengths):
             if self.use_crf:
                 confidences, tag_seq, scores = self._viterbi_decode(feats[:length])
@@ -536,6 +535,7 @@ class SequenceTagger(flair.nn.Model):
                     prediction = idx.item()
                     tag_seq.append(prediction)
                     confidences.append(softmax[prediction].item())
+                    scores = softmax.tolist()
 
             tags.append(
                 [
