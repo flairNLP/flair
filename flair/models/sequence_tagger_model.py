@@ -516,6 +516,12 @@ class SequenceTagger(flair.nn.Model):
             return score
 
     def _obtain_labels(self, feature, sentences) -> (List[List[Label]], List[List[List[Label]]]):
+        """
+        Returns a tuple of two lists: 
+         - The first list corresponds to the most likely `Label` per token in each sentence.
+         - The second list contains a probability distribution over all `Labels` for each token 
+           in a sentence for all sentences.
+        """
 
         sentences.sort(key=lambda x: len(x), reverse=True)
 
