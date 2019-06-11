@@ -50,7 +50,7 @@ Currently, the following contextual string embeddings are provided (note: replac
 | 'ar-X'     | Arabic | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
 | 'bg-X'  | Bulgarian | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
 | 'bg-X-fast'  | Bulgarian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Trained with various sources (Europarl, Wikipedia or SETimes) |
-| 'cs-X'     | Arabic | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'cs-X'     | Czech | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
 | 'cs-v0-X'    | Czech | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): LM embeddings (earlier version) |
 | 'de-X'  | German  | Trained with mixed corpus (Web, Wikipedia, Subtitles) |
 | 'de-historic-ha-X'  | German (historical) | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Historical German trained over *Hamburger Anzeiger* |
@@ -59,7 +59,7 @@ Currently, the following contextual string embeddings are provided (note: replac
 | 'es-X-fast'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): Trained with Wikipediam CPU-friendly |
 | 'eu-X'    | Basque | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
 | 'eu-v0-X'    | Basque | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): LM embeddings (earlier version) |
-| 'fa-X'     | Farsi | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'fa-X'     | Persian | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
 | 'fi-X'     | Finnish | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
 | 'fr-X'    | French | Added by [@mhham](https://github.com/mhham): Trained with French Wikipedia |
 | 'he-X'     | Hebrew | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |

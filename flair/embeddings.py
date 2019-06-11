@@ -1002,7 +1002,7 @@ class FlairEmbeddings(TokenEmbeddings):
             "eu-backward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-backward-v0.1.pt",
             "eu-v0-forward": f"{aws_path}/embeddings-v0.4/lm-eu-large-forward-v0.1.pt",
             "eu-v0-backward": f"{aws_path}/embeddings-v0.4/lm-eu-large-backward-v0.1.pt",
-            # Farsi
+            # Persian
             "fa-forward": f"{aws_path}/embeddings-stefan-it/lm-fa-opus-large-forward-v0.1.pt",
             "fa-backward": f"{aws_path}/embeddings-stefan-it/lm-fa-opus-large-backward-v0.1.pt",
             # Finnish
@@ -2376,6 +2376,7 @@ def replace_with_language_code(string: str):
     string = string.replace("danish-", "da-")
     string = string.replace("dutch-", "nl-")
     string = string.replace("farsi-", "fa-")
+    string = string.replace("persian-", "fa-")
     string = string.replace("finnish-", "fi-")
     string = string.replace("french-", "fr-")
     string = string.replace("german-", "de-")
