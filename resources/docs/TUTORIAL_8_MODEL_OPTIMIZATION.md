@@ -12,11 +12,10 @@ First you need to load your corpus. If you want to load the [AGNews corpus](http
 used in the following example, you first need to download it and convert it into the correct format. Please
 check [tutorial 6](/resources/docs/TUTORIAL_6_CORPUS.md) for more details.
 ```python
-from flair.data import TaggedCorpus
-from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
+from flair.datasets import TREC_6
 
 # load your corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.AG_NEWS, base_path='/resources/tasks/ag_news')
+corpus = TREC_6()
 ```
 
 Second you need to define the search space of parameters.
@@ -31,7 +30,7 @@ from flair.hyperparameter.param_selection import SearchSpace, Parameter
 search_space = SearchSpace()
 search_space.add(Parameter.EMBEDDINGS, hp.choice, options=[
     [ WordEmbeddings('en') ], 
-    [ CharLMEmbeddings('news-forward'), CharLMEmbeddings('news-backward') ]
+    [ FlairEmbeddings('news-forward'), FlairEmbeddings('news-backward') ]
 ])
 search_space.add(Parameter.HIDDEN_SIZE, hp.choice, options=[32, 64, 128])
 search_space.add(Parameter.RNN_LAYERS, hp.choice, options=[1, 2])
@@ -45,7 +44,7 @@ different kind of embeddings, simply pass just one embedding option to the searc
 every test run. Here is an example:
 ```python
 search_space.add(Parameter.EMBEDDINGS, hp.choice, options=[
-    [ CharLMEmbeddings('news-forward'), CharLMEmbeddings('news-backward') ]
+    [ FlairEmbeddings('news-forward'), FlairEmbeddings('news-backward') ]
 ])
 ```
 
@@ -100,14 +99,13 @@ In order to run such an experiment start with your initialized `ModelTrainer` an
 learning rate:
 
 ```python
-from flair.data import TaggedCorpus
-from flair.data_fetcher import NLPTaskDataFetcher, NLPTask
+from flair.datasets import WNUT_17
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
 from flair.trainers import ModelTrainer
 from typing import List
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03).downsample(0.1)
+corpus = WNUT_17().downsample(0.1)
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -137,10 +135,11 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 # 7. find learning rate
-learning_rate_tsv = ModelTrainer.find_learning_rate('resources/taggers/example-ner',
+learning_rate_tsv = trainer.find_learning_rate('resources/taggers/example-ner',
                                                     'learning_rate.tsv')
 
 # 8. plot the learning rate finder curve
+from flair.visual.training_curves import Plotter
 plotter = Plotter()
 plotter.plot_learning_rate(learning_rate_tsv)
 ```
@@ -153,29 +152,13 @@ extra options just specify it as shown with the `weight_decay` example:
 ```python
 from torch.optim.adam import Adam
 
-trainer: ModelTrainer = ModelTrainer(tagger, corpus,
-                                     optimizer=Adam, weight_decay=1e-4)
-```
-
-### AdamW and SGDW
-
-Weight decay is typically used by optimization methods to reduce over-fitting and it essentially adds a weight
-regularizer to the loss function via the `weight_decay` parameter of the optimizer. The way it is implemented in PyTorch
-this factor is confounded with the `learning_rate` and is essentially implementing L2 regularization. In the paper from
-Ilya Loshchilov and Frank Hutter [Fixing Weight Decay Regularization in Adam](https://arxiv.org/abs/1711.05101) the
-authors suggest to actually do weight decay rather than L2 regularization and they call their method AdamW and SGDW for
-the corresponding Adam and SGD versions. Empirically the results via these optimizers are better than their
-corresponding L2 regularized versions. However as the learning rate and weight decay are decoupled in these methods,
-any learning rate scheduling has to change both these terms. Not to worry, we automatically switch 
-schedulers that do this when these optimizers are used.
-
-To use these optimizers just create the `ModelTrainer` with `AdamW` or `SGDW` together with any extra options as shown:
-
-```python
-from flair.optim import SGDW
-
-trainer: ModelTrainer = ModelTrainer(tagger, corpus,
-                                     optimizer=SGDW, momentum=0.9)
+trainer = ModelTrainer(tagger, corpus,
+                       optimizer=Adam)
+                                     
+trainer.train(
+    "resources/taggers/example",
+    weight_decay=1e-4
+)
 ```
 
 ## Next

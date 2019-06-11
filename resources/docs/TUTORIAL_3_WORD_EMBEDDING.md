@@ -90,7 +90,7 @@ The following embeddings are currently supported:
 | 'ar' | Arabic | Arabic FastText embeddings |
 | 'he' | Hebrew | Hebrew FastText embeddings |
 | 'tr' | Turkish | Turkish FastText embeddings |
-| 'pa' | Persian | Persian FastText embeddings |
+| 'fa' | Persian | Persian FastText embeddings |
 | 'ja' | Japanese | Japanese FastText embeddings |
 | 'ko' | Korean | Korean FastText embeddings |
 | 'zh' | Chinese | Chinese FastText embeddings |

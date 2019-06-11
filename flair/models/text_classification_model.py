@@ -1,3 +1,4 @@
+import math
 import warnings
 import logging
 from pathlib import Path
@@ -10,10 +11,14 @@ import flair.nn
 import flair.embeddings
 from flair.data import Dictionary, Sentence, Label
 from flair.file_utils import cached_path
-from flair.training_utils import convert_labels_to_one_hot, clear_embeddings
+from flair.training_utils import (
+    convert_labels_to_one_hot,
+    clear_embeddings,
+    Metric,
+    Result,
+)
 
-
-log = logging.getLogger('flair')
+log = logging.getLogger("flair")
 
 
 class TextClassifier(flair.nn.Model):
@@ -24,23 +29,34 @@ class TextClassifier(flair.nn.Model):
     The model can handle single and multi class data sets.
     """
 
-    def __init__(self,
-                 document_embeddings: flair.embeddings.DocumentEmbeddings,
-                 label_dictionary: Dictionary,
-                 multi_label: bool):
+    def __init__(
+        self,
+        document_embeddings: flair.embeddings.DocumentEmbeddings,
+        label_dictionary: Dictionary,
+        multi_label: bool = None,
+        multi_label_threshold: float = 0.5,
+    ):
 
         super(TextClassifier, self).__init__()
 
         self.document_embeddings: flair.embeddings.DocumentRNNEmbeddings = document_embeddings
         self.label_dictionary: Dictionary = label_dictionary
-        self.multi_label = multi_label
 
-        self.decoder = nn.Linear(self.document_embeddings.embedding_length, len(self.label_dictionary))
+        if multi_label is not None:
+            self.multi_label = multi_label
+        else:
+            self.multi_label = self.label_dictionary.multi_label
+
+        self.multi_label_threshold = multi_label_threshold
+
+        self.decoder = nn.Linear(
+            self.document_embeddings.embedding_length, len(self.label_dictionary)
+        )
 
         self._init_weights()
 
-        if multi_label:
-            self.loss_function = nn.BCELoss()
+        if self.multi_label:
+            self.loss_function = nn.BCEWithLogitsLoss()
         else:
             self.loss_function = nn.CrossEntropyLoss()
 
@@ -53,106 +69,58 @@ class TextClassifier(flair.nn.Model):
     def forward(self, sentences) -> List[List[float]]:
         self.document_embeddings.embed(sentences)
 
-        text_embedding_list = [sentence.get_embedding().unsqueeze(0) for sentence in sentences]
+        text_embedding_list = [
+            sentence.get_embedding().unsqueeze(0) for sentence in sentences
+        ]
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
         label_scores = self.decoder(text_embedding_tensor)
 
         return label_scores
 
-    def save(self, model_file: Union[str, Path]):
-        """
-        Saves the current model to the provided file.
-        :param model_file: the model file
-        """
+    def _get_state_dict(self):
         model_state = {
-            'state_dict': self.state_dict(),
-            'document_embeddings': self.document_embeddings,
-            'label_dictionary': self.label_dictionary,
-            'multi_label': self.multi_label,
+            "state_dict": self.state_dict(),
+            "document_embeddings": self.document_embeddings,
+            "label_dictionary": self.label_dictionary,
+            "multi_label": self.multi_label,
         }
-        torch.save(model_state, str(model_file), pickle_protocol=4)
+        return model_state
 
-    def save_checkpoint(self, model_file: Union[str, Path], optimizer_state: dict, scheduler_state: dict, epoch: int, loss: float):
-        """
-        Saves the current model to the provided file.
-        :param model_file: the model file
-        """
-        model_state = {
-            'state_dict': self.state_dict(),
-            'document_embeddings': self.document_embeddings,
-            'label_dictionary': self.label_dictionary,
-            'multi_label': self.multi_label,
-            'optimizer_state_dict': optimizer_state,
-            'scheduler_state_dict': scheduler_state,
-            'epoch': epoch,
-            'loss': loss
-        }
-        torch.save(model_state, str(model_file), pickle_protocol=4)
-
-    @classmethod
-    def load_from_file(cls, model_file: Union[str, Path]):
-        """
-        Loads the model from the given file.
-        :param model_file: the model file
-        :return: the loaded text classifier model
-        """
-        state = TextClassifier._load_state(model_file)
+    def _init_model_with_state_dict(state):
 
         model = TextClassifier(
-            document_embeddings=state['document_embeddings'],
-            label_dictionary=state['label_dictionary'],
-            multi_label=state['multi_label']
+            document_embeddings=state["document_embeddings"],
+            label_dictionary=state["label_dictionary"],
+            multi_label=state["multi_label"],
         )
-        model.load_state_dict(state['state_dict'])
-        model.eval()
-        model.to(flair.device)
 
+        model.load_state_dict(state["state_dict"])
         return model
-
-    @classmethod
-    def load_checkpoint(cls, model_file: Union[str, Path]):
-        state = TextClassifier._load_state(model_file)
-        model = TextClassifier.load_from_file(model_file)
-
-        epoch = state['epoch'] if 'epoch' in state else None
-        loss = state['loss'] if 'loss' in state else None
-        optimizer_state_dict = state['optimizer_state_dict'] if 'optimizer_state_dict' in state else None
-        scheduler_state_dict = state['scheduler_state_dict'] if 'scheduler_state_dict' in state else None
-
-        return {
-            'model': model, 'epoch': epoch, 'loss': loss,
-            'optimizer_state_dict': optimizer_state_dict, 'scheduler_state_dict': scheduler_state_dict
-        }
-
-    @classmethod
-    def _load_state(cls, model_file: Union[str, Path]):
-        # ATTENTION: suppressing torch serialization warnings. This needs to be taken out once we sort out recursive
-        # serialization of torch objects
-        # https://docs.python.org/3/library/warnings.html#temporarily-suppressing-warnings
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore")
-            # load_big_file is a workaround by https://github.com/highway11git to load models on some Mac/Windows setups
-            # see https://github.com/zalandoresearch/flair/issues/351
-            f = flair.file_utils.load_big_file(str(model_file))
-            state = torch.load(f, map_location=flair.device)
-            return state
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
         scores = self.forward(sentences)
         return self._calculate_loss(scores, sentences)
 
-    def forward_labels_and_loss(self, sentences: Union[Sentence, List[Sentence]]) -> (List[List[Label]], torch.tensor):
+    def forward_labels_and_loss(
+        self, sentences: Union[Sentence, List[Sentence]]
+    ) -> (List[List[Label]], torch.tensor):
         scores = self.forward(sentences)
         labels = self._obtain_labels(scores)
         loss = self._calculate_loss(scores, sentences)
         return labels, loss
 
-    def predict(self, sentences: Union[Sentence, List[Sentence]], mini_batch_size: int = 32) -> List[Sentence]:
+    def predict(
+        self,
+        sentences: Union[Sentence, List[Sentence]],
+        mini_batch_size: int = 32,
+        multi_class_prob: bool = False,
+    ) -> List[Sentence]:
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
         :param sentences: list of sentences
         :param mini_batch_size: mini batch size to use
+        :param multi_class_prob : return probability for all class for multiclass
         :return: the list of sentences containing the labels
         """
         with torch.no_grad():
@@ -161,11 +129,16 @@ class TextClassifier(flair.nn.Model):
 
             filtered_sentences = self._filter_empty_sentences(sentences)
 
-            batches = [filtered_sentences[x:x + mini_batch_size] for x in range(0, len(filtered_sentences), mini_batch_size)]
+            batches = [
+                filtered_sentences[x : x + mini_batch_size]
+                for x in range(0, len(filtered_sentences), mini_batch_size)
+            ]
 
             for batch in batches:
                 scores = self.forward(batch)
-                predicted_labels = self._obtain_labels(scores)
+                predicted_labels = self._obtain_labels(
+                    scores, predict_prob=multi_class_prob
+                )
 
                 for (sentence, labels) in zip(batch, predicted_labels):
                     sentence.labels = labels
@@ -174,14 +147,132 @@ class TextClassifier(flair.nn.Model):
 
             return sentences
 
+    def evaluate(
+        self,
+        sentences: List[Sentence],
+        eval_mini_batch_size: int = 32,
+        embeddings_in_memory: bool = False,
+        out_path: Path = None,
+    ) -> (Result, float):
+
+        with torch.no_grad():
+            eval_loss = 0
+
+            batch_loader = torch.utils.data.DataLoader(
+                sentences,
+                batch_size=eval_mini_batch_size,
+                shuffle=False,
+                num_workers=4,
+                collate_fn=list,
+            )
+
+            metric = Metric("Evaluation")
+
+            lines: List[str] = []
+            batch_count: int = 0
+            for batch in batch_loader:
+
+                batch_count += 1
+
+                labels, loss = self.forward_labels_and_loss(batch)
+
+                clear_embeddings(
+                    batch, also_clear_word_embeddings=not embeddings_in_memory
+                )
+
+                eval_loss += loss
+
+                sentences_for_batch = [sent.to_plain_string() for sent in batch]
+                confidences_for_batch = [
+                    [label.score for label in sent_labels] for sent_labels in labels
+                ]
+                predictions_for_batch = [
+                    [label.value for label in sent_labels] for sent_labels in labels
+                ]
+                true_values_for_batch = [
+                    sentence.get_label_names() for sentence in batch
+                ]
+                available_labels = self.label_dictionary.get_items()
+
+                for sentence, confidence, prediction, true_value in zip(
+                    sentences_for_batch,
+                    confidences_for_batch,
+                    predictions_for_batch,
+                    true_values_for_batch,
+                ):
+                    eval_line = "{}\t{}\t{}\t{}\n".format(
+                        sentence, true_value, prediction, confidence
+                    )
+                    lines.append(eval_line)
+
+                for predictions_for_sentence, true_values_for_sentence in zip(
+                    predictions_for_batch, true_values_for_batch
+                ):
+
+                    for label in available_labels:
+                        if (
+                            label in predictions_for_sentence
+                            and label in true_values_for_sentence
+                        ):
+                            metric.add_tp(label)
+                        elif (
+                            label in predictions_for_sentence
+                            and label not in true_values_for_sentence
+                        ):
+                            metric.add_fp(label)
+                        elif (
+                            label not in predictions_for_sentence
+                            and label in true_values_for_sentence
+                        ):
+                            metric.add_fn(label)
+                        elif (
+                            label not in predictions_for_sentence
+                            and label not in true_values_for_sentence
+                        ):
+                            metric.add_tn(label)
+
+            eval_loss /= batch_count
+
+            detailed_result = (
+                f"\nMICRO_AVG: acc {metric.micro_avg_accuracy()} - f1-score {metric.micro_avg_f_score()}"
+                f"\nMACRO_AVG: acc {metric.macro_avg_accuracy()} - f1-score {metric.macro_avg_f_score()}"
+            )
+            for class_name in metric.get_classes():
+                detailed_result += (
+                    f"\n{class_name:<10} tp: {metric.get_tp(class_name)} - fp: {metric.get_fp(class_name)} - "
+                    f"fn: {metric.get_fn(class_name)} - tn: {metric.get_tn(class_name)} - precision: "
+                    f"{metric.precision(class_name):.4f} - recall: {metric.recall(class_name):.4f} - "
+                    f"accuracy: {metric.accuracy(class_name):.4f} - f1-score: "
+                    f"{metric.f_score(class_name):.4f}"
+                )
+
+            result = Result(
+                main_score=metric.micro_avg_f_score(),
+                log_line=f"{metric.precision()}\t{metric.recall()}\t{metric.micro_avg_f_score()}",
+                log_header="PRECISION\tRECALL\tF1",
+                detailed_results=detailed_result,
+            )
+
+            if out_path is not None:
+                with open(out_path, "w", encoding="utf-8") as outfile:
+                    outfile.write("".join(lines))
+
+            return result, eval_loss
+
     @staticmethod
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
         filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
         if len(sentences) != len(filtered_sentences):
-            log.warning('Ignore {} sentence(s) with no tokens.'.format(len(sentences) - len(filtered_sentences)))
+            log.warning(
+                "Ignore {} sentence(s) with no tokens.".format(
+                    len(sentences) - len(filtered_sentences)
+                )
+            )
         return filtered_sentences
 
-    def _calculate_loss(self, scores: List[List[float]], sentences: List[Sentence]) -> float:
+    def _calculate_loss(
+        self, scores: torch.tensor, sentences: List[Sentence]
+    ) -> torch.tensor:
         """
         Calculates the loss.
         :param scores: the prediction scores from the model
@@ -193,7 +284,9 @@ class TextClassifier(flair.nn.Model):
 
         return self._calculate_single_label_loss(scores, sentences)
 
-    def _obtain_labels(self, scores: List[List[float]]) -> List[List[Label]]:
+    def _obtain_labels(
+        self, scores: List[List[float]], predict_prob: bool = False
+    ) -> List[List[Label]]:
         """
         Predicts the labels of sentences.
         :param scores: the prediction scores from the model
@@ -202,6 +295,9 @@ class TextClassifier(flair.nn.Model):
 
         if self.multi_label:
             return [self._get_multi_label(s) for s in scores]
+
+        elif predict_prob:
+            return [self._predict_label_prob(s) for s in scores]
 
         return [self._get_single_label(s) for s in scores]
 
@@ -212,23 +308,35 @@ class TextClassifier(flair.nn.Model):
 
         results = list(map(lambda x: sigmoid(x), label_scores))
         for idx, conf in enumerate(results):
-            if conf > 0.5:
+            if conf > self.multi_label_threshold:
                 label = self.label_dictionary.get_item_for_index(idx)
                 labels.append(Label(label, conf.item()))
 
         return labels
 
     def _get_single_label(self, label_scores) -> List[Label]:
-        conf, idx = torch.max(label_scores, 0)
+        softmax = torch.nn.functional.softmax(label_scores, dim=0)
+        conf, idx = torch.max(softmax, 0)
         label = self.label_dictionary.get_item_for_index(idx.item())
 
         return [Label(label, conf.item())]
 
-    def _calculate_multi_label_loss(self, label_scores, sentences: List[Sentence]) -> float:
-        sigmoid = nn.Sigmoid()
-        return self.loss_function(sigmoid(label_scores), self._labels_to_one_hot(sentences))
+    def _predict_label_prob(self, label_scores) -> List[Label]:
+        softmax = torch.nn.functional.softmax(label_scores, dim=0)
+        label_probs = []
+        for idx, conf in enumerate(softmax):
+            label = self.label_dictionary.get_item_for_index(idx)
+            label_probs.append(Label(label, conf.item()))
+        return label_probs
 
-    def _calculate_single_label_loss(self, label_scores, sentences: List[Sentence]) -> float:
+    def _calculate_multi_label_loss(
+        self, label_scores, sentences: List[Sentence]
+    ) -> float:
+        return self.loss_function(label_scores, self._labels_to_one_hot(sentences))
+
+    def _calculate_single_label_loss(
+        self, label_scores, sentences: List[Sentence]
+    ) -> float:
         return self.loss_function(label_scores, self._labels_to_indices(sentences))
 
     def _labels_to_one_hot(self, sentences: List[Sentence]):
@@ -240,7 +348,12 @@ class TextClassifier(flair.nn.Model):
 
     def _labels_to_indices(self, sentences: List[Sentence]):
         indices = [
-            torch.LongTensor([self.label_dictionary.get_idx_for_item(label.value) for label in sentence.labels])
+            torch.LongTensor(
+                [
+                    self.label_dictionary.get_idx_for_item(label.value)
+                    for label in sentence.labels
+                ]
+            )
             for sentence in sentences
         ]
 
@@ -248,20 +361,27 @@ class TextClassifier(flair.nn.Model):
 
         return vec
 
-    @staticmethod
-    def load(model: str):
-        model_file = None
-        aws_resource_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4'
-        cache_dir = Path('models')
+    def _fetch_model(model_name) -> str:
 
-        if model.lower() == 'de-offensive-language':
-            base_path = '/'.join([aws_resource_path, 'TEXT-CLASSIFICATION_germ-eval-2018_task-1',
-                                  'germ-eval-2018-task-1.pt'])
-            model_file = cached_path(base_path, cache_dir=cache_dir)
+        model_map = {}
+        aws_resource_path = (
+            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4"
+        )
 
-        elif model.lower() == 'en-sentiment':
-            base_path = '/'.join([aws_resource_path, 'TEXT-CLASSIFICATION_imdb', 'imdb.pt'])
-            model_file = cached_path(base_path, cache_dir=cache_dir)
+        model_map["de-offensive-language"] = "/".join(
+            [
+                aws_resource_path,
+                "TEXT-CLASSIFICATION_germ-eval-2018_task-1",
+                "germ-eval-2018-task-1.pt",
+            ]
+        )
 
-        if model_file is not None:
-            return TextClassifier.load_from_file(model_file)
+        model_map["en-sentiment"] = "/".join(
+            [aws_resource_path, "TEXT-CLASSIFICATION_imdb", "imdb.pt"]
+        )
+
+        cache_dir = Path("models")
+        if model_name in model_map:
+            model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
+
+        return model_name

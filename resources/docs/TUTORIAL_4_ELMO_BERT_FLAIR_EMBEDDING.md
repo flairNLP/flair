@@ -38,54 +38,59 @@ flair_embedding_forward.embed(sentence)
 ```
 
 You choose which embeddings you load by passing the appropriate string to the constructor of the `FlairEmbeddings` class. 
-Currently, the following contextual string embeddings are provided (more coming):
+Currently, the following contextual string embeddings are provided (note: replace '*X*' with either '*forward*' or '*backward*'):
  
 | ID | Language | Embedding | 
 | -------------     | ------------- | ------------- |
-| 'multi-forward'    | English, German, French, Italian, Dutch, Polish | Mix of corpora (Web, Wikipedia, Subtitles, News) |
-| 'multi-backward'    | English, German, French, Italian, Dutch, Polish | Mix of corpora (Web, Wikipedia, Subtitles, News) |
-| 'multi-forward-fast'    | English, German, French, Italian, Dutch, Polish | Mix of corpora (Web, Wikipedia, Subtitles, News) |
-| 'multi-backward-fast'    | English, German, French, Italian, Dutch, Polish | Mix of corpora (Web, Wikipedia, Subtitles, News) |
-| 'news-forward'    | English | Forward LM embeddings over 1 billion word corpus |
-| 'news-backward'   | English | Backward LM embeddings over 1 billion word corpus |
-| 'news-forward-fast'    | English | Smaller, CPU-friendly forward LM embeddings over 1 billion word corpus |
-| 'news-backward-fast'   | English | Smaller, CPU-friendly backward LM embeddings over 1 billion word corpus |
-| 'mix-forward'     | English | Forward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
-| 'mix-backward'    | English | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
-| 'german-forward'  | German  | Forward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
-| 'german-backward' | German  | Backward LM embeddings over mixed corpus (Web, Wikipedia, Subtitles) |
-| 'polish-forward'  | Polish  | Added by [@borchmann](https://github.com/applicaai/poleval-2018): Forward LM embeddings over web crawls (Polish part of CommonCrawl) |
-| 'polish-backward' | Polish  | Added by [@borchmann](https://github.com/applicaai/poleval-2018): Backward LM embeddings over web crawls (Polish part of CommonCrawl) |
-| 'slovenian-forward'  | Slovenian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Forward LM embeddings over various sources (Europarl, Wikipedia and OpenSubtitles2018) |
-| 'slovenian-backward' | Slovenian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings over various sources (Europarl, Wikipedia and OpenSubtitles2018) |
-| 'bulgarian-forward'  | Bulgarian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Forward LM embeddings over various sources (Europarl, Wikipedia or SETimes) |
-| 'bulgarian-backward' | Bulgarian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings over various sources (Europarl, Wikipedia or SETimes) |
-| 'dutch-forward'    | Dutch | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Forward LM embeddings over various sources (Europarl, Wikipedia or OpenSubtitles2018) |
-| 'dutch-backward'    | Dutch | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings over various sources (Europarl, Wikipedia or OpenSubtitles2018) |
-| 'swedish-forward'    | Swedish | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Forward LM embeddings over various sources (Europarl, Wikipedia or OpenSubtitles2018) |
-| 'swedish-backward'    | Swedish | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings over various sources (Europarl, Wikipedia or OpenSubtitles2018) |
-| 'french-forward'    | French | Added by [@mhham](https://github.com/mhham): Forward LM embeddings over French Wikipedia |
-| 'french-backward'    | French | Added by [@mhham](https://github.com/mhham): Backward LM embeddings over French Wikipedia |
-| 'czech-forward'    | Czech | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Forward LM embeddings over various sources (Europarl, Wikipedia or OpenSubtitles2018) |
-| 'czech-backward'    | Czech | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings over various sources (Europarl, Wikipedia or OpenSubtitles2018) |
-| 'portuguese-forward'    | Portuguese | Added by [@ericlief](https://github.com/ericlief/language_models): Forward LM embeddings |
-| 'portuguese-backward'    | Portuguese | Added by [@ericlief](https://github.com/ericlief/language_models): Backward LM embeddings |
-| 'basque-forward'    | Basque | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Forward LM embeddings |
-| 'basque-backward'    | Basque | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Backward LM embeddings |
-| 'spanish-forward'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): Forward LM embeddings over Wikipedia |
-| 'spanish-backward'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): Backward LM embeddings over Wikipedia |
-| 'spanish-forward-fast'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): CPU-friendly forward LM embeddings over Wikipedia |
-| 'spanish-backward-fast'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): CPU-friendly backward LM embeddings over Wikipedia |
-| 'japanese-forward'    | Japanese | Added by [@frtacoa](https://github.com/zalandoresearch/flair/issues/527): Forward LM embeddings over 439M words of Japanese Web crawls (2048 hidden states, 2 layers)|
-| 'japanese-backward'    | Japanese | Added by [@frtacoa](https://github.com/zalandoresearch/flair/issues/527): Backward LM embeddings over 439M words of Japanese Web crawls (2048 hidden states, 2 layers)|
-| 'pubmed-forward'    | English | Added by [@jessepeng](https://github.com/zalandoresearch/flair/pull/519): Forward LM embeddings over 5% of PubMed abstracts until 2015 (1150 hidden states, 3 layers)|
-| 'pubmed-backward'    | English | Added by [@jessepeng](https://github.com/zalandoresearch/flair/pull/519): Backward LM embeddings over 5% of PubMed abstracts until 2015 (1150 hidden states, 3 layers)|
+| 'multi-X'    | English, German, French, Italian, Dutch, Polish | Mix of corpora (Web, Wikipedia, Subtitles, News) |
+| 'multi-X-fast'    | English, German, French, Italian, Dutch, Polish | Mix of corpora (Web, Wikipedia, Subtitles, News), CPU-friendly |
+| 'news-X'    | English | Trained with 1 billion word corpus |
+| 'news-X-fast'    | English | Trained with 1 billion word corpus, CPU-friendly |
+| 'mix-X'     | English | Trained with mixed corpus (Web, Wikipedia, Subtitles) |
+| 'ar-X'     | Arabic | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'bg-X'  | Bulgarian | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'bg-X-fast'  | Bulgarian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Trained with various sources (Europarl, Wikipedia or SETimes) |
+| 'cs-X'     | Czech | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'cs-v0-X'    | Czech | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): LM embeddings (earlier version) |
+| 'de-X'  | German  | Trained with mixed corpus (Web, Wikipedia, Subtitles) |
+| 'de-historic-ha-X'  | German (historical) | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Historical German trained over *Hamburger Anzeiger* |
+| 'de-historic-wz-X'  | German (historical) | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Historical German trained over *Wiener Zeitung* |
+| 'es-X'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): Trained with Wikipedia |
+| 'es-X-fast'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): Trained with Wikipediam CPU-friendly |
+| 'eu-X'    | Basque | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'eu-v0-X'    | Basque | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): LM embeddings (earlier version) |
+| 'fa-X'     | Persian | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'fi-X'     | Finnish | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'fr-X'    | French | Added by [@mhham](https://github.com/mhham): Trained with French Wikipedia |
+| 'he-X'     | Hebrew | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'hi-X'     | Hindi | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'hr-X'     | Croatian | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'id-X'     | Indonesian | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'it-X'     | Italian | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'ja-X'    | Japanese | Added by [@frtacoa](https://github.com/zalandoresearch/flair/issues/527): Trained with 439M words of Japanese Web crawls (2048 hidden states, 2 layers)|
+| 'nl-X'     | Dutch | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'nl-v0-X'    | Dutch | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): LM embeddings (earlier version) |
+| 'no-X'     | Norwegian | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'pl-X'  | Polish  | Added by [@borchmann](https://github.com/applicaai/poleval-2018): Trained with web crawls (Polish part of CommonCrawl) |
+| 'pl-opus-X'     | Polish | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'pt-X'    | Portuguese | Added by [@ericlief](https://github.com/ericlief/language_models): LM embeddings |
+| 'sl-X'     | Slovenian | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'sl-v0-X'  | Slovenian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Trained with various sources (Europarl, Wikipedia and OpenSubtitles2018) |
+| 'sv-X'    | Swedish | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
+| 'sv-v0-X'    | Swedish | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Trained with various sources (Europarl, Wikipedia or OpenSubtitles2018) |
+| 'pubmed-X'    | English | Added by [@jessepeng](https://github.com/zalandoresearch/flair/pull/519): Trained with 5% of PubMed abstracts until 2015 (1150 hidden states, 3 layers)|
 
 
-So, if you want to load embeddings from the English news backward LM model, instantiate the method as follows:
+So, if you want to load embeddings from the German forward LM model, instantiate the method as follows:
 
 ```python
-flair_backward = FlairEmbeddings('news-backward')
+flair_de_forward = FlairEmbeddings('de-forward')
+```
+
+And if you want to load embeddings from the Bulgarian backward LM model, instantiate the method as follows:
+
+```python
+flair_bg_backward = FlairEmbeddings('bg-backward')
 ```
 
 ## Recommended Flair Usage

@@ -28,7 +28,7 @@ The resulting embedding is taken as document embedding.
 
 To create a mean document embedding simply create any number of `TokenEmbeddings` first and put them in a list.
 Afterwards, initiate the `DocumentPoolEmbeddings` with this list of `TokenEmbeddings`.
-So, if you want to create a document embedding using GloVe embeddings together with CharLMEmbeddings,
+So, if you want to create a document embedding using GloVe embeddings together with `FlairEmbeddings`,
 use the following code:
 
 ```python
@@ -68,7 +68,30 @@ to use to the initialization of the `DocumentPoolEmbeddings`:
 document_embeddings = DocumentPoolEmbeddings([glove_embedding,
                                              flair_embedding_backward,
                                              flair_embedding_backward],
-                                             mode='min')
+                                             pooling='min')
+```
+
+You can also choose which fine-tuning operation you want, i.e. which transformation to apply before word embeddings get
+pooled. The default operation is 'linear' transformation, but if you only use simple word embeddings that are 
+not task-trained you should probably use a 'nonlinear' transformation instead:
+
+```python
+# instantiate pre-trained word embeddings
+embeddings = WordEmbeddings('glove')
+
+# document pool embeddings
+document_embeddings = DocumentPoolEmbeddings([embeddings], fine_tune_mode='nonlinear')
+```
+
+If on the other hand you use word embeddings that are task-trained (such as simple one hot encoded embeddings), you 
+are often better off doing no transformation at all. Do this by passing 'none':
+
+```python
+# instantiate one-hot encoded word embeddings
+embeddings = OneHotEmbeddings(corpus)
+
+# document pool embeddings
+document_embeddings = DocumentPoolEmbeddings([embeddings], fine_tune_mode='none')
 ```
 
 
