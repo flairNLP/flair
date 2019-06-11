@@ -342,6 +342,7 @@ class ModelTrainer:
             self.corpus.test,
             eval_mini_batch_size=eval_mini_batch_size,
             embeddings_in_memory=embeddings_in_memory,
+            out_path=base_path / "test.tsv",
         )
 
         test_results: Result = test_results
