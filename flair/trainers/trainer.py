@@ -61,6 +61,7 @@ class ModelTrainer:
         anneal_with_restarts: bool = False,
         shuffle: bool = True,
         param_selection_mode: bool = False,
+        num_workers: int = 8,
         **kwargs,
     ) -> dict:
 
@@ -177,7 +178,10 @@ class ModelTrainer:
                     break
 
                 batch_loader = DataLoader(
-                    train_data, batch_size=mini_batch_size, shuffle=shuffle
+                    train_data,
+                    batch_size=mini_batch_size,
+                    shuffle=shuffle,
+                    num_workers=num_workers,
                 )
 
                 self.model.train()
@@ -238,12 +242,16 @@ class ModelTrainer:
                             self.corpus.train,
                             eval_mini_batch_size,
                             embeddings_in_memory,
+                            num_workers,
                         )
                         f.write(f"\t{train_eval_result.log_line}")
 
                     if log_dev:
                         dev_eval_result, dev_loss = self.model.evaluate(
-                            self.corpus.dev, eval_mini_batch_size, embeddings_in_memory
+                            self.corpus.dev,
+                            eval_mini_batch_size,
+                            embeddings_in_memory,
+                            num_workers,
                         )
                         f.write(f"\t{dev_loss}\t{dev_eval_result.log_line}")
                         log.info(
@@ -305,7 +313,11 @@ class ModelTrainer:
         # test best model if test data is present
         if self.corpus.test:
             final_score = self.final_test(
-                base_path, embeddings_in_memory, evaluation_metric, eval_mini_batch_size
+                base_path,
+                embeddings_in_memory,
+                evaluation_metric,
+                eval_mini_batch_size,
+                num_workers,
             )
         else:
             final_score = 0
@@ -324,6 +336,7 @@ class ModelTrainer:
         embeddings_in_memory: bool,
         evaluation_metric: EvaluationMetric,
         eval_mini_batch_size: int,
+        num_workers: int = 8,
     ):
 
         log_line(log)
@@ -339,6 +352,7 @@ class ModelTrainer:
             eval_mini_batch_size=eval_mini_batch_size,
             embeddings_in_memory=embeddings_in_memory,
             out_path=base_path / "test.tsv",
+            num_workers=num_workers,
         )
 
         test_results: Result = test_results

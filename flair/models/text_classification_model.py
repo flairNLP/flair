@@ -154,13 +154,17 @@ class TextClassifier(flair.nn.Model):
         eval_mini_batch_size: int = 32,
         embeddings_in_memory: bool = False,
         out_path: Path = None,
+        num_workers: int = 8,
     ) -> (Result, float):
 
         with torch.no_grad():
             eval_loss = 0
 
             batch_loader = DataLoader(
-                sentences, batch_size=eval_mini_batch_size, shuffle=False
+                sentences,
+                batch_size=eval_mini_batch_size,
+                shuffle=False,
+                num_workers=num_workers,
             )
 
             metric = Metric("Evaluation")

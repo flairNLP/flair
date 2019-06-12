@@ -2233,12 +2233,16 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
         shuffle=False,
         sampler=None,
         batch_sampler=None,
+        num_workers=8,
         drop_last=False,
         timeout=0,
         worker_init_fn=None,
     ):
 
-        num_workers = 8
+        # in certain cases, multi-CPU data loading makes no sense and slows
+        # everything down. For this reason, we detect if a dataset is in-memory:
+        # if so, num_workers is set to 0 for faster processing
+
         if type(dataset) is list:
             num_workers = 0
         elif type(dataset) is Subset and dataset.dataset.in_memory == True:
