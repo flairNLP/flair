@@ -713,7 +713,7 @@ class Corpus:
         log.info(self)
 
     @staticmethod
-    def _filter_empty_sentences(dataset):
+    def _filter_empty_sentences(dataset) -> Dataset:
 
         # find out empty sentence indices
         empty_sentence_indices = []
