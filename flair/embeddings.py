@@ -1958,7 +1958,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         :param dropout: the dropout value to be used
         :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
         :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
-        :param rnn_type: 'GRU', 'LSTM',  'RNN_TANH' or 'RNN_RELU'
+        :param rnn_type: 'GRU' or 'LSTM'
         """
         super().__init__()
 
@@ -1981,17 +1981,25 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         if self.reproject_words and reproject_words_dimension is not None:
             self.embeddings_dimension = reproject_words_dimension
 
-        # bidirectional RNN on top of embedding layer
         self.word_reprojection_map = torch.nn.Linear(
             self.length_of_all_token_embeddings, self.embeddings_dimension
         )
-        self.rnn = torch.nn.RNNBase(
-            rnn_type,
-            self.embeddings_dimension,
-            hidden_size,
-            num_layers=rnn_layers,
-            bidirectional=self.bidirectional,
-        )
+
+        # bidirectional RNN on top of embedding layer
+        if rnn_type == "LSTM":
+            self.rnn = torch.nn.LSTM(
+                self.embeddings_dimension,
+                hidden_size,
+                num_layers=rnn_layers,
+                bidirectional=self.bidirectional,
+            )
+        else:
+            self.rnn = torch.nn.GRU(
+                self.embeddings_dimension,
+                hidden_size,
+                num_layers=rnn_layers,
+                bidirectional=self.bidirectional,
+            )
 
         self.name = "document_" + self.rnn._get_name()
 
