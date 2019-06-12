@@ -242,7 +242,7 @@ class ModelTrainer:
                             self.corpus.train,
                             eval_mini_batch_size,
                             embeddings_in_memory,
-                            num_workers,
+                            num_workers=num_workers,
                         )
                         f.write(f"\t{train_eval_result.log_line}")
 
@@ -251,7 +251,7 @@ class ModelTrainer:
                             self.corpus.dev,
                             eval_mini_batch_size,
                             embeddings_in_memory,
-                            num_workers,
+                            num_workers=num_workers,
                         )
                         f.write(f"\t{dev_loss}\t{dev_eval_result.log_line}")
                         log.info(
@@ -270,6 +270,7 @@ class ModelTrainer:
                             eval_mini_batch_size,
                             embeddings_in_memory,
                             base_path / "test.tsv",
+                            num_workers=num_workers,
                         )
                         f.write(f"\t{test_loss}\t{test_eval_result.log_line}")
                         log.info(
