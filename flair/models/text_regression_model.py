@@ -5,6 +5,8 @@ import flair.embeddings
 import torch
 import torch.nn as nn
 from typing import List, Union
+
+from flair.datasets import DataLoader
 from flair.training_utils import clear_embeddings, Metric, MetricRegression, Result
 from flair.data import Sentence, Label
 import logging
@@ -91,12 +93,8 @@ class TextRegressor(flair.models.TextClassifier):
         with torch.no_grad():
             eval_loss = 0
 
-            batch_loader = torch.utils.data.DataLoader(
-                sentences,
-                batch_size=eval_mini_batch_size,
-                shuffle=False,
-                num_workers=4,
-                collate_fn=list,
+            batch_loader = DataLoader(
+                sentences, batch_size=eval_mini_batch_size, shuffle=False
             )
 
             metric = MetricRegression("Evaluation")

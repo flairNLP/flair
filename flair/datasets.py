@@ -1,10 +1,14 @@
 import os
+from abc import abstractmethod
 
 from torch.utils.data import Dataset, random_split
 from typing import List, Dict, Union
 import re
 import logging
 from pathlib import Path
+
+import torch.utils.data.dataloader
+from torch.utils.data.dataset import Subset, ConcatDataset
 
 import flair
 from flair.data import Sentence, Corpus, Token
@@ -242,7 +246,13 @@ class ClassificationCorpus(Corpus):
         )
 
 
-class ColumnDataset(Dataset):
+class FlairDataset(Dataset):
+    @abstractmethod
+    def is_in_memory(self) -> bool:
+        pass
+
+
+class ColumnDataset(FlairDataset):
     def __init__(
         self,
         path_to_column_file: Path,
@@ -333,6 +343,9 @@ class ColumnDataset(Dataset):
                 self.indices.append(position)
             self.total_sentence_count += 1
 
+    def is_in_memory(self) -> bool:
+        return self.in_memory
+
     def __len__(self):
         return self.total_sentence_count
 
@@ -375,7 +388,7 @@ class ColumnDataset(Dataset):
         return sentence
 
 
-class UniversalDependenciesDataset(Dataset):
+class UniversalDependenciesDataset(FlairDataset):
     def __init__(self, path_to_conll_file: Path, in_memory: bool = True):
         assert path_to_conll_file.exists()
 
@@ -441,6 +454,9 @@ class UniversalDependenciesDataset(Dataset):
                 else:
                     self.indices.append(position)
 
+    def is_in_memory(self) -> bool:
+        return self.in_memory
+
     def __len__(self):
         return self.total_sentence_count
 
@@ -493,7 +509,7 @@ class UniversalDependenciesDataset(Dataset):
         return sentence
 
 
-class ClassificationDataset(Dataset):
+class ClassificationDataset(FlairDataset):
     def __init__(
         self,
         path_to_file: Union[str, Path],
@@ -581,6 +597,9 @@ class ClassificationDataset(Dataset):
             sentence = Sentence(text, labels=labels, use_tokenizer=use_tokenizer)
             return sentence
         return None
+
+    def is_in_memory(self) -> bool:
+        return self.in_memory
 
     def __len__(self):
         return self.total_sentence_count
@@ -2203,4 +2222,51 @@ class WNUT_17(ColumnCorpus):
 
         super(WNUT_17, self).__init__(
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
+
+
+class DataLoader(torch.utils.data.dataloader.DataLoader):
+    def __init__(
+        self,
+        dataset,
+        batch_size=1,
+        shuffle=False,
+        sampler=None,
+        batch_sampler=None,
+        drop_last=False,
+        timeout=0,
+        worker_init_fn=None,
+    ):
+
+        num_workers = 8
+        if type(dataset) is list:
+            num_workers = 0
+        elif type(dataset) is Subset and dataset.dataset.in_memory == True:
+            num_workers = 0
+        elif type(dataset) is ConcatDataset:
+            for concat_dataset in dataset.datasets:
+                if (
+                    type(concat_dataset) is Subset
+                    and concat_dataset.dataset.in_memory == True
+                ):
+                    num_workers = 0
+                elif (
+                    isinstance(concat_dataset, FlairDataset)
+                    and concat_dataset.is_in_memory()
+                ):
+                    num_workers = 0
+        elif isinstance(dataset, FlairDataset) and dataset.is_in_memory():
+            num_workers = 0
+
+        super(DataLoader, self).__init__(
+            dataset,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            sampler=sampler,
+            batch_sampler=batch_sampler,
+            num_workers=num_workers,
+            collate_fn=list,
+            drop_last=drop_last,
+            timeout=timeout,
+            worker_init_fn=worker_init_fn,
         )

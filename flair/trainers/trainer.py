@@ -2,8 +2,6 @@ from pathlib import Path
 from typing import List, Union
 
 import datetime
-import random
-import logging
 
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
@@ -11,6 +9,7 @@ from torch.utils.data.dataset import ConcatDataset
 import flair
 import flair.nn
 from flair.data import Sentence, MultiCorpus, Corpus
+from flair.datasets import DataLoader
 from flair.training_utils import (
     init_output_file,
     WeightExtractor,
@@ -62,12 +61,13 @@ class ModelTrainer:
         anneal_with_restarts: bool = False,
         shuffle: bool = True,
         param_selection_mode: bool = False,
-        num_workers: int = 8,
         **kwargs,
     ) -> dict:
 
         if eval_mini_batch_size is None:
             eval_mini_batch_size = mini_batch_size
+
+        log.info(f'Model training base path: "{base_path}"')
 
         # cast string to Path
         if type(base_path) is str:
@@ -176,12 +176,8 @@ class ModelTrainer:
                     log_line(log)
                     break
 
-                batch_loader = torch.utils.data.DataLoader(
-                    train_data,
-                    batch_size=mini_batch_size,
-                    shuffle=shuffle,
-                    num_workers=num_workers,
-                    collate_fn=list,
+                batch_loader = DataLoader(
+                    train_data, batch_size=mini_batch_size, shuffle=shuffle
                 )
 
                 self.model.train()
@@ -409,13 +405,7 @@ class ModelTrainer:
 
         train_data = self.corpus.train
 
-        batch_loader = torch.utils.data.DataLoader(
-            train_data,
-            batch_size=mini_batch_size,
-            shuffle=True,
-            num_workers=8,
-            collate_fn=list,
-        )
+        batch_loader = DataLoader(train_data, batch_size=mini_batch_size, shuffle=True)
 
         scheduler = ExpAnnealLR(optimizer, end_learning_rate, iterations)
 
