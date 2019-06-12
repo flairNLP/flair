@@ -12,6 +12,7 @@ import torch
 
 import flair.embeddings
 from flair.data import Dictionary, Sentence, Token, Label
+from flair.datasets import DataLoader
 from flair.file_utils import cached_path
 
 from typing import List, Tuple, Union
@@ -213,6 +214,7 @@ class SequenceTagger(flair.nn.Model):
         eval_mini_batch_size: int = 32,
         embeddings_in_memory: bool = True,
         out_path: Path = None,
+        num_workers: int = 8,
     ) -> (Result, float):
 
         with torch.no_grad():
@@ -220,12 +222,11 @@ class SequenceTagger(flair.nn.Model):
 
             batch_no: int = 0
 
-            batch_loader = torch.utils.data.DataLoader(
+            batch_loader = DataLoader(
                 sentences,
                 batch_size=eval_mini_batch_size,
                 shuffle=False,
-                num_workers=4,
-                collate_fn=list,
+                num_workers=num_workers,
             )
 
             metric = Metric("Evaluation")
@@ -354,7 +355,9 @@ class SequenceTagger(flair.nn.Model):
                     tags, all_tags = self._obtain_labels(feature, batch)
 
                 for (sentence, sent_tags, sent_all_tags) in zip(batch, tags, all_tags):
-                    for (token, tag, token_all_tags) in zip(sentence.tokens, sent_tags, sent_all_tags):
+                    for (token, tag, token_all_tags) in zip(
+                        sentence.tokens, sent_tags, sent_all_tags
+                    ):
                         token.add_tag_label(self.tag_type, tag)
                         token.add_tags_proba_dist(self.tag_type, token_all_tags)
 
@@ -515,7 +518,9 @@ class SequenceTagger(flair.nn.Model):
             score /= len(features)
             return score
 
-    def _obtain_labels(self, feature, sentences) -> (List[List[Label]], List[List[List[Label]]]):
+    def _obtain_labels(
+        self, feature, sentences
+    ) -> (List[List[Label]], List[List[List[Label]]]):
         """
         Returns a tuple of two lists: 
          - The first list corresponds to the most likely `Label` per token in each sentence.
@@ -554,7 +559,7 @@ class SequenceTagger(flair.nn.Model):
             all_tags.append(
                 [
                     [
-                        Label(self.tag_dictionary.get_item_for_index(score_id), score) 
+                        Label(self.tag_dictionary.get_item_for_index(score_id), score)
                         for score_id, score in enumerate(score_dist)
                     ]
                     for score_dist in scores

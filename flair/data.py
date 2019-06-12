@@ -13,6 +13,8 @@ from segtok.tokenizer import word_tokenizer
 from torch.utils.data import Dataset, random_split
 from torch.utils.data.dataset import ConcatDataset
 
+from flair.file_utils import Tqdm
+
 log = logging.getLogger("flair")
 
 
@@ -175,10 +177,10 @@ class Token:
 
     def add_tag_label(self, tag_type: str, tag: Label):
         self.tags[tag_type] = tag
-    
+
     def add_tags_proba_dist(self, tag_type: str, tags: List[Label]):
         self.tags_proba_dist[tag_type] = tags
-    
+
     def add_tag(self, tag_type: str, tag_value: str, confidence=1.0):
         tag = Label(tag_value, confidence)
         self.tags[tag_type] = tag
@@ -820,15 +822,26 @@ class Corpus:
         Creates a dictionary of all labels assigned to the sentences in the corpus.
         :return: dictionary of labels
         """
-        labels = set([label.value for sent in self.train for label in sent.labels])
-        log.info(labels)
         label_dictionary: Dictionary = Dictionary(add_unk=False)
-        for label in labels:
-            label_dictionary.add_item(label)
+        label_dictionary.multi_label = False
 
-        max_labels = max([len(sent.labels) for sent in self.train])
-        if max_labels > 1:
-            label_dictionary.multi_label = True
+        from flair.datasets import DataLoader
+
+        loader = DataLoader(self.train, batch_size=1)
+
+        log.info("Computing label dictionary. Progress:")
+        for batch in Tqdm.tqdm(iter(loader)):
+
+            for sentence in batch:
+
+                for label in sentence.labels:
+                    label_dictionary.add_item(label.value)
+
+                if not label_dictionary.multi_label:
+                    if len(sentence.labels) > 1:
+                        label_dictionary.multi_label = True
+
+        log.info(label_dictionary.idx2item)
 
         return label_dictionary
 

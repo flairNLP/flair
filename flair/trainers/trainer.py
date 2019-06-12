@@ -2,8 +2,6 @@ from pathlib import Path
 from typing import List, Union
 
 import datetime
-import random
-import logging
 
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
@@ -11,6 +9,7 @@ from torch.utils.data.dataset import ConcatDataset
 import flair
 import flair.nn
 from flair.data import Sentence, MultiCorpus, Corpus
+from flair.datasets import DataLoader
 from flair.training_utils import (
     init_output_file,
     WeightExtractor,
@@ -68,6 +67,8 @@ class ModelTrainer:
 
         if eval_mini_batch_size is None:
             eval_mini_batch_size = mini_batch_size
+
+        log.info(f'Model training base path: "{base_path}"')
 
         # cast string to Path
         if type(base_path) is str:
@@ -176,12 +177,11 @@ class ModelTrainer:
                     log_line(log)
                     break
 
-                batch_loader = torch.utils.data.DataLoader(
+                batch_loader = DataLoader(
                     train_data,
                     batch_size=mini_batch_size,
                     shuffle=shuffle,
                     num_workers=num_workers,
-                    collate_fn=list,
                 )
 
                 self.model.train()
@@ -242,12 +242,16 @@ class ModelTrainer:
                             self.corpus.train,
                             eval_mini_batch_size,
                             embeddings_in_memory,
+                            num_workers=num_workers,
                         )
                         f.write(f"\t{train_eval_result.log_line}")
 
                     if log_dev:
                         dev_eval_result, dev_loss = self.model.evaluate(
-                            self.corpus.dev, eval_mini_batch_size, embeddings_in_memory
+                            self.corpus.dev,
+                            eval_mini_batch_size,
+                            embeddings_in_memory,
+                            num_workers=num_workers,
                         )
                         f.write(f"\t{dev_loss}\t{dev_eval_result.log_line}")
                         log.info(
@@ -266,6 +270,7 @@ class ModelTrainer:
                             eval_mini_batch_size,
                             embeddings_in_memory,
                             base_path / "test.tsv",
+                            num_workers=num_workers,
                         )
                         f.write(f"\t{test_loss}\t{test_eval_result.log_line}")
                         log.info(
@@ -309,7 +314,11 @@ class ModelTrainer:
         # test best model if test data is present
         if self.corpus.test:
             final_score = self.final_test(
-                base_path, embeddings_in_memory, evaluation_metric, eval_mini_batch_size
+                base_path,
+                embeddings_in_memory,
+                evaluation_metric,
+                eval_mini_batch_size,
+                num_workers,
             )
         else:
             final_score = 0
@@ -328,6 +337,7 @@ class ModelTrainer:
         embeddings_in_memory: bool,
         evaluation_metric: EvaluationMetric,
         eval_mini_batch_size: int,
+        num_workers: int = 8,
     ):
 
         log_line(log)
@@ -343,6 +353,7 @@ class ModelTrainer:
             eval_mini_batch_size=eval_mini_batch_size,
             embeddings_in_memory=embeddings_in_memory,
             out_path=base_path / "test.tsv",
+            num_workers=num_workers,
         )
 
         test_results: Result = test_results
@@ -409,13 +420,7 @@ class ModelTrainer:
 
         train_data = self.corpus.train
 
-        batch_loader = torch.utils.data.DataLoader(
-            train_data,
-            batch_size=mini_batch_size,
-            shuffle=True,
-            num_workers=8,
-            collate_fn=list,
-        )
+        batch_loader = DataLoader(train_data, batch_size=mini_batch_size, shuffle=True)
 
         scheduler = ExpAnnealLR(optimizer, end_learning_rate, iterations)
 

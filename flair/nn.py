@@ -36,6 +36,7 @@ class Model(torch.nn.Module):
         eval_mini_batch_size: int = 32,
         embeddings_in_memory: bool = False,
         out_path: Path = None,
+        num_workers: int = 8,
     ) -> (Result, float):
         """Evaluates the model on a list of gold-labeled Sentences. Returns a Result object containing evaluation
         results and a loss value. Implement this to enable evaluation."""

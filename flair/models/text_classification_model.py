@@ -10,6 +10,7 @@ import torch.nn as nn
 import flair.nn
 import flair.embeddings
 from flair.data import Dictionary, Sentence, Label
+from flair.datasets import DataLoader
 from flair.file_utils import cached_path
 from flair.training_utils import (
     convert_labels_to_one_hot,
@@ -153,17 +154,17 @@ class TextClassifier(flair.nn.Model):
         eval_mini_batch_size: int = 32,
         embeddings_in_memory: bool = False,
         out_path: Path = None,
+        num_workers: int = 8,
     ) -> (Result, float):
 
         with torch.no_grad():
             eval_loss = 0
 
-            batch_loader = torch.utils.data.DataLoader(
+            batch_loader = DataLoader(
                 sentences,
                 batch_size=eval_mini_batch_size,
                 shuffle=False,
-                num_workers=4,
-                collate_fn=list,
+                num_workers=num_workers,
             )
 
             metric = Metric("Evaluation")
