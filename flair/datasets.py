@@ -252,6 +252,24 @@ class FlairDataset(Dataset):
         pass
 
 
+class SentenceDataset(FlairDataset):
+    def __init__(self, sentences: Union[Sentence, List[Sentence]]):
+        # cast to list if necessary
+        if type(sentences) == Sentence:
+            sentences = [sentences]
+        self.sentences = sentences
+
+    @abstractmethod
+    def is_in_memory(self) -> bool:
+        return True
+
+    def __len__(self):
+        return len(self.sentences)
+
+    def __getitem__(self, index: int = 0) -> Sentence:
+        return self.sentences[index]
+
+
 class ColumnDataset(FlairDataset):
     def __init__(
         self,
@@ -2242,24 +2260,18 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
         # in certain cases, multi-CPU data loading makes no sense and slows
         # everything down. For this reason, we detect if a dataset is in-memory:
         # if so, num_workers is set to 0 for faster processing
+        flair_dataset = dataset
+        while True:
+            if type(flair_dataset) is Subset:
+                flair_dataset = flair_dataset.dataset
+            elif type(flair_dataset) is ConcatDataset:
+                flair_dataset = flair_dataset.datasets[0]
+            else:
+                break
 
-        if type(dataset) is list:
+        if type(flair_dataset) is list:
             num_workers = 0
-        elif type(dataset) is Subset and dataset.dataset.in_memory == True:
-            num_workers = 0
-        elif type(dataset) is ConcatDataset:
-            for concat_dataset in dataset.datasets:
-                if (
-                    type(concat_dataset) is Subset
-                    and concat_dataset.dataset.in_memory == True
-                ):
-                    num_workers = 0
-                elif (
-                    isinstance(concat_dataset, FlairDataset)
-                    and concat_dataset.is_in_memory()
-                ):
-                    num_workers = 0
-        elif isinstance(dataset, FlairDataset) and dataset.is_in_memory():
+        elif isinstance(flair_dataset, FlairDataset) and flair_dataset.is_in_memory():
             num_workers = 0
 
         super(DataLoader, self).__init__(

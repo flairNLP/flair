@@ -11,7 +11,7 @@ from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
 from torch.utils.data import Dataset, random_split
-from torch.utils.data.dataset import ConcatDataset
+from torch.utils.data.dataset import ConcatDataset, Subset
 
 from flair.file_utils import Tqdm
 
@@ -208,6 +208,14 @@ class Token:
         embeddings = [
             self._embeddings[embed] for embed in sorted(self._embeddings.keys())
         ]
+
+        if embeddings:
+            return torch.cat(embeddings, dim=0)
+
+        return torch.Tensor()
+
+    def get_subembedding(self, names: List[str]) -> torch.tensor:
+        embeddings = [self._embeddings[embed] for embed in sorted(names)]
 
         if embeddings:
             return torch.cat(embeddings, dim=0)
@@ -696,6 +704,36 @@ class Corpus:
             self._test = self._downsample_to_proportion(self.test, percentage)
 
         return self
+
+    def filter_empty_sentences(self):
+        log.info("Filtering empty sentences")
+        self._train = Corpus._filter_empty_sentences(self._train)
+        self._test = Corpus._filter_empty_sentences(self._test)
+        self._dev = Corpus._filter_empty_sentences(self._dev)
+        log.info(self)
+
+    @staticmethod
+    def _filter_empty_sentences(dataset):
+
+        # find out empty sentence indices
+        empty_sentence_indices = []
+        non_empty_sentence_indices = []
+        index = 0
+
+        from flair.datasets import DataLoader
+
+        for batch in DataLoader(dataset):
+            for sentence in batch:
+                if len(sentence) == 0:
+                    empty_sentence_indices.append(index)
+                else:
+                    non_empty_sentence_indices.append(index)
+                index += 1
+
+        # create subset of non-empty sentence indices
+        subset = Subset(dataset, non_empty_sentence_indices)
+
+        return subset
 
     def make_vocab_dictionary(self, max_tokens=-1, min_freq=1) -> Dictionary:
         """
