@@ -83,7 +83,7 @@ model.
 
 ```python
 # load the model you trained
-model = SequenceTagger.load_from_file('resources/taggers/example-ner/final-model.pt')
+model = SequenceTagger.load('resources/taggers/example-ner/final-model.pt')
 
 # create example sentence
 sentence = Sentence('I love Berlin')
@@ -157,7 +157,7 @@ Once the model is trained you can load it to predict the class of new sentences.
 model.
 
 ```python
-classifier = TextClassifier.load_from_file('resources/taggers/ag_news/final-model.pt')
+classifier = TextClassifier.load('resources/taggers/ag_news/final-model.pt')
 
 # create example sentence
 sentence = Sentence('France is the current world cup winner.')
