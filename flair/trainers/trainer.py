@@ -68,14 +68,27 @@ class ModelTrainer:
         if eval_mini_batch_size is None:
             eval_mini_batch_size = mini_batch_size
 
-        log.info(f'Model training base path: "{base_path}"')
-
         # cast string to Path
         if type(base_path) is str:
             base_path = Path(base_path)
 
-        add_file_handler(log, base_path / "training.log")
+        log_handler = add_file_handler(log, base_path / "training.log")
 
+        log_line(log)
+        log.info(f'Model: "{self.model}"')
+        log_line(log)
+        log.info(f'Corpus: "{self.corpus}"')
+        log_line(log)
+        log.info("Parameters:")
+        log.info(f' - learning_rate: "{learning_rate}"')
+        log.info(f' - mini_batch_size: "{mini_batch_size}"')
+        log.info(f' - patience: "{patience}"')
+        log.info(f' - anneal_factor: "{anneal_factor}"')
+        log.info(f' - max_epochs: "{max_epochs}"')
+        log.info(f' - shuffle: "{train_with_dev}"')
+        log.info(f' - train_with_dev: "{train_with_dev}"')
+        log_line(log)
+        log.info(f'Model training base path: "{base_path}"')
         log_line(log)
         log.info(f"Evaluation method: {evaluation_metric.name}")
 
@@ -323,6 +336,8 @@ class ModelTrainer:
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
+
+        log.removeHandler(log_handler)
 
         return {
             "test_score": final_score,
