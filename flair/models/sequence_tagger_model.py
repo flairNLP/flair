@@ -840,11 +840,7 @@ class SequenceTagger(flair.nn.Model):
         )
 
         model_map["de-ner-germeval"] = "/".join(
-            [
-                aws_resource_path,
-                "NER-germeval--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2",
-                "de-ner-germeval-v0.3.pt",
-            ]
+            [aws_resource_path_v04, "NER-germeval", "de-ner-germeval-0.4.1.pt"]
         )
 
         model_map["fr-ner"] = "/".join(
