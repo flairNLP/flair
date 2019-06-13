@@ -344,3 +344,4 @@ def add_file_handler(log, output_file):
     formatter = logging.Formatter("%(asctime)-15s %(message)s")
     fh.setFormatter(formatter)
     log.addHandler(fh)
+    return fh
