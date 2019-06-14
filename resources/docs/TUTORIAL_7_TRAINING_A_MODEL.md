@@ -307,7 +307,8 @@ trainer.train('resources/taggers/example-ner',
 # 9. continue trainer at later point
 from pathlib import Path
 
-trainer = ModelTrainer.load_from_checkpoint(Path('resources/taggers/example-ner/checkpoint.pt'), corpus)
+checkpoint = tagger.load_checkpoint(Path('resources/taggers/example-ner/checkpoint.pt'))
+trainer = ModelTrainer.load_from_checkpoint(checkpoint, corpus)
 trainer.train('resources/taggers/example-ner',
               EvaluationMetric.MICRO_F1_SCORE,
               learning_rate=0.1,
