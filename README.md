@@ -155,7 +155,7 @@ If you use the pooled version of the Flair embeddings (PooledFlairEmbeddings), p
   title={Pooled Contextualized Embeddings for Named Entity Recognition},
   author={Akbik, Alan and Bergmann, Tanja and Vollgraf, Roland},
   booktitle = {{NAACL} 2019, 2019 Annual Conference of the North American Chapter of the Association for Computational Linguistics},
-  pages     = {to appear},
+  pages     = {724–728},
   year      = {2019}
 }
 ```
