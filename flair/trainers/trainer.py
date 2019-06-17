@@ -200,6 +200,8 @@ class ModelTrainer:
                 self.model.train()
 
                 train_loss: float = 0
+                estimated_train_loss: float = 0
+
                 seen_batches = 0
                 total_number_of_batches = len(batch_loader)
 
@@ -208,6 +210,7 @@ class ModelTrainer:
                 for batch_no, batch in enumerate(batch_loader):
 
                     loss = self.model.forward_loss(batch)
+                    # log.info(f"{batch_no}: {loss}")
 
                     optimizer.zero_grad()
                     loss.backward()
@@ -216,12 +219,17 @@ class ModelTrainer:
 
                     seen_batches += 1
                     train_loss += loss.item()
+                    # estimated_train_loss += loss.item()
 
                     clear_embeddings(
                         batch, also_clear_word_embeddings=not embeddings_in_memory
                     )
 
+                    # if total_number_of_batches - batch_no == 11:
+                    #     estimated_train_loss = 0
+
                     if batch_no % modulo == 0:
+                        estimated_train_loss = train_loss / seen_batches
                         log.info(
                             f"epoch {epoch + 1} - iter {batch_no}/{total_number_of_batches} - loss "
                             f"{train_loss / seen_batches:.8f}"
@@ -231,8 +239,13 @@ class ModelTrainer:
                             weight_extractor.extract_weights(
                                 self.model.state_dict(), iteration
                             )
+                        train_loss = 0.0
+                        seen_batches = 0.0
 
                 train_loss /= seen_batches
+                # estimated_train_loss /= 10.
+
+                train_loss = estimated_train_loss
 
                 self.model.eval()
 
@@ -244,11 +257,8 @@ class ModelTrainer:
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 current_score = train_loss
 
+                result_line: str = ""
                 with open(loss_txt, "a") as f:
-
-                    f.write(
-                        f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
-                    )
 
                     if log_train:
                         train_eval_result, train_loss = self.model.evaluate(
@@ -257,7 +267,8 @@ class ModelTrainer:
                             embeddings_in_memory,
                             num_workers=num_workers,
                         )
-                        f.write(f"\t{train_eval_result.log_line}")
+                        result_line += f"\t{train_eval_result.log_line}"
+                        # f.write(f"\t{train_eval_result.log_line}")
 
                     if log_dev:
                         dev_eval_result, dev_loss = self.model.evaluate(
@@ -266,7 +277,8 @@ class ModelTrainer:
                             embeddings_in_memory,
                             num_workers=num_workers,
                         )
-                        f.write(f"\t{dev_loss}\t{dev_eval_result.log_line}")
+                        result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
+                        # f.write(f"\t{dev_loss}\t{dev_eval_result.log_line}")
                         log.info(
                             f"DEV : loss {dev_loss} - score {dev_eval_result.main_score}"
                         )
@@ -285,10 +297,16 @@ class ModelTrainer:
                             base_path / "test.tsv",
                             num_workers=num_workers,
                         )
-                        f.write(f"\t{test_loss}\t{test_eval_result.log_line}")
+                        result_line += f"\t{dev_loss}\t{test_eval_result.log_line}"
+                        # f.write(f"\t{test_loss}\t{test_eval_result.log_line}")
                         log.info(
                             f"TEST : loss {test_loss} - score {test_eval_result.main_score}"
                         )
+
+                    f.write(
+                        f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
+                    )
+                    f.write(result_line)
 
                 scheduler.step(current_score)
 
@@ -303,6 +321,8 @@ class ModelTrainer:
                         epoch + 1,
                         train_loss,
                     )
+
+                self.model.save(base_path / f"epoch-model_{epoch}.pt")
 
                 # if we use dev data, remember best model based on dev evaluation score
                 if (
