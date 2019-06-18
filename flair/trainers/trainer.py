@@ -57,6 +57,7 @@ class ModelTrainer:
         monitor_train: bool = False,
         embeddings_in_memory: bool = True,
         checkpoint: bool = False,
+        google_drive: bool = False,
         save_final_model: bool = True,
         anneal_with_restarts: bool = False,
         shuffle: bool = True,
@@ -67,7 +68,10 @@ class ModelTrainer:
 
         if eval_mini_batch_size is None:
             eval_mini_batch_size = mini_batch_size
-
+        if google_drive:
+            import shutil
+            from google.colab import drive
+            drive.mount('/content/gdrive')
         # cast string to Path
         if type(base_path) is str:
             base_path = Path(base_path)
@@ -303,7 +307,8 @@ class ModelTrainer:
                         epoch + 1,
                         train_loss,
                     )
-
+                    if google_drive:
+                        shutil.copy(base_path / "checkpoint.pt", "/content/gdrive/My Drive/checkpoint.pt")
                 # if we use dev data, remember best model based on dev evaluation score
                 if (
                     not train_with_dev
