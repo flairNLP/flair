@@ -780,6 +780,7 @@ def test_train_resume_language_model_training(
     # clean up results directory
     shutil.rmtree(results_base_path)
 
+
 @pytest.mark.integration
 def test_keep_word_embeddings():
     loaded_model: SequenceTagger = SequenceTagger.load("ner")
