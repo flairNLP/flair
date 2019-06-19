@@ -55,6 +55,7 @@ class ModelTrainer:
         patience: int = 3,
         train_with_dev: bool = False,
         monitor_train: bool = False,
+        monitor_test: bool = False,
         embeddings_in_memory: bool = True,
         checkpoint: bool = False,
         save_final_model: bool = True,
@@ -94,7 +95,11 @@ class ModelTrainer:
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False
-        log_test = True if (not param_selection_mode and self.corpus.test) else False
+        log_test = (
+            True
+            if (not param_selection_mode and self.corpus.test and monitor_test)
+            else False
+        )
         log_dev = True if not train_with_dev else False
 
         # prepare loss logging file and set up header
