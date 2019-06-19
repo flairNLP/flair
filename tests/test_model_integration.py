@@ -779,3 +779,17 @@ def test_train_resume_language_model_training(
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+
+
+@pytest.mark.integration
+def test_keep_word_embeddings():
+    loaded_model: SequenceTagger = SequenceTagger.load("ner")
+
+    sentence = Sentence("I love Berlin")
+    loaded_model.predict(sentence)
+    for token in sentence:
+        assert len(token.embedding.numpy()) == 0
+
+    loaded_model.predict(sentence, clear_word_embeddings=False)
+    for token in sentence:
+        assert len(token.embedding.numpy()) > 0

@@ -322,6 +322,7 @@ class SequenceTagger(flair.nn.Model):
         sentences: Union[List[Sentence], Sentence],
         mini_batch_size=32,
         verbose=False,
+        clear_word_embeddings=True,
     ) -> List[Sentence]:
         with torch.no_grad():
             if isinstance(sentences, Sentence):
@@ -362,7 +363,9 @@ class SequenceTagger(flair.nn.Model):
                         token.add_tags_proba_dist(self.tag_type, token_all_tags)
 
                 # clearing token embeddings to save memory
-                clear_embeddings(batch, also_clear_word_embeddings=True)
+                clear_embeddings(
+                    batch, also_clear_word_embeddings=clear_word_embeddings
+                )
 
             return sentences
 
