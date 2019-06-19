@@ -678,7 +678,7 @@ class TableDataset(FlairDataset):
                     if self.max_chars_per_doc > 0:
                         text = text[: self.max_chars_per_doc]
 
-                    sentence = Sentence(text)
+                    sentence = Sentence(text, use_tokenizer=self.use_tokenizer)
 
                     for column in self.column_name_map:
                         if self.column_name_map[column].startswith("label"):
@@ -709,7 +709,7 @@ class TableDataset(FlairDataset):
             if self.max_chars_per_doc > 0:
                 text = text[: self.max_chars_per_doc]
 
-            sentence = Sentence(text)
+            sentence = Sentence(text, use_tokenizer=self.use_tokenizer)
             for column in self.column_name_map:
                 if self.column_name_map[column].startswith("label"):
                     sentence.add_label(row[column])
