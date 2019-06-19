@@ -204,7 +204,6 @@ class ModelTrainer:
                 self.model.train()
 
                 train_loss: float = 0
-                estimated_train_loss: float = 0
 
                 seen_batches = 0
                 total_number_of_batches = len(batch_loader)
@@ -229,7 +228,6 @@ class ModelTrainer:
                     )
 
                     if batch_no % modulo == 0:
-                        estimated_train_loss = train_loss / seen_batches
                         log.info(
                             f"epoch {epoch + 1} - iter {batch_no}/{total_number_of_batches} - loss "
                             f"{train_loss / seen_batches:.8f}"
@@ -241,8 +239,6 @@ class ModelTrainer:
                             )
 
                 train_loss /= seen_batches
-
-                train_loss = estimated_train_loss
 
                 self.model.eval()
 
