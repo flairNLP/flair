@@ -55,6 +55,7 @@ class ModelTrainer:
         patience: int = 3,
         train_with_dev: bool = False,
         monitor_train: bool = False,
+        monitor_test: bool = False,
         embeddings_in_memory: bool = True,
         checkpoint: bool = False,
         save_final_model: bool = True,
@@ -94,9 +95,14 @@ class ModelTrainer:
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False
-        log_test = True if (not param_selection_mode and self.corpus.test) else False
+        log_test = (
+            True
+            if (not param_selection_mode and self.corpus.test and monitor_test)
+            else False
+        )
         log_dev = True if not train_with_dev else False
 
+        # prepare loss logging file and set up header
         loss_txt = init_output_file(base_path, "loss.tsv")
         with open(loss_txt, "a") as f:
             f.write(f"EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS")
@@ -165,10 +171,8 @@ class ModelTrainer:
 
             for epoch in range(0 + self.epoch, max_epochs + self.epoch):
                 log_line(log)
-                try:
-                    bad_epochs = scheduler.num_bad_epochs
-                except:
-                    bad_epochs = 0
+
+                # get new learning rate
                 for group in optimizer.param_groups:
                     learning_rate = group["lr"]
 
@@ -200,11 +204,13 @@ class ModelTrainer:
                 self.model.train()
 
                 train_loss: float = 0
+
                 seen_batches = 0
                 total_number_of_batches = len(batch_loader)
 
                 modulo = max(1, int(total_number_of_batches / 10))
 
+                # process mini-batches
                 for batch_no, batch in enumerate(batch_loader):
 
                     loss = self.model.forward_loss(batch)
@@ -238,61 +244,79 @@ class ModelTrainer:
 
                 log_line(log)
                 log.info(
-                    f"EPOCH {epoch + 1} done: loss {train_loss:.4f} - lr {learning_rate:.4f} - bad epochs {bad_epochs}"
+                    f"EPOCH {epoch + 1} done: loss {train_loss:.4f} - lr {learning_rate:.4f}"
                 )
 
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 current_score = train_loss
 
-                with open(loss_txt, "a") as f:
+                # evaluate on train / dev / test split depending on training settings
+                result_line: str = ""
 
-                    f.write(
-                        f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
+                if log_train:
+                    train_eval_result, train_loss = self.model.evaluate(
+                        self.corpus.train,
+                        eval_mini_batch_size,
+                        embeddings_in_memory,
+                        num_workers=num_workers,
+                    )
+                    result_line += f"\t{train_eval_result.log_line}"
+
+                if log_dev:
+                    dev_eval_result, dev_loss = self.model.evaluate(
+                        self.corpus.dev,
+                        eval_mini_batch_size,
+                        embeddings_in_memory,
+                        num_workers=num_workers,
+                    )
+                    result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
+                    log.info(
+                        f"DEV : loss {dev_loss} - score {dev_eval_result.main_score}"
+                    )
+                    # calculate scores using dev data if available
+                    # append dev score to score history
+                    dev_score_history.append(dev_eval_result.main_score)
+                    dev_loss_history.append(dev_loss)
+
+                    current_score = dev_eval_result.main_score
+
+                if log_test:
+                    test_eval_result, test_loss = self.model.evaluate(
+                        self.corpus.test,
+                        eval_mini_batch_size,
+                        embeddings_in_memory,
+                        base_path / "test.tsv",
+                        num_workers=num_workers,
+                    )
+                    result_line += f"\t{test_loss}\t{test_eval_result.log_line}"
+                    log.info(
+                        f"TEST : loss {test_loss} - score {test_eval_result.main_score}"
                     )
 
-                    if log_train:
-                        train_eval_result, train_loss = self.model.evaluate(
-                            self.corpus.train,
-                            eval_mini_batch_size,
-                            embeddings_in_memory,
-                            num_workers=num_workers,
-                        )
-                        f.write(f"\t{train_eval_result.log_line}")
-
-                    if log_dev:
-                        dev_eval_result, dev_loss = self.model.evaluate(
-                            self.corpus.dev,
-                            eval_mini_batch_size,
-                            embeddings_in_memory,
-                            num_workers=num_workers,
-                        )
-                        f.write(f"\t{dev_loss}\t{dev_eval_result.log_line}")
-                        log.info(
-                            f"DEV : loss {dev_loss} - score {dev_eval_result.main_score}"
-                        )
-                        # calculate scores using dev data if available
-                        # append dev score to score history
-                        dev_score_history.append(dev_eval_result.main_score)
-                        dev_loss_history.append(dev_loss)
-
-                        current_score = dev_eval_result.main_score
-
-                    if log_test:
-                        test_eval_result, test_loss = self.model.evaluate(
-                            self.corpus.test,
-                            eval_mini_batch_size,
-                            embeddings_in_memory,
-                            base_path / "test.tsv",
-                            num_workers=num_workers,
-                        )
-                        f.write(f"\t{test_loss}\t{test_eval_result.log_line}")
-                        log.info(
-                            f"TEST : loss {test_loss} - score {test_eval_result.main_score}"
-                        )
-
+                # determine learning rate annealing through scheduler
                 scheduler.step(current_score)
 
                 train_loss_history.append(train_loss)
+
+                # determine bad epoch number
+                try:
+                    bad_epochs = scheduler.num_bad_epochs
+                except:
+                    bad_epochs = 0
+                for group in optimizer.param_groups:
+                    new_learning_rate = group["lr"]
+                if new_learning_rate != previous_learning_rate:
+                    bad_epochs = patience + 1
+
+                # log bad epochs
+                log.info(f"BAD EPOCHS (no improvement): {bad_epochs}")
+
+                # output log file
+                with open(loss_txt, "a") as f:
+                    f.write(
+                        f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
+                    )
+                    f.write(result_line)
 
                 # if checkpoint is enable, save model at each epoch
                 if checkpoint and not param_selection_mode:
