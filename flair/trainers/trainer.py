@@ -1,10 +1,17 @@
 from pathlib import Path
 from typing import List, Union
+import time
+import sys
 
 import datetime
 
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
+
+try:
+    from apex import amp
+except ImportError:
+    amp = None
 
 import flair
 import flair.nn
@@ -63,8 +70,17 @@ class ModelTrainer:
         shuffle: bool = True,
         param_selection_mode: bool = False,
         num_workers: int = 8,
+        apex: bool = False,
+        apex_opt_level: str = 'O1',
         **kwargs,
     ) -> dict:
+
+        if apex:
+            if sys.version_info < (3, 0):
+                raise RuntimeError("Apex currently only supports Python 3. Aborting.")
+            if amp is None:
+                raise RuntimeError("Failed to import apex. Please install apex from https://www.github.com/nvidia/apex "
+                                   "to enable mixed-precision training.")
 
         if eval_mini_batch_size is None:
             eval_mini_batch_size = mini_batch_size
@@ -201,6 +217,11 @@ class ModelTrainer:
                     num_workers=num_workers,
                 )
 
+                if apex:
+                    self.model, optimizers = amp.initialize(self.model, optimizer,
+                                                            opt_level=apex_opt_level
+                                                            )
+
                 self.model.train()
 
                 train_loss: float = 0
@@ -211,12 +232,19 @@ class ModelTrainer:
                 modulo = max(1, int(total_number_of_batches / 10))
 
                 # process mini-batches
+                batch_time = 0
                 for batch_no, batch in enumerate(batch_loader):
-
+                    start_time = time.time()
                     loss = self.model.forward_loss(batch)
 
                     optimizer.zero_grad()
-                    loss.backward()
+                    # Backward
+                    if apex:
+                        with amp.scale_loss(loss, optimizer) as scaled_loss:
+                            scaled_loss.backward()
+                    else:
+                        loss.backward()
+
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
                     optimizer.step()
 
@@ -226,11 +254,11 @@ class ModelTrainer:
                     clear_embeddings(
                         batch, also_clear_word_embeddings=not embeddings_in_memory
                     )
-
+                    batch_time += time.time() - start_time
                     if batch_no % modulo == 0:
                         log.info(
                             f"epoch {epoch + 1} - iter {batch_no}/{total_number_of_batches} - loss "
-                            f"{train_loss / seen_batches:.8f}"
+                            f"{train_loss / seen_batches:.8f} throughput (samples/sec): {mini_batch_size * modulo / batch_time:.2f}"
                         )
                         iteration = epoch * total_number_of_batches + batch_no
                         if not param_selection_mode:
