@@ -260,6 +260,7 @@ class ModelTrainer:
                             f"epoch {epoch + 1} - iter {batch_no}/{total_number_of_batches} - loss "
                             f"{train_loss / seen_batches:.8f} throughput (samples/sec): {mini_batch_size * modulo / batch_time:.2f}"
                         )
+                        batch_time = 0
                         iteration = epoch * total_number_of_batches + batch_no
                         if not param_selection_mode:
                             weight_extractor.extract_weights(
