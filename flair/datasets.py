@@ -29,7 +29,7 @@ class ColumnCorpus(Corpus):
         in_memory: bool = True,
     ):
         """
-        Helper function to get a TaggedCorpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
+        Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
 
         :param data_folder: base folder with the task data
         :param column_format: a map specifying the column format
@@ -37,7 +37,7 @@ class ColumnCorpus(Corpus):
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
         :param tag_to_bioes: whether to convert to BIOES tagging scheme
-        :return: a TaggedCorpus with annotated train, dev and test data
+        :return: a Corpus with annotated train, dev and test data
         """
 
         if type(data_folder) == str:
@@ -121,13 +121,13 @@ class UniversalDependenciesCorpus(Corpus):
         in_memory: bool = True,
     ):
         """
-        Helper function to get a TaggedCorpus from CoNLL-U column-formatted task data such as the UD corpora
+        Instantiates a Corpus from CoNLL-U column-formatted task data such as the UD corpora
 
         :param data_folder: base folder with the task data
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
-        :return: a TaggedCorpus with annotated train, dev and test data
+        :return: a Corpus with annotated train, dev and test data
         """
         # automatically identify train / test / dev files
         if train_file is None:
@@ -176,13 +176,13 @@ class ClassificationCorpus(Corpus):
         in_memory: bool = False,
     ):
         """
-        Helper function to get a TaggedCorpus from text classification-formatted task data
+        Instantiates a Corpus from text classification-formatted task data
 
         :param data_folder: base folder with the task data
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
-        :return: a TaggedCorpus with annotated train, dev and test data
+        :return: a Corpus with annotated train, dev and test data
         """
 
         if type(data_folder) == str:
@@ -250,7 +250,7 @@ class ClassificationCorpus(Corpus):
         )
 
 
-class TableCorpus(Corpus):
+class CSVClassificationCorpus(Corpus):
     def __init__(
         self,
         data_folder: Union[str, Path],
@@ -264,13 +264,13 @@ class TableCorpus(Corpus):
         in_memory: bool = False,
     ):
         """
-        Helper function to get a TaggedCorpus from text classification-formatted task data
+        Instantiates a Corpus for text classification from CSV column formatted data
 
         :param data_folder: base folder with the task data
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
-        :return: a TaggedCorpus with annotated train, dev and test data
+        :return: a Corpus with annotated train, dev and test data
         """
 
         if type(data_folder) == str:
@@ -303,7 +303,7 @@ class TableCorpus(Corpus):
         log.info("Dev: {}".format(dev_file))
         log.info("Test: {}".format(test_file))
 
-        train: Dataset = TableDataset(
+        train: Dataset = CSVClassificationDataset(
             train_file,
             column_name_map,
             use_tokenizer=use_tokenizer,
@@ -313,7 +313,7 @@ class TableCorpus(Corpus):
         )
 
         if test_file is not None:
-            test: Dataset = TableDataset(
+            test: Dataset = CSVClassificationDataset(
                 dev_file,
                 column_name_map,
                 use_tokenizer=use_tokenizer,
@@ -329,7 +329,7 @@ class TableCorpus(Corpus):
             test = splits[1]
 
         if dev_file is not None:
-            dev: Dataset = TableDataset(
+            dev: Dataset = CSVClassificationDataset(
                 dev_file,
                 column_name_map,
                 use_tokenizer=use_tokenizer,
@@ -344,7 +344,9 @@ class TableCorpus(Corpus):
             train = splits[0]
             dev = splits[1]
 
-        super(TableCorpus, self).__init__(train, dev, test, name=data_folder.name)
+        super(CSVClassificationCorpus, self).__init__(
+            train, dev, test, name=data_folder.name
+        )
 
 
 class FlairDataset(Dataset):
@@ -628,7 +630,7 @@ class UniversalDependenciesDataset(FlairDataset):
         return sentence
 
 
-class TableDataset(FlairDataset):
+class CSVClassificationDataset(FlairDataset):
     def __init__(
         self,
         path_to_file: Union[str, Path],
@@ -695,6 +697,9 @@ class TableDataset(FlairDataset):
                     self.raw_data.append(row)
 
                 self.total_sentence_count += 1
+
+    def is_in_memory(self) -> bool:
+        return False
 
     def __len__(self):
         return self.total_sentence_count
