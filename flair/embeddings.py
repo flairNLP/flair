@@ -12,21 +12,27 @@ import torch
 from bpemb import BPEmb
 from deprecated import deprecated
 
-from pytorch_pretrained_bert import (
+from pytorch_transformers import (
     BertTokenizer,
     BertModel,
     TransfoXLTokenizer,
     TransfoXLModel,
     OpenAIGPTModel,
     OpenAIGPTTokenizer,
+    XLNetTokenizer,
+    XLNetModel,
 )
 
-from pytorch_pretrained_bert.modeling_openai import (
-    PRETRAINED_MODEL_ARCHIVE_MAP as OPENAI_GPT_PRETRAINED_MODEL_ARCHIVE_MAP,
+from pytorch_transformers.modeling_openai import (
+    OPENAI_GPT_PRETRAINED_MODEL_ARCHIVE_MAP as OPENAI_GPT_PRETRAINED_MODEL_ARCHIVE_MAP,
 )
 
-from pytorch_pretrained_bert.modeling_transfo_xl import (
-    PRETRAINED_MODEL_ARCHIVE_MAP as TRANSFORMER_XL_PRETRAINED_MODEL_ARCHIVE_MAP,
+from pytorch_transformers.modeling_transfo_xl import (
+    TRANSFO_XL_PRETRAINED_MODEL_ARCHIVE_MAP as TRANSFORMER_XL_PRETRAINED_MODEL_ARCHIVE_MAP,
+)
+
+from pytorch_transformers.modeling_xlnet import (
+    XLNET_PRETRAINED_MODEL_ARCHIVE_MAP as XLNET_PRETRAINED_MODEL_ARCHIVE_MAP,
 )
 
 import flair
@@ -738,6 +744,91 @@ class TransformerXLEmbeddings(TokenEmbeddings):
                     sentence.tokens, range(len(sentence.tokens))
                 ):
                     token.set_embedding(self.name, hidden_states[0][token_idx])
+
+        return sentences
+
+    def extra_repr(self):
+        return "model={}".format(self.name)
+
+    def __str__(self):
+        return self.name
+
+
+class XLNetEmbeddings(TokenEmbeddings):
+    def __init__(self, model: str = "xlnet-large-cased", layers: str = "0,1,2,3", pooling_operation: str = "first_last"):
+        """XLNet embeddings, as proposed in Yang et al., 2019.
+        :param model: name of XLNet model
+        :param layers: comma-separated list of layers
+        :param pooling_operation: defines pooling operation for subwords
+        """
+        super().__init__()
+
+        if model not in XLNET_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
+            raise ValueError("Provided XLNet model is not available.")
+
+        self.tokenizer = XLNetTokenizer.from_pretrained(model)
+        self.model = XLNetModel.from_pretrained(pretrained_model_name_or_path=model, output_hidden_states=True)
+        self.name = model
+        self.layers: List[int] = [int(layer) for layer in layers.split(',')]
+        self.pooling_operation = pooling_operation
+        self.static_embeddings = True
+
+        dummy_sentence: Sentence = Sentence()
+        dummy_sentence.add_token(Token("hello"))
+        embedded_dummy = self.embed(dummy_sentence)
+        self.__embedding_length: int = len(
+            embedded_dummy[0].get_token(1).get_embedding()
+        )
+
+    def __getstate__(self):
+        # Copy the object's state from self.__dict__ which contains
+        # all our instance attributes. Always use the dict.copy()
+        # method to avoid modifying the original state.
+        state = self.__dict__.copy()
+        # Remove the unpicklable entries.
+        state["tokenizer"] = None
+        return state
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        # Restore unpickable entries
+        self.tokenizer = XLNetTokenizer.from_pretrained(self.name)
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        self.model.to(flair.device)
+        self.model.eval()
+
+        with torch.no_grad():
+            for sentence in sentences:
+                for token in sentence.tokens:
+                    token_text = token.text
+                    subwords = self.tokenizer.tokenize(token_text)
+                    indexed_tokens = self.tokenizer.convert_tokens_to_ids(subwords)
+                    tokens_tensor = torch.tensor([indexed_tokens])
+                    tokens_tensor = tokens_tensor.to(flair.device)
+
+                    _, _, hidden_states = self.model(tokens_tensor)
+
+                    subtoken_embeddings = []
+
+                    for layer in self.layers:
+                        first_embedding = hidden_states[layer][0][0]
+                        if self.pooling_operation == "first_last":
+                            last_embedding = hidden_states[layer][0][-1]
+                            final_embedding = torch.cat([first_embedding, last_embedding])
+                        if self.pooling_operation == "last":
+                            final_embedding = hidden_states[layer][0][-1]
+                        else:
+                            final_embedding = first_embedding
+
+                        subtoken_embeddings.append(final_embedding)
+
+                    final_subtoken_embedding = torch.cat(subtoken_embeddings)
+                    token.set_embedding(self.name, final_subtoken_embedding)
 
         return sentences
 
