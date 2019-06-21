@@ -262,6 +262,7 @@ class CSVClassificationCorpus(Corpus):
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         in_memory: bool = False,
+        skip_header: bool = False,
     ):
         """
         Instantiates a Corpus for text classification from CSV column formatted data
@@ -310,6 +311,7 @@ class CSVClassificationCorpus(Corpus):
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
+            skip_header=skip_header,
         )
 
         if test_file is not None:
@@ -320,6 +322,7 @@ class CSVClassificationCorpus(Corpus):
                 max_tokens_per_doc=max_tokens_per_doc,
                 max_chars_per_doc=max_chars_per_doc,
                 in_memory=in_memory,
+                skip_header=skip_header,
             )
         else:
             train_length = len(train)
@@ -336,6 +339,7 @@ class CSVClassificationCorpus(Corpus):
                 max_tokens_per_doc=max_tokens_per_doc,
                 max_chars_per_doc=max_chars_per_doc,
                 in_memory=in_memory,
+                skip_header=skip_header,
             )
         else:
             train_length = len(train)
@@ -639,6 +643,7 @@ class CSVClassificationDataset(FlairDataset):
         max_chars_per_doc: int = -1,
         use_tokenizer=True,
         in_memory: bool = True,
+        skip_header: bool = False,
     ):
         if type(path_to_file) == str:
             path_to_file: Path = Path(path_to_file)
@@ -662,28 +667,36 @@ class CSVClassificationDataset(FlairDataset):
         self.total_sentence_count: int = 0
 
         # most data sets have the token text in the first column, if not, pass 'text' as column
-        self.text_column: int = 0
+        self.text_columns: List[int] = []
         for column in column_name_map:
             if column_name_map[column] == "text":
-                self.text_column = column
+                self.text_columns.append(column)
 
         with open(self.path_to_file) as csv_file:
 
             csv_reader = csv.reader(csv_file)
+
+            if skip_header:
+                next(csv_reader, None)  # skip the headers
+
             for row in csv_reader:
 
                 if self.in_memory:
 
-                    print(row)
+                    text = " || ".join(
+                        [row[text_column] for text_column in self.text_columns]
+                    )
 
-                    text = row[self.text_column]
                     if self.max_chars_per_doc > 0:
                         text = text[: self.max_chars_per_doc]
 
                     sentence = Sentence(text, use_tokenizer=self.use_tokenizer)
 
                     for column in self.column_name_map:
-                        if self.column_name_map[column].startswith("label"):
+                        if (
+                            self.column_name_map[column].startswith("label")
+                            and row[column]
+                        ):
                             sentence.add_label(row[column])
 
                     if (
@@ -699,7 +712,7 @@ class CSVClassificationDataset(FlairDataset):
                 self.total_sentence_count += 1
 
     def is_in_memory(self) -> bool:
-        return False
+        return self.in_memory
 
     def __len__(self):
         return self.total_sentence_count
@@ -709,14 +722,15 @@ class CSVClassificationDataset(FlairDataset):
             return self.sentences[index]
         else:
             row = self.raw_data[index]
-            text = row[self.text_column]
+
+            text = " || ".join([row[text_column] for text_column in self.text_columns])
 
             if self.max_chars_per_doc > 0:
                 text = text[: self.max_chars_per_doc]
 
             sentence = Sentence(text, use_tokenizer=self.use_tokenizer)
             for column in self.column_name_map:
-                if self.column_name_map[column].startswith("label"):
+                if self.column_name_map[column].startswith("label") and row[column]:
                     sentence.add_label(row[column])
 
             if len(sentence) > self.max_tokens_per_doc and self.max_tokens_per_doc > 0:
