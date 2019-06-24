@@ -681,6 +681,22 @@ class CSVClassificationDataset(FlairDataset):
 
             for row in csv_reader:
 
+                # test if format is OK
+                wrong_format = False
+                for text_column in self.text_columns:
+                    if text_column >= len(row):
+                        wrong_format = True
+
+                # test if at least one label given
+                has_label = False
+                for column in self.column_name_map:
+                    if self.column_name_map[column].startswith("label") and row[column]:
+                        has_label = True
+                        break
+
+                if wrong_format or not has_label:
+                    continue
+
                 if self.in_memory:
 
                     text = " || ".join(
