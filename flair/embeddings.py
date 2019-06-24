@@ -832,7 +832,7 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
 class CharacterEmbeddings(TokenEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
 
-    def __init__(self, path_to_char_dict: str = None):
+    def __init__(self, path_to_char_dict: str = None, char_embedding_dim: int = 25, hidden_size_char: int = 25):
         """Uses the default character dictionary if none provided."""
 
         super().__init__()
@@ -847,8 +847,8 @@ class CharacterEmbeddings(TokenEmbeddings):
                 path_to_char_dict
             )
 
-        self.char_embedding_dim: int = 25
-        self.hidden_size_char: int = 25
+        self.char_embedding_dim: int = char_embedding_dim
+        self.hidden_size_char: int = hidden_size_char
         self.char_embedding = torch.nn.Embedding(
             len(self.char_dictionary.item2idx), self.char_embedding_dim
         )
