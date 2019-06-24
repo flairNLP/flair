@@ -130,7 +130,7 @@ class LanguageModel(nn.Module):
             prediction, rnn_output, hidden = self.forward(batch, hidden)
             rnn_output = rnn_output.detach()
 
-            output_parts.append(rnn_output)
+            output_parts.append(rnn_output.to("cpu"))
 
         # concatenate all chunks to make final output
         output = torch.cat(output_parts)
