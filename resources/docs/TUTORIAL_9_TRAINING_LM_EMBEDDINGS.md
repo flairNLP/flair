@@ -40,8 +40,6 @@ corpus/valid.txt
 Once you have this folder structure, simply point the `LanguageModelTrainer` class to it to start learning a model.
 
 ```python
-from pathlib import Path
-
 from flair.data import Dictionary
 from flair.models import LanguageModel
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
@@ -53,7 +51,7 @@ is_forward_lm = True
 dictionary: Dictionary = Dictionary.load('chars')
 
 # get your corpus, process forward and at the character level
-corpus = TextCorpus(Path('/path/to/your/corpus'),
+corpus = TextCorpus('/path/to/your/corpus',
                     dictionary,
                     is_forward_lm,
                     character_level=True)
@@ -175,8 +173,6 @@ import pickle
 dictionary = Dictionary.load_from_file('/path/to/your_char_mappings')
 ```
 
-
-
 ## Parameters
 
 You might to play around with some of the learning parameters in the `LanguageModelTrainer`.
@@ -184,6 +180,39 @@ For instance, we generally find that an initial learning rate of 20, and an anne
 most corpora.
 You might also want to modify the 'patience' value of the learning rate scheduler. We currently have it at 25, meaning
 that if the training loss does not improve for 25 splits, it decreases the learning rate.
+
+
+## Fine-Tuning an Existing LM
+
+Sometimes it makes sense to fine-tune an existing language model instead of training from scratch. For instance, if you have a general LM for English and you would like to fine-tune for a specific domain. 
+
+To fine tune a `LanguageModel`, you only need to load an existing `LanguageModel` instead of instantiating a new one. The rest of the training code remains the same as above:
+
+```python
+from flair.data import Dictionary
+from flair.models import LanguageModel
+from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
+
+# get your corpus, process forward and at the character level
+corpus = TextCorpus('/path/to/your/corpus',
+                    dictionary,
+                    is_forward_lm,
+                    character_level=True)
+
+# instantiate an existing LM, such as one from the FlairEmbeddings
+language_model = FlairEmbeddings('news-forward-fast').lm
+
+# use the model trainer to fine-tune this model on your corpus
+trainer = LanguageModelTrainer(language_model, corpus)
+
+trainer.train('resources/taggers/language_model',
+              sequence_length=10,
+              mini_batch_size=10,
+              max_epochs=10)
+```              
+              
+Note that when you fine-tune, you automatically use the same character dictionary as before and automatically copy the direction (forward/backward).
+
 
 ## Consider Contributing your LM
 
