@@ -758,9 +758,9 @@ class SequenceTagger(flair.nn.Model):
 
         model_map["pos"] = "/".join(
             [
-                aws_resource_path,
-                "POS-ontonotes--h256-l1-b32-%2Bmix-forward%2Bmix-backward--v0.2",
-                "en-pos-ontonotes-v0.2.pt",
+                aws_resource_path_v04,
+                "POS-ontonotes--h256-l1-b32-p3-0.5-%2Bglove%2Bnews-forward%2Bnews-backward-normal-locked0.5-word0.05--v0.4_0",
+                "en-pos-ontonotes-v0.4.pt",
             ]
         )
 
@@ -804,9 +804,9 @@ class SequenceTagger(flair.nn.Model):
 
         model_map["chunk"] = "/".join(
             [
-                aws_resource_path,
-                "NP-conll2000--h256-l1-b32-%2Bnews-forward%2Bnews-backward--v0.2",
-                "en-chunk-conll2000-v0.2.pt",
+                aws_resource_path_v04,
+                "NP-conll2000--h256-l1-b32-p3-0.5-%2Bnews-forward%2Bnews-backward-normal-locked0.5-word0.05--v0.4_0",
+                "en-chunk-conll2000-v0.4.pt",
             ]
         )
 
