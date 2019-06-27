@@ -63,6 +63,7 @@ class ModelTrainer:
         shuffle: bool = True,
         param_selection_mode: bool = False,
         num_workers: int = 8,
+        sampler=None,
         **kwargs,
     ) -> dict:
 
@@ -86,7 +87,7 @@ class ModelTrainer:
         log.info(f' - patience: "{patience}"')
         log.info(f' - anneal_factor: "{anneal_factor}"')
         log.info(f' - max_epochs: "{max_epochs}"')
-        log.info(f' - shuffle: "{train_with_dev}"')
+        log.info(f' - shuffle: "{shuffle}"')
         log.info(f' - train_with_dev: "{train_with_dev}"')
         log_line(log)
         log.info(f'Model training base path: "{base_path}"')
@@ -104,30 +105,8 @@ class ModelTrainer:
 
         # prepare loss logging file and set up header
         loss_txt = init_output_file(base_path, "loss.tsv")
-        with open(loss_txt, "a") as f:
-            f.write(f"EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS")
 
-            dummy_result, _ = self.model.evaluate(
-                [Sentence("d", labels=["0.1"])],
-                eval_mini_batch_size,
-                embeddings_in_memory,
-            )
-            if log_train:
-                f.write(
-                    "\tTRAIN_" + "\tTRAIN_".join(dummy_result.log_header.split("\t"))
-                )
-            if log_dev:
-                f.write(
-                    "\tDEV_LOSS\tDEV_"
-                    + "\tDEV_".join(dummy_result.log_header.split("\t"))
-                )
-            if log_test:
-                f.write(
-                    "\tTEST_LOSS\tTEST_"
-                    + "\tTEST_".join(dummy_result.log_header.split("\t"))
-                )
-
-            weight_extractor = WeightExtractor(base_path)
+        weight_extractor = WeightExtractor(base_path)
 
         optimizer = self.optimizer(self.model.parameters(), lr=learning_rate, **kwargs)
         if self.optimizer_state is not None:
@@ -160,6 +139,9 @@ class ModelTrainer:
         # if training also uses dev data, include in training set
         if train_with_dev:
             train_data = ConcatDataset([self.corpus.train, self.corpus.dev])
+
+        if sampler is not None:
+            sampler = sampler(train_data)
 
         dev_score_history = []
         dev_loss_history = []
@@ -199,6 +181,7 @@ class ModelTrainer:
                     batch_size=mini_batch_size,
                     shuffle=shuffle,
                     num_workers=num_workers,
+                    sampler=sampler,
                 )
 
                 self.model.train()
@@ -313,6 +296,33 @@ class ModelTrainer:
 
                 # output log file
                 with open(loss_txt, "a") as f:
+
+                    # make headers on first epoch
+                    if epoch == 0:
+                        f.write(
+                            f"EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS"
+                        )
+
+                        if log_train:
+                            f.write(
+                                "\tTRAIN_"
+                                + "\tTRAIN_".join(
+                                    train_eval_result.log_header.split("\t")
+                                )
+                            )
+                        if log_dev:
+                            f.write(
+                                "\tDEV_LOSS\tDEV_"
+                                + "\tDEV_".join(dev_eval_result.log_header.split("\t"))
+                            )
+                        if log_test:
+                            f.write(
+                                "\tTEST_LOSS\tTEST_"
+                                + "\tTEST_".join(
+                                    test_eval_result.log_header.split("\t")
+                                )
+                            )
+
                     f.write(
                         f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
                     )
