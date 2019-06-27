@@ -425,10 +425,6 @@ class OneHotEmbeddings(TokenEmbeddings):
     def __str__(self):
         return self.name
 
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
     def extra_repr(self):
         return "min_freq={}".format(self.min_freq)
 
@@ -567,8 +563,8 @@ class ELMoEmbeddings(TokenEmbeddings):
         # put on Cuda if available
         from flair import device
 
-        if re.fullmatch(r'cuda:[0-9]+', str(device)):
-            cuda_device = int(str(device).split(':')[-1])
+        if re.fullmatch(r"cuda:[0-9]+", str(device)):
+            cuda_device = int(str(device).split(":")[-1])
         elif str(device) == "cpu":
             cuda_device = -1
         else:
@@ -832,7 +828,12 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
 class CharacterEmbeddings(TokenEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
 
-    def __init__(self, path_to_char_dict: str = None, char_embedding_dim: int = 25, hidden_size_char: int = 25):
+    def __init__(
+        self,
+        path_to_char_dict: str = None,
+        char_embedding_dim: int = 25,
+        hidden_size_char: int = 25,
+    ):
         """Uses the default character dictionary if none provided."""
 
         super().__init__()

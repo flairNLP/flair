@@ -699,7 +699,7 @@ class CSVClassificationDataset(FlairDataset):
 
                 if self.in_memory:
 
-                    text = " || ".join(
+                    text = " ".join(
                         [row[text_column] for text_column in self.text_columns]
                     )
 
@@ -739,7 +739,7 @@ class CSVClassificationDataset(FlairDataset):
         else:
             row = self.raw_data[index]
 
-            text = " || ".join([row[text_column] for text_column in self.text_columns])
+            text = " ".join([row[text_column] for text_column in self.text_columns])
 
             if self.max_chars_per_doc > 0:
                 text = text[: self.max_chars_per_doc]
