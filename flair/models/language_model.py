@@ -60,6 +60,8 @@ class LanguageModel(nn.Module):
         # auto-spawn on GPU if available
         self.to(flair.device)
 
+        self.loss_func = torch.nn.CrossEntropyLoss()
+
     def init_weights(self):
         initrange = 0.1
         self.encoder.weight.detach().uniform_(-initrange, initrange)
@@ -91,6 +93,11 @@ class LanguageModel(nn.Module):
             output,
             hidden,
         )
+
+    def loss(self, data, hidden, targets, ntokens):
+        output, rnn_output, hidden = self.forward(data, hidden)
+        loss = self.loss_func(output.view(-1, ntokens), targets.view(-1)).unsqueeze(0).unsqueeze(0)
+        return loss, hidden
 
     def init_hidden(self, bsz):
         weight = next(self.parameters()).detach()
@@ -364,3 +371,18 @@ class LanguageModel(nn.Module):
         perplexity = math.exp(loss)
 
         return perplexity
+
+
+class FlairLoss(nn.Module):
+    """Container module with an encoder, a recurrent module, and a decoder."""
+
+    def __init__(
+        self,
+        model: LanguageModel
+    ):
+
+        super(FlairLoss, self).__init__()
+        self.model = model
+
+    def forward(self, data, hidden, targets, ntokens):
+        return self.model.loss(data, hidden, targets, ntokens)

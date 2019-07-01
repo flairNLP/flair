@@ -10,7 +10,7 @@ from torch.optim.sgd import SGD
 
 import flair
 from flair.data import Dictionary
-from flair.models import LanguageModel
+from flair.models import LanguageModel, FlairLoss
 from flair.optim import *
 from flair.training_utils import add_file_handler
 
@@ -236,6 +236,8 @@ class LanguageModelTrainer:
         self.loss = loss
         self.optimizer_state = optimizer_state
 
+        self.flair_loss = FlairLoss(self.model)
+
     def train(
         self,
         base_path: Union[Path, str],
@@ -286,6 +288,9 @@ class LanguageModelTrainer:
             training_generator = DataLoader(
                 self.corpus.train, shuffle=False, num_workers=self.num_workers
             )
+
+            if torch.cuda.device_count() > 1:
+                torch.nn.DataParallel(self.flair_loss, dim=1)
 
             for epoch in range(self.epoch, max_epochs):
                 epoch_start_time = time.time()
@@ -341,21 +346,22 @@ class LanguageModelTrainer:
                     ):
                         data, targets = self._get_batch(train_data, i, sequence_length)
 
-                        if not data.is_cuda and cuda.is_available():
-                            log.info(
-                                "Batch %d is not on CUDA, training will be very slow"
-                                % (batch)
-                            )
-                            raise Exception("data isnt on cuda")
+                        if torch.cuda.device_count() < 2:
+                            if not data.is_cuda and cuda.is_available():
+                                log.info(
+                                    "Batch %d is not on CUDA, training will be very slow"
+                                    % (batch)
+                                )
+                                raise Exception("data isnt on cuda")
 
                         self.model.zero_grad()
                         optimizer.zero_grad()
 
                         # do the forward pass in the model
-                        output, rnn_output, hidden = self.model.forward(data, hidden)
+                        loss, hidden = self.flair_loss(data, hidden, targets, ntokens)
+                        loss = loss.mean()
 
                         # try to predict the targets
-                        loss = self.loss_function(output.view(-1, ntokens), targets)
                         loss.backward()
 
                         # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
@@ -370,7 +376,7 @@ class LanguageModelTrainer:
                         hidden = self._repackage_hidden(hidden)
 
                         # explicitly remove loss to clear up memory
-                        del loss, output, rnn_output
+                        del loss
 
                         if batch % self.log_interval == 0 and batch > 0:
                             cur_loss = total_loss.item() / self.log_interval
@@ -477,9 +483,9 @@ class LanguageModelTrainer:
 
             for i in range(0, data_source.size(0) - 1, sequence_length):
                 data, targets = self._get_batch(data_source, i, sequence_length)
-                prediction, rnn_output, hidden = self.model.forward(data, hidden)
-                output_flat = prediction.view(-1, ntokens)
-                total_loss += len(data) * self.loss_function(output_flat, targets).data
+                loss, hidden = self.flair_loss.forward(data, hidden, targets, ntokens)
+                loss = loss.mean()
+                total_loss += len(data) * loss.data
                 hidden = self._repackage_hidden(hidden)
             return total_loss.item() / len(data_source)
 
@@ -498,10 +504,11 @@ class LanguageModelTrainer:
         seq_len = min(sequence_length, len(source) - 1 - i)
 
         data = source[i : i + seq_len].clone().detach()
-        target = source[i + 1 : i + 1 + seq_len].view(-1).clone().detach()
+        target = source[i + 1 : i + 1 + seq_len].clone().detach()
 
-        data = data.to(flair.device)
-        target = target.to(flair.device)
+        if torch.cuda.device_count() < 2:
+            data = data.to(flair.device)
+            target = target.to(flair.device)
 
         return data, target
 
