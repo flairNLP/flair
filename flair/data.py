@@ -318,6 +318,7 @@ class Sentence:
         text: str = None,
         use_tokenizer: bool = False,
         labels: Union[List[Label], List[str]] = None,
+        language_code: str = None,
     ):
 
         super(Sentence, self).__init__()
@@ -329,6 +330,8 @@ class Sentence:
             self.add_labels(labels)
 
         self._embeddings: Dict = {}
+
+        self.language_code: str = language_code
 
         # if text is passed, instantiate sentence with tokens (words)
         if text is not None:
@@ -673,6 +676,17 @@ class Sentence:
 
     def __len__(self) -> int:
         return len(self.tokens)
+
+    def get_language_code(self) -> str:
+        if self.language_code is None:
+            import langdetect
+
+            try:
+                self.language_code = langdetect.detect(self.to_plain_string())
+            except:
+                self.language_code = "en"
+
+        return self.language_code
 
 
 class Corpus:
