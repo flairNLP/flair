@@ -196,7 +196,7 @@ class ModelTrainer:
                     sampler = torch.utils.data.distributed.DistributedSampler(
                         train_data, num_replicas=hvd.size(), rank=hvd.rank())
 
-                batch_loader = torch.utils.data.DataLoader(
+                batch_loader = DataLoader(
                     train_data,
                     batch_size=mini_batch_size,
                     shuffle=shuffle,
