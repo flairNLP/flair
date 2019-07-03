@@ -248,8 +248,11 @@ class LanguageModelTrainer:
         max_epochs: int = 1000,
         checkpoint: bool = False,
         grow_to_sequence_length: int = 0,
+        horovod: bool = False,
         **kwargs,
     ):
+        if horovod:
+            import horovod.torch as hvd
 
         # cast string to Path
         if type(base_path) is str:
@@ -274,6 +277,16 @@ class LanguageModelTrainer:
             if self.optimizer_state is not None:
                 optimizer.load_state_dict(self.optimizer_state)
 
+            if horovod:
+                # Add Horovod Distributed Optimizer
+                hvd.broadcast_optimizer_state(optimizer, root_rank=0)
+
+                optimizer = hvd.DistributedOptimizer(optimizer,
+                    named_parameters=self.model.named_parameters())
+
+            # Broadcast parameters from rank 0 to all other processes.
+            hvd.broadcast_parameters(self.model.state_dict(), root_rank=0)
+
             if isinstance(optimizer, (AdamW, SGDW)):
                 scheduler: ReduceLRWDOnPlateau = ReduceLRWDOnPlateau(
                     optimizer, verbose=True, factor=anneal_factor, patience=patience
@@ -283,8 +296,15 @@ class LanguageModelTrainer:
                     optimizer, verbose=True, factor=anneal_factor, patience=patience
                 )
 
+            if horovod:
+                # Partition dataset among workers using DistributedSampler
+                sampler = torch.utils.data.distributed.DistributedSampler(
+                        self.corpus.train, num_replicas=hvd.size(), rank=hvd.rank())
+            else:
+                sampler = None
+
             training_generator = DataLoader(
-                self.corpus.train, shuffle=False, num_workers=self.num_workers
+                self.corpus.train, shuffle=False, num_workers=self.num_workers, sampler=sampler
             )
 
             for epoch in range(self.epoch, max_epochs):
@@ -292,7 +312,7 @@ class LanguageModelTrainer:
                 # Shuffle training files randomly after serially iterating through corpus one
                 if epoch > 0:
                     training_generator = DataLoader(
-                        self.corpus.train, shuffle=True, num_workers=self.num_workers
+                        self.corpus.train, shuffle=True, num_workers=self.num_workers, sampler=sampler
                     )
                     self.model.save_checkpoint(
                         base_path / f"epoch_{epoch}.pt",

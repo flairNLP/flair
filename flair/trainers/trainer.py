@@ -63,9 +63,13 @@ class ModelTrainer:
         shuffle: bool = True,
         param_selection_mode: bool = False,
         num_workers: int = 8,
-        sampler=None,
+        sampler: torch.utils.data.Sampler = None,
+        horovod: bool = False,
         **kwargs,
     ) -> dict:
+
+        if horovod:
+            import horovod.torch as hvd
 
         if eval_mini_batch_size is None:
             eval_mini_batch_size = mini_batch_size
@@ -111,6 +115,17 @@ class ModelTrainer:
         optimizer = self.optimizer(self.model.parameters(), lr=learning_rate, **kwargs)
         if self.optimizer_state is not None:
             optimizer.load_state_dict(self.optimizer_state)
+
+        if horovod:
+            # Add Horovod Distributed Optimizer
+            hvd.broadcast_optimizer_state(optimizer, root_rank=0)
+
+            optimizer = hvd.DistributedOptimizer(optimizer,
+                    named_parameters=self.model.named_parameters(),
+                    )
+
+            # Broadcast parameters from rank 0 to all other processes.
+            hvd.broadcast_parameters(self.model.state_dict(), root_rank=0)
 
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev else "max"
@@ -176,7 +191,12 @@ class ModelTrainer:
                     log_line(log)
                     break
 
-                batch_loader = DataLoader(
+                if horovod:
+                    # Partition dataset among workers using DistributedSampler
+                    sampler = torch.utils.data.distributed.DistributedSampler(
+                        train_data, num_replicas=hvd.size(), rank=hvd.rank())
+
+                batch_loader = torch.utils.data.DataLoader(
                     train_data,
                     batch_size=mini_batch_size,
                     shuffle=shuffle,
