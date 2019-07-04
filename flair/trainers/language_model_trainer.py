@@ -279,13 +279,12 @@ class LanguageModelTrainer:
 
             if horovod:
                 # Add Horovod Distributed Optimizer
-                hvd.broadcast_optimizer_state(optimizer, root_rank=0)
-
                 optimizer = hvd.DistributedOptimizer(optimizer,
                     named_parameters=self.model.named_parameters())
 
-            # Broadcast parameters from rank 0 to all other processes.
-            hvd.broadcast_parameters(self.model.state_dict(), root_rank=0)
+                # Broadcast parameters from rank 0 to all other processes.
+                hvd.broadcast_parameters(self.model.state_dict(), root_rank=0)
+                hvd.broadcast_optimizer_state(optimizer, root_rank=0)
 
             if isinstance(optimizer, (AdamW, SGDW)):
                 scheduler: ReduceLRWDOnPlateau = ReduceLRWDOnPlateau(
