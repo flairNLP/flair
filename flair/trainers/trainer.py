@@ -32,6 +32,7 @@ class ModelTrainer:
         optimizer: Optimizer = SGD,
         epoch: int = 0,
         loss: float = 10000.0,
+        optimizer_state: dict = None,
         scheduler_state: dict = None,
     ):
         self.model: flair.nn.Model = model
