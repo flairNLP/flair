@@ -32,7 +32,6 @@ class ModelTrainer:
         optimizer: Optimizer = SGD,
         epoch: int = 0,
         loss: float = 10000.0,
-        optimizer_state: dict = None,
         scheduler_state: dict = None,
     ):
         self.model: flair.nn.Model = model
@@ -118,14 +117,13 @@ class ModelTrainer:
 
         if horovod:
             # Add Horovod Distributed Optimizer
-            hvd.broadcast_optimizer_state(optimizer, root_rank=0)
-
             optimizer = hvd.DistributedOptimizer(optimizer,
                     named_parameters=self.model.named_parameters(),
                     )
 
             # Broadcast parameters from rank 0 to all other processes.
             hvd.broadcast_parameters(self.model.state_dict(), root_rank=0)
+            hvd.broadcast_optimizer_state(optimizer, root_rank=0)
 
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev else "max"
