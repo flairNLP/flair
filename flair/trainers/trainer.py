@@ -307,6 +307,10 @@ class ModelTrainer:
                     bad_epochs = 0
                 for group in optimizer.param_groups:
                     new_learning_rate = group["lr"]
+                    if horovod:
+                        avg_new_lr = hvd.allreduce(torch.tensor(new_learning_rate), name='avg_new_lr')
+                        group["lr"] = avg_new_lr.item()
+                        new_learning_rate = avg_new_lr.item()
                 if new_learning_rate != previous_learning_rate:
                     bad_epochs = patience + 1
 
