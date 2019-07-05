@@ -2122,6 +2122,8 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
         self.to(flair.device)
 
+        self.eval()
+
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
@@ -2135,11 +2137,17 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
         self.rnn.zero_grad()
 
-        sentences.sort(key=lambda x: len(x), reverse=True)
+        # the permutation that sorts the sentences by length, descending
+        sort_perm = np.argsort([len(s) for s in sentences])[::-1]
+
+        # the inverse permutation that restores the input order; it's an index tensor therefore LongTensor
+        sort_invperm = np.argsort(sort_perm)
+
+        # sort sentences by number of tokens
+        sentences = [sentences[i] for i in sort_perm]
 
         self.embeddings.embed(sentences)
 
-        # first, sort sentences by number of tokens
         longest_token_sequence_in_batch: int = len(sentences[0])
 
         all_sentence_tensors = []
@@ -2210,6 +2218,9 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
             sentence = sentences[sentence_no]
             sentence.set_embedding(self.name, embedding)
+
+        # restore original order of sentences in the batch
+        sentences = [sentences[i] for i in sort_invperm]
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass

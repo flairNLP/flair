@@ -1,4 +1,5 @@
 import pytest
+import torch
 
 from flair.embeddings import (
     WordEmbeddings,
@@ -23,6 +24,22 @@ def test_loading_not_existing_embedding():
 def test_loading_not_existing_char_lm_embedding():
     with pytest.raises(ValueError):
         FlairEmbeddings("other")
+
+
+def test_keep_batch_order():
+    sentence, glove, charlm = init_document_embeddings()
+    embeddings = DocumentRNNEmbeddings([glove])
+    sentences_1 = [Sentence("First sentence"), Sentence("This is second sentence")]
+    sentences_2 = [Sentence("This is second sentence"), Sentence("First sentence")]
+
+    embeddings.embed(sentences_1)
+    embeddings.embed(sentences_2)
+
+    assert sentences_1[0].to_original_text() == "First sentence"
+    assert sentences_1[1].to_original_text() == "This is second sentence"
+
+    assert torch.norm(sentences_1[0].embedding - sentences_2[1].embedding) == 0.0
+    assert torch.norm(sentences_1[0].embedding - sentences_2[1].embedding) == 0.0
 
 
 @pytest.mark.integration
