@@ -53,6 +53,7 @@ class ModelTrainer:
         max_epochs: int = 100,
         anneal_factor: float = 0.5,
         patience: int = 3,
+        min_learning_rate: float = 0.0001,
         train_with_dev: bool = False,
         monitor_train: bool = False,
         monitor_test: bool = False,
@@ -170,7 +171,7 @@ class ModelTrainer:
                 previous_learning_rate = learning_rate
 
                 # stop training if learning rate becomes too small
-                if learning_rate < 0.0001:
+                if learning_rate < min_learning_rate:
                     log_line(log)
                     log.info("learning rate too small - quitting training!")
                     log_line(log)
