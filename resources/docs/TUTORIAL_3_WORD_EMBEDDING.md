@@ -128,6 +128,38 @@ word_vectors = gensim.models.KeyedVectors.load_word2vec_format('/path/to/fasttex
 word_vectors.save('/path/to/converted')
 ```
 
+However, FastText embeddings have the functionality of returning vectors for out of vocabulary words using the sub-word information. If you want to use this then try `FastTextEmbeddings` class. 
+
+
+## FastText Embeddings
+
+FastText Embeddings can give you vectors for out of vocabulary words by using the sub-word information. If you want to use this functionality with Flair, try out the FastTextEmbeddings class.
+
+```python
+from flair.embeddings import FastTextEmbeddings 
+  
+# init embedding  
+embedding = FastTextEmbeddings('/path/to/local/custom_fasttext_embeddings.bin')  
+  
+# create a sentence  
+sentence = Sentence('The grass is green .')  
+  
+# embed words in sentence  
+embedding.embed(sentence)  
+```
+
+You can initialize the class by passing either the remote downloadable URL as well.
+
+```python
+embedding = FastTextEmbeddings('/path/to/remote/downloadable/custom_fasttext_embeddings.bin', use_local=False)  
+```
+
+If your embeddings are trained with FastText version less than 0.9.1 then set the `use_gensim` parameter to `True` in the constructor as shown:
+
+```python
+embedding = FastTextEmbeddings('/path/to/local/custom_fasttext_embeddings.bin', use_gensim=True)  
+```
+
 ## Character Embeddings
 
 Some embeddings - such as character-features - are not pre-trained but rather trained on the downstream task. Normally
