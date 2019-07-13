@@ -347,7 +347,7 @@ class WordEmbeddings(TokenEmbeddings):
 
 
 class FastTextEmbeddings(TokenEmbeddings):
-    """FastText Embeddings to use with Flair framework"""
+    """FastText Embeddings with oov functionality"""
 
     def __init__(
         self,
