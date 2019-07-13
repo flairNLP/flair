@@ -133,7 +133,7 @@ However, FastText embeddings have the functionality of returning vectors for out
 
 ## FastText Embeddings
 
-FastText Embeddings can give you vectors for out of vocabulary words by using the sub-word information. If you want to use this functionality with Flair, try out the FastTextEmbeddings class.
+FastText Embeddings can give you vectors for out of vocabulary(oov) words by using the sub-word information. To use this functionality with Flair, use `FastTextEmbeddings` class as shown:
 
 ```python
 from flair.embeddings import FastTextEmbeddings 
@@ -148,7 +148,7 @@ sentence = Sentence('The grass is green .')
 embedding.embed(sentence)  
 ```
 
-You can initialize the class by passing either the remote downloadable URL as well.
+You can initialize the class by passing the remote downloadable URL as well.
 
 ```python
 embedding = FastTextEmbeddings('/path/to/remote/downloadable/custom_fasttext_embeddings.bin', use_local=False)  
