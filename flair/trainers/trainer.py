@@ -11,13 +11,12 @@ from torch.utils.data.dataset import ConcatDataset
 
 import flair
 import flair.nn
-from flair.data import Sentence, MultiCorpus, Corpus
+from flair.data import MultiCorpus, Corpus
 from flair.datasets import DataLoader
 from flair.optim import ExpAnnealLR
 from flair.training_utils import (
     init_output_file,
     WeightExtractor,
-    EvaluationMetric,
     log_line,
     add_file_handler,
     Result,
@@ -49,7 +48,6 @@ class ModelTrainer:
     def train(
         self,
         base_path: Union[Path, str],
-        evaluation_metric: EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
         learning_rate: float = 0.1,
         mini_batch_size: int = 32,
         eval_mini_batch_size: int = None,
@@ -70,6 +68,33 @@ class ModelTrainer:
         sampler=None,
         **kwargs,
     ) -> dict:
+        """
+        Trains any class that implements the flair.nn.Model interface.
+        :param base_path: Main path to which all output during training is logged and models are saved
+        :param learning_rate: Initial learning rate
+        :param mini_batch_size: Size of mini-batches during training
+        :param eval_mini_batch_size: Size of mini-batches during evaluation
+        :param max_epochs: Maximum number of epochs to train. Terminates training if this number is surpassed.
+        :param anneal_factor: The factor by which the learning rate is annealed
+        :param patience: Patience is the number of epochs with no improvement the Trainer waits
+         until annealing the learning rate
+        :param min_learning_rate: If the learning rate falls below this threshold, training terminates
+        :param train_with_dev: If True, training is performed using both train+dev data
+        :param monitor_train: If True, training data is evaluated at end of each epoch
+        :param monitor_test: If True, test data is evaluated at end of each epoch
+        :param embedding_storage_mode: One of 'none' (all embeddings are deleted and freshly recomputed),
+        'cpu' (embeddings are stored on CPU) or 'gpu' (embeddings are stored on GPU)
+        :param checkpoint: If True, a full checkpoint is saved at end of each epoch
+        :param save_final_model: If True, final model is saved
+        :param anneal_with_restarts: If True, the last best model is restored when annealing the learning rate
+        :param shuffle: If True, data is shuffled during training
+        :param param_selection_mode: If True, testing is performed against dev data. Use this mode when doing
+        parameter selection.
+        :param num_workers: Number of workers in your data loader.
+        :param sampler: You can pass a data sampler here for special sampling of data.
+        :param kwargs: Other arguments for the Optimizer
+        :return:
+        """
 
         if eval_mini_batch_size is None:
             eval_mini_batch_size = mini_batch_size
@@ -95,8 +120,6 @@ class ModelTrainer:
         log.info(f' - train_with_dev: "{train_with_dev}"')
         log_line(log)
         log.info(f'Model training base path: "{base_path}"')
-        log_line(log)
-        log.info(f"Evaluation method: {evaluation_metric.name}")
         log_line(log)
         log.info(f"Device: {flair.device}")
         log_line(log)

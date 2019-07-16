@@ -107,7 +107,6 @@ class ParamSelector(object):
 
             result = trainer.train(
                 self.base_path,
-                evaluation_metric=self.evaluation_metric,
                 max_epochs=self.max_epochs,
                 param_selection_mode=True,
                 **training_params,

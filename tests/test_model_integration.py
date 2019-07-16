@@ -43,7 +43,6 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
 
     trainer.train(
         results_base_path,
-        EvaluationMetric.MICRO_F1_SCORE,
         learning_rate=0.1,
         mini_batch_size=2,
         max_epochs=2,
@@ -85,7 +84,6 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
 
     trainer.train(
         results_base_path,
-        EvaluationMetric.MICRO_F1_SCORE,
         learning_rate=0.1,
         mini_batch_size=32,
         max_epochs=2,
@@ -129,7 +127,6 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
 
     trainer.train(
         results_base_path,
-        EvaluationMetric.MICRO_F1_SCORE,
         learning_rate=0.1,
         mini_batch_size=2,
         max_epochs=2,
@@ -178,7 +175,6 @@ def test_train_charlm_changed_chache_load_use_tagger(
 
     trainer.train(
         results_base_path,
-        EvaluationMetric.MACRO_ACCURACY,
         learning_rate=0.1,
         mini_batch_size=2,
         max_epochs=2,
@@ -270,7 +266,6 @@ def test_train_optimizer(results_base_path, tasks_base_path):
 
     trainer.train(
         results_base_path,
-        EvaluationMetric.MICRO_F1_SCORE,
         learning_rate=0.1,
         mini_batch_size=2,
         max_epochs=2,
@@ -316,7 +311,6 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
 
     trainer.train(
         results_base_path,
-        EvaluationMetric.MICRO_F1_SCORE,
         learning_rate=0.1,
         mini_batch_size=2,
         max_epochs=2,
@@ -401,9 +395,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     model = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(
-        results_base_path, EvaluationMetric.MICRO_F1_SCORE, max_epochs=2, shuffle=False
-    )
+    trainer.train(results_base_path, max_epochs=2, shuffle=False)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -439,9 +431,7 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
     model = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(
-        results_base_path, EvaluationMetric.MICRO_F1_SCORE, max_epochs=2, shuffle=False
-    )
+    trainer.train(results_base_path, max_epochs=2, shuffle=False)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -482,7 +472,6 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
     trainer = ModelTrainer(model, corpus)
     trainer.train(
         results_base_path,
-        EvaluationMetric.MICRO_F1_SCORE,
         mini_batch_size=1,
         max_epochs=100,
         shuffle=False,
@@ -537,9 +526,7 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
     model = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(
-        results_base_path, EvaluationMetric.MACRO_F1_SCORE, max_epochs=2, shuffle=False
-    )
+    trainer.train(results_base_path, max_epochs=2, shuffle=False)
 
     sentence = Sentence("Berlin is a really nice city.")
 
