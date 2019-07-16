@@ -9,7 +9,6 @@ from typing import List, Union, Dict
 import gensim
 import numpy as np
 import torch
-import fasttext as ft
 from bpemb import BPEmb
 from deprecated import deprecated
 
@@ -349,20 +348,13 @@ class WordEmbeddings(TokenEmbeddings):
 class FastTextEmbeddings(TokenEmbeddings):
     """FastText Embeddings with oov functionality"""
 
-    def __init__(
-        self,
-        embeddings: str,
-        use_local: bool = True,
-        use_gensim: bool = False,
-        field: str = None,
-    ):
+    def __init__(self, embeddings: str, use_local: bool = True, field: str = None):
         """
         Initializes fasttext word embeddings. Constructor downloads required embedding file and stores in cache
         if use_local is False.
 
         :param embeddings: path to your embeddings '.bin' file
         :param use_local: set this to False if you are using embeddings from a remote source
-        :param use_gensim: set this to true if your fasttext embedding is trained with fasttext version below 0.9.1
         """
 
         cache_dir = Path("embeddings")
@@ -381,16 +373,11 @@ class FastTextEmbeddings(TokenEmbeddings):
 
         self.static_embeddings = True
 
-        self.use_gensim = use_gensim
+        self.precomputed_word_embeddings = gensim.models.FastText.load_fasttext_format(
+            str(embeddings)
+        )
 
-        if use_gensim:
-            self.precomputed_word_embeddings = gensim.models.FastText.load_fasttext_format(
-                str(embeddings)
-            )
-            self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
-        else:
-            self.precomputed_word_embeddings = ft.load_model(str(embeddings))
-            self.__embedding_length: int = self.precomputed_word_embeddings.get_dimension()
+        self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
 
         self.field = field
         super().__init__()
