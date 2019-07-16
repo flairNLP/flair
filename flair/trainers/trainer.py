@@ -1,25 +1,27 @@
+import logging
 from pathlib import Path
 from typing import List, Union
 
 import datetime
 
+import torch
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
 
 import flair
 import flair.nn
-from flair.data import Sentence, MultiCorpus, Corpus
+from flair.data import MultiCorpus, Corpus
 from flair.datasets import DataLoader
+from flair.optim import ExpAnnealLR
 from flair.training_utils import (
     init_output_file,
     WeightExtractor,
-    clear_embeddings,
-    EvaluationMetric,
     log_line,
     add_file_handler,
     Result,
+    store_embeddings,
 )
-from flair.optim import *
 
 log = logging.getLogger("flair")
 
@@ -29,7 +31,7 @@ class ModelTrainer:
         self,
         model: flair.nn.Model,
         corpus: Corpus,
-        optimizer: Optimizer = SGD,
+        optimizer: torch.optim.Optimizer = SGD,
         epoch: int = 0,
         loss: float = 10000.0,
         optimizer_state: dict = None,
@@ -37,7 +39,7 @@ class ModelTrainer:
     ):
         self.model: flair.nn.Model = model
         self.corpus: Corpus = corpus
-        self.optimizer: Optimizer = optimizer
+        self.optimizer: torch.optim.Optimizer = optimizer
         self.epoch: int = epoch
         self.loss: float = loss
         self.scheduler_state: dict = scheduler_state
@@ -46,7 +48,6 @@ class ModelTrainer:
     def train(
         self,
         base_path: Union[Path, str],
-        evaluation_metric: EvaluationMetric = EvaluationMetric.MICRO_F1_SCORE,
         learning_rate: float = 0.1,
         mini_batch_size: int = 32,
         eval_mini_batch_size: int = None,
@@ -57,16 +58,43 @@ class ModelTrainer:
         train_with_dev: bool = False,
         monitor_train: bool = False,
         monitor_test: bool = False,
-        embeddings_in_memory: bool = True,
+        embedding_storage_mode: str = "cpu",
         checkpoint: bool = False,
         save_final_model: bool = True,
         anneal_with_restarts: bool = False,
         shuffle: bool = True,
         param_selection_mode: bool = False,
-        num_workers: int = 8,
+        num_workers: int = 6,
         sampler=None,
         **kwargs,
     ) -> dict:
+        """
+        Trains any class that implements the flair.nn.Model interface.
+        :param base_path: Main path to which all output during training is logged and models are saved
+        :param learning_rate: Initial learning rate
+        :param mini_batch_size: Size of mini-batches during training
+        :param eval_mini_batch_size: Size of mini-batches during evaluation
+        :param max_epochs: Maximum number of epochs to train. Terminates training if this number is surpassed.
+        :param anneal_factor: The factor by which the learning rate is annealed
+        :param patience: Patience is the number of epochs with no improvement the Trainer waits
+         until annealing the learning rate
+        :param min_learning_rate: If the learning rate falls below this threshold, training terminates
+        :param train_with_dev: If True, training is performed using both train+dev data
+        :param monitor_train: If True, training data is evaluated at end of each epoch
+        :param monitor_test: If True, test data is evaluated at end of each epoch
+        :param embedding_storage_mode: One of 'none' (all embeddings are deleted and freshly recomputed),
+        'cpu' (embeddings are stored on CPU) or 'gpu' (embeddings are stored on GPU)
+        :param checkpoint: If True, a full checkpoint is saved at end of each epoch
+        :param save_final_model: If True, final model is saved
+        :param anneal_with_restarts: If True, the last best model is restored when annealing the learning rate
+        :param shuffle: If True, data is shuffled during training
+        :param param_selection_mode: If True, testing is performed against dev data. Use this mode when doing
+        parameter selection.
+        :param num_workers: Number of workers in your data loader.
+        :param sampler: You can pass a data sampler here for special sampling of data.
+        :param kwargs: Other arguments for the Optimizer
+        :return:
+        """
 
         if eval_mini_batch_size is None:
             eval_mini_batch_size = mini_batch_size
@@ -93,7 +121,9 @@ class ModelTrainer:
         log_line(log)
         log.info(f'Model training base path: "{base_path}"')
         log_line(log)
-        log.info(f"Evaluation method: {evaluation_metric.name}")
+        log.info(f"Device: {flair.device}")
+        log_line(log)
+        log.info(f"Embedding storage mode: {embedding_storage_mode}")
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False
@@ -109,29 +139,23 @@ class ModelTrainer:
 
         weight_extractor = WeightExtractor(base_path)
 
-        optimizer = self.optimizer(self.model.parameters(), lr=learning_rate, **kwargs)
+        optimizer: torch.optim.Optimizer = self.optimizer(
+            self.model.parameters(), lr=learning_rate, **kwargs
+        )
         if self.optimizer_state is not None:
             optimizer.load_state_dict(self.optimizer_state)
 
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev else "max"
 
-        if isinstance(optimizer, (AdamW, SGDW)):
-            scheduler = ReduceLRWDOnPlateau(
-                optimizer,
-                factor=anneal_factor,
-                patience=patience,
-                mode=anneal_mode,
-                verbose=True,
-            )
-        else:
-            scheduler = ReduceLROnPlateau(
-                optimizer,
-                factor=anneal_factor,
-                patience=patience,
-                mode=anneal_mode,
-                verbose=True,
-            )
+        scheduler: ReduceLROnPlateau = ReduceLROnPlateau(
+            optimizer,
+            factor=anneal_factor,
+            patience=patience,
+            mode=anneal_mode,
+            verbose=True,
+        )
+
         if self.scheduler_state is not None:
             scheduler.load_state_dict(self.scheduler_state)
 
@@ -143,6 +167,7 @@ class ModelTrainer:
 
         if sampler is not None:
             sampler = sampler(train_data)
+            shuffle = False
 
         dev_score_history = []
         dev_loss_history = []
@@ -207,9 +232,8 @@ class ModelTrainer:
                     seen_batches += 1
                     train_loss += loss.item()
 
-                    clear_embeddings(
-                        batch, also_clear_word_embeddings=not embeddings_in_memory
-                    )
+                    # depending on memory mode, embeddings are moved to CPU, GPU or deleted
+                    store_embeddings(batch, embedding_storage_mode)
 
                     if batch_no % modulo == 0:
                         log.info(
@@ -239,19 +263,24 @@ class ModelTrainer:
 
                 if log_train:
                     train_eval_result, train_loss = self.model.evaluate(
-                        self.corpus.train,
-                        eval_mini_batch_size,
-                        embeddings_in_memory,
-                        num_workers=num_workers,
+                        DataLoader(
+                            self.corpus.train,
+                            batch_size=eval_mini_batch_size,
+                            num_workers=num_workers,
+                        )
                     )
                     result_line += f"\t{train_eval_result.log_line}"
 
+                    # depending on memory mode, embeddings are moved to CPU, GPU or deleted
+                    store_embeddings(self.corpus.train, embedding_storage_mode)
+
                 if log_dev:
                     dev_eval_result, dev_loss = self.model.evaluate(
-                        self.corpus.dev,
-                        eval_mini_batch_size,
-                        embeddings_in_memory,
-                        num_workers=num_workers,
+                        DataLoader(
+                            self.corpus.dev,
+                            batch_size=eval_mini_batch_size,
+                            num_workers=num_workers,
+                        )
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
                     log.info(
@@ -264,18 +293,25 @@ class ModelTrainer:
 
                     current_score = dev_eval_result.main_score
 
+                    # depending on memory mode, embeddings are moved to CPU, GPU or deleted
+                    store_embeddings(self.corpus.dev, embedding_storage_mode)
+
                 if log_test:
                     test_eval_result, test_loss = self.model.evaluate(
-                        self.corpus.test,
-                        eval_mini_batch_size,
-                        embeddings_in_memory,
+                        DataLoader(
+                            self.corpus.test,
+                            batch_size=eval_mini_batch_size,
+                            num_workers=num_workers,
+                        ),
                         base_path / "test.tsv",
-                        num_workers=num_workers,
                     )
                     result_line += f"\t{test_loss}\t{test_eval_result.log_line}"
                     log.info(
                         f"TEST : loss {test_loss} - score {test_eval_result.main_score}"
                     )
+
+                    # depending on memory mode, embeddings are moved to CPU, GPU or deleted
+                    store_embeddings(self.corpus.test, embedding_storage_mode)
 
                 # determine learning rate annealing through scheduler
                 scheduler.step(current_score)
@@ -361,13 +397,7 @@ class ModelTrainer:
 
         # test best model if test data is present
         if self.corpus.test:
-            final_score = self.final_test(
-                base_path,
-                embeddings_in_memory,
-                evaluation_metric,
-                eval_mini_batch_size,
-                num_workers,
-            )
+            final_score = self.final_test(base_path, eval_mini_batch_size, num_workers)
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
@@ -382,12 +412,7 @@ class ModelTrainer:
         }
 
     def final_test(
-        self,
-        base_path: Path,
-        embeddings_in_memory: bool,
-        evaluation_metric: EvaluationMetric,
-        eval_mini_batch_size: int,
-        num_workers: int = 8,
+        self, base_path: Path, eval_mini_batch_size: int, num_workers: int = 8
     ):
 
         log_line(log)
@@ -399,11 +424,12 @@ class ModelTrainer:
             self.model = self.model.load(base_path / "best-model.pt")
 
         test_results, test_loss = self.model.evaluate(
-            self.corpus.test,
-            eval_mini_batch_size=eval_mini_batch_size,
-            embeddings_in_memory=embeddings_in_memory,
+            DataLoader(
+                self.corpus.test,
+                batch_size=eval_mini_batch_size,
+                num_workers=num_workers,
+            ),
             out_path=base_path / "test.tsv",
-            num_workers=num_workers,
         )
 
         test_results: Result = test_results
@@ -416,10 +442,12 @@ class ModelTrainer:
             for subcorpus in self.corpus.corpora:
                 log_line(log)
                 self.model.evaluate(
-                    subcorpus.test,
-                    eval_mini_batch_size,
-                    embeddings_in_memory,
-                    base_path / f"{subcorpus.name}-test.tsv",
+                    DataLoader(
+                        subcorpus.test,
+                        batch_size=eval_mini_batch_size,
+                        num_workers=num_workers,
+                    ),
+                    out_path=base_path / f"{subcorpus.name}-test.tsv",
                 )
 
         # get and return the final test score of best model
@@ -429,7 +457,7 @@ class ModelTrainer:
 
     @classmethod
     def load_from_checkpoint(
-        cls, checkpoint, corpus: Corpus, optimizer: Optimizer = SGD
+        cls, checkpoint, corpus: Corpus, optimizer: torch.optim.Optimizer = SGD
     ):
         return ModelTrainer(
             checkpoint["model"],
@@ -485,7 +513,7 @@ class ModelTrainer:
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
             optimizer.step()
-            scheduler.step()
+            scheduler.step(1)
             learning_rate = scheduler.get_lr()[0]
 
             loss_item = loss.item()
@@ -509,7 +537,7 @@ class ModelTrainer:
             if itr > iterations:
                 break
 
-            with open(learning_rate_tsv, "a") as f:
+            with open(str(learning_rate_tsv), "a") as f:
                 f.write(
                     f"{itr}\t{datetime.datetime.now():%H:%M:%S}\t{learning_rate}\t{loss_item}\n"
                 )

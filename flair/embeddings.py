@@ -28,6 +28,7 @@ from pytorch_pretrained_bert.modeling_openai import (
 from pytorch_pretrained_bert.modeling_transfo_xl import (
     PRETRAINED_MODEL_ARCHIVE_MAP as TRANSFORMER_XL_PRETRAINED_MODEL_ARCHIVE_MAP,
 )
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 import flair
 from flair.data import Corpus
@@ -1138,6 +1139,10 @@ class FlairEmbeddings(TokenEmbeddings):
             "multi-forward-fast": f"{aws_path}/embeddings-v0.4/lm-multi-forward-fast-v0.1.pt",
             "multi-backward-fast": f"{aws_path}/embeddings-v0.4/lm-multi-backward-fast-v0.1.pt",
             # English models
+            "en-forward": f"{aws_path}/embeddings-v0.4.1/big-news-forward--h2048-l1-d0.05-lr30-0.25-20/news-forward-0.4.1.pt",
+            "en-backward": f"{aws_path}/embeddings-v0.4.1/big-news-backward--h2048-l1-d0.05-lr30-0.25-20/news-backward-0.4.1.pt",
+            "en-forward-fast": f"{aws_path}/embeddings/lm-news-english-forward-1024-v0.2rc.pt",
+            "en-backward-fast": f"{aws_path}/embeddings/lm-news-english-backward-1024-v0.2rc.pt",
             "news-forward": f"{aws_path}/embeddings-v0.4.1/big-news-forward--h2048-l1-d0.05-lr30-0.25-20/news-forward-0.4.1.pt",
             "news-backward": f"{aws_path}/embeddings-v0.4.1/big-news-backward--h2048-l1-d0.05-lr30-0.25-20/news-backward-0.4.1.pt",
             "news-forward-fast": f"{aws_path}/embeddings/lm-news-english-forward-1024-v0.2rc.pt",
@@ -1374,7 +1379,7 @@ class FlairEmbeddings(TokenEmbeddings):
                     else:
                         offset = offset_backward
 
-                    embedding = all_hidden_states_in_lm[offset, i, :]
+                    embedding = all_hidden_states_in_lm[offset, i, :].detach()
 
                     # if self.tokenized_lm or token.whitespace_after:
                     offset_forward += 1
@@ -1382,7 +1387,7 @@ class FlairEmbeddings(TokenEmbeddings):
 
                     offset_backward -= len(token.text)
 
-                    token.set_embedding(self.name, embedding.clone().detach())
+                    token.set_embedding(self.name, embedding.clone())
 
             all_hidden_states_in_lm = None
 
@@ -2220,38 +2225,31 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
         longest_token_sequence_in_batch: int = len(sentences[0])
 
-        all_sentence_tensors = []
+        # all_sentence_tensors = []
         lengths: List[int] = []
 
-        # go through each sentence in batch
-        for i, sentence in enumerate(sentences):
+        # initialize zero-padded word embeddings tensor
+        sentence_tensor = torch.zeros(
+            [
+                len(sentences),
+                longest_token_sequence_in_batch,
+                self.embeddings.embedding_length,
+            ],
+            dtype=torch.float,
+            device=flair.device,
+        )
+
+        # fill values with word embeddings
+        for s_id, sentence in enumerate(sentences):
 
             lengths.append(len(sentence.tokens))
 
-            word_embeddings = []
+            sentence_tensor[s_id][: len(sentence)] = torch.cat(
+                [token.get_embedding().unsqueeze(0) for token in sentence], 0
+            )
 
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                word_embeddings.append(token.get_embedding().unsqueeze(0))
-
-            # PADDING: pad shorter sentences out
-            for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
-                word_embeddings.append(
-                    torch.zeros(
-                        self.length_of_all_token_embeddings, dtype=torch.float
-                    ).unsqueeze(0)
-                )
-
-            word_embeddings_tensor = torch.cat(word_embeddings, 0).to(flair.device)
-
-            sentence_states = word_embeddings_tensor
-
-            # ADD TO SENTENCE LIST: add the representation
-            all_sentence_tensors.append(sentence_states.unsqueeze(1))
-
-        # --------------------------------------------------------------------
-        # GET REPRESENTATION FOR ENTIRE BATCH
-        # --------------------------------------------------------------------
-        sentence_tensor = torch.cat(all_sentence_tensors, 1)
+        # TODO: this can only be removed once the implementations of word_dropout and locked_dropout have a batch_first mode
+        sentence_tensor = sentence_tensor.transpose_(0, 1)
 
         # --------------------------------------------------------------------
         # FF PART
@@ -2264,14 +2262,13 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             sentence_tensor = self.word_reprojection_map(sentence_tensor)
 
         sentence_tensor = self.dropout(sentence_tensor)
-
-        packed = torch.nn.utils.rnn.pack_padded_sequence(sentence_tensor, lengths)
+        packed = pack_padded_sequence(sentence_tensor, lengths)
 
         self.rnn.flatten_parameters()
 
         rnn_out, hidden = self.rnn(packed)
 
-        outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(rnn_out)
+        outputs, output_lengths = pad_packed_sequence(rnn_out)
 
         outputs = self.dropout(outputs)
 

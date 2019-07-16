@@ -11,7 +11,7 @@ import torch.utils.data.dataloader
 from torch.utils.data.dataset import Subset, ConcatDataset
 
 import flair
-from flair.data import Sentence, Corpus, Token
+from flair.data import Sentence, Corpus, Token, FlairDataset
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -353,12 +353,6 @@ class CSVClassificationCorpus(Corpus):
         )
 
 
-class FlairDataset(Dataset):
-    @abstractmethod
-    def is_in_memory(self) -> bool:
-        pass
-
-
 class SentenceDataset(FlairDataset):
     def __init__(self, sentences: Union[Sentence, List[Sentence]]):
         # cast to list if necessary
@@ -478,6 +472,7 @@ class ColumnDataset(FlairDataset):
 
         if self.in_memory:
             sentence = self.sentences[index]
+
         else:
             with open(str(self.path_to_column_file), encoding="utf-8") as file:
                 file.seek(self.indices[index])
@@ -687,6 +682,9 @@ class CSVClassificationDataset(FlairDataset):
                     if text_column >= len(row):
                         wrong_format = True
 
+                if wrong_format:
+                    continue
+
                 # test if at least one label given
                 has_label = False
                 for column in self.column_name_map:
@@ -694,7 +692,7 @@ class CSVClassificationDataset(FlairDataset):
                         has_label = True
                         break
 
-                if wrong_format or not has_label:
+                if not has_label:
                     continue
 
                 if self.in_memory:

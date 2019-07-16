@@ -9,6 +9,7 @@ from typing import Union, List
 
 import flair
 from flair.data import Sentence
+from flair.datasets import FlairDataset, DataLoader
 from flair.training_utils import Result
 
 
@@ -31,14 +32,9 @@ class Model(torch.nn.Module):
 
     @abstractmethod
     def evaluate(
-        self,
-        sentences: List[Sentence],
-        eval_mini_batch_size: int = 32,
-        embeddings_in_memory: bool = False,
-        out_path: Path = None,
-        num_workers: int = 8,
+        self, data_loader: DataLoader, out_path: Path = None
     ) -> (Result, float):
-        """Evaluates the model on a list of gold-labeled Sentences. Returns a Result object containing evaluation
+        """Evaluates the model. Returns a Result object containing evaluation
         results and a loss value. Implement this to enable evaluation."""
         pass
 
