@@ -149,37 +149,21 @@ class TextClassifier(flair.nn.Model):
             return sentences
 
     def evaluate(
-        self,
-        sentences: List[Sentence],
-        eval_mini_batch_size: int = 32,
-        embeddings_in_memory: bool = False,
-        out_path: Path = None,
-        num_workers: int = 8,
+        self, data_loader: DataLoader, out_path: Path = None
     ) -> (Result, float):
 
         with torch.no_grad():
             eval_loss = 0
 
-            batch_loader = DataLoader(
-                sentences,
-                batch_size=eval_mini_batch_size,
-                shuffle=False,
-                num_workers=num_workers,
-            )
-
             metric = Metric("Evaluation")
 
             lines: List[str] = []
             batch_count: int = 0
-            for batch in batch_loader:
+            for batch in data_loader:
 
                 batch_count += 1
 
                 labels, loss = self.forward_labels_and_loss(batch)
-
-                clear_embeddings(
-                    batch, also_clear_word_embeddings=not embeddings_in_memory
-                )
 
                 eval_loss += loss
 

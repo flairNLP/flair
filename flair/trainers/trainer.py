@@ -3,6 +3,8 @@ from typing import List, Union
 
 import datetime
 
+import torch
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
 
@@ -10,16 +12,15 @@ import flair
 import flair.nn
 from flair.data import Sentence, MultiCorpus, Corpus
 from flair.datasets import DataLoader
+from flair.optim import ExpAnnealLR
 from flair.training_utils import (
     init_output_file,
     WeightExtractor,
-    clear_embeddings,
     EvaluationMetric,
     log_line,
     add_file_handler,
     Result,
 )
-from flair.optim import *
 
 log = logging.getLogger("flair")
 
@@ -29,7 +30,7 @@ class ModelTrainer:
         self,
         model: flair.nn.Model,
         corpus: Corpus,
-        optimizer: Optimizer = SGD,
+        optimizer: torch.optim.Optimizer = SGD,
         epoch: int = 0,
         loss: float = 10000.0,
         optimizer_state: dict = None,
@@ -37,7 +38,7 @@ class ModelTrainer:
     ):
         self.model: flair.nn.Model = model
         self.corpus: Corpus = corpus
-        self.optimizer: Optimizer = optimizer
+        self.optimizer: torch.optim.Optimizer = optimizer
         self.epoch: int = epoch
         self.loss: float = loss
         self.scheduler_state: dict = scheduler_state
@@ -57,13 +58,13 @@ class ModelTrainer:
         train_with_dev: bool = False,
         monitor_train: bool = False,
         monitor_test: bool = False,
-        embeddings_in_memory: bool = True,
+        memory_mode: str = "cpu",
         checkpoint: bool = False,
         save_final_model: bool = True,
         anneal_with_restarts: bool = False,
         shuffle: bool = True,
         param_selection_mode: bool = False,
-        num_workers: int = 8,
+        num_workers: int = 6,
         sampler=None,
         **kwargs,
     ) -> dict:
@@ -94,6 +95,10 @@ class ModelTrainer:
         log.info(f'Model training base path: "{base_path}"')
         log_line(log)
         log.info(f"Evaluation method: {evaluation_metric.name}")
+        log_line(log)
+        log.info(f"Device: {flair.device}")
+        log_line(log)
+        log.info(f"Memory mode: {memory_mode}")
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False
@@ -109,29 +114,23 @@ class ModelTrainer:
 
         weight_extractor = WeightExtractor(base_path)
 
-        optimizer = self.optimizer(self.model.parameters(), lr=learning_rate, **kwargs)
+        optimizer: torch.optim.Optimizer = self.optimizer(
+            self.model.parameters(), lr=learning_rate, **kwargs
+        )
         if self.optimizer_state is not None:
             optimizer.load_state_dict(self.optimizer_state)
 
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev else "max"
 
-        if isinstance(optimizer, (AdamW, SGDW)):
-            scheduler = ReduceLRWDOnPlateau(
-                optimizer,
-                factor=anneal_factor,
-                patience=patience,
-                mode=anneal_mode,
-                verbose=True,
-            )
-        else:
-            scheduler = ReduceLROnPlateau(
-                optimizer,
-                factor=anneal_factor,
-                patience=patience,
-                mode=anneal_mode,
-                verbose=True,
-            )
+        scheduler: ReduceLROnPlateau = ReduceLROnPlateau(
+            optimizer,
+            factor=anneal_factor,
+            patience=patience,
+            mode=anneal_mode,
+            verbose=True,
+        )
+
         if self.scheduler_state is not None:
             scheduler.load_state_dict(self.scheduler_state)
 
@@ -143,6 +142,7 @@ class ModelTrainer:
 
         if sampler is not None:
             sampler = sampler(train_data)
+            shuffle = False
 
         dev_score_history = []
         dev_loss_history = []
@@ -207,9 +207,9 @@ class ModelTrainer:
                     seen_batches += 1
                     train_loss += loss.item()
 
-                    clear_embeddings(
-                        batch, also_clear_word_embeddings=not embeddings_in_memory
-                    )
+                    # depending on memory mode, embeddings are moved to CPU, GPU or deleted
+                    # threading.Thread(target=manage_embedding_persistance(batch, memory_mode)).start()
+                    manage_embedding_persistance(batch, memory_mode)
 
                     if batch_no % modulo == 0:
                         log.info(
@@ -239,19 +239,25 @@ class ModelTrainer:
 
                 if log_train:
                     train_eval_result, train_loss = self.model.evaluate(
-                        self.corpus.train,
-                        eval_mini_batch_size,
-                        embeddings_in_memory,
-                        num_workers=num_workers,
+                        DataLoader(
+                            self.corpus.train,
+                            batch_size=eval_mini_batch_size,
+                            num_workers=num_workers,
+                        )
                     )
                     result_line += f"\t{train_eval_result.log_line}"
 
+                    # depending on memory mode, embeddings are moved to CPU, GPU or deleted
+                    # threading.Thread(target=manage_embedding_persistance(self.corpus.train, memory_mode)).start()
+                    manage_embedding_persistance(self.corpus.train, memory_mode)
+
                 if log_dev:
                     dev_eval_result, dev_loss = self.model.evaluate(
-                        self.corpus.dev,
-                        eval_mini_batch_size,
-                        embeddings_in_memory,
-                        num_workers=num_workers,
+                        DataLoader(
+                            self.corpus.dev,
+                            batch_size=eval_mini_batch_size,
+                            num_workers=num_workers,
+                        )
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
                     log.info(
@@ -264,18 +270,27 @@ class ModelTrainer:
 
                     current_score = dev_eval_result.main_score
 
+                    # depending on memory mode, embeddings are moved to CPU, GPU or deleted
+                    # threading.Thread(target=manage_embedding_persistance(self.corpus.dev, memory_mode)).start()
+                    manage_embedding_persistance(self.corpus.dev, memory_mode)
+
                 if log_test:
                     test_eval_result, test_loss = self.model.evaluate(
-                        self.corpus.test,
-                        eval_mini_batch_size,
-                        embeddings_in_memory,
+                        DataLoader(
+                            self.corpus.test,
+                            batch_size=eval_mini_batch_size,
+                            num_workers=num_workers,
+                        ),
                         base_path / "test.tsv",
-                        num_workers=num_workers,
                     )
                     result_line += f"\t{test_loss}\t{test_eval_result.log_line}"
                     log.info(
                         f"TEST : loss {test_loss} - score {test_eval_result.main_score}"
                     )
+
+                    # depending on memory mode, embeddings are moved to CPU, GPU or deleted
+                    # threading.Thread(target=manage_embedding_persistance(self.corpus.test, memory_mode)).start()
+                    manage_embedding_persistance(self.corpus.test, memory_mode)
 
                 # determine learning rate annealing through scheduler
                 scheduler.step(current_score)
@@ -361,13 +376,7 @@ class ModelTrainer:
 
         # test best model if test data is present
         if self.corpus.test:
-            final_score = self.final_test(
-                base_path,
-                embeddings_in_memory,
-                evaluation_metric,
-                eval_mini_batch_size,
-                num_workers,
-            )
+            final_score = self.final_test(base_path, eval_mini_batch_size, num_workers)
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
@@ -382,12 +391,7 @@ class ModelTrainer:
         }
 
     def final_test(
-        self,
-        base_path: Path,
-        embeddings_in_memory: bool,
-        evaluation_metric: EvaluationMetric,
-        eval_mini_batch_size: int,
-        num_workers: int = 8,
+        self, base_path: Path, eval_mini_batch_size: int, num_workers: int = 8
     ):
 
         log_line(log)
@@ -399,11 +403,12 @@ class ModelTrainer:
             self.model = self.model.load(base_path / "best-model.pt")
 
         test_results, test_loss = self.model.evaluate(
-            self.corpus.test,
-            eval_mini_batch_size=eval_mini_batch_size,
-            embeddings_in_memory=embeddings_in_memory,
+            DataLoader(
+                self.corpus.test,
+                batch_size=eval_mini_batch_size,
+                num_workers=num_workers,
+            ),
             out_path=base_path / "test.tsv",
-            num_workers=num_workers,
         )
 
         test_results: Result = test_results
@@ -418,7 +423,6 @@ class ModelTrainer:
                 self.model.evaluate(
                     subcorpus.test,
                     eval_mini_batch_size,
-                    embeddings_in_memory,
                     base_path / f"{subcorpus.name}-test.tsv",
                 )
 
@@ -429,7 +433,7 @@ class ModelTrainer:
 
     @classmethod
     def load_from_checkpoint(
-        cls, checkpoint, corpus: Corpus, optimizer: Optimizer = SGD
+        cls, checkpoint, corpus: Corpus, optimizer: torch.optim.Optimizer = SGD
     ):
         return ModelTrainer(
             checkpoint["model"],
@@ -485,7 +489,7 @@ class ModelTrainer:
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
             optimizer.step()
-            scheduler.step()
+            scheduler.step(1)
             learning_rate = scheduler.get_lr()[0]
 
             loss_item = loss.item()
@@ -509,7 +513,7 @@ class ModelTrainer:
             if itr > iterations:
                 break
 
-            with open(learning_rate_tsv, "a") as f:
+            with open(str(learning_rate_tsv), "a") as f:
                 f.write(
                     f"{itr}\t{datetime.datetime.now():%H:%M:%S}\t{learning_rate}\t{loss_item}\n"
                 )
@@ -522,3 +526,30 @@ class ModelTrainer:
         log_line(log)
 
         return Path(learning_rate_tsv)
+
+
+def manage_embedding_persistance(sentences: List[Sentence], memory_mode: str):
+
+    # if memory mode option 'none' delete everything
+    if memory_mode == "none":
+        for sentence in sentences:
+            sentence.clear_embeddings()
+
+    # else delete only dynamic embeddings (otherwise autograd will keep everything in memory)
+    else:
+        # find out which ones are dynamic embeddings
+        delete_keys = []
+        for name, vector in sentences[0][0]._embeddings.items():
+            if sentences[0][0]._embeddings[name].requires_grad:
+                delete_keys.append(name)
+
+        # find out which ones are dynamic embeddings
+        for sentence in sentences:
+            sentence.clear_embeddings(delete_keys)
+
+    # memory management - option 1: send everything to CPU
+    if memory_mode == "cpu":
+        for sentence in sentences:
+            sentence.to("cpu")
+
+        # threading.Thread(target=cpu_embeddings(sentences)).start()

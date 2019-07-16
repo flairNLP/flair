@@ -209,12 +209,7 @@ class SequenceTagger(flair.nn.Model):
         return model
 
     def evaluate(
-        self,
-        sentences: Dataset,
-        eval_mini_batch_size: int = 32,
-        embeddings_in_memory: bool = True,
-        out_path: Path = None,
-        num_workers: int = 8,
+        self, data_loader: DataLoader, out_path: Path = None
     ) -> (Result, float):
 
         with torch.no_grad():
@@ -222,17 +217,10 @@ class SequenceTagger(flair.nn.Model):
 
             batch_no: int = 0
 
-            batch_loader = DataLoader(
-                sentences,
-                batch_size=eval_mini_batch_size,
-                shuffle=False,
-                num_workers=num_workers,
-            )
-
             metric = Metric("Evaluation")
 
             lines: List[str] = []
-            for batch in batch_loader:
+            for batch in data_loader:
                 batch_no += 1
 
                 with torch.no_grad():
@@ -278,10 +266,6 @@ class SequenceTagger(flair.nn.Model):
                             metric.add_fn(tag)
                         else:
                             metric.add_tn(tag)
-
-                clear_embeddings(
-                    batch, also_clear_word_embeddings=not embeddings_in_memory
-                )
 
             eval_loss /= batch_no
 
@@ -393,8 +377,8 @@ class SequenceTagger(flair.nn.Model):
 
         for s_id, sentence in enumerate(sentences):
             # fill values with word embeddings
-            sentence_tensor[s_id][: len(sentence)] = torch.cat(
-                [token.get_embedding().unsqueeze(0) for token in sentence], 0
+            sentence_tensor[s_id][: len(sentence)] = torch.stack(
+                [token.get_embedding() for token in sentence], 0
             )
 
             # get the tags in this sentence
@@ -403,9 +387,10 @@ class SequenceTagger(flair.nn.Model):
                 for token in sentence
             ]
             # add tags as tensor
-            tag = torch.LongTensor(tag_idx).to(flair.device)
+            tag = torch.tensor(tag_idx, device=flair.device)
             tag_list.append(tag)
 
+        # TODO: this can only be removed once the implementations of word_dropout and locked_dropout have a batch_first mode
         sentence_tensor = sentence_tensor.transpose_(0, 1)
 
         # --------------------------------------------------------------------
@@ -427,7 +412,7 @@ class SequenceTagger(flair.nn.Model):
             rnn_output, hidden = self.rnn(packed)
 
             sentence_tensor, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(
-                rnn_output
+                rnn_output, batch_first=True
             )
 
             if self.use_dropout > 0.0:
@@ -440,17 +425,17 @@ class SequenceTagger(flair.nn.Model):
 
         features = self.linear(sentence_tensor)
 
-        return features.transpose_(0, 1)
+        return features
 
     def _score_sentence(self, feats, tags, lens_):
 
-        start = torch.LongTensor([self.tag_dictionary.get_idx_for_item(START_TAG)]).to(
-            flair.device
+        start = torch.tensor(
+            [self.tag_dictionary.get_idx_for_item(START_TAG)], device=flair.device
         )
         start = start[None, :].repeat(tags.shape[0], 1)
 
-        stop = torch.LongTensor([self.tag_dictionary.get_idx_for_item(STOP_TAG)]).to(
-            flair.device
+        stop = torch.tensor(
+            [self.tag_dictionary.get_idx_for_item(STOP_TAG)], device=flair.device
         )
         stop = stop[None, :].repeat(tags.shape[0], 1)
 
@@ -491,7 +476,7 @@ class SequenceTagger(flair.nn.Model):
                 for token in sentence
             ]
             # add tags as tensor
-            tag = torch.LongTensor(tag_idx).to(flair.device)
+            tag = torch.tensor(tag_idx, device=flair.device)
             tag_list.append(tag)
 
         return self._calculate_loss_old(scores, lengths, tag_list)
@@ -525,9 +510,9 @@ class SequenceTagger(flair.nn.Model):
         self, feature, sentences
     ) -> (List[List[Label]], List[List[List[Label]]]):
         """
-        Returns a tuple of two lists: 
+        Returns a tuple of two lists:
          - The first list corresponds to the most likely `Label` per token in each sentence.
-         - The second list contains a probability distribution over all `Labels` for each token 
+         - The second list contains a probability distribution over all `Labels` for each token
            in a sentence for all sentences.
         """
 

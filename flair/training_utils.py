@@ -295,15 +295,6 @@ class WeightExtractor(object):
         self.weights_dict[key] = indices
 
 
-def clear_embeddings(sentences: List[Sentence], also_clear_word_embeddings=False):
-    """
-    Clears the embeddings from all given sentences.
-    :param sentences: list of sentences
-    """
-    for sentence in sentences:
-        sentence.clear_embeddings(also_clear_word_embeddings=also_clear_word_embeddings)
-
-
 def init_output_file(base_path: Path, file_name: str) -> Path:
     """
     Creates a local file.

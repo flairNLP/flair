@@ -1304,7 +1304,7 @@ class FlairEmbeddings(TokenEmbeddings):
                     else:
                         offset = offset_backward
 
-                    embedding = all_hidden_states_in_lm[offset, i, :]
+                    embedding = all_hidden_states_in_lm[offset, i, :].detach()
 
                     # if self.tokenized_lm or token.whitespace_after:
                     offset_forward += 1
@@ -1312,7 +1312,7 @@ class FlairEmbeddings(TokenEmbeddings):
 
                     offset_backward -= len(token.text)
 
-                    token.set_embedding(self.name, embedding.clone().detach())
+                    token.set_embedding(self.name, embedding.clone())
 
             all_hidden_states_in_lm = None
 

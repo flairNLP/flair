@@ -83,28 +83,16 @@ class TextRegressor(flair.models.TextClassifier):
         return scores, loss
 
     def evaluate(
-        self,
-        sentences: List[Sentence],
-        eval_mini_batch_size: int = 32,
-        embeddings_in_memory: bool = False,
-        out_path: Path = None,
-        num_workers: int = 8,
+        self, data_loader: DataLoader, out_path: Path = None
     ) -> (Result, float):
 
         with torch.no_grad():
             eval_loss = 0
 
-            batch_loader = DataLoader(
-                sentences,
-                batch_size=eval_mini_batch_size,
-                shuffle=False,
-                num_workers=num_workers,
-            )
-
             metric = MetricRegression("Evaluation")
 
             lines: List[str] = []
-            for batch in batch_loader:
+            for batch in data_loader:
 
                 scores, loss = self.forward_labels_and_loss(batch)
 
@@ -119,10 +107,6 @@ class TextRegressor(flair.models.TextClassifier):
                         results.append(float(score[0].score))
                     else:
                         results.append(float(score[0]))
-
-                clear_embeddings(
-                    batch, also_clear_word_embeddings=not embeddings_in_memory
-                )
 
                 eval_loss += loss
 
