@@ -1250,7 +1250,7 @@ class TREC_50(ClassificationCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        trec_path = "http://cogcomp.org/Data/QA/QC/"
+        trec_path = "https://cogcomp.seas.upenn.edu/Data/QA/QC/"
 
         original_filenames = ["train_5500.label", "TREC_10.label"]
         new_filenames = ["train.txt", "test.txt"]
@@ -1304,7 +1304,7 @@ class TREC_6(ClassificationCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        trec_path = "http://cogcomp.org/Data/QA/QC/"
+        trec_path = "https://cogcomp.seas.upenn.edu/Data/QA/QC/"
 
         original_filenames = ["train_5500.label", "TREC_10.label"]
         new_filenames = ["train.txt", "test.txt"]
