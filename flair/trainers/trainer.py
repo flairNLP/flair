@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import List, Union
 
@@ -20,6 +21,7 @@ from flair.training_utils import (
     log_line,
     add_file_handler,
     Result,
+    store_embeddings,
 )
 
 log = logging.getLogger("flair")
@@ -58,7 +60,7 @@ class ModelTrainer:
         train_with_dev: bool = False,
         monitor_train: bool = False,
         monitor_test: bool = False,
-        memory_mode: str = "cpu",
+        embedding_storage_mode: str = "cpu",
         checkpoint: bool = False,
         save_final_model: bool = True,
         anneal_with_restarts: bool = False,
@@ -98,7 +100,7 @@ class ModelTrainer:
         log_line(log)
         log.info(f"Device: {flair.device}")
         log_line(log)
-        log.info(f"Memory mode: {memory_mode}")
+        log.info(f"Embedding storage mode: {embedding_storage_mode}")
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False
@@ -208,8 +210,7 @@ class ModelTrainer:
                     train_loss += loss.item()
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
-                    # threading.Thread(target=manage_embedding_persistance(batch, memory_mode)).start()
-                    manage_embedding_persistance(batch, memory_mode)
+                    store_embeddings(batch, embedding_storage_mode)
 
                     if batch_no % modulo == 0:
                         log.info(
@@ -248,8 +249,7 @@ class ModelTrainer:
                     result_line += f"\t{train_eval_result.log_line}"
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
-                    # threading.Thread(target=manage_embedding_persistance(self.corpus.train, memory_mode)).start()
-                    manage_embedding_persistance(self.corpus.train, memory_mode)
+                    store_embeddings(self.corpus.train, embedding_storage_mode)
 
                 if log_dev:
                     dev_eval_result, dev_loss = self.model.evaluate(
@@ -271,8 +271,7 @@ class ModelTrainer:
                     current_score = dev_eval_result.main_score
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
-                    # threading.Thread(target=manage_embedding_persistance(self.corpus.dev, memory_mode)).start()
-                    manage_embedding_persistance(self.corpus.dev, memory_mode)
+                    store_embeddings(self.corpus.dev, embedding_storage_mode)
 
                 if log_test:
                     test_eval_result, test_loss = self.model.evaluate(
@@ -289,8 +288,7 @@ class ModelTrainer:
                     )
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
-                    # threading.Thread(target=manage_embedding_persistance(self.corpus.test, memory_mode)).start()
-                    manage_embedding_persistance(self.corpus.test, memory_mode)
+                    store_embeddings(self.corpus.test, embedding_storage_mode)
 
                 # determine learning rate annealing through scheduler
                 scheduler.step(current_score)
@@ -421,9 +419,12 @@ class ModelTrainer:
             for subcorpus in self.corpus.corpora:
                 log_line(log)
                 self.model.evaluate(
-                    subcorpus.test,
-                    eval_mini_batch_size,
-                    base_path / f"{subcorpus.name}-test.tsv",
+                    DataLoader(
+                        subcorpus.test,
+                        batch_size=eval_mini_batch_size,
+                        num_workers=num_workers,
+                    ),
+                    out_path=base_path / f"{subcorpus.name}-test.tsv",
                 )
 
         # get and return the final test score of best model
@@ -526,30 +527,3 @@ class ModelTrainer:
         log_line(log)
 
         return Path(learning_rate_tsv)
-
-
-def manage_embedding_persistance(sentences: List[Sentence], memory_mode: str):
-
-    # if memory mode option 'none' delete everything
-    if memory_mode == "none":
-        for sentence in sentences:
-            sentence.clear_embeddings()
-
-    # else delete only dynamic embeddings (otherwise autograd will keep everything in memory)
-    else:
-        # find out which ones are dynamic embeddings
-        delete_keys = []
-        for name, vector in sentences[0][0]._embeddings.items():
-            if sentences[0][0]._embeddings[name].requires_grad:
-                delete_keys.append(name)
-
-        # find out which ones are dynamic embeddings
-        for sentence in sentences:
-            sentence.clear_embeddings(delete_keys)
-
-    # memory management - option 1: send everything to CPU
-    if memory_mode == "cpu":
-        for sentence in sentences:
-            sentence.to("cpu")
-
-        # threading.Thread(target=cpu_embeddings(sentences)).start()

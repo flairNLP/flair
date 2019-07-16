@@ -7,7 +7,7 @@ import torch.nn as nn
 from typing import List, Union
 
 from flair.datasets import DataLoader
-from flair.training_utils import clear_embeddings, Metric, MetricRegression, Result
+from flair.training_utils import MetricRegression, Result, store_embeddings
 from flair.data import Sentence, Label
 import logging
 
@@ -40,7 +40,10 @@ class TextRegressor(flair.models.TextClassifier):
         return vec
 
     def predict(
-        self, sentences: Union[Sentence, List[Sentence]], mini_batch_size: int = 32
+        self,
+        sentences: Union[Sentence, List[Sentence]],
+        mini_batch_size: int = 32,
+        embedding_storage_mode="none",
     ) -> List[Sentence]:
 
         with torch.no_grad():
@@ -48,6 +51,9 @@ class TextRegressor(flair.models.TextClassifier):
                 sentences = [sentences]
 
             filtered_sentences = self._filter_empty_sentences(sentences)
+
+            # remove previous embeddings
+            store_embeddings(filtered_sentences, "none")
 
             batches = [
                 filtered_sentences[x : x + mini_batch_size]
@@ -60,7 +66,8 @@ class TextRegressor(flair.models.TextClassifier):
                 for (sentence, score) in zip(batch, scores.tolist()):
                     sentence.labels = [Label(value=str(score[0]))]
 
-                clear_embeddings(batch)
+                # clearing token embeddings to save memory
+                store_embeddings(batch, storage_mode=embedding_storage_mode)
 
             return sentences
 
@@ -78,6 +85,7 @@ class TextRegressor(flair.models.TextClassifier):
     def forward_labels_and_loss(
         self, sentences: Union[Sentence, List[Sentence]]
     ) -> (List[List[float]], torch.tensor):
+
         scores = self.forward(sentences)
         loss = self._calculate_loss(scores, sentences)
         return scores, loss
@@ -92,12 +100,17 @@ class TextRegressor(flair.models.TextClassifier):
             metric = MetricRegression("Evaluation")
 
             lines: List[str] = []
-            for batch in data_loader:
+            total_count = 0
+            for batch_nr, batch in enumerate(data_loader):
+
+                if isinstance(batch, Sentence):
+                    batch = [batch]
 
                 scores, loss = self.forward_labels_and_loss(batch)
 
                 true_values = []
                 for sentence in batch:
+                    total_count += 1
                     for label in sentence.labels:
                         true_values.append(float(label.value))
 
@@ -121,7 +134,7 @@ class TextRegressor(flair.models.TextClassifier):
                     )
                     lines.append(eval_line)
 
-            eval_loss /= len(sentences)
+            eval_loss /= total_count
 
             ##TODO: not saving lines yet
             if out_path is not None:

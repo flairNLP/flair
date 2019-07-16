@@ -790,6 +790,6 @@ def test_keep_word_embeddings():
     for token in sentence:
         assert len(token.embedding.numpy()) == 0
 
-    loaded_model.predict(sentence, clear_word_embeddings=False)
+    loaded_model.predict(sentence)
     for token in sentence:
         assert len(token.embedding.numpy()) > 0

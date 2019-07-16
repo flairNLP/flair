@@ -17,7 +17,7 @@ from flair.file_utils import cached_path
 
 from typing import List, Tuple, Union
 
-from flair.training_utils import clear_embeddings, Metric, Result
+from flair.training_utils import Metric, Result, store_embeddings
 
 from tqdm import tqdm
 from tabulate import tabulate
@@ -305,8 +305,8 @@ class SequenceTagger(flair.nn.Model):
         self,
         sentences: Union[List[Sentence], Sentence],
         mini_batch_size=32,
+        embedding_storage_mode="none",
         verbose=False,
-        clear_word_embeddings=True,
     ) -> List[Sentence]:
         with torch.no_grad():
             if isinstance(sentences, Sentence):
@@ -315,7 +315,7 @@ class SequenceTagger(flair.nn.Model):
             filtered_sentences = self._filter_empty_sentences(sentences)
 
             # remove previous embeddings
-            clear_embeddings(filtered_sentences, also_clear_word_embeddings=True)
+            store_embeddings(filtered_sentences, "none")
 
             # revere sort all sequences by their length
             filtered_sentences.sort(key=lambda x: len(x), reverse=True)
@@ -347,9 +347,7 @@ class SequenceTagger(flair.nn.Model):
                         token.add_tags_proba_dist(self.tag_type, token_all_tags)
 
                 # clearing token embeddings to save memory
-                clear_embeddings(
-                    batch, also_clear_word_embeddings=clear_word_embeddings
-                )
+                store_embeddings(batch, storage_mode=embedding_storage_mode)
 
             return sentences
 

@@ -682,6 +682,9 @@ class CSVClassificationDataset(FlairDataset):
                     if text_column >= len(row):
                         wrong_format = True
 
+                if wrong_format:
+                    continue
+
                 # test if at least one label given
                 has_label = False
                 for column in self.column_name_map:
@@ -689,7 +692,7 @@ class CSVClassificationDataset(FlairDataset):
                         has_label = True
                         break
 
-                if wrong_format or not has_label:
+                if not has_label:
                     continue
 
                 if self.in_memory:

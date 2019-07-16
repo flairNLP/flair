@@ -14,9 +14,9 @@ from flair.datasets import DataLoader
 from flair.file_utils import cached_path
 from flair.training_utils import (
     convert_labels_to_one_hot,
-    clear_embeddings,
     Metric,
     Result,
+    store_embeddings,
 )
 
 log = logging.getLogger("flair")
@@ -68,6 +68,7 @@ class TextClassifier(flair.nn.Model):
         nn.init.xavier_uniform_(self.decoder.weight)
 
     def forward(self, sentences) -> List[List[float]]:
+
         self.document_embeddings.embed(sentences)
 
         text_embedding_list = [
@@ -100,6 +101,7 @@ class TextClassifier(flair.nn.Model):
         return model
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
+
         scores = self.forward(sentences)
         return self._calculate_loss(scores, sentences)
 
@@ -115,6 +117,7 @@ class TextClassifier(flair.nn.Model):
         self,
         sentences: Union[Sentence, List[Sentence]],
         mini_batch_size: int = 32,
+        embedding_storage_mode="none",
         multi_class_prob: bool = False,
     ) -> List[Sentence]:
         """
@@ -130,6 +133,9 @@ class TextClassifier(flair.nn.Model):
 
             filtered_sentences = self._filter_empty_sentences(sentences)
 
+            # remove previous embeddings
+            store_embeddings(filtered_sentences, "none")
+
             batches = [
                 filtered_sentences[x : x + mini_batch_size]
                 for x in range(0, len(filtered_sentences), mini_batch_size)
@@ -144,7 +150,8 @@ class TextClassifier(flair.nn.Model):
                 for (sentence, labels) in zip(batch, predicted_labels):
                     sentence.labels = labels
 
-                clear_embeddings(batch)
+                # clearing token embeddings to save memory
+                store_embeddings(batch, storage_mode=embedding_storage_mode)
 
             return sentences
 
