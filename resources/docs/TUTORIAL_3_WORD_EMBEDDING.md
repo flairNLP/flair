@@ -154,11 +154,6 @@ You can initialize the class by passing the remote downloadable URL as well.
 embedding = FastTextEmbeddings('/path/to/remote/downloadable/custom_fasttext_embeddings.bin', use_local=False)  
 ```
 
-If your embeddings are trained with FastText version less than 0.9.1 then set the `use_gensim` parameter to `True` in the constructor as shown:
-
-```python
-embedding = FastTextEmbeddings('/path/to/local/custom_fasttext_embeddings.bin', use_gensim=True)  
-```
 
 ## Character Embeddings
 
