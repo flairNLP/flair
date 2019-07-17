@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 
 import torch.nn
+from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 import torch.nn.functional as F
 from torch.utils.data.dataset import Dataset
@@ -75,6 +76,7 @@ class SequenceTagger(flair.nn.Model):
         tag_type: str,
         use_crf: bool = True,
         use_rnn: bool = True,
+        train_initial_hs: bool = True,
         rnn_layers: int = 1,
         dropout: float = 0.0,
         word_dropout: float = 0.05,
@@ -125,29 +127,40 @@ class SequenceTagger(flair.nn.Model):
         if self.relearn_embeddings:
             self.embedding2nn = torch.nn.Linear(rnn_input_dim, rnn_input_dim)
 
-        # bidirectional LSTM on top of embedding layer
+        self.train_initial_hs = train_initial_hs
+        self.bidirectional = True
         self.rnn_type = "LSTM"
-        if self.rnn_type in ["LSTM", "GRU"]:
 
-            if self.nlayers == 1:
-                self.rnn = getattr(torch.nn, self.rnn_type)(
-                    rnn_input_dim,
-                    hidden_size,
-                    num_layers=self.nlayers,
-                    bidirectional=True,
-                )
-            else:
-                self.rnn = getattr(torch.nn, self.rnn_type)(
-                    rnn_input_dim,
-                    hidden_size,
-                    num_layers=self.nlayers,
-                    dropout=0.5,
-                    bidirectional=True,
-                )
-
-        # final linear map to tag space
+        # bidirectional LSTM on top of embedding layer
         if self.use_rnn:
-            self.linear = torch.nn.Linear(hidden_size * 2, len(tag_dictionary))
+            num_directions = 2 if self.bidirectional else 1
+
+            if self.rnn_type in ["LSTM", "GRU"]:
+
+                self.rnn = getattr(torch.nn, self.rnn_type)(
+                    rnn_input_dim,
+                    hidden_size,
+                    num_layers=self.nlayers,
+                    dropout=0.0 if self.nlayers == 1 else 0.5,
+                    bidirectional=True,
+                )
+                # Create initial hidden state and initialize it
+                if train_initial_hs:
+                    self.hs_initializer = torch.nn.init.xavier_normal_
+
+                    self.lstm_init_h = Parameter(
+                        torch.randn(self.nlayers * num_directions, self.hidden_size),
+                        requires_grad=True)
+
+                    self.lstm_init_c = Parameter(
+                        torch.randn(self.nlayers * num_directions, self.hidden_size),
+                        requires_grad=True)
+
+                    # self.hs_initializer(self.lstm_init_h)
+                    # self.hs_initializer(self.lstm_init_c)
+
+            # final linear map to tag space
+            self.linear = torch.nn.Linear(hidden_size * num_directions, len(tag_dictionary))
         else:
             self.linear = torch.nn.Linear(
                 self.embeddings.embedding_length, len(tag_dictionary)
@@ -171,6 +184,7 @@ class SequenceTagger(flair.nn.Model):
             "state_dict": self.state_dict(),
             "embeddings": self.embeddings,
             "hidden_size": self.hidden_size,
+            "train_initial_hs": self.train_initial_hs,
             "tag_dictionary": self.tag_dictionary,
             "tag_type": self.tag_type,
             "use_crf": self.use_crf,
@@ -195,6 +209,7 @@ class SequenceTagger(flair.nn.Model):
 
         model = SequenceTagger(
             hidden_size=state["hidden_size"],
+            train_initial_hs=state["train_initial_hs"],
             embeddings=state["embeddings"],
             tag_dictionary=state["tag_dictionary"],
             tag_type=state["tag_type"],
@@ -407,7 +422,11 @@ class SequenceTagger(flair.nn.Model):
         if self.use_rnn:
             packed = torch.nn.utils.rnn.pack_padded_sequence(sentence_tensor, lengths)
 
-            rnn_output, hidden = self.rnn(packed)
+            initial_hidden_state = [
+                self.lstm_init_h.unsqueeze(1).repeat(1, len(sentences), 1),
+                self.lstm_init_c.unsqueeze(1).repeat(1, len(sentences), 1),
+            ]
+            rnn_output, hidden = self.rnn(packed, initial_hidden_state)
 
             sentence_tensor, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(
                 rnn_output, batch_first=True
