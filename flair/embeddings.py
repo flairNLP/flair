@@ -873,9 +873,10 @@ class ELMoTransformerEmbeddings(TokenEmbeddings):
 
 
 class TransformerXLEmbeddings(TokenEmbeddings):
-    def __init__(self, model: str = "transfo-xl-wt103"):
+    def __init__(self, model: str = "transfo-xl-wt103", layers: str = "-1"):
         """Transformer-XL embeddings, as proposed in Dai et al., 2019.
         :param model: name of Transformer-XL model
+        :param layers: comma-separated list of layers
         """
         super().__init__()
 
@@ -883,8 +884,11 @@ class TransformerXLEmbeddings(TokenEmbeddings):
             raise ValueError("Provided Transformer-XL model is not available.")
 
         self.tokenizer = TransfoXLTokenizer.from_pretrained(model)
-        self.model = TransfoXLModel.from_pretrained(model)
+        self.model = TransfoXLModel.from_pretrained(
+            pretrained_model_name_or_path=model, output_hidden_states=True
+        )
         self.name = model
+        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
         self.static_embeddings = True
 
         dummy_sentence: Sentence = Sentence()
@@ -904,18 +908,22 @@ class TransformerXLEmbeddings(TokenEmbeddings):
 
         with torch.no_grad():
             for sentence in sentences:
-                token_strings = [token.text for token in sentence.tokens]
-                indexed_tokens = self.tokenizer.convert_tokens_to_ids(token_strings)
+                for token in sentence.tokens:
+                    token_text = token.text
+                    indexed_token = self.tokenizer.convert_tokens_to_ids([token_text])
+                    token_tensor = torch.tensor([indexed_token])
+                    token_tensor = token_tensor.to(flair.device)
 
-                tokens_tensor = torch.tensor([indexed_tokens])
-                tokens_tensor = tokens_tensor.to(flair.device)
+                    _, _, hidden_states = self.model(token_tensor)
 
-                hidden_states, _ = self.model(tokens_tensor)
+                    token_embeddings = []
 
-                for token, token_idx in zip(
-                    sentence.tokens, range(len(sentence.tokens))
-                ):
-                    token.set_embedding(self.name, hidden_states[0][token_idx])
+                    for layer in self.layers:
+                        current_embedding = hidden_states[layer][0][0]
+                        token_embeddings.append(current_embedding)
+
+                    final_token_embedding = torch.cat(token_embeddings)
+                    token.set_embedding(self.name, final_token_embedding)
 
         return sentences
 
