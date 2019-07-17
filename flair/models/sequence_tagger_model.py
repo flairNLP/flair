@@ -76,11 +76,11 @@ class SequenceTagger(flair.nn.Model):
         tag_type: str,
         use_crf: bool = True,
         use_rnn: bool = True,
-        train_initial_hs: bool = True,
         rnn_layers: int = 1,
         dropout: float = 0.0,
         word_dropout: float = 0.05,
         locked_dropout: float = 0.5,
+        train_initial_hidden_state: bool = True,
         pickle_module: str = "pickle",
     ):
 
@@ -127,7 +127,7 @@ class SequenceTagger(flair.nn.Model):
         if self.relearn_embeddings:
             self.embedding2nn = torch.nn.Linear(rnn_input_dim, rnn_input_dim)
 
-        self.train_initial_hs = train_initial_hs
+        self.train_initial_hidden_state = train_initial_hidden_state
         self.bidirectional = True
         self.rnn_type = "LSTM"
 
@@ -145,23 +145,27 @@ class SequenceTagger(flair.nn.Model):
                     bidirectional=True,
                 )
                 # Create initial hidden state and initialize it
-                if train_initial_hs:
+                if self.train_initial_hidden_state:
                     self.hs_initializer = torch.nn.init.xavier_normal_
 
                     self.lstm_init_h = Parameter(
                         torch.randn(self.nlayers * num_directions, self.hidden_size),
-                        requires_grad=True)
+                        requires_grad=True,
+                    )
 
                     self.lstm_init_c = Parameter(
                         torch.randn(self.nlayers * num_directions, self.hidden_size),
-                        requires_grad=True)
+                        requires_grad=True,
+                    )
 
                     # TODO: Decide how to initialize the hidden state variables
                     # self.hs_initializer(self.lstm_init_h)
                     # self.hs_initializer(self.lstm_init_c)
 
             # final linear map to tag space
-            self.linear = torch.nn.Linear(hidden_size * num_directions, len(tag_dictionary))
+            self.linear = torch.nn.Linear(
+                hidden_size * num_directions, len(tag_dictionary)
+            )
         else:
             self.linear = torch.nn.Linear(
                 self.embeddings.embedding_length, len(tag_dictionary)
@@ -185,7 +189,7 @@ class SequenceTagger(flair.nn.Model):
             "state_dict": self.state_dict(),
             "embeddings": self.embeddings,
             "hidden_size": self.hidden_size,
-            "train_initial_hs": self.train_initial_hs,
+            "train_initial_hidden_state": self.train_initial_hidden_state,
             "tag_dictionary": self.tag_dictionary,
             "tag_type": self.tag_type,
             "use_crf": self.use_crf,
@@ -207,10 +211,14 @@ class SequenceTagger(flair.nn.Model):
             if not "use_locked_dropout" in state.keys()
             else state["use_locked_dropout"]
         )
+        train_initial_hidden_state = (
+            False
+            if not "train_initial_hidden_state" in state.keys()
+            else state["train_initial_hidden_state"]
+        )
 
         model = SequenceTagger(
             hidden_size=state["hidden_size"],
-            train_initial_hs=state["train_initial_hs"],
             embeddings=state["embeddings"],
             tag_dictionary=state["tag_dictionary"],
             tag_type=state["tag_type"],
@@ -220,6 +228,7 @@ class SequenceTagger(flair.nn.Model):
             dropout=use_dropout,
             word_dropout=use_word_dropout,
             locked_dropout=use_locked_dropout,
+            train_initial_hidden_state=train_initial_hidden_state,
         )
         model.load_state_dict(state["state_dict"])
         return model
@@ -423,11 +432,15 @@ class SequenceTagger(flair.nn.Model):
         if self.use_rnn:
             packed = torch.nn.utils.rnn.pack_padded_sequence(sentence_tensor, lengths)
 
-            initial_hidden_state = [
-                self.lstm_init_h.unsqueeze(1).repeat(1, len(sentences), 1),
-                self.lstm_init_c.unsqueeze(1).repeat(1, len(sentences), 1),
-            ]
-            rnn_output, hidden = self.rnn(packed, initial_hidden_state)
+            # if initial hidden state is trainable, use this state
+            if self.train_initial_hidden_state:
+                initial_hidden_state = [
+                    self.lstm_init_h.unsqueeze(1).repeat(1, len(sentences), 1),
+                    self.lstm_init_c.unsqueeze(1).repeat(1, len(sentences), 1),
+                ]
+                rnn_output, hidden = self.rnn(packed, initial_hidden_state)
+            else:
+                rnn_output, hidden = self.rnn(packed)
 
             sentence_tensor, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(
                 rnn_output, batch_first=True
