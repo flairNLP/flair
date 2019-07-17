@@ -297,8 +297,41 @@ George <B-PER> Washington <I-PER> went to Washington <B-LOC> .
 
 ## Reading a Text Classification Dataset
 
-If you want to use your own text classification dataset, you must format your data to the  
-[FastText format](https://fasttext.cc/docs/en/supervised-tutorial.html), in which each line in the file represents a 
+If you want to use your own text classification dataset, there are currently two methods to go about this: 
+load specified text and labels from a simple CSV file or format your data to the 
+[FastText format](https://fasttext.cc/docs/en/supervised-tutorial.html).
+
+#### Load from simple CSV file
+
+Many text classification datasets are distributed as simple CSV files in which each row corresponds to a data point and
+columns correspond to text, labels, and other metadata.  You can load a CSV format classification dataset using 
+`CSVClassificationCorpus` by passing in a column format (like in `ColumnCorpus` above).  This column format indicates
+which column(s) in the CSV holds the text and which field(s) the label(s).
+
+Note: You will need to save your split CSV data files in the `data_folder` path with each file titled appropriately i.e.
+`train.csv` `test.csv` `dev.csv`.   This is because the corpus initializers will automatically search for the train, 
+dev, test splits in a folder.
+
+```python
+from flair.data import Corpus
+from flair.datasets import CSVClassificationCorpus
+
+# this is the folder in which train, test and dev files reside
+data_folder = '/path/to/data'
+
+# column format indicating which columns hold the text and label(s)
+column_name_map = {4: "text", 1: "label_topic", 2: "label_subtopic"}
+
+# load corpus containing training, test and dev data and if CSV has a header, you can skip it
+corpus: Corpus = CSVClassificationCorpus(data_folder,
+                                         column_name_map,
+                                         skip_header=True) 
+```
+
+
+#### FastText Format
+If using `CSVClassificationCorpus` is not practical, you may format your data to the  
+FastText format, in which each line in the file represents a 
 text document. A document can have one or multiple labels that are defined at the beginning of the line starting with 
 the prefix `__label__`. This looks like this:
 
@@ -307,7 +340,7 @@ __label__<label_1> <text>
 __label__<label_1> __label__<label_2> <text>
 ```
 
-To create a `Corpus` for a text classification task, you need to have three files (train, dev, and test) in the 
+As previously mentioned, to create a `Corpus` for a text classification task, you need to have three files (train, dev, and test) in the 
 above format located in one folder. This data folder structure could, for example, look like this for the IMDB task:
 ```text
 /resources/tasks/imdb/train.txt
@@ -334,7 +367,7 @@ corpus: Corpus = ClassificationCorpus(data_folder,
                                       train_file='train.txt')
 ```
 
-Note that our corpus initializers have methods to automatically look for train, dev and test splits in a folder. So in 
+Note again that our corpus initializers have methods to automatically look for train, dev and test splits in a folder. So in 
 most cases you don't need to specify the file names yourself. Often, this is enough: 
 
 ```python
