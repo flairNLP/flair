@@ -11,23 +11,46 @@ import numpy as np
 import torch
 from bpemb import BPEmb
 from deprecated import deprecated
+from torch.nn import ParameterList, Parameter
 
-from pytorch_pretrained_bert import (
+from pytorch_transformers import (
     BertTokenizer,
     BertModel,
     TransfoXLTokenizer,
     TransfoXLModel,
     OpenAIGPTModel,
     OpenAIGPTTokenizer,
+    GPT2Model,
+    GPT2Tokenizer,
+    XLNetTokenizer,
+    XLMTokenizer,
+    XLNetModel,
+    XLMModel,
+    PreTrainedTokenizer,
+    PreTrainedModel,
 )
 
-from pytorch_pretrained_bert.modeling_openai import (
-    PRETRAINED_MODEL_ARCHIVE_MAP as OPENAI_GPT_PRETRAINED_MODEL_ARCHIVE_MAP,
+from pytorch_transformers.modeling_openai import (
+    OPENAI_GPT_PRETRAINED_MODEL_ARCHIVE_MAP as OPENAI_GPT_PRETRAINED_MODEL_ARCHIVE_MAP,
 )
 
-from pytorch_pretrained_bert.modeling_transfo_xl import (
-    PRETRAINED_MODEL_ARCHIVE_MAP as TRANSFORMER_XL_PRETRAINED_MODEL_ARCHIVE_MAP,
+from pytorch_transformers.modeling_gpt2 import (
+    GPT2_PRETRAINED_CONFIG_ARCHIVE_MAP as OPENAI_GPT2_PRETRAINED_MODEL_ARCHIVE_MAP,
 )
+
+
+from pytorch_transformers.modeling_transfo_xl import (
+    TRANSFO_XL_PRETRAINED_MODEL_ARCHIVE_MAP as TRANSFORMER_XL_PRETRAINED_MODEL_ARCHIVE_MAP,
+)
+
+from pytorch_transformers.modeling_xlnet import (
+    XLNET_PRETRAINED_MODEL_ARCHIVE_MAP as XLNET_PRETRAINED_MODEL_ARCHIVE_MAP,
+)
+
+from pytorch_transformers.modeling_xlm import (
+    XLM_PRETRAINED_MODEL_ARCHIVE_MAP as XLM_PRETRAINED_MODEL_ARCHIVE_MAP,
+)
+
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 import flair
@@ -865,10 +888,292 @@ class ELMoTransformerEmbeddings(TokenEmbeddings):
         return self.name
 
 
+class ScalarMix(torch.nn.Module):
+    """
+    Computes a parameterised scalar mixture of N tensors.
+    This method was proposed by Liu et al. (2019) in the paper:
+    "Linguistic Knowledge and Transferability of Contextual Representations" (https://arxiv.org/abs/1903.08855)
+
+    The implementation is copied and slightly modified from the allennlp repository and is licensed under Apache 2.0.
+    It can be found under:
+    https://github.com/allenai/allennlp/blob/master/allennlp/modules/scalar_mix.py.
+    """
+
+    def __init__(self, mixture_size: int) -> None:
+        """
+        Inits scalar mix implementation.
+        ``mixture = gamma * sum(s_k * tensor_k)`` where ``s = softmax(w)``, with ``w`` and ``gamma`` scalar parameters.
+        :param mixture_size: size of mixtures (usually the number of layers)
+        """
+        super(ScalarMix, self).__init__()
+        self.mixture_size = mixture_size
+
+        initial_scalar_parameters = [0.0] * mixture_size
+
+        self.scalar_parameters = ParameterList(
+            [
+                Parameter(
+                    torch.FloatTensor([initial_scalar_parameters[i]]).to(flair.device),
+                    requires_grad=False,
+                )
+                for i in range(mixture_size)
+            ]
+        )
+        self.gamma = Parameter(
+            torch.FloatTensor([1.0]).to(flair.device), requires_grad=False
+        )
+
+    def forward(self, tensors: List[torch.Tensor]) -> torch.Tensor:
+        """
+        Computes a weighted average of the ``tensors``.  The input tensors an be any shape
+        with at least two dimensions, but must all be the same shape.
+        :param tensors: list of input tensors
+        :return: computed weighted average of input tensors
+        """
+        if len(tensors) != self.mixture_size:
+            log.error(
+                "{} tensors were passed, but the module was initialized to mix {} tensors.".format(
+                    len(tensors), self.mixture_size
+                )
+            )
+
+        normed_weights = torch.nn.functional.softmax(
+            torch.cat([parameter for parameter in self.scalar_parameters]), dim=0
+        )
+        normed_weights = torch.split(normed_weights, split_size_or_sections=1)
+
+        pieces = []
+        for weight, tensor in zip(normed_weights, tensors):
+            pieces.append(weight * tensor)
+        return self.gamma * sum(pieces)
+
+
+def _extract_embeddings(
+    hidden_states: List[torch.FloatTensor],
+    layers: List[int],
+    pooling_operation: str,
+    subword_start_idx: int,
+    subword_end_idx: int,
+    use_scalar_mix: bool = False,
+) -> List[torch.FloatTensor]:
+    """
+    Extracts subword embeddings from specified layers from hidden states.
+    :param hidden_states: list of hidden states from model
+    :param layers: list of layers
+    :param pooling_operation: pooling operation for subword embeddings (supported: first, last, first_last and mean)
+    :param subword_start_idx: defines start index for subword
+    :param subword_end_idx: defines end index for subword
+    :param use_scalar_mix: determines, if scalar mix should be used
+    :return: list of extracted subword embeddings
+    """
+    subtoken_embeddings: List[torch.FloatTensor] = []
+
+    for layer in layers:
+        current_embeddings = hidden_states[layer][0][subword_start_idx:subword_end_idx]
+
+        first_embedding: torch.FloatTensor = current_embeddings[0]
+        if pooling_operation == "first_last":
+            last_embedding: torch.FloatTensor = current_embeddings[-1]
+            final_embedding: torch.FloatTensor = torch.cat(
+                [first_embedding, last_embedding]
+            )
+        elif pooling_operation == "last":
+            final_embedding: torch.FloatTensor = current_embeddings[-1]
+        elif pooling_operation == "mean":
+            all_embeddings: List[torch.FloatTensor] = [
+                embedding.unsqueeze(0) for embedding in current_embeddings
+            ]
+            final_embedding: torch.FloatTensor = torch.mean(
+                torch.cat(all_embeddings, dim=0), dim=0
+            )
+        else:
+            final_embedding: torch.FloatTensor = first_embedding
+
+        subtoken_embeddings.append(final_embedding)
+
+    if use_scalar_mix:
+        sm = ScalarMix(mixture_size=len(subtoken_embeddings))
+        sm_embeddings = sm(subtoken_embeddings)
+
+        subtoken_embeddings = [sm_embeddings]
+
+    return subtoken_embeddings
+
+
+def _build_token_subwords_mapping(
+    sentence: Sentence, tokenizer: PreTrainedTokenizer
+) -> Dict[int, int]:
+    """ Builds a dictionary that stores the following information:
+    Token index (key) and number of corresponding subwords (value) for a sentence.
+
+    :param sentence: input sentence
+    :param tokenizer: PyTorch-Transformers tokenization object
+    :return: dictionary of token index to corresponding number of subwords
+    """
+    token_subwords_mapping: Dict[int, int] = {}
+
+    for token in sentence.tokens:
+        token_text = token.text
+
+        subwords = tokenizer.tokenize(token_text)
+
+        token_subwords_mapping[token.idx] = len(subwords)
+
+    return token_subwords_mapping
+
+
+def _build_token_subwords_mapping_roberta(sentence: Sentence, model) -> Dict[int, int]:
+    """ Builds a dictionary that stores the following information:
+    Token index (key) and number of corresponding subwords (value) for a sentence.
+
+    :param sentence: input sentence
+    :param model: RoBERTa model
+    :return: dictionary of token index to corresponding number of subwords
+    """
+    token_subwords_mapping: Dict[int, int] = {}
+
+    for token in sentence.tokens:
+        token_text = token.text
+
+        # Leading spaces are needed for GPT2 BPE tokenization in RoBERTa (except at BOS):
+        # ``roberta.encode(' world').tolist()`` -> ``[0, 232, 2]``
+        # ``roberta.encode('world').tolist()``  -> ``[0, 8331, 2]``
+        padding = "" if token.idx == 1 else " "
+
+        current_subwords = model.encode(padding + token_text)
+
+        # ``roberta.encode(' world').tolist()`` will result in ``[0, 232, 2]``:
+        # 0 and 2 are special symbols (`<s>` and `</s>`), so ignore them in subword length calculation
+        token_subwords_mapping[token.idx] = len(current_subwords) - 2
+
+    return token_subwords_mapping
+
+
+def _build_token_subwords_mapping_gpt2(
+    sentence: Sentence, tokenizer: PreTrainedTokenizer
+) -> Dict[int, int]:
+    """ Builds a dictionary that stores the following information:
+    Token index (key) and number of corresponding subwords (value) for a sentence.
+
+    :param sentence: input sentence
+    :param tokenizer: PyTorch-Transformers tokenization object
+    :return: dictionary of token index to corresponding number of subwords
+    """
+    token_subwords_mapping: Dict[int, int] = {}
+
+    for token in sentence.tokens:
+        # Dummy token is needed to get the actually token tokenized correctly with special ``Ġ`` symbol
+
+        if token.idx == 1:
+            token_text = token.text
+            subwords = tokenizer.tokenize(token_text)
+        else:
+            token_text = "X " + token.text
+            subwords = tokenizer.tokenize(token_text)[1:]
+
+        token_subwords_mapping[token.idx] = len(subwords)
+
+    return token_subwords_mapping
+
+
+def _get_transformer_sentence_embeddings(
+    sentences: List[Sentence],
+    tokenizer: PreTrainedTokenizer,
+    model: PreTrainedModel,
+    name: str,
+    layers: List[int],
+    pooling_operation: str,
+    use_scalar_mix: bool,
+    bos_token: str = None,
+    eos_token: str = None,
+) -> List[Sentence]:
+    """
+    Builds sentence embeddings for Transformer-based architectures.
+    :param sentences: input sentences
+    :param tokenizer: tokenization object
+    :param model: model object
+    :param name: name of the Transformer-based model
+    :param layers: list of layers
+    :param pooling_operation: defines pooling operation for subword extraction
+    :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
+    :param bos_token: defines begin of sentence token (used for left padding)
+    :param eos_token: defines end of sentence token (used for right padding)
+    :return: list of sentences (each token of a sentence is now embedded)
+    """
+    with torch.no_grad():
+        for sentence in sentences:
+            token_subwords_mapping: Dict[int, int] = {}
+
+            if name.startswith("roberta"):
+                token_subwords_mapping = _build_token_subwords_mapping_roberta(
+                    sentence=sentence, model=model
+                )
+            elif name.startswith("gpt2"):
+                token_subwords_mapping = _build_token_subwords_mapping_gpt2(
+                    sentence=sentence, tokenizer=tokenizer
+                )
+            else:
+                token_subwords_mapping = _build_token_subwords_mapping(
+                    sentence=sentence, tokenizer=tokenizer
+                )
+
+            if name.startswith("roberta"):
+                subwords = model.encode(sentence.to_tokenized_string())
+            else:
+                subwords = tokenizer.tokenize(sentence.to_tokenized_string())
+
+            offset = 0
+
+            if bos_token:
+                subwords = [bos_token] + subwords
+                offset = 1
+
+            if eos_token:
+                subwords = subwords + [eos_token]
+
+            if not name.startswith("roberta"):
+                indexed_tokens = tokenizer.convert_tokens_to_ids(subwords)
+                tokens_tensor = torch.tensor([indexed_tokens])
+                tokens_tensor = tokens_tensor.to(flair.device)
+
+                hidden_states = model(tokens_tensor)[-1]
+            else:
+                hidden_states = model.extract_features(
+                    subwords, return_all_hiddens=True
+                )
+                offset = 1
+
+            for token in sentence.tokens:
+                len_subwords = token_subwords_mapping[token.idx]
+
+                subtoken_embeddings = _extract_embeddings(
+                    hidden_states=hidden_states,
+                    layers=layers,
+                    pooling_operation=pooling_operation,
+                    subword_start_idx=offset,
+                    subword_end_idx=offset + len_subwords,
+                    use_scalar_mix=use_scalar_mix,
+                )
+
+                offset += len_subwords
+
+                final_subtoken_embedding = torch.cat(subtoken_embeddings)
+                token.set_embedding(name, final_subtoken_embedding)
+
+    return sentences
+
+
 class TransformerXLEmbeddings(TokenEmbeddings):
-    def __init__(self, model: str = "transfo-xl-wt103"):
+    def __init__(
+        self,
+        model: str = "transfo-xl-wt103",
+        layers: str = "1,2,3",
+        use_scalar_mix: bool = False,
+    ):
         """Transformer-XL embeddings, as proposed in Dai et al., 2019.
         :param model: name of Transformer-XL model
+        :param layers: comma-separated list of layers
+        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
         """
         super().__init__()
 
@@ -876,8 +1181,12 @@ class TransformerXLEmbeddings(TokenEmbeddings):
             raise ValueError("Provided Transformer-XL model is not available.")
 
         self.tokenizer = TransfoXLTokenizer.from_pretrained(model)
-        self.model = TransfoXLModel.from_pretrained(model)
+        self.model = TransfoXLModel.from_pretrained(
+            pretrained_model_name_or_path=model, output_hidden_states=True
+        )
         self.name = model
+        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
+        self.use_scalar_mix = use_scalar_mix
         self.static_embeddings = True
 
         dummy_sentence: Sentence = Sentence()
@@ -895,20 +1204,147 @@ class TransformerXLEmbeddings(TokenEmbeddings):
         self.model.to(flair.device)
         self.model.eval()
 
-        with torch.no_grad():
-            for sentence in sentences:
-                token_strings = [token.text for token in sentence.tokens]
-                indexed_tokens = self.tokenizer.convert_tokens_to_ids(token_strings)
+        sentences = _get_transformer_sentence_embeddings(
+            sentences=sentences,
+            tokenizer=self.tokenizer,
+            model=self.model,
+            name=self.name,
+            layers=self.layers,
+            pooling_operation="first",
+            use_scalar_mix=self.use_scalar_mix,
+            eos_token="<eos>",
+        )
 
-                tokens_tensor = torch.tensor([indexed_tokens])
-                tokens_tensor = tokens_tensor.to(flair.device)
+        return sentences
 
-                hidden_states, _ = self.model(tokens_tensor)
+    def extra_repr(self):
+        return "model={}".format(self.name)
 
-                for token, token_idx in zip(
-                    sentence.tokens, range(len(sentence.tokens))
-                ):
-                    token.set_embedding(self.name, hidden_states[0][token_idx])
+    def __str__(self):
+        return self.name
+
+
+class XLNetEmbeddings(TokenEmbeddings):
+    def __init__(
+        self,
+        model: str = "xlnet-large-cased",
+        layers: str = "1",
+        pooling_operation: str = "first_last",
+        use_scalar_mix: bool = False,
+    ):
+        """XLNet embeddings, as proposed in Yang et al., 2019.
+        :param model: name of XLNet model
+        :param layers: comma-separated list of layers
+        :param pooling_operation: defines pooling operation for subwords
+        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
+        """
+        super().__init__()
+
+        if model not in XLNET_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
+            raise ValueError("Provided XLNet model is not available.")
+
+        self.tokenizer = XLNetTokenizer.from_pretrained(model)
+        self.model = XLNetModel.from_pretrained(
+            pretrained_model_name_or_path=model, output_hidden_states=True
+        )
+        self.name = model
+        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
+        self.pooling_operation = pooling_operation
+        self.use_scalar_mix = use_scalar_mix
+        self.static_embeddings = True
+
+        dummy_sentence: Sentence = Sentence()
+        dummy_sentence.add_token(Token("hello"))
+        embedded_dummy = self.embed(dummy_sentence)
+        self.__embedding_length: int = len(
+            embedded_dummy[0].get_token(1).get_embedding()
+        )
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        self.model.to(flair.device)
+        self.model.eval()
+
+        sentences = _get_transformer_sentence_embeddings(
+            sentences=sentences,
+            tokenizer=self.tokenizer,
+            model=self.model,
+            name=self.name,
+            layers=self.layers,
+            pooling_operation=self.pooling_operation,
+            use_scalar_mix=self.use_scalar_mix,
+            bos_token="<s>",
+            eos_token="</s>",
+        )
+
+        return sentences
+
+    def extra_repr(self):
+        return "model={}".format(self.name)
+
+    def __str__(self):
+        return self.name
+
+
+class XLMEmbeddings(TokenEmbeddings):
+    def __init__(
+        self,
+        model: str = "xlm-mlm-en-2048",
+        layers: str = "1",
+        pooling_operation: str = "first_last",
+        use_scalar_mix: bool = False,
+    ):
+        """
+        XLM embeddings, as proposed in Guillaume et al., 2019.
+        :param model: name of XLM model
+        :param layers: comma-separated list of layers
+        :param pooling_operation: defines pooling operation for subwords
+        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
+        """
+        super().__init__()
+
+        if model not in XLM_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
+            raise ValueError("Provided XLM model is not available.")
+
+        self.tokenizer = XLMTokenizer.from_pretrained(model)
+        self.model = XLMModel.from_pretrained(
+            pretrained_model_name_or_path=model, output_hidden_states=True
+        )
+        self.name = model
+        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
+        self.pooling_operation = pooling_operation
+        self.use_scalar_mix = use_scalar_mix
+        self.static_embeddings = True
+
+        dummy_sentence: Sentence = Sentence()
+        dummy_sentence.add_token(Token("hello"))
+        embedded_dummy = self.embed(dummy_sentence)
+        self.__embedding_length: int = len(
+            embedded_dummy[0].get_token(1).get_embedding()
+        )
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        self.model.to(flair.device)
+        self.model.eval()
+
+        sentences = _get_transformer_sentence_embeddings(
+            sentences=sentences,
+            tokenizer=self.tokenizer,
+            model=self.model,
+            name=self.name,
+            layers=self.layers,
+            pooling_operation=self.pooling_operation,
+            use_scalar_mix=self.use_scalar_mix,
+            bos_token="<s>",
+            eos_token="</s>",
+        )
 
         return sentences
 
@@ -921,11 +1357,17 @@ class TransformerXLEmbeddings(TokenEmbeddings):
 
 class OpenAIGPTEmbeddings(TokenEmbeddings):
     def __init__(
-        self, model: str = "openai-gpt", pooling_operation: str = "first_last"
+        self,
+        model: str = "openai-gpt",
+        layers: str = "1",
+        pooling_operation: str = "first_last",
+        use_scalar_mix: bool = False,
     ):
         """OpenAI GPT embeddings, as proposed in Radford et al. 2018.
         :param model: name of OpenAI GPT model
+        :param layers: comma-separated list of layers
         :param pooling_operation: defines pooling operation for subwords
+        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
         """
         super().__init__()
 
@@ -933,10 +1375,14 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
             raise ValueError("Provided OpenAI GPT model is not available.")
 
         self.tokenizer = OpenAIGPTTokenizer.from_pretrained(model)
-        self.model = OpenAIGPTModel.from_pretrained(model)
+        self.model = OpenAIGPTModel.from_pretrained(
+            pretrained_model_name_or_path=model, output_hidden_states=True
+        )
         self.name = model
-        self.static_embeddings = True
+        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
         self.pooling_operation = pooling_operation
+        self.use_scalar_mix = use_scalar_mix
+        self.static_embeddings = True
 
         dummy_sentence: Sentence = Sentence()
         dummy_sentence.add_token(Token("hello"))
@@ -953,37 +1399,15 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
         self.model.to(flair.device)
         self.model.eval()
 
-        with torch.no_grad():
-            for sentence in sentences:
-                for token in sentence.tokens:
-                    token_text = token.text
-
-                    subwords = self.tokenizer.tokenize(token_text)
-                    indexed_tokens = self.tokenizer.convert_tokens_to_ids(subwords)
-                    tokens_tensor = torch.tensor([indexed_tokens])
-                    tokens_tensor = tokens_tensor.to(flair.device)
-
-                    hidden_states = self.model(tokens_tensor)
-
-                    if self.pooling_operation == "first":
-                        # Use embedding of first subword
-                        token.set_embedding(self.name, hidden_states[0][0])
-                    elif self.pooling_operation == "last":
-                        last_embedding = hidden_states[0][len(hidden_states[0]) - 1]
-                        token.set_embedding(self.name, last_embedding)
-                    elif self.pooling_operation == "first_last":
-                        # Use embedding of first and last subword
-                        first_embedding = hidden_states[0][0]
-                        last_embedding = hidden_states[0][len(hidden_states[0]) - 1]
-                        final_embedding = torch.cat([first_embedding, last_embedding])
-                        token.set_embedding(self.name, final_embedding)
-                    else:
-                        # Otherwise, use mean over all subwords in token
-                        all_embeddings = [
-                            embedding.unsqueeze(0) for embedding in hidden_states[0]
-                        ]
-                        mean = torch.mean(torch.cat(all_embeddings, dim=0), dim=0)
-                        token.set_embedding(self.name, mean)
+        sentences = _get_transformer_sentence_embeddings(
+            sentences=sentences,
+            tokenizer=self.tokenizer,
+            model=self.model,
+            name=self.name,
+            layers=self.layers,
+            pooling_operation=self.pooling_operation,
+            use_scalar_mix=self.use_scalar_mix,
+        )
 
         return sentences
 
@@ -992,6 +1416,140 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
 
     def __str__(self):
         return self.name
+
+
+class OpenAIGPT2Embeddings(TokenEmbeddings):
+    def __init__(
+        self,
+        model: str = "gpt2-medium",
+        layers: str = "1",
+        pooling_operation: str = "first_last",
+        use_scalar_mix: bool = False,
+    ):
+        """OpenAI GPT-2 embeddings, as proposed in Radford et al. 2019.
+        :param model: name of OpenAI GPT-2 model
+        :param layers: comma-separated list of layers
+        :param pooling_operation: defines pooling operation for subwords
+        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
+        """
+        super().__init__()
+
+        if model not in OPENAI_GPT2_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
+            raise ValueError("Provided OpenAI GPT-2 model is not available.")
+
+        self.tokenizer = GPT2Tokenizer.from_pretrained(model)
+        self.model = GPT2Model.from_pretrained(
+            pretrained_model_name_or_path=model, output_hidden_states=True
+        )
+        self.name = model
+        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
+        self.pooling_operation = pooling_operation
+        self.use_scalar_mix = use_scalar_mix
+        self.static_embeddings = True
+
+        dummy_sentence: Sentence = Sentence()
+        dummy_sentence.add_token(Token("hello"))
+        embedded_dummy = self.embed(dummy_sentence)
+        self.__embedding_length: int = len(
+            embedded_dummy[0].get_token(1).get_embedding()
+        )
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        self.model.to(flair.device)
+        self.model.eval()
+
+        sentences = _get_transformer_sentence_embeddings(
+            sentences=sentences,
+            tokenizer=self.tokenizer,
+            model=self.model,
+            name=self.name,
+            layers=self.layers,
+            pooling_operation=self.pooling_operation,
+            use_scalar_mix=self.use_scalar_mix,
+            bos_token="<|endoftext|>",
+            eos_token="<|endoftext|>",
+        )
+
+        return sentences
+
+
+class RoBERTaEmbeddings(TokenEmbeddings):
+    def __init__(
+        self,
+        model: str = "roberta.large",
+        layers: str = "-1",
+        pooling_operation: str = "first",
+        use_scalar_mix: bool = False,
+    ):
+        """RoBERTa, as proposed by Liu et al. 2019.
+        :param model: name of RoBERTa model
+        :param layers: comma-separated list of layers
+        :param pooling_operation: defines pooling operation for subwords
+        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
+        """
+        super().__init__()
+
+        try:
+            self.model = torch.hub.load("pytorch/fairseq", model)
+        except:
+            log_line(log)
+            log.warning("ATTENTION! sacremoses and subword_nmt needs to be installed!")
+            log_line(log)
+            pass
+
+        self.name = model
+        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
+        self.pooling_operation = pooling_operation
+        self.use_scalar_mix = use_scalar_mix
+        self.static_embeddings = True
+
+        dummy_sentence: Sentence = Sentence()
+        dummy_sentence.add_token(Token("hello"))
+        embedded_dummy = self.embed(dummy_sentence)
+        self.__embedding_length: int = len(
+            embedded_dummy[0].get_token(1).get_embedding()
+        )
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def __getstate__(self):
+        # Copy the object's state from self.__dict__ which contains
+        # all our instance attributes. Always use the dict.copy()
+        # method to avoid modifying the original state.
+        state = self.__dict__.copy()
+        # Remove the unpicklable entries.
+        state["model"] = None
+        state["_modules"] = None
+
+        return state
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        # Restore unpickable entries
+        super().__init__()
+        self.model = torch.hub.load("pytorch/fairseq", self.name)
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        self.model.to(flair.device)
+        self.model.eval()
+
+        sentences = _get_transformer_sentence_embeddings(
+            sentences=sentences,
+            tokenizer=None,
+            model=self.model,
+            name=self.name,
+            layers=self.layers,
+            pooling_operation=self.pooling_operation,
+            use_scalar_mix=self.use_scalar_mix,
+        )
+
+        return sentences
 
 
 class CharacterEmbeddings(TokenEmbeddings):
@@ -1507,6 +2065,7 @@ class BertEmbeddings(TokenEmbeddings):
         bert_model_or_path: str = "bert-base-uncased",
         layers: str = "-1,-2,-3,-4",
         pooling_operation: str = "first",
+        use_scalar_mix: bool = False,
     ):
         """
         Bidirectional transformer embeddings of words, as proposed in Devlin et al., 2018.
@@ -1519,9 +2078,12 @@ class BertEmbeddings(TokenEmbeddings):
         super().__init__()
 
         self.tokenizer = BertTokenizer.from_pretrained(bert_model_or_path)
-        self.model = BertModel.from_pretrained(bert_model_or_path)
+        self.model = BertModel.from_pretrained(
+            pretrained_model_name_or_path=bert_model_or_path, output_hidden_states=True
+        )
         self.layer_indexes = [int(x) for x in layers.split(",")]
         self.pooling_operation = pooling_operation
+        self.use_scalar_mix = use_scalar_mix
         self.name = str(bert_model_or_path)
         self.static_embeddings = True
 
@@ -1627,7 +2189,7 @@ class BertEmbeddings(TokenEmbeddings):
         # put encoded batch through BERT model to get all hidden states of all encoder layers
         self.model.to(flair.device)
         self.model.eval()
-        all_encoder_layers, _ = self.model(
+        _, _, all_encoder_layers = self.model(
             all_input_ids, token_type_ids=None, attention_mask=all_input_masks
         )
 
@@ -1648,6 +2210,11 @@ class BertEmbeddings(TokenEmbeddings):
                             .cpu()[sentence_index]
                         )
                         all_layers.append(layer_output[token_index])
+
+                    if self.use_scalar_mix:
+                        sm = ScalarMix(mixture_size=len(all_layers), trainable=False)
+                        sm_embeddings = sm(all_layers)
+                        all_layers = sm_embeddings
 
                     subtoken_embeddings.append(torch.cat(all_layers))
 
@@ -1680,7 +2247,11 @@ class BertEmbeddings(TokenEmbeddings):
     @abstractmethod
     def embedding_length(self) -> int:
         """Returns the length of the embedding vector."""
-        return len(self.layer_indexes) * self.model.config.hidden_size
+        return (
+            len(self.layer_indexes) * self.model.config.hidden_size
+            if not self.use_scalar_mix
+            else self.model.config.hidden_size
+        )
 
 
 class CharLMEmbeddings(TokenEmbeddings):
