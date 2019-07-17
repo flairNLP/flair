@@ -156,6 +156,7 @@ class SequenceTagger(flair.nn.Model):
                         torch.randn(self.nlayers * num_directions, self.hidden_size),
                         requires_grad=True)
 
+                    # TODO: Decide how to initialize the hidden state variables
                     # self.hs_initializer(self.lstm_init_h)
                     # self.hs_initializer(self.lstm_init_c)
 

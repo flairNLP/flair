@@ -1,9 +1,7 @@
 import warnings
 from pathlib import Path
 
-import torch
 import torch.nn
-from torch.nn.modules.rnn import LSTM as TorchLstm
 
 from abc import abstractmethod
 
