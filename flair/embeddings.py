@@ -989,6 +989,14 @@ class XLNetEmbeddings(TokenEmbeddings):
                             )
                         elif self.pooling_operation == "last":
                             final_embedding = hidden_states[layer][0][-1]
+                        elif self.pooling_operation == "mean":
+                            all_embeddings = [
+                                embedding.unsqueeze(0)
+                                for embedding in hidden_states[layer][0]
+                            ]
+                            final_embedding = torch.mean(
+                                torch.cat(all_embeddings, dim=0), dim=0
+                            )
                         else:
                             final_embedding = first_embedding
 
