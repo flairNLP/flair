@@ -65,37 +65,6 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
 
 
 @pytest.mark.integration
-def test_train_tagger_with_sampler(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
-    )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
-
-    embeddings = WordEmbeddings("turian")
-
-    tagger: SequenceTagger = SequenceTagger(
-        hidden_size=16,
-        embeddings=embeddings,
-        tag_dictionary=tag_dictionary,
-        tag_type="ner",
-        use_crf=False,
-    )
-
-    # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
-
-    trainer.train(
-        results_base_path,
-        learning_rate=0.1,
-        mini_batch_size=2,
-        max_epochs=2,
-        sampler=ImbalancedClassificationDatasetSampler,
-    )
-    # clean up results directory
-    shutil.rmtree(results_base_path)
-
-
-@pytest.mark.integration
 def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
     corpus = flair.datasets.UD_ENGLISH().downsample(0.05)
     tag_dictionary = corpus.make_tag_dictionary("pos")
@@ -444,6 +413,40 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     loaded_model.predict(sentence)
     loaded_model.predict([sentence, sentence_empty])
     loaded_model.predict([sentence_empty])
+
+    # clean up results directory
+    shutil.rmtree(results_base_path)
+
+
+@pytest.mark.integration
+def test_train_classifier_with_sampler(results_base_path, tasks_base_path):
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
+    label_dict = corpus.make_label_dictionary()
+
+    word_embedding: WordEmbeddings = WordEmbeddings("turian")
+    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
+        [word_embedding], 32, 1, False, 64, False, False
+    )
+
+    model = TextClassifier(document_embeddings, label_dict, False)
+
+    trainer = ModelTrainer(model, corpus)
+    trainer.train(
+        results_base_path,
+        max_epochs=2,
+        shuffle=False,
+        sampler=ImbalancedClassificationDatasetSampler,
+    )
+
+    sentence = Sentence("Berlin is a really nice city.")
+
+    for s in model.predict(sentence):
+        for l in s.labels:
+            assert l.value is not None
+            assert 0.0 <= l.score <= 1.0
+            assert type(l.score) is float
+
+    loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
 
     # clean up results directory
     shutil.rmtree(results_base_path)
