@@ -15,11 +15,10 @@ from flair.embeddings import (
     DocumentRNNEmbeddings,
 )
 from flair.models import SequenceTagger, TextClassifier, LanguageModel
+from flair.samplers import ImbalancedClassificationDatasetSampler
 from flair.trainers import ModelTrainer
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
-from flair.training_utils import EvaluationMetric
 from flair.optim import AdamW
-from local_onecycle_flair import ImbalancedDatasetSampler
 
 
 @pytest.mark.integration
@@ -90,7 +89,7 @@ def test_train_tagger_with_sampler(results_base_path, tasks_base_path):
         learning_rate=0.1,
         mini_batch_size=2,
         max_epochs=2,
-        sampler=ImbalancedDatasetSampler,
+        sampler=ImbalancedClassificationDatasetSampler,
     )
     # clean up results directory
     shutil.rmtree(results_base_path)
