@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 
 import torch.nn
+from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 import torch.nn.functional as F
 from torch.utils.data.dataset import Dataset
@@ -79,6 +80,7 @@ class SequenceTagger(flair.nn.Model):
         dropout: float = 0.0,
         word_dropout: float = 0.05,
         locked_dropout: float = 0.5,
+        train_initial_hidden_state: bool = False,
         pickle_module: str = "pickle",
     ):
 
@@ -125,29 +127,45 @@ class SequenceTagger(flair.nn.Model):
         if self.relearn_embeddings:
             self.embedding2nn = torch.nn.Linear(rnn_input_dim, rnn_input_dim)
 
-        # bidirectional LSTM on top of embedding layer
+        self.train_initial_hidden_state = train_initial_hidden_state
+        self.bidirectional = True
         self.rnn_type = "LSTM"
-        if self.rnn_type in ["LSTM", "GRU"]:
 
-            if self.nlayers == 1:
-                self.rnn = getattr(torch.nn, self.rnn_type)(
-                    rnn_input_dim,
-                    hidden_size,
-                    num_layers=self.nlayers,
-                    bidirectional=True,
-                )
-            else:
-                self.rnn = getattr(torch.nn, self.rnn_type)(
-                    rnn_input_dim,
-                    hidden_size,
-                    num_layers=self.nlayers,
-                    dropout=0.5,
-                    bidirectional=True,
-                )
-
-        # final linear map to tag space
+        # bidirectional LSTM on top of embedding layer
         if self.use_rnn:
-            self.linear = torch.nn.Linear(hidden_size * 2, len(tag_dictionary))
+            num_directions = 2 if self.bidirectional else 1
+
+            if self.rnn_type in ["LSTM", "GRU"]:
+
+                self.rnn = getattr(torch.nn, self.rnn_type)(
+                    rnn_input_dim,
+                    hidden_size,
+                    num_layers=self.nlayers,
+                    dropout=0.0 if self.nlayers == 1 else 0.5,
+                    bidirectional=True,
+                )
+                # Create initial hidden state and initialize it
+                if self.train_initial_hidden_state:
+                    self.hs_initializer = torch.nn.init.xavier_normal_
+
+                    self.lstm_init_h = Parameter(
+                        torch.randn(self.nlayers * num_directions, self.hidden_size),
+                        requires_grad=True,
+                    )
+
+                    self.lstm_init_c = Parameter(
+                        torch.randn(self.nlayers * num_directions, self.hidden_size),
+                        requires_grad=True,
+                    )
+
+                    # TODO: Decide how to initialize the hidden state variables
+                    # self.hs_initializer(self.lstm_init_h)
+                    # self.hs_initializer(self.lstm_init_c)
+
+            # final linear map to tag space
+            self.linear = torch.nn.Linear(
+                hidden_size * num_directions, len(tag_dictionary)
+            )
         else:
             self.linear = torch.nn.Linear(
                 self.embeddings.embedding_length, len(tag_dictionary)
@@ -171,6 +189,7 @@ class SequenceTagger(flair.nn.Model):
             "state_dict": self.state_dict(),
             "embeddings": self.embeddings,
             "hidden_size": self.hidden_size,
+            "train_initial_hidden_state": self.train_initial_hidden_state,
             "tag_dictionary": self.tag_dictionary,
             "tag_type": self.tag_type,
             "use_crf": self.use_crf,
@@ -192,6 +211,11 @@ class SequenceTagger(flair.nn.Model):
             if not "use_locked_dropout" in state.keys()
             else state["use_locked_dropout"]
         )
+        train_initial_hidden_state = (
+            False
+            if not "train_initial_hidden_state" in state.keys()
+            else state["train_initial_hidden_state"]
+        )
 
         model = SequenceTagger(
             hidden_size=state["hidden_size"],
@@ -204,6 +228,7 @@ class SequenceTagger(flair.nn.Model):
             dropout=use_dropout,
             word_dropout=use_word_dropout,
             locked_dropout=use_locked_dropout,
+            train_initial_hidden_state=train_initial_hidden_state,
         )
         model.load_state_dict(state["state_dict"])
         return model
@@ -407,7 +432,15 @@ class SequenceTagger(flair.nn.Model):
         if self.use_rnn:
             packed = torch.nn.utils.rnn.pack_padded_sequence(sentence_tensor, lengths)
 
-            rnn_output, hidden = self.rnn(packed)
+            # if initial hidden state is trainable, use this state
+            if self.train_initial_hidden_state:
+                initial_hidden_state = [
+                    self.lstm_init_h.unsqueeze(1).repeat(1, len(sentences), 1),
+                    self.lstm_init_c.unsqueeze(1).repeat(1, len(sentences), 1),
+                ]
+                rnn_output, hidden = self.rnn(packed, initial_hidden_state)
+            else:
+                rnn_output, hidden = self.rnn(packed)
 
             sentence_tensor, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(
                 rnn_output, batch_first=True
