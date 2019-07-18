@@ -1,7 +1,12 @@
+import logging
+
 from torch.utils.data.sampler import Sampler
 import random, torch
 
 from flair.data import FlairDataset
+
+
+log = logging.getLogger("flair")
 
 
 class ImbalancedClassificationDatasetSampler(Sampler):
@@ -45,7 +50,7 @@ class ImbalancedClassificationDatasetSampler(Sampler):
         return self.num_samples
 
 
-class HackSampler(Sampler):
+class ChunkSampler(Sampler):
     """Splits data into blocks and randomizes them before sampling. This causes some order of the data to be preserved,
     while still shuffling the data.
     """
@@ -67,12 +72,62 @@ class HackSampler(Sampler):
         data = [i for i in range(len(self.data_source))]
         blocksize = self.block_size + random.randint(0, self.plus_window)
 
+        log.info(
+            f"Chunk sampling with blocksize = {blocksize} ({self.block_size} + {self.plus_window})"
+        )
+
         # Create blocks
         blocks = [data[i : i + blocksize] for i in range(0, len(data), blocksize)]
         # shuffle the blocks
         random.shuffle(blocks)
         # concatenate the shuffled blocks
         data[:] = [b for bs in blocks for b in bs]
+        return iter(data)
+
+    def __len__(self):
+        return self.num_samples
+
+
+class ExpandingChunkSampler(Sampler):
+    """Splits data into blocks and randomizes them before sampling. Block size grows with each epoch.
+    This causes some order of the data to be preserved, while still shuffling the data.
+    """
+
+    def __init__(self, data_source):
+        """Initialize by passing a block_size and a plus_window parameter.
+        :param data_source: dataset to sample from
+        """
+        super().__init__(data_source)
+        self.data_source = data_source
+        self.num_samples = len(self.data_source)
+
+        self.block_size = 1
+        self.plus_window = 0
+        self.epoch_count = 0
+
+    def __iter__(self):
+
+        self.epoch_count += 1
+
+        data = [i for i in range(len(self.data_source))]
+        blocksize = self.block_size + random.randint(0, self.plus_window)
+
+        log.info(
+            f"Chunk sampling with blocksize = {blocksize} ({self.block_size} + {self.plus_window})"
+        )
+
+        # Create blocks
+        blocks = [data[i : i + blocksize] for i in range(0, len(data), blocksize)]
+        # shuffle the blocks
+        random.shuffle(blocks)
+        # concatenate the shuffled blocks
+        data[:] = [b for bs in blocks for b in bs]
+
+        if self.epoch_count % 2 == 0:
+            self.block_size += 1
+        else:
+            self.plus_window += 1
+
         return iter(data)
 
     def __len__(self):
