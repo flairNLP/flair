@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 
 from torch.utils.data.sampler import Sampler
 import random, torch
@@ -24,20 +25,18 @@ class ImbalancedClassificationDatasetSampler(Sampler):
         self.num_samples = len(data_source)
 
         # first determine the distribution of classes in the dataset
-        label_to_count = {}
+        label_count = defaultdict(int)
         for sentence in data_source:
             for label in sentence.get_label_names():
-                if label in label_to_count:
-                    label_to_count[label] += 1
-                else:
-                    label_to_count[label] = 1
+                label_count[label] += 1
 
         # weight for each sample
         offset = 0
         weights = [
-            1.0 / (offset + label_to_count[data_source[idx].get_label_names()[0]])
+            1.0 / (offset + label_count[data_source[idx].get_label_names()[0]])
             for idx in self.indices
         ]
+
         self.weights = torch.DoubleTensor(weights)
 
     def __iter__(self):
@@ -69,7 +68,8 @@ class ChunkSampler(Sampler):
         self.plus_window = plus_window
 
     def __iter__(self):
-        data = [i for i in range(len(self.data_source))]
+        data = list(range(len(self.data_source)))
+
         blocksize = self.block_size + random.randint(0, self.plus_window)
 
         log.info(
@@ -109,7 +109,7 @@ class ExpandingChunkSampler(Sampler):
 
         self.epoch_count += 1
 
-        data = [i for i in range(len(self.data_source))]
+        data = list(range(len(self.data_source)))
         blocksize = self.block_size + random.randint(0, self.plus_window)
 
         log.info(
