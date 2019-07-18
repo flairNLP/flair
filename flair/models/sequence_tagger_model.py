@@ -80,7 +80,7 @@ class SequenceTagger(flair.nn.Model):
         dropout: float = 0.0,
         word_dropout: float = 0.05,
         locked_dropout: float = 0.5,
-        train_initial_hidden_state: bool = True,
+        train_initial_hidden_state: bool = False,
         pickle_module: str = "pickle",
     ):
 
