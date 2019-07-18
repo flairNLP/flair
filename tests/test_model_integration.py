@@ -19,6 +19,7 @@ from flair.trainers import ModelTrainer
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
 from flair.training_utils import EvaluationMetric
 from flair.optim import AdamW
+from local_onecycle_flair import ImbalancedDatasetSampler
 
 
 @pytest.mark.integration
@@ -60,6 +61,37 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
     loaded_model.predict([sentence, sentence_empty])
     loaded_model.predict([sentence_empty])
 
+    # clean up results directory
+    shutil.rmtree(results_base_path)
+
+
+@pytest.mark.integration
+def test_train_tagger_with_sampler(results_base_path, tasks_base_path):
+    corpus = flair.datasets.ColumnCorpus(
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+    )
+    tag_dictionary = corpus.make_tag_dictionary("ner")
+
+    embeddings = WordEmbeddings("turian")
+
+    tagger: SequenceTagger = SequenceTagger(
+        hidden_size=16,
+        embeddings=embeddings,
+        tag_dictionary=tag_dictionary,
+        tag_type="ner",
+        use_crf=False,
+    )
+
+    # initialize trainer
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
+
+    trainer.train(
+        results_base_path,
+        learning_rate=0.1,
+        mini_batch_size=2,
+        max_epochs=2,
+        sampler=ImbalancedDatasetSampler,
+    )
     # clean up results directory
     shutil.rmtree(results_base_path)
 
