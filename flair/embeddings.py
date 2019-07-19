@@ -20,7 +20,9 @@ from pytorch_transformers import (
     OpenAIGPTModel,
     OpenAIGPTTokenizer,
     XLNetTokenizer,
+    XLMTokenizer,
     XLNetModel,
+    XLMModel,
 )
 
 from pytorch_transformers.modeling_openai import (
@@ -33,6 +35,10 @@ from pytorch_transformers.modeling_transfo_xl import (
 
 from pytorch_transformers.modeling_xlnet import (
     XLNET_PRETRAINED_MODEL_ARCHIVE_MAP as XLNET_PRETRAINED_MODEL_ARCHIVE_MAP,
+)
+
+from pytorch_transformers.modeling_xlm import (
+    XLM_PRETRAINED_MODEL_ARCHIVE_MAP as XLM_PRETRAINED_MODEL_ARCHIVE_MAP,
 )
 
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
@@ -1021,6 +1027,93 @@ class XLNetEmbeddings(TokenEmbeddings):
     def __str__(self):
         return self.name
 
+class XLMEmbeddings(TokenEmbeddings):
+    def __init__(
+        self,
+        model: str = "xlm-mlm-en-2048",
+        layers: str = "1",
+        pooling_operation: str = "first_last",
+    ):
+        """
+        XLM embeddings, as proposed in Guillaume et al., 2019.
+        :param model: name of XLM model
+        :param layers: comma-separated list of layers
+        :param pooling_operation: defines pooling operation for subwords
+        """
+        super().__init__()
+
+        if model not in XLM_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
+            raise ValueError("Provided XLM model is not available.")
+
+        self.tokenizer = XLMTokenizer.from_pretrained(model)
+        self.model = XLMModel.from_pretrained(
+            pretrained_model_name_or_path=model, output_hidden_states=True
+        )
+        self.name = model
+        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
+        self.pooling_operation = pooling_operation
+        self.static_embeddings = True
+
+        dummy_sentence: Sentence = Sentence()
+        dummy_sentence.add_token(Token("hello"))
+        embedded_dummy = self.embed(dummy_sentence)
+        self.__embedding_length: int = len(
+            embedded_dummy[0].get_token(1).get_embedding()
+        )
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        self.model.to(flair.device)
+        self.model.eval()
+
+        with torch.no_grad():
+            for sentence in sentences:
+                for token in sentence.tokens:
+                    token_text = token.text
+                    subwords = self.tokenizer.tokenize(token_text)
+                    indexed_tokens = self.tokenizer.convert_tokens_to_ids(subwords)
+                    tokens_tensor = torch.tensor([indexed_tokens])
+                    tokens_tensor = tokens_tensor.to(flair.device)
+                    # print(self.model(tokens_tensor)[1])
+                    _, hidden_states = self.model(tokens_tensor)
+
+                    subtoken_embeddings = []
+
+                    for layer in self.layers:
+                        first_embedding = hidden_states[layer][0][0]
+                        if self.pooling_operation == "first_last":
+                            last_embedding = hidden_states[layer][0][-1]
+                            final_embedding = torch.cat(
+                                [first_embedding, last_embedding]
+                            )
+                        elif self.pooling_operation == "last":
+                            final_embedding = hidden_states[layer][0][-1]
+                        elif self.pooling_operation == "mean":
+                            all_embeddings = [
+                                embedding.unsqueeze(0)
+                                for embedding in hidden_states[layer][0]
+                            ]
+                            final_embedding = torch.mean(
+                                torch.cat(all_embeddings, dim=0), dim=0
+                            )
+                        else:
+                            final_embedding = first_embedding
+
+                        subtoken_embeddings.append(final_embedding)
+
+                    final_subtoken_embedding = torch.cat(subtoken_embeddings)
+                    token.set_embedding(self.name, final_subtoken_embedding)
+
+        return sentences
+
+    def extra_repr(self):
+        return "model={}".format(self.name)
+
+    def __str__(self):
+        return self.name
 
 class OpenAIGPTEmbeddings(TokenEmbeddings):
     def __init__(
