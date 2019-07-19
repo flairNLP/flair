@@ -9,6 +9,7 @@ from typing import List, Union, Dict
 import gensim
 import numpy as np
 import torch
+import torchvision as torchvision
 from bpemb import BPEmb
 from deprecated import deprecated
 
@@ -33,7 +34,7 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import flair
 from flair.data import Corpus
 from .nn import LockedDropout, WordDropout
-from .data import Dictionary, Token, Sentence
+from .data import Dictionary, Token, Sentence, Image
 from .file_utils import cached_path, open_inside_zip
 
 log = logging.getLogger("flair")
@@ -110,6 +111,19 @@ class DocumentEmbeddings(Embeddings):
     @property
     def embedding_type(self) -> str:
         return "sentence-level"
+
+
+class ImageEmbeddings(Embeddings):
+
+    @property
+    @abstractmethod
+    def embedding_length(self) -> int:
+        """Returns the length of the embedding vector."""
+        pass
+
+    @property
+    def embedding_type(self) -> str:
+        return "image-level"
 
 
 class StackedEmbeddings(TokenEmbeddings):
@@ -2556,6 +2570,35 @@ class NILCEmbeddings(WordEmbeddings):
 
     def __str__(self):
         return self.name
+
+
+class fDNAImageEmbeddings(ImageEmbeddings):
+
+    def __init__(self):
+        self.name: str = "fDNA"
+        self.__embedding_length: int = 128
+        super().__init__()
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def embed(self, images: Union[Image, List[Image]]) -> List[Image]:
+        return images
+
+    def __str__(self):
+        return self.name
+
+
+class ResNet50Embeddings(ImageEmbeddings):
+
+    def __init__(self, pretrained=True):
+        self.pretrained = pretrained
+        self.net = torch.nn.Sequential(*list(torchvision.models.resnet50(pretrained=self.pretrained).children())[:-1])
+        self.static_embeddings = False
+
+    def embadding_length(self):
+        pass
 
 
 def replace_with_language_code(string: str):

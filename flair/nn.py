@@ -8,8 +8,8 @@ from abc import abstractmethod
 from typing import Union, List
 
 import flair
-from flair.data import Sentence
-from flair.datasets import FlairDataset, DataLoader
+from flair.data import DataPoint
+from flair.datasets import DataLoader
 from flair.training_utils import Result
 
 
@@ -18,14 +18,14 @@ class Model(torch.nn.Module):
     Every new type of model must implement these methods."""
 
     @abstractmethod
-    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
+    def forward_loss(self, data_points: Union[List[DataPoint], DataPoint]) -> torch.tensor:
         """Performs a forward pass and returns a loss tensor for backpropagation. Implement this to enable training."""
         pass
 
     @abstractmethod
     def predict(
-        self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32
-    ) -> List[Sentence]:
+        self, data_points: Union[List[DataPoint], DataPoint], mini_batch_size=32
+    ) -> List[DataPoint]:
         """Predicts the labels/tags for the given list of sentences. The labels/tags are added directly to the
         sentences. Implement this to enable prediction."""
         pass

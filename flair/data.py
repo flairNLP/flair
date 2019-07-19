@@ -13,6 +13,8 @@ from segtok.tokenizer import word_tokenizer
 from torch.utils.data import Dataset, random_split
 from torch.utils.data.dataset import ConcatDataset, Subset
 
+import numpy as np
+
 from flair.file_utils import Tqdm
 
 log = logging.getLogger("flair")
@@ -159,6 +161,35 @@ class DataPoint:
     @abstractmethod
     def clear_embeddings(self, embedding_names: List[str] = None):
         pass
+
+
+class DataTuples(DataPoint):
+
+    def __init__(self, data_points_list: List[List[DataPoint]]):
+        self._data_points_list = data_points_list
+
+    def data_points(self, index):
+        return self._data_points_list[index]
+
+    def sample_tuple(self):
+        t = ()
+        for data_points in self._data_points_list:
+            point_id = np.random.choice(len(data_points))
+            t += (data_points[point_id],)
+        return t
+
+    def group_by(self, grouped_modality_id=0, group_by_modality_id=1):
+        return [self._data_points_list[grouped_modality_id] for _ in range(len(self._data_points_list[group_by_modality_id]))]
+
+    def to(self, device: str):
+        for data_points in self._data_points_list:
+            for data_point in data_points:
+                data_point.to(device)
+
+    def clear_embeddings(self, embedding_names: List[str] = None):
+        for data_points in self._data_points_list:
+            for data_point in data_points:
+                data_point.clear_embeddings((embedding_names))
 
 
 class Token(DataPoint):
@@ -736,6 +767,46 @@ class Sentence(DataPoint):
                 self.language_code = "en"
 
         return self.language_code
+
+
+class Image(DataPoint):
+
+    def __init__(self, data, imageURL=None):
+        self.data = data
+        self._embeddings: Dict = {}
+        self.imageURL = imageURL
+
+    @property
+    def embedding(self):
+        return self.get_embedding()
+
+    def get_embedding(self) -> torch.tensor:
+        embeddings = [
+            self._embeddings[embed] for embed in sorted(self._embeddings.keys())
+        ]
+
+        if embeddings:
+            return torch.cat(embeddings, dim=0)
+
+        return torch.tensor([], device=flair.device)
+
+    def set_embedding(self, name: str, vector: torch.tensor):
+        device = flair.device
+        if len(self._embeddings.keys()) > 0:
+            device = next(iter(self._embeddings.values())).device
+        self._embeddings[name] = vector.to(device, non_blocking=True)
+
+    def to(self, device: str):
+        for name, vector in self._embeddings.items():
+            self._embeddings[name] = vector.to(device, non_blocking=True)
+
+    def clear_embeddings(self, embedding_names: List[str] = None):
+        if embedding_names is None:
+            self._embeddings: Dict = {}
+        else:
+            for name in embedding_names:
+                if name in self._embeddings.keys():
+                    del self._embeddings[name]
 
 
 class FlairDataset(Dataset):

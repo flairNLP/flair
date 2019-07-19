@@ -6,12 +6,14 @@ from typing import List, Dict, Union
 import re
 import logging
 from pathlib import Path
+import pickle
+import numpy as np
 
 import torch.utils.data.dataloader
 from torch.utils.data.dataset import Subset, ConcatDataset
 
 import flair
-from flair.data import Sentence, Corpus, Token, FlairDataset
+from flair.data import Sentence, Corpus, Token, FlairDataset, DataTuples, Image
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -247,6 +249,39 @@ class ClassificationCorpus(Corpus):
 
         super(ClassificationCorpus, self).__init__(
             train, dev, test, name=data_folder.name
+        )
+
+
+class FeideggerCorpus(Corpus):
+    def __init__(
+        self,
+        feidegger_csv,
+        feidegger_fDNA_embeddings_filename,
+        **kwargs
+    ):
+        """
+        Instantiates a Corpus from text classification-formatted task data
+
+        :param data_folder: base folder with the task data
+        :param train_file: the name of the train file
+        :param test_file: the name of the test file
+        :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :return: a Corpus with annotated train, dev and test data
+        """
+
+        feidegger_dataset: Dataset = FeideggerDataset(feidegger_csv, feidegger_fDNA_embeddings_filename, **kwargs)
+
+        train_indices = list(np.where(np.in1d(feidegger_dataset.split, list(range(8))))[0])
+        train = torch.utils.data.dataset.Subset(feidegger_dataset, train_indices)
+
+        dev_indices = list(np.where(np.in1d(feidegger_dataset.split, [8]))[0])
+        dev = torch.utils.data.dataset.Subset(feidegger_dataset, dev_indices)
+
+        test_indices = list(np.where(np.in1d(feidegger_dataset.split, [9]))[0])
+        test = torch.utils.data.dataset.Subset(feidegger_dataset, test_indices)
+
+        super(FeideggerCorpus, self).__init__(
+            train, dev, test, name='feidegger'
         )
 
 
@@ -865,6 +900,43 @@ class ClassificationDataset(FlairDataset):
                     line, self.label_prefix, self.use_tokenizer
                 )
                 return sentence
+
+
+class FeideggerDataset(FlairDataset):
+
+    def __init__(self, feidegger_csv, feidegger_fDNA_embeddings_filename, **kwargs):
+        super(FeideggerDataset, self).__init__()
+
+        self.fDNAs = pickle.load(open(feidegger_fDNA_embeddings_filename, 'rb'))
+        normalize_image_embeddings = False if 'normalize_image_embeddings' not in kwargs else kwargs['normalize_image_embeddings']
+        if normalize_image_embeddings:
+            self.fDNAs /= torch.norm(self.fDNAs, dim=1, keepdim=True)
+
+        self.feidegger_imageURLs = []
+        self.split = []
+        self.descriptions = []
+        preprocessor = lambda x: x
+        if 'lowercase' in kwargs and kwargs['lowercase']:
+            preprocessor = lambda x: x.lower()
+        for row in csv.reader(open(feidegger_csv, 'r'), delimiter='|'):
+            self.feidegger_imageURLs.append(row[0])
+            self.split.append(int(row[-1]))
+            self.descriptions.append([Sentence(preprocessor(caption), use_tokenizer=True) for caption in row[1:-1]])
+
+    def __len__(self):
+        return len(self.feidegger_imageURLs)
+
+    def __getitem__(self, index: int = 0) -> DataTuples:
+        imageURL = self.feidegger_imageURLs[index]
+        # get the image embedding
+        image_embedding = self.fDNAs[index] # .double()
+        # sample one sentence
+        descriptions = self.descriptions[index]
+
+        image = Image(image_embedding, imageURL)
+        image.set_embedding('fDNA', image_embedding)
+
+        return DataTuples([descriptions, [image]])
 
 
 class CONLL_03(ColumnCorpus):
