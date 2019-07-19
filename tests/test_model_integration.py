@@ -15,9 +15,9 @@ from flair.embeddings import (
     DocumentRNNEmbeddings,
 )
 from flair.models import SequenceTagger, TextClassifier, LanguageModel
+from flair.samplers import ImbalancedClassificationDatasetSampler
 from flair.trainers import ModelTrainer
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
-from flair.training_utils import EvaluationMetric
 from flair.optim import AdamW
 
 
@@ -413,6 +413,40 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     loaded_model.predict(sentence)
     loaded_model.predict([sentence, sentence_empty])
     loaded_model.predict([sentence_empty])
+
+    # clean up results directory
+    shutil.rmtree(results_base_path)
+
+
+@pytest.mark.integration
+def test_train_classifier_with_sampler(results_base_path, tasks_base_path):
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
+    label_dict = corpus.make_label_dictionary()
+
+    word_embedding: WordEmbeddings = WordEmbeddings("turian")
+    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
+        [word_embedding], 32, 1, False, 64, False, False
+    )
+
+    model = TextClassifier(document_embeddings, label_dict, False)
+
+    trainer = ModelTrainer(model, corpus)
+    trainer.train(
+        results_base_path,
+        max_epochs=2,
+        shuffle=False,
+        sampler=ImbalancedClassificationDatasetSampler,
+    )
+
+    sentence = Sentence("Berlin is a really nice city.")
+
+    for s in model.predict(sentence):
+        for l in s.labels:
+            assert l.value is not None
+            assert 0.0 <= l.score <= 1.0
+            assert type(l.score) is float
+
+    loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
 
     # clean up results directory
     shutil.rmtree(results_base_path)
