@@ -1,6 +1,11 @@
+from cgi import escape
+from typing import Union, List
+
 from sklearn.manifold import TSNE
 import tqdm
 import numpy
+
+from flair.data import Sentence
 
 
 class _Transform:
@@ -62,8 +67,8 @@ class Visualizer(object):
             for i, token in enumerate(strs):
                 prop = '<b><font color="red"> {token} </font></b>'.format(token=token)
 
-                prop = " ".join(strs[max(i - 4, 0) : i]) + prop
-                prop = prop + " ".join(strs[i + 1 : min(len(strs), i + 5)])
+                prop = " ".join(strs[max(i - 4, 0): i]) + prop
+                prop = prop + " ".join(strs[i + 1: min(len(strs), i + 5)])
 
                 contexts.append("<p>" + prop + "</p>")
 
@@ -74,7 +79,6 @@ class Visualizer(object):
         X = []
 
         for sentence in tqdm.tqdm(sentences):
-
             sentence = " ".join([x.text for x in sentence])
 
             hidden = embeddings.lm.get_representation([sentence])
@@ -92,13 +96,12 @@ class Visualizer(object):
             sentence = " ".join([token.text for token in sentence])
 
             for i, char in enumerate(sentence):
-
                 context = '<span style="background-color: yellow"><b>{}</b></span>'.format(
                     char
                 )
-                context = "".join(sentence[max(i - 30, 0) : i]) + context
+                context = "".join(sentence[max(i - 30, 0): i]) + context
                 context = context + "".join(
-                    sentence[i + 1 : min(len(sentence), i + 30)]
+                    sentence[i + 1: min(len(sentence), i + 30)]
                 )
 
                 contexts.append(context)
@@ -129,3 +132,46 @@ class Visualizer(object):
         mpld3.plugins.connect(fig, tooltip)
 
         mpld3.save_html(fig, file)
+
+    @staticmethod
+    def render_ner_html(sentences: Union[List[Sentence], Sentence]) -> str:
+        if isinstance(sentences, Sentence):
+            sentences = [sentences]
+
+        colors = {
+            "PER": "",
+            "ORG": "",
+            "LOC": "",
+            "MISC": "",
+            "O": "#ddd",
+        }
+
+        default_labels = {
+            "PER": "PER",
+            "ORG": "ORG",
+            "LOC": "LOC",
+            "MISC": "MISC",
+            "O": "O",
+        }
+
+        tagged_html = []
+        for s in sentences:
+            orig = s.to_original_text()
+            last_idx = 0
+            spans = []
+            tagged_ents = s.get_spans('ner')
+            for ent in tagged_ents:
+                if last_idx != ent.start_pos:
+                    spans.append((orig[last_idx:ent.start_pos], None))
+                spans.append((orig[ent.start_pos:ent.end_pos], ent.tag))
+                last_idx = ent.end_pos
+            if last_idx < len(orig) - 1:
+                spans.append((orig[last_idx:len(orig)], None))
+
+            for fragment, tag in spans:
+                escaped_fragment = escape(fragment).replace('\n', '<br/>')
+                if tag:
+                    escaped_fragment = '<%s>[%s]' % (escaped_fragment, tag)
+                tagged_html.append(escaped_fragment)
+
+        return ''.join(tagged_html)
