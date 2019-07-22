@@ -343,6 +343,10 @@ class WordEmbeddings(TokenEmbeddings):
         return self.name
 
     def extra_repr(self):
+        # fix serialized models
+        if "embeddings" not in self.__dict__:
+            self.embeddings = self.name
+
         return f"'{self.embeddings}'"
 
 
@@ -1107,22 +1111,14 @@ class CharacterEmbeddings(TokenEmbeddings):
 class FlairEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
-    def __init__(
-        self,
-        model: str,
-        use_cache: bool = False,
-        cache_directory: Path = None,
-        chars_per_chunk: int = 512,
-    ):
+    def __init__(self, model, fine_tune: bool = False, chars_per_chunk: int = 512):
         """
         initializes contextual string embeddings using a character-level language model.
         :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
                 'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward'
                 depending on which character language model is desired.
-        :param use_cache: if set to False, will not write embeddings to file for later retrieval. this saves disk space but will
-                not allow re-use of once computed embeddings that do not fit into memory
-        :param cache_directory: if cache_directory is not set, the cache will be written to ~/.flair/embeddings. otherwise the cache
-                is written to the provided directory.
+        :param fine_tune: if set to True, the gradient will propagate into the language model. This dramatically slows down
+                training and often leads to overfitting, so use with caution.
         :param  chars_per_chunk: max number of chars per rnn pass to control speed/memory tradeoff. Higher means faster but requires
                 more memory. Lower means slower but less memory.
         """
@@ -1240,43 +1236,39 @@ class FlairEmbeddings(TokenEmbeddings):
             "sv-v0-backward": f"{aws_path}/embeddings-v0.4/lm-sv-large-backward-v0.1.pt",
         }
 
-        # load model if in pretrained model map
-        if model.lower() in self.PRETRAINED_MODEL_ARCHIVE_MAP:
-            base_path = self.PRETRAINED_MODEL_ARCHIVE_MAP[model.lower()]
-            model = cached_path(base_path, cache_dir=cache_dir)
+        if type(model) == str:
 
-        elif replace_with_language_code(model) in self.PRETRAINED_MODEL_ARCHIVE_MAP:
-            base_path = self.PRETRAINED_MODEL_ARCHIVE_MAP[
-                replace_with_language_code(model)
-            ]
-            model = cached_path(base_path, cache_dir=cache_dir)
+            # load model if in pretrained model map
+            if model.lower() in self.PRETRAINED_MODEL_ARCHIVE_MAP:
+                base_path = self.PRETRAINED_MODEL_ARCHIVE_MAP[model.lower()]
+                model = cached_path(base_path, cache_dir=cache_dir)
 
-        elif not Path(model).exists():
-            raise ValueError(
-                f'The given model "{model}" is not available or is not a valid path.'
-            )
+            elif replace_with_language_code(model) in self.PRETRAINED_MODEL_ARCHIVE_MAP:
+                base_path = self.PRETRAINED_MODEL_ARCHIVE_MAP[
+                    replace_with_language_code(model)
+                ]
+                model = cached_path(base_path, cache_dir=cache_dir)
 
-        self.name = str(model)
-        self.static_embeddings = True
+            elif not Path(model).exists():
+                raise ValueError(
+                    f'The given model "{model}" is not available or is not a valid path.'
+                )
 
         from flair.models import LanguageModel
 
-        self.lm = LanguageModel.load_language_model(model)
+        if type(model) == LanguageModel:
+            self.lm: LanguageModel = model
+            self.name = f"Task-LSTM-{self.lm.hidden_size}-{self.lm.nlayers}-{self.lm.is_forward_lm}"
+        else:
+            self.lm: LanguageModel = LanguageModel.load_language_model(model)
+            self.name = str(model)
+
+        # embeddings are static if we don't do finetuning
+        self.fine_tune = fine_tune
+        self.static_embeddings = not fine_tune
 
         self.is_forward_lm: bool = self.lm.is_forward_lm
         self.chars_per_chunk: int = chars_per_chunk
-
-        # initialize cache if use_cache set
-        self.cache = None
-        if use_cache:
-            cache_path = (
-                Path(f"{self.name}-tmp-cache.sqllite")
-                if not cache_directory
-                else cache_directory / f"{self.name}-tmp-cache.sqllite"
-            )
-            from sqlitedict import SqliteDict
-
-            self.cache = SqliteDict(str(cache_path), autocommit=True)
 
         # embed a dummy sentence to determine embedding_length
         dummy_sentence: Sentence = Sentence()
@@ -1290,16 +1282,17 @@ class FlairEmbeddings(TokenEmbeddings):
         self.eval()
 
     def train(self, mode=True):
-        pass
 
-    def __getstate__(self):
-        # Copy the object's state from self.__dict__ which contains
-        # all our instance attributes. Always use the dict.copy()
-        # method to avoid modifying the original state.
-        state = self.__dict__.copy()
-        # Remove the unpicklable entries.
-        state["cache"] = None
-        return state
+        # make compatible with serialized models (TODO: remove)
+        if "fine_tune" not in self.__dict__:
+            self.fine_tune = False
+        if "chars_per_chunk" not in self.__dict__:
+            self.chars_per_chunk = 512
+
+        if not self.fine_tune:
+            pass
+        else:
+            super(FlairEmbeddings, self).train(mode)
 
     @property
     def embedding_length(self) -> int:
@@ -1307,30 +1300,10 @@ class FlairEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
-        # make compatible with serialized models
-        if "chars_per_chunk" not in self.__dict__:
-            self.chars_per_chunk = 512
+        # gradients are enable if fine-tuning is enabled
+        gradient_context = torch.enable_grad() if self.fine_tune else torch.no_grad()
 
-        # if cache is used, try setting embeddings from cache first
-        if "cache" in self.__dict__ and self.cache is not None:
-
-            # try populating embeddings from cache
-            all_embeddings_retrieved_from_cache: bool = True
-            for sentence in sentences:
-                key = sentence.to_tokenized_string()
-                embeddings = self.cache.get(key)
-
-                if not embeddings:
-                    all_embeddings_retrieved_from_cache = False
-                    break
-                else:
-                    for token, embedding in zip(sentence, embeddings):
-                        token.set_embedding(self.name, torch.FloatTensor(embedding))
-
-            if all_embeddings_retrieved_from_cache:
-                return sentences
-
-        with torch.no_grad():
+        with gradient_context:
 
             # if this is not possible, use LM to generate embedding. First, get text sentences
             text_sentences = [sentence.to_tokenized_string() for sentence in sentences]
@@ -1379,7 +1352,7 @@ class FlairEmbeddings(TokenEmbeddings):
                     else:
                         offset = offset_backward
 
-                    embedding = all_hidden_states_in_lm[offset, i, :].detach()
+                    embedding = all_hidden_states_in_lm[offset, i, :]
 
                     # if self.tokenized_lm or token.whitespace_after:
                     offset_forward += 1
@@ -1387,15 +1360,13 @@ class FlairEmbeddings(TokenEmbeddings):
 
                     offset_backward -= len(token.text)
 
+                    if not self.fine_tune:
+                        embedding = embedding.detach()
+
                     token.set_embedding(self.name, embedding.clone())
 
+            all_hidden_states_in_lm = all_hidden_states_in_lm.detach()
             all_hidden_states_in_lm = None
-
-        if "cache" in self.__dict__ and self.cache is not None:
-            for sentence in sentences:
-                self.cache[sentence.to_tokenized_string()] = [
-                    token._embeddings[self.name].tolist() for token in sentence
-                ]
 
         return sentences
 
@@ -2241,7 +2212,6 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
         # fill values with word embeddings
         for s_id, sentence in enumerate(sentences):
-
             lengths.append(len(sentence.tokens))
 
             sentence_tensor[s_id][: len(sentence)] = torch.cat(
@@ -2462,14 +2432,17 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
 
 class DocumentLMEmbeddings(DocumentEmbeddings):
-    def __init__(self, flair_embeddings: List[FlairEmbeddings], detach: bool = True):
+    def __init__(self, flair_embeddings: List[FlairEmbeddings]):
         super().__init__()
 
         self.embeddings = flair_embeddings
         self.name = "document_lm"
 
-        self.static_embeddings = detach
-        self.detach = detach
+        # IMPORTANT: add embeddings as torch modules
+        for i, embedding in enumerate(flair_embeddings):
+            self.add_module("lm_embedding_{}".format(i), embedding)
+            if not embedding.static_embeddings:
+                self.static_embeddings = False
 
         self._embedding_length: int = sum(
             embedding.embedding_length for embedding in flair_embeddings
@@ -2488,6 +2461,7 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
 
             # iterate over sentences
             for sentence in sentences:
+                sentence: Sentence = sentence
 
                 # if its a forward LM, take last state
                 if embedding.is_forward_lm:
