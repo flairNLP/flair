@@ -4,16 +4,14 @@ from pathlib import Path
 
 import torch.nn
 from torch.nn.parameter import Parameter
-from torch.optim import Optimizer
 import torch.nn.functional as F
-from torch.utils.data.dataset import Dataset
 
 import flair.nn
 import torch
 
-import flair.embeddings
 from flair.data import Dictionary, Sentence, Token, Label
 from flair.datasets import DataLoader
+from flair.embeddings import TokenEmbeddings
 from flair.file_utils import cached_path
 
 from typing import List, Tuple, Union
@@ -71,7 +69,7 @@ class SequenceTagger(flair.nn.Model):
     def __init__(
         self,
         hidden_size: int,
-        embeddings: flair.embeddings.TokenEmbeddings,
+        embeddings: TokenEmbeddings,
         tag_dictionary: Dictionary,
         tag_type: str,
         use_crf: bool = True,
@@ -291,6 +289,8 @@ class SequenceTagger(flair.nn.Model):
                             metric.add_fn(tag)
                         else:
                             metric.add_tn(tag)
+
+                store_embeddings(batch, "gpu")
 
             eval_loss /= batch_no
 
