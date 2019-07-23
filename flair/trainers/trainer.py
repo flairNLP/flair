@@ -36,6 +36,7 @@ class ModelTrainer:
         loss: float = 10000.0,
         optimizer_state: dict = None,
         scheduler_state: dict = None,
+        use_tensorboard: bool = False,
     ):
         self.model: flair.nn.Model = model
         self.corpus: Corpus = corpus
@@ -44,6 +45,7 @@ class ModelTrainer:
         self.loss: float = loss
         self.scheduler_state: dict = scheduler_state
         self.optimizer_state: dict = optimizer_state
+        self.use_tensorboard: bool = use_tensorboard
 
     def train(
         self,
@@ -95,6 +97,17 @@ class ModelTrainer:
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
+
+        if self.use_tensorboard:
+            try:
+                from torch.utils.tensorboard import SummaryWriter
+                writer = SummaryWriter()
+            except:
+                log_line(log)
+                log.warning('ATTENTION! PyTorch >= 1.1.0 and pillow are required for TensorBoard support!')
+                log_line(log)
+                self.use_tensorboard = False
+                pass
 
         if eval_mini_batch_size is None:
             eval_mini_batch_size = mini_batch_size
@@ -255,6 +268,9 @@ class ModelTrainer:
                     f"EPOCH {epoch + 1} done: loss {train_loss:.4f} - lr {learning_rate:.4f}"
                 )
 
+                if self.use_tensorboard:
+                    writer.add_scalar('train_loss', train_loss, epoch + 1)
+
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 current_score = train_loss
 
@@ -296,6 +312,10 @@ class ModelTrainer:
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(self.corpus.dev, embedding_storage_mode)
 
+                    if self.use_tensorboard:
+                        writer.add_scalar('dev_loss', dev_loss, epoch + 1)
+                        writer.add_scalar('dev_score', dev_eval_result.main_score, epoch + 1)
+
                 if log_test:
                     test_eval_result, test_loss = self.model.evaluate(
                         DataLoader(
@@ -312,6 +332,10 @@ class ModelTrainer:
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(self.corpus.test, embedding_storage_mode)
+
+                    if self.use_tensorboard:
+                        writer.add_scalar('test_loss', test_loss, epoch + 1)
+                        writer.add_scalar('test_score', test_eval_result.main_score, epoch + 1)
 
                 # determine learning rate annealing through scheduler
                 scheduler.step(current_score)
@@ -390,6 +414,10 @@ class ModelTrainer:
         except KeyboardInterrupt:
             log_line(log)
             log.info("Exiting from training early.")
+
+            if self.use_tensorboard:
+                writer.close()
+
             if not param_selection_mode:
                 log.info("Saving model ...")
                 self.model.save(base_path / "final-model.pt")
@@ -403,6 +431,9 @@ class ModelTrainer:
             log.info("Test data not provided setting final score to 0")
 
         log.removeHandler(log_handler)
+
+        if self.use_tensorboard:
+            writer.close()
 
         return {
             "test_score": final_score,
