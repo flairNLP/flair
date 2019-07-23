@@ -1,4 +1,4 @@
-from cgi import escape
+import html
 from typing import Union, List
 
 from sklearn.manifold import TSNE
@@ -6,6 +6,7 @@ import tqdm
 import numpy
 
 from flair.data import Sentence
+from flair.visual.html_templates import TAGGED_ENTITY, HTML_PAGE
 
 
 class _Transform:
@@ -21,6 +22,21 @@ class tSNE(_Transform):
         super().__init__()
 
         self.transform = TSNE(n_components=2, verbose=1, perplexity=40, n_iter=300)
+
+
+def split_to_spans(s: Sentence):
+    orig = s.to_original_text()
+    last_idx = 0
+    spans = []
+    tagged_ents = s.get_spans('ner')
+    for ent in tagged_ents:
+        if last_idx != ent.start_pos:
+            spans.append((orig[last_idx:ent.start_pos], None))
+        spans.append((orig[ent.start_pos:ent.end_pos], ent.tag))
+        last_idx = ent.end_pos
+    if last_idx < len(orig) - 1:
+        spans.append((orig[last_idx:len(orig)], None))
+    return spans
 
 
 class Visualizer(object):
@@ -134,15 +150,15 @@ class Visualizer(object):
         mpld3.save_html(fig, file)
 
     @staticmethod
-    def render_ner_html(sentences: Union[List[Sentence], Sentence]) -> str:
+    def render_ner_html(sentences: Union[List[Sentence], Sentence], wrap_page=True) -> str:
         if isinstance(sentences, Sentence):
             sentences = [sentences]
 
         colors = {
-            "PER": "",
-            "ORG": "",
-            "LOC": "",
-            "MISC": "",
+            "PER": "#F7FF53",
+            "ORG": "#E8902E",
+            "LOC": "#FF40A3",
+            "MISC": "#4647EB",
             "O": "#ddd",
         }
 
@@ -156,22 +172,19 @@ class Visualizer(object):
 
         tagged_html = []
         for s in sentences:
-            orig = s.to_original_text()
-            last_idx = 0
-            spans = []
-            tagged_ents = s.get_spans('ner')
-            for ent in tagged_ents:
-                if last_idx != ent.start_pos:
-                    spans.append((orig[last_idx:ent.start_pos], None))
-                spans.append((orig[ent.start_pos:ent.end_pos], ent.tag))
-                last_idx = ent.end_pos
-            if last_idx < len(orig) - 1:
-                spans.append((orig[last_idx:len(orig)], None))
+            spans = split_to_spans(s)
 
             for fragment, tag in spans:
-                escaped_fragment = escape(fragment).replace('\n', '<br/>')
+                escaped_fragment = html.escape(fragment).replace('\n', '<br/>')
                 if tag:
-                    escaped_fragment = '<%s>[%s]' % (escaped_fragment, tag)
+                    escaped_fragment = TAGGED_ENTITY.format(entity=escaped_fragment,
+                                                            label=default_labels.get(tag, "O"),
+                                                            color=colors.get(tag, "#ddd"))
                 tagged_html.append(escaped_fragment)
 
-        return ''.join(tagged_html)
+        final_text = ''.join(tagged_html)
+
+        if wrap_page:
+            return HTML_PAGE.format(text=final_text)
+        else:
+            return final_text
