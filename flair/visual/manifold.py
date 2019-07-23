@@ -150,7 +150,7 @@ class Visualizer(object):
         mpld3.save_html(fig, file)
 
     @staticmethod
-    def render_ner_html(sentences: Union[List[Sentence], Sentence], wrap_page=True) -> str:
+    def render_ner_html(sentences: Union[List[Sentence], Sentence], settings=None, wrap_page=True) -> str:
         if isinstance(sentences, Sentence):
             sentences = [sentences]
 
@@ -162,13 +162,19 @@ class Visualizer(object):
             "O": "#ddd",
         }
 
-        default_labels = {
+        if settings and "colors" in settings:
+            colors.update(settings["colors"])
+
+        labels = {
             "PER": "PER",
             "ORG": "ORG",
             "LOC": "LOC",
             "MISC": "MISC",
             "O": "O",
         }
+
+        if settings and "labels" in settings:
+            colors.update(settings["labels"])
 
         tagged_html = []
         for s in sentences:
@@ -178,7 +184,7 @@ class Visualizer(object):
                 escaped_fragment = html.escape(fragment).replace('\n', '<br/>')
                 if tag:
                     escaped_fragment = TAGGED_ENTITY.format(entity=escaped_fragment,
-                                                            label=default_labels.get(tag, "O"),
+                                                            label=labels.get(tag, "O"),
                                                             color=colors.get(tag, "#ddd"))
                 tagged_html.append(escaped_fragment)
 
