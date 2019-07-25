@@ -13,7 +13,7 @@ import torch.utils.data.dataloader
 from torch.utils.data.dataset import Subset, ConcatDataset
 
 import flair
-from flair.data import Sentence, Corpus, Token, FlairDataset, DataTuples, Image
+from flair.data import Sentence, Corpus, Token, FlairDataset, DataTuples, DataPair, Image
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -936,7 +936,7 @@ class FeideggerDataset(FlairDataset):
         image = Image(image_embedding, imageURL)
         image.set_embedding('fDNA', image_embedding)
 
-        return DataTuples([descriptions, [image]])
+        return DataPair([descriptions, [image]])  # DataTuples([descriptions, [image]])
 
 
 class CONLL_03(ColumnCorpus):

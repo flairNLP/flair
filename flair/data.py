@@ -163,6 +163,22 @@ class DataPoint:
         pass
 
 
+class DataPair(DataPoint):
+
+    def __init__(self, data_points_list: List[List[DataPoint]]):
+        self.data = data_points_list
+
+    def to(self, device:str):
+        for data_points in self.data:
+            for data_point in data_points:
+                data_point.to(device)
+
+    def clear_embeddings(self, embedding_names: List[str] = None):
+        for data_points in self.data:
+            for data_point in data_points:
+                data_point.clear_embeddings(embedding_names)
+
+
 class DataTuples(DataPoint):
 
     def __init__(self, data_points_list: List[List[DataPoint]]):
