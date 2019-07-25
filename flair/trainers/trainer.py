@@ -471,7 +471,7 @@ class ModelTrainer:
                 num_workers=num_workers,
             ),
             out_path=base_path / "test.tsv",
-            embedding_storage_mode="none",
+            embeddings_storage_mode="none",
         )
 
         test_results: Result = test_results
@@ -490,7 +490,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                     ),
                     out_path=base_path / f"{subcorpus.name}-test.tsv",
-                    embedding_storage_mode="none",
+                    embeddings_storage_mode="none",
                 )
 
         # get and return the final test score of best model
