@@ -8,8 +8,8 @@ from abc import abstractmethod
 from typing import Union, List
 
 import flair
-from flair.data import Sentence
-from flair.datasets import FlairDataset, DataLoader
+from flair.data import DataPoint
+from flair.datasets import DataLoader
 from flair.training_utils import Result
 
 
@@ -18,17 +18,26 @@ class Model(torch.nn.Module):
     Every new type of model must implement these methods."""
 
     @abstractmethod
-    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
+    def forward_loss(
+        self, sentences: Union[List[DataPoint], DataPoint]
+    ) -> torch.tensor:
         """Performs a forward pass and returns a loss tensor for backpropagation. Implement this to enable training."""
         pass
 
     @abstractmethod
     def predict(
         self,
-        sentences: Union[List[Sentence], Sentence],
+        data_points: Union[List[DataPoint], DataPoint],
         mini_batch_size=32,
         embeddings_storage_mode: str = "none",
-    ) -> List[Sentence]:
+    ) -> List[DataPoint]:
+        """
+        :param data_points: DataPoints for which to make a prediction
+        :param mini_batch_size: size of mini batches during prediction
+        :param embeddings_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and
+        freshly recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU
+        :return: List of DataPoint with predictions
+        """
         """Predicts the labels/tags for the given list of sentences. The labels/tags are added directly to the
         sentences. Implement this to enable prediction."""
         pass
@@ -41,7 +50,13 @@ class Model(torch.nn.Module):
         embeddings_storage_mode: str = "cpu",
     ) -> (Result, float):
         """Evaluates the model. Returns a Result object containing evaluation
-        results and a loss value. Implement this to enable evaluation."""
+        results and a loss value. Implement this to enable evaluation.
+        :param data_loader: DataLoader that iterates over dataset to be evaluated
+        :param out_path: Optional output path to store predictions
+        :param embeddings_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and
+        freshly recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU
+        :return: Returns a Tuple consisting of a Result object and a loss float value
+        """
         pass
 
     @abstractmethod

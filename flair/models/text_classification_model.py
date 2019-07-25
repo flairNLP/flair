@@ -115,23 +115,23 @@ class TextClassifier(flair.nn.Model):
 
     def predict(
         self,
-        sentences: Union[Sentence, List[Sentence]],
+        data_points: Union[Sentence, List[Sentence]],
         mini_batch_size: int = 32,
         embedding_storage_mode="none",
         multi_class_prob: bool = False,
     ) -> List[Sentence]:
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
-        :param sentences: list of sentences
+        :param data_points: list of sentences
         :param mini_batch_size: mini batch size to use
         :param multi_class_prob : return probability for all class for multiclass
         :return: the list of sentences containing the labels
         """
         with torch.no_grad():
-            if type(sentences) is Sentence:
-                sentences = [sentences]
+            if type(data_points) is Sentence:
+                data_points = [data_points]
 
-            filtered_sentences = self._filter_empty_sentences(sentences)
+            filtered_sentences = self._filter_empty_sentences(data_points)
 
             # remove previous embeddings
             store_embeddings(filtered_sentences, "none")
@@ -153,7 +153,7 @@ class TextClassifier(flair.nn.Model):
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
-            return sentences
+            return data_points
 
     def evaluate(
         self,
