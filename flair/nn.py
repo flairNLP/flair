@@ -19,7 +19,7 @@ class Model(torch.nn.Module):
 
     @abstractmethod
     def forward_loss(
-        self, sentences: Union[List[DataPoint], DataPoint]
+        self, data_points: Union[List[DataPoint], DataPoint]
     ) -> torch.tensor:
         """Performs a forward pass and returns a loss tensor for backpropagation. Implement this to enable training."""
         pass

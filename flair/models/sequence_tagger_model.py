@@ -324,10 +324,10 @@ class SequenceTagger(flair.nn.Model):
             return result, eval_loss
 
     def forward_loss(
-        self, sentences: Union[List[Sentence], Sentence], sort=True
+        self, data_points: Union[List[Sentence], Sentence], sort=True
     ) -> torch.tensor:
-        features = self.forward(sentences)
-        return self._calculate_loss(features, sentences)
+        features = self.forward(data_points)
+        return self._calculate_loss(features, data_points)
 
     def predict(
         self,

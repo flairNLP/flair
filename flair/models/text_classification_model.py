@@ -100,10 +100,12 @@ class TextClassifier(flair.nn.Model):
         model.load_state_dict(state["state_dict"])
         return model
 
-    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
+    def forward_loss(
+        self, data_points: Union[List[Sentence], Sentence]
+    ) -> torch.tensor:
 
-        scores = self.forward(sentences)
-        return self._calculate_loss(scores, sentences)
+        scores = self.forward(data_points)
+        return self._calculate_loss(scores, data_points)
 
     def forward_labels_and_loss(
         self, sentences: Union[Sentence, List[Sentence]]
