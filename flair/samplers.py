@@ -6,7 +6,6 @@ import random, torch
 
 from flair.data import FlairDataset
 
-
 log = logging.getLogger("flair")
 
 
@@ -93,7 +92,7 @@ class ExpandingChunkSampler(Sampler):
     This causes some order of the data to be preserved, while still shuffling the data.
     """
 
-    def __init__(self, data_source):
+    def __init__(self, data_source, step=3):
         """Initialize by passing a block_size and a plus_window parameter.
         :param data_source: dataset to sample from
         """
@@ -102,31 +101,27 @@ class ExpandingChunkSampler(Sampler):
         self.num_samples = len(self.data_source)
 
         self.block_size = 1
-        self.plus_window = 0
         self.epoch_count = 0
+        self.step = step
 
     def __iter__(self):
-
         self.epoch_count += 1
 
         data = list(range(len(self.data_source)))
-        blocksize = self.block_size + random.randint(0, self.plus_window)
 
-        log.info(
-            f"Chunk sampling with blocksize = {blocksize} ({self.block_size} + {self.plus_window})"
-        )
+        log.info(f"Chunk sampling with blocksize = {self.block_size}")
 
         # Create blocks
-        blocks = [data[i : i + blocksize] for i in range(0, len(data), blocksize)]
+        blocks = [
+            data[i : i + self.block_size] for i in range(0, len(data), self.block_size)
+        ]
         # shuffle the blocks
         random.shuffle(blocks)
         # concatenate the shuffled blocks
         data[:] = [b for bs in blocks for b in bs]
 
-        if self.epoch_count % 2 == 0:
+        if self.epoch_count % self.step == 0:
             self.block_size += 1
-        else:
-            self.plus_window += 1
 
         return iter(data)
 

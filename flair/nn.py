@@ -24,7 +24,10 @@ class Model(torch.nn.Module):
 
     @abstractmethod
     def predict(
-        self, sentences: Union[List[Sentence], Sentence], mini_batch_size=32
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size=32,
+        embeddings_storage_mode: str = "none",
     ) -> List[Sentence]:
         """Predicts the labels/tags for the given list of sentences. The labels/tags are added directly to the
         sentences. Implement this to enable prediction."""
@@ -32,7 +35,10 @@ class Model(torch.nn.Module):
 
     @abstractmethod
     def evaluate(
-        self, data_loader: DataLoader, out_path: Path = None
+        self,
+        data_loader: DataLoader,
+        out_path: Path = None,
+        embeddings_storage_mode: str = "cpu",
     ) -> (Result, float):
         """Evaluates the model. Returns a Result object containing evaluation
         results and a loss value. Implement this to enable evaluation."""
