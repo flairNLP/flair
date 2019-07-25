@@ -232,7 +232,10 @@ class SequenceTagger(flair.nn.Model):
         return model
 
     def evaluate(
-        self, data_loader: DataLoader, out_path: Path = None
+        self,
+        data_loader: DataLoader,
+        out_path: Path = None,
+        embeddings_storage_mode: str = "cpu",
     ) -> (Result, float):
 
         with torch.no_grad():
@@ -290,7 +293,7 @@ class SequenceTagger(flair.nn.Model):
                         else:
                             metric.add_tn(tag)
 
-                store_embeddings(batch, "gpu")
+                store_embeddings(batch, embeddings_storage_mode)
 
             eval_loss /= batch_no
 
@@ -321,10 +324,10 @@ class SequenceTagger(flair.nn.Model):
             return result, eval_loss
 
     def forward_loss(
-        self, sentences: Union[List[Sentence], Sentence], sort=True
+        self, data_points: Union[List[Sentence], Sentence], sort=True
     ) -> torch.tensor:
-        features = self.forward(sentences)
-        return self._calculate_loss(features, sentences)
+        features = self.forward(data_points)
+        return self._calculate_loss(features, data_points)
 
     def predict(
         self,

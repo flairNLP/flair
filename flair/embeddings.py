@@ -115,7 +115,7 @@ class DocumentEmbeddings(Embeddings):
 class StackedEmbeddings(TokenEmbeddings):
     """A stack of embeddings, used if you need to combine several different embedding types."""
 
-    def __init__(self, embeddings: List[TokenEmbeddings], detach: bool = True):
+    def __init__(self, embeddings: List[TokenEmbeddings]):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
@@ -125,7 +125,6 @@ class StackedEmbeddings(TokenEmbeddings):
         for i, embedding in enumerate(embeddings):
             self.add_module("list_embedding_{}".format(i), embedding)
 
-        self.detach: bool = detach
         self.name: str = "Stack"
         self.static_embeddings: bool = True
 
