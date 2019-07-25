@@ -331,16 +331,16 @@ class SequenceTagger(flair.nn.Model):
 
     def predict(
         self,
-        data_points: Union[List[Sentence], Sentence],
+        sentences: Union[List[Sentence], Sentence],
         mini_batch_size=32,
         embedding_storage_mode="none",
         verbose=False,
     ) -> List[Sentence]:
         with torch.no_grad():
-            if isinstance(data_points, Sentence):
-                data_points = [data_points]
+            if isinstance(sentences, Sentence):
+                sentences = [sentences]
 
-            filtered_sentences = self._filter_empty_sentences(data_points)
+            filtered_sentences = self._filter_empty_sentences(sentences)
 
             # remove previous embeddings
             store_embeddings(filtered_sentences, "none")
@@ -377,7 +377,7 @@ class SequenceTagger(flair.nn.Model):
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
-            return data_points
+            return sentences
 
     def forward(self, sentences: List[Sentence]):
         self.zero_grad()

@@ -25,24 +25,6 @@ class Model(torch.nn.Module):
         pass
 
     @abstractmethod
-    def predict(
-        self,
-        data_points: Union[List[DataPoint], DataPoint],
-        mini_batch_size=32,
-        embeddings_storage_mode: str = "none",
-    ) -> List[DataPoint]:
-        """
-        :param data_points: DataPoints for which to make a prediction
-        :param mini_batch_size: size of mini batches during prediction
-        :param embeddings_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and
-        freshly recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU
-        :return: List of DataPoint with predictions
-        """
-        """Predicts the labels/tags for the given list of sentences. The labels/tags are added directly to the
-        sentences. Implement this to enable prediction."""
-        pass
-
-    @abstractmethod
     def evaluate(
         self,
         data_loader: DataLoader,

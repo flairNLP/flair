@@ -41,16 +41,16 @@ class TextRegressor(flair.models.TextClassifier):
 
     def predict(
         self,
-        data_points: Union[Sentence, List[Sentence]],
+        sentences: Union[Sentence, List[Sentence]],
         mini_batch_size: int = 32,
         embedding_storage_mode="none",
     ) -> List[Sentence]:
 
         with torch.no_grad():
-            if type(data_points) is Sentence:
-                data_points = [data_points]
+            if type(sentences) is Sentence:
+                sentences = [sentences]
 
-            filtered_sentences = self._filter_empty_sentences(data_points)
+            filtered_sentences = self._filter_empty_sentences(sentences)
 
             # remove previous embeddings
             store_embeddings(filtered_sentences, "none")
@@ -69,7 +69,7 @@ class TextRegressor(flair.models.TextClassifier):
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
-            return data_points
+            return sentences
 
     def _calculate_loss(
         self, scores: torch.tensor, sentences: List[Sentence]
