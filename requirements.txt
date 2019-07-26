@@ -15,3 +15,4 @@ regex
 tabulate
 urllib3<1.25,>=1.20
 langdetect
+torchvision
