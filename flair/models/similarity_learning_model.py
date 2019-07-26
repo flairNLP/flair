@@ -24,7 +24,9 @@ class SimilarityNet(flair.nn.Model):
     further these shared modalities.
     """
 
-    def __init__(self, modality_specific_0=None, modality_specific_1=None, modality_shared=None):
+    def __init__(
+        self, modality_specific_0=None, modality_specific_1=None, modality_shared=None
+    ):
         super(SimilarityNet, self).__init__()
 
         # replace any None with identity (pass-through) model
@@ -39,15 +41,18 @@ class SimilarityNet(flair.nn.Model):
         input_modality_0 = x[0]
         input_modality_1 = x[1]
         # skip the modalities which are not available (None)
-        return [self.modality_shared(self.modality_specific_0(input_modality_0))
-                if input_modality_0 is not None else None,
-                self.modality_shared(self.modality_specific_1(input_modality_1))
-                if input_modality_1 is not None else None]
+        return [
+            self.modality_shared(self.modality_specific_0(input_modality_0))
+            if input_modality_0 is not None
+            else None,
+            self.modality_shared(self.modality_specific_1(input_modality_1))
+            if input_modality_1 is not None
+            else None,
+        ]
 
 
 # == similarity measures ==
 class SimilarityMeasure:
-
     @abstractmethod
     def forward(self, x):
         pass
@@ -55,7 +60,6 @@ class SimilarityMeasure:
 
 # helper class for ModelSimilarity
 class SliceReshaper(flair.nn.Model):
-
     def __init__(self, begin, end=None, shape=None):
         super(SliceReshaper, self).__init__()
         self.begin = begin
@@ -63,9 +67,10 @@ class SliceReshaper(flair.nn.Model):
         self.shape = shape
 
     def forward(self, x):
-        x = x[:,self.begin] if self.end is None else x[:,self.begin:self.end]
+        x = x[:, self.begin] if self.end is None else x[:, self.begin : self.end]
         x = x.view(-1, *self.shape) if self.shape is not None else x
         return x
+
 
 # -- works with binary cross entropy loss --
 class ModelSimilarity(SimilarityMeasure):
@@ -74,6 +79,7 @@ class ModelSimilarity(SimilarityMeasure):
     The similarity is evaluated by doing the forward pass (inference) on the parametrized model with
     the second element of the pair as input.
     """
+
     def __init__(self, model):
         # model is a list of tuples (function, parameters), where parameters is a dict {param_name: param_extract_model}
         self.model = model
@@ -102,20 +108,25 @@ class RBFSimilarity(SimilarityMeasure):
     Similarity defined by radial basis function with a given bandwidth.
     """
 
-
     def __init__(self, bandwidth=1.0):
         self.bandwidth = bandwidth
 
     def forward(self, x):
-
         input_modality_0 = x[0]
         input_modality_1 = x[1]
 
-        input_modality_0_sqnorms = torch.sum(input_modality_0 ** 2, dim=-1, keepdim=True)
-        input_modality_1_sqnorms = torch.sum(input_modality_1 ** 2, dim=-1, keepdim=True)
+        input_modality_0_sqnorms = torch.sum(
+            input_modality_0 ** 2, dim=-1, keepdim=True
+        )
+        input_modality_1_sqnorms = torch.sum(
+            input_modality_1 ** 2, dim=-1, keepdim=True
+        )
 
-        neg_sq_dist = 2 * torch.matmul(input_modality_0, input_modality_1.t()) - \
-                      input_modality_0_sqnorms - input_modality_1_sqnorms.t()
+        neg_sq_dist = (
+            2 * torch.matmul(input_modality_0, input_modality_1.t())
+            - input_modality_0_sqnorms
+            - input_modality_1_sqnorms.t()
+        )
 
         return torch.exp(neg_sq_dist / self.bandwidth)
 
@@ -134,7 +145,10 @@ class CosineSimilarity(SimilarityMeasure):
         input_modality_0_norms = torch.norm(input_modality_0, dim=-1, keepdim=True)
         input_modality_1_norms = torch.norm(input_modality_1, dim=-1, keepdim=True)
 
-        return torch.matmul(input_modality_0 / input_modality_0_norms, (input_modality_1 / input_modality_1_norms).t())
+        return torch.matmul(
+            input_modality_0 / input_modality_0_norms,
+            (input_modality_1 / input_modality_1_norms).t(),
+        )
 
 
 class sqL2Similarity(SimilarityMeasure):
@@ -148,16 +162,22 @@ class sqL2Similarity(SimilarityMeasure):
         input_modality_0 = x[0]
         input_modality_1 = x[1]
 
-        input_modality_0_sqnorms = torch.sum(input_modality_0 ** 2, dim=-1, keepdim=True)
-        input_modality_1_sqnorms = torch.sum(input_modality_1 ** 2, dim=-1, keepdim=True)
+        input_modality_0_sqnorms = torch.sum(
+            input_modality_0 ** 2, dim=-1, keepdim=True
+        )
+        input_modality_1_sqnorms = torch.sum(
+            input_modality_1 ** 2, dim=-1, keepdim=True
+        )
 
-        return 2 * torch.matmul(input_modality_0, input_modality_1.t()) - \
-               input_modality_0_sqnorms - input_modality_1_sqnorms.t()
+        return (
+            2 * torch.matmul(input_modality_0, input_modality_1.t())
+            - input_modality_0_sqnorms
+            - input_modality_1_sqnorms.t()
+        )
 
 
 # == similarity losses ==
 class SimilarityLoss(nn.modules.loss._Loss):
-
     def __init__(self):
         super(SimilarityLoss, self).__init__()
 
@@ -179,10 +199,10 @@ class PairwiseBCELoss(SimilarityLoss):
         n = inputs.shape[0]
         neg_targets = torch.ones_like(targets).to(flair.device) - targets
         # we want that logits for corresponding pairs are high, and for non-corresponding low
-        bce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
+        bce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction="none")
         if self.balanced:
             # TODO: this assumes eye matrix
-            weight_matrix = n * (targets / 2. + neg_targets / (2. * (n-1)))
+            weight_matrix = n * (targets / 2.0 + neg_targets / (2.0 * (n - 1)))
             bce_loss *= weight_matrix
         loss = bce_loss.mean()
 
@@ -203,22 +223,35 @@ class RankingLoss(SimilarityLoss):
         n = inputs.shape[0]
         neg_targets = torch.ones_like(targets) - targets
         # loss matrices for two directions of alignment, from modality 0 => modality 1 and vice versa
-        ranking_loss_matrix_01 = neg_targets * F.relu(self.margin + inputs - torch.diag(inputs).view(n, 1))
-        ranking_loss_matrix_10 = neg_targets * F.relu(self.margin + inputs - torch.diag(inputs).view(1, n))
+        ranking_loss_matrix_01 = neg_targets * F.relu(
+            self.margin + inputs - torch.diag(inputs).view(n, 1)
+        )
+        ranking_loss_matrix_10 = neg_targets * F.relu(
+            self.margin + inputs - torch.diag(inputs).view(1, n)
+        )
         neg_targets_01_sum = torch.sum(neg_targets, dim=1)
         neg_targets_10_sum = torch.sum(neg_targets, dim=0)
-        loss = self.direction_weights[0] * torch.mean(torch.sum(ranking_loss_matrix_01 / neg_targets_01_sum, dim=1)) + \
-               self.direction_weights[1] * torch.mean(torch.sum(ranking_loss_matrix_10 / neg_targets_10_sum, dim=0))
+        loss = self.direction_weights[0] * torch.mean(
+            torch.sum(ranking_loss_matrix_01 / neg_targets_01_sum, dim=1)
+        ) + self.direction_weights[1] * torch.mean(
+            torch.sum(ranking_loss_matrix_10 / neg_targets_10_sum, dim=0)
+        )
 
         return loss
 
 
 # == similarity learner ==
 class SimilarityLearner(flair.nn.Model):
-
-    def __init__(self, input_embeddings, similarity_net, similarity_measure, similarity_loss,
-                 eval_device=flair.device, embeddings_storage='none',
-                 recall_at_points=[1,5,10,20], recall_at_points_weights=[0.4, 0.3, 0.2, 0.1]):
+    def __init__(
+        self,
+        input_embeddings,
+        similarity_net,
+        similarity_measure,
+        similarity_loss,
+        eval_device=flair.device,
+        recall_at_points=[1, 5, 10, 20],
+        recall_at_points_weights=[0.4, 0.3, 0.2, 0.1],
+    ):
         super(SimilarityLearner, self).__init__()
         self.input_modality_0_embedding = input_embeddings[0]
         self.input_modality_1_embedding = input_embeddings[1]
@@ -226,13 +259,14 @@ class SimilarityLearner(flair.nn.Model):
         self.similarity_measure = similarity_measure
         self.similarity_loss = similarity_loss
         self.eval_device = eval_device
-        self.embeddings_storage = embeddings_storage
         self.recall_at_points = recall_at_points
         self.recall_at_points_weights = recall_at_points_weights
         self.to(flair.device)
 
-    def _embed_inputs(self, data_points, modality_ids=[0,1]):
-        modality_ids = modality_ids if isinstance(modality_ids, list) else [modality_ids]
+    def _embed_inputs(self, data_points, modality_ids=[0, 1]):
+        modality_ids = (
+            modality_ids if isinstance(modality_ids, list) else [modality_ids]
+        )
         sample_pairs = True if len(modality_ids) == 2 else False
         # extracts modality embeddings from each data point and puts them into separate tensors
         modality_tensors = [[], []]
@@ -243,23 +277,37 @@ class SimilarityLearner(flair.nn.Model):
                     pair_index = []
                     for modality_id in modality_ids:
                         index = np.random.choice(len(point.data[modality_id]))
-                        modality_embedding = self.input_modality_0_embedding if modality_id == 0 else self.input_modality_1_embedding
+                        modality_embedding = (
+                            self.input_modality_0_embedding
+                            if modality_id == 0
+                            else self.input_modality_1_embedding
+                        )
                         modality_embedding.embed(point.data[modality_id][index])
-                        modality_tensors[modality_id].append(point.data[modality_id][index].embedding.to(flair.device))
+                        modality_tensors[modality_id].append(
+                            point.data[modality_id][index].embedding.to(flair.device)
+                        )
                         pair_index.append((point_id, index))
                     pair_indices.append(pair_index)
             else:
-                assert(len(modality_ids) == 1)
+                assert len(modality_ids) == 1
                 modality_id = modality_ids[0]
-                assert (modality_id in [0, 1])
-                modality_embedding = self.input_modality_0_embedding if modality_id == 0 else self.input_modality_1_embedding
+                assert modality_id in [0, 1]
+                modality_embedding = (
+                    self.input_modality_0_embedding
+                    if modality_id == 0
+                    else self.input_modality_1_embedding
+                )
                 modality_data = point.data[modality_id]
                 if modality_data is not None:
                     modality_embedding.embed(modality_data)
-                    modality_tensors[modality_id].extend([d.embedding.to(flair.device) for d in modality_data])
+                    modality_tensors[modality_id].extend(
+                        [d.embedding.to(flair.device) for d in modality_data]
+                    )
                     first = [(point_id, index) for index in range(len(modality_data))]
                     second = len(modality_data) * [None]
-                    first, second = (second, first) if modality_id == 1 else (first, second)
+                    first, second = (
+                        (second, first) if modality_id == 1 else (first, second)
+                    )
                     pair_indices.extend(list(zip(first, second)))
 
         # store_embeddings(data_points, 'none')
@@ -273,14 +321,18 @@ class SimilarityLearner(flair.nn.Model):
 
         return output_modality_tensors, pair_indices
 
-    def embed(self, data_points: Union[List[DataPoint], DataPoint], modality_id) -> List[DataPoint]:
+    def embed(
+        self, data_points: Union[List[DataPoint], DataPoint], modality_id
+    ) -> List[DataPoint]:
         embedded_inputs, _ = self._embed_inputs(data_points, modality_ids=[modality_id])
         aligned_embeddings = self.similairty_net.forward(embedded_inputs)
 
         return aligned_embeddings[modality_id]
 
-    def forward_loss(self, data_points: Union[List[DataPoint], DataPoint]) -> torch.tensor:
-        embedded_inputs, _ = self._embed_inputs(data_points, modality_ids=[0,1])
+    def forward_loss(
+        self, data_points: Union[List[DataPoint], DataPoint]
+    ) -> torch.tensor:
+        embedded_inputs, _ = self._embed_inputs(data_points, modality_ids=[0, 1])
         aligned_embeddings = self.similarity_net.forward(embedded_inputs)
         similarity_matrix = self.similarity_measure.forward(aligned_embeddings)
         targets = torch.eye(similarity_matrix.shape[0]).to(flair.device)
@@ -288,7 +340,12 @@ class SimilarityLearner(flair.nn.Model):
 
         return loss
 
-    def evaluate(self, data_loader: DataLoader, out_path: Path = None) -> (Result, float):
+    def evaluate(
+        self,
+        data_loader: DataLoader,
+        out_path: Path = None,
+        embeddings_storage_mode="cpu",
+    ) -> (Result, float):
         # assumes that for each data pair there's at least one embedding per modality
 
         # embed_inputs on modality 1
@@ -297,55 +354,87 @@ class SimilarityLearner(flair.nn.Model):
             embedded_inputs, _ = self._embed_inputs(data_points, modality_ids=[1])
             batch_embeddings = self.similarity_net.forward(embedded_inputs)
             batch_modality_1_embeddings = batch_embeddings[1]
-            modality_1_embeddings.append(batch_modality_1_embeddings.to(self.eval_device))
-            store_embeddings(data_points, self.embeddings_storage)
-        modality_1_embeddings = torch.cat(modality_1_embeddings, dim=0) # [n0, d0]
+            modality_1_embeddings.append(
+                batch_modality_1_embeddings.to(self.eval_device)
+            )
+            store_embeddings(data_points, embeddings_storage_mode)
+        modality_1_embeddings = torch.cat(modality_1_embeddings, dim=0)  # [n0, d0]
 
         ranks = []
         modality_1_id = 0
         for data_points in data_loader:
             # embed_inputs on modality 0
             embedded_inputs, indices = self._embed_inputs(data_points, modality_ids=[0])
-            modality_1_indices = modality_1_id + torch.LongTensor([index[0][0] for index in indices])
+            modality_1_indices = modality_1_id + torch.LongTensor(
+                [index[0][0] for index in indices]
+            )
             batch_embeddings = self.similarity_net.forward(embedded_inputs)
             batch_modality_0_embeddings = batch_embeddings[0]
-            batch_modality_0_embeddings = batch_modality_0_embeddings.to(self.eval_device)
+            batch_modality_0_embeddings = batch_modality_0_embeddings.to(
+                self.eval_device
+            )
             # compute the similarity
-            batch_similarity_matrix = self.similarity_measure.forward([batch_modality_0_embeddings,
-                                                                       modality_1_embeddings]) # [bn_1, n0]
-            batch_modality_1_argsort = torch.argsort(batch_similarity_matrix, descending=True, dim=1)
+            batch_similarity_matrix = self.similarity_measure.forward(
+                [batch_modality_0_embeddings, modality_1_embeddings]
+            )  # [bn_1, n0]
+            batch_modality_1_argsort = torch.argsort(
+                batch_similarity_matrix, descending=True, dim=1
+            )
             # get the ranks, so +1 to start counting ranks from 1
             batch_modality_1_ranks = torch.argsort(batch_modality_1_argsort, dim=1) + 1
-            batch_gt_ranks = batch_modality_1_ranks[torch.arange(batch_similarity_matrix.shape[0]), modality_1_indices]
+            batch_gt_ranks = batch_modality_1_ranks[
+                torch.arange(batch_similarity_matrix.shape[0]), modality_1_indices
+            ]
             ranks.extend(batch_gt_ranks.tolist())
             modality_1_id += len(data_points)
-            store_embeddings(data_points, self.embeddings_storage)
+            store_embeddings(data_points, embeddings_storage_mode)
 
         ranks = np.array(ranks)
         median_rank = np.median(ranks)
         recall_at = {k: np.mean(ranks <= k) for k in self.recall_at_points}
 
-        results_header = ['Median rank'] + ['Recall@top'+str(r) for r in self.recall_at_points]
-        results_header_str = '\t'.join(results_header)
-        epoch_results = [str(median_rank)] + [str(recall_at[k]) for k in self.recall_at_points]
-        epoch_results_str = '\t'.join(epoch_results)
-        detailed_results = ', '.join([f'{h}={v}' for h,v in zip(results_header, epoch_results)])
+        results_header = ["Median rank"] + [
+            "Recall@top" + str(r) for r in self.recall_at_points
+        ]
+        results_header_str = "\t".join(results_header)
+        epoch_results = [str(median_rank)] + [
+            str(recall_at[k]) for k in self.recall_at_points
+        ]
+        epoch_results_str = "\t".join(epoch_results)
+        detailed_results = ", ".join(
+            [f"{h}={v}" for h, v in zip(results_header, epoch_results)]
+        )
 
-        validated_measure = sum([recall_at[r]*w for r,w in zip(self.recall_at_points, self.recall_at_points_weights)])
+        validated_measure = sum(
+            [
+                recall_at[r] * w
+                for r, w in zip(self.recall_at_points, self.recall_at_points_weights)
+            ]
+        )
 
-        return (Result(validated_measure, results_header_str, epoch_results_str, detailed_results), 0)
+        return (
+            Result(
+                validated_measure,
+                results_header_str,
+                epoch_results_str,
+                detailed_results,
+            ),
+            0,
+        )
 
     def _get_state_dict(self):
         model_state = {
             "state_dict": self.state_dict(),
-            "input_embeddings": [self.input_modality_0_embedding, self.input_modality_1_embedding],
+            "input_embeddings": [
+                self.input_modality_0_embedding,
+                self.input_modality_1_embedding,
+            ],
             "similarity_net": self.similarity_net,
             "similarity_measure": self.similarity_measure,
             "similarity_loss": self.similarity_loss,
             "eval_device": self.eval_device,
-            "embeddings_storage": self.embeddings_storage,
             "recall_at_points": self.recall_at_points,
-            "recall_at_points_weights": self.recall_at_points_weights
+            "recall_at_points_weights": self.recall_at_points_weights,
         }
         return model_state
 
@@ -356,9 +445,8 @@ class SimilarityLearner(flair.nn.Model):
             similarity_measure=state["similarity_measure"],
             similarity_loss=state["similarity_loss"],
             eval_device=state["eval_device"],
-            embeddings_storage=state["embeddings_storage"],
             recall_at_points=state["recall_at_points"],
-            recall_at_points_weights=state["recall_at_points_weights"]
+            recall_at_points_weights=state["recall_at_points_weights"],
         )
 
         model.load_state_dict(state["state_dict"])
