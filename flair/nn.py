@@ -18,24 +18,27 @@ class Model(torch.nn.Module):
     Every new type of model must implement these methods."""
 
     @abstractmethod
-    def forward_loss(self, data_points: Union[List[DataPoint], DataPoint]) -> torch.tensor:
+    def forward_loss(
+        self, data_points: Union[List[DataPoint], DataPoint]
+    ) -> torch.tensor:
         """Performs a forward pass and returns a loss tensor for backpropagation. Implement this to enable training."""
         pass
 
     @abstractmethod
-    def predict(
-        self, data_points: Union[List[DataPoint], DataPoint], mini_batch_size=32
-    ) -> List[DataPoint]:
-        """Predicts the labels/tags for the given list of sentences. The labels/tags are added directly to the
-        sentences. Implement this to enable prediction."""
-        pass
-
-    @abstractmethod
     def evaluate(
-        self, data_loader: DataLoader, out_path: Path = None
+        self,
+        data_loader: DataLoader,
+        out_path: Path = None,
+        embeddings_storage_mode: str = "cpu",
     ) -> (Result, float):
         """Evaluates the model. Returns a Result object containing evaluation
-        results and a loss value. Implement this to enable evaluation."""
+        results and a loss value. Implement this to enable evaluation.
+        :param data_loader: DataLoader that iterates over dataset to be evaluated
+        :param out_path: Optional output path to store predictions
+        :param embeddings_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and
+        freshly recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU
+        :return: Returns a Tuple consisting of a Result object and a loss float value
+        """
         pass
 
     @abstractmethod

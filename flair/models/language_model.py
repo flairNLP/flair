@@ -129,7 +129,6 @@ class LanguageModel(nn.Module):
             ).transpose(0, 1)
 
             prediction, rnn_output, hidden = self.forward(batch, hidden)
-            rnn_output = rnn_output.detach()
 
             output_parts.append(rnn_output)
 

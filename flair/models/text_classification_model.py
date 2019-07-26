@@ -100,10 +100,12 @@ class TextClassifier(flair.nn.Model):
         model.load_state_dict(state["state_dict"])
         return model
 
-    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
+    def forward_loss(
+        self, data_points: Union[List[Sentence], Sentence]
+    ) -> torch.tensor:
 
-        scores = self.forward(sentences)
-        return self._calculate_loss(scores, sentences)
+        scores = self.forward(data_points)
+        return self._calculate_loss(scores, data_points)
 
     def forward_labels_and_loss(
         self, sentences: Union[Sentence, List[Sentence]]
@@ -156,7 +158,10 @@ class TextClassifier(flair.nn.Model):
             return sentences
 
     def evaluate(
-        self, data_loader: DataLoader, out_path: Path = None
+        self,
+        data_loader: DataLoader,
+        out_path: Path = None,
+        embeddings_storage_mode: str = "cpu",
     ) -> (Result, float):
 
         with torch.no_grad():
@@ -222,6 +227,8 @@ class TextClassifier(flair.nn.Model):
                             and label not in true_values_for_sentence
                         ):
                             metric.add_tn(label)
+
+                store_embeddings(batch, embeddings_storage_mode)
 
             eval_loss /= batch_count
 

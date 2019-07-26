@@ -190,28 +190,37 @@ To fine tune a `LanguageModel`, you only need to load an existing `LanguageModel
 
 ```python
 from flair.data import Dictionary
-from flair.models import LanguageModel
+from flair.embeddings import FlairEmbeddings
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
 
+
+# instantiate an existing LM, such as one from the FlairEmbeddings
+language_model = FlairEmbeddings('news-forward').lm
+
+# are you fine-tuning a forward or backward LM?
+is_forward_lm = language_model.is_forward_lm
+
+# get the dictionary from the existing language model
+dictionary: Dictionary = language_model.dictionary
+
 # get your corpus, process forward and at the character level
-corpus = TextCorpus('/path/to/your/corpus',
+corpus = TextCorpus('path/to/your/corpus',
                     dictionary,
                     is_forward_lm,
                     character_level=True)
-
-# instantiate an existing LM, such as one from the FlairEmbeddings
-language_model = FlairEmbeddings('news-forward-fast').lm
 
 # use the model trainer to fine-tune this model on your corpus
 trainer = LanguageModelTrainer(language_model, corpus)
 
 trainer.train('resources/taggers/language_model',
-              sequence_length=10,
-              mini_batch_size=10,
-              max_epochs=10)
+              sequence_length=100,
+              mini_batch_size=100,
+              learning_rate=20,
+              patience=10,
+              checkpoint=True)
 ```              
               
-Note that when you fine-tune, you automatically use the same character dictionary as before and automatically copy the direction (forward/backward).
+Note that when you fine-tune, you must use the same character dictionary as before and copy the direction (forward/backward).
 
 
 ## Consider Contributing your LM
