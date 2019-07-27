@@ -151,14 +151,12 @@ class Visualizer(object):
 
     @staticmethod
     def render_ner_html(sentences: Union[List[Sentence], Sentence], settings=None, wrap_page=True) -> str:
-        '''
-        Converts sentences to HTML.
-        :param sentences: single sentence or multiple sentences to convert to HTML
+        """
+        :param sentences: single sentence or list of sentences to convert to HTML
         :param settings: overrides and completes default settings; includes colors and labels dictionaries
-        :param wrap_page: if <b>True</b> method returns result of processing sentences wrapped by <htm> and <body> tags,
-        otherwise - without these tags
+        :param wrap_page: if True method returns result of processing sentences wrapped by &lt;html&gt; and &lt;body&gt; tags, otherwise - without these tags
         :return: HTML as a string
-        '''
+        """
         if isinstance(sentences, Sentence):
             sentences = [sentences]
 
@@ -182,7 +180,7 @@ class Visualizer(object):
         }
 
         if settings and "labels" in settings:
-            colors.update(settings["labels"])
+            labels.update(settings["labels"])
 
         tagged_html = []
         for s in sentences:
@@ -190,9 +188,6 @@ class Visualizer(object):
 
             for fragment, tag in spans:
                 escaped_fragment = html.escape(fragment).replace('\n', '<br/>')
-                escaped_fragment = escaped_fragment.replace('\r', '<br/>')
-                escaped_fragment = escaped_fragment.replace('\t', '&nbsp;' * 4)
-                escaped_fragment = escaped_fragment.replace(' ', '&nbsp;')
                 if tag:
                     escaped_fragment = TAGGED_ENTITY.format(entity=escaped_fragment,
                                                             label=labels.get(tag, "O"),
