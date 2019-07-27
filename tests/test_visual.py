@@ -60,7 +60,7 @@ def test_html_rendering():
         "colors": {"LOC": "yellow"},
         "labels": {"LOC": "location"}
     }
-    html = Visualizer.render_ner_html([sent], settings=settings)
+    actual = Visualizer.render_ner_html([sent], settings=settings)
 
     expected_res = HTML_PAGE.format(text=
                                     TAGGED_ENTITY.format(color="#F7FF53", entity="Boris Johnson", label="PER") +
@@ -70,4 +70,4 @@ def test_html_rendering():
                                     TAGGED_ENTITY.format(color="yellow", entity="UK", label="location") +
                                     " prime minister. &amp;")
 
-    assert expected_res == html
+    assert expected_res == actual
