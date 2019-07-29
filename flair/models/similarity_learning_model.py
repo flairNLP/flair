@@ -2,6 +2,7 @@ from abc import abstractmethod
 
 import flair
 from flair.data import DataPoint
+from flair.embeddings import Embeddings
 from flair.datasets import DataLoader
 from flair.training_utils import Result
 from flair.training_utils import store_embeddings
@@ -122,11 +123,9 @@ class RBFSimilarity(SimilarityMeasure):
             input_modality_1 ** 2, dim=-1, keepdim=True
         )
 
-        neg_sq_dist = (
-            2 * torch.matmul(input_modality_0, input_modality_1.t())
-            - input_modality_0_sqnorms
-            - input_modality_1_sqnorms.t()
-        )
+        neg_sq_dist = 2 * torch.matmul(input_modality_0, input_modality_1.t())
+        neg_sq_dist -= input_modality_0_sqnorms
+        neg_sq_dist -= input_modality_1_sqnorms.t()
 
         return torch.exp(neg_sq_dist / self.bandwidth)
 
@@ -244,17 +243,18 @@ class RankingLoss(SimilarityLoss):
 class SimilarityLearner(flair.nn.Model):
     def __init__(
         self,
-        input_embeddings,
-        similarity_net,
-        similarity_measure,
-        similarity_loss,
+        input_modality_0_embedding: Embeddings,
+        input_modality_1_embedding: Embeddings,
+        similarity_net: SimilarityNet,
+        similarity_measure: SimilarityMeasure,
+        similarity_loss: SimilarityLoss,
         eval_device=flair.device,
         recall_at_points=[1, 5, 10, 20],
-        recall_at_points_weights=[0.4, 0.3, 0.2, 0.1],
+        recall_at_points_weights=[0.4, 0.3, 0.2, 0.1]
     ):
         super(SimilarityLearner, self).__init__()
-        self.input_modality_0_embedding = input_embeddings[0]
-        self.input_modality_1_embedding = input_embeddings[1]
+        self.input_modality_0_embedding = input_modality_0_embedding
+        self.input_modality_1_embedding = input_modality_1_embedding
         self.similarity_net = similarity_net
         self.similarity_measure = similarity_measure
         self.similarity_loss = similarity_loss
@@ -328,6 +328,14 @@ class SimilarityLearner(flair.nn.Model):
         aligned_embeddings = self.similairty_net.forward(embedded_inputs)
 
         return aligned_embeddings[modality_id]
+
+    def get_similarity(self, modality_0_embeddings, modality_1_embeddings):
+        """
+        :param modality_0_embedding: embeddings of first modality, a tensor of shape [n0, d0]
+        :param modality_1_embeddings: embeddings of second modality, a tensor of shape [n1, d1]
+        :return: a similarity matrix of shape [n0, n1]
+        """
+        return self.similarity_measure.forward(modality_0_embeddings, modality_1_embeddings)
 
     def forward_loss(
         self, data_points: Union[List[DataPoint], DataPoint]
@@ -425,10 +433,8 @@ class SimilarityLearner(flair.nn.Model):
     def _get_state_dict(self):
         model_state = {
             "state_dict": self.state_dict(),
-            "input_embeddings": [
-                self.input_modality_0_embedding,
-                self.input_modality_1_embedding,
-            ],
+            "input_modality_0_embedding": self.input_modality_0_embedding,
+            "input_modality_1_embedding": self.input_modality_1_embedding,
             "similarity_net": self.similarity_net,
             "similarity_measure": self.similarity_measure,
             "similarity_loss": self.similarity_loss,
@@ -440,7 +446,8 @@ class SimilarityLearner(flair.nn.Model):
 
     def _init_model_with_state_dict(state):
         model = SimilarityLearner(
-            input_embeddings=state["input_embeddings"],
+            input_modality_0_embedding=state["input_modality_0_embedding"],
+            input_modality_1_embedding=state["input_modality_1_embedding"],
             similarity_net=state["similarity_net"],
             similarity_measure=state["similarity_measure"],
             similarity_loss=state["similarity_loss"],
