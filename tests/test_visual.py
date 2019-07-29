@@ -45,29 +45,29 @@ def mock_ner_span(tag, start, end):
 
 
 def test_html_rendering():
-    text = "Boris Johnson has been elected new Conservative leader in a ballot of party members and will become the " \
-           "next UK prime minister. &"
+    text = (
+        "Boris Johnson has been elected new Conservative leader in a ballot of party members and will become the "
+        "next UK prime minister. &"
+    )
     sent = Sentence()
     sent.get_spans = MagicMock()
     sent.get_spans.return_value = [
         mock_ner_span("PER", 0, 13),
         mock_ner_span("MISC", 35, 47),
-        mock_ner_span("LOC", 109, 111)
+        mock_ner_span("LOC", 109, 111),
     ]
     sent.to_original_text = MagicMock()
     sent.to_original_text.return_value = text
-    settings = {
-        "colors": {"LOC": "yellow"},
-        "labels": {"LOC": "location"}
-    }
+    settings = {"colors": {"LOC": "yellow"}, "labels": {"LOC": "location"}}
     actual = Visualizer.render_ner_html([sent], settings=settings)
 
-    expected_res = HTML_PAGE.format(text=
-                                    TAGGED_ENTITY.format(color="#F7FF53", entity="Boris Johnson", label="PER") +
-                                    " has been elected new " +
-                                    TAGGED_ENTITY.format(color="#4647EB", entity="Conservative", label="MISC") +
-                                    " leader in a ballot of party members and will become the next " +
-                                    TAGGED_ENTITY.format(color="yellow", entity="UK", label="location") +
-                                    " prime minister. &amp;")
+    expected_res = HTML_PAGE.format(
+        text=TAGGED_ENTITY.format(color="#F7FF53", entity="Boris Johnson", label="PER")
+        + " has been elected new "
+        + TAGGED_ENTITY.format(color="#4647EB", entity="Conservative", label="MISC")
+        + " leader in a ballot of party members and will become the next "
+        + TAGGED_ENTITY.format(color="yellow", entity="UK", label="location")
+        + " prime minister. &amp;"
+    )
 
     assert expected_res == actual
