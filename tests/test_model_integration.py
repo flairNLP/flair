@@ -15,9 +15,9 @@ from flair.embeddings import (
     DocumentRNNEmbeddings,
 )
 from flair.models import SequenceTagger, TextClassifier, LanguageModel
+from flair.samplers import ImbalancedClassificationDatasetSampler
 from flair.trainers import ModelTrainer
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
-from flair.training_utils import EvaluationMetric
 from flair.optim import AdamW
 
 
@@ -43,7 +43,6 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
 
     trainer.train(
         results_base_path,
-        EvaluationMetric.MICRO_F1_SCORE,
         learning_rate=0.1,
         mini_batch_size=2,
         max_epochs=2,
@@ -85,7 +84,6 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
 
     trainer.train(
         results_base_path,
-        EvaluationMetric.MICRO_F1_SCORE,
         learning_rate=0.1,
         mini_batch_size=32,
         max_epochs=2,
@@ -115,102 +113,6 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
     embeddings = FlairEmbeddings("news-forward-fast")
-
-    tagger: SequenceTagger = SequenceTagger(
-        hidden_size=64,
-        embeddings=embeddings,
-        tag_dictionary=tag_dictionary,
-        tag_type="ner",
-        use_crf=False,
-    )
-
-    # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
-
-    trainer.train(
-        results_base_path,
-        EvaluationMetric.MICRO_F1_SCORE,
-        learning_rate=0.1,
-        mini_batch_size=2,
-        max_epochs=2,
-        shuffle=False,
-    )
-
-    loaded_model: SequenceTagger = SequenceTagger.load(
-        results_base_path / "final-model.pt"
-    )
-
-    sentence = Sentence("I love Berlin")
-    sentence_empty = Sentence("       ")
-
-    loaded_model.predict(sentence)
-    loaded_model.predict([sentence, sentence_empty])
-    loaded_model.predict([sentence_empty])
-
-    # clean up results directory
-    shutil.rmtree(results_base_path)
-
-
-@pytest.mark.integration
-def test_train_charlm_changed_chache_load_use_tagger(
-    results_base_path, tasks_base_path
-):
-    corpus = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
-    )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
-
-    # make a temporary cache directory that we remove afterwards
-    cache_dir = results_base_path / "cache"
-    os.makedirs(cache_dir, exist_ok=True)
-    embeddings = FlairEmbeddings("news-forward-fast", cache_directory=cache_dir)
-
-    tagger: SequenceTagger = SequenceTagger(
-        hidden_size=64,
-        embeddings=embeddings,
-        tag_dictionary=tag_dictionary,
-        tag_type="ner",
-        use_crf=False,
-    )
-
-    # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
-
-    trainer.train(
-        results_base_path,
-        EvaluationMetric.MACRO_ACCURACY,
-        learning_rate=0.1,
-        mini_batch_size=2,
-        max_epochs=2,
-        shuffle=False,
-    )
-
-    # remove the cache directory
-    shutil.rmtree(cache_dir)
-
-    loaded_model: SequenceTagger = SequenceTagger.load(
-        results_base_path / "final-model.pt"
-    )
-
-    sentence = Sentence("I love Berlin")
-    sentence_empty = Sentence("       ")
-
-    loaded_model.predict(sentence)
-    loaded_model.predict([sentence, sentence_empty])
-    loaded_model.predict([sentence_empty])
-
-    # clean up results directory
-    shutil.rmtree(results_base_path)
-
-
-@pytest.mark.integration
-def test_train_charlm_nochache_load_use_tagger(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
-    )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
-
-    embeddings = FlairEmbeddings("news-forward-fast", use_cache=False)
 
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
@@ -270,7 +172,6 @@ def test_train_optimizer(results_base_path, tasks_base_path):
 
     trainer.train(
         results_base_path,
-        EvaluationMetric.MICRO_F1_SCORE,
         learning_rate=0.1,
         mini_batch_size=2,
         max_epochs=2,
@@ -316,7 +217,6 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
 
     trainer.train(
         results_base_path,
-        EvaluationMetric.MICRO_F1_SCORE,
         learning_rate=0.1,
         mini_batch_size=2,
         max_epochs=2,
@@ -401,9 +301,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     model = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(
-        results_base_path, EvaluationMetric.MICRO_F1_SCORE, max_epochs=2, shuffle=False
-    )
+    trainer.train(results_base_path, max_epochs=2, shuffle=False)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -427,6 +325,40 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
 
 @pytest.mark.integration
+def test_train_classifier_with_sampler(results_base_path, tasks_base_path):
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
+    label_dict = corpus.make_label_dictionary()
+
+    word_embedding: WordEmbeddings = WordEmbeddings("turian")
+    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
+        [word_embedding], 32, 1, False, 64, False, False
+    )
+
+    model = TextClassifier(document_embeddings, label_dict, False)
+
+    trainer = ModelTrainer(model, corpus)
+    trainer.train(
+        results_base_path,
+        max_epochs=2,
+        shuffle=False,
+        sampler=ImbalancedClassificationDatasetSampler,
+    )
+
+    sentence = Sentence("Berlin is a really nice city.")
+
+    for s in model.predict(sentence):
+        for l in s.labels:
+            assert l.value is not None
+            assert 0.0 <= l.score <= 1.0
+            assert type(l.score) is float
+
+    loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
+
+    # clean up results directory
+    shutil.rmtree(results_base_path)
+
+
+@pytest.mark.integration
 def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path):
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
     label_dict = corpus.make_label_dictionary()
@@ -439,9 +371,7 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
     model = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(
-        results_base_path, EvaluationMetric.MICRO_F1_SCORE, max_epochs=2, shuffle=False
-    )
+    trainer.train(results_base_path, max_epochs=2, shuffle=False)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -482,7 +412,6 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
     trainer = ModelTrainer(model, corpus)
     trainer.train(
         results_base_path,
-        EvaluationMetric.MICRO_F1_SCORE,
         mini_batch_size=1,
         max_epochs=100,
         shuffle=False,
@@ -530,44 +459,6 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
     label_dict = corpus.make_label_dictionary()
 
     embedding: TokenEmbeddings = FlairEmbeddings("news-forward-fast")
-    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
-        [embedding], 128, 1, False, 64, False, False
-    )
-
-    model = TextClassifier(document_embeddings, label_dict, False)
-
-    trainer = ModelTrainer(model, corpus)
-    trainer.train(
-        results_base_path, EvaluationMetric.MACRO_F1_SCORE, max_epochs=2, shuffle=False
-    )
-
-    sentence = Sentence("Berlin is a really nice city.")
-
-    for s in model.predict(sentence):
-        for l in s.labels:
-            assert l.value is not None
-            assert 0.0 <= l.score <= 1.0
-            assert type(l.score) is float
-
-    loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
-
-    sentence = Sentence("I love Berlin")
-    sentence_empty = Sentence("       ")
-
-    loaded_model.predict(sentence)
-    loaded_model.predict([sentence, sentence_empty])
-    loaded_model.predict([sentence_empty])
-
-    # clean up results directory
-    shutil.rmtree(results_base_path)
-
-
-@pytest.mark.integration
-def test_train_charlm_nocache_load_use_classifier(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
-    label_dict = corpus.make_label_dictionary()
-
-    embedding: TokenEmbeddings = FlairEmbeddings("news-forward-fast", use_cache=False)
     document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
         [embedding], 128, 1, False, 64, False, False
     )
@@ -688,7 +579,7 @@ def test_train_resume_text_classification_training(results_base_path, tasks_base
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
     label_dict = corpus.make_label_dictionary()
 
-    embeddings: TokenEmbeddings = FlairEmbeddings("news-forward-fast", use_cache=False)
+    embeddings: TokenEmbeddings = FlairEmbeddings("news-forward-fast")
     document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
         [embeddings], 128, 1, False
     )
@@ -790,6 +681,6 @@ def test_keep_word_embeddings():
     for token in sentence:
         assert len(token.embedding.numpy()) == 0
 
-    loaded_model.predict(sentence, clear_word_embeddings=False)
+    loaded_model.predict(sentence, embedding_storage_mode="cpu")
     for token in sentence:
         assert len(token.embedding.numpy()) > 0

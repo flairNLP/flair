@@ -82,7 +82,7 @@ The following embeddings are currently supported:
 | 'pl' | Polish | Polish FastText embeddings |
 | 'cz' | Czech | Czech FastText embeddings |
 | 'sk' | Slovak | Slovak FastText embeddings |
-| 'pl' | Slovenian | Slovenian FastText embeddings |
+| 'si' | Slovenian | Slovenian FastText embeddings |
 | 'sr' | Serbian | Serbian FastText embeddings |
 | 'hr' | Croatian | Croatian FastText embeddings |
 | 'bg' | Bulgarian | Bulgarian FastText embeddings |
@@ -127,6 +127,33 @@ import gensim
 word_vectors = gensim.models.KeyedVectors.load_word2vec_format('/path/to/fasttext/embeddings.txt', binary=False)
 word_vectors.save('/path/to/converted')
 ```
+
+However, FastText embeddings have the functionality of returning vectors for out of vocabulary words using the sub-word information. If you want to use this then try `FastTextEmbeddings` class. 
+
+
+## FastText Embeddings
+
+FastText Embeddings can give you vectors for out of vocabulary(oov) words by using the sub-word information. To use this functionality with Flair, use `FastTextEmbeddings` class as shown:
+
+```python
+from flair.embeddings import FastTextEmbeddings 
+  
+# init embedding  
+embedding = FastTextEmbeddings('/path/to/local/custom_fasttext_embeddings.bin')  
+  
+# create a sentence  
+sentence = Sentence('The grass is green .')  
+  
+# embed words in sentence  
+embedding.embed(sentence)  
+```
+
+You can initialize the class by passing the remote downloadable URL as well.
+
+```python
+embedding = FastTextEmbeddings('/path/to/remote/downloadable/custom_fasttext_embeddings.bin', use_local=False)  
+```
+
 
 ## Character Embeddings
 

@@ -122,13 +122,13 @@ class NLPTaskDataFetcher:
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
     def load_corpus(task: Union[NLPTask, str], base_path: [str, Path] = None) -> Corpus:
         """
-        Helper function to fetch a TaggedCorpus for a specific NLPTask. For this to work you need to first download
+        Helper function to fetch a Corpus for a specific NLPTask. For this to work you need to first download
         and put into the appropriate folder structure the corresponding NLP task data. The tutorials on
         https://github.com/zalandoresearch/flair give more info on how to do this. Alternatively, you can use this
         code to create your own data fetchers.
         :param task: specification of the NLPTask you wish to get
         :param base_path: path to data folder containing tasks sub folders
-        :return: a TaggedCorpus consisting of train, dev and test data
+        :return: a Corpus consisting of train, dev and test data
         """
 
         # first, try to fetch dataset online
@@ -257,7 +257,7 @@ class NLPTaskDataFetcher:
         tag_to_biloes=None,
     ) -> Corpus:
         """
-        Helper function to get a TaggedCorpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
+        Helper function to get a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
 
         :param data_folder: base folder with the task data
         :param column_format: a map specifying the column format
@@ -265,7 +265,7 @@ class NLPTaskDataFetcher:
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
         :param tag_to_biloes: whether to convert to BILOES tagging scheme
-        :return: a TaggedCorpus with annotated train, dev and test data
+        :return: a Corpus with annotated train, dev and test data
         """
 
         if type(data_folder) == str:
@@ -353,13 +353,13 @@ class NLPTaskDataFetcher:
         data_folder: Union[str, Path], train_file=None, test_file=None, dev_file=None
     ) -> Corpus:
         """
-        Helper function to get a TaggedCorpus from CoNLL-U column-formatted task data such as the UD corpora
+        Helper function to get a Corpus from CoNLL-U column-formatted task data such as the UD corpora
 
         :param data_folder: base folder with the task data
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
-        :return: a TaggedCorpus with annotated train, dev and test data
+        :return: a Corpus with annotated train, dev and test data
         """
         # automatically identify train / test / dev files
         if train_file is None:
@@ -400,13 +400,13 @@ class NLPTaskDataFetcher:
         max_tokens_per_doc=-1,
     ) -> Corpus:
         """
-        Helper function to get a TaggedCorpus from text classification-formatted task data
+        Helper function to get a Corpus from text classification-formatted task data
 
         :param data_folder: base folder with the task data
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
-        :return: a TaggedCorpus with annotated train, dev and test data
+        :return: a Corpus with annotated train, dev and test data
         """
 
         if type(data_folder) == str:

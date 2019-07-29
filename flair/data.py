@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import List, Dict, Union
 
-import torch
+import torch, flair
 import logging
 
 from collections import Counter
@@ -146,7 +146,22 @@ class Label:
         return "{} ({})".format(self._value, self._score)
 
 
-class Token:
+class DataPoint:
+    @property
+    @abstractmethod
+    def embedding(self):
+        pass
+
+    @abstractmethod
+    def to(self, device: str):
+        pass
+
+    @abstractmethod
+    def clear_embeddings(self, embedding_names: List[str] = None):
+        pass
+
+
+class Token(DataPoint):
     """
     This class represents one word in a tokenized sentence. Each token may have any number of tags. It may also point
     to its head in a dependency tree.
@@ -198,11 +213,23 @@ class Token:
     def get_head(self):
         return self.sentence.get_token(self.head_id)
 
-    def set_embedding(self, name: str, vector: torch.autograd.Variable):
-        self._embeddings[name] = vector.cpu()
+    def set_embedding(self, name: str, vector: torch.tensor):
+        device = flair.device
+        if len(self._embeddings.keys()) > 0:
+            device = next(iter(self._embeddings.values())).device
+        self._embeddings[name] = vector.to(device, non_blocking=True)
 
-    def clear_embeddings(self):
-        self._embeddings: Dict = {}
+    def to(self, device: str):
+        for name, vector in self._embeddings.items():
+            self._embeddings[name] = vector.to(device, non_blocking=True)
+
+    def clear_embeddings(self, embedding_names: List[str] = None):
+        if embedding_names is None:
+            self._embeddings: Dict = {}
+        else:
+            for name in embedding_names:
+                if name in self._embeddings.keys():
+                    del self._embeddings[name]
 
     def get_embedding(self) -> torch.tensor:
         embeddings = [
@@ -212,7 +239,7 @@ class Token:
         if embeddings:
             return torch.cat(embeddings, dim=0)
 
-        return torch.Tensor()
+        return torch.tensor([], device=flair.device)
 
     def get_subembedding(self, names: List[str]) -> torch.tensor:
         embeddings = [self._embeddings[embed] for embed in sorted(names)]
@@ -308,7 +335,7 @@ class Span:
         )
 
 
-class Sentence:
+class Sentence(DataPoint):
     """
     A Sentence is a list of Tokens and is used to represent a sentence or text fragment.
     """
@@ -318,6 +345,7 @@ class Sentence:
         text: str = None,
         use_tokenizer: bool = False,
         labels: Union[List[Label], List[str]] = None,
+        language_code: str = None,
     ):
 
         super(Sentence, self).__init__()
@@ -329,6 +357,8 @@ class Sentence:
             self.add_labels(labels)
 
         self._embeddings: Dict = {}
+
+        self.language_code: str = language_code
 
         # if text is passed, instantiate sentence with tokens (words)
         if text is not None:
@@ -394,6 +424,8 @@ class Sentence:
             log.warn(
                 "ACHTUNG: An empty Sentence was created! Are there empty strings in your dataset?"
             )
+
+        self.tokenized = None
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
@@ -510,7 +542,10 @@ class Sentence:
         return self.get_embedding()
 
     def set_embedding(self, name: str, vector):
-        self._embeddings[name] = vector.cpu()
+        device = flair.device
+        if len(self._embeddings.keys()) > 0:
+            device = next(iter(self._embeddings.values())).device
+        self._embeddings[name] = vector.to(device, non_blocking=True)
 
     def get_embedding(self) -> torch.tensor:
         embeddings = []
@@ -523,16 +558,29 @@ class Sentence:
 
         return torch.Tensor()
 
-    def clear_embeddings(self, also_clear_word_embeddings: bool = True):
-        self._embeddings: Dict = {}
+    def to(self, device: str):
 
-        if also_clear_word_embeddings:
-            for token in self:
-                token.clear_embeddings()
-
-    def cpu_embeddings(self):
+        # move sentence embeddings to device
         for name, vector in self._embeddings.items():
-            self._embeddings[name] = vector.cpu()
+            self._embeddings[name] = vector.to(device, non_blocking=True)
+
+        # move token embeddings to device
+        for token in self:
+            token.to(device)
+
+    def clear_embeddings(self, embedding_names: List[str] = None):
+
+        # clear sentence embeddings
+        if embedding_names is None:
+            self._embeddings: Dict = {}
+        else:
+            for name in embedding_names:
+                if name in self._embeddings.keys():
+                    del self._embeddings[name]
+
+        # clear token embeddings
+        for token in self:
+            token.clear_embeddings(embedding_names)
 
     def to_tagged_string(self, main_tag=None) -> str:
         list = []
@@ -557,7 +605,11 @@ class Sentence:
         return " ".join(list)
 
     def to_tokenized_string(self) -> str:
-        return " ".join([t.text for t in self.tokens])
+
+        if self.tokenized is None:
+            self.tokenized = " ".join([t.text for t in self.tokens])
+
+        return self.tokenized
 
     def to_plain_string(self):
         plain = ""
@@ -674,26 +726,47 @@ class Sentence:
     def __len__(self) -> int:
         return len(self.tokens)
 
+    def get_language_code(self) -> str:
+        if self.language_code is None:
+            import langdetect
+
+            try:
+                self.language_code = langdetect.detect(self.to_plain_string())
+            except:
+                self.language_code = "en"
+
+        return self.language_code
+
+
+class FlairDataset(Dataset):
+    @abstractmethod
+    def is_in_memory(self) -> bool:
+        pass
+
 
 class Corpus:
     def __init__(
-        self, train: Dataset, dev: Dataset, test: Dataset, name: str = "corpus"
+        self,
+        train: FlairDataset,
+        dev: FlairDataset,
+        test: FlairDataset,
+        name: str = "corpus",
     ):
-        self._train: Dataset = train
-        self._dev: Dataset = dev
-        self._test: Dataset = test
+        self._train: FlairDataset = train
+        self._dev: FlairDataset = dev
+        self._test: FlairDataset = test
         self.name: str = name
 
     @property
-    def train(self) -> Dataset:
+    def train(self) -> FlairDataset:
         return self._train
 
     @property
-    def dev(self) -> Dataset:
+    def dev(self) -> FlairDataset:
         return self._dev
 
     @property
-    def test(self) -> Dataset:
+    def test(self) -> FlairDataset:
         return self._test
 
     def downsample(self, percentage: float = 0.1, only_downsample_train=False):

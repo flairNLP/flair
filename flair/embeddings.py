@@ -28,6 +28,7 @@ from pytorch_pretrained_bert.modeling_openai import (
 from pytorch_pretrained_bert.modeling_transfo_xl import (
     PRETRAINED_MODEL_ARCHIVE_MAP as TRANSFORMER_XL_PRETRAINED_MODEL_ARCHIVE_MAP,
 )
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 import flair
 from flair.data import Corpus
@@ -114,7 +115,7 @@ class DocumentEmbeddings(Embeddings):
 class StackedEmbeddings(TokenEmbeddings):
     """A stack of embeddings, used if you need to combine several different embedding types."""
 
-    def __init__(self, embeddings: List[TokenEmbeddings], detach: bool = True):
+    def __init__(self, embeddings: List[TokenEmbeddings]):
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
@@ -124,7 +125,6 @@ class StackedEmbeddings(TokenEmbeddings):
         for i, embedding in enumerate(embeddings):
             self.add_module("list_embedding_{}".format(i), embedding)
 
-        self.detach: bool = detach
         self.name: str = "Stack"
         self.static_embeddings: bool = True
 
@@ -342,6 +342,80 @@ class WordEmbeddings(TokenEmbeddings):
         return self.name
 
     def extra_repr(self):
+        # fix serialized models
+        if "embeddings" not in self.__dict__:
+            self.embeddings = self.name
+
+        return f"'{self.embeddings}'"
+
+
+class FastTextEmbeddings(TokenEmbeddings):
+    """FastText Embeddings with oov functionality"""
+
+    def __init__(self, embeddings: str, use_local: bool = True, field: str = None):
+        """
+        Initializes fasttext word embeddings. Constructor downloads required embedding file and stores in cache
+        if use_local is False.
+
+        :param embeddings: path to your embeddings '.bin' file
+        :param use_local: set this to False if you are using embeddings from a remote source
+        """
+
+        cache_dir = Path("embeddings")
+
+        if use_local:
+            if not Path(embeddings).exists():
+                raise ValueError(
+                    f'The given embeddings "{embeddings}" is not available or is not a valid path.'
+                )
+        else:
+            embeddings = cached_path(f"{embeddings}", cache_dir=cache_dir)
+
+        self.embeddings = embeddings
+
+        self.name: str = str(embeddings)
+
+        self.static_embeddings = True
+
+        self.precomputed_word_embeddings = gensim.models.FastText.load_fasttext_format(
+            str(embeddings)
+        )
+
+        self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
+
+        self.field = field
+        super().__init__()
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        for i, sentence in enumerate(sentences):
+
+            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+
+                if "field" not in self.__dict__ or self.field is None:
+                    word = token.text
+                else:
+                    word = token.get_tag(self.field).value
+
+                try:
+                    word_embedding = self.precomputed_word_embeddings[word]
+                except:
+                    word_embedding = np.zeros(self.embedding_length, dtype="float")
+
+                word_embedding = torch.FloatTensor(word_embedding)
+
+                token.set_embedding(self.name, word_embedding)
+
+        return sentences
+
+    def __str__(self):
+        return self.name
+
+    def extra_repr(self):
         return f"'{self.embeddings}'"
 
 
@@ -425,10 +499,6 @@ class OneHotEmbeddings(TokenEmbeddings):
     def __str__(self):
         return self.name
 
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
     def extra_repr(self):
         return "min_freq={}".format(self.min_freq)
 
@@ -462,6 +532,104 @@ class BPEmbSerializable(BPEmb):
 
         # once the modes if there, load it with sentence piece
         state["spm"] = sentencepiece_load(self.model_file)
+
+
+class MuseCrosslingualEmbeddings(TokenEmbeddings):
+    def __init__(self,):
+        self.name: str = f"muse-crosslingual"
+        self.static_embeddings = True
+        self.__embedding_length: int = 300
+        self.language_embeddings = {}
+        super().__init__()
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        for i, sentence in enumerate(sentences):
+
+            language_code = sentence.get_language_code()
+            print(language_code)
+            supported = [
+                "en",
+                "de",
+                "bg",
+                "ca",
+                "hr",
+                "cs",
+                "da",
+                "nl",
+                "et",
+                "fi",
+                "fr",
+                "el",
+                "he",
+                "hu",
+                "id",
+                "it",
+                "mk",
+                "no",
+                "pl",
+                "pt",
+                "ro",
+                "ru",
+                "sk",
+            ]
+            if language_code not in supported:
+                language_code = "en"
+
+            if language_code not in self.language_embeddings:
+                log.info(f"Loading up MUSE embeddings for '{language_code}'!")
+                # download if necessary
+                webpath = "https://alan-nlp.s3.eu-central-1.amazonaws.com/resources/embeddings-muse"
+                cache_dir = Path("embeddings") / "MUSE"
+                cached_path(
+                    f"{webpath}/muse.{language_code}.vec.gensim.vectors.npy",
+                    cache_dir=cache_dir,
+                )
+                embeddings_file = cached_path(
+                    f"{webpath}/muse.{language_code}.vec.gensim", cache_dir=cache_dir
+                )
+
+                # load the model
+                self.language_embeddings[
+                    language_code
+                ] = gensim.models.KeyedVectors.load(str(embeddings_file))
+
+            current_embedding_model = self.language_embeddings[language_code]
+
+            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+
+                if "field" not in self.__dict__ or self.field is None:
+                    word = token.text
+                else:
+                    word = token.get_tag(self.field).value
+
+                if word in current_embedding_model:
+                    word_embedding = current_embedding_model[word]
+                elif word.lower() in current_embedding_model:
+                    word_embedding = current_embedding_model[word.lower()]
+                elif re.sub(r"\d", "#", word.lower()) in current_embedding_model:
+                    word_embedding = current_embedding_model[
+                        re.sub(r"\d", "#", word.lower())
+                    ]
+                elif re.sub(r"\d", "0", word.lower()) in current_embedding_model:
+                    word_embedding = current_embedding_model[
+                        re.sub(r"\d", "0", word.lower())
+                    ]
+                else:
+                    word_embedding = np.zeros(self.embedding_length, dtype="float")
+
+                word_embedding = torch.FloatTensor(word_embedding)
+
+                token.set_embedding(self.name, word_embedding)
+
+        return sentences
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def __str__(self):
+        return self.name
 
 
 class BytePairEmbeddings(TokenEmbeddings):
@@ -567,7 +735,13 @@ class ELMoEmbeddings(TokenEmbeddings):
         # put on Cuda if available
         from flair import device
 
-        cuda_device = 0 if str(device) != "cpu" else -1
+        if re.fullmatch(r"cuda:[0-9]+", str(device)):
+            cuda_device = int(str(device).split(":")[-1])
+        elif str(device) == "cpu":
+            cuda_device = -1
+        else:
+            cuda_device = 0
+
         self.ee = allennlp.commands.elmo.ElmoEmbedder(
             options_file=options_file, weight_file=weight_file, cuda_device=cuda_device
         )
@@ -826,7 +1000,12 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
 class CharacterEmbeddings(TokenEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
 
-    def __init__(self, path_to_char_dict: str = None):
+    def __init__(
+        self,
+        path_to_char_dict: str = None,
+        char_embedding_dim: int = 25,
+        hidden_size_char: int = 25,
+    ):
         """Uses the default character dictionary if none provided."""
 
         super().__init__()
@@ -841,8 +1020,8 @@ class CharacterEmbeddings(TokenEmbeddings):
                 path_to_char_dict
             )
 
-        self.char_embedding_dim: int = 25
-        self.hidden_size_char: int = 25
+        self.char_embedding_dim: int = char_embedding_dim
+        self.hidden_size_char: int = hidden_size_char
         self.char_embedding = torch.nn.Embedding(
             len(self.char_dictionary.item2idx), self.char_embedding_dim
         )
@@ -931,22 +1110,14 @@ class CharacterEmbeddings(TokenEmbeddings):
 class FlairEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
-    def __init__(
-        self,
-        model: str,
-        use_cache: bool = False,
-        cache_directory: Path = None,
-        chars_per_chunk: int = 512,
-    ):
+    def __init__(self, model, fine_tune: bool = False, chars_per_chunk: int = 512):
         """
         initializes contextual string embeddings using a character-level language model.
         :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
                 'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward'
                 depending on which character language model is desired.
-        :param use_cache: if set to False, will not write embeddings to file for later retrieval. this saves disk space but will
-                not allow re-use of once computed embeddings that do not fit into memory
-        :param cache_directory: if cache_directory is not set, the cache will be written to ~/.flair/embeddings. otherwise the cache
-                is written to the provided directory.
+        :param fine_tune: if set to True, the gradient will propagate into the language model. This dramatically slows down
+                training and often leads to overfitting, so use with caution.
         :param  chars_per_chunk: max number of chars per rnn pass to control speed/memory tradeoff. Higher means faster but requires
                 more memory. Lower means slower but less memory.
         """
@@ -963,6 +1134,10 @@ class FlairEmbeddings(TokenEmbeddings):
             "multi-forward-fast": f"{aws_path}/embeddings-v0.4/lm-multi-forward-fast-v0.1.pt",
             "multi-backward-fast": f"{aws_path}/embeddings-v0.4/lm-multi-backward-fast-v0.1.pt",
             # English models
+            "en-forward": f"{aws_path}/embeddings-v0.4.1/big-news-forward--h2048-l1-d0.05-lr30-0.25-20/news-forward-0.4.1.pt",
+            "en-backward": f"{aws_path}/embeddings-v0.4.1/big-news-backward--h2048-l1-d0.05-lr30-0.25-20/news-backward-0.4.1.pt",
+            "en-forward-fast": f"{aws_path}/embeddings/lm-news-english-forward-1024-v0.2rc.pt",
+            "en-backward-fast": f"{aws_path}/embeddings/lm-news-english-backward-1024-v0.2rc.pt",
             "news-forward": f"{aws_path}/embeddings-v0.4.1/big-news-forward--h2048-l1-d0.05-lr30-0.25-20/news-forward-0.4.1.pt",
             "news-backward": f"{aws_path}/embeddings-v0.4.1/big-news-backward--h2048-l1-d0.05-lr30-0.25-20/news-backward-0.4.1.pt",
             "news-forward-fast": f"{aws_path}/embeddings/lm-news-english-forward-1024-v0.2rc.pt",
@@ -1060,43 +1235,39 @@ class FlairEmbeddings(TokenEmbeddings):
             "sv-v0-backward": f"{aws_path}/embeddings-v0.4/lm-sv-large-backward-v0.1.pt",
         }
 
-        # load model if in pretrained model map
-        if model.lower() in self.PRETRAINED_MODEL_ARCHIVE_MAP:
-            base_path = self.PRETRAINED_MODEL_ARCHIVE_MAP[model.lower()]
-            model = cached_path(base_path, cache_dir=cache_dir)
+        if type(model) == str:
 
-        elif replace_with_language_code(model) in self.PRETRAINED_MODEL_ARCHIVE_MAP:
-            base_path = self.PRETRAINED_MODEL_ARCHIVE_MAP[
-                replace_with_language_code(model)
-            ]
-            model = cached_path(base_path, cache_dir=cache_dir)
+            # load model if in pretrained model map
+            if model.lower() in self.PRETRAINED_MODEL_ARCHIVE_MAP:
+                base_path = self.PRETRAINED_MODEL_ARCHIVE_MAP[model.lower()]
+                model = cached_path(base_path, cache_dir=cache_dir)
 
-        elif not Path(model).exists():
-            raise ValueError(
-                f'The given model "{model}" is not available or is not a valid path.'
-            )
+            elif replace_with_language_code(model) in self.PRETRAINED_MODEL_ARCHIVE_MAP:
+                base_path = self.PRETRAINED_MODEL_ARCHIVE_MAP[
+                    replace_with_language_code(model)
+                ]
+                model = cached_path(base_path, cache_dir=cache_dir)
 
-        self.name = str(model)
-        self.static_embeddings = True
+            elif not Path(model).exists():
+                raise ValueError(
+                    f'The given model "{model}" is not available or is not a valid path.'
+                )
 
         from flair.models import LanguageModel
 
-        self.lm = LanguageModel.load_language_model(model)
+        if type(model) == LanguageModel:
+            self.lm: LanguageModel = model
+            self.name = f"Task-LSTM-{self.lm.hidden_size}-{self.lm.nlayers}-{self.lm.is_forward_lm}"
+        else:
+            self.lm: LanguageModel = LanguageModel.load_language_model(model)
+            self.name = str(model)
+
+        # embeddings are static if we don't do finetuning
+        self.fine_tune = fine_tune
+        self.static_embeddings = not fine_tune
 
         self.is_forward_lm: bool = self.lm.is_forward_lm
         self.chars_per_chunk: int = chars_per_chunk
-
-        # initialize cache if use_cache set
-        self.cache = None
-        if use_cache:
-            cache_path = (
-                Path(f"{self.name}-tmp-cache.sqllite")
-                if not cache_directory
-                else cache_directory / f"{self.name}-tmp-cache.sqllite"
-            )
-            from sqlitedict import SqliteDict
-
-            self.cache = SqliteDict(str(cache_path), autocommit=True)
 
         # embed a dummy sentence to determine embedding_length
         dummy_sentence: Sentence = Sentence()
@@ -1110,16 +1281,17 @@ class FlairEmbeddings(TokenEmbeddings):
         self.eval()
 
     def train(self, mode=True):
-        pass
 
-    def __getstate__(self):
-        # Copy the object's state from self.__dict__ which contains
-        # all our instance attributes. Always use the dict.copy()
-        # method to avoid modifying the original state.
-        state = self.__dict__.copy()
-        # Remove the unpicklable entries.
-        state["cache"] = None
-        return state
+        # make compatible with serialized models (TODO: remove)
+        if "fine_tune" not in self.__dict__:
+            self.fine_tune = False
+        if "chars_per_chunk" not in self.__dict__:
+            self.chars_per_chunk = 512
+
+        if not self.fine_tune:
+            pass
+        else:
+            super(FlairEmbeddings, self).train(mode)
 
     @property
     def embedding_length(self) -> int:
@@ -1127,30 +1299,10 @@ class FlairEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
-        # make compatible with serialized models
-        if "chars_per_chunk" not in self.__dict__:
-            self.chars_per_chunk = 512
+        # gradients are enable if fine-tuning is enabled
+        gradient_context = torch.enable_grad() if self.fine_tune else torch.no_grad()
 
-        # if cache is used, try setting embeddings from cache first
-        if "cache" in self.__dict__ and self.cache is not None:
-
-            # try populating embeddings from cache
-            all_embeddings_retrieved_from_cache: bool = True
-            for sentence in sentences:
-                key = sentence.to_tokenized_string()
-                embeddings = self.cache.get(key)
-
-                if not embeddings:
-                    all_embeddings_retrieved_from_cache = False
-                    break
-                else:
-                    for token, embedding in zip(sentence, embeddings):
-                        token.set_embedding(self.name, torch.FloatTensor(embedding))
-
-            if all_embeddings_retrieved_from_cache:
-                return sentences
-
-        with torch.no_grad():
+        with gradient_context:
 
             # if this is not possible, use LM to generate embedding. First, get text sentences
             text_sentences = [sentence.to_tokenized_string() for sentence in sentences]
@@ -1207,15 +1359,13 @@ class FlairEmbeddings(TokenEmbeddings):
 
                     offset_backward -= len(token.text)
 
-                    token.set_embedding(self.name, embedding.clone().detach())
+                    if not self.fine_tune:
+                        embedding = embedding.detach()
 
+                    token.set_embedding(self.name, embedding.clone())
+
+            all_hidden_states_in_lm = all_hidden_states_in_lm.detach()
             all_hidden_states_in_lm = None
-
-        if "cache" in self.__dict__ and self.cache is not None:
-            for sentence in sentences:
-                self.cache[sentence.to_tokenized_string()] = [
-                    token._embeddings[self.name].tolist() for token in sentence
-                ]
 
         return sentences
 
@@ -2017,6 +2167,8 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
         self.to(flair.device)
 
+        self.eval()
+
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
@@ -2030,45 +2182,43 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
         self.rnn.zero_grad()
 
-        sentences.sort(key=lambda x: len(x), reverse=True)
+        # the permutation that sorts the sentences by length, descending
+        sort_perm = np.argsort([len(s) for s in sentences])[::-1]
+
+        # the inverse permutation that restores the input order; it's an index tensor therefore LongTensor
+        sort_invperm = np.argsort(sort_perm)
+
+        # sort sentences by number of tokens
+        sentences = [sentences[i] for i in sort_perm]
 
         self.embeddings.embed(sentences)
 
-        # first, sort sentences by number of tokens
         longest_token_sequence_in_batch: int = len(sentences[0])
 
-        all_sentence_tensors = []
+        # all_sentence_tensors = []
         lengths: List[int] = []
 
-        # go through each sentence in batch
-        for i, sentence in enumerate(sentences):
+        # initialize zero-padded word embeddings tensor
+        sentence_tensor = torch.zeros(
+            [
+                len(sentences),
+                longest_token_sequence_in_batch,
+                self.embeddings.embedding_length,
+            ],
+            dtype=torch.float,
+            device=flair.device,
+        )
 
+        # fill values with word embeddings
+        for s_id, sentence in enumerate(sentences):
             lengths.append(len(sentence.tokens))
 
-            word_embeddings = []
+            sentence_tensor[s_id][: len(sentence)] = torch.cat(
+                [token.get_embedding().unsqueeze(0) for token in sentence], 0
+            )
 
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                word_embeddings.append(token.get_embedding().unsqueeze(0))
-
-            # PADDING: pad shorter sentences out
-            for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
-                word_embeddings.append(
-                    torch.zeros(
-                        self.length_of_all_token_embeddings, dtype=torch.float
-                    ).unsqueeze(0)
-                )
-
-            word_embeddings_tensor = torch.cat(word_embeddings, 0).to(flair.device)
-
-            sentence_states = word_embeddings_tensor
-
-            # ADD TO SENTENCE LIST: add the representation
-            all_sentence_tensors.append(sentence_states.unsqueeze(1))
-
-        # --------------------------------------------------------------------
-        # GET REPRESENTATION FOR ENTIRE BATCH
-        # --------------------------------------------------------------------
-        sentence_tensor = torch.cat(all_sentence_tensors, 1)
+        # TODO: this can only be removed once the implementations of word_dropout and locked_dropout have a batch_first mode
+        sentence_tensor = sentence_tensor.transpose_(0, 1)
 
         # --------------------------------------------------------------------
         # FF PART
@@ -2081,14 +2231,13 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             sentence_tensor = self.word_reprojection_map(sentence_tensor)
 
         sentence_tensor = self.dropout(sentence_tensor)
-
-        packed = torch.nn.utils.rnn.pack_padded_sequence(sentence_tensor, lengths)
+        packed = pack_padded_sequence(sentence_tensor, lengths)
 
         self.rnn.flatten_parameters()
 
         rnn_out, hidden = self.rnn(packed)
 
-        outputs, output_lengths = torch.nn.utils.rnn.pad_packed_sequence(rnn_out)
+        outputs, output_lengths = pad_packed_sequence(rnn_out)
 
         outputs = self.dropout(outputs)
 
@@ -2105,6 +2254,9 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
             sentence = sentences[sentence_no]
             sentence.set_embedding(self.name, embedding)
+
+        # restore original order of sentences in the batch
+        sentences = [sentences[i] for i in sort_invperm]
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
@@ -2279,14 +2431,17 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
 
 class DocumentLMEmbeddings(DocumentEmbeddings):
-    def __init__(self, flair_embeddings: List[FlairEmbeddings], detach: bool = True):
+    def __init__(self, flair_embeddings: List[FlairEmbeddings]):
         super().__init__()
 
         self.embeddings = flair_embeddings
         self.name = "document_lm"
 
-        self.static_embeddings = detach
-        self.detach = detach
+        # IMPORTANT: add embeddings as torch modules
+        for i, embedding in enumerate(flair_embeddings):
+            self.add_module("lm_embedding_{}".format(i), embedding)
+            if not embedding.static_embeddings:
+                self.static_embeddings = False
 
         self._embedding_length: int = sum(
             embedding.embedding_length for embedding in flair_embeddings
@@ -2305,6 +2460,7 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
 
             # iterate over sentences
             for sentence in sentences:
+                sentence: Sentence = sentence
 
                 # if its a forward LM, take last state
                 if embedding.is_forward_lm:

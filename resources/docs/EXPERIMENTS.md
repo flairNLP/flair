@@ -30,23 +30,23 @@ This allows the `NLPTaskDataFetcher` class to read the data into our data struct
 the dataset, as follows: 
 
 ```python
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03, base_path='resources/tasks')
+corpus: Corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03, base_path='resources/tasks')
 ```
 
-This gives you a `TaggedCorpus` object that contains the data. Now, select `ner` as the tag you wish to predict and init the embeddings you wish to use.
+This gives you a `Corpus` object that contains the data. Now, select `ner` as the tag you wish to predict and init the embeddings you wish to use.
 
 #### Best Known Configuration
 
 The full code to get a state-of-the-art model for English NER is as follows: 
 
 ```python
-from flair.data import TaggedCorpus
+from flair.data import Corpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, PooledFlairEmbeddings
 from typing import List
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03, base_path='resources/tasks')
+corpus: Corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03, base_path='resources/tasks')
 
 # 2. what tag do we want to predict?
 tag_type = 'ner'
@@ -108,13 +108,13 @@ Once you have the data, reproduce our experiments exactly like for CoNLL-03, jus
 FastText word embeddings and German contextual string embeddings. The full code then is as follows:
 
 ```python
-from flair.data import TaggedCorpus
+from flair.data import Corpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, PooledFlairEmbeddings
 from typing import List
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03_GERMAN, base_path='resources/tasks')
+corpus: Corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03_GERMAN, base_path='resources/tasks')
 
 # 2. what tag do we want to predict?
 tag_type = 'ner'
@@ -163,13 +163,13 @@ Once you have the data, reproduce our experiments exactly like for CoNLL-03, jus
 FastText word embeddings and German contextual string embeddings. The full code then is as follows:
 
 ```python
-from flair.data import TaggedCorpus
+from flair.data import Corpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, PooledFlairEmbeddings
 from typing import List
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03_DUTCH, base_path='resources/tasks')
+corpus: Corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03_DUTCH, base_path='resources/tasks')
 
 # 2. what tag do we want to predict?
 tag_type = 'ner'
@@ -218,13 +218,13 @@ Once you have the data, reproduce our experiments exactly like for CoNLL-03, jus
 FastText word embeddings and German contextual string embeddings. The full code then is as follows:
 
 ```python
-from flair.data import TaggedCorpus
+from flair.data import Corpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, FlairEmbeddings
 from typing import List
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03_DUTCH, base_path='resources/tasks')
+corpus: Corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_03_DUTCH, base_path='resources/tasks')
 
 # 2. what tag do we want to predict?
 tag_type = 'ner'
@@ -286,13 +286,13 @@ Once you have the data, reproduce our experiments exactly like for CoNLL-03, jus
 FastText embeddings (they work better on this dataset). The full code then is as follows: 
 
 ```python
-from flair.data import TaggedCorpus
+from flair.data import Corpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, FlairEmbeddings
 from typing import List
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.ONTONER, base_path='resources/tasks')
+corpus: Corpus = NLPTaskDataFetcher.load_corpus(NLPTask.ONTONER, base_path='resources/tasks')
 
 # 2. what tag do we want to predict?
 tag_type = 'ner'
@@ -354,13 +354,13 @@ so the algorithm knows that POS tags and not NER are to be predicted from this d
 #### Best Known Configuration
 
 ```python
-from flair.data import TaggedCorpus
+from flair.data import Corpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, FlairEmbeddings
 from typing import List
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.PENN, base_path='resources/tasks')
+corpus: Corpus = NLPTaskDataFetcher.load_corpus(NLPTask.PENN, base_path='resources/tasks')
 
 # 2. what tag do we want to predict?
 tag_type = 'pos'
@@ -410,13 +410,13 @@ Run the code with extvec embeddings and our proposed contextual string embedding
 so the algorithm knows that chunking tags and not NER are to be predicted from this data. 
 
 ```python
-from flair.data import TaggedCorpus
+from flair.data import Corpus
 from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, FlairEmbeddings
 from typing import List
 
 # 1. get the corpus
-corpus: TaggedCorpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_2000)
+corpus: Corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_2000)
 
 # 2. what tag do we want to predict?
 tag_type = 'np'

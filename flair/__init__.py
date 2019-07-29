@@ -15,6 +15,7 @@ from . import data
 from . import models
 from . import visual
 from . import trainers
+from . import nn
 
 import logging.config
 

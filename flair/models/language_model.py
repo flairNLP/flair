@@ -124,11 +124,11 @@ class LanguageModel(nn.Module):
                 ]
                 sequences_as_char_indices.append(char_indices)
 
-            batch = torch.LongTensor(sequences_as_char_indices).transpose(0, 1)
-            batch = batch.to(flair.device)
+            batch = torch.tensor(
+                sequences_as_char_indices, dtype=torch.long, device=flair.device
+            ).transpose(0, 1)
 
             prediction, rnn_output, hidden = self.forward(batch, hidden)
-            rnn_output = rnn_output.detach()
 
             output_parts.append(rnn_output)
 
