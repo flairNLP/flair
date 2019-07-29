@@ -177,6 +177,11 @@ class ModelTrainer:
         if self.optimizer_state is not None:
             optimizer.load_state_dict(self.optimizer_state)
 
+        if apex:
+            self.model, optimizers = amp.initialize(self.model, optimizer,
+                                                    opt_level=apex_opt_level
+                                                    )
+                    
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev else "max"
 
@@ -241,11 +246,6 @@ class ModelTrainer:
                     num_workers=num_workers,
                     sampler=sampler,
                 )
-
-                if apex:
-                    self.model, optimizers = amp.initialize(self.model, optimizer,
-                                                            opt_level=apex_opt_level
-                                                            )
 
                 self.model.train()
 
