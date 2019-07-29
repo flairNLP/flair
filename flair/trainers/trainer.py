@@ -178,7 +178,7 @@ class ModelTrainer:
             optimizer.load_state_dict(self.optimizer_state)
 
         if apex:
-            self.model, optimizers = amp.initialize(self.model, optimizer,
+            self.model, optimizer = amp.initialize(self.model, optimizer,
                                                     opt_level=apex_opt_level
                                                     )
                     
