@@ -13,7 +13,7 @@ import torch.utils.data.dataloader
 from torch.utils.data.dataset import Subset, ConcatDataset
 
 import flair
-from flair.data import Sentence, Corpus, Token, FlairDataset, DataTuples, DataPair, Image
+from flair.data import Sentence, Corpus, Token, FlairDataset, DataPair, Image
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -256,7 +256,6 @@ class FeideggerCorpus(Corpus):
     def __init__(
         self,
         feidegger_csv,
-        feidegger_fDNA_embeddings_filename,
         **kwargs
     ):
         """
@@ -269,7 +268,7 @@ class FeideggerCorpus(Corpus):
         :return: a Corpus with annotated train, dev and test data
         """
 
-        feidegger_dataset: Dataset = FeideggerDataset(feidegger_csv, feidegger_fDNA_embeddings_filename, **kwargs)
+        feidegger_dataset: Dataset = FeideggerDataset(feidegger_csv, **kwargs)
 
         train_indices = list(np.where(np.in1d(feidegger_dataset.split, list(range(8))))[0])
         train = torch.utils.data.dataset.Subset(feidegger_dataset, train_indices)
@@ -904,14 +903,8 @@ class ClassificationDataset(FlairDataset):
 
 class FeideggerDataset(FlairDataset):
 
-    def __init__(self, feidegger_csv, feidegger_fDNA_embeddings_filename, **kwargs):
+    def __init__(self, feidegger_csv, **kwargs):
         super(FeideggerDataset, self).__init__()
-
-        self.fDNAs = pickle.load(open(feidegger_fDNA_embeddings_filename, 'rb'))
-        normalize_image_embeddings = False if 'normalize_image_embeddings' not in kwargs else kwargs['normalize_image_embeddings']
-        if normalize_image_embeddings:
-            self.fDNAs /= torch.norm(self.fDNAs, dim=1, keepdim=True)
-
         self.feidegger_imageURLs = []
         self.split = []
         self.descriptions = []
@@ -926,17 +919,12 @@ class FeideggerDataset(FlairDataset):
     def __len__(self):
         return len(self.feidegger_imageURLs)
 
-    def __getitem__(self, index: int = 0) -> DataTuples:
+    def __getitem__(self, index: int = 0) -> DataPair:
         imageURL = self.feidegger_imageURLs[index]
-        # get the image embedding
-        image_embedding = self.fDNAs[index] # .double()
-        # sample one sentence
+        image = Image(imageURL=imageURL)
         descriptions = self.descriptions[index]
 
-        image = Image(image_embedding, imageURL)
-        image.set_embedding('fDNA', image_embedding)
-
-        return DataPair([descriptions, [image]])  # DataTuples([descriptions, [image]])
+        return DataPair([descriptions, [image]])
 
 
 class CONLL_03(ColumnCorpus):

@@ -179,35 +179,6 @@ class DataPair(DataPoint):
                 data_point.clear_embeddings(embedding_names)
 
 
-class DataTuples(DataPoint):
-
-    def __init__(self, data_points_list: List[List[DataPoint]]):
-        self._data_points_list = data_points_list
-
-    def data_points(self, index):
-        return self._data_points_list[index]
-
-    def sample_tuple(self):
-        t = ()
-        for data_points in self._data_points_list:
-            point_id = np.random.choice(len(data_points))
-            t += (data_points[point_id],)
-        return t
-
-    def group_by(self, grouped_modality_id=0, group_by_modality_id=1):
-        return [self._data_points_list[grouped_modality_id] for _ in range(len(self._data_points_list[group_by_modality_id]))]
-
-    def to(self, device: str):
-        for data_points in self._data_points_list:
-            for data_point in data_points:
-                data_point.to(device)
-
-    def clear_embeddings(self, embedding_names: List[str] = None):
-        for data_points in self._data_points_list:
-            for data_point in data_points:
-                data_point.clear_embeddings((embedding_names))
-
-
 class Token(DataPoint):
     """
     This class represents one word in a tokenized sentence. Each token may have any number of tags. It may also point
@@ -787,7 +758,7 @@ class Sentence(DataPoint):
 
 class Image(DataPoint):
 
-    def __init__(self, data, imageURL=None):
+    def __init__(self, data=None, imageURL=None):
         self.data = data
         self._embeddings: Dict = {}
         self.imageURL = imageURL

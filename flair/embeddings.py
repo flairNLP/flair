@@ -59,7 +59,7 @@ class Embeddings(torch.nn.Module):
         are non-static."""
 
         # if only one sentence is passed, convert to list of sentence
-        if type(sentences) is Sentence:
+        if (type(sentences) is Sentence) or (type(sentences) is Image):
             sentences = [sentences]
 
         everything_embedded: bool = True
@@ -2544,18 +2544,23 @@ class NILCEmbeddings(WordEmbeddings):
         return self.name
 
 
-class fDNAImageEmbeddings(ImageEmbeddings):
-    def __init__(self):
-        self.name: str = "fDNA"
-        self.__embedding_length: int = 128
+class PrecomputedImageEmbeddings(ImageEmbeddings):
+    def __init__(self, url2tensor_dict, name):
+        self.url2tensor_dict = url2tensor_dict
+        self.name = name
+        self.__embedding_length = len(list(self.url2tensor_dict.values())[0])
         super().__init__()
+
+    def _add_embeddings_internal(self, images: List[Image]) -> List[Image]:
+        for image in images:
+            if image.imageURL in self.url2tensor_dict:
+                image.set_embedding(self.name, self.url2tensor_dict[image.imageURL])
+            else:
+                image.set_embedding(self.name, torch.zeros(self.__embedding_length, device=flair.device))
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
-
-    def embed(self, images: Union[Image, List[Image]]) -> List[Image]:
-        return images
 
     def __str__(self):
         return self.name

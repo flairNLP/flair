@@ -325,7 +325,8 @@ class SimilarityLearner(flair.nn.Model):
         self, data_points: Union[List[DataPoint], DataPoint], modality_id
     ) -> List[DataPoint]:
         embedded_inputs, _ = self._embed_inputs(data_points, modality_ids=[modality_id])
-        aligned_embeddings = self.similairty_net.forward(embedded_inputs)
+        print(embedded_inputs)
+        aligned_embeddings = self.similarity_net.forward(embedded_inputs)
 
         return aligned_embeddings[modality_id]
 
@@ -445,6 +446,10 @@ class SimilarityLearner(flair.nn.Model):
         return model_state
 
     def _init_model_with_state_dict(state):
+        # The conversion from old model's constructor interface
+        if "input_embeddings" in state:
+            state["input_modality_0_embedding"] = state["input_embeddings"][0]
+            state["input_modality_1_embedding"] = state["input_embeddings"][1]
         model = SimilarityLearner(
             input_modality_0_embedding=state["input_modality_0_embedding"],
             input_modality_1_embedding=state["input_modality_1_embedding"],
