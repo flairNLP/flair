@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 import flair
-from flair.data import DataPoint
+from flair.data import DataPoint, DataPair
 from flair.embeddings import Embeddings
 from flair.datasets import DataLoader
 from flair.training_utils import Result
@@ -324,8 +324,20 @@ class SimilarityLearner(flair.nn.Model):
     def embed(
         self, data_points: Union[List[DataPoint], DataPoint], modality_id
     ) -> List[DataPoint]:
-        embedded_inputs, _ = self._embed_inputs(data_points, modality_ids=[modality_id])
-        print(embedded_inputs)
+        data_points_in = []
+        if isinstance(data_points, list):
+            if not isinstance(data_points[0], DataPair):
+                for data in data_points:
+                    d = data if isinstance(data, list) else [data]
+                    data_points_in.append(DataPair([d, None]) if modality_id==0 else DataPair([None, d]))
+        else:
+            if not isinstance(data_points, DataPair):
+                d = data_points if isinstance(data_points, list) else [data_points]
+                data_points_in = [DataPair([d, None] if modality_id==0 else [None, d])]
+            else:
+                data_points_in = [data_points]
+
+        embedded_inputs, _ = self._embed_inputs(data_points_in, modality_ids=[modality_id])
         aligned_embeddings = self.similarity_net.forward(embedded_inputs)
 
         return aligned_embeddings[modality_id]
@@ -336,7 +348,7 @@ class SimilarityLearner(flair.nn.Model):
         :param modality_1_embeddings: embeddings of second modality, a tensor of shape [n1, d1]
         :return: a similarity matrix of shape [n0, n1]
         """
-        return self.similarity_measure.forward(modality_0_embeddings, modality_1_embeddings)
+        return self.similarity_measure.forward([modality_0_embeddings, modality_1_embeddings])
 
     def forward_loss(
         self, data_points: Union[List[DataPoint], DataPoint]
