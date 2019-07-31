@@ -1,6 +1,8 @@
 import logging
 from pathlib import Path
 from typing import List, Union
+import time
+import sys
 
 import datetime
 
@@ -8,6 +10,11 @@ import torch
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
+
+try:
+    from apex import amp
+except ImportError:
+    amp = None
 
 import flair
 import flair.nn
@@ -68,6 +75,8 @@ class ModelTrainer:
         param_selection_mode: bool = False,
         num_workers: int = 6,
         sampler=None,
+        apex: bool = False,
+        apex_opt_level: str = 'O1',
         **kwargs,
     ) -> dict:
         """
@@ -111,6 +120,13 @@ class ModelTrainer:
                 log_line(log)
                 self.use_tensorboard = False
                 pass
+
+        if apex:
+            if sys.version_info < (3, 0):
+                raise RuntimeError("Apex currently only supports Python 3. Aborting.")
+            if amp is None:
+                raise RuntimeError("Failed to import apex. Please install apex from https://www.github.com/nvidia/apex "
+                                   "to enable mixed-precision training.")
 
         if eval_mini_batch_size is None:
             eval_mini_batch_size = mini_batch_size
@@ -161,6 +177,11 @@ class ModelTrainer:
         if self.optimizer_state is not None:
             optimizer.load_state_dict(self.optimizer_state)
 
+        if apex:
+            self.model, optimizer = amp.initialize(self.model, optimizer,
+                                                    opt_level=apex_opt_level
+                                                    )
+                    
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev else "max"
 
@@ -236,12 +257,19 @@ class ModelTrainer:
                 modulo = max(1, int(total_number_of_batches / 10))
 
                 # process mini-batches
+                batch_time = 0
                 for batch_no, batch in enumerate(batch_loader):
-
+                    start_time = time.time()
                     loss = self.model.forward_loss(batch)
 
                     optimizer.zero_grad()
-                    loss.backward()
+                    # Backward
+                    if apex:
+                        with amp.scale_loss(loss, optimizer) as scaled_loss:
+                            scaled_loss.backward()
+                    else:
+                        loss.backward()
+
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
                     optimizer.step()
 
@@ -250,12 +278,14 @@ class ModelTrainer:
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(batch, embeddings_storage_mode)
-
+    
+                    batch_time += time.time() - start_time
                     if batch_no % modulo == 0:
                         log.info(
                             f"epoch {epoch + 1} - iter {batch_no}/{total_number_of_batches} - loss "
-                            f"{train_loss / seen_batches:.8f}"
+                            f"{train_loss / seen_batches:.8f} throughput (samples/sec): {mini_batch_size * modulo / batch_time:.2f}"
                         )
+                        batch_time = 0
                         iteration = epoch * total_number_of_batches + batch_no
                         if not param_selection_mode:
                             weight_extractor.extract_weights(
