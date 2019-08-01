@@ -9,9 +9,18 @@ import csv
 import matplotlib
 import math
 
-matplotlib.use("Agg")
+# to enable %matplotlib inline if running in ipynb
+from IPython import get_ipython
+ipy = get_ipython()
+if ipy is not None:
+    ipy.run_line_magic('matplotlib', 'inline')
+
+# change from Agg to TkAgg for interative mode
+matplotlib.use("TkAgg")
+
 
 import matplotlib.pyplot as plt
+
 
 # header for 'weights.txt'
 WEIGHT_NAME = 1
@@ -156,7 +165,7 @@ class Plotter(object):
         plt.tight_layout(pad=1.0)
         path = file_name.parent / "weights.png"
         plt.savefig(path, dpi=300)
-
+        print(f"Weights plots are saved in {path}") # to let user know the path of the save plots
         plt.close(fig)
 
     def plot_training_curves(
@@ -191,11 +200,13 @@ class Plotter(object):
             plt.ylabel(plot_value)
             plt.xlabel("epochs")
 
+
         # save plots
         plt.tight_layout(pad=1.0)
         path = file_name.parent / "training.png"
         plt.savefig(path, dpi=300)
-
+        print(f"Loss and F1 plots are saved in {path}") # to let user know the path of the save plots
+        plt.show(block=False) # to have the plots displayed when user run this module
         plt.close(fig)
 
     def plot_learning_rate(
@@ -214,10 +225,14 @@ class Plotter(object):
         ax.set_xlabel("Learning Rate")
         ax.set_xscale("log")
         ax.xaxis.set_major_formatter(plt.FormatStrFormatter("%.0e"))
+        
+        #plt.show()
+        
 
         # save plot
         plt.tight_layout(pad=1.0)
         path = file_name.parent / "learning_rate.png"
         plt.savefig(path, dpi=300)
-
+        print(f"Learning_rate plots are saved in {path}") # to let user know the path of the save plots
+        plt.show(block=True) # to have the plots displayed when user run this module
         plt.close(fig)
