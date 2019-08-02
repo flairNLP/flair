@@ -20,6 +20,7 @@ from flair.training_utils import Metric, Result, store_embeddings
 
 from tqdm import tqdm
 from tabulate import tabulate
+import numpy as np
 
 log = logging.getLogger("flair")
 
@@ -635,19 +636,25 @@ class SequenceTagger(flair.nn.Model):
             prediction = idx.item()
             best_scores.append(softmax[prediction].item())
             scores.append([elem.item() for elem in softmax.flatten()])
-        # This has been taken from https://github.com/zalandoresearch/flair/pull/642
-        swap_best_path, swap_max_score = (
-            best_path[0],
-            scores[-1].index(max(scores[-1])),
-        )
-        scores[-1][swap_best_path], scores[-1][swap_max_score] = (
-            scores[-1][swap_max_score],
-            scores[-1][swap_best_path],
-        )
 
         start = best_path.pop()
         assert start == self.tag_dictionary.get_idx_for_item(START_TAG)
         best_path.reverse()
+        
+        for index, (tag_id, tag_scores) in enumerate(zip(best_path, scores)):
+            if type(tag_id) != int and tag_id.item() != np.argmax(tag_scores):
+                swap_index_score = np.argmax(tag_scores)
+                scores[index][tag_id.item()], scores[index][swap_index_score] = (
+                    scores[index][swap_index_score],
+                    scores[index][tag_id.item()],
+                )
+            elif type(tag_id) == int and tag_id != np.argmax(tag_scores):
+                swap_index_score = np.argmax(tag_scores)
+                scores[index][tag_id], scores[index][swap_index_score] = (
+                    scores[index][swap_index_score],
+                    scores[index][tag_id],
+                )
+				
         return best_scores, best_path, scores
 
     def _forward_alg(self, feats, lens_):
