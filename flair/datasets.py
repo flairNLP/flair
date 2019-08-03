@@ -316,7 +316,7 @@ class CSVClassificationCorpus(Corpus):
 
         if test_file is not None:
             test: Dataset = CSVClassificationDataset(
-                dev_file,
+                test_file,
                 column_name_map,
                 use_tokenizer=use_tokenizer,
                 max_tokens_per_doc=max_tokens_per_doc,
