@@ -1070,7 +1070,11 @@ class GERMEVAL(ColumnCorpus):
             )
             log.warning("-" * 100)
         super(GERMEVAL, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            comment_symbol="#",
+            in_memory=in_memory,
         )
 
 
