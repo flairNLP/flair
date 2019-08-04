@@ -2204,17 +2204,22 @@ class BertEmbeddings(TokenEmbeddings):
                 for token_index, _ in enumerate(feature.tokens):
                     all_layers = []
                     for layer_index in self.layer_indexes:
-                        layer_output = (
-                            all_encoder_layers[int(layer_index)]
-                            .detach()
-                            .cpu()[sentence_index]
-                        )
+                        if self.use_scalar_mix:
+                            layer_output = all_encoder_layers[int(layer_index)][
+                                sentence_index
+                            ]
+                        else:
+                            layer_output = (
+                                all_encoder_layers[int(layer_index)]
+                                .detach()
+                                .cpu()[sentence_index]
+                            )
                         all_layers.append(layer_output[token_index])
 
                     if self.use_scalar_mix:
-                        sm = ScalarMix(mixture_size=len(all_layers), trainable=False)
+                        sm = ScalarMix(mixture_size=len(all_layers))
                         sm_embeddings = sm(all_layers)
-                        all_layers = sm_embeddings
+                        all_layers = [sm_embeddings]
 
                     subtoken_embeddings.append(torch.cat(all_layers))
 
