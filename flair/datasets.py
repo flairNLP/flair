@@ -276,6 +276,7 @@ class CSVClassificationCorpus(Corpus):
         max_chars_per_doc=-1,
         in_memory: bool = False,
         skip_header: bool = False,
+        **fmtparams,
     ):
         """
         Instantiates a Corpus for text classification from CSV column formatted data
@@ -284,6 +285,7 @@ class CSVClassificationCorpus(Corpus):
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :param fmtparams: additional parameters for the CSV file reader
         :return: a Corpus with annotated train, dev and test data
         """
 
@@ -325,6 +327,7 @@ class CSVClassificationCorpus(Corpus):
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
             skip_header=skip_header,
+            **fmtparams,
         )
 
         if test_file is not None:
@@ -336,6 +339,7 @@ class CSVClassificationCorpus(Corpus):
                 max_chars_per_doc=max_chars_per_doc,
                 in_memory=in_memory,
                 skip_header=skip_header,
+                **fmtparams,
             )
         else:
             train_length = len(train)
@@ -353,6 +357,7 @@ class CSVClassificationCorpus(Corpus):
                 max_chars_per_doc=max_chars_per_doc,
                 in_memory=in_memory,
                 skip_header=skip_header,
+                **fmtparams,
             )
         else:
             train_length = len(train)
@@ -654,6 +659,7 @@ class CSVClassificationDataset(FlairDataset):
         use_tokenizer=True,
         in_memory: bool = True,
         skip_header: bool = False,
+        **fmtparams,
     ):
         if type(path_to_file) == str:
             path_to_file: Path = Path(path_to_file)
@@ -684,7 +690,7 @@ class CSVClassificationDataset(FlairDataset):
 
         with open(self.path_to_file) as csv_file:
 
-            csv_reader = csv.reader(csv_file)
+            csv_reader = csv.reader(csv_file, fmtparams)
 
             if skip_header:
                 next(csv_reader, None)  # skip the headers
