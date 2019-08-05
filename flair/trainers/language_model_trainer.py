@@ -254,18 +254,20 @@ class LanguageModelTrainer:
         max_epochs: int = 1000,
         checkpoint: bool = False,
         grow_to_sequence_length: int = 0,
-        apex: bool = False,
-        apex_opt_level: str = 'O1',
+        use_amp: bool = False,
+        amp_opt_level: str = "O1",
         **kwargs,
     ):
 
-        if apex:
+        if use_amp:
             if sys.version_info < (3, 0):
                 raise RuntimeError("Apex currently only supports Python 3. Aborting.")
             if amp is None:
-                raise RuntimeError("Failed to import apex. Please install apex from https://www.github.com/nvidia/apex "
-                                   "to enable mixed-precision training.")
-                
+                raise RuntimeError(
+                    "Failed to import apex. Please install apex from https://www.github.com/nvidia/apex "
+                    "to enable mixed-precision training."
+                )
+
         # cast string to Path
         if type(base_path) is str:
             base_path = Path(base_path)
@@ -298,11 +300,11 @@ class LanguageModelTrainer:
                     optimizer, verbose=True, factor=anneal_factor, patience=patience
                 )
 
-            if apex:
-                self.model, optimizer = amp.initialize(self.model, optimizer,
-                                                       opt_level=apex_opt_level
-                                                       )
-            
+            if use_amp:
+                self.model, optimizer = amp.initialize(
+                    self.model, optimizer, opt_level=amp_opt_level
+                )
+
             training_generator = DataLoader(
                 self.corpus.train, shuffle=False, num_workers=self.num_workers
             )
@@ -376,8 +378,8 @@ class LanguageModelTrainer:
 
                         # try to predict the targets
                         loss = self.loss_function(output.view(-1, ntokens), targets)
-                                            # Backward
-                        if apex:
+                        # Backward
+                        if use_amp:
                             with amp.scale_loss(loss, optimizer) as scaled_loss:
                                 scaled_loss.backward()
                         else:

@@ -75,8 +75,8 @@ class ModelTrainer:
         param_selection_mode: bool = False,
         num_workers: int = 6,
         sampler=None,
-        apex: bool = False,
-        apex_opt_level: str = 'O1',
+        use_amp: bool = False,
+        amp_opt_level: str = "O1",
         **kwargs,
     ) -> dict:
         """
@@ -121,12 +121,14 @@ class ModelTrainer:
                 self.use_tensorboard = False
                 pass
 
-        if apex:
+        if use_amp:
             if sys.version_info < (3, 0):
                 raise RuntimeError("Apex currently only supports Python 3. Aborting.")
             if amp is None:
-                raise RuntimeError("Failed to import apex. Please install apex from https://www.github.com/nvidia/apex "
-                                   "to enable mixed-precision training.")
+                raise RuntimeError(
+                    "Failed to import apex. Please install apex from https://www.github.com/nvidia/apex "
+                    "to enable mixed-precision training."
+                )
 
         if eval_mini_batch_size is None:
             eval_mini_batch_size = mini_batch_size
@@ -177,11 +179,11 @@ class ModelTrainer:
         if self.optimizer_state is not None:
             optimizer.load_state_dict(self.optimizer_state)
 
-        if apex:
-            self.model, optimizer = amp.initialize(self.model, optimizer,
-                                                    opt_level=apex_opt_level
-                                                    )
-                    
+        if use_amp:
+            self.model, optimizer = amp.initialize(
+                self.model, optimizer, opt_level=amp_opt_level
+            )
+
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev else "max"
 
@@ -264,7 +266,7 @@ class ModelTrainer:
 
                     optimizer.zero_grad()
                     # Backward
-                    if apex:
+                    if use_amp:
                         with amp.scale_loss(loss, optimizer) as scaled_loss:
                             scaled_loss.backward()
                     else:
@@ -278,7 +280,7 @@ class ModelTrainer:
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(batch, embeddings_storage_mode)
-    
+
                     batch_time += time.time() - start_time
                     if batch_no % modulo == 0:
                         log.info(
