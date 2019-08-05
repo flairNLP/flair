@@ -690,7 +690,7 @@ class CSVClassificationDataset(FlairDataset):
 
         with open(self.path_to_file) as csv_file:
 
-            csv_reader = csv.reader(csv_file, fmtparams)
+            csv_reader = csv.reader(csv_file, **fmtparams)
 
             if skip_header:
                 next(csv_reader, None)  # skip the headers
