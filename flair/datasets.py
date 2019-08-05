@@ -26,6 +26,7 @@ class ColumnCorpus(Corpus):
         test_file=None,
         dev_file=None,
         tag_to_bioes=None,
+        comment_symbol: str = None,
         in_memory: bool = True,
     ):
         """
@@ -81,13 +82,21 @@ class ColumnCorpus(Corpus):
 
         # get train data
         train = ColumnDataset(
-            train_file, column_format, tag_to_bioes, in_memory=in_memory
+            train_file,
+            column_format,
+            tag_to_bioes,
+            comment_symbol=comment_symbol,
+            in_memory=in_memory,
         )
 
         # read in test file if exists, otherwise sample 10% of train data as test dataset
         if test_file is not None:
             test = ColumnDataset(
-                test_file, column_format, tag_to_bioes, in_memory=in_memory
+                test_file,
+                column_format,
+                tag_to_bioes,
+                comment_symbol=comment_symbol,
+                in_memory=in_memory,
             )
         else:
             train_length = len(train)
@@ -99,7 +108,11 @@ class ColumnCorpus(Corpus):
         # read in dev file if exists, otherwise sample 10% of train data as dev dataset
         if dev_file is not None:
             dev = ColumnDataset(
-                dev_file, column_format, tag_to_bioes, in_memory=in_memory
+                dev_file,
+                column_format,
+                tag_to_bioes,
+                comment_symbol=comment_symbol,
+                in_memory=in_memory,
             )
         else:
             train_length = len(train)
@@ -377,12 +390,14 @@ class ColumnDataset(FlairDataset):
         path_to_column_file: Path,
         column_name_map: Dict[int, str],
         tag_to_bioes: str = None,
+        comment_symbol: str = None,
         in_memory: bool = True,
     ):
         assert path_to_column_file.exists()
         self.path_to_column_file = path_to_column_file
         self.tag_to_bioes = tag_to_bioes
         self.column_name_map = column_name_map
+        self.comment_symbol = comment_symbol
 
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
@@ -421,7 +436,7 @@ class ColumnDataset(FlairDataset):
 
             while line:
 
-                if line.startswith("#"):
+                if self.comment_symbol is not None and line.startswith(comment_symbol):
                     line = f.readline()
                     continue
 
@@ -479,7 +494,7 @@ class ColumnDataset(FlairDataset):
                 line = file.readline()
                 sentence: Sentence = Sentence()
                 while line:
-                    if line.startswith("#"):
+                    if self.comment_symbol is not None and line.startswith("#"):
                         line = file.readline()
                         continue
 
@@ -1055,7 +1070,11 @@ class GERMEVAL(ColumnCorpus):
             )
             log.warning("-" * 100)
         super(GERMEVAL, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            comment_symbol="#",
+            in_memory=in_memory,
         )
 
 
