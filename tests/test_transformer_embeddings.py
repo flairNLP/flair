@@ -37,7 +37,7 @@ def calculate_mean_embedding(
     return torch.mean(torch.cat(all_embeddings, dim=0), dim=0)
 
 
-@pytest.mark.integration
+@pytest.mark.slow
 def test_roberta_embeddings():
     roberta_model = "roberta.base"
 
@@ -181,7 +181,7 @@ def test_roberta_embeddings():
     assert ref_embedding_size == actual_embedding_size
 
 
-@pytest.mark.integration
+@pytest.mark.slow
 def test_gpt_embeddings():
     gpt_model: str = "openai-gpt"
 
@@ -330,7 +330,7 @@ def test_gpt_embeddings():
     assert ref_embedding_size == actual_embedding_size
 
 
-@pytest.mark.integration
+@pytest.mark.slow
 def test_gpt2_embeddings():
     gpt_model: str = "gpt2-medium"
 
@@ -483,7 +483,7 @@ def test_gpt2_embeddings():
     assert ref_embedding_size == actual_embedding_size
 
 
-@pytest.mark.integration
+@pytest.mark.slow
 def test_xlnet_embeddings():
     xlnet_model: str = "xlnet-large-cased"
 
@@ -634,7 +634,7 @@ def test_xlnet_embeddings():
     assert ref_embedding_size == actual_embedding_size
 
 
-@pytest.mark.integration
+@pytest.mark.slow
 def test_transformer_xl_embeddings():
     transfo_model: str = "transfo-xl-wt103"
 
@@ -711,7 +711,7 @@ def test_transformer_xl_embeddings():
     assert ref_embedding_size == actual_embedding_size
 
 
-@pytest.mark.integration
+@pytest.mark.slow
 def test_xlm_embeddings():
     xlm_model: str = "xlm-mlm-en-2048"
 
