@@ -1,6 +1,5 @@
 import time, datetime
 import random
-import sys
 import logging
 from pathlib import Path
 from typing import Union
@@ -8,11 +7,6 @@ from typing import Union
 from torch import cuda
 from torch.utils.data import Dataset, DataLoader
 from torch.optim.sgd import SGD
-
-try:
-    from apex import amp
-except ImportError:
-    amp = None
 
 import flair
 from flair.data import Dictionary
@@ -236,6 +230,7 @@ class LanguageModelTrainer:
 
         self.loss_function = torch.nn.CrossEntropyLoss()
         self.log_interval = 100
+        self.num_workers = 2
         self.epoch = epoch
         self.split = split
         self.loss = loss
@@ -253,20 +248,8 @@ class LanguageModelTrainer:
         max_epochs: int = 1000,
         checkpoint: bool = False,
         grow_to_sequence_length: int = 0,
-        num_workers: int = 2,
-        use_amp: bool = False,
-        amp_opt_level: str = "O1",
         **kwargs,
     ):
-
-        if use_amp:
-            if sys.version_info < (3, 0):
-                raise RuntimeError("Apex currently only supports Python 3. Aborting.")
-            if amp is None:
-                raise RuntimeError(
-                    "Failed to import apex. Please install apex from https://www.github.com/nvidia/apex "
-                    "to enable mixed-precision training."
-                )
 
         # cast string to Path
         if type(base_path) is str:
@@ -275,7 +258,6 @@ class LanguageModelTrainer:
         add_file_handler(log, base_path / "training.log")
 
         number_of_splits: int = len(self.corpus.train)
-
         val_data = self._batchify(self.corpus.valid, mini_batch_size)
 
         base_path.mkdir(parents=True, exist_ok=True)
@@ -300,22 +282,18 @@ class LanguageModelTrainer:
                     optimizer, verbose=True, factor=anneal_factor, patience=patience
                 )
 
-            if use_amp:
-                self.model, optimizer = amp.initialize(
-                    self.model, optimizer, opt_level=amp_opt_level
-                )
-
             training_generator = DataLoader(
-                self.corpus.train, shuffle=False, num_workers=num_workers
+                self.corpus.train, shuffle=False, num_workers=self.num_workers
             )
-
+            if number_of_splits == 1:
+                # if data fits in memory just unpack it to avoid loading and preprocessing at each epoch
+                log.warning("1 training split data make sure data fits in memory")
+                unpack_gen = [a for a in training_generator]
+            iterator = training_generator if number_of_splits > 1 else unpack_gen
             for epoch in range(self.epoch, max_epochs):
                 epoch_start_time = time.time()
                 # Shuffle training files randomly after serially iterating through corpus one
                 if epoch > 0:
-                    training_generator = DataLoader(
-                        self.corpus.train, shuffle=True, num_workers=num_workers
-                    )
                     self.model.save_checkpoint(
                         base_path / f"epoch_{epoch}.pt",
                         optimizer,
@@ -323,10 +301,13 @@ class LanguageModelTrainer:
                         0,
                         best_val_loss,
                     )
-
+                if epoch > 0 and number_of_splits > 1:
+                    training_generator = DataLoader(
+                        self.corpus.train, shuffle=True, num_workers=self.num_workers
+                    )
                 # iterate through training data, starting at self.split (for checkpointing)
                 for curr_split, train_slice in enumerate(
-                    training_generator, self.split
+                    iterator, self.split
                 ):
 
                     if sequence_length < grow_to_sequence_length:
@@ -336,6 +317,7 @@ class LanguageModelTrainer:
                     split_start_time = time.time()
                     # off by one for printing
                     curr_split += 1
+                    print(4)
                     train_data = self._batchify(train_slice.flatten(), mini_batch_size)
 
                     log.info(
@@ -378,12 +360,7 @@ class LanguageModelTrainer:
 
                         # try to predict the targets
                         loss = self.loss_function(output.view(-1, ntokens), targets)
-                        # Backward
-                        if use_amp:
-                            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                                scaled_loss.backward()
-                        else:
-                            loss.backward()
+                        loss.backward()
 
                         # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
                         torch.nn.utils.clip_grad_norm_(self.model.parameters(), clip)
