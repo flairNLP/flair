@@ -58,6 +58,7 @@ from flair.data import Corpus
 from .nn import LockedDropout, WordDropout
 from .data import Dictionary, Token, Sentence
 from .file_utils import cached_path, open_inside_zip
+from .training_utils import log_line
 
 log = logging.getLogger("flair")
 
@@ -1497,7 +1498,7 @@ class RoBERTaEmbeddings(TokenEmbeddings):
             self.model = torch.hub.load("pytorch/fairseq", model)
         except:
             log_line(log)
-            log.warning("ATTENTION! sacremoses and subword_nmt needs to be installed!")
+            log.warning("ATTENTION! fastBPE, sacremoses and subword_nmt needs to be installed!")
             log_line(log)
             pass
 
