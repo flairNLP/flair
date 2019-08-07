@@ -249,6 +249,7 @@ class SimilarityLearner(flair.nn.Model):
         similarity_measure: SimilarityMeasure,
         similarity_loss: SimilarityLoss,
         eval_device=flair.device,
+        eval_cache_modality_1_embeddings=True,
         recall_at_points=[1, 5, 10, 20],
         recall_at_points_weights=[0.4, 0.3, 0.2, 0.1]
     ):
@@ -259,6 +260,7 @@ class SimilarityLearner(flair.nn.Model):
         self.similarity_measure = similarity_measure
         self.similarity_loss = similarity_loss
         self.eval_device = eval_device
+        self.eval_cache_modality_1_embeddings = eval_cache_modality_1_embeddings
         self.recall_at_points = recall_at_points
         self.recall_at_points_weights = recall_at_points_weights
         self.to(flair.device)
@@ -370,45 +372,58 @@ class SimilarityLearner(flair.nn.Model):
         # assumes that for each data pair there's at least one embedding per modality
 
         # embed_inputs on modality 1
-        modality_1_embeddings = []
-        for data_points in data_loader:
-            embedded_inputs, _ = self._embed_inputs(data_points, modality_ids=[1])
-            batch_embeddings = self.similarity_net.forward(embedded_inputs)
-            batch_modality_1_embeddings = batch_embeddings[1]
-            modality_1_embeddings.append(
-                batch_modality_1_embeddings.to(self.eval_device)
-            )
-            store_embeddings(data_points, embeddings_storage_mode)
-        modality_1_embeddings = torch.cat(modality_1_embeddings, dim=0)  # [n0, d0]
+        if self.eval_cache_modality_1_embeddings:
+            modality_1_embeddings = []
+            for data_points in data_loader:
+                embedded_inputs, _ = self._embed_inputs(data_points, modality_ids=[1])
+                batch_embeddings = self.similarity_net.forward(embedded_inputs)
+                batch_modality_1_embeddings = batch_embeddings[1]
+                modality_1_embeddings.append(
+                    batch_modality_1_embeddings.to(self.eval_device).detach()
+                )
+                store_embeddings(data_points, embeddings_storage_mode)
+            modality_1_embeddings = torch.cat(modality_1_embeddings, dim=0)  # [n0, d0]
 
         ranks = []
         modality_1_id = 0
-        for data_points in data_loader:
-            # embed_inputs on modality 0
-            embedded_inputs, indices = self._embed_inputs(data_points, modality_ids=[0])
-            modality_1_indices = modality_1_id + torch.LongTensor(
-                [index[0][0] for index in indices]
-            )
-            batch_embeddings = self.similarity_net.forward(embedded_inputs)
-            batch_modality_0_embeddings = batch_embeddings[0]
-            batch_modality_0_embeddings = batch_modality_0_embeddings.to(
-                self.eval_device
-            )
-            # compute the similarity
-            batch_similarity_matrix = self.similarity_measure.forward(
-                [batch_modality_0_embeddings, modality_1_embeddings]
-            )  # [bn_1, n0]
-            batch_modality_1_argsort = torch.argsort(
-                batch_similarity_matrix, descending=True, dim=1
-            )
-            # get the ranks, so +1 to start counting ranks from 1
-            batch_modality_1_ranks = torch.argsort(batch_modality_1_argsort, dim=1) + 1
-            batch_gt_ranks = batch_modality_1_ranks[
-                torch.arange(batch_similarity_matrix.shape[0]), modality_1_indices
-            ]
-            ranks.extend(batch_gt_ranks.tolist())
-            modality_1_id += len(data_points)
-            store_embeddings(data_points, embeddings_storage_mode)
+        with torch.no_grad():
+            for bi, data_points in enumerate(data_loader):
+                # embed_inputs on modality 0
+                embedded_inputs, indices = self._embed_inputs(data_points, modality_ids=[0])
+                modality_1_indices = modality_1_id + torch.LongTensor(
+                    [index[0][0] for index in indices]
+                )
+                batch_embeddings = self.similarity_net.forward(embedded_inputs)
+                batch_modality_0_embeddings = batch_embeddings[0]
+                batch_modality_0_embeddings = batch_modality_0_embeddings.to(
+                    self.eval_device
+                )
+                # compute the similarity
+                if self.eval_cache_modality_1_embeddings:
+                    batch_similarity_matrix = self.similarity_measure.forward(
+                        [batch_modality_0_embeddings, modality_1_embeddings]
+                    )  # [bn_1, n0]
+                else:
+                    batch_similarity_matrix = []
+                    for di, data_points_ in enumerate(data_loader):
+                        embedded_inputs_, _ = self._embed_inputs(data_points_, modality_ids=[1])
+                        batch_embeddings_ = self.similarity_net.forward(embedded_inputs_)
+                        batch_modality_1_embeddings = batch_embeddings_[1]
+                        batch_modality_1_embeddings = batch_modality_1_embeddings.to(self.eval_device)
+                        batch_similarity_matrix.append(self.similarity_measure.forward([batch_modality_0_embeddings, batch_modality_1_embeddings]).to('cpu'))
+                    batch_similarity_matrix = torch.cat(batch_similarity_matrix, dim=1)
+                # sort the similarity matrix across modality 1
+                batch_modality_1_argsort = torch.argsort(
+                    batch_similarity_matrix, descending=True, dim=1
+                )
+                # get the ranks, so +1 to start counting ranks from 1
+                batch_modality_1_ranks = torch.argsort(batch_modality_1_argsort, dim=1) + 1
+                batch_gt_ranks = batch_modality_1_ranks[
+                    torch.arange(batch_similarity_matrix.shape[0]), modality_1_indices
+                ]
+                ranks.extend(batch_gt_ranks.tolist())
+                modality_1_id += len(data_points)
+                store_embeddings(data_points, embeddings_storage_mode)
 
         ranks = np.array(ranks)
         median_rank = np.median(ranks)
