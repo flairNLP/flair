@@ -1426,17 +1426,20 @@ class UD_GERMAN_HDT(UniversalDependenciesCorpus):
         )
         cached_path(f"{ud_path}/de_hdt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/de_hdt-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/de_hdt-ud-train-a.conllu",
-            Path("datasets") / dataset_name / "original",
-        )
-        cached_path(
-            f"{ud_path}/de_hdt-ud-train-b.conllu",
-            Path("datasets") / dataset_name / "original",
-        )
-        data_path = Path(flair.cache_root) / "datasets" / dataset_name
 
-        train_filenames = ["de_hdt-ud-train-a.conllu", "de_hdt-ud-train-b.conllu"]
+        train_filenames = [
+            "de_hdt-ud-train-a-1.conllu",
+            "de_hdt-ud-train-a-2.conllu",
+            "de_hdt-ud-train-b-1.conllu",
+            "de_hdt-ud-train-b-2.conllu",
+        ]
+
+        for train_file in train_filenames:
+            cached_path(
+                f"{ud_path}/{train_file}", Path("datasets") / dataset_name / "original"
+            )
+
+        data_path = Path(flair.cache_root) / "datasets" / dataset_name
 
         new_train_file: Path = data_path / "de_hdt-ud-train-all.conllu"
 
