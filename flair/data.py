@@ -164,19 +164,23 @@ class DataPoint:
 
 
 class DataPair(DataPoint):
+    def __init__(self, first: DataPoint, second: DataPoint):
+        self.first = first
+        self.second = second
 
-    def __init__(self, data_points_list: List[List[DataPoint]]):
-        self.data = data_points_list
-
-    def to(self, device:str):
-        for data_points in self.data:
-            for data_point in data_points:
-                data_point.to(device)
+    def to(self, device: str):
+        self.first.to(device)
+        self.second.to(device)
 
     def clear_embeddings(self, embedding_names: List[str] = None):
-        for data_points in self.data:
-            for data_point in data_points:
-                data_point.clear_embeddings(embedding_names)
+        self.first.clear_embeddings(embedding_names)
+        self.second.clear_embeddings(embedding_names)
+
+    def embedding(self):
+        return torch.cat([self.first.embedding, self.second.embedding])
+
+    def __str__(self):
+        return f"DataPoint:\n first: {self.first}\n second: {self.second}"
 
 
 class Token(DataPoint):
@@ -757,7 +761,6 @@ class Sentence(DataPoint):
 
 
 class Image(DataPoint):
-
     def __init__(self, data=None, imageURL=None):
         self.data = data
         self._embeddings: Dict = {}
@@ -766,6 +769,13 @@ class Image(DataPoint):
     @property
     def embedding(self):
         return self.get_embedding()
+
+    def __str__(self):
+
+        image_repr = self.data.size() if self.data else ""
+        image_url = self.imageURL if self.imageURL else ""
+
+        return f"Image: {image_repr} {image_url}"
 
     def get_embedding(self) -> torch.tensor:
         embeddings = [

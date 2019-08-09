@@ -1082,7 +1082,7 @@ class ParallelTextDataset(FlairDataset):
             source_sentence.tokens = source_sentence.tokens[: self.max_tokens_per_doc]
             target_sentence.tokens = target_sentence.tokens[: self.max_tokens_per_doc]
 
-        return DataPair([[source_sentence], [target_sentence]])
+        return DataPair(source_sentence, target_sentence)
 
     def __len__(self):
         return self.total_sentence_count
@@ -1097,33 +1097,43 @@ class ParallelTextDataset(FlairDataset):
 
 
 class FeideggerDataset(FlairDataset):
-    def __init__(self, feidegger_csv, **kwargs):
+    def __init__(self, feidegger_csv, in_memory: bool = True, **kwargs):
         super(FeideggerDataset, self).__init__()
-        self.feidegger_imageURLs = []
-        self.split = []
-        self.descriptions = []
+
+        self.data_points: List[DataPair] = []
+        self.split: List[int] = []
+
         preprocessor = lambda x: x
         if "lowercase" in kwargs and kwargs["lowercase"]:
             preprocessor = lambda x: x.lower()
+
         for row in csv.reader(open(feidegger_csv, "r"), delimiter="|"):
-            self.feidegger_imageURLs.append(row[0])
-            self.split.append(int(row[-1]))
-            self.descriptions.append(
-                [
-                    Sentence(preprocessor(caption), use_tokenizer=True)
-                    for caption in row[1:-1]
-                ]
-            )
+            for caption in row[1:-1]:
+
+                # get the split ID
+                split_id = int(row[-1])
+
+                # append Sentence-Image data point and split ID
+                self.data_points.append(
+                    DataPair(
+                        Sentence(preprocessor(caption), use_tokenizer=True),
+                        Image(imageURL=row[0]),
+                    )
+                )
+                self.split.append(split_id)
+
+                # only use one caption for test and eval splits
+                if split_id == 8:
+                    break
+                if split_id == 9:
+                    break
 
     def __len__(self):
-        return len(self.feidegger_imageURLs)
+        return len(self.data_points)
 
     def __getitem__(self, index: int = 0) -> DataPair:
-        imageURL = self.feidegger_imageURLs[index]
-        image = Image(imageURL=imageURL)
-        descriptions = self.descriptions[index]
 
-        return DataPair([descriptions, [image]])
+        return self.data_points[index]
 
 
 class CONLL_03(ColumnCorpus):
