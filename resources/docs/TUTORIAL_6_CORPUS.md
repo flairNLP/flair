@@ -249,9 +249,14 @@ Washington N I-PER
 went V O
 to P O
 Washington N B-LOC
+
+Sam N B-PER
+Houston N I-PER
+stayed V O
+home N O
 ```
 
-The first column is the word itself, the second coarse PoS tags, and the third BIO-annotated NER tags. To read such a 
+The first column is the word itself, the second coarse PoS tags, and the third BIO-annotated NER tags. Empty line separates sentences. To read such a 
 dataset, define the column structure as a dictionary and instantiate a `ColumnCorpus`.
 
 ```python
@@ -279,20 +284,20 @@ So, to check how many sentences there are in the training split, do
 len(corpus.train)
 ```
 
-You can also access a sentence and check out annotations. Lets assume that the first sentence in the training split is
-the example sentence from above, then executing these commands
+You can also access a sentence and check out annotations. Lets assume that the training split is
+read from the example above, then executing these commands
 
 ```python
-print(corpus.train[0].to_tagged_string('pos'))
 print(corpus.train[0].to_tagged_string('ner'))
+print(corpus.train[1].to_tagged_string('pos'))
 ```
 
-will print the sentence with different layers of annotation:
+will print the sentences with different layers of annotation:
 
 ```console
-George <N> Washington <N> went <V> to <P> Washington <N>
-
 George <B-PER> Washington <I-PER> went to Washington <B-LOC> .
+
+Sam <N> Houston <N> stayed <V> home <N>
 ```
 
 ## Reading a Text Classification Dataset

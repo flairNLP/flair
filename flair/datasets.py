@@ -440,7 +440,7 @@ class ColumnDataset(FlairDataset):
                     line = f.readline()
                     continue
 
-                if line.strip().replace("﻿", "") == "":
+                if line.isspace():
                     if len(sentence) > 0:
                         sentence.infer_space_after()
                         if self.in_memory:
