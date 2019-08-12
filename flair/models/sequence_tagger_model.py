@@ -640,7 +640,7 @@ class SequenceTagger(flair.nn.Model):
         start = best_path.pop()
         assert start == self.tag_dictionary.get_idx_for_item(START_TAG)
         best_path.reverse()
-        
+
         for index, (tag_id, tag_scores) in enumerate(zip(best_path, scores)):
             if type(tag_id) != int and tag_id.item() != np.argmax(tag_scores):
                 swap_index_score = np.argmax(tag_scores)
@@ -654,7 +654,7 @@ class SequenceTagger(flair.nn.Model):
                     scores[index][swap_index_score],
                     scores[index][tag_id],
                 )
-				
+
         return best_scores, best_path, scores
 
     def _forward_alg(self, feats, lens_):
@@ -737,9 +737,9 @@ class SequenceTagger(flair.nn.Model):
 
         model_map["ner-fast"] = "/".join(
             [
-                aws_resource_path,
-                "NER-conll03--h256-l1-b32-experimental--fast-v0.2",
-                "en-ner-fast-conll03-v0.2.pt",
+                aws_resource_path_v04,
+                "NER-conll03--h256-l1-b32-p3-0.5-%2Bglove%2Bnews-forward-fast%2Bnews-backward-fast-normal-locked0.5-word0.05--release_4",
+                "en-ner-fast-conll03-v0.4.pt",
             ]
         )
 
