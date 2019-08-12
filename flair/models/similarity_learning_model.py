@@ -300,11 +300,16 @@ class SimilarityLearner(flair.nn.Model):
 
         with torch.no_grad():
             # pre-compute embeddings for all targets in evaluation dataset
+            target_index = {}
             all_target_embeddings = []
             for data_points in data_loader:
                 all_target_embeddings.append(
                     self._embed_target(data_points).to(self.eval_device).detach()
                 )
+                # add to position index
+                for data_point in data_points:
+                    target_index[str(data_point.second)] = len(target_index.keys())
+
                 store_embeddings(data_points, embeddings_storage_mode)
             all_target_embeddings = torch.cat(all_target_embeddings, dim=0)  # [n0, d0]
 
@@ -329,9 +334,13 @@ class SimilarityLearner(flair.nn.Model):
                     torch.argsort(batch_modality_1_argsort, dim=1) + 1
                 )
 
+                batch_target_indices = [
+                    target_index[str(data_point.second)] for data_point in data_points
+                ]
+
                 batch_gt_ranks = batch_modality_1_ranks[
                     torch.arange(batch_similarity_matrix.shape[0]),
-                    torch.arange(batch_similarity_matrix.shape[0]),
+                    torch.tensor(batch_target_indices),
                 ]
                 ranks.extend(batch_gt_ranks.tolist())
 
