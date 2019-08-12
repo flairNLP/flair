@@ -810,6 +810,7 @@ class ClassificationDataset(FlairDataset):
 
         self.total_sentence_count: int = 0
         self.max_chars_per_doc = max_chars_per_doc
+        self.max_tokens_per_doc = max_tokens_per_doc
 
         self.path_to_file = path_to_file
 
@@ -826,12 +827,6 @@ class ClassificationDataset(FlairDataset):
                     sentence = self._parse_line_to_sentence(
                         line, self.label_prefix, use_tokenizer
                     )
-                    if (
-                        sentence is not None
-                        and len(sentence) > max_tokens_per_doc
-                        and max_tokens_per_doc > 0
-                    ):
-                        sentence.tokens = sentence.tokens[:max_tokens_per_doc]
                     if sentence is not None and len(sentence.tokens) > 0:
                         self.sentences.append(sentence)
                         self.total_sentence_count += 1
@@ -865,6 +860,14 @@ class ClassificationDataset(FlairDataset):
 
         if text and labels:
             sentence = Sentence(text, labels=labels, use_tokenizer=use_tokenizer)
+
+            if (
+                sentence is not None
+                and len(sentence) > self.max_tokens_per_doc
+                and self.max_tokens_per_doc > 0
+            ):
+                sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]
+
             return sentence
         return None
 
