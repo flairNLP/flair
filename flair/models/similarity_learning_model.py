@@ -141,7 +141,7 @@ class sqL2Similarity(SimilarityMeasure):
 
 
 # == similarity losses ==
-class SimilarityLoss(nn.modules.loss._Loss):
+class SimilarityLoss(nn.Module):
     def __init__(self):
         super(SimilarityLoss, self).__init__()
 
@@ -215,21 +215,20 @@ class SimilarityLearner(flair.nn.Model):
         eval_device=flair.device,
         source_mapping: torch.nn.Module = None,
         target_mapping: torch.nn.Module = None,
-        eval_cache_modality_1_embeddings: bool = True,
-        recall_at_points=[1, 5, 10, 20],
-        recall_at_points_weights=[0.4, 0.3, 0.2, 0.1],
+        recall_at_points: List[int] = [1, 5, 10, 20],
+        recall_at_points_weights: List[float] = [0.4, 0.3, 0.2, 0.1],
     ):
         super(SimilarityLearner, self).__init__()
-        self.source_embeddings = source_embeddings
-        self.target_embeddings = target_embeddings
-        self.source_mapping = source_mapping
-        self.target_mapping = target_mapping
-        self.similarity_measure = similarity_measure
-        self.similarity_loss = similarity_loss
+        self.source_embeddings: Embeddings = source_embeddings
+        self.target_embeddings: Embeddings = target_embeddings
+        self.source_mapping: torch.nn.Module = source_mapping
+        self.target_mapping: torch.nn.Module = target_mapping
+        self.similarity_measure: SimilarityMeasure = similarity_measure
+        self.similarity_loss: SimilarityLoss = similarity_loss
         self.eval_device = eval_device
-        self.eval_cache_modality_1_embeddings: bool = eval_cache_modality_1_embeddings
-        self.recall_at_points = recall_at_points
-        self.recall_at_points_weights = recall_at_points_weights
+        self.recall_at_points: List[int] = recall_at_points
+        self.recall_at_points_weights: List[float] = recall_at_points_weights
+
         self.to(flair.device)
 
     def _embed_source(self, data_points):
@@ -287,7 +286,7 @@ class SimilarityLearner(flair.nn.Model):
 
         targets = torch.eye(similarity_matrix.shape[0]).to(flair.device)
 
-        loss = self.similarity_loss.forward(similarity_matrix, targets)
+        loss = self.similarity_loss(similarity_matrix, targets)
 
         return loss
 
@@ -303,7 +302,6 @@ class SimilarityLearner(flair.nn.Model):
             # pre-compute embeddings for all targets in evaluation dataset
             all_target_embeddings = []
             for data_points in data_loader:
-
                 all_target_embeddings.append(
                     self._embed_target(data_points).to(self.eval_device).detach()
                 )
@@ -313,7 +311,6 @@ class SimilarityLearner(flair.nn.Model):
             ranks = []
             modality_1_id = 0
             for bi, data_points in enumerate(data_loader):
-
                 batch_embeddings = self._embed_source(data_points)
 
                 batch_source_embeddings = batch_embeddings.to(self.eval_device)
