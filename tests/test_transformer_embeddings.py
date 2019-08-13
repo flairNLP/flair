@@ -674,7 +674,9 @@ def test_transformer_xl_embeddings():
         sentence: str, layers: str = "1", use_scalar_mix: bool = False
     ) -> Sentence:
         embeddings = TransformerXLEmbeddings(
-            pretrained_model_name_or_path=transfo_model, layers=layers, use_scalar_mix=use_scalar_mix
+            pretrained_model_name_or_path=transfo_model,
+            layers=layers,
+            use_scalar_mix=use_scalar_mix,
         )
         flair_sentence = Sentence(sentence)
         embeddings.embed(flair_sentence)
