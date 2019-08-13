@@ -845,11 +845,7 @@ class SequenceTagger(flair.nn.Model):
         )
 
         model_map["de-pos"] = "/".join(
-            [
-                aws_resource_path,
-                "UPOS-udgerman--h256-l1-b8-%2Bgerman-forward%2Bgerman-backward--v0.2",
-                "de-pos-ud-v0.2.pt",
-            ]
+            [aws_resource_path_v04, "release-de-pos-0", "de-pos-ud-hdt-v0.4.pt"]
         )
 
         model_map["de-pos-fine-grained"] = "/".join(
