@@ -1170,25 +1170,22 @@ def _get_transformer_sentence_embeddings(
 class TransformerXLEmbeddings(TokenEmbeddings):
     def __init__(
         self,
-        model: str = "transfo-xl-wt103",
+        pretrained_model_name_or_path: str = "transfo-xl-wt103",
         layers: str = "1,2,3",
         use_scalar_mix: bool = False,
     ):
         """Transformer-XL embeddings, as proposed in Dai et al., 2019.
-        :param model: name of Transformer-XL model
+        :param pretrained_model_name_or_path: name or path of Transformer-XL model
         :param layers: comma-separated list of layers
         :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
         """
         super().__init__()
 
-        if model not in TRANSFORMER_XL_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
-            raise ValueError("Provided Transformer-XL model is not available.")
-
-        self.tokenizer = TransfoXLTokenizer.from_pretrained(model)
+        self.tokenizer = TransfoXLTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = TransfoXLModel.from_pretrained(
-            pretrained_model_name_or_path=model, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
         )
-        self.name = model
+        self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
         self.use_scalar_mix = use_scalar_mix
         self.static_embeddings = True
@@ -1231,27 +1228,24 @@ class TransformerXLEmbeddings(TokenEmbeddings):
 class XLNetEmbeddings(TokenEmbeddings):
     def __init__(
         self,
-        model: str = "xlnet-large-cased",
+        pretrained_model_name_or_path: str = "xlnet-large-cased",
         layers: str = "1",
         pooling_operation: str = "first_last",
         use_scalar_mix: bool = False,
     ):
         """XLNet embeddings, as proposed in Yang et al., 2019.
-        :param model: name of XLNet model
+        :param pretrained_model_name_or_path: name or path of XLNet model
         :param layers: comma-separated list of layers
         :param pooling_operation: defines pooling operation for subwords
         :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
         """
         super().__init__()
 
-        if model not in XLNET_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
-            raise ValueError("Provided XLNet model is not available.")
-
-        self.tokenizer = XLNetTokenizer.from_pretrained(model)
+        self.tokenizer = XLNetTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = XLNetModel.from_pretrained(
-            pretrained_model_name_or_path=model, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
         )
-        self.name = model
+        self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
         self.pooling_operation = pooling_operation
         self.use_scalar_mix = use_scalar_mix
@@ -1296,28 +1290,25 @@ class XLNetEmbeddings(TokenEmbeddings):
 class XLMEmbeddings(TokenEmbeddings):
     def __init__(
         self,
-        model: str = "xlm-mlm-en-2048",
+        pretrained_model_name_or_path: str = "xlm-mlm-en-2048",
         layers: str = "1",
         pooling_operation: str = "first_last",
         use_scalar_mix: bool = False,
     ):
         """
         XLM embeddings, as proposed in Guillaume et al., 2019.
-        :param model: name of XLM model
+        :param pretrained_model_name_or_path: name or path of XLM model
         :param layers: comma-separated list of layers
         :param pooling_operation: defines pooling operation for subwords
         :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
         """
         super().__init__()
 
-        if model not in XLM_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
-            raise ValueError("Provided XLM model is not available.")
-
-        self.tokenizer = XLMTokenizer.from_pretrained(model)
+        self.tokenizer = XLMTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = XLMModel.from_pretrained(
-            pretrained_model_name_or_path=model, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
         )
-        self.name = model
+        self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
         self.pooling_operation = pooling_operation
         self.use_scalar_mix = use_scalar_mix
@@ -1362,27 +1353,24 @@ class XLMEmbeddings(TokenEmbeddings):
 class OpenAIGPTEmbeddings(TokenEmbeddings):
     def __init__(
         self,
-        model: str = "openai-gpt",
+        pretrained_model_name_or_path: str = "openai-gpt",
         layers: str = "1",
         pooling_operation: str = "first_last",
         use_scalar_mix: bool = False,
     ):
         """OpenAI GPT embeddings, as proposed in Radford et al. 2018.
-        :param model: name of OpenAI GPT model
+        :param pretrained_model_name_or_path: name or path of OpenAI GPT model
         :param layers: comma-separated list of layers
         :param pooling_operation: defines pooling operation for subwords
         :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
         """
         super().__init__()
 
-        if model not in OPENAI_GPT_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
-            raise ValueError("Provided OpenAI GPT model is not available.")
-
-        self.tokenizer = OpenAIGPTTokenizer.from_pretrained(model)
+        self.tokenizer = OpenAIGPTTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = OpenAIGPTModel.from_pretrained(
-            pretrained_model_name_or_path=model, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
         )
-        self.name = model
+        self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
         self.pooling_operation = pooling_operation
         self.use_scalar_mix = use_scalar_mix
@@ -1425,27 +1413,24 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
 class OpenAIGPT2Embeddings(TokenEmbeddings):
     def __init__(
         self,
-        model: str = "gpt2-medium",
+        pretrained_model_name_or_path: str = "gpt2-medium",
         layers: str = "1",
         pooling_operation: str = "first_last",
         use_scalar_mix: bool = False,
     ):
         """OpenAI GPT-2 embeddings, as proposed in Radford et al. 2019.
-        :param model: name of OpenAI GPT-2 model
+        :param pretrained_model_name_or_path: name or path of OpenAI GPT-2 model
         :param layers: comma-separated list of layers
         :param pooling_operation: defines pooling operation for subwords
         :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
         """
         super().__init__()
 
-        if model not in OPENAI_GPT2_PRETRAINED_MODEL_ARCHIVE_MAP.keys():
-            raise ValueError("Provided OpenAI GPT-2 model is not available.")
-
-        self.tokenizer = GPT2Tokenizer.from_pretrained(model)
+        self.tokenizer = GPT2Tokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = GPT2Model.from_pretrained(
-            pretrained_model_name_or_path=model, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
         )
-        self.name = model
+        self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
         self.pooling_operation = pooling_operation
         self.use_scalar_mix = use_scalar_mix
@@ -2041,7 +2026,7 @@ class BertEmbeddings(TokenEmbeddings):
         """
         Bidirectional transformer embeddings of words, as proposed in Devlin et al., 2018.
         :param bert_model_or_path: name of BERT model ('') or directory path containing custom model, configuration file
-        and vocab file (names of three files should be - bert_config.json, pytorch_model.bin/model.chkpt, vocab.txt)
+        and vocab file (names of three files should be - config.json, pytorch_model.bin/model.chkpt, vocab.txt)
         :param layers: string indicating which layers to take for embedding
         :param pooling_operation: how to get from token piece embeddings to token embedding. Either pool them and take
         the average ('mean') or use first word piece embedding as token embedding ('first)
