@@ -222,7 +222,7 @@ def test_gpt_embeddings():
         use_scalar_mix: bool = False,
     ) -> Sentence:
         embeddings = OpenAIGPTEmbeddings(
-            model=gpt_model,
+            pretrained_model_name_or_path=gpt_model,
             layers=layers,
             pooling_operation=pooling_operation,
             use_scalar_mix=use_scalar_mix,
@@ -371,7 +371,7 @@ def test_gpt2_embeddings():
         use_scalar_mix: bool = False,
     ) -> Sentence:
         embeddings = OpenAIGPT2Embeddings(
-            model=gpt_model,
+            pretrained_model_name_or_path=gpt_model,
             layers=layers,
             pooling_operation=pooling_operation,
             use_scalar_mix=use_scalar_mix,
@@ -526,7 +526,7 @@ def test_xlnet_embeddings():
         use_scalar_mix: bool = False,
     ) -> Sentence:
         embeddings = XLNetEmbeddings(
-            model=xlnet_model,
+            pretrained_model_name_or_path=xlnet_model,
             layers=layers,
             pooling_operation=pooling_operation,
             use_scalar_mix=use_scalar_mix,
@@ -674,7 +674,9 @@ def test_transformer_xl_embeddings():
         sentence: str, layers: str = "1", use_scalar_mix: bool = False
     ) -> Sentence:
         embeddings = TransformerXLEmbeddings(
-            model=transfo_model, layers=layers, use_scalar_mix=use_scalar_mix
+            pretrained_model_name_or_path=transfo_model,
+            layers=layers,
+            use_scalar_mix=use_scalar_mix,
         )
         flair_sentence = Sentence(sentence)
         embeddings.embed(flair_sentence)
@@ -752,7 +754,7 @@ def test_xlm_embeddings():
         use_scalar_mix: bool = False,
     ) -> Sentence:
         embeddings = XLMEmbeddings(
-            model=xlm_model,
+            pretrained_model_name_or_path=xlm_model,
             layers=layers,
             pooling_operation=pooling_operation,
             use_scalar_mix=use_scalar_mix,
