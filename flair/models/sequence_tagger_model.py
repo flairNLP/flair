@@ -386,8 +386,8 @@ class SequenceTagger(flair.nn.Model):
         self.embeddings.embed(sentences)
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
-        # longest_token_sequence_in_batch: int = lengths[0]
         longest_token_sequence_in_batch: int = max(lengths)
+
         # initialize zero-padded word embeddings tensor
         sentence_tensor = torch.zeros(
             [
