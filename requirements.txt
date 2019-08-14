@@ -1,4 +1,4 @@
-torch>=1.0.0
+torch>=1.1.0
 gensim>=3.4.0
 pytest>=3.6.4
 tqdm>=4.26.0
