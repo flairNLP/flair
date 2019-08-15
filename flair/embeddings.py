@@ -2683,6 +2683,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         word_dropout: float = 0.0,
         locked_dropout: float = 0.0,
         rnn_type="GRU",
+        fine_tune: bool = True,
     ):
         """The constructor takes a list of embeddings to be combined.
         :param embeddings: a list of token embeddings
@@ -2709,7 +2710,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
         self.length_of_all_token_embeddings: int = self.embeddings.embedding_length
 
-        self.static_embeddings = False
+        self.static_embeddings = False if fine_tune else True
 
         self.__embedding_length: int = hidden_size
         if self.bidirectional:
@@ -2761,7 +2762,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def embed(self, sentences: Union[List[Sentence], Sentence]):
+    def _add_embeddings_internal(self, sentences: List[Sentence]):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
          only if embeddings are non-static."""
 
@@ -2840,14 +2841,14 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
                 first_rep = outputs[0, sentence_no]
                 embedding = torch.cat([first_rep, last_rep], 0)
 
+            if self.static_embeddings:
+                embedding = embedding.detach()
+
             sentence = sentences[sentence_no]
             sentence.set_embedding(self.name, embedding)
 
         # restore original order of sentences in the batch
         sentences = [sentences[i] for i in sort_invperm]
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
-        pass
 
 
 @deprecated(
