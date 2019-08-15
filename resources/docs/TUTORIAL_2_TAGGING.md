@@ -80,7 +80,7 @@ are provided:
 | ID | Task | Training Dataset | Accuracy |
 | -------------    | ------------- |------------- |------------- |
 | 'ner' | 4-class Named Entity Recognition |  Conll-03  |  **93.24** (F1) |
-| 'ner-ontonotes' | 12-class Named Entity Recognition |  Ontonotes  |  **89.52** (F1) |
+| 'ner-ontonotes' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.52** (F1) |
 | 'chunk' |  Syntactic Chunking   |  Conll-2000     |  **96.61** (F1) |
 | 'pos' |  Part-of-Speech Tagging |  Ontonotes     |  **98.01** (Accuracy) |
 | 'frame'  |   Semantic Frame Detection  (***Experimental***)|  Propbank 3.0     |  **93.92** (F1) |
@@ -94,7 +94,7 @@ In case you do not have a GPU available, we also distribute smaller models that 
 | ID | Task | Training Dataset | Accuracy |
 | -------------    | ------------- |------------- |------------- |
 | 'ner-fast' | 4-class Named Entity Recognition |  Conll-03  |  **92.61** (F1) |
-| 'ner-ontonotes-fast' | 12-class Named Entity Recognition |  Ontonotes  |  **89.28** (F1) |
+| 'ner-ontonotes-fast' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.28** (F1) |
 | 'chunk-fast' |  Syntactic Chunking   |  Conll-2000     |  **96.43** (F1) |
 | 'pos-fast' |  Part-of-Speech Tagging |  Ontonotes     |  **97.93** (Accuracy) |
 | 'frame-fast'  |   Semantic Frame Detection  (***Experimental***)| Propbank 3.0     |  **93.50** (F1) |

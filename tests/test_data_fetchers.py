@@ -28,6 +28,28 @@ def test_load_imdb_data_streaming(tasks_base_path):
     assert len(corpus.test) == 5
 
 
+def test_load_imdb_data_max_tokens(tasks_base_path):
+    # get training, test and dev data
+    corpus = flair.datasets.ClassificationCorpus(
+        tasks_base_path / "imdb", in_memory=True, max_tokens_per_doc=3
+    )
+
+    assert len(corpus.train[0]) <= 3
+    assert len(corpus.dev[0]) <= 3
+    assert len(corpus.test[0]) <= 3
+
+
+def test_load_imdb_data_streaming_max_tokens(tasks_base_path):
+    # get training, test and dev data
+    corpus = flair.datasets.ClassificationCorpus(
+        tasks_base_path / "imdb", in_memory=False, max_tokens_per_doc=3
+    )
+
+    assert len(corpus.train[0]) <= 3
+    assert len(corpus.dev[0]) <= 3
+    assert len(corpus.test[0]) <= 3
+
+
 def test_load_ag_news_data(tasks_base_path):
     # get training, test and dev data
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "ag_news")

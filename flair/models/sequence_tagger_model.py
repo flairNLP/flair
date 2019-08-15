@@ -20,6 +20,7 @@ from flair.training_utils import Metric, Result, store_embeddings
 
 from tqdm import tqdm
 from tabulate import tabulate
+import numpy as np
 
 log = logging.getLogger("flair")
 
@@ -345,7 +346,7 @@ class SequenceTagger(flair.nn.Model):
             # remove previous embeddings
             store_embeddings(filtered_sentences, "none")
 
-            # revere sort all sequences by their length
+            # reverse sort all sequences by their length
             filtered_sentences.sort(key=lambda x: len(x), reverse=True)
 
             # make mini-batches
@@ -384,11 +385,8 @@ class SequenceTagger(flair.nn.Model):
 
         self.embeddings.embed(sentences)
 
-        sentences.sort(key=lambda x: len(x), reverse=True)
-
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
-        tag_list: List = []
-        longest_token_sequence_in_batch: int = lengths[0]
+        longest_token_sequence_in_batch: int = max(lengths)
 
         # initialize zero-padded word embeddings tensor
         sentence_tensor = torch.zeros(
@@ -407,15 +405,6 @@ class SequenceTagger(flair.nn.Model):
                 [token.get_embedding().unsqueeze(0) for token in sentence], 0
             )
 
-            # get the tags in this sentence
-            tag_idx: List[int] = [
-                self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value)
-                for token in sentence
-            ]
-            # add tags as tensor
-            tag = torch.tensor(tag_idx, device=flair.device)
-            tag_list.append(tag)
-
         # TODO: this can only be removed once the implementations of word_dropout and locked_dropout have a batch_first mode
         sentence_tensor = sentence_tensor.transpose_(0, 1)
 
@@ -433,7 +422,9 @@ class SequenceTagger(flair.nn.Model):
             sentence_tensor = self.embedding2nn(sentence_tensor)
 
         if self.use_rnn:
-            packed = torch.nn.utils.rnn.pack_padded_sequence(sentence_tensor, lengths)
+            packed = torch.nn.utils.rnn.pack_padded_sequence(
+                sentence_tensor, lengths, enforce_sorted=False
+            )
 
             # if initial hidden state is trainable, use this state
             if self.train_initial_hidden_state:
@@ -456,6 +447,9 @@ class SequenceTagger(flair.nn.Model):
             #     sentence_tensor = self.word_dropout(sentence_tensor)
             if self.use_locked_dropout > 0.0:
                 sentence_tensor = self.locked_dropout(sentence_tensor)
+        else:
+            # transpose to batch_first mode
+            sentence_tensor = sentence_tensor.transpose_(0, 1)
 
         features = self.linear(sentence_tensor)
 
@@ -495,14 +489,12 @@ class SequenceTagger(flair.nn.Model):
         return score
 
     def _calculate_loss(
-        self, scores: torch.tensor, sentences: List[Sentence]
-    ) -> torch.tensor:
-
-        sentences.sort(key=lambda x: len(x), reverse=True)
+        self, features: torch.tensor, sentences: List[Sentence]
+    ) -> float:
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
-        tag_list: List = []
 
+        tag_list: List = []
         for s_id, sentence in enumerate(sentences):
             # get the tags in this sentence
             tag_idx: List[int] = [
@@ -513,12 +505,9 @@ class SequenceTagger(flair.nn.Model):
             tag = torch.tensor(tag_idx, device=flair.device)
             tag_list.append(tag)
 
-        return self._calculate_loss_old(scores, lengths, tag_list)
-
-    def _calculate_loss_old(self, features, lengths, tags) -> float:
         if self.use_crf:
             # pad tags if using batch-CRF decoder
-            tags, _ = pad_tensors(tags)
+            tags, _ = pad_tensors(tag_list)
 
             forward_score = self._forward_alg(features, lengths)
             gold_score = self._score_sentence(features, tags, lengths)
@@ -530,7 +519,7 @@ class SequenceTagger(flair.nn.Model):
         else:
             score = 0
             for sentence_feats, sentence_tags, sentence_length in zip(
-                features, tags, lengths
+                features, tag_list, lengths
             ):
                 sentence_feats = sentence_feats[:sentence_length]
 
@@ -549,8 +538,6 @@ class SequenceTagger(flair.nn.Model):
          - The second list contains a probability distribution over all `Labels` for each token
            in a sentence for all sentences.
         """
-
-        sentences.sort(key=lambda x: len(x), reverse=True)
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
 
@@ -635,19 +622,25 @@ class SequenceTagger(flair.nn.Model):
             prediction = idx.item()
             best_scores.append(softmax[prediction].item())
             scores.append([elem.item() for elem in softmax.flatten()])
-        # This has been taken from https://github.com/zalandoresearch/flair/pull/642
-        swap_best_path, swap_max_score = (
-            best_path[0],
-            scores[-1].index(max(scores[-1])),
-        )
-        scores[-1][swap_best_path], scores[-1][swap_max_score] = (
-            scores[-1][swap_max_score],
-            scores[-1][swap_best_path],
-        )
 
         start = best_path.pop()
         assert start == self.tag_dictionary.get_idx_for_item(START_TAG)
         best_path.reverse()
+
+        for index, (tag_id, tag_scores) in enumerate(zip(best_path, scores)):
+            if type(tag_id) != int and tag_id.item() != np.argmax(tag_scores):
+                swap_index_score = np.argmax(tag_scores)
+                scores[index][tag_id.item()], scores[index][swap_index_score] = (
+                    scores[index][swap_index_score],
+                    scores[index][tag_id.item()],
+                )
+            elif type(tag_id) == int and tag_id != np.argmax(tag_scores):
+                swap_index_score = np.argmax(tag_scores)
+                scores[index][tag_id], scores[index][swap_index_score] = (
+                    scores[index][swap_index_score],
+                    scores[index][tag_id],
+                )
+
         return best_scores, best_path, scores
 
     def _forward_alg(self, feats, lens_):

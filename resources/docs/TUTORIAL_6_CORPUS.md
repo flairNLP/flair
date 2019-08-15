@@ -249,9 +249,14 @@ Washington N I-PER
 went V O
 to P O
 Washington N B-LOC
+
+Sam N B-PER
+Houston N I-PER
+stayed V O
+home N O
 ```
 
-The first column is the word itself, the second coarse PoS tags, and the third BIO-annotated NER tags. To read such a 
+The first column is the word itself, the second coarse PoS tags, and the third BIO-annotated NER tags. Empty line separates sentences. To read such a 
 dataset, define the column structure as a dictionary and instantiate a `ColumnCorpus`.
 
 ```python
@@ -279,20 +284,20 @@ So, to check how many sentences there are in the training split, do
 len(corpus.train)
 ```
 
-You can also access a sentence and check out annotations. Lets assume that the first sentence in the training split is
-the example sentence from above, then executing these commands
+You can also access a sentence and check out annotations. Lets assume that the training split is
+read from the example above, then executing these commands
 
 ```python
-print(corpus.train[0].to_tagged_string('pos'))
 print(corpus.train[0].to_tagged_string('ner'))
+print(corpus.train[1].to_tagged_string('pos'))
 ```
 
-will print the sentence with different layers of annotation:
+will print the sentences with different layers of annotation:
 
 ```console
-George <N> Washington <N> went <V> to <P> Washington <N>
-
 George <B-PER> Washington <I-PER> went to Washington <B-LOC> .
+
+Sam <N> Houston <N> stayed <V> home <N>
 ```
 
 ## Reading a Text Classification Dataset
@@ -306,7 +311,9 @@ load specified text and labels from a simple CSV file or format your data to the
 Many text classification datasets are distributed as simple CSV files in which each row corresponds to a data point and
 columns correspond to text, labels, and other metadata.  You can load a CSV format classification dataset using 
 `CSVClassificationCorpus` by passing in a column format (like in `ColumnCorpus` above).  This column format indicates
-which column(s) in the CSV holds the text and which field(s) the label(s).
+which column(s) in the CSV holds the text and which field(s) the label(s). By default, Python's CSV library assumes that
+your files are in Excel CSV format, but [you can specify additional parameters](https://docs.python.org/3/library/csv.html#csv-fmt-params)
+if you use custom delimiters or quote characters.
 
 Note: You will need to save your split CSV data files in the `data_folder` path with each file titled appropriately i.e.
 `train.csv` `test.csv` `dev.csv`.   This is because the corpus initializers will automatically search for the train, 
@@ -325,7 +332,9 @@ column_name_map = {4: "text", 1: "label_topic", 2: "label_subtopic"}
 # load corpus containing training, test and dev data and if CSV has a header, you can skip it
 corpus: Corpus = CSVClassificationCorpus(data_folder,
                                          column_name_map,
-                                         skip_header=True) 
+                                         skip_header=True,
+                                         delimiter='\t',    # tab-separated files
+) 
 ```
 
 

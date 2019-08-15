@@ -28,6 +28,7 @@ class ColumnCorpus(Corpus):
         test_file=None,
         dev_file=None,
         tag_to_bioes=None,
+        comment_symbol: str = None,
         in_memory: bool = True,
     ):
         """
@@ -83,13 +84,21 @@ class ColumnCorpus(Corpus):
 
         # get train data
         train = ColumnDataset(
-            train_file, column_format, tag_to_bioes, in_memory=in_memory
+            train_file,
+            column_format,
+            tag_to_bioes,
+            comment_symbol=comment_symbol,
+            in_memory=in_memory,
         )
 
         # read in test file if exists, otherwise sample 10% of train data as test dataset
         if test_file is not None:
             test = ColumnDataset(
-                test_file, column_format, tag_to_bioes, in_memory=in_memory
+                test_file,
+                column_format,
+                tag_to_bioes,
+                comment_symbol=comment_symbol,
+                in_memory=in_memory,
             )
         else:
             train_length = len(train)
@@ -101,7 +110,11 @@ class ColumnCorpus(Corpus):
         # read in dev file if exists, otherwise sample 10% of train data as dev dataset
         if dev_file is not None:
             dev = ColumnDataset(
-                dev_file, column_format, tag_to_bioes, in_memory=in_memory
+                dev_file,
+                column_format,
+                tag_to_bioes,
+                comment_symbol=comment_symbol,
+                in_memory=in_memory,
             )
         else:
             train_length = len(train)
@@ -293,6 +306,7 @@ class CSVClassificationCorpus(Corpus):
         max_chars_per_doc=-1,
         in_memory: bool = False,
         skip_header: bool = False,
+        **fmtparams,
     ):
         """
         Instantiates a Corpus for text classification from CSV column formatted data
@@ -301,6 +315,7 @@ class CSVClassificationCorpus(Corpus):
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :param fmtparams: additional parameters for the CSV file reader
         :return: a Corpus with annotated train, dev and test data
         """
 
@@ -342,17 +357,19 @@ class CSVClassificationCorpus(Corpus):
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
             skip_header=skip_header,
+            **fmtparams,
         )
 
         if test_file is not None:
             test: Dataset = CSVClassificationDataset(
-                dev_file,
+                test_file,
                 column_name_map,
                 use_tokenizer=use_tokenizer,
                 max_tokens_per_doc=max_tokens_per_doc,
                 max_chars_per_doc=max_chars_per_doc,
                 in_memory=in_memory,
                 skip_header=skip_header,
+                **fmtparams,
             )
         else:
             train_length = len(train)
@@ -370,6 +387,7 @@ class CSVClassificationCorpus(Corpus):
                 max_chars_per_doc=max_chars_per_doc,
                 in_memory=in_memory,
                 skip_header=skip_header,
+                **fmtparams,
             )
         else:
             train_length = len(train)
@@ -522,12 +540,14 @@ class ColumnDataset(FlairDataset):
         path_to_column_file: Path,
         column_name_map: Dict[int, str],
         tag_to_bioes: str = None,
+        comment_symbol: str = None,
         in_memory: bool = True,
     ):
         assert path_to_column_file.exists()
         self.path_to_column_file = path_to_column_file
         self.tag_to_bioes = tag_to_bioes
         self.column_name_map = column_name_map
+        self.comment_symbol = comment_symbol
 
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
@@ -566,11 +586,11 @@ class ColumnDataset(FlairDataset):
 
             while line:
 
-                if line.startswith("#"):
+                if self.comment_symbol is not None and line.startswith(comment_symbol):
                     line = f.readline()
                     continue
 
-                if line.strip().replace("﻿", "") == "":
+                if line.isspace():
                     if len(sentence) > 0:
                         sentence.infer_space_after()
                         if self.in_memory:
@@ -624,7 +644,7 @@ class ColumnDataset(FlairDataset):
                 line = file.readline()
                 sentence: Sentence = Sentence()
                 while line:
-                    if line.startswith("#"):
+                    if self.comment_symbol is not None and line.startswith("#"):
                         line = file.readline()
                         continue
 
@@ -784,6 +804,7 @@ class CSVClassificationDataset(FlairDataset):
         use_tokenizer=True,
         in_memory: bool = True,
         skip_header: bool = False,
+        **fmtparams,
     ):
         if type(path_to_file) == str:
             path_to_file: Path = Path(path_to_file)
@@ -814,7 +835,7 @@ class CSVClassificationDataset(FlairDataset):
 
         with open(self.path_to_file) as csv_file:
 
-            csv_reader = csv.reader(csv_file)
+            csv_reader = csv.reader(csv_file, **fmtparams)
 
             if skip_header:
                 next(csv_reader, None)  # skip the headers
@@ -934,6 +955,7 @@ class ClassificationDataset(FlairDataset):
 
         self.total_sentence_count: int = 0
         self.max_chars_per_doc = max_chars_per_doc
+        self.max_tokens_per_doc = max_tokens_per_doc
 
         self.path_to_file = path_to_file
 
@@ -950,12 +972,6 @@ class ClassificationDataset(FlairDataset):
                     sentence = self._parse_line_to_sentence(
                         line, self.label_prefix, use_tokenizer
                     )
-                    if (
-                        sentence is not None
-                        and len(sentence) > max_tokens_per_doc
-                        and max_tokens_per_doc > 0
-                    ):
-                        sentence.tokens = sentence.tokens[:max_tokens_per_doc]
                     if sentence is not None and len(sentence.tokens) > 0:
                         self.sentences.append(sentence)
                         self.total_sentence_count += 1
@@ -989,6 +1005,14 @@ class ClassificationDataset(FlairDataset):
 
         if text and labels:
             sentence = Sentence(text, labels=labels, use_tokenizer=use_tokenizer)
+
+            if (
+                sentence is not None
+                and len(sentence) > self.max_tokens_per_doc
+                and self.max_tokens_per_doc > 0
+            ):
+                sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]
+
             return sentence
         return None
 
@@ -1324,7 +1348,11 @@ class GERMEVAL(ColumnCorpus):
             )
             log.warning("-" * 100)
         super(GERMEVAL, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            comment_symbol="#",
+            in_memory=in_memory,
         )
 
 
@@ -1676,17 +1704,20 @@ class UD_GERMAN_HDT(UniversalDependenciesCorpus):
         )
         cached_path(f"{ud_path}/de_hdt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/de_hdt-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/de_hdt-ud-train-a.conllu",
-            Path("datasets") / dataset_name / "original",
-        )
-        cached_path(
-            f"{ud_path}/de_hdt-ud-train-b.conllu",
-            Path("datasets") / dataset_name / "original",
-        )
-        data_path = Path(flair.cache_root) / "datasets" / dataset_name
 
-        train_filenames = ["de_hdt-ud-train-a.conllu", "de_hdt-ud-train-b.conllu"]
+        train_filenames = [
+            "de_hdt-ud-train-a-1.conllu",
+            "de_hdt-ud-train-a-2.conllu",
+            "de_hdt-ud-train-b-1.conllu",
+            "de_hdt-ud-train-b-2.conllu",
+        ]
+
+        for train_file in train_filenames:
+            cached_path(
+                f"{ud_path}/{train_file}", Path("datasets") / dataset_name / "original"
+            )
+
+        data_path = Path(flair.cache_root) / "datasets" / dataset_name
 
         new_train_file: Path = data_path / "de_hdt-ud-train-all.conllu"
 

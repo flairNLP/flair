@@ -1,5 +1,6 @@
 import time, datetime
 import random
+import sys
 import logging
 from pathlib import Path
 from typing import Union
@@ -7,6 +8,11 @@ from typing import Union
 from torch import cuda
 from torch.utils.data import Dataset, DataLoader
 from torch.optim.sgd import SGD
+
+try:
+    from apex import amp
+except ImportError:
+    amp = None
 
 import flair
 from flair.data import Dictionary
@@ -230,7 +236,6 @@ class LanguageModelTrainer:
 
         self.loss_function = torch.nn.CrossEntropyLoss()
         self.log_interval = 100
-        self.num_workers = 2
         self.epoch = epoch
         self.split = split
         self.loss = loss
@@ -248,8 +253,20 @@ class LanguageModelTrainer:
         max_epochs: int = 1000,
         checkpoint: bool = False,
         grow_to_sequence_length: int = 0,
+        num_workers: int = 2,
+        use_amp: bool = False,
+        amp_opt_level: str = "O1",
         **kwargs,
     ):
+
+        if use_amp:
+            if sys.version_info < (3, 0):
+                raise RuntimeError("Apex currently only supports Python 3. Aborting.")
+            if amp is None:
+                raise RuntimeError(
+                    "Failed to import apex. Please install apex from https://www.github.com/nvidia/apex "
+                    "to enable mixed-precision training."
+                )
 
         # cast string to Path
         if type(base_path) is str:
@@ -283,8 +300,13 @@ class LanguageModelTrainer:
                     optimizer, verbose=True, factor=anneal_factor, patience=patience
                 )
 
+            if use_amp:
+                self.model, optimizer = amp.initialize(
+                    self.model, optimizer, opt_level=amp_opt_level
+                )
+
             training_generator = DataLoader(
-                self.corpus.train, shuffle=False, num_workers=self.num_workers
+                self.corpus.train, shuffle=False, num_workers=num_workers
             )
 
             for epoch in range(self.epoch, max_epochs):
@@ -292,7 +314,7 @@ class LanguageModelTrainer:
                 # Shuffle training files randomly after serially iterating through corpus one
                 if epoch > 0:
                     training_generator = DataLoader(
-                        self.corpus.train, shuffle=True, num_workers=self.num_workers
+                        self.corpus.train, shuffle=True, num_workers=num_workers
                     )
                     self.model.save_checkpoint(
                         base_path / f"epoch_{epoch}.pt",
@@ -356,7 +378,12 @@ class LanguageModelTrainer:
 
                         # try to predict the targets
                         loss = self.loss_function(output.view(-1, ntokens), targets)
-                        loss.backward()
+                        # Backward
+                        if use_amp:
+                            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                                scaled_loss.backward()
+                        else:
+                            loss.backward()
 
                         # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
                         torch.nn.utils.clip_grad_norm_(self.model.parameters(), clip)
