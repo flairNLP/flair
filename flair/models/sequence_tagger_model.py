@@ -792,9 +792,9 @@ class SequenceTagger(flair.nn.Model):
 
         model_map["pos-fast"] = "/".join(
             [
-                aws_resource_path,
-                "POS-ontonotes--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
-                "en-pos-ontonotes-fast-v0.2.pt",
+                aws_resource_path_v04,
+                "release-pos-fast-0",
+                "en-pos-ontonotes-fast-v0.4.pt",
             ]
         )
 
