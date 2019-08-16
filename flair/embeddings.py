@@ -16,6 +16,8 @@ from torch.nn import ParameterList, Parameter
 from pytorch_transformers import (
     BertTokenizer,
     BertModel,
+    RobertaTokenizer,
+    RobertaModel,
     TransfoXLTokenizer,
     TransfoXLModel,
     OpenAIGPTModel,
@@ -28,27 +30,6 @@ from pytorch_transformers import (
     XLMModel,
     PreTrainedTokenizer,
     PreTrainedModel,
-)
-
-from pytorch_transformers.modeling_openai import (
-    OPENAI_GPT_PRETRAINED_MODEL_ARCHIVE_MAP as OPENAI_GPT_PRETRAINED_MODEL_ARCHIVE_MAP,
-)
-
-from pytorch_transformers.modeling_gpt2 import (
-    GPT2_PRETRAINED_CONFIG_ARCHIVE_MAP as OPENAI_GPT2_PRETRAINED_MODEL_ARCHIVE_MAP,
-)
-
-
-from pytorch_transformers.modeling_transfo_xl import (
-    TRANSFO_XL_PRETRAINED_MODEL_ARCHIVE_MAP as TRANSFORMER_XL_PRETRAINED_MODEL_ARCHIVE_MAP,
-)
-
-from pytorch_transformers.modeling_xlnet import (
-    XLNET_PRETRAINED_MODEL_ARCHIVE_MAP as XLNET_PRETRAINED_MODEL_ARCHIVE_MAP,
-)
-
-from pytorch_transformers.modeling_xlm import (
-    XLM_PRETRAINED_MODEL_ARCHIVE_MAP as XLM_PRETRAINED_MODEL_ARCHIVE_MAP,
 )
 
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
@@ -1026,33 +1007,6 @@ def _build_token_subwords_mapping(
     return token_subwords_mapping
 
 
-def _build_token_subwords_mapping_roberta(sentence: Sentence, model) -> Dict[int, int]:
-    """ Builds a dictionary that stores the following information:
-    Token index (key) and number of corresponding subwords (value) for a sentence.
-
-    :param sentence: input sentence
-    :param model: RoBERTa model
-    :return: dictionary of token index to corresponding number of subwords
-    """
-    token_subwords_mapping: Dict[int, int] = {}
-
-    for token in sentence.tokens:
-        token_text = token.text
-
-        # Leading spaces are needed for GPT2 BPE tokenization in RoBERTa (except at BOS):
-        # ``roberta.encode(' world').tolist()`` -> ``[0, 232, 2]``
-        # ``roberta.encode('world').tolist()``  -> ``[0, 8331, 2]``
-        padding = "" if token.idx == 1 else " "
-
-        current_subwords = model.encode(padding + token_text)
-
-        # ``roberta.encode(' world').tolist()`` will result in ``[0, 232, 2]``:
-        # 0 and 2 are special symbols (`<s>` and `</s>`), so ignore them in subword length calculation
-        token_subwords_mapping[token.idx] = len(current_subwords) - 2
-
-    return token_subwords_mapping
-
-
 def _build_token_subwords_mapping_gpt2(
     sentence: Sentence, tokenizer: PreTrainedTokenizer
 ) -> Dict[int, int]:
@@ -1108,11 +1062,7 @@ def _get_transformer_sentence_embeddings(
         for sentence in sentences:
             token_subwords_mapping: Dict[int, int] = {}
 
-            if name.startswith("roberta"):
-                token_subwords_mapping = _build_token_subwords_mapping_roberta(
-                    sentence=sentence, model=model
-                )
-            elif name.startswith("gpt2"):
+            if name.startswith("gpt2") or name.startswith("roberta"):
                 token_subwords_mapping = _build_token_subwords_mapping_gpt2(
                     sentence=sentence, tokenizer=tokenizer
                 )
@@ -1121,10 +1071,7 @@ def _get_transformer_sentence_embeddings(
                     sentence=sentence, tokenizer=tokenizer
                 )
 
-            if name.startswith("roberta"):
-                subwords = model.encode(sentence.to_tokenized_string())
-            else:
-                subwords = tokenizer.tokenize(sentence.to_tokenized_string())
+            subwords = tokenizer.tokenize(sentence.to_tokenized_string())
 
             offset = 0
 
@@ -1135,17 +1082,11 @@ def _get_transformer_sentence_embeddings(
             if eos_token:
                 subwords = subwords + [eos_token]
 
-            if not name.startswith("roberta"):
-                indexed_tokens = tokenizer.convert_tokens_to_ids(subwords)
-                tokens_tensor = torch.tensor([indexed_tokens])
-                tokens_tensor = tokens_tensor.to(flair.device)
+            indexed_tokens = tokenizer.convert_tokens_to_ids(subwords)
+            tokens_tensor = torch.tensor([indexed_tokens])
+            tokens_tensor = tokens_tensor.to(flair.device)
 
-                hidden_states = model(tokens_tensor)[-1]
-            else:
-                hidden_states = model.extract_features(
-                    subwords, return_all_hiddens=True
-                )
-                offset = 1
+            hidden_states = model(tokens_tensor)[-1]
 
             for token in sentence.tokens:
                 len_subwords = token_subwords_mapping[token.idx]
@@ -1181,9 +1122,12 @@ class TransformerXLEmbeddings(TokenEmbeddings):
         """
         super().__init__()
 
-        self.tokenizer = TransfoXLTokenizer.from_pretrained(pretrained_model_name_or_path)
+        self.tokenizer = TransfoXLTokenizer.from_pretrained(
+            pretrained_model_name_or_path
+        )
         self.model = TransfoXLModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
         )
         self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
@@ -1243,7 +1187,8 @@ class XLNetEmbeddings(TokenEmbeddings):
 
         self.tokenizer = XLNetTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = XLNetModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
         )
         self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
@@ -1306,7 +1251,8 @@ class XLMEmbeddings(TokenEmbeddings):
 
         self.tokenizer = XLMTokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = XLMModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
         )
         self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
@@ -1366,9 +1312,12 @@ class OpenAIGPTEmbeddings(TokenEmbeddings):
         """
         super().__init__()
 
-        self.tokenizer = OpenAIGPTTokenizer.from_pretrained(pretrained_model_name_or_path)
+        self.tokenizer = OpenAIGPTTokenizer.from_pretrained(
+            pretrained_model_name_or_path
+        )
         self.model = OpenAIGPTModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
         )
         self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
@@ -1428,7 +1377,8 @@ class OpenAIGPT2Embeddings(TokenEmbeddings):
 
         self.tokenizer = GPT2Tokenizer.from_pretrained(pretrained_model_name_or_path)
         self.model = GPT2Model.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path, output_hidden_states=True
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
         )
         self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
@@ -1469,28 +1419,25 @@ class OpenAIGPT2Embeddings(TokenEmbeddings):
 class RoBERTaEmbeddings(TokenEmbeddings):
     def __init__(
         self,
-        model: str = "roberta.large",
+        pretrained_model_name_or_path: str = "roberta-base",
         layers: str = "-1",
         pooling_operation: str = "first",
         use_scalar_mix: bool = False,
     ):
         """RoBERTa, as proposed by Liu et al. 2019.
-        :param model: name of RoBERTa model
+        :param pretrained_model_name_or_path: name or path of RoBERTa model
         :param layers: comma-separated list of layers
         :param pooling_operation: defines pooling operation for subwords
         :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
         """
         super().__init__()
 
-        try:
-            self.model = torch.hub.load("pytorch/fairseq", model)
-        except:
-            log_line(log)
-            log.warning("ATTENTION! fastBPE, sacremoses and subword_nmt needs to be installed!")
-            log_line(log)
-            pass
-
-        self.name = model
+        self.tokenizer = RobertaTokenizer.from_pretrained(pretrained_model_name_or_path)
+        self.model = RobertaModel.from_pretrained(
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
+        )
+        self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
         self.pooling_operation = pooling_operation
         self.use_scalar_mix = use_scalar_mix
@@ -1507,35 +1454,20 @@ class RoBERTaEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def __getstate__(self):
-        # Copy the object's state from self.__dict__ which contains
-        # all our instance attributes. Always use the dict.copy()
-        # method to avoid modifying the original state.
-        state = self.__dict__.copy()
-        # Remove the unpicklable entries.
-        state["model"] = None
-        state["_modules"] = None
-
-        return state
-
-    def __setstate__(self, d):
-        self.__dict__ = d
-        # Restore unpickable entries
-        super().__init__()
-        self.model = torch.hub.load("pytorch/fairseq", self.name)
-
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
         self.model.to(flair.device)
         self.model.eval()
 
         sentences = _get_transformer_sentence_embeddings(
             sentences=sentences,
-            tokenizer=None,
+            tokenizer=self.tokenizer,
             model=self.model,
             name=self.name,
             layers=self.layers,
             pooling_operation=self.pooling_operation,
             use_scalar_mix=self.use_scalar_mix,
+            bos_token="<s>",
+            eos_token="</s>",
         )
 
         return sentences
