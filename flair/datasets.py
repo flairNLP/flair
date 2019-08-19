@@ -2309,7 +2309,7 @@ class WIKINER_GERMAN(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        _download_wikiner("en", dataset_name)
+        _download_wikiner("de", dataset_name)
 
         super(WIKINER_GERMAN, self).__init__(
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
