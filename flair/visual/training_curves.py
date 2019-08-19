@@ -11,9 +11,10 @@ import math
 
 # to enable %matplotlib inline if running in ipynb
 from IPython import get_ipython
+
 ipy = get_ipython()
 if ipy is not None:
-    ipy.run_line_magic('matplotlib', 'inline')
+    ipy.run_line_magic("matplotlib", "inline")
 
 # change from Agg to TkAgg for interative mode
 matplotlib.use("TkAgg")
@@ -130,10 +131,11 @@ class Plotter(object):
         total = len(weights)
         columns = 2
         rows = max(2, int(math.ceil(total / columns)))
+        # print(rows)
 
-        figsize = (5, 5)
+        # figsize = (16, 16)
         if rows != columns:
-            figsize = (5, rows + 5)
+            figsize = (8, rows + 0)
 
         fig = plt.figure()
         f, axarr = plt.subplots(rows, columns, figsize=figsize)
@@ -165,7 +167,9 @@ class Plotter(object):
         plt.tight_layout(pad=1.0)
         path = file_name.parent / "weights.png"
         plt.savefig(path, dpi=300)
-        print(f"Weights plots are saved in {path}") # to let user know the path of the save plots
+        print(
+            f"Weights plots are saved in {path}"
+        )  # to let user know the path of the save plots
         plt.close(fig)
 
     def plot_training_curves(
@@ -200,13 +204,14 @@ class Plotter(object):
             plt.ylabel(plot_value)
             plt.xlabel("epochs")
 
-
         # save plots
         plt.tight_layout(pad=1.0)
         path = file_name.parent / "training.png"
         plt.savefig(path, dpi=300)
-        print(f"Loss and F1 plots are saved in {path}") # to let user know the path of the save plots
-        plt.show(block=False) # to have the plots displayed when user run this module
+        print(
+            f"Loss and F1 plots are saved in {path}"
+        )  # to let user know the path of the save plots
+        plt.show(block=False)  # to have the plots displayed when user run this module
         plt.close(fig)
 
     def plot_learning_rate(
@@ -225,14 +230,15 @@ class Plotter(object):
         ax.set_xlabel("Learning Rate")
         ax.set_xscale("log")
         ax.xaxis.set_major_formatter(plt.FormatStrFormatter("%.0e"))
-        
-        #plt.show()
-        
+
+        # plt.show()
 
         # save plot
         plt.tight_layout(pad=1.0)
         path = file_name.parent / "learning_rate.png"
         plt.savefig(path, dpi=300)
-        print(f"Learning_rate plots are saved in {path}") # to let user know the path of the save plots
-        plt.show(block=True) # to have the plots displayed when user run this module
+        print(
+            f"Learning_rate plots are saved in {path}"
+        )  # to let user know the path of the save plots
+        plt.show(block=True)  # to have the plots displayed when user run this module
         plt.close(fig)

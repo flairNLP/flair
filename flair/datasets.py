@@ -142,6 +142,9 @@ class UniversalDependenciesCorpus(Corpus):
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
         :return: a Corpus with annotated train, dev and test data
         """
+        if type(data_folder) == str:
+            data_folder: Path = Path(data_folder)
+
         # automatically identify train / test / dev files
         if train_file is None:
             for file in data_folder.iterdir():

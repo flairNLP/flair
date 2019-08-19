@@ -838,9 +838,9 @@ class SequenceTagger(flair.nn.Model):
 
         model_map["chunk-fast"] = "/".join(
             [
-                aws_resource_path,
-                "NP-conll2000--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
-                "en-chunk-conll2000-fast-v0.2.pt",
+                aws_resource_path_v04,
+                "release-chunk-fast-0",
+                "en-chunk-conll2000-fast-v0.4.pt",
             ]
         )
 
@@ -865,7 +865,7 @@ class SequenceTagger(flair.nn.Model):
         )
 
         model_map["fr-ner"] = "/".join(
-            [aws_resource_path, "NER-aij-wikiner-fr-wp3", "fr-ner.pt"]
+            [aws_resource_path_v04, "release-fr-ner-0", "fr-ner-wikiner-0.4.pt"]
         )
         model_map["nl-ner"] = "/".join(
             [aws_resource_path_v04, "NER-conll2002-dutch", "nl-ner-conll02-v0.1.pt"]
