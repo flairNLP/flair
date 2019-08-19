@@ -9,7 +9,7 @@ sklearn
 sqlitedict>=1.6.0
 deprecated>=1.2.4
 hyperopt>=0.1.1
-pytorch-transformers>=1.0.0
+pytorch-transformers>=1.1.0
 bpemb>=0.2.9
 regex
 tabulate

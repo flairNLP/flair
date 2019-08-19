@@ -13,6 +13,8 @@ from flair.embeddings import (
 )
 
 from pytorch_transformers import (
+    RobertaModel,
+    RobertaTokenizer,
     OpenAIGPTModel,
     OpenAIGPTTokenizer,
     GPT2Model,
@@ -39,28 +41,37 @@ def calculate_mean_embedding(
 
 @pytest.mark.slow
 def test_roberta_embeddings():
-    roberta_model = "roberta.base"
+    roberta_model: str = "roberta-base"
 
-    model = torch.hub.load("pytorch/fairseq", roberta_model)
+    tokenizer = RobertaTokenizer.from_pretrained(roberta_model)
+    model = RobertaModel.from_pretrained(
+        pretrained_model_name_or_path=roberta_model, output_hidden_states=True
+    )
     model.to(flair.device)
     model.eval()
 
     s: str = "Berlin and Munich have a lot of puppeteer to see ."
 
     with torch.no_grad():
-        tokens = model.encode(s)
-        all_layers = model.extract_features(tokens, return_all_hiddens=True)
-        first_layer = all_layers[1][0]
+        tokens = tokenizer.tokenize("<s> " + s + " </s>")
 
-    assert len(tokens) == len(first_layer)
+        indexed_tokens = tokenizer.convert_tokens_to_ids(tokens)
+        tokens_tensor = torch.tensor([indexed_tokens])
+        tokens_tensor = tokens_tensor.to(flair.device)
 
-    #  0    1       2     3       4       5   6    7   8    9     10    11  12   13    14   15
+        hidden_states = model(tokens_tensor)[-1]
+
+        first_layer = hidden_states[1][0]
+
+    assert len(first_layer) == len(tokens)
+
+    #         0           1      2       3        4         5       6      7      8       9      10     11     12     13    14      15
     #
-    #  0, 26795,  2614,   8,    10489,   33, 10,  319, 9, 32986, 9306, 254, 7,  192,  479,  2
-    #       \      /      |       |       |   |    |   |     \     |   /    |    |     |
-    #        Berlin      and    Munich  have  a   lot  of     puppeteer     to  see    .
+    #       '<s>',      'Ber', 'lin', 'Ġand', 'ĠMunich', 'Ġhave', 'Ġa', 'Ġlot', 'Ġof', 'Ġpupp', 'ete', 'er', 'Ġto', 'Ġsee', 'Ġ.',  '</s>'
+    #                      \     /       |        |         |       |      |      |         \      |      /     |      |      |
+    #                       Berlin      and    Munich     have      a     lot     of           puppeteer        to    see     .
     #
-    #          0          1       2       3   4    5   6          7          8    9    10
+    #                         0          1        2         3       4      5       6               7             8     9      10
 
     def embed_sentence(
         sentence: str,
@@ -69,7 +80,7 @@ def test_roberta_embeddings():
         use_scalar_mix: bool = False,
     ) -> Sentence:
         embeddings = RoBERTaEmbeddings(
-            model=roberta_model,
+            pretrained_model_name_or_path=roberta_model,
             layers=layers,
             pooling_operation=pooling_operation,
             use_scalar_mix=use_scalar_mix,

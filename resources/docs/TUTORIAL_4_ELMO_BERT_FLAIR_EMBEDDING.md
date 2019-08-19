@@ -420,22 +420,22 @@ embedding.embed(sentence)
 
 The following arguments can be passed to the `RoBERTaEmbeddings` class:
 
-| Argument            | Default         | Description
-| ------------------- | --------------- | -------------------------------------------------
-| `model`             | `roberta.large` | Defines RoBERTa model
-| `layers`            | `-1`            | Defines the to be used layers of the Transformer-based model
-| `pooling_operation` | `first`         | [Pooling operation section](#Pooling-operation)
-| `use_scalar_mix`    | `False`         | [Scalar mix section](#Scalar-mix)
+| Argument                        | Default         | Description
+| ------------------------------- | --------------- | -------------------------------------------------
+| `pretrained_model_name_or_path` | `roberta-base`  | Defines name or path of RoBERTa model
+| `layers`                        | `-1`            | Defines the to be used layers of the Transformer-based model
+| `pooling_operation`             | `first`         | [Pooling operation section](#Pooling-operation)
+| `use_scalar_mix`                | `False`         | [Scalar mix section](#Scalar-mix)
 
 Following XLM models can be used:
 
 | Model                | Details
 | -------------------- | -------------------------------------------------------------------------------------------------------
-| `roberta.base`       | 12-layer, 768-hidden, 12-heads
+| `roberta-base`       | 12-layer, 768-hidden, 12-heads
 |                      | RoBERTa English model
-| `roberta.base`       | 24-layer, 1024-hidden, 16-heads
+| `roberta-large`      | 24-layer, 1024-hidden, 16-heads
 |                      | RoBERTa English model
-| `roberta.large.mnli` | 24-layer, 1024-hidden, 16-heads
+| `roberta-large-mnli` | 24-layer, 1024-hidden, 16-heads
 |                      | RoBERTa English model, finetuned on MNLI
 
 ### Pooling operation
@@ -465,7 +465,7 @@ example shows how to use scalar mix for a base RoBERTa model on all layers:
 from flair.embeddings import RoBERTaEmbeddings
 
 # init embedding
-embedding = RoBERTaEmbeddings(model="roberta.base", layers="0,1,2,3,4,5,6,7,8,9,10,11,12",
+embedding = RoBERTaEmbeddings(pretrained_model_name_or_path="roberta-base", layers="0,1,2,3,4,5,6,7,8,9,10,11,12",
                               pooling_operation="first", use_scalar_mix=True)
 
 # create a sentence
