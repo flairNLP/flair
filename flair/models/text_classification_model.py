@@ -370,8 +370,8 @@ class TextClassifier(flair.nn.Model):
         model_map["de-offensive-language"] = "/".join(
             [
                 aws_resource_path,
-                "TEXT-CLASSIFICATION_germ-eval-2018_task-1",
-                "germ-eval-2018-task-1.pt",
+                "classy-offensive-de-rnn-cuda%3A0",
+                "germ-eval-2018-task-1-v0.4.pt",
             ]
         )
 

@@ -724,9 +724,7 @@ class SequenceTagger(flair.nn.Model):
     def _fetch_model(model_name) -> str:
 
         model_map = {}
-        aws_resource_path = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.2"
-        )
+
         aws_resource_path_v04 = (
             "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4"
         )
@@ -813,18 +811,14 @@ class SequenceTagger(flair.nn.Model):
             )
 
         model_map["frame"] = "/".join(
-            [
-                aws_resource_path,
-                "FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward%2Bnews-backward--v0.2",
-                "en-frame-ontonotes-v0.2.pt",
-            ]
+            [aws_resource_path_v04, "release-frame-1", "en-frame-ontonotes-v0.4.pt"]
         )
 
         model_map["frame-fast"] = "/".join(
             [
-                aws_resource_path,
-                "FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
-                "en-frame-ontonotes-fast-v0.2.pt",
+                aws_resource_path_v04,
+                "release-frame-fast-0",
+                "en-frame-ontonotes-fast-v0.4.pt",
             ]
         )
 
