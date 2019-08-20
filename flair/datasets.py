@@ -1132,8 +1132,8 @@ class FeideggerDataset(FlairDataset):
             preprocessor = lambda x: x.lower()
 
         for row in csv.reader(open(feidegger_csv, "r"), delimiter="|"):
+            image = Image(imageURL=row[0])
             for caption in row[1:-1]:
-
                 # get the split ID
                 split_id = int(row[-1])
 
@@ -1141,16 +1141,10 @@ class FeideggerDataset(FlairDataset):
                 self.data_points.append(
                     DataPair(
                         Sentence(preprocessor(caption), use_tokenizer=True),
-                        Image(imageURL=row[0]),
+                        image,
                     )
                 )
                 self.split.append(split_id)
-
-                # only use one caption for test and eval splits
-                if split_id == 8:
-                    break
-                if split_id == 9:
-                    break
 
     def __len__(self):
         return len(self.data_points)

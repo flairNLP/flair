@@ -13,6 +13,8 @@ import torch.nn.functional as F
 
 import numpy as np
 
+import itertools
+
 from typing import Union, List
 from pathlib import Path
 
@@ -276,7 +278,6 @@ class SimilarityLearner(flair.nn.Model):
     def forward_loss(
         self, data_points: Union[List[DataPoint], DataPoint]
     ) -> torch.tensor:
-
         mapped_source_embeddings = self._embed_source(data_points)
         mapped_target_embeddings = self._embed_target(data_points)
 
@@ -284,7 +285,24 @@ class SimilarityLearner(flair.nn.Model):
             (mapped_source_embeddings, mapped_target_embeddings)
         )
 
-        targets = torch.eye(similarity_matrix.shape[0]).to(flair.device)
+        def add_to_index_map(hashmap, key, val):
+            if key not in hashmap:
+                hashmap[key] = [val]
+            else:
+                hashmap[key] += [val]
+
+        index_map = {'first': {}, 'second': {}}
+        for data_point_id, data_point in enumerate(data_points):
+            add_to_index_map(index_map['first'], str(data_point.first), data_point_id)
+            add_to_index_map(index_map['second'], str(data_point.second), data_point_id)
+
+        targets = torch.zeros_like(similarity_matrix).to(flair.device)
+
+        for data_point in data_points:
+            first_indices = index_map['first'][str(data_point.first)]
+            second_indices = index_map['second'][str(data_point.second)]
+            for first_index, second_index in itertools.product(first_indices, second_indices):
+                targets[first_index, second_index] = 1.
 
         loss = self.similarity_loss(similarity_matrix, targets)
 
@@ -303,19 +321,19 @@ class SimilarityLearner(flair.nn.Model):
             target_index = {}
             all_target_embeddings = []
             for data_points in data_loader:
-                all_target_embeddings.append(
-                    self._embed_target(data_points).to(self.eval_device).detach()
-                )
-                # add to position index
+                target_inputs = []
                 for data_point in data_points:
-                    target_index[str(data_point.second)] = len(target_index.keys())
-
+                    if str(data_point.second) not in target_index:
+                        target_index[str(data_point.second)] = len(target_index)
+                        target_inputs.append(data_point)
+                if target_inputs:
+                    all_target_embeddings.append(self._embed_target(target_inputs).to(self.eval_device))
                 store_embeddings(data_points, embeddings_storage_mode)
             all_target_embeddings = torch.cat(all_target_embeddings, dim=0)  # [n0, d0]
+            assert(len(target_index) == all_target_embeddings.shape[0])
 
             ranks = []
-            modality_1_id = 0
-            for bi, data_points in enumerate(data_loader):
+            for data_points in data_loader:
                 batch_embeddings = self._embed_source(data_points)
 
                 batch_source_embeddings = batch_embeddings.to(self.eval_device)
@@ -344,7 +362,6 @@ class SimilarityLearner(flair.nn.Model):
                 ]
                 ranks.extend(batch_gt_ranks.tolist())
 
-                modality_1_id += len(data_points)
                 store_embeddings(data_points, embeddings_storage_mode)
 
         ranks = np.array(ranks)
