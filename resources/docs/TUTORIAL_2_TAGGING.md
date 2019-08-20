@@ -206,11 +206,11 @@ Here's an example:
 # load model
 tagger = SequenceTagger.load('frame')
 
-# make German sentence
+# make English sentence
 sentence_1 = Sentence('George returned to Berlin to return his hat .')
 sentence_2 = Sentence('He had a look at different hats .')
 
-# predict NER tags
+# predict semantic frames
 tagger.predict(sentence_1)
 tagger.predict(sentence_2)
 
