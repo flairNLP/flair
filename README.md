@@ -132,6 +132,7 @@ There are also good third-party articles and posts that illustrate how to use Fl
 * [How to build a microservice with Flair and Flask](https://shekhargulati.com/2019/01/04/building-a-sentiment-analysis-python-microservice-with-flair-and-flask/)
 * [A docker image for Flair](https://towardsdatascience.com/docker-image-for-nlp-5402c9a9069e)
 * [Great overview of Flair functionality and how to use in Colab](https://www.analyticsvidhya.com/blog/2019/02/flair-nlp-library-python/)
+* [Visualisation tool for highlighting the extracted entities](https://github.com/lunayach/visNER)
 
 
 ## Citing Flair
