@@ -376,7 +376,7 @@ class TextClassifier(flair.nn.Model):
         )
 
         model_map["en-sentiment"] = "/".join(
-            [aws_resource_path, "TEXT-CLASSIFICATION_imdb", "imdb.pt"]
+            [aws_resource_path, "classy-imdb-en-rnn-cuda%3A0", "imdb-v0.4.pt"]
         )
 
         cache_dir = Path("models")
