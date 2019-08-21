@@ -335,6 +335,7 @@ class SequenceTagger(flair.nn.Model):
         sentences: Union[List[Sentence], Sentence],
         mini_batch_size=32,
         embedding_storage_mode="none",
+        all_tag_prob: bool = False,
         verbose=False,
     ) -> List[Sentence]:
         with torch.no_grad():
@@ -366,14 +367,17 @@ class SequenceTagger(flair.nn.Model):
 
                 with torch.no_grad():
                     feature = self.forward(batch)
-                    tags, all_tags = self._obtain_labels(feature, batch)
+                    tags, all_tags = self._obtain_labels(
+                        feature, batch, get_all_tags=all_tag_prob
+                    )
 
                 for (sentence, sent_tags, sent_all_tags) in zip(batch, tags, all_tags):
                     for (token, tag, token_all_tags) in zip(
                         sentence.tokens, sent_tags, sent_all_tags
                     ):
                         token.add_tag_label(self.tag_type, tag)
-                        token.add_tags_proba_dist(self.tag_type, token_all_tags)
+                        if all_tag_prob:
+                            token.add_tags_proba_dist(self.tag_type, token_all_tags)
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
@@ -530,7 +534,7 @@ class SequenceTagger(flair.nn.Model):
             return score
 
     def _obtain_labels(
-        self, feature, sentences
+        self, feature, sentences, get_all_tags: bool = False
     ) -> (List[List[Label]], List[List[List[Label]]]):
         """
         Returns a tuple of two lists:
@@ -545,7 +549,9 @@ class SequenceTagger(flair.nn.Model):
         all_tags = []
         for feats, length in zip(feature, lengths):
             if self.use_crf:
-                confidences, tag_seq, scores = self._viterbi_decode(feats[:length])
+                confidences, tag_seq, scores = self._viterbi_decode(
+                    feats[:length], all_scores=get_all_tags
+                )
             else:
                 tag_seq = []
                 confidences = []
@@ -565,22 +571,24 @@ class SequenceTagger(flair.nn.Model):
                 ]
             )
 
-            all_tags.append(
-                [
+            if get_all_tags:
+                all_tags.append(
                     [
-                        Label(self.tag_dictionary.get_item_for_index(score_id), score)
-                        for score_id, score in enumerate(score_dist)
+                        [
+                            Label(
+                                self.tag_dictionary.get_item_for_index(score_id), score
+                            )
+                            for score_id, score in enumerate(score_dist)
+                        ]
+                        for score_dist in scores
                     ]
-                    for score_dist in scores
-                ]
-            )
+                )
 
         return tags, all_tags
 
-    def _viterbi_decode(self, feats):
+    def _viterbi_decode(self, feats, all_scores: bool = False):
         backpointers = []
         backscores = []
-        scores = []
 
         init_vvars = (
             torch.FloatTensor(1, self.tagset_size).to(flair.device).fill_(-10000.0)
@@ -621,25 +629,31 @@ class SequenceTagger(flair.nn.Model):
             _, idx = torch.max(backscore, 0)
             prediction = idx.item()
             best_scores.append(softmax[prediction].item())
-            scores.append([elem.item() for elem in softmax.flatten()])
 
         start = best_path.pop()
         assert start == self.tag_dictionary.get_idx_for_item(START_TAG)
         best_path.reverse()
 
-        for index, (tag_id, tag_scores) in enumerate(zip(best_path, scores)):
-            if type(tag_id) != int and tag_id.item() != np.argmax(tag_scores):
-                swap_index_score = np.argmax(tag_scores)
-                scores[index][tag_id.item()], scores[index][swap_index_score] = (
-                    scores[index][swap_index_score],
-                    scores[index][tag_id.item()],
-                )
-            elif type(tag_id) == int and tag_id != np.argmax(tag_scores):
-                swap_index_score = np.argmax(tag_scores)
-                scores[index][tag_id], scores[index][swap_index_score] = (
-                    scores[index][swap_index_score],
-                    scores[index][tag_id],
-                )
+        scores = []
+        # return all scores if so selected
+        if all_scores:
+            for backscore in backscores:
+                softmax = F.softmax(backscore, dim=0)
+                scores.append([elem.item() for elem in softmax.flatten()])
+
+            for index, (tag_id, tag_scores) in enumerate(zip(best_path, scores)):
+                if type(tag_id) != int and tag_id.item() != np.argmax(tag_scores):
+                    swap_index_score = np.argmax(tag_scores)
+                    scores[index][tag_id.item()], scores[index][swap_index_score] = (
+                        scores[index][swap_index_score],
+                        scores[index][tag_id.item()],
+                    )
+                elif type(tag_id) == int and tag_id != np.argmax(tag_scores):
+                    swap_index_score = np.argmax(tag_scores)
+                    scores[index][tag_id], scores[index][swap_index_score] = (
+                        scores[index][swap_index_score],
+                        scores[index][tag_id],
+                    )
 
         return best_scores, best_path, scores
 
