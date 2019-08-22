@@ -11,7 +11,14 @@ import torch.utils.data.dataloader
 from torch.utils.data.dataset import Subset, ConcatDataset
 
 import flair
-from flair.data import Sentence, Corpus, Token, FlairDataset, segtok_tokenizer, space_tokenizer
+from flair.data import (
+    Sentence,
+    Corpus,
+    Token,
+    FlairDataset,
+    segtok_tokenizer,
+    space_tokenizer,
+)
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -840,7 +847,9 @@ class ClassificationDataset(FlairDataset):
                 position = f.tell()
                 line = f.readline()
 
-    def _parse_line_to_sentence(self, line: str, label_prefix: str, tokenizer: Callable[[str], List[Token]]):
+    def _parse_line_to_sentence(
+        self, line: str, label_prefix: str, tokenizer: Callable[[str], List[Token]]
+    ):
         words = line.split()
 
         labels = []

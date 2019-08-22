@@ -4,7 +4,15 @@ from typing import List
 import pytest
 
 import flair.datasets
-from flair.data import Sentence, Label, Token, Dictionary, Corpus, Span, segtok_tokenizer
+from flair.data import (
+    Sentence,
+    Label,
+    Token,
+    Dictionary,
+    Corpus,
+    Span,
+    segtok_tokenizer,
+)
 
 
 def test_get_head():
@@ -252,7 +260,9 @@ def test_dictionary_save_and_load():
 def test_tagged_corpus_get_all_sentences():
     train_sentence = Sentence("I'm used in training.", tokenizer=segtok_tokenizer)
     dev_sentence = Sentence("I'm a dev sentence.", tokenizer=segtok_tokenizer)
-    test_sentence = Sentence("I will be only used for testing.", tokenizer=segtok_tokenizer)
+    test_sentence = Sentence(
+        "I will be only used for testing.", tokenizer=segtok_tokenizer
+    )
 
     corpus: Corpus = Corpus([train_sentence], [dev_sentence], [test_sentence])
 
@@ -262,7 +272,9 @@ def test_tagged_corpus_get_all_sentences():
 
 
 def test_tagged_corpus_make_vocab_dictionary():
-    train_sentence = Sentence("used in training. training is cool.", tokenizer=segtok_tokenizer)
+    train_sentence = Sentence(
+        "used in training. training is cool.", tokenizer=segtok_tokenizer
+    )
 
     corpus: Corpus = Corpus([train_sentence], [], [])
 
@@ -357,11 +369,15 @@ def test_tagged_corpus_statistics():
 
 
 def test_tagged_corpus_statistics_string_label():
-    train_sentence = Sentence("I love Berlin.", labels=["class_1"], tokenizer=segtok_tokenizer)
+    train_sentence = Sentence(
+        "I love Berlin.", labels=["class_1"], tokenizer=segtok_tokenizer
+    )
     dev_sentence = Sentence(
         "The sun is shining.", labels=["class_2"], tokenizer=segtok_tokenizer
     )
-    test_sentence = Sentence("Berlin is sunny.", labels=["class_1"], tokenizer=segtok_tokenizer)
+    test_sentence = Sentence(
+        "Berlin is sunny.", labels=["class_1"], tokenizer=segtok_tokenizer
+    )
 
     class_to_count_dict = Corpus._get_class_to_count(
         [train_sentence, dev_sentence, test_sentence]
@@ -383,7 +399,9 @@ def test_tagged_corpus_statistics_string_label():
 
 
 def test_tagged_corpus_statistics_multi_label():
-    train_sentence = Sentence("I love Berlin.", labels=["class_1"], tokenizer=segtok_tokenizer)
+    train_sentence = Sentence(
+        "I love Berlin.", labels=["class_1"], tokenizer=segtok_tokenizer
+    )
     dev_sentence = Sentence(
         "The sun is shining.", labels=["class_2"], tokenizer=segtok_tokenizer
     )
@@ -417,7 +435,8 @@ def test_tagged_corpus_get_tag_statistic():
     train_sentence[5].add_tag("ner", "S-LOC")
 
     dev_sentence = Sentence(
-        "Facebook, Inc. is a company, and Google is one as well.", tokenizer=segtok_tokenizer
+        "Facebook, Inc. is a company, and Google is one as well.",
+        tokenizer=segtok_tokenizer,
     )
     dev_sentence[0].add_tag("ner", "B-ORG")
     dev_sentence[1].add_tag("ner", "I-ORG")
@@ -438,7 +457,9 @@ def test_tagged_corpus_get_tag_statistic():
 
 
 def test_tagged_corpus_downsample():
-    sentence = Sentence("I love Berlin.", labels=[Label("class_1")], tokenizer=segtok_tokenizer)
+    sentence = Sentence(
+        "I love Berlin.", labels=[Label("class_1")], tokenizer=segtok_tokenizer
+    )
 
     corpus: Corpus = Corpus(
         [
@@ -617,7 +638,8 @@ def test_sentence_to_dict():
     assert 1 == len(dict["labels"])
 
     sentence = Sentence(
-        "Facebook, Inc. is a company, and Google is one as well.", tokenizer=segtok_tokenizer
+        "Facebook, Inc. is a company, and Google is one as well.",
+        tokenizer=segtok_tokenizer,
     )
 
     # bioes tags

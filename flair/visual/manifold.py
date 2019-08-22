@@ -28,14 +28,14 @@ def split_to_spans(s: Sentence):
     orig = s.to_original_text()
     last_idx = 0
     spans = []
-    tagged_ents = s.get_spans('ner')
+    tagged_ents = s.get_spans("ner")
     for ent in tagged_ents:
         if last_idx != ent.start_pos:
-            spans.append((orig[last_idx:ent.start_pos], None))
-        spans.append((orig[ent.start_pos:ent.end_pos], ent.tag))
+            spans.append((orig[last_idx : ent.start_pos], None))
+        spans.append((orig[ent.start_pos : ent.end_pos], ent.tag))
         last_idx = ent.end_pos
     if last_idx < len(orig) - 1:
-        spans.append((orig[last_idx:len(orig)], None))
+        spans.append((orig[last_idx : len(orig)], None))
     return spans
 
 
@@ -83,8 +83,8 @@ class Visualizer(object):
             for i, token in enumerate(strs):
                 prop = '<b><font color="red"> {token} </font></b>'.format(token=token)
 
-                prop = " ".join(strs[max(i - 4, 0): i]) + prop
-                prop = prop + " ".join(strs[i + 1: min(len(strs), i + 5)])
+                prop = " ".join(strs[max(i - 4, 0) : i]) + prop
+                prop = prop + " ".join(strs[i + 1 : min(len(strs), i + 5)])
 
                 contexts.append("<p>" + prop + "</p>")
 
@@ -115,9 +115,9 @@ class Visualizer(object):
                 context = '<span style="background-color: yellow"><b>{}</b></span>'.format(
                     char
                 )
-                context = "".join(sentence[max(i - 30, 0): i]) + context
+                context = "".join(sentence[max(i - 30, 0) : i]) + context
                 context = context + "".join(
-                    sentence[i + 1: min(len(sentence), i + 30)]
+                    sentence[i + 1 : min(len(sentence), i + 30)]
                 )
 
                 contexts.append(context)
@@ -150,7 +150,9 @@ class Visualizer(object):
         mpld3.save_html(fig, file)
 
     @staticmethod
-    def render_ner_html(sentences: Union[List[Sentence], Sentence], settings=None, wrap_page=True) -> str:
+    def render_ner_html(
+        sentences: Union[List[Sentence], Sentence], settings=None, wrap_page=True
+    ) -> str:
         """
         :param sentences: single sentence or list of sentences to convert to HTML
         :param settings: overrides and completes default settings; includes colors and labels dictionaries
@@ -171,13 +173,7 @@ class Visualizer(object):
         if settings and "colors" in settings:
             colors.update(settings["colors"])
 
-        labels = {
-            "PER": "PER",
-            "ORG": "ORG",
-            "LOC": "LOC",
-            "MISC": "MISC",
-            "O": "O",
-        }
+        labels = {"PER": "PER", "ORG": "ORG", "LOC": "LOC", "MISC": "MISC", "O": "O"}
 
         if settings and "labels" in settings:
             labels.update(settings["labels"])
@@ -187,14 +183,16 @@ class Visualizer(object):
             spans = split_to_spans(s)
 
             for fragment, tag in spans:
-                escaped_fragment = html.escape(fragment).replace('\n', '<br/>')
+                escaped_fragment = html.escape(fragment).replace("\n", "<br/>")
                 if tag:
-                    escaped_fragment = TAGGED_ENTITY.format(entity=escaped_fragment,
-                                                            label=labels.get(tag, "O"),
-                                                            color=colors.get(tag, "#ddd"))
+                    escaped_fragment = TAGGED_ENTITY.format(
+                        entity=escaped_fragment,
+                        label=labels.get(tag, "O"),
+                        color=colors.get(tag, "#ddd"),
+                    )
                 tagged_html.append(escaped_fragment)
 
-        final_text = ''.join(tagged_html)
+        final_text = "".join(tagged_html)
 
         if wrap_page:
             return HTML_PAGE.format(text=final_text)

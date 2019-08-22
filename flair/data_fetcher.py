@@ -8,7 +8,14 @@ from pathlib import Path
 from deprecated import deprecated
 
 import flair
-from flair.data import Sentence, Corpus, Token, MultiCorpus, space_tokenizer, segtok_tokenizer
+from flair.data import (
+    Sentence,
+    Corpus,
+    Token,
+    MultiCorpus,
+    space_tokenizer,
+    segtok_tokenizer,
+)
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -442,25 +449,19 @@ class NLPTaskDataFetcher:
         sentences_train: List[
             Sentence
         ] = NLPTaskDataFetcher.read_text_classification_file(
-            train_file,
-            tokenizer=tokenizer,
-            max_tokens_per_doc=max_tokens_per_doc,
+            train_file, tokenizer=tokenizer, max_tokens_per_doc=max_tokens_per_doc
         )
         sentences_test: List[
             Sentence
         ] = NLPTaskDataFetcher.read_text_classification_file(
-            test_file,
-            tokenizer=tokenizer,
-            max_tokens_per_doc=max_tokens_per_doc,
+            test_file, tokenizer=tokenizer, max_tokens_per_doc=max_tokens_per_doc
         )
 
         if dev_file is not None:
             sentences_dev: List[
                 Sentence
             ] = NLPTaskDataFetcher.read_text_classification_file(
-                dev_file,
-                tokenizer=tokenizer,
-                max_tokens_per_doc=max_tokens_per_doc,
+                dev_file, tokenizer=tokenizer, max_tokens_per_doc=max_tokens_per_doc
             )
         else:
             sentences_dev: List[Sentence] = [
@@ -474,7 +475,9 @@ class NLPTaskDataFetcher:
     @staticmethod
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
     def read_text_classification_file(
-        path_to_file: Union[str, Path], max_tokens_per_doc=-1, tokenizer=segtok_tokenizer
+        path_to_file: Union[str, Path],
+        max_tokens_per_doc=-1,
+        tokenizer=segtok_tokenizer,
     ) -> List[Sentence]:
         """
         Reads a data file for text classification. The file should contain one document/text per line.
@@ -507,9 +510,7 @@ class NLPTaskDataFetcher:
                 text = line[l_len:].strip()
 
                 if text and labels:
-                    sentence = Sentence(
-                        text, labels=labels, tokenizer=tokenizer
-                    )
+                    sentence = Sentence(text, labels=labels, tokenizer=tokenizer)
                     if len(sentence) > max_tokens_per_doc and max_tokens_per_doc > 0:
                         sentence.tokens = sentence.tokens[:max_tokens_per_doc]
                     if len(sentence.tokens) > 0:

@@ -346,7 +346,11 @@ def space_tokenizer(text: str) -> List[Token]:
         if char == " ":
             if len(word) > 0:
                 start_position = index - len(word)
-                tokens.append(Token(text=word, start_position=start_position, whitespace_after=True))
+                tokens.append(
+                    Token(
+                        text=word, start_position=start_position, whitespace_after=True
+                    )
+                )
 
             word = ""
         else:
@@ -355,7 +359,9 @@ def space_tokenizer(text: str) -> List[Token]:
     index += 1
     if len(word) > 0:
         start_position = index - len(word)
-        tokens.append(Token(text=word, start_position=start_position, whitespace_after=False))
+        tokens.append(
+            Token(text=word, start_position=start_position, whitespace_after=False)
+        )
     return tokens
 
 
@@ -383,7 +389,9 @@ def segtok_tokenizer(text: str) -> List[Token]:
             start_position = word_offset
         except:
             word_offset = previous_word_offset + 1
-            start_position = current_offset + 1 if current_offset > 0 else current_offset
+            start_position = (
+                current_offset + 1 if current_offset > 0 else current_offset
+            )
 
         token = Token(text=word, start_position=start_position, whitespace_after=True)
         tokens.append(token)
