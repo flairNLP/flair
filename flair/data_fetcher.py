@@ -1,5 +1,5 @@
 import os
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Callable
 import re
 import logging
 from enum import Enum
@@ -8,7 +8,7 @@ from pathlib import Path
 from deprecated import deprecated
 
 import flair
-from flair.data import Sentence, Corpus, Token, MultiCorpus
+from flair.data import Sentence, Corpus, Token, MultiCorpus, space_tokenizer, segtok_tokenizer
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
@@ -225,13 +225,13 @@ class NLPTaskDataFetcher:
             NLPTask.TREC_50.value,
             NLPTask.REGRESSION.value,
         ]:
-            use_tokenizer: bool = False if task in [
+            tokenizer: Callable[[str], List[Token]] = space_tokenizer if task in [
                 NLPTask.TREC_6.value,
                 NLPTask.TREC_50.value,
-            ] else True
+            ] else segtok_tokenizer
 
             return NLPTaskDataFetcher.load_classification_corpus(
-                data_folder, use_tokenizer=use_tokenizer
+                data_folder, tokenizer=tokenizer
             )
 
         # NER corpus for Basque
@@ -243,7 +243,7 @@ class NLPTaskDataFetcher:
 
         if task.startswith("wassa"):
             return NLPTaskDataFetcher.load_classification_corpus(
-                data_folder, use_tokenizer=True
+                data_folder, tokenizer=segtok_tokenizer
             )
 
     @staticmethod
@@ -396,7 +396,7 @@ class NLPTaskDataFetcher:
         train_file=None,
         test_file=None,
         dev_file=None,
-        use_tokenizer: bool = True,
+        tokenizer: Callable[[str], List[Token]] = segtok_tokenizer,
         max_tokens_per_doc=-1,
     ) -> Corpus:
         """
@@ -443,14 +443,14 @@ class NLPTaskDataFetcher:
             Sentence
         ] = NLPTaskDataFetcher.read_text_classification_file(
             train_file,
-            use_tokenizer=use_tokenizer,
+            tokenizer=tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
         )
         sentences_test: List[
             Sentence
         ] = NLPTaskDataFetcher.read_text_classification_file(
             test_file,
-            use_tokenizer=use_tokenizer,
+            tokenizer=tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
         )
 
@@ -459,7 +459,7 @@ class NLPTaskDataFetcher:
                 Sentence
             ] = NLPTaskDataFetcher.read_text_classification_file(
                 dev_file,
-                use_tokenizer=use_tokenizer,
+                tokenizer=tokenizer,
                 max_tokens_per_doc=max_tokens_per_doc,
             )
         else:
@@ -474,7 +474,7 @@ class NLPTaskDataFetcher:
     @staticmethod
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
     def read_text_classification_file(
-        path_to_file: Union[str, Path], max_tokens_per_doc=-1, use_tokenizer=True
+        path_to_file: Union[str, Path], max_tokens_per_doc=-1, tokenizer=segtok_tokenizer
     ) -> List[Sentence]:
         """
         Reads a data file for text classification. The file should contain one document/text per line.
@@ -508,7 +508,7 @@ class NLPTaskDataFetcher:
 
                 if text and labels:
                     sentence = Sentence(
-                        text, labels=labels, use_tokenizer=use_tokenizer
+                        text, labels=labels, tokenizer=tokenizer
                     )
                     if len(sentence) > max_tokens_per_doc and max_tokens_per_doc > 0:
                         sentence.tokens = sentence.tokens[:max_tokens_per_doc]

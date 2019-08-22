@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Callable
 
 import torch, flair
 import logging
@@ -335,6 +335,70 @@ class Span:
         )
 
 
+def space_tokenizer(text: str) -> List[Token]:
+    """
+    Tokenizer based on space character only.
+    """
+    tokens: List[Token] = list()
+    word = ""
+    index = -1
+    for index, char in enumerate(text):
+        if char == " ":
+            if len(word) > 0:
+                start_position = index - len(word)
+                tokens.append(Token(text=word, start_position=start_position, whitespace_after=True))
+
+            word = ""
+        else:
+            word += char
+    # increment for last token in sentence if not followed by whitespace
+    index += 1
+    if len(word) > 0:
+        start_position = index - len(word)
+        tokens.append(Token(text=word, start_position=start_position, whitespace_after=False))
+    return tokens
+
+
+def segtok_tokenizer(text: str) -> List[Token]:
+    """
+    Tokenizer using segtok, a third party library dedicated to rules-based Indo-European languages.
+    https://github.com/fnl/segtok
+    """
+    tokens: List[Token] = list()
+
+    words: List[str] = list()
+    sentences = split_single(text)
+    for sentence in sentences:
+        contractions = split_contractions(word_tokenizer(sentence))
+        words.extend(contractions)
+
+    # determine offsets for whitespace_after field
+    index = text.index
+    current_offset = 0
+    previous_word_offset = -1
+    previous_token = None
+    for word in words:
+        try:
+            word_offset = index(word, current_offset)
+            start_position = word_offset
+        except:
+            word_offset = previous_word_offset + 1
+            start_position = current_offset + 1 if current_offset > 0 else current_offset
+
+        token = Token(text=word, start_position=start_position, whitespace_after=True)
+        tokens.append(token)
+
+        if word_offset - 1 == previous_word_offset and previous_token is not None:
+            previous_token.whitespace_after = False
+
+        word_len = len(word)
+        current_offset = word_offset + word_len
+        previous_word_offset = current_offset - 1
+        previous_token = token
+
+    return tokens
+
+
 class Sentence(DataPoint):
     """
     A Sentence is a list of Tokens and is used to represent a sentence or text fragment.
@@ -343,7 +407,7 @@ class Sentence(DataPoint):
     def __init__(
         self,
         text: str = None,
-        use_tokenizer: bool = False,
+        tokenizer: Callable[[str], List[Token]] = space_tokenizer,
         labels: Union[List[Label], List[str]] = None,
         language_code: str = None,
     ):
@@ -362,62 +426,7 @@ class Sentence(DataPoint):
 
         # if text is passed, instantiate sentence with tokens (words)
         if text is not None:
-
-            # tokenize the text first if option selected
-            if use_tokenizer:
-
-                # use segtok for tokenization
-                tokens = []
-                sentences = split_single(text)
-                for sentence in sentences:
-                    contractions = split_contractions(word_tokenizer(sentence))
-                    tokens.extend(contractions)
-
-                # determine offsets for whitespace_after field
-                index = text.index
-                running_offset = 0
-                last_word_offset = -1
-                last_token = None
-                for word in tokens:
-                    try:
-                        word_offset = index(word, running_offset)
-                        start_position = word_offset
-                    except:
-                        word_offset = last_word_offset + 1
-                        start_position = (
-                            running_offset + 1 if running_offset > 0 else running_offset
-                        )
-
-                    token = Token(word, start_position=start_position)
-                    self.add_token(token)
-
-                    if word_offset - 1 == last_word_offset and last_token is not None:
-                        last_token.whitespace_after = False
-
-                    word_len = len(word)
-                    running_offset = word_offset + word_len
-                    last_word_offset = running_offset - 1
-                    last_token = token
-
-            # otherwise assumes whitespace tokenized text
-            else:
-                # add each word in tokenized string as Token object to Sentence
-                word = ""
-                index = -1
-                for index, char in enumerate(text):
-                    if char == " ":
-                        if len(word) > 0:
-                            token = Token(word, start_position=index - len(word))
-                            self.add_token(token)
-
-                        word = ""
-                    else:
-                        word += char
-                # increment for last token in sentence if not followed by whtespace
-                index += 1
-                if len(word) > 0:
-                    token = Token(word, start_position=index - len(word))
-                    self.add_token(token)
+            [self.add_token(token) for token in tokenizer(text)]
 
         # log a warning if the dataset is empty
         if text == "":
