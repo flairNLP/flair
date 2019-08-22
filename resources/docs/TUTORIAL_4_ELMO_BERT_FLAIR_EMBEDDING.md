@@ -242,7 +242,7 @@ The `OpenAIGPTEmbeddings` class has several arguments:
 
 ## OpenAI GPT-2 Embeddings
 
-The OpenAI GPT-2 model was proposed by [Radford et. al (2018)(https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf).
+The OpenAI GPT-2 model was proposed by [Radford et. al (2018)](https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf).
 GPT-2 is also an uni-directional Transformer-based model, that was trained on a larger corpus compared to the GPT model.
 
 The GPT-2 model can be used with the `OpenAIGPT2Embeddings` class:
