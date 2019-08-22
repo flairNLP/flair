@@ -383,11 +383,11 @@ Following XLM models can be used:
 | ------------------------- | -------------------------------------------------------------------------------------------------------
 | `xlm-mlm-en-2048`         | 12-layer, 1024-hidden, 8-heads
 |                           | XLM English model
-| `xlm-mlm-ende-1024`       | 12-layer, 1024-hidden, 8-heads
+| `xlm-mlm-ende-1024`       | 6-layer, 1024-hidden, 8-heads
 |                           | XLM English-German Multi-language model
-| `xlm-mlm-enfr-1024`       | 12-layer, 1024-hidden, 8-heads
+| `xlm-mlm-enfr-1024`       | 6-layer, 1024-hidden, 8-heads
 |                           | XLM English-French Multi-language model
-| `xlm-mlm-enro-1024`       | 12-layer, 1024-hidden, 8-heads
+| `xlm-mlm-enro-1024`       | 6-layer, 1024-hidden, 8-heads
 |                           | XLM English-Romanian Multi-language model
 | `xlm-mlm-xnli15-1024`     | 12-layer, 1024-hidden, 8-heads
 |                           | XLM Model pre-trained with MLM on the [15 XNLI languages](https://github.com/facebookresearch/XNLI>)
@@ -395,7 +395,7 @@ Following XLM models can be used:
 |                           | XLM Model pre-trained with MLM + TLM on the [15 XNLI languages](https://github.com/facebookresearch/XNLI)
 | `xlm-clm-enfr-1024`       | 12-layer, 1024-hidden, 8-heads
 |                           | XLM English model trained with CLM (Causal Language Modeling)
-| `xlm-clm-ende-1024`       | 12-layer, 1024-hidden, 8-heads
+| `xlm-clm-ende-1024`       | 6-layer, 1024-hidden, 8-heads
 |                           | XLM English-German Multi-language model trained with CLM (Causal Language Modeling)
 
 ## RoBERTa Embeddings
