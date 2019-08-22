@@ -799,6 +799,10 @@ class ELMoEmbeddings(TokenEmbeddings):
 class ELMoTransformerEmbeddings(TokenEmbeddings):
     """Contextual word embeddings using word-level Transformer-based LM, as proposed in Peters et al., 2018."""
 
+    @deprecated(
+        version="0.4.2",
+        reason="Not possible to load or save ELMo Transformer models. @stefan-it is working on it.",
+    )
     def __init__(self, model_file: str):
         super().__init__()
 
