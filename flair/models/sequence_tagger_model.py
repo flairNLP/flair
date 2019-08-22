@@ -724,9 +724,7 @@ class SequenceTagger(flair.nn.Model):
     def _fetch_model(model_name) -> str:
 
         model_map = {}
-        aws_resource_path = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.2"
-        )
+
         aws_resource_path_v04 = (
             "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4"
         )
@@ -737,25 +735,25 @@ class SequenceTagger(flair.nn.Model):
 
         model_map["ner-fast"] = "/".join(
             [
-                aws_resource_path,
-                "NER-conll03--h256-l1-b32-experimental--fast-v0.2",
-                "en-ner-fast-conll03-v0.2.pt",
+                aws_resource_path_v04,
+                "NER-conll03--h256-l1-b32-p3-0.5-%2Bglove%2Bnews-forward-fast%2Bnews-backward-fast-normal-locked0.5-word0.05--release_4",
+                "en-ner-fast-conll03-v0.4.pt",
             ]
         )
 
         model_map["ner-ontonotes"] = "/".join(
             [
-                aws_resource_path,
-                "NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward%2Bnews-backward--v0.2",
-                "en-ner-ontonotes-v0.3.pt",
+                aws_resource_path_v04,
+                "release-ner-ontonotes-0",
+                "en-ner-ontonotes-v0.4.pt",
             ]
         )
 
         model_map["ner-ontonotes-fast"] = "/".join(
             [
-                aws_resource_path,
-                "NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
-                "en-ner-ontonotes-fast-v0.3.pt",
+                aws_resource_path_v04,
+                "release-ner-ontonotes-fast-0",
+                "en-ner-ontonotes-fast-v0.4.pt",
             ]
         )
 
@@ -792,9 +790,9 @@ class SequenceTagger(flair.nn.Model):
 
         model_map["pos-fast"] = "/".join(
             [
-                aws_resource_path,
-                "POS-ontonotes--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
-                "en-pos-ontonotes-fast-v0.2.pt",
+                aws_resource_path_v04,
+                "release-pos-fast-0",
+                "en-pos-ontonotes-fast-v0.4.pt",
             ]
         )
 
@@ -813,18 +811,14 @@ class SequenceTagger(flair.nn.Model):
             )
 
         model_map["frame"] = "/".join(
-            [
-                aws_resource_path,
-                "FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward%2Bnews-backward--v0.2",
-                "en-frame-ontonotes-v0.2.pt",
-            ]
+            [aws_resource_path_v04, "release-frame-1", "en-frame-ontonotes-v0.4.pt"]
         )
 
         model_map["frame-fast"] = "/".join(
             [
-                aws_resource_path,
-                "FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
-                "en-frame-ontonotes-fast-v0.2.pt",
+                aws_resource_path_v04,
+                "release-frame-fast-0",
+                "en-frame-ontonotes-fast-v0.4.pt",
             ]
         )
 
@@ -838,18 +832,14 @@ class SequenceTagger(flair.nn.Model):
 
         model_map["chunk-fast"] = "/".join(
             [
-                aws_resource_path,
-                "NP-conll2000--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
-                "en-chunk-conll2000-fast-v0.2.pt",
+                aws_resource_path_v04,
+                "release-chunk-fast-0",
+                "en-chunk-conll2000-fast-v0.4.pt",
             ]
         )
 
         model_map["de-pos"] = "/".join(
-            [
-                aws_resource_path,
-                "UPOS-udgerman--h256-l1-b8-%2Bgerman-forward%2Bgerman-backward--v0.2",
-                "de-pos-ud-v0.2.pt",
-            ]
+            [aws_resource_path_v04, "release-de-pos-0", "de-pos-ud-hdt-v0.4.pt"]
         )
 
         model_map["de-pos-fine-grained"] = "/".join(
@@ -861,11 +851,7 @@ class SequenceTagger(flair.nn.Model):
         )
 
         model_map["de-ner"] = "/".join(
-            [
-                aws_resource_path,
-                "NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2",
-                "de-ner-conll03-v0.3.pt",
-            ]
+            [aws_resource_path_v04, "release-de-ner-0", "de-ner-conll03-v0.4.pt"]
         )
 
         model_map["de-ner-germeval"] = "/".join(
@@ -873,7 +859,7 @@ class SequenceTagger(flair.nn.Model):
         )
 
         model_map["fr-ner"] = "/".join(
-            [aws_resource_path, "NER-aij-wikiner-fr-wp3", "fr-ner.pt"]
+            [aws_resource_path_v04, "release-fr-ner-0", "fr-ner-wikiner-0.4.pt"]
         )
         model_map["nl-ner"] = "/".join(
             [aws_resource_path_v04, "NER-conll2002-dutch", "nl-ner-conll02-v0.1.pt"]
