@@ -707,7 +707,7 @@ class ELMoEmbeddings(TokenEmbeddings):
 
         try:
             import allennlp.commands.elmo
-        except:
+        except ModuleNotFoundError:
             log.warning("-" * 100)
             log.warning('ATTENTION! The library "allennlp" is not installed!')
             log.warning(
@@ -809,7 +809,7 @@ class ELMoTransformerEmbeddings(TokenEmbeddings):
             from allennlp.data.token_indexers.elmo_indexer import (
                 ELMoTokenCharactersIndexer,
             )
-        except:
+        except ModuleNotFoundError:
             log.warning("-" * 100)
             log.warning('ATTENTION! The library "allennlp" is not installed!')
             log.warning(
