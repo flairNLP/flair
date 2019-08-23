@@ -45,7 +45,7 @@ for token in sentence:
     print(token.embedding)
 ```
 
-This prints out the tokens and their embeddings. GloVe embeddings are Pytorch vectors of dimensionality 100.
+This prints out the tokens and their embeddings. GloVe embeddings are PyTorch vectors of dimensionality 100.
 
 You choose which pre-trained embeddings you load by passing the appropriate 
 id string to the constructor of the `WordEmbeddings` class. Typically, you use
