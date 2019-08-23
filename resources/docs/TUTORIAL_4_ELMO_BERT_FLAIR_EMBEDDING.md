@@ -1,28 +1,37 @@
-# Tutorial 4: BERT, ELMo, and Flair Embeddings
+# Tutorial 4: List of All Word Embeddings
 
-Next to standard WordEmbeddings and CharacterEmbeddings, we also provide classes for BERT, ELMo and Flair embeddings. These embeddings enable you to train truly state-of-the-art NLP models.
+This is not so much a tutorial, but rather a list of all embeddings that we currently support in Flair. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library as well as [standard word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md), in particular the `StackedEmbeddings` class.
 
-This tutorial explains how to use these embeddings. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library as well as [standard word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md), in particular the `StackedEmbeddings` class.
-
-## Embeddings
+## Overview 
 
 All word embedding classes inherit from the `TokenEmbeddings` class and implement the `embed()` method which you need to
 call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains
 hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
-All embeddings produced with our methods are Pytorch vectors, so they can be immediately used for training and
-fine-tuning.
+The following word embeddings are currently supported: 
 
-
+| Class | Type | Paper | 
+| ------------- | -------------  | -------------  | 
+| [`BertEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained BERT | [Devlin et. al, 2018](https://www.aclweb.org/anthology/N19-1423/) |  
+| [`BytePairEmbeddings`](/resources/docs/embeddings/BYTE_PAIR_EMBEDDINGS.md) | Subword-level word embeddings | [Heinzerling and Strube, 2018](https://www.aclweb.org/anthology/L18-1473)  |
+| [`CharacterEmbeddings`](/resources/docs/embeddings/CHARACTER_EMBEDDINGS.md) | Task-trained character-level embeddings of words | [Lample et al., 2016](https://www.aclweb.org/anthology/N16-1030) |
+| [`ELMoEmbeddings`](/resources/docs/embeddings/ELMO_EMBEDDINGS.md) | Contextualized word-level embeddings | [Peters et al., 2018](https://aclweb.org/anthology/N18-1202)  |
+| [`FastTextEmbeddings`](/resources/docs/embeddings/FASTTEXT_EMBEDDINGS.md) | Word embeddings with subword features | [Bojanowski et al., 2017](https://aclweb.org/anthology/Q17-1010)  |
+| [`FlairEmbeddings`](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) | Contextualized character-level embeddings | [Akbik et. al, 2018](https://www.aclweb.org/anthology/C18-1139/)  |
+| [`PooledFlairEmbeddings`](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) | Pooled variant of `FlairEmbeddings` |  [Akbik et. al, 2019](https://www.aclweb.org/anthology/N19-1078/)  |
+| [`OpenAIGPTEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) and [`OpenAIGPT2Embeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained OpenAIGPT models | |  
+| [`RoBERTaEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from RoBERTa | |  
+| [`TransformerXLEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained transformer-XL | |  
+| [`WordEmbeddings`](/resources/docs/embeddings/CLASSIC_WORD_EMBEDDINGS.md) | Classic word embeddings |  |
+| [`XLNetEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained XLNet | |  
+| [`XLMEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained XLM | |  
 
 
 ## Combining BERT and Flair
 
 You can very easily mix and match Flair, ELMo, BERT and classic word embeddings. All you need to do is instantiate each embedding you wish to combine and use them in a StackedEmbedding.
 
-For instance, let's say we want to combine the multilingual Flair and BERT embeddings to train a hyper-powerful multilingual downstream task model.
-
-First, instantiate the embeddings you wish to combine:
+For instance, let's say we want to combine the multilingual Flair and BERT embeddings to train a hyper-powerful multilingual downstream task model. First, instantiate the embeddings you wish to combine:
 
 ```python
 from flair.embeddings import FlairEmbeddings, BertEmbeddings

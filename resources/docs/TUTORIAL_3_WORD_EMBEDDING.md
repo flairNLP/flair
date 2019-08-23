@@ -9,10 +9,10 @@ library.
 
 All word embedding classes inherit from the `TokenEmbeddings` class and implement the `embed()` method which you need to 
 call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains 
-hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
-
-All embeddings produced with our methods are PyTorch vectors, so they can be immediately used for training and
+hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text. All embeddings produced with our methods are PyTorch vectors, so they can be immediately used for training and
 fine-tuning.
+
+This tutorial introduces some common embeddings and shows you how to use them. For more details on these embeddings and an overview of all supported embeddings, check [here](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md). 
 
 
 ## Classic Word Embeddings
@@ -45,7 +45,7 @@ for token in sentence:
     print(token.embedding)
 ```
 
-This prints out the tokens and their embeddings. GloVe embeddings are Pytorch vectors of dimensionality 100.
+This prints out the tokens and their embeddings. GloVe embeddings are PyTorch vectors of dimensionality 100.
 
 You choose which pre-trained embeddings you load by passing the appropriate 
 id string to the constructor of the `WordEmbeddings` class. Typically, you use
@@ -63,16 +63,44 @@ We generally recommend the FastText embeddings, or GloVe if you want a smaller m
 
 ## Flair Embeddings
 
+Contextual string embeddings are [powerful embeddings](https://www.aclweb.org/anthology/C18-1139/)
+ that capture latent syntactic-semantic information that goes beyond
+standard word embeddings. Key differences are: (1) they are trained without any explicit notion of words and
+thus fundamentally model words as sequences of characters. And (2) they are **contextualized** by their
+surrounding text, meaning that the *same word will have different embeddings depending on its
+contextual use*.
+
+With Flair, you can use these embeddings simply by instantiating the appropriate embedding class, same as standard word embeddings:
+
+```python
+from flair.embeddings import FlairEmbeddings
+
+# init embedding
+flair_embedding_forward = FlairEmbeddings('news-forward')
+
+# create a sentence
+sentence = Sentence('The grass is green .')
+
+# embed words in sentence
+flair_embedding_forward.embed(sentence)
+```
+
+You choose which embeddings you load by passing the appropriate string to the constructor of the `FlairEmbeddings` class. For all supported languages, there is a forward and a backward model. You can load a model for a language by using the **two-letter language code** followed by a hyphen and either **forward** or **backward**. So, if you want to load the forward and backward Flair models for German, do it like this: 
+
+```python
+# init forward embedding for German
+flair_embedding_forward = FlairEmbeddings('de-forward')
+flair_embedding_backward = FlairEmbeddings('de-backward')
+```
 
 ## Stacked Embeddings
 
 Stacked embeddings are one of the most important concepts of this library. You can use them to combine different
 embeddings together, for instance if you want to use both traditional embeddings together with contextual string
-embeddings (see next chapter).
-Stacked embeddings allow you to mix and match. We find that a combination of embeddings often gives best results. 
+embeddings. Stacked embeddings allow you to mix and match. We find that a combination of embeddings often gives best results. 
 
 All you need to do is use the `StackedEmbeddings` class and instantiate it by passing a list of embeddings that you wish 
-to combine. For instance, lets combine classic GloVe embeddings with character embeddings. This is effectively the architecture proposed in (Lample et al., 2016).
+to combine. For instance, lets combine classic GloVe embeddings with forward and backward Flair embeddings. This is a combination that we generally recommend to most users, especially for sequence labeling.
 
 First, instantiate the two embeddings you wish to combine: 
 
@@ -82,19 +110,24 @@ from flair.embeddings import WordEmbeddings, CharacterEmbeddings
 # init standard GloVe embedding
 glove_embedding = WordEmbeddings('glove')
 
-# init standard character embeddings
-character_embeddings = CharacterEmbeddings()
+# init Flair forward and backwards embeddings
+flair_embedding_forward = FlairEmbeddings('news-forward')
+flair_embedding_backward = FlairEmbeddings('news-backward')
 ```
 
 Now instantiate the `StackedEmbeddings` class and pass it a list containing these two embeddings.
 
 ```python
-from flair.embeddings import StackedEmbeddings
+from flair.embeddings import WordEmbeddings, FlairEmbeddings, StackedEmbeddings
 
-# now create the StackedEmbedding object that combines all embeddings
-stacked_embeddings = StackedEmbeddings(
-    embeddings=[glove_embedding, character_embeddings])
+# create a StackedEmbedding object that combines glove and forward/backward flair embeddings
+stacked_embeddings = StackedEmbeddings([
+                                        glove_embedding,
+                                        flair_embedding_forward,
+                                        flair_embedding_backward,
+                                       ])
 ```
+
 
 That's it! Now just use this embedding like all the other embeddings, i.e. call the `embed()` method over your sentences.
 
@@ -110,11 +143,12 @@ for token in sentence:
     print(token.embedding)
 ```
 
-Words are now embedded using a concatenation of two different embeddings. This means that the resulting embedding
+Words are now embedded using a concatenation of three different embeddings. This means that the resulting embedding
 vector is still a single PyTorch vector.
 
 ## Next 
 
-You can now either look into [BERT, ELMo, and Flair embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md),
+To get more details on this embeddings and a full overview of all embeddings that we support, you can look into this 
+[tutorial](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md),
 or go directly to the tutorial about [loading your corpus](/resources/docs/TUTORIAL_6_CORPUS.md), which is a
 pre-requirement for [training your own models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md).
