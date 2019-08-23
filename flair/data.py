@@ -396,7 +396,7 @@ def segtok_tokenizer(text: str) -> List[Token]:
         token = Token(text=word, start_position=start_position, whitespace_after=True)
         tokens.append(token)
 
-        if word_offset - 1 == previous_word_offset and previous_token is not None:
+        if (previous_token is not None) and word_offset - 1 == previous_word_offset:
             previous_token.whitespace_after = False
 
         word_len = len(word)
@@ -407,9 +407,49 @@ def segtok_tokenizer(text: str) -> List[Token]:
     return tokens
 
 
+def build_spacy_tokenizer(model) -> Callable[[str], List[Token]]:
+    """
+    Wrap Spacy model to build a tokenizer for the Sentence class.
+    :param model a Spacy V2 model
+    :return a tokenizer function to provide to Sentence class constructor
+    """
+    try:
+        from spacy.language import Language
+        from spacy.tokens.doc import Doc
+        from spacy.tokens.token import Token as SpacyToken
+    except ImportError:
+        raise ImportError(
+            "Please install Spacy v2.0 or better before using the Spacy tokenizer, otherwise you can use segtok_tokenizer as advanced tokenizer."
+        )
+
+    model: Language = model
+
+    def tokenizer(text: str) -> List[Token]:
+        doc: Doc = model.make_doc(text)
+        previous_token = None
+        tokens: List[Token] = list()
+        for word in doc:
+            word: SpacyToken = word
+            token = Token(
+                text=word.text, start_position=word.idx, whitespace_after=True
+            )
+            tokens.append(token)
+
+            if (previous_token is not None) and (
+                token.start_pos - 1
+                == previous_token.start_pos + len(previous_token.text)
+            ):
+                previous_token.whitespace_after = False
+
+            previous_token = token
+        return tokens
+
+    return tokenizer
+
+
 class Sentence(DataPoint):
     """
-    A Sentence is a list of Tokens and is used to represent a sentence or text fragment.
+       A Sentence is a list of Tokens and is used to represent a sentence or text fragment.
     """
 
     def __init__(
@@ -419,7 +459,15 @@ class Sentence(DataPoint):
         labels: Union[List[Label], List[str]] = None,
         language_code: str = None,
     ):
-
+        """
+        Class to hold all meta related to a text (tokens, predictions, language code, ...)
+        :param text: original string
+        :param tokenizer: a custom tokenizer (default is space based tokenizer,
+        more advanced options are segtok_tokenizer to use segtok or build_spacy_tokenizer to use Spacy library
+        if available). Check the code of space_tokenizer to implement your own (if you need it).
+        :param labels:
+        :param language_code:
+        """
         super(Sentence, self).__init__()
 
         self.tokens: List[Token] = []
