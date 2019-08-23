@@ -12,13 +12,13 @@ The following word embeddings are currently supported:
 
 | Class | Type | Paper | 
 | ------------- | -------------  | -------------  | 
-| [`BertEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained BERT | |  
-| [`BytePairEmbeddings`](/resources/docs/embeddings/BYTE_PAIR_EMBEDDINGS.md) | Subword-level word embeddings |  |
-| [`CharacterEmbeddings`](/resources/docs/embeddings/CHARACTER_EMBEDDINGS.md) | Task-trained character-level embeddings of words |  |
-| [`ELMoEmbeddings`](/resources/docs/embeddings/ELMO_EMBEDDINGS.md) | Contextualized word-level embeddings |   |
-| [`FastTextEmbeddings`](/resources/docs/embeddings/FASTTEXT_EMBEDDINGS.md) | Word embeddings with subword features |   |
-| [`FlairEmbeddings`](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) | Contextualized character-level embeddings |   |
-| [`PooledFlairEmbeddings`](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) | Pooled variant of `FlairEmbeddings` |   |
+| [`BertEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained BERT | [Devlin et. al, 2018](https://www.aclweb.org/anthology/N19-1423/) |  
+| [`BytePairEmbeddings`](/resources/docs/embeddings/BYTE_PAIR_EMBEDDINGS.md) | Subword-level word embeddings | [Heinzerling and Strube, 2018](https://www.aclweb.org/anthology/L18-1473)  |
+| [`CharacterEmbeddings`](/resources/docs/embeddings/CHARACTER_EMBEDDINGS.md) | Task-trained character-level embeddings of words | [Lample et al., 2016](https://www.aclweb.org/anthology/N16-1030) |
+| [`ELMoEmbeddings`](/resources/docs/embeddings/ELMO_EMBEDDINGS.md) | Contextualized word-level embeddings | [Peters et al., 2018](https://aclweb.org/anthology/N18-1202)  |
+| [`FastTextEmbeddings`](/resources/docs/embeddings/FASTTEXT_EMBEDDINGS.md) | Word embeddings with subword features | [Bojanowski et al., 2017](https://aclweb.org/anthology/Q17-1010)  |
+| [`FlairEmbeddings`](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) | Contextualized character-level embeddings | [Akbik et. al, 2018](https://www.aclweb.org/anthology/C18-1139/)  |
+| [`PooledFlairEmbeddings`](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) | Pooled variant of `FlairEmbeddings` |  [Akbik et. al, 2019](https://www.aclweb.org/anthology/N19-1078/)  |
 | [`OpenAIGPTEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) and [`OpenAIGPT2Embeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained OpenAIGPT models | |  
 | [`RoBERTaEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from RoBERTa | |  
 | [`TransformerXLEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained transformer-XL | |  
@@ -31,9 +31,7 @@ The following word embeddings are currently supported:
 
 You can very easily mix and match Flair, ELMo, BERT and classic word embeddings. All you need to do is instantiate each embedding you wish to combine and use them in a StackedEmbedding.
 
-For instance, let's say we want to combine the multilingual Flair and BERT embeddings to train a hyper-powerful multilingual downstream task model.
-
-First, instantiate the embeddings you wish to combine:
+For instance, let's say we want to combine the multilingual Flair and BERT embeddings to train a hyper-powerful multilingual downstream task model. First, instantiate the embeddings you wish to combine:
 
 ```python
 from flair.embeddings import FlairEmbeddings, BertEmbeddings
