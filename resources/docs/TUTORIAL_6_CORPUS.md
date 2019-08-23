@@ -339,10 +339,7 @@ corpus: Corpus = CSVClassificationCorpus(data_folder,
 
 
 #### FastText Format
-If using `CSVClassificationCorpus` is not practical, you may format your data to the  
-FastText format, in which each line in the file represents a 
-text document. A document can have one or multiple labels that are defined at the beginning of the line starting with 
-the prefix `__label__`. This looks like this:
+If using `CSVClassificationCorpus` is not practical, you may format your data to the FastText format, in which each line in the file represents a text document. A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix `__label__`. This looks like this:
 
 ```bash
 __label__<label_1> <text>
