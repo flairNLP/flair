@@ -83,6 +83,7 @@ from flair.trainers import ModelTrainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-ner',
+              train_with_dev=True,  
               max_epochs=150)
 ```
 
