@@ -227,11 +227,11 @@ data the first time you call the corresponding constructor ID. The following dat
 | 'WASSA_SADNESS' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge (sadness) |
 
 
-So to load the 20 newsgroups corpus for text classification, simply do:
+So to load the IMDB corpus for sentiment text classification, simply do:
 
 ```python
 import flair.datasets
-corpus = flair.datasets.NEWSGROUPS()
+corpus = flair.datasets.IMDB()
 ```
 
 This downloads and sets up everything you need to train your model. 
