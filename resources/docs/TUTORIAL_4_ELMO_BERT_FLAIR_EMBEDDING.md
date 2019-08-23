@@ -12,18 +12,19 @@ The following word embeddings are currently supported:
 
 | Class | Type | Paper | 
 | ------------- | -------------  | -------------  | 
-| [`BertEmbeddings`](embeddings/BERT_EMBEDDINGS.md) | Embeddings from pretrained BERT | |  
-| `BytePairEmbeddings` | Subword-level word embeddings |  |
-| `CharacterEmbeddings` | Task-trained character-level embeddings of words |  |
-| `ELMoEmbeddings` | Contextualized word-level embeddings |   |
-| `FastTextEmbeddings` | Word embeddings with subword features |   |
-| `FlairEmbeddings` | Contextualized character-level embeddings |   |
-| `OpenAIGPTEmbeddings` and `OpenAIGPT2Embeddings` | Embeddings from pretrained OpenAIGPT models | |  
-| `RoBERTaEmbeddings` | Embeddings from RoBERTa | |  
-| `TransformerXLEmbeddings` | Embeddings from pretrained transformer-XL | |  
-| `WordEmbeddings` | Classic word embeddings |  |
-| `XLNetEmbeddings` | Embeddings from pretrained XLNet | |  
-| `XLMEmbeddings` | Embeddings from pretrained XLM | |  
+| [`BertEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained BERT | |  
+| [`BytePairEmbeddings`](/resources/docs/embeddings/BYTE_PAIR_EMBEDDINGS.md) | Subword-level word embeddings |  |
+| [`CharacterEmbeddings`](/resources/docs/embeddings/CHARACTER_EMBEDDINGS.md) | Task-trained character-level embeddings of words |  |
+| [`ELMoEmbeddings`](/resources/docs/embeddings/ELMO_EMBEDDINGS.md) | Contextualized word-level embeddings |   |
+| [`FastTextEmbeddings`](/resources/docs/embeddings/FASTTEXT_EMBEDDINGS.md) | Word embeddings with subword features |   |
+| [`FlairEmbeddings`](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) | Contextualized character-level embeddings |   |
+| [`PooledFlairEmbeddings`](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) | Pooled variant of `FlairEmbeddings` |   |
+| [`OpenAIGPTEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) and [`OpenAIGPT2Embeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained OpenAIGPT models | |  
+| [`RoBERTaEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from RoBERTa | |  
+| [`TransformerXLEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained transformer-XL | |  
+| [`WordEmbeddings`](/resources/docs/embeddings/CLASSIC_WORD_EMBEDDINGS.md) | Classic word embeddings |  |
+| [`XLNetEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained XLNet | |  
+| [`XLMEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained XLM | |  
 
 
 ## Combining BERT and Flair
