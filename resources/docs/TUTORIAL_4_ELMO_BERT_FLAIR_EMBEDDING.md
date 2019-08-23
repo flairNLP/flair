@@ -1,4 +1,4 @@
-# Tutorial 4: List of all embeddings
+# Tutorial 4: List of All Word Embeddings
 
 This is not so much a tutorial, but rather a list of all embeddings that we currently support in Flair. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library as well as [standard word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md), in particular the `StackedEmbeddings` class.
 
@@ -12,18 +12,18 @@ The following word embeddings are currently supported:
 
 | Class | Type | Paper | 
 | ------------- | -------------  | -------------  | 
-| BytePairEmbeddings | Subword-level word embeddings |  |
-| CharacterEmbeddings | Task-trained character-level embeddings of words |  |
-| ELMoEmbeddings | Contextualized word-level embeddings |   |
-| FastTextEmbeddings | Word embeddings with subword features |   |
-| FlairEmbeddings | Contextualized character-level embeddings |   |
-| WordEmbeddings | Classic word embeddings |  |
-| BertEmbeddings | Embeddings from pretrained BERT | |  
-| OpenAIGPTEmbeddings and OpenAIGPT2Embeddings | Embeddings from pretrained OpenAIGPT models | |  
-| TransformerXLEmbeddings | Embeddings from pretrained transformer-XL | |  
-| XLNetEmbeddings | Embeddings from pretrained XLNet | |  
-| XLMEmbeddings | Embeddings from pretrained XLM | |  
-| RoBERTaEmbeddings | Embeddings from RoBERTa | |  
+| `BertEmbeddings` | Embeddings from pretrained BERT | |  
+| `BytePairEmbeddings` | Subword-level word embeddings |  |
+| `CharacterEmbeddings` | Task-trained character-level embeddings of words |  |
+| `ELMoEmbeddings` | Contextualized word-level embeddings |   |
+| `FastTextEmbeddings` | Word embeddings with subword features |   |
+| `FlairEmbeddings` | Contextualized character-level embeddings |   |
+| `OpenAIGPTEmbeddings` and `OpenAIGPT2Embeddings` | Embeddings from pretrained OpenAIGPT models | |  
+| `RoBERTaEmbeddings` | Embeddings from RoBERTa | |  
+| `TransformerXLEmbeddings` | Embeddings from pretrained transformer-XL | |  
+| `WordEmbeddings` | Classic word embeddings |  |
+| `XLNetEmbeddings` | Embeddings from pretrained XLNet | |  
+| `XLMEmbeddings` | Embeddings from pretrained XLM | |  
 
 
 ## Combining BERT and Flair
