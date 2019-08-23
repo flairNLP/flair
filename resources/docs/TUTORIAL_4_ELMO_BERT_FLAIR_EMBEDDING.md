@@ -141,7 +141,7 @@ The following embeddings can be used in Flair:
 * `RoBERTaEmbeddings`
 
 This section shows how to use these Transformer-based architectures in Flair and is heavily based on the excellent
-[PyTorch-Transformers pre-trained models documentation](https://huggingface.co/pytorch-transformers/pretrained_models.html.
+[PyTorch-Transformers pre-trained models documentation](https://huggingface.co/pytorch-transformers/pretrained_models.html).
 
 ### BERT Embeddings
 
@@ -186,10 +186,10 @@ You can load any of the pre-trained BERT models by providing `bert_model_or_path
 |                                                         | Trained on cased English text
 | `bert-base-multilingual-uncased`                        | (Original, not recommended) 12-layer, 768-hidden, 12-heads, 110M parameters
 |                                                         | Trained on lower-cased text in the top 102 languages with the largest Wikipedias
-|                                                         | (see [details](https://github.com/google-research/bert/blob/master/multilingual.md>))
+|                                                         | (see [details](https://github.com/google-research/bert/blob/master/multilingual.md))
 | `bert-base-multilingual-cased`                          | (New, **recommended**) 12-layer, 768-hidden, 12-heads, 110M parameters
 |                                                         | Trained on cased text in the top 104 languages with the largest Wikipedias
-|                                                         | (see [details](https://github.com/google-research/bert/blob/master/multilingual.md>))
+|                                                         | (see [details](https://github.com/google-research/bert/blob/master/multilingual.md))
 | `bert-base-chinese`                                     | 12-layer, 768-hidden, 12-heads, 110M parameters
 |                                                         | Trained on cased Chinese Simplified and Traditional text
 | `bert-base-german-cased`                                | 12-layer, 768-hidden, 12-heads, 110M parameters
@@ -242,7 +242,7 @@ The `OpenAIGPTEmbeddings` class has several arguments:
 
 ## OpenAI GPT-2 Embeddings
 
-The OpenAI GPT-2 model was proposed by [Radford et. al (2018)(https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf).
+The OpenAI GPT-2 model was proposed by [Radford et. al (2018)](https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf).
 GPT-2 is also an uni-directional Transformer-based model, that was trained on a larger corpus compared to the GPT model.
 
 The GPT-2 model can be used with the `OpenAIGPT2Embeddings` class:
@@ -383,19 +383,19 @@ Following XLM models can be used:
 | ------------------------- | -------------------------------------------------------------------------------------------------------
 | `xlm-mlm-en-2048`         | 12-layer, 1024-hidden, 8-heads
 |                           | XLM English model
-| `xlm-mlm-ende-1024`       | 12-layer, 1024-hidden, 8-heads
+| `xlm-mlm-ende-1024`       | 6-layer, 1024-hidden, 8-heads
 |                           | XLM English-German Multi-language model
-| `xlm-mlm-enfr-1024`       | 12-layer, 1024-hidden, 8-heads
+| `xlm-mlm-enfr-1024`       | 6-layer, 1024-hidden, 8-heads
 |                           | XLM English-French Multi-language model
-| `xlm-mlm-enro-1024`       | 12-layer, 1024-hidden, 8-heads
+| `xlm-mlm-enro-1024`       | 6-layer, 1024-hidden, 8-heads
 |                           | XLM English-Romanian Multi-language model
 | `xlm-mlm-xnli15-1024`     | 12-layer, 1024-hidden, 8-heads
-|                           | XLM Model pre-trained with MLM on the [15 XNLI languages](https://github.com/facebookresearch/XNLI>)
+|                           | XLM Model pre-trained with MLM on the [15 XNLI languages](https://github.com/facebookresearch/XNLI)
 | `xlm-mlm-tlm-xnli15-1024` | 12-layer, 1024-hidden, 8-heads
 |                           | XLM Model pre-trained with MLM + TLM on the [15 XNLI languages](https://github.com/facebookresearch/XNLI)
 | `xlm-clm-enfr-1024`       | 12-layer, 1024-hidden, 8-heads
 |                           | XLM English model trained with CLM (Causal Language Modeling)
-| `xlm-clm-ende-1024`       | 12-layer, 1024-hidden, 8-heads
+| `xlm-clm-ende-1024`       | 6-layer, 1024-hidden, 8-heads
 |                           | XLM English-German Multi-language model trained with CLM (Causal Language Modeling)
 
 ## RoBERTa Embeddings
