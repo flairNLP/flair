@@ -145,6 +145,7 @@ from flair.trainers import ModelTrainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-ner',
+              train_with_dev=True,  
               max_epochs=150)
 ```
 
@@ -200,6 +201,7 @@ from flair.trainers import ModelTrainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-ner',
+              train_with_dev=True,  
               max_epochs=150)
 ```
 
@@ -256,6 +258,7 @@ from flair.trainers import ModelTrainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-ner',
+              train_with_dev=True,  
               max_epochs=150)
 ```
 
@@ -326,6 +329,7 @@ trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-ner',
               learning_rate=0.1,
+              train_with_dev=True,  
               # it's a big dataset so maybe set embeddings_storage_mode to 'none' (embeddings are not kept in memory)
               embeddings_storage_mode='none')
 ```
@@ -392,6 +396,7 @@ from flair.trainers import ModelTrainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-pos',
+              train_with_dev=True,  
               max_epochs=150)
 ```
 
@@ -447,5 +452,6 @@ from flair.trainers import ModelTrainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-chunk',
+              train_with_dev=True,  
               max_epochs=150)
 ```
