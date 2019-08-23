@@ -1,19 +1,29 @@
-# Tutorial 4: BERT, ELMo, and Flair Embeddings
+# Tutorial 4: List of all embeddings
 
-Next to standard WordEmbeddings and CharacterEmbeddings, we also provide classes for BERT, ELMo and Flair embeddings. These embeddings enable you to train truly state-of-the-art NLP models.
+This is not so much a tutorial, but rather a list of all embeddings that we currently support in Flair. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library as well as [standard word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md), in particular the `StackedEmbeddings` class.
 
-This tutorial explains how to use these embeddings. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library as well as [standard word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md), in particular the `StackedEmbeddings` class.
-
-## Embeddings
+## Overview 
 
 All word embedding classes inherit from the `TokenEmbeddings` class and implement the `embed()` method which you need to
 call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains
 hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
-All embeddings produced with our methods are Pytorch vectors, so they can be immediately used for training and
-fine-tuning.
+The following word embeddings are currently supported: 
 
-
+| Class | Type | Paper | 
+| ------------- | -------------  | -------------  | 
+| BytePairEmbeddings | Subword-level word embeddings |  |
+| CharacterEmbeddings | Task-trained character-level embeddings of words |  |
+| ELMoEmbeddings | Contextualized word-level embeddings |   |
+| FastTextEmbeddings | Word embeddings with subword features |   |
+| FlairEmbeddings | Contextualized character-level embeddings |   |
+| WordEmbeddings | Classic word embeddings |  |
+| BertEmbeddings | Embeddings from pretrained BERT | |  
+| OpenAIGPTEmbeddings and OpenAIGPT2Embeddings | Embeddings from pretrained OpenAIGPT models | |  
+| TransformerXLEmbeddings | Embeddings from pretrained transformer-XL | |  
+| XLNetEmbeddings | Embeddings from pretrained XLNet | |  
+| XLMEmbeddings | Embeddings from pretrained XLM | |  
+| RoBERTaEmbeddings | Embeddings from RoBERTa | |  
 
 
 ## Combining BERT and Flair
