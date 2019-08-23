@@ -342,12 +342,12 @@ trainer.train('resources/taggers/example-ner',
 
 Get the [Penn treebank](https://catalog.ldc.upenn.edu/ldc99t42) and follow the guidelines
 in [Collins (2002)](http://www.cs.columbia.edu/~mcollins/papers/tagperc.pdf) to produce train, dev and test splits.
-Convert splits into CoNLLU-U format and place train, test and dev data in `resources/tasks/penn/` as follows: 
+Convert splits into CoNLLU-U format and place train, test and dev data in `/path/to/penn/` as follows: 
 
 ```
-resources/tasks/penn/test.conll
-resources/tasks/penn/train.conll
-resources/tasks/penn/valid.conll
+/path/to/penn/test.conll
+/path/to/penn/train.conll
+/path/to/penn/valid.conll
 ```
 
 Then, run the experiments with extvec embeddings and contextual string embeddings. Also, select 'pos' as `tag_type`, 
@@ -357,12 +357,12 @@ so the algorithm knows that POS tags and not NER are to be predicted from this d
 
 ```python
 from flair.data import Corpus
-from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
+from flair.datasets import UniversalDependenciesCorpus
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, FlairEmbeddings
 from typing import List
 
 # 1. get the corpus
-corpus: Corpus = NLPTaskDataFetcher.load_corpus(NLPTask.PENN, base_path='resources/tasks')
+corpus: Corpus = UniversalDependenciesCorpus(base_path='/path/to/penn')
 
 # 2. what tag do we want to predict?
 tag_type = 'pos'
@@ -391,10 +391,8 @@ from flair.trainers import ModelTrainer
 
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-trainer.train('resources/taggers/example-ner',
-              max_epochs=150,
-              # its a big dataset, so maybe set embeddings_in_memory=False
-              embeddings_in_memory=True)
+trainer.train('resources/taggers/example-pos',
+              max_epochs=150)
 ```
 
 ## CoNLL-2000 Noun Phrase Chunking (English)
@@ -413,12 +411,12 @@ so the algorithm knows that chunking tags and not NER are to be predicted from t
 
 ```python
 from flair.data import Corpus
-from flair.data_fetcher import  NLPTaskDataFetcher, NLPTask
+from flair.datasets import CONLL_2000
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, FlairEmbeddings
 from typing import List
 
 # 1. get the corpus
-corpus: Corpus = NLPTaskDataFetcher.load_corpus(NLPTask.CONLL_2000)
+corpus: Corpus = CONLL_2000()
 
 # 2. what tag do we want to predict?
 tag_type = 'np'
@@ -448,6 +446,6 @@ from flair.trainers import ModelTrainer
 
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-trainer.train('resources/taggers/example-ner',
+trainer.train('resources/taggers/example-chunk',
               max_epochs=150)
 ```
