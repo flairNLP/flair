@@ -371,13 +371,18 @@ class SequenceTagger(flair.nn.Model):
                         feature, batch, get_all_tags=all_tag_prob
                     )
 
-                for (sentence, sent_tags, sent_all_tags) in zip(batch, tags, all_tags):
-                    for (token, tag, token_all_tags) in zip(
-                        sentence.tokens, sent_tags, sent_all_tags
+                for (sentence, sent_tags) in zip(batch, tags):
+                    for (token, tag) in zip(
+                        sentence.tokens, sent_tags
                     ):
                         token.add_tag_label(self.tag_type, tag)
-                        if all_tag_prob:
-                            token.add_tags_proba_dist(self.tag_type, token_all_tags)
+
+                # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
+                for (sentence,  sent_all_tags) in zip(batch, all_tags):
+                    for (token, token_all_tags) in zip(
+                        sentence.tokens, sent_all_tags
+                    ):
+                        token.add_tags_proba_dist(self.tag_type, token_all_tags)
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
