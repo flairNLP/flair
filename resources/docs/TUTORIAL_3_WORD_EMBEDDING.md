@@ -9,12 +9,11 @@ library.
 
 All word embedding classes inherit from the `TokenEmbeddings` class and implement the `embed()` method which you need to 
 call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains 
-hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
-
-This tutorial introduces some common embeddings. For an overview of all supported embeddings, check here. 
-
-All embeddings produced with our methods are PyTorch vectors, so they can be immediately used for training and
+hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text. All embeddings produced with our methods are PyTorch vectors, so they can be immediately used for training and
 fine-tuning.
+
+This tutorial introduces some common embeddings and shows you how to use them. For more details on these embeddings and an overview of all supported embeddings, check [here](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md). 
+
 
 ## Classic Word Embeddings
 
