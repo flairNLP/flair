@@ -12,7 +12,7 @@ The following word embeddings are currently supported:
 
 | Class | Type | Paper | 
 | ------------- | -------------  | -------------  | 
-| [`BertEmbeddings`](/resources/docs/embeddings/BERT_EMBEDDINGS.md) | Embeddings from pretrained BERT | |  
+| [`BertEmbeddings`](embeddings/BERT_EMBEDDINGS.md) | Embeddings from pretrained BERT | |  
 | `BytePairEmbeddings` | Subword-level word embeddings |  |
 | `CharacterEmbeddings` | Task-trained character-level embeddings of words |  |
 | `ELMoEmbeddings` | Contextualized word-level embeddings |   |
