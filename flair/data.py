@@ -299,7 +299,7 @@ class Span:
     def to_original_text(self) -> str:
         pos = self.tokens[0].start_pos
         if pos is None:
-            return ' '.join([t.text for t in self.tokens])
+            return " ".join([t.text for t in self.tokens])
         str = ""
         for t in self.tokens:
             while t.start_pos != pos:
@@ -670,6 +670,8 @@ class Sentence(DataPoint):
         return self
 
     def to_original_text(self) -> str:
+        if len(self.tokens) > 0 and (self.tokens[0].start_pos is None):
+            return " ".join([t.text for t in self.tokens])
         str = ""
         pos = 0
         for t in self.tokens:
