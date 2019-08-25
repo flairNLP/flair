@@ -299,7 +299,7 @@ class Span:
     def to_original_text(self) -> str:
         pos = self.tokens[0].start_pos
         if pos is None:
-            return ' '.join([t.text for t in self.tokens])
+            return " ".join([t.text for t in self.tokens])
         str = ""
         for t in self.tokens:
             while t.start_pos != pos:
