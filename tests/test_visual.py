@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 from flair.data import Sentence, Span
 from flair.embeddings import FlairEmbeddings
 from flair.visual import *
-from flair.visual.html_templates import HTML_PAGE, TAGGED_ENTITY
+from flair.visual.ner_html import HTML_PAGE, TAGGED_ENTITY
 from flair.visual.training_curves import Plotter
 
 

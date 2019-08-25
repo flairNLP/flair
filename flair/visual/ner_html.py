@@ -10,6 +10,8 @@ TAGGED_ENTITY = """
 </mark>
 """
 
+PARAGRAPH = """<p>{sentence}</p>"""
+
 HTML_PAGE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -58,9 +60,10 @@ def render_ner_html(
     """
     if isinstance(sentences, Sentence):
         sentences = [sentences]
-    tagged_html = []
+    sentences_html = []
     for s in sentences:
         spans = split_to_spans(s)
+        spans_html = list()
         for fragment, tag in spans:
             escaped_fragment = html.escape(fragment).replace("\n", "<br/>")
             if tag:
@@ -69,9 +72,11 @@ def render_ner_html(
                     label=tag,
                     color=colors.get(tag, default_color),
                 )
-            tagged_html.append(escaped_fragment)
+            spans_html.append(escaped_fragment)
+        line = PARAGRAPH.format(sentence="".join(spans_html))
+        sentences_html.append(line)
 
-    final_text = "".join(tagged_html)
+    final_text = "".join(sentences_html)
 
     if wrap_page:
         return HTML_PAGE.format(text=final_text)
