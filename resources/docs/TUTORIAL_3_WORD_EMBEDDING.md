@@ -20,7 +20,7 @@ This tutorial introduces some common embeddings and shows you how to use them. F
 Classic word embeddings are static and word-level, meaning that each distinct word gets exactly one pre-computed 
 embedding. Most embeddings fall under this class, including the popular GloVe or Komninos embeddings. 
 
-Simply instantiate the WordEmbeddings class and pass a string identifier of the embedding you wish to load. So, if 
+Simply instantiate the `WordEmbeddings` class and pass a string identifier of the embedding you wish to load. So, if 
 you want to use GloVe embeddings, pass the string 'glove' to the constructor: 
 
 ```python
