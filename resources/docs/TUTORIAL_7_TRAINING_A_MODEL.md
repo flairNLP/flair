@@ -316,29 +316,20 @@ trainer.train('resources/taggers/example-ner',
 ```
 
 
-## Scalability: Training on Large Data Sets
+## Scalability: Setting embedding_storage_mode for Large Datasets
 
-The main thing to consider when using `FlairEmbeddings` (which you should) is that they are
-somewhat costly to generate for large training data sets. Depending on your setup, you can
-set options to optimize training time. There are three questions to ask:
+Many embeddings in Flair are somewhat costly to produce in terms of runtime and may have large vectors. Examples
+of this are `FlairEmbeddings`, `BertEmbeddings` and the other transformer-based embeddings. Depending on your setup, 
+you can set options to optimize training time. 
 
-1. Do you have a GPU?
+The main parameter you need to set is the `embeddings_storage_mode` in the `train()` method of the `ModelTrainer`. It can have one of three values:
 
-`FlairEmbeddings` are generated using PyTorch RNNs and are thus optimized for GPUs. If you have one,
-you can set large mini-batch sizes to make use of batching. If not, you may want to use smaller language models.
-For English, we package 'fast' variants of our embeddings, loadable like this: `FlairEmbeddings('news-forward-fast')`.
+1. **'none'**: If you set `embeddings_storage_mode='none'`, embeddings do not get stored in memory. Instead they are generated on-the-fly in each training mini-batch. The main advantage is that this keeps your memory requirements low. However, this 
+also means that embeddings get generated over and over again at each epoch. If you're using computationally costly embeddings such as BERT and you don't have a strong GPU, this may make training very slow. 
 
-2. Do embeddings for the entire dataset fit into memory?
+2. **'cpu'**: If you set `embeddings_storage_mode='cpu'`, embeddings will get stored in regular memory. This in many cases speeds things up significantly since embeddings only need to be computed in the first epoch, after which they are just retrieved from memory. A disadvantage is that this increases memory requirements. Depending on the size of your dataset and your memory setup, this option may not be possible.
 
-In the best-case scenario, all embeddings for the dataset fit into your regular memory, which greatly increases
-training speed. If this is not the case, you must set the flag `embeddings_in_memory=False` in the respective trainer
- (i.e. `ModelTrainer`) to
-avoid memory problems. With the flag, embeddings are either (a) recomputed at each epoch or (b)
-retrieved from disk if you choose to materialize to disk.
-
-3. Do you have a fast hard drive?
-
-If you have a fast hard drive, consider materializing the embeddings to disk. You can do this by instantiating FlairEmbeddings as follows: `FlairEmbeddings('news-forward-fast', use_cache=True)`. This can help if embeddings do not fit into memory. Also if you do not have a GPU and want to do repeat experiments on the same dataset, this helps because embeddings need only be computed once and will then always be retrieved from disk.
+3. **'gpu'**: If you set `embeddings_storage_mode='gpu'`, embeddings will get stored in CUDA memory. This will often be even faster than 'cpu' since this eliminates the need to shuffle tensors from CPU to CUDA over and over again. Of course, CUDA memory is often limited so large datasets will not fit into CUDA memory. However, if the dataset fits into CUDA memory, this option is the fastest one. 
 
 
 ## Next
