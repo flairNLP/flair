@@ -220,7 +220,7 @@ trainer.train('resources/taggers/example-universal-pos',
               learning_rate=0.1,
               mini_batch_size=32,
               max_epochs=150,
-              evaluation_metric=EvaluationMetric.MICRO_ACCURACY)
+              )
 ```
 
 Note that here we use the MICRO_ACCURACY evaluation metric instead of the default MICRO_F1_SCORE. This gives you a multilingual model. Try experimenting with more languages!
