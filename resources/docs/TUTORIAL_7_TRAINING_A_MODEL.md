@@ -66,10 +66,9 @@ trainer.train('resources/taggers/example-ner',
               mini_batch_size=32,
               max_epochs=150)
 
-# 8. plot training curves (optional)
+# 8. plot weight traces (optional)
 from flair.visual.training_curves import Plotter
 plotter = Plotter()
-plotter.plot_training_curves('resources/taggers/example-ner/loss.tsv')
 plotter.plot_weights('resources/taggers/example-ner/weights.txt')
 
 ```
