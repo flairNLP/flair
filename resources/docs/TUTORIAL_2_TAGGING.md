@@ -284,8 +284,10 @@ print(sentence.labels)
 
 This should print:
 ```console
-[NEGATIVE (1.0)]
+[NEGATIVE (0.9598667025566101)]
 ```
+
+The number in brackets behind the label is the prediction confidence.
 
 ### List of Pre-Trained Text Classification Models
 
