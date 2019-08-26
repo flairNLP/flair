@@ -69,14 +69,16 @@ def test_html_rendering():
     actual = render_ner_html([sent], colors=colors)
 
     expected_res = HTML_PAGE.format(
-        text=PARAGRAPH.format(sentence=
-                              TAGGED_ENTITY.format(color="#F7FF53", entity="Boris Johnson", label="PER")
-                              + " has been elected new "
-                              + TAGGED_ENTITY.format(color="#4647EB", entity="Conservative", label="MISC")
-                              + " leader in a ballot of party members and will become the next "
-                              + TAGGED_ENTITY.format(color="yellow", entity="UK", label="LOC")
-                              + " prime minister. &amp;"
-                              )
+        text=PARAGRAPH.format(
+            sentence=TAGGED_ENTITY.format(
+                color="#F7FF53", entity="Boris Johnson", label="PER"
+            )
+            + " has been elected new "
+            + TAGGED_ENTITY.format(color="#4647EB", entity="Conservative", label="MISC")
+            + " leader in a ballot of party members and will become the next "
+            + TAGGED_ENTITY.format(color="yellow", entity="UK", label="LOC")
+            + " prime minister. &amp;"
+        )
     )
 
     assert expected_res == actual
