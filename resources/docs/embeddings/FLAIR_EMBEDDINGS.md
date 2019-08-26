@@ -63,6 +63,7 @@ Currently, the following contextual string embeddings are provided (note: replac
 | 'sl-v0-X'  | Slovenian  | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Trained with various sources (Europarl, Wikipedia and OpenSubtitles2018) |
 | 'sv-X'    | Swedish | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
 | 'sv-v0-X'    | Swedish | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Trained with various sources (Europarl, Wikipedia or OpenSubtitles2018) |
+| 'ta-X'    | Tamil | Added by [@stefan-it](https://github.com/stefan-it/plur) |
 | 'pubmed-X'    | English | Added by [@jessepeng](https://github.com/zalandoresearch/flair/pull/519): Trained with 5% of PubMed abstracts until 2015 (1150 hidden states, 3 layers)|
 
 
