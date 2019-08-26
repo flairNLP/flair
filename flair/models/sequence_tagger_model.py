@@ -548,10 +548,12 @@ class SequenceTagger(flair.nn.Model):
 
         tags = []
         all_tags = []
-        for feats, length in zip(feature, lengths):
+        feature_cpu = feature.detach().to('cpu')
+        transitions_cpu = self.transitions.detach().to('cpu')
+        for feats, length in zip(feature_cpu, lengths):
             if self.use_crf:
                 confidences, tag_seq, scores = self._viterbi_decode(
-                    feats[:length], all_scores=get_all_tags
+                    feats[:length], all_scores=get_all_tags, transitions=transitions_cpu,
                 )
             else:
                 tag_seq = []
@@ -587,12 +589,12 @@ class SequenceTagger(flair.nn.Model):
 
         return tags, all_tags
 
-    def _viterbi_decode(self, feats, all_scores: bool = False):
+    def _viterbi_decode(self, feats, transitions, all_scores: bool = False):
         backpointers = []
         backscores = []
 
         init_vvars = (
-            torch.FloatTensor(1, self.tagset_size).to(flair.device).fill_(-10000.0)
+            torch.FloatTensor(1, self.tagset_size).fill_(-10000.0)
         )
         init_vvars[0][self.tag_dictionary.get_idx_for_item(START_TAG)] = 0
         forward_var = init_vvars
@@ -600,7 +602,7 @@ class SequenceTagger(flair.nn.Model):
         for feat in feats:
             next_tag_var = (
                 forward_var.view(1, -1).expand(self.tagset_size, self.tagset_size)
-                + self.transitions
+                + transitions
             )
             _, bptrs_t = torch.max(next_tag_var, dim=1)
             viterbivars_t = next_tag_var[range(len(bptrs_t)), bptrs_t]
@@ -610,7 +612,7 @@ class SequenceTagger(flair.nn.Model):
 
         terminal_var = (
             forward_var
-            + self.transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)]
+            + transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)]
         )
         terminal_var.detach()[self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000.0
         terminal_var.detach()[
