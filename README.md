@@ -22,7 +22,7 @@ models to your text, such as named entity recognition (NER), part-of-speech tagg
 * **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and 
 document embeddings, including our proposed **[Flair embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)**, BERT embeddings and ELMo embeddings.
 
-* **A Pytorch NLP framework.** Our framework builds directly on [Pytorch](https://pytorch.org/), making it easy to 
+* **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to 
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
 Now at [version 0.4.2](https://github.com/zalandoresearch/flair/releases)!
@@ -61,7 +61,7 @@ Alan Akbik, Tanja Bergmann, Duncan Blythe, Kashif Rasul, Stefan Schweter and Rol
 
 ### Requirements and Installation
 
-The project is based on PyTorch 0.4+ and Python 3.6+, because method signatures and type hints are beautiful.
+The project is based on PyTorch 1.1+ and Python 3.6+, because method signatures and type hints are beautiful.
 If you do not have Python 3.6, install it first. [Here is how for Ubuntu 16.04](https://vsupalov.com/developing-with-python3-6-on-ubuntu-16-04/).
 Then, in your favorite virtual environment, simply do:
 
