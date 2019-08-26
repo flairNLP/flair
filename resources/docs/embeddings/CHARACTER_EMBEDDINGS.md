@@ -1,20 +1,30 @@
-## Character Embeddings
+# Character Embeddings
 
-Some embeddings - such as character-features - are not pre-trained but rather trained on the downstream task. Normally
-this requires you to implement a [hierarchical embedding architecture](http://neuroner.com/NeuroNERengine_with_caption_no_figure.png).
+`CharacterEmbeddings` allow you to add character-level word embeddings during model training. Note that these embeddings
+are randomly initialized when you initialize the class, so they are not meaningful unless you train them on a specific
+downstream task.
 
-With Flair, you don't need to worry about such things. Just choose the appropriate
-embedding class and character features will then automatically train during downstream task training.
+For instance, the standard sequence labeling architecture used by Lample et al. is a combination of classic word embeddings
+with task-trained character features. Normally this would require you to implement a
+[hierarchical embedding architecture](http://neuroner.com/NeuroNERengine_with_caption_no_figure.png) in which character-level
+embeddings for each word are computed using an RNN and then concatenated with word embeddings.
+
+In Flair, we simplify this by treating `CharacterEmbeddings` just like any other embedding class. To reproduce the
+Lample architecture, you need only combine them with standard `WordEmbeddings` in an embedding stack:
+
 
 ```python
-from flair.embeddings import CharacterEmbeddings
+# init embedding stack
+embedding = StackedEmbeddings(
+    [
+        # standard word embeddings
+        WordEmbeddings('glove'),
 
-# init embedding
-embedding = CharacterEmbeddings()
-
-# create a sentence
-sentence = Sentence('The grass is green .')
-
-# embed words in sentence
-embedding.embed(sentence)
+        # character-level features
+        CharacterEmbeddings(),
+    ]
+)
 ```
+
+If you pass this stacked embedding to a train method, the character-level features will now automatically be trained
+for your downstream task.

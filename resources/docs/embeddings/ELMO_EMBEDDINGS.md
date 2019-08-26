@@ -1,4 +1,4 @@
-## ELMo Embeddings
+# ELMo Embeddings
 
 [ELMo embeddings](http://www.aclweb.org/anthology/N18-1202) were presented by Peters et al. in 2018. They are using
 a bidirectional recurrent neural network to predict the next word in a text.

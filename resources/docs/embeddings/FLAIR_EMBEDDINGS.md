@@ -1,5 +1,4 @@
-
-## Flair Embeddings
+# Flair Embeddings
 
 Contextual string embeddings are [powerful embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)
  that capture latent syntactic-semantic information that goes beyond

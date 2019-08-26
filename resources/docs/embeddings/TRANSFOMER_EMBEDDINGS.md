@@ -1,5 +1,4 @@
-
-## PyTorch-Transformers
+# PyTorch-Transformers
 
 Thanks to the brilliant [`pytorch-transformers`](https://github.com/huggingface/pytorch-transformers) library from [Hugging Face](https://github.com/huggingface),
 Flair is able to support various Transformer-based architectures like BERT or XLNet.
@@ -17,7 +16,7 @@ The following embeddings can be used in Flair:
 This section shows how to use these Transformer-based architectures in Flair and is heavily based on the excellent
 [PyTorch-Transformers pre-trained models documentation](https://huggingface.co/pytorch-transformers/pretrained_models.html).
 
-### BERT Embeddings
+## BERT Embeddings
 
 [BERT embeddings](https://arxiv.org/pdf/1810.04805.pdf) were developed by Devlin et al. (2018) and are a different kind
 of powerful word embedding based on a bidirectional transformer architecture.
@@ -324,7 +323,7 @@ We implement different pooling operations for these subwords to generate the fin
 * `first_last`: embeddings of the first and last subwords are concatenated and used
 * `mean`: a `torch.mean` over all subword embeddings is calculated and used
 
-### Scalar mix
+## Scalar mix
 
 The Transformer-based models have a certain number of layers. [Liu et. al (2019)](https://arxiv.org/abs/1903.08855)
 propose a technique called scalar mix, that computes a parameterised scalar mixture of user-defined layers.
