@@ -1,9 +1,9 @@
 from unittest.mock import MagicMock
 
-from flair.data import Sentence, Span
+from flair.data import Sentence, Span, Token
 from flair.embeddings import FlairEmbeddings
 from flair.visual import *
-from flair.visual.ner_html import HTML_PAGE, TAGGED_ENTITY, render_ner_html
+from flair.visual.ner_html import render_ner_html, HTML_PAGE, TAGGED_ENTITY, PARAGRAPH
 from flair.visual.training_curves import Plotter
 
 
@@ -36,11 +36,12 @@ def test_plotting_training_curves_and_weights(resources_path):
     (resources_path / "visual/training.png").unlink()
 
 
-def mock_ner_span(tag, start, end):
+def mock_ner_span(text, tag, start, end):
     span = Span([])
     span.tag = tag
     span.start_pos = start
     span.end_pos = end
+    span.tokens = [Token(text[start:end])]
     return span
 
 
@@ -52,9 +53,9 @@ def test_html_rendering():
     sent = Sentence()
     sent.get_spans = MagicMock()
     sent.get_spans.return_value = [
-        mock_ner_span("PER", 0, 13),
-        mock_ner_span("MISC", 35, 47),
-        mock_ner_span("LOC", 109, 111),
+        mock_ner_span(text, "PER", 0, 13),
+        mock_ner_span(text, "MISC", 35, 47),
+        mock_ner_span(text, "LOC", 109, 111),
     ]
     sent.to_original_text = MagicMock()
     sent.to_original_text.return_value = text
@@ -68,12 +69,14 @@ def test_html_rendering():
     actual = render_ner_html([sent], colors=colors)
 
     expected_res = HTML_PAGE.format(
-        text=TAGGED_ENTITY.format(color="#F7FF53", entity="Boris Johnson", label="PER")
-        + " has been elected new "
-        + TAGGED_ENTITY.format(color="#4647EB", entity="Conservative", label="MISC")
-        + " leader in a ballot of party members and will become the next "
-        + TAGGED_ENTITY.format(color="yellow", entity="UK", label="location")
-        + " prime minister. &amp;"
+        text=PARAGRAPH.format(sentence=
+                              TAGGED_ENTITY.format(color="#F7FF53", entity="Boris Johnson", label="PER")
+                              + " has been elected new "
+                              + TAGGED_ENTITY.format(color="#4647EB", entity="Conservative", label="MISC")
+                              + " leader in a ballot of party members and will become the next "
+                              + TAGGED_ENTITY.format(color="yellow", entity="UK", label="LOC")
+                              + " prime minister. &amp;"
+                              )
     )
 
     assert expected_res == actual
