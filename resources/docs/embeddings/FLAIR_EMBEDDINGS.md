@@ -110,3 +110,26 @@ for token in sentence:
 ```
 Words are now embedded using a concatenation of three different embeddings. This combination often gives state-of-the-art accuracy.
 
+
+## Pooled Flair Embeddings
+
+We also developed a pooled variant of the `FlairEmbeddings`. These embeddings differ in that they *constantly evolve over time*, even at prediction time (i.e. after training is complete). This means that the same words in the same sentence at two different points in time may have different embeddings. 
+
+`PooledFlairEmbeddings` manage a 'global' representation of each distinct word by using a pooling operation of all past occurences. More details on how this works may be found in . 
+
+You can instantiate and use `PooledFlairEmbeddings` like any other embedding: 
+
+```python
+from flair.embeddings import PooledFlairEmbeddings
+
+# init embedding
+flair_embedding_forward = PooledFlairEmbeddings('news-forward')
+
+# create a sentence
+sentence = Sentence('The grass is green .')
+
+# embed words in sentence
+flair_embedding_forward.embed(sentence)
+```
+
+Note that while we get some of our best results with `PooledFlairEmbeddings` they are very ineffective memory-wise since they keep past embeddings of all words in memory. In many cases, regular `FlairEmbeddings` will be nearly as good but with much lower memory requirements.
