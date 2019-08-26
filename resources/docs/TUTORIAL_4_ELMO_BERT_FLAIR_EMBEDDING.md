@@ -12,18 +12,18 @@ The following word embeddings are currently supported:
 
 | Class | Type | Paper | 
 | ------------- | -------------  | -------------  | 
-| [`BertEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained BERT | [Devlin et. al, 2018](https://www.aclweb.org/anthology/N19-1423/) |  
-| [`BytePairEmbeddings`](/resources/docs/embeddings/BYTE_PAIR_EMBEDDINGS.md) | Subword-level word embeddings | [Heinzerling and Strube, 2018](https://www.aclweb.org/anthology/L18-1473)  |
-| [`CharacterEmbeddings`](/resources/docs/embeddings/CHARACTER_EMBEDDINGS.md) | Task-trained character-level embeddings of words | [Lample et al., 2016](https://www.aclweb.org/anthology/N16-1030) |
-| [`ELMoEmbeddings`](/resources/docs/embeddings/ELMO_EMBEDDINGS.md) | Contextualized word-level embeddings | [Peters et al., 2018](https://aclweb.org/anthology/N18-1202)  |
-| [`FastTextEmbeddings`](/resources/docs/embeddings/FASTTEXT_EMBEDDINGS.md) | Word embeddings with subword features | [Bojanowski et al., 2017](https://aclweb.org/anthology/Q17-1010)  |
-| [`FlairEmbeddings`](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) | Contextualized character-level embeddings | [Akbik et. al, 2018](https://www.aclweb.org/anthology/C18-1139/)  |
-| [`PooledFlairEmbeddings`](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) | Pooled variant of `FlairEmbeddings` |  [Akbik et. al, 2019](https://www.aclweb.org/anthology/N19-1078/)  |
-| [`OpenAIGPTEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) and [`OpenAIGPT2Embeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained OpenAIGPT models | [Radford et. al (2018)](https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) |  
-| [`RoBERTaEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from RoBERTa | [Liu et. al (2019)](https://arxiv.org/abs/1907.11692) |  
-| [`TransformerXLEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained transformer-XL | [Dai et. al (2019)](https://arxiv.org/abs/1901.02860) |  
+| [`BertEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained BERT | [Devlin et al. (2018)](https://www.aclweb.org/anthology/N19-1423/) |  
+| [`BytePairEmbeddings`](/resources/docs/embeddings/BYTE_PAIR_EMBEDDINGS.md) | Subword-level word embeddings | [Heinzerling and Strube (2018)](https://www.aclweb.org/anthology/L18-1473)  |
+| [`CharacterEmbeddings`](/resources/docs/embeddings/CHARACTER_EMBEDDINGS.md) | Task-trained character-level embeddings of words | [Lample et al. (2016)](https://www.aclweb.org/anthology/N16-1030) |
+| [`ELMoEmbeddings`](/resources/docs/embeddings/ELMO_EMBEDDINGS.md) | Contextualized word-level embeddings | [Peters et al. (2018)](https://aclweb.org/anthology/N18-1202)  |
+| [`FastTextEmbeddings`](/resources/docs/embeddings/FASTTEXT_EMBEDDINGS.md) | Word embeddings with subword features | [Bojanowski et al. (2017)](https://aclweb.org/anthology/Q17-1010)  |
+| [`FlairEmbeddings`](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) | Contextualized character-level embeddings | [Akbik et al. (2018)](https://www.aclweb.org/anthology/C18-1139/)  |
+| [`PooledFlairEmbeddings`](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) | Pooled variant of `FlairEmbeddings` |  [Akbik et al. (2019)](https://www.aclweb.org/anthology/N19-1078/)  |
+| [`OpenAIGPTEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) and [`OpenAIGPT2Embeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained OpenAIGPT models | [Radford et al. (2018)](https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) |  
+| [`RoBERTaEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from RoBERTa | [Liu et al. (2019)](https://arxiv.org/abs/1907.11692) |  
+| [`TransformerXLEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained transformer-XL | [Dai et al. (2019)](https://arxiv.org/abs/1901.02860) |  
 | [`WordEmbeddings`](/resources/docs/embeddings/CLASSIC_WORD_EMBEDDINGS.md) | Classic word embeddings |  |
-| [`XLNetEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained XLNet | [Yang et. al (2019)](https://arxiv.org/abs/1906.08237) |  
+| [`XLNetEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained XLNet | [Yang et al. (2019)](https://arxiv.org/abs/1906.08237) |  
 | [`XLMEmbeddings`](/resources/docs/embeddings/TRANSFOMER_EMBEDDINGS.md) | Embeddings from pretrained XLM | [Lample and Conneau (2019)](https://arxiv.org/abs/1901.07291) |  
 
 
