@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 from flair.data import Sentence, Span
 from flair.embeddings import FlairEmbeddings
 from flair.visual import *
-from flair.visual.ner_html import HTML_PAGE, TAGGED_ENTITY
+from flair.visual.ner_html import HTML_PAGE, TAGGED_ENTITY, render_ner_html
 from flair.visual.training_curves import Plotter
 
 
@@ -58,8 +58,14 @@ def test_html_rendering():
     ]
     sent.to_original_text = MagicMock()
     sent.to_original_text.return_value = text
-    settings = {"colors": {"LOC": "yellow"}, "labels": {"LOC": "location"}}
-    actual = Visualizer.render_ner_html([sent], settings=settings)
+    colors = {
+        "PER": "#F7FF53",
+        "ORG": "#E8902E",
+        "LOC": "yellow",
+        "MISC": "#4647EB",
+        "O": "#ddd",
+    }
+    actual = render_ner_html([sent], colors=colors)
 
     expected_res = HTML_PAGE.format(
         text=TAGGED_ENTITY.format(color="#F7FF53", entity="Boris Johnson", label="PER")
