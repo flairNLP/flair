@@ -1,6 +1,6 @@
 # Tutorial 4: List of All Word Embeddings
 
-This is not so much a tutorial, but rather a list of all embeddings that we currently support in Flair. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library as well as [standard word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md), in particular the `StackedEmbeddings` class.
+This is not so much a tutorial, but rather a list of all embeddings that we currently support in Flair. Click on each embedding in the table below to get usage instructions. We assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library as well as [standard word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md), in particular the `StackedEmbeddings` class.
 
 ## Overview 
 
