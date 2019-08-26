@@ -145,10 +145,9 @@ trainer.train('resources/taggers/ag_news',
               patience=5,
               max_epochs=150)
 
-# 8. plot training curves (optional)
+# 8. plot weight traces (optional)
 from flair.visual.training_curves import Plotter
 plotter = Plotter()
-plotter.plot_training_curves('resources/taggers/ag_news/loss.tsv')
 plotter.plot_weights('resources/taggers/ag_news/weights.txt')
 ```
 
