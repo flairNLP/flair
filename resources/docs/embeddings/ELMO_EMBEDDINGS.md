@@ -28,5 +28,6 @@ simple specify the embedding id when initializing the `ELMoEmbeddings`.
 | 'small' | English | 1024-hidden, 1 layer, 14.6M parameters |
 | 'medium'   | English | 2048-hidden, 1 layer, 28.0M parameters |
 | 'original'    | English | 4096-hidden, 2 layers, 93.6M parameters |
+| 'large'    | English |  |
 | 'pt'   | Portuguese | |
 | 'pubmed' | English biomedical data | [more information](https://allennlp.org/elmo) |
