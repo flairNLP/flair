@@ -106,14 +106,14 @@ The grass is green <color> .
 Each tag is of class `Label` which next to the value has a score indicating confidence. Print like this: 
 
 ```python
-# get token 3 in the sentence
-word = sentence[3]
+# get token 3 in the sentence 
+token = sentence[3]
 
-# get the 'ner' tag of 
-tag = word.get_tag('ner')
+# get the 'ner' tag of the token
+tag = token.get_tag('ner')
 
 # print token
-print(f'"{word}" is tagged as "{tag.value}" with confidence score "{tag.score}"')
+print(f'"{token}" is tagged as "{tag.value}" with confidence score "{tag.score}"')
 ```
 
 This should print:
