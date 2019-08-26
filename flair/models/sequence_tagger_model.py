@@ -82,6 +82,20 @@ class SequenceTagger(flair.nn.Model):
         train_initial_hidden_state: bool = False,
         pickle_module: str = "pickle",
     ):
+        """
+        Initializes a SequenceTagger
+        :param hidden_size: number of hidden states in RNN
+        :param embeddings: word embeddings used in tagger
+        :param tag_dictionary: dictionary of tags you want to predict
+        :param tag_type: string identifier for tag type
+        :param use_crf: if True use CRF decoder, else project directly to tag space
+        :param use_rnn: if True use RNN layer, otherwise use word embeddings directly
+        :param rnn_layers: number of RNN layers
+        :param dropout: dropout probability
+        :param word_dropout: word dropout probability
+        :param locked_dropout: locked dropout probability
+        :param train_initial_hidden_state: if True, trains initial hidden state of RNN
+        """
 
         super(SequenceTagger, self).__init__()
 

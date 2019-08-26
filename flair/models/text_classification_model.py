@@ -37,6 +37,14 @@ class TextClassifier(flair.nn.Model):
         multi_label: bool = None,
         multi_label_threshold: float = 0.5,
     ):
+        """
+        Initializes a TextClassifier
+        :param document_embeddings: embeddings used to embed each data point
+        :param label_dictionary: dictionary of labels you want to predict
+        :param multi_label: auto-detected by default, but you can set this to True to force multi-label prediction
+        or False to force single-label prediction
+        :param multi_label_threshold: If multi-label you can set the threshold to make predictions
+        """
 
         super(TextClassifier, self).__init__()
 
