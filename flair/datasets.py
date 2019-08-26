@@ -38,6 +38,8 @@ class ColumnCorpus(Corpus):
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
         :param tag_to_bioes: whether to convert to BIOES tagging scheme
+        :param comment_symbol: if set, lines that begin with this symbol are treated as comments
+        :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
         :return: a Corpus with annotated train, dev and test data
         """
 
@@ -140,6 +142,7 @@ class UniversalDependenciesCorpus(Corpus):
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :param in_memory: If set to True, keeps full dataset in memory, otherwise does disk reads
         :return: a Corpus with annotated train, dev and test data
         """
         if type(data_folder) == str:
@@ -198,6 +201,10 @@ class ClassificationCorpus(Corpus):
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :param use_tokenizer: If True, tokenizes the dataset, otherwise uses whitespace tokenization
+        :param max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
+        :param max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
+        :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
         :return: a Corpus with annotated train, dev and test data
         """
 
@@ -285,9 +292,14 @@ class CSVClassificationCorpus(Corpus):
         Instantiates a Corpus for text classification from CSV column formatted data
 
         :param data_folder: base folder with the task data
+        :param column_name_map: a column name map that indicates which column is text and which the label(s)
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :param max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
+        :param max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
+        :param use_tokenizer: If True, tokenizes the dataset, otherwise uses whitespace tokenization
+        :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
         :param fmtparams: additional parameters for the CSV file reader
         :return: a Corpus with annotated train, dev and test data
         """
@@ -375,7 +387,15 @@ class CSVClassificationCorpus(Corpus):
 
 
 class SentenceDataset(FlairDataset):
+    """
+    A simple Dataset object to wrap a List of Sentence
+    """
+
     def __init__(self, sentences: Union[Sentence, List[Sentence]]):
+        """
+        Instantiate SentenceDataset
+        :param sentences: Sentence or List of Sentence that make up SentenceDataset
+        """
         # cast to list if necessary
         if type(sentences) == Sentence:
             sentences = [sentences]
@@ -401,6 +421,15 @@ class ColumnDataset(FlairDataset):
         comment_symbol: str = None,
         in_memory: bool = True,
     ):
+        """
+        Instantiates a column dataset (typically used for sequence labeling or word-level prediction).
+
+        :param path_to_column_file: path to the file with the column-formatted data
+        :param column_name_map: a map specifying the column format
+        :param tag_to_bioes: whether to convert to BIOES tagging scheme
+        :param comment_symbol: if set, lines that begin with this symbol are treated as comments
+        :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
+        """
         assert path_to_column_file.exists()
         self.path_to_column_file = path_to_column_file
         self.tag_to_bioes = tag_to_bioes
@@ -533,6 +562,12 @@ class ColumnDataset(FlairDataset):
 
 class UniversalDependenciesDataset(FlairDataset):
     def __init__(self, path_to_conll_file: Path, in_memory: bool = True):
+        """
+        Instantiates a column dataset in CoNLL-U format.
+
+        :param path_to_conll_file: Path to the CoNLL-U formatted file
+        :param in_memory: If set to True, keeps full dataset in memory, otherwise does disk reads
+        """
         assert path_to_conll_file.exists()
 
         self.in_memory = in_memory
@@ -664,6 +699,20 @@ class CSVClassificationDataset(FlairDataset):
         skip_header: bool = False,
         **fmtparams,
     ):
+        """
+        Instantiates a Dataset for text classification from CSV column formatted data
+
+        :param path_to_file: path to the file with the CSV data
+        :param column_name_map: a column name map that indicates which column is text and which the label(s)
+        :param max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
+        :param max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
+        :param use_tokenizer: If True, tokenizes the dataset, otherwise uses whitespace tokenization
+        :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
+        :param skip_header: If True, skips first line because it is header
+        :param fmtparams: additional parameters for the CSV file reader
+        :return: a Corpus with annotated train, dev and test data
+        """
+
         if type(path_to_file) == str:
             path_to_file: Path = Path(path_to_file)
 
@@ -794,6 +843,10 @@ class ClassificationDataset(FlairDataset):
         __label__<class_name_1> __label__<class_name_2> <text>
         :param path_to_file: the path to the data file
         :param max_tokens_per_doc: Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.
+        :param max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
+        :param max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
+        :param use_tokenizer: If True, tokenizes the dataset, otherwise uses whitespace tokenization
+        :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
         :return: list of sentences
         """
         if type(path_to_file) == str:
