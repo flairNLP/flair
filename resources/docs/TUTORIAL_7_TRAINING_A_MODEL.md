@@ -308,7 +308,6 @@ from pathlib import Path
 checkpoint = tagger.load_checkpoint(Path('resources/taggers/example-ner/checkpoint.pt'))
 trainer = ModelTrainer.load_from_checkpoint(checkpoint, corpus)
 trainer.train('resources/taggers/example-ner',
-              EvaluationMetric.MICRO_F1_SCORE,
               learning_rate=0.1,
               mini_batch_size=32,
               max_epochs=150,
