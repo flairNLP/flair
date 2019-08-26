@@ -40,16 +40,24 @@ class ModelTrainer:
         corpus: Corpus,
         optimizer: torch.optim.Optimizer = SGD,
         epoch: int = 0,
-        loss: float = 10000.0,
         optimizer_state: dict = None,
         scheduler_state: dict = None,
         use_tensorboard: bool = False,
     ):
+        """
+        Initialize a model trainer
+        :param model: The model that you want to train. The model should inherit from flair.nn.Model
+        :param corpus: The dataset used to train the model, should be of type Corpus
+        :param optimizer: The optimizer to use (typically SGD or Adam)
+        :param epoch: The starting epoch (normally 0 but could be higher if you continue training model)
+        :param optimizer_state: Optimizer state (necessary if continue training from checkpoint)
+        :param scheduler_state: Scheduler state (necessary if continue training from checkpoint)
+        :param use_tensorboard: If True, writes out tensorboard information
+        """
         self.model: flair.nn.Model = model
         self.corpus: Corpus = corpus
         self.optimizer: torch.optim.Optimizer = optimizer
         self.epoch: int = epoch
-        self.loss: float = loss
         self.scheduler_state: dict = scheduler_state
         self.optimizer_state: dict = optimizer_state
         self.use_tensorboard: bool = use_tensorboard
@@ -539,7 +547,6 @@ class ModelTrainer:
             corpus,
             optimizer,
             epoch=checkpoint["epoch"],
-            loss=checkpoint["loss"],
             optimizer_state=checkpoint["optimizer_state_dict"],
             scheduler_state=checkpoint["scheduler_state_dict"],
         )

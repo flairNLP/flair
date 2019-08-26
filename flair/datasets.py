@@ -38,6 +38,8 @@ class ColumnCorpus(Corpus):
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
         :param tag_to_bioes: whether to convert to BIOES tagging scheme
+        :param comment_symbol: if set, lines that begin with this symbol are treated as comments
+        :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
         :return: a Corpus with annotated train, dev and test data
         """
 
@@ -140,6 +142,7 @@ class UniversalDependenciesCorpus(Corpus):
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :param in_memory: If set to True, keeps full dataset in memory, otherwise does disk reads
         :return: a Corpus with annotated train, dev and test data
         """
         if type(data_folder) == str:
@@ -198,6 +201,10 @@ class ClassificationCorpus(Corpus):
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :param use_tokenizer: If True, tokenizes the dataset, otherwise uses whitespace tokenization
+        :param max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
+        :param max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
+        :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
         :return: a Corpus with annotated train, dev and test data
         """
 
@@ -285,9 +292,14 @@ class CSVClassificationCorpus(Corpus):
         Instantiates a Corpus for text classification from CSV column formatted data
 
         :param data_folder: base folder with the task data
+        :param column_name_map: a column name map that indicates which column is text and which the label(s)
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :param max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
+        :param max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
+        :param use_tokenizer: If True, tokenizes the dataset, otherwise uses whitespace tokenization
+        :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
         :param fmtparams: additional parameters for the CSV file reader
         :return: a Corpus with annotated train, dev and test data
         """
@@ -375,7 +387,15 @@ class CSVClassificationCorpus(Corpus):
 
 
 class SentenceDataset(FlairDataset):
+    """
+    A simple Dataset object to wrap a List of Sentence
+    """
+
     def __init__(self, sentences: Union[Sentence, List[Sentence]]):
+        """
+        Instantiate SentenceDataset
+        :param sentences: Sentence or List of Sentence that make up SentenceDataset
+        """
         # cast to list if necessary
         if type(sentences) == Sentence:
             sentences = [sentences]
@@ -401,6 +421,15 @@ class ColumnDataset(FlairDataset):
         comment_symbol: str = None,
         in_memory: bool = True,
     ):
+        """
+        Instantiates a column dataset (typically used for sequence labeling or word-level prediction).
+
+        :param path_to_column_file: path to the file with the column-formatted data
+        :param column_name_map: a map specifying the column format
+        :param tag_to_bioes: whether to convert to BIOES tagging scheme
+        :param comment_symbol: if set, lines that begin with this symbol are treated as comments
+        :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
+        """
         assert path_to_column_file.exists()
         self.path_to_column_file = path_to_column_file
         self.tag_to_bioes = tag_to_bioes
@@ -533,6 +562,12 @@ class ColumnDataset(FlairDataset):
 
 class UniversalDependenciesDataset(FlairDataset):
     def __init__(self, path_to_conll_file: Path, in_memory: bool = True):
+        """
+        Instantiates a column dataset in CoNLL-U format.
+
+        :param path_to_conll_file: Path to the CoNLL-U formatted file
+        :param in_memory: If set to True, keeps full dataset in memory, otherwise does disk reads
+        """
         assert path_to_conll_file.exists()
 
         self.in_memory = in_memory
@@ -664,6 +699,20 @@ class CSVClassificationDataset(FlairDataset):
         skip_header: bool = False,
         **fmtparams,
     ):
+        """
+        Instantiates a Dataset for text classification from CSV column formatted data
+
+        :param path_to_file: path to the file with the CSV data
+        :param column_name_map: a column name map that indicates which column is text and which the label(s)
+        :param max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
+        :param max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
+        :param use_tokenizer: If True, tokenizes the dataset, otherwise uses whitespace tokenization
+        :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
+        :param skip_header: If True, skips first line because it is header
+        :param fmtparams: additional parameters for the CSV file reader
+        :return: a Corpus with annotated train, dev and test data
+        """
+
         if type(path_to_file) == str:
             path_to_file: Path = Path(path_to_file)
 
@@ -794,6 +843,10 @@ class ClassificationDataset(FlairDataset):
         __label__<class_name_1> __label__<class_name_2> <text>
         :param path_to_file: the path to the data file
         :param max_tokens_per_doc: Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.
+        :param max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
+        :param max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
+        :param use_tokenizer: If True, tokenizes the dataset, otherwise uses whitespace tokenization
+        :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
         :return: list of sentences
         """
         if type(path_to_file) == str:
@@ -896,8 +949,22 @@ class ClassificationDataset(FlairDataset):
 
 class CONLL_03(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
     ):
+        """
+        Initialize the CoNLL-03 corpus. This is only possible if you've manually downloaded it to your machine.
+        Obtain the corpus from https://www.clips.uantwerpen.be/conll2003/ner/ and put it into some folder. Then point
+        the base_path parameter in the constructor to this folder
+        :param base_path: Path to the CoNLL-03 corpus on your machine
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' or 'np' to predict
+        POS tags or chunks respectively
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "pos", 2: "np", 3: "ner"}
@@ -926,8 +993,22 @@ class CONLL_03(ColumnCorpus):
 
 class CONLL_03_GERMAN(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
     ):
+        """
+        Initialize the CoNLL-03 corpus for German. This is only possible if you've manually downloaded it to your machine.
+        Obtain the corpus from https://www.clips.uantwerpen.be/conll2003/ner/ and put it into some folder. Then point
+        the base_path parameter in the constructor to this folder
+        :param base_path: Path to the CoNLL-03 corpus on your machine
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'lemma', 'pos' or 'np' to predict
+        word lemmas, POS tags or chunks respectively
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "lemma", 2: "pos", 3: "np", 4: "ner"}
@@ -956,8 +1037,23 @@ class CONLL_03_GERMAN(ColumnCorpus):
 
 class CONLL_03_DUTCH(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
     ):
+        """
+        Initialize the CoNLL-03 corpus for Dutch. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
 
@@ -982,8 +1078,22 @@ class CONLL_03_DUTCH(ColumnCorpus):
 
 class CONLL_03_SPANISH(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
     ):
+        """
+        Initialize the CoNLL-03 corpus for Spanish. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, should not be changed
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # column format
         columns = {0: "text", 1: "ner"}
 
@@ -1008,8 +1118,21 @@ class CONLL_03_SPANISH(ColumnCorpus):
 
 class CONLL_2000(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "np", in_memory: bool = True
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "np",
+        in_memory: bool = True,
     ):
+        """
+        Initialize the CoNLL-2000 corpus for English chunking.
+        The first time you call this constructor it will automatically download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: 'np' by default, should not be changed, but you can set 'pos' instead to predict POS tags
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "pos", 2: "np"}
@@ -1059,8 +1182,21 @@ class CONLL_2000(ColumnCorpus):
 
 class GERMEVAL(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
     ):
+        """
+        Initialize the GermEval NER corpus for German. This is only possible if you've manually downloaded it to your
+        machine. Obtain the corpus from https://sites.google.com/site/germeval2014ner/home/ and put it into some folder.
+        Then point the base_path parameter in the constructor to this folder
+        :param base_path: Path to the GermEval corpus on your machine
+        :param tag_to_bioes: 'ner' by default, should not be changed.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
 
         # column format
         columns = {1: "text", 2: "ner"}
@@ -1091,7 +1227,10 @@ class GERMEVAL(ColumnCorpus):
 
 
 class IMDB(ClassificationCorpus):
-    def __init__(self, base_path=None, in_memory: bool = False):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1146,7 +1285,11 @@ class IMDB(ClassificationCorpus):
 
 
 class NEWSGROUPS(ClassificationCorpus):
-    def __init__(self, base_path=None, in_memory: bool = False):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1229,8 +1372,13 @@ class NEWSGROUPS(ClassificationCorpus):
 
 class NER_BASQUE(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
     ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1271,7 +1419,11 @@ class NER_BASQUE(ColumnCorpus):
 
 
 class TREC_50(ClassificationCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1325,7 +1477,11 @@ class TREC_50(ClassificationCorpus):
 
 
 class TREC_6(ClassificationCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1379,7 +1535,11 @@ class TREC_6(ClassificationCorpus):
 
 
 class UD_ENGLISH(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1402,7 +1562,11 @@ class UD_ENGLISH(UniversalDependenciesCorpus):
 
 
 class UD_GERMAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1423,7 +1587,11 @@ class UD_GERMAN(UniversalDependenciesCorpus):
 
 
 class UD_GERMAN_HDT(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = False):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1465,7 +1633,11 @@ class UD_GERMAN_HDT(UniversalDependenciesCorpus):
 
 
 class UD_DUTCH(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1490,7 +1662,11 @@ class UD_DUTCH(UniversalDependenciesCorpus):
 
 
 class UD_FRENCH(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1510,7 +1686,11 @@ class UD_FRENCH(UniversalDependenciesCorpus):
 
 
 class UD_ITALIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1532,7 +1712,11 @@ class UD_ITALIAN(UniversalDependenciesCorpus):
 
 
 class UD_SPANISH(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1548,11 +1732,15 @@ class UD_SPANISH(UniversalDependenciesCorpus):
         cached_path(
             f"{ud_path}/es_gsd-ud-train.conllu", Path("datasets") / dataset_name
         )
-        super(UD_SPANISH, self).__init__(data_folder)
+        super(UD_SPANISH, self).__init__(data_folder, in_memory=in_memory)
 
 
 class UD_PORTUGUESE(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1576,7 +1764,11 @@ class UD_PORTUGUESE(UniversalDependenciesCorpus):
 
 
 class UD_ROMANIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1596,7 +1788,11 @@ class UD_ROMANIAN(UniversalDependenciesCorpus):
 
 
 class UD_CATALAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1620,7 +1816,11 @@ class UD_CATALAN(UniversalDependenciesCorpus):
 
 
 class UD_POLISH(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1641,7 +1841,11 @@ class UD_POLISH(UniversalDependenciesCorpus):
 
 
 class UD_CZECH(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = False):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1690,7 +1894,11 @@ class UD_CZECH(UniversalDependenciesCorpus):
 
 
 class UD_SLOVAK(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1711,7 +1919,11 @@ class UD_SLOVAK(UniversalDependenciesCorpus):
 
 
 class UD_SWEDISH(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1736,7 +1948,11 @@ class UD_SWEDISH(UniversalDependenciesCorpus):
 
 
 class UD_DANISH(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1757,7 +1973,11 @@ class UD_DANISH(UniversalDependenciesCorpus):
 
 
 class UD_NORWEGIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1782,7 +2002,11 @@ class UD_NORWEGIAN(UniversalDependenciesCorpus):
 
 
 class UD_FINNISH(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1803,7 +2027,11 @@ class UD_FINNISH(UniversalDependenciesCorpus):
 
 
 class UD_SLOVENIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1824,7 +2052,11 @@ class UD_SLOVENIAN(UniversalDependenciesCorpus):
 
 
 class UD_CROATIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1845,7 +2077,11 @@ class UD_CROATIAN(UniversalDependenciesCorpus):
 
 
 class UD_SERBIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1866,7 +2102,11 @@ class UD_SERBIAN(UniversalDependenciesCorpus):
 
 
 class UD_BULGARIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1887,7 +2127,11 @@ class UD_BULGARIAN(UniversalDependenciesCorpus):
 
 
 class UD_ARABIC(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1909,7 +2153,11 @@ class UD_ARABIC(UniversalDependenciesCorpus):
 
 
 class UD_HEBREW(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1929,7 +2177,11 @@ class UD_HEBREW(UniversalDependenciesCorpus):
 
 
 class UD_TURKISH(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1952,7 +2204,11 @@ class UD_TURKISH(UniversalDependenciesCorpus):
 
 
 class UD_PERSIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -1977,7 +2233,11 @@ class UD_PERSIAN(UniversalDependenciesCorpus):
 
 
 class UD_RUSSIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -2002,7 +2262,11 @@ class UD_RUSSIAN(UniversalDependenciesCorpus):
 
 
 class UD_HINDI(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -2025,7 +2289,11 @@ class UD_HINDI(UniversalDependenciesCorpus):
 
 
 class UD_INDONESIAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -2046,7 +2314,11 @@ class UD_INDONESIAN(UniversalDependenciesCorpus):
 
 
 class UD_JAPANESE(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -2067,7 +2339,11 @@ class UD_JAPANESE(UniversalDependenciesCorpus):
 
 
 class UD_CHINESE(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -2088,7 +2364,11 @@ class UD_CHINESE(UniversalDependenciesCorpus):
 
 
 class UD_KOREAN(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -2113,7 +2393,11 @@ class UD_KOREAN(UniversalDependenciesCorpus):
 
 
 class UD_BASQUE(UniversalDependenciesCorpus):
-    def __init__(self, base_path=None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -2160,7 +2444,11 @@ def _download_wassa_if_not_there(emotion, data_folder, dataset_name):
 
 
 class WASSA_ANGER(ClassificationCorpus):
-    def __init__(self, base_path=None, in_memory: bool = False):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -2178,7 +2466,11 @@ class WASSA_ANGER(ClassificationCorpus):
 
 
 class WASSA_FEAR(ClassificationCorpus):
-    def __init__(self, base_path=None, in_memory: bool = False):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -2196,7 +2488,11 @@ class WASSA_FEAR(ClassificationCorpus):
 
 
 class WASSA_JOY(ClassificationCorpus):
-    def __init__(self, base_path=None, in_memory: bool = False):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -2214,7 +2510,11 @@ class WASSA_JOY(ClassificationCorpus):
 
 
 class WASSA_SADNESS(ClassificationCorpus):
-    def __init__(self, base_path=None, in_memory: bool = False):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -2275,8 +2575,14 @@ def _download_wikiner(language_code: str, dataset_name: str):
 
 class WIKINER_ENGLISH(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = False,
     ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
 
@@ -2298,8 +2604,14 @@ class WIKINER_ENGLISH(ColumnCorpus):
 
 class WIKINER_GERMAN(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = False,
     ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
 
@@ -2321,8 +2633,14 @@ class WIKINER_GERMAN(ColumnCorpus):
 
 class WIKINER_DUTCH(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = False,
     ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
 
@@ -2344,8 +2662,14 @@ class WIKINER_DUTCH(ColumnCorpus):
 
 class WIKINER_FRENCH(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = False,
     ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
 
@@ -2367,8 +2691,14 @@ class WIKINER_FRENCH(ColumnCorpus):
 
 class WIKINER_ITALIAN(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = False,
     ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
 
@@ -2390,8 +2720,14 @@ class WIKINER_ITALIAN(ColumnCorpus):
 
 class WIKINER_SPANISH(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = False,
     ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
 
@@ -2413,8 +2749,14 @@ class WIKINER_SPANISH(ColumnCorpus):
 
 class WIKINER_PORTUGUESE(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = False,
     ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
 
@@ -2436,8 +2778,14 @@ class WIKINER_PORTUGUESE(ColumnCorpus):
 
 class WIKINER_POLISH(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = False,
     ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
 
@@ -2459,8 +2807,14 @@ class WIKINER_POLISH(ColumnCorpus):
 
 class WIKINER_RUSSIAN(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = False
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = False,
     ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # column format
         columns = {0: "text", 1: "pos", 2: "ner"}
 
@@ -2482,8 +2836,14 @@ class WIKINER_RUSSIAN(ColumnCorpus):
 
 class WNUT_17(ColumnCorpus):
     def __init__(
-        self, base_path=None, tag_to_bioes: str = "ner", in_memory: bool = True
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "ner",
+        in_memory: bool = True,
     ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
         # column format
         columns = {0: "text", 1: "ner"}
 
