@@ -106,9 +106,7 @@ The grass is green <color> .
 Each tag is of class `Label` which next to the value has a score indicating confidence. Print like this: 
 
 ```python
-from flair.data import Label
-
-tag: Label = sentence[3].get_tag('ner')
+tag = sentence[3].get_tag('ner')
 
 print(f'"{sentence[3]}" is tagged as "{tag.value}" with confidence score "{tag.score}"')
 ```
