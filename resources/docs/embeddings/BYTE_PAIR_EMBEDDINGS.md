@@ -2,7 +2,7 @@
 
 `BytePairEmbeddings` are word embeddings that are precomputed on the subword-level. This means that they are able to
 embed any word by splitting words into subwords and looking up their embeddings. `BytePairEmbeddings` were proposed
-and computed by [Heinzerling and Strube, 2018](https://www.aclweb.org/anthology/L18-1473) who found that they offer nearly the same accuracy as word embeddings, but at a fraction
+and computed by [Heinzerling and Strube (2018)](https://www.aclweb.org/anthology/L18-1473) who found that they offer nearly the same accuracy as word embeddings, but at a fraction
 of the model size. So they are a great choice if you want to train small models.
 
 You initialize with a language code (275 languages supported), a number of 'syllables' (one of ) and
