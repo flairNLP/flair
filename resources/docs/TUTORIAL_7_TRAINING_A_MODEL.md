@@ -316,7 +316,7 @@ trainer.train('resources/taggers/example-ner',
 ```
 
 
-## Scalability: Setting embedding_storage_mode for Large Datasets
+## Scalability: Training with Large Datasets
 
 Many embeddings in Flair are somewhat costly to produce in terms of runtime and may have large vectors. Examples
 of this are `FlairEmbeddings`, `BertEmbeddings` and the other transformer-based embeddings. Depending on your setup, 
