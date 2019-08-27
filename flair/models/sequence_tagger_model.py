@@ -535,7 +535,7 @@ class SequenceTagger(flair.nn.Model):
             return score
 
     def _obtain_labels(
-        self, feature, sentences, get_all_tags: bool = False
+        self, feature: torch.Tensor, sentences: List[Sentence], get_all_tags: bool = False
     ) -> (List[List[Label]], List[List[List[Label]]]):
         """
         Returns a tuple of two lists:
@@ -548,8 +548,9 @@ class SequenceTagger(flair.nn.Model):
 
         tags = []
         all_tags = []
-        feature_cpu = feature.detach().to("cpu")
-        transitions_cpu = self.transitions.detach().to("cpu")
+        feature_cpu = feature.detach().cpu()
+        if self.use_crf:
+            transitions_cpu = self.transitions.detach().cpu()
         for feats, length in zip(feature_cpu, lengths):
             if self.use_crf:
                 confidences, tag_seq, scores = self._viterbi_decode(
