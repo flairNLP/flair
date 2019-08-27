@@ -365,11 +365,10 @@ class SequenceTagger(flair.nn.Model):
                 if verbose:
                     batches.set_description(f"Inferencing on batch {i}")
 
-                with torch.no_grad():
-                    feature = self.forward(batch)
-                    tags, all_tags = self._obtain_labels(
-                        feature, batch, get_all_tags=all_tag_prob
-                    )
+                feature = self.forward(batch)
+                tags, all_tags = self._obtain_labels(
+                    feature, batch, get_all_tags=all_tag_prob
+                )
 
                 for (sentence, sent_tags) in zip(batch, tags):
                     for (token, tag) in zip(sentence.tokens, sent_tags):
