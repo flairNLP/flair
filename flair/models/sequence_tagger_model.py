@@ -170,16 +170,17 @@ class SequenceTagger(flair.nn.Model):
                 self.embeddings.embedding_length, len(tag_dictionary)
             )
 
-        if self.use_crf:
-            self.transitions = torch.nn.Parameter(
-                torch.randn(self.tagset_size, self.tagset_size)
-            )
-            self.transitions.detach()[
-                self.tag_dictionary.get_idx_for_item(START_TAG), :
-            ] = -10000
-            self.transitions.detach()[
-                :, self.tag_dictionary.get_idx_for_item(STOP_TAG)
-            ] = -10000
+        self.crf_transitions = torch.nn.Parameter(
+            torch.randn(self.tagset_size, self.tagset_size)
+        )
+
+        self.crf_transitions.detach()[
+            self.tag_dictionary.get_idx_for_item(START_TAG), :
+        ] = -10000
+
+        self.crf_transitions.detach()[
+            :, self.tag_dictionary.get_idx_for_item(STOP_TAG)
+        ] = -10000
 
         self.to(flair.device)
 
@@ -247,7 +248,7 @@ class SequenceTagger(flair.nn.Model):
             metric = Metric("Evaluation")
 
             lines: List[str] = []
-            transitions = self.transitions.detach().cpu()
+            crf_transitions = self.crf_transitions.detach().cpu()
 
             for batch in data_loader:
                 batch_no += 1
@@ -255,7 +256,7 @@ class SequenceTagger(flair.nn.Model):
                 with torch.no_grad():
                     features = self.forward(batch)
                     loss = self._calculate_loss(features, batch)
-                    tags, _ = self._obtain_labels(features, batch, transitions)
+                    tags, _ = self._obtain_labels(features, batch, crf_transitions)
 
                 eval_loss += loss
 
@@ -352,7 +353,7 @@ class SequenceTagger(flair.nn.Model):
             # reverse sort all sequences by their length
             filtered_sentences.sort(key=lambda x: len(x), reverse=True)
 
-            transitions = self.transitions.detach().cpu()
+            crf_transitions = self.crf_transitions.detach().cpu()
 
             # make mini-batches
             batches = [
@@ -371,7 +372,7 @@ class SequenceTagger(flair.nn.Model):
 
                 feature = self.forward(batch)
                 tags, all_tags = self._obtain_labels(
-                    feature, batch, transitions, get_all_tags=all_tag_prob
+                    feature, batch, crf_transitions, get_all_tags=all_tag_prob
                 )
 
                 for (sentence, sent_tags) in zip(batch, tags):
@@ -489,7 +490,7 @@ class SequenceTagger(flair.nn.Model):
             r = torch.LongTensor(range(lens_[i])).to(flair.device)
 
             score[i] = torch.sum(
-                self.transitions[
+                self.crf_transitions[
                     pad_stop_tags[i, : lens_[i] + 1], pad_start_tags[i, : lens_[i] + 1]
                 ]
             ) + torch.sum(feats[i, r, tags[i, : lens_[i]]])
@@ -541,7 +542,7 @@ class SequenceTagger(flair.nn.Model):
         self,
         feature: torch.Tensor,
         sentences: List[Sentence],
-        transitions: Parameter,
+        crf_transitions: Parameter,
         get_all_tags: bool = False,
     ) -> (List[List[Label]], List[List[List[Label]]]):
         """
@@ -560,7 +561,9 @@ class SequenceTagger(flair.nn.Model):
         for feats, length in zip(feature, lengths):
             if self.use_crf:
                 confidences, tag_seq, scores = self._viterbi_decode(
-                    feats[:length], all_scores=get_all_tags, transitions=transitions
+                    feats[:length],
+                    all_scores=get_all_tags,
+                    crf_transitions=crf_transitions,
                 )
             else:
                 tag_seq = []
@@ -596,7 +599,7 @@ class SequenceTagger(flair.nn.Model):
 
         return tags, all_tags
 
-    def _viterbi_decode(self, feats, transitions, all_scores: bool = False):
+    def _viterbi_decode(self, feats, crf_transitions, all_scores: bool = False):
         backpointers = []
         backscores = []
 
@@ -607,7 +610,7 @@ class SequenceTagger(flair.nn.Model):
         for feat in feats:
             next_tag_var = (
                 forward_var.view(1, -1).expand(self.tagset_size, self.tagset_size)
-                + transitions
+                + crf_transitions
             )
             _, bptrs_t = torch.max(next_tag_var, dim=1)
             viterbivars_t = next_tag_var[range(len(bptrs_t)), bptrs_t]
@@ -616,7 +619,8 @@ class SequenceTagger(flair.nn.Model):
             backpointers.append(bptrs_t)
 
         terminal_var = (
-            forward_var + transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)]
+            forward_var
+            + crf_transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)]
         )
         terminal_var.detach()[self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000.0
         terminal_var.detach()[
@@ -679,25 +683,25 @@ class SequenceTagger(flair.nn.Model):
 
         forward_var[:, 0, :] = init_alphas[None, :].repeat(feats.shape[0], 1)
 
-        transitions = self.transitions.view(
-            1, self.transitions.shape[0], self.transitions.shape[1]
+        crf_transitions = self.crf_transitions.view(
+            1, self.crf_transitions.shape[0], self.crf_transitions.shape[1]
         ).repeat(feats.shape[0], 1, 1)
 
         for i in range(feats.shape[1]):
             emit_score = feats[:, i, :]
 
             tag_var = (
-                emit_score[:, :, None].repeat(1, 1, transitions.shape[2])
-                + transitions
+                emit_score[:, :, None].repeat(1, 1, crf_transitions.shape[2])
+                + crf_transitions
                 + forward_var[:, i, :][:, :, None]
-                .repeat(1, 1, transitions.shape[2])
+                .repeat(1, 1, crf_transitions.shape[2])
                 .transpose(2, 1)
             )
 
             max_tag_var, _ = torch.max(tag_var, dim=2)
 
             tag_var = tag_var - max_tag_var[:, :, None].repeat(
-                1, 1, transitions.shape[2]
+                1, 1, crf_transitions.shape[2]
             )
 
             agg_ = torch.log(torch.sum(torch.exp(tag_var), dim=2))
@@ -709,7 +713,7 @@ class SequenceTagger(flair.nn.Model):
 
         forward_var = forward_var[range(forward_var.shape[0]), lens_, :]
 
-        terminal_var = forward_var + self.transitions[
+        terminal_var = forward_var + self.crf_transitions[
             self.tag_dictionary.get_idx_for_item(STOP_TAG)
         ][None, :].repeat(forward_var.shape[0], 1)
 
@@ -880,7 +884,7 @@ class SequenceTagger(flair.nn.Model):
 
     def get_transition_matrix(self):
         data = []
-        for to_idx, row in enumerate(self.transitions):
+        for to_idx, row in enumerate(self.crf_transitions):
             for from_idx, column in enumerate(row):
                 row = [
                     self.tag_dictionary.get_item_for_index(from_idx),
