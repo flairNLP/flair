@@ -247,13 +247,15 @@ class SequenceTagger(flair.nn.Model):
             metric = Metric("Evaluation")
 
             lines: List[str] = []
+            transitions = self.transitions.detach().cpu()
+
             for batch in data_loader:
                 batch_no += 1
 
                 with torch.no_grad():
                     features = self.forward(batch)
                     loss = self._calculate_loss(features, batch)
-                    tags, _ = self._obtain_labels(features, batch)
+                    tags, _ = self._obtain_labels(features, batch, transitions)
 
                 eval_loss += loss
 
@@ -350,6 +352,8 @@ class SequenceTagger(flair.nn.Model):
             # reverse sort all sequences by their length
             filtered_sentences.sort(key=lambda x: len(x), reverse=True)
 
+            transitions = self.transitions.detach().cpu()
+
             # make mini-batches
             batches = [
                 filtered_sentences[x : x + mini_batch_size]
@@ -367,7 +371,7 @@ class SequenceTagger(flair.nn.Model):
 
                 feature = self.forward(batch)
                 tags, all_tags = self._obtain_labels(
-                    feature, batch, get_all_tags=all_tag_prob
+                    feature, batch, transitions, get_all_tags=all_tag_prob
                 )
 
                 for (sentence, sent_tags) in zip(batch, tags):
@@ -537,6 +541,7 @@ class SequenceTagger(flair.nn.Model):
         self,
         feature: torch.Tensor,
         sentences: List[Sentence],
+        transitions: Parameter,
         get_all_tags: bool = False,
     ) -> (List[List[Label]], List[List[List[Label]]]):
         """
@@ -551,10 +556,7 @@ class SequenceTagger(flair.nn.Model):
         tags = []
         all_tags = []
         feature = feature.detach().cpu()
-        if self.use_crf:
-            transitions = self.transitions.detach().cpu()
-        else:
-            transitions = self.transitions
+
         for feats, length in zip(feature, lengths):
             if self.use_crf:
                 confidences, tag_seq, scores = self._viterbi_decode(
