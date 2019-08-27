@@ -535,7 +535,10 @@ class SequenceTagger(flair.nn.Model):
             return score
 
     def _obtain_labels(
-        self, feature: torch.Tensor, sentences: List[Sentence], get_all_tags: bool = False
+        self,
+        feature: torch.Tensor,
+        sentences: List[Sentence],
+        get_all_tags: bool = False,
     ) -> (List[List[Label]], List[List[List[Label]]]):
         """
         Returns a tuple of two lists:
