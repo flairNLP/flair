@@ -16,6 +16,8 @@ from torch.nn import ParameterList, Parameter
 from pytorch_transformers import (
     BertTokenizer,
     BertModel,
+    DistilBertTokenizer,
+    DistilBertModel,
     RobertaTokenizer,
     RobertaModel,
     TransfoXLTokenizer,
@@ -1976,10 +1978,18 @@ class BertEmbeddings(TokenEmbeddings):
         """
         super().__init__()
 
-        self.tokenizer = BertTokenizer.from_pretrained(bert_model_or_path)
-        self.model = BertModel.from_pretrained(
-            pretrained_model_name_or_path=bert_model_or_path, output_hidden_states=True
-        )
+        if bert_model_or_path.startswith("distilbert"):
+            self.tokenizer = DistilBertTokenizer.from_pretrained(bert_model_or_path)
+            self.model = DistilBertModel.from_pretrained(
+                pretrained_model_name_or_path=bert_model_or_path,
+                output_hidden_states=True,
+            )
+        else:
+            self.tokenizer = BertTokenizer.from_pretrained(bert_model_or_path)
+            self.model = BertModel.from_pretrained(
+                pretrained_model_name_or_path=bert_model_or_path,
+                output_hidden_states=True,
+            )
         self.layer_indexes = [int(x) for x in layers.split(",")]
         self.pooling_operation = pooling_operation
         self.use_scalar_mix = use_scalar_mix
@@ -2088,9 +2098,9 @@ class BertEmbeddings(TokenEmbeddings):
         # put encoded batch through BERT model to get all hidden states of all encoder layers
         self.model.to(flair.device)
         self.model.eval()
-        _, _, all_encoder_layers = self.model(
-            all_input_ids, token_type_ids=None, attention_mask=all_input_masks
-        )
+        all_encoder_layers = self.model(all_input_ids, attention_mask=all_input_masks)[
+            -1
+        ]
 
         with torch.no_grad():
 
