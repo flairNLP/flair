@@ -22,10 +22,10 @@ models to your text, such as named entity recognition (NER), part-of-speech tagg
 * **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and 
 document embeddings, including our proposed **[Flair embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)**, BERT embeddings and ELMo embeddings.
 
-* **A Pytorch NLP framework.** Our framework builds directly on [Pytorch](https://pytorch.org/), making it easy to 
+* **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to 
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.4.2](https://github.com/zalandoresearch/flair/releases)!
+Now at [version 0.4.3](https://github.com/zalandoresearch/flair/releases)!
 
 ## Comparison with State-of-the-Art
 
@@ -61,7 +61,7 @@ Alan Akbik, Tanja Bergmann, Duncan Blythe, Kashif Rasul, Stefan Schweter and Rol
 
 ### Requirements and Installation
 
-The project is based on PyTorch 0.4+ and Python 3.6+, because method signatures and type hints are beautiful.
+The project is based on PyTorch 1.1+ and Python 3.6+, because method signatures and type hints are beautiful.
 If you do not have Python 3.6, install it first. [Here is how for Ubuntu 16.04](https://vsupalov.com/developing-with-python3-6-on-ubuntu-16-04/).
 Then, in your favorite virtual environment, simply do:
 
@@ -115,12 +115,12 @@ We provide a set of quick tutorials to get you started with the library:
 
 * [Tutorial 1: Basics](/resources/docs/TUTORIAL_1_BASICS.md)
 * [Tutorial 2: Tagging your Text](/resources/docs/TUTORIAL_2_TAGGING.md)
-* [Tutorial 3: Using Word Embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)
-* [Tutorial 4: Using BERT, ELMo, and Flair Embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md)
-* [Tutorial 5: Using Document Embeddings](/resources/docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md)
+* [Tutorial 3: Embedding Words](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)
+* [Tutorial 4: List of All Word Embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md)
+* [Tutorial 5: Embedding Documents](/resources/docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md)
 * [Tutorial 6: Loading your own Corpus](/resources/docs/TUTORIAL_6_CORPUS.md)
 * [Tutorial 7: Training your own Models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
-* [Tutorial 8: Optimizing your own Models](/resources/docs/TUTORIAL_8_MODEL_OPTIMIZATION.md)
+* [Tutorial 8: Optimizing your Models](/resources/docs/TUTORIAL_8_MODEL_OPTIMIZATION.md)
 * [Tutorial 9: Training your own Flair Embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
  
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your

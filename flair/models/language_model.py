@@ -331,7 +331,7 @@ class LanguageModel(nn.Module):
             if not self.is_forward_lm:
                 text = text[::-1]
 
-            text = text.encode('utf-8')
+            text = text.encode("utf-8")
 
             return text, log_prob
 

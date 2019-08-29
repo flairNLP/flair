@@ -735,6 +735,8 @@ class Sentence(DataPoint):
         return self
 
     def to_original_text(self) -> str:
+        if len(self.tokens) > 0 and (self.tokens[0].start_pos is None):
+            return " ".join([t.text for t in self.tokens])
         str = ""
         pos = 0
         for t in self.tokens:

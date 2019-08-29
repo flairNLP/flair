@@ -1,26 +1,24 @@
-import warnings
 import logging
 from pathlib import Path
 
+import logging
+from pathlib import Path
+from typing import List, Union, Optional
+
+import numpy as np
+import torch
 import torch.nn
-from torch.nn.parameter import Parameter
 import torch.nn.functional as F
+from tabulate import tabulate
+from torch.nn.parameter import Parameter
+from tqdm import tqdm
 
 import flair.nn
-import torch
-
 from flair.data import Dictionary, Sentence, Token, Label
 from flair.datasets import DataLoader
 from flair.embeddings import TokenEmbeddings
 from flair.file_utils import cached_path
-
-from typing import List, Tuple, Union
-
 from flair.training_utils import Metric, Result, store_embeddings
-
-from tqdm import tqdm
-from tabulate import tabulate
-import numpy as np
 
 log = logging.getLogger("flair")
 
@@ -82,6 +80,20 @@ class SequenceTagger(flair.nn.Model):
         train_initial_hidden_state: bool = False,
         pickle_module: str = "pickle",
     ):
+        """
+        Initializes a SequenceTagger
+        :param hidden_size: number of hidden states in RNN
+        :param embeddings: word embeddings used in tagger
+        :param tag_dictionary: dictionary of tags you want to predict
+        :param tag_type: string identifier for tag type
+        :param use_crf: if True use CRF decoder, else project directly to tag space
+        :param use_rnn: if True use RNN layer, otherwise use word embeddings directly
+        :param rnn_layers: number of RNN layers
+        :param dropout: dropout probability
+        :param word_dropout: word dropout probability
+        :param locked_dropout: locked dropout probability
+        :param train_initial_hidden_state: if True, trains initial hidden state of RNN
+        """
 
         super(SequenceTagger, self).__init__()
 
@@ -174,9 +186,11 @@ class SequenceTagger(flair.nn.Model):
             self.transitions = torch.nn.Parameter(
                 torch.randn(self.tagset_size, self.tagset_size)
             )
+
             self.transitions.detach()[
                 self.tag_dictionary.get_idx_for_item(START_TAG), :
             ] = -10000
+
             self.transitions.detach()[
                 :, self.tag_dictionary.get_idx_for_item(STOP_TAG)
             ] = -10000
@@ -247,13 +261,19 @@ class SequenceTagger(flair.nn.Model):
             metric = Metric("Evaluation")
 
             lines: List[str] = []
+
+            if self.use_crf:
+                transitions = self.transitions.detach().cpu()
+            else:
+                transitions = None
+
             for batch in data_loader:
                 batch_no += 1
 
                 with torch.no_grad():
                     features = self.forward(batch)
                     loss = self._calculate_loss(features, batch)
-                    tags, _ = self._obtain_labels(features, batch)
+                    tags, _ = self._obtain_labels(features, batch, transitions)
 
                 eval_loss += loss
 
@@ -350,6 +370,11 @@ class SequenceTagger(flair.nn.Model):
             # reverse sort all sequences by their length
             filtered_sentences.sort(key=lambda x: len(x), reverse=True)
 
+            if self.use_crf:
+                transitions = self.transitions.detach().cpu()
+            else:
+                transitions = None
+
             # make mini-batches
             batches = [
                 filtered_sentences[x : x + mini_batch_size]
@@ -365,11 +390,10 @@ class SequenceTagger(flair.nn.Model):
                 if verbose:
                     batches.set_description(f"Inferencing on batch {i}")
 
-                with torch.no_grad():
-                    feature = self.forward(batch)
-                    tags, all_tags = self._obtain_labels(
-                        feature, batch, get_all_tags=all_tag_prob
-                    )
+                feature = self.forward(batch)
+                tags, all_tags = self._obtain_labels(
+                    feature, batch, transitions, get_all_tags=all_tag_prob
+                )
 
                 for (sentence, sent_tags) in zip(batch, tags):
                     for (token, tag) in zip(sentence.tokens, sent_tags):
@@ -535,7 +559,11 @@ class SequenceTagger(flair.nn.Model):
             return score
 
     def _obtain_labels(
-        self, feature, sentences, get_all_tags: bool = False
+        self,
+        feature: torch.Tensor,
+        sentences: List[Sentence],
+        transitions: Optional[Parameter],
+        get_all_tags: bool = False,
     ) -> (List[List[Label]], List[List[List[Label]]]):
         """
         Returns a tuple of two lists:
@@ -548,10 +576,12 @@ class SequenceTagger(flair.nn.Model):
 
         tags = []
         all_tags = []
+        feature = feature.detach().cpu()
+
         for feats, length in zip(feature, lengths):
             if self.use_crf:
                 confidences, tag_seq, scores = self._viterbi_decode(
-                    feats[:length], all_scores=get_all_tags
+                    feats[:length], all_scores=get_all_tags, transitions=transitions
                 )
             else:
                 tag_seq = []
@@ -587,20 +617,18 @@ class SequenceTagger(flair.nn.Model):
 
         return tags, all_tags
 
-    def _viterbi_decode(self, feats, all_scores: bool = False):
+    def _viterbi_decode(self, feats, transitions, all_scores: bool = False):
         backpointers = []
         backscores = []
 
-        init_vvars = (
-            torch.FloatTensor(1, self.tagset_size).to(flair.device).fill_(-10000.0)
-        )
+        init_vvars = torch.FloatTensor(1, self.tagset_size).fill_(-10000.0)
         init_vvars[0][self.tag_dictionary.get_idx_for_item(START_TAG)] = 0
         forward_var = init_vvars
 
         for feat in feats:
             next_tag_var = (
                 forward_var.view(1, -1).expand(self.tagset_size, self.tagset_size)
-                + self.transitions
+                + transitions
             )
             _, bptrs_t = torch.max(next_tag_var, dim=1)
             viterbivars_t = next_tag_var[range(len(bptrs_t)), bptrs_t]
@@ -609,8 +637,7 @@ class SequenceTagger(flair.nn.Model):
             backpointers.append(bptrs_t)
 
         terminal_var = (
-            forward_var
-            + self.transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)]
+            forward_var + transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)]
         )
         terminal_var.detach()[self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000.0
         terminal_var.detach()[

@@ -39,7 +39,6 @@ from flair.data import Corpus
 from .nn import LockedDropout, WordDropout
 from .data import Dictionary, Token, Sentence
 from .file_utils import cached_path, open_inside_zip
-from .training_utils import log_line
 
 log = logging.getLogger("flair")
 
@@ -730,6 +729,9 @@ class ELMoEmbeddings(TokenEmbeddings):
             if model == "medium":
                 options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_options.json"
                 weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_weights.hdf5"
+            if model in ["large", "5.5B"]:
+                options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json"
+                weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5"
             if model == "pt" or model == "portuguese":
                 options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_options.json"
                 weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_weights.hdf5"
@@ -1653,8 +1655,10 @@ class FlairEmbeddings(TokenEmbeddings):
             "es-forward-fast": f"{aws_path}/embeddings-v0.4/language_model_es_forward/lm-es-forward-fast.pt",
             "es-backward-fast": f"{aws_path}/embeddings-v0.4/language_model_es_backward/lm-es-backward-fast.pt",
             # Basque
-            "eu-forward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-forward-v0.1.pt",
-            "eu-backward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-backward-v0.1.pt",
+            "eu-forward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-forward-v0.2.pt",
+            "eu-backward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-backward-v0.2.pt",
+            "eu-v1-forward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-forward-v0.1.pt",
+            "eu-v1-backward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-backward-v0.1.pt",
             "eu-v0-forward": f"{aws_path}/embeddings-v0.4/lm-eu-large-forward-v0.1.pt",
             "eu-v0-backward": f"{aws_path}/embeddings-v0.4/lm-eu-large-backward-v0.1.pt",
             # Persian
@@ -1713,6 +1717,9 @@ class FlairEmbeddings(TokenEmbeddings):
             "sv-backward": f"{aws_path}/embeddings-stefan-it/lm-sv-opus-large-backward-v0.1.pt",
             "sv-v0-forward": f"{aws_path}/embeddings-v0.4/lm-sv-large-forward-v0.1.pt",
             "sv-v0-backward": f"{aws_path}/embeddings-v0.4/lm-sv-large-backward-v0.1.pt",
+            # Tamil
+            "ta-forward": f"{aws_path}/embeddings-stefan-it/lm-ta-opus-large-forward-v0.1.pt",
+            "ta-backward": f"{aws_path}/embeddings-stefan-it/lm-ta-opus-large-backward-v0.1.pt",
         }
 
         if type(model) == str:
@@ -1969,10 +1976,28 @@ class BertEmbeddings(TokenEmbeddings):
         """
         super().__init__()
 
-        self.tokenizer = BertTokenizer.from_pretrained(bert_model_or_path)
-        self.model = BertModel.from_pretrained(
-            pretrained_model_name_or_path=bert_model_or_path, output_hidden_states=True
-        )
+        if bert_model_or_path.startswith("distilbert"):
+            try:
+                from pytorch_transformers import DistilBertTokenizer, DistilBertModel
+            except ImportError:
+                log.warning("-" * 100)
+                log.warning(
+                    "ATTENTION! To use DistilBert, please first install a recent version of pytorch-transformers!"
+                )
+                log.warning("-" * 100)
+                pass
+
+            self.tokenizer = DistilBertTokenizer.from_pretrained(bert_model_or_path)
+            self.model = DistilBertModel.from_pretrained(
+                pretrained_model_name_or_path=bert_model_or_path,
+                output_hidden_states=True,
+            )
+        else:
+            self.tokenizer = BertTokenizer.from_pretrained(bert_model_or_path)
+            self.model = BertModel.from_pretrained(
+                pretrained_model_name_or_path=bert_model_or_path,
+                output_hidden_states=True,
+            )
         self.layer_indexes = [int(x) for x in layers.split(",")]
         self.pooling_operation = pooling_operation
         self.use_scalar_mix = use_scalar_mix
@@ -2081,9 +2106,9 @@ class BertEmbeddings(TokenEmbeddings):
         # put encoded batch through BERT model to get all hidden states of all encoder layers
         self.model.to(flair.device)
         self.model.eval()
-        _, _, all_encoder_layers = self.model(
-            all_input_ids, token_type_ids=None, attention_mask=all_input_masks
-        )
+        all_encoder_layers = self.model(all_input_ids, attention_mask=all_input_masks)[
+            -1
+        ]
 
         with torch.no_grad():
 

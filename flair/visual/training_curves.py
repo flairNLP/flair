@@ -17,7 +17,11 @@ if ipy is not None:
     ipy.run_line_magic("matplotlib", "inline")
 
 # change from Agg to TkAgg for interative mode
-matplotlib.use("TkAgg")
+try:
+    # change from Agg to TkAgg for interative mode
+    matplotlib.use("TkAgg")
+except:
+    pass
 
 
 import matplotlib.pyplot as plt
