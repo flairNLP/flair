@@ -84,6 +84,18 @@ You can load any of the pre-trained BERT models by providing `bert_model_or_path
 |                                                         | The `bert-base-cased` model fine-tuned on MRPC
 |                                                         | (see [details of fine-tuning in the example section of PyTorch-Transformers](https://huggingface.co/pytorch-transformers/examples.html))
 
+It is also possible to use [distilled versions](https://medium.com/huggingface/distilbert-8cf3380435b5)
+of BERT (DistilBERT):
+
+| Model                                     | Details
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------
+| `distilbert-base-uncased`                 | 6-layer, 768-hidden, 12-heads, 66M parameters
+|                                           | The DistilBERT model distilled from the BERT model `bert-base-uncased` checkpoint
+|                                           | (see [details](https://medium.com/huggingface/distilbert-8cf3380435b5))
+| `distilbert-base-uncased-distilled-squad` | 6-layer, 768-hidden, 12-heads, 66M parameters
+|                                           | The DistilBERT model distilled from the BERT model `bert-base-uncased` checkpoint, with an additional linear layer.
+|                                           | (see [details](https://medium.com/huggingface/distilbert-8cf3380435b5))
+
 ## OpenAI GPT Embeddings
 
 The OpenAI GPT model was proposed by [Radford et. al (2018)](https://s3-us-west-2.amazonaws.com/openai-assets/research-covers/language-unsupervised/language_understanding_paper.pdf).
