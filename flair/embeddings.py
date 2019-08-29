@@ -16,8 +16,6 @@ from torch.nn import ParameterList, Parameter
 from pytorch_transformers import (
     BertTokenizer,
     BertModel,
-    DistilBertTokenizer,
-    DistilBertModel,
     RobertaTokenizer,
     RobertaModel,
     TransfoXLTokenizer,
@@ -1979,6 +1977,16 @@ class BertEmbeddings(TokenEmbeddings):
         super().__init__()
 
         if bert_model_or_path.startswith("distilbert"):
+            try:
+                from pytorch_transformers import DistilBertTokenizer, DistilBertModel
+            except ImportError:
+                log.warning("-" * 100)
+                log.warning(
+                    "ATTENTION! To use DistilBert, please first install a recent version of pytorch-transformers!"
+                )
+                log.warning("-" * 100)
+                pass
+
             self.tokenizer = DistilBertTokenizer.from_pretrained(bert_model_or_path)
             self.model = DistilBertModel.from_pretrained(
                 pretrained_model_name_or_path=bert_model_or_path,
