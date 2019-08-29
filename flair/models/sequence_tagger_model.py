@@ -1,26 +1,24 @@
-import warnings
 import logging
 from pathlib import Path
 
+import logging
+from pathlib import Path
+from typing import List, Union, Optional
+
+import numpy as np
+import torch
 import torch.nn
-from torch.nn.parameter import Parameter
 import torch.nn.functional as F
+from tabulate import tabulate
+from torch.nn.parameter import Parameter
+from tqdm import tqdm
 
 import flair.nn
-import torch
-
 from flair.data import Dictionary, Sentence, Token, Label
 from flair.datasets import DataLoader
 from flair.embeddings import TokenEmbeddings
 from flair.file_utils import cached_path
-
-from typing import List, Tuple, Union
-
 from flair.training_utils import Metric, Result, store_embeddings
-
-from tqdm import tqdm
-from tabulate import tabulate
-import numpy as np
 
 log = logging.getLogger("flair")
 
@@ -170,17 +168,18 @@ class SequenceTagger(flair.nn.Model):
                 self.embeddings.embedding_length, len(tag_dictionary)
             )
 
-        self.transitions = torch.nn.Parameter(
-            torch.randn(self.tagset_size, self.tagset_size)
-        )
+        if self.use_crf:
+            self.transitions = torch.nn.Parameter(
+                torch.randn(self.tagset_size, self.tagset_size)
+            )
 
-        self.transitions.detach()[
-            self.tag_dictionary.get_idx_for_item(START_TAG), :
-        ] = -10000
+            self.transitions.detach()[
+                self.tag_dictionary.get_idx_for_item(START_TAG), :
+            ] = -10000
 
-        self.transitions.detach()[
-            :, self.tag_dictionary.get_idx_for_item(STOP_TAG)
-        ] = -10000
+            self.transitions.detach()[
+                :, self.tag_dictionary.get_idx_for_item(STOP_TAG)
+            ] = -10000
 
         self.to(flair.device)
 
@@ -248,7 +247,11 @@ class SequenceTagger(flair.nn.Model):
             metric = Metric("Evaluation")
 
             lines: List[str] = []
-            transitions = self.transitions.detach().cpu()
+
+            if self.use_crf:
+                transitions = self.transitions.detach().cpu()
+            else:
+                transitions = None
 
             for batch in data_loader:
                 batch_no += 1
@@ -353,7 +356,10 @@ class SequenceTagger(flair.nn.Model):
             # reverse sort all sequences by their length
             filtered_sentences.sort(key=lambda x: len(x), reverse=True)
 
-            transitions = self.transitions.detach().cpu()
+            if self.use_crf:
+                transitions = self.transitions.detach().cpu()
+            else:
+                transitions = None
 
             # make mini-batches
             batches = [
@@ -542,7 +548,7 @@ class SequenceTagger(flair.nn.Model):
         self,
         feature: torch.Tensor,
         sentences: List[Sentence],
-        transitions: Parameter,
+        transitions: Optional[Parameter],
         get_all_tags: bool = False,
     ) -> (List[List[Label]], List[List[List[Label]]]):
         """
