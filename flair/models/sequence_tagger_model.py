@@ -271,10 +271,10 @@ class SequenceTagger(flair.nn.Model):
                 batch_no += 1
 
                 with torch.no_grad():
-                    features = self.forward(batch).cpu().numpy()
+                    features = self.forward(batch)
                     loss = self._calculate_loss(features, batch)
                     tags, _ = self._obtain_labels(
-                        feature=features,
+                        feature=features.cpu().numpy(),
                         batch_sentences=batch,
                         transitions=transitions,
                         get_all_tags=False,
@@ -651,14 +651,12 @@ class SequenceTagger(flair.nn.Model):
         id_start = self.tag_dictionary.get_idx_for_item(START_TAG)
         id_stop = self.tag_dictionary.get_idx_for_item(STOP_TAG)
 
-        backpointers = np.empty(
-            shape=(feats.shape[0], self.tagset_size), dtype=np.float64
-        )
+        backpointers = np.empty(shape=(feats.shape[0], self.tagset_size), dtype=np.int_)
         backscores = np.empty(
-            shape=(feats.shape[0], self.tagset_size), dtype=np.float64
+            shape=(feats.shape[0], self.tagset_size), dtype=np.float32
         )
 
-        init_vvars = np.expand_dims(np.repeat(-10000.0, self.tagset_size), 0)
+        init_vvars = np.expand_dims(np.repeat(-10000.0, self.tagset_size), axis=0).astype(np.float32)
         init_vvars[0][id_start] = 0
 
         forward_var = init_vvars
@@ -677,9 +675,19 @@ class SequenceTagger(flair.nn.Model):
         terminal_var[id_start] = -10000.0
         best_tag_id = terminal_var.argmax()
 
-        best_path = np.flip(backpointers)[:, int(best_tag_id)].astype(np.int32)
-        assert best_path[-1] == id_start
-        best_path = np.flip(best_path[:-1])
+        best_path = [best_tag_id]
+        for bptrs_t in reversed(backpointers):
+            best_tag_id = bptrs_t[best_tag_id]
+            best_path.append(best_tag_id)
+
+        start = best_path.pop()
+        assert start == id_start
+        best_path.reverse()
+
+        # best_path = np.flip(backpointers)[:, best_tag_id].astype(np.int_)
+        # best_path = np.append(best_tag_id, best_path)
+        # assert best_path[-1] == id_start
+        # best_path = np.flip(best_path[:-1])
 
         best_scores_softmax = self._softmax(backscores, axis=1)
         best_scores_np = np.max(best_scores_softmax, axis=1)
@@ -706,7 +714,7 @@ class SequenceTagger(flair.nn.Model):
                         all_scores_np[index][tag_id],
                     )
 
-        return best_scores_np.tolist(), best_path.tolist(), all_scores_np.tolist()
+        return best_scores_np.tolist(), best_path, all_scores_np.tolist()
 
     def _forward_alg(self, feats, lens_):
 
