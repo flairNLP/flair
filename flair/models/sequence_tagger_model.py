@@ -689,11 +689,6 @@ class SequenceTagger(flair.nn.Model):
         assert start == id_start
         best_path.reverse()
 
-        # best_path = np.flip(backpointers)[:, best_tag_id].astype(np.int_)
-        # best_path = np.append(best_tag_id, best_path)
-        # assert best_path[-1] == id_start
-        # best_path = np.flip(best_path[:-1])
-
         best_scores_softmax = self._softmax(backscores, axis=1)
         best_scores_np = np.max(best_scores_softmax, axis=1)
 
