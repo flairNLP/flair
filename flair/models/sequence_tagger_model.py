@@ -263,7 +263,7 @@ class SequenceTagger(flair.nn.Model):
             lines: List[str] = []
 
             if self.use_crf:
-                transitions = self.transitions.cpu().numpy()
+                transitions = self.transitions.detach().cpu().numpy()
             else:
                 transitions = None
 
@@ -274,7 +274,7 @@ class SequenceTagger(flair.nn.Model):
                     features = self.forward(batch)
                     loss = self._calculate_loss(features, batch)
                     tags, _ = self._obtain_labels(
-                        feature=features.cpu().numpy(),
+                        feature=features,
                         batch_sentences=batch,
                         transitions=transitions,
                         get_all_tags=False,
@@ -388,7 +388,7 @@ class SequenceTagger(flair.nn.Model):
             filtered_sentences.sort(key=lambda x: len(x), reverse=True)
 
             if self.use_crf:
-                transitions = self.transitions.cpu().numpy()
+                transitions = self.transitions.detach().cpu().numpy()
             else:
                 transitions = None
 
@@ -407,7 +407,7 @@ class SequenceTagger(flair.nn.Model):
                 if verbose:
                     batches.set_description(f"Inferencing on batch {i}")
 
-                feature: np.ndarray = self.forward(batch).cpu().numpy()
+                feature: torch.Tensor = self.forward(batch)
                 tags, all_tags = self._obtain_labels(
                     feature=feature,
                     batch_sentences=batch,
@@ -580,9 +580,9 @@ class SequenceTagger(flair.nn.Model):
 
     def _obtain_labels(
         self,
-        feature: np.ndarray,
+        feature: torch.Tensor,
         batch_sentences: List[Sentence],
-        transitions: np.ndarray,
+        transitions: Optional[np.ndarray],
         get_all_tags: bool,
     ) -> (List[List[Label]], List[List[List[Label]]]):
         """
@@ -600,7 +600,7 @@ class SequenceTagger(flair.nn.Model):
         for feats, length in zip(feature, lengths):
             if self.use_crf:
                 confidences, tag_seq, scores = self._viterbi_decode(
-                    feats=feats[:length],
+                    feats=feats.detach().cpu().numpy()[:length],
                     transitions=transitions,
                     all_scores=get_all_tags,
                 )
