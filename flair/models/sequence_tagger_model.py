@@ -273,7 +273,12 @@ class SequenceTagger(flair.nn.Model):
                 with torch.no_grad():
                     features = self.forward(batch).cpu().numpy()
                     loss = self._calculate_loss(features, batch)
-                    tags, _ = self._obtain_labels(features, batch, transitions)
+                    tags, _ = self._obtain_labels(
+                        feature=features,
+                        sentences=batch,
+                        transitions=transitions,
+                        get_all_tags=False,
+                    )
 
                 eval_loss += loss
 
@@ -578,7 +583,7 @@ class SequenceTagger(flair.nn.Model):
         feature: np.ndarray,
         sentences: List[Sentence],
         transitions: np.ndarray,
-        get_all_tags: bool = False,
+        get_all_tags: bool,
     ) -> (List[List[Label]], List[List[List[Label]]]):
         """
         Returns a tuple of two lists:
@@ -595,7 +600,9 @@ class SequenceTagger(flair.nn.Model):
         for feats, length in zip(feature, lengths):
             if self.use_crf:
                 confidences, tag_seq, scores = self._viterbi_decode(
-                    feats=feats[:length], transitions=transitions, all_scores=False
+                    feats=feats[:length],
+                    transitions=transitions,
+                    all_scores=get_all_tags,
                 )
             else:
                 tag_seq = []
@@ -632,7 +639,7 @@ class SequenceTagger(flair.nn.Model):
         return tags, all_tags
 
     @staticmethod
-    def softmax(x, axis):
+    def _softmax(x, axis):
         # reduce raw values to avoid NaN during exp
         x_norm = x - x.max(axis=axis, keepdims=True)
         y = np.exp(x_norm)
@@ -674,9 +681,10 @@ class SequenceTagger(flair.nn.Model):
         assert best_path[-1] == id_start
         best_path = np.flip(best_path[:-1])
 
-        best_scores_softmax = self.softmax(backscores, axis=1)
+        best_scores_softmax = self._softmax(backscores, axis=1)
         best_scores_np = np.max(best_scores_softmax, axis=1)
 
+        # default value
         all_scores_np = np.zeros(0, dtype=np.float64)
         if all_scores:
             all_scores_np = best_scores_softmax
