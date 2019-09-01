@@ -597,10 +597,13 @@ class SequenceTagger(flair.nn.Model):
         tags = []
         all_tags = []
 
+        if self.use_crf:
+            feature = feature.cpu().numpy()
+
         for feats, length in zip(feature, lengths):
             if self.use_crf:
                 confidences, tag_seq, scores = self._viterbi_decode(
-                    feats=feats.detach().cpu().numpy()[:length],
+                    feats=feats[:length],
                     transitions=transitions,
                     all_scores=get_all_tags,
                 )
