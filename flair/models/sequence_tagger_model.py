@@ -656,7 +656,9 @@ class SequenceTagger(flair.nn.Model):
             shape=(feats.shape[0], self.tagset_size), dtype=np.float32
         )
 
-        init_vvars = np.expand_dims(np.repeat(-10000.0, self.tagset_size), axis=0).astype(np.float32)
+        init_vvars = np.expand_dims(
+            np.repeat(-10000.0, self.tagset_size), axis=0
+        ).astype(np.float32)
         init_vvars[0][id_start] = 0
 
         forward_var = init_vvars
