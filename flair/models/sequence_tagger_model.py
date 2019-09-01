@@ -275,7 +275,7 @@ class SequenceTagger(flair.nn.Model):
                     loss = self._calculate_loss(features, batch)
                     tags, _ = self._obtain_labels(
                         feature=features,
-                        sentences=batch,
+                        batch_sentences=batch,
                         transitions=transitions,
                         get_all_tags=False,
                     )
@@ -410,7 +410,7 @@ class SequenceTagger(flair.nn.Model):
                 feature: np.ndarray = self.forward(batch).cpu().numpy()
                 tags, all_tags = self._obtain_labels(
                     feature=feature,
-                    sentences=batch,
+                    batch_sentences=batch,
                     transitions=transitions,
                     get_all_tags=all_tag_prob,
                 )
@@ -581,7 +581,7 @@ class SequenceTagger(flair.nn.Model):
     def _obtain_labels(
         self,
         feature: np.ndarray,
-        sentences: List[Sentence],
+        batch_sentences: List[Sentence],
         transitions: np.ndarray,
         get_all_tags: bool,
     ) -> (List[List[Label]], List[List[List[Label]]]):
@@ -592,7 +592,7 @@ class SequenceTagger(flair.nn.Model):
            in a sentence for all sentences.
         """
 
-        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        lengths: List[int] = [len(sentence.tokens) for sentence in batch_sentences]
 
         tags = []
         all_tags = []
@@ -707,74 +707,6 @@ class SequenceTagger(flair.nn.Model):
                     )
 
         return best_scores_np.tolist(), best_path.tolist(), all_scores_np.tolist()
-
-    # def _viterbi_decode(self, feats, transitions, all_scores: bool = False):
-    #     backpointers = []
-    #     backscores = []
-    #
-    #     init_vvars = torch.FloatTensor(1, self.tagset_size).fill_(-10000.0)
-    #     init_vvars[0][self.tag_dictionary.get_idx_for_item(START_TAG)] = 0
-    #     forward_var = init_vvars
-    #
-    #     for feat in feats:
-    #         next_tag_var = (
-    #             forward_var.view(1, -1).expand(self.tagset_size, self.tagset_size)
-    #             + transitions
-    #         )
-    #         _, bptrs_t = torch.max(next_tag_var, dim=1)
-    #         viterbivars_t = next_tag_var[range(len(bptrs_t)), bptrs_t]
-    #         forward_var = viterbivars_t + feat
-    #         backscores.append(forward_var)
-    #         backpointers.append(bptrs_t)
-    #
-    #     terminal_var = (
-    #         forward_var + transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)]
-    #     )
-    #     terminal_var.detach()[self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000.0
-    #     terminal_var.detach()[
-    #         self.tag_dictionary.get_idx_for_item(START_TAG)
-    #     ] = -10000.0
-    #     best_tag_id = argmax(terminal_var.unsqueeze(0))
-    #
-    #     best_path = [best_tag_id]
-    #
-    #     for bptrs_t in reversed(backpointers):
-    #         best_tag_id = bptrs_t[best_tag_id]
-    #         best_path.append(best_tag_id)
-    #
-    #     best_scores = []
-    #     for backscore in backscores:
-    #         softmax = F.softmax(backscore, dim=0)
-    #         _, idx = torch.max(backscore, 0)
-    #         prediction = idx.item()
-    #         best_scores.append(softmax[prediction].item())
-    #
-    #     start = best_path.pop()
-    #     assert start == self.tag_dictionary.get_idx_for_item(START_TAG)
-    #     best_path.reverse()
-    #
-    #     scores = []
-    #     # return all scores if so selected
-    #     if all_scores:
-    #         for backscore in backscores:
-    #             softmax = F.softmax(backscore, dim=0)
-    #             scores.append([elem.item() for elem in softmax.flatten()])
-    #
-    #         for index, (tag_id, tag_scores) in enumerate(zip(best_path, scores)):
-    #             if type(tag_id) != int and tag_id.item() != np.argmax(tag_scores):
-    #                 swap_index_score = np.argmax(tag_scores)
-    #                 scores[index][tag_id.item()], scores[index][swap_index_score] = (
-    #                     scores[index][swap_index_score],
-    #                     scores[index][tag_id.item()],
-    #                 )
-    #             elif type(tag_id) == int and tag_id != np.argmax(tag_scores):
-    #                 swap_index_score = np.argmax(tag_scores)
-    #                 scores[index][tag_id], scores[index][swap_index_score] = (
-    #                     scores[index][swap_index_score],
-    #                     scores[index][tag_id],
-    #                 )
-    #
-    #     return best_scores, best_path, scores
 
     def _forward_alg(self, feats, lens_):
 
