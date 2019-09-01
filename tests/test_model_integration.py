@@ -678,8 +678,8 @@ def test_keep_word_embeddings():
     sentence = Sentence("I love Berlin")
     loaded_model.predict(sentence)
     for token in sentence:
-        assert len(token.embedding.numpy()) == 0
+        assert len(token.embedding.cpu().numpy()) == 0
 
     loaded_model.predict(sentence, embedding_storage_mode="cpu")
     for token in sentence:
-        assert len(token.embedding.numpy()) > 0
+        assert len(token.embedding.cpu().numpy()) > 0
