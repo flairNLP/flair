@@ -341,7 +341,7 @@ def space_tokenizer(text: str) -> List[Token]:
     """
     Tokenizer based on space character only.
     """
-    tokens: List[Token] = list()
+    tokens: List[Token] = []
     word = ""
     index = -1
     for index, char in enumerate(text):
@@ -372,9 +372,9 @@ def segtok_tokenizer(text: str) -> List[Token]:
     Tokenizer using segtok, a third party library dedicated to rules-based Indo-European languages.
     https://github.com/fnl/segtok
     """
-    tokens: List[Token] = list()
+    tokens: List[Token] = []
 
-    words: List[str] = list()
+    words: List[str] = []
     sentences = split_single(text)
     for sentence in sentences:
         contractions = split_contractions(word_tokenizer(sentence))
@@ -429,7 +429,7 @@ def build_spacy_tokenizer(model) -> Callable[[str], List[Token]]:
     def tokenizer(text: str) -> List[Token]:
         doc: Doc = model.make_doc(text)
         previous_token = None
-        tokens: List[Token] = list()
+        tokens: List[Token] = []
         for word in doc:
             word: SpacyToken = word
             token = Token(
