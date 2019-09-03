@@ -747,7 +747,7 @@ class CSVClassificationDataset(FlairDataset):
             if column_name_map[column] == "text":
                 self.text_columns.append(column)
 
-        with open(self.path_to_file) as csv_file:
+        with open(self.path_to_file, encoding="utf-8") as csv_file:
 
             csv_reader = csv.reader(csv_file, **fmtparams)
 

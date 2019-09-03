@@ -1,10 +1,9 @@
-import os
 import shutil
+
 import pytest
 from torch.optim import SGD
-
-from torch.optim.optimizer import Optimizer
 from torch.optim.adam import Adam
+from torch.optim.optimizer import Optimizer
 
 import flair.datasets
 from flair.data import Dictionary, Sentence, MultiCorpus
@@ -15,10 +14,10 @@ from flair.embeddings import (
     DocumentRNNEmbeddings,
 )
 from flair.models import SequenceTagger, TextClassifier, LanguageModel
+from flair.optim import AdamW
 from flair.samplers import ImbalancedClassificationDatasetSampler
 from flair.trainers import ModelTrainer
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
-from flair.optim import AdamW
 
 
 @pytest.mark.integration
@@ -679,8 +678,8 @@ def test_keep_word_embeddings():
     sentence = Sentence("I love Berlin")
     loaded_model.predict(sentence)
     for token in sentence:
-        assert len(token.embedding.numpy()) == 0
+        assert len(token.embedding.cpu().numpy()) == 0
 
     loaded_model.predict(sentence, embedding_storage_mode="cpu")
     for token in sentence:
-        assert len(token.embedding.numpy()) > 0
+        assert len(token.embedding.cpu().numpy()) > 0

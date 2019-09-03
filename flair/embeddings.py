@@ -2741,7 +2741,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             )
 
         # TODO: this can only be removed once the implementations of word_dropout and locked_dropout have a batch_first mode
-        sentence_tensor = sentence_tensor.transpose_(0, 1)
+        sentence_tensor = sentence_tensor.transpose(0, 1)
 
         # --------------------------------------------------------------------
         # FF PART
