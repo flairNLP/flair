@@ -401,8 +401,7 @@ def segtok_tokenizer(text: str) -> List[Token]:
         if (previous_token is not None) and word_offset - 1 == previous_word_offset:
             previous_token.whitespace_after = False
 
-        word_len = len(word)
-        current_offset = word_offset + word_len
+        current_offset = word_offset + len(word)
         previous_word_offset = current_offset - 1
         previous_token = token
 
