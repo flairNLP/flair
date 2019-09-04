@@ -1195,10 +1195,7 @@ class FeideggerDataset(FlairDataset):
 
                 # append Sentence-Image data point and split ID
                 self.data_points.append(
-                    DataPair(
-                        Sentence(preprocessor(caption), use_tokenizer=True),
-                        image,
-                    )
+                    DataPair(Sentence(preprocessor(caption), use_tokenizer=True), image)
                 )
                 self.split.append(split_id)
 
