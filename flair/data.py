@@ -13,8 +13,6 @@ from segtok.tokenizer import word_tokenizer
 from torch.utils.data import Dataset, random_split
 from torch.utils.data.dataset import ConcatDataset, Subset
 
-import numpy as np
-
 from flair.file_utils import Tqdm
 
 log = logging.getLogger("flair")
