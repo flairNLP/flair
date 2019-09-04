@@ -170,9 +170,8 @@ class PairwiseBCELoss(SimilarityLoss):
             # TODO: this assumes eye matrix
             weight_matrix = n * (targets / 2.0 + neg_targets / (2.0 * (n - 1)))
             bce_loss *= weight_matrix
-        loss = bce_loss.mean()
 
-        return loss
+        return bce_loss
 
 
 class RankingLoss(SimilarityLoss):
@@ -195,13 +194,14 @@ class RankingLoss(SimilarityLoss):
         ranking_loss_matrix_10 = neg_targets * F.relu(
             self.margin + inputs - torch.diag(inputs).view(1, n)
         )
-        neg_targets_01_sum = torch.sum(neg_targets, dim=1)
-        neg_targets_10_sum = torch.sum(neg_targets, dim=0)
-        loss = self.direction_weights[0] * torch.mean(
-            torch.sum(ranking_loss_matrix_01 / neg_targets_01_sum, dim=1)
-        ) + self.direction_weights[1] * torch.mean(
-            torch.sum(ranking_loss_matrix_10 / neg_targets_10_sum, dim=0)
-        )
+        # neg_targets_01_sum = torch.sum(neg_targets, dim=1, keepdim=True)
+        # neg_targets_10_sum = torch.sum(neg_targets, dim=0, keepdim=True)
+        # loss = self.direction_weights[0] * ranking_loss_matrix_01 / neg_targets_01_sum + \
+        #        self.direction_weights[1] * ranking_loss_matrix_10 / neg_targets_10_sum
+
+        loss = self.direction_weights[0] * ranking_loss_matrix_01 + \
+               self.direction_weights[1] * ranking_loss_matrix_10
+
 
         return loss
 
@@ -219,6 +219,7 @@ class SimilarityLearner(flair.nn.Model):
         target_mapping: torch.nn.Module = None,
         recall_at_points: List[int] = [1, 5, 10, 20],
         recall_at_points_weights: List[float] = [0.4, 0.3, 0.2, 0.1],
+        interleave_embedding_updates: bool = False
     ):
         super(SimilarityLearner, self).__init__()
         self.source_embeddings: Embeddings = source_embeddings
@@ -230,6 +231,7 @@ class SimilarityLearner(flair.nn.Model):
         self.eval_device = eval_device
         self.recall_at_points: List[int] = recall_at_points
         self.recall_at_points_weights: List[float] = recall_at_points_weights
+        self.interleave_embedding_updates = interleave_embedding_updates
 
         self.to(flair.device)
 
@@ -281,6 +283,14 @@ class SimilarityLearner(flair.nn.Model):
         mapped_source_embeddings = self._embed_source(data_points)
         mapped_target_embeddings = self._embed_target(data_points)
 
+        if self.interleave_embedding_updates:
+            # 1/3 only source branch of model, 1/3 only target branch of model, 1/3 both
+            detach_modality_id = torch.randint(0, 3, (1,)).item()
+            if detach_modality_id == 0:
+                mapped_source_embeddings.detach()
+            elif detach_modality_id == 1:
+                mapped_target_embeddings.detach()
+
         similarity_matrix = self.similarity_measure.forward(
             (mapped_source_embeddings, mapped_target_embeddings)
         )
@@ -304,7 +314,8 @@ class SimilarityLearner(flair.nn.Model):
             for first_index, second_index in itertools.product(first_indices, second_indices):
                 targets[first_index, second_index] = 1.
 
-        loss = self.similarity_loss(similarity_matrix, targets)
+        loss_matrix = self.similarity_loss(similarity_matrix, targets)
+        loss = loss_matrix.mean()
 
         return loss
 

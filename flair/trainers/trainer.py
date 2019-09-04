@@ -205,7 +205,8 @@ class ModelTrainer:
             train_data = ConcatDataset([self.corpus.train, self.corpus.dev])
 
         if sampler is not None:
-            sampler = sampler(train_data)
+            # sampler = sampler(train_data)
+            sampler = sampler
             shuffle = False
 
         dev_score_history = []
