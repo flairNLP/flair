@@ -1,26 +1,24 @@
-import warnings
 import logging
 from pathlib import Path
 
+import logging
+from pathlib import Path
+from typing import List, Union, Optional
+
+import numpy as np
+import torch
 import torch.nn
-from torch.nn.parameter import Parameter
 import torch.nn.functional as F
+from tabulate import tabulate
+from torch.nn.parameter import Parameter
+from tqdm import tqdm
 
 import flair.nn
-import torch
-
 from flair.data import Dictionary, Sentence, Token, Label
 from flair.datasets import DataLoader
 from flair.embeddings import TokenEmbeddings
 from flair.file_utils import cached_path
-
-from typing import List, Tuple, Union
-
 from flair.training_utils import Metric, Result, store_embeddings
-
-from tqdm import tqdm
-from tabulate import tabulate
-import numpy as np
 
 log = logging.getLogger("flair")
 
@@ -82,6 +80,20 @@ class SequenceTagger(flair.nn.Model):
         train_initial_hidden_state: bool = False,
         pickle_module: str = "pickle",
     ):
+        """
+        Initializes a SequenceTagger
+        :param hidden_size: number of hidden states in RNN
+        :param embeddings: word embeddings used in tagger
+        :param tag_dictionary: dictionary of tags you want to predict
+        :param tag_type: string identifier for tag type
+        :param use_crf: if True use CRF decoder, else project directly to tag space
+        :param use_rnn: if True use RNN layer, otherwise use word embeddings directly
+        :param rnn_layers: number of RNN layers
+        :param dropout: dropout probability
+        :param word_dropout: word dropout probability
+        :param locked_dropout: locked dropout probability
+        :param train_initial_hidden_state: if True, trains initial hidden state of RNN
+        """
 
         super(SequenceTagger, self).__init__()
 
@@ -174,9 +186,11 @@ class SequenceTagger(flair.nn.Model):
             self.transitions = torch.nn.Parameter(
                 torch.randn(self.tagset_size, self.tagset_size)
             )
+
             self.transitions.detach()[
                 self.tag_dictionary.get_idx_for_item(START_TAG), :
             ] = -10000
+
             self.transitions.detach()[
                 :, self.tag_dictionary.get_idx_for_item(STOP_TAG)
             ] = -10000
@@ -247,13 +261,24 @@ class SequenceTagger(flair.nn.Model):
             metric = Metric("Evaluation")
 
             lines: List[str] = []
+
+            if self.use_crf:
+                transitions = self.transitions.detach().cpu().numpy()
+            else:
+                transitions = None
+
             for batch in data_loader:
                 batch_no += 1
 
                 with torch.no_grad():
                     features = self.forward(batch)
                     loss = self._calculate_loss(features, batch)
-                    tags, _ = self._obtain_labels(features, batch)
+                    tags, _ = self._obtain_labels(
+                        feature=features,
+                        batch_sentences=batch,
+                        transitions=transitions,
+                        get_all_tags=False,
+                    )
 
                 eval_loss += loss
 
@@ -335,8 +360,21 @@ class SequenceTagger(flair.nn.Model):
         sentences: Union[List[Sentence], Sentence],
         mini_batch_size=32,
         embedding_storage_mode="none",
+        all_tag_prob: bool = False,
         verbose=False,
     ) -> List[Sentence]:
+        """
+        Predict sequence tags for Named Entity Recognition task
+        :param sentences: a Sentence or a List of Sentence. Empty sentences will be removed.
+        :param mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
+        up to a point when it has no more effect.
+        :param embedding_storage_mode: 'none' for the minimum memory footprint, 'cpu' to store embeddings in Ram,
+        'gpu' to store embeddings in GPU memory.
+        :param all_tag_prob: True to compute the score for each tag on each token,
+        otherwise only the score of the best tag is returned
+        :param verbose: set to True to display a progress bar
+        :return: List of Sentence enriched by the predicted tags
+        """
         with torch.no_grad():
             if isinstance(sentences, Sentence):
                 sentences = [sentences]
@@ -348,6 +386,11 @@ class SequenceTagger(flair.nn.Model):
 
             # reverse sort all sequences by their length
             filtered_sentences.sort(key=lambda x: len(x), reverse=True)
+
+            if self.use_crf:
+                transitions = self.transitions.detach().cpu().numpy()
+            else:
+                transitions = None
 
             # make mini-batches
             batches = [
@@ -364,15 +407,21 @@ class SequenceTagger(flair.nn.Model):
                 if verbose:
                     batches.set_description(f"Inferencing on batch {i}")
 
-                with torch.no_grad():
-                    feature = self.forward(batch)
-                    tags, all_tags = self._obtain_labels(feature, batch)
+                feature: torch.Tensor = self.forward(batch)
+                tags, all_tags = self._obtain_labels(
+                    feature=feature,
+                    batch_sentences=batch,
+                    transitions=transitions,
+                    get_all_tags=all_tag_prob,
+                )
 
-                for (sentence, sent_tags, sent_all_tags) in zip(batch, tags, all_tags):
-                    for (token, tag, token_all_tags) in zip(
-                        sentence.tokens, sent_tags, sent_all_tags
-                    ):
+                for (sentence, sent_tags) in zip(batch, tags):
+                    for (token, tag) in zip(sentence.tokens, sent_tags):
                         token.add_tag_label(self.tag_type, tag)
+
+                # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
+                for (sentence, sent_all_tags) in zip(batch, all_tags):
+                    for (token, token_all_tags) in zip(sentence.tokens, sent_all_tags):
                         token.add_tags_proba_dist(self.tag_type, token_all_tags)
 
                 # clearing token embeddings to save memory
@@ -406,7 +455,7 @@ class SequenceTagger(flair.nn.Model):
             )
 
         # TODO: this can only be removed once the implementations of word_dropout and locked_dropout have a batch_first mode
-        sentence_tensor = sentence_tensor.transpose_(0, 1)
+        sentence_tensor = sentence_tensor.transpose(0, 1)
 
         # --------------------------------------------------------------------
         # FF PART
@@ -449,7 +498,7 @@ class SequenceTagger(flair.nn.Model):
                 sentence_tensor = self.locked_dropout(sentence_tensor)
         else:
             # transpose to batch_first mode
-            sentence_tensor = sentence_tensor.transpose_(0, 1)
+            sentence_tensor = sentence_tensor.transpose(0, 1)
 
         features = self.linear(sentence_tensor)
 
@@ -530,7 +579,11 @@ class SequenceTagger(flair.nn.Model):
             return score
 
     def _obtain_labels(
-        self, feature, sentences
+        self,
+        feature: torch.Tensor,
+        batch_sentences: List[Sentence],
+        transitions: Optional[np.ndarray],
+        get_all_tags: bool,
     ) -> (List[List[Label]], List[List[List[Label]]]):
         """
         Returns a tuple of two lists:
@@ -539,13 +592,21 @@ class SequenceTagger(flair.nn.Model):
            in a sentence for all sentences.
         """
 
-        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        lengths: List[int] = [len(sentence.tokens) for sentence in batch_sentences]
 
         tags = []
         all_tags = []
+
+        if self.use_crf:
+            feature = feature.cpu().numpy()
+
         for feats, length in zip(feature, lengths):
             if self.use_crf:
-                confidences, tag_seq, scores = self._viterbi_decode(feats[:length])
+                confidences, tag_seq, scores = self._viterbi_decode(
+                    feats=feats[:length],
+                    transitions=transitions,
+                    all_scores=get_all_tags,
+                )
             else:
                 tag_seq = []
                 confidences = []
@@ -565,83 +626,95 @@ class SequenceTagger(flair.nn.Model):
                 ]
             )
 
-            all_tags.append(
-                [
+            if get_all_tags:
+                all_tags.append(
                     [
-                        Label(self.tag_dictionary.get_item_for_index(score_id), score)
-                        for score_id, score in enumerate(score_dist)
+                        [
+                            Label(
+                                self.tag_dictionary.get_item_for_index(score_id), score
+                            )
+                            for score_id, score in enumerate(score_dist)
+                        ]
+                        for score_dist in scores
                     ]
-                    for score_dist in scores
-                ]
-            )
+                )
 
         return tags, all_tags
 
-    def _viterbi_decode(self, feats):
-        backpointers = []
-        backscores = []
-        scores = []
+    @staticmethod
+    def _softmax(x, axis):
+        # reduce raw values to avoid NaN during exp
+        x_norm = x - x.max(axis=axis, keepdims=True)
+        y = np.exp(x_norm)
+        return y / y.sum(axis=axis, keepdims=True)
 
-        init_vvars = (
-            torch.FloatTensor(1, self.tagset_size).to(flair.device).fill_(-10000.0)
+    def _viterbi_decode(
+        self, feats: np.ndarray, transitions: np.ndarray, all_scores: bool
+    ):
+        id_start = self.tag_dictionary.get_idx_for_item(START_TAG)
+        id_stop = self.tag_dictionary.get_idx_for_item(STOP_TAG)
+
+        backpointers = np.empty(shape=(feats.shape[0], self.tagset_size), dtype=np.int_)
+        backscores = np.empty(
+            shape=(feats.shape[0], self.tagset_size), dtype=np.float32
         )
-        init_vvars[0][self.tag_dictionary.get_idx_for_item(START_TAG)] = 0
+
+        init_vvars = np.expand_dims(
+            np.repeat(-10000.0, self.tagset_size), axis=0
+        ).astype(np.float32)
+        init_vvars[0][id_start] = 0
+
         forward_var = init_vvars
-
-        for feat in feats:
-            next_tag_var = (
-                forward_var.view(1, -1).expand(self.tagset_size, self.tagset_size)
-                + self.transitions
-            )
-            _, bptrs_t = torch.max(next_tag_var, dim=1)
-            viterbivars_t = next_tag_var[range(len(bptrs_t)), bptrs_t]
+        for index, feat in enumerate(feats):
+            # broadcasting will do the job of reshaping and is more efficient than calling repeat
+            next_tag_var = forward_var + transitions
+            bptrs_t = next_tag_var.argmax(axis=1)
+            viterbivars_t = next_tag_var[np.arange(bptrs_t.shape[0]), bptrs_t]
             forward_var = viterbivars_t + feat
-            backscores.append(forward_var)
-            backpointers.append(bptrs_t)
+            backscores[index] = forward_var
+            forward_var = forward_var[np.newaxis, :]
+            backpointers[index] = bptrs_t
 
-        terminal_var = (
-            forward_var
-            + self.transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)]
-        )
-        terminal_var.detach()[self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000.0
-        terminal_var.detach()[
-            self.tag_dictionary.get_idx_for_item(START_TAG)
-        ] = -10000.0
-        best_tag_id = argmax(terminal_var.unsqueeze(0))
+        terminal_var = forward_var.squeeze() + transitions[id_stop]
+        terminal_var[id_stop] = -10000.0
+        terminal_var[id_start] = -10000.0
+        best_tag_id = terminal_var.argmax()
 
         best_path = [best_tag_id]
-
         for bptrs_t in reversed(backpointers):
             best_tag_id = bptrs_t[best_tag_id]
             best_path.append(best_tag_id)
 
-        best_scores = []
-        for backscore in backscores:
-            softmax = F.softmax(backscore, dim=0)
-            _, idx = torch.max(backscore, 0)
-            prediction = idx.item()
-            best_scores.append(softmax[prediction].item())
-            scores.append([elem.item() for elem in softmax.flatten()])
-
         start = best_path.pop()
-        assert start == self.tag_dictionary.get_idx_for_item(START_TAG)
+        assert start == id_start
         best_path.reverse()
 
-        for index, (tag_id, tag_scores) in enumerate(zip(best_path, scores)):
-            if type(tag_id) != int and tag_id.item() != np.argmax(tag_scores):
-                swap_index_score = np.argmax(tag_scores)
-                scores[index][tag_id.item()], scores[index][swap_index_score] = (
-                    scores[index][swap_index_score],
-                    scores[index][tag_id.item()],
-                )
-            elif type(tag_id) == int and tag_id != np.argmax(tag_scores):
-                swap_index_score = np.argmax(tag_scores)
-                scores[index][tag_id], scores[index][swap_index_score] = (
-                    scores[index][swap_index_score],
-                    scores[index][tag_id],
-                )
+        best_scores_softmax = self._softmax(backscores, axis=1)
+        best_scores_np = np.max(best_scores_softmax, axis=1)
 
-        return best_scores, best_path, scores
+        # default value
+        all_scores_np = np.zeros(0, dtype=np.float64)
+        if all_scores:
+            all_scores_np = best_scores_softmax
+            for index, (tag_id, tag_scores) in enumerate(zip(best_path, all_scores_np)):
+                if type(tag_id) != int and tag_id.item() != tag_scores.argmax():
+                    swap_index_score = tag_scores.argmax()
+                    all_scores_np[index][tag_id.item()], all_scores_np[index][
+                        swap_index_score
+                    ] = (
+                        all_scores_np[index][swap_index_score],
+                        all_scores_np[index][tag_id.item()],
+                    )
+                elif type(tag_id) == int and tag_id != tag_scores.argmax():
+                    swap_index_score = tag_scores.argmax()
+                    all_scores_np[index][tag_id], all_scores_np[index][
+                        swap_index_score
+                    ] = (
+                        all_scores_np[index][swap_index_score],
+                        all_scores_np[index][tag_id],
+                    )
+
+        return best_scores_np.tolist(), best_path, all_scores_np.tolist()
 
     def _forward_alg(self, feats, lens_):
 
@@ -710,9 +783,7 @@ class SequenceTagger(flair.nn.Model):
     def _fetch_model(model_name) -> str:
 
         model_map = {}
-        aws_resource_path = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.2"
-        )
+
         aws_resource_path_v04 = (
             "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4"
         )
@@ -723,25 +794,25 @@ class SequenceTagger(flair.nn.Model):
 
         model_map["ner-fast"] = "/".join(
             [
-                aws_resource_path,
-                "NER-conll03--h256-l1-b32-experimental--fast-v0.2",
-                "en-ner-fast-conll03-v0.2.pt",
+                aws_resource_path_v04,
+                "NER-conll03--h256-l1-b32-p3-0.5-%2Bglove%2Bnews-forward-fast%2Bnews-backward-fast-normal-locked0.5-word0.05--release_4",
+                "en-ner-fast-conll03-v0.4.pt",
             ]
         )
 
         model_map["ner-ontonotes"] = "/".join(
             [
-                aws_resource_path,
-                "NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward%2Bnews-backward--v0.2",
-                "en-ner-ontonotes-v0.3.pt",
+                aws_resource_path_v04,
+                "release-ner-ontonotes-0",
+                "en-ner-ontonotes-v0.4.pt",
             ]
         )
 
         model_map["ner-ontonotes-fast"] = "/".join(
             [
-                aws_resource_path,
-                "NER-ontoner--h256-l1-b32-%2Bcrawl%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
-                "en-ner-ontonotes-fast-v0.3.pt",
+                aws_resource_path_v04,
+                "release-ner-ontonotes-fast-0",
+                "en-ner-ontonotes-fast-v0.4.pt",
             ]
         )
 
@@ -778,9 +849,9 @@ class SequenceTagger(flair.nn.Model):
 
         model_map["pos-fast"] = "/".join(
             [
-                aws_resource_path,
-                "POS-ontonotes--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
-                "en-pos-ontonotes-fast-v0.2.pt",
+                aws_resource_path_v04,
+                "release-pos-fast-0",
+                "en-pos-ontonotes-fast-v0.4.pt",
             ]
         )
 
@@ -799,18 +870,14 @@ class SequenceTagger(flair.nn.Model):
             )
 
         model_map["frame"] = "/".join(
-            [
-                aws_resource_path,
-                "FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward%2Bnews-backward--v0.2",
-                "en-frame-ontonotes-v0.2.pt",
-            ]
+            [aws_resource_path_v04, "release-frame-1", "en-frame-ontonotes-v0.4.pt"]
         )
 
         model_map["frame-fast"] = "/".join(
             [
-                aws_resource_path,
-                "FRAME-conll12--h256-l1-b8-%2Bnews%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
-                "en-frame-ontonotes-fast-v0.2.pt",
+                aws_resource_path_v04,
+                "release-frame-fast-0",
+                "en-frame-ontonotes-fast-v0.4.pt",
             ]
         )
 
@@ -824,18 +891,14 @@ class SequenceTagger(flair.nn.Model):
 
         model_map["chunk-fast"] = "/".join(
             [
-                aws_resource_path,
-                "NP-conll2000--h256-l1-b32-%2Bnews-forward-fast%2Bnews-backward-fast--v0.2",
-                "en-chunk-conll2000-fast-v0.2.pt",
+                aws_resource_path_v04,
+                "release-chunk-fast-0",
+                "en-chunk-conll2000-fast-v0.4.pt",
             ]
         )
 
         model_map["de-pos"] = "/".join(
-            [
-                aws_resource_path,
-                "UPOS-udgerman--h256-l1-b8-%2Bgerman-forward%2Bgerman-backward--v0.2",
-                "de-pos-ud-v0.2.pt",
-            ]
+            [aws_resource_path_v04, "release-de-pos-0", "de-pos-ud-hdt-v0.4.pt"]
         )
 
         model_map["de-pos-fine-grained"] = "/".join(
@@ -847,11 +910,7 @@ class SequenceTagger(flair.nn.Model):
         )
 
         model_map["de-ner"] = "/".join(
-            [
-                aws_resource_path,
-                "NER-conll03ger--h256-l1-b32-%2Bde-fasttext%2Bgerman-forward%2Bgerman-backward--v0.2",
-                "de-ner-conll03-v0.3.pt",
-            ]
+            [aws_resource_path_v04, "release-de-ner-0", "de-ner-conll03-v0.4.pt"]
         )
 
         model_map["de-ner-germeval"] = "/".join(
@@ -859,7 +918,7 @@ class SequenceTagger(flair.nn.Model):
         )
 
         model_map["fr-ner"] = "/".join(
-            [aws_resource_path, "NER-aij-wikiner-fr-wp3", "fr-ner.pt"]
+            [aws_resource_path_v04, "release-fr-ner-0", "fr-ner-wikiner-0.4.pt"]
         )
         model_map["nl-ner"] = "/".join(
             [aws_resource_path_v04, "NER-conll2002-dutch", "nl-ner-conll02-v0.1.pt"]

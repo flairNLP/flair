@@ -37,6 +37,14 @@ class TextClassifier(flair.nn.Model):
         multi_label: bool = None,
         multi_label_threshold: float = 0.5,
     ):
+        """
+        Initializes a TextClassifier
+        :param document_embeddings: embeddings used to embed each data point
+        :param label_dictionary: dictionary of labels you want to predict
+        :param multi_label: auto-detected by default, but you can set this to True to force multi-label prediction
+        or False to force single-label prediction
+        :param multi_label_threshold: If multi-label you can set the threshold to make predictions
+        """
 
         super(TextClassifier, self).__init__()
 
@@ -370,13 +378,13 @@ class TextClassifier(flair.nn.Model):
         model_map["de-offensive-language"] = "/".join(
             [
                 aws_resource_path,
-                "TEXT-CLASSIFICATION_germ-eval-2018_task-1",
-                "germ-eval-2018-task-1.pt",
+                "classy-offensive-de-rnn-cuda%3A0",
+                "germ-eval-2018-task-1-v0.4.pt",
             ]
         )
 
         model_map["en-sentiment"] = "/".join(
-            [aws_resource_path, "TEXT-CLASSIFICATION_imdb", "imdb.pt"]
+            [aws_resource_path, "classy-imdb-en-rnn-cuda%3A0", "imdb-v0.4.pt"]
         )
 
         cache_dir = Path("models")

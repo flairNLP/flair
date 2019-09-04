@@ -19,7 +19,7 @@ from . import nn
 
 import logging.config
 
-__version__ = "0.4.2"
+__version__ = "0.4.3"
 
 logging.config.dictConfig(
     {
@@ -37,7 +37,6 @@ logging.config.dictConfig(
         "loggers": {
             "flair": {"handlers": ["console"], "level": "INFO", "propagate": False}
         },
-        "root": {"handlers": ["console"], "level": "WARNING"},
     }
 )
 

@@ -79,11 +79,11 @@ are provided:
 
 | ID | Task | Training Dataset | Accuracy |
 | -------------    | ------------- |------------- |------------- |
-| 'ner' | 4-class Named Entity Recognition |  Conll-03  |  **93.24** (F1) |
-| 'ner-ontonotes' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.52** (F1) |
-| 'chunk' |  Syntactic Chunking   |  Conll-2000     |  **96.61** (F1) |
-| 'pos' |  Part-of-Speech Tagging |  Ontonotes     |  **98.01** (Accuracy) |
-| 'frame'  |   Semantic Frame Detection  (***Experimental***)|  Propbank 3.0     |  **93.92** (F1) |
+| 'ner' | 4-class Named Entity Recognition |  Conll-03  |  **93.03** (F1) |
+| 'ner-ontonotes' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.06** (F1) |
+| 'chunk' |  Syntactic Chunking   |  Conll-2000     |  **96.47** (F1) |
+| 'pos' |  Part-of-Speech Tagging |  Ontonotes     |  **98.6** (Accuracy) |
+| 'frame'  |   Semantic Frame Detection |  Propbank 3.0     |  **97.54** (F1) |
 
 
 #### Fast English Models
@@ -93,11 +93,11 @@ In case you do not have a GPU available, we also distribute smaller models that 
 
 | ID | Task | Training Dataset | Accuracy |
 | -------------    | ------------- |------------- |------------- |
-| 'ner-fast' | 4-class Named Entity Recognition |  Conll-03  |  **92.61** (F1) |
-| 'ner-ontonotes-fast' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.28** (F1) |
-| 'chunk-fast' |  Syntactic Chunking   |  Conll-2000     |  **96.43** (F1) |
-| 'pos-fast' |  Part-of-Speech Tagging |  Ontonotes     |  **97.93** (Accuracy) |
-| 'frame-fast'  |   Semantic Frame Detection  (***Experimental***)| Propbank 3.0     |  **93.50** (F1) |
+| 'ner-fast' | 4-class Named Entity Recognition |  Conll-03  |  **92.75** (F1) |
+| 'ner-ontonotes-fast' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.27** (F1) |
+| 'chunk-fast' |  Syntactic Chunking   |  Conll-2000     |  **96.22** (F1) |
+| 'pos-fast' |  Part-of-Speech Tagging |  Ontonotes     |  **98.47** (Accuracy) |
+| 'frame-fast'  |   Semantic Frame Detection | Propbank 3.0     |  **97.31** (F1) |
 
 
 #### Experimental: Multilingual Models
@@ -124,9 +124,9 @@ We also distribute German models.
 
 | ID | Task | Training Dataset | Accuracy | Contributor |
 | -------------    | ------------- |------------- |------------- |------------- |
-| 'de-ner' | 4-class Named Entity Recognition |  Conll-03  |  **87.99** (F1) | |
+| 'de-ner' | 4-class Named Entity Recognition |  Conll-03  |  **87.94** (F1) | |
 | 'de-ner-germeval' | 4+4-class Named Entity Recognition |  Germeval  |  **84.90** (F1) | |
-| 'de-pos' | Part-of-Speech Tagging |  Universal Dependency Treebank  |  **94.77** (Accuracy) | |
+| 'de-pos' | Part-of-Speech Tagging |  UD German - HDT  |  **98.33** (Accuracy) | |
 | 'de-pos-fine-grained' | Part-of-Speech Tagging |  German Tweets  |  **93.06** (Accuracy) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/pos-twitter-german) |
 
 
@@ -136,7 +136,7 @@ Thanks to our contributors we are also able to distribute a couple of models for
 
 | ID | Task | Training Dataset | Accuracy | Contributor |
 | -------------    | ------------- |------------- |------------- |------------- |
-| 'fr-ner' | Named Entity Recognition |  [WikiNER (aij-wikiner-fr-wp3)](https://github.com/dice-group/FOX/tree/master/input/Wikiner)  |  **87,80** (F1) | [mhham](https://github.com/mhham) |
+| 'fr-ner' | Named Entity Recognition |  [WikiNER (aij-wikiner-fr-wp3)](https://github.com/dice-group/FOX/tree/master/input/Wikiner)  |  **95.57** (F1) | [mhham](https://github.com/mhham) |
 | 'nl-ner' | Named Entity Recognition |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **89.56** (F1) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/conll2002-ner-dutch) |
 
 
@@ -284,8 +284,10 @@ print(sentence.labels)
 
 This should print:
 ```console
-[NEGATIVE (1.0)]
+[NEGATIVE (0.9598667025566101)]
 ```
+
+The number in brackets behind the label is the prediction confidence.
 
 ### List of Pre-Trained Text Classification Models
 

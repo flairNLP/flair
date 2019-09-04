@@ -17,6 +17,8 @@ from torch.nn import ParameterList, Parameter
 from pytorch_transformers import (
     BertTokenizer,
     BertModel,
+    RobertaTokenizer,
+    RobertaModel,
     TransfoXLTokenizer,
     TransfoXLModel,
     OpenAIGPTModel,
@@ -31,27 +33,6 @@ from pytorch_transformers import (
     PreTrainedModel,
 )
 
-from pytorch_transformers.modeling_openai import (
-    OPENAI_GPT_PRETRAINED_MODEL_ARCHIVE_MAP as OPENAI_GPT_PRETRAINED_MODEL_ARCHIVE_MAP,
-)
-
-from pytorch_transformers.modeling_gpt2 import (
-    GPT2_PRETRAINED_CONFIG_ARCHIVE_MAP as OPENAI_GPT2_PRETRAINED_MODEL_ARCHIVE_MAP,
-)
-
-
-from pytorch_transformers.modeling_transfo_xl import (
-    TRANSFO_XL_PRETRAINED_MODEL_ARCHIVE_MAP as TRANSFORMER_XL_PRETRAINED_MODEL_ARCHIVE_MAP,
-)
-
-from pytorch_transformers.modeling_xlnet import (
-    XLNET_PRETRAINED_MODEL_ARCHIVE_MAP as XLNET_PRETRAINED_MODEL_ARCHIVE_MAP,
-)
-
-from pytorch_transformers.modeling_xlm import (
-    XLM_PRETRAINED_MODEL_ARCHIVE_MAP as XLM_PRETRAINED_MODEL_ARCHIVE_MAP,
-)
-
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 import flair
@@ -59,7 +40,6 @@ from flair.data import Corpus
 from .nn import LockedDropout, WordDropout
 from .data import Dictionary, Token, Sentence, Image
 from .file_utils import cached_path, open_inside_zip
-from .training_utils import log_line
 
 import PIL
 
@@ -741,7 +721,7 @@ class ELMoEmbeddings(TokenEmbeddings):
 
         try:
             import allennlp.commands.elmo
-        except:
+        except ModuleNotFoundError:
             log.warning("-" * 100)
             log.warning('ATTENTION! The library "allennlp" is not installed!')
             log.warning(
@@ -764,6 +744,9 @@ class ELMoEmbeddings(TokenEmbeddings):
             if model == "medium":
                 options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_options.json"
                 weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_weights.hdf5"
+            if model in ["large", "5.5B"]:
+                options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json"
+                weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5"
             if model == "pt" or model == "portuguese":
                 options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_options.json"
                 weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_weights.hdf5"
@@ -833,6 +816,10 @@ class ELMoEmbeddings(TokenEmbeddings):
 class ELMoTransformerEmbeddings(TokenEmbeddings):
     """Contextual word embeddings using word-level Transformer-based LM, as proposed in Peters et al., 2018."""
 
+    @deprecated(
+        version="0.4.2",
+        reason="Not possible to load or save ELMo Transformer models. @stefan-it is working on it.",
+    )
     def __init__(self, model_file: str):
         super().__init__()
 
@@ -843,7 +830,7 @@ class ELMoTransformerEmbeddings(TokenEmbeddings):
             from allennlp.data.token_indexers.elmo_indexer import (
                 ELMoTokenCharactersIndexer,
             )
-        except:
+        except ModuleNotFoundError:
             log.warning("-" * 100)
             log.warning('ATTENTION! The library "allennlp" is not installed!')
             log.warning(
@@ -1041,33 +1028,6 @@ def _build_token_subwords_mapping(
     return token_subwords_mapping
 
 
-def _build_token_subwords_mapping_roberta(sentence: Sentence, model) -> Dict[int, int]:
-    """ Builds a dictionary that stores the following information:
-    Token index (key) and number of corresponding subwords (value) for a sentence.
-
-    :param sentence: input sentence
-    :param model: RoBERTa model
-    :return: dictionary of token index to corresponding number of subwords
-    """
-    token_subwords_mapping: Dict[int, int] = {}
-
-    for token in sentence.tokens:
-        token_text = token.text
-
-        # Leading spaces are needed for GPT2 BPE tokenization in RoBERTa (except at BOS):
-        # ``roberta.encode(' world').tolist()`` -> ``[0, 232, 2]``
-        # ``roberta.encode('world').tolist()``  -> ``[0, 8331, 2]``
-        padding = "" if token.idx == 1 else " "
-
-        current_subwords = model.encode(padding + token_text)
-
-        # ``roberta.encode(' world').tolist()`` will result in ``[0, 232, 2]``:
-        # 0 and 2 are special symbols (`<s>` and `</s>`), so ignore them in subword length calculation
-        token_subwords_mapping[token.idx] = len(current_subwords) - 2
-
-    return token_subwords_mapping
-
-
 def _build_token_subwords_mapping_gpt2(
     sentence: Sentence, tokenizer: PreTrainedTokenizer
 ) -> Dict[int, int]:
@@ -1123,11 +1083,7 @@ def _get_transformer_sentence_embeddings(
         for sentence in sentences:
             token_subwords_mapping: Dict[int, int] = {}
 
-            if name.startswith("roberta"):
-                token_subwords_mapping = _build_token_subwords_mapping_roberta(
-                    sentence=sentence, model=model
-                )
-            elif name.startswith("gpt2"):
+            if name.startswith("gpt2") or name.startswith("roberta"):
                 token_subwords_mapping = _build_token_subwords_mapping_gpt2(
                     sentence=sentence, tokenizer=tokenizer
                 )
@@ -1136,10 +1092,7 @@ def _get_transformer_sentence_embeddings(
                     sentence=sentence, tokenizer=tokenizer
                 )
 
-            if name.startswith("roberta"):
-                subwords = model.encode(sentence.to_tokenized_string())
-            else:
-                subwords = tokenizer.tokenize(sentence.to_tokenized_string())
+            subwords = tokenizer.tokenize(sentence.to_tokenized_string())
 
             offset = 0
 
@@ -1150,17 +1103,11 @@ def _get_transformer_sentence_embeddings(
             if eos_token:
                 subwords = subwords + [eos_token]
 
-            if not name.startswith("roberta"):
-                indexed_tokens = tokenizer.convert_tokens_to_ids(subwords)
-                tokens_tensor = torch.tensor([indexed_tokens])
-                tokens_tensor = tokens_tensor.to(flair.device)
+            indexed_tokens = tokenizer.convert_tokens_to_ids(subwords)
+            tokens_tensor = torch.tensor([indexed_tokens])
+            tokens_tensor = tokens_tensor.to(flair.device)
 
-                hidden_states = model(tokens_tensor)[-1]
-            else:
-                hidden_states = model.extract_features(
-                    subwords, return_all_hiddens=True
-                )
-                offset = 1
+            hidden_states = model(tokens_tensor)[-1]
 
             for token in sentence.tokens:
                 len_subwords = token_subwords_mapping[token.idx]
@@ -1493,30 +1440,25 @@ class OpenAIGPT2Embeddings(TokenEmbeddings):
 class RoBERTaEmbeddings(TokenEmbeddings):
     def __init__(
         self,
-        model: str = "roberta.large",
+        pretrained_model_name_or_path: str = "roberta-base",
         layers: str = "-1",
         pooling_operation: str = "first",
         use_scalar_mix: bool = False,
     ):
         """RoBERTa, as proposed by Liu et al. 2019.
-        :param model: name of RoBERTa model
+        :param pretrained_model_name_or_path: name or path of RoBERTa model
         :param layers: comma-separated list of layers
         :param pooling_operation: defines pooling operation for subwords
         :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
         """
         super().__init__()
 
-        try:
-            self.model = torch.hub.load("pytorch/fairseq", model)
-        except:
-            log_line(log)
-            log.warning(
-                "ATTENTION! fastBPE, sacremoses and subword_nmt needs to be installed!"
-            )
-            log_line(log)
-            pass
-
-        self.name = model
+        self.tokenizer = RobertaTokenizer.from_pretrained(pretrained_model_name_or_path)
+        self.model = RobertaModel.from_pretrained(
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
+        )
+        self.name = pretrained_model_name_or_path
         self.layers: List[int] = [int(layer) for layer in layers.split(",")]
         self.pooling_operation = pooling_operation
         self.use_scalar_mix = use_scalar_mix
@@ -1533,35 +1475,20 @@ class RoBERTaEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def __getstate__(self):
-        # Copy the object's state from self.__dict__ which contains
-        # all our instance attributes. Always use the dict.copy()
-        # method to avoid modifying the original state.
-        state = self.__dict__.copy()
-        # Remove the unpicklable entries.
-        state["model"] = None
-        state["_modules"] = None
-
-        return state
-
-    def __setstate__(self, d):
-        self.__dict__ = d
-        # Restore unpickable entries
-        super().__init__()
-        self.model = torch.hub.load("pytorch/fairseq", self.name)
-
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
         self.model.to(flair.device)
         self.model.eval()
 
         sentences = _get_transformer_sentence_embeddings(
             sentences=sentences,
-            tokenizer=None,
+            tokenizer=self.tokenizer,
             model=self.model,
             name=self.name,
             layers=self.layers,
             pooling_operation=self.pooling_operation,
             use_scalar_mix=self.use_scalar_mix,
+            bos_token="<s>",
+            eos_token="</s>",
         )
 
         return sentences
@@ -1743,8 +1670,10 @@ class FlairEmbeddings(TokenEmbeddings):
             "es-forward-fast": f"{aws_path}/embeddings-v0.4/language_model_es_forward/lm-es-forward-fast.pt",
             "es-backward-fast": f"{aws_path}/embeddings-v0.4/language_model_es_backward/lm-es-backward-fast.pt",
             # Basque
-            "eu-forward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-forward-v0.1.pt",
-            "eu-backward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-backward-v0.1.pt",
+            "eu-forward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-forward-v0.2.pt",
+            "eu-backward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-backward-v0.2.pt",
+            "eu-v1-forward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-forward-v0.1.pt",
+            "eu-v1-backward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-backward-v0.1.pt",
             "eu-v0-forward": f"{aws_path}/embeddings-v0.4/lm-eu-large-forward-v0.1.pt",
             "eu-v0-backward": f"{aws_path}/embeddings-v0.4/lm-eu-large-backward-v0.1.pt",
             # Persian
@@ -1803,6 +1732,9 @@ class FlairEmbeddings(TokenEmbeddings):
             "sv-backward": f"{aws_path}/embeddings-stefan-it/lm-sv-opus-large-backward-v0.1.pt",
             "sv-v0-forward": f"{aws_path}/embeddings-v0.4/lm-sv-large-forward-v0.1.pt",
             "sv-v0-backward": f"{aws_path}/embeddings-v0.4/lm-sv-large-backward-v0.1.pt",
+            # Tamil
+            "ta-forward": f"{aws_path}/embeddings-stefan-it/lm-ta-opus-large-forward-v0.1.pt",
+            "ta-backward": f"{aws_path}/embeddings-stefan-it/lm-ta-opus-large-backward-v0.1.pt",
         }
 
         if type(model) == str:
@@ -2059,10 +1991,28 @@ class BertEmbeddings(TokenEmbeddings):
         """
         super().__init__()
 
-        self.tokenizer = BertTokenizer.from_pretrained(bert_model_or_path)
-        self.model = BertModel.from_pretrained(
-            pretrained_model_name_or_path=bert_model_or_path, output_hidden_states=True
-        )
+        if bert_model_or_path.startswith("distilbert"):
+            try:
+                from pytorch_transformers import DistilBertTokenizer, DistilBertModel
+            except ImportError:
+                log.warning("-" * 100)
+                log.warning(
+                    "ATTENTION! To use DistilBert, please first install a recent version of pytorch-transformers!"
+                )
+                log.warning("-" * 100)
+                pass
+
+            self.tokenizer = DistilBertTokenizer.from_pretrained(bert_model_or_path)
+            self.model = DistilBertModel.from_pretrained(
+                pretrained_model_name_or_path=bert_model_or_path,
+                output_hidden_states=True,
+            )
+        else:
+            self.tokenizer = BertTokenizer.from_pretrained(bert_model_or_path)
+            self.model = BertModel.from_pretrained(
+                pretrained_model_name_or_path=bert_model_or_path,
+                output_hidden_states=True,
+            )
         self.layer_indexes = [int(x) for x in layers.split(",")]
         self.pooling_operation = pooling_operation
         self.use_scalar_mix = use_scalar_mix
@@ -2171,9 +2121,9 @@ class BertEmbeddings(TokenEmbeddings):
         # put encoded batch through BERT model to get all hidden states of all encoder layers
         self.model.to(flair.device)
         self.model.eval()
-        _, _, all_encoder_layers = self.model(
-            all_input_ids, token_type_ids=None, attention_mask=all_input_masks
-        )
+        all_encoder_layers = self.model(all_input_ids, attention_mask=all_input_masks)[
+            -1
+        ]
 
         with torch.no_grad():
 
@@ -2807,7 +2757,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             )
 
         # TODO: this can only be removed once the implementations of word_dropout and locked_dropout have a batch_first mode
-        sentence_tensor = sentence_tensor.transpose_(0, 1)
+        sentence_tensor = sentence_tensor.transpose(0, 1)
 
         # --------------------------------------------------------------------
         # FF PART

@@ -106,11 +106,14 @@ The grass is green <color> .
 Each tag is of class `Label` which next to the value has a score indicating confidence. Print like this: 
 
 ```python
-from flair.data import Label
+# get token 3 in the sentence 
+token = sentence[3]
 
-tag: Label = sentence[3].get_tag('ner')
+# get the 'ner' tag of the token
+tag = token.get_tag('ner')
 
-print(f'"{sentence[3]}" is tagged as "{tag.value}" with confidence score "{tag.score}"')
+# print token
+print(f'"{token}" is tagged as "{tag.value}" with confidence score "{tag.score}"')
 ```
 
 This should print:

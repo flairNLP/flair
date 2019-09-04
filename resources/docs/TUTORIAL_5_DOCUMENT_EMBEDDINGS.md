@@ -164,7 +164,7 @@ dimension as before will be taken.
 :param dropout: the dropout value to be used.
 :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used.
 :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used.
-:param rnn_type: one of 'RNN', 'LSTM', 'RNN_TANH' or 'RNN_RELU'
+:param rnn_type: one of 'RNN' or 'LSTM'
 ```
 
 ## Next
