@@ -9,6 +9,7 @@ from typing import List, Union, Dict
 import gensim
 import numpy as np
 import torch
+import torchvision as torchvision
 from bpemb import BPEmb
 from deprecated import deprecated
 from torch.nn import ParameterList, Parameter
@@ -37,8 +38,10 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import flair
 from flair.data import Corpus
 from .nn import LockedDropout, WordDropout
-from .data import Dictionary, Token, Sentence
+from .data import Dictionary, Token, Sentence, Image
 from .file_utils import cached_path, open_inside_zip
+
+import PIL
 
 log = logging.getLogger("flair")
 
@@ -62,7 +65,7 @@ class Embeddings(torch.nn.Module):
         are non-static."""
 
         # if only one sentence is passed, convert to list of sentence
-        if type(sentences) is Sentence:
+        if (type(sentences) is Sentence) or (type(sentences) is Image):
             sentences = [sentences]
 
         everything_embedded: bool = True
@@ -114,6 +117,18 @@ class DocumentEmbeddings(Embeddings):
     @property
     def embedding_type(self) -> str:
         return "sentence-level"
+
+
+class ImageEmbeddings(Embeddings):
+    @property
+    @abstractmethod
+    def embedding_length(self) -> int:
+        """Returns the length of the embedding vector."""
+        pass
+
+    @property
+    def embedding_type(self) -> str:
+        return "image-level"
 
 
 class StackedEmbeddings(TokenEmbeddings):
@@ -2618,6 +2633,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         word_dropout: float = 0.0,
         locked_dropout: float = 0.0,
         rnn_type="GRU",
+        fine_tune: bool = True,
     ):
         """The constructor takes a list of embeddings to be combined.
         :param embeddings: a list of token embeddings
@@ -2644,7 +2660,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
         self.length_of_all_token_embeddings: int = self.embeddings.embedding_length
 
-        self.static_embeddings = False
+        self.static_embeddings = False if fine_tune else True
 
         self.__embedding_length: int = hidden_size
         if self.bidirectional:
@@ -2696,7 +2712,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def embed(self, sentences: Union[List[Sentence], Sentence]):
+    def _add_embeddings_internal(self, sentences: List[Sentence]):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
          only if embeddings are non-static."""
 
@@ -2775,14 +2791,14 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
                 first_rep = outputs[0, sentence_no]
                 embedding = torch.cat([first_rep, last_rep], 0)
 
+            if self.static_embeddings:
+                embedding = embedding.detach()
+
             sentence = sentences[sentence_no]
             sentence.set_embedding(self.name, embedding)
 
         # restore original order of sentences in the batch
         sentences = [sentences[i] for i in sort_invperm]
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
-        pass
 
 
 @deprecated(
@@ -3045,6 +3061,113 @@ class NILCEmbeddings(WordEmbeddings):
 
         self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
         super(TokenEmbeddings, self).__init__()
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def __str__(self):
+        return self.name
+
+
+class IdentityImageEmbeddings(ImageEmbeddings):
+    def __init__(self, transforms):
+        self.name = "Identity"
+        self.transforms = transforms
+        self.__embedding_length = None
+        self.static_embeddings = True
+        super().__init__()
+
+    def _add_embeddings_internal(self, images: List[Image]) -> List[Image]:
+        for image in images:
+            image_data = PIL.Image.open(image.imageURL)
+            image_data.load()
+            image.set_embedding(self.name, self.transforms(image_data))
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def __str__(self):
+        return self.name
+
+
+class PrecomputedImageEmbeddings(ImageEmbeddings):
+    def __init__(self, url2tensor_dict, name):
+        self.url2tensor_dict = url2tensor_dict
+        self.name = name
+        self.__embedding_length = len(list(self.url2tensor_dict.values())[0])
+        self.static_embeddings = True
+        super().__init__()
+
+    def _add_embeddings_internal(self, images: List[Image]) -> List[Image]:
+        for image in images:
+            if image.imageURL in self.url2tensor_dict:
+                image.set_embedding(self.name, self.url2tensor_dict[image.imageURL])
+            else:
+                image.set_embedding(
+                    self.name, torch.zeros(self.__embedding_length, device=flair.device)
+                )
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def __str__(self):
+        return self.name
+
+
+class NetworkImageEmbeddings(ImageEmbeddings):
+    def __init__(self, name, pretrained=True, transforms=None):
+        super().__init__()
+        model_info = {
+            "resnet50": (torchvision.models.resnet50, lambda x: list(x)[:-1], 2048),
+            "mobilenet_v2": (
+                torchvision.models.mobilenet_v2,
+                lambda x: list(x)[:-1] + [torch.nn.AdaptiveAvgPool2d((1, 1))],
+                1280,
+            ),
+        }
+
+        transforms = [] if transforms is None else transforms
+        transforms += [torchvision.transforms.ToTensor()]
+        if pretrained:
+            imagenet_mean = [0.485, 0.456, 0.406]
+            imagenet_std = [0.229, 0.224, 0.225]
+            transforms += [
+                torchvision.transforms.Normalize(mean=imagenet_mean, std=imagenet_std)
+            ]
+        self.transforms = torchvision.transforms.Compose(transforms)
+
+        if name in model_info:
+            model_constructor = model_info[name][0]
+            model_features = model_info[name][1]
+            embedding_length = model_info[name][2]
+
+            net = model_constructor(pretrained=pretrained)
+            modules = model_features(net.children())
+            self.features = torch.nn.Sequential(*modules)
+
+            self.__embedding_length = embedding_length
+
+            self.name = name
+        else:
+            raise Exception(f"Image embeddings {name} not available.")
+
+    def _add_embeddings_internal(self, images: List[Image]) -> List[Image]:
+        image_tensor = torch.stack([self.transforms(image.data) for image in images])
+        image_embeddings = self.features(image_tensor)
+        image_embeddings = (
+            image_embeddings.view(image_embeddings.shape[:2])
+            if image_embeddings.dim() == 4
+            else image_embeddings
+        )
+        if image_embeddings.dim() != 2:
+            raise Exception(
+                f"Unknown embedding shape of length {image_embeddings.dim()}"
+            )
+        for image_id, image in enumerate(images):
+            image.set_embedding(self.name, image_embeddings[image_id])
 
     @property
     def embedding_length(self) -> int:
