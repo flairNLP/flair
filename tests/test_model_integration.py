@@ -38,15 +38,11 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
     )
 
     # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
-
-    trainer.train(
-        results_base_path,
-        learning_rate=0.1,
-        mini_batch_size=2,
-        max_epochs=2,
-        shuffle=False,
+    trainer: ModelTrainer = ModelTrainer(
+        tagger, corpus, learning_rate=0.1, mini_batch_size=2, shuffle=False
     )
+
+    trainer.train(results_base_path, max_epochs=2)
 
     loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
@@ -79,15 +75,11 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
     )
 
     # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
-
-    trainer.train(
-        results_base_path,
-        learning_rate=0.1,
-        mini_batch_size=32,
-        max_epochs=2,
-        shuffle=False,
+    trainer: ModelTrainer = ModelTrainer(
+        tagger, corpus, learning_rate=0.1, mini_batch_size=32, shuffle=False
     )
+
+    trainer.train(results_base_path, max_epochs=2)
 
     loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
@@ -122,15 +114,11 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
     )
 
     # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
-
-    trainer.train(
-        results_base_path,
-        learning_rate=0.1,
-        mini_batch_size=2,
-        max_epochs=2,
-        shuffle=False,
+    trainer: ModelTrainer = ModelTrainer(
+        tagger, corpus, learning_rate=0.1, mini_batch_size=2, shuffle=False
     )
+
+    trainer.train(results_base_path, max_epochs=2)
 
     loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
@@ -167,15 +155,16 @@ def test_train_optimizer(results_base_path, tasks_base_path):
     optimizer: Optimizer = Adam
 
     # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=optimizer)
-
-    trainer.train(
-        results_base_path,
+    trainer: ModelTrainer = ModelTrainer(
+        tagger,
+        corpus,
+        optimizer=optimizer,
         learning_rate=0.1,
         mini_batch_size=2,
-        max_epochs=2,
         shuffle=False,
     )
+
+    trainer.train(results_base_path, max_epochs=2)
 
     loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
@@ -212,16 +201,17 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
     optimizer: Optimizer = AdamW
 
     # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=optimizer)
-
-    trainer.train(
-        results_base_path,
+    trainer: ModelTrainer = ModelTrainer(
+        tagger,
+        corpus,
+        optimizer=optimizer,
         learning_rate=0.1,
         mini_batch_size=2,
-        max_epochs=2,
         shuffle=False,
         weight_decay=1e-3,
     )
+
+    trainer.train(results_base_path, max_epochs=2)
 
     loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
@@ -299,8 +289,8 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
-    trainer = ModelTrainer(model, corpus)
-    trainer.train(results_base_path, max_epochs=2, shuffle=False)
+    trainer = ModelTrainer(model, corpus, shuffle=False)
+    trainer.train(results_base_path, max_epochs=2)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -335,13 +325,10 @@ def test_train_classifier_with_sampler(results_base_path, tasks_base_path):
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
-    trainer = ModelTrainer(model, corpus)
-    trainer.train(
-        results_base_path,
-        max_epochs=2,
-        shuffle=False,
-        sampler=ImbalancedClassificationDatasetSampler,
+    trainer = ModelTrainer(
+        model, corpus, shuffle=False, sampler=ImbalancedClassificationDatasetSampler
     )
+    trainer.train(results_base_path, max_epochs=2)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -369,8 +356,8 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
-    trainer = ModelTrainer(model, corpus)
-    trainer.train(results_base_path, max_epochs=2, shuffle=False)
+    trainer = ModelTrainer(model, corpus, shuffle=False)
+    trainer.train(results_base_path, max_epochs=2)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -408,14 +395,8 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
 
     model = TextClassifier(document_embeddings, label_dict, multi_label=True)
 
-    trainer = ModelTrainer(model, corpus)
-    trainer.train(
-        results_base_path,
-        mini_batch_size=1,
-        max_epochs=100,
-        shuffle=False,
-        checkpoint=False,
-    )
+    trainer = ModelTrainer(model, corpus, mini_batch_size=1, shuffle=False)
+    trainer.train(results_base_path, checkpoint=False, max_epochs=100)
 
     sentence = Sentence("apple tv")
 
@@ -464,8 +445,8 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
-    trainer = ModelTrainer(model, corpus)
-    trainer.train(results_base_path, max_epochs=2, shuffle=False)
+    trainer = ModelTrainer(model, corpus, shuffle=False)
+    trainer.train(results_base_path, max_epochs=2)
 
     sentence = Sentence("Berlin is a really nice city.")
 
@@ -548,15 +529,11 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
     )
 
     # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
-
-    trainer.train(
-        results_base_path,
-        learning_rate=0.1,
-        mini_batch_size=2,
-        max_epochs=2,
-        shuffle=False,
+    trainer: ModelTrainer = ModelTrainer(
+        tagger, corpus, learning_rate=0.1, mini_batch_size=2, shuffle=False
     )
+
+    trainer.train(results_base_path, max_epochs=2)
 
     loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
@@ -585,12 +562,11 @@ def test_train_resume_text_classification_training(results_base_path, tasks_base
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
-    trainer = ModelTrainer(model, corpus)
-    trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
+    trainer = ModelTrainer(model, corpus, shuffle=False)
+    trainer.train(results_base_path, max_epochs=2, checkpoint=True)
 
-    checkpoint = TextClassifier.load_checkpoint(results_base_path / "checkpoint.pt")
-    trainer = ModelTrainer.load_from_checkpoint(checkpoint, corpus)
-    trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
+    trainer = ModelTrainer.load_checkpoint(results_base_path / "checkpoint.pt", corpus)
+    trainer.train(results_base_path, max_epochs=4, checkpoint=True)
 
     # clean up results directory
     shutil.rmtree(results_base_path)
@@ -616,13 +592,12 @@ def test_train_resume_sequence_tagging_training(results_base_path, tasks_base_pa
         use_crf=False,
     )
 
-    trainer = ModelTrainer(model, corpus)
-    trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
+    trainer = ModelTrainer(model, corpus, shuffle=False)
+    trainer.train(results_base_path, max_epochs=2, checkpoint=True)
 
-    checkpoint = SequenceTagger.load_checkpoint(results_base_path / "checkpoint.pt")
-    trainer = ModelTrainer.load_from_checkpoint(checkpoint, corpus)
+    trainer = ModelTrainer.load_checkpoint(results_base_path / "checkpoint.pt", corpus)
 
-    trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
+    trainer.train(results_base_path, max_epochs=2, checkpoint=True)
 
     # clean up results directory
     shutil.rmtree(results_base_path)

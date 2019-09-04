@@ -102,14 +102,11 @@ class ParamSelector(object):
             }
 
             trainer: ModelTrainer = ModelTrainer(
-                model, self.corpus, **model_trainer_parameters
+                model, self.corpus, **model_trainer_parameters, **training_params
             )
 
             result = trainer.train(
-                self.base_path,
-                max_epochs=self.max_epochs,
-                param_selection_mode=True,
-                **training_params,
+                self.base_path, max_epochs=self.max_epochs, param_selection_mode=True
             )
 
             # take the average over the last three scores of training
