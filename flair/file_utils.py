@@ -100,7 +100,6 @@ def cached_path(url_or_filename: str, cache_dir: Path) -> Path:
 
 
 def unzip_file(file: Path, unzip_to: Path):
-    # unpack and write out in CoNLL column-like format
     from zipfile import ZipFile
 
     with ZipFile(file, "r") as zipObj:

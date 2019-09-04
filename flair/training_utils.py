@@ -349,9 +349,10 @@ def store_embeddings(sentences: List[Sentence], storage_mode: str):
     else:
         # find out which ones are dynamic embeddings
         delete_keys = []
-        for name, vector in sentences[0][0]._embeddings.items():
-            if sentences[0][0]._embeddings[name].requires_grad:
-                delete_keys.append(name)
+        if type(sentences[0]) == Sentence:
+            for name, vector in sentences[0][0]._embeddings.items():
+                if sentences[0][0]._embeddings[name].requires_grad:
+                    delete_keys.append(name)
 
         # find out which ones are dynamic embeddings
         for sentence in sentences:

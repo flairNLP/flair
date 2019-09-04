@@ -161,6 +161,26 @@ class DataPoint:
         pass
 
 
+class DataPair(DataPoint):
+    def __init__(self, first: DataPoint, second: DataPoint):
+        self.first = first
+        self.second = second
+
+    def to(self, device: str):
+        self.first.to(device)
+        self.second.to(device)
+
+    def clear_embeddings(self, embedding_names: List[str] = None):
+        self.first.clear_embeddings(embedding_names)
+        self.second.clear_embeddings(embedding_names)
+
+    def embedding(self):
+        return torch.cat([self.first.embedding, self.second.embedding])
+
+    def __str__(self):
+        return f"DataPoint:\n first: {self.first}\n second: {self.second}"
+
+
 class Token(DataPoint):
     """
     This class represents one word in a tokenized sentence. Each token may have any number of tags. It may also point
@@ -804,6 +824,52 @@ class Sentence(DataPoint):
                 self.language_code = "en"
 
         return self.language_code
+
+
+class Image(DataPoint):
+    def __init__(self, data=None, imageURL=None):
+        self.data = data
+        self._embeddings: Dict = {}
+        self.imageURL = imageURL
+
+    @property
+    def embedding(self):
+        return self.get_embedding()
+
+    def __str__(self):
+
+        image_repr = self.data.size() if self.data else ""
+        image_url = self.imageURL if self.imageURL else ""
+
+        return f"Image: {image_repr} {image_url}"
+
+    def get_embedding(self) -> torch.tensor:
+        embeddings = [
+            self._embeddings[embed] for embed in sorted(self._embeddings.keys())
+        ]
+
+        if embeddings:
+            return torch.cat(embeddings, dim=0)
+
+        return torch.tensor([], device=flair.device)
+
+    def set_embedding(self, name: str, vector: torch.tensor):
+        device = flair.device
+        if len(self._embeddings.keys()) > 0:
+            device = next(iter(self._embeddings.values())).device
+        self._embeddings[name] = vector.to(device, non_blocking=True)
+
+    def to(self, device: str):
+        for name, vector in self._embeddings.items():
+            self._embeddings[name] = vector.to(device, non_blocking=True)
+
+    def clear_embeddings(self, embedding_names: List[str] = None):
+        if embedding_names is None:
+            self._embeddings: Dict = {}
+        else:
+            for name in embedding_names:
+                if name in self._embeddings.keys():
+                    del self._embeddings[name]
 
 
 class FlairDataset(Dataset):

@@ -37,7 +37,6 @@ logging.config.dictConfig(
         "loggers": {
             "flair": {"handlers": ["console"], "level": "INFO", "propagate": False}
         },
-        "root": {"handlers": ["console"], "level": "WARNING"},
     }
 )
 
