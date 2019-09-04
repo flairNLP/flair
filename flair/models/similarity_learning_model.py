@@ -71,32 +71,6 @@ class ModelSimilarity(SimilarityMeasure):
         return cur_outputs
 
 
-class RBFSimilarity(SimilarityMeasure):
-    """
-    Similarity defined by radial basis function with a given bandwidth.
-    """
-
-    def __init__(self, bandwidth=1.0):
-        self.bandwidth = bandwidth
-
-    def forward(self, x):
-        input_modality_0 = x[0]
-        input_modality_1 = x[1]
-
-        input_modality_0_sqnorms = torch.sum(
-            input_modality_0 ** 2, dim=-1, keepdim=True
-        )
-        input_modality_1_sqnorms = torch.sum(
-            input_modality_1 ** 2, dim=-1, keepdim=True
-        )
-
-        neg_sq_dist = 2 * torch.matmul(input_modality_0, input_modality_1.t())
-        neg_sq_dist -= input_modality_0_sqnorms
-        neg_sq_dist -= input_modality_1_sqnorms.t()
-
-        return torch.exp(neg_sq_dist / self.bandwidth)
-
-
 # -- works with ranking/triplet loss --
 class CosineSimilarity(SimilarityMeasure):
     """
@@ -114,31 +88,6 @@ class CosineSimilarity(SimilarityMeasure):
         return torch.matmul(
             input_modality_0 / input_modality_0_norms,
             (input_modality_1 / input_modality_1_norms).t(),
-        )
-
-
-class sqL2Similarity(SimilarityMeasure):
-    """
-    The similarity defined by negative squared L2 distance.
-    """
-
-    def forward(self, x):
-        # this returns *negative* squared L2 distance
-
-        input_modality_0 = x[0]
-        input_modality_1 = x[1]
-
-        input_modality_0_sqnorms = torch.sum(
-            input_modality_0 ** 2, dim=-1, keepdim=True
-        )
-        input_modality_1_sqnorms = torch.sum(
-            input_modality_1 ** 2, dim=-1, keepdim=True
-        )
-
-        return (
-            2 * torch.matmul(input_modality_0, input_modality_1.t())
-            - input_modality_0_sqnorms
-            - input_modality_1_sqnorms.t()
         )
 
 
