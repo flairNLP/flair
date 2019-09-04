@@ -253,6 +253,9 @@ class SequenceTagger(flair.nn.Model):
         embeddings_storage_mode: str = "cpu",
     ) -> (Result, float):
 
+        if type(out_path) == str:
+            out_path = Path(out_path)
+
         with torch.no_grad():
             eval_loss = 0
 
