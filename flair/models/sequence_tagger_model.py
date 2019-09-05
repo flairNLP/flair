@@ -154,6 +154,7 @@ class SequenceTagger(flair.nn.Model):
                     num_layers=self.nlayers,
                     dropout=0.0 if self.nlayers == 1 else 0.5,
                     bidirectional=True,
+                    batch_first=True,
                 )
                 # Create initial hidden state and initialize it
                 if self.train_initial_hidden_state:
@@ -454,9 +455,6 @@ class SequenceTagger(flair.nn.Model):
                 [token.get_embedding().unsqueeze(0) for token in sentence], 0
             )
 
-        # TODO: this can only be removed once the implementations of word_dropout and locked_dropout have a batch_first mode
-        sentence_tensor = sentence_tensor.transpose(0, 1)
-
         # --------------------------------------------------------------------
         # FF PART
         # --------------------------------------------------------------------
@@ -472,7 +470,7 @@ class SequenceTagger(flair.nn.Model):
 
         if self.use_rnn:
             packed = torch.nn.utils.rnn.pack_padded_sequence(
-                sentence_tensor, lengths, enforce_sorted=False
+                sentence_tensor, lengths, enforce_sorted=False, batch_first=True
             )
 
             # if initial hidden state is trainable, use this state
@@ -496,9 +494,6 @@ class SequenceTagger(flair.nn.Model):
             #     sentence_tensor = self.word_dropout(sentence_tensor)
             if self.use_locked_dropout > 0.0:
                 sentence_tensor = self.locked_dropout(sentence_tensor)
-        else:
-            # transpose to batch_first mode
-            sentence_tensor = sentence_tensor.transpose(0, 1)
 
         features = self.linear(sentence_tensor)
 
