@@ -17,7 +17,9 @@ class FlairTune(Trainable):
         if not "epoch" in self.__dict__:
             self.epoch = 0
         # run training code
-        loss = self.trainer._train_one_epoch(self.epoch, embeddings_storage_mode="cpu")
+        loss = self.trainer._train_one_epoch(
+            self.epoch, embeddings_storage_mode=self.embeddings_storage_mode
+        )
         self.epoch += 1
         return loss
 
@@ -28,7 +30,7 @@ class FlairTune(Trainable):
         self.trainer.model.eval()
         results, test_loss = self.trainer.model.evaluate(
             self.test,
-            embeddings_storage_mode="cpu",
+            embeddings_storage_mode=self.embeddings_storage_mode,
             out_path=Path(self._logdir) / "test.txt",
         )
 
@@ -49,6 +51,8 @@ class FlairTune(Trainable):
         return result_dict
 
     def _train(self):
+        if not "embeddings_storage_mode" in self.__dict__:
+            self.embeddings_storage_mode = "cpu"
         loss = self._train_iteration()
         result_dict = self._test()
         result_dict["mean_loss"] = loss
@@ -85,7 +89,6 @@ def write_experiment_summary(trials, result_file_path):
                 else:
                     result_line += str(trial.config[config_key]) + "\t"
 
-            # result_line = '\t'.join([str(trial.config[config_key]) for config_key in sorted(trial.config.keys())])
             result_line += f"{1 - trial.last_result['1-lr']}\t{trial.last_result['mean_loss']}\t{trial.last_result['training_iteration']}\t{trial.last_result['mean_accuracy']}\n"
             outfile.write(result_line)
             logger.info(result_line)
