@@ -596,9 +596,15 @@ class SequenceTagger(flair.nn.Model):
 
         tags = []
         all_tags = []
-
+        feature = feature.cpu()
         if self.use_crf:
-            feature = feature.cpu().numpy()
+            feature = feature.numpy()
+        else:
+            for index, length in enumerate(lengths):
+                feature[index, length:] = 0
+            softmax_batch = F.softmax(feature, dim=2).cpu()
+            scores_batch, prediction_batch = torch.max(softmax_batch, dim=2)
+            feature = zip(softmax_batch, scores_batch, prediction_batch)
 
         for feats, length in zip(feature, lengths):
             if self.use_crf:
@@ -608,16 +614,10 @@ class SequenceTagger(flair.nn.Model):
                     all_scores=get_all_tags,
                 )
             else:
-                tag_seq = []
-                confidences = []
-                scores = []
-                for backscore in feats[:length]:
-                    softmax = F.softmax(backscore, dim=0)
-                    _, idx = torch.max(backscore, 0)
-                    prediction = idx.item()
-                    tag_seq.append(prediction)
-                    confidences.append(softmax[prediction].item())
-                    scores.append(softmax.tolist())
+                softmax, score, prediction = feats
+                confidences = score[:length].tolist()
+                tag_seq = prediction[:length].tolist()
+                scores = softmax[:length].tolist()
 
             tags.append(
                 [
