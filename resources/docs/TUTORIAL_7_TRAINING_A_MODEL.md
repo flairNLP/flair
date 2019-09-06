@@ -327,8 +327,12 @@ Instead they are generated on-the-fly in each training mini-batch.
 The main advantage is that this keeps your memory requirements low.
 
 2. **'cpu'**: If you set `embeddings_storage_mode='cpu'`, embeddings will get stored in regular memory. 
-This slow down your inference when used with a GPU as embeddings need to be moved from GPU memory to regular memory. 
-The only reason to use this option would be to not only use the predictions but also the embeddings after prediction.  
+
+* during *training*: this in many cases speeds things up significantly since embeddings only need to be computed in the first epoch, after which they are just retrieved from memory. 
+A disadvantage is that this increases memory requirements. 
+Depending on the size of your dataset and your memory setup, this option may not be possible.
+* during *inference*: this slow down your inference when used with a GPU as embeddings need to be moved from GPU memory to regular memory. 
+The only reason to use this option during inference would be to not only use the predictions but also the embeddings after prediction.
 
 3. **'gpu'**: If you set `embeddings_storage_mode='gpu'`, embeddings will get stored in CUDA memory. 
 This will often be the fastest one since this eliminates the need to shuffle tensors from CPU to CUDA over and over again. 
