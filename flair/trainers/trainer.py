@@ -75,7 +75,7 @@ class ModelTrainer:
         train_with_dev: bool = False,
         monitor_train: bool = False,
         monitor_test: bool = False,
-        embeddings_storage_mode: str = "cpu",
+        embeddings_storage_mode: str = "none",
         checkpoint: bool = False,
         save_final_model: bool = True,
         anneal_with_restarts: bool = False,

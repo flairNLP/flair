@@ -250,7 +250,7 @@ class SequenceTagger(flair.nn.Model):
         self,
         data_loader: DataLoader,
         out_path: Path = None,
-        embeddings_storage_mode: str = "cpu",
+        embeddings_storage_mode: str = "none",
     ) -> (Result, float):
 
         with torch.no_grad():
