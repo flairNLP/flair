@@ -1,16 +1,17 @@
 # Tutorial 7: Training a Model
 
-This part of the tutorial shows how you can train your own sequence labelling and text
-classification models using state-of-the-art word embeddings.
+This part of the tutorial shows how you can train your own sequence labelling and text classification models using state-of-the-art word embeddings.
 
 For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of this
-library and how [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) work (ideally, you also know how [flair embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md) work). You should also know how to [load
+library and how [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) work (ideally, you also know how [flair embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md) work). 
+You should also know how to [load
 a corpus](/resources/docs/TUTORIAL_6_CORPUS.md).
 
 
 ## Training a Sequence Labeling Model
 
-Here is example code for a small NER model trained over WikiNER data, using simple GloVe embeddings. To run this code, you first need to obtain the CoNLL-03 English dataset (alternatively, use `NLPTaskDataFetcher.load_corpus(NLPTask.WNUT_17)` instead for a task with freely available data).
+Here is example code for a small NER model trained over WikiNER data, using simple GloVe embeddings. 
+To run this code, you first need to obtain the CoNLL-03 English dataset (alternatively, use `NLPTaskDataFetcher.load_corpus(NLPTask.WNUT_17)` instead for a task with freely available data).
 
 In this example, we downsample the data to 10% of the original data because the WikiNER dataset is huge:
 
@@ -74,11 +75,9 @@ plotter.plot_weights('resources/taggers/example-ner/weights.txt')
 ```
 
 Alternatively, try using a stacked embedding with FlairEmbeddings and GloVe, over the full data, for 150 epochs.
-This will give you the state-of-the-art accuracy we report in the paper. To see the full code to reproduce experiments,
-check [here](/resources/docs/EXPERIMENTS.md).
+This will give you the state-of-the-art accuracy we report in the paper. To see the full code to reproduce experiments, check [here](/resources/docs/EXPERIMENTS.md).
 
-Once the model is trained you can use it to predict the class of new sentences. Just call the `predict` method of the
-model.
+Once the model is trained you can use it to predict the class of new sentences. Just call the `predict` method of the model.
 
 ```python
 # load the model you trained
@@ -98,8 +97,7 @@ If the model works well, it will correctly tag 'Berlin' as a location in this ex
 
 ## Training a Text Classification Model
 
-Here is example code for training a text classifier over the TREC-6 corpus, using  a combination of simple GloVe
-embeddings and Flair embeddings. 
+Here is example code for training a text classifier over the TREC-6 corpus, using  a combination of simple GloVe embeddings and Flair embeddings. 
 
 ```python
 from flair.data import Corpus
@@ -151,8 +149,7 @@ plotter = Plotter()
 plotter.plot_weights('resources/taggers/ag_news/weights.txt')
 ```
 
-Once the model is trained you can load it to predict the class of new sentences. Just call the `predict` method of the
-model.
+Once the model is trained you can load it to predict the class of new sentences. Just call the `predict` method of the model.
 
 ```python
 classifier = TextClassifier.load('resources/taggers/ag_news/final-model.pt')
@@ -169,7 +166,9 @@ print(sentence.labels)
 
 ## Multi-Dataset Training
 
-Now, let us train a single model that can PoS tag text in both English and German. To do this, we load both the English and German UD corpora and create a MultiCorpus object. We also use the new multilingual Flair embeddings for this task.
+Now, let us train a single model that can PoS tag text in both English and German. 
+To do this, we load both the English and German UD corpora and create a MultiCorpus object. 
+We also use the new multilingual Flair embeddings for this task.
 
 All the rest is same as before, e.g.:
 
@@ -223,7 +222,8 @@ trainer.train('resources/taggers/example-universal-pos',
               )
 ```
 
-Note that here we use the MICRO_ACCURACY evaluation metric instead of the default MICRO_F1_SCORE. This gives you a multilingual model. Try experimenting with more languages!
+Note that here we use the MICRO_ACCURACY evaluation metric instead of the default MICRO_F1_SCORE. 
+This gives you a multilingual model. Try experimenting with more languages!
 
 
 
@@ -249,8 +249,7 @@ This generates PNG plots in the result folder.
 If you want to stop the training at some point and resume it at a later point, you should train with the parameter
 `checkpoint` set to `True`.
 This will save the model plus training parameters after every epoch.
-Thus, you can load the model plus trainer at any later point and continue the training exactly there where you have
-left.
+Thus, you can load the model plus trainer at any later point and continue the training exactly there where you have left.
 
 The example code below shows how to train, stop, and continue training of a `SequenceTagger`.
 Same can be done for `TextClassifier`.
@@ -316,18 +315,25 @@ trainer.train('resources/taggers/example-ner',
 
 ## Scalability: Training with Large Datasets
 
-Many embeddings in Flair are somewhat costly to produce in terms of runtime and may have large vectors. Examples
-of this are `FlairEmbeddings`, `BertEmbeddings` and the other transformer-based embeddings. Depending on your setup, 
-you can set options to optimize training time. 
+Many embeddings in Flair are somewhat costly to produce in terms of runtime and may have large vectors. 
+Examples of this are `FlairEmbeddings`, `BertEmbeddings` and the other transformer-based embeddings. 
+Depending on your setup, you can set options to optimize training time. 
 
-The main parameter you need to set is the `embeddings_storage_mode` in the `train()` method of the `ModelTrainer`. It can have one of three values:
+The main parameter you need to set is the `embeddings_storage_mode` in the `train()` method of the `ModelTrainer`. 
+It can have one of three values:
 
-1. **'none'**: If you set `embeddings_storage_mode='none'`, embeddings do not get stored in memory. Instead they are generated on-the-fly in each training mini-batch. The main advantage is that this keeps your memory requirements low. However, this 
-also means that embeddings get generated over and over again at each epoch. If you're using computationally costly embeddings such as BERT and you don't have a strong GPU, this may make training very slow. 
+1. **'none'**: If you set `embeddings_storage_mode='none'`, embeddings do not get stored in memory. 
+Instead they are generated on-the-fly in each training mini-batch. 
+The main advantage is that this keeps your memory requirements low.
 
-2. **'cpu'**: If you set `embeddings_storage_mode='cpu'`, embeddings will get stored in regular memory. This in many cases speeds things up significantly since embeddings only need to be computed in the first epoch, after which they are just retrieved from memory. A disadvantage is that this increases memory requirements. Depending on the size of your dataset and your memory setup, this option may not be possible.
+2. **'cpu'**: If you set `embeddings_storage_mode='cpu'`, embeddings will get stored in regular memory. 
+This slow down your inference when used with a GPU as embeddings need to be moved from GPU memory to regular memory. 
+The only reason to use this option would be to not only use the predictions but also the embeddings after prediction.  
 
-3. **'gpu'**: If you set `embeddings_storage_mode='gpu'`, embeddings will get stored in CUDA memory. This will often be even faster than 'cpu' since this eliminates the need to shuffle tensors from CPU to CUDA over and over again. Of course, CUDA memory is often limited so large datasets will not fit into CUDA memory. However, if the dataset fits into CUDA memory, this option is the fastest one. 
+3. **'gpu'**: If you set `embeddings_storage_mode='gpu'`, embeddings will get stored in CUDA memory. 
+This will often be the fastest one since this eliminates the need to shuffle tensors from CPU to CUDA over and over again. 
+Of course, CUDA memory is often limited so large datasets will not fit into CUDA memory. 
+However, if the dataset fits into CUDA memory, this option is the fastest one.  
 
 
 ## Next

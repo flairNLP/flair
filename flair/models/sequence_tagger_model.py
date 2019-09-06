@@ -379,6 +379,13 @@ class SequenceTagger(flair.nn.Model):
             if isinstance(sentences, Sentence):
                 sentences = [sentences]
 
+            if (flair.device.type == "cuda") and embedding_storage_mode == "cpu":
+                log.warning(
+                    "You are inferring on GPU with parameter 'embedding_storage_mode' set to 'cpu'."
+                    "This option will slow down your inference, usually 'none' (default value) "
+                    "is a better choice."
+                )
+
             filtered_sentences = self._filter_empty_sentences(sentences)
 
             # remove previous embeddings
