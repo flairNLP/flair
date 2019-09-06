@@ -323,7 +323,7 @@ The main parameter you need to set is the `embeddings_storage_mode` in the `trai
 It can have one of three values:
 
 1. **'none'**: If you set `embeddings_storage_mode='none'`, embeddings do not get stored in memory. 
-Instead they are generated on-the-fly in each training mini-batch. 
+Instead they are generated on-the-fly in each training mini-batch (during *training*). 
 The main advantage is that this keeps your memory requirements low.
 
 2. **'cpu'**: If you set `embeddings_storage_mode='cpu'`, embeddings will get stored in regular memory. 
