@@ -458,9 +458,8 @@ class SequenceTagger(flair.nn.Model):
 
         for s_id, sentence in enumerate(sentences):
             # fill values with word embeddings
-            sentence_tensor[s_id][: len(sentence)] = torch.cat(
-                [token.get_embedding().unsqueeze(0) for token in sentence], 0
-            )
+            token_embeddings = [token.get_embedding() for token in sentence]
+            sentence_tensor[s_id][: len(sentence)] = torch.stack(token_embeddings)
 
         # --------------------------------------------------------------------
         # FF PART
