@@ -339,8 +339,7 @@ class WordEmbeddings(TokenEmbeddings):
         else:
             word_embedding = np.zeros(self.embedding_length, dtype="float")
 
-        word_embedding = torch.FloatTensor(word_embedding)
-        word_embedding = word_embedding.to(flair.device)
+        word_embedding = torch.tensor(word_embedding, device=flair.device, dtype=torch.float)
         return word_embedding
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
@@ -419,8 +418,7 @@ class FastTextEmbeddings(TokenEmbeddings):
         except:
             word_embedding = np.zeros(self.embedding_length, dtype="float")
 
-        word_embedding = torch.FloatTensor(word_embedding)
-        word_embedding.to(flair.device)
+        word_embedding = torch.tensor(word_embedding, device=flair.device, dtype=torch.float)
         return word_embedding
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
@@ -583,9 +581,7 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
             word_embedding = current_embedding_model[re.sub(r"\d", "0", word.lower())]
         else:
             word_embedding = np.zeros(self.embedding_length, dtype="float")
-
-        word_embedding = torch.FloatTensor(word_embedding)
-        word_embedding = word_embedding.to(flair.device)
+        word_embedding = torch.tensor(word_embedding, device=flair.device, dtype=torch.float)
         return word_embedding
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
