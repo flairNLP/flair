@@ -3,6 +3,7 @@ import re
 import logging
 from abc import abstractmethod
 from collections import Counter
+from functools import lru_cache
 from pathlib import Path
 from typing import List, Union, Dict
 
@@ -321,6 +322,27 @@ class WordEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
+    @lru_cache(maxsize=10000, typed=False)
+    def get_cached_vec(self, word: str) -> torch.Tensor:
+        if word in self.precomputed_word_embeddings:
+            word_embedding = self.precomputed_word_embeddings[word]
+        elif word.lower() in self.precomputed_word_embeddings:
+            word_embedding = self.precomputed_word_embeddings[word.lower()]
+        elif re.sub(r"\d", "#", word.lower()) in self.precomputed_word_embeddings:
+            word_embedding = self.precomputed_word_embeddings[
+                re.sub(r"\d", "#", word.lower())
+            ]
+        elif re.sub(r"\d", "0", word.lower()) in self.precomputed_word_embeddings:
+            word_embedding = self.precomputed_word_embeddings[
+                re.sub(r"\d", "0", word.lower())
+            ]
+        else:
+            word_embedding = np.zeros(self.embedding_length, dtype="float")
+
+        word_embedding = torch.FloatTensor(word_embedding)
+        word_embedding = word_embedding.to(flair.device)
+        return word_embedding
+
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
         for i, sentence in enumerate(sentences):
@@ -332,26 +354,7 @@ class WordEmbeddings(TokenEmbeddings):
                 else:
                     word = token.get_tag(self.field).value
 
-                if word in self.precomputed_word_embeddings:
-                    word_embedding = self.precomputed_word_embeddings[word]
-                elif word.lower() in self.precomputed_word_embeddings:
-                    word_embedding = self.precomputed_word_embeddings[word.lower()]
-                elif (
-                    re.sub(r"\d", "#", word.lower()) in self.precomputed_word_embeddings
-                ):
-                    word_embedding = self.precomputed_word_embeddings[
-                        re.sub(r"\d", "#", word.lower())
-                    ]
-                elif (
-                    re.sub(r"\d", "0", word.lower()) in self.precomputed_word_embeddings
-                ):
-                    word_embedding = self.precomputed_word_embeddings[
-                        re.sub(r"\d", "0", word.lower())
-                    ]
-                else:
-                    word_embedding = np.zeros(self.embedding_length, dtype="float")
-
-                word_embedding = torch.FloatTensor(word_embedding)
+                word_embedding = self.get_cached_vec(word=word)
 
                 token.set_embedding(self.name, word_embedding)
 
@@ -409,6 +412,17 @@ class FastTextEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
+    @lru_cache(maxsize=10000, typed=False)
+    def get_cached_vec(self, word: str) -> torch.Tensor:
+        try:
+            word_embedding = self.precomputed_word_embeddings[word]
+        except:
+            word_embedding = np.zeros(self.embedding_length, dtype="float")
+
+        word_embedding = torch.FloatTensor(word_embedding)
+        word_embedding.to(flair.device)
+        return word_embedding
+
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
         for i, sentence in enumerate(sentences):
@@ -420,12 +434,7 @@ class FastTextEmbeddings(TokenEmbeddings):
                 else:
                     word = token.get_tag(self.field).value
 
-                try:
-                    word_embedding = self.precomputed_word_embeddings[word]
-                except:
-                    word_embedding = np.zeros(self.embedding_length, dtype="float")
-
-                word_embedding = torch.FloatTensor(word_embedding)
+                word_embedding = self.get_cached_vec(word)
 
                 token.set_embedding(self.name, word_embedding)
 
@@ -561,6 +570,24 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
         self.language_embeddings = {}
         super().__init__()
 
+    @lru_cache(maxsize=10000, typed=False)
+    def get_cached_vec(self, language_code: str, word: str) -> torch.Tensor:
+        current_embedding_model = self.language_embeddings[language_code]
+        if word in current_embedding_model:
+            word_embedding = current_embedding_model[word]
+        elif word.lower() in current_embedding_model:
+            word_embedding = current_embedding_model[word.lower()]
+        elif re.sub(r"\d", "#", word.lower()) in current_embedding_model:
+            word_embedding = current_embedding_model[re.sub(r"\d", "#", word.lower())]
+        elif re.sub(r"\d", "0", word.lower()) in current_embedding_model:
+            word_embedding = current_embedding_model[re.sub(r"\d", "0", word.lower())]
+        else:
+            word_embedding = np.zeros(self.embedding_length, dtype="float")
+
+        word_embedding = torch.FloatTensor(word_embedding)
+        word_embedding = word_embedding.to(flair.device)
+        return word_embedding
+
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
         for i, sentence in enumerate(sentences):
@@ -613,8 +640,6 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
                     language_code
                 ] = gensim.models.KeyedVectors.load(str(embeddings_file))
 
-            current_embedding_model = self.language_embeddings[language_code]
-
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
 
                 if "field" not in self.__dict__ or self.field is None:
@@ -622,22 +647,9 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
                 else:
                     word = token.get_tag(self.field).value
 
-                if word in current_embedding_model:
-                    word_embedding = current_embedding_model[word]
-                elif word.lower() in current_embedding_model:
-                    word_embedding = current_embedding_model[word.lower()]
-                elif re.sub(r"\d", "#", word.lower()) in current_embedding_model:
-                    word_embedding = current_embedding_model[
-                        re.sub(r"\d", "#", word.lower())
-                    ]
-                elif re.sub(r"\d", "0", word.lower()) in current_embedding_model:
-                    word_embedding = current_embedding_model[
-                        re.sub(r"\d", "0", word.lower())
-                    ]
-                else:
-                    word_embedding = np.zeros(self.embedding_length, dtype="float")
-
-                word_embedding = torch.FloatTensor(word_embedding)
+                word_embedding = self.get_cached_vec(
+                    language_code=language_code, word=word
+                )
 
                 token.set_embedding(self.name, word_embedding)
 
