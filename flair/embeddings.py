@@ -339,7 +339,9 @@ class WordEmbeddings(TokenEmbeddings):
         else:
             word_embedding = np.zeros(self.embedding_length, dtype="float")
 
-        word_embedding = torch.tensor(word_embedding, device=flair.device, dtype=torch.float)
+        word_embedding = torch.tensor(
+            word_embedding, device=flair.device, dtype=torch.float
+        )
         return word_embedding
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
@@ -418,7 +420,9 @@ class FastTextEmbeddings(TokenEmbeddings):
         except:
             word_embedding = np.zeros(self.embedding_length, dtype="float")
 
-        word_embedding = torch.tensor(word_embedding, device=flair.device, dtype=torch.float)
+        word_embedding = torch.tensor(
+            word_embedding, device=flair.device, dtype=torch.float
+        )
         return word_embedding
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
@@ -581,7 +585,9 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
             word_embedding = current_embedding_model[re.sub(r"\d", "0", word.lower())]
         else:
             word_embedding = np.zeros(self.embedding_length, dtype="float")
-        word_embedding = torch.tensor(word_embedding, device=flair.device, dtype=torch.float)
+        word_embedding = torch.tensor(
+            word_embedding, device=flair.device, dtype=torch.float
+        )
         return word_embedding
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
@@ -2750,11 +2756,26 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             device=flair.device,
         )
 
+        # for s_id, sentence in enumerate(sentences):
+        #     # fill values with word embeddings
+        #     sentence_tensor[s_id][: len(sentence)] = torch.cat(
+        #         [token.get_embedding().unsqueeze(0) for token in sentence], 0
+        #     )
+
         for s_id, sentence in enumerate(sentences):
             # fill values with word embeddings
-            sentence_tensor[s_id][: len(sentence)] = torch.cat(
-                [token.get_embedding().unsqueeze(0) for token in sentence], 0
-            )
+            all_embs = list()
+
+            for index_token, token in enumerate(sentence):
+                embs = token.get_each_embedding()
+                if not all_embs:
+                    all_embs = [list() for _ in range(len(embs))]
+                for index_emb, emb in enumerate(embs):
+                    all_embs[index_emb].append(emb)
+
+            concat_word_emb = [torch.stack(embs) for embs in all_embs]
+            concat_sentence_emb = torch.cat(concat_word_emb, dim=1)
+            sentence_tensor[s_id][: len(sentence)] = concat_sentence_emb
 
         # --------------------------------------------------------------------
         # FF PART

@@ -251,6 +251,9 @@ class Token(DataPoint):
                 if name in self._embeddings.keys():
                     del self._embeddings[name]
 
+    def get_each_embedding(self) -> torch.tensor:
+        return [self._embeddings[embed] for embed in sorted(self._embeddings.keys())]
+
     def get_embedding(self) -> torch.tensor:
         embeddings = [
             self._embeddings[embed] for embed in sorted(self._embeddings.keys())
