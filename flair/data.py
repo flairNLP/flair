@@ -237,11 +237,11 @@ class Token(DataPoint):
         device = flair.device
         if len(self._embeddings.keys()) > 0:
             device = next(iter(self._embeddings.values())).device
-        self._embeddings[name] = vector.to(device, non_blocking=True)
+        self._embeddings[name] = vector.to(device)
 
     def to(self, device: str):
         for name, vector in self._embeddings.items():
-            self._embeddings[name] = vector.to(device, non_blocking=True)
+            self._embeddings[name] = vector.to(device)
 
     def clear_embeddings(self, embedding_names: List[str] = None):
         if embedding_names is None:
