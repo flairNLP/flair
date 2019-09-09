@@ -563,7 +563,7 @@ class Sentence(DataPoint):
     def embedding(self):
         return self.get_embedding()
 
-    def set_embedding(self, name: str, vector):
+    def set_embedding(self, name: str, vector: torch.tensor):
         device = flair.device
         if len(self._embeddings.keys()) > 0:
             device = next(iter(self._embeddings.values())).device
