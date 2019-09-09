@@ -153,7 +153,7 @@ class DataPoint:
         pass
 
     @abstractmethod
-    def to(self, device: str):
+    def to(self, device: str, pin_memory: bool = False):
         pass
 
     @abstractmethod
@@ -166,9 +166,9 @@ class DataPair(DataPoint):
         self.first = first
         self.second = second
 
-    def to(self, device: str):
-        self.first.to(device)
-        self.second.to(device)
+    def to(self, device: str, pin_memory: bool = False):
+        self.first.to(device, pin_memory)
+        self.second.to(device, pin_memory)
 
     def clear_embeddings(self, embedding_names: List[str] = None):
         self.first.clear_embeddings(embedding_names)
@@ -239,9 +239,15 @@ class Token(DataPoint):
             device = next(iter(self._embeddings.values())).device
         self._embeddings[name] = vector.to(device, non_blocking=True)
 
-    def to(self, device: str):
+    def to(self, device: str, pin_memory: bool = False):
         for name, vector in self._embeddings.items():
-            self._embeddings[name] = vector.to(device, non_blocking=True)
+            if str(vector.device) != str(device):
+                if pin_memory:
+                    self._embeddings[name] = vector.to(
+                        device, non_blocking=True
+                    ).pin_memory()
+                else:
+                    self._embeddings[name] = vector.to(device, non_blocking=True)
 
     def clear_embeddings(self, embedding_names: List[str] = None):
         if embedding_names is None:
@@ -580,15 +586,21 @@ class Sentence(DataPoint):
 
         return torch.Tensor()
 
-    def to(self, device: str):
+    def to(self, device: str, pin_memory: bool = False):
 
         # move sentence embeddings to device
         for name, vector in self._embeddings.items():
-            self._embeddings[name] = vector.to(device, non_blocking=True)
+            if str(vector.device) != str(device):
+                if pin_memory:
+                    self._embeddings[name] = vector.to(
+                        device, non_blocking=True
+                    ).pin_memory()
+                else:
+                    self._embeddings[name] = vector.to(device, non_blocking=True)
 
         # move token embeddings to device
         for token in self:
-            token.to(device)
+            token.to(device, pin_memory)
 
     def clear_embeddings(self, embedding_names: List[str] = None):
 
@@ -795,9 +807,15 @@ class Image(DataPoint):
             device = next(iter(self._embeddings.values())).device
         self._embeddings[name] = vector.to(device, non_blocking=True)
 
-    def to(self, device: str):
+    def to(self, device: str, pin_memory: bool = False):
         for name, vector in self._embeddings.items():
-            self._embeddings[name] = vector.to(device, non_blocking=True)
+            if str(vector.device) != str(device):
+                if pin_memory:
+                    self._embeddings[name] = vector.to(
+                        device, non_blocking=True
+                    ).pin_memory()
+                else:
+                    self._embeddings[name] = vector.to(device, non_blocking=True)
 
     def clear_embeddings(self, embedding_names: List[str] = None):
         if embedding_names is None:

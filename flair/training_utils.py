@@ -361,4 +361,4 @@ def store_embeddings(sentences: List[Sentence], storage_mode: str):
     # memory management - option 1: send everything to CPU
     if storage_mode == "cpu":
         for sentence in sentences:
-            sentence.to("cpu")
+            sentence.to("cpu", pin_memory=True)
