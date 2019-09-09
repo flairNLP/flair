@@ -2681,6 +2681,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
                 hidden_size,
                 num_layers=rnn_layers,
                 bidirectional=self.bidirectional,
+                batch_first=True,
             )
         else:
             self.rnn = torch.nn.GRU(
@@ -2688,6 +2689,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
                 hidden_size,
                 num_layers=rnn_layers,
                 bidirectional=self.bidirectional,
+                batch_first=True,
             )
 
         self.name = "document_" + self.rnn._get_name()
@@ -2721,21 +2723,11 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
         self.rnn.zero_grad()
 
-        # the permutation that sorts the sentences by length, descending
-        sort_perm = np.argsort([len(s) for s in sentences])[::-1]
-
-        # the inverse permutation that restores the input order; it's an index tensor therefore LongTensor
-        sort_invperm = np.argsort(sort_perm)
-
-        # sort sentences by number of tokens
-        sentences = [sentences[i] for i in sort_perm]
-
+        # embed words in the sentence
         self.embeddings.embed(sentences)
 
-        longest_token_sequence_in_batch: int = len(sentences[0])
-
-        # all_sentence_tensors = []
-        lengths: List[int] = []
+        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        longest_token_sequence_in_batch: int = max(lengths)
 
         # initialize zero-padded word embeddings tensor
         sentence_tensor = torch.zeros(
@@ -2748,20 +2740,16 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             device=flair.device,
         )
 
-        # fill values with word embeddings
         for s_id, sentence in enumerate(sentences):
-            lengths.append(len(sentence.tokens))
-
+            # fill values with word embeddings
             sentence_tensor[s_id][: len(sentence)] = torch.cat(
                 [token.get_embedding().unsqueeze(0) for token in sentence], 0
             )
 
-        # TODO: this can only be removed once the implementations of word_dropout and locked_dropout have a batch_first mode
-        sentence_tensor = sentence_tensor.transpose(0, 1)
-
         # --------------------------------------------------------------------
         # FF PART
         # --------------------------------------------------------------------
+        sentence_tensor = self.dropout(sentence_tensor)
         # use word dropout if set
         if self.use_word_dropout:
             sentence_tensor = self.word_dropout(sentence_tensor)
@@ -2769,14 +2757,13 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         if self.reproject_words:
             sentence_tensor = self.word_reprojection_map(sentence_tensor)
 
-        sentence_tensor = self.dropout(sentence_tensor)
-        packed = pack_padded_sequence(sentence_tensor, lengths)
-
-        self.rnn.flatten_parameters()
+        packed = pack_padded_sequence(
+            sentence_tensor, lengths, enforce_sorted=False, batch_first=True
+        )
 
         rnn_out, hidden = self.rnn(packed)
 
-        outputs, output_lengths = pad_packed_sequence(rnn_out)
+        outputs, output_lengths = pad_packed_sequence(rnn_out, batch_first=True)
 
         outputs = self.dropout(outputs)
 
@@ -2784,11 +2771,11 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         # EXTRACT EMBEDDINGS FROM RNN
         # --------------------------------------------------------------------
         for sentence_no, length in enumerate(lengths):
-            last_rep = outputs[length - 1, sentence_no]
+            last_rep = outputs[sentence_no, length - 1]
 
             embedding = last_rep
             if self.bidirectional:
-                first_rep = outputs[0, sentence_no]
+                first_rep = outputs[sentence_no, 0]
                 embedding = torch.cat([first_rep, last_rep], 0)
 
             if self.static_embeddings:
@@ -2796,9 +2783,6 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
             sentence = sentences[sentence_no]
             sentence.set_embedding(self.name, embedding)
-
-        # restore original order of sentences in the batch
-        sentences = [sentences[i] for i in sort_invperm]
 
 
 @deprecated(
