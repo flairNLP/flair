@@ -246,7 +246,9 @@ text = "This is a sentence. This is another sentence. I love Berlin."
 
 # use a library to split into sentences
 from segtok.segmenter import split_single
-sentences = [Sentence(sent, use_tokenizer=True) for sent in split_single(text)]
+from flair.data import segtok_tokenizer
+
+sentences = [Sentence(sent, use_tokenizer=segtok_tokenizer) for sent in split_single(text)]
 
 # predict tags for list of sentences
 tagger: SequenceTagger = SequenceTagger.load('ner')

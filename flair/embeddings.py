@@ -1869,15 +1869,13 @@ class FlairEmbeddings(TokenEmbeddings):
 
                     offset_backward -= len(token.text)
 
-                    if self.fine_tune:
-                        embedding = embedding.clone()
-                    else:
+                    if not self.fine_tune:
                         embedding = embedding.detach()
 
-                    token.set_embedding(self.name, embedding)
+                    token.set_embedding(self.name, embedding.clone())
 
             all_hidden_states_in_lm = all_hidden_states_in_lm.detach()
-            all_hidden_states_in_lm = None
+            del all_hidden_states_in_lm
 
         return sentences
 
@@ -2724,7 +2722,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
          only if embeddings are non-static."""
 
