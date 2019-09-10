@@ -29,7 +29,7 @@ class Model(torch.nn.Module):
         self,
         data_loader: DataLoader,
         out_path: Path = None,
-        embeddings_storage_mode: str = "cpu",
+        embeddings_storage_mode: str = "none",
     ) -> (Result, float):
         """Evaluates the model. Returns a Result object containing evaluation
         results and a loss value. Implement this to enable evaluation.
