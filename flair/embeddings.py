@@ -2714,7 +2714,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
          only if embeddings are non-static."""
 

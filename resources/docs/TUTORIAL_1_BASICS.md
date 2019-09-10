@@ -65,7 +65,9 @@ Token: 5 .
 In some use cases, you might not have your text already tokenized. For this case, we added a simple tokenizer using the
 lightweight [segtok library](https://pypi.org/project/segtok/).
 
-Simply use the `use_tokenizer` flag when instantiating your `Sentence` with an untokenized string:
+**If you are using `Flair` with a version <= 0.4.3**
+
+Simply use the use_tokenizer flag when instantiating your Sentence with an untokenized string:
 
 ```python
 from flair.data import Sentence
@@ -77,11 +79,38 @@ sentence = Sentence('The grass is green.', use_tokenizer=True)
 print(sentence)
 ```
 
+**If you are using `Flair` with a version > 0.4.3 or installed it from `master` branch**
+
+Simply use `use_tokenizer` parameter when instantiating your `Sentence` with the tokenizer you want to use:
+
+```python
+from flair.data import Sentence, segtok_tokenizer
+
+
+# Make a sentence object by passing an untokenized string and a tokenizer
+sentence = Sentence('The grass is green.', use_tokenizer=segtok_tokenizer)
+
+# Print the object to see what's in there
+print(sentence)
+```
+
 This should print:
 
 ```console
 Sentence: "The grass is green ." - 5 Tokens
 ```
+
+You can write and provide your own wrapper around the tokenizer you want to use.  
+The wrapper is a function which have the same signature than `flair.data.segtok_tokenizer` (take a `string` and return `List[Token]`).
+
+Check the code of `flair.data.space_tokenizer` (which is very simple) to have an idea of how to implement such wrapper.  
+The wrapper will take care of the following things:  
+
+* split the string in tokens;
+* compute the index of the first letter of each token;
+* say if the token is followed by a space character.
+
+And that's all!
 
 ## Adding Tags to Tokens
 
