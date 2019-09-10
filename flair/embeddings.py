@@ -1861,12 +1861,10 @@ class FlairEmbeddings(TokenEmbeddings):
 
                     offset_backward -= len(token.text)
 
-                    if self.fine_tune:
-                        embedding = embedding.clone()
-                    else:
+                    if not self.fine_tune:
                         embedding = embedding.detach()
 
-                    token.set_embedding(self.name, embedding)
+                    token.set_embedding(self.name, embedding.clone())
 
             all_hidden_states_in_lm = all_hidden_states_in_lm.detach()
             all_hidden_states_in_lm = None
