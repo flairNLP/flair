@@ -5,6 +5,8 @@ from collections import defaultdict
 from enum import Enum
 from pathlib import Path
 from typing import List
+
+import flair
 from flair.data import Dictionary, Sentence
 from functools import reduce
 from sklearn.metrics import mean_squared_error, mean_absolute_error
@@ -358,7 +360,8 @@ def store_embeddings(sentences: List[Sentence], storage_mode: str):
         for sentence in sentences:
             sentence.clear_embeddings(delete_keys)
 
-    # memory management - option 1: send everything to CPU
+    # memory management - option 1: send everything to CPU (pin to memory if we train on GPU)
     if storage_mode == "cpu":
+        pin_memory = False if str(flair.device) == "cpu" else True
         for sentence in sentences:
-            sentence.to("cpu")
+            sentence.to("cpu", pin_memory=pin_memory)

@@ -1867,7 +1867,7 @@ class FlairEmbeddings(TokenEmbeddings):
                     token.set_embedding(self.name, embedding.clone())
 
             all_hidden_states_in_lm = all_hidden_states_in_lm.detach()
-            all_hidden_states_in_lm = None
+            del all_hidden_states_in_lm
 
         return sentences
 
