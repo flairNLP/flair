@@ -476,16 +476,17 @@ class Sentence(DataPoint):
     def __init__(
         self,
         text: str = None,
-        tokenizer: Callable[[str], List[Token]] = space_tokenizer,
+        use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer,
         labels: Union[List[Label], List[str]] = None,
         language_code: str = None,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
         :param text: original string
-        :param tokenizer: a custom tokenizer (default is space based tokenizer,
+        :param use_tokenizer: a custom tokenizer (default is space based tokenizer,
         more advanced options are segtok_tokenizer to use segtok or build_spacy_tokenizer to use Spacy library
         if available). Check the code of space_tokenizer to implement your own (if you need it).
+        If instead of providing a function, this parameter is just set to True, segtok will be used.
         :param labels:
         :param language_code:
         """
@@ -500,6 +501,10 @@ class Sentence(DataPoint):
         self._embeddings: Dict = {}
 
         self.language_code: str = language_code
+
+        tokenizer = use_tokenizer
+        if type(use_tokenizer) == bool:
+            tokenizer = segtok_tokenizer if use_tokenizer else space_tokenizer
 
         # if text is passed, instantiate sentence with tokens (words)
         if text is not None:

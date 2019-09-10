@@ -930,7 +930,7 @@ class CSVClassificationDataset(FlairDataset):
                     if self.max_chars_per_doc > 0:
                         text = text[: self.max_chars_per_doc]
 
-                    sentence = Sentence(text, tokenizer=self.tokenizer)
+                    sentence = Sentence(text, use_tokenizer=self.tokenizer)
 
                     for column in self.column_name_map:
                         if (
@@ -968,7 +968,7 @@ class CSVClassificationDataset(FlairDataset):
             if self.max_chars_per_doc > 0:
                 text = text[: self.max_chars_per_doc]
 
-            sentence = Sentence(text, tokenizer=self.tokenizer)
+            sentence = Sentence(text, use_tokenizer=self.tokenizer)
             for column in self.column_name_map:
                 if self.column_name_map[column].startswith("label") and row[column]:
                     sentence.add_label(row[column])
@@ -1067,7 +1067,7 @@ class ClassificationDataset(FlairDataset):
             text = text[: self.max_chars_per_doc]
 
         if text and labels:
-            sentence = Sentence(text, labels=labels, tokenizer=tokenizer)
+            sentence = Sentence(text, labels=labels, use_tokenizer=tokenizer)
 
             if (
                 sentence is not None

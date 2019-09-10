@@ -510,7 +510,7 @@ class NLPTaskDataFetcher:
                 text = line[l_len:].strip()
 
                 if text and labels:
-                    sentence = Sentence(text, labels=labels, tokenizer=tokenizer)
+                    sentence = Sentence(text, labels=labels, use_tokenizer=tokenizer)
                     if len(sentence) > max_tokens_per_doc and max_tokens_per_doc > 0:
                         sentence.tokens = sentence.tokens[:max_tokens_per_doc]
                     if len(sentence.tokens) > 0:

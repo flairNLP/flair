@@ -52,7 +52,7 @@ def test_token_indices():
     assert text == sentence.to_original_text()
 
     text = ":    nation on"
-    sentence = Sentence(text, tokenizer=segtok_tokenizer)
+    sentence = Sentence(text, use_tokenizer=segtok_tokenizer)
     assert text == sentence.to_original_text()
 
     text = "I love Berlin."
@@ -64,12 +64,12 @@ def test_token_indices():
     assert text == sentence.to_original_text()
 
     text = 'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in einer Weise aufgetreten , die alles andere als überzeugend war " .'
-    sentence = Sentence(text, tokenizer=segtok_tokenizer)
+    sentence = Sentence(text, use_tokenizer=segtok_tokenizer)
     assert text == sentence.to_original_text()
 
 
 def test_create_sentence_with_tokenizer():
-    sentence: Sentence = Sentence("I love Berlin.", tokenizer=segtok_tokenizer)
+    sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=segtok_tokenizer)
 
     assert 4 == len(sentence.tokens)
     assert "I" == sentence.tokens[0].text
@@ -79,13 +79,13 @@ def test_create_sentence_with_tokenizer():
 
 
 def test_sentence_to_plain_string():
-    sentence: Sentence = Sentence("I love Berlin.", tokenizer=segtok_tokenizer)
+    sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=segtok_tokenizer)
 
     assert "I love Berlin ." == sentence.to_tokenized_string()
 
 
 def test_sentence_to_real_string(tasks_base_path):
-    sentence: Sentence = Sentence("I love Berlin.", tokenizer=segtok_tokenizer)
+    sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=segtok_tokenizer)
     assert "I love Berlin." == sentence.to_plain_string()
 
     corpus = flair.datasets.GERMEVAL(base_path=tasks_base_path)
@@ -129,7 +129,7 @@ def test_sentence_infer_tokenization():
 
 
 def test_sentence_get_item():
-    sentence: Sentence = Sentence("I love Berlin.", tokenizer=segtok_tokenizer)
+    sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=segtok_tokenizer)
 
     assert sentence.get_token(1) == sentence[0]
     assert sentence.get_token(3) == sentence[2]
@@ -258,10 +258,10 @@ def test_dictionary_save_and_load():
 
 
 def test_tagged_corpus_get_all_sentences():
-    train_sentence = Sentence("I'm used in training.", tokenizer=segtok_tokenizer)
-    dev_sentence = Sentence("I'm a dev sentence.", tokenizer=segtok_tokenizer)
+    train_sentence = Sentence("I'm used in training.", use_tokenizer=segtok_tokenizer)
+    dev_sentence = Sentence("I'm a dev sentence.", use_tokenizer=segtok_tokenizer)
     test_sentence = Sentence(
-        "I will be only used for testing.", tokenizer=segtok_tokenizer
+        "I will be only used for testing.", use_tokenizer=segtok_tokenizer
     )
 
     corpus: Corpus = Corpus([train_sentence], [dev_sentence], [test_sentence])
@@ -273,7 +273,7 @@ def test_tagged_corpus_get_all_sentences():
 
 def test_tagged_corpus_make_vocab_dictionary():
     train_sentence = Sentence(
-        "used in training. training is cool.", tokenizer=segtok_tokenizer
+        "used in training. training is cool.", use_tokenizer=segtok_tokenizer
     )
 
     corpus: Corpus = Corpus([train_sentence], [], [])
@@ -340,13 +340,13 @@ def test_tagged_corpus_make_label_dictionary_string():
 
 def test_tagged_corpus_statistics():
     train_sentence = Sentence(
-        "I love Berlin.", labels=[Label("class_1")], tokenizer=segtok_tokenizer
+        "I love Berlin.", labels=[Label("class_1")], use_tokenizer=segtok_tokenizer
     )
     dev_sentence = Sentence(
-        "The sun is shining.", labels=[Label("class_2")], tokenizer=segtok_tokenizer
+        "The sun is shining.", labels=[Label("class_2")], use_tokenizer=segtok_tokenizer
     )
     test_sentence = Sentence(
-        "Berlin is sunny.", labels=[Label("class_1")], tokenizer=segtok_tokenizer
+        "Berlin is sunny.", labels=[Label("class_1")], use_tokenizer=segtok_tokenizer
     )
 
     class_to_count_dict = Corpus._get_class_to_count(
@@ -370,13 +370,13 @@ def test_tagged_corpus_statistics():
 
 def test_tagged_corpus_statistics_string_label():
     train_sentence = Sentence(
-        "I love Berlin.", labels=["class_1"], tokenizer=segtok_tokenizer
+        "I love Berlin.", labels=["class_1"], use_tokenizer=segtok_tokenizer
     )
     dev_sentence = Sentence(
-        "The sun is shining.", labels=["class_2"], tokenizer=segtok_tokenizer
+        "The sun is shining.", labels=["class_2"], use_tokenizer=segtok_tokenizer
     )
     test_sentence = Sentence(
-        "Berlin is sunny.", labels=["class_1"], tokenizer=segtok_tokenizer
+        "Berlin is sunny.", labels=["class_1"], use_tokenizer=segtok_tokenizer
     )
 
     class_to_count_dict = Corpus._get_class_to_count(
@@ -400,13 +400,15 @@ def test_tagged_corpus_statistics_string_label():
 
 def test_tagged_corpus_statistics_multi_label():
     train_sentence = Sentence(
-        "I love Berlin.", labels=["class_1"], tokenizer=segtok_tokenizer
+        "I love Berlin.", labels=["class_1"], use_tokenizer=segtok_tokenizer
     )
     dev_sentence = Sentence(
-        "The sun is shining.", labels=["class_2"], tokenizer=segtok_tokenizer
+        "The sun is shining.", labels=["class_2"], use_tokenizer=segtok_tokenizer
     )
     test_sentence = Sentence(
-        "Berlin is sunny.", labels=["class_1", "class_2"], tokenizer=segtok_tokenizer
+        "Berlin is sunny.",
+        labels=["class_1", "class_2"],
+        use_tokenizer=segtok_tokenizer,
     )
 
     class_to_count_dict = Corpus._get_class_to_count(
@@ -436,7 +438,7 @@ def test_tagged_corpus_get_tag_statistic():
 
     dev_sentence = Sentence(
         "Facebook, Inc. is a company, and Google is one as well.",
-        tokenizer=segtok_tokenizer,
+        use_tokenizer=segtok_tokenizer,
     )
     dev_sentence[0].add_tag("ner", "B-ORG")
     dev_sentence[1].add_tag("ner", "I-ORG")
@@ -458,7 +460,7 @@ def test_tagged_corpus_get_tag_statistic():
 
 def test_tagged_corpus_downsample():
     sentence = Sentence(
-        "I love Berlin.", labels=[Label("class_1")], tokenizer=segtok_tokenizer
+        "I love Berlin.", labels=[Label("class_1")], use_tokenizer=segtok_tokenizer
     )
 
     corpus: Corpus = Corpus(
@@ -603,7 +605,7 @@ def test_token_position_in_sentence():
     assert 7 == sentence.tokens[2].start_position
     assert 13 == sentence.tokens[2].end_position
 
-    sentence = Sentence(" I love  Berlin.", tokenizer=segtok_tokenizer)
+    sentence = Sentence(" I love  Berlin.", use_tokenizer=segtok_tokenizer)
 
     assert 1 == sentence.tokens[0].start_position
     assert 2 == sentence.tokens[0].end_position
@@ -617,7 +619,7 @@ def test_sentence_to_dict():
     sentence = Sentence(
         "Zalando Research is   located in Berlin, the capital of Germany.",
         labels=["business"],
-        tokenizer=segtok_tokenizer,
+        use_tokenizer=segtok_tokenizer,
     )
 
     # bioes tags
@@ -639,7 +641,7 @@ def test_sentence_to_dict():
 
     sentence = Sentence(
         "Facebook, Inc. is a company, and Google is one as well.",
-        tokenizer=segtok_tokenizer,
+        use_tokenizer=segtok_tokenizer,
     )
 
     # bioes tags
