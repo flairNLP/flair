@@ -1847,6 +1847,8 @@ class FlairEmbeddings(TokenEmbeddings):
                     append_padded_sentence(padded)
 
             # get hidden states from language model
+            # all_hidden_states_in_lm contains dimensions related to padding or character inside a token
+            # however only dimensions related to the first or last character are used
             all_hidden_states_in_lm = self.lm.get_representation(
                 sentences_padded, self.chars_per_chunk
             )
@@ -1857,17 +1859,15 @@ class FlairEmbeddings(TokenEmbeddings):
 
                 offset_forward: int = extra_offset
                 offset_backward: int = len(sentence_text) + extra_offset
+                dimensions_to_extract = list()
 
                 for token in sentence.tokens:
-
                     offset_forward += len(token.text)
 
                     if self.is_forward_lm:
-                        offset = offset_forward
+                        dimensions_to_extract.append(offset_forward)
                     else:
-                        offset = offset_backward
-
-                    embedding = all_hidden_states_in_lm[offset, i, :]
+                        dimensions_to_extract.append(offset_backward)
 
                     # if self.tokenized_lm or token.whitespace_after:
                     offset_forward += 1
@@ -1875,12 +1875,20 @@ class FlairEmbeddings(TokenEmbeddings):
 
                     offset_backward -= len(token.text)
 
-                    if not self.fine_tune:
-                        embedding = embedding.detach()
+                # limit the size of the sentence embedding to the very strict minimum
+                # token embedding will keep a pointer toward sentence embedding, therefore in case of CPU or GPU storing
+                # this embedding will not be garbage collected
+                sentence_embedding = (
+                    all_hidden_states_in_lm[dimensions_to_extract, i, :]
+                    .detach()
+                    .clone()
+                )
+                for index, token in enumerate(sentence.tokens):
+                    # token embedding is just a pointer to sentence embedding plus a specific view over its data
+                    # sentence embedding will live as long as an object will point towards it
+                    token_embedding = sentence_embedding[index]
+                    token.set_embedding(self.name, token_embedding)
 
-                    token.set_embedding(self.name, embedding.clone())
-
-            all_hidden_states_in_lm = all_hidden_states_in_lm.detach()
             del all_hidden_states_in_lm
 
         return sentences
