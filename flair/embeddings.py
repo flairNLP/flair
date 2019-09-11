@@ -1529,7 +1529,7 @@ class CharacterEmbeddings(TokenEmbeddings):
             bidirectional=True,
         )
 
-        self.__embedding_length = self.char_embedding_dim * 2
+        self.__embedding_length = self.hidden_size_char * 2
 
         self.to(flair.device)
 
