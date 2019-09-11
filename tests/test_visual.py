@@ -78,7 +78,8 @@ def test_html_rendering():
             + " leader in a ballot of party members and will become the next "
             + TAGGED_ENTITY.format(color="yellow", entity="UK", label="LOC")
             + " prime minister. &amp;"
-        )
+        ),
+        title="Flair",
     )
 
     assert expected_res == actual

@@ -16,7 +16,7 @@ HTML_PAGE = """
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>Flair</title>
+        <title>{title}</title>
     </head>
 
     <body style="font-size: 16px; font-family: 'Segoe UI'; padding: 4rem 2rem">{text}</body>
@@ -41,6 +41,7 @@ def split_to_spans(s: Sentence):
 
 def render_ner_html(
     sentences: Union[List[Sentence], Sentence],
+    title: str = "Flair",
     colors={
         "PER": "#F7FF53",
         "ORG": "#E8902E",
@@ -53,6 +54,7 @@ def render_ner_html(
 ) -> str:
     """
     :param sentences: single sentence or list of sentences to convert to HTML
+    :param title: title of the HTML page
     :param colors: dict where keys are tags and values are color HTML codes
     :param default_color: color to use if colors parameter is missing a tag
     :param wrap_page: if True method returns result of processing sentences wrapped by &lt;html&gt; and &lt;body&gt; tags, otherwise - without these tags
@@ -79,6 +81,6 @@ def render_ner_html(
     final_text = "".join(sentences_html)
 
     if wrap_page:
-        return HTML_PAGE.format(text=final_text)
+        return HTML_PAGE.format(text=final_text, title=title)
     else:
         return final_text
