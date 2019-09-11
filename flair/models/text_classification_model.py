@@ -134,6 +134,8 @@ class TextClassifier(flair.nn.Model):
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
         :param sentences: list of sentences
         :param mini_batch_size: mini batch size to use
+        :param embedding_storage_mode: 'none' for the minimum memory footprint, 'cpu' to store embeddings in Ram,
+        'gpu' to store embeddings in GPU memory.
         :param multi_class_prob : return probability for all class for multiclass
         :return: the list of sentences containing the labels
         """
@@ -169,7 +171,7 @@ class TextClassifier(flair.nn.Model):
         self,
         data_loader: DataLoader,
         out_path: Path = None,
-        embeddings_storage_mode: str = "cpu",
+        embeddings_storage_mode: str = "none",
     ) -> (Result, float):
 
         with torch.no_grad():

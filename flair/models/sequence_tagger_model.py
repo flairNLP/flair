@@ -154,6 +154,7 @@ class SequenceTagger(flair.nn.Model):
                     num_layers=self.nlayers,
                     dropout=0.0 if self.nlayers == 1 else 0.5,
                     bidirectional=True,
+                    batch_first=True,
                 )
                 # Create initial hidden state and initialize it
                 if self.train_initial_hidden_state:
@@ -250,7 +251,7 @@ class SequenceTagger(flair.nn.Model):
         self,
         data_loader: DataLoader,
         out_path: Path = None,
-        embeddings_storage_mode: str = "cpu",
+        embeddings_storage_mode: str = "none",
     ) -> (Result, float):
 
         if type(out_path) == str:
@@ -382,6 +383,13 @@ class SequenceTagger(flair.nn.Model):
             if isinstance(sentences, Sentence):
                 sentences = [sentences]
 
+            if (flair.device.type == "cuda") and embedding_storage_mode == "cpu":
+                log.warning(
+                    "You are inferring on GPU with parameter 'embedding_storage_mode' set to 'cpu'."
+                    "This option will slow down your inference, usually 'none' (default value) "
+                    "is a better choice."
+                )
+
             filtered_sentences = self._filter_empty_sentences(sentences)
 
             # remove previous embeddings
@@ -457,9 +465,6 @@ class SequenceTagger(flair.nn.Model):
                 [token.get_embedding().unsqueeze(0) for token in sentence], 0
             )
 
-        # TODO: this can only be removed once the implementations of word_dropout and locked_dropout have a batch_first mode
-        sentence_tensor = sentence_tensor.transpose(0, 1)
-
         # --------------------------------------------------------------------
         # FF PART
         # --------------------------------------------------------------------
@@ -475,7 +480,7 @@ class SequenceTagger(flair.nn.Model):
 
         if self.use_rnn:
             packed = torch.nn.utils.rnn.pack_padded_sequence(
-                sentence_tensor, lengths, enforce_sorted=False
+                sentence_tensor, lengths, enforce_sorted=False, batch_first=True
             )
 
             # if initial hidden state is trainable, use this state
@@ -499,9 +504,6 @@ class SequenceTagger(flair.nn.Model):
             #     sentence_tensor = self.word_dropout(sentence_tensor)
             if self.use_locked_dropout > 0.0:
                 sentence_tensor = self.locked_dropout(sentence_tensor)
-        else:
-            # transpose to batch_first mode
-            sentence_tensor = sentence_tensor.transpose(0, 1)
 
         features = self.linear(sentence_tensor)
 
@@ -599,9 +601,15 @@ class SequenceTagger(flair.nn.Model):
 
         tags = []
         all_tags = []
-
+        feature = feature.cpu()
         if self.use_crf:
-            feature = feature.cpu().numpy()
+            feature = feature.numpy()
+        else:
+            for index, length in enumerate(lengths):
+                feature[index, length:] = 0
+            softmax_batch = F.softmax(feature, dim=2).cpu()
+            scores_batch, prediction_batch = torch.max(softmax_batch, dim=2)
+            feature = zip(softmax_batch, scores_batch, prediction_batch)
 
         for feats, length in zip(feature, lengths):
             if self.use_crf:
@@ -611,16 +619,10 @@ class SequenceTagger(flair.nn.Model):
                     all_scores=get_all_tags,
                 )
             else:
-                tag_seq = []
-                confidences = []
-                scores = []
-                for backscore in feats[:length]:
-                    softmax = F.softmax(backscore, dim=0)
-                    _, idx = torch.max(backscore, 0)
-                    prediction = idx.item()
-                    tag_seq.append(prediction)
-                    confidences.append(softmax[prediction].item())
-                    scores.append(softmax.tolist())
+                softmax, score, prediction = feats
+                confidences = score[:length].tolist()
+                tag_seq = prediction[:length].tolist()
+                scores = softmax[:length].tolist()
 
             tags.append(
                 [

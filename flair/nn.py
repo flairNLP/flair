@@ -29,7 +29,7 @@ class Model(torch.nn.Module):
         self,
         data_loader: DataLoader,
         out_path: Path = None,
-        embeddings_storage_mode: str = "cpu",
+        embeddings_storage_mode: str = "none",
     ) -> (Result, float):
         """Evaluates the model. Returns a Result object containing evaluation
         results and a loss value. Implement this to enable evaluation.
@@ -95,16 +95,21 @@ class LockedDropout(torch.nn.Module):
     Implementation of locked (or variational) dropout. Randomly drops out entire parameters in embedding space.
     """
 
-    def __init__(self, dropout_rate=0.5, inplace=False):
+    def __init__(self, dropout_rate=0.5, batch_first=True, inplace=False):
         super(LockedDropout, self).__init__()
         self.dropout_rate = dropout_rate
+        self.batch_first = batch_first
         self.inplace = inplace
 
     def forward(self, x):
         if not self.training or not self.dropout_rate:
             return x
 
-        m = x.data.new(1, x.size(1), x.size(2)).bernoulli_(1 - self.dropout_rate)
+        if not self.batch_first:
+            m = x.data.new(1, x.size(1), x.size(2)).bernoulli_(1 - self.dropout_rate)
+        else:
+            m = x.data.new(x.size(0), 1, x.size(2)).bernoulli_(1 - self.dropout_rate)
+
         mask = torch.autograd.Variable(m, requires_grad=False) / (1 - self.dropout_rate)
         mask = mask.expand_as(x)
         return mask * x
@@ -128,9 +133,9 @@ class WordDropout(torch.nn.Module):
         if not self.training or not self.dropout_rate:
             return x
 
-        m = x.data.new(x.size(0), 1, 1).bernoulli_(1 - self.dropout_rate)
+        m = x.data.new(x.size(0), x.size(1), 1).bernoulli_(1 - self.dropout_rate)
+
         mask = torch.autograd.Variable(m, requires_grad=False)
-        mask = mask.expand_as(x)
         return mask * x
 
     def extra_repr(self):

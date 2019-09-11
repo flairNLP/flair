@@ -240,18 +240,20 @@ class SimilarityLearner(flair.nn.Model):
             else:
                 hashmap[key] += [val]
 
-        index_map = {'first': {}, 'second': {}}
+        index_map = {"first": {}, "second": {}}
         for data_point_id, data_point in enumerate(data_points):
-            add_to_index_map(index_map['first'], str(data_point.first), data_point_id)
-            add_to_index_map(index_map['second'], str(data_point.second), data_point_id)
+            add_to_index_map(index_map["first"], str(data_point.first), data_point_id)
+            add_to_index_map(index_map["second"], str(data_point.second), data_point_id)
 
         targets = torch.zeros_like(similarity_matrix).to(flair.device)
 
         for data_point in data_points:
-            first_indices = index_map['first'][str(data_point.first)]
-            second_indices = index_map['second'][str(data_point.second)]
-            for first_index, second_index in itertools.product(first_indices, second_indices):
-                targets[first_index, second_index] = 1.
+            first_indices = index_map["first"][str(data_point.first)]
+            second_indices = index_map["second"][str(data_point.second)]
+            for first_index, second_index in itertools.product(
+                first_indices, second_indices
+            ):
+                targets[first_index, second_index] = 1.0
 
         loss = self.similarity_loss(similarity_matrix, targets)
 
@@ -261,7 +263,7 @@ class SimilarityLearner(flair.nn.Model):
         self,
         data_loader: DataLoader,
         out_path: Path = None,
-        embeddings_storage_mode="cpu",
+        embeddings_storage_mode="none",
     ) -> (Result, float):
         # assumes that for each data pair there's at least one embedding per modality
 
@@ -276,10 +278,12 @@ class SimilarityLearner(flair.nn.Model):
                         target_index[str(data_point.second)] = len(target_index)
                         target_inputs.append(data_point)
                 if target_inputs:
-                    all_target_embeddings.append(self._embed_target(target_inputs).to(self.eval_device))
+                    all_target_embeddings.append(
+                        self._embed_target(target_inputs).to(self.eval_device)
+                    )
                 store_embeddings(data_points, embeddings_storage_mode)
             all_target_embeddings = torch.cat(all_target_embeddings, dim=0)  # [n0, d0]
-            assert(len(target_index) == all_target_embeddings.shape[0])
+            assert len(target_index) == all_target_embeddings.shape[0]
 
             ranks = []
             for data_points in data_loader:

@@ -1,19 +1,27 @@
-import os, csv
-from abc import abstractmethod
-
-from torch.utils.data import Dataset, random_split
-from typing import List, Dict, Union
-import re
+import csv
 import logging
+import os
+import re
+from abc import abstractmethod
 from pathlib import Path
-import pickle
-import numpy as np
+from typing import List, Dict, Union, Callable
 
+import numpy as np
 import torch.utils.data.dataloader
+from torch.utils.data import Dataset, random_split
 from torch.utils.data.dataset import Subset, ConcatDataset
 
 import flair
-from flair.data import Sentence, Corpus, Token, FlairDataset, DataPair, Image
+from flair.data import (
+    Sentence,
+    Corpus,
+    Token,
+    FlairDataset,
+    DataPair,
+    Image,
+    space_tokenizer,
+    segtok_tokenizer,
+)
 from flair.file_utils import cached_path, unzip_file
 
 log = logging.getLogger("flair")
@@ -191,7 +199,7 @@ class ClassificationCorpus(Corpus):
         train_file=None,
         test_file=None,
         dev_file=None,
-        use_tokenizer: bool = True,
+        tokenizer: Callable[[str], List[Token]] = space_tokenizer,
         max_tokens_per_doc: int = -1,
         max_chars_per_doc: int = -1,
         in_memory: bool = False,
@@ -242,14 +250,14 @@ class ClassificationCorpus(Corpus):
 
         train: Dataset = ClassificationDataset(
             train_file,
-            use_tokenizer=use_tokenizer,
+            tokenizer=tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
         )
         test: Dataset = ClassificationDataset(
             test_file,
-            use_tokenizer=use_tokenizer,
+            tokenizer=tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
@@ -258,7 +266,7 @@ class ClassificationCorpus(Corpus):
         if dev_file is not None:
             dev: Dataset = ClassificationDataset(
                 dev_file,
-                use_tokenizer=use_tokenizer,
+                tokenizer=tokenizer,
                 max_tokens_per_doc=max_tokens_per_doc,
                 max_chars_per_doc=max_chars_per_doc,
                 in_memory=in_memory,
@@ -311,7 +319,7 @@ class CSVClassificationCorpus(Corpus):
         train_file=None,
         test_file=None,
         dev_file=None,
-        use_tokenizer: bool = True,
+        tokenizer: Callable[[str], List[Token]] = segtok_tokenizer,
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         in_memory: bool = False,
@@ -367,7 +375,7 @@ class CSVClassificationCorpus(Corpus):
         train: Dataset = CSVClassificationDataset(
             train_file,
             column_name_map,
-            use_tokenizer=use_tokenizer,
+            tokenizer=tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
@@ -379,7 +387,7 @@ class CSVClassificationCorpus(Corpus):
             test: Dataset = CSVClassificationDataset(
                 test_file,
                 column_name_map,
-                use_tokenizer=use_tokenizer,
+                tokenizer=tokenizer,
                 max_tokens_per_doc=max_tokens_per_doc,
                 max_chars_per_doc=max_chars_per_doc,
                 in_memory=in_memory,
@@ -397,7 +405,7 @@ class CSVClassificationCorpus(Corpus):
             dev: Dataset = CSVClassificationDataset(
                 dev_file,
                 column_name_map,
-                use_tokenizer=use_tokenizer,
+                tokenizer=tokenizer,
                 max_tokens_per_doc=max_tokens_per_doc,
                 max_chars_per_doc=max_chars_per_doc,
                 in_memory=in_memory,
@@ -839,7 +847,7 @@ class CSVClassificationDataset(FlairDataset):
         column_name_map: Dict[int, str],
         max_tokens_per_doc: int = -1,
         max_chars_per_doc: int = -1,
-        use_tokenizer=True,
+        tokenizer=segtok_tokenizer,
         in_memory: bool = True,
         skip_header: bool = False,
         **fmtparams,
@@ -866,7 +874,7 @@ class CSVClassificationDataset(FlairDataset):
         # variables
         self.path_to_file = path_to_file
         self.in_memory = in_memory
-        self.use_tokenizer = use_tokenizer
+        self.tokenizer = tokenizer
         self.column_name_map = column_name_map
         self.max_tokens_per_doc = max_tokens_per_doc
         self.max_chars_per_doc = max_chars_per_doc
@@ -922,7 +930,7 @@ class CSVClassificationDataset(FlairDataset):
                     if self.max_chars_per_doc > 0:
                         text = text[: self.max_chars_per_doc]
 
-                    sentence = Sentence(text, use_tokenizer=self.use_tokenizer)
+                    sentence = Sentence(text, use_tokenizer=self.tokenizer)
 
                     for column in self.column_name_map:
                         if (
@@ -960,7 +968,7 @@ class CSVClassificationDataset(FlairDataset):
             if self.max_chars_per_doc > 0:
                 text = text[: self.max_chars_per_doc]
 
-            sentence = Sentence(text, use_tokenizer=self.use_tokenizer)
+            sentence = Sentence(text, use_tokenizer=self.tokenizer)
             for column in self.column_name_map:
                 if self.column_name_map[column].startswith("label") and row[column]:
                     sentence.add_label(row[column])
@@ -977,7 +985,7 @@ class ClassificationDataset(FlairDataset):
         path_to_file: Union[str, Path],
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
-        use_tokenizer=True,
+        tokenizer=segtok_tokenizer,
         in_memory: bool = True,
     ):
         """
@@ -990,7 +998,6 @@ class ClassificationDataset(FlairDataset):
         :param max_tokens_per_doc: Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.
         :param max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
         :param max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
-        :param use_tokenizer: If True, tokenizes the dataset, otherwise uses whitespace tokenization
         :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
         :return: list of sentences
         """
@@ -1002,7 +1009,7 @@ class ClassificationDataset(FlairDataset):
         self.label_prefix = "__label__"
 
         self.in_memory = in_memory
-        self.use_tokenizer = use_tokenizer
+        self.tokenizer = tokenizer
 
         if self.in_memory:
             self.sentences = []
@@ -1026,7 +1033,7 @@ class ClassificationDataset(FlairDataset):
 
                 if self.in_memory:
                     sentence = self._parse_line_to_sentence(
-                        line, self.label_prefix, use_tokenizer
+                        line, self.label_prefix, tokenizer
                     )
                     if sentence is not None and len(sentence.tokens) > 0:
                         self.sentences.append(sentence)
@@ -1039,7 +1046,7 @@ class ClassificationDataset(FlairDataset):
                 line = f.readline()
 
     def _parse_line_to_sentence(
-        self, line: str, label_prefix: str, use_tokenizer: bool = True
+        self, line: str, label_prefix: str, tokenizer: Callable[[str], List[Token]]
     ):
         words = line.split()
 
@@ -1060,7 +1067,7 @@ class ClassificationDataset(FlairDataset):
             text = text[: self.max_chars_per_doc]
 
         if text and labels:
-            sentence = Sentence(text, labels=labels, use_tokenizer=use_tokenizer)
+            sentence = Sentence(text, labels=labels, use_tokenizer=tokenizer)
 
             if (
                 sentence is not None
@@ -1087,7 +1094,7 @@ class ClassificationDataset(FlairDataset):
                 file.seek(self.indices[index])
                 line = file.readline()
                 sentence = self._parse_line_to_sentence(
-                    line, self.label_prefix, self.use_tokenizer
+                    line, self.label_prefix, self.tokenizer
                 )
                 return sentence
 
@@ -1195,10 +1202,7 @@ class FeideggerDataset(FlairDataset):
 
                 # append Sentence-Image data point and split ID
                 self.data_points.append(
-                    DataPair(
-                        Sentence(preprocessor(caption), use_tokenizer=True),
-                        image,
-                    )
+                    DataPair(Sentence(preprocessor(caption), use_tokenizer=True), image)
                 )
                 self.split.append(split_id)
 
@@ -1543,7 +1547,7 @@ class IMDB(ClassificationCorpus):
                                     )
 
         super(IMDB, self).__init__(
-            data_folder, use_tokenizer=False, in_memory=in_memory
+            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
         )
 
 
@@ -1629,7 +1633,7 @@ class NEWSGROUPS(ClassificationCorpus):
                                     )
 
         super(NEWSGROUPS, self).__init__(
-            data_folder, use_tokenizer=False, in_memory=in_memory
+            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
         )
 
 
@@ -1735,7 +1739,7 @@ class TREC_50(ClassificationCorpus):
                             write_fp.write(f"{new_label} {question}\n")
 
         super(TREC_50, self).__init__(
-            data_folder, use_tokenizer=False, in_memory=in_memory
+            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
         )
 
 
@@ -1793,7 +1797,7 @@ class TREC_6(ClassificationCorpus):
                             write_fp.write(f"{new_label} {question}\n")
 
         super(TREC_6, self).__init__(
-            data_folder, use_tokenizer=False, in_memory=in_memory
+            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
         )
 
 
@@ -2724,7 +2728,7 @@ class WASSA_ANGER(ClassificationCorpus):
         _download_wassa_if_not_there("anger", data_folder, dataset_name)
 
         super(WASSA_ANGER, self).__init__(
-            data_folder, use_tokenizer=False, in_memory=in_memory
+            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
         )
 
 
@@ -2746,7 +2750,7 @@ class WASSA_FEAR(ClassificationCorpus):
         _download_wassa_if_not_there("fear", data_folder, dataset_name)
 
         super(WASSA_FEAR, self).__init__(
-            data_folder, use_tokenizer=False, in_memory=in_memory
+            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
         )
 
 
@@ -2768,7 +2772,7 @@ class WASSA_JOY(ClassificationCorpus):
         _download_wassa_if_not_there("joy", data_folder, dataset_name)
 
         super(WASSA_JOY, self).__init__(
-            data_folder, use_tokenizer=False, in_memory=in_memory
+            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
         )
 
 
@@ -2790,7 +2794,7 @@ class WASSA_SADNESS(ClassificationCorpus):
         _download_wassa_if_not_there("sadness", data_folder, dataset_name)
 
         super(WASSA_SADNESS, self).__init__(
-            data_folder, use_tokenizer=False, in_memory=in_memory
+            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
         )
 
 
