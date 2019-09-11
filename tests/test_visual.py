@@ -79,7 +79,7 @@ def test_html_rendering():
             + TAGGED_ENTITY.format(color="yellow", entity="UK", label="LOC")
             + " prime minister. &amp;"
         ),
-        title="Flair"
+        title="Flair",
     )
 
     assert expected_res == actual
