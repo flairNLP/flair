@@ -3,7 +3,7 @@ sudo: false
 env:
   - BOTO_CONFIG=/dev/null
 python:
-  - "3.6"
+  - "3.7"
 install:
   - python setup.py develop -q
 before_script: cd tests
