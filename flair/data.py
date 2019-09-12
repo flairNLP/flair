@@ -237,7 +237,9 @@ class Token(DataPoint):
         device = flair.device
         if len(self._embeddings.keys()) > 0:
             device = next(iter(self._embeddings.values())).device
-        self._embeddings[name] = vector.to(device)
+        if device != vector.device:
+            vector = vector.to(device)
+        self._embeddings[name] = vector
 
     def to(self, device: str, pin_memory: bool = False):
         for name, vector in self._embeddings.items():
@@ -645,7 +647,9 @@ class Sentence(DataPoint):
         device = flair.device
         if len(self._embeddings.keys()) > 0:
             device = next(iter(self._embeddings.values())).device
-        self._embeddings[name] = vector.to(device, non_blocking=True)
+        if device != vector.device:
+            vector = vector.to(device)
+        self._embeddings[name] = vector
 
     def get_embedding(self) -> torch.tensor:
         embeddings = []
