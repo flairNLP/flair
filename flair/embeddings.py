@@ -1839,12 +1839,11 @@ class FlairEmbeddings(TokenEmbeddings):
                     padded = "{}{}{}{}".format(
                         start_marker, sentence_text, end_marker, pad_by * " "
                     )
-                    append_padded_sentence(padded)
                 else:
                     padded = "{}{}{}{}".format(
                         start_marker, sentence_text[::-1], end_marker, pad_by * " "
                     )
-                    append_padded_sentence(padded)
+                append_padded_sentence(padded)
 
             # get hidden states from language model
             # all_hidden_states_in_lm contains dimensions related to padding or character inside a token
@@ -1878,11 +1877,13 @@ class FlairEmbeddings(TokenEmbeddings):
                 # limit the size of the sentence embedding to the very strict minimum
                 # token embedding will keep a pointer toward sentence embedding, therefore in case of CPU or GPU storing
                 # this embedding will not be garbage collected
-                sentence_embedding = (
-                    all_hidden_states_in_lm[dimensions_to_extract, i, :]
-                    .detach()
-                    .clone()
-                )
+                sentence_embedding = all_hidden_states_in_lm[
+                    dimensions_to_extract, i, :
+                ].clone()
+
+                if not self.fine_tune:
+                    sentence_embedding = sentence_embedding.detach()
+
                 for index, token in enumerate(sentence.tokens):
                     # token embedding is just a pointer to sentence embedding plus a specific view over its data
                     # sentence embedding will live as long as an object will point towards it
