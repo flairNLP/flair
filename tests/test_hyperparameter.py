@@ -1,11 +1,7 @@
 import shutil
 
 import pytest
-import ray
 from hyperopt import hp
-from ray import tune
-from ray.tune.schedulers import AsyncHyperBandScheduler
-from ray.tune.suggest.hyperopt import HyperOptSearch
 from torch.optim import SGD
 
 from flair.embeddings import (
@@ -21,10 +17,14 @@ from flair.hyperparameter import (
     TextClassifierParamSelector,
 )
 import flair.datasets
-from flair.hyperparameter.tune import FlairTune
-from flair.models import TextClassifier
-from flair.trainers import ModelTrainer
 
+# import ray
+# from ray import tune
+# from ray.tune.schedulers import AsyncHyperBandScheduler
+# from ray.tune.suggest.hyperopt import HyperOptSearch
+# from flair.hyperparameter.tune import FlairTune
+# from flair.models import TextClassifier
+# from flair.trainers import ModelTrainer
 
 # @pytest.mark.integration
 # def test_tune_classifier(results_base_path, tasks_base_path):
