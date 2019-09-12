@@ -12,7 +12,7 @@ import logging
 logger = logging.getLogger("flair")
 
 
-class FlairTune(Trainable):
+class TuneFlair(Trainable):
     def _train_iteration(self):
         if not "epoch" in self.__dict__:
             self.epoch = 0

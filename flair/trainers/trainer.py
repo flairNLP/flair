@@ -59,21 +59,19 @@ class ModelTrainer:
         :param model: The model that you want to train. The model should inherit from flair.nn.Model
         :param corpus: The dataset used to train the model, should be of type Corpus
         :param optimizer: The optimizer to use (typically SGD or Adam)
-        :param use_tensorboard: If True, writes out tensorboard information
         :param learning_rate: Initial learning rate
         :param mini_batch_size: Size of mini-batches during training
-        :param eval_mini_batch_size: Size of mini-batches during evaluation
         :param anneal_factor: The factor by which the learning rate is annealed
         :param patience: Patience is the number of epochs with no improvement the Trainer waits
          until annealing the learning rate
         :param min_learning_rate: If the learning rate falls below this threshold, training terminates
+        :param eval_mini_batch_size: Size of mini-batches during evaluation
+        :param shuffle: If True, data is shuffled during training
         :param train_with_dev: If True, training is performed using both train+dev data
         :param anneal_with_restarts: If True, the last best model is restored when annealing the learning rate
-        :param shuffle: If True, data is shuffled during training
-        :param param_selection_mode: If True, testing is performed against dev data. Use this mode when doing
-        parameter selection.
-        :param num_workers: Number of workers in your data loader.
         :param sampler: You can pass a data sampler here for special sampling of data.
+        :param num_workers: Number of workers in your data loader.
+        :param use_amp: If True, uses automatic mixed precision optimization (requires APEX to be installed).
         :param kwargs: Other arguments for the Optimizer
         """
         self.model: flair.nn.Model = model
@@ -155,10 +153,13 @@ class ModelTrainer:
         :param max_epochs: Maximum number of epochs to train. Terminates training if this number is surpassed.
         :param embeddings_storage_mode: One of 'none' (all embeddings are deleted and freshly recomputed),
         'cpu' (embeddings are stored on CPU) or 'gpu' (embeddings are stored on GPU)
-        :param monitor_train: If True, training data is evaluated at end of each epoch
         :param monitor_test: If True, test data is evaluated at end of each epoch
+        :param monitor_train: If True, training data is evaluated at end of each epoch
+        :param use_tensorboard: If True, writes out tensorboard information
         :param checkpoint: If True, a full checkpoint is saved at end of each epoch
         :param save_final_model: If True, final model is saved
+        :param param_selection_mode: If True, testing is performed against dev data. Use this mode when doing
+        parameter selection.
         :return:
         """
 
