@@ -2754,12 +2754,6 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             device=flair.device,
         )
 
-        # for s_id, sentence in enumerate(sentences):
-        #     # fill values with word embeddings
-        #     sentence_tensor[s_id][: len(sentence)] = torch.cat(
-        #         [token.get_embedding().unsqueeze(0) for token in sentence], 0
-        #     )
-
         for s_id, sentence in enumerate(sentences):
             # fill values with word embeddings
             all_embs = list()
