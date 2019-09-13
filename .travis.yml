@@ -5,7 +5,7 @@ env:
 python:
   - "3.6"
 install:
-  - python setup.py develop -q
+  - pip install -q -e .
 before_script: cd tests
 script:
   - pip freeze
