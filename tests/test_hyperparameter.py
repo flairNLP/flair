@@ -18,105 +18,106 @@ from flair.hyperparameter import (
 )
 import flair.datasets
 
-# import ray
-# from ray import tune
-# from ray.tune.schedulers import AsyncHyperBandScheduler
-# from ray.tune.suggest.hyperopt import HyperOptSearch
-# from flair.hyperparameter.tune import FlairTune
-# from flair.models import TextClassifier
-# from flair.trainers import ModelTrainer
+import ray
+from ray import tune
+from ray.tune.schedulers import AsyncHyperBandScheduler
+from ray.tune.suggest.hyperopt import HyperOptSearch
+from flair.hyperparameter.tune import TuneFlair
+from flair.models import TextClassifier
+from flair.trainers import ModelTrainer
 
-# @pytest.mark.integration
-# def test_tune_classifier(results_base_path, tasks_base_path):
-#
-#     # setup experiment class
-#     class TuneTextClassifier(FlairTune):
-#         def _setup(self, config):
-#             # A. set the corpus you are using
-#             self.corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
-#
-#             # B. define your embeddings and hyperparameters
-#             embeddings = DocumentRNNEmbeddings(
-#                 [WordEmbeddings("glove")],
-#                 hidden_size=config["hidden_size"] if "hidden_size" in config else 128,
-#                 dropout=config["dropout"] if "dropout" in config else 0.5,
-#                 locked_dropout=config["locked_dropout"]
-#                 if "locked_dropout" in config
-#                 else 0.0,
-#                 word_dropout=config["word_dropout"]
-#                 if "word_dropout" in config
-#                 else 0.0,
-#             )
-#
-#             # define model
-#             model = TextClassifier(
-#                 document_embeddings=embeddings,
-#                 label_dictionary=self.corpus.make_label_dictionary(),
-#             )
-#
-#             # C. define training parameters
-#             self.trainer = ModelTrainer(
-#                 model,
-#                 self.corpus,
-#                 learning_rate=config["initial_lr"] if "initial_lr" in config else 0.1,
-#                 patience=config["patience"] if "patience" in config else 3,
-#                 mini_batch_size=config["mini_batch_size"]
-#                 if "mini_batch_size" in config
-#                 else 8,
-#             )
-#
-#             self.embeddings_storage_mode = "gpu"
-#
-#     # 1. set the number of parameter combinations to try
-#     number_of_experiments: int = 2
-#
-#     # 2. set the maximum number of epochs per experiment
-#     max_epochs: int = 2
-#
-#     # 3. set how many experiments at the same time and what resources does each get
-#     max_concurrent: int = 2
-#     resources_per_experiment = {"cpu": 1, "gpu": 0.0}
-#
-#     # 4. define your search space
-#     search = HyperOptSearch(
-#         {
-#             "hidden_size": hp.choice("hidden_size", [32, 64, 128, 256]),
-#             "dropout": hp.uniform("dropout", 0.00, 0.8),
-#             "locked_dropout": hp.uniform("locked_dropout", 0.0, 0.8),
-#             "word_dropout": hp.uniform("word_dropout", 0.0, 0.2),
-#             "initial_lr": hp.uniform("initial_lr", 0.0, 0.5),
-#             "patience": hp.choice("patience", [1, 2, 3]),
-#             "mini_batch_size": hp.choice("mini_batch_size", [2, 4, 8, 16, 32]),
-#         },
-#         max_concurrent=max_concurrent,
-#         reward_attr="mean_accuracy",
-#     )
-#
-#     experiment_name = "experiment"
-#
-#     # Define scheduler (optional)
-#     scheduler = ray.tune.schedulers.AsyncHyperBandScheduler(
-#         time_attr="training_iteration",
-#         metric="mean_accuracy",
-#         mode="max",
-#         grace_period=1,
-#         max_t=max_epochs,
-#     )
-#
-#     # run experiment
-#     tune.run(
-#         TuneTextClassifier,
-#         local_dir=results_base_path,
-#         name=experiment_name,
-#         scheduler=scheduler,
-#         stop={"1-lr": 0.9999, "training_iteration": max_epochs},
-#         resources_per_trial=resources_per_experiment,
-#         num_samples=number_of_experiments,
-#         search_alg=search,
-#         return_trials=False,
-#     )
-#
-#     shutil.rmtree(results_base_path)
+
+@pytest.mark.integration
+def test_tune_classifier(results_base_path, tasks_base_path):
+
+    # setup experiment class
+    class TuneTextClassifier(TuneFlair):
+        def _setup(self, config):
+            # A. set the corpus you are using
+            self.corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
+
+            # B. define your embeddings and hyperparameters
+            embeddings = DocumentRNNEmbeddings(
+                [WordEmbeddings("glove")],
+                hidden_size=config["hidden_size"] if "hidden_size" in config else 128,
+                dropout=config["dropout"] if "dropout" in config else 0.5,
+                locked_dropout=config["locked_dropout"]
+                if "locked_dropout" in config
+                else 0.0,
+                word_dropout=config["word_dropout"]
+                if "word_dropout" in config
+                else 0.0,
+            )
+
+            # define model
+            model = TextClassifier(
+                document_embeddings=embeddings,
+                label_dictionary=self.corpus.make_label_dictionary(),
+            )
+
+            # C. define training parameters
+            self.trainer = ModelTrainer(
+                model,
+                self.corpus,
+                learning_rate=config["initial_lr"] if "initial_lr" in config else 0.1,
+                patience=config["patience"] if "patience" in config else 3,
+                mini_batch_size=config["mini_batch_size"]
+                if "mini_batch_size" in config
+                else 8,
+            )
+
+            self.embeddings_storage_mode = "gpu"
+
+    # 1. set the number of parameter combinations to try
+    number_of_experiments: int = 2
+
+    # 2. set the maximum number of epochs per experiment
+    max_epochs: int = 2
+
+    # 3. set how many experiments at the same time and what resources does each get
+    max_concurrent: int = 2
+    resources_per_experiment = {"cpu": 1, "gpu": 0.0}
+
+    # 4. define your search space
+    search = HyperOptSearch(
+        {
+            "hidden_size": hp.choice("hidden_size", [32, 64, 128, 256]),
+            "dropout": hp.uniform("dropout", 0.00, 0.8),
+            "locked_dropout": hp.uniform("locked_dropout", 0.0, 0.8),
+            "word_dropout": hp.uniform("word_dropout", 0.0, 0.2),
+            "initial_lr": hp.uniform("initial_lr", 0.0, 0.5),
+            "patience": hp.choice("patience", [1, 2, 3]),
+            "mini_batch_size": hp.choice("mini_batch_size", [2, 4, 8, 16, 32]),
+        },
+        max_concurrent=max_concurrent,
+        reward_attr="mean_accuracy",
+    )
+
+    experiment_name = "experiment"
+
+    # Define scheduler (optional)
+    scheduler = ray.tune.schedulers.AsyncHyperBandScheduler(
+        time_attr="training_iteration",
+        metric="mean_accuracy",
+        mode="max",
+        grace_period=1,
+        max_t=max_epochs,
+    )
+
+    # run experiment
+    tune.run(
+        TuneTextClassifier,
+        local_dir=results_base_path,
+        name=experiment_name,
+        scheduler=scheduler,
+        stop={"1-lr": 0.9999, "training_iteration": max_epochs},
+        resources_per_trial=resources_per_experiment,
+        num_samples=number_of_experiments,
+        search_alg=search,
+        return_trials=False,
+    )
+
+    shutil.rmtree(results_base_path)
 
 
 @pytest.mark.integration
