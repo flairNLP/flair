@@ -251,7 +251,7 @@ class SequenceTagger(flair.nn.Model):
         self,
         data_loader: DataLoader,
         out_path: Path = None,
-        embeddings_storage_mode: str = "none",
+        embedding_storage_mode: str = "none",
     ) -> (Result, float):
 
         with torch.no_grad():
@@ -320,7 +320,7 @@ class SequenceTagger(flair.nn.Model):
                         else:
                             metric.add_tn(tag)
 
-                store_embeddings(batch, embeddings_storage_mode)
+                store_embeddings(batch, embedding_storage_mode)
 
             eval_loss /= batch_no
 

@@ -366,8 +366,5 @@ def store_embeddings(sentences: List[Sentence], storage_mode: str):
         for sentence in sentences:
             sentence.to("cpu", pin_memory=pin_memory)
 
-    # if storage mode is GPU, set global variable to let FlairEmbeddings know that optimization is possible
-    if storage_mode == "gpu":
-        flair.optimization_mode = "gpu"
-    else:
-        flair.optimization_mode = "default"
+    # record current embedding storage mode to allow optimization (for instance in FlairEmbeddings class)
+    flair.embedding_storage_mode = storage_mode

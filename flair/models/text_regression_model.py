@@ -94,7 +94,7 @@ class TextRegressor(flair.models.TextClassifier):
         self,
         data_loader: DataLoader,
         out_path: Path = None,
-        embeddings_storage_mode: str = "none",
+        embedding_storage_mode: str = "none",
     ) -> (Result, float):
 
         with torch.no_grad():
@@ -137,7 +137,7 @@ class TextRegressor(flair.models.TextClassifier):
                     )
                     lines.append(eval_line)
 
-                store_embeddings(batch, embeddings_storage_mode)
+                store_embeddings(batch, embedding_storage_mode)
 
             eval_loss /= total_count
 

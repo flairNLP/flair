@@ -29,13 +29,13 @@ class Model(torch.nn.Module):
         self,
         data_loader: DataLoader,
         out_path: Path = None,
-        embeddings_storage_mode: str = "none",
+        embedding_storage_mode: str = "none",
     ) -> (Result, float):
         """Evaluates the model. Returns a Result object containing evaluation
         results and a loss value. Implement this to enable evaluation.
         :param data_loader: DataLoader that iterates over dataset to be evaluated
         :param out_path: Optional output path to store predictions
-        :param embeddings_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and
+        :param embedding_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and
         freshly recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU
         :return: Returns a Tuple consisting of a Result object and a loss float value
         """

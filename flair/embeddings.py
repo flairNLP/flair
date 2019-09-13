@@ -1879,7 +1879,7 @@ class FlairEmbeddings(TokenEmbeddings):
                         embedding = embedding.detach()
 
                     # only clone if optimization mode is 'gpu'
-                    if flair.optimization_mode == "gpu":
+                    if flair.embedding_storage_mode == "gpu":
                         embedding = embedding.clone()
 
                     token.set_embedding(self.name, embedding)
