@@ -457,9 +457,18 @@ class SequenceTagger(flair.nn.Model):
         )
 
         for s_id, sentence in enumerate(sentences):
-            # fill values with word embeddings
-            token_embeddings = [token.get_embedding() for token in sentence]
-            sentence_tensor[s_id][: len(sentence)] = torch.stack(token_embeddings)
+            all_embs = list()
+
+            for index_token, token in enumerate(sentence):
+                embs = token.get_each_embedding()
+                if not all_embs:
+                    all_embs = [list() for _ in range(len(embs))]
+                for index_emb, emb in enumerate(embs):
+                    all_embs[index_emb].append(emb)
+
+            concat_word_emb = [torch.stack(embs) for embs in all_embs]
+            concat_sentence_emb = torch.cat(concat_word_emb, dim=1)
+            sentence_tensor[s_id][: len(sentence)] = concat_sentence_emb
 
         # --------------------------------------------------------------------
         # FF PART
