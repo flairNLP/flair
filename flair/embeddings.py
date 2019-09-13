@@ -1878,7 +1878,11 @@ class FlairEmbeddings(TokenEmbeddings):
                     if not self.fine_tune:
                         embedding = embedding.detach()
 
-                    token.set_embedding(self.name, embedding.clone())
+                    # embedding = embedding.clone()
+                    if flair.optimization_mode == "gpu":
+                        embedding = embedding.clone()
+
+                    token.set_embedding(self.name, embedding)
 
             all_hidden_states_in_lm = all_hidden_states_in_lm.detach()
             del all_hidden_states_in_lm

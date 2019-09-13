@@ -365,3 +365,8 @@ def store_embeddings(sentences: List[Sentence], storage_mode: str):
         pin_memory = False if str(flair.device) == "cpu" else True
         for sentence in sentences:
             sentence.to("cpu", pin_memory=pin_memory)
+
+    if storage_mode == "gpu":
+        flair.optimization_mode = "gpu"
+    else:
+        flair.optimization_mode = "default"
