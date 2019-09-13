@@ -171,7 +171,7 @@ class TextClassifier(flair.nn.Model):
         self,
         data_loader: DataLoader,
         out_path: Path = None,
-        embeddings_storage_mode: str = "none",
+        embedding_storage_mode: str = "none",
     ) -> (Result, float):
 
         with torch.no_grad():
@@ -238,7 +238,7 @@ class TextClassifier(flair.nn.Model):
                         ):
                             metric.add_tn(label)
 
-                store_embeddings(batch, embeddings_storage_mode)
+                store_embeddings(batch, embedding_storage_mode)
 
             eval_loss /= batch_count
 

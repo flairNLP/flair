@@ -327,7 +327,7 @@ class ModelTrainer:
                             batch_size=eval_mini_batch_size,
                             num_workers=num_workers,
                         ),
-                        embeddings_storage_mode=embeddings_storage_mode,
+                        embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{train_eval_result.log_line}"
 
@@ -341,7 +341,7 @@ class ModelTrainer:
                             batch_size=eval_mini_batch_size,
                             num_workers=num_workers,
                         ),
-                        embeddings_storage_mode=embeddings_storage_mode,
+                        embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
                     log.info(
@@ -371,7 +371,7 @@ class ModelTrainer:
                             num_workers=num_workers,
                         ),
                         base_path / "test.tsv",
-                        embeddings_storage_mode=embeddings_storage_mode,
+                        embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{test_loss}\t{test_eval_result.log_line}"
                     log.info(
@@ -511,7 +511,7 @@ class ModelTrainer:
                 num_workers=num_workers,
             ),
             out_path=base_path / "test.tsv",
-            embeddings_storage_mode="none",
+            embedding_storage_mode="none",
         )
 
         test_results: Result = test_results
@@ -530,7 +530,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                     ),
                     out_path=base_path / f"{subcorpus.name}-test.tsv",
-                    embeddings_storage_mode="none",
+                    embedding_storage_mode="none",
                 )
 
         # get and return the final test score of best model

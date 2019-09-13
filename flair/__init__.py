@@ -11,6 +11,9 @@ if torch.cuda.is_available():
 else:
     device = torch.device("cpu")
 
+# global variable: embedding_storage_mode
+embedding_storage_mode = "default"
+
 from . import data
 from . import models
 from . import visual
