@@ -1878,7 +1878,7 @@ class FlairEmbeddings(TokenEmbeddings):
                     if not self.fine_tune:
                         embedding = embedding.detach()
 
-                    # embedding = embedding.clone()
+                    # only clone if optimization mode is 'gpu'
                     if flair.optimization_mode == "gpu":
                         embedding = embedding.clone()
 
