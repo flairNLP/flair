@@ -45,9 +45,13 @@ class TuneFlair(Trainable):
         with open(Path(self._logdir) / "eval.txt", "a", encoding="utf-8") as outfile:
             if self.epoch == 1:
                 outfile.write(results.log_header + "\n")
-            outfile.write(results.log_line + "\n")
+            outfile.write(f"{self.epoch}\t{learning_rate}\t{results.log_line}\n")
 
-        result_dict = {"mean_accuracy": results.main_score, "1-lr": 1 - learning_rate}
+        result_dict = {
+            "mean_accuracy": results.main_score,
+            "1-lr": 1 - learning_rate,
+            "patience": self.trainer.patience,
+        }
         return result_dict
 
     def _train(self):
