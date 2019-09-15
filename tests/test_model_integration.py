@@ -3,7 +3,6 @@ import shutil
 import pytest
 from torch.optim import SGD
 from torch.optim.adam import Adam
-from torch.optim.optimizer import Optimizer
 
 import flair.datasets
 from flair.data import Dictionary, Sentence, MultiCorpus
@@ -164,10 +163,8 @@ def test_train_optimizer(results_base_path, tasks_base_path):
         use_crf=False,
     )
 
-    optimizer: Optimizer = Adam
-
     # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=optimizer)
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=Adam)
 
     trainer.train(
         results_base_path,
@@ -209,10 +206,8 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
         use_crf=False,
     )
 
-    optimizer: Optimizer = AdamW
-
     # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=optimizer)
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=AdamW)
 
     trainer.train(
         results_base_path,
@@ -255,10 +250,8 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
         use_crf=False,
     )
 
-    optimizer: Optimizer = SGD
-
     # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=optimizer)
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=SGD)
 
     trainer.find_learning_rate(results_base_path, iterations=5)
 
@@ -297,7 +290,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
         [word_embedding], 128, 1, False, 64, False, False
     )
 
-    model = TextClassifier(document_embeddings, label_dict, False)
+    model: TextClassifier = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False)
@@ -333,7 +326,7 @@ def test_train_classifier_with_sampler(results_base_path, tasks_base_path):
         [word_embedding], 32, 1, False, 64, False, False
     )
 
-    model = TextClassifier(document_embeddings, label_dict, False)
+    model: TextClassifier = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(
@@ -367,7 +360,7 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
         [word_embedding], 128, 1, False, 64, False, False
     )
 
-    model = TextClassifier(document_embeddings, label_dict, False)
+    model: TextClassifier = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False)
@@ -406,7 +399,9 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
         bidirectional=False,
     )
 
-    model = TextClassifier(document_embeddings, label_dict, multi_label=True)
+    model: TextClassifier = TextClassifier(
+        document_embeddings, label_dict, multi_label=True
+    )
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(
@@ -462,7 +457,7 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
         [embedding], 128, 1, False, 64, False, False
     )
 
-    model = TextClassifier(document_embeddings, label_dict, False)
+    model: TextClassifier = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False)
@@ -515,7 +510,9 @@ def test_train_language_model(results_base_path, resources_path):
     )
 
     # use the character LM as embeddings to embed the example sentence 'I love Berlin'
-    char_lm_embeddings = FlairEmbeddings(str(results_base_path / "best-lm.pt"))
+    char_lm_embeddings: TokenEmbeddings = FlairEmbeddings(
+        str(results_base_path / "best-lm.pt")
+    )
     sentence = Sentence("I love Berlin")
     char_lm_embeddings.embed(sentence)
 
@@ -588,8 +585,7 @@ def test_train_resume_text_classification_training(results_base_path, tasks_base
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
 
-    checkpoint = TextClassifier.load_checkpoint(results_base_path / "checkpoint.pt")
-    trainer = ModelTrainer.load_from_checkpoint(checkpoint, corpus)
+    trainer = ModelTrainer.load_checkpoint(results_base_path / "checkpoint.pt", corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
 
     # clean up results directory
@@ -619,8 +615,7 @@ def test_train_resume_sequence_tagging_training(results_base_path, tasks_base_pa
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
 
-    checkpoint = SequenceTagger.load_checkpoint(results_base_path / "checkpoint.pt")
-    trainer = ModelTrainer.load_from_checkpoint(checkpoint, corpus)
+    trainer = ModelTrainer.load_checkpoint(results_base_path / "checkpoint.pt", corpus)
 
     trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
 
