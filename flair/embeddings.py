@@ -2418,17 +2418,6 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         start_marker = "\n"
         end_marker = " "
-        # extra_offset = 1
-        # for sentence_text in text_sentences:
-        #     pad_by = longest_character_sequence_in_batch - len(sentence_text)
-        #     if self.is_forward_lm:
-        #         padded = "\n{}{}{}".format(sentence_text, end_marker, pad_by * " ")
-        #         append_padded_sentence(padded)
-        #     else:
-        #         padded = "\n{}{}{}".format(
-        #             sentence_text[::-1], end_marker, pad_by * " "
-        #         )
-        #         append_padded_sentence(padded)
 
         # get hidden states from language model
         all_hidden_states_in_lm = self.lm.get_representation(
