@@ -235,7 +235,7 @@ class Token(DataPoint):
 
     def set_embedding(self, name: str, vector: torch.tensor):
         device = flair.device
-        if len(self._embeddings.keys()) > 0:
+        if (flair.embedding_storage_mode == "cpu") and len(self._embeddings.keys()) > 0:
             device = next(iter(self._embeddings.values())).device
         if device != vector.device:
             vector = vector.to(device)
@@ -645,7 +645,7 @@ class Sentence(DataPoint):
 
     def set_embedding(self, name: str, vector: torch.tensor):
         device = flair.device
-        if len(self._embeddings.keys()) > 0:
+        if (flair.embedding_storage_mode == "cpu") and len(self._embeddings.keys()) > 0:
             device = next(iter(self._embeddings.values())).device
         if device != vector.device:
             vector = vector.to(device)
@@ -879,9 +879,11 @@ class Image(DataPoint):
 
     def set_embedding(self, name: str, vector: torch.tensor):
         device = flair.device
-        if len(self._embeddings.keys()) > 0:
+        if (flair.embedding_storage_mode == "cpu") and len(self._embeddings.keys()) > 0:
             device = next(iter(self._embeddings.values())).device
-        self._embeddings[name] = vector.to(device, non_blocking=True)
+        if device != vector.device:
+            vector = vector.to(device)
+        self._embeddings[name] = vector
 
     def to(self, device: str, pin_memory: bool = False):
         for name, vector in self._embeddings.items():
