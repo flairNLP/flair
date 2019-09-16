@@ -110,29 +110,26 @@ class LanguageModel(nn.Module):
         len_longest_str: int = len(max(strings, key=len))
 
         # pad strings with whitespaces to longest sentence
-        sentences_padded: List[str] = []
+        padded_strings: List[str] = []
 
-        start_marker = "\n"
-        end_marker = " "
         for string in strings:
             pad_by = len_longest_str - len(string)
             if not self.is_forward_lm:
                 string = string[::-1]
 
-            padded = "{}{}{}{}".format(start_marker, string, end_marker, pad_by * " ")
-            sentences_padded.append(padded)
+            padded = f"{start_marker}{string}{end_marker}{pad_by * ' '}"
+            padded_strings.append(padded)
 
         # cut up the input into chunks of max charlength = chunk_size
-        # longest = len(strings[0])
         chunks = []
         splice_begin = 0
         longest_padded_str: int = len_longest_str + len(start_marker) + len(end_marker)
         for splice_end in range(chars_per_chunk, longest_padded_str, chars_per_chunk):
-            chunks.append([text[splice_begin:splice_end] for text in sentences_padded])
+            chunks.append([text[splice_begin:splice_end] for text in padded_strings])
             splice_begin = splice_end
 
         chunks.append(
-            [text[splice_begin:longest_padded_str] for text in sentences_padded]
+            [text[splice_begin:longest_padded_str] for text in padded_strings]
         )
         hidden = self.init_hidden(len(chunks[0]))
 
