@@ -440,8 +440,6 @@ class ModelTrainer:
                     and not param_selection_mode
                     and current_score == scheduler.best
                 ):
-                    print(bad_epochs)
-                    print("saving best model")
                     self.model.save(base_path / "best-model.pt")
 
             # if we do not use dev data for model selection, save final model
