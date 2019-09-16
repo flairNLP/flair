@@ -78,6 +78,7 @@ class SequenceTagger(flair.nn.Model):
         word_dropout: float = 0.05,
         locked_dropout: float = 0.5,
         train_initial_hidden_state: bool = False,
+        rnn_type: str = "LSTM",
         pickle_module: str = "pickle",
     ):
         """
@@ -140,7 +141,7 @@ class SequenceTagger(flair.nn.Model):
 
         self.train_initial_hidden_state = train_initial_hidden_state
         self.bidirectional = True
-        self.rnn_type = "LSTM"
+        self.rnn_type = rnn_type
 
         # bidirectional LSTM on top of embedding layer
         if self.use_rnn:
@@ -211,11 +212,13 @@ class SequenceTagger(flair.nn.Model):
             "rnn_layers": self.rnn_layers,
             "use_word_dropout": self.use_word_dropout,
             "use_locked_dropout": self.use_locked_dropout,
+            "rnn_type": self.rnn_type,
         }
         return model_state
 
     def _init_model_with_state_dict(state):
 
+        rnn_type = "LSTM" if not "rnn_type" in state.keys() else state["rnn_type"]
         use_dropout = 0.0 if not "use_dropout" in state.keys() else state["use_dropout"]
         use_word_dropout = (
             0.0 if not "use_word_dropout" in state.keys() else state["use_word_dropout"]
@@ -243,6 +246,7 @@ class SequenceTagger(flair.nn.Model):
             word_dropout=use_word_dropout,
             locked_dropout=use_locked_dropout,
             train_initial_hidden_state=train_initial_hidden_state,
+            rnn_type=rnn_type,
         )
         model.load_state_dict(state["state_dict"])
         return model
