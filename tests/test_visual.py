@@ -13,7 +13,7 @@ def test_highlighter(resources_path):
 
     embeddings = FlairEmbeddings("news-forward")
 
-    features = embeddings.lm.get_representation(sentences[0]).squeeze()
+    features = embeddings.lm.get_representation(sentences[0], "", "").squeeze()
 
     Highlighter().highlight_selection(
         features,
