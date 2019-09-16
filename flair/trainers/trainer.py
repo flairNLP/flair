@@ -227,7 +227,9 @@ class ModelTrainer:
                     and (base_path / "best-model.pt").exists()
                 ):
                     log.info("resetting to best model")
-                    self.model.load(base_path / "best-model.pt")
+                    self.model.load_state_dict(
+                        self.model.load(base_path / "best-model.pt").state_dict()
+                    )
 
                 previous_learning_rate = learning_rate
 
@@ -434,10 +436,12 @@ class ModelTrainer:
 
                 # if we use dev data, remember best model based on dev evaluation score
                 if (
-                    not train_with_dev
+                    (not train_with_dev or anneal_with_restarts)
                     and not param_selection_mode
                     and current_score == scheduler.best
                 ):
+                    print(bad_epochs)
+                    print("saving best model")
                     self.model.save(base_path / "best-model.pt")
 
             # if we do not use dev data for model selection, save final model
