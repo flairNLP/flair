@@ -8,6 +8,7 @@ from abc import abstractmethod
 from typing import Union, List
 
 import flair
+from flair import file_utils
 from flair.data import DataPoint
 from flair.datasets import DataLoader
 from flair.training_utils import Result
@@ -79,7 +80,7 @@ class Model(torch.nn.Module):
             warnings.filterwarnings("ignore")
             # load_big_file is a workaround by https://github.com/highway11git to load models on some Mac/Windows setups
             # see https://github.com/zalandoresearch/flair/issues/351
-            f = flair.file_utils.load_big_file(str(model_file))
+            f = file_utils.load_big_file(str(model_file))
             state = torch.load(f, map_location=flair.device)
 
         model = cls._init_model_with_state_dict(state)
