@@ -76,7 +76,7 @@ class Visualizer(object):
         for sentence in tqdm.tqdm(sentences):
             sentence = " ".join([x.text for x in sentence])
 
-            hidden = embeddings.lm.get_representation([sentence])
+            hidden = embeddings.lm.get_representation([sentence], "", "")
             X.append(hidden.squeeze().detach().numpy())
 
         X = numpy.concatenate(X, 0)

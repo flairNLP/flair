@@ -99,17 +99,38 @@ class LanguageModel(nn.Module):
             weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
         )
 
-    def get_representation(self, strings: List[str], chars_per_chunk: int = 512):
+    def get_representation(
+        self,
+        strings: List[str],
+        start_marker: str,
+        end_marker: str,
+        chars_per_chunk: int = 512,
+    ):
+
+        len_longest_str: int = len(max(strings, key=len))
+
+        # pad strings with whitespaces to longest sentence
+        padded_strings: List[str] = []
+
+        for string in strings:
+            pad_by = len_longest_str - len(string)
+            if not self.is_forward_lm:
+                string = string[::-1]
+
+            padded = f"{start_marker}{string}{end_marker}{pad_by * ' '}"
+            padded_strings.append(padded)
 
         # cut up the input into chunks of max charlength = chunk_size
-        longest = len(strings[0])
         chunks = []
         splice_begin = 0
-        for splice_end in range(chars_per_chunk, longest, chars_per_chunk):
-            chunks.append([text[splice_begin:splice_end] for text in strings])
+        longest_padded_str: int = len_longest_str + len(start_marker) + len(end_marker)
+        for splice_end in range(chars_per_chunk, longest_padded_str, chars_per_chunk):
+            chunks.append([text[splice_begin:splice_end] for text in padded_strings])
             splice_begin = splice_end
 
-        chunks.append([text[splice_begin:longest] for text in strings])
+        chunks.append(
+            [text[splice_begin:longest_padded_str] for text in padded_strings]
+        )
         hidden = self.init_hidden(len(chunks[0]))
 
         output_parts = []

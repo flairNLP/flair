@@ -1823,40 +1823,20 @@ class FlairEmbeddings(TokenEmbeddings):
             # if this is not possible, use LM to generate embedding. First, get text sentences
             text_sentences = [sentence.to_tokenized_string() for sentence in sentences]
 
-            longest_character_sequence_in_batch: int = len(max(text_sentences, key=len))
-
-            # pad strings with whitespaces to longest sentence
-            sentences_padded: List[str] = []
-            append_padded_sentence = sentences_padded.append
-
             start_marker = "\n"
-
             end_marker = " "
-            extra_offset = len(start_marker)
-            for sentence_text in text_sentences:
-                pad_by = longest_character_sequence_in_batch - len(sentence_text)
-                if self.is_forward_lm:
-                    padded = "{}{}{}{}".format(
-                        start_marker, sentence_text, end_marker, pad_by * " "
-                    )
-                    append_padded_sentence(padded)
-                else:
-                    padded = "{}{}{}{}".format(
-                        start_marker, sentence_text[::-1], end_marker, pad_by * " "
-                    )
-                    append_padded_sentence(padded)
 
             # get hidden states from language model
             all_hidden_states_in_lm = self.lm.get_representation(
-                sentences_padded, self.chars_per_chunk
+                text_sentences, start_marker, end_marker, self.chars_per_chunk
             )
 
             # take first or last hidden states from language model as word representation
             for i, sentence in enumerate(sentences):
                 sentence_text = sentence.to_tokenized_string()
 
-                offset_forward: int = extra_offset
-                offset_backward: int = len(sentence_text) + extra_offset
+                offset_forward: int = len(start_marker)
+                offset_backward: int = len(sentence_text) + len(start_marker)
 
                 for token in sentence.tokens:
 
@@ -2436,34 +2416,20 @@ class CharLMEmbeddings(TokenEmbeddings):
         # if this is not possible, use LM to generate embedding. First, get text sentences
         text_sentences = [sentence.to_tokenized_string() for sentence in sentences]
 
-        longest_character_sequence_in_batch: int = len(max(text_sentences, key=len))
-
-        # pad strings with whitespaces to longest sentence
-        sentences_padded: List[str] = []
-        append_padded_sentence = sentences_padded.append
-
+        start_marker = "\n"
         end_marker = " "
-        extra_offset = 1
-        for sentence_text in text_sentences:
-            pad_by = longest_character_sequence_in_batch - len(sentence_text)
-            if self.is_forward_lm:
-                padded = "\n{}{}{}".format(sentence_text, end_marker, pad_by * " ")
-                append_padded_sentence(padded)
-            else:
-                padded = "\n{}{}{}".format(
-                    sentence_text[::-1], end_marker, pad_by * " "
-                )
-                append_padded_sentence(padded)
 
         # get hidden states from language model
-        all_hidden_states_in_lm = self.lm.get_representation(sentences_padded)
+        all_hidden_states_in_lm = self.lm.get_representation(
+            text_sentences, start_marker, end_marker, self.chars_per_chunk
+        )
 
         # take first or last hidden states from language model as word representation
         for i, sentence in enumerate(sentences):
             sentence_text = sentence.to_tokenized_string()
 
-            offset_forward: int = extra_offset
-            offset_backward: int = len(sentence_text) + extra_offset
+            offset_forward: int = len(start_marker)
+            offset_backward: int = len(sentence_text) + len(start_marker)
 
             for token in sentence.tokens:
 
