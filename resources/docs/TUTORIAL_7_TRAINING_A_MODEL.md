@@ -77,7 +77,7 @@ plotter.plot_weights('resources/taggers/example-ner/weights.txt')
 Alternatively, try using a stacked embedding with FlairEmbeddings and GloVe, over the full data, for 150 epochs.
 This will give you the state-of-the-art accuracy we report in the paper. To see the full code to reproduce experiments, check [here](/resources/docs/EXPERIMENTS.md).
 
-Once the model is trained you can use it to predict the class of new sentences. Just call the `predict` method of the model.
+Once the model is trained you can use it to predict tags for new sentences. Just call the `predict` method of the model.
 
 ```python
 # load the model you trained
@@ -157,7 +157,7 @@ classifier = TextClassifier.load('resources/taggers/ag_news/final-model.pt')
 # create example sentence
 sentence = Sentence('France is the current world cup winner.')
 
-# predict tags and print
+# predict class and print
 classifier.predict(sentence)
 
 print(sentence.labels)
