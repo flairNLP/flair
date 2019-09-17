@@ -40,8 +40,6 @@ class ModelTrainer:
         corpus: Corpus,
         optimizer: torch.optim.Optimizer = SGD,
         epoch: int = 0,
-        optimizer_state: dict = None,
-        scheduler_state: dict = None,
         use_tensorboard: bool = False,
     ):
         """
@@ -50,16 +48,12 @@ class ModelTrainer:
         :param corpus: The dataset used to train the model, should be of type Corpus
         :param optimizer: The optimizer to use (typically SGD or Adam)
         :param epoch: The starting epoch (normally 0 but could be higher if you continue training model)
-        :param optimizer_state: Optimizer state (necessary if continue training from checkpoint)
-        :param scheduler_state: Scheduler state (necessary if continue training from checkpoint)
         :param use_tensorboard: If True, writes out tensorboard information
         """
         self.model: flair.nn.Model = model
         self.corpus: Corpus = corpus
         self.optimizer: torch.optim.Optimizer = optimizer
         self.epoch: int = epoch
-        self.scheduler_state: dict = scheduler_state
-        self.optimizer_state: dict = optimizer_state
         self.use_tensorboard: bool = use_tensorboard
 
     def train(
@@ -184,8 +178,6 @@ class ModelTrainer:
         optimizer: torch.optim.Optimizer = self.optimizer(
             self.model.parameters(), lr=learning_rate, **kwargs
         )
-        if self.optimizer_state is not None:
-            optimizer.load_state_dict(self.optimizer_state)
 
         if use_amp:
             self.model, optimizer = amp.initialize(
@@ -202,9 +194,6 @@ class ModelTrainer:
             mode=anneal_mode,
             verbose=True,
         )
-
-        if self.scheduler_state is not None:
-            scheduler.load_state_dict(self.scheduler_state)
 
         train_data = self.corpus.train
 
@@ -224,7 +213,7 @@ class ModelTrainer:
         try:
             previous_learning_rate = learning_rate
 
-            for epoch in range(0 + self.epoch, max_epochs + self.epoch):
+            for self.epoch in range(self.epoch + 1, max_epochs + 1):
                 log_line(log)
 
                 # get new learning rate
@@ -238,7 +227,9 @@ class ModelTrainer:
                     and (base_path / "best-model.pt").exists()
                 ):
                     log.info("resetting to best model")
-                    self.model.load(base_path / "best-model.pt")
+                    self.model.load_state_dict(
+                        self.model.load(base_path / "best-model.pt").state_dict()
+                    )
 
                 previous_learning_rate = learning_rate
 
@@ -292,11 +283,11 @@ class ModelTrainer:
                     batch_time += time.time() - start_time
                     if batch_no % modulo == 0:
                         log.info(
-                            f"epoch {epoch + 1} - iter {batch_no}/{total_number_of_batches} - loss "
+                            f"epoch {self.epoch} - iter {batch_no}/{total_number_of_batches} - loss "
                             f"{train_loss / seen_batches:.8f} - samples/sec: {mini_batch_size * modulo / batch_time:.2f}"
                         )
                         batch_time = 0
-                        iteration = epoch * total_number_of_batches + batch_no
+                        iteration = self.epoch * total_number_of_batches + batch_no
                         if not param_selection_mode:
                             weight_extractor.extract_weights(
                                 self.model.state_dict(), iteration
@@ -308,11 +299,11 @@ class ModelTrainer:
 
                 log_line(log)
                 log.info(
-                    f"EPOCH {epoch + 1} done: loss {train_loss:.4f} - lr {learning_rate:.4f}"
+                    f"EPOCH {self.epoch} done: loss {train_loss:.4f} - lr {learning_rate:.4f}"
                 )
 
                 if self.use_tensorboard:
-                    writer.add_scalar("train_loss", train_loss, epoch + 1)
+                    writer.add_scalar("train_loss", train_loss, self.epoch)
 
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 current_score = train_loss
@@ -358,9 +349,9 @@ class ModelTrainer:
                     store_embeddings(self.corpus.dev, embeddings_storage_mode)
 
                     if self.use_tensorboard:
-                        writer.add_scalar("dev_loss", dev_loss, epoch + 1)
+                        writer.add_scalar("dev_loss", dev_loss, self.epoch)
                         writer.add_scalar(
-                            "dev_score", dev_eval_result.main_score, epoch + 1
+                            "dev_score", dev_eval_result.main_score, self.epoch
                         )
 
                 if log_test:
@@ -382,9 +373,9 @@ class ModelTrainer:
                     store_embeddings(self.corpus.test, embeddings_storage_mode)
 
                     if self.use_tensorboard:
-                        writer.add_scalar("test_loss", test_loss, epoch + 1)
+                        writer.add_scalar("test_loss", test_loss, self.epoch)
                         writer.add_scalar(
-                            "test_score", test_eval_result.main_score, epoch + 1
+                            "test_score", test_eval_result.main_score, self.epoch
                         )
 
                 # determine learning rate annealing through scheduler
@@ -409,7 +400,7 @@ class ModelTrainer:
                 with open(loss_txt, "a") as f:
 
                     # make headers on first epoch
-                    if epoch == 0:
+                    if self.epoch == 1:
                         f.write(
                             f"EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS"
                         )
@@ -435,23 +426,17 @@ class ModelTrainer:
                             )
 
                     f.write(
-                        f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
+                        f"\n{self.epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
                     )
                     f.write(result_line)
 
-                # if checkpoint is enable, save model at each epoch
+                # if checkpoint is enabled, save model at each epoch
                 if checkpoint and not param_selection_mode:
-                    self.model.save_checkpoint(
-                        base_path / "checkpoint.pt",
-                        optimizer.state_dict(),
-                        scheduler.state_dict(),
-                        epoch + 1,
-                        train_loss,
-                    )
+                    self.save_checkpoint(base_path / "checkpoint.pt")
 
                 # if we use dev data, remember best model based on dev evaluation score
                 if (
-                    not train_with_dev
+                    (not train_with_dev or anneal_with_restarts)
                     and not param_selection_mode
                     and current_score == scheduler.best
                 ):
@@ -491,6 +476,18 @@ class ModelTrainer:
             "train_loss_history": train_loss_history,
             "dev_loss_history": dev_loss_history,
         }
+
+    def save_checkpoint(self, model_file: Union[str, Path]):
+        corpus = self.corpus
+        self.corpus = None
+        torch.save(self, str(model_file), pickle_protocol=4)
+        self.corpus = corpus
+
+    @classmethod
+    def load_checkpoint(cls, checkpoint: Union[Path, str], corpus: Corpus):
+        model: ModelTrainer = torch.load(checkpoint, map_location=flair.device)
+        model.corpus = corpus
+        return model
 
     def final_test(
         self, base_path: Path, eval_mini_batch_size: int, num_workers: int = 8
@@ -537,19 +534,6 @@ class ModelTrainer:
         final_score = test_results.main_score
 
         return final_score
-
-    @classmethod
-    def load_from_checkpoint(
-        cls, checkpoint, corpus: Corpus, optimizer: torch.optim.Optimizer = SGD
-    ):
-        return ModelTrainer(
-            checkpoint["model"],
-            corpus,
-            optimizer,
-            epoch=checkpoint["epoch"],
-            optimizer_state=checkpoint["optimizer_state_dict"],
-            scheduler_state=checkpoint["scheduler_state_dict"],
-        )
 
     def find_learning_rate(
         self,
