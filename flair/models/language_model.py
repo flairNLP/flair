@@ -134,23 +134,24 @@ class LanguageModel(nn.Module):
         hidden = self.init_hidden(len(chunks[0]))
 
         output_parts = []
-
+        batches = []
         # push each chunk through the RNN language model
         for chunk in chunks:
 
-            sequences_as_char_indices: List[List[int]] = []
+            sequences_as_char_indices: List[torch.Tensor] = []
             for string in chunk:
                 char_indices = [
                     self.dictionary.get_idx_for_item(char) for char in string
                 ]
-                sequences_as_char_indices.append(char_indices)
+                t = torch.tensor(char_indices, dtype=torch.long).to(
+                    device=flair.device, non_blocking=True
+                )
+                sequences_as_char_indices.append(t)
+            batches.append(sequences_as_char_indices)
 
-            batch = torch.tensor(
-                sequences_as_char_indices, dtype=torch.long, device=flair.device
-            ).transpose(0, 1)
-
-            prediction, rnn_output, hidden = self.forward(batch, hidden)
-
+        for batch in batches:
+            batch = torch.stack(batch).transpose(0, 1)
+            _, rnn_output, hidden = self.forward(batch, hidden)
             output_parts.append(rnn_output)
 
         # concatenate all chunks to make final output
