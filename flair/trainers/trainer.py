@@ -73,6 +73,7 @@ class ModelTrainer:
         checkpoint: bool = False,
         save_final_model: bool = True,
         anneal_with_restarts: bool = False,
+        double_back_size_when_annealing: bool = False,
         shuffle: bool = True,
         param_selection_mode: bool = False,
         num_workers: int = 6,
@@ -154,6 +155,9 @@ class ModelTrainer:
         log.info(f' - max_epochs: "{max_epochs}"')
         log.info(f' - shuffle: "{shuffle}"')
         log.info(f' - train_with_dev: "{train_with_dev}"')
+        log.info(
+            f' - double_back_size_when_annealing: "{double_back_size_when_annealing}"'
+        )
         log_line(log)
         log.info(f'Model training base path: "{base_path}"')
         log_line(log)
@@ -209,6 +213,8 @@ class ModelTrainer:
         dev_loss_history = []
         train_loss_history = []
 
+        micro_batch_size = eval_mini_batch_size
+
         # At any point you can hit Ctrl + C to break out of training early.
         try:
             previous_learning_rate = learning_rate
@@ -219,6 +225,12 @@ class ModelTrainer:
                 # get new learning rate
                 for group in optimizer.param_groups:
                     learning_rate = group["lr"]
+
+                if (
+                    learning_rate != previous_learning_rate
+                    and double_back_size_when_annealing
+                ):
+                    mini_batch_size *= 2
 
                 # reload last best model if annealing with restarts is enabled
                 if (
@@ -261,16 +273,33 @@ class ModelTrainer:
                 batch_time = 0
                 for batch_no, batch in enumerate(batch_loader):
                     start_time = time.time()
-                    loss = self.model.forward_loss(batch)
 
+                    # zero the gradients on the model and optimizer
+                    self.model.zero_grad()
                     optimizer.zero_grad()
-                    # Backward
-                    if use_amp:
-                        with amp.scale_loss(loss, optimizer) as scaled_loss:
-                            scaled_loss.backward()
-                    else:
-                        loss.backward()
 
+                    # if necessary, make batch_steps
+                    batch_steps = [batch]
+                    if len(batch) > micro_batch_size:
+                        batch_steps = [
+                            batch[x : x + micro_batch_size]
+                            for x in range(0, len(batch), micro_batch_size)
+                        ]
+
+                    # forward and backward for batch
+                    for batch_step in batch_steps:
+
+                        # forward pass
+                        loss = self.model.forward_loss(batch_step)
+
+                        # Backward
+                        if use_amp:
+                            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                                scaled_loss.backward()
+                        else:
+                            loss.backward()
+
+                    # do the optimizer step
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
                     optimizer.step()
 
