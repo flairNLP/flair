@@ -452,30 +452,32 @@ class SequenceTagger(flair.nn.Model):
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
         longest_token_sequence_in_batch: int = max(lengths)
 
-        # initialize zero-padded word embeddings tensor
-        sentence_tensor = torch.zeros(
+        pre_allocated_zero_tensor = t = torch.zeros(
+            self.embeddings.embedding_length * longest_token_sequence_in_batch,
+            dtype=torch.float,
+            device=flair.device,
+        )
+        all_embs = list()
+        for s_id, sentence in enumerate(sentences):
+            for token in sentence:
+                embs = token.get_each_embedding()
+                for index_emb, emb in enumerate(embs):
+                    all_embs.append(emb)
+            nb_padding_token = longest_token_sequence_in_batch - len(sentence)
+
+            if nb_padding_token > 0:
+                t = pre_allocated_zero_tensor[
+                    : self.embeddings.embedding_length * nb_padding_token
+                ]
+                all_embs.append(t)
+
+        sentence_tensor = torch.cat(all_embs).view(
             [
                 len(sentences),
                 longest_token_sequence_in_batch,
                 self.embeddings.embedding_length,
-            ],
-            dtype=torch.float,
-            device=flair.device,
+            ]
         )
-
-        for s_id, sentence in enumerate(sentences):
-            all_embs = list()
-
-            for index_token, token in enumerate(sentence):
-                embs = token.get_each_embedding()
-                if not all_embs:
-                    all_embs = [list() for _ in range(len(embs))]
-                for index_emb, emb in enumerate(embs):
-                    all_embs[index_emb].append(emb)
-
-            concat_word_emb = [torch.stack(embs) for embs in all_embs]
-            concat_sentence_emb = torch.cat(concat_word_emb, dim=1)
-            sentence_tensor[s_id][: len(sentence)] = concat_sentence_emb
 
         # --------------------------------------------------------------------
         # FF PART
