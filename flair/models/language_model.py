@@ -144,7 +144,9 @@ class LanguageModel(nn.Module):
                 ]
 
                 sequences_as_char_indices.append(char_indices)
-            t = torch.tensor(sequences_as_char_indices, dtype=torch.long).to(device=flair.device, non_blocking=True)
+            t = torch.tensor(sequences_as_char_indices, dtype=torch.long).to(
+                device=flair.device, non_blocking=True
+            )
             batches.append(t)
 
         output_parts = []
