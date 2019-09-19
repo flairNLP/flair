@@ -73,7 +73,7 @@ class ModelTrainer:
         checkpoint: bool = False,
         save_final_model: bool = True,
         anneal_with_restarts: bool = False,
-        double_back_size_when_annealing: bool = False,
+        batch_growth_annealing: bool = False,
         shuffle: bool = True,
         param_selection_mode: bool = False,
         num_workers: int = 6,
@@ -155,9 +155,7 @@ class ModelTrainer:
         log.info(f' - max_epochs: "{max_epochs}"')
         log.info(f' - shuffle: "{shuffle}"')
         log.info(f' - train_with_dev: "{train_with_dev}"')
-        log.info(
-            f' - double_back_size_when_annealing: "{double_back_size_when_annealing}"'
-        )
+        log.info(f' - batch_growth_annealing: "{batch_growth_annealing}"')
         log_line(log)
         log.info(f'Model training base path: "{base_path}"')
         log_line(log)
@@ -226,10 +224,7 @@ class ModelTrainer:
                 for group in optimizer.param_groups:
                     learning_rate = group["lr"]
 
-                if (
-                    learning_rate != previous_learning_rate
-                    and double_back_size_when_annealing
-                ):
+                if learning_rate != previous_learning_rate and batch_growth_annealing:
                     mini_batch_size *= 2
 
                 # reload last best model if annealing with restarts is enabled
