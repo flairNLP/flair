@@ -1799,6 +1799,9 @@ class FlairEmbeddings(TokenEmbeddings):
                 text_sentences, start_marker, end_marker, self.chars_per_chunk
             )
 
+            if not self.fine_tune:
+                all_hidden_states_in_lm = all_hidden_states_in_lm.detach()
+
             # take first or last hidden states from language model as word representation
             for i, sentence in enumerate(sentences):
                 sentence_text = sentence.to_tokenized_string()
@@ -1823,16 +1826,12 @@ class FlairEmbeddings(TokenEmbeddings):
 
                     offset_backward -= len(token.text)
 
-                    if not self.fine_tune:
-                        embedding = embedding.detach()
-
                     # only clone if optimization mode is 'gpu'
                     if flair.embedding_storage_mode == "gpu":
                         embedding = embedding.clone()
 
                     token.set_embedding(self.name, embedding)
 
-            all_hidden_states_in_lm = all_hidden_states_in_lm.detach()
             del all_hidden_states_in_lm
 
         return sentences
