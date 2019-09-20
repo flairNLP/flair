@@ -412,18 +412,13 @@ class SequenceTagger(flair.nn.Model):
             else:
                 dataset = StringDataset(filtered_sentences)
             dataloader = DataLoader(dataset=dataset,
-                                    batch_size=mini_batch_size)
+                                    batch_size=mini_batch_size,
+                                    collate_fn=lambda x: x)
 
             if self.use_crf:
                 transitions = self.transitions.detach().cpu().numpy()
             else:
                 transitions = None
-
-            # make mini-batches
-            # batches = [
-            #     filtered_sentences[x : x + mini_batch_size]
-            #     for x in range(0, len(filtered_sentences), mini_batch_size)
-            # ]
 
             # progress bar for verbosity
             if verbose:
