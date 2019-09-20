@@ -397,12 +397,11 @@ class SequenceTagger(flair.nn.Model):
 
             is_sentence: bool = isinstance(sentences[0], Sentence)
 
+            filtered_sentences = sentences
             if is_sentence:
-                filtered_sentences = self._filter_empty_sentences(sentences)
                 # remove previous embeddings
                 store_embeddings(filtered_sentences, "none")
-            else:
-                filtered_sentences = self._filter_empty_string(sentences)
+
 
             # reverse sort all sequences by their length
             filtered_sentences.sort(key=lambda x: len(x), reverse=True)
@@ -424,10 +423,16 @@ class SequenceTagger(flair.nn.Model):
             if verbose:
                 dataloader = tqdm(dataloader)
 
+            results: List[Sentence] = list()
             for i, batch in enumerate(dataloader):
 
                 if verbose:
                     dataloader.set_description(f"Inferencing on batch {i}")
+                results.append(batch)
+                batch = self._filter_empty_sentences(batch)
+                # stop if all sentences are empty
+                if not batch:
+                    continue
 
                 feature: torch.Tensor = self.forward(batch)
                 tags, all_tags = self._obtain_labels(
@@ -449,7 +454,8 @@ class SequenceTagger(flair.nn.Model):
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
-            return sentences
+            # TODO restore original order
+            return results
 
     def forward(self, sentences: List[Sentence]):
         self.zero_grad()
