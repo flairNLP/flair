@@ -61,7 +61,7 @@ class ModelTrainer:
         base_path: Union[Path, str],
         learning_rate: float = 0.1,
         mini_batch_size: int = 32,
-        eval_mini_batch_size: int = None,
+        mini_batch_chunk_size: int = 32,
         max_epochs: int = 100,
         anneal_factor: float = 0.5,
         patience: int = 3,
@@ -87,7 +87,7 @@ class ModelTrainer:
         :param base_path: Main path to which all output during training is logged and models are saved
         :param learning_rate: Initial learning rate
         :param mini_batch_size: Size of mini-batches during training
-        :param eval_mini_batch_size: Size of mini-batches during evaluation
+        :param mini_batch_chunk_size: If mini-batches are larger than this number, they get broken down into chunks of this size for processing purposes
         :param max_epochs: Maximum number of epochs to train. Terminates training if this number is surpassed.
         :param anneal_factor: The factor by which the learning rate is annealed
         :param patience: Patience is the number of epochs with no improvement the Trainer waits
@@ -133,8 +133,8 @@ class ModelTrainer:
                     "to enable mixed-precision training."
                 )
 
-        if eval_mini_batch_size is None:
-            eval_mini_batch_size = mini_batch_size
+        if mini_batch_chunk_size is None:
+            mini_batch_chunk_size = mini_batch_size
 
         # cast string to Path
         if type(base_path) is str:
@@ -211,7 +211,7 @@ class ModelTrainer:
         dev_loss_history = []
         train_loss_history = []
 
-        micro_batch_size = eval_mini_batch_size
+        micro_batch_size = mini_batch_chunk_size
 
         # At any point you can hit Ctrl + C to break out of training early.
         try:
@@ -339,7 +339,7 @@ class ModelTrainer:
                     train_eval_result, train_loss = self.model.evaluate(
                         DataLoader(
                             self.corpus.train,
-                            batch_size=eval_mini_batch_size,
+                            batch_size=mini_batch_chunk_size,
                             num_workers=num_workers,
                         ),
                         embedding_storage_mode=embeddings_storage_mode,
@@ -353,7 +353,7 @@ class ModelTrainer:
                     dev_eval_result, dev_loss = self.model.evaluate(
                         DataLoader(
                             self.corpus.dev,
-                            batch_size=eval_mini_batch_size,
+                            batch_size=mini_batch_chunk_size,
                             num_workers=num_workers,
                         ),
                         embedding_storage_mode=embeddings_storage_mode,
@@ -382,7 +382,7 @@ class ModelTrainer:
                     test_eval_result, test_loss = self.model.evaluate(
                         DataLoader(
                             self.corpus.test,
-                            batch_size=eval_mini_batch_size,
+                            batch_size=mini_batch_chunk_size,
                             num_workers=num_workers,
                         ),
                         base_path / "test.tsv",
@@ -484,7 +484,7 @@ class ModelTrainer:
 
         # test best model if test data is present
         if self.corpus.test:
-            final_score = self.final_test(base_path, eval_mini_batch_size, num_workers)
+            final_score = self.final_test(base_path, mini_batch_chunk_size, num_workers)
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
