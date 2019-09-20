@@ -11,11 +11,12 @@ import torch.nn
 import torch.nn.functional as F
 from tabulate import tabulate
 from torch.nn.parameter import Parameter
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 import flair.nn
 from flair.data import Dictionary, Sentence, Token, Label
-from flair.datasets import DataLoader
+from flair.datasets import SentenceDataset, StringDataset
 from flair.embeddings import TokenEmbeddings
 from flair.file_utils import cached_path
 from flair.training_utils import Metric, Result, store_embeddings
@@ -365,7 +366,7 @@ class SequenceTagger(flair.nn.Model):
 
     def predict(
         self,
-        sentences: Union[List[Sentence], Sentence],
+        sentences: Union[List[Sentence], Sentence, List[str], str],
         mini_batch_size=32,
         embedding_storage_mode="none",
         all_tag_prob: bool = False,
@@ -384,7 +385,7 @@ class SequenceTagger(flair.nn.Model):
         :return: List of Sentence enriched by the predicted tags
         """
         with torch.no_grad():
-            if isinstance(sentences, Sentence):
+            if isinstance(sentences, Sentence) or isinstance(sentences, str):
                 sentences = [sentences]
 
             if (flair.device.type == "cuda") and embedding_storage_mode == "cpu":
@@ -394,13 +395,24 @@ class SequenceTagger(flair.nn.Model):
                     "is a better choice."
                 )
 
-            filtered_sentences = self._filter_empty_sentences(sentences)
+            is_sentence: bool = isinstance(sentences[0], Sentence)
 
-            # remove previous embeddings
-            store_embeddings(filtered_sentences, "none")
+            if is_sentence:
+                filtered_sentences = self._filter_empty_sentences(sentences)
+                # remove previous embeddings
+                store_embeddings(filtered_sentences, "none")
+            else:
+                filtered_sentences = self._filter_empty_string(sentences)
 
             # reverse sort all sequences by their length
             filtered_sentences.sort(key=lambda x: len(x), reverse=True)
+
+            if is_sentence:
+                dataset = SentenceDataset(filtered_sentences)
+            else:
+                dataset = StringDataset(filtered_sentences)
+            dataloader = DataLoader(dataset=dataset,
+                                    batch_size=mini_batch_size)
 
             if self.use_crf:
                 transitions = self.transitions.detach().cpu().numpy()
@@ -408,19 +420,19 @@ class SequenceTagger(flair.nn.Model):
                 transitions = None
 
             # make mini-batches
-            batches = [
-                filtered_sentences[x : x + mini_batch_size]
-                for x in range(0, len(filtered_sentences), mini_batch_size)
-            ]
+            # batches = [
+            #     filtered_sentences[x : x + mini_batch_size]
+            #     for x in range(0, len(filtered_sentences), mini_batch_size)
+            # ]
 
             # progress bar for verbosity
             if verbose:
-                batches = tqdm(batches)
+                dataloader = tqdm(dataloader)
 
-            for i, batch in enumerate(batches):
+            for i, batch in enumerate(dataloader):
 
                 if verbose:
-                    batches.set_description(f"Inferencing on batch {i}")
+                    dataloader.set_description(f"Inferencing on batch {i}")
 
                 feature: torch.Tensor = self.forward(batch)
                 tags, all_tags = self._obtain_labels(
@@ -791,11 +803,18 @@ class SequenceTagger(flair.nn.Model):
         filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
         if len(sentences) != len(filtered_sentences):
             log.warning(
-                "Ignore {} sentence(s) with no tokens.".format(
-                    len(sentences) - len(filtered_sentences)
-                )
+                f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens."
             )
         return filtered_sentences
+
+    @staticmethod
+    def _filter_empty_string(texts: List[str]) -> List[str]:
+        filtered_texts = [text for text in texts if text]
+        if len(texts) != len(filtered_texts):
+            log.warning(
+                f"Ignore {len(texts) - len(filtered_texts)} string(s) with no tokens."
+            )
+        return filtered_texts
 
     def _fetch_model(model_name) -> str:
 
