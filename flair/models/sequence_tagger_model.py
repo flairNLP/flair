@@ -445,7 +445,6 @@ class SequenceTagger(flair.nn.Model):
             return sentences
 
     def forward(self, sentences: List[Sentence]):
-        self.zero_grad()
 
         self.embeddings.embed(sentences)
 

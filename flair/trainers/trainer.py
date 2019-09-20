@@ -61,7 +61,7 @@ class ModelTrainer:
         base_path: Union[Path, str],
         learning_rate: float = 0.1,
         mini_batch_size: int = 32,
-        eval_mini_batch_size: int = None,
+        mini_batch_chunk_size: int = 32,
         max_epochs: int = 100,
         anneal_factor: float = 0.5,
         patience: int = 3,
@@ -73,6 +73,7 @@ class ModelTrainer:
         checkpoint: bool = False,
         save_final_model: bool = True,
         anneal_with_restarts: bool = False,
+        batch_growth_annealing: bool = False,
         shuffle: bool = True,
         param_selection_mode: bool = False,
         num_workers: int = 6,
@@ -86,7 +87,7 @@ class ModelTrainer:
         :param base_path: Main path to which all output during training is logged and models are saved
         :param learning_rate: Initial learning rate
         :param mini_batch_size: Size of mini-batches during training
-        :param eval_mini_batch_size: Size of mini-batches during evaluation
+        :param mini_batch_chunk_size: If mini-batches are larger than this number, they get broken down into chunks of this size for processing purposes
         :param max_epochs: Maximum number of epochs to train. Terminates training if this number is surpassed.
         :param anneal_factor: The factor by which the learning rate is annealed
         :param patience: Patience is the number of epochs with no improvement the Trainer waits
@@ -132,8 +133,8 @@ class ModelTrainer:
                     "to enable mixed-precision training."
                 )
 
-        if eval_mini_batch_size is None:
-            eval_mini_batch_size = mini_batch_size
+        if mini_batch_chunk_size is None:
+            mini_batch_chunk_size = mini_batch_size
 
         # cast string to Path
         if type(base_path) is str:
@@ -154,6 +155,7 @@ class ModelTrainer:
         log.info(f' - max_epochs: "{max_epochs}"')
         log.info(f' - shuffle: "{shuffle}"')
         log.info(f' - train_with_dev: "{train_with_dev}"')
+        log.info(f' - batch_growth_annealing: "{batch_growth_annealing}"')
         log_line(log)
         log.info(f'Model training base path: "{base_path}"')
         log_line(log)
@@ -209,6 +211,8 @@ class ModelTrainer:
         dev_loss_history = []
         train_loss_history = []
 
+        micro_batch_size = mini_batch_chunk_size
+
         # At any point you can hit Ctrl + C to break out of training early.
         try:
             previous_learning_rate = learning_rate
@@ -219,6 +223,9 @@ class ModelTrainer:
                 # get new learning rate
                 for group in optimizer.param_groups:
                     learning_rate = group["lr"]
+
+                if learning_rate != previous_learning_rate and batch_growth_annealing:
+                    mini_batch_size *= 2
 
                 # reload last best model if annealing with restarts is enabled
                 if (
@@ -261,16 +268,33 @@ class ModelTrainer:
                 batch_time = 0
                 for batch_no, batch in enumerate(batch_loader):
                     start_time = time.time()
-                    loss = self.model.forward_loss(batch)
 
+                    # zero the gradients on the model and optimizer
+                    self.model.zero_grad()
                     optimizer.zero_grad()
-                    # Backward
-                    if use_amp:
-                        with amp.scale_loss(loss, optimizer) as scaled_loss:
-                            scaled_loss.backward()
-                    else:
-                        loss.backward()
 
+                    # if necessary, make batch_steps
+                    batch_steps = [batch]
+                    if len(batch) > micro_batch_size:
+                        batch_steps = [
+                            batch[x : x + micro_batch_size]
+                            for x in range(0, len(batch), micro_batch_size)
+                        ]
+
+                    # forward and backward for batch
+                    for batch_step in batch_steps:
+
+                        # forward pass
+                        loss = self.model.forward_loss(batch_step)
+
+                        # Backward
+                        if use_amp:
+                            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                                scaled_loss.backward()
+                        else:
+                            loss.backward()
+
+                    # do the optimizer step
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
                     optimizer.step()
 
@@ -315,7 +339,7 @@ class ModelTrainer:
                     train_eval_result, train_loss = self.model.evaluate(
                         DataLoader(
                             self.corpus.train,
-                            batch_size=eval_mini_batch_size,
+                            batch_size=mini_batch_chunk_size,
                             num_workers=num_workers,
                         ),
                         embedding_storage_mode=embeddings_storage_mode,
@@ -329,7 +353,7 @@ class ModelTrainer:
                     dev_eval_result, dev_loss = self.model.evaluate(
                         DataLoader(
                             self.corpus.dev,
-                            batch_size=eval_mini_batch_size,
+                            batch_size=mini_batch_chunk_size,
                             num_workers=num_workers,
                         ),
                         embedding_storage_mode=embeddings_storage_mode,
@@ -358,7 +382,7 @@ class ModelTrainer:
                     test_eval_result, test_loss = self.model.evaluate(
                         DataLoader(
                             self.corpus.test,
-                            batch_size=eval_mini_batch_size,
+                            batch_size=mini_batch_chunk_size,
                             num_workers=num_workers,
                         ),
                         base_path / "test.tsv",
@@ -460,7 +484,7 @@ class ModelTrainer:
 
         # test best model if test data is present
         if self.corpus.test:
-            final_score = self.final_test(base_path, eval_mini_batch_size, num_workers)
+            final_score = self.final_test(base_path, mini_batch_chunk_size, num_workers)
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
