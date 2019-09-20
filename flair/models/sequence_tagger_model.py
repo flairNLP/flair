@@ -395,21 +395,18 @@ class SequenceTagger(flair.nn.Model):
                     "is a better choice."
                 )
 
-            is_sentence: bool = isinstance(sentences[0], Sentence)
-
-            filtered_sentences = sentences
-            if is_sentence:
-                # remove previous embeddings
-                store_embeddings(filtered_sentences, "none")
-
-
             # reverse sort all sequences by their length
-            filtered_sentences.sort(key=lambda x: len(x), reverse=True)
+            order_len_index: List[int] = sorted(range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True)
+            original_order = sorted(range(len(order_len_index)), key=lambda k: order_len_index[k])
 
-            if is_sentence:
-                dataset = SentenceDataset(filtered_sentences)
+            ordered_sentences: List[Union[Sentence, str]] = [sentences[index] for index in order_len_index]
+
+            if isinstance(sentences[0], Sentence):
+                # remove previous embeddings
+                store_embeddings(ordered_sentences, "none")
+                dataset = SentenceDataset(ordered_sentences)
             else:
-                dataset = StringDataset(filtered_sentences)
+                dataset = StringDataset(ordered_sentences)
             dataloader = DataLoader(dataset=dataset,
                                     batch_size=mini_batch_size,
                                     collate_fn=lambda x: x)
@@ -454,7 +451,7 @@ class SequenceTagger(flair.nn.Model):
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
-            # TODO restore original order
+            results: List[Union[Sentence, str]] = [results[index] for index in original_order]
             return results
 
     def forward(self, sentences: List[Sentence]):
