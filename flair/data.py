@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from typing import List, Dict, Union, Callable
+import re
 
 import torch, flair
 import logging
@@ -519,6 +520,7 @@ class Sentence(DataPoint):
 
         # if text is passed, instantiate sentence with tokens (words)
         if text is not None:
+            text = self._restore_windows_1252_characters(text)
             [self.add_token(token) for token in tokenizer(text)]
 
         # log a warning if the dataset is empty
@@ -848,6 +850,16 @@ class Sentence(DataPoint):
                 self.language_code = "en"
 
         return self.language_code
+
+    def _restore_windows_1252_characters(self, text:str)->str:
+        def to_windows_1252(match):
+            try:
+                return bytes([ord(match.group(0))]).decode('windows-1252')
+            except UnicodeDecodeError:
+                # No character at the corresponding code point: remove it.
+                return ''
+
+        return re.sub(r'[\u0080-\u0099]', to_windows_1252, text)
 
 
 class Image(DataPoint):
