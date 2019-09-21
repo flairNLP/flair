@@ -144,7 +144,7 @@ class LanguageModel(nn.Module):
                     self.dictionary.get_idx_for_item(char) for char in string
                 ]
 
-                char_indices += [padding_char_index] * (len_longest_str - len(string))
+                char_indices += [padding_char_index] * (chars_per_chunk - len(string))
 
                 sequences_as_char_indices.append(char_indices)
             t = torch.tensor(sequences_as_char_indices, dtype=torch.long).to(
