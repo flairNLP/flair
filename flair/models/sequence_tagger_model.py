@@ -275,6 +275,9 @@ class SequenceTagger(flair.nn.Model):
         :return: List of Sentence enriched by the predicted tags
         """
         with torch.no_grad():
+            if not sentences:
+                return sentences
+
             if isinstance(sentences, Sentence) or isinstance(sentences, str):
                 sentences = [sentences]
 
