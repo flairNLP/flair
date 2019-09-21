@@ -570,7 +570,11 @@ class StringDataset(FlairDataset):
     A Dataset taking string as input and returning Sentence during iteration
     """
 
-    def __init__(self, texts: Union[str, List[str]], use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer):
+    def __init__(
+        self,
+        texts: Union[str, List[str]],
+        use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer,
+    ):
         """
         Instantiate StringDataset
         :param texts: a string or List of string that make up StringDataset

@@ -253,13 +253,13 @@ class SequenceTagger(flair.nn.Model):
         return model
 
     def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence, List[str], str],
-            mini_batch_size=32,
-            embedding_storage_mode="none",
-            all_tag_prob: bool = False,
-            verbose: bool = False,
-            use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer,
+        self,
+        sentences: Union[List[Sentence], Sentence, List[str], str],
+        mini_batch_size=32,
+        embedding_storage_mode="none",
+        all_tag_prob: bool = False,
+        verbose: bool = False,
+        use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer,
     ) -> List[Sentence]:
         """
         Predict sequence tags for Named Entity Recognition task
@@ -286,20 +286,28 @@ class SequenceTagger(flair.nn.Model):
                 )
 
             # reverse sort all sequences by their length
-            rev_order_len_index = sorted(range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True)
-            original_order_index = sorted(range(len(rev_order_len_index)), key=lambda k: rev_order_len_index[k])
+            rev_order_len_index = sorted(
+                range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True
+            )
+            original_order_index = sorted(
+                range(len(rev_order_len_index)), key=lambda k: rev_order_len_index[k]
+            )
 
-            reordered_sentences: List[Union[Sentence, str]] = [sentences[index] for index in rev_order_len_index]
+            reordered_sentences: List[Union[Sentence, str]] = [
+                sentences[index] for index in rev_order_len_index
+            ]
 
             if isinstance(sentences[0], Sentence):
                 # remove previous embeddings
                 store_embeddings(reordered_sentences, "none")
                 dataset = SentenceDataset(reordered_sentences)
             else:
-                dataset = StringDataset(reordered_sentences, use_tokenizer=use_tokenizer)
-            dataloader = DataLoader(dataset=dataset,
-                                    batch_size=mini_batch_size,
-                                    collate_fn=lambda x: x)
+                dataset = StringDataset(
+                    reordered_sentences, use_tokenizer=use_tokenizer
+                )
+            dataloader = DataLoader(
+                dataset=dataset, batch_size=mini_batch_size, collate_fn=lambda x: x
+            )
 
             if self.use_crf:
                 transitions = self.transitions.detach().cpu().numpy()
@@ -341,7 +349,9 @@ class SequenceTagger(flair.nn.Model):
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
-            results: List[Union[Sentence, str]] = [results[index] for index in original_order_index]
+            results: List[Union[Sentence, str]] = [
+                results[index] for index in original_order_index
+            ]
             assert len(sentences) == len(results)
             return results
 
@@ -473,7 +483,9 @@ class SequenceTagger(flair.nn.Model):
 
         all_embs = list()
         for sentence in sentences:
-            all_embs += [emb for token in sentence for emb in token.get_each_embedding()]
+            all_embs += [
+                emb for token in sentence for emb in token.get_each_embedding()
+            ]
             nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
 
             if nb_padding_tokens > 0:
