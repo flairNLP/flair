@@ -137,14 +137,14 @@ class LanguageModel(nn.Module):
         batches: List[torch.Tensor] = []
         # push each chunk through the RNN language model
         for chunk in chunks:
-
+            len_longest_chunk: int = len(max(chunk, key=len))
             sequences_as_char_indices: List[List[int]] = []
             for string in chunk:
                 char_indices = [
                     self.dictionary.get_idx_for_item(char) for char in string
                 ]
 
-                char_indices += [padding_char_index] * (chars_per_chunk - len(string))
+                char_indices += [padding_char_index] * (len_longest_chunk - len(string))
 
                 sequences_as_char_indices.append(char_indices)
             t = torch.tensor(sequences_as_char_indices, dtype=torch.long).to(
