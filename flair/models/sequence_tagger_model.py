@@ -365,12 +365,12 @@ class SequenceTagger(flair.nn.Model):
         return self._calculate_loss(features, data_points)
 
     def predict(
-        self,
-        sentences: Union[List[Sentence], Sentence, List[str], str],
-        mini_batch_size=32,
-        embedding_storage_mode="none",
-        all_tag_prob: bool = False,
-        verbose=False,
+            self,
+            sentences: Union[List[Sentence], Sentence, List[str], str],
+            mini_batch_size=32,
+            embedding_storage_mode="none",
+            all_tag_prob: bool = False,
+            verbose=False,
     ) -> List[Sentence]:
         """
         Predict sequence tags for Named Entity Recognition task
@@ -420,12 +420,12 @@ class SequenceTagger(flair.nn.Model):
             if verbose:
                 dataloader = tqdm(dataloader)
 
-            results: List[Sentence] = list()
+            results: List[Sentence] = []
             for i, batch in enumerate(dataloader):
 
                 if verbose:
                     dataloader.set_description(f"Inferencing on batch {i}")
-                results.append(batch)
+                results += batch
                 batch = self._filter_empty_sentences(batch)
                 # stop if all sentences are empty
                 if not batch:
@@ -452,6 +452,7 @@ class SequenceTagger(flair.nn.Model):
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
             results: List[Union[Sentence, str]] = [results[index] for index in original_order]
+            assert len(sentences) == len(results)
             return results
 
     def forward(self, sentences: List[Sentence]):
