@@ -113,11 +113,10 @@ class LanguageModel(nn.Module):
         padded_strings: List[str] = []
 
         for string in strings:
-            pad_by = len_longest_str - len(string)
             if not self.is_forward_lm:
                 string = string[::-1]
 
-            padded = f"{start_marker}{string}{end_marker}{pad_by * ' '}"
+            padded = f"{start_marker}{string}{end_marker}"
             padded_strings.append(padded)
 
         # cut up the input into chunks of max charlength = chunk_size
@@ -133,6 +132,8 @@ class LanguageModel(nn.Module):
         )
         hidden = self.init_hidden(len(chunks[0]))
 
+        padding_char_index = self.dictionary.get_idx_for_item(' ')
+
         batches: List[torch.Tensor] = []
         # push each chunk through the RNN language model
         for chunk in chunks:
@@ -142,6 +143,8 @@ class LanguageModel(nn.Module):
                 char_indices = [
                     self.dictionary.get_idx_for_item(char) for char in string
                 ]
+
+                char_indices += [padding_char_index] * (len_longest_str - len(string))
 
                 sequences_as_char_indices.append(char_indices)
             t = torch.tensor(sequences_as_char_indices, dtype=torch.long).to(
