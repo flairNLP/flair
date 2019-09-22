@@ -27,8 +27,9 @@ class Dictionary:
         # init dictionaries
         self.item2idx: Dict[str, int] = {}
         self.idx2item: List[str] = []
+        self.item2idx_not_encoded: Dict[str, int] = {}
+        self.idx2item_not_encoded: List[str] = []
         self.multi_label: bool = False
-
         # in order to deal with unknown tokens, add <unk>
         if add_unk:
             self.add_item("<unk>")
@@ -39,11 +40,13 @@ class Dictionary:
         :param item: a string for which to assign an id.
         :return: ID of string
         """
-        item = item.encode("utf-8")
-        if item not in self.item2idx:
-            self.idx2item.append(item)
-            self.item2idx[item] = len(self.idx2item) - 1
-        return self.item2idx[item]
+        # item = item.encode("utf-8")
+        if not hasattr(self, "item2idx_not_encoded"):
+            self.__decode_utf_internal()
+        if item not in self.item2idx_not_encoded:
+            self.idx2item_not_encoded.append(item)
+            self.item2idx_not_encoded[item] = len(self.idx2item_not_encoded) - 1
+        return self.item2idx_not_encoded[item]
 
     def get_idx_for_item(self, item: str) -> int:
         """
@@ -51,29 +54,34 @@ class Dictionary:
         :param item: string for which ID is requested
         :return: ID of string, otherwise 0
         """
-        item = item.encode("utf-8")
-        if item in self.item2idx.keys():
-            return self.item2idx[item]
-        else:
-            return 0
+        if not hasattr(self, "item2idx_not_encoded"):
+            self.__decode_utf_internal()
+        return self.item2idx_not_encoded.get(item, 0)
 
     def get_items(self) -> List[str]:
-        items = []
-        for item in self.idx2item:
-            items.append(item.decode("UTF-8"))
-        return items
+        if not hasattr(self, "item2idx_not_encoded"):
+            self.__decode_utf_internal()
+        return self.idx2item_not_encoded
 
     def __len__(self) -> int:
-        return len(self.idx2item)
+        if not hasattr(self, "item2idx_not_encoded"):
+            self.__decode_utf_internal()
+        return len(self.idx2item_not_encoded)
 
     def get_item_for_index(self, idx):
-        return self.idx2item[idx].decode("UTF-8")
+        if not hasattr(self, "item2idx_not_encoded"):
+            self.__decode_utf_internal()
+        return self.idx2item_not_encoded[idx]
+
+    def __decode_utf_internal(self):
+        self.idx2item_not_encoded = [item.decode("UTF-8") for item in self.idx2item]
+        self.item2idx_not_encoded = dict([(key.decode("UTF-8"), value) for key, value in self.item2idx.items()])
 
     def save(self, savefile):
         import pickle
 
-        with open(savefile, "wb") as f:
-            mappings = {"idx2item": self.idx2item, "item2idx": self.item2idx}
+        with open(file=savefile, mode="wb") as f:
+            mappings = {"idx2item": self.idx2item_not_encoded, "item2idx": self.item2idx_not_encoded}
             pickle.dump(mappings, f)
 
     @classmethod
@@ -85,8 +93,8 @@ class Dictionary:
             mappings = pickle.load(f, encoding="latin1")
             idx2item = mappings["idx2item"]
             item2idx = mappings["item2idx"]
-            dictionary.item2idx = item2idx
-            dictionary.idx2item = idx2item
+            dictionary.item2idx_not_encoded = item2idx
+            dictionary.idx2item_not_encoded = idx2item
         return dictionary
 
     @classmethod
