@@ -78,6 +78,9 @@ class Dictionary:
         self.item2idx_not_encoded = dict([(key.decode("UTF-8"), value) for key, value in self.item2idx.items()])
 
     def save(self, savefile):
+        if not hasattr(self, "item2idx_not_encoded"):
+            self.__decode_utf_internal()
+
         import pickle
 
         with open(file=savefile, mode="wb") as f:
@@ -93,8 +96,8 @@ class Dictionary:
             mappings = pickle.load(f, encoding="latin1")
             idx2item = mappings["idx2item"]
             item2idx = mappings["item2idx"]
-            dictionary.item2idx_not_encoded = item2idx
-            dictionary.idx2item_not_encoded = idx2item
+            dictionary.item2idx = item2idx
+            dictionary.idx2item = idx2item
         return dictionary
 
     @classmethod
