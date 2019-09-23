@@ -3,7 +3,7 @@ from pathlib import Path
 
 import logging
 from pathlib import Path
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Callable
 
 import numpy as np
 import torch
@@ -11,11 +11,12 @@ import torch.nn
 import torch.nn.functional as F
 from tabulate import tabulate
 from torch.nn.parameter import Parameter
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 import flair.nn
-from flair.data import Dictionary, Sentence, Token, Label
-from flair.datasets import DataLoader
+from flair.data import Dictionary, Sentence, Token, Label, space_tokenizer
+from flair.datasets import SentenceDataset, StringDataset
 from flair.embeddings import TokenEmbeddings
 from flair.file_utils import cached_path
 from flair.training_utils import Metric, Result, store_embeddings
@@ -251,6 +252,112 @@ class SequenceTagger(flair.nn.Model):
         model.load_state_dict(state["state_dict"])
         return model
 
+    def predict(
+        self,
+        sentences: Union[List[Sentence], Sentence, List[str], str],
+        mini_batch_size=32,
+        embedding_storage_mode="none",
+        all_tag_prob: bool = False,
+        verbose: bool = False,
+        use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer,
+    ) -> List[Sentence]:
+        """
+        Predict sequence tags for Named Entity Recognition task
+        :param sentences: a Sentence or a string or a List of Sentence or a List of string.
+        :param mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
+        up to a point when it has no more effect.
+        :param embedding_storage_mode: 'none' for the minimum memory footprint, 'cpu' to store embeddings in Ram,
+        'gpu' to store embeddings in GPU memory.
+        :param all_tag_prob: True to compute the score for each tag on each token,
+        otherwise only the score of the best tag is returned
+        :param verbose: set to True to display a progress bar
+        :param use_tokenizer: a custom tokenizer when string are provided (default is space based tokenizer).
+        :return: List of Sentence enriched by the predicted tags
+        """
+        with torch.no_grad():
+            if not sentences:
+                return sentences
+
+            if isinstance(sentences, Sentence) or isinstance(sentences, str):
+                sentences = [sentences]
+
+            if (flair.device.type == "cuda") and embedding_storage_mode == "cpu":
+                log.warning(
+                    "You are inferring on GPU with parameter 'embedding_storage_mode' set to 'cpu'."
+                    "This option will slow down your inference, usually 'none' (default value) "
+                    "is a better choice."
+                )
+
+            # reverse sort all sequences by their length
+            rev_order_len_index = sorted(
+                range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True
+            )
+            original_order_index = sorted(
+                range(len(rev_order_len_index)), key=lambda k: rev_order_len_index[k]
+            )
+
+            reordered_sentences: List[Union[Sentence, str]] = [
+                sentences[index] for index in rev_order_len_index
+            ]
+
+            if isinstance(sentences[0], Sentence):
+                # remove previous embeddings
+                store_embeddings(reordered_sentences, "none")
+                dataset = SentenceDataset(reordered_sentences)
+            else:
+                dataset = StringDataset(
+                    reordered_sentences, use_tokenizer=use_tokenizer
+                )
+            dataloader = DataLoader(
+                dataset=dataset, batch_size=mini_batch_size, collate_fn=lambda x: x
+            )
+
+            if self.use_crf:
+                transitions = self.transitions.detach().cpu().numpy()
+            else:
+                transitions = None
+
+            # progress bar for verbosity
+            if verbose:
+                dataloader = tqdm(dataloader)
+
+            results: List[Sentence] = []
+            for i, batch in enumerate(dataloader):
+
+                if verbose:
+                    dataloader.set_description(f"Inferencing on batch {i}")
+                results += batch
+                batch = self._filter_empty_sentences(batch)
+                # stop if all sentences are empty
+                if not batch:
+                    continue
+
+                feature: torch.Tensor = self.forward(batch)
+                tags, all_tags = self._obtain_labels(
+                    feature=feature,
+                    batch_sentences=batch,
+                    transitions=transitions,
+                    get_all_tags=all_tag_prob,
+                )
+
+                for (sentence, sent_tags) in zip(batch, tags):
+                    for (token, tag) in zip(sentence.tokens, sent_tags):
+                        token.add_tag_label(self.tag_type, tag)
+
+                # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
+                for (sentence, sent_all_tags) in zip(batch, all_tags):
+                    for (token, token_all_tags) in zip(sentence.tokens, sent_all_tags):
+                        token.add_tags_proba_dist(self.tag_type, token_all_tags)
+
+                # clearing token embeddings to save memory
+                store_embeddings(batch, storage_mode=embedding_storage_mode)
+
+            results: List[Union[Sentence, str]] = [
+                results[index] for index in original_order_index
+            ]
+            assert len(sentences) == len(results)
+            return results
+
     def evaluate(
         self,
         data_loader: DataLoader,
@@ -362,87 +469,6 @@ class SequenceTagger(flair.nn.Model):
     ) -> torch.tensor:
         features = self.forward(data_points)
         return self._calculate_loss(features, data_points)
-
-    def predict(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        mini_batch_size=32,
-        embedding_storage_mode="none",
-        all_tag_prob: bool = False,
-        verbose=False,
-    ) -> List[Sentence]:
-        """
-        Predict sequence tags for Named Entity Recognition task
-        :param sentences: a Sentence or a List of Sentence. Empty sentences will be removed.
-        :param mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
-        up to a point when it has no more effect.
-        :param embedding_storage_mode: 'none' for the minimum memory footprint, 'cpu' to store embeddings in Ram,
-        'gpu' to store embeddings in GPU memory.
-        :param all_tag_prob: True to compute the score for each tag on each token,
-        otherwise only the score of the best tag is returned
-        :param verbose: set to True to display a progress bar
-        :return: List of Sentence enriched by the predicted tags
-        """
-        with torch.no_grad():
-            if isinstance(sentences, Sentence):
-                sentences = [sentences]
-
-            if (flair.device.type == "cuda") and embedding_storage_mode == "cpu":
-                log.warning(
-                    "You are inferring on GPU with parameter 'embedding_storage_mode' set to 'cpu'."
-                    "This option will slow down your inference, usually 'none' (default value) "
-                    "is a better choice."
-                )
-
-            filtered_sentences = self._filter_empty_sentences(sentences)
-
-            # remove previous embeddings
-            store_embeddings(filtered_sentences, "none")
-
-            # reverse sort all sequences by their length
-            filtered_sentences.sort(key=lambda x: len(x), reverse=True)
-
-            if self.use_crf:
-                transitions = self.transitions.detach().cpu().numpy()
-            else:
-                transitions = None
-
-            # make mini-batches
-            batches = [
-                filtered_sentences[x : x + mini_batch_size]
-                for x in range(0, len(filtered_sentences), mini_batch_size)
-            ]
-
-            # progress bar for verbosity
-            if verbose:
-                batches = tqdm(batches)
-
-            for i, batch in enumerate(batches):
-
-                if verbose:
-                    batches.set_description(f"Inferencing on batch {i}")
-
-                feature: torch.Tensor = self.forward(batch)
-                tags, all_tags = self._obtain_labels(
-                    feature=feature,
-                    batch_sentences=batch,
-                    transitions=transitions,
-                    get_all_tags=all_tag_prob,
-                )
-
-                for (sentence, sent_tags) in zip(batch, tags):
-                    for (token, tag) in zip(sentence.tokens, sent_tags):
-                        token.add_tag_label(self.tag_type, tag)
-
-                # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
-                for (sentence, sent_all_tags) in zip(batch, all_tags):
-                    for (token, token_all_tags) in zip(sentence.tokens, sent_all_tags):
-                        token.add_tags_proba_dist(self.tag_type, token_all_tags)
-
-                # clearing token embeddings to save memory
-                store_embeddings(batch, storage_mode=embedding_storage_mode)
-
-            return sentences
 
     def forward(self, sentences: List[Sentence]):
 
@@ -792,11 +818,18 @@ class SequenceTagger(flair.nn.Model):
         filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
         if len(sentences) != len(filtered_sentences):
             log.warning(
-                "Ignore {} sentence(s) with no tokens.".format(
-                    len(sentences) - len(filtered_sentences)
-                )
+                f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens."
             )
         return filtered_sentences
+
+    @staticmethod
+    def _filter_empty_string(texts: List[str]) -> List[str]:
+        filtered_texts = [text for text in texts if text]
+        if len(texts) != len(filtered_texts):
+            log.warning(
+                f"Ignore {len(texts) - len(filtered_texts)} string(s) with no tokens."
+            )
+        return filtered_texts
 
     def _fetch_model(model_name) -> str:
 

@@ -565,6 +565,42 @@ class SentenceDataset(FlairDataset):
         return self.sentences[index]
 
 
+class StringDataset(FlairDataset):
+    """
+    A Dataset taking string as input and returning Sentence during iteration
+    """
+
+    def __init__(
+        self,
+        texts: Union[str, List[str]],
+        use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer,
+    ):
+        """
+        Instantiate StringDataset
+        :param texts: a string or List of string that make up StringDataset
+        :param use_tokenizer: a custom tokenizer (default is space based tokenizer,
+        more advanced options are segtok_tokenizer to use segtok or build_spacy_tokenizer to use Spacy library
+        if available). Check the code of space_tokenizer to implement your own (if you need it).
+        If instead of providing a function, this parameter is just set to True, segtok will be used.
+        """
+        # cast to list if necessary
+        if type(texts) == Sentence:
+            texts = [texts]
+        self.texts = texts
+        self.use_tokenizer = use_tokenizer
+
+    @abstractmethod
+    def is_in_memory(self) -> bool:
+        return True
+
+    def __len__(self):
+        return len(self.texts)
+
+    def __getitem__(self, index: int = 0) -> Sentence:
+        text = self.texts[index]
+        return Sentence(text, use_tokenizer=self.use_tokenizer)
+
+
 class ColumnDataset(FlairDataset):
     def __init__(
         self,
