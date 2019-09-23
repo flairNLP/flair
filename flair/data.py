@@ -260,7 +260,13 @@ class Token(DataPoint):
                     del self._embeddings[name]
 
     def get_each_embedding(self) -> torch.tensor:
-        return [self._embeddings[embed] for embed in sorted(self._embeddings.keys())]
+        result = []
+        for embed in sorted(self._embeddings.keys()):
+            embed = self._embeddings[embed].to(flair.device)
+            if (flair.embedding_storage_mode == "cpu") and embed.device != flair.device:
+                embed = embed.to(flair.device)
+            result.append(embed)
+        return result
 
     def get_embedding(self) -> torch.tensor:
         embeddings = [
