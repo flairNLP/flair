@@ -140,10 +140,7 @@ class LanguageModel(nn.Module):
             len_longest_chunk: int = len(max(chunk, key=len))
             sequences_as_char_indices: List[List[int]] = []
             for string in chunk:
-                char_indices = [
-                    self.dictionary.get_idx_for_item(char) for char in string
-                ]
-
+                char_indices = self.dictionary.get_idx_for_items(list(string))
                 char_indices += [padding_char_index] * (len_longest_chunk - len(string))
 
                 sequences_as_char_indices.append(char_indices)
