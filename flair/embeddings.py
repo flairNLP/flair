@@ -2710,9 +2710,9 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         # before-RNN dropout
         if self.dropout:
             sentence_tensor = self.dropout(sentence_tensor)
-        if self.locked_dropout:
+        if hasattr(self, "locked_dropout"):
             sentence_tensor = self.locked_dropout(sentence_tensor)
-        if self.word_dropout:
+        if hasattr(self, "word_dropout"):
             sentence_tensor = self.word_dropout(sentence_tensor)
 
         # reproject if set
@@ -2729,8 +2729,8 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         # after-RNN dropout
         if self.dropout:
             outputs = self.dropout(outputs)
-        if self.locked_dropout:
-            sentence_tensor = self.locked_dropout(sentence_tensor)
+        if hasattr(self, "locked_dropout"):
+            outputs = self.locked_dropout(outputs)
 
         # extract embeddings from RNN
         for sentence_no, length in enumerate(lengths):
