@@ -132,7 +132,7 @@ class LanguageModel(nn.Module):
         )
         hidden = self.init_hidden(len(chunks[0]))
 
-        padding_char_index = self.dictionary.get_idx_for_item(' ')
+        padding_char_index = self.dictionary.get_idx_for_item(" ")
 
         batches: List[torch.Tensor] = []
         # push each chunk through the RNN language model

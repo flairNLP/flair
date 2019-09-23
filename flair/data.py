@@ -28,7 +28,7 @@ class Dictionary:
         # init dictionaries
         self.item2idx: Dict[str, int] = {}
         self.idx2item: List[str] = []
-        self.item2idx_not_encoded: Dict[str, int] = defaultdict(lambda: 0)
+        self.item2idx_not_encoded: Dict[str, int] = defaultdict(int)
         self.idx2item_not_encoded: List[str] = []
         self.multi_label: bool = False
         # in order to deal with unknown tokens, add <unk>
@@ -91,8 +91,10 @@ class Dictionary:
     def decode_utf_internal(self):
         if not hasattr(self, "item2idx_not_encoded"):
             self.idx2item_not_encoded = [item.decode("UTF-8") for item in self.idx2item]
-            d = dict([(key.decode("UTF-8"), value) for key, value in self.item2idx.items()])
-            self.item2idx_not_encoded = defaultdict(lambda: 0, d)
+            d = dict(
+                [(key.decode("UTF-8"), value) for key, value in self.item2idx.items()]
+            )
+            self.item2idx_not_encoded = defaultdict(int, d)
 
     def save(self, savefile):
         if not hasattr(self, "item2idx_not_encoded"):
@@ -101,7 +103,11 @@ class Dictionary:
         import pickle
 
         with open(file=savefile, mode="wb") as f:
-            mappings = {"idx2item": self.idx2item_not_encoded, "item2idx": dict(self.item2idx_not_encoded), "UTF-8": True}
+            mappings = {
+                "idx2item": self.idx2item_not_encoded,
+                "item2idx": dict(self.item2idx_not_encoded),
+                "UTF-8": True,
+            }
             pickle.dump(mappings, f)
 
     @classmethod
