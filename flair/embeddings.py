@@ -498,6 +498,8 @@ class OneHotEmbeddings(TokenEmbeddings):
         )
         torch.nn.init.xavier_uniform_(self.embedding_layer.weight)
 
+        self.to(flair.device)
+
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
