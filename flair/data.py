@@ -118,6 +118,16 @@ class Dictionary:
             char_dict = cached_path(base_path, cache_dir="datasets")
             return Dictionary.load_from_file(char_dict)
 
+        if name == "chars-large" or name == "common-chars-large":
+            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters_large"
+            char_dict = cached_path(base_path, cache_dir="datasets")
+            return Dictionary.load_from_file(char_dict)
+
+        if name == "chars-xl" or name == "common-chars-xl":
+            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters_xl"
+            char_dict = cached_path(base_path, cache_dir="datasets")
+            return Dictionary.load_from_file(char_dict)
+
         return Dictionary.load_from_file(name)
 
 
