@@ -255,13 +255,21 @@ class ClassificationCorpus(Corpus):
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
         )
-        test: Dataset = ClassificationDataset(
-            test_file,
-            tokenizer=tokenizer,
-            max_tokens_per_doc=max_tokens_per_doc,
-            max_chars_per_doc=max_chars_per_doc,
-            in_memory=in_memory,
-        )
+
+        if test_file is not None:
+            test: Dataset = ClassificationDataset(
+                dev_file,
+                tokenizer=tokenizer,
+                max_tokens_per_doc=max_tokens_per_doc,
+                max_chars_per_doc=max_chars_per_doc,
+                in_memory=in_memory,
+            )
+        else:
+            train_length = len(train)
+            test_size: int = round(train_length / 10)
+            splits = random_split(train, [train_length - test_size, test_size])
+            train = splits[0]
+            test = splits[1]
 
         if dev_file is not None:
             dev: Dataset = ClassificationDataset(
