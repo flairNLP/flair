@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from operator import itemgetter
 from typing import List, Dict, Union, Callable
 
 import torch, flair
@@ -56,6 +57,25 @@ class Dictionary:
             return self.item2idx[item]
         else:
             return 0
+
+    def get_idx_for_items(self, items: List[str]) -> List[int]:
+        """
+        returns the IDs for each item of the list of string, otherwise 0 if not found
+        :param items: List of string for which IDs are requested
+        :return: List of ID of strings
+        """
+        if not hasattr(self, "item2idx_not_encoded"):
+            d = dict(
+                [(key.decode("UTF-8"), value) for key, value in self.item2idx.items()]
+            )
+            self.item2idx_not_encoded = defaultdict(int, d)
+
+        if not items:
+            return []
+        results = itemgetter(*items)(self.item2idx_not_encoded)
+        if isinstance(results, int):
+            return [results]
+        return list(results)
 
     def get_items(self) -> List[str]:
         items = []
@@ -260,25 +280,21 @@ class Token(DataPoint):
                     del self._embeddings[name]
 
     def get_each_embedding(self) -> torch.tensor:
-        return [self._embeddings[embed] for embed in sorted(self._embeddings.keys())]
+        embeddings = []
+        for embed in sorted(self._embeddings.keys()):
+            embed = self._embeddings[embed].to(flair.device)
+            if (flair.embedding_storage_mode == "cpu") and embed.device != flair.device:
+                embed = embed.to(flair.device)
+            embeddings.append(embed)
+        return embeddings
 
     def get_embedding(self) -> torch.tensor:
-        embeddings = [
-            self._embeddings[embed] for embed in sorted(self._embeddings.keys())
-        ]
+        embeddings = self.get_each_embedding()
 
         if embeddings:
             return torch.cat(embeddings, dim=0)
 
         return torch.tensor([], device=flair.device)
-
-    def get_subembedding(self, names: List[str]) -> torch.tensor:
-        embeddings = [self._embeddings[embed] for embed in sorted(names)]
-
-        if embeddings:
-            return torch.cat(embeddings, dim=0)
-
-        return torch.Tensor()
 
     @property
     def start_position(self) -> int:
