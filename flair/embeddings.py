@@ -2670,6 +2670,12 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
          only if embeddings are non-static."""
 
+        # TODO: remove in future versions
+        if not hasattr(self, "locked_dropout"):
+            self.locked_dropout = None
+        if not hasattr(self, "word_dropout"):
+            self.word_dropout = None
+
         if type(sentences) is Sentence:
             sentences = [sentences]
 
@@ -2710,9 +2716,9 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         # before-RNN dropout
         if self.dropout:
             sentence_tensor = self.dropout(sentence_tensor)
-        if hasattr(self, "locked_dropout"):
+        if self.locked_dropout:
             sentence_tensor = self.locked_dropout(sentence_tensor)
-        if hasattr(self, "word_dropout"):
+        if self.word_dropout:
             sentence_tensor = self.word_dropout(sentence_tensor)
 
         # reproject if set
@@ -2729,7 +2735,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         # after-RNN dropout
         if self.dropout:
             outputs = self.dropout(outputs)
-        if hasattr(self, "locked_dropout"):
+        if self.locked_dropout:
             outputs = self.locked_dropout(outputs)
 
         # extract embeddings from RNN
