@@ -206,10 +206,11 @@ class ModelTrainer:
             train_data = ConcatDataset([self.corpus.train, self.corpus.dev])
 
         # initialize sampler if provided
-        if sampler is not None and inspect.isclass(sampler):
-            sampler = sampler(train_data)
-            shuffle = False
-        if sampler is not None and isinstance(sampler, FlairSampler):
+        if sampler is not None:
+            # init with default values if only class is provided
+            if inspect.isclass(sampler):
+                sampler = sampler()
+            # set dataset to sample from
             sampler.set_dataset(train_data)
             shuffle = False
 
