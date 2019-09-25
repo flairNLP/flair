@@ -2,14 +2,16 @@ import logging
 from pathlib import Path
 from typing import List, Union
 import time
-import sys
-
 import datetime
+import sys
+import inspect
 
 import torch
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
+
+from flair.samplers import FlairSampler
 
 try:
     from apex import amp
@@ -203,8 +205,13 @@ class ModelTrainer:
         if train_with_dev:
             train_data = ConcatDataset([self.corpus.train, self.corpus.dev])
 
+        # initialize sampler if provided
         if sampler is not None:
-            sampler = sampler(train_data)
+            # init with default values if only class is provided
+            if inspect.isclass(sampler):
+                sampler = sampler()
+            # set dataset to sample from
+            sampler.set_dataset(train_data)
             shuffle = False
 
         dev_score_history = []
