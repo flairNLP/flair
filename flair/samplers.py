@@ -1,4 +1,5 @@
 import logging
+from abc import abstractmethod
 from collections import defaultdict
 
 from torch.utils.data.sampler import Sampler
@@ -9,16 +10,28 @@ from flair.data import FlairDataset
 log = logging.getLogger("flair")
 
 
-class ImbalancedClassificationDatasetSampler(Sampler):
+class FlairSampler(Sampler):
+    def set_dataset(self, data_source):
+        """Initialize by passing a block_size and a plus_window parameter.
+        :param data_source: dataset to sample from
+        """
+        self.data_source = data_source
+        self.num_samples = len(self.data_source)
+
+    def __len__(self):
+        return self.num_samples
+
+
+class ImbalancedClassificationDatasetSampler(FlairSampler):
     """Use this to upsample rare classes and downsample common classes in your unbalanced classification dataset.
     """
 
-    def __init__(self, data_source: FlairDataset):
+    def __init_dataset(self, data_source: FlairDataset):
         """
         Initialize by passing a classification dataset with labels, i.e. either TextClassificationDataSet or
         :param data_source:
         """
-        super().__init__(data_source)
+        super(ImbalancedClassificationDatasetSampler).load_dataset(data_source)
 
         self.indices = list(range(len(data_source)))
         self.num_samples = len(data_source)
@@ -44,25 +57,15 @@ class ImbalancedClassificationDatasetSampler(Sampler):
             for i in torch.multinomial(self.weights, self.num_samples, replacement=True)
         )
 
-    def __len__(self):
-        return self.num_samples
-
 
 class ChunkSampler(Sampler):
     """Splits data into blocks and randomizes them before sampling. This causes some order of the data to be preserved,
     while still shuffling the data.
     """
 
-    def __init__(self, data_source, block_size=5, plus_window=5):
-        """Initialize by passing a block_size and a plus_window parameter.
-        :param data_source: dataset to sample from
-        :param block_size: minimum size of each block
-        :param plus_window: randomly adds between 0 and this value to block size at each epoch
-        """
-        super().__init__(data_source)
-        self.data_source = data_source
-        self.num_samples = len(self.data_source)
+    def __init__(self, block_size=5, plus_window=5):
 
+        super(ChunkSampler, self).__init__(None)
         self.block_size = block_size
         self.plus_window = plus_window
 
@@ -83,9 +86,6 @@ class ChunkSampler(Sampler):
         data[:] = [b for bs in blocks for b in bs]
         return iter(data)
 
-    def __len__(self):
-        return self.num_samples
-
 
 class ExpandingChunkSampler(Sampler):
     """Splits data into blocks and randomizes them before sampling. Block size grows with each epoch.
@@ -96,7 +96,7 @@ class ExpandingChunkSampler(Sampler):
         """Initialize by passing a block_size and a plus_window parameter.
         :param data_source: dataset to sample from
         """
-        super().__init__(data_source)
+        super(ExpandingChunkSampler, self).__init__(None)
         self.data_source = data_source
         self.num_samples = len(self.data_source)
 
@@ -124,6 +124,3 @@ class ExpandingChunkSampler(Sampler):
             self.block_size += 1
 
         return iter(data)
-
-    def __len__(self):
-        return self.num_samples
