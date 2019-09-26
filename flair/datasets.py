@@ -1620,7 +1620,7 @@ class NEWSGROUPS(ClassificationCorpus):
                                 if f"{dataset}/{label}" in m.name
                             ],
                         )
-                        with open(f"{data_path}/{dataset}.txt", "at") as f_p:
+                        with open(f"{data_path}/{dataset}.txt", "at", encoding="utf-8") as f_p:
                             current_path = data_path / "original" / dataset / label
                             for file_name in current_path.iterdir():
                                 if file_name.is_file():
