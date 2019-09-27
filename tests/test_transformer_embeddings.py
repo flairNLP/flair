@@ -12,7 +12,7 @@ from flair.embeddings import (
     XLMEmbeddings,
 )
 
-from pytorch_transformers import (
+from transformers import (
     RobertaModel,
     RobertaTokenizer,
     OpenAIGPTModel,
