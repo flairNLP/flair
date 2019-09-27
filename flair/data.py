@@ -164,9 +164,10 @@ class DataPoint:
 
 
 class DataPair(DataPoint):
-    def __init__(self, first: DataPoint, second: DataPoint):
+    def __init__(self, first: DataPoint, second: DataPoint, metadata_dict=None):
         self.first = first
         self.second = second
+        self.metadata_dict = metadata_dict
 
     def to(self, device: str):
         self.first.to(device)
@@ -180,7 +181,8 @@ class DataPair(DataPoint):
         return torch.cat([self.first.embedding, self.second.embedding])
 
     def __str__(self):
-        return f"DataPoint:\n first: {self.first}\n second: {self.second}"
+        return f"DataPoint:\n first: {self.first}\n second: {self.second}" + \
+               f"metadata: {self.metadata_dict}" if self.metadata_dict else ""
 
 
 class Token(DataPoint):

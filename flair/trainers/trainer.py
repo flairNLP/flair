@@ -77,6 +77,7 @@ class ModelTrainer:
         sampler=None,
         use_amp: bool = False,
         amp_opt_level: str = "O1",
+        eval_on_train_part: bool = False,
         **kwargs,
     ) -> dict:
         """
@@ -167,6 +168,11 @@ class ModelTrainer:
             else False
         )
         log_dev = True if not train_with_dev else False
+        log_train_part = True if eval_on_train_part else False
+
+        if log_train_part:
+            train_part_indices = [i for i, point in enumerate(self.corpus.train) if point.metadata_dict['split'] == 0]
+            train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
 
         # prepare loss logging file and set up header
         loss_txt = init_output_file(base_path, "loss.tsv")
@@ -327,6 +333,20 @@ class ModelTrainer:
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(self.corpus.train, embeddings_storage_mode)
 
+                if log_train_part:
+                    train_part_eval_result, train_part_loss = self.model.evaluate(
+                        DataLoader(
+                            train_part,
+                            batch_size=eval_mini_batch_size,
+                            num_workers=num_workers
+                        ),
+                        embeddings_storage_mode=embeddings_storage_mode
+                    )
+                    result_line += f"\t{train_part_loss}\t{train_part_eval_result.log_line}"
+                    log.info(
+                        f"TRAIN_SPLIT : loss {train_part_loss} - score {train_part_eval_result.main_score}"
+                    )
+
                 if log_dev:
                     dev_eval_result, dev_loss = self.model.evaluate(
                         DataLoader(
@@ -413,6 +433,11 @@ class ModelTrainer:
                                 + "\tTRAIN_".join(
                                     train_eval_result.log_header.split("\t")
                                 )
+                            )
+                        if log_train_part:
+                            f.write(
+                                "\tTRAIN_PART_LOSS\tTRAIN_PART_"
+                                + "\tTRAIN_PART_".join(train_part_eval_result.log_header.split("\t"))
                             )
                         if log_dev:
                             f.write(

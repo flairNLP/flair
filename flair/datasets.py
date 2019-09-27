@@ -6,8 +6,11 @@ from typing import List, Dict, Union
 import re
 import logging
 from pathlib import Path
-import pickle
 import numpy as np
+import json
+from tqdm import tqdm
+import os.path
+import urllib
 
 import torch.utils.data.dataloader
 from torch.utils.data.dataset import Subset, ConcatDataset
@@ -266,7 +269,7 @@ class ClassificationCorpus(Corpus):
 
 
 class FeideggerCorpus(Corpus):
-    def __init__(self, feidegger_csv, **kwargs):
+    def __init__(self, **kwargs):
         """
         Instantiates a Corpus from text classification-formatted task data
 
@@ -277,17 +280,38 @@ class FeideggerCorpus(Corpus):
         :return: a Corpus with annotated train, dev and test data
         """
 
-        feidegger_dataset: Dataset = FeideggerDataset(feidegger_csv, **kwargs)
+        dataset = 'feidegger'
+
+        # cache Feidegger config file
+        json_link = 'https://raw.githubusercontent.com/zalandoresearch/feidegger/master/data/FEIDEGGER_release_1.1.json'
+        json_local_path = cached_path(json_link, Path('datasets') / dataset)
+
+        # cache Feidegger images
+        dataset_info = json.load(open(json_local_path, 'r'))
+        images_cache_folder = os.path.join(os.path.dirname(json_local_path), 'images')
+        if not os.path.isdir(images_cache_folder):
+            os.mkdir(images_cache_folder)
+        for image_info in tqdm(dataset_info):
+            name = os.path.basename(image_info['url'])
+            filename = os.path.join(images_cache_folder, name)
+            if not os.path.isfile(filename):
+                urllib.request.urlretrieve(image_info['url'], filename)
+            # replace image URL with local cached file
+            image_info['url'] = filename
+
+        feidegger_dataset: Dataset = FeideggerDataset(dataset_info, **kwargs)
+
+        splits = [i.metadata_dict['split'] for i in feidegger_dataset]
 
         train_indices = list(
-            np.where(np.in1d(feidegger_dataset.split, list(range(8))))[0]
+            np.where(np.in1d(splits, list(range(8))))[0]
         )
         train = torch.utils.data.dataset.Subset(feidegger_dataset, train_indices)
 
-        dev_indices = list(np.where(np.in1d(feidegger_dataset.split, [8]))[0])
+        dev_indices = list(np.where(np.in1d(splits, [8]))[0])
         dev = torch.utils.data.dataset.Subset(feidegger_dataset, dev_indices)
 
-        test_indices = list(np.where(np.in1d(feidegger_dataset.split, [9]))[0])
+        test_indices = list(np.where(np.in1d(splits, [9]))[0])
         test = torch.utils.data.dataset.Subset(feidegger_dataset, test_indices)
 
         super(FeideggerCorpus, self).__init__(train, dev, test, name="feidegger")
@@ -1121,36 +1145,31 @@ class ParallelTextDataset(FlairDataset):
 
 
 class FeideggerDataset(FlairDataset):
-    def __init__(self, feidegger_csv, in_memory: bool = True, **kwargs):
+    def __init__(self, dataset_info, in_memory: bool = True, **kwargs):
         super(FeideggerDataset, self).__init__()
 
         self.data_points: List[DataPair] = []
-        self.split: List[int] = []
 
         preprocessor = lambda x: x
         if "lowercase" in kwargs and kwargs["lowercase"]:
             preprocessor = lambda x: x.lower()
 
-        for row in csv.reader(open(feidegger_csv, "r"), delimiter="|"):
-            image = Image(imageURL=row[0])
-            for caption in row[1:-1]:
-                # get the split ID
-                split_id = int(row[-1])
-
+        for image_info in dataset_info:
+            image = Image(imageURL=image_info['url'])
+            for caption in image_info['descriptions']:
                 # append Sentence-Image data point and split ID
                 self.data_points.append(
                     DataPair(
                         Sentence(preprocessor(caption), use_tokenizer=True),
                         image,
+                        metadata_dict={'split': int(image_info['split'])}
                     )
                 )
-                self.split.append(split_id)
 
     def __len__(self):
         return len(self.data_points)
 
     def __getitem__(self, index: int = 0) -> DataPair:
-
         return self.data_points[index]
 
 

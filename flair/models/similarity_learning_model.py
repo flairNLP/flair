@@ -49,6 +49,7 @@ class ModelSimilarity(SimilarityMeasure):
     """
 
     def __init__(self, model):
+        super(ModelSimilarity, self).__init__()
         # model is a list of tuples (function, parameters), where parameters is a dict {param_name: param_extract_model}
         self.model = model
 
@@ -115,6 +116,40 @@ class CosineSimilarity(SimilarityMeasure):
             input_modality_0 / input_modality_0_norms,
             (input_modality_1 / input_modality_1_norms).t(),
         )
+
+
+class OrderSimilarity(SimilarityMeasure):
+    """
+    Similarity defined by order embedding, defined in
+    Vendrov et al., "Order-Embeddings of Images and Language", ICLR 2016
+    https://arxiv.org/abs/1511.06361
+    """
+    def __init__(self, normalize=True):
+        super(OrderSimilarity, self).__init__()
+        self.normalize = normalize
+
+    def forward(self, x):
+        input_modality_0_abs = torch.abs(x[0])
+        input_modality_1_abs = torch.abs(x[1])
+
+        # normalize embeddings if needed
+        if self.normalize:
+            input_modality_0_norms = torch.norm(input_modality_0_abs, dim=-1, keepdim=True)
+            input_modality_1_norms = torch.norm(input_modality_1_abs, dim=-1, keepdim=True)
+            input_modality_0 = input_modality_0_abs / input_modality_0_norms
+            input_modality_1 = input_modality_1_abs / input_modality_1_norms
+        else:
+            input_modality_0 = input_modality_0_abs
+            input_modality_1 = input_modality_1_abs
+
+        n_0 = input_modality_0.shape[0]
+        n_1 = input_modality_1.shape[0]
+
+        matrix_elements = torch.repeat_interleave(input_modality_0, n_1, dim=0) - input_modality_1.repeat(n_0, 1)  # [n_0, d], [n_1, d] => [n_0*n_1, d]
+        matrix_elements = torch.relu(matrix_elements)  # [n_0*n_1, d]
+        matrix_elements = torch.norm(matrix_elements, p=2, dim=1)  # [n_0*n_1, d] => [n_0*n_1]
+
+        return -torch.reshape(matrix_elements, [n_0, n_1])
 
 
 class sqL2Similarity(SimilarityMeasure):
