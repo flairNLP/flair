@@ -288,6 +288,9 @@ class SequenceTagger(flair.nn.Model):
                     "is a better choice."
                 )
 
+            # remove previous embeddings
+            store_embeddings(sentences=sentences, storage_mode="none")
+
             # reverse sort all sequences by their length
             rev_order_len_index = sorted(
                 range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True

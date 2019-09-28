@@ -2,16 +2,17 @@ import math
 import warnings
 import logging
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Callable
 
 import torch
 import torch.nn as nn
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 import flair.nn
 import flair.embeddings
-from flair.data import Dictionary, Sentence, Label
-from flair.datasets import DataLoader
+from flair.data import Dictionary, Sentence, Label, Token, space_tokenizer
+from flair.datasets import SentenceDataset, StringDataset
 from flair.file_utils import cached_path
 from flair.training_utils import (
     convert_labels_to_one_hot,
@@ -126,11 +127,12 @@ class TextClassifier(flair.nn.Model):
 
     def predict(
         self,
-        sentences: Union[Sentence, List[Sentence]],
+        sentences: Union[List[Sentence], Sentence, List[str], str],
         mini_batch_size: int = 32,
         embedding_storage_mode="none",
         multi_class_prob: bool = False,
         verbose: bool = False,
+        use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer,
     ) -> List[Sentence]:
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
@@ -140,16 +142,25 @@ class TextClassifier(flair.nn.Model):
         'gpu' to store embeddings in GPU memory.
         :param multi_class_prob : return probability for all class for multiclass
         :param verbose: set to True to display a progress bar
+        :param use_tokenizer: a custom tokenizer when string are provided (default is space based tokenizer).
         :return: the list of sentences containing the labels
         """
         with torch.no_grad():
-            if type(sentences) is Sentence:
+            if not sentences:
+                return sentences
+
+            if isinstance(sentences, Sentence) or isinstance(sentences, str):
                 sentences = [sentences]
 
-            filtered_sentences = self._filter_empty_sentences(sentences)
+            if (flair.device.type == "cuda") and embedding_storage_mode == "cpu":
+                log.warning(
+                    "You are inferring on GPU with parameter 'embedding_storage_mode' set to 'cpu'."
+                    "This option will slow down your inference, usually 'none' (default value) "
+                    "is a better choice."
+                )
 
             # remove previous embeddings
-            store_embeddings(filtered_sentences, "none")
+            store_embeddings(sentences=sentences, storage_mode="none")
 
             # reverse sort all sequences by their length
             rev_order_len_index = sorted(
@@ -163,18 +174,31 @@ class TextClassifier(flair.nn.Model):
                 sentences[index] for index in rev_order_len_index
             ]
 
-            batches = [
-                reordered_sentences[x : x + mini_batch_size]
-                for x in range(0, len(reordered_sentences), mini_batch_size)
-            ]
+            if isinstance(sentences[0], Sentence):
+                # remove previous embeddings
+                store_embeddings(reordered_sentences, "none")
+                dataset = SentenceDataset(reordered_sentences)
+            else:
+                dataset = StringDataset(
+                    reordered_sentences, use_tokenizer=use_tokenizer
+                )
+            dataloader = DataLoader(
+                dataset=dataset, batch_size=mini_batch_size, collate_fn=lambda x: x
+            )
 
             # progress bar for verbosity
             if verbose:
-                batches = tqdm(batches)
+                dataloader = tqdm(dataloader)
 
-            for i, batch in enumerate(batches):
+            results: List[Sentence] = []
+            for i, batch in enumerate(dataloader):
                 if verbose:
-                    batches.set_description(f"Inferencing on batch {i}")
+                    dataloader.set_description(f"Inferencing on batch {i}")
+                results += batch
+                batch = self._filter_empty_sentences(batch)
+                # stop if all sentences are empty
+                if not batch:
+                    continue
 
                 scores = self.forward(batch)
                 predicted_labels = self._obtain_labels(
@@ -187,6 +211,10 @@ class TextClassifier(flair.nn.Model):
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
+            results: List[Union[Sentence, str]] = [
+                results[index] for index in original_order_index
+            ]
+            assert len(sentences) == len(results)
             return sentences
 
     def evaluate(
