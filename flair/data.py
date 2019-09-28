@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from operator import itemgetter
 from typing import List, Dict, Union, Callable
 
 import torch, flair
@@ -57,6 +58,25 @@ class Dictionary:
         else:
             return 0
 
+    def get_idx_for_items(self, items: List[str]) -> List[int]:
+        """
+        returns the IDs for each item of the list of string, otherwise 0 if not found
+        :param items: List of string for which IDs are requested
+        :return: List of ID of strings
+        """
+        if not hasattr(self, "item2idx_not_encoded"):
+            d = dict(
+                [(key.decode("UTF-8"), value) for key, value in self.item2idx.items()]
+            )
+            self.item2idx_not_encoded = defaultdict(int, d)
+
+        if not items:
+            return []
+        results = itemgetter(*items)(self.item2idx_not_encoded)
+        if isinstance(results, int):
+            return [results]
+        return list(results)
+
     def get_items(self) -> List[str]:
         items = []
         for item in self.idx2item:
@@ -95,6 +115,16 @@ class Dictionary:
 
         if name == "chars" or name == "common-chars":
             base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters"
+            char_dict = cached_path(base_path, cache_dir="datasets")
+            return Dictionary.load_from_file(char_dict)
+
+        if name == "chars-large" or name == "common-chars-large":
+            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters_large"
+            char_dict = cached_path(base_path, cache_dir="datasets")
+            return Dictionary.load_from_file(char_dict)
+
+        if name == "chars-xl" or name == "common-chars-xl":
+            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters_xl"
             char_dict = cached_path(base_path, cache_dir="datasets")
             return Dictionary.load_from_file(char_dict)
 

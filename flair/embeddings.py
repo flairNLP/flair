@@ -15,7 +15,7 @@ from bpemb import BPEmb
 from deprecated import deprecated
 from torch.nn import ParameterList, Parameter
 
-from pytorch_transformers import (
+from transformers import (
     BertTokenizer,
     BertModel,
     RobertaTokenizer,
@@ -997,7 +997,7 @@ def _build_token_subwords_mapping(
     Token index (key) and number of corresponding subwords (value) for a sentence.
 
     :param sentence: input sentence
-    :param tokenizer: PyTorch-Transformers tokenization object
+    :param tokenizer: Transformers tokenization object
     :return: dictionary of token index to corresponding number of subwords
     """
     token_subwords_mapping: Dict[int, int] = {}
@@ -1019,7 +1019,7 @@ def _build_token_subwords_mapping_gpt2(
     Token index (key) and number of corresponding subwords (value) for a sentence.
 
     :param sentence: input sentence
-    :param tokenizer: PyTorch-Transformers tokenization object
+    :param tokenizer: Transformers tokenization object
     :return: dictionary of token index to corresponding number of subwords
     """
     token_subwords_mapping: Dict[int, int] = {}
@@ -1962,11 +1962,11 @@ class BertEmbeddings(TokenEmbeddings):
 
         if bert_model_or_path.startswith("distilbert"):
             try:
-                from pytorch_transformers import DistilBertTokenizer, DistilBertModel
+                from transformers import DistilBertTokenizer, DistilBertModel
             except ImportError:
                 log.warning("-" * 100)
                 log.warning(
-                    "ATTENTION! To use DistilBert, please first install a recent version of pytorch-transformers!"
+                    "ATTENTION! To use DistilBert, please first install a recent version of transformers!"
                 )
                 log.warning("-" * 100)
                 pass
@@ -2650,14 +2650,11 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         self.name = "document_" + self.rnn._get_name()
 
         # dropouts
-        if locked_dropout > 0.0:
-            self.dropout: torch.nn.Module = LockedDropout(locked_dropout)
-        else:
-            self.dropout = torch.nn.Dropout(dropout)
-
-        self.use_word_dropout: bool = word_dropout > 0.0
-        if self.use_word_dropout:
-            self.word_dropout = WordDropout(word_dropout)
+        self.dropout = torch.nn.Dropout(dropout) if dropout > 0.0 else None
+        self.locked_dropout = (
+            LockedDropout(locked_dropout) if locked_dropout > 0.0 else None
+        )
+        self.word_dropout = WordDropout(word_dropout) if word_dropout > 0.0 else None
 
         torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
 
@@ -2672,6 +2669,12 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
     def _add_embeddings_internal(self, sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
          only if embeddings are non-static."""
+
+        # TODO: remove in future versions
+        if not hasattr(self, "locked_dropout"):
+            self.locked_dropout = None
+        if not hasattr(self, "word_dropout"):
+            self.word_dropout = None
 
         if type(sentences) is Sentence:
             sentences = [sentences]
@@ -2710,30 +2713,32 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             concat_sentence_emb = torch.cat(concat_word_emb, dim=1)
             sentence_tensor[s_id][: len(sentence)] = concat_sentence_emb
 
-        # --------------------------------------------------------------------
-        # FF PART
-        # --------------------------------------------------------------------
-        sentence_tensor = self.dropout(sentence_tensor)
-        # use word dropout if set
-        if self.use_word_dropout:
+        # before-RNN dropout
+        if self.dropout:
+            sentence_tensor = self.dropout(sentence_tensor)
+        if self.locked_dropout:
+            sentence_tensor = self.locked_dropout(sentence_tensor)
+        if self.word_dropout:
             sentence_tensor = self.word_dropout(sentence_tensor)
 
+        # reproject if set
         if self.reproject_words:
             sentence_tensor = self.word_reprojection_map(sentence_tensor)
 
+        # push through RNN
         packed = pack_padded_sequence(
             sentence_tensor, lengths, enforce_sorted=False, batch_first=True
         )
-
         rnn_out, hidden = self.rnn(packed)
-
         outputs, output_lengths = pad_packed_sequence(rnn_out, batch_first=True)
 
-        outputs = self.dropout(outputs)
+        # after-RNN dropout
+        if self.dropout:
+            outputs = self.dropout(outputs)
+        if self.locked_dropout:
+            outputs = self.locked_dropout(outputs)
 
-        # --------------------------------------------------------------------
-        # EXTRACT EMBEDDINGS FROM RNN
-        # --------------------------------------------------------------------
+        # extract embeddings from RNN
         for sentence_no, length in enumerate(lengths):
             last_rep = outputs[sentence_no, length - 1]
 
