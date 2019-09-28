@@ -151,9 +151,21 @@ class TextClassifier(flair.nn.Model):
             # remove previous embeddings
             store_embeddings(filtered_sentences, "none")
 
+            # reverse sort all sequences by their length
+            rev_order_len_index = sorted(
+                range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True
+            )
+            original_order_index = sorted(
+                range(len(rev_order_len_index)), key=lambda k: rev_order_len_index[k]
+            )
+
+            reordered_sentences: List[Union[Sentence, str]] = [
+                sentences[index] for index in rev_order_len_index
+            ]
+
             batches = [
-                filtered_sentences[x : x + mini_batch_size]
-                for x in range(0, len(filtered_sentences), mini_batch_size)
+                reordered_sentences[x : x + mini_batch_size]
+                for x in range(0, len(reordered_sentences), mini_batch_size)
             ]
 
             # progress bar for verbosity
