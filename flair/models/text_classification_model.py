@@ -6,6 +6,7 @@ from typing import List, Union
 
 import torch
 import torch.nn as nn
+from tqdm import tqdm
 
 import flair.nn
 import flair.embeddings
@@ -129,6 +130,7 @@ class TextClassifier(flair.nn.Model):
         mini_batch_size: int = 32,
         embedding_storage_mode="none",
         multi_class_prob: bool = False,
+        verbose: bool = False,
     ) -> List[Sentence]:
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
@@ -137,6 +139,7 @@ class TextClassifier(flair.nn.Model):
         :param embedding_storage_mode: 'none' for the minimum memory footprint, 'cpu' to store embeddings in Ram,
         'gpu' to store embeddings in GPU memory.
         :param multi_class_prob : return probability for all class for multiclass
+        :param verbose: set to True to display a progress bar
         :return: the list of sentences containing the labels
         """
         with torch.no_grad():
@@ -153,7 +156,14 @@ class TextClassifier(flair.nn.Model):
                 for x in range(0, len(filtered_sentences), mini_batch_size)
             ]
 
-            for batch in batches:
+            # progress bar for verbosity
+            if verbose:
+                batches = tqdm(batches)
+
+            for i, batch in enumerate(batches):
+                if verbose:
+                    batches.set_description(f"Inferencing on batch {i}")
+
                 scores = self.forward(batch)
                 predicted_labels = self._obtain_labels(
                     scores, predict_prob=multi_class_prob
