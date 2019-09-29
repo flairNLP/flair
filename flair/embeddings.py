@@ -2713,7 +2713,6 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         #     concat_sentence_emb = torch.cat(concat_word_emb, dim=1)
         #     sentence_tensor[s_id][: len(sentence)] = concat_sentence_emb
 
-
         pre_allocated_zero_tensor = torch.zeros(
             self.embeddings.embedding_length * longest_token_sequence_in_batch,
             dtype=torch.float,
@@ -2740,10 +2739,6 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
                 self.embeddings.embedding_length,
             ]
         )
-
-
-
-
 
         # before-RNN dropout
         if self.dropout:
