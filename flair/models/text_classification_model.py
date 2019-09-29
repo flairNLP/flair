@@ -212,7 +212,7 @@ class TextClassifier(flair.nn.Model):
                 results[index] for index in original_order_index
             ]
             assert len(sentences) == len(results)
-            return sentences
+            return results
 
     def evaluate(
         self,
