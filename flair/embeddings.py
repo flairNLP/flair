@@ -7,6 +7,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import List, Union, Dict
 
+import hashlib
+
 import gensim
 import numpy as np
 import torch
@@ -143,8 +145,7 @@ class StackedEmbeddings(TokenEmbeddings):
 
         # IMPORTANT: add embeddings as torch modules
         for i, embedding in enumerate(embeddings):
-            embedding.name = f"{str(i)}-{embedding.name}"
-            self.add_module(f"list_embedding_{str(i)}", embedding)
+            self.add_module("list_embedding_{}".format(i), embedding)
 
         self.name: str = "Stack"
         self.static_embeddings: bool = True
@@ -536,6 +537,110 @@ class OneHotEmbeddings(TokenEmbeddings):
         return "min_freq={}".format(self.min_freq)
 
 
+class HashEmbeddings(TokenEmbeddings):
+    """Standard embeddings with Hashing Trick."""
+
+    def __init__(
+        self,
+        num_embeddings: int = 1000,
+        embedding_length: int = 300,
+        hash_method='md5'
+    ):
+
+        super().__init__()
+        self.name = "hash"
+        self.static_embeddings = False
+
+        self.__num_embeddings = num_embeddings
+        self.__embedding_length = embedding_length
+
+        self.__hash_method = hash_method
+        self.__hash_function = hashlib.new(hash_method)
+
+        # model architecture
+        self.embedding_layer = torch.nn.Embedding(
+            self.__num_embeddings, self.__embedding_length
+        )
+        torch.nn.init.xavier_uniform_(self.embedding_layer.weight)
+
+        self.to(flair.device)
+
+
+    @property
+    def num_embeddings(self) -> int:
+        return self.__num_embeddings
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        def get_idx_for_item(text):
+            self.__hash_function.update(bytes(str(text), 'utf-8'))
+            return int(self.__hash_function.hexdigest(), 16) % self.__num_embeddings
+
+        hash_sentences = []
+        for i, sentence in enumerate(sentences):
+            context_idxs = [
+                get_idx_for_item(t.text) for t in sentence.tokens
+            ]
+
+            hash_sentences.extend(context_idxs)
+
+        hash_sentences = torch.tensor(hash_sentences, dtype=torch.long).to(
+            flair.device
+        )
+
+        embedded = self.embedding_layer.forward(hash_sentences)
+
+        index = 0
+        for sentence in sentences:
+            for token in sentence:
+                embedding = embedded[index]
+                token.set_embedding(self.name, embedding)
+                index += 1
+
+        return sentences
+
+    def __str__(self):
+        return self.name
+
+    def extra_repr(self):
+        return "min_freq={}".format(self.min_freq)
+
+
+class BPEmbSerializable(BPEmb):
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # save the sentence piece model as binary file (not as path which may change)
+        state["spm_model_binary"] = open(self.model_file, mode="rb").read()
+        state["spm"] = None
+        return state
+
+    def __setstate__(self, state):
+        from bpemb.util import sentencepiece_load
+
+        model_file = self.model_tpl.format(lang=state["lang"], vs=state["vs"])
+        self.__dict__ = state
+
+        # write out the binary sentence piece model into the expected directory
+        self.cache_dir: Path = Path(flair.cache_root) / "embeddings"
+        if "spm_model_binary" in self.__dict__:
+            # if the model was saved as binary and it is not found on disk, write to appropriate path
+            if not os.path.exists(self.cache_dir / state["lang"]):
+                os.makedirs(self.cache_dir / state["lang"])
+            self.model_file = self.cache_dir / model_file
+            with open(self.model_file, "wb") as out:
+                out.write(self.__dict__["spm_model_binary"])
+        else:
+            # otherwise, use normal process and potentially trigger another download
+            self.model_file = self._load_file(model_file)
+
+        # once the modes if there, load it with sentence piece
+        state["spm"] = sentencepiece_load(self.model_file)
+
+
 class MuseCrosslingualEmbeddings(TokenEmbeddings):
     def __init__(self,):
         self.name: str = f"muse-crosslingual"
@@ -651,7 +756,9 @@ class BytePairEmbeddings(TokenEmbeddings):
 
         self.name: str = f"bpe-{language}-{syllables}-{dim}"
         self.static_embeddings = True
-        self.embedder = BPEmb(lang=language, vs=syllables, dim=dim, cache_dir=cache_dir)
+        self.embedder = BPEmbSerializable(
+            lang=language, vs=syllables, dim=dim, cache_dir=cache_dir
+        )
 
         self.__embedding_length: int = self.embedder.emb.vector_size * 2
         super().__init__()
@@ -1610,12 +1717,10 @@ class FlairEmbeddings(TokenEmbeddings):
 
         self.PRETRAINED_MODEL_ARCHIVE_MAP = {
             # multilingual models
-            "multi-forward": f"{aws_path}/embeddings-v0.4.3/lm-jw300-forward-v0.1.pt",
-            "multi-backward": f"{aws_path}/embeddings-v0.4.3/lm-jw300-backward-v0.1.pt",
-            "multi-v0-forward": f"{aws_path}/embeddings-v0.4/lm-multi-forward-v0.1.pt",
-            "multi-v0-backward": f"{aws_path}/embeddings-v0.4/lm-multi-backward-v0.1.pt",
-            "multi-v0-forward-fast": f"{aws_path}/embeddings-v0.4/lm-multi-forward-fast-v0.1.pt",
-            "multi-v0-backward-fast": f"{aws_path}/embeddings-v0.4/lm-multi-backward-fast-v0.1.pt",
+            "multi-forward": f"{aws_path}/embeddings-v0.4/lm-multi-forward-v0.1.pt",
+            "multi-backward": f"{aws_path}/embeddings-v0.4/lm-multi-backward-v0.1.pt",
+            "multi-forward-fast": f"{aws_path}/embeddings-v0.4/lm-multi-forward-fast-v0.1.pt",
+            "multi-backward-fast": f"{aws_path}/embeddings-v0.4/lm-multi-backward-fast-v0.1.pt",
             # English models
             "en-forward": f"{aws_path}/embeddings-v0.4.1/big-news-forward--h2048-l1-d0.05-lr30-0.25-20/news-forward-0.4.1.pt",
             "en-backward": f"{aws_path}/embeddings-v0.4.1/big-news-backward--h2048-l1-d0.05-lr30-0.25-20/news-backward-0.4.1.pt",
@@ -1795,23 +1900,40 @@ class FlairEmbeddings(TokenEmbeddings):
             # if this is not possible, use LM to generate embedding. First, get text sentences
             text_sentences = [sentence.to_tokenized_string() for sentence in sentences]
 
+            longest_character_sequence_in_batch: int = len(max(text_sentences, key=len))
+
+            # pad strings with whitespaces to longest sentence
+            sentences_padded: List[str] = []
+            append_padded_sentence = sentences_padded.append
+
             start_marker = "\n"
+
             end_marker = " "
+            extra_offset = len(start_marker)
+            for sentence_text in text_sentences:
+                pad_by = longest_character_sequence_in_batch - len(sentence_text)
+                if self.is_forward_lm:
+                    padded = "{}{}{}{}".format(
+                        start_marker, sentence_text, end_marker, pad_by * " "
+                    )
+                    append_padded_sentence(padded)
+                else:
+                    padded = "{}{}{}{}".format(
+                        start_marker, sentence_text[::-1], end_marker, pad_by * " "
+                    )
+                    append_padded_sentence(padded)
 
             # get hidden states from language model
             all_hidden_states_in_lm = self.lm.get_representation(
-                text_sentences, start_marker, end_marker, self.chars_per_chunk
+                sentences_padded, self.chars_per_chunk
             )
-
-            if not self.fine_tune:
-                all_hidden_states_in_lm = all_hidden_states_in_lm.detach()
 
             # take first or last hidden states from language model as word representation
             for i, sentence in enumerate(sentences):
                 sentence_text = sentence.to_tokenized_string()
 
-                offset_forward: int = len(start_marker)
-                offset_backward: int = len(sentence_text) + len(start_marker)
+                offset_forward: int = extra_offset
+                offset_backward: int = len(sentence_text) + extra_offset
 
                 for token in sentence.tokens:
 
@@ -1830,12 +1952,16 @@ class FlairEmbeddings(TokenEmbeddings):
 
                     offset_backward -= len(token.text)
 
+                    if not self.fine_tune:
+                        embedding = embedding.detach()
+
                     # only clone if optimization mode is 'gpu'
                     if flair.embedding_storage_mode == "gpu":
                         embedding = embedding.clone()
 
                     token.set_embedding(self.name, embedding)
 
+            all_hidden_states_in_lm = all_hidden_states_in_lm.detach()
             del all_hidden_states_in_lm
 
         return sentences
@@ -2387,20 +2513,34 @@ class CharLMEmbeddings(TokenEmbeddings):
         # if this is not possible, use LM to generate embedding. First, get text sentences
         text_sentences = [sentence.to_tokenized_string() for sentence in sentences]
 
-        start_marker = "\n"
+        longest_character_sequence_in_batch: int = len(max(text_sentences, key=len))
+
+        # pad strings with whitespaces to longest sentence
+        sentences_padded: List[str] = []
+        append_padded_sentence = sentences_padded.append
+
         end_marker = " "
+        extra_offset = 1
+        for sentence_text in text_sentences:
+            pad_by = longest_character_sequence_in_batch - len(sentence_text)
+            if self.is_forward_lm:
+                padded = "\n{}{}{}".format(sentence_text, end_marker, pad_by * " ")
+                append_padded_sentence(padded)
+            else:
+                padded = "\n{}{}{}".format(
+                    sentence_text[::-1], end_marker, pad_by * " "
+                )
+                append_padded_sentence(padded)
 
         # get hidden states from language model
-        all_hidden_states_in_lm = self.lm.get_representation(
-            text_sentences, start_marker, end_marker, self.chars_per_chunk
-        )
+        all_hidden_states_in_lm = self.lm.get_representation(sentences_padded)
 
         # take first or last hidden states from language model as word representation
         for i, sentence in enumerate(sentences):
             sentence_text = sentence.to_tokenized_string()
 
-            offset_forward: int = len(start_marker)
-            offset_backward: int = len(sentence_text) + len(start_marker)
+            offset_forward: int = extra_offset
+            offset_backward: int = len(sentence_text) + extra_offset
 
             for token in sentence.tokens:
 
@@ -2650,11 +2790,14 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         self.name = "document_" + self.rnn._get_name()
 
         # dropouts
-        self.dropout = torch.nn.Dropout(dropout) if dropout > 0.0 else None
-        self.locked_dropout = (
-            LockedDropout(locked_dropout) if locked_dropout > 0.0 else None
-        )
-        self.word_dropout = WordDropout(word_dropout) if word_dropout > 0.0 else None
+        if locked_dropout > 0.0:
+            self.dropout: torch.nn.Module = LockedDropout(locked_dropout)
+        else:
+            self.dropout = torch.nn.Dropout(dropout)
+
+        self.use_word_dropout: bool = word_dropout > 0.0
+        if self.use_word_dropout:
+            self.word_dropout = WordDropout(word_dropout)
 
         torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
 
@@ -2669,12 +2812,6 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
     def _add_embeddings_internal(self, sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
          only if embeddings are non-static."""
-
-        # TODO: remove in future versions
-        if not hasattr(self, "locked_dropout"):
-            self.locked_dropout = None
-        if not hasattr(self, "word_dropout"):
-            self.word_dropout = None
 
         if type(sentences) is Sentence:
             sentences = [sentences]
@@ -2713,32 +2850,30 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             concat_sentence_emb = torch.cat(concat_word_emb, dim=1)
             sentence_tensor[s_id][: len(sentence)] = concat_sentence_emb
 
-        # before-RNN dropout
-        if self.dropout:
-            sentence_tensor = self.dropout(sentence_tensor)
-        if self.locked_dropout:
-            sentence_tensor = self.locked_dropout(sentence_tensor)
-        if self.word_dropout:
+        # --------------------------------------------------------------------
+        # FF PART
+        # --------------------------------------------------------------------
+        sentence_tensor = self.dropout(sentence_tensor)
+        # use word dropout if set
+        if self.use_word_dropout:
             sentence_tensor = self.word_dropout(sentence_tensor)
 
-        # reproject if set
         if self.reproject_words:
             sentence_tensor = self.word_reprojection_map(sentence_tensor)
 
-        # push through RNN
         packed = pack_padded_sequence(
             sentence_tensor, lengths, enforce_sorted=False, batch_first=True
         )
+
         rnn_out, hidden = self.rnn(packed)
+
         outputs, output_lengths = pad_packed_sequence(rnn_out, batch_first=True)
 
-        # after-RNN dropout
-        if self.dropout:
-            outputs = self.dropout(outputs)
-        if self.locked_dropout:
-            outputs = self.locked_dropout(outputs)
+        outputs = self.dropout(outputs)
 
-        # extract embeddings from RNN
+        # --------------------------------------------------------------------
+        # EXTRACT EMBEDDINGS FROM RNN
+        # --------------------------------------------------------------------
         for sentence_no, length in enumerate(lengths):
             last_rep = outputs[sentence_no, length - 1]
 
