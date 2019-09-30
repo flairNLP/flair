@@ -565,7 +565,6 @@ class HashEmbeddings(TokenEmbeddings):
 
         self.to(flair.device)
 
-
     @property
     def num_embeddings(self) -> int:
         return self.__num_embeddings
@@ -605,9 +604,6 @@ class HashEmbeddings(TokenEmbeddings):
 
     def __str__(self):
         return self.name
-
-    def extra_repr(self):
-        return "min_freq={}".format(self.min_freq)
 
 
 class BPEmbSerializable(BPEmb):
