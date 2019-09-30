@@ -162,6 +162,8 @@ Following GPT-2 models can be used:
 |               | OpenAI GPT-2 English model
 | `gpt2-medium` | 24-layer, 1024-hidden, 16-heads, 345M parameters
 |               | OpenAI's Medium-sized GPT-2 English model
+| `gpt2-large`  | 36-layer, 1280-hidden, 20-heads, 774M parameters
+|               | OpenAI's Large-sized GPT-2 English model
 
 ## Transformer-XL Embeddings
 
