@@ -17,7 +17,7 @@ from bpemb import BPEmb
 from deprecated import deprecated
 from torch.nn import ParameterList, Parameter
 
-from pytorch_transformers import (
+from transformers import (
     BertTokenizer,
     BertModel,
     RobertaTokenizer,
@@ -1100,7 +1100,7 @@ def _build_token_subwords_mapping(
     Token index (key) and number of corresponding subwords (value) for a sentence.
 
     :param sentence: input sentence
-    :param tokenizer: PyTorch-Transformers tokenization object
+    :param tokenizer: Transformers tokenization object
     :return: dictionary of token index to corresponding number of subwords
     """
     token_subwords_mapping: Dict[int, int] = {}
@@ -1122,7 +1122,7 @@ def _build_token_subwords_mapping_gpt2(
     Token index (key) and number of corresponding subwords (value) for a sentence.
 
     :param sentence: input sentence
-    :param tokenizer: PyTorch-Transformers tokenization object
+    :param tokenizer: Transformers tokenization object
     :return: dictionary of token index to corresponding number of subwords
     """
     token_subwords_mapping: Dict[int, int] = {}
@@ -2084,11 +2084,11 @@ class BertEmbeddings(TokenEmbeddings):
 
         if bert_model_or_path.startswith("distilbert"):
             try:
-                from pytorch_transformers import DistilBertTokenizer, DistilBertModel
+                from transformers import DistilBertTokenizer, DistilBertModel
             except ImportError:
                 log.warning("-" * 100)
                 log.warning(
-                    "ATTENTION! To use DistilBert, please first install a recent version of pytorch-transformers!"
+                    "ATTENTION! To use DistilBert, please first install a recent version of transformers!"
                 )
                 log.warning("-" * 100)
                 pass

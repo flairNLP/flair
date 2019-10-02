@@ -27,7 +27,7 @@ Currently, the following contextual string embeddings are provided (note: replac
 
 | ID | Language | Embedding |
 | -------------     | ------------- | ------------- |
-| 'multi-X'    | English, German, French, Italian, Dutch, Polish | Mix of corpora (Web, Wikipedia, Subtitles, News) |
+| 'multi-X'    | 300+ | [JW300 corpus](http://opus.nlpl.eu/JW300.php), as proposed by [Agić and Vulić (2019)](https://www.aclweb.org/anthology/P19-1310/). The corpus is licensed under CC-BY-NC-SA
 | 'multi-X-fast'    | English, German, French, Italian, Dutch, Polish | Mix of corpora (Web, Wikipedia, Subtitles, News), CPU-friendly |
 | 'news-X'    | English | Trained with 1 billion word corpus |
 | 'news-X-fast'    | English | Trained with 1 billion word corpus, CPU-friendly |

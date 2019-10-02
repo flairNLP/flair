@@ -1,6 +1,6 @@
-# PyTorch-Transformers
+# Transformers
 
-Thanks to the brilliant [`pytorch-transformers`](https://github.com/huggingface/pytorch-transformers) library from [Hugging Face](https://github.com/huggingface),
+Thanks to the brilliant [`transformers`](https://github.com/huggingface/transformers) library from [Hugging Face](https://github.com/huggingface),
 Flair is able to support various Transformer-based architectures like BERT or XLNet.
 
 The following embeddings can be used in Flair:
@@ -14,7 +14,7 @@ The following embeddings can be used in Flair:
 * `RoBERTaEmbeddings`
 
 This section shows how to use these Transformer-based architectures in Flair and is heavily based on the excellent
-[PyTorch-Transformers pre-trained models documentation](https://huggingface.co/pytorch-transformers/pretrained_models.html).
+[Transformers pre-trained models documentation](https://huggingface.co/transformers/pretrained_models.html).
 
 ## BERT Embeddings
 
@@ -76,13 +76,13 @@ You can load any of the pre-trained BERT models by providing `bert_model_or_path
 |                                                         | (see [details](https://github.com/google-research/bert/#bert))
 | `bert-large-uncased-whole-word-masking-finetuned-squad` | 24-layer, 1024-hidden, 16-heads, 340M parameters
 |                                                         | The `bert-large-uncased-whole-word-masking` model fine-tuned on SQuAD (see details of fine-tuning in the
-|                                                         | [example section of PyTorch-Transformers](https://github.com/huggingface/pytorch-transformers/tree/master/examples))
+|                                                         | [example section of Transformers](https://github.com/huggingface/transformers/tree/master/examples))
 | `bert-large-cased-whole-word-masking-finetuned-squad`   | 24-layer, 1024-hidden, 16-heads, 340M parameters
 |                                                         | The `bert-large-cased-whole-word-masking` model fine-tuned on SQuAD
-|                                                         | (see [details of fine-tuning in the example section](https://huggingface.co/pytorch-transformers/examples.html))
+|                                                         | (see [details of fine-tuning in the example section](https://huggingface.co/transformers/examples.html))
 | `bert-base-cased-finetuned-mrpc`                        | 12-layer, 768-hidden, 12-heads, 110M parameters
 |                                                         | The `bert-base-cased` model fine-tuned on MRPC
-|                                                         | (see [details of fine-tuning in the example section of PyTorch-Transformers](https://huggingface.co/pytorch-transformers/examples.html))
+|                                                         | (see [details of fine-tuning in the example section of Transformers](https://huggingface.co/transformers/examples.html))
 
 It is also possible to use [distilled versions](https://medium.com/huggingface/distilbert-8cf3380435b5)
 of BERT (DistilBERT):
@@ -162,6 +162,8 @@ Following GPT-2 models can be used:
 |               | OpenAI GPT-2 English model
 | `gpt2-medium` | 24-layer, 1024-hidden, 16-heads, 345M parameters
 |               | OpenAI's Medium-sized GPT-2 English model
+| `gpt2-large`  | 36-layer, 1280-hidden, 20-heads, 774M parameters
+|               | OpenAI's Large-sized GPT-2 English model
 
 ## Transformer-XL Embeddings
 
