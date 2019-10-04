@@ -953,7 +953,7 @@ class SequenceTagger(flair.nn.Model):
         )
 
         model_map["da-ner"] = "/".join(
-            [aws_resource_path_v04, "POS-danish", "da-pos-v0.1.pt"]
+            [aws_resource_path_v04, "NER-danish", "da-ner-v0.1.pt"]
         )
 
         model_map["de-pos"] = "/".join(
