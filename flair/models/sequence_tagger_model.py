@@ -948,6 +948,14 @@ class SequenceTagger(flair.nn.Model):
             ]
         )
 
+        model_map["da-pos"] = "/".join(
+            [aws_resource_path_v04, "POS-danish", "da-pos-v0.1.pt"]
+        )
+
+        model_map["da-ner"] = "/".join(
+            [aws_resource_path_v04, "POS-danish", "da-pos-v0.1.pt"]
+        )
+
         model_map["de-pos"] = "/".join(
             [aws_resource_path_v04, "release-de-pos-0", "de-pos-ud-hdt-v0.4.pt"]
         )
