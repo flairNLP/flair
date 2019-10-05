@@ -2030,19 +2030,21 @@ class PooledFlairEmbeddings(TokenEmbeddings):
                 local_embedding = token._embeddings[self.context_embeddings.name]
                 local_embedding = local_embedding.to(flair.device)
 
-                if token.text[0].isupper() or not self.only_capitalized:
+                # check token.text is empty or not
+                if token.text:
+                    if token.text[0].isupper() or not self.only_capitalized:
 
-                    if token.text not in self.word_embeddings:
-                        self.word_embeddings[token.text] = local_embedding
-                        self.word_count[token.text] = 1
-                    else:
-                        aggregated_embedding = self.aggregate_op(
-                            self.word_embeddings[token.text], local_embedding
-                        )
-                        if self.pooling == "fade":
-                            aggregated_embedding /= 2
-                        self.word_embeddings[token.text] = aggregated_embedding
-                        self.word_count[token.text] += 1
+                        if token.text not in self.word_embeddings:
+                            self.word_embeddings[token.text] = local_embedding
+                            self.word_count[token.text] = 1
+                        else:
+                            aggregated_embedding = self.aggregate_op(
+                                self.word_embeddings[token.text], local_embedding
+                            )
+                            if self.pooling == "fade":
+                                aggregated_embedding /= 2
+                            self.word_embeddings[token.text] = aggregated_embedding
+                            self.word_count[token.text] += 1
 
         # add embeddings after updating
         for sentence in sentences:
