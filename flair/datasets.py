@@ -1177,7 +1177,7 @@ class MongoDataset(FlairDataset):
         'Plats': 'Abrahamsby'
         }
 
-        :param query: Query, e.g. {'category1': 'label1'}
+        :param query: Query, e.g. {'Län': 'Stockholms län'}
         :param host: Host, e.g. 'localhost',
         :param port: Port, e.g. 27017
         :param database: Database, e.g. 'rosenberg',
