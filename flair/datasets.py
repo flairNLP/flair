@@ -1213,10 +1213,8 @@ class MongoDataset(FlairDataset):
 
         kwargs = lambda start: {
             'filter': query,
-            'projection': {'_id': False, 'PostID': False},
             'skip': start,
-            'limit': 0,
-            'sort': [('Plats', pymongo.ASCENDING)]
+            'limit': 0
         }
 
         if self.in_memory:
