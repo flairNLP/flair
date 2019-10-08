@@ -106,7 +106,7 @@ class SequenceTagger(flair.nn.Model):
 
         self.trained_epochs: int = 0
 
-        self.embeddings = embeddings
+        self.embeddings: TokenEmbeddings = embeddings
 
         # set the dictionaries
         self.tag_dictionary: Dictionary = tag_dictionary

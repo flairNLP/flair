@@ -533,9 +533,13 @@ class LanguageModelTrainer:
         return data, target
 
     @staticmethod
-    def _repackage_hidden(h):
+    def _repackage_hidden(hidden):
         """Wraps hidden states in new tensors, to detach them from their history."""
-        return tuple(v.clone().detach() for v in h)
+
+        if type(hidden[0]) == tuple:
+            return tuple(tuple(s.clone().detach() for s in v) for v in hidden)
+        else:
+            return tuple(v.clone().detach() for v in hidden)
 
     @staticmethod
     def load_from_checkpoint(

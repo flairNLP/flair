@@ -24,6 +24,7 @@ class LanguageModel(nn.Module):
         embedding_size: int = 100,
         nout=None,
         dropout=0.1,
+        use_all_layers: bool = True,
     ):
 
         super(LanguageModel, self).__init__()
@@ -35,6 +36,7 @@ class LanguageModel(nn.Module):
         self.hidden_size = hidden_size
         self.embedding_size = embedding_size
         self.nlayers = nlayers
+        self.use_all_layers: bool = use_all_layers
 
         self.drop = nn.Dropout(dropout)
         self.encoder = nn.Embedding(len(dictionary), embedding_size)
@@ -42,18 +44,31 @@ class LanguageModel(nn.Module):
         if nlayers == 1:
             self.rnn = nn.LSTM(embedding_size, hidden_size, nlayers)
         else:
-            self.rnn = nn.LSTM(embedding_size, hidden_size, nlayers, dropout=dropout)
+            rnns = [
+                torch.nn.LSTM(
+                    input_size=embedding_size if layer == 0 else hidden_size,
+                    hidden_size=hidden_size if layer != nlayers - 1 else hidden_size,
+                    num_layers=1,
+                    dropout=0,
+                )
+                for layer in range(nlayers)
+            ]
+            self.rnn = torch.nn.ModuleList(rnns)
+
+        output_embedding_size = (
+            hidden_size * nlayers if self.use_all_layers else hidden_size
+        )
 
         self.hidden = None
 
         self.nout = nout
         if nout is not None:
-            self.proj = nn.Linear(hidden_size, nout)
+            self.proj = nn.Linear(output_embedding_size, nout)
             self.initialize(self.proj.weight)
             self.decoder = nn.Linear(nout, len(dictionary))
         else:
             self.proj = None
-            self.decoder = nn.Linear(hidden_size, len(dictionary))
+            self.decoder = nn.Linear(output_embedding_size, len(dictionary))
 
         self.init_weights()
 
@@ -73,9 +88,28 @@ class LanguageModel(nn.Module):
         encoded = self.encoder(input)
         emb = self.drop(encoded)
 
-        self.rnn.flatten_parameters()
+        if self.nlayers == 1:
+            # one layer LSTM is a simple method call
+            output, hidden = self.rnn(emb, hidden)
+        else:
+            # multi-layer LSTM is more complicated
+            raw_output = emb
+            outputs = []
+            new_hidden = []
+            for l, rnn in enumerate(self.rnn):
+                raw_output, new_h = rnn(raw_output, hidden[l] if hidden else None)
+                new_hidden.append(new_h)
 
-        output, hidden = self.rnn(emb, hidden)
+                raw_output = self.drop(raw_output)
+                outputs.append(raw_output)
+
+            hidden = new_hidden
+
+            # use all outputs or only the top layer
+            if self.use_all_layers:
+                output = torch.cat(outputs, 2)
+            else:
+                output = raw_output
 
         if self.proj is not None:
             output = self.proj(output)
@@ -85,7 +119,6 @@ class LanguageModel(nn.Module):
         decoded = self.decoder(
             output.view(output.size(0) * output.size(1), output.size(2))
         )
-
         return (
             decoded.view(output.size(0), output.size(1), decoded.size(1)),
             output,
@@ -93,11 +126,7 @@ class LanguageModel(nn.Module):
         )
 
     def init_hidden(self, bsz):
-        weight = next(self.parameters()).detach()
-        return (
-            weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
-            weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
-        )
+        return None
 
     def get_representation(
         self,
