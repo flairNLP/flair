@@ -38,6 +38,7 @@ class ColumnCorpus(Corpus):
         tag_to_bioes=None,
         comment_symbol: str = None,
         in_memory: bool = True,
+        document_separator_token: str = None,
     ):
         """
         Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
@@ -99,6 +100,7 @@ class ColumnCorpus(Corpus):
             tag_to_bioes,
             comment_symbol=comment_symbol,
             in_memory=in_memory,
+            document_separator_token=document_separator_token,
         )
 
         # read in test file if exists, otherwise sample 10% of train data as test dataset
@@ -109,6 +111,7 @@ class ColumnCorpus(Corpus):
                 tag_to_bioes,
                 comment_symbol=comment_symbol,
                 in_memory=in_memory,
+                document_separator_token=document_separator_token,
             )
         else:
             train_length = len(train)
@@ -125,6 +128,7 @@ class ColumnCorpus(Corpus):
                 tag_to_bioes,
                 comment_symbol=comment_symbol,
                 in_memory=in_memory,
+                document_separator_token=document_separator_token,
             )
         else:
             train_length = len(train)
@@ -621,6 +625,7 @@ class ColumnDataset(FlairDataset):
         tag_to_bioes: str = None,
         comment_symbol: str = None,
         in_memory: bool = True,
+        document_separator_token: str = None,
     ):
         """
         Instantiates a column dataset (typically used for sequence labeling or word-level prediction).
@@ -636,6 +641,7 @@ class ColumnDataset(FlairDataset):
         self.tag_to_bioes = tag_to_bioes
         self.column_name_map = column_name_map
         self.comment_symbol = comment_symbol
+        self.document_separator_token = document_separator_token
 
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
@@ -678,7 +684,7 @@ class ColumnDataset(FlairDataset):
                     line = f.readline()
                     continue
 
-                if line.isspace():
+                if self.__line_completes_sentence(line):
                     if len(sentence) > 0:
                         sentence.infer_space_after()
                         if self.in_memory:
@@ -703,7 +709,8 @@ class ColumnDataset(FlairDataset):
                                     self.column_name_map[column], fields[column]
                                 )
 
-                    sentence.add_token(token)
+                    if not line.isspace():
+                        sentence.add_token(token)
 
                 line = f.readline()
 
@@ -714,6 +721,16 @@ class ColumnDataset(FlairDataset):
             else:
                 self.indices.append(position)
             self.total_sentence_count += 1
+
+    def __line_completes_sentence(self, line: str) -> bool:
+        sentence_completed = line.isspace()
+        if self.document_separator_token:
+            sentence_completed = False
+            fields: List[str] = re.split("\s+", line)
+            if len(fields) >= self.text_column:
+                if fields[self.text_column] == self.document_separator_token:
+                    sentence_completed = True
+        return sentence_completed
 
     def is_in_memory(self) -> bool:
         return self.in_memory
@@ -732,19 +749,21 @@ class ColumnDataset(FlairDataset):
                 line = file.readline()
                 sentence: Sentence = Sentence()
                 while line:
-                    if self.comment_symbol is not None and line.startswith("#"):
+                    if self.comment_symbol is not None and line.startswith(
+                        self.comment_symbol
+                    ):
                         line = file.readline()
                         continue
 
-                    if line.strip().replace("﻿", "") == "":
+                    if self.__line_completes_sentence(line):
                         if len(sentence) > 0:
                             sentence.infer_space_after()
-
                             if self.tag_to_bioes is not None:
                                 sentence.convert_tag_scheme(
                                     tag_type=self.tag_to_bioes, target_scheme="iobes"
                                 )
-                            break
+                            return sentence
+
                     else:
                         fields: List[str] = re.split("\s+", line)
                         token = Token(fields[self.text_column])
@@ -755,9 +774,10 @@ class ColumnDataset(FlairDataset):
                                         self.column_name_map[column], fields[column]
                                     )
 
-                        sentence.add_token(token)
-                    line = file.readline()
+                        if not line.isspace():
+                            sentence.add_token(token)
 
+                    line = file.readline()
         return sentence
 
 
@@ -1268,6 +1288,7 @@ class CONLL_03(ColumnCorpus):
         base_path: Union[str, Path] = None,
         tag_to_bioes: str = "ner",
         in_memory: bool = True,
+        document_as_sequence: bool = False,
     ):
         """
         Initialize the CoNLL-03 corpus. This is only possible if you've manually downloaded it to your machine.
@@ -1302,7 +1323,11 @@ class CONLL_03(ColumnCorpus):
             log.warning("-" * 100)
 
         super(CONLL_03, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
         )
 
 
@@ -1668,7 +1693,9 @@ class NEWSGROUPS(ClassificationCorpus):
                                 if f"{dataset}/{label}" in m.name
                             ],
                         )
-                        with open(f"{data_path}/{dataset}.txt", "at", encoding="utf-8") as f_p:
+                        with open(
+                            f"{data_path}/{dataset}.txt", "at", encoding="utf-8"
+                        ) as f_p:
                             current_path = data_path / "original" / dataset / label
                             for file_name in current_path.iterdir():
                                 if file_name.is_file():
