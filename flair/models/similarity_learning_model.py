@@ -124,23 +124,29 @@ class OrderSimilarity(SimilarityMeasure):
     Vendrov et al., "Order-Embeddings of Images and Language", ICLR 2016
     https://arxiv.org/abs/1511.06361
     """
-    def __init__(self, normalize=True):
+
+    def __init__(self, preprocess='abs', normalize=True):
         super(OrderSimilarity, self).__init__()
+        preprocess_map = {'abs': torch.abs,
+                          'relu': torch.relu}
+
         self.normalize = normalize
+        self.preprocess = preprocess_map[preprocess] if preprocess else None
 
     def forward(self, x):
-        input_modality_0_abs = torch.abs(x[0])
-        input_modality_1_abs = torch.abs(x[1])
+
+        input_modality_0_ = self.preprocess(x[0]) if self.preprocess else x[0]
+        input_modality_1_ = self.preprocess(x[1]) if self.preprocess else x[1]
 
         # normalize embeddings if needed
         if self.normalize:
-            input_modality_0_norms = torch.norm(input_modality_0_abs, dim=-1, keepdim=True)
-            input_modality_1_norms = torch.norm(input_modality_1_abs, dim=-1, keepdim=True)
-            input_modality_0 = input_modality_0_abs / input_modality_0_norms
-            input_modality_1 = input_modality_1_abs / input_modality_1_norms
+            input_modality_0_norms = torch.norm(input_modality_0_, dim=-1, keepdim=True)
+            input_modality_1_norms = torch.norm(input_modality_1_, dim=-1, keepdim=True)
+            input_modality_0 = input_modality_0_ / input_modality_0_norms
+            input_modality_1 = input_modality_1_ / input_modality_1_norms
         else:
-            input_modality_0 = input_modality_0_abs
-            input_modality_1 = input_modality_1_abs
+            input_modality_0 = input_modality_0_
+            input_modality_1 = input_modality_1_
 
         n_0 = input_modality_0.shape[0]
         n_1 = input_modality_1.shape[0]
