@@ -449,7 +449,6 @@ class FastTextEmbeddings(TokenEmbeddings):
     def extra_repr(self):
         return f"'{self.embeddings}'"
 
-
 class OneHotEmbeddings(TokenEmbeddings):
     """One-hot encoded embeddings."""
 
@@ -465,6 +464,7 @@ class OneHotEmbeddings(TokenEmbeddings):
         self.name = "one-hot"
         self.static_embeddings = False
         self.min_freq = min_freq
+        self.field = field
 
         tokens = list(map((lambda s: s.tokens), corpus.train))
         tokens = [token for sublist in tokens for token in sublist]
@@ -473,7 +473,7 @@ class OneHotEmbeddings(TokenEmbeddings):
             most_common = Counter(list(map((lambda t: t.text), tokens))).most_common()
         else:
             most_common = Counter(
-                list(map((lambda t: t.get_tag(field)), tokens))
+                list(map((lambda t: t.get_tag(field).value), tokens))
             ).most_common()
 
         tokens = []
@@ -508,9 +508,15 @@ class OneHotEmbeddings(TokenEmbeddings):
 
         one_hot_sentences = []
         for i, sentence in enumerate(sentences):
-            context_idxs = [
-                self.vocab_dictionary.get_idx_for_item(t.text) for t in sentence.tokens
-            ]
+
+            if self.field == "text":
+                context_idxs = [
+                    self.vocab_dictionary.get_idx_for_item(t.text) for t in sentence.tokens
+                ]
+            else:
+                context_idxs = [
+                    self.vocab_dictionary.get_idx_for_item(t.get_tag(self.field).value) for t in sentence.tokens
+                ]
 
             one_hot_sentences.extend(context_idxs)
 
