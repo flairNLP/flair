@@ -556,7 +556,6 @@ class HashEmbeddings(TokenEmbeddings):
         self.__embedding_length = embedding_length
 
         self.__hash_method = hash_method
-        self.__hash_function = hashlib.new(hash_method)
 
         # model architecture
         self.embedding_layer = torch.nn.Embedding(
@@ -578,8 +577,9 @@ class HashEmbeddings(TokenEmbeddings):
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
         def get_idx_for_item(text):
-            self.__hash_function.update(bytes(str(text), 'utf-8'))
-            return int(self.__hash_function.hexdigest(), 16) % self.__num_embeddings
+            hash_function = hashlib.new(self.__hash_method)
+            hash_function.update(bytes(str(text), 'utf-8'))
+            return int(self.hash_function.hexdigest(), 16) % self.__num_embeddings
 
         hash_sentences = []
         for i, sentence in enumerate(sentences):
