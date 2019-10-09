@@ -20,7 +20,7 @@ from torch.nn import Sequential, Linear, Conv2d, ReLU, MaxPool2d, Dropout2d
 from torch.nn import AdaptiveAvgPool2d, AdaptiveMaxPool2d
 from torch.nn import TransformerEncoderLayer, TransformerEncoder
 
-from pytorch_transformers import (
+from transformers import (
     BertTokenizer,
     BertModel,
     RobertaTokenizer,
