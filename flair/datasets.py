@@ -7,6 +7,11 @@ from pathlib import Path
 from typing import List, Dict, Union, Callable
 
 import numpy as np
+import json
+import urllib
+from tqdm import tqdm
+
+
 import torch.utils.data.dataloader
 from torch.utils.data import Dataset, random_split
 from torch.utils.data.dataset import Subset, ConcatDataset
@@ -306,18 +311,27 @@ class ClassificationCorpus(Corpus):
 
 
 class FeideggerCorpus(Corpus):
-    def __init__(self, feidegger_csv, **kwargs):
-        """
-        Instantiates a Corpus from text classification-formatted task data
+    def __init__(self, **kwargs):
+        dataset = 'feidegger'
 
-        :param data_folder: base folder with the task data
-        :param train_file: the name of the train file
-        :param test_file: the name of the test file
-        :param dev_file: the name of the dev file, if None, dev data is sampled from train
-        :return: a Corpus with annotated train, dev and test data
-        """
+        # cache Feidegger config file
+        json_link = 'https://raw.githubusercontent.com/zalandoresearch/feidegger/master/data/FEIDEGGER_release_1.1.json'
+        json_local_path = cached_path(json_link, Path('datasets') / dataset)
 
-        feidegger_dataset: Dataset = FeideggerDataset(feidegger_csv, **kwargs)
+        # cache Feidegger images
+        dataset_info = json.load(open(json_local_path, 'r'))
+        images_cache_folder = os.path.join(os.path.dirname(json_local_path), 'images')
+        if not os.path.isdir(images_cache_folder):
+            os.mkdir(images_cache_folder)
+        for image_info in tqdm(dataset_info):
+            name = os.path.basename(image_info['url'])
+            filename = os.path.join(images_cache_folder, name)
+            if not os.path.isfile(filename):
+                urllib.request.urlretrieve(image_info['url'], filename)
+            # replace image URL with local cached file
+            image_info['url'] = filename
+
+        feidegger_dataset: Dataset = FeideggerDataset(dataset_info, **kwargs)
 
         train_indices = list(
             np.where(np.in1d(feidegger_dataset.split, list(range(8))))[0]
@@ -1252,7 +1266,7 @@ class ParallelTextDataset(FlairDataset):
 
 
 class FeideggerDataset(FlairDataset):
-    def __init__(self, feidegger_csv, in_memory: bool = True, **kwargs):
+    def __init__(self, dataset_info, in_memory: bool = True, **kwargs):
         super(FeideggerDataset, self).__init__()
 
         self.data_points: List[DataPair] = []
@@ -1262,23 +1276,22 @@ class FeideggerDataset(FlairDataset):
         if "lowercase" in kwargs and kwargs["lowercase"]:
             preprocessor = lambda x: x.lower()
 
-        for row in csv.reader(open(feidegger_csv, "r"), delimiter="|"):
-            image = Image(imageURL=row[0])
-            for caption in row[1:-1]:
-                # get the split ID
-                split_id = int(row[-1])
-
-                # append Sentence-Image data point and split ID
+        for image_info in dataset_info:
+            image = Image(imageURL=image_info['url'])
+            for caption in image_info['descriptions']:
+                # append Sentence-Image data point
                 self.data_points.append(
-                    DataPair(Sentence(preprocessor(caption), use_tokenizer=True), image)
+                    DataPair(
+                        Sentence(preprocessor(caption), use_tokenizer=True),
+                        image
+                    )
                 )
-                self.split.append(split_id)
+                self.split.append(int(image_info['split']))
 
     def __len__(self):
         return len(self.data_points)
 
     def __getitem__(self, index: int = 0) -> DataPair:
-
         return self.data_points[index]
 
 
