@@ -291,6 +291,7 @@ class FeideggerCorpus(Corpus):
         images_cache_folder = os.path.join(os.path.dirname(json_local_path), 'images')
         if not os.path.isdir(images_cache_folder):
             os.mkdir(images_cache_folder)
+        splits = []
         for image_info in tqdm(dataset_info):
             name = os.path.basename(image_info['url'])
             filename = os.path.join(images_cache_folder, name)
@@ -298,10 +299,9 @@ class FeideggerCorpus(Corpus):
                 urllib.request.urlretrieve(image_info['url'], filename)
             # replace image URL with local cached file
             image_info['url'] = filename
+            splits.append(int(image_info['split']))
 
         feidegger_dataset: Dataset = FeideggerDataset(dataset_info, **kwargs)
-
-        splits = [i.metadata_dict['split'] for i in feidegger_dataset]
 
         train_indices = list(
             np.where(np.in1d(splits, list(range(8))))[0]
@@ -1157,12 +1157,11 @@ class FeideggerDataset(FlairDataset):
         for image_info in dataset_info:
             image = Image(imageURL=image_info['url'])
             for caption in image_info['descriptions']:
-                # append Sentence-Image data point and split ID
+                # append Sentence-Image data point
                 self.data_points.append(
                     DataPair(
                         Sentence(preprocessor(caption), use_tokenizer=True),
-                        image,
-                        metadata_dict={'split': int(image_info['split'])}
+                        image
                     )
                 )
 

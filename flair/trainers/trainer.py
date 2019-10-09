@@ -29,6 +29,7 @@ from flair.training_utils import (
     Result,
     store_embeddings,
 )
+import random
 
 log = logging.getLogger("flair")
 
@@ -77,7 +78,8 @@ class ModelTrainer:
         sampler=None,
         use_amp: bool = False,
         amp_opt_level: str = "O1",
-        eval_on_train_part: bool = False,
+        eval_on_train_fraction = 0.,
+        eval_on_train_shuffle = False,
         **kwargs,
     ) -> dict:
         """
@@ -104,6 +106,11 @@ class ModelTrainer:
         parameter selection.
         :param num_workers: Number of workers in your data loader.
         :param sampler: You can pass a data sampler here for special sampling of data.
+        :param eval_on_train_fraction: the fraction of train data to do the evaluation on,
+        if 0. the evaluation is not performed on fraction of training data,
+        if 'dev' the size is determined from dev set size
+        :param eval_on_train_shuffle: if True the train data fraction is determined on the start of training
+        and kept fixed during training, otherwise it's sampled at beginning of each epoch
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
@@ -168,11 +175,15 @@ class ModelTrainer:
             else False
         )
         log_dev = True if not train_with_dev else False
-        log_train_part = True if eval_on_train_part else False
+        log_train_part = True if (eval_on_train_fraction == 'dev' or eval_on_train_fraction > 0.) else False
 
         if log_train_part:
-            train_part_indices = [i for i, point in enumerate(self.corpus.train) if point.metadata_dict['split'] == 0]
-            train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
+            train_part_size = len(self.corpus.dev) if eval_on_train_fraction == 'dev' \
+                              else int(len(self.corpus.train) * eval_on_train_fraction)
+            assert(train_part_size > 0)
+            if not eval_on_train_shuffle:
+                train_part_indices = list(range(train_part_size))
+                train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
 
         # prepare loss logging file and set up header
         loss_txt = init_output_file(base_path, "loss.tsv")
@@ -225,6 +236,12 @@ class ModelTrainer:
 
             for epoch in range(0 + self.epoch, max_epochs + self.epoch):
                 log_line(log)
+
+                if eval_on_train_shuffle:
+                    train_part_indices = list(range(self.corpus.train))
+                    random.shuffle(train_part_indices)
+                    train_part_indices = train_part_indices[:train_part_size]
+                    train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
 
                 # get new learning rate
                 for group in optimizer.param_groups:
