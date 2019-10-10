@@ -38,6 +38,8 @@ class ColumnCorpus(Corpus):
         tag_to_bioes=None,
         comment_symbol: str = None,
         in_memory: bool = True,
+        encoding: str = "utf-8",
+        document_separator_token: str = None,
     ):
         """
         Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
@@ -50,6 +52,8 @@ class ColumnCorpus(Corpus):
         :param tag_to_bioes: whether to convert to BIOES tagging scheme
         :param comment_symbol: if set, lines that begin with this symbol are treated as comments
         :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
+        :param document_separator_token: If provided, multiple sentences are read into one object. Provide the string token
+        that indicates that a new document begins
         :return: a Corpus with annotated train, dev and test data
         """
 
@@ -97,8 +101,10 @@ class ColumnCorpus(Corpus):
             train_file,
             column_format,
             tag_to_bioes,
+            encoding=encoding,
             comment_symbol=comment_symbol,
             in_memory=in_memory,
+            document_separator_token=document_separator_token,
         )
 
         # read in test file if exists, otherwise sample 10% of train data as test dataset
@@ -107,8 +113,10 @@ class ColumnCorpus(Corpus):
                 test_file,
                 column_format,
                 tag_to_bioes,
+                encoding=encoding,
                 comment_symbol=comment_symbol,
                 in_memory=in_memory,
+                document_separator_token=document_separator_token,
             )
         else:
             train_length = len(train)
@@ -123,8 +131,10 @@ class ColumnCorpus(Corpus):
                 dev_file,
                 column_format,
                 tag_to_bioes,
+                encoding=encoding,
                 comment_symbol=comment_symbol,
                 in_memory=in_memory,
+                document_separator_token=document_separator_token,
             )
         else:
             train_length = len(train)
@@ -621,6 +631,8 @@ class ColumnDataset(FlairDataset):
         tag_to_bioes: str = None,
         comment_symbol: str = None,
         in_memory: bool = True,
+        document_separator_token: str = None,
+        encoding: str = "utf-8",
     ):
         """
         Instantiates a column dataset (typically used for sequence labeling or word-level prediction).
@@ -630,12 +642,15 @@ class ColumnDataset(FlairDataset):
         :param tag_to_bioes: whether to convert to BIOES tagging scheme
         :param comment_symbol: if set, lines that begin with this symbol are treated as comments
         :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
+        :param document_separator_token: If provided, multiple sentences are read into one object. Provide the string token
+        that indicates that a new document begins
         """
         assert path_to_column_file.exists()
         self.path_to_column_file = path_to_column_file
         self.tag_to_bioes = tag_to_bioes
         self.column_name_map = column_name_map
         self.comment_symbol = comment_symbol
+        self.document_separator_token = document_separator_token
 
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
@@ -653,21 +668,10 @@ class ColumnDataset(FlairDataset):
                 self.text_column = column
 
         # determine encoding of text file
-        encoding = "utf-8"
-        try:
-            lines: List[str] = open(str(path_to_column_file), encoding="utf-8").read(
-                10
-            ).strip().split("\n")
-        except:
-            log.info(
-                'UTF-8 can\'t read: {} ... using "latin-1" instead.'.format(
-                    path_to_column_file
-                )
-            )
-            encoding = "latin1"
+        self.encoding = encoding
 
         sentence: Sentence = Sentence()
-        with open(str(self.path_to_column_file), encoding=encoding) as f:
+        with open(str(self.path_to_column_file), encoding=self.encoding) as f:
 
             line = f.readline()
             position = 0
@@ -678,8 +682,10 @@ class ColumnDataset(FlairDataset):
                     line = f.readline()
                     continue
 
-                if line.isspace():
+                if self.__line_completes_sentence(line):
+
                     if len(sentence) > 0:
+
                         sentence.infer_space_after()
                         if self.in_memory:
                             if self.tag_to_bioes is not None:
@@ -703,7 +709,8 @@ class ColumnDataset(FlairDataset):
                                     self.column_name_map[column], fields[column]
                                 )
 
-                    sentence.add_token(token)
+                    if not line.isspace():
+                        sentence.add_token(token)
 
                 line = f.readline()
 
@@ -714,6 +721,16 @@ class ColumnDataset(FlairDataset):
             else:
                 self.indices.append(position)
             self.total_sentence_count += 1
+
+    def __line_completes_sentence(self, line: str) -> bool:
+        sentence_completed = line.isspace()
+        if self.document_separator_token:
+            sentence_completed = False
+            fields: List[str] = re.split("\s+", line)
+            if len(fields) >= self.text_column:
+                if fields[self.text_column] == self.document_separator_token:
+                    sentence_completed = True
+        return sentence_completed
 
     def is_in_memory(self) -> bool:
         return self.in_memory
@@ -727,24 +744,26 @@ class ColumnDataset(FlairDataset):
             sentence = self.sentences[index]
 
         else:
-            with open(str(self.path_to_column_file), encoding="utf-8") as file:
+            with open(str(self.path_to_column_file), encoding=self.encoding) as file:
                 file.seek(self.indices[index])
                 line = file.readline()
                 sentence: Sentence = Sentence()
                 while line:
-                    if self.comment_symbol is not None and line.startswith("#"):
+                    if self.comment_symbol is not None and line.startswith(
+                        self.comment_symbol
+                    ):
                         line = file.readline()
                         continue
 
-                    if line.strip().replace("﻿", "") == "":
+                    if self.__line_completes_sentence(line):
                         if len(sentence) > 0:
                             sentence.infer_space_after()
-
                             if self.tag_to_bioes is not None:
                                 sentence.convert_tag_scheme(
                                     tag_type=self.tag_to_bioes, target_scheme="iobes"
                                 )
-                            break
+                            return sentence
+
                     else:
                         fields: List[str] = re.split("\s+", line)
                         token = Token(fields[self.text_column])
@@ -755,9 +774,10 @@ class ColumnDataset(FlairDataset):
                                         self.column_name_map[column], fields[column]
                                     )
 
-                        sentence.add_token(token)
-                    line = file.readline()
+                        if not line.isspace():
+                            sentence.add_token(token)
 
+                    line = file.readline()
         return sentence
 
 
@@ -1268,6 +1288,7 @@ class CONLL_03(ColumnCorpus):
         base_path: Union[str, Path] = None,
         tag_to_bioes: str = "ner",
         in_memory: bool = True,
+        document_as_sequence: bool = False,
     ):
         """
         Initialize the CoNLL-03 corpus. This is only possible if you've manually downloaded it to your machine.
@@ -1277,6 +1298,7 @@ class CONLL_03(ColumnCorpus):
         :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' or 'np' to predict
         POS tags or chunks respectively
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1302,7 +1324,11 @@ class CONLL_03(ColumnCorpus):
             log.warning("-" * 100)
 
         super(CONLL_03, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
         )
 
 
@@ -1312,6 +1338,7 @@ class CONLL_03_GERMAN(ColumnCorpus):
         base_path: Union[str, Path] = None,
         tag_to_bioes: str = "ner",
         in_memory: bool = True,
+        document_as_sequence: bool = False,
     ):
         """
         Initialize the CoNLL-03 corpus for German. This is only possible if you've manually downloaded it to your machine.
@@ -1321,6 +1348,7 @@ class CONLL_03_GERMAN(ColumnCorpus):
         :param tag_to_bioes: NER by default, need not be changed, but you could also select 'lemma', 'pos' or 'np' to predict
         word lemmas, POS tags or chunks respectively
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1346,7 +1374,11 @@ class CONLL_03_GERMAN(ColumnCorpus):
             log.warning("-" * 100)
 
         super(CONLL_03_GERMAN, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
         )
 
 
@@ -1356,6 +1388,7 @@ class CONLL_03_DUTCH(ColumnCorpus):
         base_path: Union[str, Path] = None,
         tag_to_bioes: str = "ner",
         in_memory: bool = True,
+        document_as_sequence: bool = False,
     ):
         """
         Initialize the CoNLL-03 corpus for Dutch. The first time you call this constructor it will automatically
@@ -1365,6 +1398,7 @@ class CONLL_03_DUTCH(ColumnCorpus):
         :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
         POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1387,7 +1421,12 @@ class CONLL_03_DUTCH(ColumnCorpus):
         cached_path(f"{conll_02_path}ned.train", Path("datasets") / dataset_name)
 
         super(CONLL_03_DUTCH, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            encoding="latin-1",
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
         )
 
 
@@ -1405,6 +1444,7 @@ class CONLL_03_SPANISH(ColumnCorpus):
         to point to a different folder but typically this should not be necessary.
         :param tag_to_bioes: NER by default, should not be changed
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1427,7 +1467,11 @@ class CONLL_03_SPANISH(ColumnCorpus):
         cached_path(f"{conll_02_path}esp.train", Path("datasets") / dataset_name)
 
         super(CONLL_03_SPANISH, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            encoding="latin-1",
+            in_memory=in_memory,
         )
 
 
@@ -1668,7 +1712,9 @@ class NEWSGROUPS(ClassificationCorpus):
                                 if f"{dataset}/{label}" in m.name
                             ],
                         )
-                        with open(f"{data_path}/{dataset}.txt", "at", encoding="utf-8") as f_p:
+                        with open(
+                            f"{data_path}/{dataset}.txt", "at", encoding="utf-8"
+                        ) as f_p:
                             current_path = data_path / "original" / dataset / label
                             for file_name in current_path.iterdir():
                                 if file_name.is_file():

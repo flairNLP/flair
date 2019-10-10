@@ -451,7 +451,6 @@ class FastTextEmbeddings(TokenEmbeddings):
     def extra_repr(self):
         return f"'{self.embeddings}'"
 
-
 class OneHotEmbeddings(TokenEmbeddings):
     """One-hot encoded embeddings."""
 
@@ -467,6 +466,7 @@ class OneHotEmbeddings(TokenEmbeddings):
         self.name = "one-hot"
         self.static_embeddings = False
         self.min_freq = min_freq
+        self.field = field
 
         tokens = list(map((lambda s: s.tokens), corpus.train))
         tokens = [token for sublist in tokens for token in sublist]
@@ -475,7 +475,7 @@ class OneHotEmbeddings(TokenEmbeddings):
             most_common = Counter(list(map((lambda t: t.text), tokens))).most_common()
         else:
             most_common = Counter(
-                list(map((lambda t: t.get_tag(field)), tokens))
+                list(map((lambda t: t.get_tag(field).value), tokens))
             ).most_common()
 
         tokens = []
@@ -510,9 +510,15 @@ class OneHotEmbeddings(TokenEmbeddings):
 
         one_hot_sentences = []
         for i, sentence in enumerate(sentences):
-            context_idxs = [
-                self.vocab_dictionary.get_idx_for_item(t.text) for t in sentence.tokens
-            ]
+
+            if self.field == "text":
+                context_idxs = [
+                    self.vocab_dictionary.get_idx_for_item(t.text) for t in sentence.tokens
+                ]
+            else:
+                context_idxs = [
+                    self.vocab_dictionary.get_idx_for_item(t.get_tag(self.field).value) for t in sentence.tokens
+                ]
 
             one_hot_sentences.extend(context_idxs)
 
@@ -2762,30 +2768,57 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         longest_token_sequence_in_batch: int = max(lengths)
 
         # initialize zero-padded word embeddings tensor
-        sentence_tensor = torch.zeros(
-            [
-                len(sentences),
-                longest_token_sequence_in_batch,
-                self.embeddings.embedding_length,
-            ],
+        # sentence_tensor = torch.zeros(
+        #     [
+        #         len(sentences),
+        #         longest_token_sequence_in_batch,
+        #         self.embeddings.embedding_length,
+        #     ],
+        #     dtype=torch.float,
+        #     device=flair.device,
+        # )
+        #
+        # for s_id, sentence in enumerate(sentences):
+        #     # fill values with word embeddings
+        #     all_embs = list()
+        #
+        #     for index_token, token in enumerate(sentence):
+        #         embs = token.get_each_embedding()
+        #         if not all_embs:
+        #             all_embs = [list() for _ in range(len(embs))]
+        #         for index_emb, emb in enumerate(embs):
+        #             all_embs[index_emb].append(emb)
+        #
+        #     concat_word_emb = [torch.stack(embs) for embs in all_embs]
+        #     concat_sentence_emb = torch.cat(concat_word_emb, dim=1)
+        #     sentence_tensor[s_id][: len(sentence)] = concat_sentence_emb
+
+        pre_allocated_zero_tensor = torch.zeros(
+            self.embeddings.embedding_length * longest_token_sequence_in_batch,
             dtype=torch.float,
             device=flair.device,
         )
 
-        for s_id, sentence in enumerate(sentences):
-            # fill values with word embeddings
-            all_embs = list()
+        all_embs: List[torch.Tensor] = list()
+        for sentence in sentences:
+            all_embs += [
+                emb for token in sentence for emb in token.get_each_embedding()
+            ]
+            nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
 
-            for index_token, token in enumerate(sentence):
-                embs = token.get_each_embedding()
-                if not all_embs:
-                    all_embs = [list() for _ in range(len(embs))]
-                for index_emb, emb in enumerate(embs):
-                    all_embs[index_emb].append(emb)
+            if nb_padding_tokens > 0:
+                t = pre_allocated_zero_tensor[
+                    : self.embeddings.embedding_length * nb_padding_tokens
+                ]
+                all_embs.append(t)
 
-            concat_word_emb = [torch.stack(embs) for embs in all_embs]
-            concat_sentence_emb = torch.cat(concat_word_emb, dim=1)
-            sentence_tensor[s_id][: len(sentence)] = concat_sentence_emb
+        sentence_tensor = torch.cat(all_embs).view(
+            [
+                len(sentences),
+                longest_token_sequence_in_batch,
+                self.embeddings.embedding_length,
+            ]
+        )
 
         # before-RNN dropout
         if self.dropout:
