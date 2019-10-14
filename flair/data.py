@@ -428,9 +428,9 @@ def space_tokenizer(text: str) -> List[Token]:
     return tokens
 
 
-def build_tiny_tokenizer():
+def build_tiny_tokenizer(tokenizer: str = "MeCab"):
     sentence_tokenizer = SentenceTokenizer()
-    word_tokenizer = WordTokenizer('MeCab')
+    word_tokenizer = WordTokenizer(tokenizer)
 
     def tokenizer(text: str) -> List[Token]:
         """
