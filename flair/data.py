@@ -428,7 +428,10 @@ def space_tokenizer(text: str) -> List[Token]:
     return tokens
 
 
-def build_tiny_tokenizer(tokenizer: str = "MeCab"):
+def build_japanese_tokenizer(tokenizer: str = "MeCab"):
+    if tokenizer.lower() != "mecab":
+        raise NotImplementedError("Currently, MeCab is only supported.")
+
     sentence_tokenizer = SentenceTokenizer()
     word_tokenizer = WordTokenizer(tokenizer)
 
