@@ -47,9 +47,7 @@ def test_create_sentence_without_tokenizer():
 
 
 def test_create_sentence_using_japanese_tokenizer():
-    sentence: Sentence = Sentence(
-        "私はベルリンが好き",
-        use_tokenizer=build_japanese_tokenizer())
+    sentence: Sentence = Sentence("私はベルリンが好き", use_tokenizer=build_japanese_tokenizer())
 
     assert 5 == len(sentence.tokens)
     assert "私" == sentence.tokens[0].text
