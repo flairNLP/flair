@@ -5,7 +5,6 @@ name = "pypi"
 
 [packages]
 flair = {editable = true, path = "."}
-tiny-tokenizer = {extras = ["all"], version = "*"}
 
 [dev-packages]
 pytest = "*"
