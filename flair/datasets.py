@@ -6,6 +6,8 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import List, Dict, Union, Callable
 
+import pymongo
+
 import numpy as np
 import torch.utils.data.dataloader
 from torch.utils.data import Dataset, random_split
@@ -1165,6 +1167,122 @@ class ClassificationDataset(FlairDataset):
                     line, self.label_prefix, self.tokenizer
                 )
                 return sentence
+
+
+class MongoDataset(FlairDataset):
+
+    def __init__(
+        self,
+        query: str = None,
+        host: str = 'localhost',
+        port: int = 27017,
+        database: str = 'rosenberg',
+        collection: str = 'book',
+        text_field: str = 'Beskrivning',
+        categories_field: List[str] = None,
+        max_tokens_per_doc: int = -1,
+        max_chars_per_doc: int = -1,
+        tokenizer=segtok_tokenizer,
+        in_memory: bool = True,
+    ):
+        """
+        Reads Mongo collections. Each collection should contain one document/text per item.
+
+        Each item should have the following format:
+        {
+        'Beskrivning': 'Abrahamsby. Gård i Gottröra sn, Långhundra hd, Stockholms län, nära Långsjön.',
+        'Län':'Stockholms län',
+        'Härad': 'Långhundra',
+        'Församling': 'Gottröra',
+        'Plats': 'Abrahamsby'
+        }
+
+        :param query: Query, e.g. {'Län': 'Stockholms län'}
+        :param host: Host, e.g. 'localhost',
+        :param port: Port, e.g. 27017
+        :param database: Database, e.g. 'rosenberg',
+        :param collection: Collection, e.g. 'book',
+        :param text_field: Text field, e.g. 'Beskrivning',
+        :param categories_field: List of category fields, e.g ['Län', 'Härad', 'Tingslag', 'Församling', 'Plats'],
+        :param max_tokens_per_doc: Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.
+        :param max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
+        :param max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
+        :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
+        :return: list of sentences
+        """
+
+        self.in_memory = in_memory
+        self.tokenizer = tokenizer
+
+        if self.in_memory:
+            self.sentences = []
+        else:
+            self.indices = []
+
+        self.total_sentence_count: int = 0
+        self.max_chars_per_doc = max_chars_per_doc
+        self.max_tokens_per_doc = max_tokens_per_doc
+
+        self.__connection = pymongo.MongoClient(host, port)
+        self.__cursor = self.__connection[database][collection]
+
+        self.text = text_field
+        self.categories = categories_field if categories_field is not None else []
+
+        start = 0
+
+        kwargs = lambda start: {
+            'filter': query,
+            'skip': start,
+            'limit': 0
+        }
+
+        if self.in_memory:
+            for document in self.__cursor.find(**kwargs(start)):
+                sentence = self._parse_document_to_sentence(
+                    document[self.text],
+                    [document[_] if _ in document else '' for _ in self.categories],
+                    tokenizer
+                )
+                if sentence is not None and len(sentence.tokens) > 0:
+                    self.sentences.append(sentence)
+                    self.total_sentence_count += 1
+        else:
+            self.indices = self.__cursor.find().distinct('_id')
+            self.total_sentence_count = self.__cursor.count_documents()
+
+    def _parse_document_to_sentence(
+        self, text: str, labels: List[str], tokenizer: Callable[[str], List[Token]]
+    ):
+        if self.max_chars_per_doc > 0:
+            text = text[: self.max_chars_per_doc]
+
+        if text and labels:
+            sentence = Sentence(text, labels=labels, use_tokenizer=tokenizer)
+
+            if self.max_tokens_per_doc > 0:
+                sentence.tokens = sentence.tokens[: min(len(sentence), self.max_tokens_per_doc)]
+
+            return sentence
+        return None
+
+    def is_in_memory(self) -> bool:
+        return self.in_memory
+
+    def __len__(self):
+        return self.total_sentence_count
+
+    def __getitem__(self, index: int = 0) -> Sentence:
+        if self.in_memory:
+            return self.sentences[index]
+        else:
+            document = self.__cursor.find_one({'_id': index})
+            sentence = self._parse_document_to_sentence(
+                document[self.text],
+                [document[_] if _ in document else '' for _ in self.categories],
+                self.tokenizer
+            )
+            return sentence
 
 
 class ParallelTextDataset(FlairDataset):
