@@ -15,7 +15,12 @@ import torch
 import torchvision as torchvision
 from bpemb import BPEmb
 from deprecated import deprecated
+
+import torch.nn.functional as F
 from torch.nn import ParameterList, Parameter
+from torch.nn import Sequential, Linear, Conv2d, ReLU, MaxPool2d, Dropout2d
+from torch.nn import AdaptiveAvgPool2d, AdaptiveMaxPool2d
+from torch.nn import TransformerEncoderLayer, TransformerEncoder
 
 from transformers import (
     BertTokenizer,
@@ -3232,6 +3237,98 @@ class NetworkImageEmbeddings(ImageEmbeddings):
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
+
+    def __str__(self):
+        return self.name
+
+
+class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
+
+    def __init__(self, feats_in, convnet_parms, posnet_parms, transformer_parms):
+        super(ConvTransformNetworkImageEmbeddings, self).__init__()
+
+        adaptive_pool_func_map = {'max': AdaptiveMaxPool2d,
+                                  'avg': AdaptiveAvgPool2d}
+
+        convnet_arch = [] if convnet_parms['dropout'][0] <=0 else [Dropout2d(convnet_parms['dropout'][0])]
+        convnet_arch.extend([Conv2d(in_channels=feats_in, out_channels=convnet_parms['n_feats_out'][0],
+                                    kernel_size=convnet_parms['kernel_sizes'][0],
+                                    padding=convnet_parms['kernel_sizes'][0][0] // 2,
+                                    stride=convnet_parms['strides'][0],
+                                    groups=convnet_parms['groups'][0]),
+                             ReLU()])
+        if '0' in convnet_parms['pool_layers_map']:
+            convnet_arch.append(MaxPool2d(kernel_size=convnet_parms['pool_layers_map']['0']))
+        for layer_id, (kernel_size, n_in, n_out, groups, stride, dropout) in enumerate(
+                zip(convnet_parms['kernel_sizes'][1:], convnet_parms['n_feats_out'][:-1],
+                    convnet_parms['n_feats_out'][1:], convnet_parms['groups'][1:],
+                    convnet_parms['strides'][1:], convnet_parms['dropout'][1:])):
+            if dropout > 0:
+                convnet_arch.append(Dropout2d(dropout))
+            convnet_arch.append(
+                Conv2d(in_channels=n_in, out_channels=n_out, kernel_size=kernel_size, padding=kernel_size[0] // 2,
+                       stride=stride, groups=groups))
+            convnet_arch.append(ReLU())
+            if str(layer_id+1) in convnet_parms['pool_layers_map']:
+                convnet_arch.append(MaxPool2d(kernel_size=convnet_parms['pool_layers_map'][str(layer_id+1)]))
+        convnet_arch.append(adaptive_pool_func_map[convnet_parms['adaptive_pool_func']](output_size=convnet_parms['output_size']))
+        self.conv_features = Sequential(*convnet_arch)
+        conv_feat_dim = convnet_parms['n_feats_out'][-1]
+        if posnet_parms is not None and transformer_parms is not None:
+            self.use_transformer = True
+            if posnet_parms['nonlinear']:
+                posnet_arch = [Linear(2, posnet_parms['n_hidden']), ReLU(), Linear(posnet_parms['n_hidden'], conv_feat_dim)]
+            else:
+                posnet_arch = [Linear(2, conv_feat_dim)]
+            self.position_features = Sequential(*posnet_arch)
+            transformer_layer = TransformerEncoderLayer(d_model=conv_feat_dim, **transformer_parms['transformer_encoder_parms'])
+            self.transformer = TransformerEncoder(transformer_layer, num_layers=transformer_parms['n_blocks'])
+            # <cls> token initially set to 1/D, so it attends to all image features equally
+            self.cls_token = Parameter(torch.ones(conv_feat_dim, 1) / conv_feat_dim)
+            self._feat_dim = conv_feat_dim
+        else:
+            self.use_transformer = False
+            self._feat_dim = convnet_parms['output_size'][0] * convnet_parms['output_size'][1] * conv_feat_dim
+
+
+    def forward(self, x):
+        x = self.conv_features(x) # [b, d, h, w]
+        b, d, h, w = x.shape
+        if self.use_transformer:
+            # add positional encodings
+            y = torch.stack([torch.cat([torch.arange(h).unsqueeze(1)] * w, dim=1),
+                             torch.cat([torch.arange(w).unsqueeze(0)] * h, dim=0)]) # [2, h, w
+            y = y.view([2, h*w]).transpose(1, 0) # [h*w, 2]
+            y = y.type(torch.float32).to(flair.device)
+            y = self.position_features(y).transpose(1, 0).view([d, h, w]) # [h*w, d] => [d, h, w]
+            y = y.unsqueeze(dim=0) # [1, d, h, w]
+            x = x + y # [b, d, h, w] + [1, d, h, w] => [b, d, h, w]
+            # reshape the pixels into the sequence
+            x = x.view([b, d, h*w]) # [b, d, h*w]
+            # layer norm after convolution and positional encodings
+            x = F.layer_norm(x.permute([0,2,1]), (d,)).permute([0,2,1])
+            # add <cls> token
+            x = torch.cat([x, torch.stack([self.cls_token] * b)], dim=2) # [b, d, h*w+1]
+            # transformer requires input in the shape [h*w+1, b, d]
+            x = x.view([b*d, h*w+1]).transpose(1, 0).view([h*w+1, b, d]) # [b, d, h*w+1] => [b*d, h*w+1] => [h*w+1, b*d] => [h*w+1, b*d]
+            x = self.transformer(x) # [h*w+1, b, d]
+            # the output is an embedding of <cls> token
+            x = x[-1, :, :] # [b, d]
+        else:
+            x = x.view([-1, self._feat_dim])
+            x = F.layer_norm(x, (self._feat_dim,))
+
+        return x
+
+    def _add_embeddings_internal(self, images: List[Image]) -> List[Image]:
+        image_tensor = torch.stack([image.data for image in images])
+        image_embeddings = self.forward(image_tensor)
+        for image_id, image in enumerate(images):
+            image.set_embedding(self.name, image_embeddings[image_id])
+
+    @property
+    def embedding_length(self):
+        return self._feat_dim
 
     def __str__(self):
         return self.name

@@ -31,6 +31,7 @@ from flair.training_utils import (
     Result,
     store_embeddings,
 )
+import random
 
 log = logging.getLogger("flair")
 
@@ -82,6 +83,8 @@ class ModelTrainer:
         sampler=None,
         use_amp: bool = False,
         amp_opt_level: str = "O1",
+        eval_on_train_fraction = 0.,
+        eval_on_train_shuffle = False,
         **kwargs,
     ) -> dict:
         """
@@ -108,6 +111,11 @@ class ModelTrainer:
         parameter selection.
         :param num_workers: Number of workers in your data loader.
         :param sampler: You can pass a data sampler here for special sampling of data.
+        :param eval_on_train_fraction: the fraction of train data to do the evaluation on,
+        if 0. the evaluation is not performed on fraction of training data,
+        if 'dev' the size is determined from dev set size
+        :param eval_on_train_shuffle: if True the train data fraction is determined on the start of training
+        and kept fixed during training, otherwise it's sampled at beginning of each epoch
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
@@ -173,6 +181,15 @@ class ModelTrainer:
             else False
         )
         log_dev = True if not train_with_dev else False
+        log_train_part = True if (eval_on_train_fraction == 'dev' or eval_on_train_fraction > 0.) else False
+
+        if log_train_part:
+            train_part_size = len(self.corpus.dev) if eval_on_train_fraction == 'dev' \
+                              else int(len(self.corpus.train) * eval_on_train_fraction)
+            assert(train_part_size > 0)
+            if not eval_on_train_shuffle:
+                train_part_indices = list(range(train_part_size))
+                train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
 
         # prepare loss logging file and set up header
         loss_txt = init_output_file(base_path, "loss.tsv")
@@ -226,6 +243,12 @@ class ModelTrainer:
 
             for self.epoch in range(self.epoch + 1, max_epochs + 1):
                 log_line(log)
+
+                if eval_on_train_shuffle:
+                    train_part_indices = list(range(self.corpus.train))
+                    random.shuffle(train_part_indices)
+                    train_part_indices = train_part_indices[:train_part_size]
+                    train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
 
                 # get new learning rate
                 for group in optimizer.param_groups:
@@ -356,6 +379,20 @@ class ModelTrainer:
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(self.corpus.train, embeddings_storage_mode)
 
+                if log_train_part:
+                    train_part_eval_result, train_part_loss = self.model.evaluate(
+                        DataLoader(
+                            train_part,
+                            batch_size=mini_batch_chunk_size,
+                            num_workers=num_workers
+                        ),
+                        embedding_storage_mode=embeddings_storage_mode
+                    )
+                    result_line += f"\t{train_part_loss}\t{train_part_eval_result.log_line}"
+                    log.info(
+                        f"TRAIN_SPLIT : loss {train_part_loss} - score {train_part_eval_result.main_score}"
+                    )
+
                 if log_dev:
                     dev_eval_result, dev_loss = self.model.evaluate(
                         DataLoader(
@@ -442,6 +479,11 @@ class ModelTrainer:
                                 + "\tTRAIN_".join(
                                     train_eval_result.log_header.split("\t")
                                 )
+                            )
+                        if log_train_part:
+                            f.write(
+                                "\tTRAIN_PART_LOSS\tTRAIN_PART_"
+                                + "\tTRAIN_PART_".join(train_part_eval_result.log_header.split("\t"))
                             )
                         if log_dev:
                             f.write(
