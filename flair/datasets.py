@@ -291,7 +291,6 @@ class FeideggerCorpus(Corpus):
         images_cache_folder = os.path.join(os.path.dirname(json_local_path), 'images')
         if not os.path.isdir(images_cache_folder):
             os.mkdir(images_cache_folder)
-        splits = []
         for image_info in tqdm(dataset_info):
             name = os.path.basename(image_info['url'])
             filename = os.path.join(images_cache_folder, name)
@@ -299,19 +298,18 @@ class FeideggerCorpus(Corpus):
                 urllib.request.urlretrieve(image_info['url'], filename)
             # replace image URL with local cached file
             image_info['url'] = filename
-            splits.append(int(image_info['split']))
 
         feidegger_dataset: Dataset = FeideggerDataset(dataset_info, **kwargs)
 
         train_indices = list(
-            np.where(np.in1d(splits, list(range(8))))[0]
+            np.where(np.in1d(feidegger_dataset.split, list(range(8))))[0]
         )
         train = torch.utils.data.dataset.Subset(feidegger_dataset, train_indices)
 
-        dev_indices = list(np.where(np.in1d(splits, [8]))[0])
+        dev_indices = list(np.where(np.in1d(feidegger_dataset.split, [8]))[0])
         dev = torch.utils.data.dataset.Subset(feidegger_dataset, dev_indices)
 
-        test_indices = list(np.where(np.in1d(splits, [9]))[0])
+        test_indices = list(np.where(np.in1d(feidegger_dataset.split, [9]))[0])
         test = torch.utils.data.dataset.Subset(feidegger_dataset, test_indices)
 
         super(FeideggerCorpus, self).__init__(train, dev, test, name="feidegger")
@@ -1149,6 +1147,7 @@ class FeideggerDataset(FlairDataset):
         super(FeideggerDataset, self).__init__()
 
         self.data_points: List[DataPair] = []
+        self.split: List[int] = []
 
         preprocessor = lambda x: x
         if "lowercase" in kwargs and kwargs["lowercase"]:
@@ -1164,6 +1163,7 @@ class FeideggerDataset(FlairDataset):
                         image
                     )
                 )
+                self.split.append(int(image_info['split']))
 
     def __len__(self):
         return len(self.data_points)
