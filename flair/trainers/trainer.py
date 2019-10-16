@@ -386,7 +386,7 @@ class ModelTrainer:
                             batch_size=mini_batch_chunk_size,
                             num_workers=num_workers
                         ),
-                        embeddings_storage_mode=embeddings_storage_mode
+                        embedding_storage_mode=embeddings_storage_mode
                     )
                     result_line += f"\t{train_part_loss}\t{train_part_eval_result.log_line}"
                     log.info(
