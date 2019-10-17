@@ -64,7 +64,7 @@ class ModelTrainer:
         base_path: Union[Path, str],
         learning_rate: float = 0.1,
         mini_batch_size: int = 32,
-        mini_batch_chunk_size: int = 32,
+        mini_batch_chunk_size: int = None,
         max_epochs: int = 100,
         anneal_factor: float = 0.5,
         patience: int = 3,
