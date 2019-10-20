@@ -63,11 +63,9 @@ Token: 5 .
 ## Tokenization
 
 In some use cases, you might not have your text already tokenized. For this case, we added a simple tokenizer using the
-lightweight [segtok library](https://pypi.org/project/segtok/).
+lightweight [segtok library](https://pypi.org/project/segtok/). 
 
-**If you are using `Flair` with a version <= 0.4.3**
-
-Simply use the use_tokenizer flag when instantiating your Sentence with an untokenized string:
+If you want to use this tokenizer, simply set the `use_tokenizer` flag when instantiating your `Sentence` with an untokenized string:
 
 ```python
 from flair.data import Sentence
@@ -79,9 +77,7 @@ sentence = Sentence('The grass is green.', use_tokenizer=True)
 print(sentence)
 ```
 
-**If you are using `Flair` with a version > 0.4.3 or installed it from `master` branch**
-
-Simply use `use_tokenizer` parameter when instantiating your `Sentence` with the tokenizer you want to use:
+You can also pass custom tokenizers to the initialization method. Instead of passing a boolean True value, you can pass a tokenization method to the `use_tokenizer` paramete, like this:
 
 ```python
 from flair.data import Sentence, segtok_tokenizer
