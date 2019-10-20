@@ -227,6 +227,13 @@ data the first time you call the corresponding constructor ID. The following dat
 | 'WASSA_SADNESS' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge (sadness) |
 
 
+#### Experimental: Similarity Learning
+| ID(s) | Languages | Description |
+| -------------    | ------------- |------------- |
+| 'FeideggerCorpus' | German |  [Feidegger](https://github.com/zalandoresearch/feidegger/) dataset fashion images and German-language descriptions  |
+| 'OpusParallelCorpus' | Any language pair | Parallel corpora of the [OPUS](http://opus.nlpl.eu/) project, currently supports only Tatoeba corpus |
+
+
 So to load the IMDB corpus for sentiment text classification, simply do:
 
 ```python
