@@ -148,7 +148,12 @@ vector is still a single PyTorch vector.
 
 ## Next 
 
-To get more details on this embeddings and a full overview of all embeddings that we support, you can look into this 
-[tutorial](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md),
+To get more details on these embeddings and a full overview of all word embeddings that we support, you can look into this 
+[tutorial](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md). You can also skip details on word embeddings and go directly to [document embeddings](/resources/docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md) that let you embed entire text
+passages with one vector for tasks such as text classification. You can also go directly to the tutorial about
+[loading your corpus](/resources/docs/TUTORIAL_6_CORPUS.md), which is a pre-requirement for
+[training your own models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md).
+ 
+ 
 or go directly to the tutorial about [loading your corpus](/resources/docs/TUTORIAL_6_CORPUS.md), which is a
 pre-requirement for [training your own models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md).
