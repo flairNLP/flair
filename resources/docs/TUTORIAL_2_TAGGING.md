@@ -248,9 +248,8 @@ text = "This is a sentence. This is another sentence. I love Berlin."
 
 # use a library to split into sentences
 from segtok.segmenter import split_single
-from flair.data import segtok_tokenizer
 
-sentences = [Sentence(sent, use_tokenizer=segtok_tokenizer) for sent in split_single(text)]
+sentences = [Sentence(sent, use_tokenizer=True) for sent in split_single(text)]
 
 # predict tags for list of sentences
 tagger: SequenceTagger = SequenceTagger.load('ner')
@@ -260,11 +259,6 @@ tagger.predict(sentences)
 Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the
 tagger. Depending on your resources, you might want to play around with this parameter to optimize speed.
 
-
-**If you are using `Flair` with a version > 0.4.3 or installed it from `master` branch**
-
-`predict` can receive string.   
-Simply use `use_tokenizer` parameter with the tokenizer you want to use (more info on TUTORIAL_1_BASICS.md).
 
 ## Tagging with Pre-Trained Text Classification Models
 
