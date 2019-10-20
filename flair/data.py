@@ -9,6 +9,9 @@ import logging
 from collections import Counter
 from collections import defaultdict
 
+from tiny_tokenizer import WordTokenizer
+from tiny_tokenizer import SentenceTokenizer
+
 from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
@@ -423,6 +426,56 @@ def space_tokenizer(text: str) -> List[Token]:
             Token(text=word, start_position=start_position, whitespace_after=False)
         )
     return tokens
+
+
+def build_japanese_tokenizer(tokenizer: str = "MeCab"):
+    if tokenizer.lower() != "mecab":
+        raise NotImplementedError("Currently, MeCab is only supported.")
+
+    sentence_tokenizer = SentenceTokenizer()
+    word_tokenizer = WordTokenizer(tokenizer)
+
+    def tokenizer(text: str) -> List[Token]:
+        """
+        Tokenizer using tiny_tokenizer, a third party library which supports
+        multiple Japanese tokenizer such as MeCab, KyTea and SudachiPy.
+        """
+        tokens: List[Token] = []
+        words: List[str] = []
+
+        sentences = sentence_tokenizer.tokenize(text)
+        for sentence in sentences:
+            tiny_tokenizer_tokens = word_tokenizer.tokenize(sentence)
+            words.extend(list(map(str, tiny_tokenizer_tokens)))
+
+        # determine offsets for whitespace_after field
+        index = text.index
+        current_offset = 0
+        previous_word_offset = -1
+        previous_token = None
+        for word in words:
+            try:
+                word_offset = index(word, current_offset)
+                start_position = word_offset
+            except:
+                word_offset = previous_word_offset + 1
+                start_position = (
+                    current_offset + 1 if current_offset > 0 else current_offset
+                )
+
+            token = Token(text=word, start_position=start_position, whitespace_after=True)
+            tokens.append(token)
+
+            if (previous_token is not None) and word_offset - 1 == previous_word_offset:
+                previous_token.whitespace_after = False
+
+            current_offset = word_offset + len(word)
+            previous_word_offset = current_offset - 1
+            previous_token = token
+
+        return tokens
+
+    return tokenizer
 
 
 def segtok_tokenizer(text: str) -> List[Token]:
