@@ -95,8 +95,7 @@ This should print:
 ```console
 Sentence: "The grass is green ." - 5 Tokens
 ```
-
-You can write and provide your own wrapper around the tokenizer you want to use.  
+The second way allows you to write your own wrapper around the tokenizer you want to use.  
 The wrapper is a function which have the same signature than `flair.data.segtok_tokenizer` (take a `string` and return `List[Token]`).
 
 Check the code of `flair.data.space_tokenizer` (which is very simple) to have an idea of how to implement such wrapper.  
