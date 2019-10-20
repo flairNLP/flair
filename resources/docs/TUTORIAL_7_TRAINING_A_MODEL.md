@@ -10,19 +10,18 @@ a corpus](/resources/docs/TUTORIAL_6_CORPUS.md).
 
 ## Training a Sequence Labeling Model
 
-Here is example code for a small NER model trained over WikiNER data, using simple GloVe embeddings. 
-To run this code, you first need to obtain the CoNLL-03 English dataset (alternatively, use `NLPTaskDataFetcher.load_corpus(NLPTask.WNUT_17)` instead for a task with freely available data).
-
-In this example, we downsample the data to 10% of the original data because the WikiNER dataset is huge:
+Here is example code for a small NER model trained over WNUT_17 data, using simple GloVe embeddings. 
+In this example, we downsample the data to 10% of the original data to make it run faster, but normally you 
+should train over the full dataset:
 
 ```python
 from flair.data import Corpus
-from flair.datasets import WIKINER_ENGLISH
+from flair.datasets import WNUT_17
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
 from typing import List
 
 # 1. get the corpus
-corpus: Corpus = WIKINER_ENGLISH().downsample(0.1)
+corpus: Corpus = WNUT_17().downsample(0.1)
 print(corpus)
 
 # 2. what tag do we want to predict?
