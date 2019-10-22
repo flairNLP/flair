@@ -581,7 +581,6 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
         for i, sentence in enumerate(sentences):
 
             language_code = sentence.get_language_code()
-            print(language_code)
             supported = [
                 "en",
                 "de",
