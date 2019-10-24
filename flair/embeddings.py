@@ -1152,7 +1152,7 @@ def _get_transformer_sentence_embeddings(
         for sentence in sentences:
             token_subwords_mapping: Dict[int, int] = {}
 
-            if name.startswith("gpt2") or name.startswith("roberta"):
+            if "gpt2" in name or "roberta" in name:
                 token_subwords_mapping = _build_token_subwords_mapping_gpt2(
                     sentence=sentence, tokenizer=tokenizer
                 )
