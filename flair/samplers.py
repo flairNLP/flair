@@ -165,22 +165,42 @@ class HardNegativesSampler(Sampler):
         similarity_loss_matrix *= nonzero_loss
 
         indices = []
-        for _ in range(self.n_neg_per_pos):
-            similarity_loss_matrix /= similarity_loss_matrix.sum(dim=1, keepdim=True)
-            cumsum = torch.cumsum(similarity_loss_matrix, dim=1)
-            cumsum[:,-1] = 1.0  # this is neccessary to fix numerical problems
-            sampled_indices = torch.sum(cumsum - torch.rand(chunk_size, 1) <= 0, dim=1)
-            similarity_loss_matrix[torch.arange(chunk_size), sampled_indices] = 0
-            indices.append(sampled_indices)
-        indices = torch.stack(indices)
-        # was:
-        # similarity_loss_matrix /= similarity_loss_matrix.sum(dim=1, keepdim=True)
-        # cumsum = torch.cumsum(similarity_loss_matrix, dim=1)
-        # indices = torch.stack([torch.LongTensor(torch.sum(cumsum - torch.rand(chunk_size, 1) < 0, dim=1))
-        #                        for _ in range(self.n_neg_per_pos)])
-        indices = torch.cat([torch.arange(chunk_size).unsqueeze(0), indices], dim=0).T
+        visited_points = set([])
+        for row_id in range(chunk_size):
+            similarity_loss_matrix_row = similarity_loss_matrix[row_id]
+            if row_id not in visited_points:
+                # in theory, we could add this only if there is any loss incured for this point,
+                # here we add it in any case, to ensure we're exactly the permutation of what we'd have
+                # if we did random sampling
+                sampled_indices = [torch.tensor(row_id)]
+                similarity_loss_matrix[:,row_id] = 0
+                for _ in range(self.n_neg_per_pos):
+                    similarity_loss_matrix_row_sum = similarity_loss_matrix_row.sum()
+                    if similarity_loss_matrix_row_sum == 0:
+                        break
+                    similarity_loss_matrix_row /= similarity_loss_matrix_row_sum
+                    cumsum = torch.cumsum(similarity_loss_matrix_row, dim=0)
+                    cumsum[-1] = 1.0
+                    sampled_index = (cumsum - torch.rand(1) <=0).sum()
+                    sampled_indices.append(sampled_index)
+                    similarity_loss_matrix[:,sampled_index] = 0
+                sampled_indices = torch.stack(sampled_indices)
+                indices.append(sampled_indices)
+                visited_points.update(set(sampled_indices.tolist()))
+        # for _ in range(self.n_neg_per_pos):
+        #     similarity_loss_matrix /= similarity_loss_matrix.sum(dim=1, keepdim=True)
+        #     cumsum = torch.cumsum(similarity_loss_matrix, dim=1)
+        #     cumsum[:,-1] = 1.0  # this is neccessary to fix numerical problems
+        #     sampled_indices = torch.sum(cumsum - torch.rand(chunk_size, 1) <= 0, dim=1)
+        #     similarity_loss_matrix[torch.arange(chunk_size), sampled_indices] = 0
+        #     indices.append(sampled_indices)
+        # indices = torch.stack(indices)
+        # indices = torch.cat([torch.arange(chunk_size).unsqueeze(0), indices], dim=0).T
+        # indices = indices.flatten()
 
-        return indices.flatten()
+        indices = torch.cat(indices)
+
+        return indices
 
     def __mine_batches(self):
         # == 1: take a chunk of data points (chunk is much bigger than a batch) ==
