@@ -119,9 +119,8 @@ class PairwiseBCELoss(SimilarityLoss):
             # TODO: this assumes eye matrix
             weight_matrix = n * (targets / 2.0 + neg_targets / (2.0 * (n - 1)))
             bce_loss *= weight_matrix
-        loss = bce_loss.mean()
 
-        return loss
+        return bce_loss
 
 
 class RankingLoss(SimilarityLoss):
@@ -144,13 +143,8 @@ class RankingLoss(SimilarityLoss):
         ranking_loss_matrix_10 = neg_targets * F.relu(
             self.margin + inputs - torch.diag(inputs).view(1, n)
         )
-        neg_targets_01_sum = torch.sum(neg_targets, dim=1)
-        neg_targets_10_sum = torch.sum(neg_targets, dim=0)
-        loss = self.direction_weights[0] * torch.mean(
-            torch.sum(ranking_loss_matrix_01 / neg_targets_01_sum, dim=1)
-        ) + self.direction_weights[1] * torch.mean(
-            torch.sum(ranking_loss_matrix_10 / neg_targets_10_sum, dim=0)
-        )
+        loss = self.direction_weights[0] * ranking_loss_matrix_01 + \
+               self.direction_weights[1] * ranking_loss_matrix_10
 
         return loss
 
@@ -265,7 +259,8 @@ class SimilarityLearner(flair.nn.Model):
             ):
                 targets[first_index, second_index] = 1.0
 
-        loss = self.similarity_loss(similarity_matrix, targets)
+        loss_matrix = self.similarity_loss(similarity_matrix, targets)
+        loss = loss_matrix.mean()
 
         return loss
 

@@ -1,0 +1,423 @@
+Corpus: 234305 train + 26034 dev + 28926 test sentences
+DataPoint:
+ first: Sentence: "Wenn man zu viel isst , wird man dick ." - 10 Tokens
+ second: Sentence: "If you eat too much , you 'll become fat ." - 11 Tokens
+SimilarityLearner(
+  (source_embeddings): DocumentTransformerEmbeddings(
+    (token_embedding): Embedding(5001, 256)
+    (encoder): TransformerEncoder(
+      (layers): ModuleList(
+        (0): TransformerEncoderLayer(
+          (self_attn): MultiheadAttention(
+            (out_proj): Linear(in_features=256, out_features=256, bias=True)
+          )
+          (linear1): Linear(in_features=256, out_features=512, bias=True)
+          (dropout): Dropout(p=0.1, inplace=False)
+          (linear2): Linear(in_features=512, out_features=256, bias=True)
+          (norm1): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (dropout1): Dropout(p=0.1, inplace=False)
+          (dropout2): Dropout(p=0.1, inplace=False)
+        )
+        (1): TransformerEncoderLayer(
+          (self_attn): MultiheadAttention(
+            (out_proj): Linear(in_features=256, out_features=256, bias=True)
+          )
+          (linear1): Linear(in_features=256, out_features=512, bias=True)
+          (dropout): Dropout(p=0.1, inplace=False)
+          (linear2): Linear(in_features=512, out_features=256, bias=True)
+          (norm1): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (dropout1): Dropout(p=0.1, inplace=False)
+          (dropout2): Dropout(p=0.1, inplace=False)
+        )
+        (2): TransformerEncoderLayer(
+          (self_attn): MultiheadAttention(
+            (out_proj): Linear(in_features=256, out_features=256, bias=True)
+          )
+          (linear1): Linear(in_features=256, out_features=512, bias=True)
+          (dropout): Dropout(p=0.1, inplace=False)
+          (linear2): Linear(in_features=512, out_features=256, bias=True)
+          (norm1): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (dropout1): Dropout(p=0.1, inplace=False)
+          (dropout2): Dropout(p=0.1, inplace=False)
+        )
+      )
+    )
+  )
+  (target_embeddings): DocumentTransformerEmbeddings(
+    (token_embedding): Embedding(5001, 256)
+    (encoder): TransformerEncoder(
+      (layers): ModuleList(
+        (0): TransformerEncoderLayer(
+          (self_attn): MultiheadAttention(
+            (out_proj): Linear(in_features=256, out_features=256, bias=True)
+          )
+          (linear1): Linear(in_features=256, out_features=512, bias=True)
+          (dropout): Dropout(p=0.1, inplace=False)
+          (linear2): Linear(in_features=512, out_features=256, bias=True)
+          (norm1): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (dropout1): Dropout(p=0.1, inplace=False)
+          (dropout2): Dropout(p=0.1, inplace=False)
+        )
+        (1): TransformerEncoderLayer(
+          (self_attn): MultiheadAttention(
+            (out_proj): Linear(in_features=256, out_features=256, bias=True)
+          )
+          (linear1): Linear(in_features=256, out_features=512, bias=True)
+          (dropout): Dropout(p=0.1, inplace=False)
+          (linear2): Linear(in_features=512, out_features=256, bias=True)
+          (norm1): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (dropout1): Dropout(p=0.1, inplace=False)
+          (dropout2): Dropout(p=0.1, inplace=False)
+        )
+        (2): TransformerEncoderLayer(
+          (self_attn): MultiheadAttention(
+            (out_proj): Linear(in_features=256, out_features=256, bias=True)
+          )
+          (linear1): Linear(in_features=256, out_features=512, bias=True)
+          (dropout): Dropout(p=0.1, inplace=False)
+          (linear2): Linear(in_features=512, out_features=256, bias=True)
+          (norm1): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (dropout1): Dropout(p=0.1, inplace=False)
+          (dropout2): Dropout(p=0.1, inplace=False)
+        )
+      )
+    )
+  )
+  (similarity_loss): RankingLoss()
+)
+2019-10-31 11:56:38,082 ----------------------------------------------------------------------------------------------------
+2019-10-31 11:56:38,083 Model: "SimilarityLearner(
+  (source_embeddings): DocumentTransformerEmbeddings(
+    (token_embedding): Embedding(5001, 256)
+    (encoder): TransformerEncoder(
+      (layers): ModuleList(
+        (0): TransformerEncoderLayer(
+          (self_attn): MultiheadAttention(
+            (out_proj): Linear(in_features=256, out_features=256, bias=True)
+          )
+          (linear1): Linear(in_features=256, out_features=512, bias=True)
+          (dropout): Dropout(p=0.1, inplace=False)
+          (linear2): Linear(in_features=512, out_features=256, bias=True)
+          (norm1): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (dropout1): Dropout(p=0.1, inplace=False)
+          (dropout2): Dropout(p=0.1, inplace=False)
+        )
+        (1): TransformerEncoderLayer(
+          (self_attn): MultiheadAttention(
+            (out_proj): Linear(in_features=256, out_features=256, bias=True)
+          )
+          (linear1): Linear(in_features=256, out_features=512, bias=True)
+          (dropout): Dropout(p=0.1, inplace=False)
+          (linear2): Linear(in_features=512, out_features=256, bias=True)
+          (norm1): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (dropout1): Dropout(p=0.1, inplace=False)
+          (dropout2): Dropout(p=0.1, inplace=False)
+        )
+        (2): TransformerEncoderLayer(
+          (self_attn): MultiheadAttention(
+            (out_proj): Linear(in_features=256, out_features=256, bias=True)
+          )
+          (linear1): Linear(in_features=256, out_features=512, bias=True)
+          (dropout): Dropout(p=0.1, inplace=False)
+          (linear2): Linear(in_features=512, out_features=256, bias=True)
+          (norm1): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (dropout1): Dropout(p=0.1, inplace=False)
+          (dropout2): Dropout(p=0.1, inplace=False)
+        )
+      )
+    )
+  )
+  (target_embeddings): DocumentTransformerEmbeddings(
+    (token_embedding): Embedding(5001, 256)
+    (encoder): TransformerEncoder(
+      (layers): ModuleList(
+        (0): TransformerEncoderLayer(
+          (self_attn): MultiheadAttention(
+            (out_proj): Linear(in_features=256, out_features=256, bias=True)
+          )
+          (linear1): Linear(in_features=256, out_features=512, bias=True)
+          (dropout): Dropout(p=0.1, inplace=False)
+          (linear2): Linear(in_features=512, out_features=256, bias=True)
+          (norm1): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (dropout1): Dropout(p=0.1, inplace=False)
+          (dropout2): Dropout(p=0.1, inplace=False)
+        )
+        (1): TransformerEncoderLayer(
+          (self_attn): MultiheadAttention(
+            (out_proj): Linear(in_features=256, out_features=256, bias=True)
+          )
+          (linear1): Linear(in_features=256, out_features=512, bias=True)
+          (dropout): Dropout(p=0.1, inplace=False)
+          (linear2): Linear(in_features=512, out_features=256, bias=True)
+          (norm1): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (dropout1): Dropout(p=0.1, inplace=False)
+          (dropout2): Dropout(p=0.1, inplace=False)
+        )
+        (2): TransformerEncoderLayer(
+          (self_attn): MultiheadAttention(
+            (out_proj): Linear(in_features=256, out_features=256, bias=True)
+          )
+          (linear1): Linear(in_features=256, out_features=512, bias=True)
+          (dropout): Dropout(p=0.1, inplace=False)
+          (linear2): Linear(in_features=512, out_features=256, bias=True)
+          (norm1): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+          (dropout1): Dropout(p=0.1, inplace=False)
+          (dropout2): Dropout(p=0.1, inplace=False)
+        )
+      )
+    )
+  )
+  (similarity_loss): RankingLoss()
+)"
+2019-10-31 11:56:38,083 ----------------------------------------------------------------------------------------------------
+2019-10-31 11:56:38,083 Corpus: "Corpus: 234305 train + 26034 dev + 28926 test sentences"
+2019-10-31 11:56:38,083 ----------------------------------------------------------------------------------------------------
+2019-10-31 11:56:38,083 Parameters:
+2019-10-31 11:56:38,083  - learning_rate: "2"
+2019-10-31 11:56:38,083  - mini_batch_size: "64"
+2019-10-31 11:56:38,083  - patience: "4"
+2019-10-31 11:56:38,083  - anneal_factor: "0.5"
+2019-10-31 11:56:38,083  - max_epochs: "1000"
+2019-10-31 11:56:38,083  - shuffle: "True"
+2019-10-31 11:56:38,083  - train_with_dev: "False"
+2019-10-31 11:56:38,083  - batch_growth_annealing: "False"
+2019-10-31 11:56:38,083 ----------------------------------------------------------------------------------------------------
+2019-10-31 11:56:38,083 Model training base path: "/home/jkrapac/data/translate/parallel-large-hardneg-transformer-small-sgd-nojitter"
+2019-10-31 11:56:38,084 ----------------------------------------------------------------------------------------------------
+2019-10-31 11:56:38,084 Device: cuda:0
+2019-10-31 11:56:38,084 ----------------------------------------------------------------------------------------------------
+2019-10-31 11:56:38,084 Embeddings storage mode: none
+2019-10-31 11:56:38,092 ----------------------------------------------------------------------------------------------------
+2019-10-31 11:58:22,243 epoch 1 - iter 0/3662 - loss 0.14151330 - samples/sec: 323856.51
+2019-10-31 11:58:46,269 epoch 1 - iter 366/3662 - loss 0.04105047 - samples/sec: 1502.94
+2019-10-31 11:59:09,490 epoch 1 - iter 732/3662 - loss 0.03179030 - samples/sec: 1530.47
+2019-10-31 11:59:33,352 epoch 1 - iter 1098/3662 - loss 0.02754012 - samples/sec: 1486.90
+2019-10-31 11:59:56,921 epoch 1 - iter 1464/3662 - loss 0.02489171 - samples/sec: 1521.36
+2019-10-31 12:00:20,054 epoch 1 - iter 1830/3662 - loss 0.02299347 - samples/sec: 1550.18
+2019-10-31 12:00:34,276 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:00:34,276 EPOCH 1 done: loss 0.0220 - lr 2.0000
+2019-10-31 12:01:00,184 TRAIN_SPLIT : loss 0 - score 0.04310132903126681
+2019-10-31 12:01:26,007 DEV : loss 0 - score 0.04449181839133441
+2019-10-31 12:01:32,411 BAD EPOCHS (no improvement): 0
+2019-10-31 12:01:32,509 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:03:15,426 epoch 2 - iter 0/3662 - loss 0.03446078 - samples/sec: 627313.79
+2019-10-31 12:03:37,777 epoch 2 - iter 366/3662 - loss 0.02715688 - samples/sec: 1694.55
+2019-10-31 12:03:59,465 epoch 2 - iter 732/3662 - loss 0.02554497 - samples/sec: 1709.07
+2019-10-31 12:04:21,147 epoch 2 - iter 1098/3662 - loss 0.02419626 - samples/sec: 1707.56
+2019-10-31 12:04:43,172 epoch 2 - iter 1464/3662 - loss 0.02296510 - samples/sec: 1690.17
+2019-10-31 12:05:05,029 epoch 2 - iter 1830/3662 - loss 0.02210328 - samples/sec: 1692.80
+2019-10-31 12:05:18,106 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:05:18,106 EPOCH 2 done: loss 0.0217 - lr 2.0000
+2019-10-31 12:05:44,076 TRAIN_SPLIT : loss 0 - score 0.0634670046861796
+2019-10-31 12:06:09,969 DEV : loss 0 - score 0.06155028040255052
+2019-10-31 12:06:16,365 BAD EPOCHS (no improvement): 0
+2019-10-31 12:06:16,478 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:08:00,114 epoch 3 - iter 0/3662 - loss 0.02311105 - samples/sec: 483203.62
+2019-10-31 12:08:23,093 epoch 3 - iter 366/3662 - loss 0.02038829 - samples/sec: 1657.79
+2019-10-31 12:08:45,652 epoch 3 - iter 732/3662 - loss 0.01946308 - samples/sec: 1635.31
+2019-10-31 12:09:07,920 epoch 3 - iter 1098/3662 - loss 0.01870735 - samples/sec: 1675.70
+2019-10-31 12:09:29,927 epoch 3 - iter 1464/3662 - loss 0.01814576 - samples/sec: 1684.37
+2019-10-31 12:09:52,260 epoch 3 - iter 1830/3662 - loss 0.01758068 - samples/sec: 1666.72
+2019-10-31 12:10:05,531 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:10:05,531 EPOCH 3 done: loss 0.0173 - lr 2.0000
+2019-10-31 12:10:31,415 TRAIN_SPLIT : loss 0 - score 0.08637166781900592
+2019-10-31 12:10:57,365 DEV : loss 0 - score 0.0848352154874395
+2019-10-31 12:11:03,752 BAD EPOCHS (no improvement): 0
+2019-10-31 12:11:03,871 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:12:47,309 epoch 4 - iter 0/3662 - loss 0.01416963 - samples/sec: 594286.09
+2019-10-31 12:13:09,999 epoch 4 - iter 366/3662 - loss 0.01814014 - samples/sec: 1677.98
+2019-10-31 12:13:31,955 epoch 4 - iter 732/3662 - loss 0.01735837 - samples/sec: 1699.25
+2019-10-31 12:13:53,912 epoch 4 - iter 1098/3662 - loss 0.01682694 - samples/sec: 1679.39
+2019-10-31 12:14:16,012 epoch 4 - iter 1464/3662 - loss 0.01625018 - samples/sec: 1684.14
+2019-10-31 12:14:37,669 epoch 4 - iter 1830/3662 - loss 0.01572110 - samples/sec: 1715.05
+2019-10-31 12:14:50,772 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:14:50,772 EPOCH 4 done: loss 0.0155 - lr 2.0000
+2019-10-31 12:15:16,752 TRAIN_SPLIT : loss 0 - score 0.10062994545594224
+2019-10-31 12:15:42,647 DEV : loss 0 - score 0.1001459629714988
+2019-10-31 12:15:49,042 BAD EPOCHS (no improvement): 0
+2019-10-31 12:15:49,217 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:17:32,642 epoch 5 - iter 0/3662 - loss 0.01707267 - samples/sec: 559743.95
+2019-10-31 12:17:55,298 epoch 5 - iter 366/3662 - loss 0.01639296 - samples/sec: 1682.73
+2019-10-31 12:18:16,815 epoch 5 - iter 732/3662 - loss 0.01557485 - samples/sec: 1734.34
+2019-10-31 12:18:38,920 epoch 5 - iter 1098/3662 - loss 0.01493400 - samples/sec: 1688.24
+2019-10-31 12:19:01,096 epoch 5 - iter 1464/3662 - loss 0.01441662 - samples/sec: 1676.25
+2019-10-31 12:19:23,025 epoch 5 - iter 1830/3662 - loss 0.01400382 - samples/sec: 1690.77
+2019-10-31 12:19:36,405 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:19:36,405 EPOCH 5 done: loss 0.0138 - lr 2.0000
+2019-10-31 12:20:02,321 TRAIN_SPLIT : loss 0 - score 0.1190673734347392
+2019-10-31 12:20:28,285 DEV : loss 0 - score 0.11195359913958669
+2019-10-31 12:20:34,668 BAD EPOCHS (no improvement): 0
+2019-10-31 12:20:34,842 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:22:17,849 epoch 6 - iter 0/3662 - loss 0.02025558 - samples/sec: 587737.51
+2019-10-31 12:22:40,177 epoch 6 - iter 366/3662 - loss 0.01627693 - samples/sec: 1738.14
+2019-10-31 12:23:01,807 epoch 6 - iter 732/3662 - loss 0.01532185 - samples/sec: 1721.58
+2019-10-31 12:23:23,594 epoch 6 - iter 1098/3662 - loss 0.01459392 - samples/sec: 1726.70
+2019-10-31 12:23:45,133 epoch 6 - iter 1464/3662 - loss 0.01413193 - samples/sec: 1730.21
+2019-10-31 12:24:06,688 epoch 6 - iter 1830/3662 - loss 0.01376803 - samples/sec: 1747.73
+2019-10-31 12:24:19,660 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:24:19,660 EPOCH 6 done: loss 0.0136 - lr 2.0000
+2019-10-31 12:24:45,581 TRAIN_SPLIT : loss 0 - score 0.12955750172850888
+2019-10-31 12:25:11,541 DEV : loss 0 - score 0.1252439118076362
+2019-10-31 12:25:17,922 BAD EPOCHS (no improvement): 0
+2019-10-31 12:25:18,160 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:27:01,420 epoch 7 - iter 0/3662 - loss 0.01418939 - samples/sec: 539791.09
+2019-10-31 12:27:24,009 epoch 7 - iter 366/3662 - loss 0.01454244 - samples/sec: 1703.63
+2019-10-31 12:27:45,968 epoch 7 - iter 732/3662 - loss 0.01337654 - samples/sec: 1685.38
+2019-10-31 12:28:07,746 epoch 7 - iter 1098/3662 - loss 0.01283758 - samples/sec: 1719.14
+2019-10-31 12:28:29,893 epoch 7 - iter 1464/3662 - loss 0.01242250 - samples/sec: 1675.48
+2019-10-31 12:28:51,812 epoch 7 - iter 1830/3662 - loss 0.01203426 - samples/sec: 1691.13
+2019-10-31 12:29:04,899 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:29:04,899 EPOCH 7 done: loss 0.0119 - lr 2.0000
+2019-10-31 12:29:30,858 TRAIN_SPLIT : loss 0 - score 0.14372743335638014
+2019-10-31 12:29:56,606 DEV : loss 0 - score 0.1427671506491511
+2019-10-31 12:30:03,127 BAD EPOCHS (no improvement): 0
+2019-10-31 12:30:03,271 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:31:46,926 epoch 8 - iter 0/3662 - loss 0.01283413 - samples/sec: 634296.01
+2019-10-31 12:32:08,820 epoch 8 - iter 366/3662 - loss 0.01376428 - samples/sec: 1760.49
+2019-10-31 12:32:30,426 epoch 8 - iter 732/3662 - loss 0.01290808 - samples/sec: 1718.11
+2019-10-31 12:32:52,249 epoch 8 - iter 1098/3662 - loss 0.01221225 - samples/sec: 1710.43
+2019-10-31 12:33:13,817 epoch 8 - iter 1464/3662 - loss 0.01181546 - samples/sec: 1743.40
+2019-10-31 12:33:34,977 epoch 8 - iter 1830/3662 - loss 0.01146113 - samples/sec: 1742.65
+2019-10-31 12:33:47,773 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:33:47,773 EPOCH 8 done: loss 0.0113 - lr 2.0000
+2019-10-31 12:34:13,241 TRAIN_SPLIT : loss 0 - score 0.1570676807252055
+2019-10-31 12:34:38,737 DEV : loss 0 - score 0.15533533072136438
+2019-10-31 12:34:45,135 BAD EPOCHS (no improvement): 0
+2019-10-31 12:34:45,289 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:36:27,186 epoch 9 - iter 0/3662 - loss 0.01106322 - samples/sec: 435478.25
+2019-10-31 12:36:49,539 epoch 9 - iter 366/3662 - loss 0.01292458 - samples/sec: 1719.79
+2019-10-31 12:37:11,504 epoch 9 - iter 732/3662 - loss 0.01203585 - samples/sec: 1687.88
+2019-10-31 12:37:32,963 epoch 9 - iter 1098/3662 - loss 0.01152916 - samples/sec: 1730.53
+2019-10-31 12:37:54,692 epoch 9 - iter 1464/3662 - loss 0.01106598 - samples/sec: 1714.53
+2019-10-31 12:38:16,481 epoch 9 - iter 1830/3662 - loss 0.01076445 - samples/sec: 1698.88
+2019-10-31 12:38:29,660 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:38:29,660 EPOCH 9 done: loss 0.0106 - lr 2.0000
+2019-10-31 12:38:55,104 TRAIN_SPLIT : loss 0 - score 0.16478835369132674
+2019-10-31 12:39:20,614 DEV : loss 0 - score 0.16076668971345165
+2019-10-31 12:39:26,996 BAD EPOCHS (no improvement): 0
+2019-10-31 12:39:27,103 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:41:09,381 epoch 10 - iter 0/3662 - loss 0.01845481 - samples/sec: 567900.63
+2019-10-31 12:41:31,399 epoch 10 - iter 366/3662 - loss 0.01324337 - samples/sec: 1737.25
+2019-10-31 12:41:53,078 epoch 10 - iter 732/3662 - loss 0.01236190 - samples/sec: 1723.88
+2019-10-31 12:42:14,935 epoch 10 - iter 1098/3662 - loss 0.01187724 - samples/sec: 1694.71
+2019-10-31 12:42:36,526 epoch 10 - iter 1464/3662 - loss 0.01143605 - samples/sec: 1731.75
+2019-10-31 12:42:57,623 epoch 10 - iter 1830/3662 - loss 0.01110132 - samples/sec: 1781.22
+2019-10-31 12:43:10,412 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:43:10,412 EPOCH 10 done: loss 0.0109 - lr 2.0000
+2019-10-31 12:43:35,896 TRAIN_SPLIT : loss 0 - score 0.17139893984789123
+2019-10-31 12:44:01,245 DEV : loss 0 - score 0.16804563263424752
+2019-10-31 12:44:07,769 BAD EPOCHS (no improvement): 0
+2019-10-31 12:44:07,943 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:45:49,701 epoch 11 - iter 0/3662 - loss 0.01378577 - samples/sec: 548478.88
+2019-10-31 12:46:11,897 epoch 11 - iter 366/3662 - loss 0.01319490 - samples/sec: 1731.07
+2019-10-31 12:46:33,419 epoch 11 - iter 732/3662 - loss 0.01216953 - samples/sec: 1732.42
+2019-10-31 12:46:54,436 epoch 11 - iter 1098/3662 - loss 0.01148094 - samples/sec: 1776.59
+2019-10-31 12:47:15,524 epoch 11 - iter 1464/3662 - loss 0.01102966 - samples/sec: 1754.31
+2019-10-31 12:47:36,378 epoch 11 - iter 1830/3662 - loss 0.01066771 - samples/sec: 1787.42
+2019-10-31 12:47:49,004 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:47:49,004 EPOCH 11 done: loss 0.0105 - lr 2.0000
+2019-10-31 12:48:14,575 TRAIN_SPLIT : loss 0 - score 0.1790581547207498
+2019-10-31 12:48:39,867 DEV : loss 0 - score 0.17557809018975187
+2019-10-31 12:48:46,365 BAD EPOCHS (no improvement): 0
+2019-10-31 12:48:46,610 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:50:29,094 epoch 12 - iter 0/3662 - loss 0.01714343 - samples/sec: 576021.49
+2019-10-31 12:50:51,033 epoch 12 - iter 366/3662 - loss 0.01273823 - samples/sec: 1738.85
+2019-10-31 12:51:12,560 epoch 12 - iter 732/3662 - loss 0.01181498 - samples/sec: 1722.77
+2019-10-31 12:51:34,173 epoch 12 - iter 1098/3662 - loss 0.01126791 - samples/sec: 1742.25
+2019-10-31 12:51:55,400 epoch 12 - iter 1464/3662 - loss 0.01079178 - samples/sec: 1761.02
+2019-10-31 12:52:17,428 epoch 12 - iter 1830/3662 - loss 0.01040493 - samples/sec: 1659.20
+2019-10-31 12:52:30,287 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:52:30,287 EPOCH 12 done: loss 0.0102 - lr 2.0000
+2019-10-31 12:52:55,641 TRAIN_SPLIT : loss 0 - score 0.18750096028270724
+2019-10-31 12:53:21,149 DEV : loss 0 - score 0.18470077590842743
+2019-10-31 12:53:27,662 BAD EPOCHS (no improvement): 0
+2019-10-31 12:53:27,739 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:55:10,092 epoch 13 - iter 0/3662 - loss 0.00961223 - samples/sec: 420730.81
+2019-10-31 12:55:32,114 epoch 13 - iter 366/3662 - loss 0.01187195 - samples/sec: 1748.96
+2019-10-31 12:55:53,369 epoch 13 - iter 732/3662 - loss 0.01089443 - samples/sec: 1769.40
+2019-10-31 12:56:14,941 epoch 13 - iter 1098/3662 - loss 0.01039750 - samples/sec: 1727.35
+2019-10-31 12:56:36,480 epoch 13 - iter 1464/3662 - loss 0.00998017 - samples/sec: 1734.72
+2019-10-31 12:56:57,922 epoch 13 - iter 1830/3662 - loss 0.00961384 - samples/sec: 1742.52
+2019-10-31 12:57:10,769 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:57:10,769 EPOCH 13 done: loss 0.0094 - lr 2.0000
+2019-10-31 12:57:36,247 TRAIN_SPLIT : loss 0 - score 0.19749174156871782
+2019-10-31 12:58:01,727 DEV : loss 0 - score 0.19617807482522853
+2019-10-31 12:58:08,108 BAD EPOCHS (no improvement): 0
+2019-10-31 12:58:08,189 ----------------------------------------------------------------------------------------------------
+2019-10-31 12:59:50,540 epoch 14 - iter 0/3662 - loss 0.01758276 - samples/sec: 526313.02
+2019-10-31 13:00:12,802 epoch 14 - iter 366/3662 - loss 0.01183557 - samples/sec: 1742.02
+2019-10-31 13:00:34,159 epoch 14 - iter 732/3662 - loss 0.01081049 - samples/sec: 1762.08
+2019-10-31 13:00:55,225 epoch 14 - iter 1098/3662 - loss 0.01027844 - samples/sec: 1765.87
+2019-10-31 13:01:16,999 epoch 14 - iter 1464/3662 - loss 0.00983259 - samples/sec: 1715.11
+2019-10-31 13:01:38,599 epoch 14 - iter 1830/3662 - loss 0.00948536 - samples/sec: 1735.06
+2019-10-31 13:01:51,458 ----------------------------------------------------------------------------------------------------
+2019-10-31 13:01:51,458 EPOCH 14 done: loss 0.0093 - lr 2.0000
+2019-10-31 13:02:17,050 TRAIN_SPLIT : loss 0 - score 0.2033341015594991
+2019-10-31 13:02:42,492 DEV : loss 0 - score 0.20269263271107013
+2019-10-31 13:02:48,869 BAD EPOCHS (no improvement): 0
+2019-10-31 13:02:48,964 ----------------------------------------------------------------------------------------------------
+2019-10-31 13:03:02,410 epoch 15 - iter 0/3662 - loss 0.01743810 - samples/sec: 686372.62
+2019-10-31 13:03:23,768 epoch 15 - iter 366/3662 - loss 0.00934873 - samples/sec: 1778.02
+2019-10-31 13:03:38,214 ----------------------------------------------------------------------------------------------------
+2019-10-31 13:03:38,214 EPOCH 15 done: loss 0.0086 - lr 2.0000
+2019-10-31 13:04:03,765 TRAIN_SPLIT : loss 0 - score 0.19289006683567642
+2019-10-31 13:04:29,198 DEV : loss 0 - score 0.19063916416993165
+2019-10-31 13:04:35,579 BAD EPOCHS (no improvement): 1
+2019-10-31 13:04:35,581 ----------------------------------------------------------------------------------------------------
+2019-10-31 13:06:17,541 epoch 16 - iter 0/3662 - loss 0.01873883 - samples/sec: 568423.05
+2019-10-31 13:06:39,255 epoch 16 - iter 366/3662 - loss 0.01009259 - samples/sec: 1777.88
+2019-10-31 13:06:59,966 epoch 16 - iter 732/3662 - loss 0.00919226 - samples/sec: 1812.26
+2019-10-31 13:07:21,540 epoch 16 - iter 1098/3662 - loss 0.00877877 - samples/sec: 1721.53
+2019-10-31 13:07:42,650 epoch 16 - iter 1464/3662 - loss 0.00850939 - samples/sec: 1776.38
+2019-10-31 13:08:03,967 epoch 16 - iter 1830/3662 - loss 0.00822365 - samples/sec: 1768.16
+2019-10-31 13:08:16,513 ----------------------------------------------------------------------------------------------------
+2019-10-31 13:08:16,513 EPOCH 16 done: loss 0.0081 - lr 2.0000
+2019-10-31 13:08:41,865 TRAIN_SPLIT : loss 0 - score 0.22149880924944304
+2019-10-31 13:09:07,348 DEV : loss 0 - score 0.22143735115618038
+2019-10-31 13:09:13,863 BAD EPOCHS (no improvement): 0
+2019-10-31 13:09:13,958 ----------------------------------------------------------------------------------------------------
+2019-10-31 13:10:55,837 epoch 17 - iter 0/3662 - loss 0.00818851 - samples/sec: 424561.61
+2019-10-31 13:11:17,793 epoch 17 - iter 366/3662 - loss 0.00994609 - samples/sec: 1749.76
+2019-10-31 13:11:38,873 epoch 17 - iter 732/3662 - loss 0.00933550 - samples/sec: 1777.33
+2019-10-31 13:12:00,037 epoch 17 - iter 1098/3662 - loss 0.00880488 - samples/sec: 1746.92
+2019-10-31 13:12:21,518 epoch 17 - iter 1464/3662 - loss 0.00847456 - samples/sec: 1748.63
+2019-10-31 13:12:43,183 epoch 17 - iter 1830/3662 - loss 0.00818434 - samples/sec: 1724.11
+2019-10-31 13:12:55,723 ----------------------------------------------------------------------------------------------------
+2019-10-31 13:12:55,723 EPOCH 17 done: loss 0.0080 - lr 2.0000
+2019-10-31 13:13:21,312 TRAIN_SPLIT : loss 0 - score 0.22993393254974268
+2019-10-31 13:13:46,754 DEV : loss 0 - score 0.228270722900822
+2019-10-31 13:13:53,135 BAD EPOCHS (no improvement): 0
+2019-10-31 13:13:53,214 ----------------------------------------------------------------------------------------------------
+2019-10-31 13:15:35,648 epoch 18 - iter 0/3662 - loss 0.01309252 - samples/sec: 610216.99
+2019-10-31 13:15:57,167 epoch 18 - iter 366/3662 - loss 0.00996272 - samples/sec: 1791.53
+2019-10-31 13:16:18,431 epoch 18 - iter 732/3662 - loss 0.00910119 - samples/sec: 1766.56
+2019-10-31 13:16:39,681 epoch 18 - iter 1098/3662 - loss 0.00858943 - samples/sec: 1741.49
+2019-10-31 13:17:00,889 epoch 18 - iter 1464/3662 - loss 0.00827001 - samples/sec: 1778.81
+2019-10-31 13:17:21,785 epoch 18 - iter 1830/3662 - loss 0.00801239 - samples/sec: 1795.31
+2019-10-31 13:17:34,388 ----------------------------------------------------------------------------------------------------
+2019-10-31 13:17:34,388 EPOCH 18 done: loss 0.0079 - lr 2.0000
+2019-10-31 13:17:59,887 TRAIN_SPLIT : loss 0 - score 0.2341783821156949
+2019-10-31 13:18:25,409 DEV : loss 0 - score 0.23398248444342015
+2019-10-31 13:18:31,787 BAD EPOCHS (no improvement): 0
+2019-10-31 13:18:31,925 ----------------------------------------------------------------------------------------------------
+2019-10-31 13:20:14,700 epoch 19 - iter 0/3662 - loss 0.01533567 - samples/sec: 506495.05
+2019-10-31 13:20:36,634 epoch 19 - iter 366/3662 - loss 0.01018902 - samples/sec: 1765.66
+2019-10-31 13:20:58,259 epoch 19 - iter 732/3662 - loss 0.00938332 - samples/sec: 1710.86
+2019-10-31 13:21:19,706 epoch 19 - iter 1098/3662 - loss 0.00884511 - samples/sec: 1737.86
+2019-10-31 13:21:40,876 epoch 19 - iter 1464/3662 - loss 0.00854982 - samples/sec: 1763.21
+2019-10-31 13:22:02,353 epoch 19 - iter 1830/3662 - loss 0.00822510 - samples/sec: 1731.17
+2019-10-31 13:22:15,177 ----------------------------------------------------------------------------------------------------
+2019-10-31 13:22:15,177 EPOCH 19 done: loss 0.0081 - lr 2.0000
+2019-10-31 13:22:40,756 TRAIN_SPLIT : loss 0 - score 0.2381117000845049

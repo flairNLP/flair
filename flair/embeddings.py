@@ -12,6 +12,7 @@ import numpy as np
 import torch
 import torchvision as torchvision
 from bpemb import BPEmb
+import sentencepiece as sp
 from deprecated import deprecated
 
 import torch.nn.functional as F
@@ -3006,6 +3007,77 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
                     )
 
         return sentences
+
+
+class DocumentTransformerEmbeddings(DocumentEmbeddings):
+    def __init__(self, spm_filename, embedding_dim, n_heads, transformer_ffwd_dim, n_layers, alpha, length=-1, dropout=0.1):
+        super().__init__()
+        # tokenizer part
+        self.spm_filename = spm_filename
+        self.spm = sp.SentencePieceProcessor()
+        self.spm.Load(self.spm_filename)
+        self.alpha = alpha
+        self.length = length
+        # embedding part
+        self.__embedding_length = embedding_dim
+        # transformer part
+        self.n_heads = n_heads
+        self.transformer_ffwd_dim = transformer_ffwd_dim
+        self.n_layers = n_layers
+        self.cls_token_id = len(self.spm)
+        self.n_tokens = self.cls_token_id + 1
+        # embedding part
+        self.token_embedding = torch.nn.Embedding(self.n_tokens, self.__embedding_length)  # here we keep the embedding dimension of token and the input dimension to transformer the same, but in principle they could be different (some model could come in between)
+        # transfomer part
+        self.encoder = TransformerEncoder(TransformerEncoderLayer(d_model=self.__embedding_length, nhead=self.n_heads, dim_feedforward=self.transformer_ffwd_dim, dropout=dropout), n_layers)
+        self.name = 'document_transformer'
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state['spm'] = None
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+        if 'spm' not in self.__dict__:
+            self.__dict__['spm'] = sp.SentencePieceProcessor()
+            self.__dict__['spm'].Load(self.spm_filename)
+
+    def __get_position_encodings(self, n):
+        position_encodings_even = torch.arange(n).float().unsqueeze(1) / torch.pow(10000., 2 * torch.arange(0, self.__embedding_length, 2) / self.__embedding_length).float().unsqueeze(0)
+        position_encodings_even = torch.sin(position_encodings_even).unsqueeze(2)
+        position_encodings_odd = torch.arange(n).float().unsqueeze(1) / torch.pow(10000., 2 * torch.arange(1, self.__embedding_length, 2) / self.__embedding_length).float().unsqueeze(0)
+        position_encodings_odd = torch.cos(position_encodings_odd).unsqueeze(2)
+        position_encodings = torch.cat([position_encodings_even, position_encodings_odd], dim=2).reshape([n, -1]).unsqueeze(1)
+
+        return position_encodings.to(flair.device)
+
+    def embed(self, sentences):
+        # tokenizer part
+        token_ids = []
+        for sentence in sentences:
+            tokens = self.spm.SampleEncodeAsIds(sentence.to_original_text(), self.length, self.alpha[self.training])
+            if len(tokens) > 385:
+                tokens = self.spm.SampleEncodeAsIds(sentence.to_original_text(), -1, 50)
+            token_ids.append(torch.LongTensor(tokens))
+        # token_ids = [torch.LongTensor(self.spm.SampleEncodeAsIds(sentence.to_original_text(), self.length, self.alpha[self.training])) for sentence in sentences]  # TODO: expose these params, we want this to be random in training, but fixed in inference
+        token_ids = torch.nn.utils.rnn.pad_sequence(token_ids, padding_value=0)
+        token_ids = torch.cat([self.cls_token_id * torch.ones((1, token_ids.shape[1])).long(), token_ids], dim=0)
+        # embedding part
+        token_embeddings = self.token_embedding(token_ids.to(flair.device))
+        # transformer part
+        token_embeddings[1:,:,:] += self.__get_position_encodings(token_ids.shape[0] - 1)
+        token_mask = (token_ids == 0).T
+        token_transformer_outputs = self.encoder(token_embeddings, src_key_padding_mask=token_mask.to(flair.device))
+        for sentence_id, sentence in enumerate(sentences):
+            sentence.set_embedding(self.name, token_transformer_outputs[0, sentence_id])
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        pass
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
 
 
 class NILCEmbeddings(WordEmbeddings):
