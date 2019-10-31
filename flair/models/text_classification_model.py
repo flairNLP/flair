@@ -99,6 +99,7 @@ class TextClassifier(flair.nn.Model):
         }
         return model_state
 
+    @staticmethod
     def _init_model_with_state_dict(state):
 
         model = TextClassifier(
@@ -417,6 +418,7 @@ class TextClassifier(flair.nn.Model):
 
         return vec
 
+    @staticmethod
     def _fetch_model(model_name) -> str:
 
         model_map = {}

@@ -169,6 +169,7 @@ class TextRegressor(flair.models.TextClassifier):
         }
         return model_state
 
+    @staticmethod
     def _init_model_with_state_dict(state):
 
         model = TextRegressor(document_embeddings=state["document_embeddings"])
