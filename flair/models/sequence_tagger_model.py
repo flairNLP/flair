@@ -81,6 +81,7 @@ class SequenceTagger(flair.nn.Model):
         train_initial_hidden_state: bool = False,
         rnn_type: str = "LSTM",
         pickle_module: str = "pickle",
+        beta: float = 1.0,
     ):
         """
         Initializes a SequenceTagger
@@ -95,10 +96,12 @@ class SequenceTagger(flair.nn.Model):
         :param word_dropout: word dropout probability
         :param locked_dropout: locked dropout probability
         :param train_initial_hidden_state: if True, trains initial hidden state of RNN
+        :param beta: Parameter for F-beta score for evaluation and training annealing
+
         """
 
         super(SequenceTagger, self).__init__()
-
+        self.beta = beta
         self.use_rnn = use_rnn
         self.hidden_size = hidden_size
         self.use_crf: bool = use_crf
@@ -214,6 +217,7 @@ class SequenceTagger(flair.nn.Model):
             "use_word_dropout": self.use_word_dropout,
             "use_locked_dropout": self.use_locked_dropout,
             "rnn_type": self.rnn_type,
+            "beta": self.beta
         }
         return model_state
 
@@ -235,6 +239,7 @@ class SequenceTagger(flair.nn.Model):
             if not "train_initial_hidden_state" in state.keys()
             else state["train_initial_hidden_state"]
         )
+        beta = 1.0 if "beta" not in state.keys() else state["beta"]
 
         model = SequenceTagger(
             hidden_size=state["hidden_size"],
@@ -249,6 +254,7 @@ class SequenceTagger(flair.nn.Model):
             locked_dropout=use_locked_dropout,
             train_initial_hidden_state=train_initial_hidden_state,
             rnn_type=rnn_type,
+            beta=beta,
         )
         model.load_state_dict(state["state_dict"])
         return model
@@ -374,7 +380,7 @@ class SequenceTagger(flair.nn.Model):
 
             batch_no: int = 0
 
-            metric = Metric("Evaluation")
+            metric = Metric("Evaluation", beta=self.beta)
 
             lines: List[str] = []
 
