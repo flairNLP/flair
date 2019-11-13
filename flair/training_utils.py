@@ -87,9 +87,9 @@ class Metric(object):
     def f_score(self, class_name=None):
         if self.precision(class_name) + self.recall(class_name) > 0:
             return round(
-                (1 + beta*beta)
+                (1 + self.beta*self.beta)
                 * (self.precision(class_name) * self.recall(class_name))
-                / (self.precision(class_name) * beta*beta + self.recall(class_name)),
+                / (self.precision(class_name) * self.beta*self.beta + self.recall(class_name)),
                 4,
             )
         return 0.0

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import logging
 from pathlib import Path
-from typing import List, Union, Optional, Callable
+from typing import List, Union, Optional, Callable, Dict
 
 import numpy as np
 import torch
@@ -82,6 +82,7 @@ class SequenceTagger(flair.nn.Model):
         rnn_type: str = "LSTM",
         pickle_module: str = "pickle",
         beta: float = 1.0,
+        weights: Dict = None,
     ):
         """
         Initializes a SequenceTagger
@@ -97,6 +98,7 @@ class SequenceTagger(flair.nn.Model):
         :param locked_dropout: locked dropout probability
         :param train_initial_hidden_state: if True, trains initial hidden state of RNN
         :param beta: Parameter for F-beta score for evaluation and training annealing
+        :param weights: Weights for classes for the loss function
 
         """
 
@@ -115,6 +117,19 @@ class SequenceTagger(flair.nn.Model):
         self.tag_dictionary: Dictionary = tag_dictionary
         self.tag_type: str = tag_type
         self.tagset_size: int = len(tag_dictionary)
+
+        # Initialize the weight tensor
+        if weights is not None:
+            n_classes = len(self.tag_dictionary)
+            weight_list = [1. for i in range(n_classes)]
+            for i, tag in enumerate(self.tag_dictionary.get_items()):
+                if tag in weights.keys():
+                    weight_list[i] = weights[tag]
+            self.weights = torch.FloatTensor(weight_list).to(flair.device)
+        else:
+            self.weights = None
+
+
 
         # initialize the network architecture
         self.nlayers: int = rnn_layers
@@ -622,9 +637,8 @@ class SequenceTagger(flair.nn.Model):
                 features, tag_list, lengths
             ):
                 sentence_feats = sentence_feats[:sentence_length]
-
                 score += torch.nn.functional.cross_entropy(
-                    sentence_feats, sentence_tags
+                    sentence_feats, sentence_tags, weight=self.weights
                 )
             score /= len(features)
             return score
