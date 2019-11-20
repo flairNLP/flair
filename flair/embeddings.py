@@ -25,6 +25,8 @@ from torch.nn import TransformerEncoderLayer, TransformerEncoder
 from transformers import (
     BertTokenizer,
     BertModel,
+    CamembertTokenizer,
+    CamembertModel,
     RobertaTokenizer,
     RobertaModel,
     TransfoXLTokenizer,
@@ -556,10 +558,7 @@ class HashEmbeddings(TokenEmbeddings):
     """Standard embeddings with Hashing Trick."""
 
     def __init__(
-        self,
-        num_embeddings: int = 1000,
-        embedding_length: int = 300,
-        hash_method='md5'
+        self, num_embeddings: int = 1000, embedding_length: int = 300, hash_method="md5"
     ):
 
         super().__init__()
@@ -579,7 +578,6 @@ class HashEmbeddings(TokenEmbeddings):
 
         self.to(flair.device)
 
-
     @property
     def num_embeddings(self) -> int:
         return self.__num_embeddings
@@ -589,23 +587,18 @@ class HashEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         def get_idx_for_item(text):
             hash_function = hashlib.new(self.__hash_method)
-            hash_function.update(bytes(str(text), 'utf-8'))
+            hash_function.update(bytes(str(text), "utf-8"))
             return int(hash_function.hexdigest(), 16) % self.__num_embeddings
 
         hash_sentences = []
         for i, sentence in enumerate(sentences):
-            context_idxs = [
-                get_idx_for_item(t.text) for t in sentence.tokens
-            ]
+            context_idxs = [get_idx_for_item(t.text) for t in sentence.tokens]
 
             hash_sentences.extend(context_idxs)
 
-        hash_sentences = torch.tensor(hash_sentences, dtype=torch.long).to(
-            flair.device
-        )
+        hash_sentences = torch.tensor(hash_sentences, dtype=torch.long).to(flair.device)
 
         embedded = self.embedding_layer.forward(hash_sentences)
 
@@ -1538,6 +1531,78 @@ class RoBERTaEmbeddings(TokenEmbeddings):
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(
             embedded_dummy[0].get_token(1).get_embedding()
+        )
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        self.model.to(flair.device)
+        self.model.eval()
+
+        sentences = _get_transformer_sentence_embeddings(
+            sentences=sentences,
+            tokenizer=self.tokenizer,
+            model=self.model,
+            name=self.name,
+            layers=self.layers,
+            pooling_operation=self.pooling_operation,
+            use_scalar_mix=self.use_scalar_mix,
+            bos_token="<s>",
+            eos_token="</s>",
+        )
+
+        return sentences
+
+
+class CamembertEmbeddings(TokenEmbeddings):
+    def __init__(
+        self,
+        pretrained_model_name_or_path: str = "camembert-base",
+        layers: str = "-1",
+        pooling_operation: str = "first",
+        use_scalar_mix: bool = False,
+    ):
+        """CamemBERT, a Tasty French Language Model, as proposed by Martin et al. 2019.
+        :param pretrained_model_name_or_path: name or path of RoBERTa model
+        :param layers: comma-separated list of layers
+        :param pooling_operation: defines pooling operation for subwords
+        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
+        """
+        super().__init__()
+
+        self.tokenizer = CamembertTokenizer.from_pretrained(
+            pretrained_model_name_or_path
+        )
+        self.model = CamembertModel.from_pretrained(
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
+        )
+        self.name = pretrained_model_name_or_path
+        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
+        self.pooling_operation = pooling_operation
+        self.use_scalar_mix = use_scalar_mix
+        self.static_embeddings = True
+
+        dummy_sentence: Sentence = Sentence()
+        dummy_sentence.add_token(Token("hello"))
+        embedded_dummy = self.embed(dummy_sentence)
+        self.__embedding_length: int = len(
+            embedded_dummy[0].get_token(1).get_embedding()
+        )
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state["tokenizer"] = None
+        return state
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+        # 1-camembert-base -> camembert-base
+        self.tokenizer = self.tokenizer = CamembertTokenizer.from_pretrained(
+            "-".join(self.name.split("-")[1:])
         )
 
     @property
