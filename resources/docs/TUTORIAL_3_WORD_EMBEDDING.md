@@ -153,7 +153,3 @@ To get more details on these embeddings and a full overview of all word embeddin
 passages with one vector for tasks such as text classification. You can also go directly to the tutorial about
 [loading your corpus](/resources/docs/TUTORIAL_6_CORPUS.md), which is a pre-requirement for
 [training your own models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md).
- 
- 
-or go directly to the tutorial about [loading your corpus](/resources/docs/TUTORIAL_6_CORPUS.md), which is a
-pre-requirement for [training your own models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md).
