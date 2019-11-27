@@ -70,13 +70,13 @@ class Model(torch.nn.Module):
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
     @classmethod
-    def load(cls, model_file: Union[str, Path]):
+    def load(cls, model: Union[str, Path]):
         """
         Loads the model from the given file.
-        :param model_file: the model file
+        :param model: the model file
         :return: the loaded text classifier model
         """
-        model_file = cls._fetch_model(str(model_file))
+        model_file = cls._fetch_model(str(model))
 
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
