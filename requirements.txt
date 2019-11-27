@@ -18,4 +18,3 @@ langdetect
 torchvision
 ipython==7.6.1
 ipython-genutils==0.2.0
-tiny_tokenizer[all]
