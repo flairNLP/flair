@@ -9,9 +9,6 @@ import logging
 from collections import Counter
 from collections import defaultdict
 
-from tiny_tokenizer import WordTokenizer
-from tiny_tokenizer import SentenceTokenizer
-
 from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
@@ -432,8 +429,23 @@ def build_japanese_tokenizer(tokenizer: str = "MeCab"):
     if tokenizer.lower() != "mecab":
         raise NotImplementedError("Currently, MeCab is only supported.")
 
-    sentence_tokenizer = SentenceTokenizer()
-    word_tokenizer = WordTokenizer(tokenizer)
+    try:
+        import tiny_tokenizer
+    except ModuleNotFoundError:
+        log.warning("-" * 100)
+        log.warning('ATTENTION! The library "tiny_tokenizer" is not installed!')
+        log.warning(
+            'To use Japanese tokenizer, please first install with the following steps: "pip install allennlp"'
+        )
+        log.warning(
+            '- Install mecab with "sudo apt install mecab libmecab-dev mecab-ipadic"'
+        )
+        log.warning('- Install tiny_tokenizer with "pip install tiny_tokenizer[all]"')
+        log.warning("-" * 100)
+        pass
+
+    sentence_tokenizer = tiny_tokenizer.SentenceTokenizer()
+    word_tokenizer = tiny_tokenizer.WordTokenizer(tokenizer)
 
     def tokenizer(text: str) -> List[Token]:
         """
@@ -463,7 +475,9 @@ def build_japanese_tokenizer(tokenizer: str = "MeCab"):
                     current_offset + 1 if current_offset > 0 else current_offset
                 )
 
-            token = Token(text=word, start_position=start_position, whitespace_after=True)
+            token = Token(
+                text=word, start_position=start_position, whitespace_after=True
+            )
             tokens.append(token)
 
             if (previous_token is not None) and word_offset - 1 == previous_word_offset:
@@ -507,9 +521,9 @@ def segtok_tokenizer(text: str) -> List[Token]:
             )
 
         if word:
-            token = Token(text=word,
-                          start_position=start_position,
-                          whitespace_after=True)
+            token = Token(
+                text=word, start_position=start_position, whitespace_after=True
+            )
             tokens.append(token)
 
         if (previous_token is not None) and word_offset - 1 == previous_word_offset:
@@ -933,7 +947,7 @@ class Sentence(DataPoint):
 
         return self.language_code
 
-    def _restore_windows_1252_characters(self, text:str)->str:
+    def _restore_windows_1252_characters(self, text: str) -> str:
         def to_windows_1252(match):
             try:
                 return bytes([ord(match.group(0))]).decode("windows-1252")

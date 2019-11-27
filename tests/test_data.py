@@ -12,7 +12,6 @@ from flair.data import (
     Corpus,
     Span,
     segtok_tokenizer,
-    build_japanese_tokenizer,
 )
 
 
@@ -46,15 +45,15 @@ def test_create_sentence_without_tokenizer():
     assert "Berlin." == sentence.tokens[2].text
 
 
-def test_create_sentence_using_japanese_tokenizer():
-    sentence: Sentence = Sentence("私はベルリンが好き", use_tokenizer=build_japanese_tokenizer())
-
-    assert 5 == len(sentence.tokens)
-    assert "私" == sentence.tokens[0].text
-    assert "は" == sentence.tokens[1].text
-    assert "ベルリン" == sentence.tokens[2].text
-    assert "が" == sentence.tokens[3].text
-    assert "好き" == sentence.tokens[4].text
+# def test_create_sentence_using_japanese_tokenizer():
+#     sentence: Sentence = Sentence("私はベルリンが好き", use_tokenizer=build_japanese_tokenizer())
+#
+#     assert 5 == len(sentence.tokens)
+#     assert "私" == sentence.tokens[0].text
+#     assert "は" == sentence.tokens[1].text
+#     assert "ベルリン" == sentence.tokens[2].text
+#     assert "が" == sentence.tokens[3].text
+#     assert "好き" == sentence.tokens[4].text
 
 
 def test_token_indices():
