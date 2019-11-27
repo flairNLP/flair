@@ -1,3 +1,4 @@
+python-dateutil==2.8.0
 torch>=1.1.0
 gensim>=3.4.0
 pytest>=3.6.4
