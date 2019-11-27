@@ -9,16 +9,10 @@ import csv
 import matplotlib
 import math
 
-# to enable %matplotlib inline if running in ipynb
-from IPython import get_ipython
 
-ipy = get_ipython()
-if ipy is not None:
-    ipy.run_line_magic("matplotlib", "inline")
-
-# change from Agg to TkAgg for interative mode
+# change from Agg to TkAgg for interactive mode
 try:
-    # change from Agg to TkAgg for interative mode
+    # change from Agg to TkAgg for interactive mode
     matplotlib.use("TkAgg")
 except:
     pass
