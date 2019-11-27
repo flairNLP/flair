@@ -743,17 +743,19 @@ class SequenceTagger(flair.nn.Model):
             for index, (tag_id, tag_scores) in enumerate(zip(best_path, all_scores_np)):
                 if type(tag_id) != int and tag_id.item() != tag_scores.argmax():
                     swap_index_score = tag_scores.argmax()
-                    all_scores_np[index][tag_id.item()], all_scores_np[index][
-                        swap_index_score
-                    ] = (
+                    (
+                        all_scores_np[index][tag_id.item()],
+                        all_scores_np[index][swap_index_score],
+                    ) = (
                         all_scores_np[index][swap_index_score],
                         all_scores_np[index][tag_id.item()],
                     )
                 elif type(tag_id) == int and tag_id != tag_scores.argmax():
                     swap_index_score = tag_scores.argmax()
-                    all_scores_np[index][tag_id], all_scores_np[index][
-                        swap_index_score
-                    ] = (
+                    (
+                        all_scores_np[index][tag_id],
+                        all_scores_np[index][swap_index_score],
+                    ) = (
                         all_scores_np[index][swap_index_score],
                         all_scores_np[index][tag_id],
                     )

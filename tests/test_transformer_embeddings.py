@@ -31,7 +31,7 @@ from typing import List
 
 
 def calculate_mean_embedding(
-    subword_embeddings: List[torch.FloatTensor]
+    subword_embeddings: List[torch.FloatTensor],
 ) -> torch.FloatTensor:
     all_embeddings: List[torch.FloatTensor] = [
         embedding.unsqueeze(0) for embedding in subword_embeddings

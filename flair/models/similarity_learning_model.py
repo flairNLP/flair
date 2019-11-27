@@ -168,7 +168,7 @@ class SimilarityLearner(flair.nn.Model):
         target_mapping: torch.nn.Module = None,
         recall_at_points: List[int] = [1, 5, 10, 20],
         recall_at_points_weights: List[float] = [0.4, 0.3, 0.2, 0.1],
-        interleave_embedding_updates: bool = False
+        interleave_embedding_updates: bool = False,
     ):
         super(SimilarityLearner, self).__init__()
         self.source_embeddings: Embeddings = source_embeddings

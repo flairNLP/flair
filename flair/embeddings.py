@@ -556,10 +556,7 @@ class HashEmbeddings(TokenEmbeddings):
     """Standard embeddings with Hashing Trick."""
 
     def __init__(
-        self,
-        num_embeddings: int = 1000,
-        embedding_length: int = 300,
-        hash_method='md5'
+        self, num_embeddings: int = 1000, embedding_length: int = 300, hash_method="md5"
     ):
 
         super().__init__()
@@ -579,7 +576,6 @@ class HashEmbeddings(TokenEmbeddings):
 
         self.to(flair.device)
 
-
     @property
     def num_embeddings(self) -> int:
         return self.__num_embeddings
@@ -589,23 +585,18 @@ class HashEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         def get_idx_for_item(text):
             hash_function = hashlib.new(self.__hash_method)
-            hash_function.update(bytes(str(text), 'utf-8'))
+            hash_function.update(bytes(str(text), "utf-8"))
             return int(hash_function.hexdigest(), 16) % self.__num_embeddings
 
         hash_sentences = []
         for i, sentence in enumerate(sentences):
-            context_idxs = [
-                get_idx_for_item(t.text) for t in sentence.tokens
-            ]
+            context_idxs = [get_idx_for_item(t.text) for t in sentence.tokens]
 
             hash_sentences.extend(context_idxs)
 
-        hash_sentences = torch.tensor(hash_sentences, dtype=torch.long).to(
-            flair.device
-        )
+        hash_sentences = torch.tensor(hash_sentences, dtype=torch.long).to(flair.device)
 
         embedded = self.embedding_layer.forward(hash_sentences)
 
