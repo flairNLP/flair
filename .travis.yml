@@ -5,8 +5,6 @@ env:
 python:
   - "3.6"
 install:
-  - sudo apt update -y
-  - sudo apt install mecab libmecab-dev mecab-ipadic
   - python setup.py develop -q
 before_script: cd tests
 script:
