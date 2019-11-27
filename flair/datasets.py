@@ -6,8 +6,6 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import List, Dict, Union, Callable
 
-import pymongo
-
 import numpy as np
 import json
 import urllib
@@ -314,24 +312,24 @@ class ClassificationCorpus(Corpus):
 
 class FeideggerCorpus(Corpus):
     def __init__(self, **kwargs):
-        dataset = 'feidegger'
+        dataset = "feidegger"
 
         # cache Feidegger config file
-        json_link = 'https://raw.githubusercontent.com/zalandoresearch/feidegger/master/data/FEIDEGGER_release_1.1.json'
-        json_local_path = cached_path(json_link, Path('datasets') / dataset)
+        json_link = "https://raw.githubusercontent.com/zalandoresearch/feidegger/master/data/FEIDEGGER_release_1.1.json"
+        json_local_path = cached_path(json_link, Path("datasets") / dataset)
 
         # cache Feidegger images
-        dataset_info = json.load(open(json_local_path, 'r'))
-        images_cache_folder = os.path.join(os.path.dirname(json_local_path), 'images')
+        dataset_info = json.load(open(json_local_path, "r"))
+        images_cache_folder = os.path.join(os.path.dirname(json_local_path), "images")
         if not os.path.isdir(images_cache_folder):
             os.mkdir(images_cache_folder)
         for image_info in tqdm(dataset_info):
-            name = os.path.basename(image_info['url'])
+            name = os.path.basename(image_info["url"])
             filename = os.path.join(images_cache_folder, name)
             if not os.path.isfile(filename):
-                urllib.request.urlretrieve(image_info['url'], filename)
+                urllib.request.urlretrieve(image_info["url"], filename)
             # replace image URL with local cached file
-            image_info['url'] = filename
+            image_info["url"] = filename
 
         feidegger_dataset: Dataset = FeideggerDataset(dataset_info, **kwargs)
 
@@ -1184,15 +1182,14 @@ class ClassificationDataset(FlairDataset):
 
 
 class MongoDataset(FlairDataset):
-
     def __init__(
         self,
-        query: str = None,
-        host: str = 'localhost',
-        port: int = 27017,
-        database: str = 'rosenberg',
-        collection: str = 'book',
-        text_field: str = 'Beskrivning',
+        query: str,
+        host: str,
+        port: int,
+        database: str,
+        collection: str,
+        text_field: str,
         categories_field: List[str] = None,
         max_tokens_per_doc: int = -1,
         max_chars_per_doc: int = -1,
@@ -1225,6 +1222,18 @@ class MongoDataset(FlairDataset):
         :return: list of sentences
         """
 
+        # first, check if pymongo is installed
+        try:
+            import pymongo
+        except ModuleNotFoundError:
+            log.warning("-" * 100)
+            log.warning('ATTENTION! The library "pymongo" is not installed!')
+            log.warning(
+                'To use MongoDataset, please first install with "pip install pymongo"'
+            )
+            log.warning("-" * 100)
+            pass
+
         self.in_memory = in_memory
         self.tokenizer = tokenizer
 
@@ -1245,24 +1254,20 @@ class MongoDataset(FlairDataset):
 
         start = 0
 
-        kwargs = lambda start: {
-            'filter': query,
-            'skip': start,
-            'limit': 0
-        }
+        kwargs = lambda start: {"filter": query, "skip": start, "limit": 0}
 
         if self.in_memory:
             for document in self.__cursor.find(**kwargs(start)):
                 sentence = self._parse_document_to_sentence(
                     document[self.text],
-                    [document[_] if _ in document else '' for _ in self.categories],
-                    tokenizer
+                    [document[_] if _ in document else "" for _ in self.categories],
+                    tokenizer,
                 )
                 if sentence is not None and len(sentence.tokens) > 0:
                     self.sentences.append(sentence)
                     self.total_sentence_count += 1
         else:
-            self.indices = self.__cursor.find().distinct('_id')
+            self.indices = self.__cursor.find().distinct("_id")
             self.total_sentence_count = self.__cursor.count_documents()
 
     def _parse_document_to_sentence(
@@ -1275,7 +1280,9 @@ class MongoDataset(FlairDataset):
             sentence = Sentence(text, labels=labels, use_tokenizer=tokenizer)
 
             if self.max_tokens_per_doc > 0:
-                sentence.tokens = sentence.tokens[: min(len(sentence), self.max_tokens_per_doc)]
+                sentence.tokens = sentence.tokens[
+                    : min(len(sentence), self.max_tokens_per_doc)
+                ]
 
             return sentence
         return None
@@ -1290,11 +1297,11 @@ class MongoDataset(FlairDataset):
         if self.in_memory:
             return self.sentences[index]
         else:
-            document = self.__cursor.find_one({'_id': index})
+            document = self.__cursor.find_one({"_id": index})
             sentence = self._parse_document_to_sentence(
                 document[self.text],
-                [document[_] if _ in document else '' for _ in self.categories],
-                self.tokenizer
+                [document[_] if _ in document else "" for _ in self.categories],
+                self.tokenizer,
             )
             return sentence
 
@@ -1395,16 +1402,13 @@ class FeideggerDataset(FlairDataset):
             preprocessor = lambda x: x.lower()
 
         for image_info in dataset_info:
-            image = Image(imageURL=image_info['url'])
-            for caption in image_info['descriptions']:
+            image = Image(imageURL=image_info["url"])
+            for caption in image_info["descriptions"]:
                 # append Sentence-Image data point
                 self.data_points.append(
-                    DataPair(
-                        Sentence(preprocessor(caption), use_tokenizer=True),
-                        image
-                    )
+                    DataPair(Sentence(preprocessor(caption), use_tokenizer=True), image)
                 )
-                self.split.append(int(image_info['split']))
+                self.split.append(int(image_info["split"]))
 
     def __len__(self):
         return len(self.data_points)
