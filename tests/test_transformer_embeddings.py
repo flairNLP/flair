@@ -4,6 +4,7 @@ import pytest
 
 from flair.data import Sentence
 from flair.embeddings import (
+    CamembertEmbeddings,
     RoBERTaEmbeddings,
     OpenAIGPTEmbeddings,
     OpenAIGPT2Embeddings,
@@ -13,6 +14,8 @@ from flair.embeddings import (
 )
 
 from transformers import (
+    CamembertModel,
+    CamembertTokenizer,
     RobertaModel,
     RobertaTokenizer,
     OpenAIGPTModel,
@@ -510,8 +513,6 @@ def test_xlnet_embeddings():
     with torch.no_grad():
         tokens = tokenizer.tokenize("<s>" + s + "</s>")
 
-        print(tokens)
-
         indexed_tokens = tokenizer.convert_tokens_to_ids(tokens)
         tokens_tensor = torch.tensor([indexed_tokens])
         tokens_tensor = tokens_tensor.to(flair.device)
@@ -660,8 +661,6 @@ def test_transformer_xl_embeddings():
 
     with torch.no_grad():
         tokens = tokenizer.tokenize(s + "<eos>")
-
-        print(tokens)
 
         indexed_tokens = tokenizer.convert_tokens_to_ids(tokens)
         tokens_tensor = torch.tensor([indexed_tokens])
@@ -868,6 +867,137 @@ def test_xlm_embeddings():
     )
 
     ref_embedding_size = 1 * model.embeddings.embedding_dim
+    actual_embedding_size = len(sentence_mult_layers_scalar_mix.tokens[0].embedding)
+
+    assert ref_embedding_size == actual_embedding_size
+
+
+@pytest.mark.slow
+def test_camembert_embeddings():
+    camembert_model: str = "camembert-base"
+
+    tokenizer = CamembertTokenizer.from_pretrained(camembert_model)
+    model = CamembertModel.from_pretrained(
+        pretrained_model_name_or_path=camembert_model, output_hidden_states=True
+    )
+    model.to(flair.device)
+    model.eval()
+
+    s: str = "J'aime le camembert !"
+
+    with torch.no_grad():
+        tokens = tokenizer.tokenize("<s>" + s + "</s>")
+
+        indexed_tokens = tokenizer.convert_tokens_to_ids(tokens)
+        tokens_tensor = torch.tensor([indexed_tokens])
+        tokens_tensor = tokens_tensor.to(flair.device)
+
+        hidden_states = model(tokens_tensor)[-1]
+
+        first_layer = hidden_states[1][0]
+
+    assert len(first_layer) == len(tokens)
+
+    #   0       1          2         3         4      5       6       7    8      9
+    #
+    # '<s>',   '▁J',      "'",     'aime',   '▁le', '▁ca', 'member', 't', '▁!', '</s>'
+    #           \          |         /         |      \       |        /   |
+    #                    J'aime                le         camembert        !
+    #
+    #                      0                   1              2            3
+
+    def embed_sentence(
+        sentence: str,
+        pooling_operation,
+        layers: str = "1",
+        use_scalar_mix: bool = False,
+    ) -> Sentence:
+        embeddings = CamembertEmbeddings(
+            pretrained_model_name_or_path=camembert_model,
+            layers=layers,
+            pooling_operation=pooling_operation,
+            use_scalar_mix=use_scalar_mix,
+        )
+        flair_sentence = Sentence(sentence)
+        embeddings.embed(flair_sentence)
+
+        return flair_sentence
+
+    # First subword embedding
+    sentence_first_subword = embed_sentence(sentence=s, pooling_operation="first")
+
+    camembert_first_subword_embedding_ref = first_layer[5].tolist()
+    camembert_first_subword_embedding_actual = sentence_first_subword.tokens[
+        2
+    ].embedding.tolist()
+
+    assert (
+        camembert_first_subword_embedding_ref
+        == camembert_first_subword_embedding_actual
+    )
+
+    # Last subword embedding
+    sentence_last_subword = embed_sentence(sentence=s, pooling_operation="last")
+
+    camembert_last_subword_embedding_ref = first_layer[7].tolist()
+    camembert_last_subword_embedding_actual = sentence_last_subword.tokens[
+        2
+    ].embedding.tolist()
+
+    assert (
+        camembert_last_subword_embedding_ref == camembert_last_subword_embedding_actual
+    )
+
+    # First and last subword embedding
+    sentence_first_last_subword = embed_sentence(
+        sentence=s, pooling_operation="first_last"
+    )
+
+    camembert_first_last_subword_embedding_ref = torch.cat(
+        [first_layer[5], first_layer[7]]
+    ).tolist()
+    camembert_first_last_subword_embedding_actual = sentence_first_last_subword.tokens[
+        2
+    ].embedding.tolist()
+
+    assert (
+        camembert_first_last_subword_embedding_ref
+        == camembert_first_last_subword_embedding_actual
+    )
+
+    # Mean of all subword embeddings
+    sentence_mean_subword = embed_sentence(sentence=s, pooling_operation="mean")
+
+    pcamembert_mean_subword_embedding_ref = calculate_mean_embedding(
+        [first_layer[5], first_layer[6], first_layer[7]]
+    ).tolist()
+    camembert_mean_subword_embedding_actual = sentence_mean_subword.tokens[
+        2
+    ].embedding.tolist()
+
+    assert (
+        pcamembert_mean_subword_embedding_ref == camembert_mean_subword_embedding_actual
+    )
+
+    # Check embedding dimension when using multiple layers
+    sentence_mult_layers = embed_sentence(
+        sentence="Paris", pooling_operation="first", layers="1,2,3,4"
+    )
+
+    ref_embedding_size = 4 * 768
+    actual_embedding_size = len(sentence_mult_layers.tokens[0].embedding)
+
+    assert ref_embedding_size == actual_embedding_size
+
+    # Check embedding dimension when using multiple layers and scalar mix
+    sentence_mult_layers_scalar_mix = embed_sentence(
+        sentence="TGW",
+        pooling_operation="first",
+        layers="1,2,3,4",
+        use_scalar_mix=True,
+    )
+
+    ref_embedding_size = 1 * 768
     actual_embedding_size = len(sentence_mult_layers_scalar_mix.tokens[0].embedding)
 
     assert ref_embedding_size == actual_embedding_size
