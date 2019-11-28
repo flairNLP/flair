@@ -12,6 +12,7 @@ The following embeddings can be used in Flair:
 * `XLNetEmbeddings`
 * `XLMEmbeddings`
 * `RoBERTaEmbeddings`
+* `CamembertEmbeddings`
 
 This section shows how to use these Transformer-based architectures in Flair and is heavily based on the excellent
 [Transformers pre-trained models documentation](https://huggingface.co/transformers/pretrained_models.html).
@@ -314,7 +315,7 @@ The following arguments can be passed to the `RoBERTaEmbeddings` class:
 | `pooling_operation`             | `first`         | [Pooling operation section](#Pooling-operation)
 | `use_scalar_mix`                | `False`         | [Scalar mix section](#Scalar-mix)
 
-Following XLM models can be used:
+Following RoBERTa models can be used:
 
 | Model                | Details
 | -------------------- | -------------------------------------------------------------------------------------------------------
@@ -324,6 +325,42 @@ Following XLM models can be used:
 |                      | RoBERTa English model
 | `roberta-large-mnli` | 24-layer, 1024-hidden, 16-heads
 |                      | RoBERTa English model, finetuned on MNLI
+
+## CamemBERT Embeddings
+
+CamemBERT (a Tasty French Language Model) model was proposed by [Martin et. al (2019)](https://arxiv.org/abs/1911.03894),
+and was trained on a large French corpus.
+
+It can be used with the `CamembertEmbeddings` class:
+
+```python
+from flair.embeddings import CamembertEmbeddings
+
+# init embedding
+embedding = CamembertEmbeddings()
+
+# create a sentence
+sentence = Sentence("J'aime le camembert !")
+
+# embed words in sentence
+embedding.embed(sentence)
+```
+
+The following arguments can be passed to the `CamembertEmbeddings` class:
+
+| Argument                        | Default          | Description
+| ------------------------------- | ---------------- | ------------------------------------------------------------
+| `pretrained_model_name_or_path` | `camembert-base` | Defines name or path of CamemBERT model
+| `layers`                        | `-1`             | Defines the to be used layers of the Transformer-based model
+| `pooling_operation`             | `first`          | [Pooling operation section](#Pooling-operation)
+| `use_scalar_mix`                | `False`          | [Scalar mix section](#Scalar-mix)
+
+Following CamemBERT models can be used:
+
+| Model                | Details
+| -------------------- | -----------------------------------------------
+| `camembert-base`     | 12-layer, 768-hidden, 12-heads, 110M parameters
+|                      | CamemBERT using the RoBERTa-base architecture
 
 ### Pooling operation
 
