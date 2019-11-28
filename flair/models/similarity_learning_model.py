@@ -375,6 +375,7 @@ class SimilarityLearner(flair.nn.Model):
         }
         return model_state
 
+    @staticmethod
     def _init_model_with_state_dict(state):
         # The conversion from old model's constructor interface
         if "input_embeddings" in state:

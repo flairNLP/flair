@@ -217,6 +217,7 @@ class SequenceTagger(flair.nn.Model):
         }
         return model_state
 
+    @staticmethod
     def _init_model_with_state_dict(state):
 
         rnn_type = "LSTM" if not "rnn_type" in state.keys() else state["rnn_type"]
@@ -833,6 +834,7 @@ class SequenceTagger(flair.nn.Model):
             )
         return filtered_texts
 
+    @staticmethod
     def _fetch_model(model_name) -> str:
 
         model_map = {}

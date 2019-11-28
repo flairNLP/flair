@@ -48,12 +48,14 @@ class Model(torch.nn.Module):
         functionality."""
         pass
 
+    @staticmethod
     @abstractmethod
     def _init_model_with_state_dict(state):
         """Initialize the model from a state dictionary. Implementing this enables the load() and load_checkpoint()
         functionality."""
         pass
 
+    @staticmethod
     @abstractmethod
     def _fetch_model(model_name) -> str:
         return model_name
@@ -71,7 +73,7 @@ class Model(torch.nn.Module):
     def load(cls, model: Union[str, Path]):
         """
         Loads the model from the given file.
-        :param model_file: the model file
+        :param model: the model file
         :return: the loaded text classifier model
         """
         model_file = cls._fetch_model(str(model))
