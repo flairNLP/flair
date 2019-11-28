@@ -12,7 +12,6 @@ import hashlib
 import gensim
 import numpy as np
 import torch
-import torchvision as torchvision
 from bpemb import BPEmb
 from deprecated import deprecated
 
@@ -3178,6 +3177,18 @@ class PrecomputedImageEmbeddings(ImageEmbeddings):
 class NetworkImageEmbeddings(ImageEmbeddings):
     def __init__(self, name, pretrained=True, transforms=None):
         super().__init__()
+
+        try:
+            import torchvision as torchvision
+        except ModuleNotFoundError:
+            log.warning("-" * 100)
+            log.warning('ATTENTION! The library "torchvision" is not installed!')
+            log.warning(
+                'To use convnets pretraned on ImageNet, please first install with "pip install torchvision"'
+            )
+            log.warning("-" * 100)
+            pass
+
         model_info = {
             "resnet50": (torchvision.models.resnet50, lambda x: list(x)[:-1], 2048),
             "mobilenet_v2": (
