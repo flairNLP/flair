@@ -48,7 +48,6 @@ from .nn import LockedDropout, WordDropout
 from .data import Dictionary, Token, Sentence, Image
 from .file_utils import cached_path, open_inside_zip
 
-import PIL
 
 log = logging.getLogger("flair")
 
@@ -3129,6 +3128,8 @@ class NILCEmbeddings(WordEmbeddings):
 
 class IdentityImageEmbeddings(ImageEmbeddings):
     def __init__(self, transforms):
+        import PIL as pythonimagelib
+        self.PIL = pythonimagelib
         self.name = "Identity"
         self.transforms = transforms
         self.__embedding_length = None
@@ -3137,7 +3138,7 @@ class IdentityImageEmbeddings(ImageEmbeddings):
 
     def _add_embeddings_internal(self, images: List[Image]) -> List[Image]:
         for image in images:
-            image_data = PIL.Image.open(image.imageURL)
+            image_data = self.PIL.Image.open(image.imageURL)
             image_data.load()
             image.set_embedding(self.name, self.transforms(image_data))
 
