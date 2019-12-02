@@ -5,7 +5,7 @@ from abc import abstractmethod
 from collections import Counter
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Tuple
 
 import hashlib
 
@@ -1068,37 +1068,43 @@ def _extract_embeddings(
 
 def _build_token_subwords_mapping(
     sentence: Sentence, tokenizer: PreTrainedTokenizer
-) -> Dict[int, int]:
+) -> Tuple[Dict[int, int], str]:
     """ Builds a dictionary that stores the following information:
     Token index (key) and number of corresponding subwords (value) for a sentence.
 
     :param sentence: input sentence
     :param tokenizer: Transformers tokenization object
-    :return: dictionary of token index to corresponding number of subwords
+    :return: dictionary of token index to corresponding number of subwords, tokenized string
     """
     token_subwords_mapping: Dict[int, int] = {}
+
+    tokens = []
 
     for token in sentence.tokens:
         token_text = token.text
 
         subwords = tokenizer.tokenize(token_text)
 
-        token_subwords_mapping[token.idx] = len(subwords)
+        tokens.append(token.text if subwords else tokenizer.unk_token)
 
-    return token_subwords_mapping
+        token_subwords_mapping[token.idx] = len(subwords) if subwords else 1
+
+    return token_subwords_mapping, " ".join(tokens)
 
 
 def _build_token_subwords_mapping_gpt2(
     sentence: Sentence, tokenizer: PreTrainedTokenizer
-) -> Dict[int, int]:
+) -> Tuple[Dict[int, int], str]:
     """ Builds a dictionary that stores the following information:
     Token index (key) and number of corresponding subwords (value) for a sentence.
 
     :param sentence: input sentence
     :param tokenizer: Transformers tokenization object
-    :return: dictionary of token index to corresponding number of subwords
+    :return: dictionary of token index to corresponding number of subwords, tokenized string
     """
     token_subwords_mapping: Dict[int, int] = {}
+
+    tokens = []
 
     for token in sentence.tokens:
         # Dummy token is needed to get the actually token tokenized correctly with special ``Ġ`` symbol
@@ -1110,9 +1116,11 @@ def _build_token_subwords_mapping_gpt2(
             token_text = "X " + token.text
             subwords = tokenizer.tokenize(token_text)[1:]
 
-        token_subwords_mapping[token.idx] = len(subwords)
+        tokens.append(token.text if subwords else tokenizer.unk_token)
 
-    return token_subwords_mapping
+        token_subwords_mapping[token.idx] = len(subwords) if subwords else 1
+
+    return token_subwords_mapping, " ".join(tokens)
 
 
 def _get_transformer_sentence_embeddings(
@@ -1144,15 +1152,21 @@ def _get_transformer_sentence_embeddings(
             token_subwords_mapping: Dict[int, int] = {}
 
             if "gpt2" in name or "roberta" in name:
-                token_subwords_mapping = _build_token_subwords_mapping_gpt2(
+                (
+                    token_subwords_mapping,
+                    tokenized_string,
+                ) = _build_token_subwords_mapping_gpt2(
                     sentence=sentence, tokenizer=tokenizer
                 )
             else:
-                token_subwords_mapping = _build_token_subwords_mapping(
+                (
+                    token_subwords_mapping,
+                    tokenized_string,
+                ) = _build_token_subwords_mapping(
                     sentence=sentence, tokenizer=tokenizer
                 )
 
-            subwords = tokenizer.tokenize(sentence.to_tokenized_string())
+            subwords = tokenizer.tokenize(tokenized_string)
 
             offset = 0
 
@@ -3203,6 +3217,7 @@ class NILCEmbeddings(WordEmbeddings):
 class IdentityImageEmbeddings(ImageEmbeddings):
     def __init__(self, transforms):
         import PIL as pythonimagelib
+
         self.PIL = pythonimagelib
         self.name = "Identity"
         self.transforms = transforms
