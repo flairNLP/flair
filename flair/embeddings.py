@@ -2260,7 +2260,9 @@ class BertEmbeddings(TokenEmbeddings):
                                 sentence_index
                             ]
                         else:
-                            layer_output = all_encoder_layers[int(layer_index)][sentence_index]
+                            layer_output = all_encoder_layers[int(layer_index)][
+                                sentence_index
+                            ]
                         all_layers.append(layer_output[token_index])
 
                     if self.use_scalar_mix:
@@ -3199,6 +3201,7 @@ class NILCEmbeddings(WordEmbeddings):
 class IdentityImageEmbeddings(ImageEmbeddings):
     def __init__(self, transforms):
         import PIL as pythonimagelib
+
         self.PIL = pythonimagelib
         self.name = "Identity"
         self.transforms = transforms
