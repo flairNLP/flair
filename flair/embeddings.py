@@ -22,6 +22,8 @@ from torch.nn import AdaptiveAvgPool2d, AdaptiveMaxPool2d
 from torch.nn import TransformerEncoderLayer, TransformerEncoder
 
 from transformers import (
+    AlbertTokenizer,
+    AlbertModel,
     BertTokenizer,
     BertModel,
     CamembertTokenizer,
@@ -2198,7 +2200,7 @@ class BertEmbeddings(TokenEmbeddings):
         """
         super().__init__()
 
-        if bert_model_or_path.startswith("distilbert"):
+        if "distilbert" in bert_model_or_path:
             try:
                 from transformers import DistilBertTokenizer, DistilBertModel
             except ImportError:
@@ -2211,6 +2213,12 @@ class BertEmbeddings(TokenEmbeddings):
 
             self.tokenizer = DistilBertTokenizer.from_pretrained(bert_model_or_path)
             self.model = DistilBertModel.from_pretrained(
+                pretrained_model_name_or_path=bert_model_or_path,
+                output_hidden_states=True,
+            )
+        elif "albert" in bert_model_or_path:
+            self.tokenizer = AlbertTokenizer.from_pretrained(bert_model_or_path)
+            self.model = AlbertModel.from_pretrained(
                 pretrained_model_name_or_path=bert_model_or_path,
                 output_hidden_states=True,
             )
