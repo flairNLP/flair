@@ -1155,7 +1155,7 @@ def _get_transformer_sentence_embeddings(
         for sentence in sentences:
             token_subwords_mapping: Dict[int, int] = {}
 
-            if "gpt2" in name or "roberta" in name:
+            if ("gpt2" in name or "roberta" in name) and "xlm" not in name:
                 (
                     token_subwords_mapping,
                     tokenized_string,
