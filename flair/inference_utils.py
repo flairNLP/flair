@@ -13,7 +13,7 @@ class WordEmbeddingsStore:
 
     Run this to generate a headless (without word embeddings) model as well a stored word embeddings:
 
-    >>> from WordEmbeddingsStore import WordEmbeddingsStore
+    >>> from flair.inference_utils import WordEmbeddingsStore
     >>> from flair.models import SequenceTagger
     >>> import pickle
     >>> tagger = SequenceTagger.load("multi-ner-fast")
@@ -51,11 +51,11 @@ class WordEmbeddingsStore:
             return
 
         # otherwise, push embedding to database
-        db = sqlite3.connect(self.store_filename)
+        self.db = sqlite3.connect(self.store_filename)
         pwe = embedding.precomputed_word_embeddings
         self.k = pwe.vector_size
-        db.execute(f"DROP TABLE IF EXISTS embedding;")
-        db.execute(
+        self.db.execute(f"DROP TABLE IF EXISTS embedding;")
+        self.db.execute(
             f"CREATE TABLE embedding(word text,{','.join('v'+str(i)+' float' for i in range(self.k))});"
         )
         vectors_it = (
@@ -68,10 +68,10 @@ class WordEmbeddingsStore:
         values ({','.join(['?']*(1+self.k))})",
             tqdm(vectors_it),
         )
-        db.execute(f"DROP INDEX IF EXISTS embedding_index;")
-        db.execute(f"CREATE INDEX embedding_index ON embedding(word);")
-        db.commit()
-        db.close()
+        self.db.execute(f"DROP INDEX IF EXISTS embedding_index;")
+        self.db.execute(f"CREATE INDEX embedding_index ON embedding(word);")
+        self.db.commit()
+        self.db.close()
 
     def _get_vector(self, word="house"):
         db = sqlite3.connect(self.store_filename)
@@ -81,7 +81,7 @@ class WordEmbeddingsStore:
         result = list(cursor)
         db.close()
         if not result:
-            return torch.tensor([0.0] * self.k)
+            return [0.0] * self.k
         return result[0][1:]
 
     def embed(self, sentences):
