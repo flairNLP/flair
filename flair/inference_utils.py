@@ -64,7 +64,7 @@ class WordEmbeddingsStore:
         )
         if verbose:
             print("load vectors to store")
-        db.executemany(
+        self.db.executemany(
             f"INSERT INTO embedding(word,{','.join('v'+str(i) for i in range(self.k))}) \
         values ({','.join(['?']*(1+self.k))})",
             tqdm(vectors_it),
