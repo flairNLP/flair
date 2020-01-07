@@ -4,7 +4,6 @@ import sqlite3
 import torch
 import re
 import os
-import copy
 from tqdm import tqdm
 
 
