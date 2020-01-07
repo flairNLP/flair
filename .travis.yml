@@ -11,4 +11,3 @@ script:
   - pip freeze
   - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then pytest --runintegration; fi'
   - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then pytest; fi'
-  - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then pip install black; black --check .; fi'

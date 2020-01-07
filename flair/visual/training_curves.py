@@ -6,17 +6,7 @@ from typing import Union, List
 import numpy as np
 import csv
 
-import matplotlib
 import math
-
-
-# change from Agg to TkAgg for interactive mode
-try:
-    # change from Agg to TkAgg for interactive mode
-    matplotlib.use("TkAgg")
-except:
-    pass
-
 
 import matplotlib.pyplot as plt
 

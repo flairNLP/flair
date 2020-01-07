@@ -35,6 +35,7 @@ def test_generate_text_with_small_temperatures():
     )
     assert text is not None
     assert len(text) >= 100
+    del language_model
 
 
 def test_compute_perplexity():
@@ -70,3 +71,4 @@ def test_compute_perplexity():
     print(f'"{ungrammatical}" - perplexity is {perplexity_ungramamtical_sentence}')
 
     assert perplexity_gramamtical_sentence < perplexity_ungramamtical_sentence
+    del language_model

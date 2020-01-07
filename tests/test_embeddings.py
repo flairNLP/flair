@@ -42,6 +42,7 @@ def test_keep_batch_order():
 
     assert torch.norm(sentences_1[0].embedding - sentences_2[1].embedding) == 0.0
     assert torch.norm(sentences_1[0].embedding - sentences_2[1].embedding) == 0.0
+    del embeddings
 
 
 @pytest.mark.integration
@@ -58,6 +59,7 @@ def test_stacked_embeddings():
         token.clear_embeddings()
 
         assert len(token.get_embedding()) == 0
+    del embeddings
 
 
 @pytest.mark.integration
@@ -97,6 +99,7 @@ def test_fine_tunable_flair_embedding():
     sentence.clear_embeddings()
 
     assert len(sentence.get_embedding()) == 0
+    del embeddings
 
 
 @pytest.mark.integration
@@ -115,6 +118,7 @@ def test_document_lstm_embeddings():
     sentence.clear_embeddings()
 
     assert len(sentence.get_embedding()) == 0
+    del embeddings
 
 
 @pytest.mark.integration
@@ -133,6 +137,7 @@ def test_document_bidirectional_lstm_embeddings():
     sentence.clear_embeddings()
 
     assert len(sentence.get_embedding()) == 0
+    del embeddings
 
 
 @pytest.mark.integration
@@ -151,6 +156,7 @@ def test_document_pool_embeddings():
         sentence.clear_embeddings()
 
         assert len(sentence.get_embedding()) == 0
+        del embeddings
 
 
 @pytest.mark.integration
@@ -169,6 +175,7 @@ def test_document_pool_embeddings_nonlinear():
         sentence.clear_embeddings()
 
         assert len(sentence.get_embedding()) == 0
+        del embeddings
 
 
 def init_document_embeddings():
@@ -193,6 +200,7 @@ def load_and_apply_word_embeddings(emb_type: str):
         token.clear_embeddings()
 
         assert len(token.get_embedding()) == 0
+    del embeddings
 
 
 def load_and_apply_char_lm_embeddings(emb_type: str):
@@ -207,3 +215,4 @@ def load_and_apply_char_lm_embeddings(emb_type: str):
         token.clear_embeddings()
 
         assert len(token.get_embedding()) == 0
+    del embeddings
