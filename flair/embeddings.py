@@ -5,7 +5,7 @@ from abc import abstractmethod
 from collections import Counter
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Tuple
 
 import hashlib
 
@@ -22,6 +22,8 @@ from torch.nn import AdaptiveAvgPool2d, AdaptiveMaxPool2d
 from torch.nn import TransformerEncoderLayer, TransformerEncoder
 
 from transformers import (
+    AlbertTokenizer,
+    AlbertModel,
     BertTokenizer,
     BertModel,
     CamembertTokenizer,
@@ -38,6 +40,8 @@ from transformers import (
     XLMTokenizer,
     XLNetModel,
     XLMModel,
+    XLMRobertaTokenizer,
+    XLMRobertaModel,
     PreTrainedTokenizer,
     PreTrainedModel,
 )
@@ -1068,37 +1072,43 @@ def _extract_embeddings(
 
 def _build_token_subwords_mapping(
     sentence: Sentence, tokenizer: PreTrainedTokenizer
-) -> Dict[int, int]:
+) -> Tuple[Dict[int, int], str]:
     """ Builds a dictionary that stores the following information:
     Token index (key) and number of corresponding subwords (value) for a sentence.
 
     :param sentence: input sentence
     :param tokenizer: Transformers tokenization object
-    :return: dictionary of token index to corresponding number of subwords
+    :return: dictionary of token index to corresponding number of subwords, tokenized string
     """
     token_subwords_mapping: Dict[int, int] = {}
+
+    tokens = []
 
     for token in sentence.tokens:
         token_text = token.text
 
         subwords = tokenizer.tokenize(token_text)
 
-        token_subwords_mapping[token.idx] = len(subwords)
+        tokens.append(token.text if subwords else tokenizer.unk_token)
 
-    return token_subwords_mapping
+        token_subwords_mapping[token.idx] = len(subwords) if subwords else 1
+
+    return token_subwords_mapping, " ".join(tokens)
 
 
 def _build_token_subwords_mapping_gpt2(
     sentence: Sentence, tokenizer: PreTrainedTokenizer
-) -> Dict[int, int]:
+) -> Tuple[Dict[int, int], str]:
     """ Builds a dictionary that stores the following information:
     Token index (key) and number of corresponding subwords (value) for a sentence.
 
     :param sentence: input sentence
     :param tokenizer: Transformers tokenization object
-    :return: dictionary of token index to corresponding number of subwords
+    :return: dictionary of token index to corresponding number of subwords, tokenized string
     """
     token_subwords_mapping: Dict[int, int] = {}
+
+    tokens = []
 
     for token in sentence.tokens:
         # Dummy token is needed to get the actually token tokenized correctly with special ``Ġ`` symbol
@@ -1110,9 +1120,11 @@ def _build_token_subwords_mapping_gpt2(
             token_text = "X " + token.text
             subwords = tokenizer.tokenize(token_text)[1:]
 
-        token_subwords_mapping[token.idx] = len(subwords)
+        tokens.append(token.text if subwords else tokenizer.unk_token)
 
-    return token_subwords_mapping
+        token_subwords_mapping[token.idx] = len(subwords) if subwords else 1
+
+    return token_subwords_mapping, " ".join(tokens)
 
 
 def _get_transformer_sentence_embeddings(
@@ -1143,16 +1155,22 @@ def _get_transformer_sentence_embeddings(
         for sentence in sentences:
             token_subwords_mapping: Dict[int, int] = {}
 
-            if "gpt2" in name or "roberta" in name:
-                token_subwords_mapping = _build_token_subwords_mapping_gpt2(
+            if ("gpt2" in name or "roberta" in name) and "xlm" not in name:
+                (
+                    token_subwords_mapping,
+                    tokenized_string,
+                ) = _build_token_subwords_mapping_gpt2(
                     sentence=sentence, tokenizer=tokenizer
                 )
             else:
-                token_subwords_mapping = _build_token_subwords_mapping(
+                (
+                    token_subwords_mapping,
+                    tokenized_string,
+                ) = _build_token_subwords_mapping(
                     sentence=sentence, tokenizer=tokenizer
                 )
 
-            subwords = tokenizer.tokenize(sentence.to_tokenized_string())
+            subwords = tokenizer.tokenize(tokenized_string)
 
             offset = 0
 
@@ -1600,6 +1618,78 @@ class CamembertEmbeddings(TokenEmbeddings):
 
         # 1-camembert-base -> camembert-base
         self.tokenizer = self.tokenizer = CamembertTokenizer.from_pretrained(
+            "-".join(self.name.split("-")[1:])
+        )
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        self.model.to(flair.device)
+        self.model.eval()
+
+        sentences = _get_transformer_sentence_embeddings(
+            sentences=sentences,
+            tokenizer=self.tokenizer,
+            model=self.model,
+            name=self.name,
+            layers=self.layers,
+            pooling_operation=self.pooling_operation,
+            use_scalar_mix=self.use_scalar_mix,
+            bos_token="<s>",
+            eos_token="</s>",
+        )
+
+        return sentences
+
+
+class XLMRobertaEmbeddings(TokenEmbeddings):
+    def __init__(
+        self,
+        pretrained_model_name_or_path: str = "xlm-roberta-large",
+        layers: str = "-1",
+        pooling_operation: str = "first",
+        use_scalar_mix: bool = False,
+    ):
+        """XLM-RoBERTa as proposed by Conneau et al. 2019.
+        :param pretrained_model_name_or_path: name or path of XLM-R model
+        :param layers: comma-separated list of layers
+        :param pooling_operation: defines pooling operation for subwords
+        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
+        """
+        super().__init__()
+
+        self.tokenizer = XLMRobertaTokenizer.from_pretrained(
+            pretrained_model_name_or_path
+        )
+        self.model = XLMRobertaModel.from_pretrained(
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            output_hidden_states=True,
+        )
+        self.name = pretrained_model_name_or_path
+        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
+        self.pooling_operation = pooling_operation
+        self.use_scalar_mix = use_scalar_mix
+        self.static_embeddings = True
+
+        dummy_sentence: Sentence = Sentence()
+        dummy_sentence.add_token(Token("hello"))
+        embedded_dummy = self.embed(dummy_sentence)
+        self.__embedding_length: int = len(
+            embedded_dummy[0].get_token(1).get_embedding()
+        )
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state["tokenizer"] = None
+        return state
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+        # 1-xlm-roberta-large -> xlm-roberta-large
+        self.tokenizer = self.tokenizer = XLMRobertaTokenizer.from_pretrained(
             "-".join(self.name.split("-")[1:])
         )
 
@@ -2110,7 +2200,7 @@ class BertEmbeddings(TokenEmbeddings):
         """
         super().__init__()
 
-        if bert_model_or_path.startswith("distilbert"):
+        if "distilbert" in bert_model_or_path:
             try:
                 from transformers import DistilBertTokenizer, DistilBertModel
             except ImportError:
@@ -2123,6 +2213,12 @@ class BertEmbeddings(TokenEmbeddings):
 
             self.tokenizer = DistilBertTokenizer.from_pretrained(bert_model_or_path)
             self.model = DistilBertModel.from_pretrained(
+                pretrained_model_name_or_path=bert_model_or_path,
+                output_hidden_states=True,
+            )
+        elif "albert" in bert_model_or_path:
+            self.tokenizer = AlbertTokenizer.from_pretrained(bert_model_or_path)
+            self.model = AlbertModel.from_pretrained(
                 pretrained_model_name_or_path=bert_model_or_path,
                 output_hidden_states=True,
             )
@@ -3203,6 +3299,7 @@ class NILCEmbeddings(WordEmbeddings):
 class IdentityImageEmbeddings(ImageEmbeddings):
     def __init__(self, transforms):
         import PIL as pythonimagelib
+
         self.PIL = pythonimagelib
         self.name = "Identity"
         self.transforms = transforms

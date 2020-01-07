@@ -13,9 +13,9 @@ The following embeddings can be used in Flair:
 * `XLMEmbeddings`
 * `RoBERTaEmbeddings`
 * `CamembertEmbeddings`
+* `XLMRobertaEmbeddings`
 
-This section shows how to use these Transformer-based architectures in Flair and is heavily based on the excellent
-[Transformers pre-trained models documentation](https://huggingface.co/transformers/pretrained_models.html).
+This section shows how to use these Transformer-based architectures in Flair.
 
 ## BERT Embeddings
 
@@ -40,62 +40,53 @@ embedding.embed(sentence)
 The `BertEmbeddings` class has several arguments:
 
 | Argument             | Default             | Description
-| -------------------- | ------------------- | -------------------------------------------------
-| `bert_model_or_path` | `bert-base-uncased` | Defines BERT model or points to user-defined path
+| -------------------- | ------------------- | ------------------------------------------------------------------------------
+| `bert_model_or_path` | `bert-base-uncased` | Defines BERT model or points to user-defined path, see [model section](#Models)
 | `layers`             | `-1,-2,-3,-4`       | Defines the to be used layers of the Transformer-based model
 | `pooling_operation`  | `first`             | See [Pooling operation section](#Pooling-operation).
 | `use_scalar_mix`     | `False`             | See [Scalar mix section](#Scalar-mix).
 
-You can load any of the pre-trained BERT models by providing `bert_model_or_path` during initialization:
+You can load any of the pre-trained BERT models by providing `bert_model_or_path` during initialization.
 
-| Model                                                   | Details
-| ------------------------------------------------------- | -----------------------------------------------
-| `bert-base-uncased`                                     | 12-layer, 768-hidden, 12-heads, 110M parameters
-|                                                         | Trained on lower-cased English text
-| `bert-large-uncased`                                    | 24-layer, 1024-hidden, 16-heads, 340M parameters
-|                                                         | Trained on lower-cased English text
-| `bert-base-cased`                                       | 12-layer, 768-hidden, 12-heads, 110M parameters
-|                                                         | Trained on cased English text
-| `bert-large-cased`                                      | 24-layer, 1024-hidden, 16-heads, 340M parameters
-|                                                         | Trained on cased English text
-| `bert-base-multilingual-uncased`                        | (Original, not recommended) 12-layer, 768-hidden, 12-heads, 110M parameters
-|                                                         | Trained on lower-cased text in the top 102 languages with the largest Wikipedias
-|                                                         | (see [details](https://github.com/google-research/bert/blob/master/multilingual.md))
-| `bert-base-multilingual-cased`                          | (New, **recommended**) 12-layer, 768-hidden, 12-heads, 110M parameters
-|                                                         | Trained on cased text in the top 104 languages with the largest Wikipedias
-|                                                         | (see [details](https://github.com/google-research/bert/blob/master/multilingual.md))
-| `bert-base-chinese`                                     | 12-layer, 768-hidden, 12-heads, 110M parameters
-|                                                         | Trained on cased Chinese Simplified and Traditional text
-| `bert-base-german-cased`                                | 12-layer, 768-hidden, 12-heads, 110M parameters
-|                                                         | Trained on cased German text by Deepset.ai
-|                                                         | (see [details on deepset.ai website](https://deepset.ai/german-bert))
-| `bert-large-uncased-whole-word-masking`                 | 24-layer, 1024-hidden, 16-heads, 340M parameters
-|                                                         | Trained on lower-cased English text using Whole-Word-Masking
-|                                                         | (see [details](https://github.com/google-research/bert/#bert))
-| `bert-large-cased-whole-word-masking`                   | 24-layer, 1024-hidden, 16-heads, 340M parameters
-|                                                         | Trained on cased English text using Whole-Word-Masking
-|                                                         | (see [details](https://github.com/google-research/bert/#bert))
-| `bert-large-uncased-whole-word-masking-finetuned-squad` | 24-layer, 1024-hidden, 16-heads, 340M parameters
-|                                                         | The `bert-large-uncased-whole-word-masking` model fine-tuned on SQuAD (see details of fine-tuning in the
-|                                                         | [example section of Transformers](https://github.com/huggingface/transformers/tree/master/examples))
-| `bert-large-cased-whole-word-masking-finetuned-squad`   | 24-layer, 1024-hidden, 16-heads, 340M parameters
-|                                                         | The `bert-large-cased-whole-word-masking` model fine-tuned on SQuAD
-|                                                         | (see [details of fine-tuning in the example section](https://huggingface.co/transformers/examples.html))
-| `bert-base-cased-finetuned-mrpc`                        | 12-layer, 768-hidden, 12-heads, 110M parameters
-|                                                         | The `bert-base-cased` model fine-tuned on MRPC
-|                                                         | (see [details of fine-tuning in the example section of Transformers](https://huggingface.co/transformers/examples.html))
+### DistilBERT
 
 It is also possible to use [distilled versions](https://medium.com/huggingface/distilbert-8cf3380435b5)
-of BERT (DistilBERT):
+of BERT (DistilBERT). For available DistilBERT models, proposed by [Sanh et. al (2019)](https://arxiv.org/abs/1910.01108),
+please have a look at the [model section](#Models).
 
-| Model                                     | Details
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------
-| `distilbert-base-uncased`                 | 6-layer, 768-hidden, 12-heads, 66M parameters
-|                                           | The DistilBERT model distilled from the BERT model `bert-base-uncased` checkpoint
-|                                           | (see [details](https://medium.com/huggingface/distilbert-8cf3380435b5))
-| `distilbert-base-uncased-distilled-squad` | 6-layer, 768-hidden, 12-heads, 66M parameters
-|                                           | The DistilBERT model distilled from the BERT model `bert-base-uncased` checkpoint, with an additional linear layer.
-|                                           | (see [details](https://medium.com/huggingface/distilbert-8cf3380435b5))
+The following example shows how to use a DistilBERT model:
+
+```python
+from flair.embeddings import BertEmbeddings
+
+# init embedding
+embedding = BertEmbeddings(bert_model_or_path="distilbert-base-german-cased")
+
+# create a sentence
+sentence = Sentence('Es lohnt sich, Berlin und München zu besichtigen !')
+
+# embed words in sentence
+embedding.embed(sentence)
+```
+
+### ALBERT: A Lite BERT for Self-supervised Learning of Language Representations
+
+The ALBERT model, proposed by [Lan et. al (2019)](https://arxiv.org/abs/1909.11942) can also be used:
+
+```python
+from flair.embeddings import BertEmbeddings
+
+# init embedding
+embedding = BertEmbeddings(bert_model_or_path="albert-base-v2")
+
+# create a sentence
+sentence = Sentence('The grass is green .')
+
+# embed words in sentence
+embedding.embed(sentence)
+```
+
+All available ALBERT models can be found in the [model section](#Models).
 
 ## OpenAI GPT Embeddings
 
@@ -120,7 +111,7 @@ embedding.embed(sentence)
 The `OpenAIGPTEmbeddings` class has several arguments:
 
 | Argument                        | Default      | Description
-| ------------------------------- | ------------ | -------------------------------------------------
+| ------------------------------- | ------------ | ------------------------------------------------------------
 | `pretrained_model_name_or_path` | `openai-gpt` | Defines name or path of GPT model
 | `layers`                        | `1`          | Defines the to be used layers of the Transformer-based model
 | `pooling_operation`             | `first_last` | See [Pooling operation section](#Pooling-operation)
@@ -149,22 +140,11 @@ embedding.embed(sentence)
 The `OpenAIGPT2Embeddings` class has several arguments:
 
 | Argument                        | Default       | Description
-| ------------------------------- | ------------- | -------------------------------------------------
-| `pretrained_model_name_or_path` | `gpt2-medium` | Defines name or path of GPT-2 model
+| ------------------------------- | ------------- | -----------------------------------------------------------------
+| `pretrained_model_name_or_path` | `gpt2-medium` | Defines name or path of GPT-2 model, see [model section](#Models)
 | `layers`                        | `1`           | Defines the to be used layers of the Transformer-based model
 | `pooling_operation`             | `first_last`  | See [Pooling operation section](#Pooling-operation)
 | `use_scalar_mix`                | `False`       | See [Scalar mix section](#Scalar-mix)
-
-Following GPT-2 models can be used:
-
-| Model         | Details
-| ------------- | -----------------------------------------------
-| `gpt2`        | 12-layer, 768-hidden, 12-heads, 117M parameters
-|               | OpenAI GPT-2 English model
-| `gpt2-medium` | 24-layer, 1024-hidden, 16-heads, 345M parameters
-|               | OpenAI's Medium-sized GPT-2 English model
-| `gpt2-large`  | 36-layer, 1280-hidden, 20-heads, 774M parameters
-|               | OpenAI's Large-sized GPT-2 English model
 
 ## Transformer-XL Embeddings
 
@@ -189,7 +169,7 @@ embedding.embed(sentence)
 The following arguments can be passed to the `TransformerXLEmbeddings` class:
 
 | Argument                        | Default            | Description
-| ------------------------------- | ------------------ | -------------------------------------------------
+| ------------------------------- | ------------------ | ------------------------------------------------------------
 | `pretrained_model_name_or_path` | `transfo-xl-wt103` | Defines name or path of Transformer-XL model
 | `layers`                        | `1,2,3`            | Defines the to be used layers of the Transformer-based model
 | `use_scalar_mix`                | `False`            | See [Scalar mix section](#Scalar-mix)
@@ -220,20 +200,11 @@ embedding.embed(sentence)
 The following arguments can be passed to the `XLNetEmbeddings` class:
 
 | Argument                        | Default             | Description
-| ------------------------------- | ------------------- | -------------------------------------------------
-| `pretrained_model_name_or_path` | `xlnet-large-cased` | Defines name or path of XLNet model
+| ------------------------------- | ------------------- | -----------------------------------------------------------------
+| `pretrained_model_name_or_path` | `xlnet-large-cased` | Defines name or path of XLNet model, see [model section](#Models)
 | `layers`                        | `1`                 | Defines the to be used layers of the Transformer-based model
 | `pooling_operation`             | `first_last`        | See [Pooling operation section](#Pooling-operation)
 | `use_scalar_mix`                | `False`             | See [Scalar mix section](#Scalar-mix)
-
-Following XLNet models can be used:
-
-| Model              | Details
-| ------------------ | -----------------------------------------------
-| `xlnet-base-cased` | 12-layer, 768-hidden, 12-heads, 110M parameters
-|                    | XLNet English model
-| `xlnet-large-cased`| 24-layer, 1024-hidden, 16-heads, 340M parameters
-|                    | XLNet Large English model
 
 ## XLM Embeddings
 
@@ -259,32 +230,11 @@ embedding.embed(sentence)
 The following arguments can be passed to the `XLMEmbeddings` class:
 
 | Argument                        | Default             | Description
-| ------------------------------- | ------------------- | -------------------------------------------------
-| `pretrained_model_name_or_path` | `xlm-mlm-en-2048`   | Defines name or path of XLM model
+| ------------------------------- | ------------------- | ---------------------------------------------------------------
+| `pretrained_model_name_or_path` | `xlm-mlm-en-2048`   | Defines name or path of XLM model, see [model section](#Models)
 | `layers`                        | `1`                 | Defines the to be used layers of the Transformer-based model
 | `pooling_operation`             | `first_last`        | See [Pooling operation section](#Pooling-operation)
 | `use_scalar_mix`                | `False`             | See [Scalar mix section](#Scalar-mix)
-
-Following XLM models can be used:
-
-| Model                     | Details
-| ------------------------- | -------------------------------------------------------------------------------------------------------
-| `xlm-mlm-en-2048`         | 12-layer, 1024-hidden, 8-heads
-|                           | XLM English model
-| `xlm-mlm-ende-1024`       | 6-layer, 1024-hidden, 8-heads
-|                           | XLM English-German Multi-language model
-| `xlm-mlm-enfr-1024`       | 6-layer, 1024-hidden, 8-heads
-|                           | XLM English-French Multi-language model
-| `xlm-mlm-enro-1024`       | 6-layer, 1024-hidden, 8-heads
-|                           | XLM English-Romanian Multi-language model
-| `xlm-mlm-xnli15-1024`     | 12-layer, 1024-hidden, 8-heads
-|                           | XLM Model pre-trained with MLM on the [15 XNLI languages](https://github.com/facebookresearch/XNLI)
-| `xlm-mlm-tlm-xnli15-1024` | 12-layer, 1024-hidden, 8-heads
-|                           | XLM Model pre-trained with MLM + TLM on the [15 XNLI languages](https://github.com/facebookresearch/XNLI)
-| `xlm-clm-enfr-1024`       | 12-layer, 1024-hidden, 8-heads
-|                           | XLM English model trained with CLM (Causal Language Modeling)
-| `xlm-clm-ende-1024`       | 6-layer, 1024-hidden, 8-heads
-|                           | XLM English-German Multi-language model trained with CLM (Causal Language Modeling)
 
 ## RoBERTa Embeddings
 
@@ -309,22 +259,11 @@ embedding.embed(sentence)
 The following arguments can be passed to the `RoBERTaEmbeddings` class:
 
 | Argument                        | Default         | Description
-| ------------------------------- | --------------- | -------------------------------------------------
-| `pretrained_model_name_or_path` | `roberta-base`  | Defines name or path of RoBERTa model
+| ------------------------------- | --------------- | -------------------------------------------------------------------
+| `pretrained_model_name_or_path` | `roberta-base`  | Defines name or path of RoBERTa model, see [model section](#Models)
 | `layers`                        | `-1`            | Defines the to be used layers of the Transformer-based model
 | `pooling_operation`             | `first`         | [Pooling operation section](#Pooling-operation)
 | `use_scalar_mix`                | `False`         | [Scalar mix section](#Scalar-mix)
-
-Following RoBERTa models can be used:
-
-| Model                | Details
-| -------------------- | -------------------------------------------------------------------------------------------------------
-| `roberta-base`       | 12-layer, 768-hidden, 12-heads
-|                      | RoBERTa English model
-| `roberta-large`      | 24-layer, 1024-hidden, 16-heads
-|                      | RoBERTa English model
-| `roberta-large-mnli` | 24-layer, 1024-hidden, 16-heads
-|                      | RoBERTa English model, finetuned on MNLI
 
 ## CamemBERT Embeddings
 
@@ -349,18 +288,40 @@ embedding.embed(sentence)
 The following arguments can be passed to the `CamembertEmbeddings` class:
 
 | Argument                        | Default          | Description
-| ------------------------------- | ---------------- | ------------------------------------------------------------
-| `pretrained_model_name_or_path` | `camembert-base` | Defines name or path of CamemBERT model
+| ------------------------------- | ---------------- | ---------------------------------------------------------------------
+| `pretrained_model_name_or_path` | `camembert-base` | Defines name or path of CamemBERT model, see [model section](#Models)
 | `layers`                        | `-1`             | Defines the to be used layers of the Transformer-based model
 | `pooling_operation`             | `first`          | [Pooling operation section](#Pooling-operation)
 | `use_scalar_mix`                | `False`          | [Scalar mix section](#Scalar-mix)
 
-Following CamemBERT models can be used:
+## XLMRobertaEmbeddings
 
-| Model                | Details
-| -------------------- | -----------------------------------------------
-| `camembert-base`     | 12-layer, 768-hidden, 12-heads, 110M parameters
-|                      | CamemBERT using the RoBERTa-base architecture
+XLM-RoBERTa, proposed by [Conneau et. al (2019)](https://arxiv.org/abs/1911.02116) in the "Unsupervised Cross-lingual Representation Learning at Scale"
+paper, is a multi-lingual language model trained on 2.5TB of filtered CommonCrawl data.
+
+It can be used with the `XLMRobertaEmbeddings` class:
+
+```python
+from flair.embeddings import XLMRobertaEmbeddings
+
+# init embedding
+embedding = XLMRobertaEmbeddings()
+
+# create a sentence
+sentence = Sentence("J'aime le camembert, and best whishes from München und Berlin .")
+
+# embed words in sentence
+embedding.embed(sentence)
+```
+
+The following arguments can be passed to the `XLMRobertaEmbeddings` class:
+
+| Argument                        | Default            | Description
+| ------------------------------- | ------------------- | -----------------------------------------------------------------
+| `pretrained_model_name_or_path` | `xlm-roberta-large` | Defines name or path of XLM-R model, see [model section](#Models)
+| `layers`                        | `-1`                | Defines the to be used layers of the Transformer-based model
+| `pooling_operation`             | `first`             | [Pooling operation section](#Pooling-operation)
+| `use_scalar_mix`                | `False`             | [Scalar mix section](#Scalar-mix)
 
 ### Pooling operation
 
@@ -398,3 +359,8 @@ sentence = Sentence("The Oktoberfest is the world's largest Volksfest .")
 # embed words in sentence
 embedding.embed(sentence)
 ```
+
+## Models
+
+Please have a look at the awesome Hugging Face [documentation](https://huggingface.co/transformers/v2.3.0/pretrained_models.html)
+for all supported pretrained models!
