@@ -346,9 +346,9 @@ class ModelTrainer:
                     store_embeddings(batch, embeddings_storage_mode)
 
                     batch_time += time.time() - start_time
-                    if batch_no % modulo == 0:
+                    if seen_batches % modulo == 0:
                         log.info(
-                            f"epoch {self.epoch} - iter {batch_no}/{total_number_of_batches} - loss "
+                            f"epoch {self.epoch} - iter {seen_batches}/{total_number_of_batches} - loss "
                             f"{train_loss / seen_batches:.8f} - samples/sec: {mini_batch_size * modulo / batch_time:.2f}"
                         )
                         batch_time = 0
