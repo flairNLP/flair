@@ -4,6 +4,7 @@ import sqlite3
 import torch
 import re
 import os
+import copy
 from tqdm import tqdm
 
 
@@ -28,6 +29,7 @@ class WordEmbeddingsStore:
     >>> text = "Schade um den Ameisenbären. Lukas Bärfuss veröffentlicht Erzählungen aus zwanzig Jahren."
     >>> sentence = Sentence(text)
     >>> tagger.predict(sentence)
+    >>> print(sentence.get_spans('ner'))
     """
 
     def __init__(self, embedding, verbose=True):
@@ -63,7 +65,7 @@ class WordEmbeddingsStore:
         )
         if verbose:
             print("load vectors to store")
-        self.db.executemany(
+        db.executemany(
             f"INSERT INTO embedding(word,{','.join('v'+str(i) for i in range(self.k))}) \
         values ({','.join(['?']*(1+self.k))})",
             tqdm(vectors_it),
