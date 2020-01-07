@@ -2144,7 +2144,6 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
                 # update embedding
                 local_embedding = token._embeddings[self.context_embeddings.name]
-                local_embedding = local_embedding.to(flair.device)
 
                 # check token.text is empty or not
                 if token.text:
