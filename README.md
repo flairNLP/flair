@@ -134,6 +134,7 @@ There are also good third-party articles and posts that illustrate how to use Fl
 * [Great overview of Flair functionality and how to use in Colab](https://www.analyticsvidhya.com/blog/2019/02/flair-nlp-library-python/)
 * [Visualisation tool for highlighting the extracted entities](https://github.com/lunayach/visNER)
 * [Practical approach of State-of-the-Art Flair in Named Entity Recognition](https://medium.com/analytics-vidhya/practical-approach-of-state-of-the-art-flair-in-named-entity-recognition-46a837e25e6b)
+* [Benchmarking NER algorithms](https://towardsdatascience.com/benchmark-ner-algorithm-d4ab01b2d4c3)
 
 ## Citing Flair
 
