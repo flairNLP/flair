@@ -40,7 +40,7 @@ embedding.embed(sentence)
 The `BertEmbeddings` class has several arguments:
 
 | Argument             | Default             | Description
-| -------------------- | ------------------- | -------------------------------------------------------------------------------
+| -------------------- | ------------------- | ------------------------------------------------------------------------------
 | `bert_model_or_path` | `bert-base-uncased` | Defines BERT model or points to user-defined path, see [model section](#Models)
 | `layers`             | `-1,-2,-3,-4`       | Defines the to be used layers of the Transformer-based model
 | `pooling_operation`  | `first`             | See [Pooling operation section](#Pooling-operation).
