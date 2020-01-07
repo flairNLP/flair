@@ -10,8 +10,8 @@ setup(
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     author="Alan Akbik",
-    author_email="alan.akbik@zalando.de",
-    url="https://github.com/zalandoresearch/flair",
+    author_email="alan.akbik@gmail.com",
+    url="https://github.com/flairNLP/flair",
     packages=find_packages(exclude="tests"),  # same as name
     license="MIT",
     install_requires=required,
