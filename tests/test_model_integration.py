@@ -18,6 +18,11 @@ from flair.samplers import ImbalancedClassificationDatasetSampler
 from flair.trainers import ModelTrainer
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
 
+turian_embeddings = WordEmbeddings("turian")
+flair_embeddings = FlairEmbeddings("news-forward-fast")
+document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
+    [turian_embeddings], 128, 1, False, 64, False, False
+)
 
 @pytest.mark.integration
 def test_train_load_use_tagger(results_base_path, tasks_base_path):
@@ -26,11 +31,9 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
     )
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
-    embeddings = WordEmbeddings("turian")
-
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
-        embeddings=embeddings,
+        embeddings=turian_embeddings,
         tag_dictionary=tag_dictionary,
         tag_type="ner",
         use_crf=False,
@@ -47,6 +50,7 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
         shuffle=False,
     )
 
+    del trainer, tagger, tag_dictionary, corpus
     loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
     )
@@ -60,6 +64,7 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+    del loaded_model
 
 
 @pytest.mark.integration
@@ -67,11 +72,9 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
     corpus = flair.datasets.UD_ENGLISH().downsample(0.05)
     tag_dictionary = corpus.make_tag_dictionary("pos")
 
-    embeddings = WordEmbeddings("turian")
-
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
-        embeddings=embeddings,
+        embeddings=turian_embeddings,
         tag_dictionary=tag_dictionary,
         tag_type="pos",
         use_crf=False,
@@ -88,6 +91,7 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
         shuffle=False,
     )
 
+    del trainer, tagger, tag_dictionary, corpus
     loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
     )
@@ -101,6 +105,7 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+    del loaded_model
 
 
 @pytest.mark.integration
@@ -110,11 +115,9 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
     )
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
-    embeddings = FlairEmbeddings("news-forward-fast")
-
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
-        embeddings=embeddings,
+        embeddings=flair_embeddings,
         tag_dictionary=tag_dictionary,
         tag_type="ner",
         use_crf=False,
@@ -131,6 +134,7 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
         shuffle=False,
     )
 
+    del trainer, tagger, tag_dictionary, corpus
     loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
     )
@@ -144,6 +148,7 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+    del loaded_model
 
 
 @pytest.mark.integration
@@ -153,11 +158,9 @@ def test_train_optimizer(results_base_path, tasks_base_path):
     )
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
-    embeddings = WordEmbeddings("turian")
-
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
-        embeddings=embeddings,
+        embeddings=turian_embeddings,
         tag_dictionary=tag_dictionary,
         tag_type="ner",
         use_crf=False,
@@ -174,6 +177,7 @@ def test_train_optimizer(results_base_path, tasks_base_path):
         shuffle=False,
     )
 
+    del trainer, tagger, tag_dictionary, corpus
     loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
     )
@@ -187,6 +191,7 @@ def test_train_optimizer(results_base_path, tasks_base_path):
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+    del loaded_model
 
 
 @pytest.mark.integration
@@ -196,11 +201,9 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
     )
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
-    embeddings = WordEmbeddings("turian")
-
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
-        embeddings=embeddings,
+        embeddings=turian_embeddings,
         tag_dictionary=tag_dictionary,
         tag_type="ner",
         use_crf=False,
@@ -218,6 +221,7 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
         weight_decay=1e-3,
     )
 
+    del trainer, tagger, tag_dictionary, corpus
     loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
     )
@@ -231,6 +235,7 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+    del loaded_model
 
 
 @pytest.mark.integration
@@ -240,11 +245,9 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
     )
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
-    embeddings = WordEmbeddings("turian")
-
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
-        embeddings=embeddings,
+        embeddings=turian_embeddings,
         tag_dictionary=tag_dictionary,
         tag_type="ner",
         use_crf=False,
@@ -257,6 +260,7 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+    del trainer, tagger, tag_dictionary, corpus
 
 
 @pytest.mark.integration
@@ -269,6 +273,7 @@ def test_load_use_serialized_tagger():
     loaded_model.predict(sentence)
     loaded_model.predict([sentence, sentence_empty])
     loaded_model.predict([sentence_empty])
+    del loaded_model
 
     sentence.clear_embeddings()
     sentence_empty.clear_embeddings()
@@ -278,17 +283,13 @@ def test_load_use_serialized_tagger():
     loaded_model.predict(sentence)
     loaded_model.predict([sentence, sentence_empty])
     loaded_model.predict([sentence_empty])
+    del loaded_model
 
 
 @pytest.mark.integration
 def test_train_load_use_classifier(results_base_path, tasks_base_path):
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
     label_dict = corpus.make_label_dictionary()
-
-    word_embedding: WordEmbeddings = WordEmbeddings("turian")
-    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
-        [word_embedding], 128, 1, False, 64, False, False
-    )
 
     model: TextClassifier = TextClassifier(document_embeddings, label_dict, False)
 
@@ -303,6 +304,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
             assert 0.0 <= l.score <= 1.0
             assert type(l.score) is float
 
+    del trainer, model, corpus
     loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("I love Berlin")
@@ -314,17 +316,13 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+    del loaded_model
 
 
 @pytest.mark.integration
 def test_train_classifier_with_sampler(results_base_path, tasks_base_path):
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
     label_dict = corpus.make_label_dictionary()
-
-    word_embedding: WordEmbeddings = WordEmbeddings("turian")
-    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
-        [word_embedding], 32, 1, False, 64, False, False
-    )
 
     model: TextClassifier = TextClassifier(document_embeddings, label_dict, False)
 
@@ -344,21 +342,18 @@ def test_train_classifier_with_sampler(results_base_path, tasks_base_path):
             assert 0.0 <= l.score <= 1.0
             assert type(l.score) is float
 
+    del trainer, model, corpus
     loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+    del loaded_model
 
 
 @pytest.mark.integration
 def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path):
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
     label_dict = corpus.make_label_dictionary()
-
-    word_embedding: WordEmbeddings = WordEmbeddings("turian")
-    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
-        [word_embedding], 128, 1, False, 64, False, False
-    )
 
     model: TextClassifier = TextClassifier(document_embeddings, label_dict, False)
 
@@ -373,6 +368,7 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
             assert 0.0 <= l.score <= 1.0
             assert type(l.score) is float
 
+    del trainer, model, corpus
     loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("I love Berlin")
@@ -384,20 +380,13 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+    del loaded_model
 
 
 @pytest.mark.integration
 def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_path):
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "multi_class")
     label_dict = corpus.make_label_dictionary()
-
-    word_embedding: WordEmbeddings = WordEmbeddings("turian")
-    document_embeddings = DocumentRNNEmbeddings(
-        embeddings=[word_embedding],
-        hidden_size=32,
-        reproject_words=False,
-        bidirectional=False,
-    )
 
     model: TextClassifier = TextClassifier(
         document_embeddings, label_dict, multi_label=True
@@ -434,6 +423,7 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
             assert 0.0 <= l.score <= 1.0
             assert type(l.score) is float
 
+    del trainer, model, corpus
     loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("I love Berlin")
@@ -445,6 +435,7 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+    del loaded_model
 
 
 @pytest.mark.integration
@@ -452,12 +443,11 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
     label_dict = corpus.make_label_dictionary()
 
-    embedding: TokenEmbeddings = FlairEmbeddings("news-forward-fast")
-    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
-        [embedding], 128, 1, False, 64, False, False
+    flair_document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
+       [flair_embeddings], 128, 1, False, 64, False, False
     )
 
-    model: TextClassifier = TextClassifier(document_embeddings, label_dict, False)
+    model: TextClassifier = TextClassifier(flair_document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False)
@@ -470,6 +460,7 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
             assert 0.0 <= l.score <= 1.0
             assert type(l.score) is float
 
+    del trainer, model, corpus, flair_document_embeddings
     loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
 
     sentence = Sentence("I love Berlin")
@@ -481,6 +472,7 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+    del loaded_model
 
 
 @pytest.mark.integration
@@ -522,6 +514,7 @@ def test_train_language_model(results_base_path, resources_path):
 
     # clean up results directory
     shutil.rmtree(results_base_path, ignore_errors=True)
+    del trainer, language_model, corpus, char_lm_embeddings
 
 
 @pytest.mark.integration
@@ -534,11 +527,9 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
     corpus = MultiCorpus([corpus_1, corpus_2])
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
-    embeddings = WordEmbeddings("turian")
-
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
-        embeddings=embeddings,
+        embeddings=turian_embeddings,
         tag_dictionary=tag_dictionary,
         tag_type="ner",
         use_crf=False,
@@ -555,6 +546,7 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
         shuffle=False,
     )
 
+    del trainer, tagger, corpus
     loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
     )
@@ -568,6 +560,7 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+    del loaded_model
 
 
 @pytest.mark.integration
@@ -575,21 +568,22 @@ def test_train_resume_text_classification_training(results_base_path, tasks_base
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
     label_dict = corpus.make_label_dictionary()
 
-    embeddings: TokenEmbeddings = FlairEmbeddings("news-forward-fast")
-    document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
-        [embeddings], 128, 1, False
-    )
+    #document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
+    #    [flair_embeddings], 128, 1, False
+    #)
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
 
+    del trainer, model
     trainer = ModelTrainer.load_checkpoint(results_base_path / "checkpoint.pt", corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+    del trainer
 
 
 @pytest.mark.integration
@@ -602,11 +596,9 @@ def test_train_resume_sequence_tagging_training(results_base_path, tasks_base_pa
     corpus = MultiCorpus([corpus_1, corpus_2])
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
-    embeddings = WordEmbeddings("turian")
-
     model: SequenceTagger = SequenceTagger(
         hidden_size=64,
-        embeddings=embeddings,
+        embeddings=turian_embeddings,
         tag_dictionary=tag_dictionary,
         tag_type="ner",
         use_crf=False,
@@ -615,12 +607,14 @@ def test_train_resume_sequence_tagging_training(results_base_path, tasks_base_pa
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
 
+    del trainer, model
     trainer = ModelTrainer.load_checkpoint(results_base_path / "checkpoint.pt", corpus)
 
     trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+    del trainer
 
 
 @pytest.mark.integration
@@ -654,6 +648,7 @@ def test_train_resume_language_model_training(
         max_epochs=2,
         checkpoint=True,
     )
+    del trainer, language_model
 
     trainer = LanguageModelTrainer.load_from_checkpoint(
         results_base_path / "checkpoint.pt", corpus
@@ -664,6 +659,7 @@ def test_train_resume_language_model_training(
 
     # clean up results directory
     shutil.rmtree(results_base_path)
+    del trainer
 
 
 @pytest.mark.integration
@@ -678,3 +674,5 @@ def test_keep_word_embeddings():
     loaded_model.predict(sentence, embedding_storage_mode="cpu")
     for token in sentence:
         assert len(token.embedding.cpu().numpy()) > 0
+
+    del loaded_model
