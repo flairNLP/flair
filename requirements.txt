@@ -1,4 +1,4 @@
-python-dateutil>=2.8.1
+python-dateutil>=2.6.1
 torch>=1.1.0
 gensim>=3.4.0
 pytest>=5.3.2
