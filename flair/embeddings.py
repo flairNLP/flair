@@ -2143,7 +2143,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
             for token in sentence.tokens:
 
                 # update embedding
-                local_embedding = token._embeddings[self.context_embeddings.name]
+                local_embedding = token._embeddings[self.context_embeddings.name].cpu()
 
                 # check token.text is empty or not
                 if token.text:
