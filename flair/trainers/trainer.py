@@ -174,7 +174,9 @@ class ModelTrainer:
         log.info(f"Embeddings storage mode: {embeddings_storage_mode}")
         log.info(f"Using F-score with beta: {self.model.beta}")
         log.info(f"Weight tensor: {self.model.weights}")
-
+        if self.model.weights and self.model.use_crf:
+            log_line(log)
+            log.warning(f'Warning: Specified class weights will not take effect when using CRF')
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False

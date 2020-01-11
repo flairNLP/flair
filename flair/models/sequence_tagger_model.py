@@ -82,7 +82,7 @@ class SequenceTagger(flair.nn.Model):
         rnn_type: str = "LSTM",
         pickle_module: str = "pickle",
         beta: float = 1.0,
-        weights: Dict = None,
+        weights: Dict[str, float] = None,
     ):
         """
         Initializes a SequenceTagger
@@ -98,7 +98,7 @@ class SequenceTagger(flair.nn.Model):
         :param locked_dropout: locked dropout probability
         :param train_initial_hidden_state: if True, trains initial hidden state of RNN
         :param beta: Parameter for F-beta score for evaluation and training annealing
-        :param weights: Weights for classes for the loss function
+        :param weights: Dictionary of weights for classes (tags) for the loss function (if any tag's weight is unspecified it will default to 1.0)
 
         """
 
