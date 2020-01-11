@@ -466,7 +466,7 @@ class OneHotEmbeddings(TokenEmbeddings):
 
     def __init__(
         self,
-        corpus=Union[Corpus, List[Sentence]],
+        corpus: Corpus,
         field: str = "text",
         embedding_length: int = 300,
         min_freq: int = 3,
