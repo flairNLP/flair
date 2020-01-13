@@ -218,7 +218,7 @@ class SimilarityLearner(flair.nn.Model):
 
     def get_similarity(self, modality_0_embeddings, modality_1_embeddings):
         """
-        :param modality_0_embedding: embeddings of first modality, a tensor of shape [n0, d0]
+        :param modality_0_embeddings: embeddings of first modality, a tensor of shape [n0, d0]
         :param modality_1_embeddings: embeddings of second modality, a tensor of shape [n1, d1]
         :return: a similarity matrix of shape [n0, n1]
         """
