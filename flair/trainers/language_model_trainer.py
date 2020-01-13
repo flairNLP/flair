@@ -290,7 +290,6 @@ class LanguageModelTrainer:
         savefile = base_path / "best-lm.pt"
 
         try:
-            epoch = self.epoch
             best_val_loss = self.loss
             optimizer = self.optimizer(
                 self.model.parameters(), lr=learning_rate, **kwargs
