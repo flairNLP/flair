@@ -850,7 +850,7 @@ class UniversalDependenciesDataset(FlairDataset):
                     token.add_tag("dependency", str(fields[7]))
 
                     for morph in str(fields[5]).split("|"):
-                        if not "=" in morph:
+                        if "=" not in morph:
                             continue
                         token.add_tag(morph.split("=")[0].lower(), morph.split("=")[1])
 
@@ -907,7 +907,7 @@ class UniversalDependenciesDataset(FlairDataset):
                         token.add_tag("dependency", str(fields[7]))
 
                         for morph in str(fields[5]).split("|"):
-                            if not "=" in morph:
+                            if "=" not in morph:
                                 continue
                             token.add_tag(
                                 morph.split("=")[0].lower(), morph.split("=")[1]
