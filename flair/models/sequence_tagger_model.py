@@ -1,8 +1,5 @@
 import logging
 from pathlib import Path
-
-import logging
-from pathlib import Path
 from typing import List, Union, Optional, Callable
 
 import numpy as np

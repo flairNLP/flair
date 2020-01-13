@@ -1,7 +1,6 @@
 import time, datetime
 import random
 import sys
-import logging
 from pathlib import Path
 from typing import Union
 

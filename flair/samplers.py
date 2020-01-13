@@ -1,5 +1,4 @@
 import logging
-from abc import abstractmethod
 from collections import defaultdict
 
 from torch.utils.data.sampler import Sampler
