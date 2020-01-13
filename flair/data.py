@@ -621,7 +621,7 @@ class Sentence(DataPoint):
 
         # log a warning if the dataset is empty
         if text == "":
-            log.warn(
+            log.warning(
                 "ACHTUNG: An empty Sentence was created! Are there empty strings in your dataset?"
             )
 
