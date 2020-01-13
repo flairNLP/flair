@@ -1,7 +1,6 @@
 import time, datetime
 import random
 import sys
-import logging
 from pathlib import Path
 from typing import Union
 
@@ -290,7 +289,6 @@ class LanguageModelTrainer:
         savefile = base_path / "best-lm.pt"
 
         try:
-            epoch = self.epoch
             best_val_loss = self.loss
             optimizer = self.optimizer(
                 self.model.parameters(), lr=learning_rate, **kwargs

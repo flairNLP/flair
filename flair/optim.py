@@ -1,6 +1,5 @@
 import logging
 import math
-from functools import partial
 
 import torch
 from torch.optim import Optimizer
