@@ -74,5 +74,6 @@ class Highlighter(object):
         with open(file_, "w") as f:
             f.write(rendered)
 
-    def _render(self, char, color):
+    @staticmethod
+    def _render(char, color):
         return '<span style="background-color: {}">{}</span>'.format(color, char)
