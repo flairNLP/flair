@@ -1021,10 +1021,7 @@ class CSVClassificationDataset(FlairDataset):
                         ):
                             sentence.add_label(row[column])
 
-                    if (
-                        len(sentence) > self.max_tokens_per_doc
-                        and self.max_tokens_per_doc > 0
-                    ):
+                    if 0 < self.max_tokens_per_doc < len(sentence):
                         sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]
                     self.sentences.append(sentence)
 
@@ -1055,7 +1052,7 @@ class CSVClassificationDataset(FlairDataset):
                 if self.column_name_map[column].startswith("label") and row[column]:
                     sentence.add_label(row[column])
 
-            if len(sentence) > self.max_tokens_per_doc and self.max_tokens_per_doc > 0:
+            if 0 < self.max_tokens_per_doc < len(sentence):
                 sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]
 
             return sentence
@@ -1153,8 +1150,7 @@ class ClassificationDataset(FlairDataset):
 
             if (
                 sentence is not None
-                and len(sentence) > self.max_tokens_per_doc
-                and self.max_tokens_per_doc > 0
+                and 0 < self.max_tokens_per_doc < len(sentence)
             ):
                 sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]
 
