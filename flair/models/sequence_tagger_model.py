@@ -82,7 +82,7 @@ class SequenceTagger(flair.nn.Model):
         rnn_type: str = "LSTM",
         pickle_module: str = "pickle",
         beta: float = 1.0,
-        weights: Dict[str, float] = None,
+        loss_weights: Dict[str, float] = None,
     ):
         """
         Initializes a SequenceTagger
@@ -98,12 +98,12 @@ class SequenceTagger(flair.nn.Model):
         :param locked_dropout: locked dropout probability
         :param train_initial_hidden_state: if True, trains initial hidden state of RNN
         :param beta: Parameter for F-beta score for evaluation and training annealing
-        :param weights: Dictionary of weights for classes (tags) for the loss function (if any tag's weight is unspecified it will default to 1.0)
+        :param loss_weights: Dictionary of weights for classes (tags) for the loss function
+        (if any tag's weight is unspecified it will default to 1.0)
 
         """
 
         super(SequenceTagger, self).__init__()
-        self.beta = beta
         self.use_rnn = use_rnn
         self.hidden_size = hidden_size
         self.use_crf: bool = use_crf
@@ -118,18 +118,19 @@ class SequenceTagger(flair.nn.Model):
         self.tag_type: str = tag_type
         self.tagset_size: int = len(tag_dictionary)
 
+        self.beta = beta
+
+        self.weight_dict = loss_weights
         # Initialize the weight tensor
-        if weights is not None:
+        if loss_weights is not None:
             n_classes = len(self.tag_dictionary)
             weight_list = [1. for i in range(n_classes)]
             for i, tag in enumerate(self.tag_dictionary.get_items()):
-                if tag in weights.keys():
-                    weight_list[i] = weights[tag]
-            self.weights = torch.FloatTensor(weight_list).to(flair.device)
+                if tag in loss_weights.keys():
+                    weight_list[i] = loss_weights[tag]
+            self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
         else:
-            self.weights = None
-
-
+            self.loss_weights = None
 
         # initialize the network architecture
         self.nlayers: int = rnn_layers
@@ -232,7 +233,8 @@ class SequenceTagger(flair.nn.Model):
             "use_word_dropout": self.use_word_dropout,
             "use_locked_dropout": self.use_locked_dropout,
             "rnn_type": self.rnn_type,
-            "beta": self.beta
+            "beta": self.beta,
+            "weight_dict": self.weight_dict,
         }
         return model_state
 
@@ -255,6 +257,7 @@ class SequenceTagger(flair.nn.Model):
             else state["train_initial_hidden_state"]
         )
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
+        weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
 
         model = SequenceTagger(
             hidden_size=state["hidden_size"],
@@ -270,6 +273,7 @@ class SequenceTagger(flair.nn.Model):
             train_initial_hidden_state=train_initial_hidden_state,
             rnn_type=rnn_type,
             beta=beta,
+            loss_weights=weights,
         )
         model.load_state_dict(state["state_dict"])
         return model
@@ -638,7 +642,7 @@ class SequenceTagger(flair.nn.Model):
             ):
                 sentence_feats = sentence_feats[:sentence_length]
                 score += torch.nn.functional.cross_entropy(
-                    sentence_feats, sentence_tags, weight=self.weights
+                    sentence_feats, sentence_tags, weight=self.loss_weights
                 )
             score /= len(features)
             return score
@@ -1025,3 +1029,9 @@ class SequenceTagger(flair.nn.Model):
                 data.append(row)
             data.append(["----"])
         print(tabulate(data, headers=["FROM", "TO", "SCORE"]))
+
+    def __str__(self):
+        return super(flair.nn.Model, self).__str__().rstrip(')') + \
+               f'  (beta): {self.beta}\n' + \
+               f'  (weights): {self.weight_dict}\n' + \
+               f'  (weight_tensor) {self.loss_weights}\n)'
