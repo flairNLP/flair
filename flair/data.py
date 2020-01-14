@@ -621,7 +621,7 @@ class Sentence(DataPoint):
 
         # log a warning if the dataset is empty
         if text == "":
-            log.warn(
+            log.warning(
                 "ACHTUNG: An empty Sentence was created! Are there empty strings in your dataset?"
             )
 
@@ -947,7 +947,8 @@ class Sentence(DataPoint):
 
         return self.language_code
 
-    def _restore_windows_1252_characters(self, text: str) -> str:
+    @staticmethod
+    def _restore_windows_1252_characters(text: str) -> str:
         def to_windows_1252(match):
             try:
                 return bytes([ord(match.group(0))]).decode("windows-1252")
@@ -1119,7 +1120,8 @@ class Corpus:
         tokens = [token for sublist in tokens for token in sublist]
         return list(map((lambda t: t.text), tokens))
 
-    def _downsample_to_proportion(self, dataset: Dataset, proportion: float):
+    @staticmethod
+    def _downsample_to_proportion(dataset: Dataset, proportion: float):
 
         sampled_size: int = round(len(dataset) * proportion)
         splits = random_split(dataset, [len(dataset) - sampled_size, sampled_size])

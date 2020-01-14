@@ -1,8 +1,5 @@
 import logging
 from pathlib import Path
-
-import logging
-from pathlib import Path
 from typing import List, Union, Optional, Callable, Dict
 
 import numpy as np
@@ -241,19 +238,19 @@ class SequenceTagger(flair.nn.Model):
     @staticmethod
     def _init_model_with_state_dict(state):
 
-        rnn_type = "LSTM" if not "rnn_type" in state.keys() else state["rnn_type"]
-        use_dropout = 0.0 if not "use_dropout" in state.keys() else state["use_dropout"]
+        rnn_type = "LSTM" if "rnn_type" not in state.keys() else state["rnn_type"]
+        use_dropout = 0.0 if "use_dropout" not in state.keys() else state["use_dropout"]
         use_word_dropout = (
-            0.0 if not "use_word_dropout" in state.keys() else state["use_word_dropout"]
+            0.0 if "use_word_dropout" not in state.keys() else state["use_word_dropout"]
         )
         use_locked_dropout = (
             0.0
-            if not "use_locked_dropout" in state.keys()
+            if "use_locked_dropout" not in state.keys()
             else state["use_locked_dropout"]
         )
         train_initial_hidden_state = (
             False
-            if not "train_initial_hidden_state" in state.keys()
+            if "train_initial_hidden_state" not in state.keys()
             else state["train_initial_hidden_state"]
         )
         beta = 1.0 if "beta" not in state.keys() else state["beta"]

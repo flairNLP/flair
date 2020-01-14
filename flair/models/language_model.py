@@ -176,7 +176,8 @@ class LanguageModel(nn.Module):
         else:
             return tuple(self.repackage_hidden(v) for v in h)
 
-    def initialize(self, matrix):
+    @staticmethod
+    def initialize(matrix):
         in_, out_ = matrix.size()
         stdv = math.sqrt(3.0 / (in_ + out_))
         matrix.detach().uniform_(-stdv, stdv)
