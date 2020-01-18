@@ -2031,7 +2031,7 @@ class FlairEmbeddings(TokenEmbeddings):
         with gradient_context:
 
             # if this is not possible, use LM to generate embedding. First, get text sentences
-            text_sentences = [sentence.to_tokenized_string() for sentence in sentences]
+            text_sentences = [sentence.to_plain_string() for sentence in sentences]
 
             start_marker = "\n"
             end_marker = " "
@@ -2046,7 +2046,7 @@ class FlairEmbeddings(TokenEmbeddings):
 
             # take first or last hidden states from language model as word representation
             for i, sentence in enumerate(sentences):
-                sentence_text = sentence.to_tokenized_string()
+                sentence_text = sentence.to_plain_string()
 
                 offset_forward: int = len(start_marker)
                 offset_backward: int = len(sentence_text) + len(start_marker)
@@ -2062,9 +2062,9 @@ class FlairEmbeddings(TokenEmbeddings):
 
                     embedding = all_hidden_states_in_lm[offset, i, :]
 
-                    # if self.tokenized_lm or token.whitespace_after:
-                    offset_forward += 1
-                    offset_backward -= 1
+                    if token.whitespace_after:
+                        offset_forward += 1
+                        offset_backward -= 1
 
                     offset_backward -= len(token.text)
 
