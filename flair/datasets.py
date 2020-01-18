@@ -849,6 +849,9 @@ class UniversalDependenciesDataset(FlairDataset):
                     token.add_tag("pos", str(fields[4]))
                     token.add_tag("dependency", str(fields[7]))
 
+                    if 'SpaceAfter=No' in fields[9]:
+                        token.whitespace_after=False
+                    
                     for morph in str(fields[5]).split("|"):
                         if "=" not in morph:
                             continue
