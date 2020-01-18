@@ -2048,8 +2048,8 @@ class FlairEmbeddings(TokenEmbeddings):
             for i, sentence in enumerate(sentences):
                 sentence_text = sentence.to_plain_string()
 
-                offset_forward: int = len(start_marker)
-                offset_backward: int = len(sentence_text) + len(start_marker)
+                offset_forward: int = len(start_marker) - 1
+                offset_backward: int = len(sentence_text) + len(start_marker) - 1
 
                 for token in sentence.tokens:
 
