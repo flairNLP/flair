@@ -1302,6 +1302,128 @@ class MongoDataset(FlairDataset):
             return sentence
 
 
+class JSONDataset(FlairDataset):
+    def __init__(
+        self,
+        filepath_or_buffer,
+        text_field: str,
+        categories_field: List[str] = None,
+        max_tokens_per_doc: int = -1,
+        max_chars_per_doc: int = -1,
+        tokenizer=segtok_tokenizer,
+        in_memory: bool = True,
+    ):
+        """
+        Reads JSON collections. Each collection should contain one document/text per item.
+
+        Each item should have the following format:
+        {
+        'Beskrivning': 'Abrahamsby. Gård i Gottröra sn, Långhundra hd, Stockholms län, nära Långsjön.',
+        'Län':'Stockholms län',
+        'Härad': 'Långhundra',
+        'Församling': 'Gottröra',
+        'Plats': 'Abrahamsby'
+        }
+
+        :param filepath_or_buffer: a valid JSON str, path object or file-like object,
+        :param text_field: Text field, e.g. 'Beskrivning',
+        :param categories_field: List of category fields, e.g ['Län', 'Härad', 'Tingslag', 'Församling', 'Plats'],
+        :param max_tokens_per_doc: Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.
+        :param max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
+        :param max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
+        :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
+        :return: list of sentences
+        """
+
+        # Accept three input types:
+        #     1. filepath (string-like)
+        #     2. file-like object (e.g. open file object, StringIO)
+        #     3. JSON string
+
+        # TODO 2. (... string io) and 3. (json.loads(json_string)
+
+        exists = False
+        if isinstance(filepath_or_buffer, str):
+            exists = os.path.exists(filepath_or_buffer)
+
+        _data = '[]'
+        if exists:
+            with open(filepath_or_buffer, 'r', encoding='utf8') as f:
+                _data = f.read()
+        else:
+            _data = filepath_or_buffer
+
+        self.data = json.loads(_data)
+
+        self.in_memory = in_memory
+        self.tokenizer = tokenizer
+
+        if self.in_memory:
+            self.sentences = []
+        else:
+            self.indices = []
+
+        self.total_sentence_count: int = 0
+        self.max_chars_per_doc = max_chars_per_doc
+        self.max_tokens_per_doc = max_tokens_per_doc
+
+        self.text = text_field
+        self.categories = categories_field if categories_field is not None else []
+
+        if self.in_memory:
+            for document in self.data:
+                sentence = self._parse_document_to_sentence(
+                    document[self.text],
+                    [document[_] if _ in document else "" for _ in self.categories],
+                    tokenizer,
+                )
+                if sentence is not None and len(sentence.tokens) > 0:
+                    self.sentences.append(sentence)
+                    self.total_sentence_count += 1
+        else:
+            self.indices = range(len(self.data))
+            self.total_sentence_count = len(self.data)
+
+    def _parse_document_to_sentence(
+        self, text: str, labels: List[str], tokenizer: Callable[[str], List[Token]]
+    ):
+        if self.max_chars_per_doc > 0:
+            text = text[: self.max_chars_per_doc]
+
+        if text and labels:
+            sentence = Sentence(text, labels=labels, use_tokenizer=tokenizer)
+
+            if self.max_tokens_per_doc > 0:
+                sentence.tokens = sentence.tokens[
+                    : min(len(sentence), self.max_tokens_per_doc)
+                ]
+
+            return sentence
+        return None
+
+    def is_in_memory(self) -> bool:
+        return self.in_memory
+
+    def __len__(self):
+        return self.total_sentence_count
+
+    def __getitem__(self, index: int = 0) -> Sentence:
+        if self.in_memory:
+            return self.sentences[index]
+        else:
+            document = self.data[index]
+            sentence = self._parse_document_to_sentence(
+                document[self.text],
+                [document[_] if _ in document else "" for _ in self.categories],
+                self.tokenizer,
+            )
+            return sentence
+
+
+class ParquetDataset(FlairDataset):
+    pass
+
+
 class ParallelTextDataset(FlairDataset):
     def __init__(
         self,
