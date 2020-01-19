@@ -12,6 +12,7 @@ from flair.data import (
     Corpus,
     Span,
     segtok_tokenizer,
+    build_japanese_tokenizer
 )
 
 
@@ -45,6 +46,7 @@ def test_create_sentence_without_tokenizer():
     assert "Berlin." == sentence.tokens[2].text
 
 
+# skip because it is optional https://github.com/flairNLP/flair/pull/1296
 # def test_create_sentence_using_japanese_tokenizer():
 #     sentence: Sentence = Sentence("私はベルリンが好き", use_tokenizer=build_japanese_tokenizer())
 #
