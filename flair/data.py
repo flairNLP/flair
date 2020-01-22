@@ -430,26 +430,26 @@ def build_japanese_tokenizer(tokenizer: str = "MeCab"):
         raise NotImplementedError("Currently, MeCab is only supported.")
 
     try:
-        import tiny_tokenizer
+        import konoha
     except ModuleNotFoundError:
         log.warning("-" * 100)
-        log.warning('ATTENTION! The library "tiny_tokenizer" is not installed!')
+        log.warning('ATTENTION! The library "konoha" is not installed!')
         log.warning(
-            'To use Japanese tokenizer, please first install with the following steps: "pip install allennlp"'
+            'To use Japanese tokenizer, please first install with the following steps:'
         )
         log.warning(
             '- Install mecab with "sudo apt install mecab libmecab-dev mecab-ipadic"'
         )
-        log.warning('- Install tiny_tokenizer with "pip install tiny_tokenizer[all]"')
+        log.warning('- Install konoha with "pip install konoha[mecab]"')
         log.warning("-" * 100)
         pass
 
-    sentence_tokenizer = tiny_tokenizer.SentenceTokenizer()
-    word_tokenizer = tiny_tokenizer.WordTokenizer(tokenizer)
+    sentence_tokenizer = konoha.SentenceTokenizer()
+    word_tokenizer = konoha.WordTokenizer(tokenizer)
 
     def tokenizer(text: str) -> List[Token]:
         """
-        Tokenizer using tiny_tokenizer, a third party library which supports
+        Tokenizer using konoha, a third party library which supports
         multiple Japanese tokenizer such as MeCab, KyTea and SudachiPy.
         """
         tokens: List[Token] = []
@@ -457,8 +457,8 @@ def build_japanese_tokenizer(tokenizer: str = "MeCab"):
 
         sentences = sentence_tokenizer.tokenize(text)
         for sentence in sentences:
-            tiny_tokenizer_tokens = word_tokenizer.tokenize(sentence)
-            words.extend(list(map(str, tiny_tokenizer_tokens)))
+            konoha_tokens = word_tokenizer.tokenize(sentence)
+            words.extend(list(map(str, konoha_tokens)))
 
         # determine offsets for whitespace_after field
         index = text.index
