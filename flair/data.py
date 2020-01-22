@@ -435,7 +435,7 @@ def build_japanese_tokenizer(tokenizer: str = "MeCab"):
         log.warning("-" * 100)
         log.warning('ATTENTION! The library "konoha" is not installed!')
         log.warning(
-            'To use Japanese tokenizer, please first install with the following steps: "pip install allennlp"'
+            'To use Japanese tokenizer, please first install with the following steps:'
         )
         log.warning(
             '- Install mecab with "sudo apt install mecab libmecab-dev mecab-ipadic"'
