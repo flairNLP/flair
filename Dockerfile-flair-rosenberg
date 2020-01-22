@@ -1,0 +1,76 @@
+ARG TAG=latest
+
+FROM continuumio/miniconda3:${TAG}
+
+ENV HTTP_PROXY "http://p901rcj:p901rcj@proxyvip.foreningssparbanken.se:8080"
+ENV HTTPS_PROXY "https://p901rcj:p901rcj@proxyvip.foreningssparbanken.se:8080"
+
+RUN mkdir /home/flair
+VOLUME /home/flair
+
+COPY . /home/flair
+
+ENV PYTHONDONTWRITEBYTECODE=true
+
+ARG PYTHON_VERSION=3.7
+
+RUN conda config --set proxy_servers.http ''
+RUN conda config --set proxy_servers.https ''
+RUN conda config --set ssl_verify no
+RUN conda config --remove channels 'defaults'
+RUN conda config --add channels https://lx64905.sbcore.net:8443/artifactory/AMMF_Conda_VR/main/
+
+RUN conda install -n root conda=4.7
+# RUN conda install -n root conda=4.7
+
+RUN conda install --yes --freeze-installed \
+    python=${PYTHON_VERSION} \
+    nose \
+    numpy \
+    scipy \
+    pandas \
+    matplotlib \
+    ipython \
+    jupyter \
+    beautifulsoup4 \
+    python-dateutil \
+    gensim \
+    pytest \
+    tqdm \
+    mpld3 \
+    scikit-learn \
+    regex \
+    tabulate \
+    urllib3 \
+    nltk \
+    pymongo \
+    && conda clean -afy \
+    && find /opt/conda/ -follow -type f -name '*.a' -delete \
+    && find /opt/conda/ -follow -type f -name '*.pyc' -delete \
+    && find /opt/conda/ -follow -type f -name '*.js.map' -delete
+
+RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+    opencv-python \
+    gym \
+    atari-py \
+    pytorch-ignite \
+    torch torchvision \
+    segtok \
+    bpemb \
+    pillow==6.1 \
+    tiny-tokenizer \
+    transformers \
+    deprecated \
+    sqlitedict \
+    hyperopt \
+    langdetect
+
+CMD [ "/bin/bash" ]
+
+ARG FLAIR_ROSENBERG_VERSION=0.1
+
+LABEL org.opencontainers.image.title="Basel Torch" \
+    org.opencontainers.image.description="The Basel Framework and PyTorch" \
+    org.opencontainers.image.url="https://github.com/carljohanrehn/the-basel-framework" \
+    org.opencontainers.image.source="https://github.com/carljohanrehn/the-basel-framework" \
+    org.opencontainers.image.version="${BASEL_TORCH_VERSION}"
