@@ -131,6 +131,10 @@ class Dictionary:
 
         return Dictionary.load_from_file(name)
 
+    def __str__(self):
+        tags = ', '.join(self.get_item_for_index(i) for i in range(min(len(self), 30)))
+        return f"Dictionary with {len(self)} tags: {tags}"
+
 
 class Label:
     """
