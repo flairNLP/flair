@@ -12,7 +12,6 @@ import json
 import urllib
 from tqdm import tqdm
 
-
 import torch.utils.data.dataloader
 from torch.utils.data import Dataset, random_split
 from torch.utils.data.dataset import Subset, ConcatDataset
@@ -35,17 +34,17 @@ log = logging.getLogger("flair")
 
 class ColumnCorpus(Corpus):
     def __init__(
-        self,
-        data_folder: Union[str, Path],
-        column_format: Dict[int, str],
-        train_file=None,
-        test_file=None,
-        dev_file=None,
-        tag_to_bioes=None,
-        comment_symbol: str = None,
-        in_memory: bool = True,
-        encoding: str = "utf-8",
-        document_separator_token: str = None,
+            self,
+            data_folder: Union[str, Path],
+            column_format: Dict[int, str],
+            train_file=None,
+            test_file=None,
+            dev_file=None,
+            tag_to_bioes=None,
+            comment_symbol: str = None,
+            in_memory: bool = True,
+            encoding: str = "utf-8",
+            document_separator_token: str = None,
     ):
         """
         Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
@@ -154,12 +153,12 @@ class ColumnCorpus(Corpus):
 
 class UniversalDependenciesCorpus(Corpus):
     def __init__(
-        self,
-        data_folder: Union[str, Path],
-        train_file=None,
-        test_file=None,
-        dev_file=None,
-        in_memory: bool = True,
+            self,
+            data_folder: Union[str, Path],
+            train_file=None,
+            test_file=None,
+            dev_file=None,
+            in_memory: bool = True,
     ):
         """
         Instantiates a Corpus from CoNLL-U column-formatted task data such as the UD corpora
@@ -210,15 +209,15 @@ class UniversalDependenciesCorpus(Corpus):
 
 class ClassificationCorpus(Corpus):
     def __init__(
-        self,
-        data_folder: Union[str, Path],
-        train_file=None,
-        test_file=None,
-        dev_file=None,
-        tokenizer: Callable[[str], List[Token]] = space_tokenizer,
-        max_tokens_per_doc: int = -1,
-        max_chars_per_doc: int = -1,
-        in_memory: bool = False,
+            self,
+            data_folder: Union[str, Path],
+            train_file=None,
+            test_file=None,
+            dev_file=None,
+            tokenizer: Callable[[str], List[Token]] = space_tokenizer,
+            max_tokens_per_doc: int = -1,
+            max_chars_per_doc: int = -1,
+            in_memory: bool = False,
     ):
         """
         Instantiates a Corpus from text classification-formatted task data
@@ -350,18 +349,18 @@ class FeideggerCorpus(Corpus):
 
 class CSVClassificationCorpus(Corpus):
     def __init__(
-        self,
-        data_folder: Union[str, Path],
-        column_name_map: Dict[int, str],
-        train_file=None,
-        test_file=None,
-        dev_file=None,
-        tokenizer: Callable[[str], List[Token]] = segtok_tokenizer,
-        max_tokens_per_doc=-1,
-        max_chars_per_doc=-1,
-        in_memory: bool = False,
-        skip_header: bool = False,
-        **fmtparams,
+            self,
+            data_folder: Union[str, Path],
+            column_name_map: Dict[int, str],
+            train_file=None,
+            test_file=None,
+            dev_file=None,
+            tokenizer: Callable[[str], List[Token]] = segtok_tokenizer,
+            max_tokens_per_doc=-1,
+            max_chars_per_doc=-1,
+            in_memory: bool = False,
+            skip_header: bool = False,
+            **fmtparams,
     ):
         """
         Instantiates a Corpus for text classification from CSV column formatted data
@@ -463,14 +462,14 @@ class CSVClassificationCorpus(Corpus):
 
 class ParallelTextCorpus(Corpus):
     def __init__(
-        self,
-        source_file: Union[str, Path],
-        target_file: Union[str, Path],
-        name: str = None,
-        use_tokenizer: bool = True,
-        max_tokens_per_doc=-1,
-        max_chars_per_doc=-1,
-        in_memory: bool = True,
+            self,
+            source_file: Union[str, Path],
+            target_file: Union[str, Path],
+            name: str = None,
+            use_tokenizer: bool = True,
+            max_tokens_per_doc=-1,
+            max_chars_per_doc=-1,
+            in_memory: bool = True,
     ):
         """
         Instantiates a Corpus for text classification from CSV column formatted data
@@ -510,14 +509,14 @@ class ParallelTextCorpus(Corpus):
 
 class OpusParallelCorpus(ParallelTextCorpus):
     def __init__(
-        self,
-        dataset: str,
-        l1: str,
-        l2: str,
-        use_tokenizer: bool = True,
-        max_tokens_per_doc=-1,
-        max_chars_per_doc=-1,
-        in_memory: bool = True,
+            self,
+            dataset: str,
+            l1: str,
+            l2: str,
+            use_tokenizer: bool = True,
+            max_tokens_per_doc=-1,
+            max_chars_per_doc=-1,
+            in_memory: bool = True,
     ):
         """
         Instantiates a Parallel Corpus from OPUS (http://opus.nlpl.eu/)
@@ -543,18 +542,18 @@ class OpusParallelCorpus(ParallelTextCorpus):
             link = f"https://object.pouta.csc.fi/OPUS-Tatoeba/v20190709/moses/{l1}-{l2}.txt.zip"
 
             l1_file = (
-                Path(flair.cache_root)
-                / "datasets"
-                / dataset
-                / f"{l1}-{l2}"
-                / f"Tatoeba.{l1}-{l2}.{l1}"
+                    Path(flair.cache_root)
+                    / "datasets"
+                    / dataset
+                    / f"{l1}-{l2}"
+                    / f"Tatoeba.{l1}-{l2}.{l1}"
             )
             l2_file = (
-                Path(flair.cache_root)
-                / "datasets"
-                / dataset
-                / f"{l1}-{l2}"
-                / f"Tatoeba.{l1}-{l2}.{l2}"
+                    Path(flair.cache_root)
+                    / "datasets"
+                    / dataset
+                    / f"{l1}-{l2}"
+                    / f"Tatoeba.{l1}-{l2}.{l2}"
             )
 
         # download and unzip in file structure if necessary
@@ -608,9 +607,9 @@ class StringDataset(FlairDataset):
     """
 
     def __init__(
-        self,
-        texts: Union[str, List[str]],
-        use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer,
+            self,
+            texts: Union[str, List[str]],
+            use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer,
     ):
         """
         Instantiate StringDataset
@@ -640,14 +639,14 @@ class StringDataset(FlairDataset):
 
 class ColumnDataset(FlairDataset):
     def __init__(
-        self,
-        path_to_column_file: Path,
-        column_name_map: Dict[int, str],
-        tag_to_bioes: str = None,
-        comment_symbol: str = None,
-        in_memory: bool = True,
-        document_separator_token: str = None,
-        encoding: str = "utf-8",
+            self,
+            path_to_column_file: Path,
+            column_name_map: Dict[int, str],
+            tag_to_bioes: str = None,
+            comment_symbol: str = None,
+            in_memory: bool = True,
+            document_separator_token: str = None,
+            encoding: str = "utf-8",
     ):
         """
         Instantiates a column dataset (typically used for sequence labeling or word-level prediction).
@@ -765,7 +764,7 @@ class ColumnDataset(FlairDataset):
                 sentence: Sentence = Sentence()
                 while line:
                     if self.comment_symbol is not None and line.startswith(
-                        self.comment_symbol
+                            self.comment_symbol
                     ):
                         line = file.readline()
                         continue
@@ -850,6 +849,9 @@ class UniversalDependenciesDataset(FlairDataset):
                     token.add_tag("pos", str(fields[4]))
                     token.add_tag("dependency", str(fields[7]))
 
+                    if len(fields) > 9 and 'SpaceAfter=No' in fields[9]:
+                        token.whitespace_after = False
+
                     for morph in str(fields[5]).split("|"):
                         if "=" not in morph:
                             continue
@@ -907,6 +909,9 @@ class UniversalDependenciesDataset(FlairDataset):
                         token.add_tag("pos", str(fields[4]))
                         token.add_tag("dependency", str(fields[7]))
 
+                        if len(fields) > 9 and 'SpaceAfter=No' in fields[9]:
+                            token.whitespace_after = False
+
                         for morph in str(fields[5]).split("|"):
                             if "=" not in morph:
                                 continue
@@ -925,15 +930,15 @@ class UniversalDependenciesDataset(FlairDataset):
 
 class CSVClassificationDataset(FlairDataset):
     def __init__(
-        self,
-        path_to_file: Union[str, Path],
-        column_name_map: Dict[int, str],
-        max_tokens_per_doc: int = -1,
-        max_chars_per_doc: int = -1,
-        tokenizer=segtok_tokenizer,
-        in_memory: bool = True,
-        skip_header: bool = False,
-        **fmtparams,
+            self,
+            path_to_file: Union[str, Path],
+            column_name_map: Dict[int, str],
+            max_tokens_per_doc: int = -1,
+            max_chars_per_doc: int = -1,
+            tokenizer=segtok_tokenizer,
+            in_memory: bool = True,
+            skip_header: bool = False,
+            **fmtparams,
     ):
         """
         Instantiates a Dataset for text classification from CSV column formatted data
@@ -1017,8 +1022,8 @@ class CSVClassificationDataset(FlairDataset):
 
                     for column in self.column_name_map:
                         if (
-                            self.column_name_map[column].startswith("label")
-                            and row[column]
+                                self.column_name_map[column].startswith("label")
+                                and row[column]
                         ):
                             sentence.add_label(row[column])
 
@@ -1061,12 +1066,12 @@ class CSVClassificationDataset(FlairDataset):
 
 class ClassificationDataset(FlairDataset):
     def __init__(
-        self,
-        path_to_file: Union[str, Path],
-        max_tokens_per_doc=-1,
-        max_chars_per_doc=-1,
-        tokenizer=segtok_tokenizer,
-        in_memory: bool = True,
+            self,
+            path_to_file: Union[str, Path],
+            max_tokens_per_doc=-1,
+            max_chars_per_doc=-1,
+            tokenizer=segtok_tokenizer,
+            in_memory: bool = True,
     ):
         """
         Reads a data file for text classification. The file should contain one document/text per line.
@@ -1126,7 +1131,7 @@ class ClassificationDataset(FlairDataset):
                 line = f.readline()
 
     def _parse_line_to_sentence(
-        self, line: str, label_prefix: str, tokenizer: Callable[[str], List[Token]]
+            self, line: str, label_prefix: str, tokenizer: Callable[[str], List[Token]]
     ):
         words = line.split()
 
@@ -1150,8 +1155,8 @@ class ClassificationDataset(FlairDataset):
             sentence = Sentence(text, labels=labels, use_tokenizer=tokenizer)
 
             if (
-                sentence is not None
-                and 0 < self.max_tokens_per_doc < len(sentence)
+                    sentence is not None
+                    and 0 < self.max_tokens_per_doc < len(sentence)
             ):
                 sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]
 
@@ -1180,18 +1185,18 @@ class ClassificationDataset(FlairDataset):
 
 class MongoDataset(FlairDataset):
     def __init__(
-        self,
-        query: str,
-        host: str,
-        port: int,
-        database: str,
-        collection: str,
-        text_field: str,
-        categories_field: List[str] = None,
-        max_tokens_per_doc: int = -1,
-        max_chars_per_doc: int = -1,
-        tokenizer=segtok_tokenizer,
-        in_memory: bool = True,
+            self,
+            query: str,
+            host: str,
+            port: int,
+            database: str,
+            collection: str,
+            text_field: str,
+            categories_field: List[str] = None,
+            max_tokens_per_doc: int = -1,
+            max_chars_per_doc: int = -1,
+            tokenizer=segtok_tokenizer,
+            in_memory: bool = True,
     ):
         """
         Reads Mongo collections. Each collection should contain one document/text per item.
@@ -1268,7 +1273,7 @@ class MongoDataset(FlairDataset):
             self.total_sentence_count = self.__cursor.count_documents()
 
     def _parse_document_to_sentence(
-        self, text: str, labels: List[str], tokenizer: Callable[[str], List[Token]]
+            self, text: str, labels: List[str], tokenizer: Callable[[str], List[Token]]
     ):
         if self.max_chars_per_doc > 0:
             text = text[: self.max_chars_per_doc]
@@ -1278,8 +1283,8 @@ class MongoDataset(FlairDataset):
 
             if self.max_tokens_per_doc > 0:
                 sentence.tokens = sentence.tokens[
-                    : min(len(sentence), self.max_tokens_per_doc)
-                ]
+                                  : min(len(sentence), self.max_tokens_per_doc)
+                                  ]
 
             return sentence
         return None
@@ -1426,13 +1431,13 @@ class ParquetDataset(FlairDataset):
 
 class ParallelTextDataset(FlairDataset):
     def __init__(
-        self,
-        path_to_source: Union[str, Path],
-        path_to_target: Union[str, Path],
-        max_tokens_per_doc=-1,
-        max_chars_per_doc=-1,
-        use_tokenizer=True,
-        in_memory: bool = True,
+            self,
+            path_to_source: Union[str, Path],
+            path_to_target: Union[str, Path],
+            max_tokens_per_doc=-1,
+            max_chars_per_doc=-1,
+            use_tokenizer=True,
+            in_memory: bool = True,
     ):
         if type(path_to_source) == str:
             path_to_source: Path = Path(path_to_source)
@@ -1456,7 +1461,7 @@ class ParallelTextDataset(FlairDataset):
             self.target_lines: List[str] = []
 
         with open(str(path_to_source), encoding="utf-8") as source_file, open(
-            str(path_to_target), encoding="utf-8"
+                str(path_to_target), encoding="utf-8"
         ) as target_file:
 
             source_line = source_file.readline()
@@ -1537,11 +1542,11 @@ class FeideggerDataset(FlairDataset):
 
 class CONLL_03(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = True,
-        document_as_sequence: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
     ):
         """
         Initialize the CoNLL-03 corpus. This is only possible if you've manually downloaded it to your machine.
@@ -1587,11 +1592,11 @@ class CONLL_03(ColumnCorpus):
 
 class CONLL_03_GERMAN(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = True,
-        document_as_sequence: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
     ):
         """
         Initialize the CoNLL-03 corpus for German. This is only possible if you've manually downloaded it to your machine.
@@ -1637,11 +1642,11 @@ class CONLL_03_GERMAN(ColumnCorpus):
 
 class CONLL_03_DUTCH(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = True,
-        document_as_sequence: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
     ):
         """
         Initialize the CoNLL-03 corpus for Dutch. The first time you call this constructor it will automatically
@@ -1685,10 +1690,10 @@ class CONLL_03_DUTCH(ColumnCorpus):
 
 class CONLL_03_SPANISH(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = True,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
     ):
         """
         Initialize the CoNLL-03 corpus for Spanish. The first time you call this constructor it will automatically
@@ -1730,10 +1735,10 @@ class CONLL_03_SPANISH(ColumnCorpus):
 
 class CONLL_2000(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "np",
-        in_memory: bool = True,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "np",
+            in_memory: bool = True,
     ):
         """
         Initialize the CoNLL-2000 corpus for English chunking.
@@ -1770,20 +1775,20 @@ class CONLL_2000(ColumnCorpus):
             import gzip, shutil
 
             with gzip.open(
-                Path(flair.cache_root) / "datasets" / dataset_name / "train.txt.gz",
-                "rb",
+                    Path(flair.cache_root) / "datasets" / dataset_name / "train.txt.gz",
+                    "rb",
             ) as f_in:
                 with open(
-                    Path(flair.cache_root) / "datasets" / dataset_name / "train.txt",
-                    "wb",
+                        Path(flair.cache_root) / "datasets" / dataset_name / "train.txt",
+                        "wb",
                 ) as f_out:
                     shutil.copyfileobj(f_in, f_out)
             with gzip.open(
-                Path(flair.cache_root) / "datasets" / dataset_name / "test.txt.gz", "rb"
+                    Path(flair.cache_root) / "datasets" / dataset_name / "test.txt.gz", "rb"
             ) as f_in:
                 with open(
-                    Path(flair.cache_root) / "datasets" / dataset_name / "test.txt",
-                    "wb",
+                        Path(flair.cache_root) / "datasets" / dataset_name / "test.txt",
+                        "wb",
                 ) as f_out:
                     shutil.copyfileobj(f_in, f_out)
 
@@ -1794,10 +1799,10 @@ class CONLL_2000(ColumnCorpus):
 
 class GERMEVAL(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = True,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
     ):
         """
         Initialize the GermEval NER corpus for German. This is only possible if you've manually downloaded it to your
@@ -1860,11 +1865,11 @@ class IMDB(ClassificationCorpus):
             import tarfile
 
             with tarfile.open(
-                Path(flair.cache_root)
-                / "datasets"
-                / dataset_name
-                / "aclImdb_v1.tar.gz",
-                "r:gz",
+                    Path(flair.cache_root)
+                    / "datasets"
+                    / dataset_name
+                    / "aclImdb_v1.tar.gz",
+                    "r:gz",
             ) as f_in:
                 datasets = ["train", "test"]
                 labels = ["pos", "neg"]
@@ -1883,7 +1888,7 @@ class IMDB(ClassificationCorpus):
                             current_path = data_path / "aclImdb" / dataset / label
                             for file_name in current_path.iterdir():
                                 if file_name.is_file() and file_name.name.endswith(
-                                    ".txt"
+                                        ".txt"
                                 ):
                                     f_p.write(
                                         f"__label__{label} "
@@ -1924,12 +1929,12 @@ class NEWSGROUPS(ClassificationCorpus):
             import tarfile
 
             with tarfile.open(
-                Path(flair.cache_root)
-                / "datasets"
-                / dataset_name
-                / "original"
-                / "20news-bydate.tar.gz",
-                "r:gz",
+                    Path(flair.cache_root)
+                    / "datasets"
+                    / dataset_name
+                    / "original"
+                    / "20news-bydate.tar.gz",
+                    "r:gz",
             ) as f_in:
                 datasets = ["20news-bydate-test", "20news-bydate-train"]
                 labels = [
@@ -1966,7 +1971,7 @@ class NEWSGROUPS(ClassificationCorpus):
                             ],
                         )
                         with open(
-                            f"{data_path}/{dataset}.txt", "at", encoding="utf-8"
+                                f"{data_path}/{dataset}.txt", "at", encoding="utf-8"
                         ) as f_p:
                             current_path = data_path / "original" / dataset / label
                             for file_name in current_path.iterdir():
@@ -1986,10 +1991,10 @@ class NEWSGROUPS(ClassificationCorpus):
 
 class NER_BASQUE(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = True,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -2016,8 +2021,8 @@ class NER_BASQUE(ColumnCorpus):
             import tarfile, shutil
 
             with tarfile.open(
-                Path(flair.cache_root) / "datasets" / dataset_name / "eiec_v1.0.tgz",
-                "r:gz",
+                    Path(flair.cache_root) / "datasets" / dataset_name / "eiec_v1.0.tgz",
+                    "r:gz",
             ) as f_in:
                 corpus_files = (
                     "eiec_v1.0/named_ent_eu.train",
@@ -2061,15 +2066,15 @@ class TREC_50(ClassificationCorpus):
 
         if not data_file.is_file():
             for original_filename, new_filename in zip(
-                original_filenames, new_filenames
+                    original_filenames, new_filenames
             ):
                 with open(
-                    data_folder / "original" / original_filename,
-                    "rt",
-                    encoding="latin1",
+                        data_folder / "original" / original_filename,
+                        "rt",
+                        encoding="latin1",
                 ) as open_fp:
                     with open(
-                        data_folder / new_filename, "wt", encoding="utf-8"
+                            data_folder / new_filename, "wt", encoding="utf-8"
                     ) as write_fp:
                         for line in open_fp:
                             line = line.rstrip()
@@ -2119,15 +2124,15 @@ class TREC_6(ClassificationCorpus):
 
         if not data_file.is_file():
             for original_filename, new_filename in zip(
-                original_filenames, new_filenames
+                    original_filenames, new_filenames
             ):
                 with open(
-                    data_folder / "original" / original_filename,
-                    "rt",
-                    encoding="latin1",
+                        data_folder / "original" / original_filename,
+                        "rt",
+                        encoding="latin1",
                 ) as open_fp:
                     with open(
-                        data_folder / new_filename, "wt", encoding="utf-8"
+                            data_folder / new_filename, "wt", encoding="utf-8"
                     ) as write_fp:
                         for line in open_fp:
                             line = line.rstrip()
@@ -3153,10 +3158,10 @@ def _download_wikiner(language_code: str, dataset_name: str):
     lc = language_code
 
     data_file = (
-        Path(flair.cache_root)
-        / "datasets"
-        / dataset_name
-        / f"aij-wikiner-{lc}-wp3.train"
+            Path(flair.cache_root)
+            / "datasets"
+            / dataset_name
+            / f"aij-wikiner-{lc}-wp3.train"
     )
     if not data_file.is_file():
 
@@ -3174,11 +3179,11 @@ def _download_wikiner(language_code: str, dataset_name: str):
             "rb",
         )
         with bz_file as f, open(
-            Path(flair.cache_root)
-            / "datasets"
-            / dataset_name
-            / f"aij-wikiner-{lc}-wp3.train",
-            "w",
+                Path(flair.cache_root)
+                / "datasets"
+                / dataset_name
+                / f"aij-wikiner-{lc}-wp3.train",
+                "w",
         ) as out:
             for line in f:
                 line = line.decode("utf-8")
@@ -3189,10 +3194,10 @@ def _download_wikiner(language_code: str, dataset_name: str):
 
 class WIKINER_ENGLISH(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = False,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -3218,10 +3223,10 @@ class WIKINER_ENGLISH(ColumnCorpus):
 
 class WIKINER_GERMAN(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = False,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -3247,10 +3252,10 @@ class WIKINER_GERMAN(ColumnCorpus):
 
 class WIKINER_DUTCH(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = False,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -3276,10 +3281,10 @@ class WIKINER_DUTCH(ColumnCorpus):
 
 class WIKINER_FRENCH(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = False,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -3305,10 +3310,10 @@ class WIKINER_FRENCH(ColumnCorpus):
 
 class WIKINER_ITALIAN(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = False,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -3334,10 +3339,10 @@ class WIKINER_ITALIAN(ColumnCorpus):
 
 class WIKINER_SPANISH(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = False,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -3363,10 +3368,10 @@ class WIKINER_SPANISH(ColumnCorpus):
 
 class WIKINER_PORTUGUESE(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = False,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -3392,10 +3397,10 @@ class WIKINER_PORTUGUESE(ColumnCorpus):
 
 class WIKINER_POLISH(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = False,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -3421,10 +3426,10 @@ class WIKINER_POLISH(ColumnCorpus):
 
 class WIKINER_RUSSIAN(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = False,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = False,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -3450,10 +3455,10 @@ class WIKINER_RUSSIAN(ColumnCorpus):
 
 class WNUT_17(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "ner",
-        in_memory: bool = True,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -3484,16 +3489,16 @@ class WNUT_17(ColumnCorpus):
 
 class DataLoader(torch.utils.data.dataloader.DataLoader):
     def __init__(
-        self,
-        dataset,
-        batch_size=1,
-        shuffle=False,
-        sampler=None,
-        batch_sampler=None,
-        num_workers=8,
-        drop_last=False,
-        timeout=0,
-        worker_init_fn=None,
+            self,
+            dataset,
+            batch_size=1,
+            shuffle=False,
+            sampler=None,
+            batch_sampler=None,
+            num_workers=8,
+            drop_last=False,
+            timeout=0,
+            worker_init_fn=None,
     ):
 
         # in certain cases, multi-CPU data loading makes no sense and slows

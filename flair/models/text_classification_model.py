@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Union, Callable
+from typing import List, Union, Callable, Dict
 
 import torch
 import torch.nn as nn
@@ -36,6 +36,8 @@ class TextClassifier(flair.nn.Model):
         label_dictionary: Dictionary,
         multi_label: bool = None,
         multi_label_threshold: float = 0.5,
+        beta: float = 1.0,
+        loss_weights: Dict[str, float] = None,
     ):
         """
         Initializes a TextClassifier
@@ -44,6 +46,9 @@ class TextClassifier(flair.nn.Model):
         :param multi_label: auto-detected by default, but you can set this to True to force multi-label prediction
         or False to force single-label prediction
         :param multi_label_threshold: If multi-label you can set the threshold to make predictions
+        :param beta: Parameter for F-beta score for evaluation and training annealing
+        :param loss_weights: Dictionary of weights for labels for the loss function
+        (if any label's weight is unspecified it will default to 1.0)
         """
 
         super(TextClassifier, self).__init__()
@@ -58,6 +63,20 @@ class TextClassifier(flair.nn.Model):
 
         self.multi_label_threshold = multi_label_threshold
 
+        self.beta = beta
+
+        self.weight_dict = loss_weights
+        # Initialize the weight tensor
+        if loss_weights is not None:
+            n_classes = len(self.label_dictionary)
+            weight_list = [1. for i in range(n_classes)]
+            for i, tag in enumerate(self.label_dictionary.get_items()):
+                if tag in loss_weights.keys():
+                    weight_list[i] = loss_weights[tag]
+            self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
+        else:
+            self.loss_weights = None
+
         self.decoder = nn.Linear(
             self.document_embeddings.embedding_length, len(self.label_dictionary)
         )
@@ -65,9 +84,9 @@ class TextClassifier(flair.nn.Model):
         self._init_weights()
 
         if self.multi_label:
-            self.loss_function = nn.BCEWithLogitsLoss()
+            self.loss_function = nn.BCEWithLogitsLoss(weight=self.loss_weights)
         else:
-            self.loss_function = nn.CrossEntropyLoss()
+            self.loss_function = nn.CrossEntropyLoss(weight=self.loss_weights)
 
         # auto-spawn on GPU if available
         self.to(flair.device)
@@ -94,16 +113,22 @@ class TextClassifier(flair.nn.Model):
             "document_embeddings": self.document_embeddings,
             "label_dictionary": self.label_dictionary,
             "multi_label": self.multi_label,
+            "beta": self.beta,
+            "weight_dict": self.weight_dict,
         }
         return model_state
 
     @staticmethod
     def _init_model_with_state_dict(state):
+        beta = 1.0 if "beta" not in state.keys() else state["beta"]
+        weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
 
         model = TextClassifier(
             document_embeddings=state["document_embeddings"],
             label_dictionary=state["label_dictionary"],
             multi_label=state["multi_label"],
+            beta=beta,
+            loss_weights=weights,
         )
 
         model.load_state_dict(state["state_dict"])
@@ -223,7 +248,7 @@ class TextClassifier(flair.nn.Model):
         with torch.no_grad():
             eval_loss = 0
 
-            metric = Metric("Evaluation")
+            metric = Metric("Evaluation", beta=self.beta)
 
             lines: List[str] = []
             batch_count: int = 0
@@ -441,3 +466,9 @@ class TextClassifier(flair.nn.Model):
             model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
 
         return model_name
+
+    def __str__(self):
+        return super(flair.nn.Model, self).__str__().rstrip(')') + \
+               f'  (beta): {self.beta}\n' + \
+               f'  (weights): {self.weight_dict}\n' + \
+               f'  (weight_tensor) {self.loss_weights}\n)'

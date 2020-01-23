@@ -2355,11 +2355,9 @@ class BertEmbeddings(TokenEmbeddings):
                                 sentence_index
                             ]
                         else:
-                            layer_output = (
-                                all_encoder_layers[int(layer_index)]
-                                .detach()
-                                .cpu()[sentence_index]
-                            )
+                            layer_output = all_encoder_layers[int(layer_index)][
+                                sentence_index
+                            ]
                         all_layers.append(layer_output[token_index])
 
                     if self.use_scalar_mix:
