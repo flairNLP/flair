@@ -1425,10 +1425,6 @@ class JSONDataset(FlairDataset):
             return sentence
 
 
-class ParquetDataset(FlairDataset):
-    pass
-
-
 class ParallelTextDataset(FlairDataset):
     def __init__(
             self,
