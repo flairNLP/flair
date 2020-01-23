@@ -1305,7 +1305,7 @@ class MongoDataset(FlairDataset):
 class JSONDataset(FlairDataset):
     def __init__(
         self,
-        filepath_or_buffer,
+        json_input,
         text_field: str,
         categories_field: List[str] = None,
         max_tokens_per_doc: int = -1,
@@ -1325,7 +1325,7 @@ class JSONDataset(FlairDataset):
         'Plats': 'Abrahamsby'
         }
 
-        :param filepath_or_buffer: a valid JSON str, path object or file-like object,
+        :param json_input: a valid file path, JSON string, or JSON stream,
         :param text_field: Text field, e.g. 'Beskrivning',
         :param categories_field: List of category fields, e.g ['Län', 'Härad', 'Tingslag', 'Församling', 'Plats'],
         :param max_tokens_per_doc: Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.
@@ -1337,21 +1337,22 @@ class JSONDataset(FlairDataset):
 
         # Accept three input types:
         #     1. filepath (string-like)
-        #     2. file-like object (e.g. open file object, StringIO)
-        #     3. JSON string
+        #     2. JSON string
+        #     3. In-memory JSON stream (i.e. StringIO object)
 
-        # TODO 2. (... string io) and 3. (json.loads(json_string)
-
-        exists = False
-        if isinstance(filepath_or_buffer, str):
-            exists = os.path.exists(filepath_or_buffer)
+        import io
 
         _data = '[]'
-        if exists:
-            with open(filepath_or_buffer, 'r', encoding='utf8') as f:
-                _data = f.read()
+        if isinstance(json_input, io.StringIO):
+            _data = json_input.getvalue()
+        elif isinstance(json_input, str):
+            if os.path.exists(json_input):
+                with open(json_input, 'r', encoding='utf8') as f:
+                    _data = f.read()
+            else:
+                _data = json_input
         else:
-            _data = filepath_or_buffer
+            pass
 
         self.data = json.loads(_data)
 
