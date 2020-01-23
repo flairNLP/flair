@@ -2,6 +2,7 @@ import csv
 import logging
 import os
 import re
+import io
 from abc import abstractmethod
 from pathlib import Path
 from typing import List, Dict, Union, Callable
@@ -1339,8 +1340,6 @@ class JSONDataset(FlairDataset):
         #     1. filepath (string-like)
         #     2. JSON string
         #     3. In-memory JSON stream (i.e. StringIO object)
-
-        import io
 
         _data = '[]'
         if isinstance(json_input, io.StringIO):
