@@ -54,7 +54,7 @@ class Plotter(object):
                 row.index(f"TRAIN_{score}") if f"TRAIN_{score}" in row else None
             )
             DEV_SCORE = row.index(f"DEV_{score}") if f"DEV_{score}" in row else None
-            TEST_SCORE = row.index(f"TEST_{score}")
+            TEST_SCORE = row.index(f"TEST_{score}") if f"TEST_{score}" in row else None
 
             # then get all relevant values from the tsv
             for row in tsvin:
@@ -69,8 +69,9 @@ class Plotter(object):
                     if row[DEV_SCORE] != "_":
                         training_curves["dev"]["score"].append(float(row[DEV_SCORE]))
 
-                if row[TEST_SCORE] != "_":
-                    training_curves["test"]["score"].append(float(row[TEST_SCORE]))
+                if TEST_SCORE is not None:
+                    if row[TEST_SCORE] != "_":
+                        training_curves["test"]["score"].append(float(row[TEST_SCORE]))
 
         return training_curves
 
