@@ -2,8 +2,8 @@ ARG TAG=latest
 
 FROM continuumio/miniconda3:${TAG}
 
-ENV HTTP_PROXY "http://p901rcj:p901rcj@proxyvip.foreningssparbanken.se:8080"
-ENV HTTPS_PROXY "https://p901rcj:p901rcj@proxyvip.foreningssparbanken.se:8080"
+# ENV HTTP_PROXY "http://p901rcj:p901rcj@proxyvip.foreningssparbanken.se:8080"
+# ENV HTTPS_PROXY "https://p901rcj:p901rcj@proxyvip.foreningssparbanken.se:8080"
 
 RUN mkdir /home/flair
 VOLUME /home/flair
@@ -14,13 +14,13 @@ ENV PYTHONDONTWRITEBYTECODE=true
 
 ARG PYTHON_VERSION=3.7
 
-RUN conda config --set proxy_servers.http ''
-RUN conda config --set proxy_servers.https ''
-RUN conda config --set ssl_verify no
-RUN conda config --remove channels 'defaults'
-RUN conda config --add channels https://lx64905.sbcore.net:8443/artifactory/AMMF_Conda_VR/main/
+# RUN conda config --set proxy_servers.http ''
+# RUN conda config --set proxy_servers.https ''
+# RUN conda config --set ssl_verify no
+# RUN conda config --remove channels 'defaults'
+# RUN conda config --add channels https://lx64905.sbcore.net:8443/artifactory/AMMF_Conda_VR/main/
 
-RUN conda install -n root conda=4.7
+RUN conda install -n root conda=4.8.1
 # RUN conda install -n root conda=4.7
 
 RUN conda install --yes --freeze-installed \
