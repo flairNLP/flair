@@ -12,7 +12,7 @@ import urllib
 from tqdm import tqdm
 
 import torch.utils.data.dataloader
-from torch.utils.data import Dataset, random_split
+from torch.utils.data import Dataset
 from torch.utils.data.dataset import Subset, ConcatDataset
 
 import flair
@@ -61,44 +61,9 @@ class ColumnCorpus(Corpus):
         :return: a Corpus with annotated train, dev and test data
         """
 
-        if type(data_folder) == str:
-            data_folder: Path = Path(data_folder)
-
-        if train_file is not None:
-            train_file = data_folder / train_file
-        if test_file is not None:
-            test_file = data_folder / test_file
-        if dev_file is not None:
-            dev_file = data_folder / dev_file
-
-        # automatically identify train / test / dev files
-        if train_file is None:
-            for file in data_folder.iterdir():
-                file_name = file.name
-                if file_name.endswith(".gz"):
-                    continue
-                if "train" in file_name and not "54019" in file_name:
-                    train_file = file
-                if "dev" in file_name:
-                    dev_file = file
-                if "testa" in file_name:
-                    dev_file = file
-                if "testb" in file_name:
-                    test_file = file
-
-            # if no test file is found, take any file with 'test' in name
-            if test_file is None:
-                for file in data_folder.iterdir():
-                    file_name = file.name
-                    if file_name.endswith(".gz"):
-                        continue
-                    if "test" in file_name:
-                        test_file = file
-
-        log.info("Reading data from {}".format(data_folder))
-        log.info("Train: {}".format(train_file))
-        log.info("Dev: {}".format(dev_file))
-        log.info("Test: {}".format(test_file))
+        # find train, dev and test files if not specified
+        dev_file, test_file, train_file = \
+            find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
 
         # get train data
         train = ColumnDataset(
@@ -111,43 +76,29 @@ class ColumnCorpus(Corpus):
             document_separator_token=document_separator_token,
         )
 
-        # read in test file if exists, otherwise sample 10% of train data as test dataset
-        if test_file is not None:
-            test = ColumnDataset(
-                test_file,
-                column_format,
-                tag_to_bioes,
-                encoding=encoding,
-                comment_symbol=comment_symbol,
-                in_memory=in_memory,
-                document_separator_token=document_separator_token,
-            )
-        else:
-            train_length = len(train)
-            test_size: int = round(train_length / 10)
-            splits = random_split(train, [train_length - test_size, test_size])
-            train = splits[0]
-            test = splits[1]
+        # read in test file if exists
+        test = ColumnDataset(
+            test_file,
+            column_format,
+            tag_to_bioes,
+            encoding=encoding,
+            comment_symbol=comment_symbol,
+            in_memory=in_memory,
+            document_separator_token=document_separator_token,
+        ) if test_file is not None else None
 
-        # read in dev file if exists, otherwise sample 10% of train data as dev dataset
-        if dev_file is not None:
-            dev = ColumnDataset(
-                dev_file,
-                column_format,
-                tag_to_bioes,
-                encoding=encoding,
-                comment_symbol=comment_symbol,
-                in_memory=in_memory,
-                document_separator_token=document_separator_token,
-            )
-        else:
-            train_length = len(train)
-            dev_size: int = round(train_length / 10)
-            splits = random_split(train, [train_length - dev_size, dev_size])
-            train = splits[0]
-            dev = splits[1]
+        # read in dev file if exists
+        dev = ColumnDataset(
+            dev_file,
+            column_format,
+            tag_to_bioes,
+            encoding=encoding,
+            comment_symbol=comment_symbol,
+            in_memory=in_memory,
+            document_separator_token=document_separator_token,
+        ) if dev_file is not None else None
 
-        super(ColumnCorpus, self).__init__(train, dev, test, name=data_folder.name)
+        super(ColumnCorpus, self).__init__(train, dev, test, name=str(data_folder))
 
 
 class UniversalDependenciesCorpus(Corpus):
@@ -169,28 +120,10 @@ class UniversalDependenciesCorpus(Corpus):
         :param in_memory: If set to True, keeps full dataset in memory, otherwise does disk reads
         :return: a Corpus with annotated train, dev and test data
         """
-        if type(data_folder) == str:
-            data_folder: Path = Path(data_folder)
 
-        # automatically identify train / test / dev files
-        if train_file is None:
-            for file in data_folder.iterdir():
-                file_name = file.name
-                if "train" in file_name:
-                    train_file = file
-                if "test" in file_name:
-                    test_file = file
-                if "dev" in file_name:
-                    dev_file = file
-                if "testa" in file_name:
-                    dev_file = file
-                if "testb" in file_name:
-                    test_file = file
-
-        log.info("Reading data from {}".format(data_folder))
-        log.info("Train: {}".format(train_file))
-        log.info("Test: {}".format(test_file))
-        log.info("Dev: {}".format(dev_file))
+        # find train, dev and test files if not specified
+        dev_file, test_file, train_file = \
+            find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
 
         # get train data
         train = UniversalDependenciesDataset(train_file, in_memory=in_memory)
@@ -202,7 +135,7 @@ class UniversalDependenciesCorpus(Corpus):
         dev = UniversalDependenciesDataset(dev_file, in_memory=in_memory)
 
         super(UniversalDependenciesCorpus, self).__init__(
-            train, dev, test, name=data_folder.name
+            train, dev, test, name=str(data_folder)
         )
 
 
@@ -232,37 +165,11 @@ class ClassificationCorpus(Corpus):
         :return: a Corpus with annotated train, dev and test data
         """
 
-        if type(data_folder) == str:
-            data_folder: Path = Path(data_folder)
+        # find train, dev and test files if not specified
+        dev_file, test_file, train_file = \
+            find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
 
-        if train_file is not None:
-            train_file = data_folder / train_file
-        if test_file is not None:
-            test_file = data_folder / test_file
-        if dev_file is not None:
-            dev_file = data_folder / dev_file
-
-        # automatically identify train / test / dev files
-        if train_file is None:
-            for file in data_folder.iterdir():
-                file_name = file.name
-                if "train" in file_name:
-                    train_file = file
-                if "test" in file_name:
-                    test_file = file
-                if "dev" in file_name:
-                    dev_file = file
-                if "testa" in file_name:
-                    dev_file = file
-                if "testb" in file_name:
-                    test_file = file
-
-        log.info("Reading data from {}".format(data_folder))
-        log.info("Train: {}".format(train_file))
-        log.info("Dev: {}".format(dev_file))
-        log.info("Test: {}".format(test_file))
-
-        train: Dataset = ClassificationDataset(
+        train: FlairDataset = ClassificationDataset(
             train_file,
             tokenizer=tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
@@ -271,41 +178,25 @@ class ClassificationCorpus(Corpus):
         )
 
         # use test_file to create test split if available
-        if test_file is not None:
-            test: Dataset = ClassificationDataset(
-                test_file,
-                tokenizer=tokenizer,
-                max_tokens_per_doc=max_tokens_per_doc,
-                max_chars_per_doc=max_chars_per_doc,
-                in_memory=in_memory,
-            )
-        # otherwise, sample test data from train data
-        else:
-            train_length = len(train)
-            test_size: int = round(train_length / 10)
-            splits = random_split(train, [train_length - test_size, test_size])
-            train = splits[0]
-            test = splits[1]
+        test: FlairDataset = ClassificationDataset(
+            test_file,
+            tokenizer=tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+        ) if test_file is not None else None
 
         # use dev_file to create test split if available
-        if dev_file is not None:
-            dev: Dataset = ClassificationDataset(
-                dev_file,
-                tokenizer=tokenizer,
-                max_tokens_per_doc=max_tokens_per_doc,
-                max_chars_per_doc=max_chars_per_doc,
-                in_memory=in_memory,
-            )
-        # otherwise, sample dev data from dev data
-        else:
-            train_length = len(train)
-            dev_size: int = round(train_length / 10)
-            splits = random_split(train, [train_length - dev_size, dev_size])
-            train = splits[0]
-            dev = splits[1]
+        dev: FlairDataset = ClassificationDataset(
+            dev_file,
+            tokenizer=tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+        ) if dev_file is not None else None
 
         super(ClassificationCorpus, self).__init__(
-            train, dev, test, name=data_folder.name
+            train, dev, test, name=str(data_folder)
         )
 
 
@@ -377,37 +268,11 @@ class CSVClassificationCorpus(Corpus):
         :return: a Corpus with annotated train, dev and test data
         """
 
-        if type(data_folder) == str:
-            data_folder: Path = Path(data_folder)
+        # find train, dev and test files if not specified
+        dev_file, test_file, train_file = \
+            find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
 
-        if train_file is not None:
-            train_file = data_folder / train_file
-        if test_file is not None:
-            test_file = data_folder / test_file
-        if dev_file is not None:
-            dev_file = data_folder / dev_file
-
-        # automatically identify train / test / dev files
-        if train_file is None:
-            for file in data_folder.iterdir():
-                file_name = file.name
-                if "train" in file_name:
-                    train_file = file
-                if "test" in file_name:
-                    test_file = file
-                if "dev" in file_name:
-                    dev_file = file
-                if "testa" in file_name:
-                    dev_file = file
-                if "testb" in file_name:
-                    test_file = file
-
-        log.info("Reading data from {}".format(data_folder))
-        log.info("Train: {}".format(train_file))
-        log.info("Dev: {}".format(dev_file))
-        log.info("Test: {}".format(test_file))
-
-        train: Dataset = CSVClassificationDataset(
+        train: FlairDataset = CSVClassificationDataset(
             train_file,
             column_name_map,
             tokenizer=tokenizer,
@@ -418,44 +283,30 @@ class CSVClassificationCorpus(Corpus):
             **fmtparams,
         )
 
-        if test_file is not None:
-            test: Dataset = CSVClassificationDataset(
-                test_file,
-                column_name_map,
-                tokenizer=tokenizer,
-                max_tokens_per_doc=max_tokens_per_doc,
-                max_chars_per_doc=max_chars_per_doc,
-                in_memory=in_memory,
-                skip_header=skip_header,
-                **fmtparams,
-            )
-        else:
-            train_length = len(train)
-            test_size: int = round(train_length / 10)
-            splits = random_split(train, [train_length - test_size, test_size])
-            train = splits[0]
-            test = splits[1]
+        test: FlairDataset = CSVClassificationDataset(
+            test_file,
+            column_name_map,
+            tokenizer=tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            skip_header=skip_header,
+            **fmtparams,
+        ) if test_file is not None else None
 
-        if dev_file is not None:
-            dev: Dataset = CSVClassificationDataset(
-                dev_file,
-                column_name_map,
-                tokenizer=tokenizer,
-                max_tokens_per_doc=max_tokens_per_doc,
-                max_chars_per_doc=max_chars_per_doc,
-                in_memory=in_memory,
-                skip_header=skip_header,
-                **fmtparams,
-            )
-        else:
-            train_length = len(train)
-            dev_size: int = round(train_length / 10)
-            splits = random_split(train, [train_length - dev_size, dev_size])
-            train = splits[0]
-            dev = splits[1]
+        dev: FlairDataset = CSVClassificationDataset(
+            dev_file,
+            column_name_map,
+            tokenizer=tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            skip_header=skip_header,
+            **fmtparams,
+        ) if dev_file is not None else None
 
         super(CSVClassificationCorpus, self).__init__(
-            train, dev, test, name=data_folder.name
+            train, dev, test, name=str(data_folder)
         )
 
 
@@ -489,21 +340,7 @@ class ParallelTextCorpus(Corpus):
             in_memory=in_memory,
         )
 
-        max_eval_size: int = 500000
-
-        train_length = len(train)
-        test_size: int = min(round(train_length / 10), max_eval_size)
-        splits = random_split(train, [train_length - test_size, test_size])
-        train = splits[0]
-        test = splits[1]
-
-        train_length = len(train)
-        dev_size: int = min(round(train_length / 10), max_eval_size)
-        splits = random_split(train, [train_length - dev_size, dev_size])
-        train = splits[0]
-        dev = splits[1]
-
-        super(ParallelTextCorpus, self).__init__(train, dev, test, name=name)
+        super(ParallelTextCorpus, self).__init__(train, name=name)
 
 
 class OpusParallelCorpus(ParallelTextCorpus):
@@ -3408,3 +3245,46 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
             timeout=timeout,
             worker_init_fn=worker_init_fn,
         )
+
+
+def find_train_dev_test_files(data_folder, dev_file, test_file, train_file):
+    if type(data_folder) == str:
+        data_folder: Path = Path(data_folder)
+
+    if train_file is not None:
+        train_file = data_folder / train_file
+    if test_file is not None:
+        test_file = data_folder / test_file
+    if dev_file is not None:
+        dev_file = data_folder / dev_file
+
+    # automatically identify train / test / dev files
+    if train_file is None:
+        for file in data_folder.iterdir():
+            file_name = file.name
+            if file_name.endswith(".gz"):
+                continue
+            if "train" in file_name and not "54019" in file_name:
+                train_file = file
+            if "dev" in file_name:
+                dev_file = file
+            if "testa" in file_name:
+                dev_file = file
+            if "testb" in file_name:
+                test_file = file
+
+        # if no test file is found, take any file with 'test' in name
+        if test_file is None:
+            for file in data_folder.iterdir():
+                file_name = file.name
+                if file_name.endswith(".gz"):
+                    continue
+                if "test" in file_name:
+                    test_file = file
+
+    log.info("Reading data from {}".format(data_folder))
+    log.info("Train: {}".format(train_file))
+    log.info("Dev: {}".format(dev_file))
+    log.info("Test: {}".format(test_file))
+
+    return dev_file, test_file, train_file
