@@ -2999,7 +2999,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
     def _apply(self, fn):
         major, minor, build, *_ = (int(info)
-                                for info in torch.__version__.split('.'))
+                                for info in torch.__version__.replace("+cpu","").split('.'))
 
         # fixed RNN change format for torch 1.4.0
         if major >= 1 and minor >= 4:
