@@ -1027,14 +1027,33 @@ class Corpus:
     def __init__(
         self,
         train: FlairDataset,
-        dev: FlairDataset,
-        test: FlairDataset,
+        dev: FlairDataset = None,
+        test: FlairDataset = None,
         name: str = "corpus",
     ):
-        self._train: FlairDataset = train
-        self._dev: FlairDataset = dev
-        self._test: FlairDataset = test
+        # set name
         self.name: str = name
+
+        # sample test data if none is provided
+        if test is None:
+            train_length = len(train)
+            test_size: int = round(train_length / 10)
+            splits = random_split(train, [train_length - test_size, test_size])
+            train = splits[0]
+            test = splits[1]
+
+        # sample dev data if none is provided
+        if dev is None:
+            train_length = len(train)
+            dev_size: int = round(train_length / 10)
+            splits = random_split(train, [train_length - dev_size, dev_size])
+            train = splits[0]
+            dev = splits[1]
+
+        # set train dev and test data
+        self._train: FlairDataset = train
+        self._test: FlairDataset = test
+        self._dev: FlairDataset = dev
 
     @property
     def train(self) -> FlairDataset:
