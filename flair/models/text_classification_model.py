@@ -34,6 +34,7 @@ class TextClassifier(flair.nn.Model):
         self,
         document_embeddings: flair.embeddings.DocumentEmbeddings,
         label_dictionary: Dictionary,
+        label_type: str,
         multi_label: bool = None,
         multi_label_threshold: float = 0.5,
         beta: float = 1.0,
@@ -55,6 +56,7 @@ class TextClassifier(flair.nn.Model):
 
         self.document_embeddings: flair.embeddings.DocumentRNNEmbeddings = document_embeddings
         self.label_dictionary: Dictionary = label_dictionary
+        self.label_type = label_type
 
         if multi_label is not None:
             self.multi_label = multi_label
@@ -267,9 +269,7 @@ class TextClassifier(flair.nn.Model):
                 predictions_for_batch = [
                     [label.value for label in sent_labels] for sent_labels in labels
                 ]
-                true_values_for_batch = [
-                    sentence.get_label_names() for sentence in batch
-                ]
+                true_values_for_batch = [sentence.get_labels(self.label_type) for sentence in batch]
                 available_labels = self.label_dictionary.get_items()
 
                 for sentence, confidence, prediction, true_value in zip(
@@ -286,6 +286,8 @@ class TextClassifier(flair.nn.Model):
                 for predictions_for_sentence, true_values_for_sentence in zip(
                     predictions_for_batch, true_values_for_batch
                 ):
+
+                    true_values_for_sentence = [label.value for label in true_values_for_sentence]
 
                     for label in available_labels:
                         if (
@@ -431,7 +433,7 @@ class TextClassifier(flair.nn.Model):
             torch.LongTensor(
                 [
                     self.label_dictionary.get_idx_for_item(label.value)
-                    for label in sentence.labels
+                    for label in sentence.get_labels(self.label_type)
                 ]
             )
             for sentence in sentences

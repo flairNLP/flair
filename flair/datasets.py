@@ -143,6 +143,7 @@ class ClassificationCorpus(Corpus):
     def __init__(
             self,
             data_folder: Union[str, Path],
+            label_type: str = 'class',
             train_file=None,
             test_file=None,
             dev_file=None,
@@ -171,6 +172,7 @@ class ClassificationCorpus(Corpus):
 
         train: FlairDataset = ClassificationDataset(
             train_file,
+            label_type=label_type,
             tokenizer=tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
@@ -180,6 +182,7 @@ class ClassificationCorpus(Corpus):
         # use test_file to create test split if available
         test: FlairDataset = ClassificationDataset(
             test_file,
+            label_type=label_type,
             tokenizer=tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
@@ -189,6 +192,7 @@ class ClassificationCorpus(Corpus):
         # use dev_file to create test split if available
         dev: FlairDataset = ClassificationDataset(
             dev_file,
+            label_type=label_type,
             tokenizer=tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
@@ -904,6 +908,7 @@ class ClassificationDataset(FlairDataset):
     def __init__(
             self,
             path_to_file: Union[str, Path],
+            label_type: str = 'class',
             max_tokens_per_doc=-1,
             max_chars_per_doc=-1,
             tokenizer=segtok_tokenizer,
@@ -954,7 +959,7 @@ class ClassificationDataset(FlairDataset):
 
                 if self.in_memory:
                     sentence = self._parse_line_to_sentence(
-                        line, self.label_prefix, tokenizer
+                        line, self.label_prefix, label_type, tokenizer
                     )
                     if sentence is not None and len(sentence.tokens) > 0:
                         self.sentences.append(sentence)
@@ -967,7 +972,7 @@ class ClassificationDataset(FlairDataset):
                 line = f.readline()
 
     def _parse_line_to_sentence(
-            self, line: str, label_prefix: str, tokenizer: Callable[[str], List[Token]]
+            self, line: str, label_prefix: str, label_type: str, tokenizer: Callable[[str], List[Token]]
     ):
         words = line.split()
 
@@ -988,7 +993,10 @@ class ClassificationDataset(FlairDataset):
             text = text[: self.max_chars_per_doc]
 
         if text and labels:
-            sentence = Sentence(text, labels=labels, use_tokenizer=tokenizer)
+            sentence = Sentence(text, use_tokenizer=tokenizer)
+
+            for label in labels:
+                sentence.add_label(label_type, label)
 
             if (
                     sentence is not None
@@ -1864,7 +1872,7 @@ class TREC_6(ClassificationCorpus):
                             write_fp.write(f"{new_label} {question}\n")
 
         super(TREC_6, self).__init__(
-            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
+            data_folder, label_type='question_type', tokenizer=space_tokenizer, in_memory=in_memory
         )
 
 

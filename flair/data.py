@@ -182,6 +182,10 @@ class Label:
 
 
 class DataPoint:
+
+    def __init__(self):
+        self.annotation_layers = {}
+
     @property
     @abstractmethod
     def embedding(self):
@@ -194,6 +198,16 @@ class DataPoint:
     @abstractmethod
     def clear_embeddings(self, embedding_names: List[str] = None):
         pass
+
+    def add_label(self, label_type: str, value: str, score: float = 1.):
+
+        if label_type not in self.annotation_layers:
+            self.annotation_layers[label_type] = [Label(value, score)]
+        else:
+            self.annotation_layers[label_type].append(Label(value, score))
+
+    def get_labels(self, label_type: str):
+        return self.annotation_layers[label_type] if label_type in self.annotation_layers else []
 
 
 class DataPair(DataPoint):
@@ -589,7 +603,6 @@ class Sentence(DataPoint):
         self,
         text: str = None,
         use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer,
-        labels: Union[List[Label], List[str]] = None,
         language_code: str = None,
     ):
         """
@@ -605,10 +618,6 @@ class Sentence(DataPoint):
         super(Sentence, self).__init__()
 
         self.tokens: List[Token] = []
-
-        self.labels: List[Label] = []
-        if labels is not None:
-            self.add_labels(labels)
 
         self._embeddings: Dict = {}
 
@@ -726,20 +735,6 @@ class Sentence(DataPoint):
                 )
 
         return spans
-
-    def add_label(self, label: Union[Label, str]):
-        if type(label) is Label:
-            self.labels.append(label)
-
-        elif type(label) is str:
-            self.labels.append(Label(label))
-
-    def add_labels(self, labels: Union[List[Label], List[str]]):
-        for label in labels:
-            self.add_label(label)
-
-    def get_label_names(self) -> List[str]:
-        return [label.value for label in self.labels]
 
     @property
     def embedding(self):
@@ -932,8 +927,8 @@ class Sentence(DataPoint):
 
     def __str__(self) -> str:
 
-        if self.labels:
-            return f'Sentence: "{self.to_tokenized_string()}" - {len(self)} Tokens - Labels: {self.labels} '
+        if self.annotation_layers != {}:
+            return f'Sentence: "{self.to_tokenized_string()}" - {len(self)} Tokens - Labels: {self.annotation_layers} '
         else:
             return f'Sentence: "{self.to_tokenized_string()}" - {len(self)} Tokens'
 
@@ -1227,7 +1222,7 @@ class Corpus:
             len(self.test),
         )
 
-    def make_label_dictionary(self) -> Dictionary:
+    def make_label_dictionary(self, label_type: str) -> Dictionary:
         """
         Creates a dictionary of all labels assigned to the sentences in the corpus.
         :return: dictionary of labels
@@ -1244,11 +1239,11 @@ class Corpus:
 
             for sentence in batch:
 
-                for label in sentence.labels:
+                for label in sentence.get_labels(label_type):
                     label_dictionary.add_item(label.value)
 
                 if not label_dictionary.multi_label:
-                    if len(sentence.labels) > 1:
+                    if len(sentence.get_labels(label_type)) > 1:
                         label_dictionary.multi_label = True
 
         log.info(label_dictionary.idx2item)
