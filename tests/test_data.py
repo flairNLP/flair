@@ -165,7 +165,7 @@ def test_sentence_to_tagged_string():
     token1 = Token("I", 0)
     token2 = Token("love", 1, 0)
     token3 = Token("Berlin", 2, 1)
-    token3.add_tag("ner", "LOC")
+    token3.add_label("ner", "LOC")
 
     sentence: Sentence = Sentence()
     sentence.add_token(token1)
@@ -445,18 +445,18 @@ def test_tagged_corpus_statistics_multi_label():
 
 def test_tagged_corpus_get_tag_statistic():
     train_sentence = Sentence("Zalando Research is located in Berlin .")
-    train_sentence[0].add_tag("ner", "B-ORG")
-    train_sentence[1].add_tag("ner", "E-ORG")
-    train_sentence[5].add_tag("ner", "S-LOC")
+    train_sentence[0].add_label("ner", "B-ORG")
+    train_sentence[1].add_label("ner", "E-ORG")
+    train_sentence[5].add_label("ner", "S-LOC")
 
     dev_sentence = Sentence(
         "Facebook, Inc. is a company, and Google is one as well.",
         use_tokenizer=segtok_tokenizer,
     )
-    dev_sentence[0].add_tag("ner", "B-ORG")
-    dev_sentence[1].add_tag("ner", "I-ORG")
-    dev_sentence[2].add_tag("ner", "E-ORG")
-    dev_sentence[8].add_tag("ner", "S-ORG")
+    dev_sentence[0].add_label("ner", "B-ORG")
+    dev_sentence[1].add_label("ner", "I-ORG")
+    dev_sentence[2].add_label("ner", "E-ORG")
+    dev_sentence[8].add_label("ner", "S-ORG")
 
     test_sentence = Sentence("Nothing to do with companies.")
 
@@ -504,9 +504,9 @@ def test_spans():
     sentence = Sentence("Zalando Research is located in Berlin .")
 
     # bioes tags
-    sentence[0].add_tag("ner", "B-ORG")
-    sentence[1].add_tag("ner", "E-ORG")
-    sentence[5].add_tag("ner", "S-LOC")
+    sentence[0].add_label("ner", "B-ORG")
+    sentence[1].add_label("ner", "E-ORG")
+    sentence[5].add_label("ner", "S-LOC")
 
     spans: List[Span] = sentence.get_spans("ner")
 
@@ -517,9 +517,9 @@ def test_spans():
     assert "LOC" == spans[1].tag
 
     # bio tags
-    sentence[0].add_tag("ner", "B-ORG")
-    sentence[1].add_tag("ner", "I-ORG")
-    sentence[5].add_tag("ner", "B-LOC")
+    sentence[0].add_label("ner", "B-ORG")
+    sentence[1].add_label("ner", "I-ORG")
+    sentence[5].add_label("ner", "B-LOC")
 
     spans: List[Span] = sentence.get_spans("ner")
 
@@ -529,9 +529,9 @@ def test_spans():
     assert "LOC" == spans[1].tag
 
     # broken tags
-    sentence[0].add_tag("ner", "I-ORG")
-    sentence[1].add_tag("ner", "E-ORG")
-    sentence[5].add_tag("ner", "I-LOC")
+    sentence[0].add_label("ner", "I-ORG")
+    sentence[1].add_label("ner", "E-ORG")
+    sentence[5].add_label("ner", "I-LOC")
 
     spans: List[Span] = sentence.get_spans("ner")
 
@@ -541,12 +541,12 @@ def test_spans():
     assert "LOC" == spans[1].tag
 
     # all tags
-    sentence[0].add_tag("ner", "I-ORG")
-    sentence[1].add_tag("ner", "E-ORG")
-    sentence[2].add_tag("ner", "aux")
-    sentence[3].add_tag("ner", "verb")
-    sentence[4].add_tag("ner", "preposition")
-    sentence[5].add_tag("ner", "I-LOC")
+    sentence[0].add_label("ner", "I-ORG")
+    sentence[1].add_label("ner", "E-ORG")
+    sentence[2].add_label("ner", "aux")
+    sentence[3].add_label("ner", "verb")
+    sentence[4].add_label("ner", "preposition")
+    sentence[5].add_label("ner", "I-LOC")
 
     spans: List[Span] = sentence.get_spans("ner")
     assert 5 == len(spans)
@@ -556,12 +556,12 @@ def test_spans():
     assert "LOC" == spans[4].tag
 
     # all weird tags
-    sentence[0].add_tag("ner", "I-ORG")
-    sentence[1].add_tag("ner", "S-LOC")
-    sentence[2].add_tag("ner", "aux")
-    sentence[3].add_tag("ner", "B-relation")
-    sentence[4].add_tag("ner", "E-preposition")
-    sentence[5].add_tag("ner", "S-LOC")
+    sentence[0].add_label("ner", "I-ORG")
+    sentence[1].add_label("ner", "S-LOC")
+    sentence[2].add_label("ner", "aux")
+    sentence[3].add_label("ner", "B-relation")
+    sentence[4].add_label("ner", "E-preposition")
+    sentence[5].add_label("ner", "S-LOC")
 
     spans: List[Span] = sentence.get_spans("ner")
     assert 5 == len(spans)
@@ -575,9 +575,9 @@ def test_spans():
     sentence = Sentence(
         "A woman was charged on Friday with terrorist offences after three Irish Republican Army mortar bombs were found in a Belfast house , police said . "
     )
-    sentence[11].add_tag("ner", "S-MISC")
-    sentence[12].add_tag("ner", "B-MISC")
-    sentence[13].add_tag("ner", "E-MISC")
+    sentence[11].add_label("ner", "S-MISC")
+    sentence[12].add_label("ner", "B-MISC")
+    sentence[13].add_label("ner", "E-MISC")
     spans: List[Span] = sentence.get_spans("ner")
     assert 2 == len(spans)
     assert "Irish" == spans[0].text
@@ -586,9 +586,9 @@ def test_spans():
     sentence = Sentence("Zalando Research is located in Berlin .")
 
     # tags with confidence
-    sentence[0].add_tag("ner", "B-ORG", 1.0)
-    sentence[1].add_tag("ner", "E-ORG", 0.9)
-    sentence[5].add_tag("ner", "S-LOC", 0.5)
+    sentence[0].add_label("ner", "B-ORG", 1.0)
+    sentence[1].add_label("ner", "E-ORG", 0.9)
+    sentence[5].add_label("ner", "S-LOC", 0.5)
 
     spans: List[Span] = sentence.get_spans("ner", min_score=0.0)
 
@@ -636,10 +636,10 @@ def test_sentence_to_dict():
     )
 
     # bioes tags
-    sentence[0].add_tag("ner", "B-ORG")
-    sentence[1].add_tag("ner", "E-ORG")
-    sentence[5].add_tag("ner", "S-LOC")
-    sentence[10].add_tag("ner", "S-LOC")
+    sentence[0].add_label("ner", "B-ORG")
+    sentence[1].add_label("ner", "E-ORG")
+    sentence[5].add_label("ner", "S-LOC")
+    sentence[10].add_label("ner", "S-LOC")
 
     dict = sentence.to_dict("ner")
 
@@ -658,10 +658,10 @@ def test_sentence_to_dict():
     )
 
     # bioes tags
-    sentence[0].add_tag("ner", "B-ORG")
-    sentence[1].add_tag("ner", "I-ORG")
-    sentence[2].add_tag("ner", "E-ORG")
-    sentence[8].add_tag("ner", "S-ORG")
+    sentence[0].add_label("ner", "B-ORG")
+    sentence[1].add_label("ner", "I-ORG")
+    sentence[2].add_label("ner", "E-ORG")
+    sentence[8].add_label("ner", "S-ORG")
 
     dict = sentence.to_dict("ner")
 

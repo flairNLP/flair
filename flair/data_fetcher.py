@@ -575,7 +575,7 @@ class NLPTaskDataFetcher:
                 for column in column_name_map:
                     if len(fields) > column:
                         if column != text_column:
-                            token.add_tag(column_name_map[column], fields[column])
+                            token.add_label(column_name_map[column], fields[column])
 
                 sentence.add_token(token)
 
@@ -616,18 +616,18 @@ class NLPTaskDataFetcher:
                 continue
             else:
                 token = Token(fields[1], head_id=int(fields[6]))
-                token.add_tag("lemma", str(fields[2]))
-                token.add_tag("upos", str(fields[3]))
-                token.add_tag("pos", str(fields[4]))
-                token.add_tag("dependency", str(fields[7]))
+                token.add_label("lemma", str(fields[2]))
+                token.add_label("upos", str(fields[3]))
+                token.add_label("pos", str(fields[4]))
+                token.add_label("dependency", str(fields[7]))
 
                 for morph in str(fields[5]).split("|"):
                     if not "=" in morph:
                         continue
-                    token.add_tag(morph.split("=")[0].lower(), morph.split("=")[1])
+                    token.add_label(morph.split("=")[0].lower(), morph.split("=")[1])
 
                 if len(fields) > 10 and str(fields[10]) == "Y":
-                    token.add_tag("frame", str(fields[11]))
+                    token.add_label("frame", str(fields[11]))
 
                 sentence.add_token(token)
 

@@ -29,13 +29,13 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
     )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
         embeddings=turian_embeddings,
-        tag_dictionary=tag_dictionary,
-        tag_type="ner",
+        label_dictionary=tag_dictionary,
+        label_type="ner",
         use_crf=False,
     )
 
@@ -70,13 +70,13 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
     corpus = flair.datasets.UD_ENGLISH().downsample(0.05)
-    tag_dictionary = corpus.make_tag_dictionary("pos")
+    tag_dictionary = corpus.make_label_dictionary("pos")
 
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
         embeddings=turian_embeddings,
-        tag_dictionary=tag_dictionary,
-        tag_type="pos",
+        label_dictionary=tag_dictionary,
+        label_type="pos",
         use_crf=False,
     )
 
@@ -113,13 +113,13 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
     )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
         embeddings=flair_embeddings,
-        tag_dictionary=tag_dictionary,
-        tag_type="ner",
+        label_dictionary=tag_dictionary,
+        label_type="ner",
         use_crf=False,
     )
 
@@ -156,13 +156,13 @@ def test_train_optimizer(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
     )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
         embeddings=turian_embeddings,
-        tag_dictionary=tag_dictionary,
-        tag_type="ner",
+        label_dictionary=tag_dictionary,
+        label_type="ner",
         use_crf=False,
     )
 
@@ -199,13 +199,13 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
     )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
         embeddings=turian_embeddings,
-        tag_dictionary=tag_dictionary,
-        tag_type="ner",
+        label_dictionary=tag_dictionary,
+        label_type="ner",
         use_crf=False,
     )
 
@@ -243,13 +243,13 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
     )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
         embeddings=turian_embeddings,
-        tag_dictionary=tag_dictionary,
-        tag_type="ner",
+        label_dictionary=tag_dictionary,
+        label_type="ner",
         use_crf=False,
     )
 
@@ -525,13 +525,13 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
     corpus_2 = flair.datasets.GERMEVAL(base_path=tasks_base_path)
 
     corpus = MultiCorpus([corpus_1, corpus_2])
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
         embeddings=turian_embeddings,
-        tag_dictionary=tag_dictionary,
-        tag_type="ner",
+        label_dictionary=tag_dictionary,
+        label_type="ner",
         use_crf=False,
     )
 
@@ -594,13 +594,13 @@ def test_train_resume_sequence_tagging_training(results_base_path, tasks_base_pa
     corpus_2 = flair.datasets.GERMEVAL(base_path=tasks_base_path)
 
     corpus = MultiCorpus([corpus_1, corpus_2])
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     model: SequenceTagger = SequenceTagger(
         hidden_size=64,
         embeddings=turian_embeddings,
-        tag_dictionary=tag_dictionary,
-        tag_type="ner",
+        label_dictionary=tag_dictionary,
+        label_type="ner",
         use_crf=False,
     )
 

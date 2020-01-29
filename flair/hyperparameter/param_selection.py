@@ -207,7 +207,7 @@ class SequenceTaggerParamSelector(ParamSelector):
         )
 
         self.tag_type = tag_type
-        self.tag_dictionary = self.corpus.make_tag_dictionary(self.tag_type)
+        self.tag_dictionary = self.corpus.make_label_dictionary(self.tag_type)
 
     def _set_up_model(self, params: dict):
         sequence_tagger_params = {
@@ -215,8 +215,8 @@ class SequenceTaggerParamSelector(ParamSelector):
         }
 
         tagger: SequenceTagger = SequenceTagger(
-            tag_dictionary=self.tag_dictionary,
-            tag_type=self.tag_type,
+            label_dictionary=self.tag_dictionary,
+            label_type=self.tag_type,
             **sequence_tagger_params,
         )
         return tagger

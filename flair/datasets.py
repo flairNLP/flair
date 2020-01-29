@@ -559,7 +559,7 @@ class ColumnDataset(FlairDataset):
                     for column in column_name_map:
                         if len(fields) > column:
                             if column != self.text_column:
-                                token.add_tag(
+                                token.add_label(
                                     self.column_name_map[column], fields[column]
                                 )
 
@@ -624,7 +624,7 @@ class ColumnDataset(FlairDataset):
                         for column in self.column_name_map:
                             if len(fields) > column:
                                 if column != self.text_column:
-                                    token.add_tag(
+                                    token.add_label(
                                         self.column_name_map[column], fields[column]
                                     )
 
@@ -684,10 +684,10 @@ class UniversalDependenciesDataset(FlairDataset):
                     continue
                 else:
                     token = Token(fields[1], head_id=int(fields[6]))
-                    token.add_tag("lemma", str(fields[2]))
-                    token.add_tag("upos", str(fields[3]))
-                    token.add_tag("pos", str(fields[4]))
-                    token.add_tag("dependency", str(fields[7]))
+                    token.add_label("lemma", str(fields[2]))
+                    token.add_label("upos", str(fields[3]))
+                    token.add_label("pos", str(fields[4]))
+                    token.add_label("dependency", str(fields[7]))
 
                     if len(fields) > 9 and 'SpaceAfter=No' in fields[9]:
                         token.whitespace_after = False
@@ -695,10 +695,10 @@ class UniversalDependenciesDataset(FlairDataset):
                     for morph in str(fields[5]).split("|"):
                         if "=" not in morph:
                             continue
-                        token.add_tag(morph.split("=")[0].lower(), morph.split("=")[1])
+                        token.add_label(morph.split("=")[0].lower(), morph.split("=")[1])
 
                     if len(fields) > 10 and str(fields[10]) == "Y":
-                        token.add_tag("frame", str(fields[11]))
+                        token.add_label("frame", str(fields[11]))
 
                     sentence.add_token(token)
 
@@ -744,10 +744,10 @@ class UniversalDependenciesDataset(FlairDataset):
                         continue
                     else:
                         token = Token(fields[1], head_id=int(fields[6]))
-                        token.add_tag("lemma", str(fields[2]))
-                        token.add_tag("upos", str(fields[3]))
-                        token.add_tag("pos", str(fields[4]))
-                        token.add_tag("dependency", str(fields[7]))
+                        token.add_label("lemma", str(fields[2]))
+                        token.add_label("upos", str(fields[3]))
+                        token.add_label("pos", str(fields[4]))
+                        token.add_label("dependency", str(fields[7]))
 
                         if len(fields) > 9 and 'SpaceAfter=No' in fields[9]:
                             token.whitespace_after = False
@@ -755,12 +755,12 @@ class UniversalDependenciesDataset(FlairDataset):
                         for morph in str(fields[5]).split("|"):
                             if "=" not in morph:
                                 continue
-                            token.add_tag(
+                            token.add_label(
                                 morph.split("=")[0].lower(), morph.split("=")[1]
                             )
 
                         if len(fields) > 10 and str(fields[10]) == "Y":
-                            token.add_tag("frame", str(fields[11]))
+                            token.add_label("frame", str(fields[11]))
 
                         sentence.add_token(token)
 

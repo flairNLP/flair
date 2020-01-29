@@ -65,10 +65,9 @@ def pad_tensors(tensor_list):
 class SequenceTagger(flair.nn.Model):
     def __init__(
         self,
-        hidden_size: int,
         embeddings: TokenEmbeddings,
-        tag_dictionary: Dictionary,
-        tag_type: str,
+        label_dictionary: Dictionary,
+        hidden_size: int = 256,
         use_crf: bool = True,
         use_rnn: bool = True,
         rnn_layers: int = 1,
@@ -85,8 +84,8 @@ class SequenceTagger(flair.nn.Model):
         Initializes a SequenceTagger
         :param hidden_size: number of hidden states in RNN
         :param embeddings: word embeddings used in tagger
-        :param tag_dictionary: dictionary of tags you want to predict
-        :param tag_type: string identifier for tag type
+        :param label_dictionary: dictionary of tags you want to predict
+        :param label_type: string identifier for tag type
         :param use_crf: if True use CRF decoder, else project directly to tag space
         :param use_rnn: if True use RNN layer, otherwise use word embeddings directly
         :param rnn_layers: number of RNN layers
@@ -97,7 +96,6 @@ class SequenceTagger(flair.nn.Model):
         :param beta: Parameter for F-beta score for evaluation and training annealing
         :param loss_weights: Dictionary of weights for classes (tags) for the loss function
         (if any tag's weight is unspecified it will default to 1.0)
-
         """
 
         super(SequenceTagger, self).__init__()
@@ -111,18 +109,21 @@ class SequenceTagger(flair.nn.Model):
         self.embeddings = embeddings
 
         # set the dictionaries
-        self.tag_dictionary: Dictionary = tag_dictionary
-        self.tag_type: str = tag_type
-        self.tagset_size: int = len(tag_dictionary)
+        self.label_dictionary: Dictionary = label_dictionary
+        self.label_dictionary.add_item(START_TAG)
+        self.label_dictionary.add_item(STOP_TAG)
+
+        self.label_type: str = self.label_dictionary.label_type
+        self.labelset_size: int = len(label_dictionary)
 
         self.beta = beta
 
         self.weight_dict = loss_weights
         # Initialize the weight tensor
         if loss_weights is not None:
-            n_classes = len(self.tag_dictionary)
+            n_classes = len(self.label_dictionary)
             weight_list = [1. for i in range(n_classes)]
-            for i, tag in enumerate(self.tag_dictionary.get_items()):
+            for i, tag in enumerate(self.label_dictionary.get_items()):
                 if tag in loss_weights.keys():
                     weight_list[i] = loss_weights[tag]
             self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
@@ -194,24 +195,24 @@ class SequenceTagger(flair.nn.Model):
 
             # final linear map to tag space
             self.linear = torch.nn.Linear(
-                hidden_size * num_directions, len(tag_dictionary)
+                hidden_size * num_directions, len(label_dictionary)
             )
         else:
             self.linear = torch.nn.Linear(
-                self.embeddings.embedding_length, len(tag_dictionary)
+                self.embeddings.embedding_length, len(label_dictionary)
             )
 
         if self.use_crf:
             self.transitions = torch.nn.Parameter(
-                torch.randn(self.tagset_size, self.tagset_size)
+                torch.randn(self.labelset_size, self.labelset_size)
             )
 
             self.transitions.detach()[
-                self.tag_dictionary.get_idx_for_item(START_TAG), :
+                self.label_dictionary.get_idx_for_item(START_TAG), :
             ] = -10000
 
             self.transitions.detach()[
-                :, self.tag_dictionary.get_idx_for_item(STOP_TAG)
+                :, self.label_dictionary.get_idx_for_item(STOP_TAG)
             ] = -10000
 
         self.to(flair.device)
@@ -222,8 +223,7 @@ class SequenceTagger(flair.nn.Model):
             "embeddings": self.embeddings,
             "hidden_size": self.hidden_size,
             "train_initial_hidden_state": self.train_initial_hidden_state,
-            "tag_dictionary": self.tag_dictionary,
-            "tag_type": self.tag_type,
+            "label_dictionary": self.label_dictionary,
             "use_crf": self.use_crf,
             "use_rnn": self.use_rnn,
             "rnn_layers": self.rnn_layers,
@@ -256,11 +256,16 @@ class SequenceTagger(flair.nn.Model):
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
 
+        if "label_dictionary" in state.keys():
+            label_dictionary = state["label_dictionary"]
+        else:
+            label_dictionary = state["tag_dictionary"]
+            label_dictionary.label_type = state["tag_type"]
+
         model = SequenceTagger(
             hidden_size=state["hidden_size"],
             embeddings=state["embeddings"],
-            tag_dictionary=state["tag_dictionary"],
-            tag_type=state["tag_type"],
+            label_dictionary=label_dictionary,
             use_crf=state["use_crf"],
             use_rnn=state["use_rnn"],
             rnn_layers=state["rnn_layers"],
@@ -365,7 +370,7 @@ class SequenceTagger(flair.nn.Model):
 
                 for (sentence, sent_tags) in zip(batch, tags):
                     for (token, tag) in zip(sentence.tokens, sent_tags):
-                        token.add_tag_label(self.tag_type, tag)
+                        token.add_label(self.label_type, tag.value, tag.score)
 
                 # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
                 for (sentence, sent_all_tags) in zip(batch, all_tags):
@@ -423,12 +428,12 @@ class SequenceTagger(flair.nn.Model):
                 for (sentence, sent_tags) in zip(batch, tags):
                     for (token, tag) in zip(sentence.tokens, sent_tags):
                         token: Token = token
-                        token.add_tag_label("predicted", tag)
+                        token.add_label("predicted", tag.value, tag.score)
 
                         # append both to file for evaluation
                         eval_line = "{} {} {} {}\n".format(
                             token.text,
-                            token.get_tag(self.tag_type).value,
+                            token.get_labels(self.label_type)[0].value,
                             tag.value,
                             tag.score,
                         )
@@ -437,7 +442,7 @@ class SequenceTagger(flair.nn.Model):
                 for sentence in batch:
                     # make list of gold tags
                     gold_tags = [
-                        (tag.tag, str(tag)) for tag in sentence.get_spans(self.tag_type)
+                        (tag.tag, str(tag)) for tag in sentence.get_spans(self.label_type)
                     ]
                     # make list of predicted tags
                     predicted_tags = [
@@ -574,12 +579,12 @@ class SequenceTagger(flair.nn.Model):
     def _score_sentence(self, feats, tags, lens_):
 
         start = torch.tensor(
-            [self.tag_dictionary.get_idx_for_item(START_TAG)], device=flair.device
+            [self.label_dictionary.get_idx_for_item(START_TAG)], device=flair.device
         )
         start = start[None, :].repeat(tags.shape[0], 1)
 
         stop = torch.tensor(
-            [self.tag_dictionary.get_idx_for_item(STOP_TAG)], device=flair.device
+            [self.label_dictionary.get_idx_for_item(STOP_TAG)], device=flair.device
         )
         stop = stop[None, :].repeat(tags.shape[0], 1)
 
@@ -587,7 +592,7 @@ class SequenceTagger(flair.nn.Model):
         pad_stop_tags = torch.cat([tags, stop], 1)
 
         for i in range(len(lens_)):
-            pad_stop_tags[i, lens_[i] :] = self.tag_dictionary.get_idx_for_item(
+            pad_stop_tags[i, lens_[i] :] = self.label_dictionary.get_idx_for_item(
                 STOP_TAG
             )
 
@@ -614,7 +619,7 @@ class SequenceTagger(flair.nn.Model):
         for s_id, sentence in enumerate(sentences):
             # get the tags in this sentence
             tag_idx: List[int] = [
-                self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value)
+                self.label_dictionary.get_idx_for_item(token.get_labels(self.label_type)[0].value)
                 for token in sentence
             ]
             # add tags as tensor
@@ -687,7 +692,7 @@ class SequenceTagger(flair.nn.Model):
 
             tags.append(
                 [
-                    Label(self.tag_dictionary.get_item_for_index(tag), conf)
+                    Label(self.label_dictionary.get_item_for_index(tag), conf)
                     for conf, tag in zip(confidences, tag_seq)
                 ]
             )
@@ -697,7 +702,7 @@ class SequenceTagger(flair.nn.Model):
                     [
                         [
                             Label(
-                                self.tag_dictionary.get_item_for_index(score_id), score
+                                self.label_dictionary.get_item_for_index(score_id), score
                             )
                             for score_id, score in enumerate(score_dist)
                         ]
@@ -717,16 +722,16 @@ class SequenceTagger(flair.nn.Model):
     def _viterbi_decode(
         self, feats: np.ndarray, transitions: np.ndarray, all_scores: bool
     ):
-        id_start = self.tag_dictionary.get_idx_for_item(START_TAG)
-        id_stop = self.tag_dictionary.get_idx_for_item(STOP_TAG)
+        id_start = self.label_dictionary.get_idx_for_item(START_TAG)
+        id_stop = self.label_dictionary.get_idx_for_item(STOP_TAG)
 
-        backpointers = np.empty(shape=(feats.shape[0], self.tagset_size), dtype=np.int_)
+        backpointers = np.empty(shape=(feats.shape[0], self.labelset_size), dtype=np.int_)
         backscores = np.empty(
-            shape=(feats.shape[0], self.tagset_size), dtype=np.float32
+            shape=(feats.shape[0], self.labelset_size), dtype=np.float32
         )
 
         init_vvars = np.expand_dims(
-            np.repeat(-10000.0, self.tagset_size), axis=0
+            np.repeat(-10000.0, self.labelset_size), axis=0
         ).astype(np.float32)
         init_vvars[0][id_start] = 0
 
@@ -786,8 +791,8 @@ class SequenceTagger(flair.nn.Model):
 
     def _forward_alg(self, feats, lens_):
 
-        init_alphas = torch.FloatTensor(self.tagset_size).fill_(-10000.0)
-        init_alphas[self.tag_dictionary.get_idx_for_item(START_TAG)] = 0.0
+        init_alphas = torch.FloatTensor(self.labelset_size).fill_(-10000.0)
+        init_alphas[self.label_dictionary.get_idx_for_item(START_TAG)] = 0.0
 
         forward_var = torch.zeros(
             feats.shape[0],
@@ -830,7 +835,7 @@ class SequenceTagger(flair.nn.Model):
         forward_var = forward_var[range(forward_var.shape[0]), lens_, :]
 
         terminal_var = forward_var + self.transitions[
-            self.tag_dictionary.get_idx_for_item(STOP_TAG)
+            self.label_dictionary.get_idx_for_item(STOP_TAG)
         ][None, :].repeat(forward_var.shape[0], 1)
 
         alpha = log_sum_exp_batch(terminal_var)
@@ -1019,8 +1024,8 @@ class SequenceTagger(flair.nn.Model):
         for to_idx, row in enumerate(self.transitions):
             for from_idx, column in enumerate(row):
                 row = [
-                    self.tag_dictionary.get_item_for_index(from_idx),
-                    self.tag_dictionary.get_item_for_index(to_idx),
+                    self.label_dictionary.get_item_for_index(from_idx),
+                    self.label_dictionary.get_item_for_index(to_idx),
                     column.item(),
                 ]
                 data.append(row)

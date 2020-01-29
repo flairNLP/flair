@@ -109,7 +109,7 @@ the word 'green'. This means that we've tagged this word as an entity of type co
 
 ```python
 # add a tag to a word in the sentence
-sentence[3].add_tag('ner', 'color')
+sentence[3].add_label('ner', 'color')
 
 # print the sentence with all tags of this type
 print(sentence.to_tagged_string())

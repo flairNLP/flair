@@ -52,7 +52,7 @@ corpus: Corpus = CONLL_03(base_path='resources/tasks')
 tag_type = 'ner'
 
 # 3. make the tag dictionary from the corpus
-tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+tag_dictionary = corpus.make_label_dictionary(tag_type=tag_type)
 
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
@@ -74,8 +74,8 @@ from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
-                                        tag_dictionary=tag_dictionary,
-                                        tag_type=tag_type)
+                                        label_dictionary=tag_dictionary,
+                                        label_type=tag_type)
 
 # initialize trainer
 from flair.trainers import ModelTrainer
@@ -121,7 +121,7 @@ corpus: Corpus = CONLL_03_GERMAN(base_path='resources/tasks')
 tag_type = 'ner'
 
 # 3. make the tag dictionary from the corpus
-tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+tag_dictionary = corpus.make_label_dictionary(tag_type=tag_type)
 
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
@@ -137,8 +137,8 @@ from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
-                                        tag_dictionary=tag_dictionary,
-                                        tag_type=tag_type)
+                                        label_dictionary=tag_dictionary,
+                                        label_type=tag_type)
 
 # initialize trainer
 from flair.trainers import ModelTrainer
@@ -177,7 +177,7 @@ corpus: Corpus = CONLL_03_DUTCH()
 tag_type = 'ner'
 
 # 3. make the tag dictionary from the corpus
-tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+tag_dictionary = corpus.make_label_dictionary(tag_type=tag_type)
 
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
@@ -193,8 +193,8 @@ from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
-                                        tag_dictionary=tag_dictionary,
-                                        tag_type=tag_type)
+                                        label_dictionary=tag_dictionary,
+                                        label_type=tag_type)
 
 # initialize trainer
 from flair.trainers import ModelTrainer
@@ -233,7 +233,7 @@ corpus: Corpus = WNUT_17()
 tag_type = 'ner'
 
 # 3. make the tag dictionary from the corpus
-tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+tag_dictionary = corpus.make_label_dictionary(tag_type=tag_type)
 
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
@@ -250,8 +250,8 @@ from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
-                                        tag_dictionary=tag_dictionary,
-                                        tag_type=tag_type)
+                                        label_dictionary=tag_dictionary,
+                                        label_type=tag_type)
 
 # initialize trainer
 from flair.trainers import ModelTrainer
@@ -304,7 +304,7 @@ corpus: Corpus = flair.datasets.ColumnCorpus('resources/tasks/onto-ner',
 tag_type = 'ner'
 
 # 3. make the tag dictionary from the corpus
-tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+tag_dictionary = corpus.make_label_dictionary(tag_type=tag_type)
 
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
@@ -320,8 +320,8 @@ from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
-                                        tag_dictionary=tag_dictionary,
-                                        tag_type=tag_type)
+                                        label_dictionary=tag_dictionary,
+                                        label_type=tag_type)
 
 # initialize trainer
 from flair.trainers import ModelTrainer
@@ -373,7 +373,7 @@ corpus: Corpus = UniversalDependenciesCorpus(base_path='/path/to/penn')
 tag_type = 'pos'
 
 # 3. make the tag dictionary from the corpus
-tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+tag_dictionary = corpus.make_label_dictionary(tag_type=tag_type)
 
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
@@ -389,8 +389,8 @@ from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
-                                        tag_dictionary=tag_dictionary,
-                                        tag_type=tag_type)
+                                        label_dictionary=tag_dictionary,
+                                        label_type=tag_type)
 # initialize trainer
 from flair.trainers import ModelTrainer
 
@@ -428,7 +428,7 @@ corpus: Corpus = CONLL_2000()
 tag_type = 'np'
 
 # 3. make the tag dictionary from the corpus
-tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+tag_dictionary = corpus.make_label_dictionary(tag_type=tag_type)
 
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
@@ -444,8 +444,8 @@ from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
-                                        tag_dictionary=tag_dictionary,
-                                        tag_type=tag_type)
+                                        label_dictionary=tag_dictionary,
+                                        label_type=tag_type)
 
 # initialize trainer
 from flair.trainers import ModelTrainer

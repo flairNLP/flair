@@ -34,7 +34,6 @@ class TextClassifier(flair.nn.Model):
         self,
         document_embeddings: flair.embeddings.DocumentEmbeddings,
         label_dictionary: Dictionary,
-        label_type: str,
         multi_label: bool = None,
         multi_label_threshold: float = 0.5,
         beta: float = 1.0,
@@ -56,7 +55,7 @@ class TextClassifier(flair.nn.Model):
 
         self.document_embeddings: flair.embeddings.DocumentRNNEmbeddings = document_embeddings
         self.label_dictionary: Dictionary = label_dictionary
-        self.label_type = label_type
+        self.label_type = label_dictionary.label_type
 
         if multi_label is not None:
             self.multi_label = multi_label
@@ -114,6 +113,7 @@ class TextClassifier(flair.nn.Model):
             "state_dict": self.state_dict(),
             "document_embeddings": self.document_embeddings,
             "label_dictionary": self.label_dictionary,
+            "label_type": self.label_type,
             "multi_label": self.multi_label,
             "beta": self.beta,
             "weight_dict": self.weight_dict,

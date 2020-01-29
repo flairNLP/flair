@@ -30,6 +30,7 @@ class Dictionary:
         self.item2idx: Dict[str, int] = {}
         self.idx2item: List[str] = []
         self.multi_label: bool = False
+        self.label_type = None
 
         # in order to deal with unknown tokens, add <unk>
         if add_unk:
@@ -138,7 +139,7 @@ class Dictionary:
 
 class Label:
     """
-    This class represents a label of a sentence. Each label has a value and optionally a confidence score. The
+    This class represents a tag. Each tag has a value and optionally a confidence score. The
     score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
     """
 
@@ -209,9 +210,17 @@ class DataPoint:
     def get_labels(self, label_type: str):
         return self.annotation_layers[label_type] if label_type in self.annotation_layers else []
 
+    @property
+    def labels(self) -> List[Label]:
+        all_labels = []
+        for key in self.annotation_layers.keys():
+            all_labels.extend(self.annotation_layers[key])
+        return all_labels
+
 
 class DataPair(DataPoint):
     def __init__(self, first: DataPoint, second: DataPoint):
+        super().__init__()
         self.first = first
         self.second = second
 
@@ -244,6 +253,8 @@ class Token(DataPoint):
         whitespace_after: bool = True,
         start_position: int = None,
     ):
+        super().__init__()
+
         self.text: str = text
         self.idx: int = idx
         self.head_id: int = head_id
@@ -256,23 +267,15 @@ class Token(DataPoint):
 
         self.sentence: Sentence = None
         self._embeddings: Dict = {}
-        self.tags: Dict[str, Label] = {}
         self.tags_proba_dist: Dict[str, List[Label]] = {}
-
-    def add_tag_label(self, tag_type: str, tag: Label):
-        self.tags[tag_type] = tag
 
     def add_tags_proba_dist(self, tag_type: str, tags: List[Label]):
         self.tags_proba_dist[tag_type] = tags
 
-    def add_tag(self, tag_type: str, tag_value: str, confidence=1.0):
-        tag = Label(tag_value, confidence)
-        self.tags[tag_type] = tag
-
-    def get_tag(self, tag_type: str) -> Label:
-        if tag_type in self.tags:
-            return self.tags[tag_type]
-        return Label("")
+    # def get_tag(self, tag_type: str) -> Label:
+    #     if tag_type in self.tags:
+    #         return self.tags[tag_type]
+    #     return Label("")
 
     def get_tags_proba_dist(self, tag_type: str) -> List[Label]:
         if tag_type in self.tags_proba_dist:
@@ -352,12 +355,15 @@ class Token(DataPoint):
         )
 
 
-class Span:
+class Span(DataPoint):
     """
     This class represents one textual span consisting of Tokens. A span may have a tag.
     """
 
     def __init__(self, tokens: List[Token], tag: str = None, score=1.0):
+
+        super().__init__()
+
         self.tokens = tokens
         self.tag = tag
         self.score = score
@@ -413,187 +419,6 @@ class Span:
         )
 
 
-def space_tokenizer(text: str) -> List[Token]:
-    """
-    Tokenizer based on space character only.
-    """
-    tokens: List[Token] = []
-    word = ""
-    index = -1
-    for index, char in enumerate(text):
-        if char == " ":
-            if len(word) > 0:
-                start_position = index - len(word)
-                tokens.append(
-                    Token(
-                        text=word, start_position=start_position, whitespace_after=True
-                    )
-                )
-
-            word = ""
-        else:
-            word += char
-    # increment for last token in sentence if not followed by whitespace
-    index += 1
-    if len(word) > 0:
-        start_position = index - len(word)
-        tokens.append(
-            Token(text=word, start_position=start_position, whitespace_after=False)
-        )
-    return tokens
-
-
-def build_japanese_tokenizer(tokenizer: str = "MeCab"):
-    if tokenizer.lower() != "mecab":
-        raise NotImplementedError("Currently, MeCab is only supported.")
-
-    try:
-        import konoha
-    except ModuleNotFoundError:
-        log.warning("-" * 100)
-        log.warning('ATTENTION! The library "konoha" is not installed!')
-        log.warning(
-            'To use Japanese tokenizer, please first install with the following steps:'
-        )
-        log.warning(
-            '- Install mecab with "sudo apt install mecab libmecab-dev mecab-ipadic"'
-        )
-        log.warning('- Install konoha with "pip install konoha[mecab]"')
-        log.warning("-" * 100)
-        pass
-
-    sentence_tokenizer = konoha.SentenceTokenizer()
-    word_tokenizer = konoha.WordTokenizer(tokenizer)
-
-    def tokenizer(text: str) -> List[Token]:
-        """
-        Tokenizer using konoha, a third party library which supports
-        multiple Japanese tokenizer such as MeCab, KyTea and SudachiPy.
-        """
-        tokens: List[Token] = []
-        words: List[str] = []
-
-        sentences = sentence_tokenizer.tokenize(text)
-        for sentence in sentences:
-            konoha_tokens = word_tokenizer.tokenize(sentence)
-            words.extend(list(map(str, konoha_tokens)))
-
-        # determine offsets for whitespace_after field
-        index = text.index
-        current_offset = 0
-        previous_word_offset = -1
-        previous_token = None
-        for word in words:
-            try:
-                word_offset = index(word, current_offset)
-                start_position = word_offset
-            except:
-                word_offset = previous_word_offset + 1
-                start_position = (
-                    current_offset + 1 if current_offset > 0 else current_offset
-                )
-
-            token = Token(
-                text=word, start_position=start_position, whitespace_after=True
-            )
-            tokens.append(token)
-
-            if (previous_token is not None) and word_offset - 1 == previous_word_offset:
-                previous_token.whitespace_after = False
-
-            current_offset = word_offset + len(word)
-            previous_word_offset = current_offset - 1
-            previous_token = token
-
-        return tokens
-
-    return tokenizer
-
-
-def segtok_tokenizer(text: str) -> List[Token]:
-    """
-    Tokenizer using segtok, a third party library dedicated to rules-based Indo-European languages.
-    https://github.com/fnl/segtok
-    """
-    tokens: List[Token] = []
-
-    words: List[str] = []
-    sentences = split_single(text)
-    for sentence in sentences:
-        contractions = split_contractions(word_tokenizer(sentence))
-        words.extend(contractions)
-
-    # determine offsets for whitespace_after field
-    index = text.index
-    current_offset = 0
-    previous_word_offset = -1
-    previous_token = None
-    for word in words:
-        try:
-            word_offset = index(word, current_offset)
-            start_position = word_offset
-        except:
-            word_offset = previous_word_offset + 1
-            start_position = (
-                current_offset + 1 if current_offset > 0 else current_offset
-            )
-
-        if word:
-            token = Token(
-                text=word, start_position=start_position, whitespace_after=True
-            )
-            tokens.append(token)
-
-        if (previous_token is not None) and word_offset - 1 == previous_word_offset:
-            previous_token.whitespace_after = False
-
-        current_offset = word_offset + len(word)
-        previous_word_offset = current_offset - 1
-        previous_token = token
-
-    return tokens
-
-
-def build_spacy_tokenizer(model) -> Callable[[str], List[Token]]:
-    """
-    Wrap Spacy model to build a tokenizer for the Sentence class.
-    :param model a Spacy V2 model
-    :return a tokenizer function to provide to Sentence class constructor
-    """
-    try:
-        from spacy.language import Language
-        from spacy.tokens.doc import Doc
-        from spacy.tokens.token import Token as SpacyToken
-    except ImportError:
-        raise ImportError(
-            "Please install Spacy v2.0 or better before using the Spacy tokenizer, otherwise you can use segtok_tokenizer as advanced tokenizer."
-        )
-
-    model: Language = model
-
-    def tokenizer(text: str) -> List[Token]:
-        doc: Doc = model.make_doc(text)
-        previous_token = None
-        tokens: List[Token] = []
-        for word in doc:
-            word: SpacyToken = word
-            token = Token(
-                text=word.text, start_position=word.idx, whitespace_after=True
-            )
-            tokens.append(token)
-
-            if (previous_token is not None) and (
-                token.start_pos - 1
-                == previous_token.start_pos + len(previous_token.text)
-            ):
-                previous_token.whitespace_after = False
-
-            previous_token = token
-        return tokens
-
-    return tokenizer
-
-
 class Sentence(DataPoint):
     """
        A Sentence is a list of Tokens and is used to represent a sentence or text fragment.
@@ -602,7 +427,7 @@ class Sentence(DataPoint):
     def __init__(
         self,
         text: str = None,
-        use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer,
+        use_tokenizer: Union[bool, Callable[[str], List[Token]]] = False,
         language_code: str = None,
     ):
         """
@@ -615,7 +440,7 @@ class Sentence(DataPoint):
         :param labels:
         :param language_code:
         """
-        super(Sentence, self).__init__()
+        super().__init__()
 
         self.tokens: List[Token] = []
 
@@ -668,7 +493,7 @@ class Sentence(DataPoint):
         previous_tag_value: str = "O"
         for token in self:
 
-            tag: Label = token.get_tag(tag_type)
+            tag: Label = token.get_labels(tag_type)[0]
             tag_value = tag.value
 
             # non-set tags are OUT tags
@@ -697,7 +522,7 @@ class Sentence(DataPoint):
                 starts_new_span = True
 
             if (starts_new_span or not in_span) and len(current_span) > 0:
-                scores = [t.get_tag(tag_type).score for t in current_span]
+                scores = [t.get_labels(tag_type)[0].score for t in current_span]
                 span_score = sum(scores) / len(scores)
                 if span_score > min_score:
                     spans.append(
@@ -721,7 +546,7 @@ class Sentence(DataPoint):
             previous_tag_value = tag_value
 
         if len(current_span) > 0:
-            scores = [t.get_tag(tag_type).score for t in current_span]
+            scores = [t.get_labels(tag_type)[0].score for t in current_span]
             span_score = sum(scores) / len(scores)
             if span_score > min_score:
                 spans.append(
@@ -795,17 +620,15 @@ class Sentence(DataPoint):
             list.append(token.text)
 
             tags: List[str] = []
-            for tag_type in token.tags.keys():
+            for label_type in token.annotation_layers.keys():
 
-                if main_tag is not None and main_tag != tag_type:
+                if main_tag is not None and main_tag != label_type:
                     continue
 
-                if (
-                    token.get_tag(tag_type).value == ""
-                    or token.get_tag(tag_type).value == "O"
-                ):
+                if token.get_labels(label_type)[0].value == "O":
                     continue
-                tags.append(token.get_tag(tag_type).value)
+
+                tags.append(token.get_labels(label_type)[0].value)
             all_tags = "<" + "/".join(tags) + ">"
             if all_tags != "<>":
                 list.append(all_tags)
@@ -840,7 +663,7 @@ class Sentence(DataPoint):
             tags = iob_iobes(tags)
 
         for index, tag in enumerate(tags):
-            self.tokens[index].add_tag(tag_type, tag)
+            self.tokens[index].add_label(tag_type, tag)
 
     def infer_space_after(self):
         """
@@ -916,7 +739,7 @@ class Sentence(DataPoint):
         for token in self.tokens:
             nt = Token(token.text)
             for tag_type in token.tags:
-                nt.add_tag(
+                nt.add_label(
                     tag_type,
                     token.get_tag(tag_type).value,
                     token.get_tag(tag_type).score,
@@ -927,10 +750,16 @@ class Sentence(DataPoint):
 
     def __str__(self) -> str:
 
-        if self.annotation_layers != {}:
-            return f'Sentence: "{self.to_tokenized_string()}" - {len(self)} Tokens - Labels: {self.annotation_layers} '
-        else:
-            return f'Sentence: "{self.to_tokenized_string()}" - {len(self)} Tokens'
+        tagged_string = self.to_tagged_string()
+        tokenized_string = self.to_tokenized_string()
+
+        # add Sentence labels to output if they exist
+        sentence_labels = f"  − Sentence-Labels: {self.annotation_layers}" if self.annotation_layers != {} else ""
+
+        # add Token labels to output if they exist
+        token_labels = f'  − Token-Labels: "{tagged_string}"' if tokenized_string != tagged_string else ""
+
+        return f'Sentence: "{tokenized_string}"   [− Tokens: {len(self)}{token_labels}{sentence_labels}]'
 
     def __len__(self) -> int:
         return len(self.tokens)
@@ -959,7 +788,10 @@ class Sentence(DataPoint):
 
 
 class Image(DataPoint):
+
     def __init__(self, data=None, imageURL=None):
+        super().__init__()
+
         self.data = data
         self._embeddings: Dict = {}
         self.imageURL = imageURL
@@ -1229,6 +1061,7 @@ class Corpus:
         """
         label_dictionary: Dictionary = Dictionary(add_unk=False)
         label_dictionary.multi_label = False
+        label_dictionary.label_type = label_type
 
         from flair.datasets import DataLoader
 
@@ -1239,8 +1072,14 @@ class Corpus:
 
             for sentence in batch:
 
+                # check if sentence itself has labels
                 for label in sentence.get_labels(label_type):
                     label_dictionary.add_item(label.value)
+
+                # check for labels of words
+                for token in sentence.tokens:
+                    for label in token.get_labels(label_type):
+                        label_dictionary.add_item(label.value)
 
                 if not label_dictionary.multi_label:
                     if len(sentence.get_labels(label_type)) > 1:
@@ -1259,18 +1098,6 @@ class Corpus:
 
     def get_all_sentences(self) -> Dataset:
         return ConcatDataset([self.train, self.dev, self.test])
-
-    def make_tag_dictionary(self, tag_type: str) -> Dictionary:
-
-        # Make the tag dictionary
-        tag_dictionary: Dictionary = Dictionary()
-        tag_dictionary.add_item("O")
-        for sentence in self.get_all_sentences():
-            for token in sentence.tokens:
-                tag_dictionary.add_item(token.get_tag(tag_type).value)
-        tag_dictionary.add_item("<START>")
-        tag_dictionary.add_item("<STOP>")
-        return tag_dictionary
 
 
 class MultiCorpus(Corpus):
@@ -1331,3 +1158,183 @@ def iob_iobes(tags):
         else:
             raise Exception("Invalid IOB format!")
     return new_tags
+
+def space_tokenizer(text: str) -> List[Token]:
+    """
+    Tokenizer based on space character only.
+    """
+    tokens: List[Token] = []
+    word = ""
+    index = -1
+    for index, char in enumerate(text):
+        if char == " ":
+            if len(word) > 0:
+                start_position = index - len(word)
+                tokens.append(
+                    Token(
+                        text=word, start_position=start_position, whitespace_after=True
+                    )
+                )
+
+            word = ""
+        else:
+            word += char
+    # increment for last token in sentence if not followed by whitespace
+    index += 1
+    if len(word) > 0:
+        start_position = index - len(word)
+        tokens.append(
+            Token(text=word, start_position=start_position, whitespace_after=False)
+        )
+    return tokens
+
+
+def build_japanese_tokenizer(tokenizer: str = "MeCab"):
+    if tokenizer.lower() != "mecab":
+        raise NotImplementedError("Currently, MeCab is only supported.")
+
+    try:
+        import konoha
+    except ModuleNotFoundError:
+        log.warning("-" * 100)
+        log.warning('ATTENTION! The library "konoha" is not installed!')
+        log.warning(
+            'To use Japanese tokenizer, please first install with the following steps:'
+        )
+        log.warning(
+            '- Install mecab with "sudo apt install mecab libmecab-dev mecab-ipadic"'
+        )
+        log.warning('- Install konoha with "pip install konoha[mecab]"')
+        log.warning("-" * 100)
+        pass
+
+    sentence_tokenizer = konoha.SentenceTokenizer()
+    word_tokenizer = konoha.WordTokenizer(tokenizer)
+
+    def tokenizer(text: str) -> List[Token]:
+        """
+        Tokenizer using konoha, a third party library which supports
+        multiple Japanese tokenizer such as MeCab, KyTea and SudachiPy.
+        """
+        tokens: List[Token] = []
+        words: List[str] = []
+
+        sentences = sentence_tokenizer.tokenize(text)
+        for sentence in sentences:
+            konoha_tokens = word_tokenizer.tokenize(sentence)
+            words.extend(list(map(str, konoha_tokens)))
+
+        # determine offsets for whitespace_after field
+        index = text.index
+        current_offset = 0
+        previous_word_offset = -1
+        previous_token = None
+        for word in words:
+            try:
+                word_offset = index(word, current_offset)
+                start_position = word_offset
+            except:
+                word_offset = previous_word_offset + 1
+                start_position = (
+                    current_offset + 1 if current_offset > 0 else current_offset
+                )
+
+            token = Token(
+                text=word, start_position=start_position, whitespace_after=True
+            )
+            tokens.append(token)
+
+            if (previous_token is not None) and word_offset - 1 == previous_word_offset:
+                previous_token.whitespace_after = False
+
+            current_offset = word_offset + len(word)
+            previous_word_offset = current_offset - 1
+            previous_token = token
+
+        return tokens
+
+    return tokenizer
+
+
+def segtok_tokenizer(text: str) -> List[Token]:
+    """
+    Tokenizer using segtok, a third party library dedicated to rules-based Indo-European languages.
+    https://github.com/fnl/segtok
+    """
+    tokens: List[Token] = []
+
+    words: List[str] = []
+    sentences = split_single(text)
+    for sentence in sentences:
+        contractions = split_contractions(word_tokenizer(sentence))
+        words.extend(contractions)
+
+    # determine offsets for whitespace_after field
+    index = text.index
+    current_offset = 0
+    previous_word_offset = -1
+    previous_token = None
+    for word in words:
+        try:
+            word_offset = index(word, current_offset)
+            start_position = word_offset
+        except:
+            word_offset = previous_word_offset + 1
+            start_position = (
+                current_offset + 1 if current_offset > 0 else current_offset
+            )
+
+        if word:
+            token = Token(
+                text=word, start_position=start_position, whitespace_after=True
+            )
+            tokens.append(token)
+
+        if (previous_token is not None) and word_offset - 1 == previous_word_offset:
+            previous_token.whitespace_after = False
+
+        current_offset = word_offset + len(word)
+        previous_word_offset = current_offset - 1
+        previous_token = token
+
+    return tokens
+
+
+def build_spacy_tokenizer(model) -> Callable[[str], List[Token]]:
+    """
+    Wrap Spacy model to build a tokenizer for the Sentence class.
+    :param model a Spacy V2 model
+    :return a tokenizer function to provide to Sentence class constructor
+    """
+    try:
+        from spacy.language import Language
+        from spacy.tokens.doc import Doc
+        from spacy.tokens.token import Token as SpacyToken
+    except ImportError:
+        raise ImportError(
+            "Please install Spacy v2.0 or better before using the Spacy tokenizer, otherwise you can use segtok_tokenizer as advanced tokenizer."
+        )
+
+    model: Language = model
+
+    def tokenizer(text: str) -> List[Token]:
+        doc: Doc = model.make_doc(text)
+        previous_token = None
+        tokens: List[Token] = []
+        for word in doc:
+            word: SpacyToken = word
+            token = Token(
+                text=word.text, start_position=word.idx, whitespace_after=True
+            )
+            tokens.append(token)
+
+            if (previous_token is not None) and (
+                token.start_pos - 1
+                == previous_token.start_pos + len(previous_token.text)
+            ):
+                previous_token.whitespace_after = False
+
+            previous_token = token
+        return tokens
+
+    return tokenizer
