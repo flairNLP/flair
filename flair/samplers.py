@@ -25,8 +25,9 @@ class ImbalancedClassificationDatasetSampler(FlairSampler):
     """Use this to upsample rare classes and downsample common classes in your unbalanced classification dataset.
     """
 
-    def __init__(self):
+    def __init__(self, label_type: str):
         super(ImbalancedClassificationDatasetSampler, self).__init__(None)
+        self.label_type = label_type
 
     def set_dataset(self, data_source: FlairDataset):
         """
@@ -40,13 +41,13 @@ class ImbalancedClassificationDatasetSampler(FlairSampler):
         # first determine the distribution of classes in the dataset
         label_count = defaultdict(int)
         for sentence in data_source:
-            for label in sentence.labels:
+            for label in sentence.get_labels(self.label_type):
                 label_count[label.value] += 1
 
         # weight for each sample
         offset = 0
         weights = [
-            1.0 / (offset + label_count[data_source[idx].get_label_names()[0]])
+            1.0 / (offset + label_count[data_source[idx].get_labels(self.label_type)[0].value])
             for idx in self.indices
         ]
 

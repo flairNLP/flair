@@ -325,7 +325,7 @@ def test_train_classifier_with_sampler(results_base_path, tasks_base_path):
         results_base_path,
         max_epochs=2,
         shuffle=False,
-        sampler=ImbalancedClassificationDatasetSampler,
+        sampler=ImbalancedClassificationDatasetSampler(label_type='sentiment'),
     )
 
     sentence = Sentence("Berlin is a really nice city.")
@@ -379,8 +379,8 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
 
 @pytest.mark.integration
 def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type='sentiment')
-    label_dict = corpus.make_label_dictionary(label_type='sentiment')
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "multi_class", label_type='topic')
+    label_dict = corpus.make_label_dictionary(label_type='topic')
 
     model: TextClassifier = TextClassifier(
         document_embeddings, label_dict, multi_label=True
@@ -408,8 +408,9 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
 
     for s in model.predict(sentence):
 
-        assert "apple" in sentence.get_label_names()
-        assert "tv" in sentence.get_label_names()
+        label_names = [label.value for label in sentence.get_labels('topic')]
+        assert "apple" in label_names
+        assert "tv" in label_names
 
         for l in s.labels:
             print(l)
@@ -558,12 +559,8 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_resume_text_classification_training(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
-    label_dict = corpus.make_label_dictionary()
-
-    #document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
-    #    [flair_embeddings], 128, 1, False
-    #)
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type='topic')
+    label_dict = corpus.make_label_dictionary(label_type='topic')
 
     model = TextClassifier(document_embeddings, label_dict, False)
 
