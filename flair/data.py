@@ -139,7 +139,7 @@ class Dictionary:
 
 class Label:
     """
-    This class represents a tag. Each tag has a value and optionally a confidence score. The
+    This class represents a label. Each label has a value and optionally a confidence score. The
     score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
     """
 
@@ -176,13 +176,19 @@ class Label:
         return {"value": self.value, "confidence": self.score}
 
     def __str__(self):
-        return "{} ({})".format(self._value, self._score)
+        return f"{self._value} ({self._score:.4f})"
 
     def __repr__(self):
-        return "{} ({})".format(self._value, self._score)
+        return f"{self._value} ({self._score:.4f})"
 
 
 class DataPoint:
+    """
+    This is the parent class of all data points in Flair (including Token, Sentence, Image, etc.). Each DataPoint
+    must be embeddable (hence the abstract property embedding() and methods to() and clear_embeddings()). Also,
+    each DataPoint may have Labels in several layers of annotation (hence the functions add_label(), get_labels()
+    and the property 'label')
+    """
 
     def __init__(self):
         self.annotation_layers = {}
@@ -246,12 +252,12 @@ class Token(DataPoint):
     """
 
     def __init__(
-        self,
-        text: str,
-        idx: int = None,
-        head_id: int = None,
-        whitespace_after: bool = True,
-        start_position: int = None,
+            self,
+            text: str,
+            idx: int = None,
+            head_id: int = None,
+            whitespace_after: bool = True,
+            start_position: int = None,
     ):
         super().__init__()
 
@@ -357,16 +363,14 @@ class Token(DataPoint):
 
 class Span(DataPoint):
     """
-    This class represents one textual span consisting of Tokens. A span may have a tag.
+    This class represents one textual span consisting of Tokens.
     """
 
-    def __init__(self, tokens: List[Token], tag: str = None, score=1.0):
+    def __init__(self, tokens: List[Token]):
 
         super().__init__()
 
         self.tokens = tokens
-        self.tag = tag
-        self.score = score
         self.start_pos = None
         self.end_pos = None
 
@@ -398,16 +402,15 @@ class Span(DataPoint):
             "text": self.to_original_text(),
             "start_pos": self.start_pos,
             "end_pos": self.end_pos,
-            "type": self.tag,
-            "confidence": self.score,
+            "labels": self.labels,
         }
 
     def __str__(self) -> str:
         ids = ",".join([str(t.idx) for t in self.tokens])
+        label_string = " ".join([str(label) for label in self.labels])
+        labels = f'   [− Labels: {label_string}]' if self.labels is not None else ""
         return (
-            '{}-span [{}]: "{}"'.format(self.tag, ids, self.text)
-            if self.tag is not None
-            else 'span [{}]: "{}"'.format(ids, self.text)
+            'Span [{}]: "{}"{}'.format(ids, self.text, labels)
         )
 
     def __repr__(self) -> str:
@@ -425,10 +428,10 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-        self,
-        text: str = None,
-        use_tokenizer: Union[bool, Callable[[str], List[Token]]] = False,
-        language_code: str = None,
+            self,
+            text: str = None,
+            use_tokenizer: Union[bool, Callable[[str], List[Token]]] = False,
+            language_code: str = None,
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -482,7 +485,7 @@ class Sentence(DataPoint):
         if token.idx is None:
             token.idx = len(self.tokens)
 
-    def get_spans(self, tag_type: str, min_score=-1) -> List[Span]:
+    def get_spans(self, label_type: str, min_score=-1) -> List[Span]:
 
         spans: List[Span] = []
 
@@ -493,7 +496,7 @@ class Sentence(DataPoint):
         previous_tag_value: str = "O"
         for token in self:
 
-            tag: Label = token.get_labels(tag_type)[0]
+            tag: Label = token.get_labels(label_type)[0]
             tag_value = tag.value
 
             # non-set tags are OUT tags
@@ -515,25 +518,23 @@ class Sentence(DataPoint):
                 starts_new_span = True
 
             if (
-                previous_tag_value[0:2] in ["S-"]
-                and previous_tag_value[2:] != tag_value[2:]
-                and in_span
+                    previous_tag_value[0:2] in ["S-"]
+                    and previous_tag_value[2:] != tag_value[2:]
+                    and in_span
             ):
                 starts_new_span = True
 
             if (starts_new_span or not in_span) and len(current_span) > 0:
-                scores = [t.get_labels(tag_type)[0].score for t in current_span]
+                scores = [t.get_labels(label_type)[0].score for t in current_span]
                 span_score = sum(scores) / len(scores)
                 if span_score > min_score:
-                    spans.append(
-                        Span(
-                            current_span,
-                            tag=sorted(
-                                tags.items(), key=lambda k_v: k_v[1], reverse=True
-                            )[0][0],
-                            score=span_score,
-                        )
-                    )
+                    span = Span(current_span)
+                    span.add_label(
+                        label_type=label_type,
+                        value=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
+                        score=span_score)
+                    spans.append(span)
+
                 current_span = []
                 tags = defaultdict(lambda: 0.0)
 
@@ -546,7 +547,7 @@ class Sentence(DataPoint):
             previous_tag_value = tag_value
 
         if len(current_span) > 0:
-            scores = [t.get_labels(tag_type)[0].score for t in current_span]
+            scores = [t.get_labels(label_type)[0].score for t in current_span]
             span_score = sum(scores) / len(scores)
             if span_score > min_score:
                 spans.append(
@@ -852,11 +853,11 @@ class FlairDataset(Dataset):
 
 class Corpus:
     def __init__(
-        self,
-        train: FlairDataset,
-        dev: FlairDataset = None,
-        test: FlairDataset = None,
-        name: str = "corpus",
+            self,
+            train: FlairDataset,
+            dev: FlairDataset = None,
+            test: FlairDataset = None,
+            name: str = "corpus",
     ):
         # set name
         self.name: str = name
@@ -959,7 +960,7 @@ class Corpus:
         tokens = []
         for token, freq in tokens_and_frequencies:
             if (min_freq != -1 and freq < min_freq) or (
-                max_tokens != -1 and len(tokens) == max_tokens
+                    max_tokens != -1 and len(tokens) == max_tokens
             ):
                 break
             tokens.append(token)
@@ -978,7 +979,7 @@ class Corpus:
         return splits[1]
 
     def obtain_statistics(
-        self, tag_type: str = None, pretty_print: bool = True
+            self, tag_type: str = None, pretty_print: bool = True
     ) -> dict:
         """
         Print statistics about the class distribution (only labels of sentences are taken into account) and sentence
@@ -1159,6 +1160,7 @@ def iob_iobes(tags):
             raise Exception("Invalid IOB format!")
     return new_tags
 
+
 def space_tokenizer(text: str) -> List[Token]:
     """
     Tokenizer based on space character only.
@@ -1329,8 +1331,8 @@ def build_spacy_tokenizer(model) -> Callable[[str], List[Token]]:
             tokens.append(token)
 
             if (previous_token is not None) and (
-                token.start_pos - 1
-                == previous_token.start_pos + len(previous_token.text)
+                    token.start_pos - 1
+                    == previous_token.start_pos + len(previous_token.text)
             ):
                 previous_token.whitespace_after = False
 
