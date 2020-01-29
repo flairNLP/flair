@@ -85,7 +85,6 @@ class SequenceTagger(flair.nn.Model):
         :param hidden_size: number of hidden states in RNN
         :param embeddings: word embeddings used in tagger
         :param label_dictionary: dictionary of tags you want to predict
-        :param label_type: string identifier for tag type
         :param use_crf: if True use CRF decoder, else project directly to tag space
         :param use_rnn: if True use RNN layer, otherwise use word embeddings directly
         :param rnn_layers: number of RNN layers
@@ -263,9 +262,9 @@ class SequenceTagger(flair.nn.Model):
             label_dictionary.label_type = state["tag_type"]
 
         model = SequenceTagger(
-            hidden_size=state["hidden_size"],
             embeddings=state["embeddings"],
             label_dictionary=label_dictionary,
+            hidden_size=state["hidden_size"],
             use_crf=state["use_crf"],
             use_rnn=state["use_rnn"],
             rnn_layers=state["rnn_layers"],

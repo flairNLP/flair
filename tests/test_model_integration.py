@@ -35,7 +35,6 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
         hidden_size=64,
         embeddings=turian_embeddings,
         label_dictionary=tag_dictionary,
-        label_type="ner",
         use_crf=False,
     )
 
@@ -76,7 +75,6 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
         hidden_size=64,
         embeddings=turian_embeddings,
         label_dictionary=tag_dictionary,
-        label_type="pos",
         use_crf=False,
     )
 
@@ -119,7 +117,6 @@ def test_train_charlm_load_use_tagger(results_base_path, tasks_base_path):
         hidden_size=64,
         embeddings=flair_embeddings,
         label_dictionary=tag_dictionary,
-        label_type="ner",
         use_crf=False,
     )
 
@@ -162,7 +159,6 @@ def test_train_optimizer(results_base_path, tasks_base_path):
         hidden_size=64,
         embeddings=turian_embeddings,
         label_dictionary=tag_dictionary,
-        label_type="ner",
         use_crf=False,
     )
 
@@ -205,7 +201,6 @@ def test_train_optimizer_arguments(results_base_path, tasks_base_path):
         hidden_size=64,
         embeddings=turian_embeddings,
         label_dictionary=tag_dictionary,
-        label_type="ner",
         use_crf=False,
     )
 
@@ -249,7 +244,6 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
         hidden_size=64,
         embeddings=turian_embeddings,
         label_dictionary=tag_dictionary,
-        label_type="ner",
         use_crf=False,
     )
 
@@ -288,8 +282,8 @@ def test_load_use_serialized_tagger():
 
 @pytest.mark.integration
 def test_train_load_use_classifier(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
-    label_dict = corpus.make_label_dictionary()
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type='sentiment')
+    label_dict = corpus.make_label_dictionary('sentiment')
 
     model: TextClassifier = TextClassifier(document_embeddings, label_dict, False)
 
@@ -321,8 +315,8 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_classifier_with_sampler(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
-    label_dict = corpus.make_label_dictionary()
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type='sentiment')
+    label_dict = corpus.make_label_dictionary(label_type='sentiment')
 
     model: TextClassifier = TextClassifier(document_embeddings, label_dict, False)
 
@@ -352,8 +346,8 @@ def test_train_classifier_with_sampler(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
-    label_dict = corpus.make_label_dictionary()
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type='sentiment')
+    label_dict = corpus.make_label_dictionary(label_type='sentiment')
 
     model: TextClassifier = TextClassifier(document_embeddings, label_dict, False)
 
@@ -385,8 +379,8 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
 
 @pytest.mark.integration
 def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "multi_class")
-    label_dict = corpus.make_label_dictionary()
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type='sentiment')
+    label_dict = corpus.make_label_dictionary(label_type='sentiment')
 
     model: TextClassifier = TextClassifier(
         document_embeddings, label_dict, multi_label=True
@@ -440,8 +434,8 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
 
 @pytest.mark.integration
 def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
-    label_dict = corpus.make_label_dictionary()
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type='sentiment')
+    label_dict = corpus.make_label_dictionary(label_type='sentiment')
 
     flair_document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
        [flair_embeddings], 128, 1, False, 64, False, False
@@ -531,7 +525,6 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
         hidden_size=64,
         embeddings=turian_embeddings,
         label_dictionary=tag_dictionary,
-        label_type="ner",
         use_crf=False,
     )
 
@@ -600,7 +593,6 @@ def test_train_resume_sequence_tagging_training(results_base_path, tasks_base_pa
         hidden_size=64,
         embeddings=turian_embeddings,
         label_dictionary=tag_dictionary,
-        label_type="ner",
         use_crf=False,
     )
 

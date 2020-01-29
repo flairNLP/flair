@@ -213,6 +213,9 @@ class DataPoint:
         else:
             self.annotation_layers[label_type].append(Label(value, score))
 
+    def set_label(self, label_type: str, value: str, score: float = 1.):
+        self.annotation_layers[label_type] = [Label(value, score)]
+
     def get_labels(self, label_type: str):
         return self.annotation_layers[label_type] if label_type in self.annotation_layers else []
 
@@ -360,6 +363,10 @@ class Token(DataPoint):
             else "Token: {}".format(self.text)
         )
 
+    def get_tag(self, label_type):
+        if len(self.get_labels(label_type)) == 0: return Label('')
+        return self.get_labels(label_type)[0]
+
 
 class Span(DataPoint):
     """
@@ -420,6 +427,10 @@ class Span(DataPoint):
             if self.tag is not None
             else '<span ({}): "{}">'.format(ids, self.text)
         )
+
+    @property
+    def tag(self):
+        return self.labels[0].value
 
 
 class Sentence(DataPoint):
@@ -496,7 +507,7 @@ class Sentence(DataPoint):
         previous_tag_value: str = "O"
         for token in self:
 
-            tag: Label = token.get_labels(label_type)[0]
+            tag: Label = token.get_tag(label_type)
             tag_value = tag.value
 
             # non-set tags are OUT tags
@@ -550,15 +561,12 @@ class Sentence(DataPoint):
             scores = [t.get_labels(label_type)[0].score for t in current_span]
             span_score = sum(scores) / len(scores)
             if span_score > min_score:
-                spans.append(
-                    Span(
-                        current_span,
-                        tag=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[
-                            0
-                        ][0],
-                        score=span_score,
-                    )
-                )
+                span = Span(current_span)
+                span.add_label(
+                    label_type=label_type,
+                    value=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
+                    score=span_score)
+                spans.append(span)
 
         return spans
 
@@ -979,16 +987,16 @@ class Corpus:
         return splits[1]
 
     def obtain_statistics(
-            self, tag_type: str = None, pretty_print: bool = True
+            self, label_type: str = None, pretty_print: bool = True
     ) -> dict:
         """
         Print statistics about the class distribution (only labels of sentences are taken into account) and sentence
         sizes.
         """
         json_string = {
-            "TRAIN": self._obtain_statistics_for(self.train, "TRAIN", tag_type),
-            "TEST": self._obtain_statistics_for(self.test, "TEST", tag_type),
-            "DEV": self._obtain_statistics_for(self.dev, "DEV", tag_type),
+            "TRAIN": self._obtain_statistics_for(self.train, "TRAIN", label_type),
+            "TEST": self._obtain_statistics_for(self.test, "TEST", label_type),
+            "DEV": self._obtain_statistics_for(self.dev, "DEV", label_type),
         }
         if pretty_print:
             import json
@@ -1001,8 +1009,8 @@ class Corpus:
         if len(sentences) == 0:
             return {}
 
-        classes_to_count = Corpus._get_class_to_count(sentences)
-        tags_to_count = Corpus._get_tag_to_count(sentences, tag_type)
+        classes_to_count = Corpus._count_sentence_labels(sentences)
+        tags_to_count = Corpus._count_token_labels(sentences, tag_type)
         tokens_per_sentence = Corpus._get_tokens_per_sentence(sentences)
 
         label_size_dict = {}
@@ -1031,22 +1039,22 @@ class Corpus:
         return list(map(lambda x: len(x.tokens), sentences))
 
     @staticmethod
-    def _get_class_to_count(sentences):
-        class_to_count = defaultdict(lambda: 0)
+    def _count_sentence_labels(sentences):
+        label_count = defaultdict(lambda: 0)
         for sent in sentences:
             for label in sent.labels:
-                class_to_count[label.value] += 1
-        return class_to_count
+                label_count[label.value] += 1
+        return label_count
 
     @staticmethod
-    def _get_tag_to_count(sentences, tag_type):
-        tag_to_count = defaultdict(lambda: 0)
+    def _count_token_labels(sentences, label_type):
+        label_count = defaultdict(lambda: 0)
         for sent in sentences:
-            for word in sent.tokens:
-                if tag_type in word.tags:
-                    label = word.tags[tag_type]
-                    tag_to_count[label.value] += 1
-        return tag_to_count
+            for token in sent.tokens:
+                if label_type in token.annotation_layers.keys():
+                    label = token.get_tag(label_type)
+                    label_count[label.value] += 1
+        return label_count
 
     def __str__(self) -> str:
         return "Corpus: %d train + %d dev + %d test sentences" % (

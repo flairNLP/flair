@@ -32,7 +32,6 @@ def test_get_head():
 
 
 def test_create_sentence_on_empty_string():
-
     sentence: Sentence = Sentence("")
     assert 0 == len(sentence.tokens)
 
@@ -59,7 +58,6 @@ def test_create_sentence_without_tokenizer():
 
 
 def test_token_indices():
-
     text = ":    nation on"
     sentence = Sentence(text)
     assert text == sentence.to_original_text()
@@ -105,22 +103,22 @@ def test_sentence_to_real_string(tasks_base_path):
 
     sentence = corpus.train[0]
     assert (
-        'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in einer Weise aufgetreten , die alles andere als überzeugend war " .'
-        == sentence.to_tokenized_string()
+            'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in einer Weise aufgetreten , die alles andere als überzeugend war " .'
+            == sentence.to_tokenized_string()
     )
     assert (
-        'Schartau sagte dem "Tagesspiegel" vom Freitag, Fischer sei "in einer Weise aufgetreten, die alles andere als überzeugend war".'
-        == sentence.to_plain_string()
+            'Schartau sagte dem "Tagesspiegel" vom Freitag, Fischer sei "in einer Weise aufgetreten, die alles andere als überzeugend war".'
+            == sentence.to_plain_string()
     )
 
     sentence = corpus.train[1]
     assert (
-        "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf ."
-        == sentence.to_tokenized_string()
+            "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf ."
+            == sentence.to_tokenized_string()
     )
     assert (
-        "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als Möbelvertreter, als er einen fliegenden Händler aus dem Libanon traf."
-        == sentence.to_plain_string()
+            "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als Möbelvertreter, als er einen fliegenden Händler aus dem Libanon traf."
+            == sentence.to_plain_string()
     )
 
 
@@ -322,13 +320,18 @@ def test_label_set_confidence():
 
 
 def test_tagged_corpus_make_label_dictionary():
-    sentence_1 = Sentence("sentence 1", labels=[Label("class_1")])
-    sentence_2 = Sentence("sentence 2", labels=[Label("class_2")])
-    sentence_3 = Sentence("sentence 3", labels=[Label("class_1")])
+    sentence_1 = Sentence("sentence 1")
+    sentence_1.add_label('class', "class_1")
+
+    sentence_2 = Sentence("sentence 2")
+    sentence_2.add_label('class', "class_2")
+
+    sentence_3 = Sentence("sentence 3")
+    sentence_3.add_label('class', "class_1")
 
     corpus: Corpus = Corpus([sentence_1, sentence_2, sentence_3], [], [])
 
-    label_dict = corpus.make_label_dictionary()
+    label_dict = corpus.make_label_dictionary('class')
 
     assert 2 == len(label_dict)
     assert "<unk>" not in label_dict.get_items()
@@ -337,13 +340,18 @@ def test_tagged_corpus_make_label_dictionary():
 
 
 def test_tagged_corpus_make_label_dictionary_string():
-    sentence_1 = Sentence("sentence 1", labels=["class_1"])
-    sentence_2 = Sentence("sentence 2", labels=["class_2"])
-    sentence_3 = Sentence("sentence 3", labels=["class_1"])
+    sentence_1 = Sentence("sentence 1")
+    sentence_1.add_label('class', "class_1")
+
+    sentence_2 = Sentence("sentence 2")
+    sentence_2.add_label('class', "class_2")
+
+    sentence_3 = Sentence("sentence 3")
+    sentence_3.add_label('class', "class_1")
 
     corpus: Corpus = Corpus([sentence_1, sentence_2, sentence_3], [], [])
 
-    label_dict = corpus.make_label_dictionary()
+    label_dict = corpus.make_label_dictionary('class')
 
     assert 2 == len(label_dict)
     assert "<unk>" not in label_dict.get_items()
@@ -352,17 +360,16 @@ def test_tagged_corpus_make_label_dictionary_string():
 
 
 def test_tagged_corpus_statistics():
-    train_sentence = Sentence(
-        "I love Berlin.", labels=[Label("class_1")], use_tokenizer=segtok_tokenizer
-    )
-    dev_sentence = Sentence(
-        "The sun is shining.", labels=[Label("class_2")], use_tokenizer=segtok_tokenizer
-    )
-    test_sentence = Sentence(
-        "Berlin is sunny.", labels=[Label("class_1")], use_tokenizer=segtok_tokenizer
-    )
+    train_sentence = Sentence("I love Berlin.", use_tokenizer=True)
+    train_sentence.add_label('class', "class_1")
 
-    class_to_count_dict = Corpus._get_class_to_count(
+    dev_sentence = Sentence("The sun is shining.", use_tokenizer=True)
+    train_sentence.add_label('class', "class_2")
+
+    test_sentence = Sentence("Berlin is sunny.", use_tokenizer=True)
+    test_sentence.add_label('class', "class_1")
+
+    class_to_count_dict = Corpus._count_sentence_labels(
         [train_sentence, dev_sentence, test_sentence]
     )
 
@@ -382,17 +389,16 @@ def test_tagged_corpus_statistics():
 
 
 def test_tagged_corpus_statistics_string_label():
-    train_sentence = Sentence(
-        "I love Berlin.", labels=["class_1"], use_tokenizer=segtok_tokenizer
-    )
-    dev_sentence = Sentence(
-        "The sun is shining.", labels=["class_2"], use_tokenizer=segtok_tokenizer
-    )
-    test_sentence = Sentence(
-        "Berlin is sunny.", labels=["class_1"], use_tokenizer=segtok_tokenizer
-    )
+    train_sentence = Sentence("I love Berlin.", use_tokenizer=True)
+    train_sentence.add_label('class', "class_1")
 
-    class_to_count_dict = Corpus._get_class_to_count(
+    dev_sentence = Sentence("The sun is shining.", use_tokenizer=True)
+    train_sentence.add_label('class', "class_2")
+
+    test_sentence = Sentence("Berlin is sunny.", use_tokenizer=True)
+    test_sentence.add_label('class', "class_1")
+
+    class_to_count_dict = Corpus._count_sentence_labels(
         [train_sentence, dev_sentence, test_sentence]
     )
 
@@ -412,19 +418,17 @@ def test_tagged_corpus_statistics_string_label():
 
 
 def test_tagged_corpus_statistics_multi_label():
-    train_sentence = Sentence(
-        "I love Berlin.", labels=["class_1"], use_tokenizer=segtok_tokenizer
-    )
-    dev_sentence = Sentence(
-        "The sun is shining.", labels=["class_2"], use_tokenizer=segtok_tokenizer
-    )
-    test_sentence = Sentence(
-        "Berlin is sunny.",
-        labels=["class_1", "class_2"],
-        use_tokenizer=segtok_tokenizer,
-    )
+    train_sentence = Sentence("I love Berlin.", use_tokenizer=True)
+    train_sentence.add_label('class', "class_1")
 
-    class_to_count_dict = Corpus._get_class_to_count(
+    dev_sentence = Sentence("The sun is shining.", use_tokenizer=True)
+    train_sentence.add_label('class', "class_2")
+
+    test_sentence = Sentence("Berlin is sunny.", use_tokenizer=True)
+    test_sentence.add_label('class', "class_1")
+    test_sentence.add_label('class', "class_2")
+
+    class_to_count_dict = Corpus._count_sentence_labels(
         [train_sentence, dev_sentence, test_sentence]
     )
 
@@ -460,7 +464,7 @@ def test_tagged_corpus_get_tag_statistic():
 
     test_sentence = Sentence("Nothing to do with companies.")
 
-    tag_to_count_dict = Corpus._get_tag_to_count(
+    tag_to_count_dict = Corpus._count_token_labels(
         [train_sentence, dev_sentence, test_sentence], "ner"
     )
 
@@ -472,9 +476,8 @@ def test_tagged_corpus_get_tag_statistic():
 
 
 def test_tagged_corpus_downsample():
-    sentence = Sentence(
-        "I love Berlin.", labels=[Label("class_1")], use_tokenizer=segtok_tokenizer
-    )
+    sentence = Sentence("I love Berlin.", use_tokenizer=True)
+    sentence.add_label('class', 'class_1')
 
     corpus: Corpus = Corpus(
         [
@@ -504,22 +507,22 @@ def test_spans():
     sentence = Sentence("Zalando Research is located in Berlin .")
 
     # bioes tags
-    sentence[0].add_label("ner", "B-ORG")
-    sentence[1].add_label("ner", "E-ORG")
-    sentence[5].add_label("ner", "S-LOC")
+    sentence[0].set_label("ner", "B-ORG")
+    sentence[1].set_label("ner", "E-ORG")
+    sentence[5].set_label("ner", "S-LOC")
 
     spans: List[Span] = sentence.get_spans("ner")
 
     assert 2 == len(spans)
     assert "Zalando Research" == spans[0].text
-    assert "ORG" == spans[0].tag
+    assert "ORG" == spans[0].labels[0].value
     assert "Berlin" == spans[1].text
-    assert "LOC" == spans[1].tag
+    assert "LOC" == spans[1].labels[0].value
 
     # bio tags
-    sentence[0].add_label("ner", "B-ORG")
-    sentence[1].add_label("ner", "I-ORG")
-    sentence[5].add_label("ner", "B-LOC")
+    sentence[0].set_label("ner", "B-ORG")
+    sentence[1].set_label("ner", "I-ORG")
+    sentence[5].set_label("ner", "B-LOC")
 
     spans: List[Span] = sentence.get_spans("ner")
 
@@ -529,9 +532,9 @@ def test_spans():
     assert "LOC" == spans[1].tag
 
     # broken tags
-    sentence[0].add_label("ner", "I-ORG")
-    sentence[1].add_label("ner", "E-ORG")
-    sentence[5].add_label("ner", "I-LOC")
+    sentence[0].set_label("ner", "I-ORG")
+    sentence[1].set_label("ner", "E-ORG")
+    sentence[5].set_label("ner", "I-LOC")
 
     spans: List[Span] = sentence.get_spans("ner")
 
@@ -541,12 +544,12 @@ def test_spans():
     assert "LOC" == spans[1].tag
 
     # all tags
-    sentence[0].add_label("ner", "I-ORG")
-    sentence[1].add_label("ner", "E-ORG")
-    sentence[2].add_label("ner", "aux")
-    sentence[3].add_label("ner", "verb")
-    sentence[4].add_label("ner", "preposition")
-    sentence[5].add_label("ner", "I-LOC")
+    sentence[0].set_label("ner", "I-ORG")
+    sentence[1].set_label("ner", "E-ORG")
+    sentence[2].set_label("ner", "aux")
+    sentence[3].set_label("ner", "verb")
+    sentence[4].set_label("ner", "preposition")
+    sentence[5].set_label("ner", "I-LOC")
 
     spans: List[Span] = sentence.get_spans("ner")
     assert 5 == len(spans)
@@ -556,12 +559,12 @@ def test_spans():
     assert "LOC" == spans[4].tag
 
     # all weird tags
-    sentence[0].add_label("ner", "I-ORG")
-    sentence[1].add_label("ner", "S-LOC")
-    sentence[2].add_label("ner", "aux")
-    sentence[3].add_label("ner", "B-relation")
-    sentence[4].add_label("ner", "E-preposition")
-    sentence[5].add_label("ner", "S-LOC")
+    sentence[0].set_label("ner", "I-ORG")
+    sentence[1].set_label("ner", "S-LOC")
+    sentence[2].set_label("ner", "aux")
+    sentence[3].set_label("ner", "B-relation")
+    sentence[4].set_label("ner", "E-preposition")
+    sentence[5].set_label("ner", "S-LOC")
 
     spans: List[Span] = sentence.get_spans("ner")
     assert 5 == len(spans)
@@ -575,9 +578,9 @@ def test_spans():
     sentence = Sentence(
         "A woman was charged on Friday with terrorist offences after three Irish Republican Army mortar bombs were found in a Belfast house , police said . "
     )
-    sentence[11].add_label("ner", "S-MISC")
-    sentence[12].add_label("ner", "B-MISC")
-    sentence[13].add_label("ner", "E-MISC")
+    sentence[11].set_label("ner", "S-MISC")
+    sentence[12].set_label("ner", "B-MISC")
+    sentence[13].set_label("ner", "E-MISC")
     spans: List[Span] = sentence.get_spans("ner")
     assert 2 == len(spans)
     assert "Irish" == spans[0].text
@@ -586,20 +589,20 @@ def test_spans():
     sentence = Sentence("Zalando Research is located in Berlin .")
 
     # tags with confidence
-    sentence[0].add_label("ner", "B-ORG", 1.0)
-    sentence[1].add_label("ner", "E-ORG", 0.9)
-    sentence[5].add_label("ner", "S-LOC", 0.5)
+    sentence[0].set_label("ner", "B-ORG", 1.0)
+    sentence[1].set_label("ner", "E-ORG", 0.9)
+    sentence[5].set_label("ner", "S-LOC", 0.5)
 
     spans: List[Span] = sentence.get_spans("ner", min_score=0.0)
 
     assert 2 == len(spans)
     assert "Zalando Research" == spans[0].text
     assert "ORG" == spans[0].tag
-    assert 0.95 == spans[0].score
+    assert 0.95 == spans[0].labels[0].score
 
     assert "Berlin" == spans[1].text
     assert "LOC" == spans[1].tag
-    assert 0.5 == spans[1].score
+    assert 0.5 == spans[1].labels[0].score
 
     spans: List[Span] = sentence.get_spans("ner", min_score=0.6)
     assert 1 == len(spans)
@@ -631,9 +634,9 @@ def test_token_position_in_sentence():
 def test_sentence_to_dict():
     sentence = Sentence(
         "Zalando Research is   located in Berlin, the capital of Germany.",
-        labels=["business"],
         use_tokenizer=segtok_tokenizer,
     )
+    sentence.add_label("type", "business")
 
     # bioes tags
     sentence[0].add_label("ner", "B-ORG")
@@ -644,8 +647,8 @@ def test_sentence_to_dict():
     dict = sentence.to_dict("ner")
 
     assert (
-        "Zalando Research is   located in Berlin, the capital of Germany."
-        == dict["text"]
+            "Zalando Research is   located in Berlin, the capital of Germany."
+            == dict["text"]
     )
     assert "Zalando Research" == dict["entities"][0]["text"]
     assert "Berlin" == dict["entities"][1]["text"]
@@ -654,7 +657,7 @@ def test_sentence_to_dict():
 
     sentence = Sentence(
         "Facebook, Inc. is a company, and Google is one as well.",
-        use_tokenizer=segtok_tokenizer,
+        use_tokenizer=True,
     )
 
     # bioes tags

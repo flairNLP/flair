@@ -40,8 +40,8 @@ class ImbalancedClassificationDatasetSampler(FlairSampler):
         # first determine the distribution of classes in the dataset
         label_count = defaultdict(int)
         for sentence in data_source:
-            for label in sentence.get_label_names():
-                label_count[label] += 1
+            for label in sentence.labels:
+                label_count[label.value] += 1
 
         # weight for each sample
         offset = 0

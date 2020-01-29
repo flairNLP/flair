@@ -9,8 +9,8 @@ from flair.models.text_classification_model import TextClassifier
 
 def init(tasks_base_path) -> Tuple[Corpus, Dictionary, TextClassifier]:
     # get training, test and dev data
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "ag_news")
-    label_dict = corpus.make_label_dictionary()
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "ag_news", label_type="topic")
+    label_dict = corpus.make_label_dictionary(label_type="topic")
 
     glove_embedding: WordEmbeddings = WordEmbeddings("turian")
     document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(

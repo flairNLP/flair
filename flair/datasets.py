@@ -933,6 +933,7 @@ class ClassificationDataset(FlairDataset):
         assert path_to_file.exists()
 
         self.label_prefix = "__label__"
+        self.label_type = label_type
 
         self.in_memory = in_memory
         self.tokenizer = tokenizer
@@ -959,7 +960,7 @@ class ClassificationDataset(FlairDataset):
 
                 if self.in_memory:
                     sentence = self._parse_line_to_sentence(
-                        line, self.label_prefix, label_type, tokenizer
+                        line, self.label_prefix, tokenizer
                     )
                     if sentence is not None and len(sentence.tokens) > 0:
                         self.sentences.append(sentence)
@@ -972,7 +973,7 @@ class ClassificationDataset(FlairDataset):
                 line = f.readline()
 
     def _parse_line_to_sentence(
-            self, line: str, label_prefix: str, label_type: str, tokenizer: Callable[[str], List[Token]]
+            self, line: str, label_prefix: str, tokenizer: Callable[[str], List[Token]]
     ):
         words = line.split()
 
@@ -996,7 +997,7 @@ class ClassificationDataset(FlairDataset):
             sentence = Sentence(text, use_tokenizer=tokenizer)
 
             for label in labels:
-                sentence.add_label(label_type, label)
+                sentence.add_label(self.label_type, label)
 
             if (
                     sentence is not None

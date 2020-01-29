@@ -113,7 +113,6 @@ class TextClassifier(flair.nn.Model):
             "state_dict": self.state_dict(),
             "document_embeddings": self.document_embeddings,
             "label_dictionary": self.label_dictionary,
-            "label_type": self.label_type,
             "multi_label": self.multi_label,
             "beta": self.beta,
             "weight_dict": self.weight_dict,
@@ -229,7 +228,8 @@ class TextClassifier(flair.nn.Model):
                 )
 
                 for (sentence, labels) in zip(batch, predicted_labels):
-                    sentence.labels = labels
+                    for label in labels:
+                        sentence.add_label(self.label_type, label.value, label.score)
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
@@ -422,7 +422,12 @@ class TextClassifier(flair.nn.Model):
         return self.loss_function(label_scores, self._labels_to_indices(sentences))
 
     def _labels_to_one_hot(self, sentences: List[Sentence]):
-        label_list = [sentence.get_label_names() for sentence in sentences]
+
+        label_list = []
+        for sentence in sentences:
+            label_list.append([label.value for label in sentence.get_labels(self.label_type)])
+
+        # label_list = [sentence.get_label_names() for sentence in sentences]
         one_hot = convert_labels_to_one_hot(label_list, self.label_dictionary)
         one_hot = [torch.FloatTensor(l).unsqueeze(0) for l in one_hot]
         one_hot = torch.cat(one_hot, 0).to(flair.device)

@@ -206,8 +206,7 @@ class SequenceTaggerParamSelector(ParamSelector):
             optimization_value,
         )
 
-        self.tag_type = tag_type
-        self.tag_dictionary = self.corpus.make_label_dictionary(self.tag_type)
+        self.tag_dictionary = self.corpus.make_label_dictionary(tag_type)
 
     def _set_up_model(self, params: dict):
         sequence_tagger_params = {
@@ -216,7 +215,6 @@ class SequenceTaggerParamSelector(ParamSelector):
 
         tagger: SequenceTagger = SequenceTagger(
             label_dictionary=self.tag_dictionary,
-            label_type=self.tag_type,
             **sequence_tagger_params,
         )
         return tagger
@@ -226,6 +224,7 @@ class TextClassifierParamSelector(ParamSelector):
     def __init__(
         self,
         corpus: Corpus,
+        label_type: str,
         multi_label: bool,
         base_path: Union[str, Path],
         document_embedding_type: str,
@@ -256,7 +255,7 @@ class TextClassifierParamSelector(ParamSelector):
         self.multi_label = multi_label
         self.document_embedding_type = document_embedding_type
 
-        self.label_dictionary = self.corpus.make_label_dictionary()
+        self.label_dictionary = self.corpus.make_label_dictionary(label_type)
 
     def _set_up_model(self, params: dict):
         embdding_params = {
