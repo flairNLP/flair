@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 import flair.nn
 import flair.embeddings
-from flair.data import Dictionary, Sentence, Label, Token, space_tokenizer
+from flair.data import Dictionary, Sentence, Label, Token, space_tokenizer, DataPoint
 from flair.datasets import SentenceDataset, StringDataset
 from flair.file_utils import cached_path
 from flair.training_utils import (
@@ -100,7 +100,7 @@ class TextClassifier(flair.nn.Model):
         self.document_embeddings.embed(sentences)
 
         text_embedding_list = [
-            sentence.get_embedding().unsqueeze(0) for sentence in sentences
+            sentence.embedding.unsqueeze(0) for sentence in sentences
         ]
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
@@ -174,7 +174,7 @@ class TextClassifier(flair.nn.Model):
             if not sentences:
                 return sentences
 
-            if isinstance(sentences, Sentence) or isinstance(sentences, str):
+            if isinstance(sentences, DataPoint) or isinstance(sentences, str):
                 sentences = [sentences]
 
             if (flair.device.type == "cuda") and embedding_storage_mode == "cpu":
@@ -196,7 +196,7 @@ class TextClassifier(flair.nn.Model):
                 sentences[index] for index in rev_order_len_index
             ]
 
-            if isinstance(sentences[0], Sentence):
+            if isinstance(sentences[0], DataPoint):
                 # remove previous embeddings
                 store_embeddings(reordered_sentences, "none")
                 dataset = SentenceDataset(reordered_sentences)
@@ -217,7 +217,6 @@ class TextClassifier(flair.nn.Model):
                 if verbose:
                     dataloader.set_description(f"Inferencing on batch {i}")
                 results += batch
-                batch = self._filter_empty_sentences(batch)
                 # stop if all sentences are empty
                 if not batch:
                     continue
@@ -258,36 +257,31 @@ class TextClassifier(flair.nn.Model):
 
                 batch_count += 1
 
-                labels, loss = self.forward_labels_and_loss(batch)
+                predictions, loss = self.forward_labels_and_loss(batch)
 
                 eval_loss += loss
 
                 sentences_for_batch = [sent.to_plain_string() for sent in batch]
-                confidences_for_batch = [
-                    [label.score for label in sent_labels] for sent_labels in labels
-                ]
-                predictions_for_batch = [
-                    [label.value for label in sent_labels] for sent_labels in labels
-                ]
+
                 true_values_for_batch = [sentence.get_labels(self.label_type) for sentence in batch]
                 available_labels = self.label_dictionary.get_items()
 
-                for sentence, confidence, prediction, true_value in zip(
+                for sentence, prediction, true_value in zip(
                     sentences_for_batch,
-                    confidences_for_batch,
-                    predictions_for_batch,
+                    predictions,
                     true_values_for_batch,
                 ):
-                    eval_line = "{}\t{}\t{}\t{}\n".format(
-                        sentence, true_value, prediction, confidence
+                    eval_line = "{}\t{}\t{}\n".format(
+                        sentence, true_value, prediction
                     )
                     lines.append(eval_line)
 
                 for predictions_for_sentence, true_values_for_sentence in zip(
-                    predictions_for_batch, true_values_for_batch
+                    predictions, true_values_for_batch
                 ):
 
                     true_values_for_sentence = [label.value for label in true_values_for_sentence]
+                    predictions_for_sentence = [label.value for label in predictions_for_sentence]
 
                     for label in available_labels:
                         if (

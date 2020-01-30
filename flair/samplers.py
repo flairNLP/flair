@@ -44,6 +44,8 @@ class ImbalancedClassificationDatasetSampler(FlairSampler):
             for label in sentence.get_labels(self.label_type):
                 label_count[label.value] += 1
 
+        print(label_count)
+
         # weight for each sample
         offset = 0
         weights = [
@@ -52,8 +54,13 @@ class ImbalancedClassificationDatasetSampler(FlairSampler):
         ]
 
         self.weights = torch.DoubleTensor(weights)
+        print(self.weights)
 
     def __iter__(self):
+        # print(torch.multinomial(self.weights, self.num_samples, replacement=True))
+        # for i in torch.multinomial(self.weights, self.num_samples, replacement=True):
+        #     print(i)
+        #     print(self.data_source[i])
         return (
             self.indices[i]
             for i in torch.multinomial(self.weights, self.num_samples, replacement=True)

@@ -1153,6 +1153,86 @@ class MongoDataset(FlairDataset):
             return sentence
 
 
+class SentencePairClassificationDataset(FlairDataset):
+    def __init__(
+            self,
+            path_to_dataset: Union[str, Path],
+            label_type: str = 'pair_class',
+            max_tokens_per_doc=-1,
+            max_chars_per_doc=-1,
+            use_tokenizer=True,
+            in_memory: bool = True,
+    ):
+        if type(path_to_dataset) == str:
+            path_to_dataset: Path = Path(path_to_dataset)
+
+        assert path_to_dataset.exists()
+
+        self.in_memory = in_memory
+        self.label_type = label_type
+        self.use_tokenizer = use_tokenizer
+        self.max_tokens_per_doc = max_tokens_per_doc
+
+        self.total_sentence_count: int = 0
+
+        if self.in_memory:
+            self.bi_sentences: List[DataPair] = []
+        else:
+            self.lines: List[str] = []
+
+        with open(str(path_to_dataset), encoding="utf-8") as file:
+
+            line = file.readline()
+
+            while line:
+
+                if line.strip() == "":
+                    continue
+
+                fields = line.split("\t")
+
+                sentence_one = fields[0]
+                sentence_two = fields[1]
+                label = fields[2].strip()
+
+                if max_chars_per_doc > 0:
+                    sentence_one = sentence_one[:max_chars_per_doc]
+                    sentence_two = sentence_two[:max_chars_per_doc]
+
+                if self.in_memory:
+                    bi_sentence = self._make_bi_sentence(sentence_one, sentence_two, label)
+                    self.bi_sentences.append(bi_sentence)
+                else:
+                    self.lines.append(line)
+
+                self.total_sentence_count += 1
+
+                line = file.readline()
+
+    def _make_bi_sentence(self, source_line: str, target_line: str, label: str):
+
+        source_sentence = Sentence(source_line, use_tokenizer=self.use_tokenizer)
+        target_sentence = Sentence(target_line, use_tokenizer=self.use_tokenizer)
+
+        if self.max_tokens_per_doc > 0:
+            source_sentence.tokens = source_sentence.tokens[: self.max_tokens_per_doc]
+            target_sentence.tokens = target_sentence.tokens[: self.max_tokens_per_doc]
+        data_pair = DataPair(source_sentence, target_sentence)
+        data_pair.add_label(self.label_type, label)
+        return data_pair
+
+    def __len__(self):
+        return self.total_sentence_count
+
+    def __getitem__(self, index: int = 0) -> DataPair:
+        if self.in_memory:
+            return self.bi_sentences[index]
+        else:
+            return self._make_bi_sentence(
+                self.source_lines[index], self.target_lines[index]
+            )
+
+
 class ParallelTextDataset(FlairDataset):
     def __init__(
             self,

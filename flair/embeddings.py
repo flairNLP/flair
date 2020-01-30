@@ -49,7 +49,7 @@ from transformers import (
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 import flair
-from flair.data import Corpus
+from flair.data import Corpus, DataPair
 from .nn import LockedDropout, WordDropout
 from .data import Dictionary, Token, Sentence, Image
 from .file_utils import cached_path, open_inside_zip
@@ -107,12 +107,6 @@ class TokenEmbeddings(Embeddings):
     """Abstract base class for all token-level embeddings. Ever new type of word embedding must implement these methods."""
 
     @property
-    @abstractmethod
-    def embedding_length(self) -> int:
-        """Returns the length of the embedding vector."""
-        pass
-
-    @property
     def embedding_type(self) -> str:
         return "word-level"
 
@@ -121,22 +115,11 @@ class DocumentEmbeddings(Embeddings):
     """Abstract base class for all document-level embeddings. Ever new type of document embedding must implement these methods."""
 
     @property
-    @abstractmethod
-    def embedding_length(self) -> int:
-        """Returns the length of the embedding vector."""
-        pass
-
-    @property
     def embedding_type(self) -> str:
         return "sentence-level"
 
 
 class ImageEmbeddings(Embeddings):
-    @property
-    @abstractmethod
-    def embedding_length(self) -> int:
-        """Returns the length of the embedding vector."""
-        pass
 
     @property
     def embedding_type(self) -> str:
@@ -478,7 +461,15 @@ class OneHotEmbeddings(TokenEmbeddings):
         self.min_freq = min_freq
         self.field = field
 
-        tokens = list(map((lambda s: s.tokens), corpus.train))
+        dataset = []
+        for item in corpus.train:
+            if isinstance(item, Sentence):
+                dataset.append(item)
+            if isinstance(item, DataPair):
+                dataset.append(item.first)
+                dataset.append(item.second)
+
+        tokens = list(map((lambda s: s.tokens), dataset))
         tokens = [token for sublist in tokens for token in sublist]
 
         if field == "text":

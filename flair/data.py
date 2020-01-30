@@ -241,11 +241,18 @@ class DataPair(DataPoint):
         self.first.clear_embeddings(embedding_names)
         self.second.clear_embeddings(embedding_names)
 
+    @property
     def embedding(self):
         return torch.cat([self.first.embedding, self.second.embedding])
 
     def __str__(self):
-        return f"DataPoint:\n first: {self.first}\n second: {self.second}"
+        return f"DataPair:\n − First {self.first}\n − Second {self.second}\n − Labels: {self.labels}"
+
+    def to_plain_string(self):
+        return f"DataPair: First {self.first}  ||  Second {self.second}"
+
+    def __len__(self):
+        return len(self.first) + len(self.second)
 
 
 class Token(DataPoint):
@@ -1086,9 +1093,10 @@ class Corpus:
                     label_dictionary.add_item(label.value)
 
                 # check for labels of words
-                for token in sentence.tokens:
-                    for label in token.get_labels(label_type):
-                        label_dictionary.add_item(label.value)
+                if isinstance(sentence, Sentence):
+                    for token in sentence.tokens:
+                        for label in token.get_labels(label_type):
+                            label_dictionary.add_item(label.value)
 
                 if not label_dictionary.multi_label:
                     if len(sentence.get_labels(label_type)) > 1:
