@@ -1601,6 +1601,166 @@ class CONLL_2000(ColumnCorpus):
         )
 
 
+class SENTEVAL_CR(ClassificationCorpus):
+    def __init__(
+            self,
+            in_memory: bool = True,
+    ):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
+
+        # download data if necessary
+        if not (data_folder / "train.txt").is_file():
+
+            # download senteval datasets if necessary und unzip
+            senteval_path = "https://dl.fbaipublicfiles.com/senteval/senteval_data/datasmall_NB_ACL12.zip"
+            cached_path(senteval_path, Path("datasets") / "senteval")
+            senteval_folder = Path(flair.cache_root) / "datasets" / "senteval"
+            unzip_file(senteval_folder / "datasmall_NB_ACL12.zip", senteval_folder)
+
+            # create dataset directory if necessary
+            if not os.path.exists(data_folder):
+                os.makedirs(data_folder)
+
+            # create train.txt file by iterating over pos and neg file
+            with open(data_folder / "train.txt", "a") as train_file:
+
+                with open(senteval_folder / "data" / "customerr" / "custrev.pos", encoding="latin1") as file:
+                    for line in file:
+                        train_file.write(f"__label__POSITIVE {line}")
+
+                with open(senteval_folder / "data" / "customerr" / "custrev.neg", encoding="latin1") as file:
+                    for line in file:
+                        train_file.write(f"__label__NEGATIVE {line}")
+
+        super(SENTEVAL_CR, self).__init__(
+            data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, in_memory=in_memory
+        )
+
+
+class SENTEVAL_MR(ClassificationCorpus):
+    def __init__(
+            self,
+            in_memory: bool = True,
+    ):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
+
+        # download data if necessary
+        if not (data_folder / "train.txt").is_file():
+
+            # download senteval datasets if necessary und unzip
+            senteval_path = "https://dl.fbaipublicfiles.com/senteval/senteval_data/datasmall_NB_ACL12.zip"
+            cached_path(senteval_path, Path("datasets") / "senteval")
+            senteval_folder = Path(flair.cache_root) / "datasets" / "senteval"
+            unzip_file(senteval_folder / "datasmall_NB_ACL12.zip", senteval_folder)
+
+            # create dataset directory if necessary
+            if not os.path.exists(data_folder):
+                os.makedirs(data_folder)
+
+            # create train.txt file by iterating over pos and neg file
+            with open(data_folder / "train.txt", "a") as train_file:
+
+                with open(senteval_folder / "data" / "rt10662" / "rt-polarity.pos", encoding="latin1") as file:
+                    for line in file:
+                        train_file.write(f"__label__POSITIVE {line}")
+
+                with open(senteval_folder / "data" / "rt10662" / "rt-polarity.neg", encoding="latin1") as file:
+                    for line in file:
+                        train_file.write(f"__label__NEGATIVE {line}")
+
+        super(SENTEVAL_MR, self).__init__(
+            data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, in_memory=in_memory
+        )
+
+
+class SENTEVAL_SUBJ(ClassificationCorpus):
+    def __init__(
+            self,
+            in_memory: bool = True,
+    ):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
+
+        # download data if necessary
+        if not (data_folder / "train.txt").is_file():
+
+            # download senteval datasets if necessary und unzip
+            senteval_path = "https://dl.fbaipublicfiles.com/senteval/senteval_data/datasmall_NB_ACL12.zip"
+            cached_path(senteval_path, Path("datasets") / "senteval")
+            senteval_folder = Path(flair.cache_root) / "datasets" / "senteval"
+            unzip_file(senteval_folder / "datasmall_NB_ACL12.zip", senteval_folder)
+
+            # create dataset directory if necessary
+            if not os.path.exists(data_folder):
+                os.makedirs(data_folder)
+
+            # create train.txt file by iterating over pos and neg file
+            with open(data_folder / "train.txt", "a") as train_file:
+
+                with open(senteval_folder / "data" / "subj" / "subj.subjective", encoding="latin1") as file:
+                    for line in file:
+                        train_file.write(f"__label__SUBJECTIVE {line}")
+
+                with open(senteval_folder / "data" / "subj" / "subj.objective", encoding="latin1") as file:
+                    for line in file:
+                        train_file.write(f"__label__OBJECTIVE {line}")
+
+        super(SENTEVAL_SUBJ, self).__init__(
+            data_folder, label_type='objectivity', tokenizer=segtok_tokenizer, in_memory=in_memory
+        )
+
+
+class SENTEVAL_MPQA(ClassificationCorpus):
+    def __init__(
+            self,
+            in_memory: bool = True,
+    ):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
+
+        # download data if necessary
+        if not (data_folder / "train.txt").is_file():
+
+            # download senteval datasets if necessary und unzip
+            senteval_path = "https://dl.fbaipublicfiles.com/senteval/senteval_data/datasmall_NB_ACL12.zip"
+            cached_path(senteval_path, Path("datasets") / "senteval")
+            senteval_folder = Path(flair.cache_root) / "datasets" / "senteval"
+            unzip_file(senteval_folder / "datasmall_NB_ACL12.zip", senteval_folder)
+
+            # create dataset directory if necessary
+            if not os.path.exists(data_folder):
+                os.makedirs(data_folder)
+
+            # create train.txt file by iterating over pos and neg file
+            with open(data_folder / "train.txt", "a") as train_file:
+
+                with open(senteval_folder / "data" / "mpqa" / "mpqa.pos", encoding="latin1") as file:
+                    for line in file:
+                        train_file.write(f"__label__POSITIVE {line}")
+
+                with open(senteval_folder / "data" / "mpqa" / "mpqa.neg", encoding="latin1") as file:
+                    for line in file:
+                        train_file.write(f"__label__NEGATIVE {line}")
+
+        super(SENTEVAL_MPQA, self).__init__(
+            data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, in_memory=in_memory
+        )
+
+
 class GERMEVAL(ColumnCorpus):
     def __init__(
             self,
