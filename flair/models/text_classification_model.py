@@ -82,7 +82,7 @@ class TextClassifier(flair.nn.Model):
             self.document_embeddings.embedding_length, len(self.label_dictionary)
         )
 
-        self._init_weights()
+        nn.init.xavier_uniform_(self.decoder.weight)
 
         if self.multi_label:
             self.loss_function = nn.BCEWithLogitsLoss(weight=self.loss_weights)
@@ -92,10 +92,7 @@ class TextClassifier(flair.nn.Model):
         # auto-spawn on GPU if available
         self.to(flair.device)
 
-    def _init_weights(self):
-        nn.init.xavier_uniform_(self.decoder.weight)
-
-    def forward(self, sentences) -> List[List[float]]:
+    def forward(self, sentences):
 
         self.document_embeddings.embed(sentences)
 
@@ -140,15 +137,15 @@ class TextClassifier(flair.nn.Model):
     ) -> torch.tensor:
 
         scores = self.forward(data_points)
+
         return self._calculate_loss(scores, data_points)
 
-    def forward_labels_and_loss(
-        self, sentences: Union[Sentence, List[Sentence]]
-    ) -> (List[List[Label]], torch.tensor):
-        scores = self.forward(sentences)
-        labels = self._obtain_labels(scores)
-        loss = self._calculate_loss(scores, sentences)
-        return labels, loss
+    def _calculate_loss(self, scores, data_points):
+
+        labels = self._labels_to_one_hot(data_points) if self.multi_label \
+            else self._labels_to_indices(data_points)
+
+        return self.loss_function(scores, labels)
 
     def predict(
         self,
@@ -257,7 +254,9 @@ class TextClassifier(flair.nn.Model):
 
                 batch_count += 1
 
-                predictions, loss = self.forward_labels_and_loss(batch)
+                scores = self.forward(batch)
+                predictions = self._obtain_labels(scores)
+                loss = self._calculate_loss(scores, batch)
 
                 eval_loss += loss
 
@@ -323,7 +322,7 @@ class TextClassifier(flair.nn.Model):
                 )
 
             result = Result(
-                main_score=metric.micro_avg_f_score(),
+                main_score=metric.micro_avg_accuracy(),
                 log_line=f"{metric.precision()}\t{metric.recall()}\t{metric.micro_avg_f_score()}",
                 log_header="PRECISION\tRECALL\tF1",
                 detailed_results=detailed_result,
@@ -345,20 +344,6 @@ class TextClassifier(flair.nn.Model):
                 )
             )
         return filtered_sentences
-
-    def _calculate_loss(
-        self, scores: torch.tensor, sentences: List[Sentence]
-    ) -> torch.tensor:
-        """
-        Calculates the loss.
-        :param scores: the prediction scores from the model
-        :param sentences: list of sentences
-        :return: loss value
-        """
-        if self.multi_label:
-            return self._calculate_multi_label_loss(scores, sentences)
-
-        return self._calculate_single_label_loss(scores, sentences)
 
     def _obtain_labels(
         self, scores: List[List[float]], predict_prob: bool = False
@@ -404,16 +389,6 @@ class TextClassifier(flair.nn.Model):
             label = self.label_dictionary.get_item_for_index(idx)
             label_probs.append(Label(label, conf.item()))
         return label_probs
-
-    def _calculate_multi_label_loss(
-        self, label_scores, sentences: List[Sentence]
-    ) -> float:
-        return self.loss_function(label_scores, self._labels_to_one_hot(sentences))
-
-    def _calculate_single_label_loss(
-        self, label_scores, sentences: List[Sentence]
-    ) -> float:
-        return self.loss_function(label_scores, self._labels_to_indices(sentences))
 
     def _labels_to_one_hot(self, sentences: List[Sentence]):
 

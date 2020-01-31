@@ -412,15 +412,14 @@ class SequenceTagger(flair.nn.Model):
             for batch in data_loader:
                 batch_no += 1
 
-                with torch.no_grad():
-                    features = self.forward(batch)
-                    loss = self._calculate_loss(features, batch)
-                    tags, _ = self._obtain_labels(
-                        feature=features,
-                        batch_sentences=batch,
-                        transitions=transitions,
-                        get_all_tags=False,
-                    )
+                features = self.forward(batch)
+                loss = self._calculate_loss(features, batch)
+                tags, _ = self._obtain_labels(
+                    feature=features,
+                    batch_sentences=batch,
+                    transitions=transitions,
+                    get_all_tags=False,
+                )
 
                 eval_loss += loss
 
