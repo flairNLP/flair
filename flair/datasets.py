@@ -3258,11 +3258,13 @@ def find_train_dev_test_files(data_folder, dev_file, test_file, train_file):
     if dev_file is not None:
         dev_file = data_folder / dev_file
 
+    suffixes_to_ignore = {".gz", ".swp"}
+    
     # automatically identify train / test / dev files
     if train_file is None:
         for file in data_folder.iterdir():
             file_name = file.name
-            if file_name.endswith(".gz"):
+            if not suffixes_to_ignore.isdisjoint(file.suffixes):
                 continue
             if "train" in file_name and not "54019" in file_name:
                 train_file = file
@@ -3277,7 +3279,7 @@ def find_train_dev_test_files(data_folder, dev_file, test_file, train_file):
         if test_file is None:
             for file in data_folder.iterdir():
                 file_name = file.name
-                if file_name.endswith(".gz"):
+                if not suffixes_to_ignore.isdisjoint(file.suffixes):
                     continue
                 if "test" in file_name:
                     test_file = file
