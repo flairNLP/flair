@@ -391,7 +391,7 @@ class LanguageModel(nn.Module):
 
     def _apply(self, fn):
         major, minor, build, *_ = (int(info)
-                                for info in torch.__version__.replace("+cpu","").split('.'))
+                                for info in torch.__version__.split('.') if info.isdigit())
 
         # fixed RNN change format for torch 1.4.0
         if major >= 1 and minor >= 4:
