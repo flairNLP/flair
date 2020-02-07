@@ -3145,7 +3145,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
                 word_embeddings.append(
                     torch.zeros(
                         self.length_of_all_token_embeddings, dtype=torch.float
-                    ).unsqueeze(0)
+                    ).unsqueeze(0).to(flair.device)
                 )
 
             word_embeddings_tensor = torch.cat(word_embeddings, 0).to(flair.device)
