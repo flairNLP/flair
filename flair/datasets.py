@@ -521,6 +521,8 @@ class ColumnDataset(FlairDataset):
         self.encoding = encoding
 
         sentence: Sentence = Sentence()
+        non_empty_sentence: Sentence = Sentence()
+        non_empty_sentence.add_token(Token(''))
         with open(str(self.path_to_column_file), encoding=self.encoding) as f:
 
             line = f.readline()
@@ -549,7 +551,7 @@ class ColumnDataset(FlairDataset):
                         self.total_sentence_count += 1
                     sentence: Sentence = Sentence()
 
-                else:
+                elif self.in_memory:
                     fields: List[str] = re.split("\s+", line)
                     token = Token(fields[self.text_column])
                     for column in column_name_map:
@@ -561,6 +563,8 @@ class ColumnDataset(FlairDataset):
 
                     if not line.isspace():
                         sentence.add_token(token)
+                elif not line.isspace():
+                    sentence = non_empty_sentence
 
                 line = f.readline()
 
