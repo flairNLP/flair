@@ -14,5 +14,4 @@ transformers>=2.3.0
 bpemb>=0.2.9
 regex
 tabulate
-urllib3<1.25,>=1.20
 langdetect
