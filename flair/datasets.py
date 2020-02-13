@@ -1708,6 +1708,60 @@ class NEWSGROUPS(ClassificationCorpus):
             data_folder, tokenizer=space_tokenizer, in_memory=in_memory
         )
 
+class DANE(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+    ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {1: 'text', 3: 'pos', 9: 'ner'}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        data_path = Path(flair.cache_root) / "datasets" / dataset_name
+        train_data_file = data_path / "ddt.train.conllu"
+        if not train_data_file.is_file():
+            temp_file = cached_path(
+                'https://danlp.s3.eu-central-1.amazonaws.com/datasets/ddt.zip',
+                Path("datasets") / dataset_name
+            )
+            from zipfile import ZipFile
+
+            with ZipFile(temp_file, 'r') as zip_file:
+                zip_file.extractall(path=data_path)
+
+            # Remove CoNLL-U meta information in the last column
+            for part in ['train', 'dev', 'test']:
+                lines = []
+                data_file = "ddt.{}.conllu".format(part)
+                with open(data_path / data_file, 'r') as file:
+                    for line in file:
+                        if line.startswith("#") or line == "\n":
+                            lines.append(line)
+                        lines.append(line.replace("name=", "").replace("|SpaceAfter=No", ""))
+
+                with open(data_path / data_file, 'w') as file:
+                    file.writelines(lines)
+
+                print(data_path / data_file)
+
+        super(DANE, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory, comment_symbol="#"
+        )
+
 
 class NER_BASQUE(ColumnCorpus):
     def __init__(
