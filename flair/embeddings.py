@@ -2143,7 +2143,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
             for token in sentence.tokens:
 
                 # update embedding
-                local_embedding = token._embeddings[self.context_embeddings.name]
+                local_embedding = token._embeddings[self.context_embeddings.name].cpu()
 
                 # check token.text is empty or not
                 if token.text:
@@ -2179,6 +2179,13 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
     def embedding_length(self) -> int:
         return self.embedding_length
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+        if flair.device == 'gpu':
+            for key in self.word_embeddings:
+                self.word_embeddings[key] = self.word_embeddings[key].cpu()
 
 
 class BertEmbeddings(TokenEmbeddings):
@@ -2999,7 +3006,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
     def _apply(self, fn):
         major, minor, build, *_ = (int(info)
-                                for info in torch.__version__.replace("+cpu","").split('.'))
+                                for info in torch.__version__.replace("+",".").split('.') if info.isdigit())
 
         # fixed RNN change format for torch 1.4.0
         if major >= 1 and minor >= 4:
