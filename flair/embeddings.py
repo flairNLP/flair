@@ -198,7 +198,7 @@ class StackedEmbeddings(TokenEmbeddings):
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
-    def __init__(self, embeddings: str, field: str = None,ignore: bool = False):
+    def __init__(self, embeddings: str, field: str = None,ignore_unicode_error: bool = False):
         """
         Initializes classic word embeddings. Constructor downloads required files if not there.
         :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or custom
@@ -317,12 +317,12 @@ class WordEmbeddings(TokenEmbeddings):
         self.static_embeddings = True
 
         if str(embeddings).endswith(".bin"):
-            if(ignore = True):
+            if(ignore_unicode_error):
                 self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
                     str(embeddings), binary=True, unicode_error=True
                 )
-             else:
-                 self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
+            else:
+                self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
                     str(embeddings), binary=True, unicode_error=False
                 )
         else:
