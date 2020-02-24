@@ -219,7 +219,10 @@ class DataPoint:
 
         return self
 
-    def get_labels(self, label_type: str):
+    def get_labels(self, label_type: str = None):
+        if label_type == None:
+            return self.labels
+
         return self.annotation_layers[label_type] if label_type in self.annotation_layers else []
 
     @property
@@ -1083,7 +1086,7 @@ class Corpus:
             len(self.test),
         )
 
-    def make_label_dictionary(self, label_type: str = "class") -> Dictionary:
+    def make_label_dictionary(self, label_type: str = None) -> Dictionary:
         """
         Creates a dictionary of all labels assigned to the sentences in the corpus.
         :return: dictionary of labels
@@ -1101,7 +1104,9 @@ class Corpus:
             for sentence in batch:
 
                 # check if sentence itself has labels
-                for label in sentence.get_labels(label_type):
+                labels = sentence.get_labels(label_type) if label_type is not None else sentence.labels
+
+                for label in labels:
                     label_dictionary.add_item(label.value)
 
                 # check for labels of words
@@ -1111,7 +1116,7 @@ class Corpus:
                             label_dictionary.add_item(label.value)
 
                 if not label_dictionary.multi_label:
-                    if len(sentence.get_labels(label_type)) > 1:
+                    if len(labels) > 1:
                         label_dictionary.multi_label = True
 
         log.info(label_dictionary.idx2item)

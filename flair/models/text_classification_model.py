@@ -34,7 +34,7 @@ class TextClassifier(flair.nn.Model):
         self,
         document_embeddings: flair.embeddings.DocumentEmbeddings,
         label_dictionary: Dictionary,
-        label_type: str = 'class',
+        label_type: str = None,
         multi_label: bool = None,
         multi_label_threshold: float = 0.5,
         beta: float = 1.0,
@@ -403,6 +403,7 @@ class TextClassifier(flair.nn.Model):
         return one_hot
 
     def _labels_to_indices(self, sentences: List[Sentence]):
+
         indices = [
             torch.LongTensor(
                 [
