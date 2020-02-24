@@ -462,7 +462,7 @@ class FastTextEmbeddings(TokenEmbeddings):
 
 
 class OneHotEmbeddings(TokenEmbeddings):
-    """One-hot encoded embeddings."""
+    """One-hot encoded embeddings. """
 
     def __init__(
         self,
@@ -471,7 +471,13 @@ class OneHotEmbeddings(TokenEmbeddings):
         embedding_length: int = 300,
         min_freq: int = 3,
     ):
-
+        """
+        Initializes one-hot encoded word embeddings and a trainable embedding layer
+        :param corpus: you need to pass a Corpus in order to construct the vocabulary
+        :param field: by default, the 'text' of tokens is embedded, but you can also embed tags such as 'pos'
+        :param embedding_length: dimensionality of the trainable embedding layer
+        :param min_freq: minimum frequency of a word to become part of the vocabulary
+        """
         super().__init__()
         self.name = "one-hot"
         self.static_embeddings = False
