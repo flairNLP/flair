@@ -19,6 +19,7 @@ The following word embeddings are currently supported:
 | [`FastTextEmbeddings`](/resources/docs/embeddings/FASTTEXT_EMBEDDINGS.md) | Word embeddings with subword features | [Bojanowski et al. (2017)](https://aclweb.org/anthology/Q17-1010)  |
 | [`FlairEmbeddings`](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) | Contextualized character-level embeddings | [Akbik et al. (2018)](https://www.aclweb.org/anthology/C18-1139/)  |
 | [`PooledFlairEmbeddings`](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) | Pooled variant of `FlairEmbeddings` |  [Akbik et al. (2019)](https://www.aclweb.org/anthology/N19-1078/)  |
+| [`OneHotEmbeddings`](/resources/docs/embeddings/ONE_HOT_EMBEDDINGS.md) | Standard one-hot embeddings of text or tags | - |  
 | [`OpenAIGPTEmbeddings`](/resources/docs/embeddings/TRANSFORMER_EMBEDDINGS.md) and [`OpenAIGPT2Embeddings`](/resources/docs/embeddings/TRANSFORMER_EMBEDDINGS.md) | Embeddings from pretrained OpenAIGPT models | [Radford et al. (2018)](https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) |  
 | [`RoBERTaEmbeddings`](/resources/docs/embeddings/TRANSFORMER_EMBEDDINGS.md) | Embeddings from RoBERTa | [Liu et al. (2019)](https://arxiv.org/abs/1907.11692) |  
 | [`TransformerXLEmbeddings`](/resources/docs/embeddings/TRANSFORMER_EMBEDDINGS.md) | Embeddings from pretrained transformer-XL | [Dai et al. (2019)](https://arxiv.org/abs/1901.02860) |  
