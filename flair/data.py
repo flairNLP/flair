@@ -763,9 +763,17 @@ class Sentence(DataPoint):
         return iter(self.tokens)
 
     def __repr__(self):
-        return 'Sentence: "{}" - {} Tokens'.format(
-            " ".join([t.text for t in self.tokens]), len(self)
-        )
+        tagged_string = self.to_tagged_string()
+        tokenized_string = self.to_tokenized_string()
+
+        # add Sentence labels to output if they exist
+        sentence_labels = f"  − Sentence-Labels: {self.annotation_layers}" if self.annotation_layers != {} else ""
+
+        # add Token labels to output if they exist
+        token_labels = f'  − Token-Labels: "{tagged_string}"' if tokenized_string != tagged_string else ""
+
+        return f'Sentence: "{tokenized_string}"   [− Tokens: {len(self)}{token_labels}{sentence_labels}]'
+
 
     def __copy__(self):
         s = Sentence()
