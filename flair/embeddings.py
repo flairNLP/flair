@@ -2183,7 +2183,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
     def __setstate__(self, d):
         self.__dict__ = d
 
-        if flair.device == 'gpu':
+        if flair.device != 'cpu':
             for key in self.word_embeddings:
                 self.word_embeddings[key] = self.word_embeddings[key].cpu()
 
