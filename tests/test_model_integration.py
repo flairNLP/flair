@@ -572,7 +572,7 @@ def test_train_resume_text_classification_training(results_base_path, tasks_base
     #    [flair_embeddings], 128, 1, False
     #)
 
-    model = TextClassifier(document_embeddings, label_dict, False)
+    model = TextClassifier(document_embeddings, label_dict, multi_label=False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
