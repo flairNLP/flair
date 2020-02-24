@@ -182,6 +182,11 @@ class TextClassifier(flair.nn.Model):
                     "is a better choice."
                 )
 
+            # filter empty sentences
+            if isinstance(sentences[0], Sentence):
+                sentences = [sentence for sentence in sentences if len(sentence) > 0]
+            if len(sentences) == 0: return sentences
+
             # reverse sort all sequences by their length
             rev_order_len_index = sorted(
                 range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True
@@ -190,7 +195,7 @@ class TextClassifier(flair.nn.Model):
                 range(len(rev_order_len_index)), key=lambda k: rev_order_len_index[k]
             )
 
-            reordered_sentences: List[Union[Sentence, str]] = [
+            reordered_sentences: List[Union[DataPoint, str]] = [
                 sentences[index] for index in rev_order_len_index
             ]
 
