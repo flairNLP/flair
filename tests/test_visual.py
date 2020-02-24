@@ -37,8 +37,7 @@ def test_plotting_training_curves_and_weights(resources_path):
 
 
 def mock_ner_span(text, tag, start, end):
-    span = Span([])
-    span.tag = tag
+    span = Span([]).set_label('class', tag)
     span.start_pos = start
     span.end_pos = end
     span.tokens = [Token(text[start:end])]

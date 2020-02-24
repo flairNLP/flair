@@ -17,7 +17,7 @@ def init(tasks_base_path) -> Tuple[Corpus, Dictionary, TextClassifier]:
         [glove_embedding], 128, 1, False, 64, False, False
     )
 
-    model = TextClassifier(document_embeddings, label_dict, False)
+    model = TextClassifier(document_embeddings, label_dict, multi_label=False)
 
     return corpus, label_dict, model
 

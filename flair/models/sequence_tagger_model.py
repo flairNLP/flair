@@ -423,7 +423,7 @@ class SequenceTagger(flair.nn.Model):
                 for (sentence, sent_tags) in zip(batch, tags):
                     for (token, tag) in zip(sentence.tokens, sent_tags):
                         token: Token = token
-                        token.add_tag_label("predicted", tag)
+                        token.add_tag("predicted", tag.value, tag.score)
 
                         # append both to file for evaluation
                         eval_line = "{} {} {} {}\n".format(
