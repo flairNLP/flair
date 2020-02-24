@@ -870,7 +870,7 @@ class CSVClassificationDataset(FlairDataset):
                                 self.column_name_map[column].startswith("label")
                                 and row[column]
                         ):
-                            sentence.add_label(row[column])
+                            sentence.add_label(self.column_name_map[column], row[column])
 
                     if 0 < self.max_tokens_per_doc < len(sentence):
                         sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]
@@ -1683,6 +1683,46 @@ class SENTEVAL_MPQA(ClassificationCorpus):
 
         super(SENTEVAL_MPQA, self).__init__(
             data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, in_memory=in_memory
+        )
+
+
+class SENTEVAL_SST_BINARY(CSVClassificationCorpus):
+    def __init__(
+            self,
+            in_memory: bool = True,
+    ):
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
+
+        # download data if necessary
+        if not (data_folder / "train.txt").is_file():
+
+            # download senteval datasets if necessary und unzip
+            cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-train', Path("datasets") / dataset_name)
+            cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-test', Path("datasets") / dataset_name)
+            cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-dev', Path("datasets") / dataset_name)
+
+            # create train.txt file by iterating over pos and neg file
+            # with open(data_folder / "train.txt", "a") as train_file:
+            #
+            #     with open(senteval_folder / "data" / "mpqa" / "mpqa.pos", encoding="latin1") as file:
+            #         for line in file:
+            #             train_file.write(f"__label__POSITIVE {line}")
+            #
+            #     with open(senteval_folder / "data" / "mpqa" / "mpqa.neg", encoding="latin1") as file:
+            #         for line in file:
+            #             train_file.write(f"__label__NEGATIVE {line}")
+
+        super(SENTEVAL_SST_BINARY, self).__init__(
+            data_folder,
+            column_name_map={0: 'text', 1: 'label'},
+            tokenizer=segtok_tokenizer,
+            in_memory=in_memory,
+            delimiter='\t',
+            quotechar=None,
         )
 
 

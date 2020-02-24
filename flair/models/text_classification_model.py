@@ -121,10 +121,12 @@ class TextClassifier(flair.nn.Model):
     def _init_model_with_state_dict(state):
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
+        label_type = None if "label_type" not in state.keys() else state["label_type"]
 
         model = TextClassifier(
             document_embeddings=state["document_embeddings"],
             label_dictionary=state["label_dictionary"],
+            label_type=label_type,
             multi_label=state["multi_label"],
             beta=beta,
             loss_weights=weights,
