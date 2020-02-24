@@ -782,7 +782,8 @@ class BytePairEmbeddings(TokenEmbeddings):
 
 
 class ELMoEmbeddings(TokenEmbeddings):
-    """Contextual word embeddings using word-level LM, as proposed in Peters et al., 2018."""
+    """Contextual word embeddings using word-level LM, as proposed in Peters et al., 2018.
+    ELMo word vectors are constructed by concatenating the top 3 layers in the LM."""
 
     def __init__(
         self, model: str = "original", options_file: str = None, weight_file: str = None
