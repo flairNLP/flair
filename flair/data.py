@@ -774,7 +774,6 @@ class Sentence(DataPoint):
 
         return f'Sentence: "{tokenized_string}"   [− Tokens: {len(self)}{token_labels}{sentence_labels}]'
 
-
     def __copy__(self):
         s = Sentence()
         for token in self.tokens:
