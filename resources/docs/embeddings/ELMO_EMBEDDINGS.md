@@ -20,6 +20,8 @@ sentence = Sentence('The grass is green .')
 embedding.embed(sentence)
 ```
 
+By default, the top 3 layers in the language model are concatenated to form the word embedding.
+
 AllenNLP provides the following pre-trained models. To use any of the following models inside Flair
 simple specify the embedding id when initializing the `ELMoEmbeddings`.
 
