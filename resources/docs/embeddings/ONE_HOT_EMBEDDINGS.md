@@ -2,8 +2,8 @@
 
 `OneHotEmbeddings` are embeddings that encode each word in a vocabulary as a one-hot vector, followed by an embedding 
 layer. These embeddings
-thus do not encode any prior knowledge as most other embeddings. They differ from most other embeddings
-in that they require to see a `Corpus` during instantiation, so they can build up a vocabulary consisting
+thus do not encode any prior knowledge as do most other embeddings. They also differ in that they require to see 
+a `Corpus` during instantiation, so they can build up a vocabulary consisting
 of the most common words seen in the corpus, plus an UNK token for all rare words. 
 
 You initialize these embeddings like this:
@@ -27,12 +27,12 @@ embedding.embed(sentence)
 
 By default, the 'text' of a token (i.e. its lexical value) is one-hot encoded and the embedding layer has a dimensionality
 of 300. However, this layer is randomly initialized, meaning that these embeddings do not make sense unless they are 
-trained in a task (by instantiating a model and using the `ModelTrainer`). 
+ [trained in a task](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md). 
 
 ### Vocabulary size
 
-By default, all words that occur in the Corpus at least 3 times are part of the vocabulary. You can change 
-this using the `min_freq` parameter. For instance, if your Corpus is very large you might want to set a 
+By default, all words that occur in the corpus at least 3 times are part of the vocabulary. You can change 
+this using the `min_freq` parameter. For instance, if your corpus is very large you might want to set a 
 higher `min_freq`: 
 
 ```python
