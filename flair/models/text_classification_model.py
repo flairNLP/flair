@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 import flair.nn
 import flair.embeddings
-from flair.data import Dictionary, Sentence, Label, Token, space_tokenizer
+from flair.data import Dictionary, Sentence, Label, Token, space_tokenizer, DataPoint
 from flair.datasets import SentenceDataset, StringDataset
 from flair.file_utils import cached_path
 from flair.training_utils import (
@@ -34,6 +34,7 @@ class TextClassifier(flair.nn.Model):
         self,
         document_embeddings: flair.embeddings.DocumentEmbeddings,
         label_dictionary: Dictionary,
+        label_type: str = "class",
         multi_label: bool = None,
         multi_label_threshold: float = 0.5,
         beta: float = 1.0,
@@ -55,6 +56,7 @@ class TextClassifier(flair.nn.Model):
 
         self.document_embeddings: flair.embeddings.DocumentRNNEmbeddings = document_embeddings
         self.label_dictionary: Dictionary = label_dictionary
+        self.label_type = label_type
 
         if multi_label is not None:
             self.multi_label = multi_label
@@ -81,7 +83,7 @@ class TextClassifier(flair.nn.Model):
             self.document_embeddings.embedding_length, len(self.label_dictionary)
         )
 
-        self._init_weights()
+        nn.init.xavier_uniform_(self.decoder.weight)
 
         if self.multi_label:
             self.loss_function = nn.BCEWithLogitsLoss(weight=self.loss_weights)
@@ -91,15 +93,12 @@ class TextClassifier(flair.nn.Model):
         # auto-spawn on GPU if available
         self.to(flair.device)
 
-    def _init_weights(self):
-        nn.init.xavier_uniform_(self.decoder.weight)
-
-    def forward(self, sentences) -> List[List[float]]:
+    def forward(self, sentences):
 
         self.document_embeddings.embed(sentences)
 
         text_embedding_list = [
-            sentence.get_embedding().unsqueeze(0) for sentence in sentences
+            sentence.embedding.unsqueeze(0) for sentence in sentences
         ]
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
@@ -139,15 +138,15 @@ class TextClassifier(flair.nn.Model):
     ) -> torch.tensor:
 
         scores = self.forward(data_points)
+
         return self._calculate_loss(scores, data_points)
 
-    def forward_labels_and_loss(
-        self, sentences: Union[Sentence, List[Sentence]]
-    ) -> (List[List[Label]], torch.tensor):
-        scores = self.forward(sentences)
-        labels = self._obtain_labels(scores)
-        loss = self._calculate_loss(scores, sentences)
-        return labels, loss
+    def _calculate_loss(self, scores, data_points):
+
+        labels = self._labels_to_one_hot(data_points) if self.multi_label \
+            else self._labels_to_indices(data_points)
+
+        return self.loss_function(scores, labels)
 
     def predict(
         self,
@@ -173,7 +172,7 @@ class TextClassifier(flair.nn.Model):
             if not sentences:
                 return sentences
 
-            if isinstance(sentences, Sentence) or isinstance(sentences, str):
+            if isinstance(sentences, DataPoint) or isinstance(sentences, str):
                 sentences = [sentences]
 
             if (flair.device.type == "cuda") and embedding_storage_mode == "cpu":
@@ -183,6 +182,11 @@ class TextClassifier(flair.nn.Model):
                     "is a better choice."
                 )
 
+            # filter empty sentences
+            if isinstance(sentences[0], Sentence):
+                sentences = [sentence for sentence in sentences if len(sentence) > 0]
+            if len(sentences) == 0: return sentences
+
             # reverse sort all sequences by their length
             rev_order_len_index = sorted(
                 range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True
@@ -191,11 +195,11 @@ class TextClassifier(flair.nn.Model):
                 range(len(rev_order_len_index)), key=lambda k: rev_order_len_index[k]
             )
 
-            reordered_sentences: List[Union[Sentence, str]] = [
+            reordered_sentences: List[Union[DataPoint, str]] = [
                 sentences[index] for index in rev_order_len_index
             ]
 
-            if isinstance(sentences[0], Sentence):
+            if isinstance(sentences[0], DataPoint):
                 # remove previous embeddings
                 store_embeddings(reordered_sentences, "none")
                 dataset = SentenceDataset(reordered_sentences)
@@ -216,7 +220,6 @@ class TextClassifier(flair.nn.Model):
                 if verbose:
                     dataloader.set_description(f"Inferencing on batch {i}")
                 results += batch
-                batch = self._filter_empty_sentences(batch)
                 # stop if all sentences are empty
                 if not batch:
                     continue
@@ -227,7 +230,8 @@ class TextClassifier(flair.nn.Model):
                 )
 
                 for (sentence, labels) in zip(batch, predicted_labels):
-                    sentence.labels = labels
+                    for label in labels:
+                        sentence.add_label(self.label_type, label.value, label.score)
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
@@ -256,36 +260,33 @@ class TextClassifier(flair.nn.Model):
 
                 batch_count += 1
 
-                labels, loss = self.forward_labels_and_loss(batch)
+                scores = self.forward(batch)
+                predictions = self._obtain_labels(scores)
+                loss = self._calculate_loss(scores, batch)
 
                 eval_loss += loss
 
                 sentences_for_batch = [sent.to_plain_string() for sent in batch]
-                confidences_for_batch = [
-                    [label.score for label in sent_labels] for sent_labels in labels
-                ]
-                predictions_for_batch = [
-                    [label.value for label in sent_labels] for sent_labels in labels
-                ]
-                true_values_for_batch = [
-                    sentence.get_label_names() for sentence in batch
-                ]
+
+                true_values_for_batch = [sentence.get_labels(self.label_type) for sentence in batch]
                 available_labels = self.label_dictionary.get_items()
 
-                for sentence, confidence, prediction, true_value in zip(
+                for sentence, prediction, true_value in zip(
                     sentences_for_batch,
-                    confidences_for_batch,
-                    predictions_for_batch,
+                    predictions,
                     true_values_for_batch,
                 ):
-                    eval_line = "{}\t{}\t{}\t{}\n".format(
-                        sentence, true_value, prediction, confidence
+                    eval_line = "{}\t{}\t{}\n".format(
+                        sentence, true_value, prediction
                     )
                     lines.append(eval_line)
 
                 for predictions_for_sentence, true_values_for_sentence in zip(
-                    predictions_for_batch, true_values_for_batch
+                    predictions, true_values_for_batch
                 ):
+
+                    true_values_for_sentence = [label.value for label in true_values_for_sentence]
+                    predictions_for_sentence = [label.value for label in predictions_for_sentence]
 
                     for label in available_labels:
                         if (
@@ -327,7 +328,7 @@ class TextClassifier(flair.nn.Model):
                 )
 
             result = Result(
-                main_score=metric.micro_avg_f_score(),
+                main_score=metric.micro_avg_accuracy(),
                 log_line=f"{metric.precision()}\t{metric.recall()}\t{metric.micro_avg_f_score()}",
                 log_header="PRECISION\tRECALL\tF1",
                 detailed_results=detailed_result,
@@ -349,20 +350,6 @@ class TextClassifier(flair.nn.Model):
                 )
             )
         return filtered_sentences
-
-    def _calculate_loss(
-        self, scores: torch.tensor, sentences: List[Sentence]
-    ) -> torch.tensor:
-        """
-        Calculates the loss.
-        :param scores: the prediction scores from the model
-        :param sentences: list of sentences
-        :return: loss value
-        """
-        if self.multi_label:
-            return self._calculate_multi_label_loss(scores, sentences)
-
-        return self._calculate_single_label_loss(scores, sentences)
 
     def _obtain_labels(
         self, scores: List[List[float]], predict_prob: bool = False
@@ -409,29 +396,24 @@ class TextClassifier(flair.nn.Model):
             label_probs.append(Label(label, conf.item()))
         return label_probs
 
-    def _calculate_multi_label_loss(
-        self, label_scores, sentences: List[Sentence]
-    ) -> float:
-        return self.loss_function(label_scores, self._labels_to_one_hot(sentences))
-
-    def _calculate_single_label_loss(
-        self, label_scores, sentences: List[Sentence]
-    ) -> float:
-        return self.loss_function(label_scores, self._labels_to_indices(sentences))
-
     def _labels_to_one_hot(self, sentences: List[Sentence]):
-        label_list = [sentence.get_label_names() for sentence in sentences]
+
+        label_list = []
+        for sentence in sentences:
+            label_list.append([label.value for label in sentence.get_labels(self.label_type)])
+
         one_hot = convert_labels_to_one_hot(label_list, self.label_dictionary)
         one_hot = [torch.FloatTensor(l).unsqueeze(0) for l in one_hot]
         one_hot = torch.cat(one_hot, 0).to(flair.device)
         return one_hot
 
     def _labels_to_indices(self, sentences: List[Sentence]):
+
         indices = [
             torch.LongTensor(
                 [
                     self.label_dictionary.get_idx_for_item(label.value)
-                    for label in sentence.labels
+                    for label in sentence.get_labels(self.label_type)
                 ]
             )
             for sentence in sentences

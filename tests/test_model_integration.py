@@ -291,7 +291,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
     label_dict = corpus.make_label_dictionary()
 
-    model: TextClassifier = TextClassifier(document_embeddings, label_dict, False)
+    model: TextClassifier = TextClassifier(document_embeddings, label_dict, multi_label=False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False)
@@ -324,7 +324,7 @@ def test_train_classifier_with_sampler(results_base_path, tasks_base_path):
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
     label_dict = corpus.make_label_dictionary()
 
-    model: TextClassifier = TextClassifier(document_embeddings, label_dict, False)
+    model: TextClassifier = TextClassifier(document_embeddings, label_dict, multi_label=False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(
@@ -355,7 +355,7 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
     label_dict = corpus.make_label_dictionary()
 
-    model: TextClassifier = TextClassifier(document_embeddings, label_dict, False)
+    model: TextClassifier = TextClassifier(document_embeddings, label_dict, multi_label=False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False)
@@ -447,7 +447,7 @@ def test_train_charlm_load_use_classifier(results_base_path, tasks_base_path):
        [flair_embeddings], 128, 1, False, 64, False, False
     )
 
-    model: TextClassifier = TextClassifier(flair_document_embeddings, label_dict, False)
+    model: TextClassifier = TextClassifier(flair_document_embeddings, label_dict, multi_label=False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False)
@@ -572,7 +572,7 @@ def test_train_resume_text_classification_training(results_base_path, tasks_base
     #    [flair_embeddings], 128, 1, False
     #)
 
-    model = TextClassifier(document_embeddings, label_dict, False)
+    model = TextClassifier(document_embeddings, label_dict, multi_label=False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)

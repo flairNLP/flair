@@ -322,28 +322,15 @@ def test_label_set_confidence():
 
 
 def test_tagged_corpus_make_label_dictionary():
-    sentence_1 = Sentence("sentence 1", labels=[Label("class_1")])
-    sentence_2 = Sentence("sentence 2", labels=[Label("class_2")])
-    sentence_3 = Sentence("sentence 3", labels=[Label("class_1")])
+    sentence_1 = Sentence("sentence 1").add_label('label', 'class_1')
+
+    sentence_2 = Sentence("sentence 2").add_label('label', 'class_2')
+
+    sentence_3 = Sentence("sentence 3").add_label('label', 'class_1')
 
     corpus: Corpus = Corpus([sentence_1, sentence_2, sentence_3], [], [])
 
-    label_dict = corpus.make_label_dictionary()
-
-    assert 2 == len(label_dict)
-    assert "<unk>" not in label_dict.get_items()
-    assert "class_1" in label_dict.get_items()
-    assert "class_2" in label_dict.get_items()
-
-
-def test_tagged_corpus_make_label_dictionary_string():
-    sentence_1 = Sentence("sentence 1", labels=["class_1"])
-    sentence_2 = Sentence("sentence 2", labels=["class_2"])
-    sentence_3 = Sentence("sentence 3", labels=["class_1"])
-
-    corpus: Corpus = Corpus([sentence_1, sentence_2, sentence_3], [], [])
-
-    label_dict = corpus.make_label_dictionary()
+    label_dict = corpus.make_label_dictionary('label')
 
     assert 2 == len(label_dict)
     assert "<unk>" not in label_dict.get_items()
@@ -352,47 +339,14 @@ def test_tagged_corpus_make_label_dictionary_string():
 
 
 def test_tagged_corpus_statistics():
-    train_sentence = Sentence(
-        "I love Berlin.", labels=[Label("class_1")], use_tokenizer=segtok_tokenizer
-    )
-    dev_sentence = Sentence(
-        "The sun is shining.", labels=[Label("class_2")], use_tokenizer=segtok_tokenizer
-    )
-    test_sentence = Sentence(
-        "Berlin is sunny.", labels=[Label("class_1")], use_tokenizer=segtok_tokenizer
-    )
 
-    class_to_count_dict = Corpus._get_class_to_count(
-        [train_sentence, dev_sentence, test_sentence]
-    )
+    train_sentence = Sentence("I love Berlin.", use_tokenizer=True).add_label('label', 'class_1')
 
-    assert "class_1" in class_to_count_dict
-    assert "class_2" in class_to_count_dict
-    assert 2 == class_to_count_dict["class_1"]
-    assert 1 == class_to_count_dict["class_2"]
+    dev_sentence = Sentence("The sun is shining.", use_tokenizer=True).add_label('label', 'class_2')
 
-    tokens_in_sentences = Corpus._get_tokens_per_sentence(
-        [train_sentence, dev_sentence, test_sentence]
-    )
+    test_sentence = Sentence("Berlin is sunny.", use_tokenizer=True).add_label('label', 'class_1')
 
-    assert 3 == len(tokens_in_sentences)
-    assert 4 == tokens_in_sentences[0]
-    assert 5 == tokens_in_sentences[1]
-    assert 4 == tokens_in_sentences[2]
-
-
-def test_tagged_corpus_statistics_string_label():
-    train_sentence = Sentence(
-        "I love Berlin.", labels=["class_1"], use_tokenizer=segtok_tokenizer
-    )
-    dev_sentence = Sentence(
-        "The sun is shining.", labels=["class_2"], use_tokenizer=segtok_tokenizer
-    )
-    test_sentence = Sentence(
-        "Berlin is sunny.", labels=["class_1"], use_tokenizer=segtok_tokenizer
-    )
-
-    class_to_count_dict = Corpus._get_class_to_count(
+    class_to_count_dict = Corpus._count_sentence_labels(
         [train_sentence, dev_sentence, test_sentence]
     )
 
@@ -412,19 +366,16 @@ def test_tagged_corpus_statistics_string_label():
 
 
 def test_tagged_corpus_statistics_multi_label():
-    train_sentence = Sentence(
-        "I love Berlin.", labels=["class_1"], use_tokenizer=segtok_tokenizer
-    )
-    dev_sentence = Sentence(
-        "The sun is shining.", labels=["class_2"], use_tokenizer=segtok_tokenizer
-    )
-    test_sentence = Sentence(
-        "Berlin is sunny.",
-        labels=["class_1", "class_2"],
-        use_tokenizer=segtok_tokenizer,
-    )
 
-    class_to_count_dict = Corpus._get_class_to_count(
+    train_sentence = Sentence("I love Berlin.", use_tokenizer=True).add_label('label', 'class_1')
+
+    dev_sentence = Sentence("The sun is shining.", use_tokenizer=True).add_label('label', 'class_2')
+
+    test_sentence = Sentence("Berlin is sunny.", use_tokenizer=True)
+    test_sentence.add_label('label', 'class_1')
+    test_sentence.add_label('label', 'class_2')
+
+    class_to_count_dict = Corpus._count_sentence_labels(
         [train_sentence, dev_sentence, test_sentence]
     )
 
@@ -460,7 +411,7 @@ def test_tagged_corpus_get_tag_statistic():
 
     test_sentence = Sentence("Nothing to do with companies.")
 
-    tag_to_count_dict = Corpus._get_tag_to_count(
+    tag_to_count_dict = Corpus._count_token_labels(
         [train_sentence, dev_sentence, test_sentence], "ner"
     )
 
@@ -472,9 +423,8 @@ def test_tagged_corpus_get_tag_statistic():
 
 
 def test_tagged_corpus_downsample():
-    sentence = Sentence(
-        "I love Berlin.", labels=[Label("class_1")], use_tokenizer=segtok_tokenizer
-    )
+
+    sentence = Sentence("I love Berlin.", use_tokenizer=True).add_label('label', 'class_1')
 
     corpus: Corpus = Corpus(
         [
@@ -631,9 +581,8 @@ def test_token_position_in_sentence():
 def test_sentence_to_dict():
     sentence = Sentence(
         "Zalando Research is   located in Berlin, the capital of Germany.",
-        labels=["business"],
-        use_tokenizer=segtok_tokenizer,
-    )
+        use_tokenizer=True,
+    ).add_label('class', 'business')
 
     # bioes tags
     sentence[0].add_tag("ner", "B-ORG")
@@ -654,7 +603,7 @@ def test_sentence_to_dict():
 
     sentence = Sentence(
         "Facebook, Inc. is a company, and Google is one as well.",
-        use_tokenizer=segtok_tokenizer,
+        use_tokenizer=True,
     )
 
     # bioes tags

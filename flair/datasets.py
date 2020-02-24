@@ -143,6 +143,7 @@ class ClassificationCorpus(Corpus):
     def __init__(
             self,
             data_folder: Union[str, Path],
+            label_type: str = 'class',
             train_file=None,
             test_file=None,
             dev_file=None,
@@ -171,6 +172,7 @@ class ClassificationCorpus(Corpus):
 
         train: FlairDataset = ClassificationDataset(
             train_file,
+            label_type=label_type,
             tokenizer=tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
@@ -180,6 +182,7 @@ class ClassificationCorpus(Corpus):
         # use test_file to create test split if available
         test: FlairDataset = ClassificationDataset(
             test_file,
+            label_type=label_type,
             tokenizer=tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
@@ -189,6 +192,7 @@ class ClassificationCorpus(Corpus):
         # use dev_file to create test split if available
         dev: FlairDataset = ClassificationDataset(
             dev_file,
+            label_type=label_type,
             tokenizer=tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
@@ -557,7 +561,7 @@ class ColumnDataset(FlairDataset):
                     for column in column_name_map:
                         if len(fields) > column:
                             if column != self.text_column:
-                                token.add_tag(
+                                token.add_label(
                                     self.column_name_map[column], fields[column]
                                 )
 
@@ -625,7 +629,7 @@ class ColumnDataset(FlairDataset):
                         for column in self.column_name_map:
                             if len(fields) > column:
                                 if column != self.text_column:
-                                    token.add_tag(
+                                    token.add_label(
                                         self.column_name_map[column], fields[column]
                                     )
 
@@ -685,10 +689,10 @@ class UniversalDependenciesDataset(FlairDataset):
                     continue
                 else:
                     token = Token(fields[1], head_id=int(fields[6]))
-                    token.add_tag("lemma", str(fields[2]))
-                    token.add_tag("upos", str(fields[3]))
-                    token.add_tag("pos", str(fields[4]))
-                    token.add_tag("dependency", str(fields[7]))
+                    token.add_label("lemma", str(fields[2]))
+                    token.add_label("upos", str(fields[3]))
+                    token.add_label("pos", str(fields[4]))
+                    token.add_label("dependency", str(fields[7]))
 
                     if len(fields) > 9 and 'SpaceAfter=No' in fields[9]:
                         token.whitespace_after = False
@@ -696,10 +700,10 @@ class UniversalDependenciesDataset(FlairDataset):
                     for morph in str(fields[5]).split("|"):
                         if "=" not in morph:
                             continue
-                        token.add_tag(morph.split("=")[0].lower(), morph.split("=")[1])
+                        token.add_label(morph.split("=")[0].lower(), morph.split("=")[1])
 
                     if len(fields) > 10 and str(fields[10]) == "Y":
-                        token.add_tag("frame", str(fields[11]))
+                        token.add_label("frame", str(fields[11]))
 
                     sentence.add_token(token)
 
@@ -745,10 +749,10 @@ class UniversalDependenciesDataset(FlairDataset):
                         continue
                     else:
                         token = Token(fields[1], head_id=int(fields[6]))
-                        token.add_tag("lemma", str(fields[2]))
-                        token.add_tag("upos", str(fields[3]))
-                        token.add_tag("pos", str(fields[4]))
-                        token.add_tag("dependency", str(fields[7]))
+                        token.add_label("lemma", str(fields[2]))
+                        token.add_label("upos", str(fields[3]))
+                        token.add_label("pos", str(fields[4]))
+                        token.add_label("dependency", str(fields[7]))
 
                         if len(fields) > 9 and 'SpaceAfter=No' in fields[9]:
                             token.whitespace_after = False
@@ -756,12 +760,12 @@ class UniversalDependenciesDataset(FlairDataset):
                         for morph in str(fields[5]).split("|"):
                             if "=" not in morph:
                                 continue
-                            token.add_tag(
+                            token.add_label(
                                 morph.split("=")[0].lower(), morph.split("=")[1]
                             )
 
                         if len(fields) > 10 and str(fields[10]) == "Y":
-                            token.add_tag("frame", str(fields[11]))
+                            token.add_label("frame", str(fields[11]))
 
                         sentence.add_token(token)
 
@@ -909,6 +913,7 @@ class ClassificationDataset(FlairDataset):
     def __init__(
             self,
             path_to_file: Union[str, Path],
+            label_type: str = 'class',
             max_tokens_per_doc=-1,
             max_chars_per_doc=-1,
             tokenizer=segtok_tokenizer,
@@ -933,6 +938,7 @@ class ClassificationDataset(FlairDataset):
         assert path_to_file.exists()
 
         self.label_prefix = "__label__"
+        self.label_type = label_type
 
         self.in_memory = in_memory
         self.tokenizer = tokenizer
@@ -993,7 +999,10 @@ class ClassificationDataset(FlairDataset):
             text = text[: self.max_chars_per_doc]
 
         if text and labels:
-            sentence = Sentence(text, labels=labels, use_tokenizer=tokenizer)
+            sentence = Sentence(text, use_tokenizer=tokenizer)
+
+            for label in labels:
+                sentence.add_label(self.label_type, label)
 
             if (
                     sentence is not None
@@ -1923,7 +1932,7 @@ class TREC_6(ClassificationCorpus):
                             write_fp.write(f"{new_label} {question}\n")
 
         super(TREC_6, self).__init__(
-            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
+            data_folder, label_type='question_type', tokenizer=space_tokenizer, in_memory=in_memory
         )
 
 
