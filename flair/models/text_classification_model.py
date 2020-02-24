@@ -34,7 +34,7 @@ class TextClassifier(flair.nn.Model):
         self,
         document_embeddings: flair.embeddings.DocumentEmbeddings,
         label_dictionary: Dictionary,
-        label_type: str = None,
+        label_type: str = "class",
         multi_label: bool = None,
         multi_label_threshold: float = 0.5,
         beta: float = 1.0,

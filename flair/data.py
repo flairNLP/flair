@@ -518,6 +518,7 @@ class Sentence(DataPoint):
         label_names = []
         for label in self.labels:
             label_names.append(label.value)
+        return label_names
 
     def get_spans(self, label_type: str, min_score=-1) -> List[Span]:
 
