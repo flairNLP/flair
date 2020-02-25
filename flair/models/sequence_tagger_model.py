@@ -434,14 +434,15 @@ class SequenceTagger(flair.nn.Model):
                         )
                         lines.append(eval_line)
                     lines.append("\n")
+
                 for sentence in batch:
                     # make list of gold tags
                     gold_tags = [
-                        (tag.tag, str(tag)) for tag in sentence.get_spans(self.tag_type)
+                        (tag.tag, tag.text) for tag in sentence.get_spans(self.tag_type)
                     ]
                     # make list of predicted tags
                     predicted_tags = [
-                        (tag.tag, str(tag)) for tag in sentence.get_spans("predicted")
+                        (tag.tag, tag.text) for tag in sentence.get_spans("predicted")
                     ]
 
                     # check for true positives, false positives and false negatives
