@@ -292,6 +292,7 @@ class CSVClassificationCorpus(Corpus):
         test: FlairDataset = CSVClassificationDataset(
             test_file,
             column_name_map,
+            label_type=label_type,
             tokenizer=tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
@@ -303,6 +304,7 @@ class CSVClassificationCorpus(Corpus):
         dev: FlairDataset = CSVClassificationDataset(
             dev_file,
             column_name_map,
+            label_type=label_type,
             tokenizer=tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
