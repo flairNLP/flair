@@ -246,6 +246,7 @@ class CSVClassificationCorpus(Corpus):
             self,
             data_folder: Union[str, Path],
             column_name_map: Dict[int, str],
+            label_type: str = 'class',
             train_file=None,
             test_file=None,
             dev_file=None,
@@ -279,6 +280,7 @@ class CSVClassificationCorpus(Corpus):
         train: FlairDataset = CSVClassificationDataset(
             train_file,
             column_name_map,
+            label_type=label_type,
             tokenizer=tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
@@ -778,6 +780,7 @@ class CSVClassificationDataset(FlairDataset):
             self,
             path_to_file: Union[str, Path],
             column_name_map: Dict[int, str],
+            label_type: str = "class",
             max_tokens_per_doc: int = -1,
             max_chars_per_doc: int = -1,
             tokenizer=segtok_tokenizer,
@@ -870,7 +873,7 @@ class CSVClassificationDataset(FlairDataset):
                                 self.column_name_map[column].startswith("label")
                                 and row[column]
                         ):
-                            sentence.add_label(self.column_name_map[column], row[column])
+                            sentence.add_label(label_type, row[column])
 
                     if 0 < self.max_tokens_per_doc < len(sentence):
                         sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]

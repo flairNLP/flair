@@ -220,7 +220,7 @@ class DataPoint:
         return self
 
     def get_labels(self, label_type: str = None):
-        if label_type == None:
+        if label_type is None:
             return self.labels
 
         return self.annotation_layers[label_type] if label_type in self.annotation_layers else []
