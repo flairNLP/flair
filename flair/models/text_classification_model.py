@@ -34,7 +34,7 @@ class TextClassifier(flair.nn.Model):
         self,
         document_embeddings: flair.embeddings.DocumentEmbeddings,
         label_dictionary: Dictionary,
-        label_type: str = "class",
+        label_type: str = None,
         multi_label: bool = None,
         multi_label_threshold: float = 0.5,
         beta: float = 1.0,
@@ -121,10 +121,12 @@ class TextClassifier(flair.nn.Model):
     def _init_model_with_state_dict(state):
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
+        label_type = None if "label_type" not in state.keys() else state["label_type"]
 
         model = TextClassifier(
             document_embeddings=state["document_embeddings"],
             label_dictionary=state["label_dictionary"],
+            label_type=label_type,
             multi_label=state["multi_label"],
             beta=beta,
             loss_weights=weights,
@@ -168,6 +170,8 @@ class TextClassifier(flair.nn.Model):
         :param use_tokenizer: a custom tokenizer when string are provided (default is space based tokenizer).
         :return: the list of sentences containing the labels
         """
+        predicted_label_type = self.label_type if self.label_type is not None else 'class'
+
         with torch.no_grad():
             if not sentences:
                 return sentences
@@ -231,7 +235,7 @@ class TextClassifier(flair.nn.Model):
 
                 for (sentence, labels) in zip(batch, predicted_labels):
                     for label in labels:
-                        sentence.add_label(self.label_type, label.value, label.score)
+                        sentence.add_label(predicted_label_type, label.value, label.score)
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
