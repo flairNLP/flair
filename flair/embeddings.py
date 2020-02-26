@@ -1836,7 +1836,7 @@ class CharacterEmbeddings(TokenEmbeddings):
 class FlairEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
-    def __init__(self, model, fine_tune: bool = False, chars_per_chunk: int = 512):
+    def __init__(self, model, fine_tune: bool = False, chars_per_chunk: int = 512, offset_mode: str = 'with_whitespace'):
         """
         initializes contextual string embeddings using a character-level language model.
         :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
@@ -2000,6 +2000,7 @@ class FlairEmbeddings(TokenEmbeddings):
         self.static_embeddings = not fine_tune
 
         self.is_forward_lm: bool = self.lm.is_forward_lm
+        self.offset_mode = offset_mode
         self.chars_per_chunk: int = chars_per_chunk
 
         # embed a dummy sentence to determine embedding_length
@@ -2061,18 +2062,29 @@ class FlairEmbeddings(TokenEmbeddings):
                 for token in sentence.tokens:
 
                     offset_forward += len(token.text)
-
                     if self.is_forward_lm:
-                        offset = offset_forward
+                        offset_with_whitespace = offset_forward
+                        offset_without_whitespace = offset_forward - 1
                     else:
-                        offset = offset_backward
+                        offset_with_whitespace = offset_backward
+                        offset_without_whitespace = offset_backward - 1
 
-                    embedding = all_hidden_states_in_lm[offset, i, :]
+                    # offset mode that extracts at whitespace after last character
+                    if self.offset_mode == 'with_whitespace':
+                        embedding = all_hidden_states_in_lm[offset_with_whitespace, i, :]
+
+                    # offset mode that extracts at last character
+                    if self.offset_mode == 'without_whitespace':
+                        embedding = all_hidden_states_in_lm[offset_without_whitespace, i, :]
+
+                    if self.offset_mode == 'both':
+                        embedding_with = all_hidden_states_in_lm[offset_with_whitespace, i, :]
+                        embedding_without = all_hidden_states_in_lm[offset_without_whitespace, i, :]
+                        embedding = torch.cat([embedding_with, embedding_without])
 
                     # if self.tokenized_lm or token.whitespace_after:
                     offset_forward += 1
                     offset_backward -= 1
-
                     offset_backward -= len(token.text)
 
                     # only clone if optimization mode is 'gpu'
