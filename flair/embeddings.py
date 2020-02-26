@@ -2033,6 +2033,10 @@ class FlairEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
+        # make compatible with serialized models (TODO: remove)
+        if "offset_mode" not in self.__dict__:
+            self.offset_mode = 'with_whitespace'
+
         # gradients are enable if fine-tuning is enabled
         gradient_context = torch.enable_grad() if self.fine_tune else torch.no_grad()
 
