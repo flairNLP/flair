@@ -2187,6 +2187,13 @@ class PooledFlairEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.embedding_length
 
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+        if flair.device != 'cpu':
+            for key in self.word_embeddings:
+                self.word_embeddings[key] = self.word_embeddings[key].cpu()
+
 
 class BertEmbeddings(TokenEmbeddings):
     def __init__(
