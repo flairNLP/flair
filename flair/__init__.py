@@ -1,8 +1,9 @@
+import os
 import torch
 from pathlib import Path
 
 # global variable: cache_root
-cache_root = Path(Path.home(), ".flair")
+cache_root = os.getenv('FLAIR_CACHE_ROOT', Path(Path.home(), ".flair"))
 
 # global variable: device
 device = None
