@@ -182,8 +182,8 @@ tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
     WordEmbeddings('nl'),
-    PooledFlairEmbeddings('dutch-forward', pool='mean'),
-    PooledFlairEmbeddings('dutch-backward', pool='mean'),
+    PooledFlairEmbeddings('dutch-forward', pooling='mean'),
+    PooledFlairEmbeddings('dutch-backward', pooling='mean'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
