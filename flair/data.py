@@ -696,7 +696,7 @@ class Sentence(DataPoint):
             tags = iob_iobes(tags)
 
         for index, tag in enumerate(tags):
-            self.tokens[index].add_label(tag_type, tag)
+            self.tokens[index].set_label(tag_type, tag)
 
     def infer_space_after(self):
         """
