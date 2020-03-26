@@ -2198,7 +2198,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
                 self.word_embeddings[key] = self.word_embeddings[key].cpu()
 
 
-class BertEmbeddingsNew(DocumentEmbeddings, TokenEmbeddings):
+class BertEmbeddings(DocumentEmbeddings, TokenEmbeddings):
     def __init__(
         self,
         bert_model_or_path: str = "bert-base-uncased",
