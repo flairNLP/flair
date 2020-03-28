@@ -1192,6 +1192,7 @@ def _get_transformer_sentence_embeddings(
             tokens_tensor = torch.tensor([indexed_tokens])
             tokens_tensor = tokens_tensor.to(flair.device)
 
+            print(tokens_tensor)
             hidden_states = model(tokens_tensor)[-1]
 
             for token in sentence.tokens:
@@ -2237,6 +2238,10 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         self.fine_tune = fine_tune
         self.static_embeddings = not self.fine_tune
 
+        self.special_tokens = []
+        self.special_tokens.append(self.tokenizer.bos_token)
+        self.special_tokens.append(self.tokenizer.cls_token)
+
         # most models have an intial BOS token, except for XLNet, T5 and GPT2
         self.begin_offset = 1
         if isinstance(self.tokenizer, XLNetTokenizer):
@@ -2284,8 +2289,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 reconstructed_token = reconstructed_token + subtoken
 
                 # check if reconstructed token is special begin token ([CLS] or similar)
-                if (reconstructed_token == self.tokenizer.bos_token or reconstructed_token == self.tokenizer.cls_token)\
-                        and subtoken_id == 0:
+                if reconstructed_token in self.special_tokens and subtoken_id == 0:
                     reconstructed_token = ''
                     subtoken_count = 0
 
