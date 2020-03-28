@@ -2239,11 +2239,11 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # most models have an intial BOS token, except for XLNet, T5 and GPT2
         self.begin_offset = 1
-        if print(isinstance(self.tokenizer, XLNetTokenizer)):
+        if isinstance(self.tokenizer, XLNetTokenizer):
             self.begin_offset = 0
-        if print(isinstance(self.tokenizer, T5Tokenizer)):
+        if isinstance(self.tokenizer, T5Tokenizer):
             self.begin_offset = 0
-        if print(isinstance(self.tokenizer, GPT2Tokenizer)):
+        if isinstance(self.tokenizer, GPT2Tokenizer):
             self.begin_offset = 0
 
 
