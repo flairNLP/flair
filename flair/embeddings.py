@@ -2205,6 +2205,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         model: str = "bert-base-uncased",
         layers: str = "-1,-2,-3,-4",
         pooling_operation: str = "first",
+        batch_size: int = 1,
         use_scalar_mix: bool = False,
         fine_tune: bool = False
     ):
@@ -2237,6 +2238,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         self.use_scalar_mix = use_scalar_mix
         self.fine_tune = fine_tune
         self.static_embeddings = not self.fine_tune
+        self.batch_size = batch_size
 
         self.special_tokens = []
         self.special_tokens.append(self.tokenizer.bos_token)
@@ -2251,8 +2253,21 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         if isinstance(self.tokenizer, GPT2Tokenizer):
             self.begin_offset = 0
 
-
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        """Add embeddings to all words in a list of sentences. If embeddings are already added,
+        updates only if embeddings are non-static."""
+
+        # using list comprehension
+        sentence_batches = [sentences[i * self.batch_size:(i + 1) * self.batch_size]
+                            for i in range((len(sentences) + self.batch_size - 1) // self.batch_size)]
+
+        for batch in sentence_batches:
+
+            self._add_embeddings_to_sentences(batch)
+
+        return sentences
+
+    def _add_embeddings_to_sentences(self, sentences: List[Sentence]):
         """Add embeddings to all words in a list of sentences. If embeddings are already added,
         updates only if embeddings are non-static."""
 
@@ -2383,38 +2398,29 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
                     subword_start_idx += number_of_subtokens
 
-        return sentences
-
     @property
     @abstractmethod
     def embedding_length(self) -> int:
         """Returns the length of the embedding vector."""
-        return (
-            len(self.layer_indexes) * self.model.config.hidden_size
-            if not self.use_scalar_mix
-            else self.model.config.hidden_size
-        )
 
+        if not self.use_scalar_mix:
+            length = len(self.layer_indexes) * self.model.config.hidden_size
+        else:
+            length = self.model.config.hidden_size
 
-class BERTEmbeddings(TransformerWordEmbeddings):
-    def __init__(self,
-                 model: str = "bert-base-uncased",
-                 layers: str = "-1,-2,-3,-4",
-                 pooling_operation: str = "first",
-                 use_scalar_mix: bool = False,
-                 fine_tune: bool = False):
+        if self.pooling_operation == 'first_last': length *= 2
 
-        super().__init__(model, layers, pooling_operation, use_scalar_mix, fine_tune)
+        return length
 
 
 class TransformerDocumentEmbeddings(DocumentEmbeddings):
     def __init__(
         self,
         model: str = "bert-base-uncased",
-        layers: str = "-1,-2,-3,-4",
-        use_scalar_mix: bool = False,
         fine_tune: bool = True,
-        batch_size: int = 4,
+        batch_size: int = 1,
+        layers: str = "-1",
+        use_scalar_mix: bool = False,
     ):
         """
         Bidirectional transformer embeddings of words, as proposed in Devlin et al., 2018.
@@ -2446,16 +2452,24 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         self.static_embeddings = not self.fine_tune
         self.batch_size = batch_size
 
-        # most models have an initial CLS token
-        self.index_of_CLS_token = 0
+        # most models have CLS token as last token (GPT-1, GPT-2, TransfoXL, XLNet, XLM), but BERT is initial
+        self.initial_cls_token: bool = False
+        if isinstance(self.tokenizer, BertTokenizer) or isinstance(self.tokenizer, AlbertTokenizer):
+            self.initial_cls_token = True
 
-        # TODO: some transformers have CLS token at different position
-        # if isinstance(self.tokenizer, XLNetTokenizer):
-        #     self.begin_offset = 0
-        # if isinstance(self.tokenizer, T5Tokenizer):
-        #     self.begin_offset = 0
-        # if isinstance(self.tokenizer, GPT2Tokenizer):
-        #     self.begin_offset = 0
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        """Add embeddings to all words in a list of sentences. If embeddings are already added,
+        updates only if embeddings are non-static."""
+
+        # using list comprehension
+        sentence_batches = [sentences[i * self.batch_size:(i + 1) * self.batch_size]
+                            for i in range((len(sentences) + self.batch_size - 1) // self.batch_size)]
+
+        for batch in sentence_batches:
+
+            self._add_embeddings_to_sentences(batch)
+
+        return sentences
 
     def _add_embeddings_to_sentences(self, sentences: List[Sentence]):
 
@@ -2493,12 +2507,13 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
                 mask[s_id][:sequence_length] = torch.ones(sequence_length)
 
             # put encoded batch through transformer model to get all hidden states of all encoder layers
-            hidden_states = self.model(input_ids, attention_mask=mask)[-1]
+            hidden_states = self.model(input_ids, attention_mask=mask)[-1] if len(sentences) > 1 \
+                else self.model(input_ids)[-1]
 
             # iterate over all subtokenized sentences
-            for sentence_idx, sentence in enumerate(sentences):
+            for sentence_idx, (sentence, subtokens) in enumerate(zip(sentences, subtokenized_sentences)):
 
-                index_of_CLS_token = self.index_of_CLS_token
+                index_of_CLS_token = 0 if self.initial_cls_token else len(subtokens) -1
 
                 cls_embeddings_all_layers: List[torch.FloatTensor] = \
                     [hidden_states[layer][sentence_idx][index_of_CLS_token] for layer in self.layer_indexes]
@@ -2513,20 +2528,6 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
                 # set the extracted embedding for the token
                 sentence.set_embedding(self.name, torch.cat(cls_embeddings_all_layers))
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        """Add embeddings to all words in a list of sentences. If embeddings are already added,
-        updates only if embeddings are non-static."""
-
-        # using list comprehension
-        sentence_batches = [sentences[i * self.batch_size:(i + 1) * self.batch_size]
-                            for i in range((len(sentences) + self.batch_size - 1) // self.batch_size)]
-
-        for batch in sentence_batches:
-
-            self._add_embeddings_to_sentences(batch)
-
-        return sentences
-
     @property
     @abstractmethod
     def embedding_length(self) -> int:
@@ -2536,6 +2537,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             if not self.use_scalar_mix
             else self.model.config.hidden_size
         )
+
 
 class BertEmbeddings(DocumentEmbeddings, TokenEmbeddings):
     def __init__(
