@@ -826,6 +826,8 @@ class CSVClassificationDataset(FlairDataset):
         self.max_tokens_per_doc = max_tokens_per_doc
         self.max_chars_per_doc = max_chars_per_doc
 
+        self.label_type = label_type
+
         # different handling of in_memory data than streaming data
         if self.in_memory:
             self.sentences = []
@@ -915,7 +917,7 @@ class CSVClassificationDataset(FlairDataset):
             sentence = Sentence(text, use_tokenizer=self.tokenizer)
             for column in self.column_name_map:
                 if self.column_name_map[column].startswith("label") and row[column]:
-                    sentence.add_label(row[column])
+                    sentence.add_label(self.label_type, row[column])
 
             if 0 < self.max_tokens_per_doc < len(sentence):
                 sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]
