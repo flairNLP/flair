@@ -2407,6 +2407,136 @@ class BERTEmbeddings(TransformerWordEmbeddings):
         super().__init__(model, layers, pooling_operation, use_scalar_mix, fine_tune)
 
 
+class TransformerDocumentEmbeddings(DocumentEmbeddings):
+    def __init__(
+        self,
+        model: str = "bert-base-uncased",
+        layers: str = "-1,-2,-3,-4",
+        use_scalar_mix: bool = False,
+        fine_tune: bool = True,
+        batch_size: int = 4,
+    ):
+        """
+        Bidirectional transformer embeddings of words, as proposed in Devlin et al., 2018.
+        :param bert_model_or_path: name of BERT model ('') or directory path containing custom model, configuration file
+        and vocab file (names of three files should be - config.json, pytorch_model.bin/model.chkpt, vocab.txt)
+        :param layers: string indicating which layers to take for embedding
+        :param pooling_operation: how to get from token piece embeddings to token embedding. Either pool them and take
+        the average ('mean') or use first word piece embedding as token embedding ('first)
+        :param document_only: set only document (sentence) emebddings
+        """
+        super().__init__()
+
+        # load tokenizer and transformer model
+        self.tokenizer = AutoTokenizer.from_pretrained(model)
+        config = AutoConfig.from_pretrained(model, output_hidden_states=True)
+        self.model = AutoModel.from_pretrained(model, config=config)
+
+        # model name
+        self.name = str(model)
+
+        # when initializing, embeddings are in eval mode by default
+        self.model.eval()
+        self.model.to(flair.device)
+
+        # embedding parameters
+        self.layer_indexes = [int(x) for x in layers.split(",")]
+        self.use_scalar_mix = use_scalar_mix
+        self.fine_tune = fine_tune
+        self.static_embeddings = not self.fine_tune
+        self.batch_size = batch_size
+
+        # most models have an initial CLS token
+        self.index_of_CLS_token = 0
+
+        # TODO: some transformers have CLS token at different position
+        # if isinstance(self.tokenizer, XLNetTokenizer):
+        #     self.begin_offset = 0
+        # if isinstance(self.tokenizer, T5Tokenizer):
+        #     self.begin_offset = 0
+        # if isinstance(self.tokenizer, GPT2Tokenizer):
+        #     self.begin_offset = 0
+
+    def _add_embeddings_to_sentences(self, sentences: List[Sentence]):
+
+        # gradients are enabled if fine-tuning is enabled
+        gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
+
+        with gradient_context:
+
+            # first, subtokenize each sentence and find out into how many subtokens each token was divided
+            subtokenized_sentences = []
+
+            # subtokenize sentences
+            for sentence in sentences:
+                subtokenized_sentence = self.tokenizer.encode(sentence.to_tokenized_string(), add_special_tokens=True)
+                subtokenized_sentences.append(
+                    torch.tensor(subtokenized_sentence, dtype=torch.long, device=flair.device))
+
+            # find longest sentence in batch
+            longest_sequence_in_batch: int = len(max(subtokenized_sentences, key=len))
+
+            # initialize batch tensors and mask
+            input_ids = torch.zeros(
+                [len(sentences), longest_sequence_in_batch],
+                dtype=torch.long,
+                device=flair.device,
+            )
+            mask = torch.zeros(
+                [len(sentences), longest_sequence_in_batch],
+                dtype=torch.long,
+                device=flair.device,
+            )
+            for s_id, sentence in enumerate(subtokenized_sentences):
+                sequence_length = len(sentence)
+                input_ids[s_id][:sequence_length] = sentence
+                mask[s_id][:sequence_length] = torch.ones(sequence_length)
+
+            # put encoded batch through transformer model to get all hidden states of all encoder layers
+            hidden_states = self.model(input_ids, attention_mask=mask)[-1]
+
+            # iterate over all subtokenized sentences
+            for sentence_idx, sentence in enumerate(sentences):
+
+                index_of_CLS_token = self.index_of_CLS_token
+
+                cls_embeddings_all_layers: List[torch.FloatTensor] = \
+                    [hidden_states[layer][sentence_idx][index_of_CLS_token] for layer in self.layer_indexes]
+
+                # use scalar mix of embeddings if so selected
+                if self.use_scalar_mix:
+                    sm = ScalarMix(mixture_size=len(cls_embeddings_all_layers))
+                    sm_embeddings = sm(cls_embeddings_all_layers)
+
+                    cls_embeddings_all_layers = [sm_embeddings]
+
+                # set the extracted embedding for the token
+                sentence.set_embedding(self.name, torch.cat(cls_embeddings_all_layers))
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        """Add embeddings to all words in a list of sentences. If embeddings are already added,
+        updates only if embeddings are non-static."""
+
+        # using list comprehension
+        sentence_batches = [sentences[i * self.batch_size:(i + 1) * self.batch_size]
+                            for i in range((len(sentences) + self.batch_size - 1) // self.batch_size)]
+
+        for batch in sentence_batches:
+
+            self._add_embeddings_to_sentences(batch)
+
+        return sentences
+
+    @property
+    @abstractmethod
+    def embedding_length(self) -> int:
+        """Returns the length of the embedding vector."""
+        return (
+            len(self.layer_indexes) * self.model.config.hidden_size
+            if not self.use_scalar_mix
+            else self.model.config.hidden_size
+        )
+
 class BertEmbeddings(DocumentEmbeddings, TokenEmbeddings):
     def __init__(
         self,

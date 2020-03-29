@@ -99,11 +99,12 @@ class Metric(object):
             > 0
         ):
             return round(
-                (self.get_tp(class_name))
+                (self.get_tp(class_name) + self.get_tn(class_name))
                 / (
                     self.get_tp(class_name)
                     + self.get_fp(class_name)
                     + self.get_fn(class_name)
+                    + self.get_tn(class_name)
                 ),
                 4,
             )
