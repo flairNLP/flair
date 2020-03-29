@@ -151,6 +151,7 @@ class ClassificationCorpus(Corpus):
             max_tokens_per_doc: int = -1,
             max_chars_per_doc: int = -1,
             in_memory: bool = False,
+            encoding: str = 'utf-8',
     ):
         """
         Instantiates a Corpus from text classification-formatted task data
@@ -177,6 +178,7 @@ class ClassificationCorpus(Corpus):
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
+            encoding=encoding,
         )
 
         # use test_file to create test split if available
@@ -187,6 +189,7 @@ class ClassificationCorpus(Corpus):
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
+            encoding=encoding,
         ) if test_file is not None else None
 
         # use dev_file to create test split if available
@@ -197,6 +200,7 @@ class ClassificationCorpus(Corpus):
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
+            encoding=encoding,
         ) if dev_file is not None else None
 
         super(ClassificationCorpus, self).__init__(
@@ -255,6 +259,7 @@ class CSVClassificationCorpus(Corpus):
             max_chars_per_doc=-1,
             in_memory: bool = False,
             skip_header: bool = False,
+            encoding: str = 'utf-8',
             **fmtparams,
     ):
         """
@@ -286,6 +291,7 @@ class CSVClassificationCorpus(Corpus):
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
             skip_header=skip_header,
+            encoding=encoding,
             **fmtparams,
         )
 
@@ -298,6 +304,7 @@ class CSVClassificationCorpus(Corpus):
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
             skip_header=skip_header,
+            encoding=encoding,
             **fmtparams,
         ) if test_file is not None else None
 
@@ -310,6 +317,7 @@ class CSVClassificationCorpus(Corpus):
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
             skip_header=skip_header,
+            encoding=encoding,
             **fmtparams,
         ) if dev_file is not None else None
 
@@ -788,6 +796,7 @@ class CSVClassificationDataset(FlairDataset):
             tokenizer=segtok_tokenizer,
             in_memory: bool = True,
             skip_header: bool = False,
+            encoding: str = 'utf-8',
             **fmtparams,
     ):
         """
@@ -817,6 +826,8 @@ class CSVClassificationDataset(FlairDataset):
         self.max_tokens_per_doc = max_tokens_per_doc
         self.max_chars_per_doc = max_chars_per_doc
 
+        self.label_type = label_type
+
         # different handling of in_memory data than streaming data
         if self.in_memory:
             self.sentences = []
@@ -831,7 +842,7 @@ class CSVClassificationDataset(FlairDataset):
             if column_name_map[column] == "text":
                 self.text_columns.append(column)
 
-        with open(self.path_to_file, encoding="utf-8") as csv_file:
+        with open(self.path_to_file, encoding=encoding) as csv_file:
 
             csv_reader = csv.reader(csv_file, **fmtparams)
 
@@ -906,7 +917,7 @@ class CSVClassificationDataset(FlairDataset):
             sentence = Sentence(text, use_tokenizer=self.tokenizer)
             for column in self.column_name_map:
                 if self.column_name_map[column].startswith("label") and row[column]:
-                    sentence.add_label(row[column])
+                    sentence.add_label(self.label_type, row[column])
 
             if 0 < self.max_tokens_per_doc < len(sentence):
                 sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]
@@ -923,6 +934,7 @@ class ClassificationDataset(FlairDataset):
             max_chars_per_doc=-1,
             tokenizer=segtok_tokenizer,
             in_memory: bool = True,
+            encoding: str = 'utf-8',
     ):
         """
         Reads a data file for text classification. The file should contain one document/text per line.
@@ -959,7 +971,7 @@ class ClassificationDataset(FlairDataset):
 
         self.path_to_file = path_to_file
 
-        with open(str(path_to_file), encoding="utf-8") as f:
+        with open(str(path_to_file), encoding=encoding) as f:
             line = f.readline()
             position = 0
             while line:
