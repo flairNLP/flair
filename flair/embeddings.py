@@ -1852,6 +1852,7 @@ class FlairEmbeddings(TokenEmbeddings):
         cache_dir = Path("embeddings")
 
         aws_path: str = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources"
+        hu_path: str = "https://flair.informatik.hu-berlin.de/resources"
 
         self.PRETRAINED_MODEL_ARCHIVE_MAP = {
             # multilingual models
@@ -1895,6 +1896,8 @@ class FlairEmbeddings(TokenEmbeddings):
             "de-historic-ha-backward": f"{aws_path}/embeddings-stefan-it/lm-historic-hamburger-anzeiger-backward-v0.1.pt",
             "de-historic-wz-forward": f"{aws_path}/embeddings-stefan-it/lm-historic-wiener-zeitung-forward-v0.1.pt",
             "de-historic-wz-backward": f"{aws_path}/embeddings-stefan-it/lm-historic-wiener-zeitung-backward-v0.1.pt",
+            "de-historic-rw-forward": f"{hu_path}/embeddings/redewiedergabe_lm_forward.pt",
+            "de-historic-rw-backward": f"{hu_path}/embeddings/redewiedergabe_lm_backward.pt",
             # Spanish
             "es-forward": f"{aws_path}/embeddings-v0.4/language_model_es_forward_long/lm-es-forward.pt",
             "es-backward": f"{aws_path}/embeddings-v0.4/language_model_es_backward_long/lm-es-backward.pt",
