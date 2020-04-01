@@ -1192,7 +1192,6 @@ def _get_transformer_sentence_embeddings(
             tokens_tensor = torch.tensor([indexed_tokens])
             tokens_tensor = tokens_tensor.to(flair.device)
 
-            print(tokens_tensor)
             hidden_states = model(tokens_tensor)[-1]
 
             for token in sentence.tokens:
