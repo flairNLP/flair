@@ -75,6 +75,7 @@ class ModelTrainer:
         checkpoint: bool = False,
         save_final_model: bool = True,
         anneal_with_restarts: bool = False,
+        anneal_with_prestarts: bool = False,
         batch_growth_annealing: bool = False,
         shuffle: bool = True,
         param_selection_mode: bool = False,
@@ -255,6 +256,9 @@ class ModelTrainer:
             for self.epoch in range(self.epoch + 1, max_epochs + 1):
                 log_line(log)
 
+                last_epoch_model_state_dict = self.model.state_dict()
+                best_state_dict = self.model.state_dict()
+
                 if eval_on_train_shuffle:
                     train_part_indices = list(range(self.corpus.train))
                     random.shuffle(train_part_indices)
@@ -273,13 +277,18 @@ class ModelTrainer:
                 # reload last best model if annealing with restarts is enabled
                 if (
                     learning_rate != previous_learning_rate
-                    and anneal_with_restarts
                     and (base_path / "best-model.pt").exists()
                 ):
                     log.info("resetting to best model")
-                    self.model.load_state_dict(
-                        self.model.load(base_path / "best-model.pt").state_dict()
-                    )
+                    if anneal_with_restarts:
+                        self.model.load_state_dict(
+                            self.model.load(base_path / "best-model.pt").state_dict()
+                        )
+                    if anneal_with_prestarts:
+                        self.model.load_state_dict(
+                            self.model.load(base_path / "pre-best-model.pt").state_dict()
+                        )
+
 
                 previous_learning_rate = learning_rate
 
@@ -366,7 +375,7 @@ class ModelTrainer:
 
                 log_line(log)
                 log.info(
-                    f"EPOCH {self.epoch} done: loss {train_loss:.4f} - lr {learning_rate:.4f}"
+                    f"EPOCH {self.epoch} done: loss {train_loss:.4f} - lr {learning_rate:.7f}"
                 )
 
                 if self.use_tensorboard:
@@ -405,7 +414,7 @@ class ModelTrainer:
                         f"\t{train_part_loss}\t{train_part_eval_result.log_line}"
                     )
                     log.info(
-                        f"TRAIN_SPLIT : loss {train_part_loss} - score {train_part_eval_result.main_score}"
+                        f"TRAIN_SPLIT : loss {train_part_loss} - score {round(train_part_eval_result.main_score, 4)}"
                     )
 
                 if log_dev:
@@ -419,7 +428,7 @@ class ModelTrainer:
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
                     log.info(
-                        f"DEV : loss {dev_loss} - score {dev_eval_result.main_score}"
+                        f"DEV : loss {dev_loss} - score {round(dev_eval_result.main_score, 4)}"
                     )
                     # calculate scores using dev data if available
                     # append dev score to score history
@@ -449,7 +458,7 @@ class ModelTrainer:
                     )
                     result_line += f"\t{test_loss}\t{test_eval_result.log_line}"
                     log.info(
-                        f"TEST : loss {test_loss} - score {test_eval_result.main_score}"
+                        f"TEST : loss {test_loss} - score {round(test_eval_result.main_score, 4)}"
                     )
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
@@ -526,11 +535,16 @@ class ModelTrainer:
 
                 # if we use dev data, remember best model based on dev evaluation score
                 if (
-                    (not train_with_dev or anneal_with_restarts)
+                    (not train_with_dev or anneal_with_restarts or anneal_with_prestarts)
                     and not param_selection_mode
                     and current_score == scheduler.best
                 ):
+                    print("saving best model")
                     self.model.save(base_path / "best-model.pt")
+                    current_state_dict = self.model.state_dict()
+                    self.model.load_state_dict(last_epoch_model_state_dict)
+                    self.model.save(base_path / "pre-best-model.pt")
+                    self.model.load_state_dict(current_state_dict)
 
             # if we do not use dev data for model selection, save final model
             if save_final_model and not param_selection_mode:

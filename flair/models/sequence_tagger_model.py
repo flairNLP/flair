@@ -467,8 +467,8 @@ class SequenceTagger(flair.nn.Model):
                     outfile.write("".join(lines))
 
             detailed_result = (
-                f"\nMICRO_AVG: acc {metric.micro_avg_accuracy()} - f1-score {metric.micro_avg_f_score()}"
-                f"\nMACRO_AVG: acc {metric.macro_avg_accuracy()} - f1-score {metric.macro_avg_f_score()}"
+                f"\nMICRO_AVG: acc {metric.micro_avg_accuracy():.4f} - f1-score {metric.micro_avg_f_score():.4f}"
+                f"\nMACRO_AVG: acc {metric.macro_avg_accuracy():.4f} - f1-score {metric.macro_avg_f_score():.4f}"
             )
             for class_name in metric.get_classes():
                 detailed_result += (
@@ -481,7 +481,7 @@ class SequenceTagger(flair.nn.Model):
 
             result = Result(
                 main_score=metric.micro_avg_f_score(),
-                log_line=f"{metric.precision()}\t{metric.recall()}\t{metric.micro_avg_f_score()}",
+                log_line=f"{metric.precision():.4f}\t{metric.recall():.4f}\t{metric.micro_avg_f_score():.4f}",
                 log_header="PRECISION\tRECALL\tF1",
                 detailed_results=detailed_result,
             )
