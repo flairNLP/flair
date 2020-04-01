@@ -40,6 +40,7 @@ Currently, the following contextual string embeddings are provided (note: replac
 | 'de-X'  | German  | Trained with mixed corpus (Web, Wikipedia, Subtitles) |
 | 'de-historic-ha-X'  | German (historical) | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Historical German trained over *Hamburger Anzeiger* |
 | 'de-historic-wz-X'  | German (historical) | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): Historical German trained over *Wiener Zeitung* |
+| 'de-historic-rw-X'  | German (historical) | Added by [@redewiedergabe](https://github.com/redewiedergabe): Historical German trained over 100 million tokens |
 | 'es-X'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): Trained with Wikipedia |
 | 'es-X-fast'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): Trained with Wikipediam CPU-friendly |
 | 'eu-X'    | Basque | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
