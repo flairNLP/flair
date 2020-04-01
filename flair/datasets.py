@@ -1285,44 +1285,6 @@ class FeideggerDataset(FlairDataset):
         return self.data_points[index]
 
 
-class AMAZON_PRODUCT_SENTIMENT(ClassificationCorpus):
-    def __init__(
-            self,
-            **corpusargs
-    ):
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
-
-        # download data if necessary
-        if not (data_folder / "train.txt").is_file():
-
-            amazon__path = "http://deepyeti.ucsd.edu/jianmo/amazon/categoryFilesSmall"
-
-            part_name = "AMAZON_FASHION_5.json.gz"
-
-            cached_path(f"{amazon__path}/{part_name}", Path("datasets") / dataset_name)
-
-            import gzip, shutil
-
-            # create dataset directory if necessary
-            if not os.path.exists(data_folder):
-                os.makedirs(data_folder)
-
-            with open(data_folder / "train.txt", "a") as train_file:
-
-                # download senteval datasets if necessary und unzip
-                with gzip.open(Path(flair.cache_root) / "datasets" / dataset_name / part_name,  "rb",) as f_in:
-                    for line in f_in:
-                        train_file.write(f"__label__POSITIVE {line}")
-
-        super(AMAZON_PRODUCT_SENTIMENT, self).__init__(
-            data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, **corpusargs
-        )
-
 class CONLL_03(ColumnCorpus):
     def __init__(
             self,
