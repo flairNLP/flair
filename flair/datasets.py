@@ -148,8 +148,9 @@ class ClassificationCorpus(Corpus):
             test_file=None,
             dev_file=None,
             tokenizer: Callable[[str], List[Token]] = space_tokenizer,
-            max_tokens_per_doc: int = -1,
-            max_chars_per_doc: int = -1,
+            truncate_to_max_tokens: int = -1,
+            truncate_to_max_chars: int = -1,
+            filter_if_longer_than: int = -1,
             in_memory: bool = False,
     ):
         """
@@ -160,8 +161,8 @@ class ClassificationCorpus(Corpus):
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
         :param use_tokenizer: If True, tokenizes the dataset, otherwise uses whitespace tokenization
-        :param max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
-        :param max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
+        :param truncate_to_max_tokens: If set, truncates each Sentence to a maximum number of Tokens
+        :param truncate_to_max_chars: If set, truncates each Sentence to a maximum number of chars
         :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
         :return: a Corpus with annotated train, dev and test data
         """
@@ -174,8 +175,9 @@ class ClassificationCorpus(Corpus):
             train_file,
             label_type=label_type,
             tokenizer=tokenizer,
-            max_tokens_per_doc=max_tokens_per_doc,
-            max_chars_per_doc=max_chars_per_doc,
+            truncate_to_max_tokens=truncate_to_max_tokens,
+            truncate_to_max_chars=truncate_to_max_chars,
+            filter_if_longer_than=filter_if_longer_than,
             in_memory=in_memory,
         )
 
@@ -184,8 +186,9 @@ class ClassificationCorpus(Corpus):
             test_file,
             label_type=label_type,
             tokenizer=tokenizer,
-            max_tokens_per_doc=max_tokens_per_doc,
-            max_chars_per_doc=max_chars_per_doc,
+            truncate_to_max_tokens=truncate_to_max_tokens,
+            truncate_to_max_chars=truncate_to_max_chars,
+            filter_if_longer_than=filter_if_longer_than,
             in_memory=in_memory,
         ) if test_file is not None else None
 
@@ -194,8 +197,9 @@ class ClassificationCorpus(Corpus):
             dev_file,
             label_type=label_type,
             tokenizer=tokenizer,
-            max_tokens_per_doc=max_tokens_per_doc,
-            max_chars_per_doc=max_chars_per_doc,
+            truncate_to_max_tokens=truncate_to_max_tokens,
+            truncate_to_max_chars=truncate_to_max_chars,
+            filter_if_longer_than=filter_if_longer_than,
             in_memory=in_memory,
         ) if dev_file is not None else None
 
@@ -919,8 +923,9 @@ class ClassificationDataset(FlairDataset):
             self,
             path_to_file: Union[str, Path],
             label_type: str = 'class',
-            max_tokens_per_doc=-1,
-            max_chars_per_doc=-1,
+            truncate_to_max_tokens=-1,
+            truncate_to_max_chars=-1,
+            filter_if_longer_than: int = -1,
             tokenizer=segtok_tokenizer,
             in_memory: bool = True,
     ):
@@ -931,9 +936,9 @@ class ClassificationDataset(FlairDataset):
         If you have a multi class task, you can have as many labels as you want at the beginning of the line, e.g.,
         __label__<class_name_1> __label__<class_name_2> <text>
         :param path_to_file: the path to the data file
-        :param max_tokens_per_doc: Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.
+        :param truncate_to_max_tokens: Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.
         :param max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
-        :param max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
+        :param truncate_to_max_chars: If set, truncates each Sentence to a maximum number of chars
         :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
         :return: list of sentences
         """
@@ -954,8 +959,9 @@ class ClassificationDataset(FlairDataset):
             self.indices = []
 
         self.total_sentence_count: int = 0
-        self.max_chars_per_doc = max_chars_per_doc
-        self.max_tokens_per_doc = max_tokens_per_doc
+        self.truncate_to_max_chars = truncate_to_max_chars
+        self.truncate_to_max_tokens = truncate_to_max_tokens
+        self.filter_if_longer_than = filter_if_longer_than
 
         self.path_to_file = path_to_file
 
@@ -964,6 +970,11 @@ class ClassificationDataset(FlairDataset):
             position = 0
             while line:
                 if "__label__" not in line or " " not in line:
+                    position = f.tell()
+                    line = f.readline()
+                    continue
+
+                if 0 < self.filter_if_longer_than < len(line.split(' ')):
                     position = f.tell()
                     line = f.readline()
                     continue
@@ -1000,8 +1011,8 @@ class ClassificationDataset(FlairDataset):
 
         text = line[l_len:].strip()
 
-        if self.max_chars_per_doc > 0:
-            text = text[: self.max_chars_per_doc]
+        if self.truncate_to_max_chars > 0:
+            text = text[: self.truncate_to_max_chars]
 
         if text and labels:
             sentence = Sentence(text, use_tokenizer=tokenizer)
@@ -1011,9 +1022,9 @@ class ClassificationDataset(FlairDataset):
 
             if (
                     sentence is not None
-                    and 0 < self.max_tokens_per_doc < len(sentence)
+                    and 0 < self.truncate_to_max_tokens < len(sentence)
             ):
-                sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]
+                sentence.tokens = sentence.tokens[: self.truncate_to_max_tokens]
 
             return sentence
         return None
@@ -1273,6 +1284,44 @@ class FeideggerDataset(FlairDataset):
     def __getitem__(self, index: int = 0) -> DataPair:
         return self.data_points[index]
 
+
+class AMAZON_PRODUCT_SENTIMENT(ClassificationCorpus):
+    def __init__(
+            self,
+            **corpusargs
+    ):
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
+
+        # download data if necessary
+        if not (data_folder / "train.txt").is_file():
+
+            amazon__path = "http://deepyeti.ucsd.edu/jianmo/amazon/categoryFilesSmall"
+
+            part_name = "AMAZON_FASHION_5.json.gz"
+
+            cached_path(f"{amazon__path}/{part_name}", Path("datasets") / dataset_name)
+
+            import gzip, shutil
+
+            # create dataset directory if necessary
+            if not os.path.exists(data_folder):
+                os.makedirs(data_folder)
+
+            with open(data_folder / "train.txt", "a") as train_file:
+
+                # download senteval datasets if necessary und unzip
+                with gzip.open(Path(flair.cache_root) / "datasets" / dataset_name / part_name,  "rb",) as f_in:
+                    for line in f_in:
+                        train_file.write(f"__label__POSITIVE {line}")
+
+        super(AMAZON_PRODUCT_SENTIMENT, self).__init__(
+            data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, **corpusargs
+        )
 
 class CONLL_03(ColumnCorpus):
     def __init__(
@@ -1574,7 +1623,7 @@ class SENTEVAL_CR(ClassificationCorpus):
 class SENTEVAL_MR(ClassificationCorpus):
     def __init__(
             self,
-            in_memory: bool = True,
+            **corpusargs
     ):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1607,7 +1656,7 @@ class SENTEVAL_MR(ClassificationCorpus):
                         train_file.write(f"__label__NEGATIVE {line}")
 
         super(SENTEVAL_MR, self).__init__(
-            data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, in_memory=in_memory
+            data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, **corpusargs
         )
 
 
@@ -1691,13 +1740,13 @@ class SENTEVAL_MPQA(ClassificationCorpus):
         )
 
 
-class SENTEVAL_SST_BINARY(CSVClassificationCorpus):
+class SENTEVAL_SST_BINARY(ClassificationCorpus):
     def __init__(
             self,
-            in_memory: bool = True,
+            **corpusargs
     ):
         # this dataset name
-        dataset_name = self.__class__.__name__.lower()
+        dataset_name = self.__class__.__name__.lower() + '_v2'
 
         # default dataset folder is the cache root
         data_folder = Path(flair.cache_root) / "datasets" / dataset_name
@@ -1706,17 +1755,21 @@ class SENTEVAL_SST_BINARY(CSVClassificationCorpus):
         if not (data_folder / "train.txt").is_file():
 
             # download senteval datasets if necessary und unzip
-            cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-train', Path("datasets") / dataset_name)
-            cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-test', Path("datasets") / dataset_name)
-            cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-dev', Path("datasets") / dataset_name)
+            cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-train', Path("datasets") / dataset_name / 'raw')
+            cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-test', Path("datasets") / dataset_name / 'raw')
+            cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-dev', Path("datasets") / dataset_name / 'raw')
+
+            # create train.txt file by iterating over pos and neg file
+            with open(data_folder / "train.txt", "a") as out_file, open(data_folder / 'raw' / "sentiment-train") as in_file:
+                for line in in_file:
+                    fields = line.split('\t')
+                    label = 'POSITIVE' if fields[1].rstrip() == '1' else 'NEGATIVE'
+                    out_file.write(f"__label__{label} {fields[0]}\n")
 
         super(SENTEVAL_SST_BINARY, self).__init__(
             data_folder,
-            column_name_map={0: 'text', 1: 'label'},
             tokenizer=segtok_tokenizer,
-            in_memory=in_memory,
-            delimiter='\t',
-            quotechar=None,
+            **corpusargs,
         )
 
 
@@ -1801,12 +1854,15 @@ class GERMEVAL(ColumnCorpus):
 
 
 class IMDB(ClassificationCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False):
+    def __init__(self, base_path: Union[str, Path] = None, rebalance_corpus: bool = True, **corpusargs):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
         # this dataset name
-        dataset_name = self.__class__.__name__.lower()
+        dataset_name = self.__class__.__name__.lower() + '_v2'
+
+        if rebalance_corpus:
+            dataset_name = dataset_name + '-rebalanced'
 
         # default dataset folder is the cache root
         if not base_path:
@@ -1841,20 +1897,22 @@ class IMDB(ClassificationCorpus):
                                 if f"{dataset}/{label}" in m.name
                             ],
                         )
-                        with open(f"{data_path}/{dataset}.txt", "at") as f_p:
+                        with open(f"{data_path}/train-all.txt", "at") as f_p:
                             current_path = data_path / "aclImdb" / dataset / label
                             for file_name in current_path.iterdir():
                                 if file_name.is_file() and file_name.name.endswith(
                                         ".txt"
                                 ):
+                                    if label == "pos": sentiment_label = 'POSITIVE'
+                                    if label == "neg": sentiment_label = 'NEGATIVE'
                                     f_p.write(
-                                        f"__label__{label} "
+                                        f"__label__{sentiment_label} "
                                         + file_name.open("rt", encoding="utf-8").read()
                                         + "\n"
                                     )
 
         super(IMDB, self).__init__(
-            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
+            data_folder, tokenizer=space_tokenizer, **corpusargs
         )
 
 
