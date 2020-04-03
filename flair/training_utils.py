@@ -67,29 +67,26 @@ class Metric(object):
 
     def precision(self, class_name=None):
         if self.get_tp(class_name) + self.get_fp(class_name) > 0:
-            return round(
+            return (
                 self.get_tp(class_name)
-                / (self.get_tp(class_name) + self.get_fp(class_name)),
-                4,
+                / (self.get_tp(class_name) + self.get_fp(class_name))
             )
         return 0.0
 
     def recall(self, class_name=None):
         if self.get_tp(class_name) + self.get_fn(class_name) > 0:
-            return round(
+            return (
                 self.get_tp(class_name)
-                / (self.get_tp(class_name) + self.get_fn(class_name)),
-                4,
+                / (self.get_tp(class_name) + self.get_fn(class_name))
             )
         return 0.0
 
     def f_score(self, class_name=None):
         if self.precision(class_name) + self.recall(class_name) > 0:
-            return round(
+            return (
                 (1 + self.beta*self.beta)
                 * (self.precision(class_name) * self.recall(class_name))
-                / (self.precision(class_name) * self.beta*self.beta + self.recall(class_name)),
-                4,
+                / (self.precision(class_name) * self.beta*self.beta + self.recall(class_name))
             )
         return 0.0
 
@@ -98,14 +95,14 @@ class Metric(object):
             self.get_tp(class_name) + self.get_fp(class_name) + self.get_fn(class_name)
             > 0
         ):
-            return round(
-                (self.get_tp(class_name))
+            return (
+                (self.get_tp(class_name) + self.get_tn(class_name))
                 / (
                     self.get_tp(class_name)
                     + self.get_fp(class_name)
                     + self.get_fn(class_name)
-                ),
-                4,
+                    + self.get_tn(class_name)
+                )
             )
         return 0.0
 
@@ -128,7 +125,7 @@ class Metric(object):
         ]
 
         if len(class_accuracy) > 0:
-            return round(sum(class_accuracy) / len(class_accuracy), 4)
+            return sum(class_accuracy) / len(class_accuracy)
 
         return 0.0
 
