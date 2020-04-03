@@ -19,7 +19,7 @@ except ImportError:
 import flair
 import flair.nn
 from flair.data import MultiCorpus, Corpus
-from flair.datasets import DataLoader
+from flair.datasets.base import DataLoader
 from flair.optim import ExpAnnealLR
 from flair.training_utils import (
     init_output_file,
