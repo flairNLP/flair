@@ -10,7 +10,7 @@ from typing import Union, List
 import flair
 from flair import file_utils
 from flair.data import DataPoint
-from flair.datasets.base import DataLoader
+from flair.datasets import DataLoader
 from flair.training_utils import Result
 
 
