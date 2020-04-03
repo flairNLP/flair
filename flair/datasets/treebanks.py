@@ -1,19 +1,7 @@
-import csv
 import logging
-import os
 import re
-from abc import abstractmethod
 from pathlib import Path
-from typing import List, Dict, Union, Callable
-
-import numpy as np
-import json
-import urllib
-from tqdm import tqdm
-
-import torch.utils.data.dataloader
-from torch.utils.data import Dataset
-from torch.utils.data.dataset import Subset, ConcatDataset
+from typing import List, Union
 
 import flair
 from flair.data import (
@@ -21,10 +9,6 @@ from flair.data import (
     Corpus,
     Token,
     FlairDataset,
-    DataPair,
-    Image,
-    space_tokenizer,
-    segtok_tokenizer,
 )
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unzip_file

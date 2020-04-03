@@ -1,19 +1,8 @@
 import csv
-import logging
 import os
-import re
-from abc import abstractmethod
 from pathlib import Path
 from typing import List, Dict, Union, Callable
 
-import numpy as np
-import json
-import urllib
-from tqdm import tqdm
-
-import torch.utils.data.dataloader
-from torch.utils.data import Dataset
-from torch.utils.data.dataset import Subset, ConcatDataset
 
 import flair
 from flair.data import (
@@ -21,8 +10,6 @@ from flair.data import (
     Corpus,
     Token,
     FlairDataset,
-    DataPair,
-    Image,
     space_tokenizer,
     segtok_tokenizer,
 )
@@ -518,7 +505,7 @@ class IMDB(ClassificationCorpus):
 
 
 class NEWSGROUPS(ClassificationCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False):
+    def __init__(self, base_path: Union[str, Path] = None, **corpusargs):
 
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -601,14 +588,14 @@ class NEWSGROUPS(ClassificationCorpus):
                                     )
 
         super(NEWSGROUPS, self).__init__(
-            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
+            data_folder, tokenizer=space_tokenizer, **corpusargs,
         )
 
 
 class SENTEVAL_CR(ClassificationCorpus):
     def __init__(
             self,
-            in_memory: bool = True,
+            **corpusargs,
     ):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -641,7 +628,7 @@ class SENTEVAL_CR(ClassificationCorpus):
                         train_file.write(f"__label__NEGATIVE {line}")
 
         super(SENTEVAL_CR, self).__init__(
-            data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, in_memory=in_memory
+            data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, **corpusargs,
         )
 
 
@@ -688,7 +675,7 @@ class SENTEVAL_MR(ClassificationCorpus):
 class SENTEVAL_SUBJ(ClassificationCorpus):
     def __init__(
             self,
-            in_memory: bool = True,
+            **corpusargs,
     ):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -721,14 +708,14 @@ class SENTEVAL_SUBJ(ClassificationCorpus):
                         train_file.write(f"__label__OBJECTIVE {line}")
 
         super(SENTEVAL_SUBJ, self).__init__(
-            data_folder, label_type='objectivity', tokenizer=segtok_tokenizer, in_memory=in_memory
+            data_folder, label_type='objectivity', tokenizer=segtok_tokenizer, **corpusargs,
         )
 
 
 class SENTEVAL_MPQA(ClassificationCorpus):
     def __init__(
             self,
-            in_memory: bool = True,
+            **corpusargs,
     ):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -761,7 +748,7 @@ class SENTEVAL_MPQA(ClassificationCorpus):
                         train_file.write(f"__label__NEGATIVE {line}")
 
         super(SENTEVAL_MPQA, self).__init__(
-            data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, in_memory=in_memory
+            data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, **corpusargs,
         )
 
 
@@ -801,7 +788,7 @@ class SENTEVAL_SST_BINARY(ClassificationCorpus):
 class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
     def __init__(
             self,
-            in_memory: bool = True,
+            **corpusargs,
     ):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -828,12 +815,12 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
         super(SENTEVAL_SST_GRANULAR, self).__init__(
             data_folder,
             tokenizer=segtok_tokenizer,
-            in_memory=in_memory,
+            **corpusargs,
         )
 
 
 class TREC_50(ClassificationCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, **corpusargs):
 
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -886,12 +873,12 @@ class TREC_50(ClassificationCorpus):
                             write_fp.write(f"{new_label} {question}\n")
 
         super(TREC_50, self).__init__(
-            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
+            data_folder, tokenizer=space_tokenizer, **corpusargs,
         )
 
 
 class TREC_6(ClassificationCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, **corpusargs):
 
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -944,7 +931,7 @@ class TREC_6(ClassificationCorpus):
                             write_fp.write(f"{new_label} {question}\n")
 
         super(TREC_6, self).__init__(
-            data_folder, label_type='question_type', tokenizer=space_tokenizer, in_memory=in_memory
+            data_folder, label_type='question_type', tokenizer=space_tokenizer, **corpusargs,
         )
 
 
@@ -975,7 +962,7 @@ def _download_wassa_if_not_there(emotion, data_folder, dataset_name):
 
 
 class WASSA_ANGER(ClassificationCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False):
+    def __init__(self, base_path: Union[str, Path] = None, **corpusargs):
 
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -992,12 +979,12 @@ class WASSA_ANGER(ClassificationCorpus):
         _download_wassa_if_not_there("anger", data_folder, dataset_name)
 
         super(WASSA_ANGER, self).__init__(
-            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
+            data_folder, tokenizer=space_tokenizer, **corpusargs,
         )
 
 
 class WASSA_FEAR(ClassificationCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False):
+    def __init__(self, base_path: Union[str, Path] = None, **corpusargs):
 
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1014,12 +1001,12 @@ class WASSA_FEAR(ClassificationCorpus):
         _download_wassa_if_not_there("fear", data_folder, dataset_name)
 
         super(WASSA_FEAR, self).__init__(
-            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
+            data_folder, tokenizer=space_tokenizer, **corpusargs
         )
 
 
 class WASSA_JOY(ClassificationCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False):
+    def __init__(self, base_path: Union[str, Path] = None, **corpusargs):
 
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1036,12 +1023,12 @@ class WASSA_JOY(ClassificationCorpus):
         _download_wassa_if_not_there("joy", data_folder, dataset_name)
 
         super(WASSA_JOY, self).__init__(
-            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
+            data_folder, tokenizer=space_tokenizer, **corpusargs,
         )
 
 
 class WASSA_SADNESS(ClassificationCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = False):
+    def __init__(self, base_path: Union[str, Path] = None, **corpusargs):
 
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1058,5 +1045,5 @@ class WASSA_SADNESS(ClassificationCorpus):
         _download_wassa_if_not_there("sadness", data_folder, dataset_name)
 
         super(WASSA_SADNESS, self).__init__(
-            data_folder, tokenizer=space_tokenizer, in_memory=in_memory
+            data_folder, tokenizer=space_tokenizer, **corpusargs,
         )
