@@ -1,4 +1,5 @@
 import csv
+import json
 import os
 from pathlib import Path
 from typing import List, Dict, Union, Callable
@@ -29,7 +30,8 @@ class ClassificationCorpus(Corpus):
             truncate_to_max_tokens: int = -1,
             truncate_to_max_chars: int = -1,
             filter_if_longer_than: int = -1,
-            in_memory: bool = False,
+            memory_mode: str = "partial",
+            label_name_map: Dict[str, str] = None,
             encoding: str = 'utf-8',
     ):
         """
@@ -57,7 +59,8 @@ class ClassificationCorpus(Corpus):
             truncate_to_max_tokens=truncate_to_max_tokens,
             truncate_to_max_chars=truncate_to_max_chars,
             filter_if_longer_than=filter_if_longer_than,
-            in_memory=in_memory,
+            memory_mode=memory_mode,
+            label_name_map=label_name_map,
             encoding=encoding,
         )
 
@@ -69,7 +72,8 @@ class ClassificationCorpus(Corpus):
             truncate_to_max_tokens=truncate_to_max_tokens,
             truncate_to_max_chars=truncate_to_max_chars,
             filter_if_longer_than=filter_if_longer_than,
-            in_memory=in_memory,
+            memory_mode=memory_mode,
+            label_name_map=label_name_map,
             encoding=encoding,
         ) if test_file is not None else None
 
@@ -81,7 +85,8 @@ class ClassificationCorpus(Corpus):
             truncate_to_max_tokens=truncate_to_max_tokens,
             truncate_to_max_chars=truncate_to_max_chars,
             filter_if_longer_than=filter_if_longer_than,
-            in_memory=in_memory,
+            memory_mode=memory_mode,
+            label_name_map=label_name_map,
             encoding=encoding,
         ) if dev_file is not None else None
 
@@ -99,7 +104,8 @@ class ClassificationDataset(FlairDataset):
             truncate_to_max_chars=-1,
             filter_if_longer_than: int = -1,
             tokenizer=segtok_tokenizer,
-            in_memory: bool = True,
+            memory_mode: str = "string",
+            label_name_map: Dict[str, str] = None,
             encoding: str = 'utf-8',
     ):
         """
@@ -123,18 +129,21 @@ class ClassificationDataset(FlairDataset):
         self.label_prefix = "__label__"
         self.label_type = label_type
 
-        self.in_memory = in_memory
+        self.memory_mode = memory_mode
         self.tokenizer = tokenizer
 
-        if self.in_memory:
+        if self.memory_mode == 'full':
             self.sentences = []
-        else:
+        if self.memory_mode == 'partial':
+            self.lines = []
+        if self.memory_mode == 'disk':
             self.indices = []
 
         self.total_sentence_count: int = 0
         self.truncate_to_max_chars = truncate_to_max_chars
         self.truncate_to_max_tokens = truncate_to_max_tokens
         self.filter_if_longer_than = filter_if_longer_than
+        self.label_name_map = label_name_map
 
         self.path_to_file = path_to_file
 
@@ -152,14 +161,19 @@ class ClassificationDataset(FlairDataset):
                     line = f.readline()
                     continue
 
-                if self.in_memory:
+                if self.memory_mode == 'full':
                     sentence = self._parse_line_to_sentence(
                         line, self.label_prefix, tokenizer
                     )
                     if sentence is not None and len(sentence.tokens) > 0:
                         self.sentences.append(sentence)
                         self.total_sentence_count += 1
-                else:
+
+                if self.memory_mode == 'partial':
+                    self.lines.append(line)
+                    self.total_sentence_count += 1
+
+                if self.memory_mode == 'disk':
                     self.indices.append(position)
                     self.total_sentence_count += 1
 
@@ -178,6 +192,10 @@ class ClassificationDataset(FlairDataset):
             if words[i].startswith(label_prefix):
                 l_len += len(words[i]) + 1
                 label = words[i].replace(label_prefix, "")
+
+                if self.label_name_map and label in self.label_name_map.keys():
+                    label = self.label_name_map[label]
+
                 labels.append(label)
             else:
                 break
@@ -203,16 +221,25 @@ class ClassificationDataset(FlairDataset):
         return None
 
     def is_in_memory(self) -> bool:
-        return self.in_memory
+        if self.memory_mode == 'disk': return False
+        if self.memory_mode == 'partial': return False
+        return True
 
     def __len__(self):
         return self.total_sentence_count
 
     def __getitem__(self, index: int = 0) -> Sentence:
-        if self.in_memory:
-            return self.sentences[index]
-        else:
 
+        if self.memory_mode == 'full':
+            return self.sentences[index]
+
+        if self.memory_mode == 'partial':
+            sentence = self._parse_line_to_sentence(
+                self.lines[index], self.label_prefix, self.tokenizer
+            )
+            return sentence
+
+        if self.memory_mode == 'disk':
             with open(str(self.path_to_file), encoding="utf-8") as file:
                 file.seek(self.indices[index])
                 line = file.readline()
@@ -301,6 +328,8 @@ class CSVClassificationCorpus(Corpus):
         super(CSVClassificationCorpus, self).__init__(
             train, dev, test, name=str(data_folder)
         )
+
+
 class CSVClassificationDataset(FlairDataset):
     def __init__(
             self,
@@ -439,6 +468,95 @@ class CSVClassificationDataset(FlairDataset):
                 sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]
 
             return sentence
+
+
+class AMAZON_REVIEWS(ClassificationCorpus):
+    def __init__(
+            self,
+            label_name_map=None,
+            split_max=10000,
+            **corpusargs
+    ):
+
+        # by defaut, map point score to POSITIVE / NEGATIVE values
+        if label_name_map is None:
+            label_name_map = {'1.0': 'NEGATIVE',
+                              '2.0': 'NEGATIVE',
+                              '3.0': 'NEUTRAL',
+                              '4.0': 'POSITIVE',
+                              '5.0': 'POSITIVE'}
+
+        dataset_name = self.__class__.__name__.lower() + '_' + str(split_max)
+
+        # default dataset folder is the cache root
+        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
+
+        # download data if necessary
+        if not (data_folder / "train.txt").is_file():
+
+            self.download_and_prepare_amazon_product_file(data_folder, "AMAZON_FASHION_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "All_Beauty_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Appliances_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Arts_Crafts_and_Sewing_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Arts_Crafts_and_Sewing_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Automotive_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Books_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "CDs_and_Vinyl_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Cell_Phones_and_Accessories_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Clothing_Shoes_and_Jewelry_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Digital_Music_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Electronics_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Gift_Cards_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Grocery_and_Gourmet_Food_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Home_and_Kitchen_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Industrial_and_Scientific_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Kindle_Store_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Luxury_Beauty_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Magazine_Subscriptions_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Movies_and_TV_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Musical_Instruments_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Office_Products_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Patio_Lawn_and_Garden_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Pet_Supplies_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Prime_Pantry_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Software_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Sports_and_Outdoors_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Tools_and_Home_Improvement_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Toys_and_Games_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "Video_Games_5.json.gz", split_max)
+
+        super(AMAZON_REVIEWS, self).__init__(
+            data_folder,
+            label_type='sentiment',
+            tokenizer=segtok_tokenizer,
+            label_name_map=label_name_map,
+            **corpusargs
+        )
+
+    def download_and_prepare_amazon_product_file(self, data_folder, part_name, max_data_points = None):
+        amazon__path = "http://deepyeti.ucsd.edu/jianmo/amazon/categoryFilesSmall"
+        cached_path(f"{amazon__path}/{part_name}", Path("datasets") / 'Amazon_Product_Reviews')
+        import gzip, shutil
+        # create dataset directory if necessary
+        if not os.path.exists(data_folder):
+            os.makedirs(data_folder)
+        with open(data_folder / "train.txt", "a") as train_file:
+
+            write_count = 0
+            # download senteval datasets if necessary und unzip
+            with gzip.open(Path(flair.cache_root) / "datasets" / 'Amazon_Product_Reviews' / part_name, "rb", ) as f_in:
+                for line in f_in:
+                    parsed_json = json.loads(line)
+                    if 'reviewText' not in parsed_json:
+                        continue
+                    if parsed_json['reviewText'].strip() == '':
+                        continue
+                    text = parsed_json['reviewText'].replace('\n', '')
+                    train_file.write(f"__label__{parsed_json['overall']} {text}\n")
+
+                    write_count += 1
+                    if max_data_points and write_count >= max_data_points:
+                        break
 
 
 class IMDB(ClassificationCorpus):
@@ -589,6 +707,69 @@ class NEWSGROUPS(ClassificationCorpus):
 
         super(NEWSGROUPS, self).__init__(
             data_folder, tokenizer=space_tokenizer, **corpusargs,
+        )
+
+
+class SENTIMENT_140(ClassificationCorpus):
+    def __init__(
+            self,
+            label_name_map=None,
+            **corpusargs,
+    ):
+
+        # by defaut, map point score to POSITIVE / NEGATIVE values
+        if label_name_map is None:
+            label_name_map = {'0': 'NEGATIVE',
+                              '2': 'NEUTRAL',
+                              '4': 'POSITIVE'}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
+
+        # download data if necessary
+        if True or not (data_folder / "train.txt").is_file():
+
+            # download senteval datasets if necessary und unzip
+            sentiment_url = "https://cs.stanford.edu/people/alecmgo/trainingandtestdata.zip"
+            cached_path(sentiment_url, Path("datasets") / dataset_name / 'raw')
+            senteval_folder = Path(flair.cache_root) / "datasets" / dataset_name / 'raw'
+            unzip_file(senteval_folder / "trainingandtestdata.zip", senteval_folder)
+
+            # create dataset directory if necessary
+            if not os.path.exists(data_folder):
+                os.makedirs(data_folder)
+
+            # create train.txt file from CSV
+            with open(data_folder / "train.txt", "w") as train_file:
+
+                with open(senteval_folder / "training.1600000.processed.noemoticon.csv", encoding='latin-1') as csv_train:
+
+                    csv_reader = csv.reader(csv_train)
+
+                    for row in csv_reader:
+
+                        label = row[0]
+                        text = row[5]
+                        train_file.write(f"__label__{label} {text}\n")
+
+            # create test.txt file from CSV
+            with open(data_folder / "test.txt", "w") as train_file:
+
+                with open(senteval_folder / "testdata.manual.2009.06.14.csv", encoding='latin-1') as csv_train:
+
+                    csv_reader = csv.reader(csv_train)
+
+                    for row in csv_reader:
+
+                        label = row[0]
+                        text = row[5]
+                        train_file.write(f"__label__{label} {text}\n")
+
+        super(SENTIMENT_140, self).__init__(
+            data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, label_name_map=label_name_map, **corpusargs,
         )
 
 
