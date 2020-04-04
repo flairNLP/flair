@@ -2715,14 +2715,9 @@ class BertEmbeddings(TokenEmbeddings):
                 for token_index, _ in enumerate(feature.tokens):
                     all_layers = []
                     for layer_index in self.layer_indexes:
-                        if self.use_scalar_mix:
-                            layer_output = all_encoder_layers[int(layer_index)][
-                                sentence_index
-                            ]
-                        else:
-                            layer_output = all_encoder_layers[int(layer_index)][
-                                sentence_index
-                            ]
+                        layer_output = all_encoder_layers[int(layer_index)][
+                            sentence_index
+                        ]
                         all_layers.append(layer_output[token_index])
 
                     if self.use_scalar_mix:
