@@ -3,11 +3,12 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from itertools import combinations
 from pathlib import Path
-from typing import Union, Callable, Dict, List, Tuple
+from typing import Union, Callable, Dict, List, Tuple, Iterable
 
 from lxml import etree
 
 import flair
+from file_utils import unzip_targz_file
 from flair.datasets import ColumnCorpus
 from flair.file_utils import cached_path, unzip_file
 
@@ -18,22 +19,12 @@ class Entity:
         self.type = entity_type
 
 
-class InternalHunerDataset:
+class InternalBioNerDataset:
     def __init__(
         self, documents: Dict[str, str], entities_per_document: Dict[str, List[Entity]]
     ):
         self.documents = documents
         self.entities_per_document = entities_per_document
-
-    def get_subset(self, split_path: Path):
-        with split_path.open() as f:
-            ids = {l.strip() for l in f if l.strip()}
-            ids = sorted(id_ for id_ in ids if id_ in self.documents)
-
-        return InternalHunerDataset(
-            documents={k: self.documents[k] for k in ids},
-            entities_per_document={k: self.entities_per_document[k] for k in ids},
-        )
 
 
 def overlap(entity1, entity2):
@@ -58,6 +49,33 @@ def merge_overlapping_entities(entities):
     return entities
 
 
+def merge_datasets(data_sets: Iterable[InternalBioNerDataset]):
+    all_documents = {}
+    all_entities = {}
+
+    for ds in data_sets:
+        all_documents.update(ds.documents)
+        all_entities.update(ds.entities_per_document)
+
+    return InternalBioNerDataset(
+        documents=all_documents, entities_per_document=all_entities
+    )
+
+
+def filter_entities(
+    dataset: InternalBioNerDataset, target_types: Iterable[str]
+) -> InternalBioNerDataset:
+
+    target_entities_per_document = {
+        id: [e for e in entities if e.type in target_types]
+        for id, entities in dataset.entities_per_document.items()
+    }
+
+    return InternalBioNerDataset(
+        documents=dataset.documents, entities_per_document=target_entities_per_document
+    )
+
+
 class CoNLLWriter:
     def __init__(
         self,
@@ -71,12 +89,14 @@ class CoNLLWriter:
         self.tokenizer = tokenizer
         self.sentence_splitter = sentence_splitter
 
-    def process_dataset(self, datasets: Dict[str, InternalHunerDataset], out_dir: Path):
+    def process_dataset(
+        self, datasets: Dict[str, InternalBioNerDataset], out_dir: Path
+    ):
         self.write_to_conll(datasets["train"], out_dir / "train.conll")
         self.write_to_conll(datasets["dev"], out_dir / "dev.conll")
         self.write_to_conll(datasets["test"], out_dir / "test.conll")
 
-    def write_to_conll(self, dataset: InternalHunerDataset, output_file: Path):
+    def write_to_conll(self, dataset: InternalBioNerDataset, output_file: Path):
         os.makedirs(output_file.parent, exist_ok=True)
         with output_file.open("w") as f:
             for document_id in dataset.documents.keys():
@@ -151,8 +171,13 @@ class HunerDataset(ColumnCorpus, ABC):
 
     @staticmethod
     @abstractmethod
-    def to_internal(data_folder: Path) -> Dict[str, InternalHunerDataset]:
-        pass
+    def to_internal(data_folder: Path) -> InternalBioNerDataset:
+        raise NotImplementedError()
+
+    @staticmethod
+    @abstractmethod
+    def split_url() -> str:
+        raise NotImplementedError()
 
     def __init__(
         self,
@@ -217,36 +242,56 @@ class HunerDataset(ColumnCorpus, ABC):
         test_file = data_folder / "test.conll"
 
         if not (train_file.exists() and dev_file.exists() and test_file.exists()):
+            internal_dataset = self.to_internal(data_folder)
+
+            splits_dir = data_folder / "splits"
+            os.makedirs(splits_dir, exist_ok=True)
+
             writer = CoNLLWriter(
                 tokenizer=tokenizer, sentence_splitter=sentence_splitter,
             )
-            internal_datasets = self.to_internal(data_folder)
-            writer.process_dataset(internal_datasets, data_folder)
+
+            train_data = self.get_subset(internal_dataset, "train", splits_dir)
+            writer.write_to_conll(train_data, train_file)
+
+            dev_data = self.get_subset(internal_dataset, "dev", splits_dir)
+            writer.write_to_conll(dev_data, dev_file)
+
+            test_data = self.get_subset(internal_dataset, "test", splits_dir)
+            writer.write_to_conll(test_data, test_file)
 
         super(HunerDataset, self).__init__(
             data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
         )
 
+    def get_subset(self, dataset: InternalBioNerDataset, split: str, split_dir: Path):
+        split_file = cached_path(f"{self.split_url()}.{split}", split_dir)
 
-class HunerProteinBioInfer(HunerDataset):
+        with split_file.open() as f:
+            ids = [l.strip() for l in f if l.strip()]
+            ids = sorted(id_ for id_ in ids if id_ in dataset.documents)
+
+        return InternalBioNerDataset(
+            documents={k: dataset.documents[k] for k in ids},
+            entities_per_document={k: dataset.entities_per_document[k] for k in ids},
+        )
+
+
+class HUNER_PROTEIN_BIO_INFER(HunerDataset):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
     @staticmethod
-    def to_internal(data_dir: Path) -> Dict[str, InternalHunerDataset]:
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/bioinfer"
+
+    @staticmethod
+    def to_internal(data_dir: Path) -> InternalBioNerDataset:
         documents = {}
         entities_per_document = defaultdict(list)
+
         data_url = "http://mars.cs.utu.fi/BioInfer/files/BioInfer_corpus_1.1.1.zip"
         data_path = cached_path(data_url, data_dir)
-        train_split = cached_path(
-            "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/bioinfer.train",
-            data_dir,
-        )
-        dev_split = cached_path(
-            "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/bioinfer.dev",
-            data_dir,
-        )
-        test_split = cached_path(
-            "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/bioinfer.test",
-            data_dir,
-        )
         unzip_file(data_path, data_dir)
 
         tree = etree.parse(str(data_dir / "BioInfer_corpus_1.1.1.xml"))
@@ -299,16 +344,222 @@ class HunerProteinBioInfer(HunerDataset):
                     else:
                         if entity_start is not None:
                             entities_per_document[sentence_id].append(
-                                Entity((entity_start, token_offset - 1), "Protein")
+                                Entity((entity_start, token_offset - 1), "protein")
                             )
                             entity_start = None
-        dataset = InternalHunerDataset(
+        return InternalBioNerDataset(
             documents=documents, entities_per_document=entities_per_document
         )
-        train_dataset = dataset.get_subset(train_split)
-        dev_dataset = dataset.get_subset(dev_split)
-        test_dataset = dataset.get_subset(test_split)
-        return {"train": train_dataset, "dev": dev_dataset, "test": test_dataset}
 
+
+class JNLPBA(ColumnCorpus):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+        :param base_path: Path to the corpus on your machine
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param tokenizer: Callable that segments a sentence into words,
+                          defaults to scispacy
+        :param sentence_splitter: Callable that segments a document into sentences,
+                                  defaults to scispacy
+        """
+
+        if tokenizer is None:
+            try:
+                import spacy
+
+                tokenizer = SciSpacyTokenizer()
+            except ImportError:
+                raise ValueError(
+                    "Default tokenizer is scispacy."
+                    " Install packages 'scispacy' and"
+                    " 'https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy"
+                    "/releases/v0.2.4/en_core_sci_sm-0.2.4.tar.gz' via pip"
+                    " or choose a different tokenizer"
+                )
+
+        if sentence_splitter is None:
+            try:
+                import spacy
+
+                sentence_splitter = SciSpacySentenceSplitter()
+            except ImportError:
+                raise ValueError(
+                    "Default sentence splitter is scispacy."
+                    " Install packages 'scispacy' and"
+                    "'https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy"
+                    "/releases/v0.2.4/en_core_sci_sm-0.2.4.tar.gz' via pip"
+                    " or choose a different sentence splitter"
+                )
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        test_file = data_folder / "test.conll"
+
+        if not (train_file.exists() and test_file.exists()):
+            writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter,
+            )
+
+            download_folder = data_folder / "original"
+            os.makedirs(str(download_folder), exist_ok=True)
+
+            train_corpus = JNLPBA.download_and_prepare_train(download_folder)
+            writer.write_to_conll(train_corpus, train_file)
+
+            test_corpus = JNLPBA.download_and_prepare_test(download_folder)
+            writer.write_to_conll(test_corpus, test_file)
+
+        super(JNLPBA, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @staticmethod
+    def download_and_prepare_train(data_folder: Path) -> InternalBioNerDataset:
+        train_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Train/Genia4ERtraining.tar.gz"
+        train_data_path = cached_path(train_data_url, data_folder)
+        unzip_targz_file(train_data_path, data_folder)
+
+        train_input_file = data_folder / "Genia4ERtask2.iob2"
+        return JNLPBA.read_file(train_input_file)
+
+    @staticmethod
+    def download_and_prepare_test(data_folder: Path) -> InternalBioNerDataset:
+        train_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Evaluation/Genia4ERtest.tar.gz"
+        train_data_path = cached_path(train_data_url, data_folder)
+        unzip_targz_file(train_data_path, data_folder)
+
+        test_input_file = data_folder / "Genia4EReval2.iob2"
+        return JNLPBA.read_file(test_input_file)
+
+    @staticmethod
+    def read_file(input_iob_file: Path) -> InternalBioNerDataset:
+        documents = {}
+        entities_per_document = defaultdict(list)
+
+        with open(str(input_iob_file), "r") as file_reader:
+            document_id = None
+            document_text = None
+
+            entities = []
+            entity_type = None
+            entity_start = 0
+
+            for line in file_reader:
+                line = line.strip()
+                if line[:3] == "###":
+                    if not (document_id is None and document_text is None):
+                        documents[document_id] = document_text
+                        entities_per_document[document_id] = entities
+
+                    document_id = line.split(":")[-1]
+                    document_text = None
+
+                    entities = []
+                    entity_type = None
+                    entity_start = 0
+
+                    file_reader.__next__()
+                    continue
+
+                if line:
+                    parts = line.split()
+
+                    entity = parts[1].strip()
+                    if entity.startswith("B-"):
+                        if entity_type is not None:
+                            entities.append(
+                                Entity((entity_start, len(document_text)), entity_type)
+                            )
+
+                        entity_start = len(document_text) + 1 if document_text else 0
+                        entity_type = entity[2:]
+
+                    elif entity == "O" and entity_type is not None:
+                        entities.append(
+                            Entity((entity_start, len(document_text)), entity_type)
+                        )
+                        entity_type = None
+
+                    token = parts[0].strip()
+                    document_text = (
+                        document_text + " " + token if document_text else token
+                    )
+
+                else:
+                    # Edge case: last token starts a new entity
+                    if entity_type is not None:
+                        entities.append(
+                            Entity((entity_start, len(document_text)), entity_type)
+                        )
+
+            # Last document in file
+            if not (document_id is None and document_text is None):
+                documents[document_id] = document_text
+                entities_per_document[document_id] = entities
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
+
+
+class HUNER_PROTEIN_JNLPBA(HunerDataset):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/genia"
+
+    @staticmethod
+    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+        download_folder = data_dir / "original"
+        os.makedirs(str(download_folder), exist_ok=True)
+
+        train_data = JNLPBA.download_and_prepare_train(download_folder)
+        train_data = filter_entities(train_data, "protein")
+
+        test_data = JNLPBA.download_and_prepare_test(download_folder)
+        test_data = filter_entities(test_data, "protein")
+
+        return merge_datasets([train_data, test_data])
+
+
+class HUNER_CELL_LINE_JNLPBA(HunerDataset):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/genia"
+
+    @staticmethod
+    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+        download_folder = data_dir / "original"
+        os.makedirs(str(download_folder), exist_ok=True)
+
+        train_data = JNLPBA.download_and_prepare_train(download_folder)
+        train_data = filter_entities(train_data, "cell_line")
+
+        test_data = JNLPBA.download_and_prepare_test(download_folder)
+        test_data = filter_entities(test_data, "cell_line")
+
+        return merge_datasets([train_data, test_data])
