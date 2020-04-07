@@ -332,6 +332,36 @@ class SciSpacySentenceSplitter:
         return sentences, offsets
 
 
+def build_spacy_tokenizer() -> SciSpacyTokenizer:
+    try:
+        import spacy
+
+        return SciSpacyTokenizer()
+    except ImportError:
+        raise ValueError(
+            "Default tokenizer is scispacy."
+            " Install packages 'scispacy' and"
+            " 'https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy"
+            "/releases/v0.2.4/en_core_sci_sm-0.2.4.tar.gz' via pip"
+            " or choose a different tokenizer"
+        )
+
+
+def build_spacy_sentence_splitter() -> SciSpacySentenceSplitter:
+    try:
+        import spacy
+
+        return SciSpacySentenceSplitter()
+    except ImportError:
+        raise ValueError(
+            "Default sentence splitter is scispacy."
+            " Install packages 'scispacy' and"
+            "'https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy"
+            "/releases/v0.2.4/en_core_sci_sm-0.2.4.tar.gz' via pip"
+            " or choose a different sentence splitter"
+        )
+
+
 class HunerDataset(ColumnCorpus, ABC):
     """
     Base class for HUNER Datasets.
@@ -375,32 +405,10 @@ class HunerDataset(ColumnCorpus, ABC):
         """
 
         if tokenizer is None:
-            try:
-                import spacy
-
-                tokenizer = SciSpacyTokenizer()
-            except ImportError:
-                raise ValueError(
-                    "Default tokenizer is scispacy."
-                    " Install packages 'scispacy' and"
-                    " 'https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy"
-                    "/releases/v0.2.4/en_core_sci_sm-0.2.4.tar.gz' via pip"
-                    " or choose a different tokenizer"
-                )
+            tokenizer = build_spacy_tokenizer()
 
         if sentence_splitter is None:
-            try:
-                import spacy
-
-                sentence_splitter = SciSpacySentenceSplitter()
-            except ImportError:
-                raise ValueError(
-                    "Default sentence splitter is scispacy."
-                    " Install packages 'scispacy' and"
-                    "'https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy"
-                    "/releases/v0.2.4/en_core_sci_sm-0.2.4.tar.gz' via pip"
-                    " or choose a different sentence splitter"
-                )
+            sentence_splitter = build_spacy_sentence_splitter()
 
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -591,26 +599,26 @@ class JNLPBA(ColumnCorpus):
 
 
 class HunerJNLPBA:
-    @staticmethod
-    def download_and_prepare_train(data_folder: Path) -> InternalBioNerDataset:
+    @classmethod
+    def download_and_prepare_train(cls, data_folder: Path) -> InternalBioNerDataset:
         train_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Train/Genia4ERtraining.tar.gz"
         train_data_path = cached_path(train_data_url, data_folder)
         unzip_targz_file(train_data_path, data_folder)
 
         train_input_file = data_folder / "Genia4ERtask2.iob2"
-        return HunerJNLPBA.read_file(train_input_file)
+        return cls.read_file(train_input_file)
 
-    @staticmethod
-    def download_and_prepare_test(data_folder: Path) -> InternalBioNerDataset:
+    @classmethod
+    def download_and_prepare_test(cls, data_folder: Path) -> InternalBioNerDataset:
         test_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Evaluation/Genia4ERtest.tar.gz"
         test_data_path = cached_path(test_data_url, data_folder)
         unzip_targz_file(test_data_path, data_folder)
 
         test_input_file = data_folder / "Genia4EReval2.iob2"
-        return HunerJNLPBA.read_file(test_input_file)
+        return cls.read_file(test_input_file)
 
-    @staticmethod
-    def read_file(input_iob_file: Path) -> InternalBioNerDataset:
+    @classmethod
+    def read_file(cls, input_iob_file: Path) -> InternalBioNerDataset:
         documents = {}
         entities_per_document = defaultdict(list)
 
@@ -749,32 +757,10 @@ class CELL_FINDER(ColumnCorpus):
                                   defaults to scispacy
         """
         if tokenizer is None:
-            try:
-                import spacy
-
-                tokenizer = SciSpacyTokenizer()
-            except ImportError:
-                raise ValueError(
-                    "Default tokenizer is scispacy."
-                    " Install packages 'scispacy' and"
-                    " 'https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy"
-                    "/releases/v0.2.4/en_core_sci_sm-0.2.4.tar.gz' via pip"
-                    " or choose a different tokenizer"
-                )
+            tokenizer = build_spacy_tokenizer()
 
         if sentence_splitter is None:
-            try:
-                import spacy
-
-                sentence_splitter = SciSpacySentenceSplitter()
-            except ImportError:
-                raise ValueError(
-                    "Default sentence splitter is scispacy."
-                    " Install packages 'scispacy' and"
-                    "'https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy"
-                    "/releases/v0.2.4/en_core_sci_sm-0.2.4.tar.gz' via pip"
-                    " or choose a different sentence splitter"
-                )
+            sentence_splitter = build_spacy_sentence_splitter()
 
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -883,5 +869,197 @@ class HUNER_PROTEIN_CELL_FINDER(HunerDataset):
         return data
 
 
-if __name__ == "__main__":
-    HUNER_PROTEIN_BIO_INFER()
+class MIRNA(ColumnCorpus):
+    """
+    Original miRNA corpus.
+
+    For further information see Bagewadi et al.:
+        Detecting miRNA Mentions and Relations in Biomedical Literature
+        https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4602280/
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+        :param base_path: Path to the corpus on your machine
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param tokenizer: Callable that segments a sentence into words,
+                          defaults to scispacy
+        :param sentence_splitter: Callable that segments a document into sentences,
+                                  defaults to scispacy
+        """
+        if tokenizer is None:
+            tokenizer = build_spacy_tokenizer()
+
+        if sentence_splitter is None:
+            sentence_splitter = build_spacy_sentence_splitter()
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        test_file = data_folder / "test.conll"
+
+        if not (train_file.exists() and test_file.exists()):
+            download_folder = data_folder / "original"
+            os.makedirs(str(download_folder), exist_ok=True)
+
+            writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter,
+            )
+
+            train_corpus = self.download_and_prepare_train(download_folder)
+            writer.write_to_conll(train_corpus, train_file)
+
+            test_corpus = self.download_and_prepare_test(download_folder)
+            writer.write_to_conll(test_corpus, test_file)
+
+        super(MIRNA, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @classmethod
+    def download_and_prepare_train(cls, data_folder: Path):
+        data_url = "https://www.scai.fraunhofer.de/content/dam/scai/de/downloads/bioinformatik/miRNA/miRNA-Train-Corpus.xml"
+        data_path = cached_path(data_url, data_folder)
+
+        return cls.parse_file(data_path)
+
+    @classmethod
+    def download_and_prepare_test(cls, data_folder: Path):
+        data_url = "https://www.scai.fraunhofer.de/content/dam/scai/de/downloads/bioinformatik/miRNA/miRNA-Test-Corpus.xml"
+        data_path = cached_path(data_url, data_folder)
+
+        return cls.parse_file(data_path)
+
+    @classmethod
+    def parse_file(cls, input_file: Path) -> InternalBioNerDataset:
+        tree = etree.parse(str(input_file))
+
+        documents = {}
+        entities_per_document = {}
+
+        for document in tree.xpath(".//document"):
+            document_id = document.get("id")
+            entities = []
+
+            document_text = ""
+            for sentence in document.xpath(".//sentence"):
+                sentence_offset = len(document_text)
+                document_text += sentence.get("text")
+
+                for entity in sentence.xpath(".//entity"):
+                    start, end = entity.get("charOffset").split("-")
+                    entities.append(
+                        Entity(
+                            (
+                                sentence_offset + int(start),
+                                sentence_offset + int(end) + 1,
+                            ),
+                            entity.get("type"),
+                        )
+                    )
+
+            documents[document_id] = document_text
+            entities_per_document[document_id] = entities
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
+
+
+class HUNER_PROTEIN_MIRNA(HunerDataset):
+    """
+        HUNER version of the miRNA corpus containing protein / gene annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA"
+
+    @staticmethod
+    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+        download_folder = data_dir / "original"
+        os.makedirs(str(download_folder), exist_ok=True)
+
+        # FIXME: Add entity type normalization!
+        train_data = MIRNA.download_and_prepare_train(download_folder)
+        train_data = filter_entities(train_data, "Genes/Proteins")
+
+        test_data = MIRNA.download_and_prepare_test(download_folder)
+        test_data = filter_entities(test_data, "Genes/Proteins")
+
+        return merge_datasets([train_data, test_data])
+
+
+class HUNER_SPECIES_MIRNA(HunerDataset):
+    """
+        HUNER version of the miRNA corpus containing species annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA"
+
+    @staticmethod
+    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+        download_folder = data_dir / "original"
+        os.makedirs(str(download_folder), exist_ok=True)
+
+        # FIXME: Add entity type normalization!
+        train_data = MIRNA.download_and_prepare_train(download_folder)
+        train_data = filter_entities(train_data, "Species")
+
+        test_data = MIRNA.download_and_prepare_test(download_folder)
+        test_data = filter_entities(test_data, "Species")
+
+        return merge_datasets([train_data, test_data])
+
+
+class HUNER_DISEASE_MIRNA(HunerDataset):
+    """
+        HUNER version of the miRNA corpus containing disease annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA"
+
+    @staticmethod
+    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+        download_folder = data_dir / "original"
+        os.makedirs(str(download_folder), exist_ok=True)
+
+        # FIXME: Add entity type normalization!
+        train_data = MIRNA.download_and_prepare_train(download_folder)
+        train_data = filter_entities(train_data, "Diseases")
+
+        test_data = MIRNA.download_and_prepare_test(download_folder)
+        test_data = filter_entities(test_data, "Diseases")
+
+        return merge_datasets([train_data, test_data])
