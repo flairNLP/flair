@@ -8,14 +8,13 @@ from typing import Union, Callable, Dict, List, Tuple, Iterable
 from lxml import etree
 
 import flair
-from file_utils import unzip_targz_file
 from flair.datasets import ColumnCorpus
-from flair.file_utils import cached_path, unzip_file
+from flair.file_utils import cached_path, unzip_file, unzip_targz_file
 
 
 class Entity:
-    def __init__(self, span: Tuple[int, int], entity_type: str):
-        self.span = range(*span)
+    def __init__(self, char_span: Tuple[int, int], entity_type: str):
+        self.char_span = range(*char_span)
         self.type = entity_type
 
 
@@ -65,7 +64,9 @@ def merge_datasets(data_sets: Iterable[InternalBioNerDataset]):
 def filter_entities(
     dataset: InternalBioNerDataset, target_types: Iterable[str]
 ) -> InternalBioNerDataset:
-
+    """
+    FIXME Map to canonical type names
+    """
     target_entities_per_document = {
         id: [e for e in entities if e.type in target_types]
         for id, entities in dataset.entities_per_document.items()
@@ -111,8 +112,10 @@ class CoNLLWriter:
                     for token, token_offset in zip(tokens, token_offsets):
                         offset = sentence_offset + token_offset
 
+                        # FIXME The runtime complexity of this is unneccessarily high
+                        # FIXME This assumes that entities aren't nested, we have to ensure that beforehand
                         for entity in entities:
-                            if offset in entity.span:
+                            if offset in entity.char_span:
                                 if in_entity != entity:
                                     tag = "B-" + entity.type
                                     in_entity = entity
@@ -563,3 +566,154 @@ class HUNER_CELL_LINE_JNLPBA(HunerDataset):
         test_data = filter_entities(test_data, "cell_line")
 
         return merge_datasets([train_data, test_data])
+
+
+class CELL_FINDER(ColumnCorpus):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+        :param base_path: Path to the corpus on your machine
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param tokenizer: Callable that segments a sentence into words,
+                          defaults to scispacy
+        :param sentence_splitter: Callable that segments a document into sentences,
+                                  defaults to scispacy
+        """
+        if tokenizer is None:
+            try:
+                import spacy
+
+                tokenizer = SciSpacyTokenizer()
+            except ImportError:
+                raise ValueError(
+                    "Default tokenizer is scispacy."
+                    " Install packages 'scispacy' and"
+                    " 'https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy"
+                    "/releases/v0.2.4/en_core_sci_sm-0.2.4.tar.gz' via pip"
+                    " or choose a different tokenizer"
+                )
+
+        if sentence_splitter is None:
+            try:
+                import spacy
+
+                sentence_splitter = SciSpacySentenceSplitter()
+            except ImportError:
+                raise ValueError(
+                    "Default sentence splitter is scispacy."
+                    " Install packages 'scispacy' and"
+                    "'https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy"
+                    "/releases/v0.2.4/en_core_sci_sm-0.2.4.tar.gz' via pip"
+                    " or choose a different sentence splitter"
+                )
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        if not (train_file.exists()):
+            train_corpus = self.download_and_prepare(data_folder)
+            writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter,
+            )
+            writer.write_to_conll(train_corpus, train_file)
+        super(CELL_FINDER, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @classmethod
+    def download_and_prepare(cls, data_folder: Path) -> InternalBioNerDataset:
+        data_url = "https://www.informatik.hu-berlin.de/de/forschung/gebiete/wbi/resources/cellfinder/cellfinder1_brat.tar.gz"
+        data_path = cached_path(data_url, data_folder)
+        unzip_targz_file(data_path, data_folder)
+
+        return cls.read_folder(data_folder)
+
+    @classmethod
+    def read_folder(cls, data_folder: Path) -> InternalBioNerDataset:
+        ann_files = list(data_folder.glob("*.ann"))
+        documents = {}
+        entities_per_document = defaultdict(list)
+        for ann_file in ann_files:
+            with ann_file.open() as f_ann, ann_file.with_suffix(".txt").open() as f_txt:
+                document_id = ann_file.stem
+                for line in f_ann:
+                    fields = line.strip().split("\t")
+                    if not fields:
+                        continue
+                    ent_type, char_start, char_end = fields[1].split()
+                    entities_per_document[document_id].append(
+                        Entity(
+                            char_span=(int(char_start), int(char_end)),
+                            entity_type=ent_type,
+                        )
+                    )
+                documents[document_id] = f_txt.read()
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=dict(entities_per_document)
+        )
+
+
+class HUNER_CELL_LINE_CELL_FINDER(HunerDataset):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/cellfinder_cellline"
+
+    @staticmethod
+    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+        data = CELL_FINDER.download_and_prepare(data_dir)
+        data = filter_entities(data, "CellLine")
+
+        return data
+
+
+class HUNER_SPECIES_CELL_FINDER(HunerDataset):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/cellfinder_species"
+
+    @staticmethod
+    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+        data = CELL_FINDER.download_and_prepare(data_dir)
+        data = filter_entities(data, "Species")
+
+        return data
+
+
+class HUNER_PROTEIN_CELL_FINDER(HunerDataset):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/cellfinder_protein"
+
+    @staticmethod
+    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+        data = CELL_FINDER.download_and_prepare(data_dir)
+        data = filter_entities(data, "GeneProtein")
+
+        return data
