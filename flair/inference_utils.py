@@ -78,15 +78,6 @@ class WordEmbeddingsStore:
         if backend == 'sqlite':
             self.backend = SqliteWordEmbeddingsStoreBackend(embedding, verbose)
         elif backend == 'lmdb':
-            try:
-                import lmdb
-            except ModuleNotFoundError:
-                log.warning("-" * 100)
-                log.warning('ATTENTION! The library "lmdb" is not installed!')
-                log.warning(
-                    'To use LMDB, please first install with "pip install lmdb"'
-                )
-                log.warning("-" * 100)
             self.backend = LmdbWordEmbeddingsStoreBackend(embedding, verbose)
         else:
             raise ValueError(
@@ -208,38 +199,48 @@ class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
 class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
     def __init__(self, embedding, verbose):
         super().__init__(embedding, 'lmdb', verbose)
-        # if embedding database already exists
-        load_db = True
-        if os.path.isdir(self.store_filename):
-            # open the database in read mode
-            self.env = lmdb.open(self.store_filename, readonly=True, max_readers=2048, max_spare_txns=4)
-            if self.env:
-                # we need to set self.k
-                with self.env.begin() as txn:
-                    cursor = txn.cursor()
-                    for key, value in cursor:
-                        vector = pickle.loads(value)
-                        self.k = vector.shape[0]
-                        break
-                    cursor.close()
-                return
-        # create and load the database in write mode
-        os.makedirs(self.store_filename, exist_ok=True)
-        pwe = embedding.precomputed_word_embeddings
-        self.k = pwe.vector_size
-        self.env = lmdb.open(self.store_filename, map_size=DEFAULT_MAP_SIZE)
-        if verbose:
-            print("load vectors to store")
-        txn = self.env.begin(write=True)
-        for word in tqdm(pwe.vocab.keys()):
-            vector = pwe.get_vector(word)
-            if len(word.encode(encoding='UTF-8')) < self.env.max_key_size():
-                txn.put(word.encode(encoding='UTF-8'), pickle.dumps(vector))
-        txn.commit()
-        return
+        try:
+            import lmdb
+            # if embedding database already exists
+            load_db = True
+            if os.path.isdir(self.store_filename):
+                # open the database in read mode
+                self.env = lmdb.open(self.store_filename, readonly=True, max_readers=2048, max_spare_txns=4)
+                if self.env:
+                    # we need to set self.k
+                    with self.env.begin() as txn:
+                        cursor = txn.cursor()
+                        for key, value in cursor:
+                            vector = pickle.loads(value)
+                            self.k = vector.shape[0]
+                            break
+                        cursor.close()
+                    return
+            # create and load the database in write mode
+            os.makedirs(self.store_filename, exist_ok=True)
+            pwe = embedding.precomputed_word_embeddings
+            self.k = pwe.vector_size
+            self.env = lmdb.open(self.store_filename, map_size=DEFAULT_MAP_SIZE)
+            if verbose:
+                print("load vectors to store")
+            txn = self.env.begin(write=True)
+            for word in tqdm(pwe.vocab.keys()):
+                vector = pwe.get_vector(word)
+                if len(word.encode(encoding='UTF-8')) < self.env.max_key_size():
+                    txn.put(word.encode(encoding='UTF-8'), pickle.dumps(vector))
+            txn.commit()
+            return
+        except ModuleNotFoundError:
+            log.warning("-" * 100)
+            log.warning('ATTENTION! The library "lmdb" is not installed!')
+            log.warning(
+                'To use LMDB, please first install with "pip install lmdb"'
+            )
+            log.warning("-" * 100)
 
     def _get_vector(self, word="house"):
         try:
+            import lmdb
             with self.env.begin() as txn:
                 vector = txn.get(word.encode(encoding='UTF-8'))
                 if vector:
@@ -254,4 +255,12 @@ class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
             self.env.close()
             self.env = lmdb.open(self.store_filename, readonly=True, max_readers=2048, max_spare_txns=2, lock=False)
             return self._get_vector(word)
+        except ModuleNotFoundError:
+            log.warning("-" * 100)
+            log.warning('ATTENTION! The library "lmdb" is not installed!')
+            log.warning(
+                'To use LMDB, please first install with "pip install lmdb"'
+            )
+            log.warning("-" * 100)
+            word_vector = np.zeros((self.k,), dtype=np.float32)
         return word_vector
