@@ -1,8 +1,9 @@
+import logging
+
 import flair
 import numpy as np
 from flair.embeddings import WordEmbeddings
 import sqlite3
-import lmdb
 import torch
 import re
 import os
@@ -12,6 +13,7 @@ import shutil
 # this is the default init size of a lmdb database for embeddings
 DEFAULT_MAP_SIZE = 100 * 1024 * 1024 * 1024
 
+log = logging.getLogger("flair")
 
 class WordEmbeddingsStore:
     """
@@ -76,6 +78,15 @@ class WordEmbeddingsStore:
         if backend == 'sqlite':
             self.backend = SqliteWordEmbeddingsStoreBackend(embedding, verbose)
         elif backend == 'lmdb':
+            try:
+                import lmdb
+            except ModuleNotFoundError:
+                log.warning("-" * 100)
+                log.warning('ATTENTION! The library "lmdb" is not installed!')
+                log.warning(
+                    'To use LMDB, please first install with "pip install lmdb"'
+                )
+                log.warning("-" * 100)
             self.backend = LmdbWordEmbeddingsStoreBackend(embedding, verbose)
         else:
             raise ValueError(
