@@ -1,4 +1,5 @@
 import os
+import shutil
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from itertools import combinations
@@ -162,14 +163,18 @@ class SciSpacySentenceSplitter:
 
 class HunerDataset(ColumnCorpus, ABC):
     """
-    Base class for HUNER Datasets
+    Base class for HUNER Datasets.
 
     Every subclass has to implement the following methods:
-      - `to_internal', which produces a dictionary of InternalHUNERDatasets.
-        This dictionary is composed as follows:
-            dict['train'] -> train split
-            dict['dev'] -> development split
-            dict['test'] -> test split
+      - `to_internal', which reads the complete data set (incl. train, dev, test) and returns the corpus
+        as InternalBioNerDataset
+      - `split_url', which returns the base url (i.e. without '.train', '.dev', '.test') to the HUNER split files
+
+    For further information see:
+      - Weber et al.: 'HUNER: improving biomedical NER with pretraining'
+        https://academic.oup.com/bioinformatics/article-abstract/36/1/295/5523847?redirectedFrom=fulltext
+      - HUNER github repository:
+        https://github.com/hu-ner/huner
     """
 
     @staticmethod
@@ -356,49 +361,19 @@ class HUNER_PROTEIN_BIO_INFER(HunerDataset):
 
 
 class JNLPBA(ColumnCorpus):
-    def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
-    ):
+    """
+        Original corpus of the JNLPBA shared task.
+
+        For further information see Kim et al.:
+          Introduction to the Bio-Entity Recognition Task at JNLPBA
+          https://www.aclweb.org/anthology/W04-1213.pdf
+    """
+
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         """
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param tokenizer: Callable that segments a sentence into words,
-                          defaults to scispacy
-        :param sentence_splitter: Callable that segments a document into sentences,
-                                  defaults to scispacy
         """
-
-        if tokenizer is None:
-            try:
-                import spacy
-
-                tokenizer = SciSpacyTokenizer()
-            except ImportError:
-                raise ValueError(
-                    "Default tokenizer is scispacy."
-                    " Install packages 'scispacy' and"
-                    " 'https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy"
-                    "/releases/v0.2.4/en_core_sci_sm-0.2.4.tar.gz' via pip"
-                    " or choose a different tokenizer"
-                )
-
-        if sentence_splitter is None:
-            try:
-                import spacy
-
-                sentence_splitter = SciSpacySentenceSplitter()
-            except ImportError:
-                raise ValueError(
-                    "Default sentence splitter is scispacy."
-                    " Install packages 'scispacy' and"
-                    "'https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy"
-                    "/releases/v0.2.4/en_core_sci_sm-0.2.4.tar.gz' via pip"
-                    " or choose a different sentence splitter"
-                )
 
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -418,23 +393,33 @@ class JNLPBA(ColumnCorpus):
         test_file = data_folder / "test.conll"
 
         if not (train_file.exists() and test_file.exists()):
-            writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter,
-            )
+            download_dir = data_folder / "original"
+            os.makedirs(download_dir, exist_ok=True)
 
-            download_folder = data_folder / "original"
-            os.makedirs(str(download_folder), exist_ok=True)
+            train_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Train/Genia4ERtraining.tar.gz"
+            train_data_path = cached_path(train_data_url, download_dir)
+            unzip_targz_file(train_data_path, download_dir)
 
-            train_corpus = JNLPBA.download_and_prepare_train(download_folder)
-            writer.write_to_conll(train_corpus, train_file)
+            train_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Evaluation/Genia4ERtest.tar.gz"
+            train_data_path = cached_path(train_data_url, download_dir)
+            unzip_targz_file(train_data_path, download_dir)
 
-            test_corpus = JNLPBA.download_and_prepare_test(download_folder)
-            writer.write_to_conll(test_corpus, test_file)
+            train_file = download_dir / "Genia4ERtask2.iob2"
+            shutil.copy(train_file, data_folder / "train.conll")
+
+            test_file = download_dir / "Genia4EReval2.iob2"
+            shutil.copy(test_file, data_folder / "test.conll")
 
         super(JNLPBA, self).__init__(
-            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+            data_folder,
+            columns,
+            tag_to_bioes="ner",
+            in_memory=in_memory,
+            comment_symbol="#",
         )
 
+
+class HunerJNLPBA:
     @staticmethod
     def download_and_prepare_train(data_folder: Path) -> InternalBioNerDataset:
         train_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Train/Genia4ERtraining.tar.gz"
@@ -442,16 +427,16 @@ class JNLPBA(ColumnCorpus):
         unzip_targz_file(train_data_path, data_folder)
 
         train_input_file = data_folder / "Genia4ERtask2.iob2"
-        return JNLPBA.read_file(train_input_file)
+        return HunerJNLPBA.read_file(train_input_file)
 
     @staticmethod
     def download_and_prepare_test(data_folder: Path) -> InternalBioNerDataset:
-        train_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Evaluation/Genia4ERtest.tar.gz"
-        train_data_path = cached_path(train_data_url, data_folder)
-        unzip_targz_file(train_data_path, data_folder)
+        test_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Evaluation/Genia4ERtest.tar.gz"
+        test_data_path = cached_path(test_data_url, data_folder)
+        unzip_targz_file(test_data_path, data_folder)
 
         test_input_file = data_folder / "Genia4EReval2.iob2"
-        return JNLPBA.read_file(test_input_file)
+        return HunerJNLPBA.read_file(test_input_file)
 
     @staticmethod
     def read_file(input_iob_file: Path) -> InternalBioNerDataset:
@@ -525,6 +510,10 @@ class JNLPBA(ColumnCorpus):
 
 
 class HUNER_PROTEIN_JNLPBA(HunerDataset):
+    """
+        HUNER version of the JNLPBA corpus containing protein annotations.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -537,16 +526,20 @@ class HUNER_PROTEIN_JNLPBA(HunerDataset):
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
-        train_data = JNLPBA.download_and_prepare_train(download_folder)
+        train_data = HunerJNLPBA.download_and_prepare_train(download_folder)
         train_data = filter_entities(train_data, "protein")
 
-        test_data = JNLPBA.download_and_prepare_test(download_folder)
+        test_data = HunerJNLPBA.download_and_prepare_test(download_folder)
         test_data = filter_entities(test_data, "protein")
 
         return merge_datasets([train_data, test_data])
 
 
 class HUNER_CELL_LINE_JNLPBA(HunerDataset):
+    """
+        HUNER version of the JNLPBA corpus containing cell line annotations.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -559,10 +552,10 @@ class HUNER_CELL_LINE_JNLPBA(HunerDataset):
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
-        train_data = JNLPBA.download_and_prepare_train(download_folder)
+        train_data = HunerJNLPBA.download_and_prepare_train(download_folder)
         train_data = filter_entities(train_data, "cell_line")
 
-        test_data = JNLPBA.download_and_prepare_test(download_folder)
+        test_data = HunerJNLPBA.download_and_prepare_test(download_folder)
         test_data = filter_entities(test_data, "cell_line")
 
         return merge_datasets([train_data, test_data])
