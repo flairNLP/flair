@@ -649,24 +649,24 @@ class HunerJNLPBA:
 
                 if line:
                     parts = line.split()
+                    token = parts[0].strip()
+                    tag = parts[1].strip()
 
-                    entity = parts[1].strip()
-                    if entity.startswith("B-"):
+                    if tag.startswith("B-"):
                         if entity_type is not None:
                             entities.append(
                                 Entity((entity_start, len(document_text)), entity_type)
                             )
 
                         entity_start = len(document_text) + 1 if document_text else 0
-                        entity_type = entity[2:]
+                        entity_type = tag[2:]
 
-                    elif entity == "O" and entity_type is not None:
+                    elif tag == "O" and entity_type is not None:
                         entities.append(
                             Entity((entity_start, len(document_text)), entity_type)
                         )
                         entity_type = None
 
-                    token = parts[0].strip()
                     document_text = (
                         document_text + " " + token if document_text else token
                     )
@@ -1063,3 +1063,137 @@ class HUNER_DISEASE_MIRNA(HunerDataset):
         test_data = filter_entities(test_data, "Diseases")
 
         return merge_datasets([train_data, test_data])
+
+
+class CLL(ColumnCorpus):
+    """
+    Original CLL corpus.
+
+    For further information, see Kaewphan et al.:
+        Cell line name recognition in support of the identification of synthetic lethality in cancer from text
+        https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/
+    """
+
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+        """
+        :param base_path: Path to the corpus on your machine
+        :param in_memory: If True, keeps dataset in memory giving speedups in training
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "ner", 1: "text"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+
+        if not (train_file.exists()):
+            self.download_corpus(data_folder)
+            self.prepare_corpus(data_folder, train_file)
+
+        super(CLL, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @classmethod
+    def download_corpus(cls, data_folder: Path):
+        data_url = "http://bionlp-www.utu.fi/cell-lines/CLL_corpus.tar.gz"
+        data_path = cached_path(data_url, data_folder)
+        unzip_targz_file(data_path, data_folder)
+
+    @classmethod
+    def prepare_corpus(cls, data_folder: Path, train_file: Path):
+        conll_folder = data_folder / "CLL-1.0.2" / "conll"
+
+        sentences = []
+        for file in os.listdir(str(conll_folder)):
+            if not file.endswith(".conll"):
+                continue
+
+            with open(os.path.join(str(conll_folder), file), "r") as reader:
+                sentences.append(reader.read())
+
+        with open(str(train_file), "w", encoding="utf8") as writer:
+            writer.writelines(sentences)
+
+
+class HUNER_CELL_LINE_CLL(HunerDataset):
+    """
+        HUNER version of the miRNA corpus containing protein / gene annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/cll"
+
+    @staticmethod
+    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+        CLL.download_corpus(data_dir)
+        conll_folder = data_dir / "CLL-1.0.2" / "conll"
+
+        documents = {}
+        entities_per_document = {}
+        for file in os.listdir(str(conll_folder)):
+            if not file.endswith(".conll"):
+                continue
+
+            document_id = file.replace(".conll", "")
+
+            with open(os.path.join(str(conll_folder), file), "r") as reader:
+                document_text = ""
+                entities = []
+
+                entity_start = None
+                entity_type = None
+
+                for line in reader.readlines():
+                    line = line.strip()
+                    if line:
+                        tag, token = line.split("\t")
+
+                        if tag.startswith("B-"):
+                            if entity_type is not None:
+                                entities.append(
+                                    Entity(
+                                        (entity_start, len(document_text)), entity_type
+                                    )
+                                )
+
+                            entity_start = (
+                                len(document_text) + 1 if document_text else 0
+                            )
+                            entity_type = tag[2:]
+
+                        elif tag == "O" and entity_type is not None:
+                            entities.append(
+                                Entity((entity_start, len(document_text)), entity_type,)
+                            )
+                            entity_type = None
+
+                        document_text = (
+                            document_text + " " + token if document_text else token
+                        )
+                    else:
+                        # Edge case: last token starts a new entity
+                        if entity_type is not None:
+                            entities.append(
+                                Entity((entity_start, len(document_text)), entity_type)
+                            )
+
+                documents[document_id] = document_text
+                entities_per_document[document_id] = entities
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
