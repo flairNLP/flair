@@ -270,7 +270,7 @@ class CoNLLWriter:
         self.write_to_conll(datasets["test"], out_dir / "test.conll")
 
     def write_to_conll(self, dataset: InternalBioNerDataset, output_file: Path):
-        os.makedirs(output_file.parent, exist_ok=True)
+        os.makedirs(str(output_file.parent), exist_ok=True)
         with output_file.open("w") as f:
             for document_id in dataset.documents.keys():
 
@@ -364,7 +364,7 @@ def build_spacy_sentence_splitter() -> SciSpacySentenceSplitter:
 
 class HunerDataset(ColumnCorpus, ABC):
     """
-    Base class for HUNER Datasets.
+    Base class for HUNER datasets.
 
     Every subclass has to implement the following methods:
       - `to_internal', which reads the complete data set (incl. train, dev, test) and returns the corpus
@@ -705,6 +705,7 @@ class HUNER_PROTEIN_JNLPBA(HunerDataset):
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
+        # FIXME: Normalize entity type name
         train_data = HunerJNLPBA.download_and_prepare_train(download_folder)
         train_data = filter_entities(train_data, "protein")
 
@@ -731,6 +732,7 @@ class HUNER_CELL_LINE_JNLPBA(HunerDataset):
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
+        # FIXME: Normalize entity type name
         train_data = HunerJNLPBA.download_and_prepare_train(download_folder)
         train_data = filter_entities(train_data, "cell_line")
 
@@ -1001,7 +1003,7 @@ class HUNER_PROTEIN_MIRNA(HunerDataset):
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
-        # FIXME: Add entity type normalization!
+        # FIXME: Add entity type name normalization!
         train_data = MIRNA.download_and_prepare_train(download_folder)
         train_data = filter_entities(train_data, "Genes/Proteins")
 
@@ -1028,7 +1030,7 @@ class HUNER_SPECIES_MIRNA(HunerDataset):
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
-        # FIXME: Add entity type normalization!
+        # FIXME: Normalize entity type name
         train_data = MIRNA.download_and_prepare_train(download_folder)
         train_data = filter_entities(train_data, "Species")
 
@@ -1055,7 +1057,7 @@ class HUNER_DISEASE_MIRNA(HunerDataset):
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
-        # FIXME: Add entity type normalization!
+        # FIXME: Add entity type name normalization!
         train_data = MIRNA.download_and_prepare_train(download_folder)
         train_data = filter_entities(train_data, "Diseases")
 
@@ -1065,54 +1067,17 @@ class HUNER_DISEASE_MIRNA(HunerDataset):
         return merge_datasets([train_data, test_data])
 
 
-class CLL(ColumnCorpus):
-    """
-    Original CLL corpus.
+class KaewphanCorpusHelper:
+    """ Helper class for the corpora from Kaewphan et al., i.e. CLL and Gellus"""
 
-    For further information, see Kaewphan et al.:
-        Cell line name recognition in support of the identification of synthetic lethality in cancer from text
-        https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/
-    """
-
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
-        """
-        :param base_path: Path to the corpus on your machine
-        :param in_memory: If True, keeps dataset in memory giving speedups in training
-        """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
-
-        # column format
-        columns = {0: "ner", 1: "text"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name
-
-        train_file = data_folder / "train.conll"
-
-        if not (train_file.exists()):
-            self.download_corpus(data_folder)
-            self.prepare_corpus(data_folder, train_file)
-
-        super(CLL, self).__init__(
-            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
-        )
-
-    @classmethod
-    def download_corpus(cls, data_folder: Path):
+    @staticmethod
+    def download_cll_dataset(data_folder: Path):
         data_url = "http://bionlp-www.utu.fi/cell-lines/CLL_corpus.tar.gz"
         data_path = cached_path(data_url, data_folder)
         unzip_targz_file(data_path, data_folder)
 
-    @classmethod
-    def prepare_corpus(cls, data_folder: Path, train_file: Path):
-        conll_folder = data_folder / "CLL-1.0.2" / "conll"
-
+    @staticmethod
+    def prepare_and_save_dataset(conll_folder: Path, output_file: Path):
         sentences = []
         for file in os.listdir(str(conll_folder)):
             if not file.endswith(".conll"):
@@ -1121,27 +1086,19 @@ class CLL(ColumnCorpus):
             with open(os.path.join(str(conll_folder), file), "r") as reader:
                 sentences.append(reader.read())
 
-        with open(str(train_file), "w", encoding="utf8") as writer:
+        with open(str(output_file), "w", encoding="utf8") as writer:
             writer.writelines(sentences)
 
-
-class HUNER_CELL_LINE_CLL(HunerDataset):
-    """
-        HUNER version of the miRNA corpus containing protein / gene annotations.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    @staticmethod
+    def download_gellus_dataset(data_folder: Path):
+        data_url = "http://bionlp-www.utu.fi/cell-lines/Gellus_corpus.tar.gz"
+        data_path = cached_path(data_url, data_folder)
+        unzip_targz_file(data_path, data_folder)
 
     @staticmethod
-    def split_url() -> str:
-        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/cll"
-
-    @staticmethod
-    def to_internal(data_dir: Path) -> InternalBioNerDataset:
-        CLL.download_corpus(data_dir)
-        conll_folder = data_dir / "CLL-1.0.2" / "conll"
-
+    def read_dataset(
+        conll_folder: Path, tag_column: int, token_column: int
+    ) -> InternalBioNerDataset:
         documents = {}
         entities_per_document = {}
         for file in os.listdir(str(conll_folder)):
@@ -1160,8 +1117,9 @@ class HUNER_CELL_LINE_CLL(HunerDataset):
                 for line in reader.readlines():
                     line = line.strip()
                     if line:
-                        tag, token = line.split("\t")
-
+                        columns = line.split("\t")
+                        tag = columns[tag_column]
+                        token = columns[token_column]
                         if tag.startswith("B-"):
                             if entity_type is not None:
                                 entities.append(
@@ -1197,3 +1155,144 @@ class HUNER_CELL_LINE_CLL(HunerDataset):
         return InternalBioNerDataset(
             documents=documents, entities_per_document=entities_per_document
         )
+
+
+class CLL(ColumnCorpus):
+    """
+    Original CLL corpus containing cell line annotations.
+
+    For further information, see Kaewphan et al.:
+        Cell line name recognition in support of the identification of synthetic lethality in cancer from text
+        https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/
+    """
+
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+        """
+        :param base_path: Path to the corpus on your machine
+        :param in_memory: If True, keeps dataset in memory giving speedups in training
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "ner", 1: "text"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+
+        if not (train_file.exists()):
+            KaewphanCorpusHelper.download_cll_dataset(data_folder)
+
+            conll_folder = data_folder / "CLL-1.0.2" / "conll"
+            KaewphanCorpusHelper.prepare_and_save_dataset(conll_folder, train_file)
+
+        super(CLL, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+
+class HUNER_CELL_LINE_CLL(HunerDataset):
+    """
+        HUNER version of the CLL corpus containing cell line annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/cll"
+
+    @staticmethod
+    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+        KaewphanCorpusHelper.download_cll_dataset(data_dir)
+        conll_folder = data_dir / "CLL-1.0.2" / "conll"
+        # FIXME: Normalize entity type name!
+        return KaewphanCorpusHelper.read_dataset(
+            conll_folder=conll_folder, tag_column=0, token_column=1
+        )
+
+
+class GELLUS(ColumnCorpus):
+    """
+    Original Gellus corpus containing cell line annotations.
+
+    For further information, see Kaewphan et al.:
+        Cell line name recognition in support of the identification of synthetic lethality in cancer from text
+        https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/
+    """
+
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+        """
+        :param base_path: Path to the corpus on your machine
+        :param in_memory: If True, keeps dataset in memory giving speedups in training
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        dev_file = data_folder / "dev.conll"
+        test_file = data_folder / "test.conll"
+
+        if not (train_file.exists() and dev_file.exists() and test_file.exists()):
+            KaewphanCorpusHelper.download_gellus_dataset(data_folder)
+
+            conll_train = data_folder / "GELLUS-1.0.3" / "conll" / "train"
+            KaewphanCorpusHelper.prepare_and_save_dataset(conll_train, train_file)
+
+            conll_dev = data_folder / "GELLUS-1.0.3" / "conll" / "devel"
+            KaewphanCorpusHelper.prepare_and_save_dataset(conll_dev, dev_file)
+
+            conll_test = data_folder / "GELLUS-1.0.3" / "conll" / "test"
+            KaewphanCorpusHelper.prepare_and_save_dataset(conll_test, test_file)
+
+        super(GELLUS, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+
+class HUNER_CELL_LINE_GELLUS(HunerDataset):
+    """
+        HUNER version of the Gellus corpus containing cell line annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/gellus"
+
+    @staticmethod
+    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+        KaewphanCorpusHelper.download_gellus_dataset(data_dir)
+
+        splits = []
+        for folder in ["train", "devel", "test"]:
+            conll_folder = data_dir / "GELLUS-1.0.3" / "conll" / folder
+            split_data = KaewphanCorpusHelper.read_dataset(
+                conll_folder=conll_folder, tag_column=1, token_column=0
+            )
+            # FIXME: Normalize entity type name!
+            split_data = filter_entities(split_data, "Cell-line-name")
+            splits.append(split_data)
+
+        return merge_datasets(splits)
