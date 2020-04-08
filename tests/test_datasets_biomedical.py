@@ -1,5 +1,13 @@
-from datasets.biomedical import (
+import io
+import os
+import tempfile
+from pathlib import Path
+
+from flair.datasets.biomedical import (
     Entity,
+    InternalBioNerDataset,
+    whitespace_tokenize,
+    CoNLLWriter,
     find_overlapping_entities,
     find_nested_entities,
     normalize_entity_spans,
@@ -82,3 +90,47 @@ def test_normalize_entity_spans():
     assert result[0] == entity2
     assert result[1] == entity3
     assert result[2].char_span == range(12, 16)
+
+
+def test_write_to_conll():
+    writer = CoNLLWriter(
+        tokenizer=whitespace_tokenize, sentence_splitter=lambda x: ([x], [0])
+    )
+    text = "This is entity1 entity2 and a long entity3"
+    dataset = InternalBioNerDataset(
+        documents={"1": text},
+        entities_per_document={
+            "1": [
+                Entity(
+                    (text.find("entity1"), text.find("entity1") + len("entity1")), "E"
+                ),
+                Entity(
+                    (text.find("entity2"), text.find("entity2") + len("entity2")), "E"
+                ),
+                Entity(
+                    (
+                        text.find("a long entity3"),
+                        text.find("a long entity3") + len("a long entity3"),
+                    ),
+                    "E",
+                ),
+            ]
+        },
+    )
+
+    outfile_path = tempfile.mkstemp()[1]
+    try:
+        writer.write_to_conll(dataset, Path(outfile_path))
+        contents = [l.strip() for l in open(outfile_path).readlines() if l.strip()]
+    finally:
+        os.remove(outfile_path)
+    assert contents == [
+        "This O",
+        "is O",
+        "entity1 B-E",
+        "entity2 B-E",
+        "and O",
+        "a B-E",
+        "long I-E",
+        "entity3 I-E",
+    ]

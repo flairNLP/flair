@@ -1,11 +1,12 @@
 import os
 import shutil
 from abc import ABC, abstractmethod
-from collections import defaultdict
+from collections import defaultdict, deque
 from functools import cmp_to_key
 from itertools import combinations
+from operator import attrgetter
 from pathlib import Path
-from typing import Union, Callable, Dict, List, Tuple, Iterable
+from typing import Union, Callable, Dict, List, Tuple, Iterable, IO
 
 from lxml import etree
 
@@ -18,6 +19,19 @@ class Entity:
     def __init__(self, char_span: Tuple[int, int], entity_type: str):
         self.char_span = range(*char_span)
         self.type = entity_type
+
+    def __str__(self):
+        return (
+            self.type
+            + "("
+            + str(self.char_span[0])
+            + ","
+            + str(self.char_span[1])
+            + ")"
+        )
+
+    def __repr__(self):
+        return str(self)
 
     def is_before(self, other_entity) -> bool:
         """
@@ -271,35 +285,57 @@ class CoNLLWriter:
 
     def write_to_conll(self, dataset: InternalBioNerDataset, output_file: Path):
         os.makedirs(str(output_file.parent), exist_ok=True)
+
         with output_file.open("w") as f:
             for document_id in dataset.documents.keys():
-
                 document_text = dataset.documents[document_id]
                 sentences, sentence_offsets = self.sentence_splitter(document_text)
-                entities = dataset.entities_per_document[document_id]
+                entities = deque(
+                    sorted(
+                        dataset.entities_per_document[document_id],
+                        key=attrgetter("char_span.start", "char_span.stop"),
+                    )
+                )
 
+                current_entity = entities.popleft()
+                in_entity = False
                 for sentence, sentence_offset in zip(sentences, sentence_offsets):
-                    in_entity = False
                     tokens, token_offsets = self.tokenizer(sentence)
                     for token, token_offset in zip(tokens, token_offsets):
                         offset = sentence_offset + token_offset
 
-                        # FIXME The runtime complexity of this is unneccessarily high
+                        if current_entity and offset >= current_entity.char_span.stop:
+                            in_entity = False
+                            if entities:
+                                current_entity = entities.popleft()
+                            else:
+                                current_entity = None
+
                         # FIXME This assumes that entities aren't nested, we have to ensure that beforehand
-                        for entity in entities:
-                            if offset in entity.char_span:
-                                if in_entity != entity:
-                                    tag = "B-" + entity.type
-                                    in_entity = entity
-                                else:
-                                    tag = "I-" + entity.type
-                                break
+                        if current_entity and offset in current_entity.char_span:
+                            if not in_entity:
+                                tag = "B-" + current_entity.type
+                                in_entity = True
+                            else:
+                                tag = "I-" + current_entity.type
                         else:
                             tag = "O"
                             in_entity = False
 
                         f.write(" ".join([token, tag]) + "\n")
                     f.write("\n")
+
+
+def whitespace_tokenize(text):
+    offset = 0
+    tokens = []
+    offsets = []
+    for token in text.split():
+        tokens.append(token)
+        offsets.append(offset)
+        offset += len(token) + 1
+
+    return tokens, offsets
 
 
 class SciSpacyTokenizer:
