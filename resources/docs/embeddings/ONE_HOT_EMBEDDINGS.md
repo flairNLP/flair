@@ -22,7 +22,7 @@ embeddings = OneHotEmbeddings(corpus=corpus)
 sentence = Sentence('The grass is green .')
 
 # embed words in sentence
-embedding.embed(sentence)
+embeddings.embed(sentence)
 ```
 
 By default, the 'text' of a token (i.e. its lexical value) is one-hot encoded and the embedding layer has a dimensionality
