@@ -1,20 +1,26 @@
 import json
 import os
 import shutil
-import flair
 
 from abc import ABC, abstractmethod
 from collections import defaultdict, deque
+from copy import copy
 from functools import cmp_to_key
 from itertools import combinations
 from operator import attrgetter
 from pathlib import Path
-from typing import Union, Callable, Dict, List, Tuple, Iterable, IO
+from typing import Union, Callable, Dict, List, Tuple, Iterable
 
 from lxml import etree
 
+import flair
 from flair.datasets import ColumnCorpus
 from flair.file_utils import cached_path, unzip_file, unzip_targz_file
+
+DISEASE_TAG = "Disease"
+CELL_LINE_TAG = "CellLine"
+PROTEIN_TAG = "Protein"
+SPECIES_TAG = "Species"
 
 
 class Entity:
@@ -128,19 +134,25 @@ def merge_datasets(data_sets: Iterable[InternalBioNerDataset]):
     )
 
 
-def filter_entities(
-    dataset: InternalBioNerDataset, target_types: Iterable[str]
+def filter_and_map_entities(
+    dataset: InternalBioNerDataset, entity_type_to_canonical: Dict[str, str]
 ) -> InternalBioNerDataset:
     """
-    FIXME Map to canonical type names
+    :param entity_type_to_canonical: Maps entity type in dataset to canonical type
+                                     if entity type is not present in map it is discarded
     """
-    target_entities_per_document = {
-        id: [e for e in entities if e.type in target_types]
-        for id, entities in dataset.entities_per_document.items()
-    }
+    mapped_entities_per_document = {}
+    for id, entities in dataset.entities_per_document.items():
+        new_entities = []
+        for entity in entities:
+            if entity.type in entity_type_to_canonical:
+                new_entity = copy(entity)
+                new_entity.type = entity_type_to_canonical[entity.type]
+                new_entities.append(new_entity)
+        mapped_entities_per_document[id] = new_entities
 
     return InternalBioNerDataset(
-        documents=dataset.documents, entities_per_document=target_entities_per_document
+        documents=dataset.documents, entities_per_document=mapped_entities_per_document
     )
 
 
@@ -749,12 +761,11 @@ class HUNER_PROTEIN_JNLPBA(HunerDataset):
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
-        # FIXME: Normalize entity type name
         train_data = HunerJNLPBA.download_and_prepare_train(download_folder)
-        train_data = filter_entities(train_data, "protein")
+        train_data = filter_and_map_entities(train_data, {"protein": "Protein"})
 
         test_data = HunerJNLPBA.download_and_prepare_test(download_folder)
-        test_data = filter_entities(test_data, "protein")
+        test_data = filter_and_map_entities(test_data, {"protein": "Protein"})
 
         return merge_datasets([train_data, test_data])
 
@@ -776,12 +787,11 @@ class HUNER_CELL_LINE_JNLPBA(HunerDataset):
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
-        # FIXME: Normalize entity type name
         train_data = HunerJNLPBA.download_and_prepare_train(download_folder)
-        train_data = filter_entities(train_data, "cell_line")
+        train_data = filter_and_map_entities(train_data, {"cell_line": CELL_LINE_TAG})
 
         test_data = HunerJNLPBA.download_and_prepare_test(download_folder)
-        test_data = filter_entities(test_data, "cell_line")
+        test_data = filter_and_map_entities(test_data, {"cell_line": CELL_LINE_TAG})
 
         return merge_datasets([train_data, test_data])
 
@@ -878,7 +888,7 @@ class HUNER_CELL_LINE_CELL_FINDER(HunerDataset):
     @staticmethod
     def to_internal(data_dir: Path) -> InternalBioNerDataset:
         data = CELL_FINDER.download_and_prepare(data_dir)
-        data = filter_entities(data, "CellLine")
+        data = filter_and_map_entities(data, {"CellLine": CELL_LINE_TAG})
 
         return data
 
@@ -894,7 +904,7 @@ class HUNER_SPECIES_CELL_FINDER(HunerDataset):
     @staticmethod
     def to_internal(data_dir: Path) -> InternalBioNerDataset:
         data = CELL_FINDER.download_and_prepare(data_dir)
-        data = filter_entities(data, "Species")
+        data = filter_and_map_entities(data, {"Species": SPECIES_TAG})
 
         return data
 
@@ -910,7 +920,7 @@ class HUNER_PROTEIN_CELL_FINDER(HunerDataset):
     @staticmethod
     def to_internal(data_dir: Path) -> InternalBioNerDataset:
         data = CELL_FINDER.download_and_prepare(data_dir)
-        data = filter_entities(data, "GeneProtein")
+        data = filter_and_map_entities(data, {"GeneProtein": "Protein"})
 
         return data
 
@@ -1047,12 +1057,11 @@ class HUNER_PROTEIN_MIRNA(HunerDataset):
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
-        # FIXME: Add entity type name normalization!
         train_data = MIRNA.download_and_prepare_train(download_folder)
-        train_data = filter_entities(train_data, "Genes/Proteins")
+        train_data = filter_and_map_entities(train_data, {"Genes/Proteins": "Protein"})
 
         test_data = MIRNA.download_and_prepare_test(download_folder)
-        test_data = filter_entities(test_data, "Genes/Proteins")
+        test_data = filter_and_map_entities(test_data, {"Genes/Proteins": "Protein"})
 
         return merge_datasets([train_data, test_data])
 
@@ -1074,12 +1083,11 @@ class HUNER_SPECIES_MIRNA(HunerDataset):
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
-        # FIXME: Normalize entity type name
         train_data = MIRNA.download_and_prepare_train(download_folder)
-        train_data = filter_entities(train_data, "Species")
+        train_data = filter_and_map_entities(train_data, {"Species": SPECIES_TAG})
 
         test_data = MIRNA.download_and_prepare_test(download_folder)
-        test_data = filter_entities(test_data, "Species")
+        test_data = filter_and_map_entities(test_data, {"Species": SPECIES_TAG})
 
         return merge_datasets([train_data, test_data])
 
@@ -1101,12 +1109,11 @@ class HUNER_DISEASE_MIRNA(HunerDataset):
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
-        # FIXME: Add entity type name normalization!
         train_data = MIRNA.download_and_prepare_train(download_folder)
-        train_data = filter_entities(train_data, "Diseases")
+        train_data = filter_and_map_entities(train_data, {"Diseases": DISEASE_TAG})
 
         test_data = MIRNA.download_and_prepare_test(download_folder)
-        test_data = filter_entities(test_data, "Diseases")
+        test_data = filter_and_map_entities(test_data, {"Diseases": DISEASE_TAG})
 
         return merge_datasets([train_data, test_data])
 
@@ -1335,8 +1342,8 @@ class HUNER_CELL_LINE_GELLUS(HunerDataset):
             split_data = KaewphanCorpusHelper.read_dataset(
                 conll_folder=conll_folder, tag_column=1, token_column=0
             )
-            # FIXME: Normalize entity type name!
-            split_data = filter_entities(split_data, "Cell-line-name")
+            split_data = filter_and_map_entities(split_data, {"Cell-line-name":
+                                                                  CELL_LINE_TAG})
             splits.append(split_data)
 
         return merge_datasets(splits)
@@ -1458,7 +1465,7 @@ class HUNER_SPECIES_LOCTEXT(HunerDataset):
         LOCTEXT.download_dataset(data_dir)
         dataset = LOCTEXT.parse_dataset(data_dir)
 
-        return filter_entities(dataset, "species")
+        return filter_and_map_entities(dataset, {"species": SPECIES_TAG})
 
 
 class HUNER_PROTEIN_LOCTEXT(HunerDataset):
@@ -1478,4 +1485,4 @@ class HUNER_PROTEIN_LOCTEXT(HunerDataset):
         LOCTEXT.download_dataset(data_dir)
         dataset = LOCTEXT.parse_dataset(data_dir)
 
-        return filter_entities(dataset, "protein")
+        return filter_and_map_entities(dataset, {"protein": PROTEIN_TAG})
