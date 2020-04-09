@@ -1,5 +1,8 @@
+import json
 import os
 import shutil
+import flair
+
 from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from functools import cmp_to_key
@@ -10,7 +13,6 @@ from typing import Union, Callable, Dict, List, Tuple, Iterable, IO
 
 from lxml import etree
 
-import flair
 from flair.datasets import ColumnCorpus
 from flair.file_utils import cached_path, unzip_file, unzip_targz_file
 
@@ -24,9 +26,9 @@ class Entity:
         return (
             self.type
             + "("
-            + str(self.char_span[0])
+            + str(self.char_span.start)
             + ","
-            + str(self.char_span[1])
+            + str(self.char_span.stop)
             + ")"
         )
 
@@ -297,7 +299,8 @@ class CoNLLWriter:
                     )
                 )
 
-                current_entity = entities.popleft()
+                current_entity = entities.popleft() if entities else None
+
                 in_entity = False
                 for sentence, sentence_offset in zip(sentences, sentence_offsets):
                     tokens, token_offsets = self.tokenizer(sentence)
@@ -306,10 +309,15 @@ class CoNLLWriter:
 
                         if current_entity and offset >= current_entity.char_span.stop:
                             in_entity = False
-                            if entities:
-                                current_entity = entities.popleft()
-                            else:
-                                current_entity = None
+
+                            # One token may contain multiple entities -> deque all of them
+                            while (
+                                current_entity
+                                and offset >= current_entity.char_span.stop
+                            ):
+                                current_entity = (
+                                    entities.popleft() if entities else None
+                                )
 
                         # FIXME This assumes that entities aren't nested, we have to ensure that beforehand
                         if current_entity and offset in current_entity.char_span:
@@ -1332,3 +1340,142 @@ class HUNER_CELL_LINE_GELLUS(HunerDataset):
             splits.append(split_data)
 
         return merge_datasets(splits)
+
+
+class LOCTEXT(ColumnCorpus):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+        :param base_path: Path to the corpus on your machine
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param tokenizer: Callable that segments a sentence into words,
+                          defaults to scispacy
+        :param sentence_splitter: Callable that segments a document into sentences,
+                                  defaults to scispacy
+        """
+        if tokenizer is None:
+            tokenizer = build_spacy_tokenizer()
+
+        if sentence_splitter is None:
+            sentence_splitter = build_spacy_sentence_splitter()
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+
+        if not (train_file.exists()):
+            self.download_dataset(data_folder)
+            full_dataset = self.parse_dataset(data_folder)
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(full_dataset, train_file)
+
+        super(LOCTEXT, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @staticmethod
+    def download_dataset(data_dir: Path):
+        data_url = "http://pubannotation.org/downloads/LocText-annotations.tgz"
+        data_path = cached_path(data_url, data_dir)
+        unzip_targz_file(data_path, data_dir)
+
+    @staticmethod
+    def parse_dataset(data_dir: Path) -> InternalBioNerDataset:
+        loctext_json_folder = data_dir / "LocText"
+
+        entity_type_mapping = {
+            "go": "protein",
+            "uniprot": "protein",
+            "taxonomy": "species",
+        }
+
+        documents = {}
+        entities_per_document = {}
+
+        for file in os.listdir(str(loctext_json_folder)):
+            document_id = file.strip(".json")
+            entities = []
+
+            with open(os.path.join(str(loctext_json_folder), file), "r") as f_in:
+                data = json.load(f_in)
+                document_text = data["text"].strip()
+                document_text = document_text.replace("\n", " ")
+
+                if "denotations" in data.keys():
+                    for ann in data["denotations"]:
+                        start = int(ann["span"]["begin"])
+                        end = int(ann["span"]["end"])
+
+                        original_entity_type = ann["obj"].split(":")[0]
+                        if not original_entity_type in entity_type_mapping:
+                            continue
+
+                        entity_type = entity_type_mapping[original_entity_type]
+                        entities.append(Entity((start, end), entity_type))
+
+                documents[document_id] = document_text
+                entities_per_document[document_id] = entities
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
+
+
+class HUNER_SPECIES_LOCTEXT(HunerDataset):
+    """
+        HUNER version of the Loctext corpus containing species annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/loctext"
+
+    @staticmethod
+    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+        LOCTEXT.download_dataset(data_dir)
+        dataset = LOCTEXT.parse_dataset(data_dir)
+
+        return filter_entities(dataset, "species")
+
+
+class HUNER_PROTEIN_LOCTEXT(HunerDataset):
+    """
+        HUNER version of the Loctext corpus containing protein annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/loctext"
+
+    @staticmethod
+    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+        LOCTEXT.download_dataset(data_dir)
+        dataset = LOCTEXT.parse_dataset(data_dir)
+
+        return filter_entities(dataset, "protein")

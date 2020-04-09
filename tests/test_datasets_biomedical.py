@@ -1,7 +1,8 @@
-import io
 import os
 import tempfile
+
 from pathlib import Path
+from typing import List
 
 from flair.datasets.biomedical import (
     Entity,
@@ -93,9 +94,6 @@ def test_normalize_entity_spans():
 
 
 def test_write_to_conll():
-    writer = CoNLLWriter(
-        tokenizer=whitespace_tokenize, sentence_splitter=lambda x: ([x], [0])
-    )
     text = "This is entity1 entity2 and a long entity3"
     dataset = InternalBioNerDataset(
         documents={"1": text},
@@ -117,14 +115,7 @@ def test_write_to_conll():
             ]
         },
     )
-
-    outfile_path = tempfile.mkstemp()[1]
-    try:
-        writer.write_to_conll(dataset, Path(outfile_path))
-        contents = [l.strip() for l in open(outfile_path).readlines() if l.strip()]
-    finally:
-        os.remove(outfile_path)
-    assert contents == [
+    expected_labeling = [
         "This O",
         "is O",
         "entity1 B-E",
@@ -134,3 +125,55 @@ def test_write_to_conll():
         "long I-E",
         "entity3 I-E",
     ]
+    assert_conll_writer_output(dataset, expected_labeling)
+
+
+def test_conll_writer_one_token_multiple_entities1():
+    text = "This is entity1 entity2"
+    dataset = InternalBioNerDataset(
+        documents={"1": text},
+        entities_per_document={
+            "1": [
+                Entity((text.find("entity1"), text.find("entity1") + 2), "E"),
+                Entity((text.find("tity1"), text.find("tity1") + 5), "E"),
+                Entity(
+                    (text.find("entity2"), text.find("entity2") + len("entity2")), "E"
+                ),
+            ]
+        },
+    )
+
+    assert_conll_writer_output(
+        dataset, ["This O", "is O", "entity1 B-E", "entity2 B-E"]
+    )
+
+
+def test_conll_writer_one_token_multiple_entities2():
+    text = "This is entity1 entity2"
+    dataset = InternalBioNerDataset(
+        documents={"1": text},
+        entities_per_document={
+            "1": [
+                Entity((text.find("entity1"), text.find("entity1") + 2), "E"),
+                Entity((text.find("tity1"), text.find("tity1") + 5), "E"),
+            ]
+        },
+    )
+
+    assert_conll_writer_output(dataset, ["This O", "is O", "entity1 B-E", "entity2 O"])
+
+
+def assert_conll_writer_output(
+    dataset: InternalBioNerDataset, expected_output: List[str]
+):
+    outfile_path = tempfile.mkstemp()[1]
+    try:
+        writer = CoNLLWriter(
+            tokenizer=whitespace_tokenize, sentence_splitter=lambda x: ([x], [0])
+        )
+        writer.write_to_conll(dataset, Path(outfile_path))
+        contents = [l.strip() for l in open(outfile_path).readlines() if l.strip()]
+    finally:
+        os.remove(outfile_path)
+
+    assert contents == expected_output
