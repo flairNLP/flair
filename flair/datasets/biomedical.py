@@ -277,6 +277,49 @@ def normalize_entity_spans(entities: Iterable[Entity]) -> List[Entity]:
     return [entity for entity in entities if entity is not None]
 
 
+def bioc_to_internal(bioc_file: Path):
+    tree = etree.parse(str(bioc_file))
+    texts_per_document = {}
+    entities_per_document = {}
+    documents = tree.xpath('.//document')
+
+    for document in documents:
+        document_id = document.xpath('./id')[0].text
+        texts = []
+        entities = []
+
+        for passage in document.xpath('passage'):
+            text = passage.xpath('text/text()')[0]
+            passage_offset = int(passage.xpath('./offset/text()')[0]) # from BioC annotation
+            document_offset = len(" ".join(texts)) # because we stick all passages of a document together
+
+            texts.append(text) # calculate offset without current text
+
+            for annotation in passage.xpath('.//annotation'):
+                # TODO Handle non-contiguous entities
+                assert len(annotation.xpath('./location')) <= 1
+
+                entity_types = [i.text.replace(" ", "_") for i in annotation.xpath('./infon')]
+
+                start = int(annotation.xpath('./location')[0].get('offset')) - passage_offset
+                length = int(annotation.xpath('./location')[0].get('length'))
+                if length <= 0:
+                    continue
+                end = start + length
+                annotated_entity = text[start:end]
+                true_entity = annotation.xpath('.//text')[0].text
+                assert annotated_entity.lower() == true_entity.lower()
+
+                for entity_type in entity_types:
+                    entities.append(Entity((start + document_offset, end + document_offset),
+                                           entity_type))
+        texts_per_document[document_id] = " ".join(texts)
+        entities_per_document[document_id] = entities
+
+    return InternalBioNerDataset(documents=texts_per_document,
+                                 entities_per_document=entities_per_document)
+
+
 class CoNLLWriter:
     def __init__(
         self,
@@ -434,9 +477,8 @@ class HunerDataset(ColumnCorpus, ABC):
         https://github.com/hu-ner/huner
     """
 
-    @staticmethod
     @abstractmethod
-    def to_internal(data_folder: Path) -> InternalBioNerDataset:
+    def to_internal(self, data_folder: Path) -> InternalBioNerDataset:
         raise NotImplementedError()
 
     @staticmethod
@@ -528,8 +570,7 @@ class HUNER_PROTEIN_BIO_INFER(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/bioinfer"
 
-    @staticmethod
-    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         documents = {}
         entities_per_document = defaultdict(list)
 
@@ -756,8 +797,7 @@ class HUNER_PROTEIN_JNLPBA(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/genia"
 
-    @staticmethod
-    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
@@ -782,8 +822,7 @@ class HUNER_CELL_LINE_JNLPBA(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/genia"
 
-    @staticmethod
-    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
@@ -885,8 +924,7 @@ class HUNER_CELL_LINE_CELL_FINDER(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/cellfinder_cellline"
 
-    @staticmethod
-    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         data = CELL_FINDER.download_and_prepare(data_dir)
         data = filter_and_map_entities(data, {"CellLine": CELL_LINE_TAG})
 
@@ -901,8 +939,7 @@ class HUNER_SPECIES_CELL_FINDER(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/cellfinder_species"
 
-    @staticmethod
-    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         data = CELL_FINDER.download_and_prepare(data_dir)
         data = filter_and_map_entities(data, {"Species": SPECIES_TAG})
 
@@ -917,8 +954,7 @@ class HUNER_PROTEIN_CELL_FINDER(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/cellfinder_protein"
 
-    @staticmethod
-    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         data = CELL_FINDER.download_and_prepare(data_dir)
         data = filter_and_map_entities(data, {"GeneProtein": "Protein"})
 
@@ -1052,8 +1088,7 @@ class HUNER_PROTEIN_MIRNA(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA"
 
-    @staticmethod
-    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
@@ -1078,8 +1113,7 @@ class HUNER_SPECIES_MIRNA(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA"
 
-    @staticmethod
-    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
@@ -1104,8 +1138,7 @@ class HUNER_DISEASE_MIRNA(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA"
 
-    @staticmethod
-    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
@@ -1261,8 +1294,7 @@ class HUNER_CELL_LINE_CLL(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/cll"
 
-    @staticmethod
-    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         KaewphanCorpusHelper.download_cll_dataset(data_dir)
         conll_folder = data_dir / "CLL-1.0.2" / "conll"
         # FIXME: Normalize entity type name!
@@ -1332,8 +1364,7 @@ class HUNER_CELL_LINE_GELLUS(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/gellus"
 
-    @staticmethod
-    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         KaewphanCorpusHelper.download_gellus_dataset(data_dir)
 
         splits = []
@@ -1460,8 +1491,7 @@ class HUNER_SPECIES_LOCTEXT(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/loctext"
 
-    @staticmethod
-    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         LOCTEXT.download_dataset(data_dir)
         dataset = LOCTEXT.parse_dataset(data_dir)
 
@@ -1480,9 +1510,124 @@ class HUNER_PROTEIN_LOCTEXT(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/loctext"
 
-    @staticmethod
-    def to_internal(data_dir: Path) -> InternalBioNerDataset:
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         LOCTEXT.download_dataset(data_dir)
         dataset = LOCTEXT.parse_dataset(data_dir)
 
         return filter_and_map_entities(dataset, {"protein": PROTEIN_TAG})
+
+
+class CHEMDNER(ColumnCorpus):
+    """
+        Original corpus of the CHEMDNER shared task.
+
+        For further information see Krallinger et al.:
+          The CHEMDNER corpus of chemicals and drugs and its annotation principles
+          https://jcheminf.biomedcentral.com/articles/10.1186/1758-2946-7-S1-S2
+    """
+
+    default_dir = Path(flair.cache_root) / "datasets"/ "CHEMDNER"
+
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True,
+                 tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+                 sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None
+                 ):
+        """
+        :param base_path: Path to the corpus on your machine
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param tokenizer: Callable that segments a sentence into words,
+                          defaults to scispacy
+        :param sentence_splitter: Callable that segments a document into sentences,
+                                  defaults to scispacy
+        """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+             # download file is huge => make default_dir visible so that derivative
+             # corpora can all use the same download file
+            data_folder = self.default_dir
+        else:
+            data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        dev_file = data_folder / "dev.conll"
+        test_file = data_folder / "test.conll"
+
+        if not (train_file.exists() and dev_file.exists() and test_file.exists()):
+            download_dir = data_folder / "original"
+            os.makedirs(download_dir, exist_ok=True)
+            self.download_dataset(download_dir)
+
+            train_data = bioc_to_internal(download_dir/"chemdner_corpus"/ "training.bioc.xml")
+            dev_data = bioc_to_internal(download_dir/"chemdner_corpus"/"development.bioc.xml")
+            test_data = bioc_to_internal(download_dir/"chemdner_corpus"/"evaluation.bioc.xml")
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(train_data, train_file)
+            conll_writer.write_to_conll(dev_data, dev_file)
+            conll_writer.write_to_conll(test_data, test_file)
+
+
+        super(CHEMDNER, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes="ner",
+            in_memory=in_memory
+        )
+
+    @staticmethod
+    def download_dataset(data_dir: Path):
+        data_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2014/chemdner_corpus.tar.gz"
+        data_path = cached_path(data_url, data_dir)
+        unzip_targz_file(data_path, data_dir)
+
+
+class HUNER_CHEMICAL_CHEMDNER(HunerDataset):
+    """
+        HUNER version of the CHEMDNER corpus containing chemical annotations.
+    """
+
+    def __init__(self, *args, download_folder=None, **kwargs):
+        self.download_folder = download_folder or CHEMDNER.default_dir / "original"
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/chemdner"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        os.makedirs(str(self.download_folder), exist_ok=True)
+        CHEMDNER.download_dataset(self.download_folder)
+        train_data = bioc_to_internal(self.download_folder/"chemdner_corpus"/ "training.bioc.xml")
+        dev_data = bioc_to_internal(self.download_folder/"chemdner_corpus"/"development.bioc.xml")
+        test_data = bioc_to_internal(self.download_folder/"chemdner_corpus"/"evaluation.bioc.xml")
+        all_data = merge_datasets([train_data, dev_data, test_data])
+        all_data = filter_and_map_entities(all_data, {
+            "ABBREVIATION": "Chemical",
+            "FAMILY": "Chemical",
+            "FORMULA": "Chemical",
+            "IDENTIFIER": "Chemical",
+            "MULTIPLE": "Chemical",
+            "NO_CLASS": "Chemical",
+            "SYSTEMATIC": "Chemical",
+            "TRIVIAL": "Chemical"
+        })
+
+        return all_data
