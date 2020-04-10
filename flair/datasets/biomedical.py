@@ -1631,3 +1631,93 @@ class HUNER_CHEMICAL_CHEMDNER(HunerDataset):
         })
 
         return all_data
+
+
+class IEPA(ColumnCorpus):
+    """
+        IEPA corpus as provided by http://corpora.informatik.hu-berlin.de/
+        (Original corpus is 404)
+
+        For further information see Ding, Berleant, Nettleton, Wurtele:
+          Mining MEDLINE: abstracts, sentences, or phrases?
+    """
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True,
+                    tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+                    sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None
+                    ):
+           """
+           :param base_path: Path to the corpus on your machine
+           :param in_memory: If True, keeps dataset in memory giving speedups in training.
+           :param tokenizer: Callable that segments a sentence into words,
+                             defaults to scispacy
+           :param sentence_splitter: Callable that segments a document into sentences,
+                                     defaults to scispacy
+           """
+
+           if type(base_path) == str:
+               base_path: Path = Path(base_path)
+
+           # column format
+           columns = {0: "text", 1: "ner"}
+
+           # this dataset name
+           dataset_name = self.__class__.__name__.lower()
+
+           # default dataset folder is the cache root
+           if not base_path:
+               base_path = Path(flair.cache_root) / "datasets"
+           data_folder = base_path / dataset_name
+
+           train_file = data_folder / "train.conll"
+
+           if not (train_file.exists()):
+               download_dir = data_folder / "original"
+               os.makedirs(download_dir, exist_ok=True)
+               self.download_dataset(download_dir)
+
+               all_data = bioc_to_internal(download_dir/"iepa_bioc.xml")
+
+               if tokenizer is None:
+                   tokenizer = build_spacy_tokenizer()
+
+               if sentence_splitter is None:
+                   sentence_splitter = build_spacy_sentence_splitter()
+
+               conll_writer = CoNLLWriter(
+                   tokenizer=tokenizer, sentence_splitter=sentence_splitter
+               )
+               conll_writer.write_to_conll(all_data, train_file)
+
+           super(IEPA, self).__init__(
+               data_folder,
+               columns,
+               tag_to_bioes="ner",
+               in_memory=in_memory
+           )
+
+    @staticmethod
+    def download_dataset(data_dir: Path):
+       data_url = "http://corpora.informatik.hu-berlin.de/corpora/brat2bioc/iepa_bioc.xml.zip"
+       data_path = cached_path(data_url, data_dir)
+       unzip_file(data_path, data_dir)
+
+
+class HUNER_PROTEIN_IEPA(HunerDataset):
+    """
+        HUNER version of the IEPA corpus containing protein annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/iepa"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        os.makedirs(str(data_dir), exist_ok=True)
+        IEPA.download_dataset(data_dir)
+        all_data = bioc_to_internal(data_dir/"iepa_bioc.xml")
+        all_data = filter_and_map_entities(all_data, {"ann": "Protein"})
+
+        return all_data
