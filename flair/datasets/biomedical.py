@@ -19,7 +19,7 @@ from flair.file_utils import cached_path, unzip_file, unzip_targz_file
 
 DISEASE_TAG = "Disease"
 CELL_LINE_TAG = "CellLine"
-PROTEIN_TAG = "Protein"
+GENE_TAG = "Gene"
 SPECIES_TAG = "Species"
 
 
@@ -562,7 +562,7 @@ class HunerDataset(ColumnCorpus, ABC):
         )
 
 
-class HUNER_PROTEIN_BIO_INFER(HunerDataset):
+class HUNER_GENE_BIO_INFER(HunerDataset):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -785,9 +785,9 @@ class HunerJNLPBA:
         )
 
 
-class HUNER_PROTEIN_JNLPBA(HunerDataset):
+class HUNER_GENE_JNLPBA(HunerDataset):
     """
-        HUNER version of the JNLPBA corpus containing protein annotations.
+        HUNER version of the JNLPBA corpus containing gene annotations.
     """
 
     def __init__(self, *args, **kwargs):
@@ -802,10 +802,10 @@ class HUNER_PROTEIN_JNLPBA(HunerDataset):
         os.makedirs(str(download_folder), exist_ok=True)
 
         train_data = HunerJNLPBA.download_and_prepare_train(download_folder)
-        train_data = filter_and_map_entities(train_data, {"protein": "Protein"})
+        train_data = filter_and_map_entities(train_data, {"protein": GENE_TAG})
 
         test_data = HunerJNLPBA.download_and_prepare_test(download_folder)
-        test_data = filter_and_map_entities(test_data, {"protein": "Protein"})
+        test_data = filter_and_map_entities(test_data, {"protein": GENE_TAG})
 
         return merge_datasets([train_data, test_data])
 
@@ -946,7 +946,7 @@ class HUNER_SPECIES_CELL_FINDER(HunerDataset):
         return data
 
 
-class HUNER_PROTEIN_CELL_FINDER(HunerDataset):
+class HUNER_GENE_CELL_FINDER(HunerDataset):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -956,7 +956,7 @@ class HUNER_PROTEIN_CELL_FINDER(HunerDataset):
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         data = CELL_FINDER.download_and_prepare(data_dir)
-        data = filter_and_map_entities(data, {"GeneProtein": "Protein"})
+        data = filter_and_map_entities(data, {"GeneProtein": GENE_TAG})
 
         return data
 
@@ -1076,7 +1076,7 @@ class MIRNA(ColumnCorpus):
         )
 
 
-class HUNER_PROTEIN_MIRNA(HunerDataset):
+class HUNER_GENE_MIRNA(HunerDataset):
     """
         HUNER version of the miRNA corpus containing protein / gene annotations.
     """
@@ -1093,10 +1093,10 @@ class HUNER_PROTEIN_MIRNA(HunerDataset):
         os.makedirs(str(download_folder), exist_ok=True)
 
         train_data = MIRNA.download_and_prepare_train(download_folder)
-        train_data = filter_and_map_entities(train_data, {"Genes/Proteins": "Protein"})
+        train_data = filter_and_map_entities(train_data, {"Genes/Proteins": GENE_TAG})
 
         test_data = MIRNA.download_and_prepare_test(download_folder)
-        test_data = filter_and_map_entities(test_data, {"Genes/Proteins": "Protein"})
+        test_data = filter_and_map_entities(test_data, {"Genes/Proteins": GENE_TAG})
 
         return merge_datasets([train_data, test_data])
 
@@ -1498,7 +1498,7 @@ class HUNER_SPECIES_LOCTEXT(HunerDataset):
         return filter_and_map_entities(dataset, {"species": SPECIES_TAG})
 
 
-class HUNER_PROTEIN_LOCTEXT(HunerDataset):
+class HUNER_GENE_LOCTEXT(HunerDataset):
     """
         HUNER version of the Loctext corpus containing protein annotations.
     """
@@ -1514,7 +1514,7 @@ class HUNER_PROTEIN_LOCTEXT(HunerDataset):
         LOCTEXT.download_dataset(data_dir)
         dataset = LOCTEXT.parse_dataset(data_dir)
 
-        return filter_and_map_entities(dataset, {"protein": PROTEIN_TAG})
+        return filter_and_map_entities(dataset, {"protein": GENE_TAG})
 
 
 class CHEMDNER(ColumnCorpus):
@@ -1702,9 +1702,9 @@ class IEPA(ColumnCorpus):
        unzip_file(data_path, data_dir)
 
 
-class HUNER_PROTEIN_IEPA(HunerDataset):
+class HUNER_GENE_IEPA(HunerDataset):
     """
-        HUNER version of the IEPA corpus containing protein annotations.
+        HUNER version of the IEPA corpus containing gene annotations.
     """
 
     def __init__(self, *args, **kwargs):
@@ -1718,6 +1718,6 @@ class HUNER_PROTEIN_IEPA(HunerDataset):
         os.makedirs(str(data_dir), exist_ok=True)
         IEPA.download_dataset(data_dir)
         all_data = bioc_to_internal(data_dir/"iepa_bioc.xml")
-        all_data = filter_and_map_entities(all_data, {"ann": "Protein"})
+        all_data = filter_and_map_entities(all_data, {"ann": GENE_TAG})
 
         return all_data
