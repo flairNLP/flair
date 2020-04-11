@@ -18,6 +18,7 @@ from flair.datasets import ColumnCorpus
 from flair.file_utils import cached_path, unzip_file, unzip_targz_file
 
 DISEASE_TAG = "Disease"
+CHEMICAL_TAG = "Chemical"
 CELL_LINE_TAG = "CellLine"
 GENE_TAG = "Gene"
 SPECIES_TAG = "Species"
@@ -281,43 +282,60 @@ def bioc_to_internal(bioc_file: Path):
     tree = etree.parse(str(bioc_file))
     texts_per_document = {}
     entities_per_document = {}
-    documents = tree.xpath('.//document')
+    documents = tree.xpath(".//document")
 
     for document in documents:
-        document_id = document.xpath('./id')[0].text
+        document_id = document.xpath("./id")[0].text
         texts = []
         entities = []
 
-        for passage in document.xpath('passage'):
-            text = passage.xpath('text/text()')[0]
-            passage_offset = int(passage.xpath('./offset/text()')[0]) # from BioC annotation
-            document_offset = len(" ".join(texts)) # because we stick all passages of a document together
+        for passage in document.xpath("passage"):
+            text = passage.xpath("text/text()")[0]
+            passage_offset = int(
+                passage.xpath("./offset/text()")[0]
+            )  # from BioC annotation
+            document_offset = len(
+                " ".join(texts)
+            )  # because we stick all passages of a document together
 
-            texts.append(text) # calculate offset without current text
+            texts.append(text)  # calculate offset without current text
 
-            for annotation in passage.xpath('.//annotation'):
-                # TODO Handle non-contiguous entities
-                assert len(annotation.xpath('./location')) <= 1
+            for annotation in passage.xpath(".//annotation"):
 
-                entity_types = [i.text.replace(" ", "_") for i in annotation.xpath('./infon')]
+                entity_types = [
+                    i.text.replace(" ", "_") for i in annotation.xpath("./infon")
+                ]
 
-                start = int(annotation.xpath('./location')[0].get('offset')) - passage_offset
-                length = int(annotation.xpath('./location')[0].get('length'))
-                if length <= 0:
+                start = (
+                    int(annotation.xpath("./location")[0].get("offset"))
+                    - passage_offset
+                )
+                # TODO For split entities we also annotate everything inbetween which might be a bad idea?
+                final_length = int(annotation.xpath("./location")[-1].get("length"))
+                final_offset = (
+                    int(annotation.xpath("./location")[-1].get("offset"))
+                    - passage_offset
+                )
+                if final_length <= 0:
                     continue
-                end = start + length
+                end = final_offset + final_length
                 annotated_entity = text[start:end]
-                true_entity = annotation.xpath('.//text')[0].text
-                assert annotated_entity.lower() == true_entity.lower()
+                true_entity = annotation.xpath(".//text")[0].text
+                # assert annotated_entity.lower() == true_entity.lower()
 
                 for entity_type in entity_types:
-                    entities.append(Entity((start + document_offset, end + document_offset),
-                                           entity_type))
+                    entities.append(
+                        Entity(
+                            (start + document_offset, end + document_offset),
+                            entity_type,
+                        )
+                    )
         texts_per_document[document_id] = " ".join(texts)
         entities_per_document[document_id] = entities
 
-    return InternalBioNerDataset(documents=texts_per_document,
-                                 entities_per_document=entities_per_document)
+    return InternalBioNerDataset(
+        documents=texts_per_document, entities_per_document=entities_per_document
+    )
 
 
 class CoNLLWriter:
@@ -1373,8 +1391,9 @@ class HUNER_CELL_LINE_GELLUS(HunerDataset):
             split_data = KaewphanCorpusHelper.read_dataset(
                 conll_folder=conll_folder, tag_column=1, token_column=0
             )
-            split_data = filter_and_map_entities(split_data, {"Cell-line-name":
-                                                                  CELL_LINE_TAG})
+            split_data = filter_and_map_entities(
+                split_data, {"Cell-line-name": CELL_LINE_TAG}
+            )
             splits.append(split_data)
 
         return merge_datasets(splits)
@@ -1526,12 +1545,15 @@ class CHEMDNER(ColumnCorpus):
           https://jcheminf.biomedcentral.com/articles/10.1186/1758-2946-7-S1-S2
     """
 
-    default_dir = Path(flair.cache_root) / "datasets"/ "CHEMDNER"
+    default_dir = Path(flair.cache_root) / "datasets" / "CHEMDNER"
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True,
-                 tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-                 sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None
-                 ):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
         """
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -1552,8 +1574,8 @@ class CHEMDNER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-             # download file is huge => make default_dir visible so that derivative
-             # corpora can all use the same download file
+            # download file is huge => make default_dir visible so that derivative
+            # corpora can all use the same download file
             data_folder = self.default_dir
         else:
             data_folder = base_path / dataset_name
@@ -1567,9 +1589,15 @@ class CHEMDNER(ColumnCorpus):
             os.makedirs(download_dir, exist_ok=True)
             self.download_dataset(download_dir)
 
-            train_data = bioc_to_internal(download_dir/"chemdner_corpus"/ "training.bioc.xml")
-            dev_data = bioc_to_internal(download_dir/"chemdner_corpus"/"development.bioc.xml")
-            test_data = bioc_to_internal(download_dir/"chemdner_corpus"/"evaluation.bioc.xml")
+            train_data = bioc_to_internal(
+                download_dir / "chemdner_corpus" / "training.bioc.xml"
+            )
+            dev_data = bioc_to_internal(
+                download_dir / "chemdner_corpus" / "development.bioc.xml"
+            )
+            test_data = bioc_to_internal(
+                download_dir / "chemdner_corpus" / "evaluation.bioc.xml"
+            )
 
             if tokenizer is None:
                 tokenizer = build_spacy_tokenizer()
@@ -1584,12 +1612,8 @@ class CHEMDNER(ColumnCorpus):
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-
         super(CHEMDNER, self).__init__(
-            data_folder,
-            columns,
-            tag_to_bioes="ner",
-            in_memory=in_memory
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
         )
 
     @staticmethod
@@ -1615,20 +1639,29 @@ class HUNER_CHEMICAL_CHEMDNER(HunerDataset):
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         os.makedirs(str(self.download_folder), exist_ok=True)
         CHEMDNER.download_dataset(self.download_folder)
-        train_data = bioc_to_internal(self.download_folder/"chemdner_corpus"/ "training.bioc.xml")
-        dev_data = bioc_to_internal(self.download_folder/"chemdner_corpus"/"development.bioc.xml")
-        test_data = bioc_to_internal(self.download_folder/"chemdner_corpus"/"evaluation.bioc.xml")
+        train_data = bioc_to_internal(
+            self.download_folder / "chemdner_corpus" / "training.bioc.xml"
+        )
+        dev_data = bioc_to_internal(
+            self.download_folder / "chemdner_corpus" / "development.bioc.xml"
+        )
+        test_data = bioc_to_internal(
+            self.download_folder / "chemdner_corpus" / "evaluation.bioc.xml"
+        )
         all_data = merge_datasets([train_data, dev_data, test_data])
-        all_data = filter_and_map_entities(all_data, {
-            "ABBREVIATION": "Chemical",
-            "FAMILY": "Chemical",
-            "FORMULA": "Chemical",
-            "IDENTIFIER": "Chemical",
-            "MULTIPLE": "Chemical",
-            "NO_CLASS": "Chemical",
-            "SYSTEMATIC": "Chemical",
-            "TRIVIAL": "Chemical"
-        })
+        all_data = filter_and_map_entities(
+            all_data,
+            {
+                "ABBREVIATION": CHEMICAL_TAG,
+                "FAMILY": CHEMICAL_TAG,
+                "FORMULA": CHEMICAL_TAG,
+                "IDENTIFIER": CHEMICAL_TAG,
+                "MULTIPLE": CHEMICAL_TAG,
+                "NO_CLASS": CHEMICAL_TAG,
+                "SYSTEMATIC": CHEMICAL_TAG,
+                "TRIVIAL": CHEMICAL_TAG,
+            },
+        )
 
         return all_data
 
@@ -1641,11 +1674,15 @@ class IEPA(ColumnCorpus):
         For further information see Ding, Berleant, Nettleton, Wurtele:
           Mining MEDLINE: abstracts, sentences, or phrases?
     """
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True,
-                    tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-                    sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None
-                    ):
-           """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param tokenizer: Callable that segments a sentence into words,
@@ -1654,52 +1691,51 @@ class IEPA(ColumnCorpus):
                                      defaults to scispacy
            """
 
-           if type(base_path) == str:
-               base_path: Path = Path(base_path)
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
 
-           # column format
-           columns = {0: "text", 1: "ner"}
+        # column format
+        columns = {0: "text", 1: "ner"}
 
-           # this dataset name
-           dataset_name = self.__class__.__name__.lower()
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
 
-           # default dataset folder is the cache root
-           if not base_path:
-               base_path = Path(flair.cache_root) / "datasets"
-           data_folder = base_path / dataset_name
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
 
-           train_file = data_folder / "train.conll"
+        train_file = data_folder / "train.conll"
 
-           if not (train_file.exists()):
-               download_dir = data_folder / "original"
-               os.makedirs(download_dir, exist_ok=True)
-               self.download_dataset(download_dir)
+        if not (train_file.exists()):
+            download_dir = data_folder / "original"
+            os.makedirs(download_dir, exist_ok=True)
+            self.download_dataset(download_dir)
 
-               all_data = bioc_to_internal(download_dir/"iepa_bioc.xml")
+            all_data = bioc_to_internal(download_dir / "iepa_bioc.xml")
 
-               if tokenizer is None:
-                   tokenizer = build_spacy_tokenizer()
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
 
-               if sentence_splitter is None:
-                   sentence_splitter = build_spacy_sentence_splitter()
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
 
-               conll_writer = CoNLLWriter(
-                   tokenizer=tokenizer, sentence_splitter=sentence_splitter
-               )
-               conll_writer.write_to_conll(all_data, train_file)
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(all_data, train_file)
 
-           super(IEPA, self).__init__(
-               data_folder,
-               columns,
-               tag_to_bioes="ner",
-               in_memory=in_memory
-           )
+        super(IEPA, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
 
     @staticmethod
     def download_dataset(data_dir: Path):
-       data_url = "http://corpora.informatik.hu-berlin.de/corpora/brat2bioc/iepa_bioc.xml.zip"
-       data_path = cached_path(data_url, data_dir)
-       unzip_file(data_path, data_dir)
+        data_url = (
+            "http://corpora.informatik.hu-berlin.de/corpora/brat2bioc/iepa_bioc.xml.zip"
+        )
+        data_path = cached_path(data_url, data_dir)
+        unzip_file(data_path, data_dir)
 
 
 class HUNER_GENE_IEPA(HunerDataset):
@@ -1717,7 +1753,160 @@ class HUNER_GENE_IEPA(HunerDataset):
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         os.makedirs(str(data_dir), exist_ok=True)
         IEPA.download_dataset(data_dir)
-        all_data = bioc_to_internal(data_dir/"iepa_bioc.xml")
+        all_data = bioc_to_internal(data_dir / "iepa_bioc.xml")
         all_data = filter_and_map_entities(all_data, {"ann": GENE_TAG})
+
+        return all_data
+
+
+class CDR(ColumnCorpus):
+    """
+        CDR corpus as provided by https://github.com/JHnlp/BioCreative-V-CDR-Corpus
+
+        For further information see Li et al.:
+          BioCreative V CDR task corpus: a resource for chemical disease relation extraction
+          https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4860626/
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+        :param base_path: Path to the corpus on your machine
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param tokenizer: Callable that segments a sentence into words,
+                          defaults to scispacy
+        :param sentence_splitter: Callable that segments a document into sentences,
+                                  defaults to scispacy
+        """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        dev_file = data_folder / "dev.conll"
+        test_file = data_folder / "test.conll"
+
+        if not (train_file.exists() and dev_file.exists() and test_file.exists()):
+            download_dir = data_folder / "original"
+            os.makedirs(download_dir, exist_ok=True)
+            self.download_dataset(download_dir)
+
+            train_data = bioc_to_internal(
+                download_dir
+                / "CDR_Data"
+                / "CDR.Corpus.v010516"
+                / "CDR_TrainingSet.BioC.xml"
+            )
+            dev_data = bioc_to_internal(
+                download_dir
+                / "CDR_Data"
+                / "CDR.Corpus.v010516"
+                / "CDR_DevelopmentSet.BioC.xml"
+            )
+            test_data = bioc_to_internal(
+                download_dir
+                / "CDR_Data"
+                / "CDR.Corpus.v010516"
+                / "CDR_TestSet.BioC.xml"
+            )
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(train_data, train_file)
+            conll_writer.write_to_conll(dev_data, dev_file)
+            conll_writer.write_to_conll(test_data, test_file)
+
+        super(CDR, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @staticmethod
+    def download_dataset(data_dir: Path):
+        data_url = (
+            "https://github.com/JHnlp/BioCreative-V-CDR-Corpus/raw/master/CDR_Data.zip"
+        )
+        data_path = cached_path(data_url, data_dir)
+        unzip_file(data_path, data_dir)
+
+
+class HUNER_DISEASE_CDR(HunerDataset):
+    """
+        HUNER version of the IEPA corpus containing disease annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/CDRDisease"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        os.makedirs(str(data_dir), exist_ok=True)
+        CDR.download_dataset(data_dir)
+        train_data = bioc_to_internal(
+            data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TrainingSet.BioC.xml"
+        )
+        dev_data = bioc_to_internal(
+            data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_DevelopmentSet.BioC.xml"
+        )
+        test_data = bioc_to_internal(
+            data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TestSet.BioC.xml"
+        )
+        all_data = merge_datasets([train_data, dev_data, test_data])
+        all_data = filter_and_map_entities(all_data, {"Disease": DISEASE_TAG})
+
+        return all_data
+
+
+class HUNER_CHEMICAL_CDR(HunerDataset):
+    """
+        HUNER version of the IEPA corpus containing chemical annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/CDRChem"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        os.makedirs(str(data_dir), exist_ok=True)
+        CDR.download_dataset(data_dir)
+        train_data = bioc_to_internal(
+            data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TrainingSet.BioC.xml"
+        )
+        dev_data = bioc_to_internal(
+            data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_DevelopmentSet.BioC.xml"
+        )
+        test_data = bioc_to_internal(
+            data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TestSet.BioC.xml"
+        )
+        all_data = merge_datasets([train_data, dev_data, test_data])
+        all_data = filter_and_map_entities(all_data, {"Chemical": CHEMICAL_TAG})
 
         return all_data
