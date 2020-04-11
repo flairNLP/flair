@@ -11,6 +11,7 @@ from operator import attrgetter
 from pathlib import Path
 from typing import Union, Callable, Dict, List, Tuple, Iterable
 
+import ftfy
 from lxml import etree
 
 import flair
@@ -303,7 +304,9 @@ def bioc_to_internal(bioc_file: Path):
             for annotation in passage.xpath(".//annotation"):
 
                 entity_types = [
-                    i.text.replace(" ", "_") for i in annotation.xpath("./infon")
+                    i.text.replace(" ", "_")
+                    for i in annotation.xpath("./infon")
+                    if i.attrib["key"] in {"type", "class"}
                 ]
 
                 start = (
@@ -363,7 +366,7 @@ class CoNLLWriter:
 
         with output_file.open("w") as f:
             for document_id in dataset.documents.keys():
-                document_text = dataset.documents[document_id]
+                document_text = ftfy.fix_text(dataset.documents[document_id])
                 sentences, sentence_offsets = self.sentence_splitter(document_text)
                 entities = deque(
                     sorted(
@@ -1755,7 +1758,7 @@ class HUNER_GENE_IEPA(HunerDataset):
         os.makedirs(str(data_dir), exist_ok=True)
         IEPA.download_dataset(data_dir)
         all_data = bioc_to_internal(data_dir / "iepa_bioc.xml")
-        all_data = filter_and_map_entities(all_data, {"ann": GENE_TAG})
+        all_data = filter_and_map_entities(all_data, {"Protein": GENE_TAG})
 
         return all_data
 
@@ -1770,11 +1773,11 @@ class LINNEAUS(ColumnCorpus):
     """
 
     def __init__(
-            self,
-            base_path: Union[str, Path] = None,
-            in_memory: bool = True,
-            tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-            sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
@@ -2025,5 +2028,141 @@ class HUNER_CHEMICAL_CDR(HunerDataset):
         )
         all_data = merge_datasets([train_data, dev_data, test_data])
         all_data = filter_and_map_entities(all_data, {"Chemical": CHEMICAL_TAG})
+
+        return all_data
+
+
+class VARIOME(ColumnCorpus):
+    """
+        Variome corpus as provided by http://corpora.informatik.hu-berlin.de/corpora/brat2bioc/hvp_bioc.xml.zip
+        For further information see Verspoor et al.:
+          Annotating the biomedical literature for the human variome
+          https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3676157/
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+           :param base_path: Path to the corpus on your machine
+           :param in_memory: If True, keeps dataset in memory giving speedups in training.
+           :param tokenizer: Callable that segments a sentence into words,
+                             defaults to scispacy
+           :param sentence_splitter: Callable that segments a document into sentences,
+                                     defaults to scispacy
+           """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+
+        if not (train_file.exists()):
+            download_dir = data_folder / "original"
+            os.makedirs(download_dir, exist_ok=True)
+            self.download_dataset(download_dir)
+
+            all_data = bioc_to_internal(download_dir / "hvp_bioc.xml")
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(all_data, train_file)
+
+        super(VARIOME, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @staticmethod
+    def download_dataset(data_dir: Path):
+        data_url = (
+            "http://corpora.informatik.hu-berlin.de/corpora/brat2bioc/hvp_bioc.xml.zip"
+        )
+        data_path = cached_path(data_url, data_dir)
+        unzip_file(data_path, data_dir)
+
+
+class HUNER_GENE_VARIOME(HunerDataset):
+    """
+        HUNER version of the Variome corpus containing gene annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/variome_gene"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        os.makedirs(str(data_dir), exist_ok=True)
+        VARIOME.download_dataset(data_dir)
+        all_data = bioc_to_internal(data_dir / "hvp_bioc.xml")
+        all_data = filter_and_map_entities(all_data, {"gene": GENE_TAG})
+
+        return all_data
+
+
+class HUNER_DISEASE_VARIOME(HunerDataset):
+    """
+        HUNER version of the Variome corpus containing disease annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/variome_disease"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        os.makedirs(str(data_dir), exist_ok=True)
+        VARIOME.download_dataset(data_dir)
+        all_data = bioc_to_internal(data_dir / "hvp_bioc.xml")
+        all_data = filter_and_map_entities(
+            all_data, {"Disorder": DISEASE_TAG, "disease": DISEASE_TAG}
+        )
+
+        return all_data
+
+
+class HUNER_SPECIES_VARIOME(HunerDataset):
+    """
+        HUNER version of the Variome corpus containing species annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/variome_species"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        os.makedirs(str(data_dir), exist_ok=True)
+        VARIOME.download_dataset(data_dir)
+        all_data = bioc_to_internal(data_dir / "hvp_bioc.xml")
+        all_data = filter_and_map_entities(all_data, {"Living_Beings": SPECIES_TAG})
 
         return all_data

@@ -16,3 +16,4 @@ regex
 tabulate
 langdetect
 lxml
+ftfy
