@@ -16,7 +16,7 @@ from lxml import etree
 
 import flair
 from flair.datasets import ColumnCorpus
-from flair.file_utils import cached_path, unzip_file, unzip_targz_file
+from flair.file_utils import cached_path, unzip_file, unzip_targz_file, Tqdm
 
 DISEASE_TAG = "Disease"
 CHEMICAL_TAG = "Chemical"
@@ -285,7 +285,7 @@ def bioc_to_internal(bioc_file: Path):
     entities_per_document = {}
     documents = tree.xpath(".//document")
 
-    for document in documents:
+    for document in Tqdm.tqdm(documents, desc="Converting to internal"):
         document_id = document.xpath("./id")[0].text
         texts = []
         entities = []
@@ -365,7 +365,9 @@ class CoNLLWriter:
         os.makedirs(str(output_file.parent), exist_ok=True)
 
         with output_file.open("w") as f:
-            for document_id in dataset.documents.keys():
+            for document_id in Tqdm.tqdm(dataset.documents.keys(),
+                                         total=len(dataset.documents),
+                                         desc="Converting to CoNLL"):
                 document_text = ftfy.fix_text(dataset.documents[document_id])
                 sentences, sentence_offsets = self.sentence_splitter(document_text)
                 entities = deque(
