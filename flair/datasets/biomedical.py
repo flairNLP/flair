@@ -519,13 +519,6 @@ class HunerDataset(ColumnCorpus, ABC):
         :param sentence_splitter: Callable that segments a document into sentences,
                                   defaults to scispacy
         """
-
-        if tokenizer is None:
-            tokenizer = build_spacy_tokenizer()
-
-        if sentence_splitter is None:
-            sentence_splitter = build_spacy_sentence_splitter()
-
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
@@ -549,6 +542,12 @@ class HunerDataset(ColumnCorpus, ABC):
 
             splits_dir = data_folder / "splits"
             os.makedirs(splits_dir, exist_ok=True)
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
 
             writer = CoNLLWriter(
                 tokenizer=tokenizer, sentence_splitter=sentence_splitter,
@@ -869,12 +868,6 @@ class CELL_FINDER(ColumnCorpus):
         :param sentence_splitter: Callable that segments a document into sentences,
                                   defaults to scispacy
         """
-        if tokenizer is None:
-            tokenizer = build_spacy_tokenizer()
-
-        if sentence_splitter is None:
-            sentence_splitter = build_spacy_sentence_splitter()
-
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
@@ -892,6 +885,13 @@ class CELL_FINDER(ColumnCorpus):
         train_file = data_folder / "train.conll"
         if not (train_file.exists()):
             train_corpus = self.download_and_prepare(data_folder)
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
             writer = CoNLLWriter(
                 tokenizer=tokenizer, sentence_splitter=sentence_splitter,
             )
@@ -1003,12 +1003,6 @@ class MIRNA(ColumnCorpus):
         :param sentence_splitter: Callable that segments a document into sentences,
                                   defaults to scispacy
         """
-        if tokenizer is None:
-            tokenizer = build_spacy_tokenizer()
-
-        if sentence_splitter is None:
-            sentence_splitter = build_spacy_sentence_splitter()
-
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
@@ -1029,6 +1023,12 @@ class MIRNA(ColumnCorpus):
         if not (train_file.exists() and test_file.exists()):
             download_folder = data_folder / "original"
             os.makedirs(str(download_folder), exist_ok=True)
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
 
             writer = CoNLLWriter(
                 tokenizer=tokenizer, sentence_splitter=sentence_splitter,
@@ -1415,12 +1415,6 @@ class LOCTEXT(ColumnCorpus):
         :param sentence_splitter: Callable that segments a document into sentences,
                                   defaults to scispacy
         """
-        if tokenizer is None:
-            tokenizer = build_spacy_tokenizer()
-
-        if sentence_splitter is None:
-            sentence_splitter = build_spacy_sentence_splitter()
-
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
@@ -1440,6 +1434,12 @@ class LOCTEXT(ColumnCorpus):
         if not (train_file.exists()):
             self.download_dataset(data_folder)
             full_dataset = self.parse_dataset(data_folder)
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
 
             conll_writer = CoNLLWriter(
                 tokenizer=tokenizer, sentence_splitter=sentence_splitter
@@ -1673,6 +1673,7 @@ class IEPA(ColumnCorpus):
 
         For further information see Ding, Berleant, Nettleton, Wurtele:
           Mining MEDLINE: abstracts, sentences, or phrases?
+          https://www.ncbi.nlm.nih.gov/pubmed/11928487
     """
 
     def __init__(
@@ -1757,6 +1758,122 @@ class HUNER_GENE_IEPA(HunerDataset):
         all_data = filter_and_map_entities(all_data, {"ann": GENE_TAG})
 
         return all_data
+
+
+class LINNEAUS(ColumnCorpus):
+    """
+       Original LINNEAUS corpus containing species annotations.
+
+       For further information see Gerner et al.:
+            LINNAEUS: a species name identification system for biomedical literature
+            https://www.ncbi.nlm.nih.gov/pubmed/20149233
+    """
+
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+            sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+           :param base_path: Path to the corpus on your machine
+           :param in_memory: If True, keeps dataset in memory giving speedups in training.
+           :param tokenizer: Callable that segments a sentence into words,
+                             defaults to scispacy
+           :param sentence_splitter: Callable that segments a document into sentences,
+                                     defaults to scispacy
+           """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+
+        if not (train_file.exists()):
+            dataset = self.download_and_parse_dataset(data_folder)
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(dataset, train_file)
+        super(LINNEAUS, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @staticmethod
+    def download_and_parse_dataset(data_dir: Path):
+        data_url = "https://iweb.dl.sourceforge.net/project/linnaeus/Corpora/manual-corpus-species-1.0.tar.gz"
+        data_path = cached_path(data_url, data_dir)
+        unzip_targz_file(data_path, data_dir)
+
+        documents = {}
+        entities_per_document = defaultdict(list)
+
+        # Read texts
+        texts_directory = data_dir / "manual-corpus-species-1.0" / "txt"
+        for filename in os.listdir(str(texts_directory)):
+            document_id = filename.strip(".txt")
+
+            with open(os.path.join(str(texts_directory), filename), "r") as file:
+                documents[document_id] = file.read().strip()
+
+        # Read annotations
+        tag_file = data_dir / "manual-corpus-species-1.0" / "filtered_tags.tsv"
+        with open(str(tag_file), "r") as file:
+            next(file)  # Ignore header row
+
+            for line in file:
+                if not line:
+                    continue
+
+                document_id, start, end, text = line.strip().split("\t")[1:5]
+                start, end = int(start), int(end)
+
+                entities_per_document[document_id].append(
+                    Entity((start, end), SPECIES_TAG)
+                )
+
+                document_text = documents[document_id]
+                if document_text[start:end] != text:
+                    raise AssertionError()
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
+
+
+class HUNER_SPECIES_LINNEAUS(HunerDataset):
+    """
+        HUNER version of the LINNEAUS corpus containing species annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/linneaus"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        return LINNEAUS.download_and_parse_dataset(data_dir)
 
 
 class CDR(ColumnCorpus):
