@@ -1841,6 +1841,7 @@ class FlairEmbeddings(TokenEmbeddings):
                  fine_tune: bool = False,
                  chars_per_chunk: int = 512,
                  offset_mode: str = 'with_whitespace',
+                 add_begin_state: bool = True,
                  tokenized_lm: bool = True,
                  ):
         """
@@ -2012,6 +2013,7 @@ class FlairEmbeddings(TokenEmbeddings):
 
         self.is_forward_lm: bool = self.lm.is_forward_lm
         self.offset_mode: str = offset_mode
+        self.add_begin_state: bool = add_begin_state
         self.tokenized_lm: bool = tokenized_lm
         self.chars_per_chunk: int = chars_per_chunk
 
@@ -2089,18 +2091,31 @@ class FlairEmbeddings(TokenEmbeddings):
                         offset_without_whitespace = offset_backward - 1
 
                     # offset mode that extracts at whitespace after last character
-                    if self.offset_mode == 'with_whitespace':
+                    if self.offset_mode == 'end_with_whitespace':
                         embedding = all_hidden_states_in_lm[offset_with_whitespace, i, :]
 
                     # offset mode that extracts at last character
-                    if self.offset_mode == 'without_whitespace':
+                    if self.offset_mode == 'end_without_whitespace':
                         embedding = all_hidden_states_in_lm[offset_without_whitespace, i, :]
 
-                    if self.offset_mode == 'both':
+                    if self.offset_mode == 'end_both':
                         embedding_with = all_hidden_states_in_lm[offset_with_whitespace, i, :]
                         embedding_without = all_hidden_states_in_lm[offset_without_whitespace, i, :]
                         embedding = torch.cat([embedding_with, embedding_without])
 
+                    if self.offset_mode == 'begin':
+                        begin_offset = offset_without_whitespace - len(token.text)
+                        embedding = all_hidden_states_in_lm[begin_offset, i, :]
+
+                    if self.offset_mode == 'begin_and_end_with_whitespace':
+                        begin_offset = offset_without_whitespace - len(token.text)
+                        begin_embedding = all_hidden_states_in_lm[begin_offset, i, :]
+                        embedding_with = all_hidden_states_in_lm[offset_with_whitespace, i, :]
+                        embedding = torch.cat([begin_embedding, embedding_with])
+
+                    # tokenized_lm=False,
+                    # offset_mode='with_whitespace'
+                    # and tokens with whitespace_after=False.
                     if self.tokenized_lm or token.whitespace_after:
                         offset_forward += 1
                         offset_backward -= 1
