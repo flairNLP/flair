@@ -365,9 +365,11 @@ class CoNLLWriter:
         os.makedirs(str(output_file.parent), exist_ok=True)
 
         with output_file.open("w") as f:
-            for document_id in Tqdm.tqdm(dataset.documents.keys(),
-                                         total=len(dataset.documents),
-                                         desc="Converting to CoNLL"):
+            for document_id in Tqdm.tqdm(
+                dataset.documents.keys(),
+                total=len(dataset.documents),
+                desc="Converting to CoNLL",
+            ):
                 document_text = ftfy.fix_text(dataset.documents[document_id])
                 sentences, sentence_offsets = self.sentence_splitter(document_text)
                 entities = deque(
@@ -2168,3 +2170,186 @@ class HUNER_SPECIES_VARIOME(HunerDataset):
         all_data = filter_and_map_entities(all_data, {"Living_Beings": SPECIES_TAG})
 
         return all_data
+
+
+class NCBI_DISEASE(ColumnCorpus):
+    """
+       Original NCBI disease corpus containing disease annotations.
+
+       For further information see Dogan et al.:
+          NCBI disease corpus: a resource for disease name recognition and concept normalization
+          https://www.ncbi.nlm.nih.gov/pubmed/24393765
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+           :param base_path: Path to the corpus on your machine
+           :param in_memory: If True, keeps dataset in memory giving speedups in training.
+           :param tokenizer: Callable that segments a sentence into words,
+                             defaults to scispacy
+           :param sentence_splitter: Callable that segments a document into sentences,
+                                     defaults to scispacy
+           """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        dev_file = data_folder / "dev.conll"
+        test_file = data_folder / "test.conll"
+
+        if not (train_file.exists() and dev_file.exists() and test_file.exists()):
+            orig_folder = self.download_corpus(data_folder)
+
+            train_data = self.parse_input_file(orig_folder / "NCBItrainset_patched.txt")
+            dev_data = self.parse_input_file(orig_folder / "NCBIdevelopset_corpus.txt")
+            test_data = self.parse_input_file(orig_folder / "NCBItestset_corpus.txt")
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(train_data, train_file)
+            conll_writer.write_to_conll(dev_data, dev_file)
+            conll_writer.write_to_conll(test_data, test_file)
+
+        super(NCBI_DISEASE, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @classmethod
+    def download_corpus(cls, data_dir: Path) -> Path:
+        original_folder = data_dir / "original"
+        os.makedirs(str(original_folder), exist_ok=True)
+
+        data_urls = [
+            "https://www.ncbi.nlm.nih.gov/CBBresearch/Dogan/DISEASE/NCBItrainset_corpus.zip",
+            "https://www.ncbi.nlm.nih.gov/CBBresearch/Dogan/DISEASE/NCBIdevelopset_corpus.zip",
+            "https://www.ncbi.nlm.nih.gov/CBBresearch/Dogan/DISEASE/NCBItestset_corpus.zip",
+        ]
+
+        for url in data_urls:
+            data_path = cached_path(url, original_folder)
+            unzip_file(data_path, original_folder)
+
+        # We need to apply a patch to correct the original training file
+        orig_train_file = original_folder / "NCBItrainset_corpus.txt"
+        patched_train_file = original_folder / "NCBItrainset_patched.txt"
+        cls.patch_training_file(orig_train_file, patched_train_file)
+
+        return original_folder
+
+    @staticmethod
+    def patch_training_file(orig_train_file: Path, patched_file: Path):
+        patch_lines = {
+            3249: '10923035\t711\t761\tgeneralized epilepsy and febrile seizures " plus "\tSpecificDisease\tD004829+D003294\n'
+        }
+        with open(str(orig_train_file), "r") as input:
+            with open(str(patched_file), "w") as output:
+                line_no = 1
+
+                for line in input:
+                    output.write(
+                        patch_lines[line_no] if line_no in patch_lines else line
+                    )
+                    line_no += 1
+
+    @staticmethod
+    def parse_input_file(input_file: Path):
+        documents = {}
+        entities_per_document = {}
+
+        with open(str(input_file), "r") as file:
+            document_id = None
+            document_text = None
+            entities = []
+
+            c = 1
+            for line in file:
+                line = line.strip()
+                if not line:
+                    if document_id and document_text:
+                        documents[document_id] = document_text
+                        entities_per_document[document_id] = entities
+
+                    document_id, document_text, entities = None, None, []
+                    c = 1
+                    continue
+                if c == 1:
+                    # Articles title
+                    document_text = line.split("|")[2] + " "
+                    document_id = line.split("|")[0]
+                elif c == 2:
+                    # Article abstract
+                    document_text += line.split("|")[2]
+                else:
+                    # Entity annotations
+                    columns = line.split("\t")
+                    start = int(columns[1])
+                    end = int(columns[2])
+                    entity_text = columns[3]
+
+                    if document_text[start:end] != entity_text:
+                        print("foo")
+
+                    assert document_text[start:end] == entity_text
+                    entities.append(Entity((start, end), DISEASE_TAG))
+                c += 1
+
+            if c != 1 and document_id and document_text:
+                documents[document_id] = document_text
+                entities_per_document[document_id] = entities
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
+
+
+class HUNER_DISEASE_NCBI(HunerDataset):
+    """
+        HUNER version of the NCBI corpus containing disease annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/ncbi"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        orig_folder = NCBI_DISEASE.download_corpus(data_dir)
+
+        train_data = NCBI_DISEASE.parse_input_file(
+            orig_folder / "NCBItrainset_patched.txt"
+        )
+        dev_data = NCBI_DISEASE.parse_input_file(
+            orig_folder / "NCBIdevelopset_corpus.txt"
+        )
+        test_data = NCBI_DISEASE.parse_input_file(
+            orig_folder / "NCBItestset_corpus.txt"
+        )
+
+        return merge_datasets([train_data, dev_data, test_data])
