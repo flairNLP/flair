@@ -15,6 +15,7 @@ import ftfy
 from lxml import etree
 
 import flair
+from file_utils import unzip_gz_file
 from flair.datasets import ColumnCorpus
 from flair.file_utils import cached_path, unzip_file, unzip_targz_file, Tqdm
 
@@ -2353,3 +2354,226 @@ class HUNER_DISEASE_NCBI(HunerDataset):
         )
 
         return merge_datasets([train_data, dev_data, test_data])
+
+
+class ScaiCorpus(ColumnCorpus):
+    """Base class to support the SCAI chemicals and disease corpora"""
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+           :param base_path: Path to the corpus on your machine
+           :param in_memory: If True, keeps dataset in memory giving speedups in training.
+           :param tokenizer: Callable that segments a sentence into words,
+                             defaults to scispacy
+           :param sentence_splitter: Callable that segments a document into sentences,
+                                     defaults to scispacy
+           """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+
+        if not (train_file.exists()):
+            dataset_file = self.download_corpus(data_folder)
+            train_data = self.parse_input_file(dataset_file)
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(train_data, train_file)
+
+        super(ScaiCorpus, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    def download_corpus(self, data_folder: Path) -> Path:
+        raise NotImplementedError()
+
+    @staticmethod
+    def parse_input_file(input_file: Path):
+        documents = {}
+        entities_per_document = {}
+
+        with open(str(input_file), "r", encoding="iso-8859-1") as file:
+            document_id = None
+            document_text = None
+            entities = []
+            entity_type = None
+
+            for line in file:
+                line = line.strip()
+                if not line:
+                    continue
+
+                if line[:3] == "###":
+                    # Edge case: last token starts a new entity
+                    if entity_type is not None:
+                        entities.append(
+                            Entity((entity_start, len(document_text)), entity_type)
+                        )
+
+                    if not (document_id is None and document_text is None):
+                        documents[document_id] = document_text
+                        entities_per_document[document_id] = entities
+
+                    document_id = line.strip("#").strip()
+                    document_text = None
+                    entities = []
+                else:
+                    columns = line.strip().split("\t")
+                    token = columns[0].strip()
+                    tag = columns[4].strip().split("|")[1]
+
+                    if tag.startswith("B-"):
+                        if entity_type is not None:
+                            entities.append(
+                                Entity((entity_start, len(document_text)), entity_type)
+                            )
+
+                        entity_start = len(document_text) + 1 if document_text else 0
+                        entity_type = tag[2:]
+
+                    elif tag == "O" and entity_type is not None:
+                        entities.append(
+                            Entity((entity_start, len(document_text)), entity_type)
+                        )
+                        entity_type = None
+
+                    document_text = (
+                        document_text + " " + token if document_text else token
+                    )
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
+
+
+class SCAI_CHEMICALS(ScaiCorpus):
+    """
+       Original SCAI chemicals corpus containing chemical annotations.
+
+       For further information see Kolářik et al.:
+            Chemical Names: Terminological Resources and Corpora Annotation
+            https://pub.uni-bielefeld.de/record/2603498
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def download_corpus(self, data_dir: Path) -> Path:
+        return self.perform_corpus_download(data_dir)
+
+    @staticmethod
+    def perform_corpus_download(data_dir: Path) -> Path:
+        original_directory = data_dir / "original"
+        os.makedirs(str(original_directory), exist_ok=True)
+
+        url = "https://www.scai.fraunhofer.de/content/dam/scai/de/downloads/bioinformatik/Corpora-for-Chemical-Entity-Recognition/chemicals-test-corpus-27-04-2009-v3_iob.gz"
+        data_path = cached_path(url, original_directory)
+        corpus_file = original_directory / "chemicals-test-corpus-27-04-2009-v3.iob"
+        unzip_gz_file(data_path, corpus_file)
+
+        return corpus_file
+
+
+class SCAI_DISEASE(ScaiCorpus):
+    """
+       Original SCAI disease corpus containing disease annotations.
+
+       For further information see Gurulingappa et al.:
+        An Empirical Evaluation of Resources for the Identification of Diseases and Adverse Effects in Biomedical Literature
+        https://pub.uni-bielefeld.de/record/2603398
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def download_corpus(self, data_dir: Path) -> Path:
+        return self.perform_corpus_download(data_dir)
+
+    @staticmethod
+    def perform_corpus_download(data_dir: Path) -> Path:
+        original_directory = data_dir / "original"
+        os.makedirs(str(original_directory), exist_ok=True)
+
+        url = "https://www.scai.fraunhofer.de/content/dam/scai/de/downloads/bioinformatik/Disease-ae-corpus.iob"
+        data_path = cached_path(url, original_directory)
+
+        return data_path
+
+
+class HUNER_CHEMICAL_SCAI(HunerDataset):
+    """
+        HUNER version of the SCAI chemicals corpus containing chemical annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/scai_chemicals"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        original_file = SCAI_CHEMICALS.perform_corpus_download(data_dir)
+        corpus = ScaiCorpus.parse_input_file(original_file)
+
+        # Map all entities to chemicals
+        entity_mapping = {
+            "FAMILY": CHEMICAL_TAG,
+            "TRIVIALVAR": CHEMICAL_TAG,
+            "PARTIUPAC": CHEMICAL_TAG,
+            "TRIVIAL": CHEMICAL_TAG,
+            "ABBREVIATION": CHEMICAL_TAG,
+            "IUPAC": CHEMICAL_TAG,
+            "MODIFIER": CHEMICAL_TAG,
+            "SUM": CHEMICAL_TAG,
+        }
+
+        return filter_and_map_entities(corpus, entity_mapping)
+
+
+class HUNER_DISEASE_SCAI(HunerDataset):
+    """
+        HUNER version of the SCAI chemicals corpus containing chemical annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/scai_disease"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        original_file = SCAI_DISEASE.perform_corpus_download(data_dir)
+        corpus = ScaiCorpus.parse_input_file(original_file)
+
+        # Map all entities to disease
+        entity_mapping = {"DISEASE": DISEASE_TAG, "ADVERSE": DISEASE_TAG}
+
+        return filter_and_map_entities(corpus, entity_mapping)

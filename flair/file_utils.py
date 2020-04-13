@@ -114,6 +114,14 @@ def unzip_targz_file(file: Path, unzip_to: Path):
         tarObj.extractall(unzip_to)
 
 
+def unzip_gz_file(file: Path, unzip_to: Path):
+    import gzip
+
+    with gzip.open(str(file), "rb") as f_in:
+        with open(str(unzip_to), "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
+
+
 def download_file(url: str, cache_dir: Path):
     cache_dir.mkdir(parents=True, exist_ok=True)
 
