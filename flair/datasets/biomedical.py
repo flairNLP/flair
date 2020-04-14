@@ -15,7 +15,7 @@ import ftfy
 from lxml import etree
 
 import flair
-from file_utils import unzip_gz_file, unzip_tar_file
+from flair.file_utils import unzip_gz_file, unzip_tar_file
 from flair.datasets import ColumnCorpus
 from flair.file_utils import cached_path, unzip_file, unzip_targz_file, Tqdm
 
@@ -2711,3 +2711,111 @@ class HUNER_GENE_OSIRIS(HunerDataset):
 
         entity_type_mapping = {"ge": GENE_TAG}
         return filter_and_map_entities(corpus, entity_type_mapping)
+
+
+class S800(ColumnCorpus):
+    """
+        S800 corpus
+        For further information see Pafilis et al.:
+          The SPECIES and ORGANISMS Resources for Fast and Accurate Identification of Taxonomic Names in Text
+          http://www.plosone.org/article/info:doi%2F10.1371%2Fjournal.pone.0065390
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+           :param base_path: Path to the corpus on your machine
+           :param in_memory: If True, keeps dataset in memory giving speedups in training.
+           :param tokenizer: Callable that segments a sentence into words,
+                             defaults to scispacy
+           :param sentence_splitter: Callable that segments a document into sentences,
+                                     defaults to scispacy
+           """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+
+        if not (train_file.exists()):
+            download_dir = data_folder / "original"
+            os.makedirs(download_dir, exist_ok=True)
+            self.download_dataset(download_dir)
+
+            all_data = self.parse_dataset(download_dir)
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(all_data, train_file)
+
+        super(S800, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @staticmethod
+    def download_dataset(data_dir: Path):
+        data_url = "https://species.jensenlab.org/files/S800-1.0.tar.gz"
+        data_path = cached_path(data_url, data_dir)
+        unzip_tar_file(data_path, data_dir)
+
+    @staticmethod
+    def parse_dataset(data_dir: Path) -> InternalBioNerDataset:
+        entities_per_document = defaultdict(list)
+        texts_per_document = {}
+        with (data_dir / "S800.tsv").open() as f:
+            for line in f:
+                fields = line.strip().split("\t")
+                if not fields:
+                    continue
+                fname, pmid = fields[1].split(":")
+
+                entities_per_document[fname].append(
+                    Entity((int(fields[2]), int(fields[3])), "Species")
+                )
+
+        for fname in entities_per_document:
+            with (data_dir / "abstracts" / fname).with_suffix(".txt").open() as f:
+                texts_per_document[fname] = f.read()
+
+        return InternalBioNerDataset(
+            documents=texts_per_document, entities_per_document=entities_per_document
+        )
+
+
+class HUNER_SPECIES_S800(HunerDataset):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/s800"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        S800.download_dataset(data_dir)
+        data = S800.parse_dataset(data_dir)
+        data = filter_and_map_entities(data, {"Species": SPECIES_TAG})
+
+        return data
