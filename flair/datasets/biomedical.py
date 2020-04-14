@@ -15,7 +15,7 @@ import ftfy
 from lxml import etree
 
 import flair
-from file_utils import unzip_gz_file
+from file_utils import unzip_gz_file, unzip_tar_file
 from flair.datasets import ColumnCorpus
 from flair.file_utils import cached_path, unzip_file, unzip_targz_file, Tqdm
 
@@ -2577,3 +2577,137 @@ class HUNER_DISEASE_SCAI(HunerDataset):
         entity_mapping = {"DISEASE": DISEASE_TAG, "ADVERSE": DISEASE_TAG}
 
         return filter_and_map_entities(corpus, entity_mapping)
+
+
+class OSIRIS(ColumnCorpus):
+    """
+       Original OSIRIS corpus containing variation and gene annotations.
+
+       For further information see Furlong et al.:
+          Osirisv1.2: a named entity recognition system for sequence variants of genes in biomedical literature
+          https://www.ncbi.nlm.nih.gov/pubmed/18251998
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+           :param base_path: Path to the corpus on your machine
+           :param in_memory: If True, keeps dataset in memory giving speedups in training.
+           :param tokenizer: Callable that segments a sentence into words,
+                             defaults to scispacy
+           :param sentence_splitter: Callable that segments a document into sentences,
+                                     defaults to scispacy
+           """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+
+        if not (train_file.exists()):
+            corpus_folder = self.download_dataset(data_folder)
+            corpus_data = self.parse_dataset(corpus_folder)
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(corpus_data, train_file)
+
+        super(OSIRIS, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @classmethod
+    def download_dataset(cls, data_dir: Path) -> Path:
+        url = "http://ibi.imim.es/OSIRIScorpusv02.tar"
+        data_path = cached_path(url, data_dir)
+        unzip_tar_file(data_path, data_dir)
+
+        return data_dir / "OSIRIScorpusv02"
+
+    @classmethod
+    def parse_dataset(cls, corpus_folder: Path):
+        documents = {}
+        entities_per_document = {}
+
+        input_files = [
+            file
+            for file in os.listdir(str(corpus_folder))
+            if file.endswith(".txt") and not file.startswith("README")
+        ]
+        for text_file in input_files:
+
+            with open(os.path.join(str(corpus_folder), text_file)) as text_reader:
+                document_text = text_reader.read()
+                if not document_text:
+                    continue
+
+                article_parts = document_text.split("\n\n")
+                document_id = article_parts[0]
+                text_offset = document_text.find(article_parts[1])
+                document_text = (article_parts[1] + "  " + article_parts[2]).strip()
+
+            with open(os.path.join(str(corpus_folder), text_file + ".ann")) as ann_file:
+                entities = []
+
+                tree = etree.parse(ann_file)
+                for annotation in tree.xpath(".//Annotation"):
+                    entity_type = annotation.get("type")
+                    if entity_type not in ["ge", "so", "sa", "lo", "ty"]:
+                        continue
+
+                    start, end = annotation.get("span").split("..")
+                    start, end = int(start), int(end)
+
+                    entities.append(
+                        Entity((start - text_offset, end - text_offset), entity_type)
+                    )
+
+            documents[document_id] = document_text
+            entities_per_document[document_id] = entities
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
+
+
+class HUNER_GENE_OSIRIS(HunerDataset):
+    """
+        HUNER version of the OSIRIS corpus containing (only) gene annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/osiris"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        original_file = OSIRIS.download_dataset(data_dir)
+        corpus = OSIRIS.parse_dataset(original_file)
+
+        entity_type_mapping = {"ge": GENE_TAG}
+        return filter_and_map_entities(corpus, entity_type_mapping)

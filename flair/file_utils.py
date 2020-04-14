@@ -114,6 +114,13 @@ def unzip_targz_file(file: Path, unzip_to: Path):
         tarObj.extractall(unzip_to)
 
 
+def unzip_tar_file(file: Path, unzip_to: Path):
+    import tarfile
+
+    with tarfile.open(file, "r") as tarObj:
+        tarObj.extractall(unzip_to)
+
+
 def unzip_gz_file(file: Path, unzip_to: Path):
     import gzip
 
