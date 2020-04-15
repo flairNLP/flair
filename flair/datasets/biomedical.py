@@ -382,8 +382,8 @@ class CoNLLWriter:
 
                 current_entity = entities.popleft() if entities else None
 
-                in_entity = False
                 for sentence, sentence_offset in zip(sentences, sentence_offsets):
+                    in_entity = False
                     tokens, token_offsets = self.tokenizer(sentence)
                     for token, token_offset in zip(tokens, token_offsets):
                         offset = sentence_offset + token_offset
