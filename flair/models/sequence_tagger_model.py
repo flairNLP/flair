@@ -1008,6 +1008,8 @@ class SequenceTagger(flair.nn.Model):
         model_map["nl-ner"] = "/".join(
             [aws_resource_path_v04, "NER-conll2002-dutch", "nl-ner-conll02-v0.1.pt"]
         )
+        model_map["ml-pos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-upos-model.pt"
+        model_map["ml-xpos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt"
 
         cache_dir = Path("models")
         if model_name in model_map:
