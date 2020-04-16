@@ -11,6 +11,7 @@ from typing import Union, Callable, Dict, List, Tuple, Iterable
 
 import ftfy
 from lxml import etree
+from lxml.etree import XMLSyntaxError
 
 import flair
 from flair.file_utils import unzip_gz_file, unzip_tar_file
@@ -22,6 +23,8 @@ CHEMICAL_TAG = "Chemical"
 CELL_LINE_TAG = "CellLine"
 GENE_TAG = "Gene"
 SPECIES_TAG = "Species"
+
+SENTENCE_TAG = "[__SENT__]"
 
 
 class Entity:
@@ -165,6 +168,17 @@ def whitespace_tokenize(text: str) -> Tuple[List[str], List[int]]:
         last_offset += len(token) + 1
 
     return tokens, offsets
+
+
+def sentence_split_at_tag(text: str) -> Tuple[List[str], List[int]]:
+    sentences = text.split(SENTENCE_TAG)
+    offsets = []
+    last_offset = 0
+    for sent in sentences:
+        offsets += [last_offset]
+        last_offset += len(sent) + len(SENTENCE_TAG)
+
+    return sentences, offsets
 
 
 def bioc_to_internal(bioc_file: Path):
@@ -2996,3 +3010,190 @@ class HUNER_GENE_DECA(HunerDataset):
         gold_file = corpus_dir / "gold.txt"
 
         return DECA.parse_corpus(text_dir, gold_file)
+
+
+class FSU(ColumnCorpus):
+    """
+          Original FSU corpus containing protein and derived annotations.
+
+          For further information see Hahn et al.: A proposal for a configurable silver standard
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+           :param base_path: Path to the corpus on your machine
+           :param in_memory: If True, keeps dataset in memory giving speedups in training.
+           :param tokenizer: Callable that segments a sentence into words,
+                             defaults to scispacy
+           :param sentence_splitter: Callable that segments a document into sentences,
+                                     defaults to scispacy
+           """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+
+        if not train_file.exists():
+            corpus_dir = self.download_corpus(data_folder)
+
+            corpus_data = self.parse_corpus(corpus_dir)
+
+            if tokenizer is None:
+                tokenizer = whitespace_tokenize
+
+            if sentence_splitter is None:
+                sentence_splitter = sentence_split_at_tag
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(corpus_data, train_file)
+
+        super(FSU, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @classmethod
+    def download_corpus(cls, data_dir: Path) -> Path:
+        url = "https://julielab.de/downloads/resources/fsu_prge_release_v1_0.tgz"
+        data_path = cached_path(url, data_dir)
+        unzip_targz_file(data_path, data_dir)
+
+        return data_dir / "fsu-prge-release-v1.0"
+
+    @staticmethod
+    def parse_corpus(corpus_dir: Path) -> InternalBioNerDataset:
+        documents = {}
+        entities_per_document = {}
+
+        for subcorpus in corpus_dir.iterdir():
+            if not subcorpus.is_dir():
+                continue
+            for doc in (subcorpus / "mmax").iterdir():
+                if not doc.is_dir():
+                    continue
+                try:
+                    with open(doc / "Basedata" / "Basedata.xml", "r") as word_f:
+                        word_tree = etree.parse(word_f)
+                    with open(doc / "Markables" / "sentence.xml", "r") as sentence_f:
+                        sentence_tree = etree.parse(sentence_f).getroot()
+                    with open(doc / "Markables" / "proteins.xml", "r") as protein_f:
+                        protein_tree = etree.parse(protein_f).getroot()
+                    with open(doc / "Basedata.uri", "r") as id_f:
+                        document_id = id_f.read().strip()
+                except FileNotFoundError:
+                    # Incomplete article
+                    continue
+                except XMLSyntaxError:
+                    # Invalid XML syntax
+                    continue
+
+                word_to_id = {}
+                words = []
+                for i, token in enumerate(word_tree.xpath(".//word")):
+                    words += [token.text]
+                    word_to_id[token.get("id")] = i
+                word_pos = [(0, 0) for _ in words]
+
+                sentences_id_span = sorted(
+                    [
+                        (int(sentence.get("id").split("_")[-1]), sentence.get("span"))
+                        for sentence in sentence_tree
+                    ]
+                )
+
+                sentences = []
+                for j, sentence in enumerate(sentences_id_span):
+                    tmp_sentence = []
+                    akt_pos = 0
+                    start = word_to_id[sentence[1].split("..")[0]]
+                    end = word_to_id[sentence[1].split("..")[1]]
+                    for i in range(start, end + 1):
+                        tmp_sentence += [words[i]]
+                        word_pos[i] = (j, akt_pos)
+                        akt_pos += len(words[i]) + 1
+                    sentences += [tmp_sentence]
+
+                pre_entities = [[] for _ in sentences]
+                for protein in protein_tree:
+                    for span in protein.get("span").split(","):
+                        start = word_to_id[span.split("..")[0]]
+                        end = word_to_id[span.split("..")[-1]]
+                        pre_entities[word_pos[start][0]] += [
+                            (
+                                word_pos[start][1],
+                                word_pos[end][1] + len(words[end]),
+                                protein.get("proteins"),
+                            )
+                        ]
+
+                sentences = [" ".join(sentence) for sentence in sentences]
+                document = SENTENCE_TAG.join(sentences)
+
+                entities = []
+                sent_offset = 0
+                for sentence, sent_entities in zip(sentences, pre_entities):
+                    entities += [
+                        Entity(
+                            (entity[0] + sent_offset, entity[1] + sent_offset),
+                            entity[2],
+                        )
+                        for entity in sent_entities
+                    ]
+                    sent_offset += len(sentence) + len(SENTENCE_TAG)
+
+                documents[document_id] = document
+                entities_per_document[document_id] = entities
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
+
+
+class HUNER_GENE_FSU(HunerDataset):
+    """
+        HUNER version of the FSU corpus containing (only) gene annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            tokenizer=whitespace_tokenize,
+            sentence_splitter=sentence_split_at_tag,
+            *args,
+            **kwargs,
+        )
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/fsu"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        corpus_dir = FSU.download_corpus(data_dir)
+        corpus = FSU.parse_corpus(corpus_dir)
+
+        entity_type_mapping = {
+            "protein": GENE_TAG,
+            "protein_group_or_family": GENE_TAG,
+            "protein_complex": GENE_TAG,
+            "protein_enumeration": GENE_TAG,
+            "protein_variant": GENE_TAG,
+        }
+        return filter_and_map_entities(corpus, entity_type_mapping)
