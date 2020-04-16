@@ -5,8 +5,6 @@ import shutil
 from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from copy import copy
-from functools import cmp_to_key
-from itertools import combinations
 from operator import attrgetter
 from pathlib import Path
 from typing import Union, Callable, Dict, List, Tuple, Iterable
@@ -74,54 +72,12 @@ class Entity:
         ) or (self.char_span.start < other_entity.char_span.stop <= self.char_span.stop)
 
 
-class NestedEntity(Entity):
-    def __init__(
-        self,
-        char_span: Tuple[int, int],
-        entity_type: str,
-        nested_entities: Iterable[Entity],
-    ):
-        super(NestedEntity, self).__init__(char_span, entity_type)
-        self.nested_entities = nested_entities
-
-
 class InternalBioNerDataset:
     def __init__(
         self, documents: Dict[str, str], entities_per_document: Dict[str, List[Entity]]
     ):
         self.documents = documents
         self.entities_per_document = entities_per_document
-
-
-def overlap(entity1, entity2):
-    return range(max(entity1[0], entity2[0]), min(entity1[1], entity2[1]))
-
-
-def compare_by_start_and_length(entity1, entity2):
-    start_offset = entity1.char_span.start - entity2.char_span.start
-    return (
-        start_offset
-        if start_offset != 0
-        else len(entity2.char_span) - len(entity1.char_span)
-    )
-
-
-def merge_overlapping_entities(entities):
-    entities = list(entities)
-
-    entity_set_stable = False
-    while not entity_set_stable:
-        for e1, e2 in combinations(entities, 2):
-            if overlap(e1, e2):
-                merged_entity = (min(e1[0], e2[0]), max(e1[1], e2[1]))
-                entities.remove(e1)
-                entities.remove(e2)
-                entities.append(merged_entity)
-                break
-        else:
-            entity_set_stable = True
-
-    return entities
 
 
 def merge_datasets(data_sets: Iterable[InternalBioNerDataset]):
@@ -157,26 +113,6 @@ def filter_and_map_entities(
     return InternalBioNerDataset(
         documents=dataset.documents, entities_per_document=mapped_entities_per_document
     )
-
-
-def find_overlapping_entities(
-    entities: Iterable[Entity],
-) -> List[Tuple[Entity, Entity]]:
-    # Sort the entities by their start offset
-    entities = sorted(entities, key=lambda e: e.char_span.start)
-
-    overlapping_entities = []
-    for i in range(0, len(entities)):
-        current_entity = entities[i]
-        for other_entity in entities[i + 1 :]:
-            if current_entity.overlaps(other_entity):
-                # Entities overlap!
-                overlapping_entities.append((current_entity, other_entity))
-            else:
-                # Second entity is located after the current one!
-                break
-
-    return overlapping_entities
 
 
 def filter_nested_entities(dataset: InternalBioNerDataset) -> None:
@@ -215,107 +151,6 @@ def filter_nested_entities(dataset: InternalBioNerDataset) -> None:
                 p -= len(dp_entry[3].char_span)
 
         dataset.entities_per_document[document_id] = independent_set
-
-
-def find_nested_entities(entities: Iterable[Entity]) -> List[NestedEntity]:
-    # Sort entities by start offset and length (i.e. rank longer entity spans first)
-    entities = sorted(entities, key=cmp_to_key(compare_by_start_and_length))
-
-    # Initial list with entities and whether they are already contained in a nested entity
-    entities = [(entity, False) for entity in entities]
-
-    nested_entities = []
-    for i in range(0, len(entities)):
-        current_entity, is_part_of_other_entity = entities[i]
-        if is_part_of_other_entity:
-            continue
-
-        contained_entities = []
-        for j in range(i + 1, len(entities)):
-            other_entity, _ = entities[j]
-
-            if current_entity.is_before(other_entity):
-                # other_entity is located after the current one
-                break
-
-            elif current_entity.contains(other_entity):
-                # other_entity is contained in current_entity
-                contained_entities.append(other_entity)
-                entities[j] = (other_entity, True)
-
-        if len(contained_entities) > 0:
-            nested_entities.append(
-                NestedEntity(
-                    (current_entity.char_span.start, current_entity.char_span.stop),
-                    current_entity.type,
-                    contained_entities,
-                )
-            )
-
-    return nested_entities
-
-
-def normalize_entity_spans(entities: Iterable[Entity]) -> List[Entity]:
-    # Sort entities by start offset and length (i.e. rank longer entity spans first)
-    entities = sorted(entities, key=cmp_to_key(compare_by_start_and_length))
-
-    for i in range(0, len(entities)):
-        current_entity = entities[i]
-        if current_entity is None:
-            continue
-
-        contained_entities = []
-        for j in range(i + 1, len(entities)):
-            other_entity = entities[j]
-            if other_entity is None:
-                continue
-
-            if current_entity.is_before(other_entity):
-                # other_entity is located after the current one
-                break
-
-            elif current_entity.contains(other_entity):
-                # other entity is nested in the current one
-                contained_entities.append((other_entity, j))
-
-            elif current_entity.overlaps(other_entity):
-                # Shift overlapping entities
-                shifted_entity = Entity(
-                    (current_entity.char_span.stop, other_entity.char_span.stop),
-                    other_entity.type,
-                )
-                entities[j] = shifted_entity
-
-        if len(contained_entities) == 1:
-            # Only one smaller entity span is contained -> take the longer one and erase the shorter one
-            contained_entity, position = contained_entities[0]
-            entities[position] = None
-
-        elif len(contained_entities) > 1:
-            # Wrapper for sorting entries by start offset and length
-            def compare_entries(entry1, entry2):
-                return compare_by_start_and_length(entry1[0], entry2[0])
-
-            contained_entities = sorted(
-                contained_entities, key=cmp_to_key(compare_entries)
-            )
-
-            # Keep first nested entity
-            current_contained_entity = contained_entities[0][0]
-
-            # Fill the complete span successively with non-overlapping entities
-            for other_contained_entity, position in contained_entities[1:]:
-                if current_contained_entity.is_before(other_contained_entity):
-                    current_contained_entity = other_contained_entity
-                else:
-                    # Entities overlap - erase other contained entity!
-                    # FIXME: Shift overlapping entity alternatively?
-                    entities[position] = None
-
-            # Erase longer entity
-            entities[i] = None
-
-    return [entity for entity in entities if entity is not None]
 
 
 def bioc_to_internal(bioc_file: Path):
