@@ -134,3 +134,13 @@ def test_filter_nested_entities():
             sorted(entities, key=lambda x: str(x)),
         ):
             assert str(e1) == str(e2)
+
+
+def test_whitespace_tokenizer():
+    tokens, offsets = whitespace_tokenize("Abc def .")
+    assert tokens == ["Abc", "def", "."]
+    assert offsets == [0, 4, 8]
+
+    tokens, offsets = whitespace_tokenize("Abc Abc .")
+    assert tokens == ["Abc", "Abc", "."]
+    assert offsets == [0, 4, 8]
