@@ -875,6 +875,14 @@ class HUNER_CELL_LINE_JNLPBA(HunerDataset):
 
 
 class CELL_FINDER(ColumnCorpus):
+    """
+        Original CellFinder corpus containing cell line, species and gene annotations.
+
+        For futher information see Neves et al.:
+            Annotating and evaluating text for stem cell research
+            https://pdfs.semanticscholar.org/38e3/75aeeeb1937d03c3c80128a70d8e7a74441f.pdf
+    """
+
     def __init__(
         self,
         base_path: Union[str, Path] = None,
@@ -2988,3 +2996,130 @@ class HUNER_GENE_GPRO(HunerDataset):
         dev_data = GPRO.parse_input_file(dev_text_file, dev_ann_file)
 
         return merge_datasets([train_data, dev_data])
+
+
+class DECA(ColumnCorpus):
+    """
+          Original DECA corpus containing gene annotations.
+
+          For further information see Wang et al.:
+             Disambiguating the species of biomedical named entities using natural language parsers
+             https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2828111/
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+           :param base_path: Path to the corpus on your machine
+           :param in_memory: If True, keeps dataset in memory giving speedups in training.
+           :param tokenizer: Callable that segments a sentence into words,
+                             defaults to scispacy
+           :param sentence_splitter: Callable that segments a document into sentences,
+                                     defaults to scispacy
+           """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+
+        if not train_file.exists():
+            corpus_dir = self.download_corpus(data_folder)
+            text_dir = corpus_dir / "text"
+            gold_file = corpus_dir / "gold.txt"
+
+            corpus_data = self.parse_corpus(text_dir, gold_file)
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(corpus_data, train_file)
+
+        super(DECA, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @classmethod
+    def download_corpus(cls, data_dir: Path) -> Path:
+        url = "http://www.nactem.ac.uk/deca/species_corpus_0.2.tar.gz"
+        data_path = cached_path(url, data_dir)
+        unzip_targz_file(data_path, data_dir)
+
+        return data_dir / "species_corpus_0.2"
+
+    @staticmethod
+    def parse_corpus(text_dir: Path, gold_file: Path) -> InternalBioNerDataset:
+        documents = {}
+        entities_per_document = {}
+
+        text_files = [
+            file for file in os.listdir(str(text_dir)) if not file.startswith(".")
+        ]
+
+        for file in text_files:
+            document_id = file.strip(".txt")
+            with open(os.path.join(str(text_dir), file), "r") as text_file:
+                documents[document_id] = text_file.read().strip()
+                entities_per_document[document_id] = []
+
+        with open(str(gold_file), "r") as gold_reader:
+            for line in gold_reader:
+                if not line:
+                    continue
+                columns = line.strip().split("\t")
+
+                document_id = columns[0].strip(".txt")
+                start, end = int(columns[1]), int(columns[2])
+
+                entities_per_document[document_id].append(
+                    Entity((start, end), GENE_TAG)
+                )
+
+                document_text = documents[document_id]
+                assert document_text[start:end] == columns[3]
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
+
+
+class HUNER_GENE_DECA(HunerDataset):
+    """
+        HUNER version of the DECA corpus containing gene annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/deca"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        corpus_dir = DECA.download_corpus(data_dir)
+        text_dir = corpus_dir / "text"
+        gold_file = corpus_dir / "gold.txt"
+
+        return DECA.parse_corpus(text_dir, gold_file)
