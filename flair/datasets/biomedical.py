@@ -179,6 +179,44 @@ def find_overlapping_entities(
     return overlapping_entities
 
 
+def filter_nested_entities(dataset: InternalBioNerDataset) -> None:
+    for document_id, entities in dataset.entities_per_document.items():
+        # Uses dynamic programming approach to calculate maximum independent set in interval graph
+        # with sum of all entity lengths as secondary key
+        dp_array = [
+            (0, 0, 0, None)
+        ]  # position_end, number of entities, sum of all entity lengths, last entity
+        for entity in sorted(entities, key=lambda x: x.char_span.stop):
+            i = len(dp_array) - 1
+            while dp_array[i][0] > entity.char_span.start:
+                i -= 1
+            if dp_array[i][1] + 1 > dp_array[-1][1] or (
+                dp_array[i][1] + 1 == dp_array[-1][1]
+                and dp_array[i][2] + len(entity.char_span) > dp_array[-1][2]
+            ):
+                dp_array += [
+                    (
+                        entity.char_span.stop,
+                        dp_array[i][1] + 1,
+                        dp_array[i][2] + len(entity.char_span),
+                        entity,
+                    )
+                ]
+            else:
+                dp_array += [dp_array[-1]]
+
+        independent_set = []
+        p = dp_array[-1][0]
+        for dp_entry in dp_array[::-1]:
+            if dp_entry[3] is None:
+                break
+            if dp_entry[0] <= p:
+                independent_set += [dp_entry[3]]
+                p -= len(dp_entry[3].char_span)
+
+        dataset.entities_per_document[document_id] = independent_set
+
+
 def find_nested_entities(entities: Iterable[Entity]) -> List[NestedEntity]:
     # Sort entities by start offset and length (i.e. rank longer entity spans first)
     entities = sorted(entities, key=cmp_to_key(compare_by_start_and_length))
@@ -364,6 +402,7 @@ class CoNLLWriter:
 
     def write_to_conll(self, dataset: InternalBioNerDataset, output_file: Path):
         os.makedirs(str(output_file.parent), exist_ok=True)
+        filter_nested_entities(dataset)
 
         with output_file.open("w") as f:
             for document_id in Tqdm.tqdm(
@@ -400,7 +439,6 @@ class CoNLLWriter:
                                     entities.popleft() if entities else None
                                 )
 
-                        # FIXME This assumes that entities aren't nested, we have to ensure that beforehand
                         if current_entity and offset in current_entity.char_span:
                             if not in_entity:
                                 tag = "B-" + current_entity.type

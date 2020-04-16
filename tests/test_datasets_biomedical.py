@@ -12,6 +12,7 @@ from flair.datasets.biomedical import (
     find_overlapping_entities,
     find_nested_entities,
     normalize_entity_spans,
+    filter_nested_entities,
 )
 
 
@@ -177,3 +178,40 @@ def assert_conll_writer_output(
         os.remove(outfile_path)
 
     assert contents == expected_output
+
+
+def test_filter_nested_entities():
+    entities_per_document = {
+        "d0": [Entity((0, 1), "t0"), Entity((2, 3), "t1")],
+        "d1": [Entity((0, 6), "t0"), Entity((2, 3), "t1"), Entity((4, 5), "t2")],
+        "d2": [Entity((0, 3), "t0"), Entity((3, 5), "t1")],
+        "d3": [Entity((0, 3), "t0"), Entity((2, 5), "t1"), Entity((4, 7), "t2")],
+        "d4": [Entity((0, 4), "t0"), Entity((3, 5), "t1")],
+        "d5": [Entity((0, 4), "t0"), Entity((3, 9), "t1")],
+        "d6": [Entity((0, 4), "t0"), Entity((2, 6), "t1")],
+    }
+
+    target = {
+        "d0": [Entity((0, 1), "t0"), Entity((2, 3), "t1")],
+        "d1": [Entity((2, 3), "t1"), Entity((4, 5), "t2")],
+        "d2": [Entity((0, 3), "t0"), Entity((3, 5), "t1")],
+        "d3": [Entity((0, 3), "t0"), Entity((4, 7), "t2")],
+        "d4": [Entity((0, 4), "t0")],
+        "d5": [Entity((3, 9), "t1")],
+        "d6": [Entity((0, 4), "t0")],
+    }
+
+    dataset = InternalBioNerDataset(
+        documents={}, entities_per_document=entities_per_document
+    )
+
+    filter_nested_entities(dataset)
+
+    for key, entities in dataset.entities_per_document.items():
+        assert key in target
+        assert len(target[key]) == len(entities)
+        for e1, e2 in zip(
+            sorted(target[key], key=lambda x: str(x)),
+            sorted(entities, key=lambda x: str(x)),
+        ):
+            assert str(e1) == str(e2)
