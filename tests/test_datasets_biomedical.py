@@ -177,3 +177,13 @@ def assert_conll_writer_output(
         os.remove(outfile_path)
 
     assert contents == expected_output
+
+
+def test_whitespace_tokenizer():
+    tokens, offsets = whitespace_tokenize("Abc def .")
+    assert tokens == ["Abc", "def", "."]
+    assert offsets == [0, 4, 8]
+
+    tokens, offsets = whitespace_tokenize("Abc Abc .")
+    assert tokens == ["Abc", "Abc", "."]
+    assert offsets == [0, 4, 8]

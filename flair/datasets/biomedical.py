@@ -280,6 +280,20 @@ def normalize_entity_spans(entities: Iterable[Entity]) -> List[Entity]:
     return [entity for entity in entities if entity is not None]
 
 
+def whitespace_tokenize(text: str) -> Tuple[List[str], List[int]]:
+    tokens = text.split(" ")
+    offsets = []
+    last_offset = 0
+    for token in tokens:
+        offset = text.find(token, last_offset)
+        assert offset >= 0
+
+        offsets.append(offset)
+        last_offset += len(token) + 1
+
+    return tokens, offsets
+
+
 def bioc_to_internal(bioc_file: Path):
     tree = etree.parse(str(bioc_file))
     texts_per_document = {}
@@ -2363,7 +2377,6 @@ class ScaiCorpus(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
         sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
     ):
         """
@@ -2395,14 +2408,11 @@ class ScaiCorpus(ColumnCorpus):
             dataset_file = self.download_corpus(data_folder)
             train_data = self.parse_input_file(dataset_file)
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
             if sentence_splitter is None:
                 sentence_splitter = build_spacy_sentence_splitter()
 
             conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+                tokenizer=whitespace_tokenize, sentence_splitter=sentence_splitter
             )
             conll_writer.write_to_conll(train_data, train_file)
 
