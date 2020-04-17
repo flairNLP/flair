@@ -2283,11 +2283,11 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             tokenized_string = sentence.to_tokenized_string()
 
             # method 1: subtokenize sentence
-            subtokenized_sentence = self.tokenizer.encode(tokenized_string, add_special_tokens=True)
+            # subtokenized_sentence = self.tokenizer.encode(tokenized_string, add_special_tokens=True)
 
             # method 2:
-            # ids = self.tokenizer.encode(tokenized_string, add_special_tokens=False)
-            # subtokenized_sentence = self.tokenizer.build_inputs_with_special_tokens(ids)
+            ids = self.tokenizer.encode(tokenized_string, add_special_tokens=False)
+            subtokenized_sentence = self.tokenizer.build_inputs_with_special_tokens(ids)
 
             subtokenized_sentences.append(torch.tensor(subtokenized_sentence, dtype=torch.long))
             subtokens = self.tokenizer.convert_ids_to_tokens(subtokenized_sentence)
