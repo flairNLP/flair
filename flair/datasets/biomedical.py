@@ -168,7 +168,6 @@ def whitespace_tokenize(text: str) -> Tuple[List[str], List[int]]:
     return tokens, offsets
 
 
-
 def sentence_split_at_tag(text: str) -> Tuple[List[str], List[int]]:
     sentences = text.split(SENTENCE_TAG)
     offsets = []
@@ -318,7 +317,6 @@ class CoNLLWriter:
                             sentence_had_tokens = True
                     if sentence_had_tokens:
                         f.write("\n")
-
 
 
 class SciSpacyTokenizer:
@@ -3189,4 +3187,176 @@ class HUNER_GENE_FSU(HunerDataset):
             "protein_enumeration": GENE_TAG,
             "protein_variant": GENE_TAG,
         }
+        return filter_and_map_entities(corpus, entity_type_mapping)
+
+
+class CRAFT(ColumnCorpus):
+    """
+          Original CRAFT corpus containing all but the coreference and sections/typography annotations.
+
+          For further information see Bada et al.: Concept annotation in the craft corpus
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+           :param base_path: Path to the corpus on your machine
+           :param in_memory: If True, keeps dataset in memory giving speedups in training.
+           :param tokenizer: Callable that segments a sentence into words,
+                             defaults to scispacy
+           :param sentence_splitter: Callable that segments a document into sentences,
+                                     defaults to scispacy
+           """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+
+        if not train_file.exists():
+            corpus_dir = self.download_corpus(data_folder)
+
+            corpus_data = self.parse_corpus(corpus_dir)
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(corpus_data, train_file)
+
+        super(CRAFT, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @classmethod
+    def download_corpus(cls, data_dir: Path) -> Path:
+        url = "http://sourceforge.net/projects/bionlp-corpora/files/CRAFT/v2.0/craft-2.0.tar.gz/download"
+        data_path = cached_path(url, data_dir)
+        unzip_targz_file(data_path, data_dir)
+
+        return data_dir / "craft-2.0"
+
+    @staticmethod
+    def parse_corpus(corpus_dir: Path) -> InternalBioNerDataset:
+        documents = {}
+        entities_per_document = {}
+
+        text_dir = corpus_dir / "articles" / "txt"
+        document_texts = [doc for doc in text_dir.iterdir() if doc.name[-4:] == ".txt"]
+        annotation_dirs = [
+            path
+            for path in (corpus_dir / "xml").iterdir()
+            if path.name not in ["sections-and-typography", "coreference"]
+        ]
+
+        for doc in Tqdm.tqdm(document_texts, desc="Converting to internal"):
+            document_id = doc.name.split(".")[0]
+
+            with open(doc, "r") as f_txt:
+                documents[document_id] = f_txt.read()
+
+            entities = []
+
+            for annotation_dir in annotation_dirs:
+                with open(
+                    annotation_dir / (doc.name + ".annotations.xml"), "r"
+                ) as f_ann:
+                    ann_tree = etree.parse(f_ann)
+                for annotation in ann_tree.xpath("//annotation"):
+                    for span in annotation.xpath("span"):
+                        start = int(span.get("start"))
+                        end = int(span.get("end"))
+                        entities += [Entity((start, end), annotation_dir.name)]
+
+            entities_per_document[document_id] = entities
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
+
+
+class HUNER_GENE_CRAFT(HunerDataset):
+    """
+        HUNER version of the CRAFT corpus containing (only) gene annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            *args, **kwargs,
+        )
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/craft"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        corpus_dir = CRAFT.download_corpus(data_dir)
+        corpus = CRAFT.parse_corpus(corpus_dir)
+
+        entity_type_mapping = {"entrezgene": GENE_TAG, "pr": GENE_TAG}
+        return filter_and_map_entities(corpus, entity_type_mapping)
+
+
+class HUNER_CHEMICAL_CRAFT(HunerDataset):
+    """
+        HUNER version of the CRAFT corpus containing (only) chemical annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            *args, **kwargs,
+        )
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/craft"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        corpus_dir = CRAFT.download_corpus(data_dir)
+        corpus = CRAFT.parse_corpus(corpus_dir)
+
+        entity_type_mapping = {"chebi": CHEMICAL_TAG}
+        return filter_and_map_entities(corpus, entity_type_mapping)
+
+
+class HUNER_SPECIES_CRAFT(HunerDataset):
+    """
+        HUNER version of the CRAFT corpus containing (only) species annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            *args, **kwargs,
+        )
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/craft"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        corpus_dir = CRAFT.download_corpus(data_dir)
+        corpus = CRAFT.parse_corpus(corpus_dir)
+
+        entity_type_mapping = {"ncbitaxon": SPECIES_TAG}
         return filter_and_map_entities(corpus, entity_type_mapping)
