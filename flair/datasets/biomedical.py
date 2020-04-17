@@ -286,8 +286,10 @@ class CoNLLWriter:
 
                 for sentence, sentence_offset in zip(sentences, sentence_offsets):
                     in_entity = False
+                    sentence_had_tokens = False
                     tokens, token_offsets = self.tokenizer(sentence)
                     for token, token_offset in zip(tokens, token_offsets):
+                        token = token.strip()
                         offset = sentence_offset + token_offset
 
                         if current_entity and offset >= current_entity.char_span.stop:
@@ -312,8 +314,11 @@ class CoNLLWriter:
                             tag = "O"
                             in_entity = False
 
-                        f.write(" ".join([token, tag]) + "\n")
-                    f.write("\n")
+                        if len(token) > 0:
+                            f.write(" ".join([token, tag]) + "\n")
+                            sentence_had_tokens = True
+                    if sentence_had_tokens:
+                        f.write("\n")
 
 
 def whitespace_tokenize(text):
