@@ -157,17 +157,16 @@ def filter_nested_entities(dataset: InternalBioNerDataset) -> None:
 
 
 def whitespace_tokenize(text: str) -> Tuple[List[str], List[int]]:
-    tokens = text.split(" ")
+    offset = 0
+    tokens = []
     offsets = []
-    last_offset = 0
-    for token in tokens:
-        offset = text.find(token, last_offset)
-        assert offset >= 0
-
+    for token in text.split():
+        tokens.append(token)
         offsets.append(offset)
-        last_offset += len(token) + 1
+        offset += len(token) + 1
 
     return tokens, offsets
+
 
 
 def sentence_split_at_tag(text: str) -> Tuple[List[str], List[int]]:
@@ -320,17 +319,6 @@ class CoNLLWriter:
                     if sentence_had_tokens:
                         f.write("\n")
 
-
-def whitespace_tokenize(text):
-    offset = 0
-    tokens = []
-    offsets = []
-    for token in text.split():
-        tokens.append(token)
-        offsets.append(offset)
-        offset += len(token) + 1
-
-    return tokens, offsets
 
 
 class SciSpacyTokenizer:
