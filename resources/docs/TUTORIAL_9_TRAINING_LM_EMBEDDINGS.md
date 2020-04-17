@@ -34,6 +34,8 @@ corpus/test.txt
 corpus/valid.txt
 ```
 
+In most cases, it is recommended to provide the corpus in an unstructured format without explicit separators for documents or sentences. If you want to make it easier for the LM to discern the document boundaries, you can introduce a separator token like "[SEP]".
+
 
 ## Training the Language Model
 
