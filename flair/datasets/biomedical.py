@@ -1,3 +1,5 @@
+import flair
+import ftfy
 import json
 import os
 import shutil
@@ -8,12 +10,10 @@ from copy import copy
 from operator import attrgetter
 from pathlib import Path
 from typing import Union, Callable, Dict, List, Tuple, Iterable
-
-import ftfy
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 
-import flair
+from file_utils import unzip_rar_file
 from flair.file_utils import unzip_gz_file, unzip_tar_file
 from flair.datasets import ColumnCorpus
 from flair.file_utils import cached_path, unzip_file, unzip_targz_file, Tqdm
@@ -3360,3 +3360,194 @@ class HUNER_SPECIES_CRAFT(HunerDataset):
 
         entity_type_mapping = {"ncbitaxon": SPECIES_TAG}
         return filter_and_map_entities(corpus, entity_type_mapping)
+
+
+class BIOSEMANTICS(ColumnCorpus):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+        :param base_path: Path to the corpus on your machine
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param tokenizer: Callable that segments a sentence into words,
+                          defaults to scispacy
+        :param sentence_splitter: Callable that segments a document into sentences,
+                                  defaults to scispacy
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+
+        if not (train_file.exists()):
+            corpus_dir = self.download_dataset(data_folder)
+            full_dataset = self.parse_dataset(corpus_dir)
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(full_dataset, train_file)
+
+        super(BIOSEMANTICS, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @staticmethod
+    def download_dataset(data_dir: Path) -> Path:
+        data_url = "http://biosemantics.org/PatentCorpus/Patent_Corpus.rar"
+        data_path = cached_path(data_url, data_dir)
+        unzip_rar_file(data_path, data_dir)
+
+        return data_dir / "Patent_Corpus"
+
+    @staticmethod
+    def parse_dataset(data_dir: Path) -> InternalBioNerDataset:
+        base_folder = data_dir / "Full_set"
+
+        dirs = [
+            file
+            for file in os.listdir(str(base_folder))
+            if os.path.isdir(os.path.join(str(base_folder), file))
+        ]
+
+        text_files = []
+        for directory in dirs:
+            text_files += [
+                os.path.join(str(base_folder), directory, file)
+                for file in os.listdir(os.path.join(str(base_folder), directory))
+                if file[-4:] == ".txt"
+            ]
+
+        documents = {}
+        entities_per_document = {}
+
+        for text_file in sorted(text_files):
+            document_id = os.path.basename(text_file).split("_")[0]
+            with open(text_file, "r") as file_reader:
+                file_text = ftfy.fix_text(file_reader.read())
+
+            offset = 0
+            document_text = ""
+            if document_id in documents:
+                document_text = documents[document_id] + " "
+                offset = len(document_text)
+
+            tmp_document_text = document_text + file_text
+
+            entities = []
+            dirty_file = False
+            with open(text_file[:-4] + ".ann") as file_reader:
+                for line in file_reader:
+                    if not line:
+                        continue
+
+                    if line[-1] == "\n":
+                        line = line[:-1]
+
+                    columns = line.split("\t")
+                    mid = columns[1].split()
+                    if len(mid) != 3:
+                        continue
+
+                    entity_type, start, end = mid[0], mid[1], mid[2]
+                    start, end = int(start), int(end)
+
+                    if file_text[start:end] != columns[2]:
+                        dirty_file = True
+                        break
+
+                    if tmp_document_text[offset + start : offset + end] != columns[2]:
+                        dirty_file = True
+                        break
+
+                    entities.append(Entity((offset + start, offset + end), entity_type))
+
+            if not dirty_file:
+                documents[document_id] = tmp_document_text
+                if document_id in entities_per_document:
+                    entities_per_document[document_id] = (
+                        entities_per_document[document_id] + entities
+                    )
+                else:
+                    entities_per_document[document_id] = entities
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
+
+
+class HUNER_DISEASE_BIOSEMANTICS(HunerDataset):
+    """
+        HUNER version of the Biosemantics corpus containing (only) disease annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            *args, **kwargs,
+        )
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/bios"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        corpus_dir = BIOSEMANTICS.download_dataset(data_dir)
+        dataset = BIOSEMANTICS.parse_dataset(corpus_dir)
+
+        entity_type_mapping = {"Disease": DISEASE_TAG}
+        return filter_and_map_entities(dataset, entity_type_mapping)
+
+
+class HUNER_CHEMICAL_BIOSEMANTICS(HunerDataset):
+    """
+        HUNER version of the Biosemantics corpus containing (only) disease annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            *args, **kwargs,
+        )
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/bios"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        corpus_dir = BIOSEMANTICS.download_dataset(data_dir)
+        dataset = BIOSEMANTICS.parse_dataset(corpus_dir)
+
+        entity_type_mapping = {
+            "M": CHEMICAL_TAG,
+            "I": CHEMICAL_TAG,
+            "Y": CHEMICAL_TAG,
+            "D": CHEMICAL_TAG,
+            "B": CHEMICAL_TAG,
+            "C": CHEMICAL_TAG,
+            "F": CHEMICAL_TAG,
+            "R": CHEMICAL_TAG,
+            "G": CHEMICAL_TAG,
+            "MOA": CHEMICAL_TAG,
+        }
+
+        return filter_and_map_entities(dataset, entity_type_mapping)

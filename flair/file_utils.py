@@ -129,6 +129,12 @@ def unzip_gz_file(file: Path, unzip_to: Path):
             shutil.copyfileobj(f_in, f_out)
 
 
+def unzip_rar_file(file: Path, unzip_to: Path):
+    import patoolib
+
+    patoolib.extract_archive(str(file), outdir=unzip_to, interactive=False)
+
+
 def download_file(url: str, cache_dir: Path):
     cache_dir.mkdir(parents=True, exist_ok=True)
 
