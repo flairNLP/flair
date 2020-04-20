@@ -976,7 +976,7 @@ class ScalarMix(torch.nn.Module):
     https://github.com/allenai/allennlp/blob/master/allennlp/modules/scalar_mix.py.
     """
 
-    def __init__(self, mixture_size: int) -> None:
+    def __init__(self, mixture_size: int, trainable: bool = False) -> None:
         """
         Inits scalar mix implementation.
         ``mixture = gamma * sum(s_k * tensor_k)`` where ``s = softmax(w)``, with ``w`` and ``gamma`` scalar parameters.
@@ -990,14 +990,14 @@ class ScalarMix(torch.nn.Module):
         self.scalar_parameters = ParameterList(
             [
                 Parameter(
-                    torch.FloatTensor([initial_scalar_parameters[i]]).to(flair.device),
-                    requires_grad=False,
+                    torch.FloatTensor([initial_scalar_parameters[i]]),
+                    requires_grad=trainable,
                 )
                 for i in range(mixture_size)
             ]
         )
         self.gamma = Parameter(
-            torch.FloatTensor([1.0]).to(flair.device), requires_grad=False
+            torch.FloatTensor([1.0]), requires_grad=trainable
         )
 
     def forward(self, tensors: List[torch.Tensor]) -> torch.Tensor:
@@ -2239,6 +2239,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # embedding parameters
         self.layer_indexes = [int(x) for x in layers.split(",")]
+        self.mix = ScalarMix(mixture_size=len(self.layer_indexes), trainable=False)
         self.pooling_operation = pooling_operation
         self.use_scalar_mix = use_scalar_mix
         self.fine_tune = fine_tune
@@ -2339,11 +2340,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 # check if reconstructed token is the same as current token
                 if reconstructed_token.lower() == token_text:
 
-                    # print(token)
-                    # print(reconstructed_token)
-                    # print(subtoken_count)
-                    # print()
-
                     # if so, add subtoken count
                     token_subtoken_lengths.append(subtoken_count)
 
@@ -2422,8 +2418,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
                     # use scalar mix of embeddings if so selected
                     if self.use_scalar_mix:
-                        sm = ScalarMix(mixture_size=len(subtoken_embeddings))
-                        sm_embeddings = sm(subtoken_embeddings)
+                        sm_embeddings = self.mix(subtoken_embeddings)
 
                         subtoken_embeddings = [sm_embeddings]
 
@@ -2431,6 +2426,14 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                     token.set_embedding(self.name, torch.cat(subtoken_embeddings))
 
                     subword_start_idx += number_of_subtokens
+
+    def train(self, mode=True):
+        # if fine-tuning is not enabled (i.e. a "feature-based approach" used), this
+        # module should never be in training mode
+        if not self.fine_tune:
+            pass
+        else:
+            super().train(mode)
 
     @property
     @abstractmethod
@@ -2500,7 +2503,6 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
                             for i in range((len(sentences) + self.batch_size - 1) // self.batch_size)]
 
         for batch in sentence_batches:
-
             self._add_embeddings_to_sentences(batch)
 
         return sentences
