@@ -3363,6 +3363,14 @@ class HUNER_SPECIES_CRAFT(HunerDataset):
 
 
 class BIOSEMANTICS(ColumnCorpus):
+    """
+          Original Biosemantics corpus.
+
+          For further information see Akhondi et al.:
+            Annotated chemical patent corpus: a gold standard for text mining
+            https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4182036/
+    """
+
     def __init__(
         self,
         base_path: Union[str, Path] = None,
@@ -3551,3 +3559,164 @@ class HUNER_CHEMICAL_BIOSEMANTICS(HunerDataset):
         }
 
         return filter_and_map_entities(dataset, entity_type_mapping)
+
+
+class BC2GM(ColumnCorpus):
+    """
+        Original BioCreative-II-GM corpus containing gene annotations.
+
+        For further information see Smith et al.:
+            Overview of BioCreative II gene mention recognition
+            https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2559986/
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+        :param base_path: Path to the corpus on your machine
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param tokenizer: Callable that segments a sentence into words,
+                          defaults to scispacy
+        :param sentence_splitter: Callable that segments a document into sentences,
+                                  defaults to scispacy
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        test_file = data_folder / "test.conll"
+
+        if not (train_file.exists() and test_file.exists()):
+            data_folder = self.download_dataset(data_folder)
+            train_data = self.parse_train_dataset(data_folder)
+            test_data = self.parse_test_dataset(data_folder)
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+
+            conll_writer.write_to_conll(train_data, train_file)
+            conll_writer.write_to_conll(test_data, test_file)
+
+        super(BC2GM, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @staticmethod
+    def download_dataset(data_dir: Path) -> Path:
+        data_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2011/bc2GMtrain_1.1.tar.gz"
+        data_path = cached_path(data_url, data_dir)
+        unzip_targz_file(data_path, data_dir)
+
+        data_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2011/bc2GMtest_1.0.tar.gz"
+        data_path = cached_path(data_url, data_dir)
+        unzip_targz_file(data_path, data_dir)
+
+        return data_dir
+
+    @classmethod
+    def parse_train_dataset(cls, data_folder: Path) -> InternalBioNerDataset:
+        train_text_file = data_folder / "bc2geneMention" / "train" / "train.in"
+        train_ann_file = data_folder / "bc2geneMention" / "train" / "GENE.eval"
+
+        return cls.parse_dataset(train_text_file, train_ann_file)
+
+    @classmethod
+    def parse_test_dataset(cls, data_folder: Path) -> InternalBioNerDataset:
+        test_text_file = data_folder / "BC2GM" / "test" / "test.in"
+        test_ann_file = data_folder / "BC2GM" / "test" / "GENE.eval"
+
+        return cls.parse_dataset(test_text_file, test_ann_file)
+
+    @staticmethod
+    def parse_dataset(text_file: Path, ann_file: Path) -> InternalBioNerDataset:
+        documents = {}
+        entities_per_document = {}
+
+        with open(str(text_file), "r") as text_file_reader:
+            for line in text_file_reader:
+                line = line.strip()
+                offset = line.find(" ")
+                document_id = line[:offset]
+                document_text = line[offset + 1 :]
+                documents[document_id] = document_text
+                entities_per_document[document_id] = []
+
+        with open(str(ann_file), "r") as ann_file_reader:
+            for line in ann_file_reader:
+                columns = line.strip().split("|")
+                document_id = columns[0]
+                document_text = documents[document_id]
+
+                start_idx, end_idx = [int(i) for i in columns[1].split()]
+
+                non_whitespaces_chars = 0
+                new_start_idx = None
+                new_end_idx = None
+                for i, char in enumerate(document_text):
+                    if char != " ":
+                        non_whitespaces_chars += 1
+                    if new_start_idx is None and non_whitespaces_chars == start_idx + 1:
+                        new_start_idx = i
+                    if non_whitespaces_chars == end_idx + 1:
+                        new_end_idx = i + 1
+                        break
+
+                mention_text = document_text[new_start_idx:new_end_idx]
+                if mention_text != columns[2] and mention_text.startswith("/"):
+                    # There is still one illegal annotation in the file ..
+                    new_start_idx += 1
+
+                entities_per_document[document_id].append(
+                    Entity((new_start_idx, new_end_idx), GENE_TAG)
+                )
+
+                assert document_text[new_start_idx:new_end_idx] == columns[2]
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
+
+
+class HUNER_GENE_BC2GM(HunerDataset):
+    """
+        HUNER version of the BioCreative-II-GM corpus containing gene annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            *args, **kwargs,
+        )
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/bc2gm"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        data_dir = BC2GM.download_dataset(data_dir)
+        train_data = BC2GM.parse_train_dataset(data_dir)
+        test_data = BC2GM.parse_test_dataset(data_dir)
+
+        return merge_datasets([train_data, test_data])
