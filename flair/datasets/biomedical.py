@@ -13,8 +13,7 @@ from typing import Union, Callable, Dict, List, Tuple, Iterable
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 
-from file_utils import unzip_rar_file
-from flair.file_utils import unzip_gz_file, unzip_tar_file
+from flair.file_utils import unzip_gz_file, unzip_tar_file, unzip_rar_file
 from flair.datasets import ColumnCorpus
 from flair.file_utils import cached_path, unzip_file, unzip_targz_file, Tqdm
 
@@ -3720,3 +3719,177 @@ class HUNER_GENE_BC2GM(HunerDataset):
         test_data = BC2GM.parse_test_dataset(data_dir)
 
         return merge_datasets([train_data, test_data])
+
+
+class CEMP(ColumnCorpus):
+    """
+       Original CEMP corpus containing chemical annotations.
+
+       For further information see:
+            https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/cemp-detailed-task-description/
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+           :param base_path: Path to the corpus on your machine
+           :param in_memory: If True, keeps dataset in memory giving speedups in training.
+           :param tokenizer: Callable that segments a sentence into words,
+                             defaults to scispacy
+           :param sentence_splitter: Callable that segments a document into sentences,
+                                     defaults to scispacy
+           """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        dev_file = data_folder / "dev.conll"
+
+        if not (train_file.exists() and dev_file.exists()):
+            train_folder = self.download_train_corpus(data_folder)
+            train_text_file = train_folder / "chemdner_patents_train_text.txt"
+            train_ann_file = train_folder / "chemdner_cemp_gold_standard_train.tsv"
+            train_data = self.parse_input_file(train_text_file, train_ann_file)
+
+            dev_folder = self.download_dev_corpus(data_folder)
+            dev_text_file = dev_folder / "chemdner_patents_development_text.txt"
+            dev_ann_file = (
+                dev_folder / "chemdner_cemp_gold_standard_development_v03.tsv"
+            )
+            dev_data = self.parse_input_file(dev_text_file, dev_ann_file)
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(train_data, train_file)
+            conll_writer.write_to_conll(dev_data, dev_file)
+
+        super(CEMP, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @classmethod
+    def download_train_corpus(cls, data_dir: Path) -> Path:
+        corpus_dir = data_dir / "original"
+        os.makedirs(str(corpus_dir), exist_ok=True)
+
+        train_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2015/cemp_training_set.tar.gz"
+        data_path = cached_path(train_url, corpus_dir)
+        unzip_targz_file(data_path, corpus_dir)
+
+        return corpus_dir / "cemp_training_set"
+
+    @classmethod
+    def download_dev_corpus(cls, data_dir) -> Path:
+        corpus_dir = data_dir / "original"
+        os.makedirs(str(corpus_dir), exist_ok=True)
+
+        dev_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2015/cemp_development_set_v03.tar.gz"
+        data_path = cached_path(dev_url, corpus_dir)
+        unzip_targz_file(data_path, corpus_dir)
+
+        return corpus_dir / "cemp_development_set_v03"
+
+    @staticmethod
+    def parse_input_file(text_file: Path, ann_file: Path) -> InternalBioNerDataset:
+        documents = {}
+        entities_per_document = {}
+
+        document_title_length = {}
+
+        with open(str(text_file), "r") as text_reader:
+            for line in text_reader:
+                if not line:
+                    continue
+
+                document_id, title, abstract = line.split("\t")
+                documents[document_id] = title + " " + abstract
+                document_title_length[document_id] = len(title) + 1
+
+                entities_per_document[document_id] = []
+
+        with open(str(ann_file), "r") as ann_reader:
+            for line in ann_reader:
+                if not line:
+                    continue
+
+                columns = line.split("\t")
+                document_id = columns[0]
+                start, end = int(columns[2]), int(columns[3])
+
+                if columns[1] == "A":
+                    start = start + document_title_length[document_id]
+                    end = end + document_title_length[document_id]
+
+                entities_per_document[document_id].append(
+                    Entity((start, end), columns[5].strip())
+                )
+
+                document_text = documents[document_id]
+                assert columns[4] == document_text[start:end]
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
+
+
+class HUNER_CHEMICAL_CEMP(HunerDataset):
+    """
+        HUNER version of the CEMP corpus containing chemical annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/cemp"
+
+    def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
+        train_folder = CEMP.download_train_corpus(data_dir)
+        train_text_file = train_folder / "chemdner_patents_train_text.txt"
+        train_ann_file = train_folder / "chemdner_cemp_gold_standard_train.tsv"
+        train_data = CEMP.parse_input_file(train_text_file, train_ann_file)
+
+        dev_folder = CEMP.download_dev_corpus(data_dir)
+        dev_text_file = dev_folder / "chemdner_patents_development_text.txt"
+        dev_ann_file = dev_folder / "chemdner_cemp_gold_standard_development_v03.tsv"
+        dev_data = CEMP.parse_input_file(dev_text_file, dev_ann_file)
+
+        dataset = merge_datasets([train_data, dev_data])
+        entity_type_mapping = {
+            x: CHEMICAL_TAG
+            for x in [
+                "ABBREVIATION",
+                "FAMILY",
+                "FORMULA",
+                "IDENTIFIERS",
+                "MULTIPLE",
+                "SYSTEMATIC",
+                "TRIVIAL",
+            ]
+        }
+        return filter_and_map_entities(dataset, entity_type_mapping)
