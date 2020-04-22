@@ -2637,7 +2637,7 @@ class OSIRIS(ColumnCorpus):
                 tree = etree.parse(ann_file)
                 for annotation in tree.xpath(".//Annotation"):
                     entity_type = annotation.get("type")
-                    if entity_type not in ["ge", "so", "sa", "lo", "ty"]:
+                    if entity_type == "file":
                         continue
 
                     start, end = annotation.get("span").split("..")
