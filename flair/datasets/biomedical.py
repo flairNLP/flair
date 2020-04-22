@@ -3547,6 +3547,9 @@ class BIOSEMANTICS(ColumnCorpus):
                     entity_type, start, end = mid[0], mid[1], mid[2]
                     start, end = int(start), int(end)
 
+                    if start == end:
+                        continue
+
                     if file_text[start:end] != columns[2]:
                         dirty_file = True
                         break
