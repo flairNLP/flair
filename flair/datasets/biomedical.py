@@ -1289,10 +1289,12 @@ class HUNER_CELL_LINE_CLL(HunerDataset):
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         KaewphanCorpusHelper.download_cll_dataset(data_dir)
         conll_folder = data_dir / "CLL-1.0.2" / "conll"
-        # FIXME: Normalize entity type name!
-        return KaewphanCorpusHelper.read_dataset(
+
+        orig_dataset = KaewphanCorpusHelper.read_dataset(
             conll_folder=conll_folder, tag_column=0, token_column=1
         )
+
+        return filter_and_map_entities(orig_dataset, {"CL": CELL_LINE_TAG})
 
 
 class GELLUS(ColumnCorpus):
@@ -2753,10 +2755,12 @@ class S800(ColumnCorpus):
                 if not fields:
                     continue
                 fname, pmid = fields[1].split(":")
+                start, end = int(fields[2]), int(fields[3])
 
-                entities_per_document[fname].append(
-                    Entity((int(fields[2]), int(fields[3])), "Species")
-                )
+                if start == end:
+                    continue
+
+                entities_per_document[fname].append(Entity((start, end), "Species"))
 
         for fname in entities_per_document:
             with (data_dir / "abstracts" / fname).with_suffix(".txt").open() as f:
