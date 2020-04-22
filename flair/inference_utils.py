@@ -147,7 +147,7 @@ class WordEmbeddingsStoreBackend:
         self.name = embedding.name
         self.store_path : Path = WordEmbeddingsStore._get_store_path(embedding, backend)
         if verbose:
-            print("store filename:", str(self.store_path))
+            log.info("store filename:", str(self.store_path))
     @property
     def is_ok(self):
         return hasattr(self, 'k')
@@ -170,7 +170,7 @@ class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                 return
             except sqlite3.Error as err:
                 if verbose:
-                    print("Fail to open lmdb database %s: %s" % (str(self.store_path), str(err)))
+                    log.info("Fail to open lmdb database %s: %s" % (str(self.store_path), str(err)))
         # otherwise, push embedding to database
         if hasattr(embedding, 'precomputed_word_embeddings'):
             self.db = sqlite3.connect(str(self.store_path))
@@ -184,7 +184,7 @@ class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                 [word] + pwe.get_vector(word).tolist() for word in pwe.vocab.keys()
             )
             if verbose:
-                print("load vectors to store")
+                log.info("load vectors to store")
             self.db.executemany(
                 f"INSERT INTO embedding(word,{','.join('v' + str(i) for i in range(self.k))}) \
             values ({','.join(['?'] * (1 + self.k))})",
@@ -230,7 +230,7 @@ class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                 except lmdb.Error as err:
                     log.exception("Fail to open lmdb database %s: %s"%(str(self.store_path), str(err)))
                     if verbose:
-                        print("Fail to open lmdb database %s: %s"%(str(self.store_path), str(err)))
+                        log.info("Fail to open lmdb database %s: %s"%(str(self.store_path), str(err)))
             # create and load the database in write mode
             if hasattr(embedding, 'precomputed_word_embeddings'):
                 pwe = embedding.precomputed_word_embeddings
