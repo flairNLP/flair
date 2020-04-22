@@ -14,8 +14,8 @@ from lxml import etree
 from lxml.etree import XMLSyntaxError
 
 from flair.file_utils import unzip_gz_file, unzip_tar_file, unzip_rar_file
-from flair.datasets import ColumnCorpus
 from flair.file_utils import cached_path, unzip_file, unzip_targz_file, Tqdm
+from flair.datasets import ColumnCorpus
 
 DISEASE_TAG = "Disease"
 CHEMICAL_TAG = "Chemical"
@@ -28,6 +28,7 @@ SENTENCE_TAG = "[__SENT__]"
 
 class Entity:
     def __init__(self, char_span: Tuple[int, int], entity_type: str):
+        assert char_span[0] < char_span[1]
         self.char_span = range(*char_span)
         self.type = entity_type
 
@@ -176,6 +177,10 @@ def sentence_split_at_tag(text: str) -> Tuple[List[str], List[int]]:
         last_offset += len(sent) + len(SENTENCE_TAG)
 
     return sentences, offsets
+
+
+def sentence_split_one_sentence_per_doc(text: str) -> Tuple[List[str], List[int]]:
+    return [text], [0]
 
 
 def bioc_to_internal(bioc_file: Path):
@@ -478,6 +483,120 @@ class HunerDataset(ColumnCorpus, ABC):
         )
 
 
+class BIO_INFER(ColumnCorpus):
+    """
+       Original BioInfer corpus
+
+       For further information see Pyysalo et al.:
+          BioInfer: a corpus for information extraction in the biomedical domain
+          https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-8-50
+    """
+
+    def __init__(
+        self, base_path: Union[str, Path] = None, in_memory: bool = True,
+    ):
+        """
+           :param base_path: Path to the corpus on your machine
+           :param in_memory: If True, keeps dataset in memory giving speedups in training.
+           """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+
+        if not (train_file.exists()):
+            corpus_folder = self.download_dataset(data_folder)
+            corpus_data = self.parse_dataset(corpus_folder)
+
+            tokenizer = whitespace_tokenize
+
+            sentence_splitter = sentence_split_one_sentence_per_doc
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(corpus_data, train_file)
+
+        super(BIO_INFER, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @classmethod
+    def download_dataset(cls, data_dir: Path) -> Path:
+        data_url = "http://mars.cs.utu.fi/BioInfer/files/BioInfer_corpus_1.1.1.zip"
+        data_path = cached_path(data_url, data_dir)
+        unzip_file(data_path, data_dir)
+
+        return data_dir / "BioInfer_corpus_1.1.1.xml"
+
+    @classmethod
+    def parse_dataset(cls, original_file: Path):
+        documents = {}
+        entities_per_document = {}
+
+        tree = etree.parse(str(original_file))
+        sentence_elems = tree.xpath("//sentence")
+        for sentence_id, sentence in enumerate(sentence_elems):
+            sentence_id = str(sentence_id)
+            token_id_to_span = {}
+            sentence_text = ""
+            entities_per_document[sentence_id] = []
+
+            for token in sentence.xpath(".//token"):
+                token_text = "".join(token.xpath(".//subtoken/@text"))
+                token_id = ".".join(token.attrib["id"].split(".")[1:])
+
+                if not sentence_text:
+                    token_id_to_span[token_id] = (0, len(token_text))
+                    sentence_text = token_text
+                else:
+                    token_id_to_span[token_id] = (
+                        len(sentence_text) + 1,
+                        len(token_text) + len(sentence_text) + 1,
+                    )
+                    sentence_text += " " + token_text
+            documents[sentence_id] = sentence_text
+
+            entities = [
+                e for e in sentence.xpath(".//entity") if not e.attrib["type"].isupper()
+            ]  # all caps entity type apparently marks event trigger
+
+            for entity in entities:
+                entity_character_starts = []
+                entity_character_ends = []
+
+                for subtoken in entity.xpath(".//nestedsubtoken"):
+                    token_id = ".".join(subtoken.attrib["id"].split(".")[1:3])
+                    entity_character_starts.append(token_id_to_span[token_id][0])
+                    entity_character_ends.append(token_id_to_span[token_id][1])
+
+                if entity_character_starts and entity_character_ends:
+                    char_span = (
+                        min(entity_character_starts),
+                        max(entity_character_ends),
+                    )
+                    entity = Entity(
+                        char_span=char_span, entity_type=entity.attrib["type"]
+                    )
+                    entities_per_document[sentence_id].append(entity)
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
+
+
 class HUNER_GENE_BIO_INFER(HunerDataset):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -487,69 +606,17 @@ class HUNER_GENE_BIO_INFER(HunerDataset):
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/bioinfer"
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
-        documents = {}
-        entities_per_document = defaultdict(list)
+        original_file = BIO_INFER.download_dataset(data_dir)
+        corpus = BIO_INFER.parse_dataset(original_file)
 
-        data_url = "http://mars.cs.utu.fi/BioInfer/files/BioInfer_corpus_1.1.1.zip"
-        data_path = cached_path(data_url, data_dir)
-        unzip_file(data_path, data_dir)
+        entity_type_mapping = {
+            "Individual_protein": GENE_TAG,
+            "Gene/protein/RNA": GENE_TAG,
+            "Gene": GENE_TAG,
+            "DNA_family_or_group": GENE_TAG,
+        }
 
-        tree = etree.parse(str(data_dir / "BioInfer_corpus_1.1.1.xml"))
-        sentence_elems = tree.xpath("//sentence")
-        for sentence_id, sentence in enumerate(sentence_elems):
-            sentence_id = str(sentence_id)
-            token_ids = []
-            token_offsets = []
-            sentence_text = ""
-
-            all_entity_token_ids = []
-            entities = (
-                sentence.xpath(".//entity[@type='Individual_protein']")
-                + sentence.xpath(".//entity[@type='Gene/protein/RNA']")
-                + sentence.xpath(".//entity[@type='Gene']")
-                + sentence.xpath(".//entity[@type='DNA_family_or_group']")
-            )
-            for entity in entities:
-                valid_entity = True
-                entity_token_ids = set()
-                for subtoken in entity.xpath(".//nestedsubtoken"):
-                    token_id = ".".join(subtoken.attrib["id"].split(".")[1:3])
-                    entity_token_ids.add(token_id)
-
-                if valid_entity:
-                    all_entity_token_ids.append(entity_token_ids)
-
-            for token in sentence.xpath(".//token"):
-                token_text = "".join(token.xpath(".//subtoken/@text"))
-                token_id = ".".join(token.attrib["id"].split(".")[1:])
-                token_ids.append(token_id)
-
-                if not sentence_text:
-                    token_offsets.append(0)
-                    sentence_text = token_text
-                else:
-                    token_offsets.append(len(sentence_text) + 1)
-                    sentence_text += " " + token_text
-
-            documents[sentence_id] = sentence_text
-
-            for entity_token_ids in all_entity_token_ids:
-                entity_start = None
-                for token_idx, (token_id, token_offset) in enumerate(
-                    zip(token_ids, token_offsets)
-                ):
-                    if token_id in entity_token_ids:
-                        if entity_start is None:
-                            entity_start = token_offset
-                    else:
-                        if entity_start is not None:
-                            entities_per_document[sentence_id].append(
-                                Entity((entity_start, token_offset - 1), "protein")
-                            )
-                            entity_start = None
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return filter_and_map_entities(corpus, entity_type_mapping)
 
 
 class JNLPBA(ColumnCorpus):
