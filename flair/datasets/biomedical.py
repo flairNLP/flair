@@ -3967,3 +3967,196 @@ class HUNER_CHEMICAL_CEMP(HunerDataset):
             ]
         }
         return filter_and_map_entities(dataset, entity_type_mapping)
+
+
+class CHEBI(ColumnCorpus):
+    """
+       Original CHEBI corpus containing all annotations.
+
+       For further information see Shardlow et al.:
+            A New Corpus to Support Text Mining for the Curation of Metabolites in the ChEBI Database
+            http://www.lrec-conf.org/proceedings/lrec2018/pdf/229.pdf
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        annotator: int = 0,
+    ):
+        """
+        :param base_path: Path to the corpus on your machine
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param tokenizer: Callable that segments a sentence into words,
+                          defaults to scispacy
+        :param sentence_splitter: Callable that segments a document into sentences,
+                                  defaults to scispacy
+        :param annotator: The abstracts have been annotated by two annotators, which can be selected by choosing annotator 1 or 2. If annotator is 0, the union of both annotations is used.
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+
+        if not (train_file.exists()):
+            corpus_dir = self.download_dataset(data_folder)
+            full_dataset = self.parse_dataset(corpus_dir, annotator=annotator)
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(full_dataset, train_file)
+
+        super(CHEBI, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @staticmethod
+    def download_dataset(data_dir: Path) -> Path:
+        data_url = "http://www.nactem.ac.uk/chebi/ChEBI.zip"
+        data_path = cached_path(data_url, data_dir)
+        unzip_file(data_path, data_dir)
+
+        return data_dir / "ChEBI"
+
+    @staticmethod
+    def parse_dataset(data_dir: Path, annotator: int) -> InternalBioNerDataset:
+        abstract_folder = data_dir / "abstracts"
+        fulltext_folder = data_dir / "fullpapers"
+
+        if annotator == 0:
+            annotation_dirs = ["Annotator1", "Annotator2"]
+        elif annotator <= 2:
+            annotation_dirs = [f"Annotator{annotator}"]
+        else:
+            raise ValueError("Invalid value for annotator")
+
+        documents = {}
+        entities_per_document = {}
+
+        abstract_ids = [
+            x.name[:-4]
+            for x in (abstract_folder / annotation_dirs[0]).iterdir()
+            if x.name[-4:] == ".txt"
+        ]
+        fulltext_ids = [
+            x.name[:-4] for x in fulltext_folder.iterdir() if x.name[-4:] == ".txt"
+        ]
+
+        for abstract_id in abstract_ids:
+            abstract_id_output = abstract_id + "_A"
+            with open(
+                abstract_folder / annotation_dirs[0] / f"{abstract_id}.txt", "r"
+            ) as f:
+                documents[abstract_id_output] = f.read()
+
+            for annotation_dir in annotation_dirs:
+                with open(
+                    abstract_folder / annotation_dir / f"{abstract_id}.ann", "r"
+                ) as f:
+                    entities = CHEBI.get_entities(f)
+            entities_per_document[abstract_id_output] = entities
+
+        for fulltext_id in fulltext_ids:
+            fulltext_id_output = fulltext_id + "_F"
+            with open(fulltext_folder / f"{fulltext_id}.txt", "r") as f:
+                documents[fulltext_id_output] = f.read()
+
+            with open(fulltext_folder / f"{fulltext_id}.ann", "r") as f:
+                entities = CHEBI.get_entities(f)
+            entities_per_document[fulltext_id_output] = entities
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
+
+    @staticmethod
+    def get_entities(f):
+        entities = []
+        for line in f:
+            if not line.strip() or line[0] != "T":
+                continue
+            parts = line.split("\t")[1].split()
+            entity_type = parts[0]
+            char_offsets = " ".join(parts[1:])
+            for start_end in char_offsets.split(";"):
+                start, end = start_end.split(" ")
+                entities += [Entity((int(start), int(end)), entity_type)]
+
+        return entities
+
+
+class HUNER_CHEMICAL_CHEBI(HunerDataset):
+    """
+        HUNER version of the CHEBI corpus containing chemical annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/chebi_new"
+
+    def to_internal(self, data_dir: Path, annotator: int = 0) -> InternalBioNerDataset:
+        corpus_dir = CHEBI.download_dataset(data_dir)
+        dataset = CHEBI.parse_dataset(corpus_dir, annotator=annotator)
+        entity_type_mapping = {"Chemical": CHEMICAL_TAG}
+        return filter_and_map_entities(dataset, entity_type_mapping)
+
+
+class HUNER_GENE_CHEBI(HunerDataset):
+    """
+        HUNER version of the CHEBI corpus containing gene annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/chebi_new"
+
+    def to_internal(self, data_dir: Path, annotator: int = 0) -> InternalBioNerDataset:
+        corpus_dir = CHEBI.download_dataset(data_dir)
+        dataset = CHEBI.parse_dataset(corpus_dir, annotator=annotator)
+        entity_type_mapping = {"Protein": GENE_TAG}
+        return filter_and_map_entities(dataset, entity_type_mapping)
+
+
+class HUNER_SPECIES_CHEBI(HunerDataset):
+    """
+        HUNER version of the CHEBI corpus containing species annotations.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def split_url() -> str:
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/chebi_new"
+
+    def to_internal(self, data_dir: Path, annotator: int = 0) -> InternalBioNerDataset:
+        corpus_dir = CHEBI.download_dataset(data_dir)
+        dataset = CHEBI.parse_dataset(corpus_dir, annotator=annotator)
+        entity_type_mapping = {"Species": SPECIES_TAG}
+        return filter_and_map_entities(dataset, entity_type_mapping)
