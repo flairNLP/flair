@@ -2044,6 +2044,8 @@ class FlairEmbeddings(TokenEmbeddings):
         with gradient_context:
 
             # if this is not possible, use LM to generate embedding. First, get text sentences
+            # text_sentences = [f'{sentence.to_tokenized_string()} [REG] {sentence.to_tokenized_string()}' for sentence in sentences]
+            # print(text_sentences)
             text_sentences = [sentence.to_tokenized_string() for sentence in sentences]
 
             start_marker = "\n"
@@ -2062,6 +2064,7 @@ class FlairEmbeddings(TokenEmbeddings):
                 sentence_text = sentence.to_tokenized_string()
 
                 offset_forward: int = len(start_marker)
+                                     # + len(sentence_text) + 7
                 offset_backward: int = len(sentence_text) + len(start_marker)
 
                 for token in sentence.tokens:
@@ -2238,7 +2241,12 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         self.model.to(flair.device)
 
         # embedding parameters
-        self.layer_indexes = [int(x) for x in layers.split(",")]
+        if layers == 'all':
+            # send mini-token through to check how many layers the model has
+            hidden_states = self.model(torch.tensor([1], device=flair.device).unsqueeze(0))[-1]
+            self.layer_indexes = [int(x) for x in range(len(hidden_states))]
+        else:
+            self.layer_indexes = [int(x) for x in layers.split(",")]
         self.mix = ScalarMix(mixture_size=len(self.layer_indexes), trainable=False)
         self.pooling_operation = pooling_operation
         self.use_scalar_mix = use_scalar_mix
@@ -2315,8 +2323,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
                 # append subtoken to reconstruct token
                 reconstructed_token = reconstructed_token + subtoken
-
-                # print(reconstructed_token)
 
                 # check if reconstructed token is special begin token ([CLS] or similar)
                 if reconstructed_token in self.special_tokens and subtoken_id == 0:
@@ -2418,7 +2424,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
                     # use scalar mix of embeddings if so selected
                     if self.use_scalar_mix:
-                        sm_embeddings = self.mix(subtoken_embeddings)
+                        sm_embeddings = torch.mean(torch.stack(subtoken_embeddings, dim=1), dim=1)
+                        # sm_embeddings = self.mix(subtoken_embeddings)
 
                         subtoken_embeddings = [sm_embeddings]
 
