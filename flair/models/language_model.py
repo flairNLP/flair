@@ -23,12 +23,14 @@ class LanguageModel(nn.Module):
         nlayers: int,
         embedding_size: int = 100,
         nout=None,
+        document_delimiter: str = '\n',
         dropout=0.1,
     ):
 
         super(LanguageModel, self).__init__()
 
         self.dictionary = dictionary
+        self.document_delimiter = document_delimiter
         self.is_forward_lm: bool = is_forward_lm
 
         self.dropout = dropout
@@ -187,14 +189,17 @@ class LanguageModel(nn.Module):
 
         state = torch.load(str(model_file), map_location=flair.device)
 
+        document_delimiter = state["document_delimiter"] if "document_delimiter" in state else '\n'
+
         model = LanguageModel(
-            state["dictionary"],
-            state["is_forward_lm"],
-            state["hidden_size"],
-            state["nlayers"],
-            state["embedding_size"],
-            state["nout"],
-            state["dropout"],
+            dictionary=state["dictionary"],
+            is_forward_lm=state["is_forward_lm"],
+            hidden_size=state["hidden_size"],
+            nlayers=state["nlayers"],
+            embedding_size=state["embedding_size"],
+            nout=state["nout"],
+            document_delimiter=document_delimiter,
+            dropout=state["dropout"],
         )
         model.load_state_dict(state["state_dict"])
         model.eval()
@@ -209,18 +214,21 @@ class LanguageModel(nn.Module):
         epoch = state["epoch"] if "epoch" in state else None
         split = state["split"] if "split" in state else None
         loss = state["loss"] if "loss" in state else None
+        document_delimiter = state["document_delimiter"] if "document_delimiter" in state else '\n'
+
         optimizer_state_dict = (
             state["optimizer_state_dict"] if "optimizer_state_dict" in state else None
         )
 
         model = LanguageModel(
-            state["dictionary"],
-            state["is_forward_lm"],
-            state["hidden_size"],
-            state["nlayers"],
-            state["embedding_size"],
-            state["nout"],
-            state["dropout"],
+            dictionary=state["dictionary"],
+            is_forward_lm=state["is_forward_lm"],
+            hidden_size=state["hidden_size"],
+            nlayers=state["nlayers"],
+            embedding_size=state["embedding_size"],
+            nout=state["nout"],
+            document_delimiter=document_delimiter,
+            dropout=state["dropout"],
         )
         model.load_state_dict(state["state_dict"])
         model.eval()
@@ -245,6 +253,7 @@ class LanguageModel(nn.Module):
             "nlayers": self.nlayers,
             "embedding_size": self.embedding_size,
             "nout": self.nout,
+            "document_delimiter": self.document_delimiter,
             "dropout": self.dropout,
             "optimizer_state_dict": optimizer.state_dict(),
             "epoch": epoch,
@@ -263,6 +272,7 @@ class LanguageModel(nn.Module):
             "nlayers": self.nlayers,
             "embedding_size": self.embedding_size,
             "nout": self.nout,
+            "document_delimiter": self.document_delimiter,
             "dropout": self.dropout,
         }
 

@@ -31,7 +31,8 @@ class TextDataset(Dataset):
         forward: bool = True,
         split_on_char: bool = True,
         random_case_flip: bool = True,
-        shuffle_lines: bool = True,
+        document_delimiter: str = '\n',
+        shuffle: bool = True,
     ):
 
         assert path.exists()
@@ -43,7 +44,8 @@ class TextDataset(Dataset):
         self.forward = forward
         self.random_case_flip = random_case_flip
         self.expand_vocab = expand_vocab
-        self.shuffle_lines = shuffle_lines
+        self.document_delimiter = document_delimiter
+        self.shuffle = shuffle
 
         if path.is_dir():
             self.files = sorted([f for f in path.iterdir() if f.exists()])
@@ -74,9 +76,11 @@ class TextDataset(Dataset):
         """Tokenizes a text file on character basis."""
         assert path.exists()
 
-        lines = open(path, "r", encoding="utf-8").readlines()
+        lines = [doc + self.document_delimiter
+                 for doc in open(path, "r", encoding="utf-8").read().split(self.document_delimiter) if doc]
+
         log.info(f"read text file with {len(lines)} lines")
-        if self.shuffle_lines:
+        if self.shuffle:
             random.shuffle(lines)
             log.info(f"shuffled")
 
@@ -130,6 +134,7 @@ class TextDataset(Dataset):
                         break
                     ids[token] = self.dictionary.get_idx_for_item(char)
                     token -= 1
+
         return ids
 
     @staticmethod
@@ -174,13 +179,13 @@ class TextCorpus(object):
         forward: bool = True,
         character_level: bool = True,
         random_case_flip: bool = True,
-        shuffle_lines: bool = True,
+        document_delimiter: str = '\n',
     ):
         self.dictionary: Dictionary = dictionary
         self.forward = forward
         self.split_on_char = character_level
         self.random_case_flip = random_case_flip
-        self.shuffle_lines = shuffle_lines
+        self.document_delimiter: str = document_delimiter
 
         if type(path) == str:
             path = Path(path)
@@ -192,7 +197,8 @@ class TextCorpus(object):
             self.forward,
             self.split_on_char,
             self.random_case_flip,
-            shuffle_lines=self.shuffle_lines,
+            document_delimiter=self.document_delimiter,
+            shuffle=True,
         )
 
         # TextDataset returns a list. valid and test are only one file, so return the first element
@@ -203,7 +209,8 @@ class TextCorpus(object):
             self.forward,
             self.split_on_char,
             self.random_case_flip,
-            shuffle_lines=False,
+            document_delimiter=document_delimiter,
+            shuffle=False,
         )[0]
         self.test = TextDataset(
             path / "test.txt",
@@ -212,7 +219,8 @@ class TextCorpus(object):
             self.forward,
             self.split_on_char,
             self.random_case_flip,
-            shuffle_lines=False,
+            document_delimiter=document_delimiter,
+            shuffle=False,
         )[0]
 
 
