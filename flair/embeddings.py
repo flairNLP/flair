@@ -2046,7 +2046,7 @@ class FlairEmbeddings(TokenEmbeddings):
             # if this is not possible, use LM to generate embedding. First, get text sentences
             text_sentences = [sentence.to_tokenized_string() for sentence in sentences]
 
-            start_marker = "\n"
+            start_marker = self.lm.document_delimiter if "document_delimiter" in self.lm.__dict__ else '\n'
             end_marker = " "
 
             # get hidden states from language model
