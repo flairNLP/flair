@@ -2044,8 +2044,6 @@ class FlairEmbeddings(TokenEmbeddings):
         with gradient_context:
 
             # if this is not possible, use LM to generate embedding. First, get text sentences
-            # text_sentences = [f'{sentence.to_tokenized_string()} [REG] {sentence.to_tokenized_string()}' for sentence in sentences]
-            # print(text_sentences)
             text_sentences = [sentence.to_tokenized_string() for sentence in sentences]
 
             start_marker = "\n"
@@ -2064,7 +2062,6 @@ class FlairEmbeddings(TokenEmbeddings):
                 sentence_text = sentence.to_tokenized_string()
 
                 offset_forward: int = len(start_marker)
-                                     # + len(sentence_text) + 7
                 offset_backward: int = len(sentence_text) + len(start_marker)
 
                 for token in sentence.tokens:
