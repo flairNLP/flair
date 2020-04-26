@@ -543,7 +543,8 @@ class ModelTrainer:
                     self.model.save(base_path / "best-model.pt")
                     current_state_dict = self.model.state_dict()
                     self.model.load_state_dict(last_epoch_model_state_dict)
-                    self.model.save(base_path / "pre-best-model.pt")
+                    if anneal_with_prestarts:
+                        self.model.save(base_path / "pre-best-model.pt")
                     self.model.load_state_dict(current_state_dict)
 
             # if we do not use dev data for model selection, save final model
