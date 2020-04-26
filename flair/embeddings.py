@@ -2297,7 +2297,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
             subtokenized_sentences.append(torch.tensor(subtokenized_sentence, dtype=torch.long))
             subtokens = self.tokenizer.convert_ids_to_tokens(subtokenized_sentence)
-            # print(subtokens)
 
             word_iterator = iter(sentence)
             token = next(word_iterator)
