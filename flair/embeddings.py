@@ -976,7 +976,7 @@ class ScalarMix(torch.nn.Module):
     https://github.com/allenai/allennlp/blob/master/allennlp/modules/scalar_mix.py.
     """
 
-    def __init__(self, mixture_size: int) -> None:
+    def __init__(self, mixture_size: int, trainable: bool = False) -> None:
         """
         Inits scalar mix implementation.
         ``mixture = gamma * sum(s_k * tensor_k)`` where ``s = softmax(w)``, with ``w`` and ``gamma`` scalar parameters.
@@ -990,14 +990,14 @@ class ScalarMix(torch.nn.Module):
         self.scalar_parameters = ParameterList(
             [
                 Parameter(
-                    torch.FloatTensor([initial_scalar_parameters[i]]).to(flair.device),
-                    requires_grad=False,
+                    torch.FloatTensor([initial_scalar_parameters[i]]),
+                    requires_grad=trainable,
                 )
                 for i in range(mixture_size)
             ]
         )
         self.gamma = Parameter(
-            torch.FloatTensor([1.0]).to(flair.device), requires_grad=False
+            torch.FloatTensor([1.0]), requires_grad=trainable
         )
 
     def forward(self, tensors: List[torch.Tensor]) -> torch.Tensor:
@@ -2231,14 +2231,20 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         self.model = AutoModel.from_pretrained(model, config=config)
 
         # model name
-        self.name = str(model)
+        self.name = 'transformer-word-' + str(model)
 
         # when initializing, embeddings are in eval mode by default
         self.model.eval()
         self.model.to(flair.device)
 
         # embedding parameters
-        self.layer_indexes = [int(x) for x in layers.split(",")]
+        if layers == 'all':
+            # send mini-token through to check how many layers the model has
+            hidden_states = self.model(torch.tensor([1], device=flair.device).unsqueeze(0))[-1]
+            self.layer_indexes = [int(x) for x in range(len(hidden_states))]
+        else:
+            self.layer_indexes = [int(x) for x in layers.split(",")]
+        self.mix = ScalarMix(mixture_size=len(self.layer_indexes), trainable=False)
         self.pooling_operation = pooling_operation
         self.use_scalar_mix = use_scalar_mix
         self.fine_tune = fine_tune
@@ -2251,11 +2257,11 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # most models have an intial BOS token, except for XLNet, T5 and GPT2
         self.begin_offset = 1
-        if isinstance(self.tokenizer, XLNetTokenizer):
+        if type(self.tokenizer) == XLNetTokenizer:
             self.begin_offset = 0
-        if isinstance(self.tokenizer, T5Tokenizer):
+        if type(self.tokenizer) == T5Tokenizer:
             self.begin_offset = 0
-        if isinstance(self.tokenizer, GPT2Tokenizer):
+        if type(self.tokenizer) == GPT2Tokenizer:
             self.begin_offset = 0
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
@@ -2280,13 +2286,21 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         for sentence in sentences:
 
-            # subtokenize sentence
-            subtokenized_sentence = self.tokenizer.encode(sentence.to_tokenized_string(), add_special_tokens=True)
+            tokenized_string = sentence.to_tokenized_string()
+
+            # method 1: subtokenize sentence
+            # subtokenized_sentence = self.tokenizer.encode(tokenized_string, add_special_tokens=True)
+
+            # method 2:
+            ids = self.tokenizer.encode(tokenized_string, add_special_tokens=False)
+            subtokenized_sentence = self.tokenizer.build_inputs_with_special_tokens(ids)
+
             subtokenized_sentences.append(torch.tensor(subtokenized_sentence, dtype=torch.long))
             subtokens = self.tokenizer.convert_ids_to_tokens(subtokenized_sentence)
 
             word_iterator = iter(sentence)
             token = next(word_iterator)
+            token_text = token.text.lower()
 
             token_subtoken_lengths = []
             reconstructed_token = ''
@@ -2311,8 +2325,22 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                     reconstructed_token = ''
                     subtoken_count = 0
 
+                # special handling for UNK subtokens
+                if self.tokenizer.unk_token and self.tokenizer.unk_token in reconstructed_token:
+                    pieces = self.tokenizer.convert_ids_to_tokens(
+                        self.tokenizer.encode(token.text, add_special_tokens=False))
+                    token_text = ''
+                    for piece in pieces:
+                        # remove special markup
+                        piece = re.sub('^Ġ', '', piece)  # RoBERTa models
+                        piece = re.sub('^##', '', piece)  # BERT models
+                        piece = re.sub('^▁', '', piece)  # XLNet models
+                        piece = re.sub('</w>$', '', piece)  # XLM models
+                        token_text += piece
+                    token_text = token_text.lower()
+
                 # check if reconstructed token is the same as current token
-                if reconstructed_token.lower() == token.text.lower():
+                if reconstructed_token.lower() == token_text:
 
                     # if so, add subtoken count
                     token_subtoken_lengths.append(subtoken_count)
@@ -2324,6 +2352,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                     # break from loop if all tokens are accounted for
                     if len(token_subtoken_lengths) < len(sentence):
                         token = next(word_iterator)
+                        token_text = token.text.lower()
                     else:
                         break
 
@@ -2391,8 +2420,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
                     # use scalar mix of embeddings if so selected
                     if self.use_scalar_mix:
-                        sm = ScalarMix(mixture_size=len(subtoken_embeddings))
-                        sm_embeddings = sm(subtoken_embeddings)
+                        sm_embeddings = torch.mean(torch.stack(subtoken_embeddings, dim=1), dim=1)
+                        # sm_embeddings = self.mix(subtoken_embeddings)
 
                         subtoken_embeddings = [sm_embeddings]
 
@@ -2400,6 +2429,14 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                     token.set_embedding(self.name, torch.cat(subtoken_embeddings))
 
                     subword_start_idx += number_of_subtokens
+
+    def train(self, mode=True):
+        # if fine-tuning is not enabled (i.e. a "feature-based approach" used), this
+        # module should never be in training mode
+        if not self.fine_tune:
+            pass
+        else:
+            super().train(mode)
 
     @property
     @abstractmethod
@@ -2469,7 +2506,6 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
                             for i in range((len(sentences) + self.batch_size - 1) // self.batch_size)]
 
         for batch in sentence_batches:
-
             self._add_embeddings_to_sentences(batch)
 
         return sentences
