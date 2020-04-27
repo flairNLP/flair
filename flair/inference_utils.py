@@ -14,7 +14,7 @@ from flair.embeddings import WordEmbeddings
 # this is the default init size of a lmdb database for embeddings
 DEFAULT_MAP_SIZE = 100 * 1024 * 1024 * 1024
 
-log = logging.getLogger("flair")
+logger = logging.getLogger("flair")
 
 class WordEmbeddingsStore:
     """
@@ -74,7 +74,7 @@ class WordEmbeddingsStore:
         self.name = embedding.name
         self.store_path: Path = WordEmbeddingsStore._get_store_path(embedding, backend)
         if verbose:
-            log.info("store filename: "+str(self.store_path))
+            logger.info(f"store filename: {str(self.store_path)}")
 
         if backend == 'sqlite':
             self.backend = SqliteWordEmbeddingsStoreBackend(embedding, verbose)
@@ -108,12 +108,24 @@ class WordEmbeddingsStore:
         return store_path
 
     @staticmethod
+    def _word_embeddings(model):
+        # SequenceTagger
+        if hasattr(model, 'embeddings'):
+            embeds = model.embeddings.embeddings
+        # TextClassifier
+        elif hasattr(model, 'document_embeddings') and hasattr(model.document_embeddings, 'embeddings'):
+            embeds = model.document_embeddings.embeddings.embeddings
+        else:
+            embeds = []
+        return embeds
+
+    @staticmethod
     def create_stores(model, backend='sqlite'):
         """
         creates database versions of all word embeddings in the model and
         deletes the original vectors to save memory
         """
-        for embedding in model.embeddings.embeddings:
+        for embedding in WordEmbeddingsStore._word_embeddings(model):
             if type(embedding) == WordEmbeddings:
                 WordEmbeddingsStore(embedding, backend)
                 del embedding.precomputed_word_embeddings
@@ -123,18 +135,19 @@ class WordEmbeddingsStore:
         """
         loads the db versions of all word embeddings in the model
         """
-        for i, embedding in enumerate(model.embeddings.embeddings):
+        embeds = WordEmbeddingsStore._word_embeddings(model)
+        for i, embedding in enumerate(embeds):
             if type(embedding) == WordEmbeddings:
-                model.embeddings.embeddings[i] = WordEmbeddingsStore(embedding, backend)
+                embeds[i] = WordEmbeddingsStore(embedding, backend)
 
     @staticmethod
     def delete_stores(model, backend='sqlite'):
         """
         deletes the db versions of all word embeddings
         """
-        for embedding in model.embeddings.embeddings:
+        for embedding in WordEmbeddingsStore._word_embeddings(model):
             store_path : Path = WordEmbeddingsStore._get_store_path(embedding)
-            log.info("delete store: "+str(store_path))
+            logger.info(f"delete store: {str(store_path)}")
             if store_path.is_file():
                 store_path.unlink()
             elif store_path.is_dir():
@@ -146,8 +159,7 @@ class WordEmbeddingsStoreBackend:
         # get db filename from embedding name
         self.name = embedding.name
         self.store_path : Path = WordEmbeddingsStore._get_store_path(embedding, backend)
-        if verbose:
-            log.info("store filename:", str(self.store_path))
+
     @property
     def is_ok(self):
         return hasattr(self, 'k')
@@ -157,7 +169,7 @@ class WordEmbeddingsStoreBackend:
 
 
 class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
-    def __init__(self, embedding : WordEmbeddings, verbose):
+    def __init__(self, embedding, verbose):
         super().__init__(embedding, 'sqlite', verbose)
         # if embedding database already exists
         if self.store_path.exists() and self.store_path.is_file():
@@ -169,8 +181,7 @@ class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                 self.k = len(result[0]) - 1
                 return
             except sqlite3.Error as err:
-                if verbose:
-                    log.info("Fail to open lmdb database %s: %s" % (str(self.store_path), str(err)))
+                logger.exception(f"Fail to open sqlite database {str(self.store_path)}: {str(err)}")
         # otherwise, push embedding to database
         if hasattr(embedding, 'precomputed_word_embeddings'):
             self.db = sqlite3.connect(str(self.store_path))
@@ -184,7 +195,7 @@ class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                 [word] + pwe.get_vector(word).tolist() for word in pwe.vocab.keys()
             )
             if verbose:
-                log.info("load vectors to store")
+                logger.info("load vectors to store")
             self.db.executemany(
                 f"INSERT INTO embedding(word,{','.join('v' + str(i) for i in range(self.k))}) \
             values ({','.join(['?'] * (1 + self.k))})",
@@ -208,7 +219,7 @@ class SqliteWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
 
 
 class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
-    def __init__(self, embedding : WordEmbeddings, verbose):
+    def __init__(self, embedding, verbose):
         super().__init__(embedding, 'lmdb', verbose)
         try:
             import lmdb
@@ -228,9 +239,7 @@ class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                             cursor.close()
                         return
                 except lmdb.Error as err:
-                    log.exception("Fail to open lmdb database %s: %s"%(str(self.store_path), str(err)))
-                    if verbose:
-                        log.info("Fail to open lmdb database %s: %s"%(str(self.store_path), str(err)))
+                    logger.exception(f"Fail to open lmdb database {str(self.store_path)}: {str(err)}")
             # create and load the database in write mode
             if hasattr(embedding, 'precomputed_word_embeddings'):
                 pwe = embedding.precomputed_word_embeddings
@@ -238,7 +247,7 @@ class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                 self.store_path.mkdir(parents=True, exist_ok=True)
                 self.env = lmdb.open(str(self.store_path), map_size=DEFAULT_MAP_SIZE)
                 if verbose:
-                    log.info("load vectors to store")
+                    logger.info("load vectors to store")
 
                 txn = self.env.begin(write=True)
                 for word in tqdm(pwe.vocab.keys()):
@@ -248,12 +257,12 @@ class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
                 txn.commit()
                 return
         except ModuleNotFoundError:
-            log.warning("-" * 100)
-            log.warning('ATTENTION! The library "lmdb" is not installed!')
-            log.warning(
+            logger.warning("-" * 100)
+            logger.warning('ATTENTION! The library "lmdb" is not installed!')
+            logger.warning(
                 'To use LMDB, please first install with "pip install lmdb"'
             )
-            log.warning("-" * 100)
+            logger.warning("-" * 100)
 
     def _get_vector(self, word="house"):
         try:
@@ -273,11 +282,11 @@ class LmdbWordEmbeddingsStoreBackend(WordEmbeddingsStoreBackend):
             self.env = lmdb.open(self.store_path, readonly=True, max_readers=2048, max_spare_txns=2, lock=False)
             return self._get_vector(word)
         except ModuleNotFoundError:
-            log.warning("-" * 100)
-            log.warning('ATTENTION! The library "lmdb" is not installed!')
-            log.warning(
+            logger.warning("-" * 100)
+            logger.warning('ATTENTION! The library "lmdb" is not installed!')
+            logger.warning(
                 'To use LMDB, please first install with "pip install lmdb"'
             )
-            log.warning("-" * 100)
+            logger.warning("-" * 100)
             word_vector = np.zeros((self.k,), dtype=np.float32)
         return word_vector
