@@ -1156,7 +1156,7 @@ class KaewphanCorpusHelper:
     def prepare_and_save_dataset(conll_folder: Path, output_file: Path):
         sentences = []
         for file in os.listdir(str(conll_folder)):
-            if not file.endswith(".conll"):
+            if not file.endswith(".nersuite"):
                 continue
 
             with open(os.path.join(str(conll_folder), file), "r") as reader:
@@ -1172,18 +1172,16 @@ class KaewphanCorpusHelper:
         unzip_targz_file(data_path, data_folder)
 
     @staticmethod
-    def read_dataset(
-        conll_folder: Path, tag_column: int, token_column: int
-    ) -> InternalBioNerDataset:
+    def read_dataset(nersuite_folder: Path) -> InternalBioNerDataset:
         documents = {}
         entities_per_document = {}
-        for file in os.listdir(str(conll_folder)):
-            if not file.endswith(".conll"):
+        for file in os.listdir(str(nersuite_folder)):
+            if not file.endswith(".nersuite"):
                 continue
 
-            document_id = file.replace(".conll", "")
+            document_id = file.replace(".nersuite", "")
 
-            with open(os.path.join(str(conll_folder), file), "r") as reader:
+            with open(os.path.join(str(nersuite_folder), file), "r") as reader:
                 document_text = ""
                 entities = []
 
@@ -1194,8 +1192,8 @@ class KaewphanCorpusHelper:
                     line = line.strip()
                     if line:
                         columns = line.split("\t")
-                        tag = columns[tag_column]
-                        token = columns[token_column]
+                        tag = columns[0]
+                        token = columns[3]
                         if tag.startswith("B-"):
                             if entity_type is not None:
                                 entities.append(
@@ -1266,7 +1264,7 @@ class CLL(ColumnCorpus):
         if not (train_file.exists()):
             KaewphanCorpusHelper.download_cll_dataset(data_folder)
 
-            conll_folder = data_folder / "CLL-1.0.2" / "conll"
+            conll_folder = data_folder / "CLL-1.0.2" / "nersuite"
             KaewphanCorpusHelper.prepare_and_save_dataset(conll_folder, train_file)
 
         super(CLL, self).__init__(
@@ -1288,10 +1286,10 @@ class HUNER_CELL_LINE_CLL(HunerDataset):
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         KaewphanCorpusHelper.download_cll_dataset(data_dir)
-        conll_folder = data_dir / "CLL-1.0.2" / "conll"
 
+        nersuite_folder = data_dir / "CLL-1.0.2" / "nersuite"
         orig_dataset = KaewphanCorpusHelper.read_dataset(
-            conll_folder=conll_folder, tag_column=0, token_column=1
+            nersuite_folder=nersuite_folder
         )
 
         return filter_and_map_entities(orig_dataset, {"CL": CELL_LINE_TAG})
@@ -1332,14 +1330,14 @@ class GELLUS(ColumnCorpus):
         if not (train_file.exists() and dev_file.exists() and test_file.exists()):
             KaewphanCorpusHelper.download_gellus_dataset(data_folder)
 
-            conll_train = data_folder / "GELLUS-1.0.3" / "conll" / "train"
-            KaewphanCorpusHelper.prepare_and_save_dataset(conll_train, train_file)
+            nersuite_train = data_folder / "GELLUS-1.0.3" / "nersuite" / "train"
+            KaewphanCorpusHelper.prepare_and_save_dataset(nersuite_train, train_file)
 
-            conll_dev = data_folder / "GELLUS-1.0.3" / "conll" / "devel"
-            KaewphanCorpusHelper.prepare_and_save_dataset(conll_dev, dev_file)
+            nersuite_dev = data_folder / "GELLUS-1.0.3" / "nersuite" / "devel"
+            KaewphanCorpusHelper.prepare_and_save_dataset(nersuite_dev, dev_file)
 
-            conll_test = data_folder / "GELLUS-1.0.3" / "conll" / "test"
-            KaewphanCorpusHelper.prepare_and_save_dataset(conll_test, test_file)
+            nersuite_test = data_folder / "GELLUS-1.0.3" / "nersuite" / "test"
+            KaewphanCorpusHelper.prepare_and_save_dataset(nersuite_test, test_file)
 
         super(GELLUS, self).__init__(
             data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
@@ -1363,16 +1361,13 @@ class HUNER_CELL_LINE_GELLUS(HunerDataset):
 
         splits = []
         for folder in ["train", "devel", "test"]:
-            conll_folder = data_dir / "GELLUS-1.0.3" / "conll" / folder
-            split_data = KaewphanCorpusHelper.read_dataset(
-                conll_folder=conll_folder, tag_column=1, token_column=0
+            conll_folder = data_dir / "GELLUS-1.0.3" / "nersuite" / folder
+            splits.append(
+                KaewphanCorpusHelper.read_dataset(nersuite_folder=conll_folder)
             )
-            split_data = filter_and_map_entities(
-                split_data, {"Cell-line-name": CELL_LINE_TAG}
-            )
-            splits.append(split_data)
 
-        return merge_datasets(splits)
+        full_dataset = merge_datasets(splits)
+        return filter_and_map_entities(full_dataset, {"Cell-line-name": CELL_LINE_TAG})
 
 
 class LOCTEXT(ColumnCorpus):
