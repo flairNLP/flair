@@ -1040,7 +1040,7 @@ class MIRNA(ColumnCorpus):
         entities_per_document = {}
 
         for document in tree.xpath(".//document"):
-            document_id = document.get("id")
+            document_id = document.get("origId")
             entities = []
 
             document_text = ""
@@ -1078,7 +1078,7 @@ class HUNER_GENE_MIRNA(HunerDataset):
 
     @staticmethod
     def split_url() -> str:
-        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA"
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA_new"
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         download_folder = data_dir / "original"
@@ -1103,7 +1103,7 @@ class HUNER_SPECIES_MIRNA(HunerDataset):
 
     @staticmethod
     def split_url() -> str:
-        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA"
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA_new"
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         download_folder = data_dir / "original"
@@ -1128,7 +1128,7 @@ class HUNER_DISEASE_MIRNA(HunerDataset):
 
     @staticmethod
     def split_url() -> str:
-        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA"
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA_new"
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         download_folder = data_dir / "original"
