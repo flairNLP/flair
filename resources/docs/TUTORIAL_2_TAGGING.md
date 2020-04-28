@@ -254,6 +254,10 @@ sentences = [Sentence(sent, use_tokenizer=True) for sent in split_single(text)]
 # predict tags for list of sentences
 tagger: SequenceTagger = SequenceTagger.load('ner')
 tagger.predict(sentences)
+
+# iterate through sentences and print predicted labels
+for sentence in sentences:
+    print(sentence.to_tagged_string())
 ```
 
 Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the
