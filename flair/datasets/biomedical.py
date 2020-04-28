@@ -3511,6 +3511,7 @@ class BIOSEMANTICS(ColumnCorpus):
                 for file in os.listdir(os.path.join(str(base_folder), directory))
                 if file[-4:] == ".txt"
             ]
+        text_files = sorted(text_files)
 
         documents = {}
         entities_per_document = {}
@@ -3518,7 +3519,7 @@ class BIOSEMANTICS(ColumnCorpus):
         for text_file in sorted(text_files):
             document_id = os.path.basename(text_file).split("_")[0]
             with open(text_file, "r") as file_reader:
-                file_text = ftfy.fix_text(file_reader.read())
+                file_text = file_reader.read().replace("\n", " ")
 
             offset = 0
             document_text = ""
@@ -3532,39 +3533,44 @@ class BIOSEMANTICS(ColumnCorpus):
             dirty_file = False
             with open(text_file[:-4] + ".ann") as file_reader:
                 for line in file_reader:
+                    if line[-1] == "\n":
+                        line = line[:-1]
                     if not line:
                         continue
 
-                    if line[-1] == "\n":
-                        line = line[:-1]
-
                     columns = line.split("\t")
                     mid = columns[1].split()
-                    if len(mid) != 3:
-                        continue
+                    # if len(mid) != 3:
+                    #     continue
 
                     entity_type, start, end = mid[0], mid[1], mid[2]
-                    start, end = int(start), int(end)
+                    start, end = int(start.split(";")[0]), int(end.split(";")[0])
 
                     if start == end:
                         continue
 
+                    # Try to fix entity offsets
+                    if tmp_document_text[offset + start : offset + end] != columns[2]:
+                        alt_text = tmp_document_text[
+                            offset + start : offset + start + len(columns[2])
+                        ]
+                        if alt_text == columns[2]:
+                            end = start + len(columns[2])
+
                     if file_text[start:end] != columns[2]:
                         dirty_file = True
-                        break
+                        continue
 
                     if tmp_document_text[offset + start : offset + end] != columns[2]:
                         dirty_file = True
-                        break
+                        continue
 
                     entities.append(Entity((offset + start, offset + end), entity_type))
 
             if not dirty_file:
                 documents[document_id] = tmp_document_text
                 if document_id in entities_per_document:
-                    entities_per_document[document_id] = (
-                        entities_per_document[document_id] + entities
-                    )
+                    entities_per_document[document_id] += entities
                 else:
                     entities_per_document[document_id] = entities
 
