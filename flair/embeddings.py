@@ -1974,12 +1974,12 @@ class FlairEmbeddings(TokenEmbeddings):
             "ta-forward": f"{aws_path}/embeddings-stefan-it/lm-ta-opus-large-forward-v0.1.pt",
             "ta-backward": f"{aws_path}/embeddings-stefan-it/lm-ta-opus-large-backward-v0.1.pt",
             # CLEF HIPE Shared task
-            "de-hipe-v1-forward": f"{clef_hipe_path}/de-hipe-flair-v1-forward/best-lm.pt",
-            "de-hipe-v1-backward": f"{clef_hipe_path}/de-hipe-flair-v1-backward/best-lm.pt",
-            "en-hipe-v1-forward": f"{clef_hipe_path}/en-flair-v1-forward/best-lm.pt",
-            "en-hipe-v1-backward": f"{clef_hipe_path}/en-flair-v1-backward/best-lm.pt",
-            "fr-hipe-v1-forward": f"{clef_hipe_path}/fr-hipe-flair-v1-forward/best-lm.pt",
-            "fr-hipe-v1-backward": f"{clef_hipe_path}/fr-hipe-flair-v1-backward/best-lm.pt",
+            "de-impresso-hipe-v1-forward": f"{clef_hipe_path}/de-hipe-flair-v1-forward/best-lm.pt",
+            "de-impresso-hipe-v1-backward": f"{clef_hipe_path}/de-hipe-flair-v1-backward/best-lm.pt",
+            "en-impresso-hipe-v1-forward": f"{clef_hipe_path}/en-flair-v1-forward/best-lm.pt",
+            "en-impresso-hipe-v1-backward": f"{clef_hipe_path}/en-flair-v1-backward/best-lm.pt",
+            "fr-impresso-hipe-v1-forward": f"{clef_hipe_path}/fr-hipe-flair-v1-forward/best-lm.pt",
+            "fr-impresso-hipe-v1-backward": f"{clef_hipe_path}/fr-hipe-flair-v1-backward/best-lm.pt",
         }
 
         if type(model) == str:
@@ -1989,7 +1989,7 @@ class FlairEmbeddings(TokenEmbeddings):
                 base_path = self.PRETRAINED_MODEL_ARCHIVE_MAP[model.lower()]
 
                 # Fix for CLEF HIPE models (avoid overwriting best-lm.pt in cache_dir)
-                if "hipe" in model.lower():
+                if "impresso-hipe" in model.lower():
                     cache_dir = cache_dir / model.lower()
                 model = cached_path(base_path, cache_dir=cache_dir)
 
