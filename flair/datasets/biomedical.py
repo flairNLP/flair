@@ -111,6 +111,9 @@ def filter_and_map_entities(
                 new_entity = copy(entity)
                 new_entity.type = entity_type_to_canonical[entity.type]
                 new_entities.append(new_entity)
+            else:
+                print(f"Skip entity type {entity.type}")
+                pass
         mapped_entities_per_document[id] = new_entities
 
     return InternalBioNerDataset(
@@ -3072,16 +3075,12 @@ class FSU(ColumnCorpus):
     """
           Original FSU corpus containing protein and derived annotations.
 
-          For further information see Hahn et al.: A proposal for a configurable silver standard
+          For further information see Hahn et al.:
+            A proposal for a configurable silver standard
+            https://www.aclweb.org/anthology/W10-1838/
     """
 
-    def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
-    ):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -3109,17 +3108,10 @@ class FSU(ColumnCorpus):
 
         if not train_file.exists():
             corpus_dir = self.download_corpus(data_folder)
-
-            corpus_data = self.parse_corpus(corpus_dir)
-
-            if tokenizer is None:
-                tokenizer = whitespace_tokenize
-
-            if sentence_splitter is None:
-                sentence_splitter = sentence_split_at_tag
+            corpus_data = self.parse_corpus(corpus_dir, SENTENCE_TAG)
 
             conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+                tokenizer=whitespace_tokenize, sentence_splitter=sentence_split_at_tag
             )
             conll_writer.write_to_conll(corpus_data, train_file)
 
@@ -3136,7 +3128,9 @@ class FSU(ColumnCorpus):
         return data_dir / "fsu-prge-release-v1.0"
 
     @staticmethod
-    def parse_corpus(corpus_dir: Path) -> InternalBioNerDataset:
+    def parse_corpus(
+        corpus_dir: Path, sentence_delimiter: str
+    ) -> InternalBioNerDataset:
         documents = {}
         entities_per_document = {}
 
@@ -3202,7 +3196,7 @@ class FSU(ColumnCorpus):
                         ]
 
                 sentences = [" ".join(sentence) for sentence in sentences]
-                document = SENTENCE_TAG.join(sentences)
+                document = sentence_delimiter.join(sentences)
 
                 entities = []
                 sent_offset = 0
@@ -3214,7 +3208,7 @@ class FSU(ColumnCorpus):
                         )
                         for entity in sent_entities
                     ]
-                    sent_offset += len(sentence) + len(SENTENCE_TAG)
+                    sent_offset += len(sentence) + len(sentence_delimiter)
 
                 documents[document_id] = document
                 entities_per_document[document_id] = entities
@@ -3230,12 +3224,7 @@ class HUNER_GENE_FSU(HunerDataset):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(
-            tokenizer=whitespace_tokenize,
-            sentence_splitter=sentence_split_at_tag,
-            *args,
-            **kwargs,
-        )
+        super().__init__(*args, **kwargs)
 
     @staticmethod
     def split_url() -> str:
@@ -3243,14 +3232,14 @@ class HUNER_GENE_FSU(HunerDataset):
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         corpus_dir = FSU.download_corpus(data_dir)
-        corpus = FSU.parse_corpus(corpus_dir)
+        corpus = FSU.parse_corpus(corpus_dir, " ")
 
         entity_type_mapping = {
             "protein": GENE_TAG,
-            "protein_group_or_family": GENE_TAG,
+            "protein_familiy_or_group": GENE_TAG,
             "protein_complex": GENE_TAG,
-            "protein_enumeration": GENE_TAG,
             "protein_variant": GENE_TAG,
+            "protein_enum": GENE_TAG,
         }
         return filter_and_map_entities(corpus, entity_type_mapping)
 
