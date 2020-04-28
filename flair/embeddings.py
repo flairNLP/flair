@@ -783,10 +783,11 @@ class BytePairEmbeddings(TokenEmbeddings):
 
 class ELMoEmbeddings(TokenEmbeddings):
     """Contextual word embeddings using word-level LM, as proposed in Peters et al., 2018.
-    ELMo word vectors are constructed by concatenating the top 3 layers in the LM."""
+    ELMo word vectors can be constructed by combining layers in different ways.
+    Default is to concatene the top 3 layers in the LM."""
 
     def __init__(
-        self, model: str = "original", options_file: str = None, weight_file: str = None
+        self, model: str = "original", options_file: str = None, weight_file: str = None, embedding_mode: str = "all"
     ):
         super().__init__()
 
@@ -801,7 +802,9 @@ class ELMoEmbeddings(TokenEmbeddings):
             log.warning("-" * 100)
             pass
 
-        self.name = "elmo-" + model
+        assert embedding_mode in ["all", "top", "average"]
+
+        self.name = f"elmo-{model}-{embedding_mode}"
         self.static_embeddings = True
 
         if not options_file or not weight_file:
@@ -824,6 +827,13 @@ class ELMoEmbeddings(TokenEmbeddings):
             if model == "pubmed":
                 options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_options.json"
                 weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_weights_PubMed_only.hdf5"
+
+        if embedding_mode == "all":
+            self.embedding_mode_fn = lambda x: torch.cat(x, 0)
+        elif embedding_mode == "top":
+            self.embedding_mode_fn = lambda x: x[-1]
+        elif embedding_mode == "average":
+            self.embedding_mode_fn = lambda x: torch.mean(torch.stack(x), 0)
 
         # put on Cuda if available
         from flair import device
@@ -864,15 +874,12 @@ class ELMoEmbeddings(TokenEmbeddings):
             sentence_embeddings = embeddings[i]
 
             for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                word_embedding = torch.cat(
-                    [
-                        torch.FloatTensor(sentence_embeddings[0, token_idx, :]),
-                        torch.FloatTensor(sentence_embeddings[1, token_idx, :]),
-                        torch.FloatTensor(sentence_embeddings[2, token_idx, :]),
-                    ],
-                    0,
-                )
-
+                elmo_embedding_layers = [
+                    torch.FloatTensor(sentence_embeddings[0, token_idx, :]),
+                    torch.FloatTensor(sentence_embeddings[1, token_idx, :]),
+                    torch.FloatTensor(sentence_embeddings[2, token_idx, :])
+                ]
+                word_embedding = self.embedding_mode_fn(elmo_embedding_layers)
                 token.set_embedding(self.name, word_embedding)
 
         return sentences
