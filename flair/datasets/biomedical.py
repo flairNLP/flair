@@ -1,3 +1,5 @@
+import logging
+
 import flair
 import ftfy
 import json
@@ -24,6 +26,8 @@ GENE_TAG = "Gene"
 SPECIES_TAG = "Species"
 
 SENTENCE_TAG = "[__SENT__]"
+
+logger = logging.getLogger("flair")
 
 
 class Entity:
@@ -112,7 +116,7 @@ def filter_and_map_entities(
                 new_entity.type = entity_type_to_canonical[entity.type]
                 new_entities.append(new_entity)
             else:
-                print(f"Skip entity type {entity.type}")
+                logging.debug(f"Skip entity type {entity.type}")
                 pass
         mapped_entities_per_document[id] = new_entities
 
@@ -2279,7 +2283,7 @@ class NCBI_DISEASE(ColumnCorpus):
                     entity_text = columns[3]
 
                     if document_text[start:end] != entity_text:
-                        print("foo")
+                        print("foo") # TODO Remove this
 
                     assert document_text[start:end] == entity_text
                     entities.append(Entity((start, end), DISEASE_TAG))
