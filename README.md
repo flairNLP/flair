@@ -1,10 +1,10 @@
 ![alt text](resources/docs/flair_logo_2020.png)
 
 [![PyPI version](https://badge.fury.io/py/flair.svg)](https://badge.fury.io/py/flair)
-[![GitHub Issues](https://img.shields.io/github/issues/zalandoresearch/flair.svg)](https://github.com/zalandoresearch/flair/issues)
+[![GitHub Issues](https://img.shields.io/github/issues/flairNLP/flair.svg)](https://github.com/flairNLP/flair/issues)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
-[![Travis](https://img.shields.io/travis/zalandoresearch/flair.svg)](https://travis-ci.org/zalandoresearch/flair)
+[![Travis](https://img.shields.io/travis/flairNLP/flair.svg)](https://travis-ci.org/flairNLP/flair)
 
 A very simple framework for **state-of-the-art NLP**. Developed by [Humboldt University of Berlin](https://www.informatik.hu-berlin.de/en/forschung-en/gebiete/ml-en/) and friends.
 
@@ -25,7 +25,7 @@ document embeddings, including our proposed **[Flair embeddings](https://drive.g
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to 
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.4.5](https://github.com/zalandoresearch/flair/releases)!
+Now at [version 0.4.5](https://github.com/flairNLP/flair/releases)!
 
 ## Comparison with State-of-the-Art
 
@@ -170,7 +170,7 @@ Please email your questions or comments to [Alan Akbik](http://alanakbik.github.
 
 Thanks for your interest in contributing! There are many ways to get involved; 
 start with our [contributor guidelines](CONTRIBUTING.md) and then 
-check these [open issues](https://github.com/zalandoresearch/flair/issues) for specific tasks.
+check these [open issues](https://github.com/flairNLP/flair/issues) for specific tasks.
 
 For contributors looking to get deeper into the API we suggest cloning the repository and checking out the unit 
 tests for examples of how to call methods. Nearly all classes and methods are documented, so finding your way around 

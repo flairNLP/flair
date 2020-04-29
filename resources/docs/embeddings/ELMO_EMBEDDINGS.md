@@ -20,7 +20,12 @@ sentence = Sentence('The grass is green .')
 embedding.embed(sentence)
 ```
 
-By default, the top 3 layers in the language model are concatenated to form the word embedding.
+ELMo word embeddings can be constructed by combining ELMo layers in different ways. The available combination strategies are:
+- `"all"`: Use the concatenation of the three ELMo layers.
+- `"top"`: Use the top ELMo layer.
+- `"average"`: Use the average of the three ELMo layers.
+
+By default, the top 3 layers are concatenated to form the word embedding.
 
 AllenNLP provides the following pre-trained models. To use any of the following models inside Flair
 simple specify the embedding id when initializing the `ELMoEmbeddings`.
