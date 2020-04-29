@@ -1,9 +1,14 @@
+import inspect
 import os
 import tempfile
+from operator import itemgetter
 
 from pathlib import Path
-from typing import List
+from typing import List, Callable, Type
 
+from tqdm import tqdm
+
+from flair.datasets import ColumnCorpus, biomedical
 from flair.datasets.biomedical import (
     Entity,
     InternalBioNerDataset,
@@ -11,7 +16,38 @@ from flair.datasets.biomedical import (
     CoNLLWriter,
     filter_nested_entities,
 )
+import pytest
 
+def gene_predicate(member):
+    return "HUNER_GENE_" in str(member) and inspect.isclass(member)
+
+
+def chemical_predicate(member):
+    return "HUNER_CHEMICAL_" in str(member) and inspect.isclass(member)
+
+
+def disease_predicate(member):
+    return "HUNER_DISEASE_" in str(member) and inspect.isclass(member)
+
+
+def species_predicate(member):
+    return "HUNER_SPECIES_" in str(member) and inspect.isclass(member)
+
+
+def cellline_predicate(member):
+    return "HUNER_CELL_LINE_" in str(member) and inspect.isclass(member)
+
+CELLLINE_DATASETS = [i[1] for i in sorted(inspect.getmembers(biomedical, predicate=cellline_predicate),
+                           key=itemgetter(0))]
+CHEMICAL_DATASETS = [i[1] for i in sorted(inspect.getmembers(biomedical, predicate=chemical_predicate),
+                           key=itemgetter(0))]
+DISEASE_DATASETS = [i[1] for i in sorted(inspect.getmembers(biomedical, predicate=disease_predicate),
+                          key=itemgetter(0))]
+GENE_DATASETS = [i[1] for i in sorted(inspect.getmembers(biomedical, predicate=gene_predicate),
+                       key=itemgetter(0))]
+SPECIES_DATASETS = [i[1] for i in sorted(inspect.getmembers(biomedical, predicate=species_predicate),
+                          key=itemgetter(0))]
+ALL_DATASETS = CELLLINE_DATASETS + CHEMICAL_DATASETS + DISEASE_DATASETS + GENE_DATASETS + SPECIES_DATASETS
 
 def test_write_to_conll():
     text = "This is entity1 entity2 and a long entity3"
@@ -144,3 +180,28 @@ def test_whitespace_tokenizer():
     tokens, offsets = whitespace_tokenize("Abc Abc .")
     assert tokens == ["Abc", "Abc", "."]
     assert offsets == [0, 4, 8]
+
+
+def sanity_check_all_corpora(check: Callable[[ColumnCorpus], None]):
+    for _, CorpusType in tqdm(ALL_DATASETS):
+        corpus = CorpusType()
+        check(corpus)
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("CorpusType", ALL_DATASETS)
+def test_sanity_no_repeating_Bs(CorpusType: Type[ColumnCorpus]):
+    corpus = CorpusType()
+    longest_repeat_tokens = []
+    repeat_tokens = []
+    for sentence in corpus.get_all_sentences():
+        for token in sentence.tokens:
+            if token.get_labels()[0].value.startswith("B") or token.get_labels()[0].value.startswith("S"):
+                repeat_tokens.append(token)
+            else:
+                if len(repeat_tokens) > len(longest_repeat_tokens):
+                    longest_repeat_tokens = repeat_tokens
+                repeat_tokens = []
+
+    assert len(longest_repeat_tokens) < 4
+
