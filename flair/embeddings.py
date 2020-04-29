@@ -1860,6 +1860,7 @@ class FlairEmbeddings(TokenEmbeddings):
 
         aws_path: str = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources"
         hu_path: str = "https://flair.informatik.hu-berlin.de/resources"
+        clef_hipe_path: str = "https://files.ifi.uzh.ch/cl/siclemat/impresso/clef-hipe-2020/flair"
 
         self.PRETRAINED_MODEL_ARCHIVE_MAP = {
             # multilingual models
@@ -1979,6 +1980,13 @@ class FlairEmbeddings(TokenEmbeddings):
             # Tamil
             "ta-forward": f"{aws_path}/embeddings-stefan-it/lm-ta-opus-large-forward-v0.1.pt",
             "ta-backward": f"{aws_path}/embeddings-stefan-it/lm-ta-opus-large-backward-v0.1.pt",
+            # CLEF HIPE Shared task
+            "de-impresso-hipe-v1-forward": f"{clef_hipe_path}/de-hipe-flair-v1-forward/best-lm.pt",
+            "de-impresso-hipe-v1-backward": f"{clef_hipe_path}/de-hipe-flair-v1-backward/best-lm.pt",
+            "en-impresso-hipe-v1-forward": f"{clef_hipe_path}/en-flair-v1-forward/best-lm.pt",
+            "en-impresso-hipe-v1-backward": f"{clef_hipe_path}/en-flair-v1-backward/best-lm.pt",
+            "fr-impresso-hipe-v1-forward": f"{clef_hipe_path}/fr-hipe-flair-v1-forward/best-lm.pt",
+            "fr-impresso-hipe-v1-backward": f"{clef_hipe_path}/fr-hipe-flair-v1-backward/best-lm.pt",
         }
 
         if type(model) == str:
@@ -1986,6 +1994,10 @@ class FlairEmbeddings(TokenEmbeddings):
             # load model if in pretrained model map
             if model.lower() in self.PRETRAINED_MODEL_ARCHIVE_MAP:
                 base_path = self.PRETRAINED_MODEL_ARCHIVE_MAP[model.lower()]
+
+                # Fix for CLEF HIPE models (avoid overwriting best-lm.pt in cache_dir)
+                if "impresso-hipe" in model.lower():
+                    cache_dir = cache_dir / model.lower()
                 model = cached_path(base_path, cache_dir=cache_dir)
 
             elif replace_with_language_code(model) in self.PRETRAINED_MODEL_ARCHIVE_MAP:
