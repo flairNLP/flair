@@ -101,7 +101,7 @@ def test_sentence_to_real_string(tasks_base_path):
     sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=segtok_tokenizer)
     assert "I love Berlin." == sentence.to_plain_string()
 
-    corpus = flair.datasets.GERMEVAL(base_path=tasks_base_path)
+    corpus = flair.datasets.GERMEVAL_14(base_path=tasks_base_path)
 
     sentence = corpus.train[0]
     assert (
@@ -445,7 +445,7 @@ def test_tagged_corpus_downsample():
 
     assert 10 == len(corpus.train)
 
-    corpus.downsample(percentage=0.3, only_downsample_train=True)
+    corpus.downsample(percentage=0.3, downsample_dev=False, downsample_test=False)
 
     assert 3 == len(corpus.train)
 
