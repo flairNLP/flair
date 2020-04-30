@@ -2560,6 +2560,7 @@ class OSIRIS(ColumnCorpus):
         in_memory: bool = True,
         tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
         sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        load_original_unfixed_annotation = False
     ):
         """
            :param base_path: Path to the corpus on your machine
@@ -2568,6 +2569,9 @@ class OSIRIS(ColumnCorpus):
                              defaults to scispacy
            :param sentence_splitter: Callable that segments a document into sentences,
                                      defaults to scispacy
+           :param load_original_unfixed_annotation: The original annotation of Osiris
+                erroneously annotates two sentences as a protein. Set to True if you don't
+                want the fixed version.
            """
 
         if type(base_path) == str:
@@ -2588,7 +2592,8 @@ class OSIRIS(ColumnCorpus):
 
         if not (train_file.exists()):
             corpus_folder = self.download_dataset(data_folder)
-            corpus_data = self.parse_dataset(corpus_folder)
+            corpus_data = self.parse_dataset(corpus_folder,
+                                             fix_annotation=not load_original_unfixed_annotation)
 
             if tokenizer is None:
                 tokenizer = build_spacy_tokenizer()
@@ -2614,7 +2619,7 @@ class OSIRIS(ColumnCorpus):
         return data_dir / "OSIRIScorpusv02"
 
     @classmethod
-    def parse_dataset(cls, corpus_folder: Path):
+    def parse_dataset(cls, corpus_folder: Path, fix_annotation=True):
         documents = {}
         entities_per_document = {}
 
@@ -2647,6 +2652,9 @@ class OSIRIS(ColumnCorpus):
                     start, end = annotation.get("span").split("..")
                     start, end = int(start), int(end)
 
+                    if fix_annotation and text_file == "article46.txt" and start == 289 and end == 644:
+                        end = 295
+
                     entities.append(
                         Entity((start - text_offset, end - text_offset), entity_type)
                     )
@@ -2662,6 +2670,7 @@ class OSIRIS(ColumnCorpus):
 class HUNER_GENE_OSIRIS(HunerDataset):
     """
         HUNER version of the OSIRIS corpus containing (only) gene annotations.
+
     """
 
     def __init__(self, *args, **kwargs):
