@@ -189,6 +189,7 @@ def sanity_check_all_corpora(check: Callable[[ColumnCorpus], None]):
 
 
 @pytest.mark.slow
+@pytest.mark.xfail
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
 def test_sanity_no_repeating_Bs(CorpusType: Type[ColumnCorpus]):
     corpus = CorpusType()
@@ -205,3 +206,17 @@ def test_sanity_no_repeating_Bs(CorpusType: Type[ColumnCorpus]):
 
     assert len(longest_repeat_tokens) < 4
 
+
+@pytest.mark.slow
+@pytest.mark.xfail
+@pytest.mark.parametrize("CorpusType", ALL_DATASETS)
+def test_sanity_no_long_entities(CorpusType: Type[ColumnCorpus]):
+    corpus = CorpusType()
+    longest_entity = []
+    for sentence in corpus.get_all_sentences():
+        entities = sentence.get_spans("ner")
+        for entity in entities:
+            if len(entity.tokens) > len(longest_entity):
+                longest_entity = [t.text for t in entity.tokens]
+
+    assert len(longest_entity) < 10, " ".join(longest_entity)
