@@ -444,21 +444,6 @@ class AnnealOnPlateau(object):
     def in_cooldown(self):
         return self.cooldown_counter > 0
 
-    # def is_better(self, a, best):
-    #     if self.mode == 'min' and self.threshold_mode == 'rel':
-    #         rel_epsilon = 1. - self.threshold
-    #         return a < best * rel_epsilon
-    #
-    #     elif self.mode == 'min' and self.threshold_mode == 'abs':
-    #         return a < best - self.threshold
-    #
-    #     elif self.mode == 'max' and self.threshold_mode == 'rel':
-    #         rel_epsilon = self.threshold + 1.
-    #         return a > best * rel_epsilon
-    #
-    #     else:  # mode == 'max' and epsilon_mode == 'abs':
-    #         return a > best + self.threshold
-
     def _init_is_better(self, mode):
         if mode not in {'min', 'max'}:
             raise ValueError('mode ' + mode + ' is unknown!')
