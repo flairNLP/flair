@@ -112,6 +112,11 @@ class SequenceTagger(flair.nn.Model):
 
         # set the dictionaries
         self.tag_dictionary: Dictionary = tag_dictionary
+        # if we use a CRF, we must add special START and STOP tags to the dictionary
+        if use_crf:
+            self.tag_dictionary.add_item(START_TAG)
+            self.tag_dictionary.add_item(STOP_TAG)
+
         self.tag_type: str = tag_type
         self.tagset_size: int = len(tag_dictionary)
 
