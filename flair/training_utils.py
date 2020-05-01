@@ -3,8 +3,11 @@ import random
 import logging
 from collections import defaultdict
 from enum import Enum
+from math import inf
 from pathlib import Path
 from typing import List
+
+from torch.optim import Optimizer
 
 import flair
 from flair.data import Dictionary, Sentence
@@ -292,6 +295,187 @@ class WeightExtractor(object):
                 i += 1
 
         self.weights_dict[key] = indices
+
+
+class AnnealOnPlateau(object):
+    """This class is a modification of
+    torch.optim.lr_scheduler.ReduceLROnPlateau that enables
+    setting an "auxiliary metric" to break ties.
+
+    Reduce learning rate when a metric has stopped improving.
+    Models often benefit from reducing the learning rate by a factor
+    of 2-10 once learning stagnates. This scheduler reads a metrics
+    quantity and if no improvement is seen for a 'patience' number
+    of epochs, the learning rate is reduced.
+
+    Args:
+        optimizer (Optimizer): Wrapped optimizer.
+        mode (str): One of `min`, `max`. In `min` mode, lr will
+            be reduced when the quantity monitored has stopped
+            decreasing; in `max` mode it will be reduced when the
+            quantity monitored has stopped increasing. Default: 'min'.
+        factor (float): Factor by which the learning rate will be
+            reduced. new_lr = lr * factor. Default: 0.1.
+        patience (int): Number of epochs with no improvement after
+            which learning rate will be reduced. For example, if
+            `patience = 2`, then we will ignore the first 2 epochs
+            with no improvement, and will only decrease the LR after the
+            3rd epoch if the loss still hasn't improved then.
+            Default: 10.
+        verbose (bool): If ``True``, prints a message to stdout for
+            each update. Default: ``False``.
+        cooldown (int): Number of epochs to wait before resuming
+            normal operation after lr has been reduced. Default: 0.
+        min_lr (float or list): A scalar or a list of scalars. A
+            lower bound on the learning rate of all param groups
+            or each group respectively. Default: 0.
+        eps (float): Minimal decay applied to lr. If the difference
+            between new and old lr is smaller than eps, the update is
+            ignored. Default: 1e-8.
+
+    Example:
+        >>> optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
+        >>> scheduler = ReduceLROnPlateau(optimizer, 'min')
+        >>> for epoch in range(10):
+        >>>     train(...)
+        >>>     val_loss = validate(...)
+        >>>     # Note that step should be called after validate()
+        >>>     scheduler.step(val_loss)
+    """
+
+    def __init__(self, optimizer, mode='min', aux_mode='min', factor=0.1, patience=10,
+                 verbose=False, cooldown=0, min_lr=0, eps=1e-8):
+
+        if factor >= 1.0:
+            raise ValueError('Factor should be < 1.0.')
+        self.factor = factor
+
+        # Attach optimizer
+        if not isinstance(optimizer, Optimizer):
+            raise TypeError('{} is not an Optimizer'.format(
+                type(optimizer).__name__))
+        self.optimizer = optimizer
+
+        if isinstance(min_lr, list) or isinstance(min_lr, tuple):
+            if len(min_lr) != len(optimizer.param_groups):
+                raise ValueError("expected {} min_lrs, got {}".format(
+                    len(optimizer.param_groups), len(min_lr)))
+            self.min_lrs = list(min_lr)
+        else:
+            self.min_lrs = [min_lr] * len(optimizer.param_groups)
+
+        self.patience = patience
+        self.verbose = verbose
+        self.cooldown = cooldown
+        self.cooldown_counter = 0
+        self.mode = mode
+        self.aux_mode = aux_mode
+        self.best = None
+        self.best_aux = None
+        self.num_bad_epochs = None
+        self.mode_worse = None  # the worse value for the chosen mode
+        self.eps = eps
+        self.last_epoch = 0
+        self._init_is_better(mode=mode)
+        self._reset()
+
+    def _reset(self):
+        """Resets num_bad_epochs counter and cooldown counter."""
+        self.best = self.mode_worse
+        self.cooldown_counter = 0
+        self.num_bad_epochs = 0
+
+    def step(self, metric, auxiliary_metric = None):
+        # convert `metrics` to float, in case it's a zero-dim Tensor
+        current = float(metric)
+        epoch = self.last_epoch + 1
+        self.last_epoch = epoch
+
+        is_better = False
+
+        if self.mode == 'min':
+            if current < self.best:
+                is_better = True
+
+        if self.mode == 'max':
+            if current > self.best:
+                is_better = True
+
+        if current == self.best and auxiliary_metric:
+            current_aux = float(auxiliary_metric)
+            if self.aux_mode == 'min':
+                if current_aux < self.best_aux:
+                    is_better = True
+
+            if self.aux_mode == 'max':
+                if current_aux > self.best_aux:
+                    is_better = True
+
+        if is_better:
+            self.best = current
+            if auxiliary_metric:
+                self.best_aux = auxiliary_metric
+            self.num_bad_epochs = 0
+        else:
+            self.num_bad_epochs += 1
+
+        if self.in_cooldown:
+            self.cooldown_counter -= 1
+            self.num_bad_epochs = 0  # ignore any bad epochs in cooldown
+
+        if self.num_bad_epochs > self.patience:
+            self._reduce_lr(epoch)
+            self.cooldown_counter = self.cooldown
+            self.num_bad_epochs = 0
+
+        self._last_lr = [group['lr'] for group in self.optimizer.param_groups]
+
+    def _reduce_lr(self, epoch):
+        for i, param_group in enumerate(self.optimizer.param_groups):
+            old_lr = float(param_group['lr'])
+            new_lr = max(old_lr * self.factor, self.min_lrs[i])
+            if old_lr - new_lr > self.eps:
+                param_group['lr'] = new_lr
+                if self.verbose:
+                    print('Epoch {:5d}: reducing learning rate'
+                          ' of group {} to {:.4e}.'.format(epoch, i, new_lr))
+
+    @property
+    def in_cooldown(self):
+        return self.cooldown_counter > 0
+
+    # def is_better(self, a, best):
+    #     if self.mode == 'min' and self.threshold_mode == 'rel':
+    #         rel_epsilon = 1. - self.threshold
+    #         return a < best * rel_epsilon
+    #
+    #     elif self.mode == 'min' and self.threshold_mode == 'abs':
+    #         return a < best - self.threshold
+    #
+    #     elif self.mode == 'max' and self.threshold_mode == 'rel':
+    #         rel_epsilon = self.threshold + 1.
+    #         return a > best * rel_epsilon
+    #
+    #     else:  # mode == 'max' and epsilon_mode == 'abs':
+    #         return a > best + self.threshold
+
+    def _init_is_better(self, mode):
+        if mode not in {'min', 'max'}:
+            raise ValueError('mode ' + mode + ' is unknown!')
+
+        if mode == 'min':
+            self.mode_worse = inf
+        else:  # mode == 'max':
+            self.mode_worse = -inf
+
+        self.mode = mode
+
+    def state_dict(self):
+        return {key: value for key, value in self.__dict__.items() if key != 'optimizer'}
+
+    def load_state_dict(self, state_dict):
+        self.__dict__.update(state_dict)
+        self._init_is_better(mode=self.mode, threshold=self.threshold, threshold_mode=self.threshold_mode)
 
 
 def init_output_file(base_path: Path, file_name: str) -> Path:
