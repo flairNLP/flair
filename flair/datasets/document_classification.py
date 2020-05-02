@@ -546,7 +546,7 @@ class AMAZON_REVIEWS(ClassificationCorpus):
         if label_name_map is None:
             label_name_map = {'1.0': 'NEGATIVE',
                               '2.0': 'NEGATIVE',
-                              '3.0': 'NEUTRAL',
+                              '3.0': 'NEGATIVE',
                               '4.0': 'POSITIVE',
                               '5.0': 'POSITIVE'}
 
