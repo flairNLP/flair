@@ -20,6 +20,7 @@ from . import models
 from . import visual
 from . import trainers
 from . import nn
+from .training_utils import AnnealOnPlateau
 
 import logging.config
 

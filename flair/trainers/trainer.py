@@ -1,3 +1,4 @@
+import copy
 import logging
 from pathlib import Path
 from typing import List, Union
@@ -7,7 +8,6 @@ import sys
 import inspect
 
 import torch
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
 
@@ -28,6 +28,7 @@ from flair.training_utils import (
     add_file_handler,
     Result,
     store_embeddings,
+    AnnealOnPlateau,
 )
 from flair.models import SequenceTagger
 import random
@@ -65,6 +66,7 @@ class ModelTrainer:
         mini_batch_size: int = 32,
         mini_batch_chunk_size: int = None,
         max_epochs: int = 100,
+        scheduler = AnnealOnPlateau,
         anneal_factor: float = 0.5,
         patience: int = 3,
         min_learning_rate: float = 0.0001,
@@ -220,7 +222,7 @@ class ModelTrainer:
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev else "max"
 
-        scheduler: ReduceLROnPlateau = ReduceLROnPlateau(
+        lr_scheduler = scheduler(
             optimizer,
             factor=anneal_factor,
             patience=patience,
@@ -256,8 +258,8 @@ class ModelTrainer:
             for self.epoch in range(self.epoch + 1, max_epochs + 1):
                 log_line(log)
 
-                last_epoch_model_state_dict = self.model.state_dict()
-                best_state_dict = self.model.state_dict()
+                if anneal_with_prestarts:
+                    last_epoch_model_state_dict = copy.deepcopy(self.model.state_dict())
 
                 if eval_on_train_shuffle:
                     train_part_indices = list(range(self.corpus.train))
@@ -276,19 +278,20 @@ class ModelTrainer:
 
                 # reload last best model if annealing with restarts is enabled
                 if (
-                    learning_rate != previous_learning_rate
+                    (anneal_with_restarts or anneal_with_prestarts)
+                    and learning_rate != previous_learning_rate
                     and (base_path / "best-model.pt").exists()
                 ):
-                    log.info("resetting to best model")
                     if anneal_with_restarts:
+                        log.info("resetting to best model")
                         self.model.load_state_dict(
                             self.model.load(base_path / "best-model.pt").state_dict()
                         )
                     if anneal_with_prestarts:
+                        log.info("resetting to pre-best model")
                         self.model.load_state_dict(
                             self.model.load(base_path / "pre-best-model.pt").state_dict()
                         )
-
 
                 previous_learning_rate = learning_rate
 
@@ -470,14 +473,17 @@ class ModelTrainer:
                             "test_score", test_eval_result.main_score, self.epoch
                         )
 
-                # determine learning rate annealing through scheduler
-                scheduler.step(current_score)
+                # determine learning rate annealing through scheduler. Use auxiliary metric for AnnealOnPlateau
+                if not train_with_dev and isinstance(lr_scheduler, AnnealOnPlateau):
+                    lr_scheduler.step(current_score, dev_loss)
+                else:
+                    lr_scheduler.step(current_score)
 
                 train_loss_history.append(train_loss)
 
                 # determine bad epoch number
                 try:
-                    bad_epochs = scheduler.num_bad_epochs
+                    bad_epochs = lr_scheduler.num_bad_epochs
                 except:
                     bad_epochs = 0
                 for group in optimizer.param_groups:
@@ -537,15 +543,17 @@ class ModelTrainer:
                 if (
                     (not train_with_dev or anneal_with_restarts or anneal_with_prestarts)
                     and not param_selection_mode
-                    and current_score == scheduler.best
+                    and current_score == lr_scheduler.best
+                    and bad_epochs == 0
                 ):
                     print("saving best model")
                     self.model.save(base_path / "best-model.pt")
-                    current_state_dict = self.model.state_dict()
-                    self.model.load_state_dict(last_epoch_model_state_dict)
+
                     if anneal_with_prestarts:
+                        current_state_dict = self.model.state_dict()
+                        self.model.load_state_dict(last_epoch_model_state_dict)
                         self.model.save(base_path / "pre-best-model.pt")
-                    self.model.load_state_dict(current_state_dict)
+                        self.model.load_state_dict(current_state_dict)
 
             # if we do not use dev data for model selection, save final model
             if save_final_model and not param_selection_mode:
