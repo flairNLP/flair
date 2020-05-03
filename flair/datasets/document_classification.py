@@ -35,6 +35,7 @@ class ClassificationCorpus(Corpus):
             tokenizer: Callable[[str], List[Token]] = segtok_tokenizer,
             memory_mode: str = "partial",
             label_name_map: Dict[str, str] = None,
+            skip_labels: List[str] = None,
             encoding: str = 'utf-8',
     ):
         """
@@ -70,6 +71,7 @@ class ClassificationCorpus(Corpus):
             filter_if_longer_than=filter_if_longer_than,
             memory_mode=memory_mode,
             label_name_map=label_name_map,
+            skip_labels=skip_labels,
             encoding=encoding,
         )
 
@@ -83,6 +85,7 @@ class ClassificationCorpus(Corpus):
             filter_if_longer_than=filter_if_longer_than,
             memory_mode=memory_mode,
             label_name_map=label_name_map,
+            skip_labels=skip_labels,
             encoding=encoding,
         ) if test_file is not None else None
 
@@ -96,6 +99,7 @@ class ClassificationCorpus(Corpus):
             filter_if_longer_than=filter_if_longer_than,
             memory_mode=memory_mode,
             label_name_map=label_name_map,
+            skip_labels=skip_labels,
             encoding=encoding,
         ) if dev_file is not None else None
 
@@ -118,6 +122,7 @@ class ClassificationDataset(FlairDataset):
             tokenizer=segtok_tokenizer,
             memory_mode: str = "partial",
             label_name_map: Dict[str, str] = None,
+            skip_labels: List[str] = None,
             encoding: str = 'utf-8',
     ):
         """
@@ -178,6 +183,16 @@ class ClassificationDataset(FlairDataset):
                     position = f.tell()
                     line = f.readline()
                     continue
+
+                # if data point contains black-listed label, do not use
+                if skip_labels:
+                    skip = False
+                    for skip_label in skip_labels:
+                        if "__label__" + skip_label in line:
+                            skip = True
+                    if skip:
+                        line = f.readline()
+                        continue
 
                 if self.memory_mode == 'full':
                     sentence = self._parse_line_to_sentence(
@@ -522,11 +537,21 @@ class AMAZON_REVIEWS(ClassificationCorpus):
     https://nijianmo.github.io/amazon/index.html. We download the 5-core subset which is still tens of millions of
     reviews.
     """
+
+    # noinspection PyDefaultArgument
     def __init__(
             self,
-            label_name_map=None,
-            split_max=10000,
-            memory_mode='partial',
+            split_max: int = 30000,
+            memory_mode: str = 'partial',
+            label_name_map: Dict[str, str] = {
+                '1.0': 'NEGATIVE',
+                '2.0': 'NEGATIVE',
+                '3.0': 'NEGATIVE',
+                '4.0': 'POSITIVE',
+                '5.0': 'POSITIVE',
+            },
+            skip_labels = ['3.0', '4.0'],
+            fraction_of_5_star_reviews: int = 10,
             **corpusargs
     ):
         """
@@ -542,16 +567,8 @@ class AMAZON_REVIEWS(ClassificationCorpus):
         :param corpusargs: Arguments for ClassificationCorpus
         """
 
-        # by defaut, map point score to POSITIVE / NEGATIVE values
-        if label_name_map is None:
-            label_name_map = {'1.0': 'NEGATIVE',
-                              '2.0': 'NEGATIVE',
-                              '3.0': 'NEGATIVE',
-                              '4.0': 'POSITIVE',
-                              '5.0': 'POSITIVE'}
-
         # dataset name includes the split size
-        dataset_name = self.__class__.__name__.lower() + '_' + str(split_max)
+        dataset_name = self.__class__.__name__.lower() + '_' + str(split_max) + '_' + str(fraction_of_5_star_reviews)
 
         # default dataset folder is the cache root
         data_folder = Path(flair.cache_root) / "datasets" / dataset_name
@@ -560,47 +577,48 @@ class AMAZON_REVIEWS(ClassificationCorpus):
         if not (data_folder / "train.txt").is_file():
 
             # download each of the 28 splits
-            self.download_and_prepare_amazon_product_file(data_folder, "AMAZON_FASHION_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "All_Beauty_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Appliances_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Arts_Crafts_and_Sewing_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Arts_Crafts_and_Sewing_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Automotive_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Books_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "CDs_and_Vinyl_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Cell_Phones_and_Accessories_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Clothing_Shoes_and_Jewelry_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Digital_Music_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Electronics_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Gift_Cards_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Grocery_and_Gourmet_Food_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Home_and_Kitchen_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Industrial_and_Scientific_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Kindle_Store_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Luxury_Beauty_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Magazine_Subscriptions_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Movies_and_TV_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Musical_Instruments_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Office_Products_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Patio_Lawn_and_Garden_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Pet_Supplies_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Prime_Pantry_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Software_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Sports_and_Outdoors_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Tools_and_Home_Improvement_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Toys_and_Games_5.json.gz", split_max)
-            self.download_and_prepare_amazon_product_file(data_folder, "Video_Games_5.json.gz", split_max)
+            self.download_and_prepare_amazon_product_file(data_folder, "AMAZON_FASHION_5.json.gz", split_max, fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "All_Beauty_5.json.gz", split_max, fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Appliances_5.json.gz", split_max, fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Arts_Crafts_and_Sewing_5.json.gz", split_max, fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Arts_Crafts_and_Sewing_5.json.gz", split_max, fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Automotive_5.json.gz", split_max, fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Books_5.json.gz", split_max, fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "CDs_and_Vinyl_5.json.gz", split_max, fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Cell_Phones_and_Accessories_5.json.gz", split_max, fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Clothing_Shoes_and_Jewelry_5.json.gz", split_max, fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Digital_Music_5.json.gz", split_max, fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Electronics_5.json.gz", split_max, fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Gift_Cards_5.json.gz", split_max, fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Grocery_and_Gourmet_Food_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Home_and_Kitchen_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Industrial_and_Scientific_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Kindle_Store_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Luxury_Beauty_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Magazine_Subscriptions_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Movies_and_TV_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Musical_Instruments_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Office_Products_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Patio_Lawn_and_Garden_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Pet_Supplies_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Prime_Pantry_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Software_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Sports_and_Outdoors_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Tools_and_Home_Improvement_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Toys_and_Games_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Video_Games_5.json.gz", split_max , fraction_of_5_star_reviews)
 
         super(AMAZON_REVIEWS, self).__init__(
             data_folder,
             label_type='sentiment',
             tokenizer=segtok_tokenizer,
             label_name_map=label_name_map,
+            skip_labels=skip_labels,
             memory_mode=memory_mode,
             **corpusargs
         )
 
-    def download_and_prepare_amazon_product_file(self, data_folder, part_name, max_data_points = None):
+    def download_and_prepare_amazon_product_file(self, data_folder, part_name, max_data_points = None, fraction_of_5_star_reviews = None):
         amazon__path = "http://deepyeti.ucsd.edu/jianmo/amazon/categoryFilesSmall"
         cached_path(f"{amazon__path}/{part_name}", Path("datasets") / 'Amazon_Product_Reviews')
         import gzip
@@ -610,6 +628,7 @@ class AMAZON_REVIEWS(ClassificationCorpus):
         with open(data_folder / "train.txt", "a") as train_file:
 
             write_count = 0
+            review_5_count = 0
             # download senteval datasets if necessary und unzip
             with gzip.open(Path(flair.cache_root) / "datasets" / 'Amazon_Product_Reviews' / part_name, "rb", ) as f_in:
                 for line in f_in:
@@ -619,6 +638,14 @@ class AMAZON_REVIEWS(ClassificationCorpus):
                     if parsed_json['reviewText'].strip() == '':
                         continue
                     text = parsed_json['reviewText'].replace('\n', '')
+
+                    if fraction_of_5_star_reviews and str(parsed_json['overall']) == '5.0':
+                        review_5_count += 1
+                        if review_5_count != fraction_of_5_star_reviews:
+                            continue
+                        else:
+                            review_5_count = 0
+
                     train_file.write(f"__label__{parsed_json['overall']} {text}\n")
 
                     write_count += 1
