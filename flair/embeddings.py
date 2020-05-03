@@ -1841,7 +1841,6 @@ class FlairEmbeddings(TokenEmbeddings):
                  fine_tune: bool = False,
                  chars_per_chunk: int = 512,
                  with_whitespace: bool = True,
-                 add_begin_state: bool = True,
                  tokenized_lm: bool = True,
                  ):
         """
@@ -2013,7 +2012,6 @@ class FlairEmbeddings(TokenEmbeddings):
 
         self.is_forward_lm: bool = self.lm.is_forward_lm
         self.with_whitespace: bool = with_whitespace
-        self.add_begin_state: bool = add_begin_state
         self.tokenized_lm: bool = tokenized_lm
         self.chars_per_chunk: int = chars_per_chunk
 
