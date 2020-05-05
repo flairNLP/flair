@@ -20,12 +20,10 @@ class ColumnCorpus(Corpus):
             test_file=None,
             dev_file=None,
             tag_to_bioes=None,
-            column_delimiter: str = "\s+",
             comment_symbol: str = None,
+            in_memory: bool = True,
             encoding: str = "utf-8",
             document_separator_token: str = None,
-            skip_first_line: bool = False,
-            in_memory: bool = True,
     ):
         """
         Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
@@ -36,13 +34,10 @@ class ColumnCorpus(Corpus):
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
         :param tag_to_bioes: whether to convert to BIOES tagging scheme
-        :param column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t"
-        to split only on tabs
         :param comment_symbol: if set, lines that begin with this symbol are treated as comments
+        :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
         :param document_separator_token: If provided, multiple sentences are read into one object. Provide the string token
         that indicates that a new document begins
-        :param skip_first_line: set to True if your dataset has a header line
-        :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
         :return: a Corpus with annotated train, dev and test data
         """
 
@@ -57,10 +52,8 @@ class ColumnCorpus(Corpus):
             tag_to_bioes,
             encoding=encoding,
             comment_symbol=comment_symbol,
-            column_delimiter=column_delimiter,
             in_memory=in_memory,
             document_separator_token=document_separator_token,
-            skip_first_line=skip_first_line,
         )
 
         # read in test file if exists
@@ -70,10 +63,8 @@ class ColumnCorpus(Corpus):
             tag_to_bioes,
             encoding=encoding,
             comment_symbol=comment_symbol,
-            column_delimiter=column_delimiter,
             in_memory=in_memory,
             document_separator_token=document_separator_token,
-            skip_first_line=skip_first_line,
         ) if test_file is not None else None
 
         # read in dev file if exists
@@ -83,27 +74,27 @@ class ColumnCorpus(Corpus):
             tag_to_bioes,
             encoding=encoding,
             comment_symbol=comment_symbol,
-            column_delimiter=column_delimiter,
             in_memory=in_memory,
             document_separator_token=document_separator_token,
-            skip_first_line=skip_first_line,
         ) if dev_file is not None else None
 
         super(ColumnCorpus, self).__init__(train, dev, test, name=str(data_folder))
 
 
 class ColumnDataset(FlairDataset):
+
+    # special key for space after
+    SPACE_AFTER_KEY = "space-after"
+
     def __init__(
             self,
             path_to_column_file: Path,
             column_name_map: Dict[int, str],
             tag_to_bioes: str = None,
-            column_delimiter: str = "\s+",
             comment_symbol: str = None,
             in_memory: bool = True,
             document_separator_token: str = None,
             encoding: str = "utf-8",
-            skip_first_line: bool = False,
     ):
         """
         Instantiates a column dataset (typically used for sequence labeling or word-level prediction).
@@ -111,19 +102,15 @@ class ColumnDataset(FlairDataset):
         :param path_to_column_file: path to the file with the column-formatted data
         :param column_name_map: a map specifying the column format
         :param tag_to_bioes: whether to convert to BIOES tagging scheme
-        :param column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t"
-        to split only on tabs
         :param comment_symbol: if set, lines that begin with this symbol are treated as comments
         :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
         :param document_separator_token: If provided, multiple sentences are read into one object. Provide the string token
         that indicates that a new document begins
-        :param skip_first_line: set to True if your dataset has a header line
         """
         assert path_to_column_file.exists()
         self.path_to_column_file = path_to_column_file
         self.tag_to_bioes = tag_to_bioes
         self.column_name_map = column_name_map
-        self.column_delimiter = column_delimiter
         self.comment_symbol = comment_symbol
         self.document_separator_token = document_separator_token
 
@@ -149,10 +136,6 @@ class ColumnDataset(FlairDataset):
         sentence_started: bool = False
         with open(str(self.path_to_column_file), encoding=self.encoding) as f:
 
-            # skip first line if to selected
-            if skip_first_line:
-                f.readline()
-
             line = f.readline()
             position = 0
 
@@ -166,7 +149,6 @@ class ColumnDataset(FlairDataset):
 
                     if sentence_started:
 
-                        sentence.infer_space_after()
                         if self.in_memory:
                             if self.tag_to_bioes is not None:
                                 sentence.convert_tag_scheme(
@@ -181,36 +163,41 @@ class ColumnDataset(FlairDataset):
                     sentence_started = False
 
                 elif self.in_memory:
-                    fields: List[str] = re.split(self.column_delimiter, line)
-                    token = Token(fields[self.text_column])
-                    for column in column_name_map:
-                        if len(fields) > column:
-                            if column != self.text_column:
-                                token.add_label(
-                                    self.column_name_map[column], fields[column]
-                                )
-
+                    token = self._parse_token(line)
                     if not line.isspace():
                         sentence.add_token(token)
                         sentence_started = True
+
                 elif not line.isspace():
                     sentence_started = True
 
                 line = f.readline()
 
         if sentence_started:
-            sentence.infer_space_after()
             if self.in_memory:
                 self.sentences.append(sentence)
             else:
                 self.indices.append(position)
             self.total_sentence_count += 1
 
+    def _parse_token(self, line: str) -> Token:
+        fields: List[str] = re.split("\s+", line)
+        token = Token(fields[self.text_column])
+        for column in self.column_name_map:
+            if len(fields) > column:
+                if column != self.text_column and self.column_name_map[column] != self.SPACE_AFTER_KEY:
+                    token.add_label(
+                        self.column_name_map[column], fields[column]
+                    )
+                if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == '-':
+                        token.whitespace_after = False
+        return token
+
     def __line_completes_sentence(self, line: str) -> bool:
         sentence_completed = line.isspace()
         if self.document_separator_token:
             sentence_completed = False
-            fields: List[str] = re.split(self.column_delimiter, line)
+            fields: List[str] = re.split("\s+", line)
             if len(fields) >= self.text_column:
                 if fields[self.text_column] == self.document_separator_token:
                     sentence_completed = True
@@ -241,7 +228,6 @@ class ColumnDataset(FlairDataset):
 
                     if self.__line_completes_sentence(line):
                         if len(sentence) > 0:
-                            sentence.infer_space_after()
                             if self.tag_to_bioes is not None:
                                 sentence.convert_tag_scheme(
                                     tag_type=self.tag_to_bioes, target_scheme="iobes"
@@ -249,15 +235,7 @@ class ColumnDataset(FlairDataset):
                             return sentence
 
                     else:
-                        fields: List[str] = re.split(self.column_delimiter, line)
-                        token = Token(fields[self.text_column])
-                        for column in self.column_name_map:
-                            if len(fields) > column:
-                                if column != self.text_column:
-                                    token.add_label(
-                                        self.column_name_map[column], fields[column]
-                                    )
-
+                        token = self._parse_token(line)
                         if not line.isspace():
                             sentence.add_token(token)
 
