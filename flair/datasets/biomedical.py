@@ -323,8 +323,16 @@ class CoNLLWriter:
                             tag = "O"
                             in_entity = False
 
+                        whitespace_after = "yes"
+                        next_token_offset = offset + len(token)
+                        if (
+                            next_token_offset < len(document_text)
+                            and not document_text[next_token_offset].isspace()
+                        ) or (next_token_offset == len(document_text)):
+                            whitespace_after = "no"
+
                         if len(token) > 0:
-                            f.write(" ".join([token, tag]) + "\n")
+                            f.write(" ".join([token, tag, whitespace_after]) + "\n")
                             sentence_had_tokens = True
                     if sentence_had_tokens:
                         f.write("\n")
@@ -2282,9 +2290,6 @@ class NCBI_DISEASE(ColumnCorpus):
                     end = int(columns[2])
                     entity_text = columns[3]
 
-                    if document_text[start:end] != entity_text:
-                        print("foo") # TODO Remove this
-
                     assert document_text[start:end] == entity_text
                     entities.append(Entity((start, end), DISEASE_TAG))
                 c += 1
@@ -2560,7 +2565,7 @@ class OSIRIS(ColumnCorpus):
         in_memory: bool = True,
         tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
         sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
-        load_original_unfixed_annotation = False
+        load_original_unfixed_annotation=False,
     ):
         """
            :param base_path: Path to the corpus on your machine
@@ -2592,8 +2597,9 @@ class OSIRIS(ColumnCorpus):
 
         if not (train_file.exists()):
             corpus_folder = self.download_dataset(data_folder)
-            corpus_data = self.parse_dataset(corpus_folder,
-                                             fix_annotation=not load_original_unfixed_annotation)
+            corpus_data = self.parse_dataset(
+                corpus_folder, fix_annotation=not load_original_unfixed_annotation
+            )
 
             if tokenizer is None:
                 tokenizer = build_spacy_tokenizer()
@@ -2652,7 +2658,12 @@ class OSIRIS(ColumnCorpus):
                     start, end = annotation.get("span").split("..")
                     start, end = int(start), int(end)
 
-                    if fix_annotation and text_file == "article46.txt" and start == 289 and end == 644:
+                    if (
+                        fix_annotation
+                        and text_file == "article46.txt"
+                        and start == 289
+                        and end == 644
+                    ):
                         end = 295
 
                     entities.append(
