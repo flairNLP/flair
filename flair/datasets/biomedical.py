@@ -1,5 +1,7 @@
 import logging
 
+from spacy.lang.punctuation import TOKENIZER_INFIXES
+
 import flair
 import ftfy
 import json
@@ -341,10 +343,32 @@ class CoNLLWriter:
 class SciSpacyTokenizer:
     def __init__(self):
         import spacy
+        from spacy.lang import char_classes
+
+        infixes = (
+            char_classes.LIST_ELLIPSES
+            + char_classes.LIST_ICONS
+            + [
+                r"×",  # added this special x character to tokenize it separately
+                r"[\(\)\[\]\{\}]",  # want to split at every bracket
+                r"(?<=[0-9])[+\-\*^](?=[0-9-])",
+                r"(?<=[{al}])\.(?=[{au}])".format(
+                    al=char_classes.ALPHA_LOWER, au=char_classes.ALPHA_UPPER
+                ),
+                r"(?<=[{a}]),(?=[{a}])".format(a=char_classes.ALPHA),
+                r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(
+                    a=char_classes.ALPHA, h=char_classes.HYPHENS
+                ),
+                r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=char_classes.ALPHA),
+            ]
+        )
+
+        infix_re = spacy.util.compile_infix_regex(infixes)
 
         self.nlp = spacy.load(
             "en_core_sci_sm", disable=["tagger", "ner", "parser", "textcat"]
         )
+        self.nlp.tokenizer.infix_finditer = infix_re.finditer
 
     def __call__(self, sentence: str):
         sentence = self.nlp(sentence)
