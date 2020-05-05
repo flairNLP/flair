@@ -1,13 +1,15 @@
 import inspect
 import os
+import re
 import tempfile
 from operator import itemgetter
 
 from pathlib import Path
-from typing import List, Callable, Type
+from typing import List, Callable, Type, Optional, Tuple
 
 from tqdm import tqdm
 
+from datasets.biomedical import sentence_split_at_tag, SENTENCE_TAG
 from flair.datasets import ColumnCorpus, biomedical
 from flair.datasets.biomedical import (
     Entity,
@@ -17,6 +19,7 @@ from flair.datasets.biomedical import (
     filter_nested_entities,
 )
 import pytest
+
 
 def gene_predicate(member):
     return "HUNER_GENE_" in str(member) and inspect.isclass(member)
@@ -37,17 +40,57 @@ def species_predicate(member):
 def cellline_predicate(member):
     return "HUNER_CELL_LINE_" in str(member) and inspect.isclass(member)
 
-CELLLINE_DATASETS = [i[1] for i in sorted(inspect.getmembers(biomedical, predicate=cellline_predicate),
-                           key=itemgetter(0))]
-CHEMICAL_DATASETS = [i[1] for i in sorted(inspect.getmembers(biomedical, predicate=chemical_predicate),
-                           key=itemgetter(0))]
-DISEASE_DATASETS = [i[1] for i in sorted(inspect.getmembers(biomedical, predicate=disease_predicate),
-                          key=itemgetter(0))]
-GENE_DATASETS = [i[1] for i in sorted(inspect.getmembers(biomedical, predicate=gene_predicate),
-                       key=itemgetter(0))]
-SPECIES_DATASETS = [i[1] for i in sorted(inspect.getmembers(biomedical, predicate=species_predicate),
-                          key=itemgetter(0))]
-ALL_DATASETS = CELLLINE_DATASETS + CHEMICAL_DATASETS + DISEASE_DATASETS + GENE_DATASETS + SPECIES_DATASETS
+
+CELLLINE_DATASETS = [
+    i[1]
+    for i in sorted(
+        inspect.getmembers(biomedical, predicate=cellline_predicate), key=itemgetter(0)
+    )
+]
+CHEMICAL_DATASETS = [
+    i[1]
+    for i in sorted(
+        inspect.getmembers(biomedical, predicate=chemical_predicate), key=itemgetter(0)
+    )
+]
+DISEASE_DATASETS = [
+    i[1]
+    for i in sorted(
+        inspect.getmembers(biomedical, predicate=disease_predicate), key=itemgetter(0)
+    )
+]
+GENE_DATASETS = [
+    i[1]
+    for i in sorted(
+        inspect.getmembers(biomedical, predicate=gene_predicate), key=itemgetter(0)
+    )
+]
+SPECIES_DATASETS = [
+    i[1]
+    for i in sorted(
+        inspect.getmembers(biomedical, predicate=species_predicate), key=itemgetter(0)
+    )
+]
+ALL_DATASETS = (
+    CELLLINE_DATASETS
+    + CHEMICAL_DATASETS
+    + DISEASE_DATASETS
+    + GENE_DATASETS
+    + SPECIES_DATASETS
+)
+
+
+def simple_tokenizer(text: str) -> Tuple[List[str], List[int]]:
+    offset = 0
+    tokens = []
+    offsets = []
+    for token in re.split(r"[\s\\-]", text):
+        tokens.append(token)
+        offsets.append(offset)
+        offset += len(token) + 1
+
+    return tokens, offsets
+
 
 def test_write_to_conll():
     text = "This is entity1 entity2 and a long entity3"
@@ -72,14 +115,14 @@ def test_write_to_conll():
         },
     )
     expected_labeling = [
-        "This O",
-        "is O",
-        "entity1 B-E",
-        "entity2 B-E",
-        "and O",
-        "a B-E",
-        "long I-E",
-        "entity3 I-E",
+        "This O yes",
+        "is O yes",
+        "entity1 B-E yes",
+        "entity2 B-E yes",
+        "and O yes",
+        "a B-E yes",
+        "long I-E yes",
+        "entity3 I-E no",
     ]
     assert_conll_writer_output(dataset, expected_labeling)
 
@@ -100,7 +143,7 @@ def test_conll_writer_one_token_multiple_entities1():
     )
 
     assert_conll_writer_output(
-        dataset, ["This O", "is O", "entity1 B-E", "entity2 B-E"]
+        dataset, ["This O yes", "is O yes", "entity1 B-E yes", "entity2 B-E no"]
     )
 
 
@@ -116,17 +159,49 @@ def test_conll_writer_one_token_multiple_entities2():
         },
     )
 
-    assert_conll_writer_output(dataset, ["This O", "is O", "entity1 B-E", "entity2 O"])
+    assert_conll_writer_output(
+        dataset, ["This O yes", "is O yes", "entity1 B-E yes", "entity2 O no"]
+    )
+
+
+def test_conll_writer_whitespace_after():
+    text = f"A sentence with cardio-dependent. {SENTENCE_TAG}Clark et al. reported that"
+    dataset = InternalBioNerDataset(
+        documents={"1": text}, entities_per_document={"1": []},
+    )
+
+    assert_conll_writer_output(
+        dataset,
+        [
+            "A O yes",
+            "sentence O yes",
+            "with O yes",
+            "cardio O no",
+            "dependent. O yes",
+            "Clark O yes",
+            "et O yes",
+            "al. O yes",
+            "reported O yes",
+            "that O no",
+        ],
+        simple_tokenizer,
+        sentence_split_at_tag,
+    )
 
 
 def assert_conll_writer_output(
-    dataset: InternalBioNerDataset, expected_output: List[str]
+    dataset: InternalBioNerDataset,
+    expected_output: List[str],
+    tokenizer: Optional[Callable] = None,
+    sentence_splitter: Optional[Callable] = None,
 ):
     outfile_path = tempfile.mkstemp()[1]
     try:
-        writer = CoNLLWriter(
-            tokenizer=whitespace_tokenize, sentence_splitter=lambda x: ([x], [0])
+        tokenizer = tokenizer if tokenizer else whitespace_tokenize
+        sentence_splitter = (
+            sentence_splitter if sentence_splitter else lambda x: ([x], [0])
         )
+        writer = CoNLLWriter(tokenizer=tokenizer, sentence_splitter=sentence_splitter)
         writer.write_to_conll(dataset, Path(outfile_path))
         contents = [l.strip() for l in open(outfile_path).readlines() if l.strip()]
     finally:
@@ -197,7 +272,9 @@ def test_sanity_no_repeating_Bs(CorpusType: Type[ColumnCorpus]):
     repeat_tokens = []
     for sentence in corpus.get_all_sentences():
         for token in sentence.tokens:
-            if token.get_labels()[0].value.startswith("B") or token.get_labels()[0].value.startswith("S"):
+            if token.get_labels()[0].value.startswith("B") or token.get_labels()[
+                0
+            ].value.startswith("S"):
                 repeat_tokens.append(token)
             else:
                 if len(repeat_tokens) > len(longest_repeat_tokens):
