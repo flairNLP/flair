@@ -328,7 +328,7 @@ class CoNLLWriter:
                         if (
                             next_token_offset < len(document_text)
                             and not document_text[next_token_offset].isspace()
-                        ) or (next_token_offset == len(document_text)):
+                        ):
                             whitespace_after = "no"
 
                         if len(token) > 0:

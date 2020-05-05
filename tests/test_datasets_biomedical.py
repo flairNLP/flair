@@ -38,7 +38,6 @@ def has_balanced_parantheses(text: str) -> bool:
     return len(stack) == 0
 
 
-
 def gene_predicate(member):
     return "HUNER_GENE_" in str(member) and inspect.isclass(member)
 
@@ -140,7 +139,7 @@ def test_write_to_conll():
         "and O yes",
         "a B-E yes",
         "long I-E yes",
-        "entity3 I-E no",
+        "entity3 I-E yes",
     ]
     assert_conll_writer_output(dataset, expected_labeling)
 
@@ -161,7 +160,7 @@ def test_conll_writer_one_token_multiple_entities1():
     )
 
     assert_conll_writer_output(
-        dataset, ["This O yes", "is O yes", "entity1 B-E yes", "entity2 B-E no"]
+        dataset, ["This O yes", "is O yes", "entity1 B-E yes", "entity2 B-E yes"]
     )
 
 
@@ -178,7 +177,7 @@ def test_conll_writer_one_token_multiple_entities2():
     )
 
     assert_conll_writer_output(
-        dataset, ["This O yes", "is O yes", "entity1 B-E yes", "entity2 O no"]
+        dataset, ["This O yes", "is O yes", "entity1 B-E yes", "entity2 O yes"]
     )
 
 
@@ -200,7 +199,7 @@ def test_conll_writer_whitespace_after():
             "et O yes",
             "al. O yes",
             "reported O yes",
-            "that O no",
+            "that O yes",
         ],
         simple_tokenizer,
         sentence_split_at_tag,
