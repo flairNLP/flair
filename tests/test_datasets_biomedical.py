@@ -18,6 +18,25 @@ from flair.datasets.biomedical import (
 )
 import pytest
 
+
+def has_balanced_parantheses(text: str) -> bool:
+    stack = []
+    opening = ["(", "[", "{"]
+    closing = [")", "]", "}"]
+    for c in text:
+        if c in opening:
+            stack.append(c)
+        elif c in closing:
+            if not stack:
+                return False
+            last_paren = stack.pop()
+            if opening.index(last_paren) != closing.index(c):
+                return False
+
+    return len(stack) == 0
+
+
+
 def gene_predicate(member):
     return "HUNER_GENE_" in str(member) and inspect.isclass(member)
 
@@ -220,3 +239,19 @@ def test_sanity_no_long_entities(CorpusType: Type[ColumnCorpus]):
                 longest_entity = [t.text for t in entity.tokens]
 
     assert len(longest_entity) < 10, " ".join(longest_entity)
+
+
+@pytest.mark.slow
+@pytest.mark.xfail
+@pytest.mark.parametrize("CorpusType", ALL_DATASETS)
+def test_sanity_no_unmatched_parentheses(CorpusType: Type[ColumnCorpus]):
+    corpus = CorpusType()
+    unbalanced_entities = []
+    for sentence in corpus.get_all_sentences():
+        entities = sentence.get_spans("ner")
+        for entity in entities:
+            entity_text = "".join(t.text for t in entity.tokens)
+            if not has_balanced_parantheses(entity_text):
+                unbalanced_entities.append(entity_text)
+
+    assert unbalanced_entities == []
