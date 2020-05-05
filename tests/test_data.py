@@ -104,6 +104,7 @@ def test_sentence_to_real_string(tasks_base_path):
     corpus = flair.datasets.GERMEVAL_14(base_path=tasks_base_path)
 
     sentence = corpus.train[0]
+    sentence.infer_space_after()
     assert (
         'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in einer Weise aufgetreten , die alles andere als überzeugend war " .'
         == sentence.to_tokenized_string()
@@ -114,6 +115,7 @@ def test_sentence_to_real_string(tasks_base_path):
     )
 
     sentence = corpus.train[1]
+    sentence.infer_space_after()
     assert (
         "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf ."
         == sentence.to_tokenized_string()
