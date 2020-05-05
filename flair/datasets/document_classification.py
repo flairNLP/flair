@@ -542,7 +542,6 @@ class AMAZON_REVIEWS(ClassificationCorpus):
     def __init__(
             self,
             split_max: int = 30000,
-            memory_mode: str = 'partial',
             label_name_map: Dict[str, str] = {
                 '1.0': 'NEGATIVE',
                 '2.0': 'NEGATIVE',
@@ -552,6 +551,7 @@ class AMAZON_REVIEWS(ClassificationCorpus):
             },
             skip_labels = ['3.0', '4.0'],
             fraction_of_5_star_reviews: int = 10,
+            tokenizer=segtok_tokenizer,
             **corpusargs
     ):
         """
@@ -611,10 +611,9 @@ class AMAZON_REVIEWS(ClassificationCorpus):
         super(AMAZON_REVIEWS, self).__init__(
             data_folder,
             label_type='sentiment',
-            tokenizer=segtok_tokenizer,
             label_name_map=label_name_map,
             skip_labels=skip_labels,
-            memory_mode=memory_mode,
+            tokenizer=tokenizer,
             **corpusargs
         )
 
@@ -658,7 +657,7 @@ class IMDB(ClassificationCorpus):
     Corpus of IMDB movie reviews labeled by sentiment (POSITIVE, NEGATIVE). Downloaded from and documented at
     http://ai.stanford.edu/~amaas/data/sentiment/.
     """
-    def __init__(self, base_path: Union[str, Path] = None, rebalance_corpus: bool = True, **corpusargs):
+    def __init__(self, base_path: Union[str, Path] = None, rebalance_corpus: bool = True, tokenizer=segtok_tokenizer, **corpusargs):
         """
 
         :param base_path: Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.
@@ -725,7 +724,7 @@ class IMDB(ClassificationCorpus):
                                     )
 
         super(IMDB, self).__init__(
-            data_folder, tokenizer=space_tokenizer, **corpusargs
+            data_folder, tokenizer=tokenizer, **corpusargs
         )
 
 
@@ -734,7 +733,7 @@ class NEWSGROUPS(ClassificationCorpus):
     20 newsgroups corpus available at "http://qwone.com/~jason/20Newsgroups", classifying
     news items into one of 20 categories. Each data point is a full news article so documents may be very long.
     """
-    def __init__(self, base_path: Union[str, Path] = None, **corpusargs):
+    def __init__(self, base_path: Union[str, Path] = None, tokenizer=segtok_tokenizer, **corpusargs):
         """
         Instantiates 20 newsgroups corpus.
         :param base_path: Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.
@@ -822,7 +821,7 @@ class NEWSGROUPS(ClassificationCorpus):
                                     )
 
         super(NEWSGROUPS, self).__init__(
-            data_folder, tokenizer=space_tokenizer, **corpusargs,
+            data_folder, tokenizer=tokenizer, **corpusargs,
         )
 
 
@@ -834,6 +833,7 @@ class SENTIMENT_140(ClassificationCorpus):
     def __init__(
             self,
             label_name_map=None,
+            tokenizer=segtok_tokenizer,
             **corpusargs,
     ):
         """
@@ -894,7 +894,7 @@ class SENTIMENT_140(ClassificationCorpus):
                         train_file.write(f"__label__{label} {text}\n")
 
         super(SENTIMENT_140, self).__init__(
-            data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, label_name_map=label_name_map, **corpusargs,
+            data_folder, label_type='sentiment', tokenizer=tokenizer, label_name_map=label_name_map, **corpusargs,
         )
 
 
@@ -905,6 +905,7 @@ class SENTEVAL_CR(ClassificationCorpus):
     """
     def __init__(
             self,
+            tokenizer=space_tokenizer,
             **corpusargs,
     ):
         """
@@ -943,7 +944,7 @@ class SENTEVAL_CR(ClassificationCorpus):
                         train_file.write(f"__label__NEGATIVE {line}")
 
         super(SENTEVAL_CR, self).__init__(
-            data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, **corpusargs,
+            data_folder, label_type='sentiment', tokenizer=tokenizer, **corpusargs,
         )
 
 
@@ -954,6 +955,7 @@ class SENTEVAL_MR(ClassificationCorpus):
     """
     def __init__(
             self,
+            tokenizer=space_tokenizer,
             **corpusargs
     ):
         """
@@ -992,7 +994,7 @@ class SENTEVAL_MR(ClassificationCorpus):
                         train_file.write(f"__label__NEGATIVE {line}")
 
         super(SENTEVAL_MR, self).__init__(
-            data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, **corpusargs
+            data_folder, label_type='sentiment', tokenizer=tokenizer, **corpusargs
         )
 
 
@@ -1003,6 +1005,7 @@ class SENTEVAL_SUBJ(ClassificationCorpus):
     """
     def __init__(
             self,
+            tokenizer=space_tokenizer,
             **corpusargs,
     ):
         """
@@ -1041,7 +1044,7 @@ class SENTEVAL_SUBJ(ClassificationCorpus):
                         train_file.write(f"__label__OBJECTIVE {line}")
 
         super(SENTEVAL_SUBJ, self).__init__(
-            data_folder, label_type='objectivity', tokenizer=segtok_tokenizer, **corpusargs,
+            data_folder, label_type='objectivity', tokenizer=tokenizer, **corpusargs,
         )
 
 
@@ -1053,6 +1056,7 @@ class SENTEVAL_MPQA(ClassificationCorpus):
 
     def __init__(
             self,
+            tokenizer=space_tokenizer,
             **corpusargs,
     ):
         """
@@ -1091,7 +1095,7 @@ class SENTEVAL_MPQA(ClassificationCorpus):
                         train_file.write(f"__label__NEGATIVE {line}")
 
         super(SENTEVAL_MPQA, self).__init__(
-            data_folder, label_type='sentiment', tokenizer=segtok_tokenizer, **corpusargs,
+            data_folder, label_type='sentiment', tokenizer=tokenizer, **corpusargs,
         )
 
 
@@ -1103,7 +1107,8 @@ class SENTEVAL_SST_BINARY(ClassificationCorpus):
 
     def __init__(
             self,
-            **corpusargs
+            tokenizer=space_tokenizer,
+            **corpusargs,
     ):
         """
         Instantiates SentEval Stanford sentiment treebank dataset.
@@ -1133,7 +1138,7 @@ class SENTEVAL_SST_BINARY(ClassificationCorpus):
 
         super(SENTEVAL_SST_BINARY, self).__init__(
             data_folder,
-            tokenizer=segtok_tokenizer,
+            tokenizer=tokenizer,
             **corpusargs,
         )
 
@@ -1146,6 +1151,7 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
 
     def __init__(
             self,
+            tokenizer=space_tokenizer,
             **corpusargs,
     ):
         """
@@ -1177,7 +1183,7 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
 
         super(SENTEVAL_SST_GRANULAR, self).__init__(
             data_folder,
-            tokenizer=segtok_tokenizer,
+            tokenizer=tokenizer,
             **corpusargs,
         )
 
@@ -1187,7 +1193,7 @@ class TREC_50(ClassificationCorpus):
     The TREC Question Classification Corpus, classifying questions into 50 fine-grained answer types.
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, **corpusargs):
+    def __init__(self, base_path: Union[str, Path] = None, tokenizer=space_tokenizer, **corpusargs):
         """
         Instantiates TREC Question Classification Corpus with 50 classes.
         :param base_path: Provide this only if you store the TREC corpus in a specific folder, otherwise use default.
@@ -1245,7 +1251,7 @@ class TREC_50(ClassificationCorpus):
                             write_fp.write(f"{new_label} {question}\n")
 
         super(TREC_50, self).__init__(
-            data_folder, tokenizer=space_tokenizer, **corpusargs,
+            data_folder, tokenizer=tokenizer, **corpusargs,
         )
 
 
@@ -1255,7 +1261,7 @@ class TREC_6(ClassificationCorpus):
     (DESC, HUM, LOC, ENTY, NUM, ABBR).
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, **corpusargs):
+    def __init__(self, base_path: Union[str, Path] = None,  tokenizer=space_tokenizer, **corpusargs):
         """
         Instantiates TREC Question Classification Corpus with 6 classes.
         :param base_path: Provide this only if you store the TREC corpus in a specific folder, otherwise use default.
@@ -1313,7 +1319,7 @@ class TREC_6(ClassificationCorpus):
                             write_fp.write(f"{new_label} {question}\n")
 
         super(TREC_6, self).__init__(
-            data_folder, label_type='question_type', tokenizer=space_tokenizer, **corpusargs,
+            data_folder, label_type='question_type', tokenizer=tokenizer, **corpusargs,
         )
 
 
@@ -1348,7 +1354,7 @@ class WASSA_ANGER(ClassificationCorpus):
     WASSA-2017 anger emotion-intensity dataset downloaded from and documented at
      https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html
     """
-    def __init__(self, base_path: Union[str, Path] = None, **corpusargs):
+    def __init__(self, base_path: Union[str, Path] = None, tokenizer=segtok_tokenizer, **corpusargs):
         """
         Instantiates WASSA-2017 anger emotion-intensity dataset
         :param base_path: Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.
@@ -1370,7 +1376,7 @@ class WASSA_ANGER(ClassificationCorpus):
         _download_wassa_if_not_there("anger", data_folder, dataset_name)
 
         super(WASSA_ANGER, self).__init__(
-            data_folder, tokenizer=space_tokenizer, **corpusargs,
+            data_folder, tokenizer=tokenizer, **corpusargs,
         )
 
 
@@ -1379,7 +1385,7 @@ class WASSA_FEAR(ClassificationCorpus):
     WASSA-2017 fear emotion-intensity dataset downloaded from and documented at
      https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html
     """
-    def __init__(self, base_path: Union[str, Path] = None, **corpusargs):
+    def __init__(self, base_path: Union[str, Path] = None, tokenizer=segtok_tokenizer, **corpusargs):
         """
         Instantiates WASSA-2017 fear emotion-intensity dataset
         :param base_path: Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.
@@ -1401,7 +1407,7 @@ class WASSA_FEAR(ClassificationCorpus):
         _download_wassa_if_not_there("fear", data_folder, dataset_name)
 
         super(WASSA_FEAR, self).__init__(
-            data_folder, tokenizer=space_tokenizer, **corpusargs
+            data_folder, tokenizer=tokenizer, **corpusargs
         )
 
 
@@ -1410,7 +1416,7 @@ class WASSA_JOY(ClassificationCorpus):
     WASSA-2017 joy emotion-intensity dataset downloaded from and documented at
      https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html
     """
-    def __init__(self, base_path: Union[str, Path] = None, **corpusargs):
+    def __init__(self, base_path: Union[str, Path] = None, tokenizer=segtok_tokenizer, **corpusargs):
         """
         Instantiates WASSA-2017 joy emotion-intensity dataset
         :param base_path: Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.
@@ -1432,7 +1438,7 @@ class WASSA_JOY(ClassificationCorpus):
         _download_wassa_if_not_there("joy", data_folder, dataset_name)
 
         super(WASSA_JOY, self).__init__(
-            data_folder, tokenizer=space_tokenizer, **corpusargs,
+            data_folder, tokenizer=tokenizer, **corpusargs,
         )
 
 
@@ -1441,7 +1447,7 @@ class WASSA_SADNESS(ClassificationCorpus):
     WASSA-2017 sadness emotion-intensity dataset downloaded from and documented at
      https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html
     """
-    def __init__(self, base_path: Union[str, Path] = None, **corpusargs):
+    def __init__(self, base_path: Union[str, Path] = None, tokenizer=segtok_tokenizer, **corpusargs):
         """
         Instantiates WASSA-2017 sadness emotion-intensity dataset
         :param base_path: Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.
@@ -1463,5 +1469,5 @@ class WASSA_SADNESS(ClassificationCorpus):
         _download_wassa_if_not_there("sadness", data_folder, dataset_name)
 
         super(WASSA_SADNESS, self).__init__(
-            data_folder, tokenizer=space_tokenizer, **corpusargs,
+            data_folder, tokenizer=tokenizer, **corpusargs,
         )
