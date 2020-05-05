@@ -767,6 +767,8 @@ class HunerJNLPBA:
                     )
 
                 else:
+                    document_text += SENTENCE_TAG
+
                     # Edge case: last token starts a new entity
                     if entity_type is not None:
                         entities.append(
@@ -789,7 +791,7 @@ class HUNER_GENE_JNLPBA(HunerDataset):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(sentence_splitter=sentence_split_at_tag, *args, **kwargs)
 
     @staticmethod
     def split_url() -> str:
@@ -814,7 +816,7 @@ class HUNER_CELL_LINE_JNLPBA(HunerDataset):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(sentence_splitter=sentence_split_at_tag, *args, **kwargs)
 
     @staticmethod
     def split_url() -> str:
