@@ -1631,7 +1631,7 @@ class CamembertEmbeddings(TokenEmbeddings):
         self.__dict__ = d
 
         # 1-camembert-base -> camembert-base
-        if self.name.startswith("1"):
+        if any(char.isdigit() for char in self.name):
             self.tokenizer = CamembertTokenizer.from_pretrained(
                 "-".join(self.name.split("-")[1:]))
         else:
