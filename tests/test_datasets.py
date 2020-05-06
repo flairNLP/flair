@@ -84,6 +84,21 @@ def test_load_sequence_labeling_whitespace_after(tasks_base_path):
     assert corpus.train[0].to_plain_string() == "It is a German-owned firm."
 
 
+def test_load_column_corpus_options(tasks_base_path):
+    # get training, test and dev data
+    corpus = flair.datasets.ColumnCorpus(
+        tasks_base_path / "column_corpus_options",
+        column_format={0: 'text', 1: 'ner'},
+        column_delimiter='\t',
+        skip_first_line=True,
+    )
+
+    assert len(corpus.train) == 1
+    assert len(corpus.dev) == 1
+    assert len(corpus.test) == 1
+
+    assert corpus.train[0].to_tokenized_string() == "This is New Berlin"
+
 def test_load_germeval_data(tasks_base_path):
     # get training, test and dev data
     corpus = flair.datasets.GERMEVAL_14(tasks_base_path)
