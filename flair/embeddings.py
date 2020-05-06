@@ -1631,9 +1631,11 @@ class CamembertEmbeddings(TokenEmbeddings):
         self.__dict__ = d
 
         # 1-camembert-base -> camembert-base
-        self.tokenizer = self.tokenizer = CamembertTokenizer.from_pretrained(
-            "-".join(self.name.split("-")[1:])
-        )
+        if self.name.startswith("1"):
+            self.tokenizer = CamembertTokenizer.from_pretrained(
+                "-".join(self.name.split("-")[1:]))
+        else:
+            self.tokenizer = CamembertTokenizer.from_pretrained(self.name)
 
     @property
     def embedding_length(self) -> int:
