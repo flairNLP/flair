@@ -997,14 +997,23 @@ class ScalarMix(torch.nn.Module):
         self.scalar_parameters = ParameterList(
             [
                 Parameter(
-                    torch.FloatTensor([initial_scalar_parameters[i]]),
+                    torch.tensor(
+                        [initial_scalar_parameters[i]],
+                        dtype=torch.float,
+                        device=flair.device,
+                    ),
                     requires_grad=trainable,
+
                 )
                 for i in range(mixture_size)
             ]
         )
         self.gamma = Parameter(
-            torch.FloatTensor([1.0]), requires_grad=trainable
+            torch.tensor(
+                [1.0],
+                dtype=torch.float,
+                device=flair.device,
+            ), requires_grad=trainable
         )
 
     def forward(self, tensors: List[torch.Tensor]) -> torch.Tensor:
