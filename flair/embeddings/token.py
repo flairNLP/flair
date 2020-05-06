@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import List, Union
 from collections import Counter
 from functools import lru_cache
-from deprecated import deprecated
 
 import torch
 from bpemb import BPEmb
