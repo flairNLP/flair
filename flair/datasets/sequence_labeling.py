@@ -93,6 +93,10 @@ class ColumnCorpus(Corpus):
 
 
 class ColumnDataset(FlairDataset):
+
+    # special key for space after
+    SPACE_AFTER_KEY = "space-after"
+
     def __init__(
             self,
             path_to_column_file: Path,
@@ -166,7 +170,6 @@ class ColumnDataset(FlairDataset):
 
                     if sentence_started:
 
-                        sentence.infer_space_after()
                         if self.in_memory:
                             if self.tag_to_bioes is not None:
                                 sentence.convert_tag_scheme(
@@ -181,30 +184,35 @@ class ColumnDataset(FlairDataset):
                     sentence_started = False
 
                 elif self.in_memory:
-                    fields: List[str] = re.split(self.column_delimiter, line)
-                    token = Token(fields[self.text_column])
-                    for column in column_name_map:
-                        if len(fields) > column:
-                            if column != self.text_column:
-                                token.add_label(
-                                    self.column_name_map[column], fields[column]
-                                )
-
+                    token = self._parse_token(line)
                     if not line.isspace():
                         sentence.add_token(token)
                         sentence_started = True
+
                 elif not line.isspace():
                     sentence_started = True
 
                 line = f.readline()
 
         if sentence_started:
-            sentence.infer_space_after()
             if self.in_memory:
                 self.sentences.append(sentence)
             else:
                 self.indices.append(position)
             self.total_sentence_count += 1
+
+    def _parse_token(self, line: str) -> Token:
+        fields: List[str] = re.split(self.column_delimiter, line)
+        token = Token(fields[self.text_column])
+        for column in self.column_name_map:
+            if len(fields) > column:
+                if column != self.text_column and self.column_name_map[column] != self.SPACE_AFTER_KEY:
+                    token.add_label(
+                        self.column_name_map[column], fields[column]
+                    )
+                if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == '-':
+                        token.whitespace_after = False
+        return token
 
     def __line_completes_sentence(self, line: str) -> bool:
         sentence_completed = line.isspace()
@@ -241,7 +249,6 @@ class ColumnDataset(FlairDataset):
 
                     if self.__line_completes_sentence(line):
                         if len(sentence) > 0:
-                            sentence.infer_space_after()
                             if self.tag_to_bioes is not None:
                                 sentence.convert_tag_scheme(
                                     tag_type=self.tag_to_bioes, target_scheme="iobes"
@@ -249,15 +256,7 @@ class ColumnDataset(FlairDataset):
                             return sentence
 
                     else:
-                        fields: List[str] = re.split(self.column_delimiter, line)
-                        token = Token(fields[self.text_column])
-                        for column in self.column_name_map:
-                            if len(fields) > column:
-                                if column != self.text_column:
-                                    token.add_label(
-                                        self.column_name_map[column], fields[column]
-                                    )
-
+                        token = self._parse_token(line)
                         if not line.isspace():
                             sentence.add_token(token)
 
