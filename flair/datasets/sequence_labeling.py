@@ -966,6 +966,38 @@ class WNUT_17(ColumnCorpus):
         )
 
 
+class BIOFID(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+    ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "lemma", 2: "pos", 3: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        biofid_path = "https://raw.githubusercontent.com/texttechnologylab/BIOfid/master/BIOfid-Dataset-NER/"
+        cached_path(f"{biofid_path}train.conll", Path("datasets") / dataset_name)
+        cached_path(f"{biofid_path}dev.conll", Path("datasets") / dataset_name)
+        cached_path(f"{biofid_path}test.conll", Path("datasets") / dataset_name)
+
+        super(BIOFID, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
+
+
 def _download_wikiner(language_code: str, dataset_name: str):
     # download data if necessary
     wikiner_path = (
