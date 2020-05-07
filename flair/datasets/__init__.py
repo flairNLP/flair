@@ -24,6 +24,7 @@ from .sequence_labeling import WIKINER_PORTUGUESE
 from .sequence_labeling import WIKINER_POLISH
 from .sequence_labeling import WIKINER_RUSSIAN
 from .sequence_labeling import WNUT_17
+from .sequence_labeling import BIOFID
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
