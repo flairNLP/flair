@@ -1,6 +1,5 @@
+import itertools
 import logging
-
-from spacy.lang.punctuation import TOKENIZER_INFIXES
 
 import flair
 import ftfy
@@ -4200,3 +4199,148 @@ class HUNER_SPECIES_CHEBI(HunerDataset):
         dataset = CHEBI.parse_dataset(corpus_dir, annotator=annotator)
         entity_type_mapping = {"Species": SPECIES_TAG}
         return filter_and_map_entities(dataset, entity_type_mapping)
+
+
+class BioNLPCorpus(ColumnCorpus):
+    """
+       Base class for corpora from BioNLP event extraction shared tasks
+
+       For further information see:
+            http://2013.bionlp-st.org/Intro
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        entities_or_triggers: str = "entities",
+    ):
+        """
+           :param base_path: Path to the corpus on your machine
+           :param in_memory: If True, keeps dataset in memory giving speedups in training.
+           :param tokenizer: Callable that segments a sentence into words,
+                             defaults to scispacy
+           :param sentence_splitter: Callable that segments a document into sentences,
+                                     defaults to scispacy
+           :param entities_or_triggers: "entities": only load entity annotations,
+                                        "triggers": only load trigger annotations,
+                                        "both": load trigger and entity annotations
+                                        defaults to "entities"
+           """
+
+        assert entities_or_triggers in {"entities", "triggers", "both"}
+        self.entities_or_triggers = entities_or_triggers
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        dev_file = data_folder / "dev.conll"
+
+        if not (train_file.exists() and dev_file.exists()):
+            train_folder, dev_folder = self.download_corpus(data_folder / "original")
+            train_data = self.parse_input_files(train_folder)
+            dev_data = self.parse_input_files(dev_folder)
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(train_data, train_file)
+            conll_writer.write_to_conll(dev_data, dev_file)
+
+        super(BioNLPCorpus, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @abstractmethod
+    def download_corpus(self, data_folder: Path) -> Tuple[Path, Path]:
+        pass
+
+    def parse_input_files(self, input_folder: Path) -> InternalBioNerDataset:
+        documents = {}
+        entities_per_document = {}
+
+        for txt_file in input_folder.glob("*.txt"):
+            name = txt_file.with_suffix("").name
+            a1_file = txt_file.with_suffix(".a1")
+            a2_file = txt_file.with_suffix(".a2")
+
+            with txt_file.open() as f:
+                documents[name] = f.read()
+
+            with a1_file.open() as f_a1, a2_file.open() as f_a2:
+                entities = []
+                if self.entities_or_triggers == "entities":
+                    f = f_a1
+                elif self.entities_or_triggers == "triggers":
+                    f = f_a2
+                elif self.entities_or_triggers == "both":
+                    f = itertools.chain(f_a1, f_a2)
+                else:
+                    raise ValueError(self.entities_or_triggers)
+
+                for line in f:
+                    fields = line.strip().split("\t")
+                    if fields[0].startswith("T"):
+                        ann_type, start, end = fields[1].split()
+                        entities.append(
+                            Entity(
+                                char_span=(int(start), int(end)), entity_type=ann_type
+                            )
+                        )
+                entities_per_document[name] = entities
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
+
+
+class BIONLP2013_PC(BioNLPCorpus):
+    """
+    Corpus of the BioNLP'2013 Pathway Curation shared task
+
+    For further information see Ohta et al.
+        Overview of the pathway curation (PC) task of bioNLP shared task 2013.
+        https://www.aclweb.org/anthology/W13-2009/
+    """
+
+    def download_corpus(self, download_folder: Path) -> Tuple[Path, Path]:
+        train_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_training_data.tar.gz?attredirects=0"
+        dev_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_development_data.tar.gz?attredirects=0"
+
+        cached_path(train_url, download_folder)
+        cached_path(dev_url, download_folder)
+
+        unzip_targz_file(
+            download_folder / "BioNLP-ST_2013_PC_training_data.tar.gz?attredirects=0",
+            download_folder,
+        )
+        unzip_targz_file(
+            download_folder
+            / "BioNLP-ST_2013_PC_development_data.tar.gz?attredirects=0",
+            download_folder,
+        )
+
+        train_folder = download_folder / "BioNLP-ST_2013_PC_training_data"
+        dev_folder = download_folder / "BioNLP-ST_2013_PC_development_data"
+
+        return train_folder, dev_folder
