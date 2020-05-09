@@ -507,6 +507,12 @@ class Sentence(DataPoint):
         if type(token) is str:
             token = Token(token)
 
+        # data with variation selectors cannot be handled
+        if u'\ufe0f' in token.text or u'\ufeff' in token.text:
+            return
+        if token.text.strip() == '':
+            return
+
         self.tokens.append(token)
 
         # set token idx if not set
