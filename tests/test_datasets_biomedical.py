@@ -18,7 +18,7 @@ from flair.datasets.biomedical import (
     filter_nested_entities,
     sentence_split_at_tag,
     SENTENCE_TAG,
-    build_spacy_tokenizer
+    build_spacy_tokenizer,
 )
 import pytest
 
@@ -134,14 +134,14 @@ def test_write_to_conll():
         },
     )
     expected_labeling = [
-        "This O yes",
-        "is O yes",
-        "entity1 B-E yes",
-        "entity2 B-E yes",
-        "and O yes",
-        "a B-E yes",
-        "long I-E yes",
-        "entity3 I-E yes",
+        "This O +",
+        "is O +",
+        "entity1 B-E +",
+        "entity2 B-E +",
+        "and O +",
+        "a B-E +",
+        "long I-E +",
+        "entity3 I-E +",
     ]
     assert_conll_writer_output(dataset, expected_labeling)
 
@@ -162,7 +162,7 @@ def test_conll_writer_one_token_multiple_entities1():
     )
 
     assert_conll_writer_output(
-        dataset, ["This O yes", "is O yes", "entity1 B-E yes", "entity2 B-E yes"]
+        dataset, ["This O +", "is O +", "entity1 B-E +", "entity2 B-E +"]
     )
 
 
@@ -179,12 +179,12 @@ def test_conll_writer_one_token_multiple_entities2():
     )
 
     assert_conll_writer_output(
-        dataset, ["This O yes", "is O yes", "entity1 B-E yes", "entity2 O yes"]
+        dataset, ["This O +", "is O +", "entity1 B-E +", "entity2 O +"]
     )
 
 
 def test_conll_writer_whitespace_after():
-    text = f"A sentence with cardio-dependent. {SENTENCE_TAG}Clark et al. reported that"
+    text = f"A sentence with cardio-dependent.{SENTENCE_TAG}Clark et al. reported that"
     dataset = InternalBioNerDataset(
         documents={"1": text}, entities_per_document={"1": []},
     )
@@ -192,16 +192,16 @@ def test_conll_writer_whitespace_after():
     assert_conll_writer_output(
         dataset,
         [
-            "A O yes",
-            "sentence O yes",
-            "with O yes",
-            "cardio O no",
-            "dependent. O yes",
-            "Clark O yes",
-            "et O yes",
-            "al. O yes",
-            "reported O yes",
-            "that O yes",
+            "A O +",
+            "sentence O +",
+            "with O +",
+            "cardio O -",
+            "dependent. O +",
+            "Clark O +",
+            "et O +",
+            "al. O +",
+            "reported O +",
+            "that O +",
         ],
         simple_tokenizer,
         sentence_split_at_tag,
@@ -354,4 +354,14 @@ def test_sanity_not_too_many_entities(CorpusType: Type[ColumnCorpus]):
 def test_scispacy_tokenization():
     tokenizer = build_spacy_tokenizer()
     assert tokenizer("HBeAg(+) patients")[0] == ["HBeAg", "(", "+", ")", "patients"]
-    assert tokenizer("HBeAg(+)/HBsAg(+)")[0] == ["HBeAg", "(", "+", ")", "/", "HBsAg", "(", "+", ")"]
+    assert tokenizer("HBeAg(+)/HBsAg(+)")[0] == [
+        "HBeAg",
+        "(",
+        "+",
+        ")",
+        "/",
+        "HBsAg",
+        "(",
+        "+",
+        ")",
+    ]
