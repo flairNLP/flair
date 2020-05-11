@@ -18,6 +18,7 @@ from flair.datasets.biomedical import (
     filter_nested_entities,
     sentence_split_at_tag,
     SENTENCE_TAG,
+    build_spacy_tokenizer
 )
 import pytest
 
@@ -347,3 +348,10 @@ def test_sanity_not_too_many_entities(CorpusType: Type[ColumnCorpus]):
     )
 
     assert avg_entities_per_sentence <= 5
+
+
+@pytest.mark.slow
+def test_scispacy_tokenization():
+    tokenizer = build_spacy_tokenizer()
+    assert tokenizer("HBeAg(+) patients")[0] == ["HBeAg", "(", "+", ")", "patients"]
+    assert tokenizer("HBeAg(+)/HBsAg(+)")[0] == ["HBeAg", "(", "+", ")", "/", "HBsAg", "(", "+", ")"]

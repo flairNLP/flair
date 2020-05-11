@@ -350,6 +350,7 @@ class SciSpacyTokenizer:
             + [
                 r"×",  # added this special x character to tokenize it separately
                 r"[\(\)\[\]\{\}]",  # want to split at every bracket
+                r"/",  # want to split at every slash
                 r"(?<=[0-9])[+\-\*^](?=[0-9-])",
                 r"(?<=[{al}])\.(?=[{au}])".format(
                     al=char_classes.ALPHA_LOWER, au=char_classes.ALPHA_UPPER
