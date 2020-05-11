@@ -492,17 +492,17 @@ class HunerDataset(ColumnCorpus, ABC):
         dev_file = data_folder / "dev.conll"
         test_file = data_folder / "test.conll"
 
+        self.tokenizer = tokenizer if tokenizer else self.build_default_tokenizer()
+
+        self.sentence_splitter = (
+            sentence_splitter
+            if sentence_splitter
+            else self.build_default_sentence_splitter()
+        )
+
         if not (train_file.exists() and dev_file.exists() and test_file.exists()):
             splits_dir = data_folder / "splits"
             os.makedirs(splits_dir, exist_ok=True)
-
-            self.tokenizer = tokenizer if tokenizer else self.build_default_tokenizer()
-
-            self.sentence_splitter = (
-                sentence_splitter
-                if sentence_splitter
-                else self.build_default_sentence_splitter()
-            )
 
             writer = CoNLLWriter(
                 tokenizer=self.tokenizer, sentence_splitter=self.sentence_splitter,
@@ -4460,3 +4460,6 @@ class BIONLP2013_PC(BioNLPCorpus):
         dev_folder = download_folder / "BioNLP-ST_2013_PC_development_data"
 
         return train_folder, dev_folder
+
+if __name__ == '__main__':
+    HUNER_CELL_LINE_JNLPBA()
