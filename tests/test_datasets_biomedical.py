@@ -9,6 +9,7 @@ from typing import List, Callable, Type, Optional, Tuple
 
 from tqdm import tqdm
 
+import flair
 from flair.datasets import ColumnCorpus, biomedical
 from flair.datasets.biomedical import (
     Entity,
@@ -18,7 +19,8 @@ from flair.datasets.biomedical import (
     filter_nested_entities,
     sentence_split_at_tag,
     SENTENCE_TAG,
-    build_spacy_tokenizer
+    build_spacy_tokenizer,
+    HunerDataset,
 )
 import pytest
 
@@ -351,7 +353,54 @@ def test_sanity_not_too_many_entities(CorpusType: Type[ColumnCorpus]):
 
 
 @pytest.mark.slow
+@pytest.mark.xfail
+@pytest.mark.parametrize("CorpusType", ALL_DATASETS)
+def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
+    dataset_name = CorpusType.__class__.__name__.lower()
+    base_path = Path(flair.cache_root) / "datasets"
+    data_folder = base_path / dataset_name
+    tokenizer = build_spacy_tokenizer()
+
+    corpus = CorpusType()
+    internal = corpus.to_internal(data_folder)
+    for doc_id, doc_text in internal.documents.items():
+        misaligned_starts = []
+        misaligned_ends = []
+
+        token_starts = set()
+        token_ends = set()
+        for token, token_start in zip(*tokenizer(doc_text)):
+            token_starts.add(token_start)
+            token_ends.add(token_start + len(token))
+
+        entities = internal.entities_per_document[doc_id]
+        entity_starts = [i.char_span.start for i in entities]
+        entity_ends = [i.char_span.stop for i in entities]
+
+        for start in entity_starts:
+            if start not in entity_starts:
+                misaligned_starts.append(start)
+
+        for end in entity_ends:
+            if end not in entity_ends:
+                misaligned_starts.append(end)
+
+        assert len(misaligned_starts) <= len(entities) // 10
+        assert len(misaligned_ends) <= len(entities) // 10
+
+
+@pytest.mark.slow
 def test_scispacy_tokenization():
     tokenizer = build_spacy_tokenizer()
     assert tokenizer("HBeAg(+) patients")[0] == ["HBeAg", "(", "+", ")", "patients"]
-    assert tokenizer("HBeAg(+)/HBsAg(+)")[0] == ["HBeAg", "(", "+", ")", "/", "HBsAg", "(", "+", ")"]
+    assert tokenizer("HBeAg(+)/HBsAg(+)")[0] == [
+        "HBeAg",
+        "(",
+        "+",
+        ")",
+        "/",
+        "HBsAg",
+        "(",
+        "+",
+        ")",
+    ]
