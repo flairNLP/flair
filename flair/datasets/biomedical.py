@@ -327,14 +327,9 @@ class CoNLLWriter:
                         whitespace_after = "+"
                         next_token_offset = offset + len(token)
                         sentence_end_offset = sentence_offset + len(sentence)
-                        sentence_suffix = document_text[
-                            next_token_offset:sentence_end_offset
-                        ].strip()
-
                         if (
                             next_token_offset < sentence_end_offset
                             and not document_text[next_token_offset].isspace()
-                            and not sentence_suffix == "."
                         ):
                             whitespace_after = "-"
 
@@ -4460,6 +4455,3 @@ class BIONLP2013_PC(BioNLPCorpus):
         dev_folder = download_folder / "BioNLP-ST_2013_PC_development_data"
 
         return train_folder, dev_folder
-
-if __name__ == '__main__':
-    HUNER_CELL_LINE_JNLPBA()
