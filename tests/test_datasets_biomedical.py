@@ -9,7 +9,6 @@ from typing import List, Callable, Type, Optional, Tuple
 
 from tqdm import tqdm
 
-from datasets.biomedical import sentence_split_at_tag, SENTENCE_TAG
 from flair.datasets import ColumnCorpus, biomedical
 from flair.datasets.biomedical import (
     Entity,
@@ -17,6 +16,8 @@ from flair.datasets.biomedical import (
     whitespace_tokenize,
     CoNLLWriter,
     filter_nested_entities,
+    sentence_split_at_tag,
+    SENTENCE_TAG,
 )
 import pytest
 
@@ -330,3 +331,19 @@ def test_sanity_no_unmatched_parentheses(CorpusType: Type[ColumnCorpus]):
                 unbalanced_entities.append(entity_text)
 
     assert unbalanced_entities == []
+
+
+@pytest.mark.slow
+@pytest.mark.xfail
+@pytest.mark.parametrize("CorpusType", ALL_DATASETS)
+def test_sanity_not_too_many_entities(CorpusType: Type[ColumnCorpus]):
+    corpus = CorpusType()
+    n_entities_per_sentence = []
+    for sentence in corpus.get_all_sentences():
+        entities = sentence.get_spans("ner")
+        n_entities_per_sentence.append(len(entities))
+    avg_entities_per_sentence = sum(n_entities_per_sentence) / len(
+        n_entities_per_sentence
+    )
+
+    assert avg_entities_per_sentence <= 5
