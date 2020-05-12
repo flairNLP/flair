@@ -107,32 +107,56 @@ def unzip_file(file: Path, unzip_to: Path):
         zipObj.extractall(unzip_to)
 
 
-def unzip_targz_file(file: Path, unzip_to: Path):
-    import tarfile
+def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True):
+    """
+        Unpacks a file to the given location.
 
-    with tarfile.open(file, "r:gz") as tarObj:
-        tarObj.extractall(unzip_to)
+        :param file Archive file to unpack
+        :param unpack_to Destination where to store the output
+        :param mode Type of the archive (zip, tar, gz, targz, rar)
+        :param keep Indicates whether to keep the archive after extraction or delete it
+    """
+    if mode == "zip" or (mode is None and str(file).endswith("zip")):
+        from zipfile import ZipFile
 
+        with ZipFile(file, "r") as zipObj:
+            # Extract all the contents of zip file in current directory
+            zipObj.extractall(unpack_to)
 
-def unzip_tar_file(file: Path, unzip_to: Path):
-    import tarfile
+    elif mode == "targz" or (
+        mode is None and str(file).endswith("tar.gz") or str(file).endswith("tgz")
+    ):
+        import tarfile
 
-    with tarfile.open(file, "r") as tarObj:
-        tarObj.extractall(unzip_to)
+        with tarfile.open(file, "r:gz") as tarObj:
+            tarObj.extractall(unpack_to)
 
+    elif mode == "tar" or (mode is None and str(file).endswith("tar")):
+        import tarfile
 
-def unzip_gz_file(file: Path, unzip_to: Path):
-    import gzip
+        with tarfile.open(file, "r") as tarObj:
+            tarObj.extractall(unpack_to)
 
-    with gzip.open(str(file), "rb") as f_in:
-        with open(str(unzip_to), "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
+    elif mode == "gz" or (mode is None and str(file).endswith("gz")):
+        import gzip
 
+        with gzip.open(str(file), "rb") as f_in:
+            with open(str(unpack_to), "wb") as f_out:
+                shutil.copyfileobj(f_in, f_out)
 
-def unzip_rar_file(file: Path, unzip_to: Path):
-    import patoolib
+    elif mode == "rar" or (mode is None and str(file).endswith("rar")):
+        import patoolib
 
-    patoolib.extract_archive(str(file), outdir=unzip_to, interactive=False)
+        patoolib.extract_archive(str(file), outdir=unpack_to, interactive=False)
+
+    else:
+        if mode is None:
+            raise AssertionError(f"Can't infer archive type from {file}")
+        else:
+            raise AssertionError(f"Unsupported mode {mode}")
+
+    if not keep:
+        os.remove(str(file))
 
 
 def download_file(url: str, cache_dir: Path):

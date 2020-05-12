@@ -16,8 +16,7 @@ from typing import Union, Callable, Dict, List, Tuple, Iterable
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 
-from flair.file_utils import unzip_gz_file, unzip_tar_file, unzip_rar_file
-from flair.file_utils import cached_path, unzip_file, unzip_targz_file, Tqdm
+from flair.file_utils import cached_path, Tqdm, unpack_file
 from flair.datasets import ColumnCorpus
 
 DISEASE_TAG = "Disease"
@@ -585,7 +584,7 @@ class BIO_INFER(ColumnCorpus):
     def download_dataset(cls, data_dir: Path) -> Path:
         data_url = "http://mars.cs.utu.fi/BioInfer/files/BioInfer_corpus_1.1.1.zip"
         data_path = cached_path(data_url, data_dir)
-        unzip_file(data_path, data_dir)
+        unpack_file(data_path, data_dir, keep=False)
 
         return data_dir / "BioInfer_corpus_1.1.1.xml"
 
@@ -705,11 +704,11 @@ class JNLPBA(ColumnCorpus):
 
             train_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Train/Genia4ERtraining.tar.gz"
             train_data_path = cached_path(train_data_url, download_dir)
-            unzip_targz_file(train_data_path, download_dir)
+            unpack_file(train_data_path, download_dir, keep=False)
 
             train_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Evaluation/Genia4ERtest.tar.gz"
             train_data_path = cached_path(train_data_url, download_dir)
-            unzip_targz_file(train_data_path, download_dir)
+            unpack_file(train_data_path, download_dir, keep=False)
 
             train_file = download_dir / "Genia4ERtask2.iob2"
             shutil.copy(train_file, data_folder / "train.conll")
@@ -733,7 +732,7 @@ class HunerJNLPBA:
     ) -> InternalBioNerDataset:
         train_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Train/Genia4ERtraining.tar.gz"
         train_data_path = cached_path(train_data_url, data_folder)
-        unzip_targz_file(train_data_path, data_folder)
+        unpack_file(train_data_path, data_folder, keep=False)
 
         train_input_file = data_folder / "Genia4ERtask2.iob2"
         return cls.read_file(train_input_file, sentence_tag)
@@ -744,7 +743,7 @@ class HunerJNLPBA:
     ) -> InternalBioNerDataset:
         test_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Evaluation/Genia4ERtest.tar.gz"
         test_data_path = cached_path(test_data_url, data_folder)
-        unzip_targz_file(test_data_path, data_folder)
+        unpack_file(test_data_path, data_folder, keep=False)
 
         test_input_file = data_folder / "Genia4EReval2.iob2"
         return cls.read_file(test_input_file, sentence_tag)
@@ -956,7 +955,7 @@ class CELL_FINDER(ColumnCorpus):
     def download_and_prepare(cls, data_folder: Path) -> InternalBioNerDataset:
         data_url = "https://www.informatik.hu-berlin.de/de/forschung/gebiete/wbi/resources/cellfinder/cellfinder1_brat.tar.gz"
         data_path = cached_path(data_url, data_folder)
-        unzip_targz_file(data_path, data_folder)
+        unpack_file(data_path, data_folder, keep=False)
 
         return cls.read_folder(data_folder)
 
@@ -1270,7 +1269,7 @@ class KaewphanCorpusHelper:
     def download_cll_dataset(data_folder: Path):
         data_url = "http://bionlp-www.utu.fi/cell-lines/CLL_corpus.tar.gz"
         data_path = cached_path(data_url, data_folder)
-        unzip_targz_file(data_path, data_folder)
+        unpack_file(data_path, data_folder, keep=False)
 
     @staticmethod
     def prepare_and_save_dataset(conll_folder: Path, output_file: Path):
@@ -1289,7 +1288,7 @@ class KaewphanCorpusHelper:
     def download_gellus_dataset(data_folder: Path):
         data_url = "http://bionlp-www.utu.fi/cell-lines/Gellus_corpus.tar.gz"
         data_path = cached_path(data_url, data_folder)
-        unzip_targz_file(data_path, data_folder)
+        unpack_file(data_path, data_folder, keep=False)
 
     @staticmethod
     def read_dataset(
@@ -1569,7 +1568,7 @@ class LOCTEXT(ColumnCorpus):
     def download_dataset(data_dir: Path):
         data_url = "http://pubannotation.org/downloads/LocText-annotations.tgz"
         data_path = cached_path(data_url, data_dir)
-        unzip_targz_file(data_path, data_dir)
+        unpack_file(data_path, data_dir, keep=False)
 
     @staticmethod
     def parse_dataset(data_dir: Path) -> InternalBioNerDataset:
@@ -1735,7 +1734,7 @@ class CHEMDNER(ColumnCorpus):
     def download_dataset(data_dir: Path):
         data_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2014/chemdner_corpus.tar.gz"
         data_path = cached_path(data_url, data_dir)
-        unzip_targz_file(data_path, data_dir)
+        unpack_file(data_path, data_dir, keep=False)
 
 
 class HUNER_CHEMICAL_CHEMDNER(HunerDataset):
@@ -1851,7 +1850,7 @@ class IEPA(ColumnCorpus):
             "http://corpora.informatik.hu-berlin.de/corpora/brat2bioc/iepa_bioc.xml.zip"
         )
         data_path = cached_path(data_url, data_dir)
-        unzip_file(data_path, data_dir)
+        unpack_file(data_path, data_dir, keep=False)
 
 
 class HUNER_GENE_IEPA(HunerDataset):
@@ -1937,7 +1936,7 @@ class LINNEAUS(ColumnCorpus):
     def download_and_parse_dataset(data_dir: Path):
         data_url = "https://iweb.dl.sourceforge.net/project/linnaeus/Corpora/manual-corpus-species-1.0.tar.gz"
         data_path = cached_path(data_url, data_dir)
-        unzip_targz_file(data_path, data_dir)
+        unpack_file(data_path, data_dir, keep=False)
 
         documents = {}
         entities_per_document = defaultdict(list)
@@ -2081,7 +2080,7 @@ class CDR(ColumnCorpus):
             "https://github.com/JHnlp/BioCreative-V-CDR-Corpus/raw/master/CDR_Data.zip"
         )
         data_path = cached_path(data_url, data_dir)
-        unzip_file(data_path, data_dir)
+        unpack_file(data_path, data_dir, keep=False)
 
 
 class HUNER_DISEASE_CDR(HunerDataset):
@@ -2212,7 +2211,7 @@ class VARIOME(ColumnCorpus):
             "http://corpora.informatik.hu-berlin.de/corpora/brat2bioc/hvp_bioc.xml.zip"
         )
         data_path = cached_path(data_url, data_dir)
-        unzip_file(data_path, data_dir)
+        unpack_file(data_path, data_dir, keep=False)
 
 
 class HUNER_GENE_VARIOME(HunerDataset):
@@ -2360,7 +2359,7 @@ class NCBI_DISEASE(ColumnCorpus):
 
         for url in data_urls:
             data_path = cached_path(url, original_folder)
-            unzip_file(data_path, original_folder)
+            unpack_file(data_path, original_folder, keep=False)
 
         # We need to apply a patch to correct the original training file
         orig_train_file = original_folder / "NCBItrainset_corpus.txt"
@@ -2595,7 +2594,7 @@ class SCAI_CHEMICALS(ScaiCorpus):
         url = "https://www.scai.fraunhofer.de/content/dam/scai/de/downloads/bioinformatik/Corpora-for-Chemical-Entity-Recognition/chemicals-test-corpus-27-04-2009-v3_iob.gz"
         data_path = cached_path(url, original_directory)
         corpus_file = original_directory / "chemicals-test-corpus-27-04-2009-v3.iob"
-        unzip_gz_file(data_path, corpus_file)
+        unpack_file(data_path, corpus_file, keep=False)
 
         return corpus_file
 
@@ -2749,7 +2748,7 @@ class OSIRIS(ColumnCorpus):
     def download_dataset(cls, data_dir: Path) -> Path:
         url = "http://ibi.imim.es/OSIRIScorpusv02.tar"
         data_path = cached_path(url, data_dir)
-        unzip_tar_file(data_path, data_dir)
+        unpack_file(data_path, data_dir, keep=False)
 
         return data_dir / "OSIRIScorpusv02"
 
@@ -2894,7 +2893,7 @@ class S800(ColumnCorpus):
     def download_dataset(data_dir: Path):
         data_url = "https://species.jensenlab.org/files/S800-1.0.tar.gz"
         data_path = cached_path(data_url, data_dir)
-        unzip_tar_file(data_path, data_dir)
+        unpack_file(data_path, data_dir, keep=False)
 
     @staticmethod
     def parse_dataset(data_dir: Path) -> InternalBioNerDataset:
@@ -3013,7 +3012,7 @@ class GPRO(ColumnCorpus):
 
         train_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2015/gpro_training_set_v02.tar.gz"
         data_path = cached_path(train_url, corpus_dir)
-        unzip_targz_file(data_path, corpus_dir)
+        unpack_file(data_path, corpus_dir, keep=False)
 
         return corpus_dir / "gpro_training_set_v02"
 
@@ -3022,9 +3021,9 @@ class GPRO(ColumnCorpus):
         corpus_dir = data_dir / "original"
         os.makedirs(str(corpus_dir), exist_ok=True)
 
-        dev_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2015/gpro_development_set.tar_.gz"
+        dev_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2015/gpro_development_set.tar.gz"
         data_path = cached_path(dev_url, corpus_dir)
-        unzip_targz_file(data_path, corpus_dir)
+        unpack_file(data_path, corpus_dir, keep=False)
 
         return corpus_dir / "gpro_development_set"
 
@@ -3164,7 +3163,7 @@ class DECA(ColumnCorpus):
     def download_corpus(cls, data_dir: Path) -> Path:
         url = "http://www.nactem.ac.uk/deca/species_corpus_0.2.tar.gz"
         data_path = cached_path(url, data_dir)
-        unzip_targz_file(data_path, data_dir)
+        unpack_file(data_path, data_dir, keep=False)
 
         return data_dir / "species_corpus_0.2"
 
@@ -3276,7 +3275,7 @@ class FSU(ColumnCorpus):
     def download_corpus(cls, data_dir: Path) -> Path:
         url = "https://julielab.de/downloads/resources/fsu_prge_release_v1_0.tgz"
         data_path = cached_path(url, data_dir)
-        unzip_targz_file(data_path, data_dir)
+        unpack_file(data_path, data_dir, mode="targz", keep=False)
 
         return data_dir / "fsu-prge-release-v1.0"
 
@@ -3467,7 +3466,7 @@ class CRAFT(ColumnCorpus):
     def download_corpus(cls, data_dir: Path) -> Path:
         url = "http://sourceforge.net/projects/bionlp-corpora/files/CRAFT/v2.0/craft-2.0.tar.gz/download"
         data_path = cached_path(url, data_dir)
-        unzip_targz_file(data_path, data_dir)
+        unpack_file(data_path, data_dir, mode="targz", keep=False)
 
         return data_dir / "craft-2.0"
 
@@ -3639,7 +3638,7 @@ class BIOSEMANTICS(ColumnCorpus):
     def download_dataset(data_dir: Path) -> Path:
         data_url = "http://biosemantics.org/PatentCorpus/Patent_Corpus.rar"
         data_path = cached_path(data_url, data_dir)
-        unzip_rar_file(data_path, data_dir)
+        unpack_file(data_path, data_dir, keep=False)
 
         return data_dir / "Patent_Corpus"
 
@@ -3851,11 +3850,11 @@ class BC2GM(ColumnCorpus):
     def download_dataset(data_dir: Path) -> Path:
         data_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2011/bc2GMtrain_1.1.tar.gz"
         data_path = cached_path(data_url, data_dir)
-        unzip_targz_file(data_path, data_dir)
+        unpack_file(data_path, data_dir, keep=False)
 
         data_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2011/bc2GMtest_1.0.tar.gz"
         data_path = cached_path(data_url, data_dir)
-        unzip_targz_file(data_path, data_dir)
+        unpack_file(data_path, data_dir, keep=False)
 
         return data_dir
 
@@ -4022,7 +4021,7 @@ class CEMP(ColumnCorpus):
 
         train_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2015/cemp_training_set.tar.gz"
         data_path = cached_path(train_url, corpus_dir)
-        unzip_targz_file(data_path, corpus_dir)
+        unpack_file(data_path, corpus_dir, keep=False)
 
         return corpus_dir / "cemp_training_set"
 
@@ -4033,7 +4032,7 @@ class CEMP(ColumnCorpus):
 
         dev_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2015/cemp_development_set_v03.tar.gz"
         data_path = cached_path(dev_url, corpus_dir)
-        unzip_targz_file(data_path, corpus_dir)
+        unpack_file(data_path, corpus_dir, keep=False)
 
         return corpus_dir / "cemp_development_set_v03"
 
@@ -4184,7 +4183,7 @@ class CHEBI(ColumnCorpus):
     def download_dataset(data_dir: Path) -> Path:
         data_url = "http://www.nactem.ac.uk/chebi/ChEBI.zip"
         data_path = cached_path(data_url, data_dir)
-        unzip_file(data_path, data_dir)
+        unpack_file(data_path, data_dir, keep=False)
 
         return data_dir / "ChEBI"
 
@@ -4441,14 +4440,16 @@ class BIONLP2013_PC(BioNLPCorpus):
         cached_path(train_url, download_folder)
         cached_path(dev_url, download_folder)
 
-        unzip_targz_file(
+        unpack_file(
             download_folder / "BioNLP-ST_2013_PC_training_data.tar.gz?attredirects=0",
             download_folder,
+            keep=False,
         )
-        unzip_targz_file(
+        unpack_file(
             download_folder
             / "BioNLP-ST_2013_PC_development_data.tar.gz?attredirects=0",
             download_folder,
+            keep=False,
         )
 
         train_folder = download_folder / "BioNLP-ST_2013_PC_training_data"
