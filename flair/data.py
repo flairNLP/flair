@@ -507,13 +507,12 @@ class Sentence(DataPoint):
         if type(token) is str:
             token = Token(token)
 
-        # data with variation selectors cannot be handled
-        if u'\ufe0f' in token.text or u'\ufeff' in token.text:
-            return
-
-        # data with zero-width characters cannot be handled
         token.text = token.text.replace('\u200c', '')
         token.text = token.text.replace('\u200b', '')
+        token.text = token.text.replace('\ufe0f', '')
+        token.text = token.text.replace('\ufeff', '')
+
+        # data with zero-width characters cannot be handled
         if token.text.strip() == '':
             return
 
