@@ -1,5 +1,6 @@
 import itertools
 import logging
+from warnings import warn
 
 import flair
 import ftfy
@@ -1828,6 +1829,10 @@ class IEPA(ColumnCorpus):
             self.download_dataset(download_dir)
 
             all_data = bioc_to_internal(download_dir / "iepa_bioc.xml")
+            new_documents = {}
+            for doc_id, document in all_data.documents.items():
+                new_documents[doc_id] = document.replace("\n", SENTENCE_TAG)
+            all_data.documents = new_documents
 
             if tokenizer is None:
                 tokenizer = build_spacy_tokenizer()
@@ -1858,8 +1863,13 @@ class HUNER_GENE_IEPA(HunerDataset):
         HUNER version of the IEPA corpus containing gene annotations.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, sentence_splitter=None, **kwargs):
+        if sentence_splitter is not None:
+            warn(
+                "Ignoring non-default sentence splitter for corpus with predefined sentences"
+            )
+            del kwargs["sentence_splitter"]
+        super().__init__(*args, sentence_splitter=sentence_split_at_tag, **kwargs)
 
     @staticmethod
     def split_url() -> str:
@@ -1869,6 +1879,10 @@ class HUNER_GENE_IEPA(HunerDataset):
         os.makedirs(str(data_dir), exist_ok=True)
         IEPA.download_dataset(data_dir)
         all_data = bioc_to_internal(data_dir / "iepa_bioc.xml")
+        new_documents = {}
+        for doc_id, document in all_data.documents.items():
+            new_documents[doc_id] = document.replace("\n", SENTENCE_TAG)
+        all_data.documents = new_documents
         all_data = filter_and_map_entities(all_data, {"Protein": GENE_TAG})
 
         return all_data
@@ -1888,15 +1902,12 @@ class LINNEAUS(ColumnCorpus):
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param tokenizer: Callable that segments a sentence into words,
                              defaults to scispacy
-           :param sentence_splitter: Callable that segments a document into sentences,
-                                     defaults to scispacy
            """
 
         if type(base_path) == str:
@@ -1921,8 +1932,7 @@ class LINNEAUS(ColumnCorpus):
             if tokenizer is None:
                 tokenizer = build_spacy_tokenizer()
 
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
+            sentence_splitter = sentence_split_at_tag
 
             conll_writer = CoNLLWriter(
                 tokenizer=tokenizer, sentence_splitter=sentence_splitter
