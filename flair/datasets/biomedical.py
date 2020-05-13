@@ -348,11 +348,27 @@ def segtok_tokenizer(text: str) -> Tuple[List[str], List[int]]:
     return tokens_text, tokens_offset
 
 
-
 class SciSpacyTokenizer:
     def __init__(self):
         import spacy
         from spacy.lang import char_classes
+
+        def combined_rule_prefixes() -> List[str]:
+            """Helper function that returns the prefix pattern for the tokenizer.
+               It is a helper function to accomodate spacy tests that only test
+               prefixes.
+            """
+            prefix_punct = char_classes.PUNCT.replace("|", " ")
+
+            prefixes = (
+                ["§", "%", "=", r"\+"]
+                + char_classes.split_chars(prefix_punct)
+                + char_classes.LIST_ELLIPSES
+                + char_classes.LIST_QUOTES
+                + char_classes.LIST_CURRENCY
+                + char_classes.LIST_ICONS
+            )
+            return prefixes
 
         infixes = (
             char_classes.LIST_ELLIPSES
@@ -373,11 +389,13 @@ class SciSpacyTokenizer:
             ]
         )
 
+        prefix_re = spacy.util.compile_prefix_regex(combined_rule_prefixes())
         infix_re = spacy.util.compile_infix_regex(infixes)
 
         self.nlp = spacy.load(
             "en_core_sci_sm", disable=["tagger", "ner", "parser", "textcat"]
         )
+        self.nlp.tokenizer.prefix_search = prefix_re.search
         self.nlp.tokenizer.infix_finditer = infix_re.finditer
 
     def __call__(self, sentence: str):
