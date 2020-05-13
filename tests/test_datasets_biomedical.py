@@ -404,3 +404,4 @@ def test_scispacy_tokenization():
         "+",
         ")",
     ]
+    assert tokenizer("doxorubicin (DOX)-induced")[0] == ["doxorubicin", "(", "DOX", ")", "-", "induced"]

@@ -340,6 +340,15 @@ class CoNLLWriter:
                         f.write("\n")
 
 
+def segtok_tokenizer(text: str) -> Tuple[List[str], List[int]]:
+    tokens = flair.data.segtok_tokenizer(text)
+    tokens_text = [i.text for i in tokens]
+    tokens_offset = [i.start_pos for i in tokens]
+
+    return tokens_text, tokens_offset
+
+
+
 class SciSpacyTokenizer:
     def __init__(self):
         import spacy
