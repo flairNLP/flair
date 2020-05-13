@@ -4082,8 +4082,7 @@ class CEMP(ColumnCorpus):
     def parse_input_file(text_file: Path, ann_file: Path) -> InternalBioNerDataset:
         documents = {}
         entities_per_document = {}
-
-        document_title_length = {}
+        document_abstract_length = {}
 
         with open(str(text_file), "r") as text_reader:
             for line in text_reader:
@@ -4091,8 +4090,10 @@ class CEMP(ColumnCorpus):
                     continue
 
                 document_id, title, abstract = line.split("\t")
-                documents[document_id] = title + " " + abstract
-                document_title_length[document_id] = len(title) + 1
+
+                # Abstract first, title second to prevent issues with sentence splitting
+                documents[document_id] = abstract + " " + title
+                document_abstract_length[document_id] = len(abstract) + 1
 
                 entities_per_document[document_id] = []
 
@@ -4105,9 +4106,9 @@ class CEMP(ColumnCorpus):
                 document_id = columns[0]
                 start, end = int(columns[2]), int(columns[3])
 
-                if columns[1] == "A":
-                    start = start + document_title_length[document_id]
-                    end = end + document_title_length[document_id]
+                if columns[1] == "T":
+                    start = start + document_abstract_length[document_id]
+                    end = end + document_abstract_length[document_id]
 
                 entities_per_document[document_id].append(
                     Entity((start, end), columns[5].strip())
