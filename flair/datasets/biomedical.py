@@ -994,7 +994,11 @@ class CELL_FINDER(ColumnCorpus):
         entities_per_document = defaultdict(list)
         for ann_file in ann_files:
             with ann_file.open() as f_ann, ann_file.with_suffix(".txt").open() as f_txt:
+                document_text = f_txt.read().strip()
+
                 document_id = ann_file.stem
+                documents[document_id] = document_text
+
                 for line in f_ann:
                     fields = line.strip().split("\t")
                     if not fields:
@@ -1006,7 +1010,8 @@ class CELL_FINDER(ColumnCorpus):
                             entity_type=ent_type,
                         )
                     )
-                documents[document_id] = f_txt.read()
+
+                    assert document_text[int(char_start) : int(char_end)] == fields[2]
 
         return InternalBioNerDataset(
             documents=documents, entities_per_document=dict(entities_per_document)
