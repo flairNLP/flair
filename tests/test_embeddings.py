@@ -8,14 +8,17 @@ from flair.embeddings import (
     DocumentPoolEmbeddings,
     FlairEmbeddings,
     DocumentRNNEmbeddings,
-    DocumentLMEmbeddings,
+    DocumentLMEmbeddings, TransformerWordEmbeddings, TransformerDocumentEmbeddings,
 )
 
 from flair.data import Sentence, Dictionary
 from flair.models import LanguageModel
 
+glove: TokenEmbeddings = WordEmbeddings("turian")
+flair_embedding: TokenEmbeddings = FlairEmbeddings("news-forward-fast")
 
-def test_loading_not_existing_embedding():
+
+def test_load_non_existing_embedding():
     with pytest.raises(ValueError):
         WordEmbeddings("other")
 
@@ -23,13 +26,13 @@ def test_loading_not_existing_embedding():
         WordEmbeddings("not/existing/path/to/embeddings")
 
 
-def test_loading_not_existing_char_lm_embedding():
+def test_load_non_existing_flair_embedding():
     with pytest.raises(ValueError):
         FlairEmbeddings("other")
 
 
 def test_keep_batch_order():
-    sentence, glove, charlm = init_document_embeddings()
+
     embeddings = DocumentRNNEmbeddings([glove])
     sentences_1 = [Sentence("First sentence"), Sentence("This is second sentence")]
     sentences_2 = [Sentence("This is second sentence"), Sentence("First sentence")]
@@ -45,12 +48,11 @@ def test_keep_batch_order():
     del embeddings
 
 
-@pytest.mark.integration
 def test_stacked_embeddings():
-    sentence, glove, charlm = init_document_embeddings()
 
-    embeddings: StackedEmbeddings = StackedEmbeddings([glove, charlm])
+    embeddings: StackedEmbeddings = StackedEmbeddings([glove, flair_embedding])
 
+    sentence: Sentence = Sentence("I love Berlin. Berlin is a great place to live.")
     embeddings.embed(sentence)
 
     for token in sentence.tokens:
@@ -62,7 +64,45 @@ def test_stacked_embeddings():
     del embeddings
 
 
-@pytest.mark.integration
+def test_transformer_word_embeddings():
+
+    embeddings = TransformerWordEmbeddings('distilbert-base-uncased')
+
+    sentence: Sentence = Sentence("I love Berlin")
+    embeddings.embed(sentence)
+
+    for token in sentence.tokens:
+        assert len(token.get_embedding()) == 3072
+
+        token.clear_embeddings()
+
+        assert len(token.get_embedding()) == 0
+
+    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all')
+
+    embeddings.embed(sentence)
+
+    for token in sentence.tokens:
+        assert len(token.get_embedding()) == 5376
+
+        token.clear_embeddings()
+
+        assert len(token.get_embedding()) == 0
+    del embeddings
+
+    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', use_scalar_mix=True)
+
+    embeddings.embed(sentence)
+
+    for token in sentence.tokens:
+        assert len(token.get_embedding()) == 768
+
+        token.clear_embeddings()
+
+        assert len(token.get_embedding()) == 0
+    del embeddings
+
+
 def test_fine_tunable_flair_embedding():
     language_model_forward = LanguageModel(
         Dictionary.load("chars"), is_forward_lm=True, hidden_size=32, nlayers=1
@@ -102,12 +142,11 @@ def test_fine_tunable_flair_embedding():
     del embeddings
 
 
-@pytest.mark.integration
 def test_document_lstm_embeddings():
-    sentence, glove, charlm = init_document_embeddings()
+    sentence: Sentence = Sentence("I love Berlin. Berlin is a great place to live.")
 
     embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
-        [glove, charlm], hidden_size=128, bidirectional=False
+        [glove, flair_embedding], hidden_size=128, bidirectional=False
     )
 
     embeddings.embed(sentence)
@@ -121,12 +160,11 @@ def test_document_lstm_embeddings():
     del embeddings
 
 
-@pytest.mark.integration
 def test_document_bidirectional_lstm_embeddings():
-    sentence, glove, charlm = init_document_embeddings()
+    sentence: Sentence = Sentence("I love Berlin. Berlin is a great place to live.")
 
     embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
-        [glove, charlm], hidden_size=128, bidirectional=True
+        [glove, flair_embedding], hidden_size=128, bidirectional=True
     )
 
     embeddings.embed(sentence)
@@ -140,13 +178,12 @@ def test_document_bidirectional_lstm_embeddings():
     del embeddings
 
 
-@pytest.mark.integration
 def test_document_pool_embeddings():
-    sentence, glove, charlm = init_document_embeddings()
+    sentence: Sentence = Sentence("I love Berlin. Berlin is a great place to live.")
 
     for mode in ["mean", "max", "min"]:
         embeddings: DocumentPoolEmbeddings = DocumentPoolEmbeddings(
-            [glove, charlm], pooling=mode, fine_tune_mode="none"
+            [glove, flair_embedding], pooling=mode, fine_tune_mode="none"
         )
 
         embeddings.embed(sentence)
@@ -159,13 +196,12 @@ def test_document_pool_embeddings():
         del embeddings
 
 
-@pytest.mark.integration
 def test_document_pool_embeddings_nonlinear():
-    sentence, glove, charlm = init_document_embeddings()
+    sentence: Sentence = Sentence("I love Berlin. Berlin is a great place to live.")
 
     for mode in ["mean", "max", "min"]:
         embeddings: DocumentPoolEmbeddings = DocumentPoolEmbeddings(
-            [glove, charlm], pooling=mode, fine_tune_mode="nonlinear"
+            [glove, flair_embedding], pooling=mode, fine_tune_mode="nonlinear"
         )
 
         embeddings.embed(sentence)
@@ -178,41 +214,35 @@ def test_document_pool_embeddings_nonlinear():
         del embeddings
 
 
-def init_document_embeddings():
-    text = "I love Berlin. Berlin is a great place to live."
-    sentence: Sentence = Sentence(text)
+def test_transformer_document_embeddings():
 
-    glove: TokenEmbeddings = WordEmbeddings("turian")
-    charlm: TokenEmbeddings = FlairEmbeddings("news-forward-fast")
+    embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased')
 
-    return sentence, glove, charlm
-
-
-def load_and_apply_word_embeddings(emb_type: str):
-    text = "I love Berlin."
-    sentence: Sentence = Sentence(text)
-    embeddings: TokenEmbeddings = WordEmbeddings(emb_type)
+    sentence: Sentence = Sentence("I love Berlin")
     embeddings.embed(sentence)
 
-    for token in sentence.tokens:
-        assert len(token.get_embedding()) != 0
+    assert len(sentence.get_embedding()) == 3072
 
-        token.clear_embeddings()
+    sentence.clear_embeddings()
 
-        assert len(token.get_embedding()) == 0
-    del embeddings
+    assert len(sentence.get_embedding()) == 0
 
+    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all')
 
-def load_and_apply_char_lm_embeddings(emb_type: str):
-    text = "I love Berlin."
-    sentence: Sentence = Sentence(text)
-    embeddings: TokenEmbeddings = FlairEmbeddings(emb_type)
     embeddings.embed(sentence)
 
-    for token in sentence.tokens:
-        assert len(token.get_embedding()) != 0
+    assert len(sentence.get_embedding()) == 3072
 
-        token.clear_embeddings()
+    sentence.clear_embeddings()
 
-        assert len(token.get_embedding()) == 0
+    assert len(sentence.get_embedding()) == 0
+
+    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', use_scalar_mix=True)
+
+    embeddings.embed(sentence)
+
+    assert len(sentence.get_embedding()) == 768
+
+    sentence.clear_embeddings()
+
     del embeddings
