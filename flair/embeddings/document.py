@@ -63,7 +63,13 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         self.model.to(flair.device)
 
         # embedding parameters
-        self.layer_indexes = [int(x) for x in layers.split(",")]
+        if layers == 'all':
+            # send mini-token through to check how many layers the model has
+            hidden_states = self.model(torch.tensor([1], device=flair.device).unsqueeze(0))[-1]
+            self.layer_indexes = [int(x) for x in range(len(hidden_states))]
+        else:
+            self.layer_indexes = [int(x) for x in layers.split(",")]
+
         self.use_scalar_mix = use_scalar_mix
         self.fine_tune = fine_tune
         self.static_embeddings = not self.fine_tune

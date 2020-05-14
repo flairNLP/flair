@@ -221,23 +221,23 @@ def test_transformer_document_embeddings():
     sentence: Sentence = Sentence("I love Berlin")
     embeddings.embed(sentence)
 
-    assert len(sentence.get_embedding()) == 3072
+    assert len(sentence.get_embedding()) == 768
 
     sentence.clear_embeddings()
 
     assert len(sentence.get_embedding()) == 0
 
-    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all')
+    embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased', layers='all')
 
     embeddings.embed(sentence)
 
-    assert len(sentence.get_embedding()) == 3072
+    assert len(sentence.get_embedding()) == 5376
 
     sentence.clear_embeddings()
 
     assert len(sentence.get_embedding()) == 0
 
-    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', use_scalar_mix=True)
+    embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased', layers='all', use_scalar_mix=True)
 
     embeddings.embed(sentence)
 
