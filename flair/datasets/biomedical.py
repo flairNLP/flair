@@ -2195,7 +2195,7 @@ class VARIOME(ColumnCorpus):
             os.makedirs(download_dir, exist_ok=True)
             self.download_dataset(download_dir)
 
-            all_data = bioc_to_internal(download_dir / "hvp_bioc.xml")
+            all_data = self.parse_corpus(download_dir / "hvp_bioc.xml")
 
             if tokenizer is None:
                 tokenizer = build_spacy_tokenizer()
@@ -2220,6 +2220,110 @@ class VARIOME(ColumnCorpus):
         data_path = cached_path(data_url, data_dir)
         unpack_file(data_path, data_dir, keep=False)
 
+    @staticmethod
+    def parse_corpus(corpus_xml: Path) -> InternalBioNerDataset:
+        tree = etree.parse(str(corpus_xml))
+        texts_per_document = {}
+        entities_per_document = {}
+        documents = tree.xpath(".//document")
+
+        for document in Tqdm.tqdm(documents, desc="Converting to internal"):
+            document_id = document.xpath("./id")[0].text
+            texts = []
+            entities = []
+
+            for passage in document.xpath("passage"):
+                text = passage.xpath("text/text()")[0]
+                passage_offset = int(
+                    passage.xpath("./offset/text()")[0]
+                )  # from BioC annotation
+                document_offset = len(
+                    " ".join(texts)
+                )  # because we stick all passages of a document together
+
+                texts.append(text)  # calculate offset without current text
+
+                for annotation in passage.xpath(".//annotation"):
+
+                    entity_types = [
+                        i.text.replace(" ", "_")
+                        for i in annotation.xpath("./infon")
+                        if i.attrib["key"] in {"type", "class"}
+                    ]
+
+                    start = (
+                        int(annotation.xpath("./location")[0].get("offset"))
+                        - passage_offset
+                    )
+                    # TODO For split entities we also annotate everything in-between which might be a bad idea?
+                    final_length = int(annotation.xpath("./location")[-1].get("length"))
+                    final_offset = (
+                        int(annotation.xpath("./location")[-1].get("offset"))
+                        - passage_offset
+                    )
+
+                    if final_length <= 0:
+                        continue
+
+                    end = final_offset + final_length
+                    annotated_entity = text[start:end]
+                    true_entity = annotation.xpath(".//text")[0].text
+
+                    # Try to fix incorrect annotations
+                    if annotated_entity.lower() != true_entity.lower():
+                        max_shift = min(3, len(true_entity))
+                        for i in range(max_shift):
+                            index = annotated_entity.lower().find(
+                                true_entity[0 : max_shift - i].lower()
+                            )
+                            if index != -1:
+                                start += index
+                                end += index
+                                break
+
+                    annotated_entity = text[start:end]
+
+                    if annotated_entity.lower() != true_entity.lower():
+                        continue
+
+                    for entity_type in entity_types:
+                        entities.append(
+                            Entity(
+                                (start + document_offset, end + document_offset),
+                                entity_type,
+                            )
+                        )
+
+            document_text = " ".join(texts)
+            original_length = len(document_text)
+
+            text_cleaned = document_text.replace("** IGNORE LINE **\n", "")
+            offset = original_length - len(text_cleaned)
+
+            if offset != 0:
+                new_entities = []
+                for entity in entities:
+                    new_start = entity.char_span.start - offset
+                    new_end = entity.char_span.stop - offset
+
+                    new_entities.append(Entity((new_start, new_end), entity.type))
+
+                    orig_text = document_text[
+                        entity.char_span.start : entity.char_span.stop
+                    ]
+                    new_text = text_cleaned[new_start:new_end]
+                    assert orig_text == new_text
+
+                entities = new_entities
+                document_text = text_cleaned
+
+            texts_per_document[document_id] = document_text
+            entities_per_document[document_id] = entities
+
+        return InternalBioNerDataset(
+            documents=texts_per_document, entities_per_document=entities_per_document
+        )
+
 
 class HUNER_GENE_VARIOME(HunerDataset):
     """
@@ -2236,7 +2340,7 @@ class HUNER_GENE_VARIOME(HunerDataset):
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         os.makedirs(str(data_dir), exist_ok=True)
         VARIOME.download_dataset(data_dir)
-        all_data = bioc_to_internal(data_dir / "hvp_bioc.xml")
+        all_data = VARIOME.parse_corpus(data_dir / "hvp_bioc.xml")
         all_data = filter_and_map_entities(all_data, {"gene": GENE_TAG})
 
         return all_data
@@ -2257,7 +2361,7 @@ class HUNER_DISEASE_VARIOME(HunerDataset):
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         os.makedirs(str(data_dir), exist_ok=True)
         VARIOME.download_dataset(data_dir)
-        all_data = bioc_to_internal(data_dir / "hvp_bioc.xml")
+        all_data = VARIOME.parse_corpus(data_dir / "hvp_bioc.xml")
         all_data = filter_and_map_entities(
             all_data, {"Disorder": DISEASE_TAG, "disease": DISEASE_TAG}
         )
@@ -2280,7 +2384,7 @@ class HUNER_SPECIES_VARIOME(HunerDataset):
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         os.makedirs(str(data_dir), exist_ok=True)
         VARIOME.download_dataset(data_dir)
-        all_data = bioc_to_internal(data_dir / "hvp_bioc.xml")
+        all_data = VARIOME.parse_corpus(data_dir / "hvp_bioc.xml")
         all_data = filter_and_map_entities(all_data, {"Living_Beings": SPECIES_TAG})
 
         return all_data
