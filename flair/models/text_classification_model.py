@@ -432,7 +432,7 @@ class TextClassifier(flair.nn.Model):
 
         model_map = {}
         aws_resource_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4"
-        hu_path: str = "https://flair.informatik.hu-berlin.de/resources/models"
+        hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
         model_map["de-offensive-language"] = "/".join(
             [
@@ -444,13 +444,13 @@ class TextClassifier(flair.nn.Model):
 
         # English sentiment models
         model_map["sentiment"] = "/".join(
-            [hu_path, "sentiment-curated-distilbert-base-uncased", "sentiment-en-mix-distillbert.pt"]
+            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert.pt"]
         )
         model_map["en-sentiment"] = "/".join(
-            [hu_path, "sentiment-curated-distilbert-base-uncased", "sentiment-en-mix-distillbert.pt"]
+            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert.pt"]
         )
         model_map["sentiment-fast"] = "/".join(
-            [hu_path, "sentiment-curated-fasttext-rnn-sgd", "sentiment-en-mix-rnn.pt"]
+            [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn.pt"]
         )
 
         cache_dir = Path("models")
