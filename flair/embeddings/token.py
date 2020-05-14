@@ -836,7 +836,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             self.layer_indexes = [int(x) for x in range(len(hidden_states))]
         else:
             self.layer_indexes = [int(x) for x in layers.split(",")]
-        self.mix = ScalarMix(mixture_size=len(self.layer_indexes), trainable=False)
+        # self.mix = ScalarMix(mixture_size=len(self.layer_indexes), trainable=False)
         self.pooling_operation = pooling_operation
         self.use_scalar_mix = use_scalar_mix
         self.fine_tune = fine_tune
@@ -844,8 +844,11 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         self.batch_size = batch_size
 
         self.special_tokens = []
-        self.special_tokens.append(self.tokenizer.bos_token)
-        self.special_tokens.append(self.tokenizer.cls_token)
+        # check if special tokens exist to circumvent error message
+        if self.tokenizer._bos_token:
+            self.special_tokens.append(self.tokenizer.bos_token)
+        if self.tokenizer._cls_token:
+            self.special_tokens.append(self.tokenizer.cls_token)
 
         # most models have an intial BOS token, except for XLNet, T5 and GPT2
         self.begin_offset = 1
@@ -869,6 +872,24 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         return sentences
 
+    @staticmethod
+    def _remove_special_markup(text: str):
+        # remove special markup
+        text = re.sub('^Ġ', '', text)  # RoBERTa models
+        text = re.sub('^##', '', text)  # BERT models
+        text = re.sub('^▁', '', text)  # XLNet models
+        text = re.sub('</w>$', '', text)  # XLM models
+        return text
+
+    def _get_processed_token_text(self, token: Token) -> str:
+        pieces = self.tokenizer.convert_ids_to_tokens(
+            self.tokenizer.encode(token.text, add_special_tokens=False))
+        token_text = ''
+        for piece in pieces:
+            token_text += self._remove_special_markup(piece)
+        token_text = token_text.lower()
+        return token_text
+
     def _add_embeddings_to_sentences(self, sentences: List[Sentence]):
         """Match subtokenization to Flair tokenization and extract embeddings from transformers for each token."""
 
@@ -889,10 +910,11 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
             subtokenized_sentences.append(torch.tensor(subtokenized_sentence, dtype=torch.long))
             subtokens = self.tokenizer.convert_ids_to_tokens(subtokenized_sentence)
+            # print(subtokens)
 
             word_iterator = iter(sentence)
             token = next(word_iterator)
-            token_text = token.text.lower()
+            token_text = self._get_processed_token_text(token)
 
             token_subtoken_lengths = []
             reconstructed_token = ''
@@ -904,10 +926,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 subtoken_count += 1
 
                 # remove special markup
-                subtoken = re.sub('^Ġ', '', subtoken)    # RoBERTa models
-                subtoken = re.sub('^##', '', subtoken)   # BERT models
-                subtoken = re.sub('^▁', '', subtoken)    # XLNet models
-                subtoken = re.sub('</w>$', '', subtoken) # XLM models
+                subtoken = self._remove_special_markup(subtoken)
 
                 # append subtoken to reconstruct token
                 reconstructed_token = reconstructed_token + subtoken
@@ -916,20 +935,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 if reconstructed_token in self.special_tokens and subtoken_id == 0:
                     reconstructed_token = ''
                     subtoken_count = 0
-
-                # special handling for UNK subtokens
-                if self.tokenizer.unk_token and self.tokenizer.unk_token in reconstructed_token:
-                    pieces = self.tokenizer.convert_ids_to_tokens(
-                        self.tokenizer.encode(token.text, add_special_tokens=False))
-                    token_text = ''
-                    for piece in pieces:
-                        # remove special markup
-                        piece = re.sub('^Ġ', '', piece)  # RoBERTa models
-                        piece = re.sub('^##', '', piece)  # BERT models
-                        piece = re.sub('^▁', '', piece)  # XLNet models
-                        piece = re.sub('</w>$', '', piece)  # XLM models
-                        token_text += piece
-                    token_text = token_text.lower()
 
                 # check if reconstructed token is the same as current token
                 if reconstructed_token.lower() == token_text:
@@ -944,9 +949,16 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                     # break from loop if all tokens are accounted for
                     if len(token_subtoken_lengths) < len(sentence):
                         token = next(word_iterator)
-                        token_text = token.text.lower()
+                        token_text = self._get_processed_token_text(token)
                     else:
                         break
+
+            # check if all tokens were matched to subtokens
+            if token != sentence[-1]:
+                log.error(f"Tokenization MISMATCH in sentence '{sentence.to_tokenized_string()}'")
+                log.error(f"Last matched: '{token}'")
+                log.error(f"Last sentence: '{sentence[-1]}'")
+                log.error(f"subtokenized: '{subtokens}'")
 
             subtokenized_sentences_token_lengths.append(token_subtoken_lengths)
 
@@ -1043,6 +1055,13 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         if self.pooling_operation == 'first_last': length *= 2
 
         return length
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+        # reload tokenizer to get around serialization issues
+        model_name = self.name.split('transformer-word-')[-1]
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 
 class FastTextEmbeddings(TokenEmbeddings):

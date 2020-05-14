@@ -56,7 +56,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         self.model = AutoModel.from_pretrained(model, config=config)
 
         # model name
-        self.name = str(model)
+        self.name = 'transformer-document-' + str(model)
 
         # when initializing, embeddings are in eval mode by default
         self.model.eval()
@@ -157,6 +157,12 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             else self.model.config.hidden_size
         )
 
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+        # reload tokenizer to get around serialization issues
+        model_name = self.name.split('transformer-document-')[-1]
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 class DocumentPoolEmbeddings(DocumentEmbeddings):
     def __init__(
