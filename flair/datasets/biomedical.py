@@ -127,6 +127,8 @@ def filter_and_map_entities(
 
 
 def filter_nested_entities(dataset: InternalBioNerDataset) -> None:
+    num_entities_before = sum([len(x) for x in dataset.entities_per_document.values()])
+
     for document_id, entities in dataset.entities_per_document.items():
         # Uses dynamic programming approach to calculate maximum independent set in interval graph
         # with sum of all entity lengths as secondary key
@@ -162,6 +164,13 @@ def filter_nested_entities(dataset: InternalBioNerDataset) -> None:
                 p -= len(dp_entry[3].char_span)
 
         dataset.entities_per_document[document_id] = independent_set
+
+    num_entities_after = sum([len(x) for x in dataset.entities_per_document.values()])
+    if num_entities_before != num_entities_after:
+        removed = num_entities_before - num_entities_after
+        warn(
+            f"Corpus modified by filtering nested entities. Removed {removed} entities."
+        )
 
 
 def whitespace_tokenize(text: str) -> Tuple[List[str], List[int]]:
