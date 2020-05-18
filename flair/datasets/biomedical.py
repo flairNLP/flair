@@ -667,23 +667,44 @@ class BIO_INFER(ColumnCorpus):
             ]  # all caps entity type apparently marks event trigger
 
             for entity in entities:
+                token_nums = []
                 entity_character_starts = []
                 entity_character_ends = []
 
                 for subtoken in entity.xpath(".//nestedsubtoken"):
-                    token_id = ".".join(subtoken.attrib["id"].split(".")[1:3])
+                    token_id_parts = subtoken.attrib["id"].split(".")
+                    token_id = ".".join(token_id_parts[1:3])
+
+                    token_nums.append(int(token_id_parts[2]))
                     entity_character_starts.append(token_id_to_span[token_id][0])
                     entity_character_ends.append(token_id_to_span[token_id][1])
 
-                if entity_character_starts and entity_character_ends:
-                    char_span = (
-                        min(entity_character_starts),
-                        max(entity_character_ends),
+                if token_nums and entity_character_starts and entity_character_ends:
+                    entity_tokens = list(
+                        zip(token_nums, entity_character_starts, entity_character_ends)
                     )
-                    entity = Entity(
-                        char_span=char_span, entity_type=entity.attrib["type"]
-                    )
-                    entities_per_document[sentence_id].append(entity)
+
+                    start_token = entity_tokens[0]
+                    last_entity_token = entity_tokens[0]
+                    for entity_token in entity_tokens[1:]:
+                        if not (entity_token[0] - 1) == last_entity_token[0]:
+                            entities_per_document[sentence_id].append(
+                                Entity(
+                                    char_span=(start_token[1], last_entity_token[2]),
+                                    entity_type=entity.attrib["type"],
+                                )
+                            )
+                            start_token = entity_token
+
+                        last_entity_token = entity_token
+
+                    if start_token:
+                        entities_per_document[sentence_id].append(
+                            Entity(
+                                char_span=(start_token[1], last_entity_token[2]),
+                                entity_type=entity.attrib["type"],
+                            )
+                        )
 
         return InternalBioNerDataset(
             documents=documents, entities_per_document=entities_per_document
