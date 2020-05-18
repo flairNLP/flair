@@ -1145,18 +1145,18 @@ class MIRNA(ColumnCorpus):
         data_url = "https://www.scai.fraunhofer.de/content/dam/scai/de/downloads/bioinformatik/miRNA/miRNA-Train-Corpus.xml"
         data_path = cached_path(data_url, data_folder)
 
-        return cls.parse_file(data_path, sentence_separator)
+        return cls.parse_file(data_path, "train", sentence_separator)
 
     @classmethod
     def download_and_prepare_test(cls, data_folder: Path, sentence_separator):
         data_url = "https://www.scai.fraunhofer.de/content/dam/scai/de/downloads/bioinformatik/miRNA/miRNA-Test-Corpus.xml"
         data_path = cached_path(data_url, data_folder)
 
-        return cls.parse_file(data_path, sentence_separator)
+        return cls.parse_file(data_path, "test", sentence_separator)
 
     @classmethod
     def parse_file(
-        cls, input_file: Path, sentence_separator: str
+        cls, input_file: Path, split: str, sentence_separator: str
     ) -> InternalBioNerDataset:
         tree = etree.parse(str(input_file))
 
@@ -1164,7 +1164,7 @@ class MIRNA(ColumnCorpus):
         entities_per_document = {}
 
         for document in tree.xpath(".//document"):
-            document_id = document.get("origId")
+            document_id = document.get("id") + "-" + split
             entities = []
 
             document_text = ""
@@ -1197,6 +1197,24 @@ class MIRNA(ColumnCorpus):
         )
 
 
+class HunerMiRNAHelper(object):
+    @staticmethod
+    def get_mirna_subset(
+        dataset: InternalBioNerDataset, split_url: str, split_dir: Path
+    ):
+        split_file = cached_path(split_url, split_dir)
+
+        with split_file.open() as f:
+            ids = [l.strip() for l in f if l.strip()]
+            ids = [id + "-train" for id in ids] + [id + "-test" for id in ids]
+            ids = sorted(id_ for id_ in ids if id_ in dataset.documents)
+
+        return InternalBioNerDataset(
+            documents={k: dataset.documents[k] for k in ids},
+            entities_per_document={k: dataset.entities_per_document[k] for k in ids},
+        )
+
+
 class HUNER_GENE_MIRNA(HunerDataset):
     """
         HUNER version of the miRNA corpus containing protein / gene annotations.
@@ -1207,7 +1225,15 @@ class HUNER_GENE_MIRNA(HunerDataset):
 
     @staticmethod
     def split_url() -> str:
-        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA_new"
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA"
+
+    def get_subset(self, dataset: InternalBioNerDataset, split: str, split_dir: Path):
+        # In the huner split files there is no information whether a given id originates
+        # from the train or test file of the original corpus - so we have to adapt corpus
+        # splitting here
+        return HunerMiRNAHelper.get_mirna_subset(
+            dataset, f"{self.split_url()}.{split}", split_dir
+        )
 
     def get_corpus_sentence_splitter(self):
         return sentence_split_at_tag
@@ -1235,7 +1261,15 @@ class HUNER_SPECIES_MIRNA(HunerDataset):
 
     @staticmethod
     def split_url() -> str:
-        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA_new"
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA"
+
+    def get_subset(self, dataset: InternalBioNerDataset, split: str, split_dir: Path):
+        # In the huner split files there is no information whether a given id originates
+        # from the train or test file of the original corpus - so we have to adapt corpus
+        # splitting here
+        return HunerMiRNAHelper.get_mirna_subset(
+            dataset, f"{self.split_url()}.{split}", split_dir
+        )
 
     def get_corpus_sentence_splitter(self):
         return sentence_split_at_tag
@@ -1263,7 +1297,15 @@ class HUNER_DISEASE_MIRNA(HunerDataset):
 
     @staticmethod
     def split_url() -> str:
-        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA_new"
+        return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/miRNA"
+
+    def get_subset(self, dataset: InternalBioNerDataset, split: str, split_dir: Path):
+        # In the huner split files there is no information whether a given id originates
+        # from the train or test file of the original corpus - so we have to adapt corpus
+        # splitting here
+        return HunerMiRNAHelper.get_mirna_subset(
+            dataset, f"{self.split_url()}.{split}", split_dir
+        )
 
     def get_corpus_sentence_splitter(self):
         return sentence_split_at_tag
