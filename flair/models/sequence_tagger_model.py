@@ -75,6 +75,7 @@ class SequenceTagger(flair.nn.Model):
         dropout: float = 0.0,
         word_dropout: float = 0.05,
         locked_dropout: float = 0.5,
+        reproject_to: int = 2048,
         train_initial_hidden_state: bool = False,
         rnn_type: str = "LSTM",
         pickle_module: str = "pickle",
@@ -154,12 +155,12 @@ class SequenceTagger(flair.nn.Model):
         if locked_dropout > 0.0:
             self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
 
-        rnn_input_dim: int = self.embeddings.embedding_length
+        embedding_dim: int = self.embeddings.embedding_length
+        rnn_input_dim: int = reproject_to
 
         self.relearn_embeddings: bool = True
-
         if self.relearn_embeddings:
-            self.embedding2nn = torch.nn.Linear(rnn_input_dim, rnn_input_dim)
+            self.embedding2nn = torch.nn.Linear(embedding_dim, rnn_input_dim)
 
         self.train_initial_hidden_state = train_initial_hidden_state
         self.bidirectional = True
