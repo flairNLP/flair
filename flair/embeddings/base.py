@@ -17,9 +17,11 @@ class Embeddings(torch.nn.Module):
 
     def __init__(self):
         """Set some attributes that would otherwise result in errors. Overwrite these in your embedding class."""
-        self.name: str = "unnamed_embedding"
-        # if the embeddings for a sentence are the same in each epoch, set this to True for improved efficiency
-        self.static_embeddings = False
+        if not hasattr(self, "name"):
+            self.name: str = "unnamed_embedding"
+        if not hasattr(self, "static_embeddings"):
+            # if the embeddings for a sentence are the same in each epoch, set this to True for improved efficiency
+            self.static_embeddings = False
         super().__init__()
 
     @property
