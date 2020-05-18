@@ -15,6 +15,15 @@ log = logging.getLogger("flair")
 class Embeddings(torch.nn.Module):
     """Abstract base class for all embeddings. Every new type of embedding must implement these methods."""
 
+    def __init__(self):
+        """Set some attributes that would otherwise result in errors. Overwrite these in your embedding class."""
+        if not hasattr(self, "name"):
+            self.name: str = "unnamed_embedding"
+        if not hasattr(self, "static_embeddings"):
+            # if the embeddings for a sentence are the same in each epoch, set this to True for improved efficiency
+            self.static_embeddings = False
+        super().__init__()
+
     @property
     @abstractmethod
     def embedding_length(self) -> int:
