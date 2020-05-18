@@ -20,6 +20,7 @@ class Embeddings(torch.nn.Module):
         self.name: str = "unnamed_embedding"
         # if the embeddings for a sentence are the same in each epoch, set this to True for improved efficiency
         self.static_embeddings = False
+        super().__init__()
 
     @property
     @abstractmethod
