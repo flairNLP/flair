@@ -206,6 +206,9 @@ def bioc_to_internal(bioc_file: Path):
     entities_per_document = {}
     documents = tree.xpath(".//document")
 
+    all_entities = 0
+    non_matching = 0
+
     for document in Tqdm.tqdm(documents, desc="Converting to internal"):
         document_id = document.xpath("./id")[0].text
         texts = []
@@ -216,11 +219,14 @@ def bioc_to_internal(bioc_file: Path):
             passage_offset = int(
                 passage.xpath("./offset/text()")[0]
             )  # from BioC annotation
-            document_offset = len(
-                " ".join(texts)
-            )  # because we stick all passages of a document together
 
-            texts.append(text)  # calculate offset without current text
+            # calculate offset without current text
+            # because we stick all passages of a document together
+            document_text = " ".join(texts)
+            document_offset = len(document_text)
+
+            texts.append(text)
+            document_text += " " + text
 
             for annotation in passage.xpath(".//annotation"):
 
@@ -243,19 +249,40 @@ def bioc_to_internal(bioc_file: Path):
                 if final_length <= 0:
                     continue
                 end = final_offset + final_length
-                annotated_entity = text[start:end]
+
+                start += document_offset
+                end += document_offset
+
                 true_entity = annotation.xpath(".//text")[0].text
-                # assert annotated_entity.lower() == true_entity.lower()
+                annotated_entity = " ".join(texts)[start:end]
+
+                # Try to fix incorrect annotations
+                if annotated_entity.lower() != true_entity.lower():
+                    max_shift = min(3, len(true_entity))
+                    for i in range(max_shift):
+                        index = annotated_entity.lower().find(
+                            true_entity[0 : max_shift - i].lower()
+                        )
+                        if index != -1:
+                            start += index
+                            end += index
+                            break
+
+                annotated_entity = " ".join(texts)[start:end]
+                if not annotated_entity.lower() == true_entity.lower():
+                    non_matching += 1
+
+                all_entities += 1
 
                 for entity_type in entity_types:
-                    entities.append(
-                        Entity(
-                            (start + document_offset, end + document_offset),
-                            entity_type,
-                        )
-                    )
+                    entities.append(Entity((start, end), entity_type))
+
         texts_per_document[document_id] = " ".join(texts)
         entities_per_document[document_id] = entities
+
+    # print(
+    #     f"Found {non_matching} non-matching entities ({non_matching/all_entities}%) in {bioc_file}"
+    # )
 
     return InternalBioNerDataset(
         documents=texts_per_document, entities_per_document=entities_per_document
@@ -630,7 +657,7 @@ class BIO_INFER(ColumnCorpus):
     def download_dataset(cls, data_dir: Path) -> Path:
         data_url = "http://mars.cs.utu.fi/BioInfer/files/BioInfer_corpus_1.1.1.zip"
         data_path = cached_path(data_url, data_dir)
-        unpack_file(data_path, data_dir, keep=False)
+        unpack_file(data_path, data_dir)
 
         return data_dir / "BioInfer_corpus_1.1.1.xml"
 
@@ -771,11 +798,11 @@ class JNLPBA(ColumnCorpus):
 
             train_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Train/Genia4ERtraining.tar.gz"
             train_data_path = cached_path(train_data_url, download_dir)
-            unpack_file(train_data_path, download_dir, keep=False)
+            unpack_file(train_data_path, download_dir)
 
             train_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Evaluation/Genia4ERtest.tar.gz"
             train_data_path = cached_path(train_data_url, download_dir)
-            unpack_file(train_data_path, download_dir, keep=False)
+            unpack_file(train_data_path, download_dir)
 
             train_file = download_dir / "Genia4ERtask2.iob2"
             shutil.copy(train_file, data_folder / "train.conll")
@@ -799,7 +826,7 @@ class HunerJNLPBA:
     ) -> InternalBioNerDataset:
         train_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Train/Genia4ERtraining.tar.gz"
         train_data_path = cached_path(train_data_url, data_folder)
-        unpack_file(train_data_path, data_folder, keep=False)
+        unpack_file(train_data_path, data_folder)
 
         train_input_file = data_folder / "Genia4ERtask2.iob2"
         return cls.read_file(train_input_file, sentence_tag)
@@ -810,7 +837,7 @@ class HunerJNLPBA:
     ) -> InternalBioNerDataset:
         test_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Evaluation/Genia4ERtest.tar.gz"
         test_data_path = cached_path(test_data_url, data_folder)
-        unpack_file(test_data_path, data_folder, keep=False)
+        unpack_file(test_data_path, data_folder)
 
         test_input_file = data_folder / "Genia4EReval2.iob2"
         return cls.read_file(test_input_file, sentence_tag)
@@ -1008,7 +1035,7 @@ class CELL_FINDER(ColumnCorpus):
     def download_and_prepare(cls, data_folder: Path) -> InternalBioNerDataset:
         data_url = "https://www.informatik.hu-berlin.de/de/forschung/gebiete/wbi/resources/cellfinder/cellfinder1_brat.tar.gz"
         data_path = cached_path(data_url, data_folder)
-        unpack_file(data_path, data_folder, keep=False)
+        unpack_file(data_path, data_folder)
 
         return cls.read_folder(data_folder)
 
@@ -1351,7 +1378,7 @@ class KaewphanCorpusHelper:
     def download_cll_dataset(data_folder: Path):
         data_url = "http://bionlp-www.utu.fi/cell-lines/CLL_corpus.tar.gz"
         data_path = cached_path(data_url, data_folder)
-        unpack_file(data_path, data_folder, keep=False)
+        unpack_file(data_path, data_folder)
 
     @staticmethod
     def prepare_and_save_dataset(conll_folder: Path, output_file: Path):
@@ -1370,7 +1397,7 @@ class KaewphanCorpusHelper:
     def download_gellus_dataset(data_folder: Path):
         data_url = "http://bionlp-www.utu.fi/cell-lines/Gellus_corpus.tar.gz"
         data_path = cached_path(data_url, data_folder)
-        unpack_file(data_path, data_folder, keep=False)
+        unpack_file(data_path, data_folder)
 
     @staticmethod
     def read_dataset(
@@ -1638,7 +1665,7 @@ class LOCTEXT(ColumnCorpus):
     def download_dataset(data_dir: Path):
         data_url = "http://pubannotation.org/downloads/LocText-annotations.tgz"
         data_path = cached_path(data_url, data_dir)
-        unpack_file(data_path, data_dir, keep=False)
+        unpack_file(data_path, data_dir)
 
     @staticmethod
     def parse_dataset(data_dir: Path) -> InternalBioNerDataset:
@@ -1804,7 +1831,7 @@ class CHEMDNER(ColumnCorpus):
     def download_dataset(data_dir: Path):
         data_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2014/chemdner_corpus.tar.gz"
         data_path = cached_path(data_url, data_dir)
-        unpack_file(data_path, data_dir, keep=False)
+        unpack_file(data_path, data_dir)
 
 
 class HUNER_CHEMICAL_CHEMDNER(HunerDataset):
@@ -1924,7 +1951,7 @@ class IEPA(ColumnCorpus):
             "http://corpora.informatik.hu-berlin.de/corpora/brat2bioc/iepa_bioc.xml.zip"
         )
         data_path = cached_path(data_url, data_dir)
-        unpack_file(data_path, data_dir, keep=False)
+        unpack_file(data_path, data_dir)
 
 
 class HUNER_GENE_IEPA(HunerDataset):
@@ -2015,7 +2042,7 @@ class LINNEAUS(ColumnCorpus):
     def download_and_parse_dataset(data_dir: Path):
         data_url = "https://iweb.dl.sourceforge.net/project/linnaeus/Corpora/manual-corpus-species-1.0.tar.gz"
         data_path = cached_path(data_url, data_dir)
-        unpack_file(data_path, data_dir, keep=False)
+        unpack_file(data_path, data_dir)
 
         documents = {}
         entities_per_document = defaultdict(list)
@@ -2159,7 +2186,7 @@ class CDR(ColumnCorpus):
             "https://github.com/JHnlp/BioCreative-V-CDR-Corpus/raw/master/CDR_Data.zip"
         )
         data_path = cached_path(data_url, data_dir)
-        unpack_file(data_path, data_dir, keep=False)
+        unpack_file(data_path, data_dir)
 
 
 class HUNER_DISEASE_CDR(HunerDataset):
@@ -2290,83 +2317,17 @@ class VARIOME(ColumnCorpus):
             "http://corpora.informatik.hu-berlin.de/corpora/brat2bioc/hvp_bioc.xml.zip"
         )
         data_path = cached_path(data_url, data_dir)
-        unpack_file(data_path, data_dir, keep=False)
+        unpack_file(data_path, data_dir)
 
     @staticmethod
     def parse_corpus(corpus_xml: Path) -> InternalBioNerDataset:
-        tree = etree.parse(str(corpus_xml))
-        texts_per_document = {}
-        entities_per_document = {}
-        documents = tree.xpath(".//document")
+        corpus = bioc_to_internal(corpus_xml)
 
-        for document in Tqdm.tqdm(documents, desc="Converting to internal"):
-            document_id = document.xpath("./id")[0].text
-            texts = []
-            entities = []
+        cleaned_documents = {}
+        cleaned_entities_per_document = {}
 
-            for passage in document.xpath("passage"):
-                text = passage.xpath("text/text()")[0]
-                passage_offset = int(
-                    passage.xpath("./offset/text()")[0]
-                )  # from BioC annotation
-                document_offset = len(
-                    " ".join(texts)
-                )  # because we stick all passages of a document together
-
-                texts.append(text)  # calculate offset without current text
-
-                for annotation in passage.xpath(".//annotation"):
-
-                    entity_types = [
-                        i.text.replace(" ", "_")
-                        for i in annotation.xpath("./infon")
-                        if i.attrib["key"] in {"type", "class"}
-                    ]
-
-                    start = (
-                        int(annotation.xpath("./location")[0].get("offset"))
-                        - passage_offset
-                    )
-                    # TODO For split entities we also annotate everything in-between which might be a bad idea?
-                    final_length = int(annotation.xpath("./location")[-1].get("length"))
-                    final_offset = (
-                        int(annotation.xpath("./location")[-1].get("offset"))
-                        - passage_offset
-                    )
-
-                    if final_length <= 0:
-                        continue
-
-                    end = final_offset + final_length
-                    annotated_entity = text[start:end]
-                    true_entity = annotation.xpath(".//text")[0].text
-
-                    # Try to fix incorrect annotations
-                    if annotated_entity.lower() != true_entity.lower():
-                        max_shift = min(3, len(true_entity))
-                        for i in range(max_shift):
-                            index = annotated_entity.lower().find(
-                                true_entity[0 : max_shift - i].lower()
-                            )
-                            if index != -1:
-                                start += index
-                                end += index
-                                break
-
-                    annotated_entity = text[start:end]
-
-                    if annotated_entity.lower() != true_entity.lower():
-                        continue
-
-                    for entity_type in entity_types:
-                        entities.append(
-                            Entity(
-                                (start + document_offset, end + document_offset),
-                                entity_type,
-                            )
-                        )
-
-            document_text = " ".join(texts)
+        for id, document_text in corpus.documents.items():
+            entities = corpus.entities_per_document[id]
             original_length = len(document_text)
 
             text_cleaned = document_text.replace("** IGNORE LINE **\n", "")
@@ -2389,11 +2350,12 @@ class VARIOME(ColumnCorpus):
                 entities = new_entities
                 document_text = text_cleaned
 
-            texts_per_document[document_id] = document_text
-            entities_per_document[document_id] = entities
+            cleaned_documents[id] = document_text
+            cleaned_entities_per_document[id] = entities
 
         return InternalBioNerDataset(
-            documents=texts_per_document, entities_per_document=entities_per_document
+            documents=cleaned_documents,
+            entities_per_document=cleaned_entities_per_document,
         )
 
 
@@ -2542,7 +2504,7 @@ class NCBI_DISEASE(ColumnCorpus):
 
         for url in data_urls:
             data_path = cached_path(url, original_folder)
-            unpack_file(data_path, original_folder, keep=False)
+            unpack_file(data_path, original_folder)
 
         # We need to apply a patch to correct the original training file
         orig_train_file = original_folder / "NCBItrainset_corpus.txt"
@@ -2777,7 +2739,7 @@ class SCAI_CHEMICALS(ScaiCorpus):
         url = "https://www.scai.fraunhofer.de/content/dam/scai/de/downloads/bioinformatik/Corpora-for-Chemical-Entity-Recognition/chemicals-test-corpus-27-04-2009-v3_iob.gz"
         data_path = cached_path(url, original_directory)
         corpus_file = original_directory / "chemicals-test-corpus-27-04-2009-v3.iob"
-        unpack_file(data_path, corpus_file, keep=False)
+        unpack_file(data_path, corpus_file)
 
         return corpus_file
 
@@ -2931,7 +2893,7 @@ class OSIRIS(ColumnCorpus):
     def download_dataset(cls, data_dir: Path) -> Path:
         url = "http://ibi.imim.es/OSIRIScorpusv02.tar"
         data_path = cached_path(url, data_dir)
-        unpack_file(data_path, data_dir, keep=False)
+        unpack_file(data_path, data_dir)
 
         return data_dir / "OSIRIScorpusv02"
 
@@ -3076,7 +3038,7 @@ class S800(ColumnCorpus):
     def download_dataset(data_dir: Path):
         data_url = "https://species.jensenlab.org/files/S800-1.0.tar.gz"
         data_path = cached_path(data_url, data_dir)
-        unpack_file(data_path, data_dir, keep=False)
+        unpack_file(data_path, data_dir)
 
     @staticmethod
     def parse_dataset(data_dir: Path) -> InternalBioNerDataset:
@@ -3195,7 +3157,7 @@ class GPRO(ColumnCorpus):
 
         train_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2015/gpro_training_set_v02.tar.gz"
         data_path = cached_path(train_url, corpus_dir)
-        unpack_file(data_path, corpus_dir, keep=False)
+        unpack_file(data_path, corpus_dir)
 
         return corpus_dir / "gpro_training_set_v02"
 
@@ -3206,7 +3168,7 @@ class GPRO(ColumnCorpus):
 
         dev_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2015/gpro_development_set.tar.gz"
         data_path = cached_path(dev_url, corpus_dir)
-        unpack_file(data_path, corpus_dir, keep=False)
+        unpack_file(data_path, corpus_dir)
 
         return corpus_dir / "gpro_development_set"
 
@@ -3346,7 +3308,7 @@ class DECA(ColumnCorpus):
     def download_corpus(cls, data_dir: Path) -> Path:
         url = "http://www.nactem.ac.uk/deca/species_corpus_0.2.tar.gz"
         data_path = cached_path(url, data_dir)
-        unpack_file(data_path, data_dir, keep=False)
+        unpack_file(data_path, data_dir)
 
         return data_dir / "species_corpus_0.2"
 
@@ -3458,7 +3420,7 @@ class FSU(ColumnCorpus):
     def download_corpus(cls, data_dir: Path) -> Path:
         url = "https://julielab.de/downloads/resources/fsu_prge_release_v1_0.tgz"
         data_path = cached_path(url, data_dir)
-        unpack_file(data_path, data_dir, mode="targz", keep=False)
+        unpack_file(data_path, data_dir, mode="targz")
 
         return data_dir / "fsu-prge-release-v1.0"
 
@@ -3645,7 +3607,7 @@ class CRAFT(ColumnCorpus):
     def download_corpus(cls, data_dir: Path) -> Path:
         url = "http://sourceforge.net/projects/bionlp-corpora/files/CRAFT/v2.0/craft-2.0.tar.gz/download"
         data_path = cached_path(url, data_dir)
-        unpack_file(data_path, data_dir, mode="targz", keep=False)
+        unpack_file(data_path, data_dir, mode="targz")
 
         return data_dir / "craft-2.0"
 
@@ -3817,7 +3779,7 @@ class BIOSEMANTICS(ColumnCorpus):
     def download_dataset(data_dir: Path) -> Path:
         data_url = "http://biosemantics.org/PatentCorpus/Patent_Corpus.rar"
         data_path = cached_path(data_url, data_dir)
-        unpack_file(data_path, data_dir, keep=False)
+        unpack_file(data_path, data_dir)
 
         return data_dir / "Patent_Corpus"
 
@@ -4029,11 +3991,11 @@ class BC2GM(ColumnCorpus):
     def download_dataset(data_dir: Path) -> Path:
         data_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2011/bc2GMtrain_1.1.tar.gz"
         data_path = cached_path(data_url, data_dir)
-        unpack_file(data_path, data_dir, keep=False)
+        unpack_file(data_path, data_dir)
 
         data_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2011/bc2GMtest_1.0.tar.gz"
         data_path = cached_path(data_url, data_dir)
-        unpack_file(data_path, data_dir, keep=False)
+        unpack_file(data_path, data_dir)
 
         return data_dir
 
@@ -4200,7 +4162,7 @@ class CEMP(ColumnCorpus):
 
         train_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2015/cemp_training_set.tar.gz"
         data_path = cached_path(train_url, corpus_dir)
-        unpack_file(data_path, corpus_dir, keep=False)
+        unpack_file(data_path, corpus_dir)
 
         return corpus_dir / "cemp_training_set"
 
@@ -4211,7 +4173,7 @@ class CEMP(ColumnCorpus):
 
         dev_url = "https://biocreative.bioinformatics.udel.edu/media/store/files/2015/cemp_development_set_v03.tar.gz"
         data_path = cached_path(dev_url, corpus_dir)
-        unpack_file(data_path, corpus_dir, keep=False)
+        unpack_file(data_path, corpus_dir)
 
         return corpus_dir / "cemp_development_set_v03"
 
@@ -4363,7 +4325,7 @@ class CHEBI(ColumnCorpus):
     def download_dataset(data_dir: Path) -> Path:
         data_url = "http://www.nactem.ac.uk/chebi/ChEBI.zip"
         data_path = cached_path(data_url, data_dir)
-        unpack_file(data_path, data_dir, keep=False)
+        unpack_file(data_path, data_dir)
 
         return data_dir / "ChEBI"
 
