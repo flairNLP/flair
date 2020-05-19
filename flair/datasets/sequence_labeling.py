@@ -672,6 +672,15 @@ class NER_BASQUE(ColumnCorpus):
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
+class NER_FINNISH(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+    ):
+        pass
+
 
 class WIKINER_ENGLISH(ColumnCorpus):
     def __init__(
