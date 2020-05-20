@@ -196,6 +196,17 @@ def sentence_split_at_tag(text: str) -> Tuple[List[str], List[int]]:
     return sentences, offsets
 
 
+def sentence_split_at_newline(text: str) -> Tuple[List[str], List[int]]:
+    sentences = text.split("\n")
+    offsets = []
+    last_offset = 0
+    for sent in sentences:
+        offsets += [last_offset]
+        last_offset += len(sent) + 1
+
+    return sentences, offsets
+
+
 def sentence_split_one_sentence_per_doc(text: str) -> Tuple[List[str], List[int]]:
     return [text], [0]
 
@@ -1892,7 +1903,6 @@ class IEPA(ColumnCorpus):
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
@@ -1925,19 +1935,12 @@ class IEPA(ColumnCorpus):
             self.download_dataset(download_dir)
 
             all_data = bioc_to_internal(download_dir / "iepa_bioc.xml")
-            new_documents = {}
-            for doc_id, document in all_data.documents.items():
-                new_documents[doc_id] = document.replace("\n", SENTENCE_TAG)
-            all_data.documents = new_documents
 
             if tokenizer is None:
                 tokenizer = build_spacy_tokenizer()
 
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
             conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+                tokenizer=tokenizer, sentence_splitter=sentence_split_at_newline
             )
             conll_writer.write_to_conll(all_data, train_file)
 
@@ -1967,18 +1970,13 @@ class HUNER_GENE_IEPA(HunerDataset):
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/iepa"
 
     def get_corpus_sentence_splitter(self):
-        return sentence_split_at_tag
+        return sentence_split_at_newline
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         os.makedirs(str(data_dir), exist_ok=True)
         IEPA.download_dataset(data_dir)
+
         all_data = bioc_to_internal(data_dir / "iepa_bioc.xml")
-
-        new_documents = {}
-        for doc_id, document in all_data.documents.items():
-            new_documents[doc_id] = document.replace("\n", SENTENCE_TAG)
-
-        all_data.documents = new_documents
         all_data = filter_and_map_entities(all_data, {"Protein": GENE_TAG})
 
         return all_data

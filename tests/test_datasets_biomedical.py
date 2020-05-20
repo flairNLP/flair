@@ -287,6 +287,25 @@ def sanity_check_all_corpora(check: Callable[[ColumnCorpus], None]):
 @pytest.mark.slow
 @pytest.mark.xfail
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
+def test_sanity_not_starting_with_minus(CorpusType: Type[ColumnCorpus]):
+    corpus = CorpusType()
+    entities_starting_with_minus = []
+    for sentence in corpus.get_all_sentences():
+        entities = sentence.get_spans("ner")
+        for entity in entities:
+            if str(entity.tokens[0].text).startswith("-"):
+                entities_starting_with_minus.append(
+                    " ".join([t.text for t in entity.tokens])
+                )
+
+    assert len(entities_starting_with_minus) == 0, "|".join(
+        entities_starting_with_minus
+    )
+
+
+@pytest.mark.slow
+@pytest.mark.xfail
+@pytest.mark.parametrize("CorpusType", ALL_DATASETS)
 def test_sanity_no_repeating_Bs(CorpusType: Type[ColumnCorpus]):
     corpus = CorpusType()
     longest_repeat_tokens = []
