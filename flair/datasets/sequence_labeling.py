@@ -672,6 +672,48 @@ class NER_BASQUE(ColumnCorpus):
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
+class NER_FINNISH(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+    ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ner_finnish_path = "https://raw.githubusercontent.com/mpsilfve/finer-data/master/data/digitoday."
+        cached_path(f"{ner_finnish_path}2014.train.csv", Path("datasets") / dataset_name)
+        cached_path(f"{ner_finnish_path}2014.dev.csv", Path("datasets") / dataset_name)
+        cached_path(f"{ner_finnish_path}2015.test.csv", Path("datasets") / dataset_name)
+
+        _remove_lines_without_annotations(data_file=Path(data_folder / "digitoday.2015.test.csv"))
+
+        super(NER_FINNISH, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, skip_first_line=True
+        )
+
+def _remove_lines_without_annotations(data_file: Union[str, Path] = None):
+        with open(data_file, 'r') as f:
+            lines = f.readlines()
+        with open(data_file, 'w') as f:
+            for line in lines:
+                if len(line.split()) != 1:
+                    f.write(line)
+
+
 
 class WIKINER_ENGLISH(ColumnCorpus):
     def __init__(
