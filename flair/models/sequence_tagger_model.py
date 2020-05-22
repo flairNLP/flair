@@ -866,9 +866,8 @@ class SequenceTagger(flair.nn.Model):
 
         model_map = {}
 
-        aws_resource_path_v04 = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4"
-        )
+        aws_resource_path_v04 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4"
+        hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
         model_map["ner"] = "/".join(
             [aws_resource_path_v04, "NER-conll03-english", "en-ner-conll03-v0.4.pt"]
@@ -921,7 +920,7 @@ class SequenceTagger(flair.nn.Model):
                 ]
             )
 
-        model_map["pos"] = "/".join(
+        model_map["upos"] = "/".join(
             [
                 aws_resource_path_v04,
                 "POS-ontonotes--h256-l1-b32-p3-0.5-%2Bglove%2Bnews-forward%2Bnews-backward-normal-locked0.5-word0.05--v0.4_0",
@@ -929,11 +928,27 @@ class SequenceTagger(flair.nn.Model):
             ]
         )
 
-        model_map["pos-fast"] = "/".join(
+        model_map["pos"] = "/".join(
+            [
+                hu_path,
+                "release-pos-0",
+                "en-pos-ontonotes-v0.5.pt",
+            ]
+        )
+
+        model_map["upos-fast"] = "/".join(
             [
                 aws_resource_path_v04,
                 "release-pos-fast-0",
                 "en-pos-ontonotes-fast-v0.4.pt",
+            ]
+        )
+
+        model_map["pos-fast"] = "/".join(
+            [
+                hu_path,
+                "release-pos-fast-0",
+                "en-pos-ontonotes-fast-v0.5.pt",
             ]
         )
 
@@ -988,7 +1003,7 @@ class SequenceTagger(flair.nn.Model):
         )
 
         model_map["de-pos"] = "/".join(
-            [aws_resource_path_v04, "release-de-pos-0", "de-pos-ud-hdt-v0.4.pt"]
+            [hu_path, "release-de-pos-0", "de-pos-ud-hdt-v0.5.pt"]
         )
 
         model_map["de-pos-fine-grained"] = "/".join(
