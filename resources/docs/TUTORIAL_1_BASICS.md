@@ -101,7 +101,11 @@ Sentence: "The grass is green ." - 5 Tokens
 
 The second way allows you to write your own wrapper around the tokenizer you want to use. The wrapper is a function which has the same signature as `flair.data.segtok_tokenizer` (take a `string` and return `List[Token]`). Check the code of `flair.data.space_tokenizer` (which is very simple) to have an idea of how to implement such wrapper.  
 
-## Adding Tags to Tokens
+## Adding Labels
+
+In Flair, any data point can be labeled. For instance, you can label a word or label a sentence. The following shows you how to do it:
+
+### Adding Labels to Tokens
 
 A `Token` has fields for linguistic annotation, such as lemmas, part-of-speech tags or named entity tags. You can
 add a tag by specifying the tag type and the tag value. In this example, we're adding an NER tag of type 'color' to
@@ -143,7 +147,7 @@ This should print:
 Our color tag has a score of 1.0 since we manually added it. If a tag is predicted by our
 sequence labeler, the score value will indicate classifier confidence.
 
-## Adding Labels to Sentences
+### Adding Labels to Sentences
 
 You can also add a `Label` to a whole `Sentence`.
 For instance, the example below shows how we add the label 'sports' to a sentence, thereby labeling it
@@ -167,7 +171,7 @@ This should print:
 Sentence: "France is the current world cup winner."   [− Tokens: 7  − Sentence-Labels: {'topic': [sports (1.0)]}]
 ```
 
-### Sentences with Multiple Labels
+### Multiple Labels
 
 A sentence can also belong to multiple topics. In this case, add two labels with the same label name:
 
