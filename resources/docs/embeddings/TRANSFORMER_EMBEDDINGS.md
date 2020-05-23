@@ -128,8 +128,7 @@ example shows how to use scalar mix for a base RoBERTa model on all layers:
 from flair.embeddings import TransformerWordEmbeddings
 
 # init embedding
-embedding = TransformerWordEmbeddings(pretrained_model_name_or_path="roberta-base", layers="all",
-                              pooling_operation="first", use_scalar_mix=True)
+embedding = TransformerWordEmbeddings("roberta-base", layers="all", use_scalar_mix=True)
 
 # create a sentence
 sentence = Sentence("The Oktoberfest is the world's largest Volksfest .")
