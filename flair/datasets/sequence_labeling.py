@@ -1108,6 +1108,37 @@ class SEMEVAL2017(ColumnCorpus):
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, document_separator_token="."
         )
 
+class SEMEVAL2010(ColumnCorpus):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "tag",
+        in_memory: bool = True,
+    ):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "tag"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        semeval2010_path = "https://raw.githubusercontent.com/midas-research/keyphrase-extraction-as-sequence-labeling-data/master/processed_semeval-2010"
+        cached_path(f"{semeval2010_path}/train.txt", Path("datasets") / dataset_name)
+        cached_path(f"{semeval2010_path}/test.txt", Path("datasets") / dataset_name)
+        #cached_path(f"{semeval2010_path}/dev.txt", Path("datasets") / dataset_name)
+
+        super(SEMEVAL2010, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, document_separator_token="."
+        )
+
 def _download_wikiner(language_code: str, dataset_name: str):
     # download data if necessary
     wikiner_path = (
