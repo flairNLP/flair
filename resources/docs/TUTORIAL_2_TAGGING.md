@@ -46,13 +46,13 @@ for entity in sentence.get_spans('ner'):
 
 This should print:
 ```console
-PER-span [1,2]: "George Washington"
-LOC-span [5]: "Washington"
+Span [1,2]: "George Washington"   [− Labels: PER (0.9968)]
+Span [5]: "Washington"   [− Labels: LOC (0.9994)]
 ```
 
 Which indicates that "George Washington" is a person (PER) and "Washington" is
-a location (LOC). Each such `Span` has a text, a tag value, its position
-in the sentence and "score" that indicates how confident the tagger is that the prediction is correct.
+a location (LOC). Each such `Span` has a text, its position in the sentence and `Label` 
+with a value and a score (confidence in the prediction). 
 You can also get additional information, such as the position offsets of
 each entity in the sentence by calling:
 
