@@ -124,7 +124,8 @@ trainer.train('resources/taggers/trec',
               mini_batch_size=32,
               anneal_factor=0.5,
               patience=5,
-              max_epochs=150)```
+              max_epochs=150)
+```
 
 Once the model is trained you can load it to predict the class of new sentences. Just call the `predict` method of the model.
 
