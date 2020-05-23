@@ -73,7 +73,7 @@ Once the model is trained you can use it to predict tags for new sentences. Just
 
 ```python
 # load the model you trained
-model = SequenceTagger.load('resources/taggers/example-ner/final-model.pt')
+model = SequenceTagger.load('resources/taggers/example-pos/final-model.pt')
 
 # create example sentence
 sentence = Sentence('I love Berlin')
