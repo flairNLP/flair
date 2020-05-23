@@ -109,7 +109,7 @@ to combine. For instance, lets combine classic GloVe embeddings with forward and
 First, instantiate the two embeddings you wish to combine: 
 
 ```python
-from flair.embeddings import WordEmbeddings, CharacterEmbeddings
+from flair.embeddings import WordEmbeddings, FlairEmbeddings
 
 # init standard GloVe embedding
 glove_embedding = WordEmbeddings('glove')
