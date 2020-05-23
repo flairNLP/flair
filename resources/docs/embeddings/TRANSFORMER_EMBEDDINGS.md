@@ -52,7 +52,7 @@ There are several options that you can set when you init the TransformerWordEmbe
 
 ### Layers
 
-The 'layers' argument controls which transformer layers are used for the embedding. If you set this value to `-1,-2,-3,-4`, the top 4 layers are used to make an embedding. If you set it to '-1', only the last layer is used. If you set it to "all", then all layers are used.
+The `layers` argument controls which transformer layers are used for the embedding. If you set this value to '-1,-2,-3,-4', the top 4 layers are used to make an embedding. If you set it to '-1', only the last layer is used. If you set it to "all", then all layers are used.
 
 This affects the length of an embedding, since layers are just concatenated. 
 
