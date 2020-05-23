@@ -122,7 +122,7 @@ flair_embedding_backward = FlairEmbeddings('news-backward')
 Now instantiate the `StackedEmbeddings` class and pass it a list containing these two embeddings.
 
 ```python
-from flair.embeddings import WordEmbeddings, FlairEmbeddings, StackedEmbeddings
+from flair.embeddings import StackedEmbeddings
 
 # create a StackedEmbedding object that combines glove and forward/backward flair embeddings
 stacked_embeddings = StackedEmbeddings([
