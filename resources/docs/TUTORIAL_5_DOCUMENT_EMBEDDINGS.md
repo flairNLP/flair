@@ -149,6 +149,8 @@ print(sentence.get_embedding())
 This will output a single embedding for the complete sentence. The embedding dimensionality depends on the number of
 hidden states you are using and whether the RNN is bidirectional or not.
 
+### RNN type 
+
 If you want to use a different type of RNN, you need to set the `rnn_type` parameter in the constructor. So,
 to initialize a document RNN embedding with an LSTM, do:
 
@@ -159,6 +161,8 @@ glove_embedding = WordEmbeddings('glove')
 
 document_lstm_embeddings = DocumentRNNEmbeddings([glove_embedding], rnn_type='LSTM')
 ```
+
+### `DocumentRNNEmbeddings` need to be trained on a task!
 
 Note that while `DocumentPoolEmbeddings` are immediately meaningful, `DocumentRNNEmbeddings` need to be tuned on the
 downstream task. This happens automatically in Flair if you train a new model with these embeddings. You can find an example of training a text classification model [here](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md#training-a-text-classification-model). Once the model is trained, you can access the tuned `DocumentRNNEmbeddings` object directly from the classifier object and use it to embed sentences.
