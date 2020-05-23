@@ -95,6 +95,8 @@ flair_embedding_forward = FlairEmbeddings('de-forward')
 flair_embedding_backward = FlairEmbeddings('de-backward')
 ```
 
+Check out the full list of all pre-trained FlairEmbeddings models [here](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md) aong with more information on standard usage.
+
 ## Stacked Embeddings
 
 Stacked embeddings are one of the most important concepts of this library. You can use them to combine different
