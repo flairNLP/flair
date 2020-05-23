@@ -118,10 +118,9 @@ We provide a set of quick tutorials to get you started with the library:
 * [Tutorial 3: Embedding Words](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)
 * [Tutorial 4: List of All Word Embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md)
 * [Tutorial 5: Embedding Documents](/resources/docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md)
-* [Tutorial 6: Loading your own Corpus](/resources/docs/TUTORIAL_6_CORPUS.md)
-* [Tutorial 7: Training your own Models](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
-* [Tutorial 8: Optimizing your Models](/resources/docs/TUTORIAL_8_MODEL_OPTIMIZATION.md)
-* [Tutorial 9: Training your own Flair Embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
+* [Tutorial 6: Loading a Dataset](/resources/docs/TUTORIAL_6_CORPUS.md)
+* [Tutorial 7: Training a Model](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
+* [Tutorial 8: Training your own Flair Embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
  
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
 text, how you can embed your text with different word or document embeddings, and how you can train your own 
