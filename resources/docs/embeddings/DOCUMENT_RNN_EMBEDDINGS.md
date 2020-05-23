@@ -43,7 +43,7 @@ glove_embedding = WordEmbeddings('glove')
 document_lstm_embeddings = DocumentRNNEmbeddings([glove_embedding], rnn_type='LSTM')
 ```
 
-### `DocumentRNNEmbeddings` need to be trained on a task!
+### Need to be trained on a task
 
 Note that while `DocumentPoolEmbeddings` are immediately meaningful, `DocumentRNNEmbeddings` need to be tuned on the
 downstream task. This happens automatically in Flair if you train a new model with these embeddings. You can find an example of training a text classification model [here](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md#training-a-text-classification-model). Once the model is trained, you can access the tuned `DocumentRNNEmbeddings` object directly from the classifier object and use it to embed sentences.
