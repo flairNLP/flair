@@ -158,7 +158,9 @@ sentence = Sentence('France is the current world cup winner.')
 # add a label to a sentence
 sentence.add_label('topic', 'sports')
 
-# You can also create a sentence with label in one line
+print(sentence)
+
+# Alternatively, you can also create a sentence with label in one line
 sentence = Sentence('France is the current world cup winner.').add_label('topic', 'sports')
 
 print(sentence)
@@ -169,6 +171,8 @@ This should print:
 ```console
 Sentence: "France is the current world cup winner."   [− Tokens: 7  − Sentence-Labels: {'topic': [sports (1.0)]}]
 ```
+
+Indicating that this sentence belongs to the topic 'sports' with confidence 1.0.
 
 ### Multiple Labels
 
