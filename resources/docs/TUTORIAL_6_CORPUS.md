@@ -99,11 +99,11 @@ tag or label dictionary, depending on the task you want to learn. Simple execute
 ```python
 # create tag dictionary for a PoS task
 corpus = flair.datasets.UD_ENGLISH()
-print(corpus.make_tag_dictionary('upos'))
+print(corpus.make_label_dictionary('upos'))
 
 # create tag dictionary for an NER task
 corpus = flair.datasets.CONLL_03_DUTCH()
-print(corpus.make_tag_dictionary('ner'))
+print(corpus.make_label_dictionary('ner'))
 
 # create label dictionary for a text classification task
 corpus = flair.datasets.TREC_6()
