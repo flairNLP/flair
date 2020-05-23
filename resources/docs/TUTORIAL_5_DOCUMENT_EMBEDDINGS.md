@@ -41,16 +41,13 @@ print(sentence.embedding)
 
 We give details on all three document embeddings in the following:
 
-## DocumentPoolEmbeddings
+## Document Pool Embeddings
 
-DocumentPoolEmbeddings calculate a pooling operation over all word embeddings in a document.
-The default operation is `mean` which gives us the mean of all words in the sentence.
-The resulting embedding is taken as document embedding.
+The simplest type of document embedding does a pooling operation over all word embeddings in a sentence to 
+obtain an embedding for the whole sentence. The default is mean pooling, meaning that the average of all 
+word embeddings is used. 
 
-To create a mean document embedding simply create any number of `TokenEmbeddings` first and put them in a list.
-Afterwards, initiate the `DocumentPoolEmbeddings` with this list of `TokenEmbeddings`.
-So, if you want to create a document embedding using GloVe embeddings together with `FlairEmbeddings`,
-use the following code:
+To instantiate, you need to pass a list of word embeddings to pool over: 
 
 ```python
 from flair.embeddings import WordEmbeddings, DocumentPoolEmbeddings
@@ -77,53 +74,11 @@ print(sentence.embedding)
 
 This prints out the embedding of the document. Since the document embedding is derived from word embeddings, its dimensionality depends on the dimensionality of word embeddings you are using.
 
-You have the following optional constructor arguments: 
+One advantage of DocumentPoolEmbeddings is that they do not need to be trained, you can immediately use them to embed your documents.
 
-| Argument             | Default             | Description
-| -------------------- | ------------------- | ------------------------------------------------------------------------------
-| `fine_tune_mode`             | `linear`       | One of `linear`, `nonlinear` and `none`.
-| `pooling`  | `first`             | One of `mean`, `max` and `min`.
+## Document RNN Embeddings
 
-### Pooling operation
-
-Next to the `mean` pooling operation you can also use `min` or `max` pooling. Simply pass the pooling operation you want
-to use to the initialization of the `DocumentPoolEmbeddings`:
-```python
-document_embeddings = DocumentPoolEmbeddings([glove_embedding],  pooling='min')
-```
-
-### Fine-tune mode
-
-You can also choose which fine-tuning operation you want, i.e. which transformation to apply before word embeddings get
-pooled. The default operation is 'linear' transformation, but if you only use simple word embeddings that are 
-not task-trained you should probably use a 'nonlinear' transformation instead:
-
-```python
-# instantiate pre-trained word embeddings
-embeddings = WordEmbeddings('glove')
-
-# document pool embeddings
-document_embeddings = DocumentPoolEmbeddings([embeddings], fine_tune_mode='nonlinear')
-```
-
-If on the other hand you use word embeddings that are task-trained (such as simple one hot encoded embeddings), you 
-are often better off doing no transformation at all. Do this by passing 'none':
-
-```python
-# instantiate one-hot encoded word embeddings
-embeddings = OneHotEmbeddings(corpus)
-
-# document pool embeddings
-document_embeddings = DocumentPoolEmbeddings([embeddings], fine_tune_mode='none')
-```
-
-## DocumentRNNEmbeddings
-
-Besides simple pooling we also support a method based on an RNN to obtain a `DocumentEmbeddings`.
-The RNN takes the word embeddings of every token in the document as input and provides its last output state as document
-embedding. You can choose which type of RNN you wish to use.
-
-In order to use the `DocumentRNNEmbeddings` you need to initialize them by passing a list of token embeddings to it:
+These embeddings run an RNN over all words in sentence and use the final state of the RNN as embedding for the whole document. In order to use the `DocumentRNNEmbeddings` you need to initialize them by passing a list of token embeddings to it:
 
 ```python
 from flair.embeddings import WordEmbeddings, DocumentRNNEmbeddings
@@ -147,52 +102,9 @@ print(sentence.get_embedding())
 ```
 
 This will output a single embedding for the complete sentence. The embedding dimensionality depends on the number of
-hidden states you are using and whether the RNN is bidirectional or not.
+hidden states you are using and whether the RNN is bidirectional or not. 
 
-### RNN type 
-
-If you want to use a different type of RNN, you need to set the `rnn_type` parameter in the constructor. So,
-to initialize a document RNN embedding with an LSTM, do:
-
-```python
-from flair.embeddings import WordEmbeddings, DocumentRNNEmbeddings
-
-glove_embedding = WordEmbeddings('glove')
-
-document_lstm_embeddings = DocumentRNNEmbeddings([glove_embedding], rnn_type='LSTM')
-```
-
-### `DocumentRNNEmbeddings` need to be trained on a task!
-
-Note that while `DocumentPoolEmbeddings` are immediately meaningful, `DocumentRNNEmbeddings` need to be tuned on the
-downstream task. This happens automatically in Flair if you train a new model with these embeddings. You can find an example of training a text classification model [here](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md#training-a-text-classification-model). Once the model is trained, you can access the tuned `DocumentRNNEmbeddings` object directly from the classifier object and use it to embed sentences.
-
-```python
-document_embeddings = classifier.document_embeddings
-
-sentence = Sentence('The grass is green . And the sky is blue .')
-
-document_embeddings.embed(sentence)
-
-print(sentence.get_embedding())
-```
-
-`DocumentRNNEmbeddings` have a number of hyper-parameters that can be tuned to improve learning:
-
-```text
-:param hidden_size: the number of hidden states in the rnn.
-:param rnn_layers: the number of layers for the rnn.
-:param reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear
-layer before putting them into the rnn or not.
-:param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
-dimension as before will be taken.
-:param bidirectional: boolean value, indicating whether to use a bidirectional rnn or not.
-:param dropout: the dropout value to be used.
-:param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used.
-:param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used.
-:param rnn_type: one of 'RNN' or 'LSTM'
-```
-
+Note that when you initialize this embedding, the RNN weights are randomly initialized. So this embedding needs to be trained in order to make sense. 
 
 ## TransformerDocumentEmbeddings
 
