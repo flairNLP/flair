@@ -13,14 +13,9 @@ need to call to embed your text. This means that for most users of Flair, the co
 hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
 All embeddings produced with our methods are PyTorch vectors, so they can be immediately used for training and
-fine-tuning.
+fine-tuning. There are three main document embeddings in Flair: 
 
-## Document Embeddings
-
-Our document embeddings are created from the embeddings of all words in the document.
-Currently, we have two different methods to obtain a document embedding from a list of word embeddings.
-
-### Pooling
+## DocumentPoolEmbeddings
 
 The first method calculates a pooling operation over all word embeddings in a document.
 The default operation is `mean` which gives us the mean of all words in the sentence.
@@ -94,10 +89,9 @@ embeddings = OneHotEmbeddings(corpus)
 document_embeddings = DocumentPoolEmbeddings([embeddings], fine_tune_mode='none')
 ```
 
+## DocumentRNNEmbeddings
 
-### RNN
-
-Besides the pooling we also support a method based on an RNN to obtain a `DocumentEmbeddings`.
+Besides simple pooling we also support a method based on an RNN to obtain a `DocumentEmbeddings`.
 The RNN takes the word embeddings of every token in the document as input and provides its last output state as document
 embedding. You can choose which type of RNN you wish to use.
 
@@ -166,6 +160,11 @@ dimension as before will be taken.
 :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used.
 :param rnn_type: one of 'RNN' or 'LSTM'
 ```
+
+
+## TransformerDocumentEmbeddings
+
+
 
 ## Next
 
