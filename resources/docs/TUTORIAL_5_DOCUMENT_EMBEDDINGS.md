@@ -87,9 +87,7 @@ You have the following optional constructor arguments:
 Next to the `mean` pooling operation you can also use `min` or `max` pooling. Simply pass the pooling operation you want
 to use to the initialization of the `DocumentPoolEmbeddings`:
 ```python
-document_embeddings = DocumentPoolEmbeddings([glove_embedding,
-                                             flair_embedding_backward,
-                                             flair_embedding_backward],
+document_embeddings = DocumentPoolEmbeddings([glove_embedding],
                                              pooling='min')
 ```
 
