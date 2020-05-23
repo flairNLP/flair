@@ -167,6 +167,8 @@ This should print:
 Sentence: "France is the current world cup winner."   [− Tokens: 7  − Sentence-Labels: {'topic': [sports (1.0)]}]
 ```
 
+### Sentences with Multiple Labels
+
 A sentence can also belong to multiple topics. In this case, add two labels with the same label name:
 
 ```python
@@ -198,7 +200,11 @@ This should print:
 Sentence: "France is the current world cup winner."   [− Tokens: 7  − Sentence-Labels: {'topic': [sports (1.0), soccer (1.0)], 'language': [English (1.0)]}]
 ```
 
-Indicating that this sentence has two "topic" labels and one "language" label. You can access these labels like this: 
+Indicating that this sentence has two "topic" labels and one "language" label. 
+
+### Accessing a Sentence's Labels
+
+You can access these labels like this: 
 
 ```python
 for label in sentence.labels:
