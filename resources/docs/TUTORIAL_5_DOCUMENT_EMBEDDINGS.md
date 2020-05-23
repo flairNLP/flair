@@ -54,7 +54,7 @@ use the following code:
 from flair.embeddings import WordEmbeddings, DocumentPoolEmbeddings
 
 # initialize the word embeddings
-glove_embedding =
+glove_embedding = WordEmbeddings('glove')
 
 # initialize the document embeddings, mode = mean
 document_embeddings = DocumentPoolEmbeddings([glove_embedding])
