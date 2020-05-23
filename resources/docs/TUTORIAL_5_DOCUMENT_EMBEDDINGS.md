@@ -164,6 +164,37 @@ dimension as before will be taken.
 
 ## TransformerDocumentEmbeddings
 
+You can get embeddings for a whole sentence directly from a pre-trained [`transformer`](https://github.com/huggingface/transformers). There is a single class for all transformer embeddings that you instantiate with different identifiers get different transformers. For instance, to load a standard BERT transformer model, do:  
+
+```python
+from flair.embeddings import TransformerDocumentEmbeddings
+
+# init embedding
+embedding = TransformerDocumentEmbeddings('bert-base-uncased')
+
+# create a sentence
+sentence = Sentence('The grass is green .')
+
+# embed the sentence
+embedding.embed(sentence)
+```
+
+If instead you want to use RoBERTa, do: 
+
+```python
+from flair.embeddings import TransformerDocumentEmbeddings
+
+# init embedding
+embedding = TransformerDocumentEmbeddings('roberta-base')
+
+# create a sentence
+sentence = Sentence('The grass is green .')
+
+# embed the sentence
+embedding.embed(sentence)
+```
+
+[Here](https://huggingface.co/transformers/pretrained_models.html) is a full list of all models (BERT, RoBERTa, XLM, XLNet etc.). You can use any of these models with this class. 
 
 
 ## Next
