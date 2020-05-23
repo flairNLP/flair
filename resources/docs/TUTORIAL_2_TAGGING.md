@@ -102,7 +102,7 @@ In case you do not have a GPU available, we also distribute smaller models that 
 | 'frame-fast'  |   Semantic Frame Detection | Propbank 3.0     |  **97.31** (F1) |
 
 
-#### Experimental: Multilingual Models
+#### Multilingual Models
 
 We distribute new models that are capable of handling text in multiple languages within a singular model. 
 
