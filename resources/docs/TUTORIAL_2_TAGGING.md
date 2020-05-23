@@ -279,11 +279,12 @@ and negative sentiment in English text.
 ```python
 from flair.models import TextClassifier
 
-classifier = TextClassifier.load('en-sentiment')
+# load tagger
+classifier = TextClassifier.load('sentiment')
 ```
 
 All you need to do is use the `predict()` method of the classifier on a sentence. This will add the predicted label to
-the sentence. Lets use a sentence with negative sentiment:
+the sentence. Lets use a sentence with positive sentiment:
 
 ```python
 # load tagger
@@ -299,10 +300,10 @@ print(sentence)
 
 This should print:
 ```console
-[NEGATIVE (0.9598667025566101)]
+Sentence: "enormously entertaining for moviegoers of any age ."   [− Tokens: 8  − Sentence-Labels: {'class': [POSITIVE (0.9976)]}]
 ```
 
-The number in brackets behind the label is the prediction confidence.
+The label POSITIVE is added to the sentence, indicating that this sentence has positive sentiment.
 
 ### List of Pre-Trained Text Classification Models
 
