@@ -106,7 +106,7 @@ Sentence: "I love Berlin ." - 4 Tokens
 
 The following NER tags are found: 
 
-LOC-span [3]: "Berlin"
+Span [3]: "Berlin"   [− Labels: LOC (0.9992)]
 ```
 
 ## Tutorials
