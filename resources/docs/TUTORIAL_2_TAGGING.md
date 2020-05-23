@@ -152,9 +152,7 @@ Thanks to our contributors we are also able to distribute a couple of models for
 
 ### Tagging a German sentence
 
-As indicated in the list above, we also provide pre-trained models for languages other than English. Currently, we
-support German, French, and Dutch other languages are forthcoming. To tag a German sentence, just load the appropriate
-model:
+As indicated in the list above, we also provide pre-trained models for languages other than English. To tag a German sentence, just load the appropriate model:
 
 ```python
 
