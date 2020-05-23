@@ -16,6 +16,8 @@ All embeddings produced with our methods are PyTorch vectors, so they can be imm
 fine-tuning. There are three main document embeddings in Flair: (1) `DocumentPoolEmbeddings` that simply do an average over all word embeddings in the sentence, (2) `DocumentRNNEmbeddings` that train an RNN over all word embeddings in a sentence, and (3) `TransformerDocumentEmbeddings` that use a pre-trained transformer: 
 
 ```python
+from flair.embeddings import TransformerDocumentEmbeddings, DocumentPoolEmbeddings, DocumentRNNEmbeddings
+
 # document embedding is a mean over GloVe word embeddings
 pooled_embeddings = DocumentPoolEmbeddings([WordEmbeddings('glove')], pooling='mean')
 
