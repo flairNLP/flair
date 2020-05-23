@@ -13,11 +13,35 @@ need to call to embed your text. This means that for most users of Flair, the co
 hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
 All embeddings produced with our methods are PyTorch vectors, so they can be immediately used for training and
-fine-tuning. There are three main document embeddings in Flair: 
+fine-tuning. There are three main document embeddings in Flair: (1) DocumentPoolEmbeddings that simply do an average over all word embeddings in the sentence, (2) DocumentRNNEmbeddings that train an RNN over all word embeddings in a sentence, and (3) TransformerDocumentEmbeddings that use a pre-trained transformer: 
+
+```python
+# document embedding is a mean over GloVe word embeddings
+pooled_embeddings = DocumentPoolEmbeddings([WordEmbeddings('glove')], pooling='mean')
+
+# document embedding is an LSTM over GloVe word embeddings
+lstm_embeddings = DocumentRNNEmbeddings([WordEmbeddings('glove')], rnn_type='lstm')
+
+# document embedding is a pre-trained transformer
+transformer_embeddings = TransformerDocumentEmbeddings('bert-base-uncased')
+```
+
+Simply call embed() to embed your sentence with one of these three options: 
+
+```python
+# example sentence
+sentence = Sentence('The grass is green.')
+
+# embed with pooled embeddings
+pooled_embeddings.embed(sentence)
+
+# print embedding for whole sentence
+print(sentence.embedding)
+```
 
 ## DocumentPoolEmbeddings
 
-The first method calculates a pooling operation over all word embeddings in a document.
+DocumentPoolEmbeddings calculate a pooling operation over all word embeddings in a document.
 The default operation is `mean` which gives us the mean of all words in the sentence.
 The resulting embedding is taken as document embedding.
 
@@ -27,17 +51,13 @@ So, if you want to create a document embedding using GloVe embeddings together w
 use the following code:
 
 ```python
-from flair.embeddings import WordEmbeddings, FlairEmbeddings, DocumentPoolEmbeddings
+from flair.embeddings import WordEmbeddings, DocumentPoolEmbeddings
 
 # initialize the word embeddings
-glove_embedding = WordEmbeddings('glove')
-flair_embedding_forward = FlairEmbeddings('news-forward')
-flair_embedding_backward = FlairEmbeddings('news-backward')
+glove_embedding =
 
 # initialize the document embeddings, mode = mean
-document_embeddings = DocumentPoolEmbeddings([glove_embedding,
-                                              flair_embedding_backward,
-                                              flair_embedding_forward])
+document_embeddings = DocumentPoolEmbeddings([glove_embedding])
 ```
 
 Now, create an example sentence and call the embedding's `embed()` method.
@@ -50,12 +70,19 @@ sentence = Sentence('The grass is green . And the sky is blue .')
 document_embeddings.embed(sentence)
 
 # now check out the embedded sentence.
-print(sentence.get_embedding())
+print(sentence.embedding)
 ```
 
-This prints out the embedding of the document.
-Since the document embedding is derived from word embeddings, its dimensionality depends on the dimensionality of word
-embeddings you are using.
+This prints out the embedding of the document. Since the document embedding is derived from word embeddings, its dimensionality depends on the dimensionality of word embeddings you are using.
+
+You have the following optional constructor arguments: 
+
+| Argument             | Default             | Description
+| -------------------- | ------------------- | ------------------------------------------------------------------------------
+| `fine_tune_mode`             | `linear`       | One of `linear`, `nonlinear` and `none`.
+| `pooling`  | `first`             | One of `mean`, `max` and `min`.
+
+### Pooling operation
 
 Next to the `mean` pooling operation you can also use `min` or `max` pooling. Simply pass the pooling operation you want
 to use to the initialization of the `DocumentPoolEmbeddings`:
@@ -65,6 +92,8 @@ document_embeddings = DocumentPoolEmbeddings([glove_embedding,
                                              flair_embedding_backward],
                                              pooling='min')
 ```
+
+### Fine-tune mode
 
 You can also choose which fine-tuning operation you want, i.e. which transformation to apply before word embeddings get
 pooled. The default operation is 'linear' transformation, but if you only use simple word embeddings that are 
