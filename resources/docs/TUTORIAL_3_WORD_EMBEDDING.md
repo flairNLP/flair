@@ -58,6 +58,8 @@ to use embeddings trained over German web crawls:
 german_embedding = WordEmbeddings('de-crawl')
 ```
 
+Check out the full list of all word embeddings models [here](/resources/docs/embeddings/CLASSIC_WORD_EMBEDDINGS.md), along with more explanations on this class.
+
 We generally recommend the FastText embeddings, or GloVe if you want a smaller model.
 
 
