@@ -85,7 +85,6 @@ You can also pass custom tokenizers to the initialization method. Instead of pas
 ```python
 from flair.data import Sentence, segtok_tokenizer
 
-
 # Make a sentence object by passing an untokenized string and a tokenizer
 sentence = Sentence('The grass is green.', use_tokenizer=segtok_tokenizer)
 
@@ -103,7 +102,7 @@ The second way allows you to write your own wrapper around the tokenizer you wan
 
 ## Adding Labels
 
-In Flair, any data point can be labeled. For instance, you can label a word or label a sentence. The following shows you how to do it:
+In Flair, any data point can be labeled. For instance, you can label a word or label a sentence:
 
 ### Adding Labels to Tokens
 
@@ -173,7 +172,7 @@ Sentence: "France is the current world cup winner."   [− Tokens: 7  − Senten
 
 ### Multiple Labels
 
-A sentence can also belong to multiple topics. In this case, add two labels with the same label name:
+Any data point can be labeled multiple times. A sentence for instance might belong to two topics. In this case, add two labels with the same label name:
 
 ```python
 sentence = Sentence('France is the current world cup winner.')
