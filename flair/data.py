@@ -175,10 +175,10 @@ class Label:
         return {"value": self.value, "confidence": self.score}
 
     def __str__(self):
-        return f"{self._value} ({self._score:.4f})"
+        return f"{self._value} ({round(self._score, 4)})"
 
     def __repr__(self):
-        return f"{self._value} ({self._score:.4f})"
+        return f"{self._value} ({round(self._score, 4)})"
 
 
 class DataPoint:
