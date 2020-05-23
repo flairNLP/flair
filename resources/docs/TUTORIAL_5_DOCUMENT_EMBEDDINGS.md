@@ -13,7 +13,7 @@ need to call to embed your text. This means that for most users of Flair, the co
 hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
 All embeddings produced with our methods are PyTorch vectors, so they can be immediately used for training and
-fine-tuning. There are three main document embeddings in Flair: (1) DocumentPoolEmbeddings that simply do an average over all word embeddings in the sentence, (2) DocumentRNNEmbeddings that train an RNN over all word embeddings in a sentence, and (3) TransformerDocumentEmbeddings that use a pre-trained transformer: 
+fine-tuning. There are three main document embeddings in Flair: (1) `DocumentPoolEmbeddings` that simply do an average over all word embeddings in the sentence, (2) `DocumentRNNEmbeddings` that train an RNN over all word embeddings in a sentence, and (3) `TransformerDocumentEmbeddings` that use a pre-trained transformer: 
 
 ```python
 # document embedding is a mean over GloVe word embeddings
@@ -38,6 +38,8 @@ pooled_embeddings.embed(sentence)
 # print embedding for whole sentence
 print(sentence.embedding)
 ```
+
+We give details on all three document embeddings in the following:
 
 ## DocumentPoolEmbeddings
 
