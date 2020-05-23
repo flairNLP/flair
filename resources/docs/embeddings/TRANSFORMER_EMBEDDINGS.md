@@ -1,6 +1,6 @@
 # TransformerWordEmbeddings
 
-Thanks to the brilliant [`transformers`](https://github.com/huggingface/transformers) library from [Hugging Face](https://github.com/huggingface), 
+Thanks to the brilliant [`transformers`](https://github.com/huggingface/transformers) library from [HuggingFace](https://github.com/huggingface), 
 Flair is able to support various Transformer-based architectures like BERT or XLNet. 
 
 As of version 0.5 of Flair, there is a single class for all transformer embeddings that you instantiate with different identifiers get different transformers. For instance, to load a standard BERT transformer model, do:  
@@ -137,7 +137,25 @@ sentence = Sentence("The Oktoberfest is the world's largest Volksfest .")
 embedding.embed(sentence)
 ```
 
-## Models
+### Fine-tuneable or not
+
+In some setups, you may wish to fine-tune the transformer embeddings. In this case, set fine_tune=True in the init method: 
+
+```python
+# use first and last subtoken for each word
+embeddings = TransformerWordEmbeddings('bert-base-uncased', fine_tune=True)
+embeddings.embed(sentence)
+print(sentence[0].embedding)
+```
+
+This will print a tensor that now has a gradient function and can be fine-tuned if you use it in a training routine.
+
+```python
+tensor([-0.0323, -0.3904, -1.1946,  ...,  0.1305, -0.1365, -0.4323],
+       device='cuda:0', grad_fn=<CatBackward>)
+```
+
+### Models
 
 Please have a look at the awesome Hugging Face [documentation](https://huggingface.co/transformers/v2.3.0/pretrained_models.html)
 for all supported pretrained models!
