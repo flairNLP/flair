@@ -288,13 +288,15 @@ All you need to do is use the `predict()` method of the classifier on a sentence
 the sentence. Lets use a sentence with negative sentiment:
 
 ```python
-sentence = Sentence('This film hurts. It is so bad that I am confused.')
+# load tagger
+classifier = TextClassifier.load('sentiment')
 
-# predict NER tags
+# predict for example sentence
+sentence = Sentence("enormously entertaining for moviegoers of any age .")
 classifier.predict(sentence)
 
-# print sentence with predicted labels
-print(sentence.labels)
+# check prediction
+print(sentence)
 ```
 
 This should print:
@@ -312,7 +314,8 @@ are provided:
 
 | ID | Language | Task | Training Dataset | Accuracy |
 | ------------- | ---- | ------------- |------------- |------------- |
-| 'en-sentiment' | English | detecting positive and negative sentiment | movie reviews from [IMDB](http://ai.stanford.edu/~amaas/data/sentiment/)  |  **90.54** (Micro F1) |
+| 'sentiment' | English | detecting positive and negative sentiment (transformer-based) | movie and product reviews |  **98.87** |
+| 'sentiment-fast' | English | detecting positive and negative sentiment (RNN-based) | movie and product reviews |  **96.83**|
 | 'de-offensive-language' | German | detecting offensive language | [GermEval 2018 Task 1](https://projects.fzai.h-da.de/iggsa/projekt/) |  **75.71** (Macro F1) |
 
 
