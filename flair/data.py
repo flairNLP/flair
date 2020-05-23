@@ -507,6 +507,15 @@ class Sentence(DataPoint):
         if type(token) is str:
             token = Token(token)
 
+        token.text = token.text.replace('\u200c', '')
+        token.text = token.text.replace('\u200b', '')
+        token.text = token.text.replace('\ufe0f', '')
+        token.text = token.text.replace('\ufeff', '')
+
+        # data with zero-width characters cannot be handled
+        if token.text.strip() == '':
+            return
+
         self.tokens.append(token)
 
         # set token idx if not set

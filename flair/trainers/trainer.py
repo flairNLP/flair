@@ -148,6 +148,8 @@ class ModelTrainer:
 
         if mini_batch_chunk_size is None:
             mini_batch_chunk_size = mini_batch_size
+        if learning_rate < min_learning_rate:
+            min_learning_rate = learning_rate / 10
 
         initial_learning_rate = learning_rate
 

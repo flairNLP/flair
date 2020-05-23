@@ -1,27 +1,96 @@
-import shutil
+import shutil, pytest
 
-from flair.data import Dictionary
-from flair.trainers.language_model_trainer import TextCorpus
+from flair.data import Dictionary, Sentence
+from flair.embeddings import TokenEmbeddings, FlairEmbeddings
+from flair.models import LanguageModel
+from flair.trainers.language_model_trainer import TextCorpus, LanguageModelTrainer
 
 
-def test_train_resume_language_model_training(
-    resources_path, results_base_path, tasks_base_path
-):
+@pytest.mark.integration
+def test_train_language_model(results_base_path, resources_path):
     # get default dictionary
     dictionary: Dictionary = Dictionary.load("chars")
+
+    # init forward LM with 128 hidden states and 1 layer
+    language_model: LanguageModel = LanguageModel(
+        dictionary, is_forward_lm=True, hidden_size=128, nlayers=1
+    )
 
     # get the example corpus and process at character level in forward direction
     corpus: TextCorpus = TextCorpus(
         resources_path / "corpora/lorem_ipsum",
         dictionary,
-        forward=True,
+        language_model.is_forward_lm,
         character_level=True,
     )
 
-    assert corpus.test is not None
-    assert corpus.train is not None
-    assert corpus.valid is not None
-    assert len(corpus.train) == 2
+    # train the language model
+    trainer: LanguageModelTrainer = LanguageModelTrainer(
+        language_model, corpus, test_mode=True
+    )
+    trainer.train(
+        results_base_path, sequence_length=10, mini_batch_size=10, max_epochs=2
+    )
+
+    # use the character LM as embeddings to embed the example sentence 'I love Berlin'
+    char_lm_embeddings: TokenEmbeddings = FlairEmbeddings(
+        str(results_base_path / "best-lm.pt")
+    )
+    sentence = Sentence("I love Berlin")
+    char_lm_embeddings.embed(sentence)
+
+    text, likelihood = language_model.generate_text(number_of_characters=100)
+    assert text is not None
+    assert len(text) >= 100
+
+    # clean up results directory
+    shutil.rmtree(results_base_path, ignore_errors=True)
+    del trainer, language_model, corpus, char_lm_embeddings
+
+
+@pytest.mark.integration
+def test_train_resume_language_model(
+    resources_path, results_base_path, tasks_base_path
+):
+    # get default dictionary
+    dictionary: Dictionary = Dictionary.load("chars")
+
+    # init forward LM with 128 hidden states and 1 layer
+    language_model: LanguageModel = LanguageModel(
+        dictionary, is_forward_lm=True, hidden_size=128, nlayers=1
+    )
+
+    # get the example corpus and process at character level in forward direction
+    corpus: TextCorpus = TextCorpus(
+        resources_path / "corpora/lorem_ipsum",
+        dictionary,
+        language_model.is_forward_lm,
+        character_level=True,
+    )
+
+    # train the language model
+    trainer: LanguageModelTrainer = LanguageModelTrainer(
+        language_model, corpus, test_mode=True
+    )
+    trainer.train(
+        results_base_path,
+        sequence_length=10,
+        mini_batch_size=10,
+        max_epochs=2,
+        checkpoint=True,
+    )
+    del trainer, language_model
+
+    trainer = LanguageModelTrainer.load_from_checkpoint(
+        results_base_path / "checkpoint.pt", corpus
+    )
+    trainer.train(
+        results_base_path, sequence_length=10, mini_batch_size=10, max_epochs=2
+    )
+
+    # clean up results directory
+    shutil.rmtree(results_base_path)
+    del trainer
 
 
 def test_generate_text_with_small_temperatures():
@@ -72,3 +141,4 @@ def test_compute_perplexity():
 
     assert perplexity_gramamtical_sentence < perplexity_ungramamtical_sentence
     del language_model
+

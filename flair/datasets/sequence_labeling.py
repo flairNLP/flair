@@ -211,7 +211,7 @@ class ColumnDataset(FlairDataset):
                         self.column_name_map[column], fields[column]
                     )
                 if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == '-':
-                        token.whitespace_after = False
+                    token.whitespace_after = False
         return token
 
     def __line_completes_sentence(self, line: str) -> bool:
@@ -274,9 +274,10 @@ class CONLL_03(ColumnCorpus):
     ):
         """
         Initialize the CoNLL-03 corpus. This is only possible if you've manually downloaded it to your machine.
-        Obtain the corpus from https://www.clips.uantwerpen.be/conll2003/ner/ and put it into some folder. Then point
-        the base_path parameter in the constructor to this folder
-        :param base_path: Path to the CoNLL-03 corpus on your machine
+        Obtain the corpus from https://www.clips.uantwerpen.be/conll2003/ner/ and put the eng.testa, .testb, .train
+        files in a folder called 'conll_03'. Then set the base_path parameter in the constructor to the path to the
+        parent directory where the conll_03 folder resides.
+        :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
         :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' or 'np' to predict
         POS tags or chunks respectively
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -299,7 +300,7 @@ class CONLL_03(ColumnCorpus):
         # check if data there
         if not data_folder.exists():
             log.warning("-" * 100)
-            log.warning(f'ACHTUNG: CoNLL-03 dataset not found at "{data_folder}".')
+            log.warning(f'WARNING: CoNLL-03 dataset not found at "{data_folder}".')
             log.warning(
                 'Instructions for obtaining the data can be found here: https://www.clips.uantwerpen.be/conll2003/ner/"'
             )
@@ -324,9 +325,10 @@ class CONLL_03_GERMAN(ColumnCorpus):
     ):
         """
         Initialize the CoNLL-03 corpus for German. This is only possible if you've manually downloaded it to your machine.
-        Obtain the corpus from https://www.clips.uantwerpen.be/conll2003/ner/ and put it into some folder. Then point
-        the base_path parameter in the constructor to this folder
-        :param base_path: Path to the CoNLL-03 corpus on your machine
+        Obtain the corpus from https://www.clips.uantwerpen.be/conll2003/ner/ and put the respective files in a folder called
+        'conll_03_german'. Then set the base_path parameter in the constructor to the path to the parent directory where
+        the conll_03_german folder resides.
+        :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03_german' folder) on your machine
         :param tag_to_bioes: NER by default, need not be changed, but you could also select 'lemma', 'pos' or 'np' to predict
         word lemmas, POS tags or chunks respectively
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -349,7 +351,7 @@ class CONLL_03_GERMAN(ColumnCorpus):
         # check if data there
         if not data_folder.exists():
             log.warning("-" * 100)
-            log.warning(f'ACHTUNG: CoNLL-03 dataset not found at "{data_folder}".')
+            log.warning(f'WARNING: CoNLL-03 dataset not found at "{data_folder}".')
             log.warning(
                 'Instructions for obtaining the data can be found here: https://www.clips.uantwerpen.be/conll2003/ner/"'
             )
@@ -609,7 +611,7 @@ class GERMEVAL_14(ColumnCorpus):
         if not data_folder.exists():
 
             log.warning("-" * 100)
-            log.warning(f'ACHTUNG: GermEval-14 dataset not found at "{data_folder}".')
+            log.warning(f'WARNING: GermEval-14 dataset not found at "{data_folder}".')
             log.warning(
                 'Instructions for obtaining the data can be found here: https://sites.google.com/site/germeval2014ner/home/"'
             )
@@ -669,6 +671,48 @@ class NER_BASQUE(ColumnCorpus):
         super(NER_BASQUE, self).__init__(
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
+
+class NER_FINNISH(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+    ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ner_finnish_path = "https://raw.githubusercontent.com/mpsilfve/finer-data/master/data/digitoday."
+        cached_path(f"{ner_finnish_path}2014.train.csv", Path("datasets") / dataset_name)
+        cached_path(f"{ner_finnish_path}2014.dev.csv", Path("datasets") / dataset_name)
+        cached_path(f"{ner_finnish_path}2015.test.csv", Path("datasets") / dataset_name)
+
+        _remove_lines_without_annotations(data_file=Path(data_folder / "digitoday.2015.test.csv"))
+
+        super(NER_FINNISH, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, skip_first_line=True
+        )
+
+def _remove_lines_without_annotations(data_file: Union[str, Path] = None):
+        with open(data_file, 'r') as f:
+            lines = f.readlines()
+        with open(data_file, 'w') as f:
+            for line in lines:
+                if len(line.split()) != 1:
+                    f.write(line)
+
 
 
 class WIKINER_ENGLISH(ColumnCorpus):

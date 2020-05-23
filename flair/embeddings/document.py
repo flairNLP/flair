@@ -56,14 +56,20 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         self.model = AutoModel.from_pretrained(model, config=config)
 
         # model name
-        self.name = str(model)
+        self.name = 'transformer-document-' + str(model)
 
         # when initializing, embeddings are in eval mode by default
         self.model.eval()
         self.model.to(flair.device)
 
         # embedding parameters
-        self.layer_indexes = [int(x) for x in layers.split(",")]
+        if layers == 'all':
+            # send mini-token through to check how many layers the model has
+            hidden_states = self.model(torch.tensor([1], device=flair.device).unsqueeze(0))[-1]
+            self.layer_indexes = [int(x) for x in range(len(hidden_states))]
+        else:
+            self.layer_indexes = [int(x) for x in layers.split(",")]
+
         self.use_scalar_mix = use_scalar_mix
         self.fine_tune = fine_tune
         self.static_embeddings = not self.fine_tune
@@ -157,6 +163,12 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             else self.model.config.hidden_size
         )
 
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+        # reload tokenizer to get around serialization issues
+        model_name = self.name.split('transformer-document-')[-1]
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 class DocumentPoolEmbeddings(DocumentEmbeddings):
     def __init__(
