@@ -145,7 +145,7 @@ sequence labeler, the score value will indicate classifier confidence.
 
 ## Adding Labels to Sentences
 
-A `Sentence` can have one or multiple labels that can for example be used in text classification tasks.
+A `Sentence` can have one or multiple labels that can be used in text classification tasks.
 For instance, the example below shows how we add the label 'sports' to a sentence, thereby labeling it
 as belonging to the sports "topic".
 
@@ -155,7 +155,7 @@ sentence = Sentence('France is the current world cup winner.')
 # add a label to a sentence
 sentence.add_label('topic', 'sports')
 
-# ou can also create a sentence with label in one line
+# You can also create a sentence with label in one line
 sentence = Sentence('France is the current world cup winner.').add_label('topic', 'sports')
 
 print(sentence)
