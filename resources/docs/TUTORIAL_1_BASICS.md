@@ -85,7 +85,6 @@ You can also pass custom tokenizers to the initialization method. Instead of pas
 ```python
 from flair.data import Sentence, segtok_tokenizer
 
-
 # Make a sentence object by passing an untokenized string and a tokenizer
 sentence = Sentence('The grass is green.', use_tokenizer=segtok_tokenizer)
 
@@ -101,7 +100,11 @@ Sentence: "The grass is green ." - 5 Tokens
 
 The second way allows you to write your own wrapper around the tokenizer you want to use. The wrapper is a function which has the same signature as `flair.data.segtok_tokenizer` (take a `string` and return `List[Token]`). Check the code of `flair.data.space_tokenizer` (which is very simple) to have an idea of how to implement such wrapper.  
 
-## Adding Tags to Tokens
+## Adding Labels
+
+In Flair, any data point can be labeled. For instance, you can label a word or label a sentence:
+
+### Adding Labels to Tokens
 
 A `Token` has fields for linguistic annotation, such as lemmas, part-of-speech tags or named entity tags. You can
 add a tag by specifying the tag type and the tag value. In this example, we're adding an NER tag of type 'color' to
@@ -143,9 +146,9 @@ This should print:
 Our color tag has a score of 1.0 since we manually added it. If a tag is predicted by our
 sequence labeler, the score value will indicate classifier confidence.
 
-## Adding Labels to Sentences
+### Adding Labels to Sentences
 
-A `Sentence` can have one or multiple labels that can be used in text classification tasks.
+You can also add a `Label` to a whole `Sentence`.
 For instance, the example below shows how we add the label 'sports' to a sentence, thereby labeling it
 as belonging to the sports "topic".
 
@@ -155,7 +158,9 @@ sentence = Sentence('France is the current world cup winner.')
 # add a label to a sentence
 sentence.add_label('topic', 'sports')
 
-# You can also create a sentence with label in one line
+print(sentence)
+
+# Alternatively, you can also create a sentence with label in one line
 sentence = Sentence('France is the current world cup winner.').add_label('topic', 'sports')
 
 print(sentence)
@@ -164,10 +169,14 @@ print(sentence)
 This should print: 
 
 ```console
-Sentence: "France is the current world cup winner."   [− Tokens: 7  − Sentence-Labels: {'topic': [sports (1.0000)]}]
+Sentence: "France is the current world cup winner."   [− Tokens: 7  − Sentence-Labels: {'topic': [sports (1.0)]}]
 ```
 
-A sentence can also belong to multiple topics. In this case, add two labels with the same label name:
+Indicating that this sentence belongs to the topic 'sports' with confidence 1.0.
+
+### Multiple Labels
+
+Any data point can be labeled multiple times. A sentence for instance might belong to two topics. In this case, add two labels with the same label name:
 
 ```python
 sentence = Sentence('France is the current world cup winner.')
@@ -198,21 +207,34 @@ This should print:
 Sentence: "France is the current world cup winner."   [− Tokens: 7  − Sentence-Labels: {'topic': [sports (1.0), soccer (1.0)], 'language': [English (1.0)]}]
 ```
 
-Indicating that this sentence has two "topic" labels and one "language" label. You can access these labels like this: 
+Indicating that this sentence has two "topic" labels and one "language" label. 
+
+### Accessing a Sentence's Labels
+
+You can access these labels like this: 
 
 ```python
 for label in sentence.labels:
     print(label)
 ```
 
+Remember that each label is a `Label` object, so you can also access the label's `value` and `score` fields directly:
+
+```python
+print(sentence.to_plain_string())
+for label in sentence.labels:
+    print(f' - classified as "{label.value}" with score {label.score}')
+```
+
 This should print:
 
 ```console
-sports (1.0)
-world cup (1.0)
+France is the current world cup winner.
+ - classified as "sports" with score 1.0
+ - classified as "soccer" with score 1.0
 ```
 
-Here, each label is a `Label` object. If you are interested only in the labels of one layer of annotation, you can access them like this: 
+If you are interested only in the labels of one layer of annotation, you can access them like this: 
 
 ```python
 for label in sentence.get_labels('topic'):
