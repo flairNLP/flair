@@ -145,7 +145,7 @@ sequence labeler, the score value will indicate classifier confidence.
 
 ## Adding Labels to Sentences
 
-A `Sentence` can have one or multiple labels that can be used in text classification tasks.
+You can also add a `Label` to a whole `Sentence`.
 For instance, the example below shows how we add the label 'sports' to a sentence, thereby labeling it
 as belonging to the sports "topic".
 
@@ -164,7 +164,7 @@ print(sentence)
 This should print: 
 
 ```console
-Sentence: "France is the current world cup winner."   [− Tokens: 7  − Sentence-Labels: {'topic': [sports (1.0000)]}]
+Sentence: "France is the current world cup winner."   [− Tokens: 7  − Sentence-Labels: {'topic': [sports (1.0)]}]
 ```
 
 A sentence can also belong to multiple topics. In this case, add two labels with the same label name:
@@ -205,14 +205,23 @@ for label in sentence.labels:
     print(label)
 ```
 
+Remember that each label is a `Label` object, so you can also access the label's `value` and `score` fields directly:
+
+```python
+print(sentence.to_plain_string())
+for label in sentence.labels:
+    print(f' - classified as "{label.value}" with score {label.score}')
+```
+
 This should print:
 
 ```console
-sports (1.0)
-world cup (1.0)
+France is the current world cup winner.
+ - classified as "sports" with score 1.0
+ - classified as "soccer" with score 1.0
 ```
 
-Here, each label is a `Label` object. If you are interested only in the labels of one layer of annotation, you can access them like this: 
+If you are interested only in the labels of one layer of annotation, you can access them like this: 
 
 ```python
 for label in sentence.get_labels('topic'):
