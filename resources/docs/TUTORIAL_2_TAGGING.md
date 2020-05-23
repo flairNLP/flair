@@ -82,7 +82,8 @@ are provided:
 | 'ner' | 4-class Named Entity Recognition |  Conll-03  |  **93.03** (F1) |
 | 'ner-ontonotes' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.06** (F1) |
 | 'chunk' |  Syntactic Chunking   |  Conll-2000     |  **96.47** (F1) |
-| 'pos' |  Part-of-Speech Tagging |  Ontonotes     |  **98.6** (Accuracy) |
+| 'pos' |  Part-of-Speech Tagging (fine-grained) |  Ontonotes     |  **98.19** (Accuracy) |
+| 'upos' |  Part-of-Speech Tagging (universal) |  Ontonotes     |  **98.6** (Accuracy) |
 | 'frame'  |   Semantic Frame Detection |  Propbank 3.0     |  **97.54** (F1) |
 
 
@@ -96,7 +97,8 @@ In case you do not have a GPU available, we also distribute smaller models that 
 | 'ner-fast' | 4-class Named Entity Recognition |  Conll-03  |  **92.75** (F1) |
 | 'ner-ontonotes-fast' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.27** (F1) |
 | 'chunk-fast' |  Syntactic Chunking   |  Conll-2000     |  **96.22** (F1) |
-| 'pos-fast' |  Part-of-Speech Tagging |  Ontonotes     |  **98.47** (Accuracy) |
+| 'pos-fast' |  Part-of-Speech Tagging (fine-grained) |  Ontonotes     |  **98.1** (Accuracy) |
+| 'upos-fast' |  Part-of-Speech Tagging (universal) |  Ontonotes     |  **98.47** (Accuracy) |
 | 'frame-fast'  |   Semantic Frame Detection | Propbank 3.0     |  **97.31** (F1) |
 
 
@@ -126,8 +128,12 @@ We also distribute German models.
 | -------------    | ------------- |------------- |------------- |------------- |
 | 'de-ner' | 4-class Named Entity Recognition |  Conll-03  |  **87.94** (F1) | |
 | 'de-ner-germeval' | 4+4-class Named Entity Recognition |  Germeval  |  **84.90** (F1) | |
-| 'de-pos' | Part-of-Speech Tagging |  UD German - HDT  |  **98.33** (Accuracy) | |
-| 'de-pos-fine-grained' | Part-of-Speech Tagging |  German Tweets  |  **93.06** (Accuracy) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/pos-twitter-german) |
+| 'de-pos' | Part-of-Speech Tagging |  UD German - HDT  |  **98.50** (Accuracy) | |
+| 'de-pos-tweets' | Part-of-Speech Tagging |  German Tweets  |  **93.06** (Accuracy) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/pos-twitter-german) |
+| 'de-historic-indirect' | historical German speech and thought (indirect) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
+| 'de-historic-direct' | historical German speech and thought (direct) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
+| 'de-historic-reported' | historical German speech and thought (reported) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
+| 'de-historic-free-indirect' | historical German speech and thought (de-historic-free-indirect) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
 
 
 #### Models for other Languages
@@ -140,6 +146,8 @@ Thanks to our contributors we are also able to distribute a couple of models for
 | 'nl-ner' | Named Entity Recognition |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **89.56** (F1) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/conll2002-ner-dutch) |
 | 'da-ner' | Named Entity Recognition |  [Danish NER dataset](https://github.com/alexandrainst/danlp)  |   | [AmaliePauli](https://github.com/AmaliePauli) |
 | 'da-pos' | Named Entity Recognition |  [Danish Dependency Treebank](https://github.com/UniversalDependencies/UD_Danish-DDT/blob/master/README.md)  |  | [AmaliePauli](https://github.com/AmaliePauli) |
+| 'ml-pos' | Part-of-Speech Tagging (fine-grained) |  more than 30000 sentences  | **83** | [sabiqueqb](https://github.com/sabiqueqb) |
+| 'ml-upos' | Part-of-Speech Tagging (universal)| more than 30000 sentences | **87** | [sabiqueqb](https://github.com/sabiqueqb) |
 
 
 ### Tagging a German sentence
