@@ -74,7 +74,7 @@ print(sentence.embedding)
 
 This prints out the embedding of the document. Since the document embedding is derived from word embeddings, its dimensionality depends on the dimensionality of word embeddings you are using. For more details on these embeddings, check [here](/resources/docs/embeddings/DOCUMENT_POOL_EMBEDDINGS.md). 
 
-One advantage of DocumentPoolEmbeddings is that they do not need to be trained, you can immediately use them to embed your documents. You can find more details on these embeddings [here]().
+One advantage of DocumentPoolEmbeddings is that they do not need to be trained, you can immediately use them to embed your documents. 
 
 ## Document RNN Embeddings
 
