@@ -147,27 +147,34 @@ sequence labeler, the score value will indicate classifier confidence.
 
 A `Sentence` can have one or multiple labels that can for example be used in text classification tasks.
 For instance, the example below shows how we add the label 'sports' to a sentence, thereby labeling it
-as belonging to the sports category.
+as belonging to the sports "topic".
 
 ```python
 sentence = Sentence('France is the current world cup winner.')
 
 # add a label to a sentence
-sentence.add_label('sports')
+sentence.add_label('topic', 'sports')
 
-# a sentence can also belong to multiple classes
-sentence.add_labels(['sports', 'world cup'])
-
-# you can also set the labels while initializing the sentence
-sentence = Sentence('France is the current world cup winner.', labels=['sports', 'world cup'])
+# ou can also create a sentence with label in one line
+sentence = Sentence('France is the current world cup winner.').add_label('topic', 'sports')
 ```
 
-Labels are also of the `Label` class. So, you can print a sentence's labels like this: 
+A sentence can also belong to multiple topics. In this case, add two labels with the same label name:
 
 ```python
-sentence = Sentence('France is the current world cup winner.', labels=['sports', 'world cup'])
+sentence = Sentence('France is the current world cup winner.')
 
-print(sentence)
+# this sentence has multiple topic labels
+sentence.add_label('topic', 'sports')
+sentence.add_label('topic', 'soccer')
+```
+
+Each label is a `Label` object. You can print a sentence's labels like this: 
+
+```python
+sentence = Sentence('France is the current world cup winner.')
+sentence.add_label('topic', 'sports').add_label('topic', 'sports')
+
 for label in sentence.labels:
     print(label)
 ```
