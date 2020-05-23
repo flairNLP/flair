@@ -10,29 +10,28 @@ a corpus](/resources/docs/TUTORIAL_6_CORPUS.md).
 
 ## Training a Sequence Labeling Model
 
-Here is example code for a small NER model trained over WNUT_17 data, using simple GloVe embeddings. 
+Here is example code for a small part-of-speech tagger model trained over UD_ENGLISH (English universal dependency treebank) data, using simple GloVe embeddings. 
 In this example, we downsample the data to 10% of the original data to make it run faster, but normally you 
 should train over the full dataset:
 
 ```python
 from flair.data import Corpus
-from flair.datasets import WNUT_17
+from flair.datasets import UD_ENGLISH
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
-from typing import List
 
 # 1. get the corpus
-corpus: Corpus = WNUT_17().downsample(0.1)
+corpus: Corpus = UD_ENGLISH().downsample(0.1)
 print(corpus)
 
 # 2. what tag do we want to predict?
-tag_type = 'ner'
+tag_type = 'pos'
 
 # 3. make the tag dictionary from the corpus
 tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary)
 
 # 4. initialize embeddings
-embedding_types: List[TokenEmbeddings] = [
+embedding_types = [
 
     WordEmbeddings('glove'),
 
@@ -61,16 +60,10 @@ from flair.trainers import ModelTrainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 # 7. start training
-trainer.train('resources/taggers/example-ner',
+trainer.train('resources/taggers/example-pos',
               learning_rate=0.1,
               mini_batch_size=32,
               max_epochs=150)
-
-# 8. plot weight traces (optional)
-from flair.visual.training_curves import Plotter
-plotter = Plotter()
-plotter.plot_weights('resources/taggers/example-ner/weights.txt')
-
 ```
 
 Alternatively, try using a stacked embedding with FlairEmbeddings and GloVe, over the full data, for 150 epochs.
@@ -91,7 +84,7 @@ model.predict(sentence)
 print(sentence.to_tagged_string())
 ```
 
-If the model works well, it will correctly tag 'Berlin' as a location in this example.
+If the model works well, it will correctly tag 'love' as a verb in this example.
 
 
 ## Training a Text Classification Model
