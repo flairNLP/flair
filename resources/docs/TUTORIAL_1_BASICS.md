@@ -157,6 +157,14 @@ sentence.add_label('topic', 'sports')
 
 # ou can also create a sentence with label in one line
 sentence = Sentence('France is the current world cup winner.').add_label('topic', 'sports')
+
+print(sentence)
+```
+
+This should print: 
+
+```console
+Sentence: "France is the current world cup winner."   [− Tokens: 7  − Sentence-Labels: {'topic': [sports (1.0000)]}]
 ```
 
 A sentence can also belong to multiple topics. In this case, add two labels with the same label name:
@@ -169,12 +177,30 @@ sentence.add_label('topic', 'sports')
 sentence.add_label('topic', 'soccer')
 ```
 
-Each label is a `Label` object. You can print a sentence's labels like this: 
+You might want to add different layers of annotation for the same sentence. Next to topic you might also want to predict the "language" of a sentence. In this case, add a label with a different label name: 
 
 ```python
 sentence = Sentence('France is the current world cup winner.')
-sentence.add_label('topic', 'sports').add_label('topic', 'sports')
 
+# this sentence has multiple "topic" labels
+sentence.add_label('topic', 'sports')
+sentence.add_label('topic', 'soccer')
+
+# this sentence has a "language" labels
+sentence.add_label('language', 'English')
+
+print(sentence)
+```
+
+This should print: 
+
+```console
+Sentence: "France is the current world cup winner."   [− Tokens: 7  − Sentence-Labels: {'topic': [sports (1.0), soccer (1.0)], 'language': [English (1.0)]}]
+```
+
+Indicating that this sentence has two "topic" labels and one "language" label. You can access these labels like this: 
+
+```python
 for label in sentence.labels:
     print(label)
 ```
@@ -186,7 +212,15 @@ sports (1.0)
 world cup (1.0)
 ```
 
-This indicates that the sentence belongs to these two classes, each with confidence score 1.0.
+Here, each label is a `Label` object. If you are interested only in the labels of one layer of annotation, you can access them like this: 
+
+```python
+for label in sentence.get_labels('topic'):
+    print(label)
+```
+
+Giving you only the "topic" labels.
+
 
 ## Next
 
