@@ -75,7 +75,7 @@ class SequenceTagger(flair.nn.Model):
         dropout: float = 0.0,
         word_dropout: float = 0.05,
         locked_dropout: float = 0.5,
-        reproject_to: int = 2048,
+        reproject_to: int = None,
         train_initial_hidden_state: bool = False,
         rnn_type: str = "LSTM",
         pickle_module: str = "pickle",
@@ -93,6 +93,7 @@ class SequenceTagger(flair.nn.Model):
         :param rnn_layers: number of RNN layers
         :param dropout: dropout probability
         :param word_dropout: word dropout probability
+        :param reproject_to: set this to control the dimensionality of the reprojection layer
         :param locked_dropout: locked dropout probability
         :param train_initial_hidden_state: if True, trains initial hidden state of RNN
         :param beta: Parameter for F-beta score for evaluation and training annealing
@@ -156,7 +157,11 @@ class SequenceTagger(flair.nn.Model):
             self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
 
         embedding_dim: int = self.embeddings.embedding_length
-        rnn_input_dim: int = reproject_to
+
+        # if no dimensionality for reprojection layer is set, reproject to equal dimension
+        self.reproject_to = reproject_to
+        if self.reproject_to is None: self.reproject_to = embedding_dim
+        rnn_input_dim: int = self.reproject_to
 
         self.relearn_embeddings: bool = True
         if self.relearn_embeddings:
@@ -238,6 +243,7 @@ class SequenceTagger(flair.nn.Model):
             "rnn_type": self.rnn_type,
             "beta": self.beta,
             "weight_dict": self.weight_dict,
+            "reproject_to": self.reproject_to,
         }
         return model_state
 
@@ -261,6 +267,7 @@ class SequenceTagger(flair.nn.Model):
         )
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
+        reproject_to = None  if "reproject_to" not in state.keys() else state["reproject_to"]
 
         model = SequenceTagger(
             hidden_size=state["hidden_size"],
@@ -277,6 +284,7 @@ class SequenceTagger(flair.nn.Model):
             rnn_type=rnn_type,
             beta=beta,
             loss_weights=weights,
+            reproject_to=reproject_to,
         )
         model.load_state_dict(state["state_dict"])
         return model
