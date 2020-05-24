@@ -673,6 +673,7 @@ class NER_BASQUE(ColumnCorpus):
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
+
 class NER_FINNISH(ColumnCorpus):
     def __init__(
             self,

@@ -170,6 +170,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         model_name = self.name.split('transformer-document-')[-1]
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
+
 class DocumentPoolEmbeddings(DocumentEmbeddings):
     def __init__(
         self,

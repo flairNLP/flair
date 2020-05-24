@@ -75,6 +75,7 @@ class SequenceTagger(flair.nn.Model):
         dropout: float = 0.0,
         word_dropout: float = 0.05,
         locked_dropout: float = 0.5,
+        reproject_to: int = None,
         train_initial_hidden_state: bool = False,
         rnn_type: str = "LSTM",
         pickle_module: str = "pickle",
@@ -92,6 +93,7 @@ class SequenceTagger(flair.nn.Model):
         :param rnn_layers: number of RNN layers
         :param dropout: dropout probability
         :param word_dropout: word dropout probability
+        :param reproject_to: set this to control the dimensionality of the reprojection layer
         :param locked_dropout: locked dropout probability
         :param train_initial_hidden_state: if True, trains initial hidden state of RNN
         :param beta: Parameter for F-beta score for evaluation and training annealing
@@ -154,12 +156,16 @@ class SequenceTagger(flair.nn.Model):
         if locked_dropout > 0.0:
             self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
 
-        rnn_input_dim: int = self.embeddings.embedding_length
+        embedding_dim: int = self.embeddings.embedding_length
+
+        # if no dimensionality for reprojection layer is set, reproject to equal dimension
+        self.reproject_to = reproject_to
+        if self.reproject_to is None: self.reproject_to = embedding_dim
+        rnn_input_dim: int = self.reproject_to
 
         self.relearn_embeddings: bool = True
-
         if self.relearn_embeddings:
-            self.embedding2nn = torch.nn.Linear(rnn_input_dim, rnn_input_dim)
+            self.embedding2nn = torch.nn.Linear(embedding_dim, rnn_input_dim)
 
         self.train_initial_hidden_state = train_initial_hidden_state
         self.bidirectional = True
@@ -237,6 +243,7 @@ class SequenceTagger(flair.nn.Model):
             "rnn_type": self.rnn_type,
             "beta": self.beta,
             "weight_dict": self.weight_dict,
+            "reproject_to": self.reproject_to,
         }
         return model_state
 
@@ -260,6 +267,7 @@ class SequenceTagger(flair.nn.Model):
         )
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
+        reproject_to = None  if "reproject_to" not in state.keys() else state["reproject_to"]
 
         model = SequenceTagger(
             hidden_size=state["hidden_size"],
@@ -276,6 +284,7 @@ class SequenceTagger(flair.nn.Model):
             rnn_type=rnn_type,
             beta=beta,
             loss_weights=weights,
+            reproject_to=reproject_to,
         )
         model.load_state_dict(state["state_dict"])
         return model
@@ -866,9 +875,8 @@ class SequenceTagger(flair.nn.Model):
 
         model_map = {}
 
-        aws_resource_path_v04 = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4"
-        )
+        aws_resource_path_v04 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4"
+        hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
         model_map["ner"] = "/".join(
             [aws_resource_path_v04, "NER-conll03-english", "en-ner-conll03-v0.4.pt"]
@@ -921,7 +929,7 @@ class SequenceTagger(flair.nn.Model):
                 ]
             )
 
-        model_map["pos"] = "/".join(
+        model_map["upos"] = "/".join(
             [
                 aws_resource_path_v04,
                 "POS-ontonotes--h256-l1-b32-p3-0.5-%2Bglove%2Bnews-forward%2Bnews-backward-normal-locked0.5-word0.05--v0.4_0",
@@ -929,11 +937,27 @@ class SequenceTagger(flair.nn.Model):
             ]
         )
 
-        model_map["pos-fast"] = "/".join(
+        model_map["pos"] = "/".join(
+            [
+                hu_path,
+                "release-pos-0",
+                "en-pos-ontonotes-v0.5.pt",
+            ]
+        )
+
+        model_map["upos-fast"] = "/".join(
             [
                 aws_resource_path_v04,
                 "release-pos-fast-0",
                 "en-pos-ontonotes-fast-v0.4.pt",
+            ]
+        )
+
+        model_map["pos-fast"] = "/".join(
+            [
+                hu_path,
+                "release-pos-fast-0",
+                "en-pos-ontonotes-fast-v0.5.pt",
             ]
         )
 
@@ -988,10 +1012,10 @@ class SequenceTagger(flair.nn.Model):
         )
 
         model_map["de-pos"] = "/".join(
-            [aws_resource_path_v04, "release-de-pos-0", "de-pos-ud-hdt-v0.4.pt"]
+            [hu_path, "release-de-pos-0", "de-pos-ud-hdt-v0.5.pt"]
         )
 
-        model_map["de-pos-fine-grained"] = "/".join(
+        model_map["de-pos-tweets"] = "/".join(
             [
                 aws_resource_path_v04,
                 "POS-fine-grained-german-tweets",
@@ -1013,8 +1037,8 @@ class SequenceTagger(flair.nn.Model):
         model_map["nl-ner"] = "/".join(
             [aws_resource_path_v04, "NER-conll2002-dutch", "nl-ner-conll02-v0.1.pt"]
         )
-        model_map["ml-pos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-upos-model.pt"
-        model_map["ml-xpos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt"
+        model_map["ml-pos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt"
+        model_map["ml-upos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-upos-model.pt"
 
         cache_dir = Path("models")
         if model_name in model_map:

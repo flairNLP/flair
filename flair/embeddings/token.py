@@ -246,7 +246,7 @@ class WordEmbeddings(TokenEmbeddings):
             word_embedding = np.zeros(self.embedding_length, dtype="float")
 
         word_embedding = torch.tensor(
-            word_embedding, device=flair.device, dtype=torch.float
+            word_embedding.tolist(), device=flair.device, dtype=torch.float
         )
         return word_embedding
 
@@ -1113,7 +1113,7 @@ class FastTextEmbeddings(TokenEmbeddings):
             word_embedding = np.zeros(self.embedding_length, dtype="float")
 
         word_embedding = torch.tensor(
-            word_embedding, device=flair.device, dtype=torch.float
+            word_embedding.tolist(), device=flair.device, dtype=torch.float
         )
         return word_embedding
 

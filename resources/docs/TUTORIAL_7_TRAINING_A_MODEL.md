@@ -10,29 +10,28 @@ a corpus](/resources/docs/TUTORIAL_6_CORPUS.md).
 
 ## Training a Sequence Labeling Model
 
-Here is example code for a small NER model trained over WNUT_17 data, using simple GloVe embeddings. 
+Here is example code for a small part-of-speech tagger model trained over UD_ENGLISH (English universal dependency treebank) data, using simple GloVe embeddings. 
 In this example, we downsample the data to 10% of the original data to make it run faster, but normally you 
 should train over the full dataset:
 
 ```python
 from flair.data import Corpus
-from flair.datasets import WNUT_17
+from flair.datasets import UD_ENGLISH
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
-from typing import List
 
 # 1. get the corpus
-corpus: Corpus = WNUT_17().downsample(0.1)
+corpus: Corpus = UD_ENGLISH().downsample(0.1)
 print(corpus)
 
 # 2. what tag do we want to predict?
-tag_type = 'ner'
+tag_type = 'pos'
 
 # 3. make the tag dictionary from the corpus
 tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary)
 
 # 4. initialize embeddings
-embedding_types: List[TokenEmbeddings] = [
+embedding_types = [
 
     WordEmbeddings('glove'),
 
@@ -61,16 +60,10 @@ from flair.trainers import ModelTrainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 # 7. start training
-trainer.train('resources/taggers/example-ner',
+trainer.train('resources/taggers/example-pos',
               learning_rate=0.1,
               mini_batch_size=32,
               max_epochs=150)
-
-# 8. plot weight traces (optional)
-from flair.visual.training_curves import Plotter
-plotter = Plotter()
-plotter.plot_weights('resources/taggers/example-ner/weights.txt')
-
 ```
 
 Alternatively, try using a stacked embedding with FlairEmbeddings and GloVe, over the full data, for 150 epochs.
@@ -80,7 +73,7 @@ Once the model is trained you can use it to predict tags for new sentences. Just
 
 ```python
 # load the model you trained
-model = SequenceTagger.load('resources/taggers/example-ner/final-model.pt')
+model = SequenceTagger.load('resources/taggers/example-pos/final-model.pt')
 
 # create example sentence
 sentence = Sentence('I love Berlin')
@@ -91,7 +84,7 @@ model.predict(sentence)
 print(sentence.to_tagged_string())
 ```
 
-If the model works well, it will correctly tag 'Berlin' as a location in this example.
+If the model works well, it will correctly tag 'love' as a verb in this example.
 
 
 ## Training a Text Classification Model
@@ -113,20 +106,11 @@ corpus: Corpus = TREC_6()
 label_dict = corpus.make_label_dictionary()
 
 # 3. make a list of word embeddings
-word_embeddings = [WordEmbeddings('glove'),
-
-                   # comment in flair embeddings for state-of-the-art results
-                   # FlairEmbeddings('news-forward'),
-                   # FlairEmbeddings('news-backward'),
-                   ]
+word_embeddings = [WordEmbeddings('glove')]
 
 # 4. initialize document embedding by passing list of word embeddings
 # Can choose between many RNN types (GRU by default, to change use rnn_type parameter)
-document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(word_embeddings,
-                                                                     hidden_size=512,
-                                                                     reproject_words=True,
-                                                                     reproject_words_dimension=256,
-                                                                     )
+document_embeddings = DocumentRNNEmbeddings(word_embeddings, hidden_size=256)
 
 # 5. create the text classifier
 classifier = TextClassifier(document_embeddings, label_dictionary=label_dict)
@@ -135,31 +119,65 @@ classifier = TextClassifier(document_embeddings, label_dictionary=label_dict)
 trainer = ModelTrainer(classifier, corpus)
 
 # 7. start the training
-trainer.train('resources/taggers/ag_news',
+trainer.train('resources/taggers/trec',
               learning_rate=0.1,
               mini_batch_size=32,
               anneal_factor=0.5,
               patience=5,
               max_epochs=150)
-
-# 8. plot weight traces (optional)
-from flair.visual.training_curves import Plotter
-plotter = Plotter()
-plotter.plot_weights('resources/taggers/ag_news/weights.txt')
 ```
 
 Once the model is trained you can load it to predict the class of new sentences. Just call the `predict` method of the model.
 
 ```python
-classifier = TextClassifier.load('resources/taggers/ag_news/final-model.pt')
+classifier = TextClassifier.load('resources/taggers/trec/final-model.pt')
 
 # create example sentence
-sentence = Sentence('France is the current world cup winner.')
+sentence = Sentence('Who built the Eiffel Tower ?')
 
 # predict class and print
 classifier.predict(sentence)
 
 print(sentence.labels)
+```
+
+## Training a Text Classification Model with Transformer
+
+The best results in text classification use fine-tuned transformers. Use `TransformerDocumentEmbeddings` for this and set `fine_tune=True`. Then, use the following code: 
+
+
+```python
+from torch.optim.adam import Adam
+
+from flair.data import Corpus
+from flair.datasets import TREC_6
+from flair.embeddings import TransformerDocumentEmbeddings
+from flair.models import TextClassifier
+from flair.trainers import ModelTrainer
+
+
+# 1. get the corpus
+corpus: Corpus = TREC_6()
+
+# 2. create the label dictionary
+label_dict = corpus.make_label_dictionary()
+
+# 3. initialize transformer document embeddings (many models are available)
+document_embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased', fine_tune=True)
+
+# 4. create the text classifier
+classifier = TextClassifier(document_embeddings, label_dictionary=label_dict)
+
+# 5. initialize the text classifier trainer with Adam optimizer
+trainer = ModelTrainer(classifier, corpus, optimizer=Adam)
+
+# 6. start the training
+trainer.train('resources/taggers/trec',
+              learning_rate=3e-5, # use very small learning rate
+              mini_batch_size=16,
+              mini_batch_chunk_size=4, # optionally set this if transformer is too much for your machine
+              max_epochs=5, # terminate after 5 epochs
+              )
 ```
 
 
@@ -337,5 +355,4 @@ However, if the dataset fits into CUDA memory, this option is the fastest one.
 
 ## Next
 
-You can now either look into [optimizing your model](/resources/docs/TUTORIAL_8_MODEL_OPTIMIZATION.md) or
-[training your own embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md).
+You can now look into [training your own embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md).
