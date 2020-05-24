@@ -4,7 +4,7 @@ import shutil
 import pytest
 
 import flair.datasets
-from flair.data import Dictionary, Sentence, MultiCorpus
+from flair.data import Sentence
 from flair.embeddings import (
     WordEmbeddings,
     FlairEmbeddings,

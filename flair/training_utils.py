@@ -343,7 +343,7 @@ class AnnealOnPlateau(object):
         >>>     scheduler.step(val_loss)
     """
 
-    def __init__(self, optimizer, mode='min', aux_mode='min', factor=0.1, patience=10,
+    def __init__(self, optimizer, mode='min', aux_mode='min', factor=0.1, patience=10, initial_extra_patience=0,
                  verbose=False, cooldown=0, min_lr=0, eps=1e-8):
 
         if factor >= 1.0:
@@ -364,7 +364,8 @@ class AnnealOnPlateau(object):
         else:
             self.min_lrs = [min_lr] * len(optimizer.param_groups)
 
-        self.patience = patience
+        self.default_patience = patience
+        self.effective_patience = patience + initial_extra_patience
         self.verbose = verbose
         self.cooldown = cooldown
         self.cooldown_counter = 0
@@ -423,10 +424,11 @@ class AnnealOnPlateau(object):
             self.cooldown_counter -= 1
             self.num_bad_epochs = 0  # ignore any bad epochs in cooldown
 
-        if self.num_bad_epochs > self.patience:
+        if self.num_bad_epochs > self.effective_patience:
             self._reduce_lr(epoch)
             self.cooldown_counter = self.cooldown
             self.num_bad_epochs = 0
+            self.effective_patience = self.default_patience
 
         self._last_lr = [group['lr'] for group in self.optimizer.param_groups]
 

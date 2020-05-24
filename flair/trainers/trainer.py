@@ -69,6 +69,7 @@ class ModelTrainer:
         scheduler = AnnealOnPlateau,
         anneal_factor: float = 0.5,
         patience: int = 3,
+        initial_extra_patience = 0,
         min_learning_rate: float = 0.0001,
         train_with_dev: bool = False,
         monitor_train: bool = False,
@@ -150,6 +151,8 @@ class ModelTrainer:
         if learning_rate < min_learning_rate:
             min_learning_rate = learning_rate / 10
 
+        initial_learning_rate = learning_rate
+
         # cast string to Path
         if type(base_path) is str:
             base_path = Path(base_path)
@@ -228,6 +231,7 @@ class ModelTrainer:
             optimizer,
             factor=anneal_factor,
             patience=patience,
+            initial_extra_patience=initial_extra_patience,
             mode=anneal_mode,
             verbose=True,
         )
@@ -492,6 +496,7 @@ class ModelTrainer:
                     new_learning_rate = group["lr"]
                 if new_learning_rate != previous_learning_rate:
                     bad_epochs = patience + 1
+                    if previous_learning_rate == initial_learning_rate: bad_epochs += initial_extra_patience
 
                 # log bad epochs
                 log.info(f"BAD EPOCHS (no improvement): {bad_epochs}")
