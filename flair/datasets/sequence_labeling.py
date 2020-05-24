@@ -1133,7 +1133,6 @@ class SEMEVAL2010(ColumnCorpus):
         semeval2010_path = "https://raw.githubusercontent.com/midas-research/keyphrase-extraction-as-sequence-labeling-data/master/processed_semeval-2010"
         cached_path(f"{semeval2010_path}/train.txt", Path("datasets") / dataset_name)
         cached_path(f"{semeval2010_path}/test.txt", Path("datasets") / dataset_name)
-        #cached_path(f"{semeval2010_path}/dev.txt", Path("datasets") / dataset_name)
 
         super(SEMEVAL2010, self).__init__(
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, document_separator_token="."
