@@ -1073,7 +1073,7 @@ class INSPEC(ColumnCorpus):
             os.rename(data_folder / "valid.txt", data_folder / "dev.txt")
 
         super(INSPEC, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, document_separator_token="."
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 
@@ -1105,7 +1105,7 @@ class SEMEVAL2017(ColumnCorpus):
         cached_path(f"{semeval2017_path}/dev.txt", Path("datasets") / dataset_name)
 
         super(SEMEVAL2017, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, document_separator_token="."
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 class SEMEVAL2010(ColumnCorpus):
