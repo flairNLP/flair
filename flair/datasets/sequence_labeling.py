@@ -1135,7 +1135,7 @@ class SEMEVAL2010(ColumnCorpus):
         cached_path(f"{semeval2010_path}/test.txt", Path("datasets") / dataset_name)
 
         super(SEMEVAL2010, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, document_separator_token="."
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
 def _download_wikiner(language_code: str, dataset_name: str):
