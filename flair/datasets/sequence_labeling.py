@@ -1046,7 +1046,7 @@ class INSPEC(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "tag",
+        tag_to_bioes: str = "keyword",
         in_memory: bool = True,
     ):
 
@@ -1054,7 +1054,7 @@ class INSPEC(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "tag"}
+        columns = {0: "text", 1: "keyword"}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1081,7 +1081,7 @@ class SEMEVAL2017(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "tag",
+        tag_to_bioes: str = "keyword",
         in_memory: bool = True,
     ):
 
@@ -1089,7 +1089,7 @@ class SEMEVAL2017(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "tag"}
+        columns = {0: "text", 1: "keyword"}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1112,7 +1112,7 @@ class SEMEVAL2010(ColumnCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "tag",
+        tag_to_bioes: str = "keyword",
         in_memory: bool = True,
     ):
 
@@ -1120,7 +1120,7 @@ class SEMEVAL2010(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "tag"}
+        columns = {0: "text", 1: "keyword"}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
