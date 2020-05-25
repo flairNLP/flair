@@ -4502,8 +4502,12 @@ class BioNLPCorpus(ColumnCorpus):
 
         if not (train_file.exists() and dev_file.exists()):
             train_folder, dev_folder = self.download_corpus(data_folder / "original")
-            train_data = self.parse_input_files(train_folder)
-            dev_data = self.parse_input_files(dev_folder)
+            train_data = self.parse_input_files(
+                train_folder, entities_or_triggers=self.entities_or_triggers
+            )
+            dev_data = self.parse_input_files(
+                dev_folder, entities_or_triggers=self.entities_or_triggers
+            )
 
             if tokenizer is None:
                 tokenizer = build_spacy_tokenizer()
@@ -4521,11 +4525,15 @@ class BioNLPCorpus(ColumnCorpus):
             data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
         )
 
+    @staticmethod
     @abstractmethod
-    def download_corpus(self, data_folder: Path) -> Tuple[Path, Path]:
+    def download_corpus(data_folder: Path) -> Tuple[Path, Path]:
         pass
 
-    def parse_input_files(self, input_folder: Path) -> InternalBioNerDataset:
+    @staticmethod
+    def parse_input_files(
+        input_folder: Path, entities_or_triggers: str
+    ) -> InternalBioNerDataset:
         documents = {}
         entities_per_document = {}
 
@@ -4539,14 +4547,14 @@ class BioNLPCorpus(ColumnCorpus):
 
             with a1_file.open() as f_a1, a2_file.open() as f_a2:
                 entities = []
-                if self.entities_or_triggers == "entities":
+                if entities_or_triggers == "entities":
                     f = f_a1
-                elif self.entities_or_triggers == "triggers":
+                elif entities_or_triggers == "triggers":
                     f = f_a2
-                elif self.entities_or_triggers == "both":
+                elif entities_or_triggers == "both":
                     f = itertools.chain(f_a1, f_a2)
                 else:
-                    raise ValueError(self.entities_or_triggers)
+                    raise ValueError(entities_or_triggers)
 
                 for line in f:
                     fields = line.strip().split("\t")
@@ -4573,7 +4581,8 @@ class BIONLP2013_PC(BioNLPCorpus):
         https://www.aclweb.org/anthology/W13-2009/
     """
 
-    def download_corpus(self, download_folder: Path) -> Tuple[Path, Path]:
+    @staticmethod
+    def download_corpus(download_folder: Path) -> Tuple[Path, Path]:
         train_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_training_data.tar.gz?attredirects=0"
         dev_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_development_data.tar.gz?attredirects=0"
 
@@ -4594,5 +4603,42 @@ class BIONLP2013_PC(BioNLPCorpus):
 
         train_folder = download_folder / "BioNLP-ST_2013_PC_training_data"
         dev_folder = download_folder / "BioNLP-ST_2013_PC_development_data"
+
+        return train_folder, dev_folder
+
+
+class BIONLP2013_CG(BioNLPCorpus):
+    """
+    Corpus of the BioNLP'2013 Cancer Genetics shared task
+
+    For further information see Pyysalo, Ohta & Ananiadou 2013
+        Overview of the Cancer Genetics (CG) task of BioNLP Shared Task 2013
+        https://www.aclweb.org/anthology/W13-2008/
+    """
+
+    @staticmethod
+    def download_corpus(download_folder: Path) -> Tuple[Path, Path]:
+        train_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_CG_training_data.tar.gz?attredirects=0"
+        dev_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_CG_development_data.tar.gz?attredirects=0"
+
+        cached_path(train_url, download_folder)
+        cached_path(dev_url, download_folder)
+
+        unpack_file(
+            download_folder / "BioNLP-ST_2013_CG_training_data.tar.gz?attredirects=0",
+            download_folder,
+            keep=False,
+            mode="targz",
+        )
+        unpack_file(
+            download_folder
+            / "BioNLP-ST_2013_CG_development_data.tar.gz?attredirects=0",
+            download_folder,
+            keep=False,
+            mode="targz",
+        )
+
+        train_folder = download_folder / "BioNLP-ST_2013_CG_training_data"
+        dev_folder = download_folder / "BioNLP-ST_2013_CG_development_data"
 
         return train_folder, dev_folder
