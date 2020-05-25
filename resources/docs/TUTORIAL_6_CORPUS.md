@@ -172,6 +172,7 @@ data the first time you call the corresponding constructor ID. The following dat
 | 'WIKINER_RUSSIAN'  | Russian  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
 | 'NER_BASQUE' | Basque  |  [NER dataset for Basque](http://ixa2.si.ehu.eus/eiec/) |
 | 'NER_FINNISH' | Finnish | [Finer-data](https://github.com/mpsilfve/finer-data) | 
+| 'NER_SWEDISH' | Swedish | [Swedish Spraakbanken NER] (https://github.com/klintan/swedish-ner-corpus/) 4-class NER |
 
 
 #### Universal Dependency Treebanks
