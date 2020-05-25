@@ -10,6 +10,7 @@ from .sequence_labeling import ColumnDataset
 from .sequence_labeling import CONLL_03
 from .sequence_labeling import CONLL_03_GERMAN
 from .sequence_labeling import CONLL_03_DUTCH
+from .sequence_labeling import NER_SWEDISH
 from .sequence_labeling import CONLL_03_SPANISH
 from .sequence_labeling import CONLL_2000
 from .sequence_labeling import DANE
