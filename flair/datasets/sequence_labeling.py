@@ -412,6 +412,52 @@ class CONLL_03_DUTCH(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
         )
+        
+        
+class NER_SWEDISH(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = None,
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+    ):
+        """
+        Initialize the NER_SWEDISH corpus for Swedish. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ner_spraakbanken_path = "https://raw.githubusercontent.com/klintan/swedish-ner-corpus/master/"
+        cached_path(f"{ner_spraakbanken_path}test_corpus.txt", Path("datasets") / dataset_name)
+        cached_path(f"{ner_spraakbanken_path}train_corpus.txt", Path("datasets") / dataset_name)
+        #cached_path(f"{conll_02_path}ned.train", Path("datasets") / dataset_name)
+
+        super(NER_SWEDISH, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+        )
 
 
 class CONLL_03_SPANISH(ColumnCorpus):
