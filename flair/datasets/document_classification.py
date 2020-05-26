@@ -617,7 +617,7 @@ class AMAZON_REVIEWS(ClassificationCorpus):
             **corpusargs
         )
 
-    def download_and_prepare_amazon_product_file(self, data_folder, part_name, max_data_points = None, fraction_of_5_star_reviews = None):
+    def download_and_prepare_amazon_product_file(self, data_folder, part_name, max_data_points=None, fraction_of_5_star_reviews=None):
         amazon__path = "http://deepyeti.ucsd.edu/jianmo/amazon/categoryFilesSmall"
         cached_path(f"{amazon__path}/{part_name}", Path("datasets") / 'Amazon_Product_Reviews')
         import gzip

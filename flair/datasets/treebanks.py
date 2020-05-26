@@ -55,13 +55,15 @@ class UniversalDependenciesCorpus(Corpus):
 
 
 class UniversalDependenciesDataset(FlairDataset):
-    def __init__(self, path_to_conll_file: Path, in_memory: bool = True):
+    def __init__(self, path_to_conll_file: Union[str, Path], in_memory: bool = True):
         """
         Instantiates a column dataset in CoNLL-U format.
 
         :param path_to_conll_file: Path to the CoNLL-U formatted file
         :param in_memory: If set to True, keeps full dataset in memory, otherwise does disk reads
         """
+        if type(path_to_conll_file) is str:
+            path_to_conll_file = Path(path_to_conll_file)
         assert path_to_conll_file.exists()
 
         self.in_memory = in_memory

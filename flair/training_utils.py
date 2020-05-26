@@ -5,7 +5,7 @@ from collections import defaultdict
 from enum import Enum
 from math import inf
 from pathlib import Path
-from typing import List
+from typing import Union, List
 
 from torch.optim import Optimizer
 
@@ -251,7 +251,9 @@ class EvaluationMetric(Enum):
 
 
 class WeightExtractor(object):
-    def __init__(self, directory: Path, number_of_weights: int = 10):
+    def __init__(self, directory: Union[str, Path], number_of_weights: int = 10):
+        if type(directory) is str:
+            directory = Path(directory)
         self.weights_file = init_output_file(directory, "weights.txt")
         self.weights_dict = defaultdict(lambda: defaultdict(lambda: list()))
         self.number_of_weights = number_of_weights
@@ -463,13 +465,15 @@ class AnnealOnPlateau(object):
         self._init_is_better(mode=self.mode, threshold=self.threshold, threshold_mode=self.threshold_mode)
 
 
-def init_output_file(base_path: Path, file_name: str) -> Path:
+def init_output_file(base_path: Union[str, Path], file_name: str) -> Path:
     """
     Creates a local file.
     :param base_path: the path to the directory
     :param file_name: the file name
     :return: the created file
     """
+    if type(base_path) is str:
+        base_path = Path(base_path)
     base_path.mkdir(parents=True, exist_ok=True)
 
     file = base_path / file_name

@@ -99,7 +99,7 @@ class ColumnDataset(FlairDataset):
 
     def __init__(
             self,
-            path_to_column_file: Path,
+            path_to_column_file: Union[str, Path],
             column_name_map: Dict[int, str],
             tag_to_bioes: str = None,
             column_delimiter: str = "\s+",
@@ -123,6 +123,8 @@ class ColumnDataset(FlairDataset):
         that indicates that a new document begins
         :param skip_first_line: set to True if your dataset has a header line
         """
+        if type(path_to_column_file) is str:
+            path_to_column_file = Path(path_to_column_file)
         assert path_to_column_file.exists()
         self.path_to_column_file = path_to_column_file
         self.tag_to_bioes = tag_to_bioes
@@ -211,7 +213,7 @@ class ColumnDataset(FlairDataset):
                         self.column_name_map[column], fields[column]
                     )
                 if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == '-':
-                        token.whitespace_after = False
+                    token.whitespace_after = False
         return token
 
     def __line_completes_sentence(self, line: str) -> bool:

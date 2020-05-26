@@ -1,7 +1,7 @@
 import copy
 import logging
 from pathlib import Path
-from typing import List, Union
+from typing import Union
 import time
 import datetime
 import sys
@@ -605,8 +605,10 @@ class ModelTrainer:
         return model
 
     def final_test(
-        self, base_path: Path, eval_mini_batch_size: int, num_workers: int = 8
+        self, base_path: Union[Path, str], eval_mini_batch_size: int, num_workers: int = 8
     ):
+        if type(base_path) is str:
+            base_path = Path(base_path)
 
         log_line(log)
         log.info("Testing using best model ...")

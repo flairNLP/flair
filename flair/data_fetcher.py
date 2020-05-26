@@ -119,15 +119,15 @@ class NLPTaskDataFetcher:
     @staticmethod
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
     def load_corpora(
-        tasks: List[Union[NLPTask, str]], base_path: Path = None
+        tasks: List[Union[NLPTask, str]], base_path: Union[str, Path] = None
     ) -> MultiCorpus:
         return MultiCorpus(
-            [NLPTaskDataFetcher.load_corpus(task, base_path) for task in tasks]
+            [NLPTaskDataFetcher.load_corpus(task, Path(base_path)) for task in tasks]
         )
 
     @staticmethod
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
-    def load_corpus(task: Union[NLPTask, str], base_path: [str, Path] = None) -> Corpus:
+    def load_corpus(task: Union[NLPTask, str], base_path: Union[str, Path] = None) -> Corpus:
         """
         Helper function to fetch a Corpus for a specific NLPTask. For this to work you need to first download
         and put into the appropriate folder structure the corresponding NLP task data. The tutorials on
@@ -521,7 +521,7 @@ class NLPTaskDataFetcher:
     @staticmethod
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
     def read_column_data(
-        path_to_column_file: Path,
+        path_to_column_file: Union[str, Path],
         column_name_map: Dict[int, str],
         infer_whitespace_after: bool = True,
     ):
@@ -587,7 +587,7 @@ class NLPTaskDataFetcher:
 
     @staticmethod
     @deprecated(version="0.4.1", reason="Use 'flair.datasets' instead.")
-    def read_conll_ud(path_to_conll_file: Path) -> List[Sentence]:
+    def read_conll_ud(path_to_conll_file: Union[str, Path]) -> List[Sentence]:
         """
        Reads a file in CoNLL-U format and produces a list of Sentence with full morphosyntactic annotation
        :param path_to_conll_file: the path to the conll-u file
