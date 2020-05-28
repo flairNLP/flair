@@ -16,6 +16,7 @@ DEFAULT_MAP_SIZE = 100 * 1024 * 1024 * 1024
 
 logger = logging.getLogger("flair")
 
+
 class WordEmbeddingsStore:
     """
     class to simulate a WordEmbeddings class from flair.
@@ -59,7 +60,7 @@ class WordEmbeddingsStore:
     >>> print(sentence.get_spans('ner'))
     """
 
-    def __init__(self, embedding : WordEmbeddings, backend='sqlite', verbose=True):
+    def __init__(self, embedding: WordEmbeddings, backend='sqlite', verbose=True):
         """
         :param embedding: Flair WordEmbeddings instance.
         :param backend: cache database backend name e.g ``'sqlite'``, ``'lmdb'``.
@@ -146,7 +147,7 @@ class WordEmbeddingsStore:
         deletes the db versions of all word embeddings
         """
         for embedding in WordEmbeddingsStore._word_embeddings(model):
-            store_path : Path = WordEmbeddingsStore._get_store_path(embedding)
+            store_path: Path = WordEmbeddingsStore._get_store_path(embedding)
             logger.info(f"delete store: {str(store_path)}")
             if store_path.is_file():
                 store_path.unlink()
@@ -158,7 +159,7 @@ class WordEmbeddingsStoreBackend:
     def __init__(self, embedding, backend, verbose=True):
         # get db filename from embedding name
         self.name = embedding.name
-        self.store_path : Path = WordEmbeddingsStore._get_store_path(embedding, backend)
+        self.store_path: Path = WordEmbeddingsStore._get_store_path(embedding, backend)
 
     @property
     def is_ok(self):
