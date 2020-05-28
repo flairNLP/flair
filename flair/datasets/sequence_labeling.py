@@ -1,5 +1,6 @@
 import logging
 import re
+import os
 from pathlib import Path
 from typing import Union, Dict, List
 
@@ -1044,6 +1045,101 @@ class BIOFID(ColumnCorpus):
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
+class INSPEC(ColumnCorpus):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "keyword",
+        in_memory: bool = True,
+    ):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "keyword"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        inspec_path = "https://raw.githubusercontent.com/midas-research/keyphrase-extraction-as-sequence-labeling-data/master/Inspec"
+        cached_path(f"{inspec_path}/train.txt", Path("datasets") / dataset_name)
+        cached_path(f"{inspec_path}/test.txt", Path("datasets") / dataset_name)
+        if not "dev.txt" in os.listdir(data_folder):
+            cached_path(f"{inspec_path}/valid.txt", Path("datasets") / dataset_name)
+            #rename according to train - test - dev - convention
+            os.rename(data_folder / "valid.txt", data_folder / "dev.txt")
+
+        super(INSPEC, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
+
+
+class SEMEVAL2017(ColumnCorpus):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "keyword",
+        in_memory: bool = True,
+    ):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "keyword"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        semeval2017_path = "https://raw.githubusercontent.com/midas-research/keyphrase-extraction-as-sequence-labeling-data/master/SemEval-2017"
+        cached_path(f"{semeval2017_path}/train.txt", Path("datasets") / dataset_name)
+        cached_path(f"{semeval2017_path}/test.txt", Path("datasets") / dataset_name)
+        cached_path(f"{semeval2017_path}/dev.txt", Path("datasets") / dataset_name)
+
+        super(SEMEVAL2017, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
+
+class SEMEVAL2010(ColumnCorpus):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "keyword",
+        in_memory: bool = True,
+    ):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "keyword"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        semeval2010_path = "https://raw.githubusercontent.com/midas-research/keyphrase-extraction-as-sequence-labeling-data/master/processed_semeval-2010"
+        cached_path(f"{semeval2010_path}/train.txt", Path("datasets") / dataset_name)
+        cached_path(f"{semeval2010_path}/test.txt", Path("datasets") / dataset_name)
+
+        super(SEMEVAL2010, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
 
 def _download_wikiner(language_code: str, dataset_name: str):
     # download data if necessary

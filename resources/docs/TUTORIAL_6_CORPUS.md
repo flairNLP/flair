@@ -211,7 +211,12 @@ data the first time you call the corresponding constructor ID. The following dat
 |  'UD_SWEDISH' | Swedish  |  Universal Dependency Treebank for [Swedish](https://github.com/UniversalDependencies/UD_Swedish-Talbanken) |
 |  'UD_TURKISH' | Turkish  |  Universal Dependency Treebank for [Tturkish](https://github.com/UniversalDependencies/UD_Turkish-IMST) |
 
-
+#### Keyword / Keyphrase Extraction
+| ID(s) | Languages | Description |
+| -------------    | ------------- |------------- |
+| 'INSPEC' | English |  [INSPEC](https://www.aclweb.org/anthology/W03-1028) original corpus (2000 docs) from INSPEC database, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
+| 'SEMEVAL2017' | English | The original [SEMEVAL2017](https://arxiv.org/abs/1704.02853) dataset (500 docs) from ScienceDirect, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
+| 'SEMEVAL2010' | English | The original [SEMEVAL2010](https://www.aclweb.org/anthology/S10-1004/) dataset (~250 docs) from ACM Digital Library, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
 
 #### Text Classification
 | ID(s) | Languages | Description |
