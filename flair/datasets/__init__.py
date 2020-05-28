@@ -25,6 +25,10 @@ from .sequence_labeling import WIKINER_POLISH
 from .sequence_labeling import WIKINER_RUSSIAN
 from .sequence_labeling import WNUT_17
 from .sequence_labeling import BIOFID
+from .sequence_labeling import NER_FINNISH
+from .sequence_labeling import INSPEC
+from .sequence_labeling import SEMEVAL2010
+from .sequence_labeling import SEMEVAL2017
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
