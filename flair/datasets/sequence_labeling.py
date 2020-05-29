@@ -1141,6 +1141,44 @@ class SEMEVAL2010(ColumnCorpus):
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
+class MS_MARCO(ColumnCorpus):
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        tag_to_bioes: str = "keyword",
+        in_memory: bool = True,
+    ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        #TODO: MAKE CORPUS + DEFINE COLUMNS
+        # LINK: https://microsoft.github.io/msmarco/
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        #TODO: DOWNLOAD DATA
+        # CHECK: PROBABLY NEED TO BE PREPROCESSED, ADJUST COLUMNS ABOVE LATER
+        """
+        ms_marco_path = ""
+        cached_path(f"{semeval2010_path}/train.txt", Path("datasets") / dataset_name)
+        cached_path(f"{semeval2010_path}/test.txt", Path("datasets") / dataset_name)
+        """
+
+        #TODO: DEFINE ATTRIBUTES
+        """
+        super(SEMEVAL2010, self).__init__(
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
+        """
+
+
+
 def _download_wikiner(language_code: str, dataset_name: str):
     # download data if necessary
     wikiner_path = (
