@@ -484,22 +484,24 @@ def add_IOB2_tags(data_file: Union[str, Path], encoding: str = "utf8"):
             for line in lines:
                 line_list = line.split()
                 if len(line_list) == 2: # word with tag
-                    if line_list[1] in ['0','O']: #no chunk
-                        f.write(line_list[0] + ' O\n')
+                    word = line_list[0]
+                    tag = line_list[1]
+                    if tag in ['0','O']: #no chunk
+                        f.write(word + ' O\n')
                         pred = 'O'
-                    elif '-' not in line_list[1]: #no IOB tags
+                    elif '-' not in tag: #no IOB tags
                         if pred == 'O': #found a new chunk
-                            f.write(line_list[0] + ' B-'+ line_list[1]+'\n')
-                            pred = line_list[1]
+                            f.write(word + ' B-'+ tag +'\n')
+                            pred = tag
                         else: #found further part of chunk or new chunk directly after old chunk
-                            if pred == line_list[1]:
-                                f.write(line_list[0] + ' I-'+ line_list[1]+'\n')
+                            if pred == tag:
+                                f.write(word + ' I-'+ tag +'\n')
                             else:
-                                f.write(line_list[0] + ' B-'+ line_list[1]+'\n')
-                                pred = line[1]
+                                f.write(word + ' B-'+ tag +'\n')
+                                pred = tag
                     else: #line already has IOB tag (tag contains '-')
                         f.write(line)
-                        pred = line_list[1].split('-')[1]
+                        pred = tag.split('-')[1]
                 elif len(line_list) == 0: #empty line
                     f.write('\n')
                     pred = 'O'
