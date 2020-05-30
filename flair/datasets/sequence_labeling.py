@@ -418,9 +418,8 @@ class NER_SWEDISH(ColumnCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
-            tag_to_bioes: str = None,
+            tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            document_as_sequence: bool = False,
     ):
         """
         Initialize the NER_SWEDISH corpus for Swedish. The first time you call this constructor it will automatically
@@ -449,15 +448,63 @@ class NER_SWEDISH(ColumnCorpus):
         ner_spraakbanken_path = "https://raw.githubusercontent.com/klintan/swedish-ner-corpus/master/"
         cached_path(f"{ner_spraakbanken_path}test_corpus.txt", Path("datasets") / dataset_name)
         cached_path(f"{ner_spraakbanken_path}train_corpus.txt", Path("datasets") / dataset_name)
-        #cached_path(f"{conll_02_path}ned.train", Path("datasets") / dataset_name)
+        
+       
+        #data is not in IOB2 format. Thus we transform it to IOB2
+        add_IOB2_tags(data_file=Path(data_folder / "test_corpus.txt"))
+        add_IOB2_tags(data_file=Path(data_folder / "train_corpus.txt"))
+        
 
         super(NER_SWEDISH, self).__init__(
             data_folder,
             columns,
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
         )
+        
+        
+def add_IOB2_tags(data_file: Union[str, Path], encoding: str = "utf8"):
+        """
+    Function that adds IOB2 tags if only chunk names are provided (e.g. words are tagged PER instead
+    of B-PER or I-PER). Replaces '0' with 'O' as the no-chunk tag since ColumnCorpus expects
+    the letter 'O'. Additionaly it removes lines with no tags in the data file and can also
+    be used if the data is only partialy IOB tagged.
+    Parameters
+    ----------
+    data_file : Union[str, Path]
+        Path to the data file. 
+    encoding : str, optional
+        Encoding used in open function. The default is "utf8".
+
+    """
+        with open(file=data_file, mode='r', encoding=encoding) as f:
+            lines = f.readlines()
+        with open(file=data_file, mode='w', encoding=encoding) as f:
+            pred = 'O'  #remembers tag of predecessing line
+            for line in lines:
+                line_list = line.split()
+                if len(line_list) == 2: # word with tag
+                    if line_list[1] in ['0','O']: #no chunk
+                        f.write(line_list[0] + ' O\n')
+                        pred = 'O'
+                    elif '-' not in line_list[1]: #no IOB tags
+                        if pred == 'O': #found a new chunk
+                            f.write(line_list[0] + ' B-'+ line_list[1]+'\n')
+                            pred = line_list[1]
+                        else: #found further part of chunk or new chunk directly after old chunk
+                            if pred == line_list[1]:
+                                f.write(line_list[0] + ' I-'+ line_list[1]+'\n')
+                            else:
+                                f.write(line_list[0] + ' B-'+ line_list[1]+'\n')
+                                pred = line[1]
+                    else: #line already has IOB tag (tag contains '-')
+                        f.write(line)
+                        pred = line_list[1].split('-')[1]
+                elif len(line_list) == 0: #empty line
+                    f.write('\n')
+                    pred = 'O'
+
+                
 
 
 class CONLL_03_SPANISH(ColumnCorpus):
