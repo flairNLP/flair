@@ -415,6 +415,101 @@ class CONLL_03_DUTCH(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
         )
+        
+        
+class NER_SWEDISH(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+    ):
+        """
+        Initialize the NER_SWEDISH corpus for Swedish. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ner_spraakbanken_path = "https://raw.githubusercontent.com/klintan/swedish-ner-corpus/master/"
+        cached_path(f"{ner_spraakbanken_path}test_corpus.txt", Path("datasets") / dataset_name)
+        cached_path(f"{ner_spraakbanken_path}train_corpus.txt", Path("datasets") / dataset_name)
+        
+       
+        #data is not in IOB2 format. Thus we transform it to IOB2
+        add_IOB2_tags(data_file=Path(data_folder / "test_corpus.txt"))
+        add_IOB2_tags(data_file=Path(data_folder / "train_corpus.txt"))
+        
+
+        super(NER_SWEDISH, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+        )
+        
+        
+def add_IOB2_tags(data_file: Union[str, Path], encoding: str = "utf8"):
+        """
+    Function that adds IOB2 tags if only chunk names are provided (e.g. words are tagged PER instead
+    of B-PER or I-PER). Replaces '0' with 'O' as the no-chunk tag since ColumnCorpus expects
+    the letter 'O'. Additionaly it removes lines with no tags in the data file and can also
+    be used if the data is only partialy IOB tagged.
+    Parameters
+    ----------
+    data_file : Union[str, Path]
+        Path to the data file. 
+    encoding : str, optional
+        Encoding used in open function. The default is "utf8".
+
+    """
+        with open(file=data_file, mode='r', encoding=encoding) as f:
+            lines = f.readlines()
+        with open(file=data_file, mode='w', encoding=encoding) as f:
+            pred = 'O'  #remembers tag of predecessing line
+            for line in lines:
+                line_list = line.split()
+                if len(line_list) == 2: # word with tag
+                    word = line_list[0]
+                    tag = line_list[1]
+                    if tag in ['0','O']: #no chunk
+                        f.write(word + ' O\n')
+                        pred = 'O'
+                    elif '-' not in tag: #no IOB tags
+                        if pred == 'O': #found a new chunk
+                            f.write(word + ' B-'+ tag +'\n')
+                            pred = tag
+                        else: #found further part of chunk or new chunk directly after old chunk
+                            if pred == tag:
+                                f.write(word + ' I-'+ tag +'\n')
+                            else:
+                                f.write(word + ' B-'+ tag +'\n')
+                                pred = tag
+                    else: #line already has IOB tag (tag contains '-')
+                        f.write(line)
+                        pred = tag.split('-')[1]
+                elif len(line_list) == 0: #empty line
+                    f.write('\n')
+                    pred = 'O'
+
+                
 
 
 class CONLL_03_SPANISH(ColumnCorpus):
