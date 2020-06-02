@@ -13,7 +13,7 @@ from flair.training_utils import EvaluationMetric
 from flair.visual.training_curves import Plotter
 
 # 1. get the corpus
-corpus: Corpus = flair.datasets.INSPEC()
+corpus: Corpus = flair.datasets.SEMEVAL2010()
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -49,7 +49,7 @@ from flair.trainers import ModelTrainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train(
-    "resources/taggers/keyphrase-tagger",
+    "resources/taggers/keyphrase-tagger-semeval2010",
     learning_rate=0.1,
     mini_batch_size=32,
     max_epochs=20,
@@ -58,5 +58,5 @@ trainer.train(
 )
 
 plotter = Plotter()
-plotter.plot_training_curves("resources/taggers/example-ner/loss.tsv")
-plotter.plot_weights("resources/taggers/example-ner/weights.txt")
+plotter.plot_training_curves("resources/taggers/keyphrase-tagger-semeval2010/loss.tsv")
+plotter.plot_weights("resources/taggers/keyphrase-tagger-semeval2010/weights.txt")
