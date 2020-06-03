@@ -1338,6 +1338,8 @@ def segtok_tokenizer(text: str) -> List[Token]:
         contractions = split_contractions(word_tokenizer(sentence))
         words.extend(contractions)
 
+    words = list(filter(None, words))
+
     # determine offsets for whitespace_after field
     index = text.index
     current_offset = 0
