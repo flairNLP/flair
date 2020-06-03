@@ -174,7 +174,7 @@ class ClassificationDataset(FlairDataset):
             line = f.readline()
             position = 0
             while line:
-                if "__label__" not in line or " " not in line:
+                if "__label__" not in line or (" " not in line and "\t" not in line):
                     position = f.tell()
                     line = f.readline()
                     continue
