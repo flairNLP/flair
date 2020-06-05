@@ -60,8 +60,7 @@ for corpus_object, path in data:
         learning_rate=0.1,
         mini_batch_size=32,
         max_epochs=20,
-        shuffle=False,
-        embeddings_storage_mode='gpu'
+        shuffle=False
     )
     """x
     plotter = Plotter()
