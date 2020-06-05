@@ -13,9 +13,10 @@ from flair.embeddings import (
 from flair.training_utils import EvaluationMetric
 from flair.visual.training_curves import Plotter
 
+#        (flair.datasets.SEMEVAL2010(), 'keyphrase-tagger-semeval2010'),
+#        (flair.datasets.SEMEVAL2017(), 'keyphrase-tagger-semeval2017'),
+
 data = [
-        (flair.datasets.SEMEVAL2010(), 'keyphrase-tagger-semeval2010'),
-        (flair.datasets.SEMEVAL2017(), 'keyphrase-tagger-semeval2017'),
         (flair.datasets.INSPEC(), 'keyphrase-tagger-inspec')
         ]
 
