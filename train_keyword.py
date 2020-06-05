@@ -8,16 +8,20 @@ from flair.embeddings import (
     StackedEmbeddings,
     FlairEmbeddings,
     CharacterEmbeddings,
-    BertEmbeddings
+    BertEmbeddings,
+    TransformerWordEmbeddings
 )
 from flair.training_utils import EvaluationMetric
 from flair.visual.training_curves import Plotter
 
 data = [
-        (flair.datasets.INSPEC(), 'keyphrase-tagger-inspec'),
+        (flair.datasets.INSPEC(), 'keyphrase-tagger-inspec')
+        ]
+
+"""
         (flair.datasets.SEMEVAL2010(), 'keyphrase-tagger-semeval2010'),
         (flair.datasets.SEMEVAL2017(), 'keyphrase-tagger-semeval2017')
-        ]
+"""
 
 for corpus_object, path in data:
     # 1. get the corpus
@@ -31,16 +35,19 @@ for corpus_object, path in data:
     tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
     print(tag_dictionary)
 
-    # initialize embeddings
-    embedding_types = \
-    [
-        [
+    """
+            [
             WordEmbeddings("crawl"),
             FlairEmbeddings("news-forward"),
             FlairEmbeddings("news-backward")
         ],
+    """
+
+    # initialize embeddings
+    embedding_types = \
+    [
         [
-            BertEmbeddings(bert_model_or_path='/tmp/scibert_scivocab_uncased')
+            TransformerWordEmbeddings('/tmp/scibert_scivocab_uncased')
         ]
     ]
 
