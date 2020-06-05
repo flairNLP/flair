@@ -13,11 +13,10 @@ from flair.embeddings import (
 from flair.training_utils import EvaluationMetric
 from flair.visual.training_curves import Plotter
 
-#        (flair.datasets.SEMEVAL2010(), 'keyphrase-tagger-semeval2010'),
-#        (flair.datasets.SEMEVAL2017(), 'keyphrase-tagger-semeval2017'),
-
 data = [
-        (flair.datasets.INSPEC(), 'keyphrase-tagger-inspec')
+        (flair.datasets.INSPEC(), 'keyphrase-tagger-inspec'),
+        (flair.datasets.SEMEVAL2010(), 'keyphrase-tagger-semeval2010'),
+        (flair.datasets.SEMEVAL2017(), 'keyphrase-tagger-semeval2017')
         ]
 
 for corpus_object, path in data:
@@ -33,37 +32,47 @@ for corpus_object, path in data:
     print(tag_dictionary)
 
     # initialize embeddings
-    embedding_types: List[TokenEmbeddings] = [
-        BertEmbeddings(bert_model_or_path="/tmp/scibert_scivocab_uncased")
+    embedding_types = \
+    [
+        [
+            WordEmbeddings("crawl"),
+            FlairEmbeddings("news-forward"),
+            FlairEmbeddings("news-backward")
+        ],
+        [
+            BertEmbeddings(bert_model_or_path='/tmp/scibert_scivocab_uncased')
+        ]
     ]
 
-    embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
+    for embedding_type in embedding_types:
 
-    # initialize sequence tagger
-    from flair.models import SequenceTagger
+        embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_type)
 
-    tagger: SequenceTagger = SequenceTagger(
-        hidden_size=256,
-        embeddings=embeddings,
-        tag_dictionary=tag_dictionary,
-        tag_type=tag_type,
-        use_crf=True,
-    )
+        # initialize sequence tagger
+        from flair.models import SequenceTagger
 
-    # initialize trainer
-    from flair.trainers import ModelTrainer
+        tagger: SequenceTagger = SequenceTagger(
+            hidden_size=256,
+            embeddings=embeddings,
+            tag_dictionary=tag_dictionary,
+            tag_type=tag_type,
+            use_crf=True,
+        )
 
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
+        # initialize trainer
+        from flair.trainers import ModelTrainer
 
-    trainer.train(
-        "resources/taggers/{}".format(path),
-        learning_rate=0.1,
-        mini_batch_size=32,
-        max_epochs=20,
-        shuffle=False
-    )
-    """x
-    plotter = Plotter()
-    plotter.plot_training_curves("resources/taggers/{}/loss.tsv".format(path))
-    plotter.plot_weights("resources/taggers/{}/weights.txt".format(path))
-    """
+        trainer: ModelTrainer = ModelTrainer(tagger, corpus)
+
+        trainer.train(
+            "resources/taggers/{}".format(path),
+            learning_rate=0.05,
+            mini_batch_size=8,
+            max_epochs=150,
+            embeddings_storage_mode='gpu'
+        )
+        """x
+        plotter = Plotter()
+        plotter.plot_training_curves("resources/taggers/{}/loss.tsv".format(path))
+        plotter.plot_weights("resources/taggers/{}/weights.txt".format(path))
+        """
