@@ -294,24 +294,25 @@ class SequenceTagger(flair.nn.Model):
         self,
         sentences: Union[List[Sentence], Sentence, List[str], str],
         mini_batch_size=32,
-        embedding_storage_mode="none",
         all_tag_prob: bool = False,
         verbose: bool = False,
         use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer,
         label_name: Optional[str] = None,
         return_loss = False,
+        embedding_storage_mode="none",
     ) -> List[Sentence]:
         """
         Predict sequence tags for Named Entity Recognition task
         :param sentences: a Sentence or a string or a List of Sentence or a List of string.
         :param mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
         up to a point when it has no more effect.
-        :param embedding_storage_mode: 'none' for the minimum memory footprint, 'cpu' to store embeddings in Ram,
-        'gpu' to store embeddings in GPU memory.
         :param all_tag_prob: True to compute the score for each tag on each token,
         otherwise only the score of the best tag is returned
         :param verbose: set to True to display a progress bar
         :param use_tokenizer: a custom tokenizer when string are provided (default is space based tokenizer).
+        :param embedding_storage_mode: default is 'none' which is best for most use cases. Set to 'cpu' or 'gpu' only if
+        you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
+        'gpu' to store embeddings in GPU memory.
         :return: List of Sentence enriched by the predicted tags
         """
         if label_name == None:
@@ -323,13 +324,6 @@ class SequenceTagger(flair.nn.Model):
 
             if isinstance(sentences, Sentence) or isinstance(sentences, str):
                 sentences = [sentences]
-
-            if (flair.device.type == "cuda") and embedding_storage_mode == "cpu":
-                log.warning(
-                    "You are inferring on GPU with parameter 'embedding_storage_mode' set to 'cpu'."
-                    "This option will slow down your inference, usually 'none' (default value) "
-                    "is a better choice."
-                )
 
             # reverse sort all sequences by their length
             rev_order_len_index = sorted(
@@ -367,7 +361,10 @@ class SequenceTagger(flair.nn.Model):
             results: List[Sentence] = []
 
             overall_loss = 0
-            for batch_no, batch in enumerate(dataloader):
+            batch_no = 0
+            for batch in dataloader:
+
+                batch_no += 1
 
                 if verbose:
                     dataloader.set_description(f"Inferencing on batch {batch_no}")
@@ -410,12 +407,98 @@ class SequenceTagger(flair.nn.Model):
                 return overall_loss / batch_no
             return results
 
-    def _evaluate_with_span_F1(self) -> bool:
+    def _requires_span_F1_evaluation(self) -> bool:
         span_F1 = False
         for item in self.tag_dictionary.get_items():
             if item.startswith('B-'):
                 span_F1 = True
         return span_F1
+
+    def _evaluate_with_span_F1(self, data_loader, embedding_storage_mode, mini_batch_size, out_path):
+        eval_loss = 0
+
+        batch_no: int = 0
+
+        metric = Metric("Evaluation", beta=self.beta)
+
+        lines: List[str] = []
+
+        for batch in data_loader:
+
+            # predict for batch
+            loss = self.predict(batch,
+                                use_tokenizer=False,
+                                embedding_storage_mode=embedding_storage_mode,
+                                mini_batch_size=mini_batch_size,
+                                label_name='predicted',
+                                return_loss=True)
+            eval_loss += loss
+            batch_no += 1
+
+            for sentence in batch:
+
+                # make list of gold tags
+                gold_spans = sentence.get_spans(self.tag_type)
+                gold_tags = [(span.tag, repr(span)) for span in gold_spans]
+
+                # make list of predicted tags
+                predicted_spans = sentence.get_spans("predicted")
+                predicted_tags = [(span.tag, repr(span)) for span in predicted_spans]
+
+                # check for true positives, false positives and false negatives
+                for tag, prediction in predicted_tags:
+                    if (tag, prediction) in gold_tags:
+                        metric.add_tp(tag)
+                    else:
+                        metric.add_fp(tag)
+
+                for tag, gold in gold_tags:
+                    if (tag, gold) not in predicted_tags:
+                        metric.add_fn(tag)
+
+                # also write to file in BIO format to use old conlleval script
+                if out_path:
+                    for token in sentence:
+                        # check if in gold spans
+                        gold_tag = 'O'
+                        for span in gold_spans:
+                            if token in span:
+                                gold_tag = 'B-' + span.tag if token == span[0] else 'I-' + span.tag
+                        predicted_tag = 'O'
+                        # check if in predicted spans
+                        for span in predicted_spans:
+                            if token in span:
+                                predicted_tag = 'B-' + span.tag if token == span[0] else 'I-' + span.tag
+                        lines.append(f'{token.text} {gold_tag} {predicted_tag}\n')
+                    lines.append('\n')
+
+        if out_path:
+            with open(Path(out_path), "w", encoding="utf-8") as outfile:
+                outfile.write("".join(lines))
+
+        eval_loss /= batch_no
+
+        detailed_result = (
+            f"\nMICRO_AVG: f1-score {metric.micro_avg_f_score():.4f}"
+            f"\nMACRO_AVG: f1-score {metric.macro_avg_f_score():.4f}"
+        )
+        for class_name in metric.get_classes():
+            detailed_result += (
+                f"\n{class_name:<10} tp: {metric.get_tp(class_name)} - fp: {metric.get_fp(class_name)} - "
+                f"tn: {metric.get_tn(class_name)} - precision: "
+                f"{metric.precision(class_name):.4f} - recall: {metric.recall(class_name):.4f} - "
+                f"f1-score: "
+                f"{metric.f_score(class_name):.4f}"
+            )
+
+        result = Result(
+            main_score=metric.micro_avg_f_score(),
+            log_line=f"{metric.precision():.4f}\t{metric.recall():.4f}\t{metric.micro_avg_f_score():.4f}",
+            log_header="PRECISION\tRECALL\tF1",
+            detailed_results=detailed_result,
+        )
+
+        return result, eval_loss
 
     def evaluate(
         self,
@@ -431,146 +514,83 @@ class SequenceTagger(flair.nn.Model):
             sentences = SentenceDataset(sentences)
         data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
 
-        # determine whether to use F1 or span-F1 metric
-        span_F1 = self._evaluate_with_span_F1()
+        # if span F1 needs to be used, use separate eval method
+        if self._requires_span_F1_evaluation():
+            return self._evaluate_with_span_F1(data_loader, embedding_storage_mode, mini_batch_size, out_path)
 
-        with torch.no_grad():
-            eval_loss = 0
+        # else, use scikit-learn to evaluate
+        y_true = []
+        y_pred = []
+        labels = Dictionary(add_unk=False)
 
-            batch_no: int = 0
+        eval_loss = 0
+        batch_no: int = 0
 
-            metric = Metric("Evaluation", beta=self.beta)
+        lines: List[str] = []
 
-            lines: List[str] = []
+        for batch in data_loader:
 
-            y_true = []
-            y_pred = []
-            labels = Dictionary(add_unk=False)
+            # predict for batch
+            loss = self.predict(batch,
+                                use_tokenizer=False,
+                                embedding_storage_mode=embedding_storage_mode,
+                                mini_batch_size=mini_batch_size,
+                                label_name='predicted',
+                                return_loss=True)
+            eval_loss += loss
+            batch_no += 1
 
-            for batch in data_loader:
+            for sentence in batch:
 
-                # predict for batch
-                loss = self.predict(batch,
-                                    use_tokenizer=False,
-                                    embedding_storage_mode=embedding_storage_mode,
-                                    mini_batch_size=mini_batch_size,
-                                    label_name='predicted',
-                                    return_loss=True)
-                eval_loss += loss
-                batch_no += 1
+                for token in sentence:
+                    # add gold tag
+                    gold_tag = token.get_tag(self.tag_type).value
+                    y_true.append(labels.add_item(gold_tag))
 
-                # go through all sentences and count TP, FP, FN and (if not span-F1) TN
-                for sentence in batch:
+                    # add predicted tag
+                    predicted_tag = token.get_tag('predicted').value
+                    y_pred.append(labels.add_item(predicted_tag))
 
-                    if span_F1 or out_path:
-                        # make list of gold tags
-                        gold_spans = sentence.get_spans(self.tag_type)
-                        gold_tags = [(span.tag, repr(span)) for span in gold_spans]
+                    # for file output
+                    lines.append(f'{token.text} {gold_tag} {predicted_tag}\n')
 
-                        # make list of predicted tags
-                        predicted_spans = sentence.get_spans("predicted")
-                        predicted_tags = [(span.tag, repr(span)) for span in predicted_spans]
+                lines.append('\n')
 
-                    if span_F1:
-                        # check for true positives, false positives and false negatives
-                        for tag, prediction in predicted_tags:
-                            if (tag, prediction) in gold_tags:
-                                metric.add_tp(tag)
-                            else:
-                                metric.add_fp(tag)
+        if out_path:
+            with open(Path(out_path), "w", encoding="utf-8") as outfile:
+                outfile.write("".join(lines))
 
-                        for tag, gold in gold_tags:
-                            if (tag, gold) not in predicted_tags:
-                                metric.add_fn(tag)
+        eval_loss /= batch_no
 
-                    else:
-                        for token in sentence:
-                            y_true.append(labels.add_item(token.get_tag(self.tag_type).value))
-                            y_pred.append(labels.add_item(token.get_tag('predicted').value))
+        # use sklearn
+        from sklearn import metrics
 
-                    # also write to file in BIO format to use old conlleval script
-                    if out_path:
-                        for token in sentence:
-                            # check if in gold spans
-                            gold_tag = 'O'
-                            for span in gold_spans:
-                                if token in span:
-                                    gold_tag = span.tag
-                                    if span_F1:
-                                        gold_tag = 'B-' + span.tag if token == span[0] else 'I-' + span.tag
-                            predicted_tag = 'O'
-                            # check if in predicted spans
-                            for span in predicted_spans:
-                                if token in span:
-                                    predicted_tag = span.tag
-                                    if span_F1:
-                                        predicted_tag = 'B-' + span.tag if token == span[0] else 'I-' + span.tag
-                            lines.append(f'{token.text} {gold_tag} {predicted_tag}\n')
-                        lines.append('\n')
+        # make "classification report"
+        target_names = []
+        for i in range(len(labels)):
+            target_names.append(labels.get_item_for_index(i))
+        classification_report = metrics.classification_report(y_true, y_pred, digits=4, target_names=target_names, zero_division=1)
 
-            if out_path:
-                with open(Path(out_path), "w", encoding="utf-8") as outfile:
-                    outfile.write("".join(lines))
+        # use classification report in detailed results
+        detailed_result = (
+            "Overall:"
+            f"\n- F1-score (micro) {metrics.f1_score(y_true, y_pred, average='micro'):.4f}"
+            f"\n- F1-score (macro) {metrics.f1_score(y_true, y_pred, average='macro'):.4f}"
+            f"\n- Accuracy {metrics.accuracy_score(y_true, y_pred):.4f}"
+            '\n\nBy class:\n' + classification_report
+        )
 
-            eval_loss /= batch_no
+        # line for log file
+        log_header = "ACCURACY"
+        log_line = f"\t{metrics.accuracy_score(y_true, y_pred):.4f}"
 
-            if not span_F1:
-
-                from sklearn import metrics
-
-                target_names = []
-                for i in range(len(labels)):
-                    target_names.append(labels.get_item_for_index(i))
-
-                detailed_result = (
-                    f"\nMICRO_AVG: accuracy {metrics.accuracy_score(y_true, y_pred):.4f} - f1-score {metrics.f1_score(y_true, y_pred, average='micro'):.4f}"
-                    f"\nMACRO_AVG: accuracy {metrics.balanced_accuracy_score(y_true, y_pred):.4f} - f1-score {metrics.f1_score(y_true, y_pred, average='macro'):.4f}"
-                )
-
-                detailed_result += '\n' + metrics.classification_report(y_true, y_pred,
-                                                                digits=4, target_names=target_names, zero_division=1)
-
-                main_score = metrics.f1_score(y_true, y_pred, average='micro')
-
-                log_line = (
-                    f"{metrics.precision_score(y_true, y_pred, average='micro'):.4f}" 
-                    f"\t{metrics.recall_score(y_true, y_pred, average='micro'):.4f}" 
-                    f"\t{metrics.f1_score(y_true, y_pred, average='micro'):.4f}"
-                )
-
-                log_header = "PRECISION\tRECALL\tF1"
-
-                result = Result(
-                    main_score=main_score,
-                    log_line=log_line,
-                    log_header=log_header,
-                    detailed_results=detailed_result,
-                )
-                return result, eval_loss
-
-            else:
-
-                detailed_result = (
-                    f"\nMICRO_AVG: f1-score {metric.micro_avg_f_score():.4f}"
-                    f"\nMACRO_AVG: f1-score {metric.macro_avg_f_score():.4f}"
-                )
-                for class_name in metric.get_classes():
-                    detailed_result += (
-                        f"\n{class_name:<10} tp: {metric.get_tp(class_name)} - fp: {metric.get_fp(class_name)} - "
-                        f"tn: {metric.get_tn(class_name)} - precision: "
-                        f"{metric.precision(class_name):.4f} - recall: {metric.recall(class_name):.4f} - "
-                        f"f1-score: "
-                        f"{metric.f_score(class_name):.4f}"
-                    )
-
-                result = Result(
-                    main_score=metric.micro_avg_f_score(),
-                    log_line=f"{metric.precision():.4f}\t{metric.recall():.4f}\t{metric.micro_avg_f_score():.4f}",
-                    log_header="PRECISION\tRECALL\tF1",
-                    detailed_results=detailed_result,
-                )
-
-                return result, eval_loss
+        result = Result(
+            main_score=metrics.f1_score(y_true, y_pred, average='micro'),
+            log_line=log_line,
+            log_header=log_header,
+            detailed_results=detailed_result,
+        )
+        return result, eval_loss
 
     def forward_loss(
         self, data_points: Union[List[Sentence], Sentence], sort=True
