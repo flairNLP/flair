@@ -442,6 +442,15 @@ class Span(DataPoint):
             else '<span ({}): "{}">'.format(ids, self.text)
         )
 
+    def __getitem__(self, idx: int) -> Token:
+        return self.tokens[idx]
+
+    def __iter__(self):
+        return iter(self.tokens)
+
+    def __len__(self) -> int:
+        return len(self.tokens)
+
     @property
     def tag(self):
         return self.labels[0].value
@@ -771,6 +780,9 @@ class Sentence(DataPoint):
     def __iter__(self):
         return iter(self.tokens)
 
+    def __len__(self) -> int:
+        return len(self.tokens)
+
     def __repr__(self):
         tagged_string = self.to_tagged_string()
         tokenized_string = self.to_tokenized_string()
@@ -809,9 +821,6 @@ class Sentence(DataPoint):
         token_labels = f'  − Token-Labels: "{tagged_string}"' if tokenized_string != tagged_string else ""
 
         return f'Sentence: "{tokenized_string}"   [− Tokens: {len(self)}{token_labels}{sentence_labels}]'
-
-    def __len__(self) -> int:
-        return len(self.tokens)
 
     def get_language_code(self) -> str:
         if self.language_code is None:
