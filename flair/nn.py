@@ -7,9 +7,11 @@ from abc import abstractmethod
 
 from typing import Union, List
 
+from torch.utils.data.dataset import Dataset
+
 import flair
 from flair import file_utils
-from flair.data import DataPoint
+from flair.data import DataPoint, Sentence
 from flair.datasets import DataLoader
 from flair.training_utils import Result
 
@@ -28,7 +30,7 @@ class Model(torch.nn.Module):
     @abstractmethod
     def evaluate(
         self,
-        data_loader: DataLoader,
+        sentences: Union[List[DataPoint], Dataset],
         out_path: Path = None,
         embedding_storage_mode: str = "none",
     ) -> (Result, float):
