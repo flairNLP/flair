@@ -33,7 +33,7 @@ for corpus_object, path in data:
 
     # initialize embeddings
     embedding_types: List[TokenEmbeddings] = [
-        BertEmbeddings(bert_model_or_path="tmp/scibert_scivocab_uncased")
+        BertEmbeddings(bert_model_or_path="/tmp/scibert_scivocab_uncased")
     ]
 
     embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
@@ -62,7 +62,7 @@ for corpus_object, path in data:
         shuffle=False,
         embeddings_storage_mode='gpu'
     )
-    """
+    """x
     plotter = Plotter()
     plotter.plot_training_curves("resources/taggers/{}/loss.tsv".format(path))
     plotter.plot_weights("resources/taggers/{}/weights.txt".format(path))
