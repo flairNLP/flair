@@ -479,9 +479,12 @@ class SequenceTagger(flair.nn.Model):
         eval_loss /= batch_no
 
         detailed_result = (
-            f"\nMICRO_AVG: f1-score {metric.micro_avg_f_score():.4f}"
-            f"\nMACRO_AVG: f1-score {metric.macro_avg_f_score():.4f}"
+            "\nResults:"
+            f"\n- F1-score (micro) {metric.micro_avg_f_score():.4f}"
+            f"\n- F1-score (macro) {metric.macro_avg_f_score():.4f}"
+            '\n\nBy class:'
         )
+
         for class_name in metric.get_classes():
             detailed_result += (
                 f"\n{class_name:<10} tp: {metric.get_tp(class_name)} - fp: {metric.get_fp(class_name)} - "
@@ -573,7 +576,7 @@ class SequenceTagger(flair.nn.Model):
 
         # use classification report in detailed results
         detailed_result = (
-            "Overall:"
+            "\nResults:"
             f"\n- F1-score (micro) {metrics.f1_score(y_true, y_pred, average='micro'):.4f}"
             f"\n- F1-score (macro) {metrics.f1_score(y_true, y_pred, average='macro'):.4f}"
             f"\n- Accuracy {metrics.accuracy_score(y_true, y_pred):.4f}"
