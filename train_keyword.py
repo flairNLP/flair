@@ -36,17 +36,19 @@ for corpus_object, path in data:
     # initialize embeddings
     embedding_types = \
     [
-        [
+        ([
             WordEmbeddings("crawl"),
             FlairEmbeddings("news-forward"),
             FlairEmbeddings("news-backward")
         ],
-        [
+        'flair'),
+        ([
             TransformerWordEmbeddings('/tmp/scibert_scivocab_uncased')
-        ]
+        ],
+        'bert')
     ]
 
-    for embedding_type in embedding_types:
+    for embedding_type, embedding in embedding_types:
 
         embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_type)
 
@@ -67,14 +69,9 @@ for corpus_object, path in data:
         trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
         trainer.train(
-            "resources/taggers/{}".format(path),
+            "resources/taggers/{}/{}".format(path, embedding),
             learning_rate=0.05,
             mini_batch_size=16,
             max_epochs=150,
             embeddings_storage_mode='gpu'
         )
-        """x
-        plotter = Plotter()
-        plotter.plot_training_curves("resources/taggers/{}/loss.tsv".format(path))
-        plotter.plot_weights("resources/taggers/{}/weights.txt".format(path))
-        """
