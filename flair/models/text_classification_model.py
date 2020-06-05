@@ -4,13 +4,13 @@ from typing import List, Union, Callable, Dict
 
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
+from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair.nn
 import flair.embeddings
 from flair.data import Dictionary, Sentence, Label, Token, space_tokenizer, DataPoint
-from flair.datasets import SentenceDataset, StringDataset
+from flair.datasets import SentenceDataset, StringDataset, DataLoader
 from flair.file_utils import cached_path
 from flair.training_utils import (
     convert_labels_to_one_hot,
@@ -248,10 +248,17 @@ class TextClassifier(flair.nn.Model):
 
     def evaluate(
         self,
-        data_loader: DataLoader,
-        out_path: Path = None,
+        sentences: Union[List[DataPoint], Dataset],
+        out_path: Union[str, Path] = None,
         embedding_storage_mode: str = "none",
+        mini_batch_size: int = 32,
+        num_workers: int = 8,
     ) -> (Result, float):
+
+        # read Dataset into data loader (if list of sentences passed, make Dataset first)
+        if not isinstance(sentences, Dataset):
+            sentences = SentenceDataset(sentences)
+        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
 
         with torch.no_grad():
             eval_loss = 0
