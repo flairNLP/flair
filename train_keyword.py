@@ -37,12 +37,6 @@ for corpus_object, path in data:
     embedding_types = \
     [
         ([
-            WordEmbeddings("crawl"),
-            FlairEmbeddings("news-forward"),
-            FlairEmbeddings("news-backward")
-        ],
-        'flair'),
-        ([
             TransformerWordEmbeddings('/tmp/scibert_scivocab_uncased')
         ],
         'bert')
