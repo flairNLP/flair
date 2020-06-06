@@ -6,7 +6,9 @@ import torch
 import torch.nn as nn
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
+import numpy as np
 
+import sklearn.metrics as metrics
 import flair.nn
 import flair.embeddings
 from flair.data import Dictionary, Sentence, Label, Token, space_tokenizer, DataPoint
@@ -211,9 +213,8 @@ class TextClassifier(flair.nn.Model):
                 dataset = StringDataset(
                     reordered_sentences, use_tokenizer=use_tokenizer
                 )
-            dataloader = DataLoader(
-                dataset=dataset, batch_size=mini_batch_size, collate_fn=lambda x: x
-            )
+
+            dataloader = DataLoader(dataset=dataset, batch_size=mini_batch_size)
 
             # progress bar for verbosity
             if verbose:
@@ -260,6 +261,10 @@ class TextClassifier(flair.nn.Model):
             sentences = SentenceDataset(sentences)
         data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
 
+        # use scikit-learn to evaluate
+        y_true = []
+        y_pred = []
+
         with torch.no_grad():
             eval_loss = 0
 
@@ -299,6 +304,18 @@ class TextClassifier(flair.nn.Model):
                     true_values_for_sentence = [label.value for label in true_values_for_sentence]
                     predictions_for_sentence = [label.value for label in predictions_for_sentence]
 
+                    y_true_instance = np.zeros(len(self.label_dictionary), dtype=int)
+                    for i in range(len(self.label_dictionary)):
+                        if self.label_dictionary.get_item_for_index(i) in true_values_for_sentence:
+                            y_true_instance[i] = 1
+                    y_true.append(y_true_instance.tolist())
+
+                    y_pred_instance = np.zeros(len(self.label_dictionary), dtype=int)
+                    for i in range(len(self.label_dictionary)):
+                        if self.label_dictionary.get_item_for_index(i) in predictions_for_sentence:
+                            y_pred_instance[i] = 1
+                    y_pred.append(y_pred_instance.tolist())
+
                     for label in available_labels:
                         if (
                             label in predictions_for_sentence
@@ -323,31 +340,48 @@ class TextClassifier(flair.nn.Model):
 
                 store_embeddings(batch, embedding_storage_mode)
 
-            eval_loss /= batch_count
-
-            detailed_result = (
-                f"\nMICRO_AVG: acc {metric.micro_avg_accuracy()} - f1-score {metric.micro_avg_f_score()}"
-                f"\nMACRO_AVG: acc {metric.macro_avg_accuracy()} - f1-score {metric.macro_avg_f_score()}"
-            )
-            for class_name in metric.get_classes():
-                detailed_result += (
-                    f"\n{class_name:<10} tp: {metric.get_tp(class_name)} - fp: {metric.get_fp(class_name)} - "
-                    f"fn: {metric.get_fn(class_name)} - tn: {metric.get_tn(class_name)} - precision: "
-                    f"{metric.precision(class_name):.4f} - recall: {metric.recall(class_name):.4f} - "
-                    f"accuracy: {metric.accuracy(class_name):.4f} - f1-score: "
-                    f"{metric.f_score(class_name):.4f}"
-                )
-
-            result = Result(
-                main_score=metric.micro_avg_accuracy(),
-                log_line=f"{metric.precision()}\t{metric.recall()}\t{metric.micro_avg_f_score()}",
-                log_header="PRECISION\tRECALL\tF1",
-                detailed_results=detailed_result,
-            )
-
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
+
+            # make "classification report"
+            target_names = []
+            for i in range(len(self.label_dictionary)):
+                target_names.append(self.label_dictionary.get_item_for_index(i))
+            classification_report = metrics.classification_report(y_true, y_pred, digits=4,
+                                                                  target_names=target_names, zero_division=1)
+
+            # use classification report in detailed results
+            detailed_result = (
+                    "\nResults:"
+                    f"\n- F1-score (micro) {metrics.f1_score(y_true, y_pred, average='micro'):.4f}"
+                    f"\n- F1-score (macro) {metrics.f1_score(y_true, y_pred, average='macro'):.4f}"
+                    f"\n- Accuracy {metrics.accuracy_score(y_true, y_pred):.4f}"
+                    '\n\nBy class:\n' + classification_report
+            )
+
+            print(y_true)
+            print(y_pred)
+
+            if not self.multi_label:
+                # line for log file
+                log_header = "ACCURACY"
+                log_line = f"\t{metrics.accuracy_score(y_true, y_pred):.4f}"
+            else:
+                log_header = "PRECISION\tRECALL\tF1\tACCURACY"
+                log_line = f"{metrics.precision_score(y_true, y_pred, average='macro'):.4f}\t" \
+                           f"{metrics.recall_score(y_true, y_pred, average='macro'):.4f}\t" \
+                           f"{metrics.f1_score(y_true, y_pred, average='macro'):.4f}\t" \
+                           f"{metrics.accuracy_score(y_true, y_pred):.4f}"
+
+            result = Result(
+                main_score=metrics.f1_score(y_true, y_pred, average='micro'),
+                log_line=log_line,
+                log_header=log_header,
+                detailed_results=detailed_result,
+            )
+
+            eval_loss /= batch_count
 
             return result, eval_loss
 
