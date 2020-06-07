@@ -501,7 +501,7 @@ class SequenceTagger(flair.nn.Model):
         for class_name in metric.get_classes():
             detailed_result += (
                 f"\n{class_name:<10} tp: {metric.get_tp(class_name)} - fp: {metric.get_fp(class_name)} - "
-                f"tn: {metric.get_tn(class_name)} - precision: "
+                f"fn: {metric.get_fn(class_name)} - precision: "
                 f"{metric.precision(class_name):.4f} - recall: {metric.recall(class_name):.4f} - "
                 f"f1-score: "
                 f"{metric.f_score(class_name):.4f}"
