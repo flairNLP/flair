@@ -268,17 +268,20 @@ class TextClassifier(flair.nn.Model):
             for batch in data_loader:
 
                 batch_count += 1
-
-                scores = self.forward(batch)
-                predictions = self._obtain_labels(scores)
-                loss = self._calculate_loss(scores, batch)
+                
+                # predict for batch
+                loss = self.predict(batch,
+                                    embedding_storage_mode=embedding_storage_mode,
+                                    mini_batch_size=mini_batch_size,
+                                    label_name='predicted',
+                                    return_loss=True)
 
                 eval_loss += loss
 
                 sentences_for_batch = [sent.to_plain_string() for sent in batch]
 
                 true_values_for_batch = [sentence.get_labels(self.label_type) for sentence in batch]
-                available_labels = self.label_dictionary.get_items()
+                predictions = [sentence.get_labels('predicted') for sentence in batch]
 
                 for sentence, prediction, true_value in zip(
                     sentences_for_batch,
