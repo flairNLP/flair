@@ -1036,8 +1036,8 @@ class Corpus:
     def _downsample_to_proportion(dataset: Dataset, proportion: float):
 
         sampled_size: int = round(len(dataset) * proportion)
-        splits = random_split(dataset, [len(dataset) - sampled_size, sampled_size])
-        return splits[1]
+        splits = randomly_split_into_two_datasets(dataset, sampled_size)
+        return splits[0]
 
     def obtain_statistics(
             self, label_type: str = None, pretty_print: bool = True
