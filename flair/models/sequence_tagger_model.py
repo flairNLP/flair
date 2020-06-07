@@ -505,7 +505,7 @@ class SequenceTagger(flair.nn.Model):
 
     def evaluate(
         self,
-        sentences: Union[List[DataPoint], Dataset],
+        sentences: Union[List[Sentence], Dataset],
         out_path: Union[str, Path] = None,
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,

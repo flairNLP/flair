@@ -268,8 +268,6 @@ class TextClassifier(flair.nn.Model):
         with torch.no_grad():
             eval_loss = 0
 
-            metric = Metric("Evaluation", beta=self.beta)
-
             lines: List[str] = []
             batch_count: int = 0
             for batch in data_loader:
@@ -316,28 +314,6 @@ class TextClassifier(flair.nn.Model):
                             y_pred_instance[i] = 1
                     y_pred.append(y_pred_instance.tolist())
 
-                    for label in available_labels:
-                        if (
-                            label in predictions_for_sentence
-                            and label in true_values_for_sentence
-                        ):
-                            metric.add_tp(label)
-                        elif (
-                            label in predictions_for_sentence
-                            and label not in true_values_for_sentence
-                        ):
-                            metric.add_fp(label)
-                        elif (
-                            label not in predictions_for_sentence
-                            and label in true_values_for_sentence
-                        ):
-                            metric.add_fn(label)
-                        elif (
-                            label not in predictions_for_sentence
-                            and label not in true_values_for_sentence
-                        ):
-                            metric.add_tn(label)
-
                 store_embeddings(batch, embedding_storage_mode)
 
             if out_path is not None:
@@ -351,31 +327,34 @@ class TextClassifier(flair.nn.Model):
             classification_report = metrics.classification_report(y_true, y_pred, digits=4,
                                                                   target_names=target_names, zero_division=1)
 
-            # use classification report in detailed results
+            # get scores
+            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro'), 4)
+            accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
+            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro'), 4)
+            precision_score = round(metrics.precision_score(y_true, y_pred, average='macro'), 4)
+            recall_score = round(metrics.recall_score(y_true, y_pred, average='macro'), 4)
+
             detailed_result = (
                     "\nResults:"
-                    f"\n- F1-score (micro) {metrics.f1_score(y_true, y_pred, average='micro'):.4f}"
-                    f"\n- F1-score (macro) {metrics.f1_score(y_true, y_pred, average='macro'):.4f}"
-                    f"\n- Accuracy {metrics.accuracy_score(y_true, y_pred):.4f}"
+                    f"\n- F-score (micro) {micro_f_score}"
+                    f"\n- F-score (macro) {macro_f_score}"
+                    f"\n- Accuracy {accuracy_score}"
                     '\n\nBy class:\n' + classification_report
             )
 
-            print(y_true)
-            print(y_pred)
-
+            # line for log file
             if not self.multi_label:
-                # line for log file
                 log_header = "ACCURACY"
-                log_line = f"\t{metrics.accuracy_score(y_true, y_pred):.4f}"
+                log_line = f"\t{accuracy_score}"
             else:
                 log_header = "PRECISION\tRECALL\tF1\tACCURACY"
-                log_line = f"{metrics.precision_score(y_true, y_pred, average='macro'):.4f}\t" \
-                           f"{metrics.recall_score(y_true, y_pred, average='macro'):.4f}\t" \
-                           f"{metrics.f1_score(y_true, y_pred, average='macro'):.4f}\t" \
-                           f"{metrics.accuracy_score(y_true, y_pred):.4f}"
+                log_line = f"{precision_score}\t" \
+                           f"{recall_score}\t" \
+                           f"{macro_f_score}\t" \
+                           f"{accuracy_score}"
 
             result = Result(
-                main_score=metrics.f1_score(y_true, y_pred, average='micro'),
+                main_score=micro_f_score,
                 log_line=log_line,
                 log_header=log_header,
                 detailed_results=detailed_result,
