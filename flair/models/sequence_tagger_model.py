@@ -423,6 +423,9 @@ class SequenceTagger(flair.nn.Model):
 
         lines: List[str] = []
 
+        y_true = []
+        y_pred = []
+
         for batch in data_loader:
 
             # predict for batch
@@ -456,6 +459,9 @@ class SequenceTagger(flair.nn.Model):
                     if (tag, gold) not in predicted_tags:
                         metric.add_fn(tag)
 
+                tags_gold = []
+                tags_pred = []
+
                 # also write to file in BIO format to use old conlleval script
                 if out_path:
                     for token in sentence:
@@ -464,13 +470,20 @@ class SequenceTagger(flair.nn.Model):
                         for span in gold_spans:
                             if token in span:
                                 gold_tag = 'B-' + span.tag if token == span[0] else 'I-' + span.tag
+                        tags_gold.append(gold_tag)
+
                         predicted_tag = 'O'
                         # check if in predicted spans
                         for span in predicted_spans:
                             if token in span:
                                 predicted_tag = 'B-' + span.tag if token == span[0] else 'I-' + span.tag
+                        tags_pred.append(predicted_tag)
+
                         lines.append(f'{token.text} {gold_tag} {predicted_tag}\n')
                     lines.append('\n')
+
+                y_true.append(tags_gold)
+                y_pred.append(tags_pred)
 
         if out_path:
             with open(Path(out_path), "w", encoding="utf-8") as outfile:
@@ -574,21 +587,25 @@ class SequenceTagger(flair.nn.Model):
             target_names.append(labels.get_item_for_index(i))
         classification_report = metrics.classification_report(y_true, y_pred, digits=4, target_names=target_names, zero_division=1)
 
-        # use classification report in detailed results
+        # get scores
+        macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro'), 4)
+        micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro'), 4)
+        accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
+
         detailed_result = (
             "\nResults:"
-            f"\n- F1-score (micro) {metrics.f1_score(y_true, y_pred, average='micro'):.4f}"
-            f"\n- F1-score (macro) {metrics.f1_score(y_true, y_pred, average='macro'):.4f}"
-            f"\n- Accuracy {metrics.accuracy_score(y_true, y_pred):.4f}"
+            f"\n- F-score (micro) {macro_f_score}"
+            f"\n- F-score (macro) {micro_f_score}"
+            f"\n- Accuracy {accuracy_score}"
             '\n\nBy class:\n' + classification_report
         )
 
         # line for log file
         log_header = "ACCURACY"
-        log_line = f"\t{metrics.accuracy_score(y_true, y_pred):.4f}"
+        log_line = f"\t{accuracy_score}"
 
         result = Result(
-            main_score=metrics.f1_score(y_true, y_pred, average='micro'),
+            main_score=macro_f_score,
             log_line=log_line,
             log_header=log_header,
             detailed_results=detailed_result,
