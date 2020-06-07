@@ -88,6 +88,14 @@ class StackedEmbeddings(TokenEmbeddings):
     def __str__(self):
         return f'StackedEmbeddings [{",".join([str(e) for e in self.embeddings])}]'
 
+    def get_names(self) -> List[str]:
+        """Returns a list of embedding names. In most cases, it is just a list with one item, namely the name of
+        this embedding. But in some cases, the embedding is made up by different embeddings (StackedEmbedding).
+        Then, the list contains the names of all embeddings in the stack."""
+        names = []
+        for embedding in self.embeddings:
+            names.extend(embedding.get_names())
+        return names
 
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
@@ -784,6 +792,9 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
     def embedding_length(self) -> int:
         return self.embedding_length
+
+    def get_names(self) -> List[str]:
+        return [self.name, self.context_embeddings.name]
 
     def __setstate__(self, d):
         self.__dict__ = d
