@@ -17,6 +17,7 @@ from typing import Union, Callable, Dict, List, Tuple, Iterable
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 
+from datasets import ColumnDataset
 from flair.file_utils import cached_path, Tqdm, unpack_file
 from flair.datasets import ColumnCorpus
 
@@ -4642,3 +4643,153 @@ class BIONLP2013_CG(BioNLPCorpus):
         dev_folder = download_folder / "BioNLP-ST_2013_CG_development_data"
 
         return train_folder, dev_folder
+
+
+class ANAT_EM(ColumnCorpus):
+    """
+          Anatomical entity mention recognition
+
+          For further information see Pyysalo and Ananiadou:
+            Anatomical entity mention recognition at literature scale
+            https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3957068/
+            http://nactem.ac.uk/anatomytagger/#AnatEM
+       """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+           :param base_path: Path to the corpus on your machine
+           :param in_memory: If True, keeps dataset in memory giving speedups in training.
+           :param tokenizer: Callable that segments a sentence into words,
+                             defaults to scispacy
+           :param sentence_splitter: Callable that segments a document into sentences,
+                                     defaults to scispacy
+           """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        dev_file = data_folder / "dev.conll"
+        test_file = data_folder / "test.conll"
+
+        if not (train_file.exists() and dev_file.exists() and test_file.exists()):
+            corpus_folder = self.download_corpus(data_folder)
+
+            train_data = self.parse_input_files(
+                corpus_folder / "nersuite" / "train", SENTENCE_TAG
+            )
+            dev_data = self.parse_input_files(
+                corpus_folder / "nersuite" / "devel", SENTENCE_TAG
+            )
+            test_data = self.parse_input_files(
+                corpus_folder / "nersuite" / "test", SENTENCE_TAG
+            )
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_split_at_tag
+            )
+
+            conll_writer.write_to_conll(train_data, train_file)
+            conll_writer.write_to_conll(dev_data, dev_file)
+            conll_writer.write_to_conll(test_data, test_file)
+
+        super(ANAT_EM, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @staticmethod
+    @abstractmethod
+    def download_corpus(data_folder: Path):
+        corpus_url = "http://nactem.ac.uk/anatomytagger/AnatEM-1.0.2.tar.gz"
+        corpus_archive = cached_path(corpus_url, data_folder)
+
+        unpack_file(
+            corpus_archive, data_folder, keep=True, mode="targz",
+        )
+
+        return data_folder / "AnatEM-1.0.2"
+
+    @staticmethod
+    def parse_input_files(
+        input_dir: Path, sentence_separator: str
+    ) -> InternalBioNerDataset:
+        documents = {}
+        entities_per_document = {}
+
+        input_files = [
+            file
+            for file in os.listdir(str(input_dir))
+            if file.endswith(".nersuite") and not file.startswith("._")
+        ]
+
+        for input_file in input_files:
+            document_id = input_file.replace(".nersuite", "")
+            document_text = ""
+
+            entities = []
+            entity_type = None
+            entity_start = None
+
+            sent_offset = 0
+            last_offset = 0
+
+            input_file = open(str(input_dir / input_file), "r")
+            for line in input_file.readlines():
+                line = line.strip()
+                if line:
+                    tag, start, end, word, _, _, _ = line.split("\t")
+
+                    start = int(start) + sent_offset
+                    end = int(end) + sent_offset
+
+                    document_text += " " * (start - last_offset)
+                    document_text += word
+
+                    if tag.startswith("B-"):
+                        if entity_type is not None:
+                            entities.append(
+                                Entity((entity_start, last_offset), entity_type)
+                            )
+
+                        entity_start = start
+                        entity_type = tag[2:]
+
+                    elif tag == "O" and entity_type is not None:
+                        entities.append(
+                            Entity((entity_start, last_offset), entity_type)
+                        )
+                        entity_type = None
+
+                    last_offset = end
+
+                    assert word == document_text[start:end]
+
+                else:
+                    document_text += sentence_separator
+                    sent_offset += len(sentence_separator)
+                    last_offset += len(sentence_separator)
+
+            documents[document_id] = document_text
+            entities_per_document[document_id] = entities
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
