@@ -923,17 +923,17 @@ class Corpus:
         if test is None:
             train_length = len(train)
             test_size: int = round(train_length / 10)
-            splits = random_split(train, [train_length - test_size, test_size])
-            train = splits[0]
-            test = splits[1]
+            splits = randomly_split_into_two_datasets(train, test_size)
+            test = splits[0]
+            train = splits[1]
 
         # sample dev data if none is provided
         if dev is None:
             train_length = len(train)
             dev_size: int = round(train_length / 10)
-            splits = random_split(train, [train_length - dev_size, dev_size])
-            train = splits[0]
-            dev = splits[1]
+            splits = randomly_split_into_two_datasets(train, dev_size)
+            dev = splits[0]
+            train = splits[1]
 
         # set train dev and test data
         self._train: FlairDataset = train
@@ -1418,3 +1418,17 @@ def build_spacy_tokenizer(model) -> Callable[[str], List[Token]]:
         return tokens
 
     return tokenizer
+
+
+def randomly_split_into_two_datasets(dataset, length_of_first):
+
+    import random
+    indices = [i for i in range(len(dataset))]
+    random.shuffle(indices)
+
+    first_dataset = indices[:length_of_first]
+    second_dataset = indices[length_of_first:]
+    first_dataset.sort()
+    second_dataset.sort()
+
+    return [Subset(dataset, first_dataset), Subset(dataset, second_dataset)]
