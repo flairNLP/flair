@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from operator import itemgetter
-from typing import List, Dict, Union, Callable
+from typing import List, Dict, Union, Callable, Optional
 import re
 
 import torch, flair
@@ -338,17 +338,18 @@ class Token(DataPoint):
                 if name in self._embeddings.keys():
                     del self._embeddings[name]
 
-    def get_each_embedding(self) -> torch.tensor:
+    def get_each_embedding(self, embedding_names: Optional[List[str]] = None) -> torch.tensor:
         embeddings = []
         for embed in sorted(self._embeddings.keys()):
+            if embedding_names and embed not in embedding_names: continue
             embed = self._embeddings[embed].to(flair.device)
             if (flair.embedding_storage_mode == "cpu") and embed.device != flair.device:
                 embed = embed.to(flair.device)
             embeddings.append(embed)
         return embeddings
 
-    def get_embedding(self) -> torch.tensor:
-        embeddings = self.get_each_embedding()
+    def get_embedding(self, names: Optional[List[str]] = None) -> torch.tensor:
+        embeddings = self.get_each_embedding(names)
 
         if embeddings:
             return torch.cat(embeddings, dim=0)
@@ -624,9 +625,10 @@ class Sentence(DataPoint):
             vector = vector.to(device)
         self._embeddings[name] = vector
 
-    def get_embedding(self) -> torch.tensor:
+    def get_embedding(self, names: Optional[List[str]] = None) -> torch.tensor:
         embeddings = []
         for embed in sorted(self._embeddings.keys()):
+            if names and embed not in names: continue
             embedding = self._embeddings[embed]
             embeddings.append(embedding)
 
