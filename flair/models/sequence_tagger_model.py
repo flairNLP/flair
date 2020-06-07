@@ -14,7 +14,7 @@ from tqdm import tqdm
 import flair.nn
 from flair.data import Dictionary, Sentence, Token, Label, space_tokenizer, DataPoint
 from flair.datasets import SentenceDataset, StringDataset, DataLoader
-from flair.embeddings import TokenEmbeddings
+from flair.embeddings import TokenEmbeddings, StackedEmbeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.training_utils import Metric, Result, store_embeddings
 
@@ -292,28 +292,27 @@ class SequenceTagger(flair.nn.Model):
 
     def predict(
         self,
-        sentences: Union[List[Sentence], Sentence, List[str], str],
+        sentences: Union[List[Sentence], Sentence],
         mini_batch_size=32,
         all_tag_prob: bool = False,
         verbose: bool = False,
-        use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer,
         label_name: Optional[str] = None,
         return_loss = False,
         embedding_storage_mode="none",
-    ) -> List[Sentence]:
+    ):
         """
         Predict sequence tags for Named Entity Recognition task
-        :param sentences: a Sentence or a string or a List of Sentence or a List of string.
+        :param sentences: a Sentence or a List of Sentence
         :param mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
         up to a point when it has no more effect.
         :param all_tag_prob: True to compute the score for each tag on each token,
         otherwise only the score of the best tag is returned
         :param verbose: set to True to display a progress bar
-        :param use_tokenizer: a custom tokenizer when string are provided (default is space based tokenizer).
-        :param embedding_storage_mode: default is 'none' which is best for most use cases. Set to 'cpu' or 'gpu' only if
+        :param return_loss: set to True to return loss
+        :param label_name: set this to change the name of the label type that is predicted
+        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
         you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
         'gpu' to store embeddings in GPU memory.
-        :return: List of Sentence enriched by the predicted tags
         """
         if label_name == None:
             label_name = self.tag_type
@@ -322,31 +321,20 @@ class SequenceTagger(flair.nn.Model):
             if not sentences:
                 return sentences
 
-            if isinstance(sentences, Sentence) or isinstance(sentences, str):
+            if isinstance(sentences, Sentence):
                 sentences = [sentences]
 
             # reverse sort all sequences by their length
             rev_order_len_index = sorted(
                 range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True
             )
-            original_order_index = sorted(
-                range(len(rev_order_len_index)), key=lambda k: rev_order_len_index[k]
-            )
 
             reordered_sentences: List[Union[Sentence, str]] = [
                 sentences[index] for index in rev_order_len_index
             ]
 
-            if isinstance(sentences[0], Sentence):
-                # remove previous embeddings
-                store_embeddings(reordered_sentences, "none")
-                dataset = SentenceDataset(reordered_sentences)
-            else:
-                dataset = StringDataset(
-                    reordered_sentences, use_tokenizer=use_tokenizer
-                )
             dataloader = DataLoader(
-                dataset=dataset, batch_size=mini_batch_size
+                dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size
             )
 
             if self.use_crf:
@@ -358,8 +346,6 @@ class SequenceTagger(flair.nn.Model):
             if verbose:
                 dataloader = tqdm(dataloader)
 
-            results: List[Sentence] = []
-
             overall_loss = 0
             batch_no = 0
             for batch in dataloader:
@@ -368,7 +354,7 @@ class SequenceTagger(flair.nn.Model):
 
                 if verbose:
                     dataloader.set_description(f"Inferencing on batch {batch_no}")
-                results += batch
+
                 batch = self._filter_empty_sentences(batch)
                 # stop if all sentences are empty
                 if not batch:
@@ -398,14 +384,8 @@ class SequenceTagger(flair.nn.Model):
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
-            results: List[Union[Sentence, str]] = [
-                results[index] for index in original_order_index
-            ]
-            assert len(sentences) == len(results)
-
             if return_loss:
                 return overall_loss / batch_no
-            return results
 
     def _requires_span_F1_evaluation(self) -> bool:
         span_F1 = False
@@ -622,6 +602,13 @@ class SequenceTagger(flair.nn.Model):
 
         self.embeddings.embed(sentences)
 
+        # if type(self.embeddings) == StackedEmbeddings:
+        #     names = [embedding.name for embedding in self.embeddings.embeddings]
+        names = self.embeddings.get_names()
+        print(names)
+
+        print(self.embeddings)
+
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
         longest_token_sequence_in_batch: int = max(lengths)
 
@@ -634,7 +621,7 @@ class SequenceTagger(flair.nn.Model):
         all_embs = list()
         for sentence in sentences:
             all_embs += [
-                emb for token in sentence for emb in token.get_each_embedding()
+                emb for token in sentence for emb in token.get_each_embedding(names)
             ]
             nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
 

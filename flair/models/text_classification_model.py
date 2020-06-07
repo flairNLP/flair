@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Union, Callable, Dict
+from typing import List, Union, Callable, Dict, Optional
 
 import torch
 import torch.nn as nn
@@ -99,8 +99,10 @@ class TextClassifier(flair.nn.Model):
 
         self.document_embeddings.embed(sentences)
 
+        embedding_names = self.document_embeddings.get_names()
+
         text_embedding_list = [
-            sentence.embedding.unsqueeze(0) for sentence in sentences
+            sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in sentences
         ]
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
@@ -154,39 +156,35 @@ class TextClassifier(flair.nn.Model):
 
     def predict(
         self,
-        sentences: Union[List[Sentence], Sentence, List[str], str],
+        sentences: Union[List[Sentence], Sentence],
         mini_batch_size: int = 32,
-        embedding_storage_mode="none",
         multi_class_prob: bool = False,
         verbose: bool = False,
-        use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer,
-    ) -> List[Sentence]:
+        label_name: Optional[str] = None,
+        return_loss = False,
+        embedding_storage_mode="none",
+    ):
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
         :param sentences: list of sentences
         :param mini_batch_size: mini batch size to use
-        :param embedding_storage_mode: 'none' for the minimum memory footprint, 'cpu' to store embeddings in Ram,
-        'gpu' to store embeddings in GPU memory.
         :param multi_class_prob : return probability for all class for multiclass
         :param verbose: set to True to display a progress bar
-        :param use_tokenizer: a custom tokenizer when string are provided (default is space based tokenizer).
-        :return: the list of sentences containing the labels
+        :param return_loss: set to True to return loss
+        :param label_name: set this to change the name of the label type that is predicted
+        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
+        you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
+        'gpu' to store embeddings in GPU memory.
         """
-        predicted_label_type = self.label_type if self.label_type is not None else 'class'
+        if label_name == None:
+            label_name = self.label_type if self.label_type is not None else 'class'
 
         with torch.no_grad():
             if not sentences:
                 return sentences
 
-            if isinstance(sentences, DataPoint) or isinstance(sentences, str):
+            if isinstance(sentences, DataPoint):
                 sentences = [sentences]
-
-            if (flair.device.type == "cuda") and embedding_storage_mode == "cpu":
-                log.warning(
-                    "You are inferring on GPU with parameter 'embedding_storage_mode' set to 'cpu'."
-                    "This option will slow down your inference, usually 'none' (default value) "
-                    "is a better choice."
-                )
 
             # filter empty sentences
             if isinstance(sentences[0], Sentence):
@@ -197,55 +195,52 @@ class TextClassifier(flair.nn.Model):
             rev_order_len_index = sorted(
                 range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True
             )
-            original_order_index = sorted(
-                range(len(rev_order_len_index)), key=lambda k: rev_order_len_index[k]
-            )
 
             reordered_sentences: List[Union[DataPoint, str]] = [
                 sentences[index] for index in rev_order_len_index
             ]
 
-            if isinstance(sentences[0], DataPoint):
-                # remove previous embeddings
-                store_embeddings(reordered_sentences, "none")
-                dataset = SentenceDataset(reordered_sentences)
-            else:
-                dataset = StringDataset(
-                    reordered_sentences, use_tokenizer=use_tokenizer
-                )
-
-            dataloader = DataLoader(dataset=dataset, batch_size=mini_batch_size)
-
+            dataloader = DataLoader(
+                dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size
+            )
             # progress bar for verbosity
             if verbose:
                 dataloader = tqdm(dataloader)
 
-            results: List[Sentence] = []
-            for i, batch in enumerate(dataloader):
+            overall_loss = 0
+            batch_no = 0
+            for batch in dataloader:
+
+                batch_no += 1
+
                 if verbose:
-                    dataloader.set_description(f"Inferencing on batch {i}")
-                results += batch
+                    dataloader.set_description(f"Inferencing on batch {batch_no}")
+
                 # stop if all sentences are empty
                 if not batch:
                     continue
 
                 scores = self.forward(batch)
+
+                if return_loss:
+                    overall_loss += self._calculate_loss(scores, batch)
+
                 predicted_labels = self._obtain_labels(
                     scores, predict_prob=multi_class_prob
                 )
 
                 for (sentence, labels) in zip(batch, predicted_labels):
                     for label in labels:
-                        sentence.add_label(predicted_label_type, label.value, label.score)
+                        if self.multi_label:
+                            sentence.add_label(label_name, label.value, label.score)
+                        else:
+                            sentence.set_label(label_name, label.value, label.score)
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
-            results: List[Union[Sentence, str]] = [
-                results[index] for index in original_order_index
-            ]
-            assert len(sentences) == len(results)
-            return results
+            if return_loss:
+                return overall_loss / batch_no
 
     def evaluate(
         self,
