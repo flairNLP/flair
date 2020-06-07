@@ -527,7 +527,6 @@ class SequenceTagger(flair.nn.Model):
 
             # predict for batch
             loss = self.predict(batch,
-                                use_tokenizer=False,
                                 embedding_storage_mode=embedding_storage_mode,
                                 mini_batch_size=mini_batch_size,
                                 label_name='predicted',
