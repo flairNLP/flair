@@ -268,7 +268,7 @@ class TextClassifier(flair.nn.Model):
             for batch in data_loader:
 
                 batch_count += 1
-                
+
                 # predict for batch
                 loss = self.predict(batch,
                                     embedding_storage_mode=embedding_storage_mode,

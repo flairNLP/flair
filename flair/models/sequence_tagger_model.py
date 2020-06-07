@@ -600,12 +600,7 @@ class SequenceTagger(flair.nn.Model):
 
         self.embeddings.embed(sentences)
 
-        # if type(self.embeddings) == StackedEmbeddings:
-        #     names = [embedding.name for embedding in self.embeddings.embeddings]
         names = self.embeddings.get_names()
-        print(names)
-
-        print(self.embeddings)
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
         longest_token_sequence_in_batch: int = max(lengths)
