@@ -180,7 +180,7 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
     ):
         """The constructor takes a list of embeddings to be combined.
         :param embeddings: a list of token embeddings
-        :param fine_tune_mode: if set to "linear" a randomly initialized, trainable layer is added, if set to
+        :param fine_tune_mode: if set to "linear" a trainable layer is added, if set to
         "nonlinear", a nonlinearity is added as well. Set this to make the pooling trainable.
         :param pooling: a string which can any value from ['mean', 'max', 'min']
         """
