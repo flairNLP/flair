@@ -947,7 +947,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 if subtoken in self.special_tokens and subtoken_id == 0:
                     continue
 
-                if subtoken_count == 0 and not token_text.startswith(subtoken):
+                if subtoken_count == 0 and not token_text.startswith(subtoken.lower()):
                     token_subtoken_lengths.append(0)
                     token = next(word_iterator)
                     token_text = self._get_processed_token_text(token)
