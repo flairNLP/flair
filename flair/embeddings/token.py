@@ -910,8 +910,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         for sentence in sentences:
 
-            # print(sentence)
-
             tokenized_string = sentence.to_tokenized_string()
 
             # method 1: subtokenize sentence
