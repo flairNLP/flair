@@ -49,11 +49,12 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
     sentence = Sentence("Berlin is a really nice city.")
 
-    for s in model.predict(sentence):
-        for l in s.labels:
-            assert l.value is not None
-            assert 0.0 <= l.score <= 1.0
-            assert type(l.score) is float
+    model.predict(sentence)
+
+    for label in sentence.labels:
+        assert label.value is not None
+        assert 0.0 <= label.score <= 1.0
+        assert type(label.score) is float
 
     del trainer, model, corpus
     loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
@@ -86,12 +87,12 @@ def test_train_load_use_classifier_with_sampler(results_base_path, tasks_base_pa
     )
 
     sentence = Sentence("Berlin is a really nice city.")
+    model.predict(sentence)
 
-    for s in model.predict(sentence):
-        for l in s.labels:
-            assert l.value is not None
-            assert 0.0 <= l.score <= 1.0
-            assert type(l.score) is float
+    for label in sentence.labels:
+        assert label.value is not None
+        assert 0.0 <= label.score <= 1.0
+        assert type(label.score) is float
 
     del trainer, model, corpus
     loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
@@ -120,11 +121,12 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
 
     sentence = Sentence("Berlin is a really nice city.")
 
-    for s in model.predict(sentence, multi_class_prob=True):
-        for l in s.labels:
-            assert l.value is not None
-            assert 0.0 <= l.score <= 1.0
-            assert type(l.score) is float
+    model.predict(sentence, multi_class_prob=True)
+
+    for label in sentence.labels:
+        assert label.value is not None
+        assert 0.0 <= label.score <= 1.0
+        assert type(label.score) is float
 
     del trainer, model, corpus
     loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
@@ -161,25 +163,25 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
 
     sentence = Sentence("apple tv")
 
-    for s in model.predict(sentence):
-        for l in s.labels:
-            print(l)
-            assert l.value is not None
-            assert 0.0 <= l.score <= 1.0
-            assert type(l.score) is float
+    model.predict(sentence)
+
+    for label in sentence.labels:
+        print(label)
+        assert label.value is not None
+        assert 0.0 <= label.score <= 1.0
+        assert type(label.score) is float
 
     sentence = Sentence("apple tv")
 
-    for s in model.predict(sentence):
+    model.predict(sentence)
 
-        assert "apple" in sentence.get_label_names()
-        assert "tv" in sentence.get_label_names()
+    assert "apple" in sentence.get_label_names()
+    assert "tv" in sentence.get_label_names()
 
-        for l in s.labels:
-            print(l)
-            assert l.value is not None
-            assert 0.0 <= l.score <= 1.0
-            assert type(l.score) is float
+    for label in sentence.labels:
+        assert label.value is not None
+        assert 0.0 <= label.score <= 1.0
+        assert type(label.score) is float
 
     del trainer, model, corpus
     loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
@@ -212,11 +214,12 @@ def test_train_load_use_classifier_flair(results_base_path, tasks_base_path):
 
     sentence = Sentence("Berlin is a really nice city.")
 
-    for s in model.predict(sentence):
-        for l in s.labels:
-            assert l.value is not None
-            assert 0.0 <= l.score <= 1.0
-            assert type(l.score) is float
+    model.predict(sentence)
+
+    for label in sentence.labels:
+        assert label.value is not None
+        assert 0.0 <= label.score <= 1.0
+        assert type(label.score) is float
 
     del trainer, model, corpus, flair_document_embeddings
     loaded_model = TextClassifier.load(results_base_path / "final-model.pt")
