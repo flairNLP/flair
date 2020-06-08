@@ -175,11 +175,13 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
     def __init__(
         self,
         embeddings: List[TokenEmbeddings],
-        fine_tune_mode="linear",
+        fine_tune_mode: str = "none",
         pooling: str = "mean",
     ):
         """The constructor takes a list of embeddings to be combined.
         :param embeddings: a list of token embeddings
+        :param fine_tune_mode: if set to "linear" a randomly initialized, trainable layer is added, if set to
+        "nonlinear", a nonlinearity is added as well. Set this to make the pooling trainable.
         :param pooling: a string which can any value from ['mean', 'max', 'min']
         """
         super().__init__()
