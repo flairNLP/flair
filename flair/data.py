@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from operator import itemgetter
-from typing import List, Dict, Union, Callable
+from typing import List, Dict, Union, Callable, Optional
 import re
 
 import torch, flair
@@ -175,10 +175,10 @@ class Label:
         return {"value": self.value, "confidence": self.score}
 
     def __str__(self):
-        return f"{self._value} ({self._score:.4f})"
+        return f"{self._value} ({round(self._score, 4)})"
 
     def __repr__(self):
-        return f"{self._value} ({self._score:.4f})"
+        return f"{self._value} ({round(self._score, 4)})"
 
 
 class DataPoint:
@@ -338,17 +338,18 @@ class Token(DataPoint):
                 if name in self._embeddings.keys():
                     del self._embeddings[name]
 
-    def get_each_embedding(self) -> torch.tensor:
+    def get_each_embedding(self, embedding_names: Optional[List[str]] = None) -> torch.tensor:
         embeddings = []
         for embed in sorted(self._embeddings.keys()):
+            if embedding_names and embed not in embedding_names: continue
             embed = self._embeddings[embed].to(flair.device)
             if (flair.embedding_storage_mode == "cpu") and embed.device != flair.device:
                 embed = embed.to(flair.device)
             embeddings.append(embed)
         return embeddings
 
-    def get_embedding(self) -> torch.tensor:
-        embeddings = self.get_each_embedding()
+    def get_embedding(self, names: Optional[List[str]] = None) -> torch.tensor:
+        embeddings = self.get_each_embedding(names)
 
         if embeddings:
             return torch.cat(embeddings, dim=0)
@@ -442,6 +443,15 @@ class Span(DataPoint):
             else '<span ({}): "{}">'.format(ids, self.text)
         )
 
+    def __getitem__(self, idx: int) -> Token:
+        return self.tokens[idx]
+
+    def __iter__(self):
+        return iter(self.tokens)
+
+    def __len__(self) -> int:
+        return len(self.tokens)
+
     @property
     def tag(self):
         return self.labels[0].value
@@ -506,6 +516,15 @@ class Sentence(DataPoint):
 
         if type(token) is str:
             token = Token(token)
+
+        token.text = token.text.replace('\u200c', '')
+        token.text = token.text.replace('\u200b', '')
+        token.text = token.text.replace('\ufe0f', '')
+        token.text = token.text.replace('\ufeff', '')
+
+        # data with zero-width characters cannot be handled
+        if token.text.strip() == '':
+            return
 
         self.tokens.append(token)
 
@@ -606,9 +625,10 @@ class Sentence(DataPoint):
             vector = vector.to(device)
         self._embeddings[name] = vector
 
-    def get_embedding(self) -> torch.tensor:
+    def get_embedding(self, names: Optional[List[str]] = None) -> torch.tensor:
         embeddings = []
         for embed in sorted(self._embeddings.keys()):
+            if names and embed not in names: continue
             embedding = self._embeddings[embed]
             embeddings.append(embedding)
 
@@ -762,6 +782,9 @@ class Sentence(DataPoint):
     def __iter__(self):
         return iter(self.tokens)
 
+    def __len__(self) -> int:
+        return len(self.tokens)
+
     def __repr__(self):
         tagged_string = self.to_tagged_string()
         tokenized_string = self.to_tokenized_string()
@@ -800,9 +823,6 @@ class Sentence(DataPoint):
         token_labels = f'  − Token-Labels: "{tagged_string}"' if tokenized_string != tagged_string else ""
 
         return f'Sentence: "{tokenized_string}"   [− Tokens: {len(self)}{token_labels}{sentence_labels}]'
-
-    def __len__(self) -> int:
-        return len(self.tokens)
 
     def get_language_code(self) -> str:
         if self.language_code is None:
@@ -905,17 +925,17 @@ class Corpus:
         if test is None:
             train_length = len(train)
             test_size: int = round(train_length / 10)
-            splits = random_split(train, [train_length - test_size, test_size])
-            train = splits[0]
-            test = splits[1]
+            splits = randomly_split_into_two_datasets(train, test_size)
+            test = splits[0]
+            train = splits[1]
 
         # sample dev data if none is provided
         if dev is None:
             train_length = len(train)
             dev_size: int = round(train_length / 10)
-            splits = random_split(train, [train_length - dev_size, dev_size])
-            train = splits[0]
-            dev = splits[1]
+            splits = randomly_split_into_two_datasets(train, dev_size)
+            dev = splits[0]
+            train = splits[1]
 
         # set train dev and test data
         self._train: FlairDataset = train
@@ -1018,8 +1038,8 @@ class Corpus:
     def _downsample_to_proportion(dataset: Dataset, proportion: float):
 
         sampled_size: int = round(len(dataset) * proportion)
-        splits = random_split(dataset, [len(dataset) - sampled_size, sampled_size])
-        return splits[1]
+        splits = randomly_split_into_two_datasets(dataset, sampled_size)
+        return splits[0]
 
     def obtain_statistics(
             self, label_type: str = None, pretty_print: bool = True
@@ -1329,6 +1349,8 @@ def segtok_tokenizer(text: str) -> List[Token]:
         contractions = split_contractions(word_tokenizer(sentence))
         words.extend(contractions)
 
+    words = list(filter(None, words))
+
     # determine offsets for whitespace_after field
     index = text.index
     current_offset = 0
@@ -1398,3 +1420,17 @@ def build_spacy_tokenizer(model) -> Callable[[str], List[Token]]:
         return tokens
 
     return tokenizer
+
+
+def randomly_split_into_two_datasets(dataset, length_of_first):
+
+    import random
+    indices = [i for i in range(len(dataset))]
+    random.shuffle(indices)
+
+    first_dataset = indices[:length_of_first]
+    second_dataset = indices[length_of_first:]
+    first_dataset.sort()
+    second_dataset.sort()
+
+    return [Subset(dataset, first_dataset), Subset(dataset, second_dataset)]

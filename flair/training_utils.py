@@ -5,7 +5,7 @@ from collections import defaultdict
 from enum import Enum
 from math import inf
 from pathlib import Path
-from typing import List
+from typing import Union, List
 
 from torch.optim import Optimizer
 
@@ -251,7 +251,9 @@ class EvaluationMetric(Enum):
 
 
 class WeightExtractor(object):
-    def __init__(self, directory: Path, number_of_weights: int = 10):
+    def __init__(self, directory: Union[str, Path], number_of_weights: int = 10):
+        if type(directory) is str:
+            directory = Path(directory)
         self.weights_file = init_output_file(directory, "weights.txt")
         self.weights_dict = defaultdict(lambda: defaultdict(lambda: list()))
         self.number_of_weights = number_of_weights
@@ -343,7 +345,7 @@ class AnnealOnPlateau(object):
         >>>     scheduler.step(val_loss)
     """
 
-    def __init__(self, optimizer, mode='min', aux_mode='min', factor=0.1, patience=10,
+    def __init__(self, optimizer, mode='min', aux_mode='min', factor=0.1, patience=10, initial_extra_patience=0,
                  verbose=False, cooldown=0, min_lr=0, eps=1e-8):
 
         if factor >= 1.0:
@@ -364,7 +366,8 @@ class AnnealOnPlateau(object):
         else:
             self.min_lrs = [min_lr] * len(optimizer.param_groups)
 
-        self.patience = patience
+        self.default_patience = patience
+        self.effective_patience = patience + initial_extra_patience
         self.verbose = verbose
         self.cooldown = cooldown
         self.cooldown_counter = 0
@@ -423,10 +426,11 @@ class AnnealOnPlateau(object):
             self.cooldown_counter -= 1
             self.num_bad_epochs = 0  # ignore any bad epochs in cooldown
 
-        if self.num_bad_epochs > self.patience:
+        if self.num_bad_epochs > self.effective_patience:
             self._reduce_lr(epoch)
             self.cooldown_counter = self.cooldown
             self.num_bad_epochs = 0
+            self.effective_patience = self.default_patience
 
         self._last_lr = [group['lr'] for group in self.optimizer.param_groups]
 
@@ -463,13 +467,15 @@ class AnnealOnPlateau(object):
         self._init_is_better(mode=self.mode, threshold=self.threshold, threshold_mode=self.threshold_mode)
 
 
-def init_output_file(base_path: Path, file_name: str) -> Path:
+def init_output_file(base_path: Union[str, Path], file_name: str) -> Path:
     """
     Creates a local file.
     :param base_path: the path to the directory
     :param file_name: the file name
     :return: the created file
     """
+    if type(base_path) is str:
+        base_path = Path(base_path)
     base_path.mkdir(parents=True, exist_ok=True)
 
     file = base_path / file_name

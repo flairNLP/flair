@@ -1,7 +1,7 @@
 import copy
 import logging
 from pathlib import Path
-from typing import List, Union
+from typing import Union
 import time
 import datetime
 import sys
@@ -69,6 +69,7 @@ class ModelTrainer:
         scheduler = AnnealOnPlateau,
         anneal_factor: float = 0.5,
         patience: int = 3,
+        initial_extra_patience = 0,
         min_learning_rate: float = 0.0001,
         train_with_dev: bool = False,
         monitor_train: bool = False,
@@ -147,6 +148,10 @@ class ModelTrainer:
 
         if mini_batch_chunk_size is None:
             mini_batch_chunk_size = mini_batch_size
+        if learning_rate < min_learning_rate:
+            min_learning_rate = learning_rate / 10
+
+        initial_learning_rate = learning_rate
 
         # cast string to Path
         if type(base_path) is str:
@@ -226,6 +231,7 @@ class ModelTrainer:
             optimizer,
             factor=anneal_factor,
             patience=patience,
+            initial_extra_patience=initial_extra_patience,
             mode=anneal_mode,
             verbose=True,
         )
@@ -392,11 +398,9 @@ class ModelTrainer:
 
                 if log_train:
                     train_eval_result, train_loss = self.model.evaluate(
-                        DataLoader(
-                            self.corpus.train,
-                            batch_size=mini_batch_chunk_size,
-                            num_workers=num_workers,
-                        ),
+                        self.corpus.train,
+                        mini_batch_size=mini_batch_chunk_size,
+                        num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{train_eval_result.log_line}"
@@ -406,11 +410,9 @@ class ModelTrainer:
 
                 if log_train_part:
                     train_part_eval_result, train_part_loss = self.model.evaluate(
-                        DataLoader(
-                            train_part,
-                            batch_size=mini_batch_chunk_size,
-                            num_workers=num_workers,
-                        ),
+                        train_part,
+                        mini_batch_size=mini_batch_chunk_size,
+                        num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += (
@@ -422,11 +424,9 @@ class ModelTrainer:
 
                 if log_dev:
                     dev_eval_result, dev_loss = self.model.evaluate(
-                        DataLoader(
-                            self.corpus.dev,
-                            batch_size=mini_batch_chunk_size,
-                            num_workers=num_workers,
-                        ),
+                        self.corpus.dev,
+                        mini_batch_size=mini_batch_chunk_size,
+                        num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
@@ -451,12 +451,10 @@ class ModelTrainer:
 
                 if log_test:
                     test_eval_result, test_loss = self.model.evaluate(
-                        DataLoader(
-                            self.corpus.test,
-                            batch_size=mini_batch_chunk_size,
-                            num_workers=num_workers,
-                        ),
-                        base_path / "test.tsv",
+                        self.corpus.test,
+                        mini_batch_size=mini_batch_chunk_size,
+                        num_workers=num_workers,
+                        out_path=base_path / "test.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{test_loss}\t{test_eval_result.log_line}"
@@ -490,6 +488,7 @@ class ModelTrainer:
                     new_learning_rate = group["lr"]
                 if new_learning_rate != previous_learning_rate:
                     bad_epochs = patience + 1
+                    if previous_learning_rate == initial_learning_rate: bad_epochs += initial_extra_patience
 
                 # log bad epochs
                 log.info(f"BAD EPOCHS (no improvement): {bad_epochs}")
@@ -603,8 +602,10 @@ class ModelTrainer:
         return model
 
     def final_test(
-        self, base_path: Path, eval_mini_batch_size: int, num_workers: int = 8
+        self, base_path: Union[Path, str], eval_mini_batch_size: int, num_workers: int = 8
     ):
+        if type(base_path) is str:
+            base_path = Path(base_path)
 
         log_line(log)
         log.info("Testing using best model ...")
@@ -615,11 +616,9 @@ class ModelTrainer:
             self.model = self.model.load(base_path / "best-model.pt")
 
         test_results, test_loss = self.model.evaluate(
-            DataLoader(
-                self.corpus.test,
-                batch_size=eval_mini_batch_size,
-                num_workers=num_workers,
-            ),
+            self.corpus.test,
+            mini_batch_size=eval_mini_batch_size,
+            num_workers=num_workers,
             out_path=base_path / "test.tsv",
             embedding_storage_mode="none",
         )
@@ -634,11 +633,9 @@ class ModelTrainer:
             for subcorpus in self.corpus.corpora:
                 log_line(log)
                 self.model.evaluate(
-                    DataLoader(
-                        subcorpus.test,
-                        batch_size=eval_mini_batch_size,
-                        num_workers=num_workers,
-                    ),
+                    subcorpus.test,
+                    mini_batch_size=eval_mini_batch_size,
+                    num_workers=num_workers,
                     out_path=base_path / f"{subcorpus.name}-test.tsv",
                     embedding_storage_mode="none",
                 )

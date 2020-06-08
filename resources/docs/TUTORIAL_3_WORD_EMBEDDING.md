@@ -58,6 +58,8 @@ to use embeddings trained over German web crawls:
 german_embedding = WordEmbeddings('de-crawl')
 ```
 
+Check out the full list of all word embeddings models [here](/resources/docs/embeddings/CLASSIC_WORD_EMBEDDINGS.md), along with more explanations on this class.
+
 We generally recommend the FastText embeddings, or GloVe if you want a smaller model.
 
 
@@ -93,6 +95,8 @@ flair_embedding_forward = FlairEmbeddings('de-forward')
 flair_embedding_backward = FlairEmbeddings('de-backward')
 ```
 
+Check out the full list of all pre-trained FlairEmbeddings models [here](/resources/docs/embeddings/FLAIR_EMBEDDINGS.md), along with more information on standard usage.
+
 ## Stacked Embeddings
 
 Stacked embeddings are one of the most important concepts of this library. You can use them to combine different
@@ -105,7 +109,7 @@ to combine. For instance, lets combine classic GloVe embeddings with forward and
 First, instantiate the two embeddings you wish to combine: 
 
 ```python
-from flair.embeddings import WordEmbeddings, CharacterEmbeddings
+from flair.embeddings import WordEmbeddings, FlairEmbeddings
 
 # init standard GloVe embedding
 glove_embedding = WordEmbeddings('glove')
@@ -118,7 +122,7 @@ flair_embedding_backward = FlairEmbeddings('news-backward')
 Now instantiate the `StackedEmbeddings` class and pass it a list containing these two embeddings.
 
 ```python
-from flair.embeddings import WordEmbeddings, FlairEmbeddings, StackedEmbeddings
+from flair.embeddings import StackedEmbeddings
 
 # create a StackedEmbedding object that combines glove and forward/backward flair embeddings
 stacked_embeddings = StackedEmbeddings([

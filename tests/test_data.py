@@ -58,6 +58,25 @@ def test_create_sentence_without_tokenizer():
 #     assert "好き" == sentence.tokens[4].text
 
 
+def test_problem_sentences():
+    text = "so out of the norm ❤ ️ enjoyed every moment️"
+    sentence = Sentence(text)
+    assert len(sentence) == 9
+
+    text= "equivalently , accumulating the logs as :( 6 ) sl = 1N ∑ t = 1Nlogp ( Ll | xt ​ , θ ) where " \
+          "p ( Ll | xt ​ , θ ) represents the class probability output"
+    sentence = Sentence(text)
+    assert len(sentence) == 37
+
+    text = "This guy needs his own show on Discivery Channel ! ﻿"
+    sentence = Sentence(text)
+    assert len(sentence) == 10
+
+    text = "n't have new vintages."
+    sentence = Sentence(text, use_tokenizer=True)
+    assert len(sentence) == 5
+
+
 def test_token_indices():
 
     text = ":    nation on"

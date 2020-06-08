@@ -208,7 +208,7 @@ class LanguageModel(nn.Module):
         return model
 
     @classmethod
-    def load_checkpoint(cls, model_file: Path):
+    def load_checkpoint(cls, model_file: Union[Path, str]):
         state = torch.load(str(model_file), map_location=flair.device)
 
         epoch = state["epoch"] if "epoch" in state else None
@@ -243,7 +243,7 @@ class LanguageModel(nn.Module):
         }
 
     def save_checkpoint(
-        self, file: Path, optimizer: Optimizer, epoch: int, split: int, loss: float
+        self, file: Union[Path, str], optimizer: Optimizer, epoch: int, split: int, loss: float
     ):
         model_state = {
             "state_dict": self.state_dict(),
@@ -263,7 +263,7 @@ class LanguageModel(nn.Module):
 
         torch.save(model_state, str(file), pickle_protocol=4)
 
-    def save(self, file: Path):
+    def save(self, file: Union[Path, str]):
         model_state = {
             "state_dict": self.state_dict(),
             "dictionary": self.dictionary,
