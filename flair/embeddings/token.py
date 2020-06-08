@@ -940,6 +940,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 if subtoken in self.special_tokens and subtoken_id == 0:
                     continue
 
+                # some BERT tokenizers somehow omit words - in such cases skip to next token
                 if subtoken_count == 0 and not token_text.startswith(subtoken.lower()):
                     token_subtoken_lengths.append(0)
                     token = next(word_iterator)
@@ -1012,6 +1013,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 # for each token, get embedding
                 for token_idx, (token, number_of_subtokens) in enumerate(zip(sentence, subtoken_lengths)):
 
+                    # some tokens have no subtokens at all (if omitted by BERT tokenizer) so return zero vector
                     if number_of_subtokens == 0:
                         token.set_embedding(self.name, torch.zeros(self.embedding_length))
                         continue
