@@ -921,6 +921,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
             subtokenized_sentences.append(torch.tensor(subtokenized_sentence, dtype=torch.long))
             subtokens = self.tokenizer.convert_ids_to_tokens(subtokenized_sentence)
+
+            # print(tokenized_string)
             # print(subtokens)
 
             word_iterator = iter(sentence)
@@ -934,18 +936,29 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             # iterate over subtokens and reconstruct tokens
             for subtoken_id, subtoken in enumerate(subtokens):
 
-                subtoken_count += 1
-
                 # remove special markup
                 subtoken = self._remove_special_markup(subtoken)
+
+                # print('-')
+                # print(token_text)
+                # print(subtoken)
+
+                # check if subtoken is special begin token ([CLS] or similar)
+                if subtoken in self.special_tokens and subtoken_id == 0:
+                    continue
+
+                if subtoken_count == 0 and not token_text.startswith(subtoken):
+                    token_subtoken_lengths.append(0)
+                    token = next(word_iterator)
+                    token_text = self._get_processed_token_text(token)
+
+                subtoken_count += 1
 
                 # append subtoken to reconstruct token
                 reconstructed_token = reconstructed_token + subtoken
 
-                # check if reconstructed token is special begin token ([CLS] or similar)
-                if reconstructed_token in self.special_tokens and subtoken_id == 0:
-                    reconstructed_token = ''
-                    subtoken_count = 0
+                # print(reconstructed_token)
+                # print('-')
 
                 # check if reconstructed token is the same as current token
                 if reconstructed_token.lower() == token_text:
@@ -957,10 +970,12 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                     reconstructed_token = ''
                     subtoken_count = 0
 
-                    # break from loop if all tokens are accounted for
+                    # get next token
                     if len(token_subtoken_lengths) < len(sentence):
                         token = next(word_iterator)
                         token_text = self._get_processed_token_text(token)
+                        # print(f'"{token_text}"')
+                    # break from loop if all tokens are accounted for
                     else:
                         break
 
@@ -1007,6 +1022,10 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
                 # for each token, get embedding
                 for token_idx, (token, number_of_subtokens) in enumerate(zip(sentence, subtoken_lengths)):
+
+                    if number_of_subtokens == 0:
+                        token.set_embedding(self.name, torch.zeros(self.embedding_length))
+                        continue
 
                     subword_end_idx = subword_start_idx + number_of_subtokens
 
