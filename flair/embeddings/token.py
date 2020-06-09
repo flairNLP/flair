@@ -953,6 +953,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 subtoken_ids_split_sentence = encoded_inputs['input_ids']
                 subtokenized_sentences.append(torch.tensor(subtoken_ids_split_sentence, dtype=torch.long))
 
+
                 if 'overflowing_tokens' in encoded_inputs:
                     subtoken_ids_sentence = encoded_inputs['overflowing_tokens']
                 else:
@@ -1011,6 +1012,11 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 # for each token, get embedding
                 for token_idx, (token, number_of_subtokens) in enumerate(zip(sentence, subtoken_lengths)):
 
+                    # some tokens have no subtokens at all (if omitted by BERT tokenizer) so return zero vector
+                    if number_of_subtokens == 0:
+                        token.set_embedding(self.name, torch.zeros(self.embedding_length))
+                        continue
+
                     subword_end_idx = subword_start_idx + number_of_subtokens
 
                     subtoken_embeddings: List[torch.FloatTensor] = []
@@ -1058,19 +1064,24 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         # iterate over subtokens and reconstruct tokens
         for subtoken_id, subtoken in enumerate(subtokens):
 
-            subtoken_count += 1
-
             # remove special markup
             subtoken = self._remove_special_markup(subtoken)
 
+            # TODO check if this is necessary is this method is called before prepare_for_model
+            # check if reconstructed token is special begin token ([CLS] or similar)
+            if subtoken in self.special_tokens and subtoken_id == 0:
+                continue
+
+            # some BERT tokenizers somehow omit words - in such cases skip to next token
+            if subtoken_count == 0 and not token_text.startswith(subtoken.lower()):
+                token_subtoken_lengths.append(0)
+                token = next(word_iterator)
+                token_text = self._get_processed_token_text(token)
+
+            subtoken_count += 1
+
             # append subtoken to reconstruct token
             reconstructed_token = reconstructed_token + subtoken
-
-            # TODO check if this is necessary is this method is called before build_inputs_with_special_tokens
-            # check if reconstructed token is special begin token ([CLS] or similar)
-            if reconstructed_token in self.special_tokens and subtoken_id == 0:
-                reconstructed_token = ''
-                subtoken_count = 0
 
             # check if reconstructed token is the same as current token
             if reconstructed_token.lower() == token_text:

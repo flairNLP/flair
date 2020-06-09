@@ -143,9 +143,9 @@ class TextDataset(Dataset):
     @staticmethod
     def random_casechange(line: str) -> str:
         no = random.randint(0, 99)
-        if no is 0:
+        if no == 0:
             line = line.lower()
-        if no is 1:
+        if no == 1:
             line = line.upper()
         return line
 
