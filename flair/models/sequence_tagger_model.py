@@ -75,7 +75,7 @@ class SequenceTagger(flair.nn.Model):
         dropout: float = 0.0,
         word_dropout: float = 0.05,
         locked_dropout: float = 0.5,
-        reproject_to: int = None,
+        reproject_embeddings: Union[bool,int] = True,
         train_initial_hidden_state: bool = False,
         rnn_type: str = "LSTM",
         pickle_module: str = "pickle",
@@ -93,7 +93,8 @@ class SequenceTagger(flair.nn.Model):
         :param rnn_layers: number of RNN layers
         :param dropout: dropout probability
         :param word_dropout: word dropout probability
-        :param reproject_to: set this to control the dimensionality of the reprojection layer
+        :param reproject_embeddings: if True, adds trainable linear map on top of embedding layer. If False, no map.
+        If you set this to an integer, you can control the dimensionality of the reprojection layer
         :param locked_dropout: locked dropout probability
         :param train_initial_hidden_state: if True, trains initial hidden state of RNN
         :param beta: Parameter for F-beta score for evaluation and training annealing
@@ -157,14 +158,14 @@ class SequenceTagger(flair.nn.Model):
             self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
 
         embedding_dim: int = self.embeddings.embedding_length
+        rnn_input_dim: int = embedding_dim
 
-        # if no dimensionality for reprojection layer is set, reproject to equal dimension
-        self.reproject_to = reproject_to
-        if self.reproject_to is None: self.reproject_to = embedding_dim
-        rnn_input_dim: int = self.reproject_to
+        # optional reprojection layer on top of word embeddings
+        self.reproject_embeddings = reproject_embeddings
+        if self.reproject_embeddings:
+            if type(self.reproject_embeddings) == int:
+                rnn_input_dim = self.reproject_embeddings
 
-        self.relearn_embeddings: bool = True
-        if self.relearn_embeddings:
             self.embedding2nn = torch.nn.Linear(embedding_dim, rnn_input_dim)
 
         self.train_initial_hidden_state = train_initial_hidden_state
@@ -244,7 +245,7 @@ class SequenceTagger(flair.nn.Model):
             "rnn_type": self.rnn_type,
             "beta": self.beta,
             "weight_dict": self.weight_dict,
-            "reproject_to": self.reproject_to,
+            "reproject_embeddings": self.reproject_embeddings,
         }
         return model_state
 
@@ -268,7 +269,9 @@ class SequenceTagger(flair.nn.Model):
         )
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
-        reproject_to = None  if "reproject_to" not in state.keys() else state["reproject_to"]
+        reproject_embeddings = True if "reproject_embeddings" not in state.keys() else state["reproject_embeddings"]
+        if "reproject_to" in state.keys():
+            reproject_embeddings = state["reproject_to"]
 
         model = SequenceTagger(
             hidden_size=state["hidden_size"],
@@ -285,7 +288,7 @@ class SequenceTagger(flair.nn.Model):
             rnn_type=rnn_type,
             beta=beta,
             loss_weights=weights,
-            reproject_to=reproject_to,
+            reproject_embeddings=reproject_embeddings,
         )
         model.load_state_dict(state["state_dict"])
         return model
@@ -642,7 +645,7 @@ class SequenceTagger(flair.nn.Model):
         if self.use_locked_dropout > 0.0:
             sentence_tensor = self.locked_dropout(sentence_tensor)
 
-        if self.relearn_embeddings:
+        if self.reproject_embeddings:
             sentence_tensor = self.embedding2nn(sentence_tensor)
 
         if self.use_rnn:

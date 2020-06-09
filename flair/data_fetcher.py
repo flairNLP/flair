@@ -570,7 +570,7 @@ class NLPTaskDataFetcher:
                 sentence: Sentence = Sentence()
 
             else:
-                fields: List[str] = re.split("\s+", line)
+                fields: List[str] = re.split(r"\s+", line)
                 token = Token(fields[text_column])
                 for column in column_name_map:
                     if len(fields) > column:
