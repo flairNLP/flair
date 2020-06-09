@@ -46,6 +46,7 @@ from .document_classification import SENTEVAL_SST_BINARY
 from .document_classification import SENTEVAL_SST_GRANULAR
 from .document_classification import TREC_50
 from .document_classification import TREC_6
+from .document_classification import Communicative_Functions
 from .document_classification import WASSA_ANGER
 from .document_classification import WASSA_FEAR
 from .document_classification import WASSA_JOY
