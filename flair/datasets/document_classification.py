@@ -1359,7 +1359,6 @@ class Communicative_Functions(ClassificationCorpus):
         
         data_file = data_folder / "train.txt"
         
-        # TODO: Delete "(again)" from label in last tsv file
         
         if not data_file.is_file(): #check if new file already exists
             with open(data_folder / "train.txt" , 'a+', encoding = "utf-8") as write_fp:
