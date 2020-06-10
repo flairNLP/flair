@@ -1612,7 +1612,8 @@ class ELMoEmbeddings(TokenEmbeddings):
                     torch.FloatTensor(sentence_embeddings[1, token_idx, :]),
                     torch.FloatTensor(sentence_embeddings[2, token_idx, :])
                 ]
-                word_embedding = self.embedding_mode_fn(elmo_embedding_layers)
+                #word_embedding = self.embedding_mode_fn(elmo_embedding_layers)
+                word_embedding = torch.cat(elmo_embedding_layers, 0)
                 token.set_embedding(self.name, word_embedding)
 
         return sentences
