@@ -1324,7 +1324,7 @@ class TREC_6(ClassificationCorpus):
         
 
 
-class Communicative_Functions(ClassificationCorpus):
+class COMMUNICATIVE_FUNCTIONS(ClassificationCorpus):
     """
     The Communicative Functions Classification Corpus. 
     Classifying sentences from scientific papers into 39 communicative functions. 
@@ -1377,7 +1377,7 @@ class Communicative_Functions(ClassificationCorpus):
             
 
         
-        super(Communicative_Functions, self).__init__(
+        super(COMMUNICATIVE_FUNCTIONS, self).__init__(
             data_folder, label_type='communicative_function', tokenizer=tokenizer, **corpusargs,
         )
 
