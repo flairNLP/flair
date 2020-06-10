@@ -1560,14 +1560,14 @@ class ELMoEmbeddings(TokenEmbeddings):
             if model == "pubmed":
                 options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_options.json"
                 weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_weights_PubMed_only.hdf5"
-
+        '''
         if embedding_mode == "all":
             self.embedding_mode_fn = lambda x: torch.cat(x, 0)
         elif embedding_mode == "top":
             self.embedding_mode_fn = lambda x: x[-1]
         elif embedding_mode == "average":
             self.embedding_mode_fn = lambda x: torch.mean(torch.stack(x), 0)
-
+        '''
         # put on Cuda if available
         from flair import device
 
