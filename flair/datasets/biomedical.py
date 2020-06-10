@@ -4466,7 +4466,6 @@ class BioNLPCorpus(ColumnCorpus):
         in_memory: bool = True,
         tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
         sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
-        entities_or_triggers: str = "entities",
     ):
         """
            :param base_path: Path to the corpus on your machine
@@ -4475,14 +4474,8 @@ class BioNLPCorpus(ColumnCorpus):
                              defaults to scispacy
            :param sentence_splitter: Callable that segments a document into sentences,
                                      defaults to scispacy
-           :param entities_or_triggers: "entities": only load entity annotations,
-                                        "triggers": only load trigger annotations,
-                                        "both": load trigger and entity annotations
-                                        defaults to "entities"
            """
 
-        assert entities_or_triggers in {"entities", "triggers", "both"}
-        self.entities_or_triggers = entities_or_triggers
 
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -4500,15 +4493,13 @@ class BioNLPCorpus(ColumnCorpus):
 
         train_file = data_folder / "train.conll"
         dev_file = data_folder / "dev.conll"
+        test_file = data_folder / "test.conll"
 
-        if not (train_file.exists() and dev_file.exists()):
-            train_folder, dev_folder = self.download_corpus(data_folder / "original")
-            train_data = self.parse_input_files(
-                train_folder, entities_or_triggers=self.entities_or_triggers
-            )
-            dev_data = self.parse_input_files(
-                dev_folder, entities_or_triggers=self.entities_or_triggers
-            )
+        if not (train_file.exists() and dev_file.exists() and test_file.exists()):
+            train_folder, dev_folder, test_folder = self.download_corpus(data_folder / "original")
+            train_data = self.parse_input_files(train_folder)
+            dev_data = self.parse_input_files(dev_folder)
+            test_data = self.parse_input_files(test_folder)
 
             if tokenizer is None:
                 tokenizer = build_spacy_tokenizer()
@@ -4521,6 +4512,7 @@ class BioNLPCorpus(ColumnCorpus):
             )
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(dev_data, dev_file)
+            conll_writer.write_to_conll(test_data, test_file)
 
         super(BioNLPCorpus, self).__init__(
             data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
@@ -4532,9 +4524,7 @@ class BioNLPCorpus(ColumnCorpus):
         pass
 
     @staticmethod
-    def parse_input_files(
-        input_folder: Path, entities_or_triggers: str
-    ) -> InternalBioNerDataset:
+    def parse_input_files(input_folder: Path) -> InternalBioNerDataset:
         documents = {}
         entities_per_document = {}
 
@@ -4546,18 +4536,10 @@ class BioNLPCorpus(ColumnCorpus):
             with txt_file.open() as f:
                 documents[name] = f.read()
 
-            with a1_file.open() as f_a1, a2_file.open() as f_a2:
+            with a1_file.open() as f_a1:
                 entities = []
-                if entities_or_triggers == "entities":
-                    f = f_a1
-                elif entities_or_triggers == "triggers":
-                    f = f_a2
-                elif entities_or_triggers == "both":
-                    f = itertools.chain(f_a1, f_a2)
-                else:
-                    raise ValueError(entities_or_triggers)
 
-                for line in f:
+                for line in f_a1:
                     fields = line.strip().split("\t")
                     if fields[0].startswith("T"):
                         ann_type, start, end = fields[1].split()
@@ -4583,12 +4565,14 @@ class BIONLP2013_PC(BioNLPCorpus):
     """
 
     @staticmethod
-    def download_corpus(download_folder: Path) -> Tuple[Path, Path]:
+    def download_corpus(download_folder: Path) -> Tuple[Path, Path, Path]:
         train_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_training_data.tar.gz?attredirects=0"
         dev_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_development_data.tar.gz?attredirects=0"
+        test_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_test_data.tar.gz?attredirects=0"
 
         cached_path(train_url, download_folder)
         cached_path(dev_url, download_folder)
+        cached_path(test_url, download_folder)
 
         unpack_file(
             download_folder / "BioNLP-ST_2013_PC_training_data.tar.gz?attredirects=0",
@@ -4601,11 +4585,18 @@ class BIONLP2013_PC(BioNLPCorpus):
             download_folder,
             keep=False,
         )
+        unpack_file(
+            download_folder
+            / "BioNLP-ST_2013_PC_test_data.tar.gz?attredirects=0",
+            download_folder,
+            keep=False,
+            )
 
         train_folder = download_folder / "BioNLP-ST_2013_PC_training_data"
         dev_folder = download_folder / "BioNLP-ST_2013_PC_development_data"
+        test_folder = download_folder / "BioNLP-ST_2013_PC_test_data"
 
-        return train_folder, dev_folder
+        return train_folder, dev_folder, test_folder
 
 
 class BIONLP2013_CG(BioNLPCorpus):
@@ -4618,12 +4609,14 @@ class BIONLP2013_CG(BioNLPCorpus):
     """
 
     @staticmethod
-    def download_corpus(download_folder: Path) -> Tuple[Path, Path]:
+    def download_corpus(download_folder: Path) -> Tuple[Path, Path, Path]:
         train_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_CG_training_data.tar.gz?attredirects=0"
         dev_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_CG_development_data.tar.gz?attredirects=0"
+        test_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_CG_test_data.tar.gz?attredirects=0"
 
         cached_path(train_url, download_folder)
         cached_path(dev_url, download_folder)
+        cached_path(test_url, download_folder)
 
         unpack_file(
             download_folder / "BioNLP-ST_2013_CG_training_data.tar.gz?attredirects=0",
@@ -4638,11 +4631,19 @@ class BIONLP2013_CG(BioNLPCorpus):
             keep=False,
             mode="targz",
         )
+        unpack_file(
+            download_folder
+            / "BioNLP-ST_2013_CG_test_data.tar.gz?attredirects=0",
+            download_folder,
+            keep=False,
+            mode="targz",
+            )
 
         train_folder = download_folder / "BioNLP-ST_2013_CG_training_data"
         dev_folder = download_folder / "BioNLP-ST_2013_CG_development_data"
+        test_folder = download_folder / "BioNLP-ST_2013_CG_test_data"
 
-        return train_folder, dev_folder
+        return train_folder, dev_folder, test_folder
 
 
 class ANAT_EM(ColumnCorpus):
