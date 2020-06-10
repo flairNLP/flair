@@ -11,12 +11,11 @@ from flair.embeddings import (
     BertEmbeddings,
     TransformerWordEmbeddings
 )
-from flair.training_utils import EvaluationMetric
-from flair.visual.training_curves import Plotter
+
+#        (flair.datasets.INSPEC(), 'keyphrase-tagger-inspec'),
+#        (flair.datasets.SEMEVAL2010(), 'keyphrase-tagger-semeval2010'),
 
 data = [
-        (flair.datasets.INSPEC(), 'keyphrase-tagger-inspec'),
-        (flair.datasets.SEMEVAL2010(), 'keyphrase-tagger-semeval2010'),
         (flair.datasets.SEMEVAL2017(), 'keyphrase-tagger-semeval2017')
         ]
 
@@ -37,7 +36,7 @@ for corpus_object, path in data:
     embedding_types = \
     [
         ([
-            TransformerWordEmbeddings('/tmp/scibert_scivocab_uncased')
+            TransformerWordEmbeddings('bert-base-uncased')
         ],
         'bert')
     ]
@@ -64,8 +63,7 @@ for corpus_object, path in data:
 
         trainer.train(
             "resources/taggers/{}/{}".format(path, embedding),
-            learning_rate=0.05,
+            learning_rate=0.1,
             mini_batch_size=16,
-            max_epochs=150,
-            embeddings_storage_mode='gpu'
+            max_epochs=1,
         )
