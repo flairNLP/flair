@@ -2,7 +2,7 @@
 Utilities for working with the local dataset cache. Copied from AllenNLP
 """
 from pathlib import Path
-from typing import Tuple, Optional, Sequence, cast
+from typing import Tuple, Union, Optional, Sequence, cast
 import os
 import base64
 import logging
@@ -72,13 +72,15 @@ def filename_to_url(filename: str) -> Tuple[str, str]:
     return url_bytes.decode("utf-8"), etag
 
 
-def cached_path(url_or_filename: str, cache_dir: Path) -> Path:
+def cached_path(url_or_filename: str, cache_dir: Union[str, Path]) -> Path:
     """
     Given something that might be a URL (or might be a local path),
     determine which. If it's a URL, download the file and cache it, and
     return the path to the cached file. If it's already a local path,
     make sure the file exists and then return the path.
     """
+    if type(cache_dir) is str:
+        cache_dir = Path(cache_dir)
     dataset_cache = Path(flair.cache_root) / cache_dir
 
     parsed = urlparse(url_or_filename)
@@ -99,13 +101,12 @@ def cached_path(url_or_filename: str, cache_dir: Path) -> Path:
         )
 
 
-def unzip_file(file: Path, unzip_to: Path):
+def unzip_file(file: Union[str, Path], unzip_to: Union[str, Path]):
     from zipfile import ZipFile
 
-    with ZipFile(file, "r") as zipObj:
+    with ZipFile(Path(file), "r") as zipObj:
         # Extract all the contents of zip file in current directory
-        zipObj.extractall(unzip_to)
-
+        zipObj.extractall(Path(unzip_to))
 
 def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True):
     """
@@ -124,7 +125,7 @@ def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True
             zipObj.extractall(unpack_to)
 
     elif mode == "targz" or (
-        mode is None and str(file).endswith("tar.gz") or str(file).endswith("tgz")
+            mode is None and str(file).endswith("tar.gz") or str(file).endswith("tgz")
     ):
         import tarfile
 
@@ -159,7 +160,9 @@ def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True
         os.remove(str(file))
 
 
-def download_file(url: str, cache_dir: Path):
+def download_file(url: str, cache_dir: Union[str, Path]):
+    if type(cache_dir) is str:
+        cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
 
     filename = re.sub(r".+/", "", url)
@@ -248,11 +251,11 @@ def get_from_cache(url: str, cache_dir: Path = None) -> Path:
 
 def open_inside_zip(
     archive_path: str,
-    cache_dir: Path,
+    cache_dir: Union[str, Path],
     member_path: Optional[str] = None,
     encoding: str = "utf8",
 ) -> iter:
-    cached_archive_path = cached_path(archive_path, cache_dir=cache_dir)
+    cached_archive_path = cached_path(archive_path, cache_dir=Path(cache_dir))
     archive = zipfile.ZipFile(cached_archive_path, "r")
     if member_path is None:
         members_list = archive.namelist()

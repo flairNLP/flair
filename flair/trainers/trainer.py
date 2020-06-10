@@ -1,13 +1,13 @@
+import copy
 import logging
 from pathlib import Path
-from typing import List, Union
+from typing import Union
 import time
 import datetime
 import sys
 import inspect
 
 import torch
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
 
@@ -28,6 +28,7 @@ from flair.training_utils import (
     add_file_handler,
     Result,
     store_embeddings,
+    AnnealOnPlateau,
 )
 from flair.models import SequenceTagger
 import random
@@ -65,8 +66,10 @@ class ModelTrainer:
         mini_batch_size: int = 32,
         mini_batch_chunk_size: int = None,
         max_epochs: int = 100,
+        scheduler = AnnealOnPlateau,
         anneal_factor: float = 0.5,
         patience: int = 3,
+        initial_extra_patience = 0,
         min_learning_rate: float = 0.0001,
         train_with_dev: bool = False,
         monitor_train: bool = False,
@@ -145,6 +148,10 @@ class ModelTrainer:
 
         if mini_batch_chunk_size is None:
             mini_batch_chunk_size = mini_batch_size
+        if learning_rate < min_learning_rate:
+            min_learning_rate = learning_rate / 10
+
+        initial_learning_rate = learning_rate
 
         # cast string to Path
         if type(base_path) is str:
@@ -220,10 +227,11 @@ class ModelTrainer:
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev else "max"
 
-        scheduler: ReduceLROnPlateau = ReduceLROnPlateau(
+        lr_scheduler = scheduler(
             optimizer,
             factor=anneal_factor,
             patience=patience,
+            initial_extra_patience=initial_extra_patience,
             mode=anneal_mode,
             verbose=True,
         )
@@ -256,8 +264,8 @@ class ModelTrainer:
             for self.epoch in range(self.epoch + 1, max_epochs + 1):
                 log_line(log)
 
-                last_epoch_model_state_dict = self.model.state_dict()
-                best_state_dict = self.model.state_dict()
+                if anneal_with_prestarts:
+                    last_epoch_model_state_dict = copy.deepcopy(self.model.state_dict())
 
                 if eval_on_train_shuffle:
                     train_part_indices = list(range(self.corpus.train))
@@ -276,19 +284,20 @@ class ModelTrainer:
 
                 # reload last best model if annealing with restarts is enabled
                 if (
-                    learning_rate != previous_learning_rate
+                    (anneal_with_restarts or anneal_with_prestarts)
+                    and learning_rate != previous_learning_rate
                     and (base_path / "best-model.pt").exists()
                 ):
-                    log.info("resetting to best model")
                     if anneal_with_restarts:
+                        log.info("resetting to best model")
                         self.model.load_state_dict(
                             self.model.load(base_path / "best-model.pt").state_dict()
                         )
                     if anneal_with_prestarts:
+                        log.info("resetting to pre-best model")
                         self.model.load_state_dict(
                             self.model.load(base_path / "pre-best-model.pt").state_dict()
                         )
-
 
                 previous_learning_rate = learning_rate
 
@@ -389,11 +398,9 @@ class ModelTrainer:
 
                 if log_train:
                     train_eval_result, train_loss = self.model.evaluate(
-                        DataLoader(
-                            self.corpus.train,
-                            batch_size=mini_batch_chunk_size,
-                            num_workers=num_workers,
-                        ),
+                        self.corpus.train,
+                        mini_batch_size=mini_batch_chunk_size,
+                        num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{train_eval_result.log_line}"
@@ -403,11 +410,9 @@ class ModelTrainer:
 
                 if log_train_part:
                     train_part_eval_result, train_part_loss = self.model.evaluate(
-                        DataLoader(
-                            train_part,
-                            batch_size=mini_batch_chunk_size,
-                            num_workers=num_workers,
-                        ),
+                        train_part,
+                        mini_batch_size=mini_batch_chunk_size,
+                        num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += (
@@ -419,11 +424,9 @@ class ModelTrainer:
 
                 if log_dev:
                     dev_eval_result, dev_loss = self.model.evaluate(
-                        DataLoader(
-                            self.corpus.dev,
-                            batch_size=mini_batch_chunk_size,
-                            num_workers=num_workers,
-                        ),
+                        self.corpus.dev,
+                        mini_batch_size=mini_batch_chunk_size,
+                        num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
@@ -433,7 +436,7 @@ class ModelTrainer:
                     # calculate scores using dev data if available
                     # append dev score to score history
                     dev_score_history.append(dev_eval_result.main_score)
-                    dev_loss_history.append(dev_loss)
+                    dev_loss_history.append(dev_loss.item())
 
                     current_score = dev_eval_result.main_score
 
@@ -448,12 +451,10 @@ class ModelTrainer:
 
                 if log_test:
                     test_eval_result, test_loss = self.model.evaluate(
-                        DataLoader(
-                            self.corpus.test,
-                            batch_size=mini_batch_chunk_size,
-                            num_workers=num_workers,
-                        ),
-                        base_path / "test.tsv",
+                        self.corpus.test,
+                        mini_batch_size=mini_batch_chunk_size,
+                        num_workers=num_workers,
+                        out_path=base_path / "test.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{test_loss}\t{test_eval_result.log_line}"
@@ -470,20 +471,24 @@ class ModelTrainer:
                             "test_score", test_eval_result.main_score, self.epoch
                         )
 
-                # determine learning rate annealing through scheduler
-                scheduler.step(current_score)
+                # determine learning rate annealing through scheduler. Use auxiliary metric for AnnealOnPlateau
+                if not train_with_dev and isinstance(lr_scheduler, AnnealOnPlateau):
+                    lr_scheduler.step(current_score, dev_loss)
+                else:
+                    lr_scheduler.step(current_score)
 
                 train_loss_history.append(train_loss)
 
                 # determine bad epoch number
                 try:
-                    bad_epochs = scheduler.num_bad_epochs
+                    bad_epochs = lr_scheduler.num_bad_epochs
                 except:
                     bad_epochs = 0
                 for group in optimizer.param_groups:
                     new_learning_rate = group["lr"]
                 if new_learning_rate != previous_learning_rate:
                     bad_epochs = patience + 1
+                    if previous_learning_rate == initial_learning_rate: bad_epochs += initial_extra_patience
 
                 # log bad epochs
                 log.info(f"BAD EPOCHS (no improvement): {bad_epochs}")
@@ -537,14 +542,17 @@ class ModelTrainer:
                 if (
                     (not train_with_dev or anneal_with_restarts or anneal_with_prestarts)
                     and not param_selection_mode
-                    and current_score == scheduler.best
+                    and current_score == lr_scheduler.best
+                    and bad_epochs == 0
                 ):
                     print("saving best model")
                     self.model.save(base_path / "best-model.pt")
-                    current_state_dict = self.model.state_dict()
-                    self.model.load_state_dict(last_epoch_model_state_dict)
-                    self.model.save(base_path / "pre-best-model.pt")
-                    self.model.load_state_dict(current_state_dict)
+
+                    if anneal_with_prestarts:
+                        current_state_dict = self.model.state_dict()
+                        self.model.load_state_dict(last_epoch_model_state_dict)
+                        self.model.save(base_path / "pre-best-model.pt")
+                        self.model.load_state_dict(current_state_dict)
 
             # if we do not use dev data for model selection, save final model
             if save_final_model and not param_selection_mode:
@@ -594,8 +602,10 @@ class ModelTrainer:
         return model
 
     def final_test(
-        self, base_path: Path, eval_mini_batch_size: int, num_workers: int = 8
+        self, base_path: Union[Path, str], eval_mini_batch_size: int, num_workers: int = 8
     ):
+        if type(base_path) is str:
+            base_path = Path(base_path)
 
         log_line(log)
         log.info("Testing using best model ...")
@@ -606,11 +616,9 @@ class ModelTrainer:
             self.model = self.model.load(base_path / "best-model.pt")
 
         test_results, test_loss = self.model.evaluate(
-            DataLoader(
-                self.corpus.test,
-                batch_size=eval_mini_batch_size,
-                num_workers=num_workers,
-            ),
+            self.corpus.test,
+            mini_batch_size=eval_mini_batch_size,
+            num_workers=num_workers,
             out_path=base_path / "test.tsv",
             embedding_storage_mode="none",
         )
@@ -625,11 +633,9 @@ class ModelTrainer:
             for subcorpus in self.corpus.corpora:
                 log_line(log)
                 self.model.evaluate(
-                    DataLoader(
-                        subcorpus.test,
-                        batch_size=eval_mini_batch_size,
-                        num_workers=num_workers,
-                    ),
+                    subcorpus.test,
+                    mini_batch_size=eval_mini_batch_size,
+                    num_workers=num_workers,
                     out_path=base_path / f"{subcorpus.name}-test.tsv",
                     embedding_storage_mode="none",
                 )

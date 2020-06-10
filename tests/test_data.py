@@ -58,6 +58,25 @@ def test_create_sentence_without_tokenizer():
 #     assert "好き" == sentence.tokens[4].text
 
 
+def test_problem_sentences():
+    text = "so out of the norm ❤ ️ enjoyed every moment️"
+    sentence = Sentence(text)
+    assert len(sentence) == 9
+
+    text= "equivalently , accumulating the logs as :( 6 ) sl = 1N ∑ t = 1Nlogp ( Ll | xt ​ , θ ) where " \
+          "p ( Ll | xt ​ , θ ) represents the class probability output"
+    sentence = Sentence(text)
+    assert len(sentence) == 37
+
+    text = "This guy needs his own show on Discivery Channel ! ﻿"
+    sentence = Sentence(text)
+    assert len(sentence) == 10
+
+    text = "n't have new vintages."
+    sentence = Sentence(text, use_tokenizer=True)
+    assert len(sentence) == 5
+
+
 def test_token_indices():
 
     text = ":    nation on"
@@ -101,9 +120,10 @@ def test_sentence_to_real_string(tasks_base_path):
     sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=segtok_tokenizer)
     assert "I love Berlin." == sentence.to_plain_string()
 
-    corpus = flair.datasets.GERMEVAL(base_path=tasks_base_path)
+    corpus = flair.datasets.GERMEVAL_14(base_path=tasks_base_path)
 
     sentence = corpus.train[0]
+    sentence.infer_space_after()
     assert (
         'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in einer Weise aufgetreten , die alles andere als überzeugend war " .'
         == sentence.to_tokenized_string()
@@ -114,6 +134,7 @@ def test_sentence_to_real_string(tasks_base_path):
     )
 
     sentence = corpus.train[1]
+    sentence.infer_space_after()
     assert (
         "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf ."
         == sentence.to_tokenized_string()
@@ -445,7 +466,7 @@ def test_tagged_corpus_downsample():
 
     assert 10 == len(corpus.train)
 
-    corpus.downsample(percentage=0.3, only_downsample_train=True)
+    corpus.downsample(percentage=0.3, downsample_dev=False, downsample_test=False)
 
     assert 3 == len(corpus.train)
 
