@@ -1136,6 +1136,10 @@ class SequenceTagger(flair.nn.Model):
         model_map["ml-pos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt"
         model_map["ml-upos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-upos-model.pt"
 
+        model_map["keyphrase"] = "/".join(
+            [hu_path, "keyphrase-semeval2017-scibert", "keyphrase-en-scibert.pt"]
+        )
+
         cache_dir = Path("models")
         if model_name in model_map:
             model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
