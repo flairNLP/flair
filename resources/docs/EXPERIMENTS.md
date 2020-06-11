@@ -155,7 +155,7 @@ trainer.train('resources/taggers/example-ner',
 
 #### Current best score with Flair
 
-**INSERT SCORE HERE** F1-score, averaged over 5 runs.
+**92.38** F1-score, averaged over 5 runs.
 
 #### Data
 Data is included in Flair and will get automatically downloaded when you run the script.
