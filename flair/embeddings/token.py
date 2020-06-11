@@ -1134,7 +1134,10 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # reload tokenizer to get around serialization issues
         model_name = self.name.split('transformer-word-')[-1]
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        except:
+            pass
 
 
 class FastTextEmbeddings(TokenEmbeddings):
