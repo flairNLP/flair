@@ -103,6 +103,21 @@ def test_transformer_word_embeddings():
     del embeddings
 
 
+def test_transformer_weird_sentences():
+
+    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', use_scalar_mix=True)
+
+    sentence = Sentence("Hybrid mesons , qq ̄ states with an admixture")
+    embeddings.embed(sentence)
+    for token in sentence:
+        assert len(token.get_embedding()) == 768
+
+    sentence = Sentence("typical proportionalities of ∼ 1nmV − 1 [ 3,4 ] .")
+    embeddings.embed(sentence)
+    for token in sentence:
+        assert len(token.get_embedding()) == 768
+
+
 def test_fine_tunable_flair_embedding():
     language_model_forward = LanguageModel(
         Dictionary.load("chars"), is_forward_lm=True, hidden_size=32, nlayers=1

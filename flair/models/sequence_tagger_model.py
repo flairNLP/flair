@@ -8,13 +8,13 @@ import torch.nn
 import torch.nn.functional as F
 from tabulate import tabulate
 from torch.nn.parameter import Parameter
-from torch.utils.data import DataLoader
+from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair.nn
-from flair.data import Dictionary, Sentence, Token, Label, space_tokenizer
-from flair.datasets import SentenceDataset, StringDataset
-from flair.embeddings import TokenEmbeddings
+from flair.data import Dictionary, Sentence, Token, Label, space_tokenizer, DataPoint
+from flair.datasets import SentenceDataset, StringDataset, DataLoader
+from flair.embeddings import TokenEmbeddings, StackedEmbeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.training_utils import Metric, Result, store_embeddings
 
@@ -75,7 +75,7 @@ class SequenceTagger(flair.nn.Model):
         dropout: float = 0.0,
         word_dropout: float = 0.05,
         locked_dropout: float = 0.5,
-        reproject_to: int = None,
+        reproject_embeddings: Union[bool,int] = True,
         train_initial_hidden_state: bool = False,
         rnn_type: str = "LSTM",
         pickle_module: str = "pickle",
@@ -93,7 +93,8 @@ class SequenceTagger(flair.nn.Model):
         :param rnn_layers: number of RNN layers
         :param dropout: dropout probability
         :param word_dropout: word dropout probability
-        :param reproject_to: set this to control the dimensionality of the reprojection layer
+        :param reproject_embeddings: if True, adds trainable linear map on top of embedding layer. If False, no map.
+        If you set this to an integer, you can control the dimensionality of the reprojection layer
         :param locked_dropout: locked dropout probability
         :param train_initial_hidden_state: if True, trains initial hidden state of RNN
         :param beta: Parameter for F-beta score for evaluation and training annealing
@@ -157,14 +158,14 @@ class SequenceTagger(flair.nn.Model):
             self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
 
         embedding_dim: int = self.embeddings.embedding_length
+        rnn_input_dim: int = embedding_dim
 
-        # if no dimensionality for reprojection layer is set, reproject to equal dimension
-        self.reproject_to = reproject_to
-        if self.reproject_to is None: self.reproject_to = embedding_dim
-        rnn_input_dim: int = self.reproject_to
+        # optional reprojection layer on top of word embeddings
+        self.reproject_embeddings = reproject_embeddings
+        if self.reproject_embeddings:
+            if type(self.reproject_embeddings) == int:
+                rnn_input_dim = self.reproject_embeddings
 
-        self.relearn_embeddings: bool = True
-        if self.relearn_embeddings:
             self.embedding2nn = torch.nn.Linear(embedding_dim, rnn_input_dim)
 
         self.train_initial_hidden_state = train_initial_hidden_state
@@ -238,12 +239,13 @@ class SequenceTagger(flair.nn.Model):
             "use_crf": self.use_crf,
             "use_rnn": self.use_rnn,
             "rnn_layers": self.rnn_layers,
+            "use_dropout": self.use_dropout,
             "use_word_dropout": self.use_word_dropout,
             "use_locked_dropout": self.use_locked_dropout,
             "rnn_type": self.rnn_type,
             "beta": self.beta,
             "weight_dict": self.weight_dict,
-            "reproject_to": self.reproject_to,
+            "reproject_embeddings": self.reproject_embeddings,
         }
         return model_state
 
@@ -267,7 +269,9 @@ class SequenceTagger(flair.nn.Model):
         )
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
-        reproject_to = None  if "reproject_to" not in state.keys() else state["reproject_to"]
+        reproject_embeddings = True if "reproject_embeddings" not in state.keys() else state["reproject_embeddings"]
+        if "reproject_to" in state.keys():
+            reproject_embeddings = state["reproject_to"]
 
         model = SequenceTagger(
             hidden_size=state["hidden_size"],
@@ -284,69 +288,56 @@ class SequenceTagger(flair.nn.Model):
             rnn_type=rnn_type,
             beta=beta,
             loss_weights=weights,
-            reproject_to=reproject_to,
+            reproject_embeddings=reproject_embeddings,
         )
         model.load_state_dict(state["state_dict"])
         return model
 
     def predict(
         self,
-        sentences: Union[List[Sentence], Sentence, List[str], str],
+        sentences: Union[List[Sentence], Sentence],
         mini_batch_size=32,
-        embedding_storage_mode="none",
         all_tag_prob: bool = False,
         verbose: bool = False,
-        use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer,
-    ) -> List[Sentence]:
+        label_name: Optional[str] = None,
+        return_loss = False,
+        embedding_storage_mode="none",
+    ):
         """
         Predict sequence tags for Named Entity Recognition task
-        :param sentences: a Sentence or a string or a List of Sentence or a List of string.
+        :param sentences: a Sentence or a List of Sentence
         :param mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
         up to a point when it has no more effect.
-        :param embedding_storage_mode: 'none' for the minimum memory footprint, 'cpu' to store embeddings in Ram,
-        'gpu' to store embeddings in GPU memory.
         :param all_tag_prob: True to compute the score for each tag on each token,
         otherwise only the score of the best tag is returned
         :param verbose: set to True to display a progress bar
-        :param use_tokenizer: a custom tokenizer when string are provided (default is space based tokenizer).
-        :return: List of Sentence enriched by the predicted tags
+        :param return_loss: set to True to return loss
+        :param label_name: set this to change the name of the label type that is predicted
+        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
+        you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
+        'gpu' to store embeddings in GPU memory.
         """
+        if label_name == None:
+            label_name = self.tag_type
+
         with torch.no_grad():
             if not sentences:
                 return sentences
 
-            if isinstance(sentences, Sentence) or isinstance(sentences, str):
+            if isinstance(sentences, Sentence):
                 sentences = [sentences]
-
-            if (flair.device.type == "cuda") and embedding_storage_mode == "cpu":
-                log.warning(
-                    "You are inferring on GPU with parameter 'embedding_storage_mode' set to 'cpu'."
-                    "This option will slow down your inference, usually 'none' (default value) "
-                    "is a better choice."
-                )
 
             # reverse sort all sequences by their length
             rev_order_len_index = sorted(
                 range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True
-            )
-            original_order_index = sorted(
-                range(len(rev_order_len_index)), key=lambda k: rev_order_len_index[k]
             )
 
             reordered_sentences: List[Union[Sentence, str]] = [
                 sentences[index] for index in rev_order_len_index
             ]
 
-            if isinstance(sentences[0], Sentence):
-                # remove previous embeddings
-                store_embeddings(reordered_sentences, "none")
-                dataset = SentenceDataset(reordered_sentences)
-            else:
-                dataset = StringDataset(
-                    reordered_sentences, use_tokenizer=use_tokenizer
-                )
             dataloader = DataLoader(
-                dataset=dataset, batch_size=mini_batch_size, collate_fn=lambda x: x
+                dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size
             )
 
             if self.use_crf:
@@ -358,18 +349,25 @@ class SequenceTagger(flair.nn.Model):
             if verbose:
                 dataloader = tqdm(dataloader)
 
-            results: List[Sentence] = []
-            for i, batch in enumerate(dataloader):
+            overall_loss = 0
+            batch_no = 0
+            for batch in dataloader:
+
+                batch_no += 1
 
                 if verbose:
-                    dataloader.set_description(f"Inferencing on batch {i}")
-                results += batch
+                    dataloader.set_description(f"Inferencing on batch {batch_no}")
+
                 batch = self._filter_empty_sentences(batch)
                 # stop if all sentences are empty
                 if not batch:
                     continue
 
-                feature: torch.Tensor = self.forward(batch)
+                feature = self.forward(batch)
+
+                if return_loss:
+                    overall_loss += self._calculate_loss(feature, batch)
+
                 tags, all_tags = self._obtain_labels(
                     feature=feature,
                     batch_sentences=batch,
@@ -379,128 +377,221 @@ class SequenceTagger(flair.nn.Model):
 
                 for (sentence, sent_tags) in zip(batch, tags):
                     for (token, tag) in zip(sentence.tokens, sent_tags):
-                        token.add_tag_label(self.tag_type, tag)
+                        token.add_tag_label(label_name, tag)
 
                 # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
                 for (sentence, sent_all_tags) in zip(batch, all_tags):
                     for (token, token_all_tags) in zip(sentence.tokens, sent_all_tags):
-                        token.add_tags_proba_dist(self.tag_type, token_all_tags)
+                        token.add_tags_proba_dist(label_name, token_all_tags)
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
-            results: List[Union[Sentence, str]] = [
-                results[index] for index in original_order_index
-            ]
-            assert len(sentences) == len(results)
-            return results
+            if return_loss:
+                return overall_loss / batch_no
+
+    def _requires_span_F1_evaluation(self) -> bool:
+        span_F1 = False
+        for item in self.tag_dictionary.get_items():
+            if item.startswith('B-'):
+                span_F1 = True
+        return span_F1
+
+    def _evaluate_with_span_F1(self, data_loader, embedding_storage_mode, mini_batch_size, out_path):
+        eval_loss = 0
+
+        batch_no: int = 0
+
+        metric = Metric("Evaluation", beta=self.beta)
+
+        lines: List[str] = []
+
+        y_true = []
+        y_pred = []
+
+        for batch in data_loader:
+
+            # predict for batch
+            loss = self.predict(batch,
+                                embedding_storage_mode=embedding_storage_mode,
+                                mini_batch_size=mini_batch_size,
+                                label_name='predicted',
+                                return_loss=True)
+            eval_loss += loss
+            batch_no += 1
+
+            for sentence in batch:
+
+                # make list of gold tags
+                gold_spans = sentence.get_spans(self.tag_type)
+                gold_tags = [(span.tag, repr(span)) for span in gold_spans]
+
+                # make list of predicted tags
+                predicted_spans = sentence.get_spans("predicted")
+                predicted_tags = [(span.tag, repr(span)) for span in predicted_spans]
+
+                # check for true positives, false positives and false negatives
+                for tag, prediction in predicted_tags:
+                    if (tag, prediction) in gold_tags:
+                        metric.add_tp(tag)
+                    else:
+                        metric.add_fp(tag)
+
+                for tag, gold in gold_tags:
+                    if (tag, gold) not in predicted_tags:
+                        metric.add_fn(tag)
+
+                tags_gold = []
+                tags_pred = []
+
+                # also write to file in BIO format to use old conlleval script
+                if out_path:
+                    for token in sentence:
+                        # check if in gold spans
+                        gold_tag = 'O'
+                        for span in gold_spans:
+                            if token in span:
+                                gold_tag = 'B-' + span.tag if token == span[0] else 'I-' + span.tag
+                        tags_gold.append(gold_tag)
+
+                        predicted_tag = 'O'
+                        # check if in predicted spans
+                        for span in predicted_spans:
+                            if token in span:
+                                predicted_tag = 'B-' + span.tag if token == span[0] else 'I-' + span.tag
+                        tags_pred.append(predicted_tag)
+
+                        lines.append(f'{token.text} {gold_tag} {predicted_tag}\n')
+                    lines.append('\n')
+
+                y_true.append(tags_gold)
+                y_pred.append(tags_pred)
+
+        if out_path:
+            with open(Path(out_path), "w", encoding="utf-8") as outfile:
+                outfile.write("".join(lines))
+
+        eval_loss /= batch_no
+
+        detailed_result = (
+            "\nResults:"
+            f"\n- F1-score (micro) {metric.micro_avg_f_score():.4f}"
+            f"\n- F1-score (macro) {metric.macro_avg_f_score():.4f}"
+            '\n\nBy class:'
+        )
+
+        for class_name in metric.get_classes():
+            detailed_result += (
+                f"\n{class_name:<10} tp: {metric.get_tp(class_name)} - fp: {metric.get_fp(class_name)} - "
+                f"fn: {metric.get_fn(class_name)} - precision: "
+                f"{metric.precision(class_name):.4f} - recall: {metric.recall(class_name):.4f} - "
+                f"f1-score: "
+                f"{metric.f_score(class_name):.4f}"
+            )
+
+        result = Result(
+            main_score=metric.micro_avg_f_score(),
+            log_line=f"{metric.precision():.4f}\t{metric.recall():.4f}\t{metric.micro_avg_f_score():.4f}",
+            log_header="PRECISION\tRECALL\tF1",
+            detailed_results=detailed_result,
+        )
+
+        return result, eval_loss
 
     def evaluate(
         self,
-        data_loader: DataLoader,
-        out_path: Path = None,
+        sentences: Union[List[Sentence], Dataset],
+        out_path: Union[str, Path] = None,
         embedding_storage_mode: str = "none",
+        mini_batch_size: int = 32,
+        num_workers: int = 8,
     ) -> (Result, float):
 
-        if type(out_path) == str:
-            out_path = Path(out_path)
+        # read Dataset into data loader (if list of sentences passed, make Dataset first)
+        if not isinstance(sentences, Dataset):
+            sentences = SentenceDataset(sentences)
+        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
 
-        with torch.no_grad():
-            eval_loss = 0
+        # if span F1 needs to be used, use separate eval method
+        if self._requires_span_F1_evaluation():
+            return self._evaluate_with_span_F1(data_loader, embedding_storage_mode, mini_batch_size, out_path)
 
-            batch_no: int = 0
+        # else, use scikit-learn to evaluate
+        y_true = []
+        y_pred = []
+        labels = Dictionary(add_unk=False)
 
-            metric = Metric("Evaluation", beta=self.beta)
+        eval_loss = 0
+        batch_no: int = 0
 
-            lines: List[str] = []
+        lines: List[str] = []
 
-            if self.use_crf:
-                transitions = self.transitions.detach().cpu().numpy()
-            else:
-                transitions = None
+        for batch in data_loader:
 
-            for batch in data_loader:
-                batch_no += 1
+            # predict for batch
+            loss = self.predict(batch,
+                                embedding_storage_mode=embedding_storage_mode,
+                                mini_batch_size=mini_batch_size,
+                                label_name='predicted',
+                                return_loss=True)
+            eval_loss += loss
+            batch_no += 1
 
-                with torch.no_grad():
-                    features = self.forward(batch)
-                    loss = self._calculate_loss(features, batch)
-                    tags, _ = self._obtain_labels(
-                        feature=features,
-                        batch_sentences=batch,
-                        transitions=transitions,
-                        get_all_tags=False,
-                    )
+            for sentence in batch:
 
-                eval_loss += loss
+                for token in sentence:
+                    # add gold tag
+                    gold_tag = token.get_tag(self.tag_type).value
+                    y_true.append(labels.add_item(gold_tag))
 
-                for (sentence, sent_tags) in zip(batch, tags):
-                    for (token, tag) in zip(sentence.tokens, sent_tags):
-                        token: Token = token
-                        token.add_tag("predicted", tag.value, tag.score)
+                    # add predicted tag
+                    predicted_tag = token.get_tag('predicted').value
+                    y_pred.append(labels.add_item(predicted_tag))
 
-                        # append both to file for evaluation
-                        eval_line = "{} {} {} {}\n".format(
-                            token.text,
-                            token.get_tag(self.tag_type).value,
-                            tag.value,
-                            tag.score,
-                        )
-                        lines.append(eval_line)
-                    lines.append("\n")
+                    # for file output
+                    lines.append(f'{token.text} {gold_tag} {predicted_tag}\n')
 
-                for sentence in batch:
-                    # make list of gold tags
-                    gold_tags = [
-                        (tag.tag, tag.text) for tag in sentence.get_spans(self.tag_type)
-                    ]
-                    # make list of predicted tags
-                    predicted_tags = [
-                        (tag.tag, tag.text) for tag in sentence.get_spans("predicted")
-                    ]
+                lines.append('\n')
 
-                    # check for true positives, false positives and false negatives
-                    for tag, prediction in predicted_tags:
-                        if (tag, prediction) in gold_tags:
-                            metric.add_tp(tag)
-                        else:
-                            metric.add_fp(tag)
+        if out_path:
+            with open(Path(out_path), "w", encoding="utf-8") as outfile:
+                outfile.write("".join(lines))
 
-                    for tag, gold in gold_tags:
-                        if (tag, gold) not in predicted_tags:
-                            metric.add_fn(tag)
-                        else:
-                            metric.add_tn(tag)
+        eval_loss /= batch_no
 
-                store_embeddings(batch, embedding_storage_mode)
+        # use sklearn
+        from sklearn import metrics
 
-            eval_loss /= batch_no
+        # make "classification report"
+        target_names = []
+        for i in range(len(labels)):
+            target_names.append(labels.get_item_for_index(i))
+        classification_report = metrics.classification_report(y_true, y_pred, digits=4, target_names=target_names, zero_division=1)
 
-            if out_path is not None:
-                with open(out_path, "w", encoding="utf-8") as outfile:
-                    outfile.write("".join(lines))
+        # get scores
+        macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro'), 4)
+        micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro'), 4)
+        accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
 
-            detailed_result = (
-                f"\nMICRO_AVG: acc {metric.micro_avg_accuracy():.4f} - f1-score {metric.micro_avg_f_score():.4f}"
-                f"\nMACRO_AVG: acc {metric.macro_avg_accuracy():.4f} - f1-score {metric.macro_avg_f_score():.4f}"
-            )
-            for class_name in metric.get_classes():
-                detailed_result += (
-                    f"\n{class_name:<10} tp: {metric.get_tp(class_name)} - fp: {metric.get_fp(class_name)} - "
-                    f"fn: {metric.get_fn(class_name)} - tn: {metric.get_tn(class_name)} - precision: "
-                    f"{metric.precision(class_name):.4f} - recall: {metric.recall(class_name):.4f} - "
-                    f"accuracy: {metric.accuracy(class_name):.4f} - f1-score: "
-                    f"{metric.f_score(class_name):.4f}"
-                )
+        detailed_result = (
+            "\nResults:"
+            f"\n- F-score (micro) {macro_f_score}"
+            f"\n- F-score (macro) {micro_f_score}"
+            f"\n- Accuracy {accuracy_score}"
+            '\n\nBy class:\n' + classification_report
+        )
 
-            result = Result(
-                main_score=metric.micro_avg_f_score(),
-                log_line=f"{metric.precision():.4f}\t{metric.recall():.4f}\t{metric.micro_avg_f_score():.4f}",
-                log_header="PRECISION\tRECALL\tF1",
-                detailed_results=detailed_result,
-            )
+        # line for log file
+        log_header = "ACCURACY"
+        log_line = f"\t{accuracy_score}"
 
-            return result, eval_loss
+        result = Result(
+            main_score=macro_f_score,
+            log_line=log_line,
+            log_header=log_header,
+            detailed_results=detailed_result,
+        )
+        return result, eval_loss
 
     def forward_loss(
         self, data_points: Union[List[Sentence], Sentence], sort=True
@@ -511,6 +602,8 @@ class SequenceTagger(flair.nn.Model):
     def forward(self, sentences: List[Sentence]):
 
         self.embeddings.embed(sentences)
+
+        names = self.embeddings.get_names()
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
         longest_token_sequence_in_batch: int = max(lengths)
@@ -524,7 +617,7 @@ class SequenceTagger(flair.nn.Model):
         all_embs = list()
         for sentence in sentences:
             all_embs += [
-                emb for token in sentence for emb in token.get_each_embedding()
+                emb for token in sentence for emb in token.get_each_embedding(names)
             ]
             nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
 
@@ -552,7 +645,7 @@ class SequenceTagger(flair.nn.Model):
         if self.use_locked_dropout > 0.0:
             sentence_tensor = self.locked_dropout(sentence_tensor)
 
-        if self.relearn_embeddings:
+        if self.reproject_embeddings:
             sentence_tensor = self.embedding2nn(sentence_tensor)
 
         if self.use_rnn:
@@ -1035,7 +1128,10 @@ class SequenceTagger(flair.nn.Model):
             [aws_resource_path_v04, "release-fr-ner-0", "fr-ner-wikiner-0.4.pt"]
         )
         model_map["nl-ner"] = "/".join(
-            [aws_resource_path_v04, "NER-conll2002-dutch", "nl-ner-conll02-v0.1.pt"]
+            [hu_path, "dutch-ner_0", "nl-ner-bert-conll02-v0.5.pt"]
+        )
+        model_map["nl-ner-rnn"] = "/".join(
+            [hu_path, "dutch-ner-flair-0", "nl-ner-conll02-v0.5.pt"]
         )
         model_map["ml-pos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt"
         model_map["ml-upos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-upos-model.pt"

@@ -88,6 +88,14 @@ class StackedEmbeddings(TokenEmbeddings):
     def __str__(self):
         return f'StackedEmbeddings [{",".join([str(e) for e in self.embeddings])}]'
 
+    def get_names(self) -> List[str]:
+        """Returns a list of embedding names. In most cases, it is just a list with one item, namely the name of
+        this embedding. But in some cases, the embedding is made up by different embeddings (StackedEmbedding).
+        Then, the list contains the names of all embeddings in the stack."""
+        names = []
+        for embedding in self.embeddings:
+            names.extend(embedding.get_names())
+        return names
 
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
@@ -785,6 +793,9 @@ class PooledFlairEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.embedding_length
 
+    def get_names(self) -> List[str]:
+        return [self.name, self.context_embeddings.name]
+
     def __setstate__(self, d):
         self.__dict__ = d
 
@@ -801,7 +812,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         pooling_operation: str = "first",
         batch_size: int = 1,
         use_scalar_mix: bool = False,
-        fine_tune: bool = False
+        fine_tune: bool = False,
+        allow_long_sentences: bool = False
     ):
         """
         Bidirectional transformer embeddings of words from various transformer architectures.
@@ -821,6 +833,15 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         self.tokenizer = AutoTokenizer.from_pretrained(model)
         config = AutoConfig.from_pretrained(model, output_hidden_states=True)
         self.model = AutoModel.from_pretrained(model, config=config)
+
+        self.allow_long_sentences = allow_long_sentences
+
+        if allow_long_sentences:
+            self.max_subtokens_sequence_length = self.tokenizer.model_max_length
+            self.stride = self.tokenizer.model_max_length//2
+        else:
+            self.max_subtokens_sequence_length = None
+            self.stride = 0
 
         # model name
         self.name = 'transformer-word-' + str(model)
@@ -882,8 +903,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         return text
 
     def _get_processed_token_text(self, token: Token) -> str:
-        pieces = self.tokenizer.convert_ids_to_tokens(
-            self.tokenizer.encode(token.text, add_special_tokens=False))
+        pieces = self.tokenizer.tokenize(token.text)
         token_text = ''
         for piece in pieces:
             token_text += self._remove_special_markup(piece)
@@ -897,82 +917,62 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         subtokenized_sentences = []
         subtokenized_sentences_token_lengths = []
 
-        for sentence in sentences:
+        sentence_parts_lengths = []
 
+        # TODO: keep for backwards compatibility, but remove in future
+        # some pretrained models do not have this property, applying default settings now.
+        # can be set manually after loading the model.
+        if not hasattr(self, 'max_subtokens_sequence_length'):
+            self.max_subtokens_sequence_length = None
+            self.allow_long_sentences = False
+            self.stride = 0
+
+        for sentence in sentences:
             tokenized_string = sentence.to_tokenized_string()
 
             # method 1: subtokenize sentence
             # subtokenized_sentence = self.tokenizer.encode(tokenized_string, add_special_tokens=True)
 
             # method 2:
-            ids = self.tokenizer.encode(tokenized_string, add_special_tokens=False)
-            subtokenized_sentence = self.tokenizer.build_inputs_with_special_tokens(ids)
-
-            subtokenized_sentences.append(torch.tensor(subtokenized_sentence, dtype=torch.long))
-            subtokens = self.tokenizer.convert_ids_to_tokens(subtokenized_sentence)
-            # print(subtokens)
-
-            word_iterator = iter(sentence)
-            token = next(word_iterator)
-            token_text = self._get_processed_token_text(token)
-
-            token_subtoken_lengths = []
-            reconstructed_token = ''
-            subtoken_count = 0
-
-            # iterate over subtokens and reconstruct tokens
-            for subtoken_id, subtoken in enumerate(subtokens):
-
-                subtoken_count += 1
-
-                # remove special markup
-                subtoken = self._remove_special_markup(subtoken)
-
-                # append subtoken to reconstruct token
-                reconstructed_token = reconstructed_token + subtoken
-
-                # check if reconstructed token is special begin token ([CLS] or similar)
-                if reconstructed_token in self.special_tokens and subtoken_id == 0:
-                    reconstructed_token = ''
-                    subtoken_count = 0
-
-                # check if reconstructed token is the same as current token
-                if reconstructed_token.lower() == token_text:
-
-                    # if so, add subtoken count
-                    token_subtoken_lengths.append(subtoken_count)
-
-                    # reset subtoken count and reconstructed token
-                    reconstructed_token = ''
-                    subtoken_count = 0
-
-                    # break from loop if all tokens are accounted for
-                    if len(token_subtoken_lengths) < len(sentence):
-                        token = next(word_iterator)
-                        token_text = self._get_processed_token_text(token)
-                    else:
-                        break
-
-            # check if all tokens were matched to subtokens
-            if token != sentence[-1]:
-                log.error(f"Tokenization MISMATCH in sentence '{sentence.to_tokenized_string()}'")
-                log.error(f"Last matched: '{token}'")
-                log.error(f"Last sentence: '{sentence[-1]}'")
-                log.error(f"subtokenized: '{subtokens}'")
-
+            # transformer specific tokenization
+            subtokenized_sentence = self.tokenizer.tokenize(tokenized_string)
+            token_subtoken_lengths = self.reconstruct_tokens_from_subtokens(sentence, subtokenized_sentence)
             subtokenized_sentences_token_lengths.append(token_subtoken_lengths)
+
+            subtoken_ids_sentence = self.tokenizer.convert_tokens_to_ids(subtokenized_sentence)
+
+            nr_sentence_parts = 0
+
+            while subtoken_ids_sentence:
+                nr_sentence_parts += 1
+                encoded_inputs = self.tokenizer.prepare_for_model(subtoken_ids_sentence,
+                                                                  max_length=self.max_subtokens_sequence_length,
+                                                                  stride=self.stride,
+                                                                  return_overflowing_tokens=self.allow_long_sentences)
+
+                subtoken_ids_split_sentence = encoded_inputs['input_ids']
+                subtokenized_sentences.append(torch.tensor(subtoken_ids_split_sentence, dtype=torch.long))
+
+
+                if 'overflowing_tokens' in encoded_inputs:
+                    subtoken_ids_sentence = encoded_inputs['overflowing_tokens']
+                else:
+                    subtoken_ids_sentence = None
+
+            sentence_parts_lengths.append(nr_sentence_parts)
 
         # find longest sentence in batch
         longest_sequence_in_batch: int = len(max(subtokenized_sentences, key=len))
 
+        total_sentence_parts = sum(sentence_parts_lengths)
         # initialize batch tensors and mask
         input_ids = torch.zeros(
-            [len(sentences), longest_sequence_in_batch],
+            [total_sentence_parts, longest_sequence_in_batch],
             dtype=torch.long,
             device=flair.device,
         )
         mask = torch.zeros(
-            [len(sentences), longest_sequence_in_batch],
+            [total_sentence_parts, longest_sequence_in_batch],
             dtype=torch.long,
             device=flair.device,
         )
@@ -983,6 +983,10 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # put encoded batch through transformer model to get all hidden states of all encoder layers
         hidden_states = self.model(input_ids, attention_mask=mask)[-1]
+        # make the tuple a tensor; makes working with it easier.
+        hidden_states = torch.stack(hidden_states)
+
+        sentence_idx_offset = 0
 
         # gradients are enabled if fine-tuning is enabled
         gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
@@ -990,12 +994,28 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         with gradient_context:
 
             # iterate over all subtokenized sentences
-            for sentence_idx, (sentence, subtoken_lengths) in enumerate(zip(sentences, subtokenized_sentences_token_lengths)):
+            for sentence_idx, (sentence, subtoken_lengths, nr_sentence_parts) in enumerate(zip(sentences, subtokenized_sentences_token_lengths, sentence_parts_lengths)):
+
+                sentence_hidden_state = hidden_states[:, sentence_idx + sentence_idx_offset, ...]
+
+                for i in range(1, nr_sentence_parts):
+                    sentence_idx_offset += 1
+                    remainder_sentence_hidden_state = hidden_states[:, sentence_idx + sentence_idx_offset, ...]
+                    # remove stride_size//2 at end of sentence_hidden_state, and half at beginning of remainder,
+                    # in order to get some context into the embeddings of these words.
+                    # also don't include the embedding of the extra [CLS] and [SEP] tokens.
+                    sentence_hidden_state = torch.cat((sentence_hidden_state[:, :-1-self.stride//2, :],
+                                                       remainder_sentence_hidden_state[:, 1 + self.stride//2:, :]), 1)
 
                 subword_start_idx = self.begin_offset
 
                 # for each token, get embedding
                 for token_idx, (token, number_of_subtokens) in enumerate(zip(sentence, subtoken_lengths)):
+
+                    # some tokens have no subtokens at all (if omitted by BERT tokenizer) so return zero vector
+                    if number_of_subtokens == 0:
+                        token.set_embedding(self.name, torch.zeros(self.embedding_length))
+                        continue
 
                     subword_end_idx = subword_start_idx + number_of_subtokens
 
@@ -1003,7 +1023,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
                     # get states from all selected layers, aggregate with pooling operation
                     for layer in self.layer_indexes:
-                        current_embeddings = hidden_states[layer][sentence_idx][subword_start_idx:subword_end_idx]
+                        current_embeddings = sentence_hidden_state[layer][subword_start_idx:subword_end_idx]
 
                         if self.pooling_operation == "first":
                             final_embedding: torch.FloatTensor = current_embeddings[0]
@@ -1034,6 +1054,59 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
                     subword_start_idx += number_of_subtokens
 
+    def reconstruct_tokens_from_subtokens(self, sentence, subtokens):
+        word_iterator = iter(sentence)
+        token = next(word_iterator)
+        token_text = self._get_processed_token_text(token)
+        token_subtoken_lengths = []
+        reconstructed_token = ''
+        subtoken_count = 0
+        # iterate over subtokens and reconstruct tokens
+        for subtoken_id, subtoken in enumerate(subtokens):
+
+            # remove special markup
+            subtoken = self._remove_special_markup(subtoken)
+
+            # TODO check if this is necessary is this method is called before prepare_for_model
+            # check if reconstructed token is special begin token ([CLS] or similar)
+            if subtoken in self.special_tokens and subtoken_id == 0:
+                continue
+
+            # some BERT tokenizers somehow omit words - in such cases skip to next token
+            if subtoken_count == 0 and not token_text.startswith(subtoken.lower()):
+                token_subtoken_lengths.append(0)
+                token = next(word_iterator)
+                token_text = self._get_processed_token_text(token)
+
+            subtoken_count += 1
+
+            # append subtoken to reconstruct token
+            reconstructed_token = reconstructed_token + subtoken
+
+            # check if reconstructed token is the same as current token
+            if reconstructed_token.lower() == token_text:
+
+                # if so, add subtoken count
+                token_subtoken_lengths.append(subtoken_count)
+
+                # reset subtoken count and reconstructed token
+                reconstructed_token = ''
+                subtoken_count = 0
+
+                # break from loop if all tokens are accounted for
+                if len(token_subtoken_lengths) < len(sentence):
+                    token = next(word_iterator)
+                    token_text = self._get_processed_token_text(token)
+                else:
+                    break
+        # check if all tokens were matched to subtokens
+        if token != sentence[-1]:
+            log.error(f"Tokenization MISMATCH in sentence '{sentence.to_tokenized_string()}'")
+            log.error(f"Last matched: '{token}'")
+            log.error(f"Last sentence: '{sentence[-1]}'")
+            log.error(f"subtokenized: '{subtokens}'")
+        return token_subtoken_lengths
+
     def train(self, mode=True):
         # if fine-tuning is not enabled (i.e. a "feature-based approach" used), this
         # module should never be in training mode
@@ -1061,7 +1134,10 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # reload tokenizer to get around serialization issues
         model_name = self.name.split('transformer-word-')[-1]
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        except:
+            pass
 
 
 class FastTextEmbeddings(TokenEmbeddings):

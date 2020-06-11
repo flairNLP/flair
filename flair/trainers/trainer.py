@@ -398,11 +398,9 @@ class ModelTrainer:
 
                 if log_train:
                     train_eval_result, train_loss = self.model.evaluate(
-                        DataLoader(
-                            self.corpus.train,
-                            batch_size=mini_batch_chunk_size,
-                            num_workers=num_workers,
-                        ),
+                        self.corpus.train,
+                        mini_batch_size=mini_batch_chunk_size,
+                        num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{train_eval_result.log_line}"
@@ -412,11 +410,9 @@ class ModelTrainer:
 
                 if log_train_part:
                     train_part_eval_result, train_part_loss = self.model.evaluate(
-                        DataLoader(
-                            train_part,
-                            batch_size=mini_batch_chunk_size,
-                            num_workers=num_workers,
-                        ),
+                        train_part,
+                        mini_batch_size=mini_batch_chunk_size,
+                        num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += (
@@ -428,11 +424,9 @@ class ModelTrainer:
 
                 if log_dev:
                     dev_eval_result, dev_loss = self.model.evaluate(
-                        DataLoader(
-                            self.corpus.dev,
-                            batch_size=mini_batch_chunk_size,
-                            num_workers=num_workers,
-                        ),
+                        self.corpus.dev,
+                        mini_batch_size=mini_batch_chunk_size,
+                        num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
@@ -457,12 +451,10 @@ class ModelTrainer:
 
                 if log_test:
                     test_eval_result, test_loss = self.model.evaluate(
-                        DataLoader(
-                            self.corpus.test,
-                            batch_size=mini_batch_chunk_size,
-                            num_workers=num_workers,
-                        ),
-                        base_path / "test.tsv",
+                        self.corpus.test,
+                        mini_batch_size=mini_batch_chunk_size,
+                        num_workers=num_workers,
+                        out_path=base_path / "test.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{test_loss}\t{test_eval_result.log_line}"
@@ -624,11 +616,9 @@ class ModelTrainer:
             self.model = self.model.load(base_path / "best-model.pt")
 
         test_results, test_loss = self.model.evaluate(
-            DataLoader(
-                self.corpus.test,
-                batch_size=eval_mini_batch_size,
-                num_workers=num_workers,
-            ),
+            self.corpus.test,
+            mini_batch_size=eval_mini_batch_size,
+            num_workers=num_workers,
             out_path=base_path / "test.tsv",
             embedding_storage_mode="none",
         )
@@ -643,11 +633,9 @@ class ModelTrainer:
             for subcorpus in self.corpus.corpora:
                 log_line(log)
                 self.model.evaluate(
-                    DataLoader(
-                        subcorpus.test,
-                        batch_size=eval_mini_batch_size,
-                        num_workers=num_workers,
-                    ),
+                    subcorpus.test,
+                    mini_batch_size=eval_mini_batch_size,
+                    num_workers=num_workers,
                     out_path=base_path / f"{subcorpus.name}-test.tsv",
                     embedding_storage_mode="none",
                 )

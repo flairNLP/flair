@@ -72,6 +72,10 @@ def test_problem_sentences():
     sentence = Sentence(text)
     assert len(sentence) == 10
 
+    text = "n't have new vintages."
+    sentence = Sentence(text, use_tokenizer=True)
+    assert len(sentence) == 5
+
 
 def test_token_indices():
 

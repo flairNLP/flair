@@ -174,7 +174,7 @@ class ClassificationDataset(FlairDataset):
             line = f.readline()
             position = 0
             while line:
-                if "__label__" not in line or " " not in line:
+                if "__label__" not in line or (" " not in line and "\t" not in line):
                     position = f.tell()
                     line = f.readline()
                     continue
@@ -1321,6 +1321,66 @@ class TREC_6(ClassificationCorpus):
         super(TREC_6, self).__init__(
             data_folder, label_type='question_type', tokenizer=tokenizer, **corpusargs,
         )
+        
+
+
+class COMMUNICATIVE_FUNCTIONS(ClassificationCorpus):
+    """
+    The Communicative Functions Classification Corpus. 
+    Classifying sentences from scientific papers into 39 communicative functions. 
+    """
+
+    def __init__(self, base_path: Union[str, Path] = None,  tokenizer=space_tokenizer, **corpusargs):
+        """
+        Instantiates Communicative Functions Classification Corpus with 39 classes.
+        :param base_path: Provide this only if you store the Communicative Functions date in a specific folder, otherwise use default.
+        :param corpusargs: Other args for ClassificationCorpus.
+        """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+        
+        
+        original_filenames = ["background.tsv", "discussion.tsv", "introduction.tsv", "method.tsv", "result.tsv"]
+
+        # download data if necessary
+        comm_path = "https://raw.githubusercontent.com/Alab-NII/FECFevalDataset/master/sentences/"
+        
+        for original_filename in original_filenames:
+            cached_path(f"{comm_path}{original_filename}", Path("datasets") / dataset_name / "original")
+        
+        data_file = data_folder / "train.txt"
+        
+        
+        if not data_file.is_file(): #check if new file already exists
+            with open(data_folder / "train.txt" , 'a+', encoding = "utf-8") as write_fp:
+                for original_filename in original_filenames[:4]:
+                    with open(data_folder / "original" / original_filename, 'rt', encoding = "utf-8") as open_fp:
+                        for line in open_fp:
+                            liste = line.split('\t')
+                            write_fp.write('__label__' + liste[0].replace(' ', '_')+' '+liste[2] + '\n')
+                    with open(data_folder / "original" / "result.tsv", 'rt', encoding = "utf-8") as open_fp:
+                        for line in open_fp:
+                            liste = line.split('\t')
+                            if liste[0].split(' ')[-1] == "(again)":
+                                write_fp.write('__label__' + liste[0][:-8].replace(' ', '_')+' '+liste[2] + '\n')
+                            else:
+                                write_fp.write('__label__' + liste[0].replace(' ', '_')+' '+liste[2] + '\n')
+            
+
+        
+        super(COMMUNICATIVE_FUNCTIONS, self).__init__(
+            data_folder, label_type='communicative_function', tokenizer=tokenizer, **corpusargs,
+        )
+
 
 
 def _download_wassa_if_not_there(emotion, data_folder, dataset_name):

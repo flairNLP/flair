@@ -40,7 +40,7 @@ Flair outperforms the previous best methods on a range of NLP tasks:
 | Chunking |English| Conll-2000  |  **96.72** (F1) | *96.36 [(Peters et al., 2017)](https://arxiv.org/pdf/1705.00108.pdf)*
 | Named Entity Recognition | German  | Conll-03    |  **88.27** (F1)  | *78.76 [(Lample et al., 2016)](https://arxiv.org/abs/1603.01360)* |
 | Named Entity Recognition |German  | Germeval    |  **84.65** (F1)  | *79.08 [(Hänig et al, 2014)](http://asv.informatik.uni-leipzig.de/publication/file/300/GermEval2014_ExB.pdf)*|
-| Named Entity Recognition | Dutch  | Conll-03    |  **90.44** (F1)  | *81.74 [(Lample et al., 2016)](https://arxiv.org/abs/1603.01360)* |
+| Named Entity Recognition | Dutch  | Conll-02    |  **92.38** (F1)  | *81.74 [(Lample et al., 2016)](https://arxiv.org/abs/1603.01360)* |
 | Named Entity Recognition |Polish  | PolEval-2018    |  **86.6** (F1) <br> [(Borchmann et al., 2018)](https://github.com/applicaai/poleval-2018) | *85.1 [(PolDeepNer)](https://github.com/CLARIN-PL/PolDeepNer/)*|
 
 Here's how to [reproduce these numbers](/resources/docs/EXPERIMENTS.md) using Flair. You can also find detailed evaluations and discussions in our papers:

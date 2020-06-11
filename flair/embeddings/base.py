@@ -65,6 +65,12 @@ class Embeddings(torch.nn.Module):
         """Private method for adding embeddings to all words in a list of sentences."""
         pass
 
+    def get_names(self) -> List[str]:
+        """Returns a list of embedding names. In most cases, it is just a list with one item, namely the name of
+        this embedding. But in some cases, the embedding is made up by different embeddings (StackedEmbedding).
+        Then, the list contains the names of all embeddings in the stack."""
+        return [self.name]
+
 
 class ScalarMix(torch.nn.Module):
     """
