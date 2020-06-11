@@ -175,11 +175,13 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
     def __init__(
         self,
         embeddings: List[TokenEmbeddings],
-        fine_tune_mode="linear",
+        fine_tune_mode: str = "none",
         pooling: str = "mean",
     ):
         """The constructor takes a list of embeddings to be combined.
         :param embeddings: a list of token embeddings
+        :param fine_tune_mode: if set to "linear" a trainable layer is added, if set to
+        "nonlinear", a nonlinearity is added as well. Set this to make the pooling trainable.
         :param pooling: a string which can any value from ['mean', 'max', 'min']
         """
         super().__init__()
@@ -205,15 +207,10 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
 
         self.to(flair.device)
 
-        self.pooling = pooling
-        if self.pooling == "mean":
-            self.pool_op = torch.mean
-        elif pooling == "max":
-            self.pool_op = torch.max
-        elif pooling == "min":
-            self.pool_op = torch.min
-        else:
+        if pooling not in ['min', 'max', 'mean']:
             raise ValueError(f"Pooling operation for {self.mode!r} is not defined")
+
+        self.pooling = pooling
         self.name: str = f"document_{self.pooling}"
 
     @property
@@ -245,9 +242,11 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
                 word_embeddings = self.embedding_flex_nonlinear_map(word_embeddings)
 
             if self.pooling == "mean":
-                pooled_embedding = self.pool_op(word_embeddings, 0)
-            else:
-                pooled_embedding, _ = self.pool_op(word_embeddings, 0)
+                pooled_embedding = torch.mean(word_embeddings, 0)
+            elif self.pooling == "max":
+                pooled_embedding, _ = torch.max(word_embeddings, 0)
+            elif self.pooling == "min":
+                pooled_embedding, _ = torch.min(word_embeddings, 0)
 
             sentence.set_embedding(self.name, pooled_embedding)
 

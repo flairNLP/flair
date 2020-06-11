@@ -1,14 +1,16 @@
 from pathlib import Path
 
+from torch.utils.data.dataset import Dataset
+
 import flair
 import flair.embeddings
 import torch
 import torch.nn as nn
 from typing import List, Union
 
-from flair.datasets import DataLoader
+from flair.datasets import DataLoader, SentenceDataset
 from flair.training_utils import MetricRegression, Result, store_embeddings
-from flair.data import Sentence, Label
+from flair.data import Sentence, Label, DataPoint
 import logging
 
 log = logging.getLogger("flair")
@@ -92,10 +94,17 @@ class TextRegressor(flair.models.TextClassifier):
 
     def evaluate(
         self,
-        data_loader: DataLoader,
-        out_path: Path = None,
+        sentences: Union[List[DataPoint], Dataset],
+        out_path: Union[str, Path] = None,
         embedding_storage_mode: str = "none",
+        mini_batch_size: int = 32,
+        num_workers: int = 8,
     ) -> (Result, float):
+
+        # read Dataset into data loader (if list of sentences passed, make Dataset first)
+        if not isinstance(sentences, Dataset):
+            sentences = SentenceDataset(sentences)
+        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
 
         with torch.no_grad():
             eval_loss = 0

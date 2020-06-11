@@ -7,14 +7,20 @@ from .base import MongoDataset
 # Expose all sequence labeling datasets
 from .sequence_labeling import ColumnCorpus
 from .sequence_labeling import ColumnDataset
+from .sequence_labeling import BIOFID
 from .sequence_labeling import CONLL_03
 from .sequence_labeling import CONLL_03_GERMAN
 from .sequence_labeling import CONLL_03_DUTCH
-from .sequence_labeling import NER_SWEDISH
 from .sequence_labeling import CONLL_03_SPANISH
 from .sequence_labeling import CONLL_2000
 from .sequence_labeling import DANE
 from .sequence_labeling import GERMEVAL_14
+from .sequence_labeling import INSPEC
+from .sequence_labeling import NER_BASQUE
+from .sequence_labeling import NER_FINNISH
+from .sequence_labeling import NER_SWEDISH
+from .sequence_labeling import SEMEVAL2010
+from .sequence_labeling import SEMEVAL2017
 from .sequence_labeling import WIKINER_ENGLISH
 from .sequence_labeling import WIKINER_GERMAN
 from .sequence_labeling import WIKINER_DUTCH
@@ -25,19 +31,16 @@ from .sequence_labeling import WIKINER_PORTUGUESE
 from .sequence_labeling import WIKINER_POLISH
 from .sequence_labeling import WIKINER_RUSSIAN
 from .sequence_labeling import WNUT_17
-from .sequence_labeling import BIOFID
-from .sequence_labeling import NER_FINNISH
-from .sequence_labeling import INSPEC
-from .sequence_labeling import SEMEVAL2010
-from .sequence_labeling import SEMEVAL2017
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
 from .document_classification import ClassificationDataset
 from .document_classification import CSVClassificationCorpus
 from .document_classification import CSVClassificationDataset
+from .document_classification import AMAZON_REVIEWS
 from .document_classification import IMDB
 from .document_classification import NEWSGROUPS
+from .document_classification import SENTIMENT_140
 from .document_classification import SENTEVAL_CR
 from .document_classification import SENTEVAL_MR
 from .document_classification import SENTEVAL_MPQA
@@ -46,6 +49,7 @@ from .document_classification import SENTEVAL_SST_BINARY
 from .document_classification import SENTEVAL_SST_GRANULAR
 from .document_classification import TREC_50
 from .document_classification import TREC_6
+from .document_classification import COMMUNICATIVE_FUNCTIONS
 from .document_classification import WASSA_ANGER
 from .document_classification import WASSA_FEAR
 from .document_classification import WASSA_JOY
