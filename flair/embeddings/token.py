@@ -1615,14 +1615,14 @@ class ELMoEmbeddings(TokenEmbeddings):
             if model == "pubmed":
                 options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_options.json"
                 weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_weights_PubMed_only.hdf5"
-        '''
-        if embedding_mode == "all":
-            self.embedding_mode_fn = lambda x: torch.cat(x, 0)
-        elif embedding_mode == "top":
-            self.embedding_mode_fn = lambda x: x[-1]
+        
+        # all ELMoEmbeddings before Release 0.5 used all layers
+        self.embedding_mode_fn = self.use_layers_all
+        if embedding_mode == "top":
+            self.embedding_mode_fn = self.use_layers_top 
         elif embedding_mode == "average":
-            self.embedding_mode_fn = lambda x: torch.mean(torch.stack(x), 0)
-        '''
+            self.embedding_mode_fn = self.use_layers_average   
+                    
         # put on Cuda if available
         from flair import device
 
@@ -1648,7 +1648,16 @@ class ELMoEmbeddings(TokenEmbeddings):
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
-
+    
+    def use_layers_all(self,x):
+        return torch.cat(x, 0)
+    
+    def use_layers_top(self,x):
+        return x[-1]
+    
+    def use_layers_average(self,x):
+        return torch.mean(torch.stack(x), 0)
+        
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
         sentence_words: List[List[str]] = []
@@ -1667,8 +1676,7 @@ class ELMoEmbeddings(TokenEmbeddings):
                     torch.FloatTensor(sentence_embeddings[1, token_idx, :]),
                     torch.FloatTensor(sentence_embeddings[2, token_idx, :])
                 ]
-                #word_embedding = self.embedding_mode_fn(elmo_embedding_layers)
-                word_embedding = torch.cat(elmo_embedding_layers, 0)
+                word_embedding = self.embedding_mode_fn(elmo_embedding_layers)
                 token.set_embedding(self.name, word_embedding)
 
         return sentences
