@@ -1615,14 +1615,14 @@ class ELMoEmbeddings(TokenEmbeddings):
             if model == "pubmed":
                 options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_options.json"
                 weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_weights_PubMed_only.hdf5"
-
+        
         if embedding_mode == "all":
-            self.embedding_mode_fn = lambda x: torch.cat(x, 0)
+            self.embedding_mode_fn = self.use_layers_all
         elif embedding_mode == "top":
-            self.embedding_mode_fn = lambda x: x[-1]
+            self.embedding_mode_fn = self.use_layers_top 
         elif embedding_mode == "average":
-            self.embedding_mode_fn = lambda x: torch.mean(torch.stack(x), 0)
-
+            self.embedding_mode_fn = self.use_layers_average   
+                    
         # put on Cuda if available
         from flair import device
 
@@ -1648,9 +1648,21 @@ class ELMoEmbeddings(TokenEmbeddings):
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
-
+    
+    def use_layers_all(self,x):
+        return torch.cat(x, 0)
+    
+    def use_layers_top(self,x):
+        return x[-1]
+    
+    def use_layers_average(self,x):
+        return torch.mean(torch.stack(x), 0)
+        
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
+        # ELMoEmbeddings before Release 0.5 did not set self.embedding_mode_fn
+        if not getattr(self, "embedding_mode_fn", None):
+            self.embedding_mode_fn = self.use_layers_all
+            
         sentence_words: List[List[str]] = []
         for sentence in sentences:
             sentence_words.append([token.text for token in sentence])
