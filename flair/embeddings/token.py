@@ -1616,9 +1616,9 @@ class ELMoEmbeddings(TokenEmbeddings):
                 options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_options.json"
                 weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_weights_PubMed_only.hdf5"
         
-        # all ELMoEmbeddings before Release 0.5 used all layers
-        self.embedding_mode_fn = self.use_layers_all
-        if embedding_mode == "top":
+        if embedding_mode == "all":
+            self.embedding_mode_fn = self.use_layers_all
+        elif embedding_mode == "top":
             self.embedding_mode_fn = self.use_layers_top 
         elif embedding_mode == "average":
             self.embedding_mode_fn = self.use_layers_average   
@@ -1659,7 +1659,10 @@ class ELMoEmbeddings(TokenEmbeddings):
         return torch.mean(torch.stack(x), 0)
         
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
+        # ELMoEmbeddings before Release 0.5 did not set self.embedding_mode_fn
+        if not getattr(self, "embedding_mode_fn", None):
+            self.embedding_mode_fn = self.use_layers_all
+            
         sentence_words: List[List[str]] = []
         for sentence in sentences:
             sentence_words.append([token.text for token in sentence])
