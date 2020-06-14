@@ -730,14 +730,6 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
         # set the memory method
         self.pooling = pooling
-        if pooling == "mean":
-            self.aggregate_op = torch.add
-        elif pooling == "fade":
-            self.aggregate_op = torch.add
-        elif pooling == "max":
-            self.aggregate_op = torch.max
-        elif pooling == "min":
-            self.aggregate_op = torch.min
 
     def train(self, mode=True):
         super().train(mode=mode)
@@ -766,11 +758,18 @@ class PooledFlairEmbeddings(TokenEmbeddings):
                             self.word_embeddings[token.text] = local_embedding
                             self.word_count[token.text] = 1
                         else:
-                            aggregated_embedding = self.aggregate_op(
-                                self.word_embeddings[token.text], local_embedding
-                            )
-                            if self.pooling == "fade":
+
+                            # set aggregation operation
+                            if self.pooling == "mean":
+                                aggregated_embedding = torch.mean(self.word_embeddings[token.text], local_embedding)
+                            elif self.pooling == "fade":
+                                aggregated_embedding = torch.add(self.word_embeddings[token.text], local_embedding)
                                 aggregated_embedding /= 2
+                            elif self.pooling == "max":
+                                aggregated_embedding = torch.max(self.word_embeddings[token.text], local_embedding)
+                            elif self.pooling == "min":
+                                aggregated_embedding = torch.min(self.word_embeddings[token.text], local_embedding)
+
                             self.word_embeddings[token.text] = aggregated_embedding
                             self.word_count[token.text] += 1
 
