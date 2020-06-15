@@ -17,7 +17,6 @@ from typing import Union, Callable, Dict, List, Tuple, Iterable
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 
-from datasets import ColumnDataset
 from flair.file_utils import cached_path, Tqdm, unpack_file
 from flair.datasets import ColumnCorpus
 
@@ -4476,7 +4475,6 @@ class BioNLPCorpus(ColumnCorpus):
                                      defaults to scispacy
            """
 
-
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
@@ -4496,7 +4494,9 @@ class BioNLPCorpus(ColumnCorpus):
         test_file = data_folder / "test.conll"
 
         if not (train_file.exists() and dev_file.exists() and test_file.exists()):
-            train_folder, dev_folder, test_folder = self.download_corpus(data_folder / "original")
+            train_folder, dev_folder, test_folder = self.download_corpus(
+                data_folder / "original"
+            )
             train_data = self.parse_input_files(train_folder)
             dev_data = self.parse_input_files(dev_folder)
             test_data = self.parse_input_files(test_folder)
@@ -4586,11 +4586,10 @@ class BIONLP2013_PC(BioNLPCorpus):
             keep=False,
         )
         unpack_file(
-            download_folder
-            / "BioNLP-ST_2013_PC_test_data.tar.gz?attredirects=0",
+            download_folder / "BioNLP-ST_2013_PC_test_data.tar.gz?attredirects=0",
             download_folder,
             keep=False,
-            )
+        )
 
         train_folder = download_folder / "BioNLP-ST_2013_PC_training_data"
         dev_folder = download_folder / "BioNLP-ST_2013_PC_development_data"
@@ -4632,12 +4631,11 @@ class BIONLP2013_CG(BioNLPCorpus):
             mode="targz",
         )
         unpack_file(
-            download_folder
-            / "BioNLP-ST_2013_CG_test_data.tar.gz?attredirects=0",
+            download_folder / "BioNLP-ST_2013_CG_test_data.tar.gz?attredirects=0",
             download_folder,
             keep=False,
             mode="targz",
-            )
+        )
 
         train_folder = download_folder / "BioNLP-ST_2013_CG_training_data"
         dev_folder = download_folder / "BioNLP-ST_2013_CG_development_data"
@@ -4793,4 +4791,280 @@ class ANAT_EM(ColumnCorpus):
 
         return InternalBioNerDataset(
             documents=documents, entities_per_document=entities_per_document
+        )
+
+
+class BioBertHelper(ColumnCorpus):
+    @staticmethod
+    def download_corpora(download_dir: Path):
+        from google_drive_downloader import GoogleDriveDownloader as gdd
+
+        gdd.download_file_from_google_drive(
+            file_id="1OletxmPYNkz2ltOr9pyT0b0iBtUWxslh",
+            dest_path=str(download_dir / "NERdata.zip"),
+            unzip=True,
+        )
+
+    @staticmethod
+    def convert_and_write(download_folder, data_folder, tag_type):
+        data_folder.mkdir(parents=True, exist_ok=True)
+        with (download_folder / "train.tsv").open() as f_in, (
+            data_folder / "train.conll"
+        ).open("w") as f_out:
+            for line in f_in:
+                if not line.strip():
+                    f_out.write("\n")
+                    continue
+
+                token, tag = line.strip().split("\t")
+                if tag != "O":
+                    tag = tag + "-" + tag_type
+                f_out.write(f"{token} {tag}\n")
+
+        with (download_folder / "devel.tsv").open() as f_in, (
+            data_folder / "dev.conll"
+        ).open("w") as f_out:
+            for line in f_in:
+                if not line.strip():
+                    f_out.write("\n")
+                    continue
+                token, tag = line.strip().split("\t")
+                if tag != "O":
+                    tag = tag + "-" + tag_type
+                f_out.write(f"{token} {tag}\n")
+
+        with (download_folder / "test.tsv").open() as f_in, (
+            data_folder / "test.conll"
+        ).open("w") as f_out:
+            for line in f_in:
+                if not line.strip():
+                    f_out.write("\n")
+                    continue
+                token, tag = line.strip().split("\t")
+                if tag != "O":
+                    tag = tag + "-" + tag_type
+                f_out.write(f"{token} {tag}\n")
+
+
+class BIOBERT_CHEMICAL_BC4CHEMD(ColumnCorpus):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+        columns = {0: "text", 1: "ner"}
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        dev_file = data_folder / "dev.conll"
+        test_file = data_folder / "test.conll"
+
+        if not (train_file.exists() and dev_file.exists() and test_file.exists()):
+            common_path = base_path / "biobert_common"
+            if not (common_path / "BC4CHEMD").exists():
+                BioBertHelper.download_corpora(common_path)
+            BioBertHelper.convert_and_write(
+                common_path / "BC4CHEMD", data_folder, tag_type=CHEMICAL_TAG
+            )
+        super(BIOBERT_CHEMICAL_BC4CHEMD, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+
+class BIOBERT_GENE_BC2GM(ColumnCorpus):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+        columns = {0: "text", 1: "ner"}
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        dev_file = data_folder / "dev.conll"
+        test_file = data_folder / "test.conll"
+
+        if not (train_file.exists() and dev_file.exists() and test_file.exists()):
+            common_path = base_path / "biobert_common"
+            if not (common_path / "BC2GM").exists():
+                BioBertHelper.download_corpora(common_path)
+            BioBertHelper.convert_and_write(
+                common_path / "BC2GM", data_folder, tag_type=GENE_TAG
+            )
+        super(BIOBERT_GENE_BC2GM, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+
+class BIOBERT_GENE_JNLPBA(ColumnCorpus):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+        columns = {0: "text", 1: "ner"}
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        dev_file = data_folder / "dev.conll"
+        test_file = data_folder / "test.conll"
+
+        if not (train_file.exists() and dev_file.exists() and test_file.exists()):
+            common_path = base_path / "biobert_common"
+            if not (common_path / "JNLPBA").exists():
+                BioBertHelper.download_corpora(common_path)
+            BioBertHelper.convert_and_write(
+                common_path / "JNLPBA", data_folder, tag_type=GENE_TAG
+            )
+        super(BIOBERT_GENE_JNLPBA, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+
+class BIOBERT_CHEMICAL_BC5CDR(ColumnCorpus):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+        columns = {0: "text", 1: "ner"}
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        dev_file = data_folder / "dev.conll"
+        test_file = data_folder / "test.conll"
+
+        if not (train_file.exists() and dev_file.exists() and test_file.exists()):
+            common_path = base_path / "biobert_common"
+            if not (common_path / "BC5CDR-chem").exists():
+                BioBertHelper.download_corpora(common_path)
+            BioBertHelper.convert_and_write(
+                common_path / "BC5CDR-chem", data_folder, tag_type=CHEMICAL_TAG
+            )
+        super(BIOBERT_CHEMICAL_BC5CDR, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+
+class BIOBERT_DISEASE_BC5CDR(ColumnCorpus):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+        columns = {0: "text", 1: "ner"}
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        dev_file = data_folder / "dev.conll"
+        test_file = data_folder / "test.conll"
+
+        if not (train_file.exists() and dev_file.exists() and test_file.exists()):
+            common_path = base_path / "biobert_common"
+            if not (common_path / "BC5CDR-disease").exists():
+                BioBertHelper.download_corpora(common_path)
+            BioBertHelper.convert_and_write(
+                common_path / "BC5CDR-disease", data_folder, tag_type=DISEASE_TAG
+            )
+        super(BIOBERT_DISEASE_BC5CDR, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+
+class BIOBERT_DISEASE_NCBI(ColumnCorpus):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+        columns = {0: "text", 1: "ner"}
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        dev_file = data_folder / "dev.conll"
+        test_file = data_folder / "test.conll"
+
+        if not (train_file.exists() and dev_file.exists() and test_file.exists()):
+            common_path = base_path / "biobert_common"
+            if not (common_path / "NCBI-disease").exists():
+                BioBertHelper.download_corpora(common_path)
+            BioBertHelper.convert_and_write(
+                common_path / "NCBI-disease", data_folder, tag_type=DISEASE_TAG
+            )
+        super(BIOBERT_DISEASE_NCBI, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+
+class BIOBERT_SPECIES_LINNAEUS(ColumnCorpus):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+        columns = {0: "text", 1: "ner"}
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        dev_file = data_folder / "dev.conll"
+        test_file = data_folder / "test.conll"
+
+        if not (train_file.exists() and dev_file.exists() and test_file.exists()):
+            common_path = base_path / "biobert_common"
+            if not (common_path / "linnaeus").exists():
+                BioBertHelper.download_corpora(common_path)
+            BioBertHelper.convert_and_write(
+                common_path / "linnaeus", data_folder, tag_type=SPECIES_TAG
+            )
+        super(BIOBERT_SPECIES_LINNAEUS, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+
+class BIOBERT_SPECIES_S800(ColumnCorpus):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+        columns = {0: "text", 1: "ner"}
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+        dev_file = data_folder / "dev.conll"
+        test_file = data_folder / "test.conll"
+
+        if not (train_file.exists() and dev_file.exists() and test_file.exists()):
+            common_path = base_path / "biobert_common"
+            if not (common_path / "s800").exists():
+                BioBertHelper.download_corpora(common_path)
+            BioBertHelper.convert_and_write(
+                common_path / "s800", data_folder, tag_type=SPECIES_TAG
+            )
+        super(BIOBERT_SPECIES_S800, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
         )
