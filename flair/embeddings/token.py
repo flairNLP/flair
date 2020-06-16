@@ -761,7 +761,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
                             # set aggregation operation
                             if self.pooling == "mean":
-                                aggregated_embedding = torch.mean(self.word_embeddings[token.text], local_embedding)
+                                aggregated_embedding = torch.add(self.word_embeddings[token.text], local_embedding)
                             elif self.pooling == "fade":
                                 aggregated_embedding = torch.add(self.word_embeddings[token.text], local_embedding)
                                 aggregated_embedding /= 2
