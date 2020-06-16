@@ -730,14 +730,6 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
         # set the memory method
         self.pooling = pooling
-        if pooling == "mean":
-            self.aggregate_op = torch.add
-        elif pooling == "fade":
-            self.aggregate_op = torch.add
-        elif pooling == "max":
-            self.aggregate_op = torch.max
-        elif pooling == "min":
-            self.aggregate_op = torch.min
 
     def train(self, mode=True):
         super().train(mode=mode)
@@ -766,11 +758,18 @@ class PooledFlairEmbeddings(TokenEmbeddings):
                             self.word_embeddings[token.text] = local_embedding
                             self.word_count[token.text] = 1
                         else:
-                            aggregated_embedding = self.aggregate_op(
-                                self.word_embeddings[token.text], local_embedding
-                            )
-                            if self.pooling == "fade":
+
+                            # set aggregation operation
+                            if self.pooling == "mean":
+                                aggregated_embedding = torch.mean(self.word_embeddings[token.text], local_embedding)
+                            elif self.pooling == "fade":
+                                aggregated_embedding = torch.add(self.word_embeddings[token.text], local_embedding)
                                 aggregated_embedding /= 2
+                            elif self.pooling == "max":
+                                aggregated_embedding = torch.max(self.word_embeddings[token.text], local_embedding)
+                            elif self.pooling == "min":
+                                aggregated_embedding = torch.min(self.word_embeddings[token.text], local_embedding)
+
                             self.word_embeddings[token.text] = aggregated_embedding
                             self.word_count[token.text] += 1
 
@@ -1134,7 +1133,10 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # reload tokenizer to get around serialization issues
         model_name = self.name.split('transformer-word-')[-1]
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        except:
+            pass
 
 
 class FastTextEmbeddings(TokenEmbeddings):
@@ -1612,14 +1614,14 @@ class ELMoEmbeddings(TokenEmbeddings):
             if model == "pubmed":
                 options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_options.json"
                 weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_weights_PubMed_only.hdf5"
-
+        
         if embedding_mode == "all":
-            self.embedding_mode_fn = lambda x: torch.cat(x, 0)
+            self.embedding_mode_fn = self.use_layers_all
         elif embedding_mode == "top":
-            self.embedding_mode_fn = lambda x: x[-1]
+            self.embedding_mode_fn = self.use_layers_top 
         elif embedding_mode == "average":
-            self.embedding_mode_fn = lambda x: torch.mean(torch.stack(x), 0)
-
+            self.embedding_mode_fn = self.use_layers_average   
+                    
         # put on Cuda if available
         from flair import device
 
@@ -1645,9 +1647,21 @@ class ELMoEmbeddings(TokenEmbeddings):
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
-
+    
+    def use_layers_all(self,x):
+        return torch.cat(x, 0)
+    
+    def use_layers_top(self,x):
+        return x[-1]
+    
+    def use_layers_average(self,x):
+        return torch.mean(torch.stack(x), 0)
+        
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
+        # ELMoEmbeddings before Release 0.5 did not set self.embedding_mode_fn
+        if not getattr(self, "embedding_mode_fn", None):
+            self.embedding_mode_fn = self.use_layers_all
+            
         sentence_words: List[List[str]] = []
         for sentence in sentences:
             sentence_words.append([token.text for token in sentence])

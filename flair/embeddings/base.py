@@ -50,10 +50,12 @@ class Embeddings(torch.nn.Module):
                 for token in sentence.tokens:
                     if self.name not in token._embeddings.keys():
                         everything_embedded = False
+                        break
         else:
             for sentence in sentences:
                 if self.name not in sentence._embeddings.keys():
                     everything_embedded = False
+                    break
 
         if not everything_embedded or not self.static_embeddings:
             self._add_embeddings_internal(sentences)

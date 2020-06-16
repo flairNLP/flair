@@ -1128,10 +1128,17 @@ class SequenceTagger(flair.nn.Model):
             [aws_resource_path_v04, "release-fr-ner-0", "fr-ner-wikiner-0.4.pt"]
         )
         model_map["nl-ner"] = "/".join(
-            [aws_resource_path_v04, "NER-conll2002-dutch", "nl-ner-conll02-v0.1.pt"]
+            [hu_path, "dutch-ner_0", "nl-ner-bert-conll02-v0.5.pt"]
+        )
+        model_map["nl-ner-rnn"] = "/".join(
+            [hu_path, "dutch-ner-flair-0", "nl-ner-conll02-v0.5.pt"]
         )
         model_map["ml-pos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt"
         model_map["ml-upos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-upos-model.pt"
+
+        model_map["keyphrase"] = "/".join(
+            [hu_path, "keyphrase-semeval2017-scibert", "keyphrase-en-scibert.pt"]
+        )
 
         cache_dir = Path("models")
         if model_name in model_map:
