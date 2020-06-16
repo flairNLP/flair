@@ -6,6 +6,8 @@ import torch
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from transformers import BertTokenizer, AlbertTokenizer, AutoTokenizer, AutoConfig, AutoModel
 
+from sentence_transformers import SentenceTransformer
+
 import flair
 from flair.data import Sentence
 from flair.embeddings.base import Embeddings, ScalarMix
@@ -516,33 +518,47 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
 
         return sentences
 
-class SentencesTransformers(DocumentEmbeddings):
+class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
     def __init__(
         self,
-        model: str = "bert-base-uncased",
-        fine_tune: bool = True,
+        model: str = "bert-base-nli-mean-tokens",
         batch_size: int = 1,
-        layers: str = "-1",
-        use_scalar_mix: bool = False,
+        convert_to_numpy: bool = False,
+
     ):
         """
-        #TODO: WHAT ARE THE PARAMS DOING
+        :param model: string name of models from SentencesTransformer Class
+        :param name: string name of embedding type which will be set to Sentence object
+        :param batch_size: int number of sentences to processed in one batch
+        :param convert_to_numpy: bool whether the encode() returns a numpy array or PyTorch tensor
         """
         super().__init__()
+        self.model = SentenceTransformer(model)
+        self.name = 'sentence-transformers-' + str(model)
+        self.batch_size = batch_size
+        self.convert_to_numpy = convert_to_numpy
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        sentence_batches = [sentences[i * self.batch_size:(i + 1) * self.batch_size]
+                            for i in range((len(sentences) + self.batch_size - 1) // self.batch_size)]
+
+        for batch in sentence_batches:
+            self._add_embeddings_to_sentences(batch)
+
+        return sentences
+
+    def _add_embeddings_to_sentences(self, sentences: List[Sentence]):
+
+        # convert to plain strings, embedded in a list for the encode function
+        sentences_plain_text = [sentence.to_plain_string() for sentence in sentences]
+
+        embeddings = self.model.encode(sentences_plain_text, convert_to_numpy=self.convert_to_numpy)
+        for sentence, embedding in zip(sentences, embeddings):
+            sentence.set_embedding(self.name, embedding)
 
     @property
     @abstractmethod
     def embedding_length(self) -> int:
         """Returns the length of the embedding vector."""
-        return (
-            len(self.layer_indexes) * self.model.config.hidden_size
-            if not self.use_scalar_mix
-            else self.model.config.hidden_size
-        )
-
-    def __setstate__(self, d):
-        self.__dict__ = d
-
-        # reload tokenizer to get around serialization issues
-        model_name = self.name.split('transformer-document-')[-1]
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        return self.model.get_sentence_embedding_dimension()
