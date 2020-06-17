@@ -761,7 +761,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
                             # set aggregation operation
                             if self.pooling == "mean":
-                                aggregated_embedding = torch.mean(self.word_embeddings[token.text], local_embedding)
+                                aggregated_embedding = torch.add(self.word_embeddings[token.text], local_embedding)
                             elif self.pooling == "fade":
                                 aggregated_embedding = torch.add(self.word_embeddings[token.text], local_embedding)
                                 aggregated_embedding /= 2
@@ -812,7 +812,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         batch_size: int = 1,
         use_scalar_mix: bool = False,
         fine_tune: bool = False,
-        allow_long_sentences: bool = False
+        allow_long_sentences: bool = False,
+        **kwargs
     ):
         """
         Bidirectional transformer embeddings of words from various transformer architectures.
@@ -829,9 +830,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         super().__init__()
 
         # load tokenizer and transformer model
-        self.tokenizer = AutoTokenizer.from_pretrained(model)
-        config = AutoConfig.from_pretrained(model, output_hidden_states=True)
-        self.model = AutoModel.from_pretrained(model, config=config)
+        self.tokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
+        config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
+        self.model = AutoModel.from_pretrained(model, config=config, **kwargs)
 
         self.allow_long_sentences = allow_long_sentences
 
