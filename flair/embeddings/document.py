@@ -524,19 +524,21 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
         model: str = "bert-base-nli-mean-tokens",
         batch_size: int = 1,
         convert_to_numpy: bool = False,
-
+        static_embeddings: bool = True,
     ):
         """
         :param model: string name of models from SentencesTransformer Class
         :param name: string name of embedding type which will be set to Sentence object
         :param batch_size: int number of sentences to processed in one batch
         :param convert_to_numpy: bool whether the encode() returns a numpy array or PyTorch tensor
+        :param static_embeddings: bool if true, embeddings wont be calculated new all the time
         """
         super().__init__()
         self.model = SentenceTransformer(model)
         self.name = 'sentence-transformers-' + str(model)
         self.batch_size = batch_size
         self.convert_to_numpy = convert_to_numpy
+        self.static_embeddings = True
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
