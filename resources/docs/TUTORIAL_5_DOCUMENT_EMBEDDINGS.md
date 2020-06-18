@@ -13,10 +13,10 @@ need to call to embed your text. This means that for most users of Flair, the co
 hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
 All embeddings produced with our methods are PyTorch vectors, so they can be immediately used for training and
-fine-tuning. There are three main document embeddings in Flair: (1) `DocumentPoolEmbeddings` that simply do an average over all word embeddings in the sentence, (2) `DocumentRNNEmbeddings` that train an RNN over all word embeddings in a sentence, and (3) `TransformerDocumentEmbeddings` that use a pre-trained transformer: 
+fine-tuning. There are four main document embeddings in Flair: (1) `DocumentPoolEmbeddings` that simply do an average over all word embeddings in the sentence, (2) `DocumentRNNEmbeddings` that train an RNN over all word embeddings in a sentence, and (3) `TransformerDocumentEmbeddings` / (4) `SentenceTransformerDocumentEmbeddings` that both use a pre-trained transformer: 
 
 ```python
-from flair.embeddings import TransformerDocumentEmbeddings, DocumentPoolEmbeddings, DocumentRNNEmbeddings
+from flair.embeddings import TransformerDocumentEmbeddings, DocumentPoolEmbeddings, DocumentRNNEmbeddings, SentenceTransformerDocumentEmbeddings
 
 # document embedding is a mean over GloVe word embeddings
 pooled_embeddings = DocumentPoolEmbeddings([WordEmbeddings('glove')], pooling='mean')
@@ -26,6 +26,9 @@ lstm_embeddings = DocumentRNNEmbeddings([WordEmbeddings('glove')], rnn_type='lst
 
 # document embedding is a pre-trained transformer
 transformer_embeddings = TransformerDocumentEmbeddings('bert-base-uncased')
+
+# document embedding is a pre-trained transformer
+sent_transformer_embeddings = SentenceTransformerDocumentEmbeddings('bert-base-nli-mean-tokens')
 ```
 
 Simply call embed() to embed your sentence with one of these three options: 
@@ -41,7 +44,7 @@ pooled_embeddings.embed(sentence)
 print(sentence.embedding)
 ```
 
-We give details on all three document embeddings in the following:
+We give details on all four document embeddings in the following:
 
 ## Document Pool Embeddings
 
@@ -142,6 +145,25 @@ embedding.embed(sentence)
 
 [Here](https://huggingface.co/transformers/pretrained_models.html) is a full list of all models (BERT, RoBERTa, XLM, XLNet etc.). You can use any of these models with this class. 
 
+## SentenceTransformerDocumentEmbeddings
+
+You can also get several embeddings from the [`sentence-transformer`](https://github.com/UKPLab/sentence-transformers) library. The procedure is similar to the TransformerDocumentEmbeddings class:  
+
+```python
+from flair.data import Sentence
+from flair.embeddings import SentenceTransformerDocumentEmbeddings
+
+# init embedding
+embedding = SentenceTransformerDocumentEmbeddings('bert-base-nli-mean-tokens')
+
+# create a sentence
+sentence = Sentence('The grass is green .')
+
+# embed the sentence
+embedding.embed(sentence)
+```
+
+You can find a full list of their pretained models [here](https://docs.google.com/spreadsheets/d/14QplCdTCDwEmTqrn1LH4yrbKvdogK4oQvYO1K1aPR5M/edit#gid=0).
 
 ## Next
 
