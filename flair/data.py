@@ -1411,8 +1411,7 @@ def build_spacy_tokenizer(model) -> Callable[[str], List[Token]]:
             tokens.append(token)
 
             if (previous_token is not None) and (
-                    token.start_pos - 1
-                    == previous_token.start_pos + len(previous_token.text)
+                token.start_pos == previous_token.start_pos + len(previous_token.text)
             ):
                 previous_token.whitespace_after = False
 
