@@ -173,7 +173,7 @@ data the first time you call the corresponding constructor ID. The following dat
 | 'NER_BASQUE' | Basque  |  [NER dataset for Basque](http://ixa2.si.ehu.eus/eiec/) |
 | 'NER_FINNISH' | Finnish | [Finer-data](https://github.com/mpsilfve/finer-data) | 
 | 'NER_SWEDISH' | Swedish | [Swedish Spraakbanken NER] (https://github.com/klintan/swedish-ner-corpus/) 4-class NER |
-
+| 'LER_GERMAN' | German | [Legal Entity Recognition](https://github.com/elenanereiss/Legal-Entity-Recognition) NER in German Legal Documents | 
 
 #### Universal Dependency Treebanks
 
