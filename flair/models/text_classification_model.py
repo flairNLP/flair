@@ -323,14 +323,14 @@ class TextClassifier(flair.nn.Model):
             for i in range(len(self.label_dictionary)):
                 target_names.append(self.label_dictionary.get_item_for_index(i))
             classification_report = metrics.classification_report(y_true, y_pred, digits=4,
-                                                                  target_names=target_names, zero_division=1)
+                                                                  target_names=target_names, zero_division=0)
 
             # get scores
-            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro'), 4)
+            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0), 4)
             accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
-            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro'), 4)
-            precision_score = round(metrics.precision_score(y_true, y_pred, average='macro'), 4)
-            recall_score = round(metrics.recall_score(y_true, y_pred, average='macro'), 4)
+            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro', zero_division=0), 4)
+            precision_score = round(metrics.precision_score(y_true, y_pred, average='macro', zero_division=0), 4)
+            recall_score = round(metrics.recall_score(y_true, y_pred, average='macro', zero_division=0), 4)
 
             detailed_result = (
                     "\nResults:"
