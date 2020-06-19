@@ -10,6 +10,7 @@ from .token import CharacterEmbeddings
 from .token import FlairEmbeddings
 from .token import PooledFlairEmbeddings
 from .token import TransformerWordEmbeddings
+from .token import TransformerWordEmbeddingsEnhanced
 from .token import BPEmbSerializable
 from .token import BytePairEmbeddings
 from .token import ELMoEmbeddings

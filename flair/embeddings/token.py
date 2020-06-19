@@ -1140,6 +1140,170 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             pass
 
 
+class TransformerWordEmbeddingsEnhanced(TokenEmbeddings):
+    def __init__(
+        self,
+        model: str = "bert-base-uncased",
+        layers: str = "-1,-2,-3,-4",
+        pooling_operation: str = "first",
+        batch_size: int = 1,
+        use_scalar_mix: bool = False,
+        fine_tune: bool = False,
+        allow_long_sentences: bool = False,
+        **kwargs
+    ):
+        """
+        Bidirectional transformer embeddings of words from various transformer architectures.
+        :param model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for
+        options)
+        :param layers: string indicating which layers to take for embedding (-1 is topmost layer)
+        :param pooling_operation: how to get from token piece embeddings to token embedding. Either take the first
+        subtoken ('first'), the last subtoken ('last'), both first and last ('first_last') or a mean over all ('mean')
+        :param batch_size: How many sentence to push through transformer at once. Set to 1 by default since transformer
+        models tend to be huge.
+        :param use_scalar_mix: If True, uses a scalar mix of layers as embedding
+        :param fine_tune: If True, allows transformers to be fine-tuned during training
+        """
+        super().__init__()
+
+        # load tokenizer and transformer model
+        self.tokenizer = AutoTokenizer.from_pretrained(model, use_fast=True, **kwargs)
+        config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
+        self.model = AutoModel.from_pretrained(model, config=config, **kwargs)
+
+        self.allow_long_sentences = allow_long_sentences
+
+        if allow_long_sentences:
+            self.max_subtokens_sequence_length = self.tokenizer.model_max_length
+            self.stride = self.tokenizer.model_max_length//2
+        else:
+            self.max_subtokens_sequence_length = None
+            self.stride = 0
+
+        # model name
+        self.name = 'transformer-word-' + str(model)
+
+        # when initializing, embeddings are in eval mode by default
+        self.model.eval()
+        self.model.to(flair.device)
+
+        # embedding parameters
+        if layers == 'all':
+            # send mini-token through to check how many layers the model has
+            hidden_states = self.model(torch.tensor([1], device=flair.device).unsqueeze(0))[-1]
+            self.layer_indexes = [int(x) for x in range(len(hidden_states))]
+        else:
+            self.layer_indexes = [int(x) for x in layers.split(",")]
+        #self.mix = ScalarMix(mixture_size=len(self.layer_indexes), trainable=False)
+        self.pooling_operation = pooling_operation
+        self.use_scalar_mix = use_scalar_mix
+        self.fine_tune = fine_tune
+        self.static_embeddings = not self.fine_tune
+        self.batch_size = batch_size
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        """Add embeddings to all words in a list of sentences."""
+
+        # split into micro batches of size self.batch_size before pushing through transformer
+        sentence_batches = [sentences[i * self.batch_size:(i + 1) * self.batch_size]
+                            for i in range((len(sentences) + self.batch_size - 1) // self.batch_size)]
+
+        # embed each micro-batch
+        for batch in sentence_batches:
+            self._add_embeddings_to_sentences(batch)
+
+        return sentences
+
+    def _add_embeddings_to_sentences(self, sentences: List[Sentence]):
+        """Match subtokenization to Flair tokenization and extract embeddings from transformers for each token."""
+
+
+        # TODO: keep for backwards compatibility, but remove in future
+        # some pretrained models do not have this property, applying default settings now.
+        # can be set manually after loading the model.
+        if not hasattr(self, 'max_subtokens_sequence_length'):
+            self.max_subtokens_sequence_length = None
+            self.allow_long_sentences = False
+            self.stride = 0
+
+        batch_text = [[token.text for token in sent] for sent in sentences]
+
+        output = self.tokenizer.batch_encode_plus(batch_text_or_text_pairs=batch_text,
+                                             padding=True,
+                                             is_pretokenized=True,
+                                             return_tensors="pt"
+                                            )
+
+        output["input_ids"] = output["input_ids"].to(flair.device)
+        output["token_type_ids"] = output["token_type_ids"].to(flair.device)
+        output["attention_mask"] = output["attention_mask"].to(flair.device)
+
+        hidden_states = torch.stack(self.model(**output)[-1])
+
+        # gradients are enabled if fine-tuning is enabled
+        gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
+
+        with gradient_context:
+            for sent_idx, sentence in enumerate(sentences):
+                for token in sentence.tokens:
+                    token_idx = token.idx - 1
+                    token_start, token_end = output.word_to_tokens(sent_idx, token_idx)
+                    subword_embeddings = []
+                    for layer in self.layer_indexes:
+                        current_subword_embeddings = hidden_states[layer][sent_idx][token_start:token_end]
+
+                        if self.pooling_operation == "first":
+                            final_subword_embedding = current_subword_embeddings[0]
+                        elif self.pooling_operation == "last":
+                            final_subword_embedding = current_subword_embeddings[-1]
+                        elif self.pooling_operation == "first_last":
+                            final_subword_embedding = torch.cat([current_subword_embeddings[0],
+                                                                 current_subword_embeddings[-1]])
+                        elif self.pooling_operation == "mean":
+                            all_embeddings = [embedding.unsqueeze(0) for embedding in current_subword_embeddings]
+                            final_subword_embedding = torch.mean(torch.cat(all_embeddings, dim=0), dim=0)
+
+                        subword_embeddings.append(final_subword_embedding)
+
+                    if self.use_scalar_mix:
+                        sm_embeddings = torch.mean(torch.stack(subword_embeddings, dim=1), dim=1)
+                        subword_embeddings = [sm_embeddings]
+
+                    token.set_embedding(self.name, torch.cat(subword_embeddings))
+
+    def train(self, mode=True):
+        # if fine-tuning is not enabled (i.e. a "feature-based approach" used), this
+        # module should never be in training mode
+        if not self.fine_tune:
+            pass
+        else:
+            super().train(mode)
+
+    @property
+    @abstractmethod
+    def embedding_length(self) -> int:
+        """Returns the length of the embedding vector."""
+
+        if not self.use_scalar_mix:
+            length = len(self.layer_indexes) * self.model.config.hidden_size
+        else:
+            length = self.model.config.hidden_size
+
+        if self.pooling_operation == 'first_last': length *= 2
+
+        return length
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+        # reload tokenizer to get around serialization issues
+        model_name = self.name.split('transformer-word-')[-1]
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+        except:
+            pass
+
+
 class FastTextEmbeddings(TokenEmbeddings):
     """FastText Embeddings with oov functionality"""
 
