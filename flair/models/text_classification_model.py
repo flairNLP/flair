@@ -470,6 +470,11 @@ class TextClassifier(flair.nn.Model):
         model_map["sentiment-fast"] = "/".join(
             [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn.pt"]
         )
+        
+        #Communicative Functions Model
+        model_map["communicative-functions"] = "/".join(
+            [hu_path, "communicative-functions", "communicative-functions.pt"]
+        )
 
         cache_dir = Path("models")
         if model_name in model_map:
