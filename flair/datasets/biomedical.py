@@ -226,7 +226,11 @@ def bioc_to_internal(bioc_file: Path):
         entities = []
 
         for passage in document.xpath("passage"):
-            text = passage.xpath("text/text()")[0]
+            passage_texts = passage.xpath("text/text()")
+            if len(passage_texts) == 0:
+                continue
+
+            text = passage_texts[0]
             passage_offset = int(
                 passage.xpath("./offset/text()")[0]
             )  # from BioC annotation
