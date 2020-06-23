@@ -1310,6 +1310,7 @@ def _download_wikiner(language_code: str, dataset_name: str):
                 / dataset_name
                 / f"aij-wikiner-{lc}-wp3.train",
                 "w",
+                encoding="utf-8"
         ) as out:
             for line in f:
                 line = line.decode("utf-8")
