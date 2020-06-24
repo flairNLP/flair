@@ -5406,6 +5406,8 @@ class AZDZ(ColumnCorpus):
                 if end == 0:
                     continue
 
+                entities.append(Entity((start, end), DISEASE_TAG))
+
         return InternalBioNerDataset(
             documents=documents, entities_per_document=entities_per_document
         )
