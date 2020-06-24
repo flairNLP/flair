@@ -597,7 +597,7 @@ class HunerDataset(ColumnCorpus, ABC):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner", 2: "space-after"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -683,7 +683,7 @@ class BIO_INFER(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1062,7 +1062,7 @@ class CELL_FINDER(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1202,7 +1202,7 @@ class MIRNA(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1689,7 +1689,7 @@ class LOCTEXT(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1837,7 +1837,7 @@ class CHEMDNER(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1965,7 +1965,7 @@ class IEPA(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -2056,7 +2056,7 @@ class LINNEAUS(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -2171,7 +2171,7 @@ class CDR(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -2323,7 +2323,7 @@ class VARIOME(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -2499,7 +2499,7 @@ class NCBI_DISEASE(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -2672,7 +2672,7 @@ class ScaiCorpus(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -2902,7 +2902,7 @@ class OSIRIS(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -3046,7 +3046,7 @@ class S800(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -3156,7 +3156,7 @@ class GPRO(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -3316,7 +3316,7 @@ class DECA(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -3437,7 +3437,7 @@ class FSU(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -3619,7 +3619,7 @@ class CRAFT(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -3792,7 +3792,7 @@ class BIOSEMANTICS(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -4000,7 +4000,7 @@ class BC2GM(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -4161,7 +4161,7 @@ class CEMP(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -4338,7 +4338,7 @@ class CHEBI(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -4529,7 +4529,7 @@ class BioNLPCorpus(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -4722,7 +4722,7 @@ class ANAT_EM(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
