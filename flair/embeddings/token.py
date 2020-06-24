@@ -640,8 +640,6 @@ class FlairEmbeddings(TokenEmbeddings):
             text_sentences = [sentence.to_tokenized_string() for sentence in sentences] if self.tokenized_lm \
                 else [sentence.to_plain_string() for sentence in sentences]
 
-            print(text_sentences)
-
             start_marker = self.lm.document_delimiter if "document_delimiter" in self.lm.__dict__ else '\n'
             end_marker = " "
 
@@ -1122,10 +1120,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 else:
                     break
 
-        print(len(sentence))
-        print(len(token_subtoken_lengths))
-        print(token.text)
-        print(len(token.text))
         # if tokens are unaccounted for
         while len(token_subtoken_lengths) < len(sentence) and len(token.text) == 1:
             token_subtoken_lengths.append(0)
