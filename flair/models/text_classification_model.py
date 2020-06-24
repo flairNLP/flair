@@ -231,7 +231,7 @@ class TextClassifier(flair.nn.Model):
 
                 for (sentence, labels) in zip(batch, predicted_labels):
                     for label in labels:
-                        if self.multi_label:
+                        if self.multi_label or multi_class_prob:
                             sentence.add_label(label_name, label.value, label.score)
                         else:
                             sentence.set_label(label_name, label.value, label.score)
