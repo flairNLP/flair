@@ -304,6 +304,50 @@ def bioc_to_internal(bioc_file: Path):
     )
 
 
+def brat_to_internal(corpus_dir: Path, ann_file_suffixes=None) -> InternalBioNerDataset:
+    if ann_file_suffixes is None:
+        ann_file_suffixes = [".ann"]
+
+    text_files = list(corpus_dir.glob("*.txt"))
+    documents = {}
+    entities_per_document = defaultdict(list)
+    for text_file in text_files:
+        document_text = open(str(text_file)).read().strip()
+        document_id = text_file.stem
+
+        for suffix in ann_file_suffixes:
+            with open(str(text_file.with_suffix(suffix)), "r") as ann_file:
+                for line in ann_file:
+                    fields = line.strip().split("\t")
+
+                    # Ignore empty lines or relation annotations
+                    if not fields or len(fields) <= 2:
+                        continue
+
+                    ent_type, char_start, char_end = fields[1].split()
+                    start = int(char_start)
+                    end = int(char_end)
+
+                    # FIX annotation of whitespaces (necessary for PDR)
+                    while document_text[start:end].startswith(" "):
+                        start += 1
+
+                    while document_text[start:end].endswith(" "):
+                        end -= 1
+
+                    entities_per_document[document_id].append(
+                        Entity(char_span=(start, end), entity_type=ent_type,)
+                    )
+
+                    assert document_text[start:end].strip() == fields[2].strip()
+
+        documents[document_id] = document_text
+
+    return InternalBioNerDataset(
+        documents=documents, entities_per_document=dict(entities_per_document)
+    )
+
+
 class CoNLLWriter:
     def __init__(
         self,
@@ -5411,3 +5455,76 @@ class AZDZ(ColumnCorpus):
         return InternalBioNerDataset(
             documents=documents, entities_per_document=entities_per_document
         )
+
+
+class PDR(ColumnCorpus):
+    """
+        Corpus of plant-disease relation from Kim et al., consisting of named entity annotations
+        for plants and disease.
+
+          For further information see Kim et al.:
+            A corpus of plant-disease relations in the biomedical domain
+            https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0221582
+            http://gcancer.org/pdr/
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+           :param base_path: Path to the corpus on your machine
+           :param in_memory: If True, keeps dataset in memory giving speedups in training.
+           :param tokenizer: Callable that segments a sentence into words,
+                             defaults to scispacy
+           :param sentence_splitter: Callable that segments a document into sentences,
+                                     defaults to scispacy
+           """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+
+        if not train_file.exists():
+            corpus_folder = self.download_corpus(data_folder)
+            corpus_data = brat_to_internal(
+                corpus_folder, ann_file_suffixes=[".ann", ".ann2"]
+            )
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            if sentence_splitter is None:
+                sentence_splitter = build_spacy_sentence_splitter()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_splitter
+            )
+            conll_writer.write_to_conll(corpus_data, train_file)
+
+        super(PDR, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @classmethod
+    def download_corpus(cls, data_dir: Path) -> Path:
+        url = "http://gcancer.org/pdr/Plant-Disease_Corpus.tar.gz"
+        data_path = cached_path(url, data_dir)
+        unpack_file(data_path, data_dir)
+
+        return data_dir / "Plant-Disease_Corpus"
