@@ -16,6 +16,7 @@ from typing import Union, Callable, Dict, List, Tuple, Iterable
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 
+from datasets import ColumnDataset
 from flair.file_utils import cached_path, Tqdm, unpack_file
 from flair.datasets import ColumnCorpus
 
@@ -5295,3 +5296,116 @@ class CRAFT_V4_SPECIES(CRAFT_V4):
     def filter_entities(self, corpus: InternalBioNerDataset) -> InternalBioNerDataset:
         entity_type_mapping = {"ncbitaxon": SPECIES_TAG}
         return filter_and_map_entities(corpus, entity_type_mapping)
+
+
+class AZDZ(ColumnCorpus):
+    """
+         Arizona Disease Corpus from the Biomedical Informatics Lab at Arizona State University.
+
+          For further information see:
+            http://diego.asu.edu/index.php
+    """
+
+    def __init__(
+        self,
+        base_path: Union[str, Path] = None,
+        in_memory: bool = True,
+        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+    ):
+        """
+           :param base_path: Path to the corpus on your machine
+           :param in_memory: If True, keeps dataset in memory giving speedups in training.
+           :param tokenizer: Callable that segments a sentence into words,
+                             defaults to scispacy
+           """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_file = data_folder / "train.conll"
+
+        if not train_file.exists():
+            corpus_file = self.download_corpus(data_folder)
+            corpus_data = self.parse_corpus(corpus_file)
+
+            if tokenizer is None:
+                tokenizer = build_spacy_tokenizer()
+
+            conll_writer = CoNLLWriter(
+                tokenizer=tokenizer, sentence_splitter=sentence_split_at_tag
+            )
+            conll_writer.write_to_conll(corpus_data, train_file)
+
+        super(AZDZ, self).__init__(
+            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+        )
+
+    @classmethod
+    def download_corpus(cls, data_dir: Path) -> Path:
+        url = "http://diego.asu.edu/downloads/AZDC_6-26-2009.txt"
+        data_path = cached_path(url, data_dir)
+
+        return data_path
+
+    @staticmethod
+    def parse_corpus(input_file: Path) -> InternalBioNerDataset:
+        documents = {}
+        entities_per_document = {}
+
+        with open(str(input_file), "r", encoding="iso-8859-1") as azdz_reader:
+            prev_document_id = None
+            prev_sentence_id = None
+
+            document_text = None
+            entities = []
+            offset = None
+
+            for line in azdz_reader:
+                line = line.strip()
+                if not line or line.startswith("Doc Id"):
+                    continue
+
+                columns = line.split("\t")
+
+                document_id = columns[1]  # PMID
+                sentence_id = document_id + "_" + columns[2]  # PMID + sentence no
+
+                if document_id != prev_document_id and document_text:
+                    documents[document_id] = document_text
+                    entities_per_document[document_id] = entities
+
+                    document_text = None
+                    entities = []
+                    offset = None
+
+                if sentence_id != prev_sentence_id:
+                    offset = offset + len(SENTENCE_TAG) if offset else 0
+                    document_text = (
+                        document_text + SENTENCE_TAG + columns[3].strip()
+                        if document_text
+                        else columns[3]
+                    )
+
+                try:
+                    start = offset + int(columns[4]) - 1
+                    end = offset + int(columns[5])
+                except:
+                    continue
+
+                if end == 0:
+                    continue
+
+        return InternalBioNerDataset(
+            documents=documents, entities_per_document=entities_per_document
+        )
