@@ -1186,3 +1186,57 @@ class SequenceTagger(flair.nn.Model):
                f'  (beta): {self.beta}\n' + \
                f'  (weights): {self.weight_dict}\n' + \
                f'  (weight_tensor) {self.loss_weights}\n)'
+
+
+class MultiTagger:
+    def __init__(self, name_to_tagger: Dict[str, SequenceTagger]):
+        super().__init__()
+        self.name_to_tagger = name_to_tagger
+
+    def predict(
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size=32,
+            all_tag_prob: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss: bool = False,
+            embedding_storage_mode="none",
+    ):
+        """
+        Predict sequence tags for Named Entity Recognition task
+        :param sentences: a Sentence or a List of Sentence
+        :param mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
+        up to a point when it has no more effect.
+        :param all_tag_prob: True to compute the score for each tag on each token,
+        otherwise only the score of the best tag is returned
+        :param verbose: set to True to display a progress bar
+        :param return_loss: set to True to return loss
+        :param label_name: set this to change the name of the label type that is predicted
+        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
+        you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
+        'gpu' to store embeddings in GPU memory.
+        """
+        if isinstance(sentences, Sentence):
+            sentences = [sentences]
+        for name, tagger in self.name_to_tagger.items():
+            tagger.predict(sentences=sentences,
+                           mini_batch_size=mini_batch_size,
+                           all_tag_prob=all_tag_prob,
+                           verbose=verbose,
+                           label_name=name,
+                           return_loss=return_loss,
+                           embedding_storage_mode=embedding_storage_mode
+                           )
+
+    @classmethod
+    def load(cls, tagger_names: List[str]):
+        taggers = {name: SequenceTagger.load(name) for name in tagger_names}
+        return cls(taggers)
+
+    def get_all_spans(self, sentence: Sentence):
+        spans = []
+        for name in self.name_to_tagger:
+            spans.extend(sentence.get_spans(name))
+
+        return spans
