@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from operator import itemgetter
 from typing import List, Dict, Union, Callable, Optional
 import re
@@ -1433,3 +1433,124 @@ def randomly_split_into_two_datasets(dataset, length_of_first):
     second_dataset.sort()
 
     return [Subset(dataset, first_dataset), Subset(dataset, second_dataset)]
+
+
+class Tokenizer(ABC):
+    r"""An abstract class representing a :class:`Tokenizer`.
+
+    Tokenizers are used to represent algorithms and models to split plain text into
+    individual tokens / words. All subclasses should overwrite :meth:`tokenize`, which
+    splits the given plain text into tokens, and :meth:`id`, returning a unique identifier
+    representing the tokenizer's configuration.
+    """
+
+    @abstractmethod
+    def tokenize(self, text: str) -> List[Token]:
+        raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def id(self) -> str:
+        raise NotImplementedError()
+
+
+class SpacyTokenizer(Tokenizer):
+    """
+    Implementation of :class:`Tokenizer`, using models from Spacy.
+
+    :param model a Spacy V2 model
+    """
+
+    def __init__(self, model):
+        try:
+            from spacy.language import Language
+        except ImportError:
+            raise ImportError(
+                "Please install Spacy v2.0 or better before using the Spacy tokenizer, otherwise you can use segtok_tokenizer as advanced tokenizer."
+            )
+
+        self.model: Language = model
+
+    def tokenize(self, text: str) -> List[Token]:
+        from spacy.tokens.doc import Doc
+        from spacy.tokens.token import Token as SpacyToken
+
+        doc: Doc = self.model.make_doc(text)
+        previous_token = None
+        tokens: List[Token] = []
+        for word in doc:
+            word: SpacyToken = word
+            token = Token(
+                text=word.text, start_position=word.idx, whitespace_after=True
+            )
+            tokens.append(token)
+
+            if (previous_token is not None) and (
+                token.start_pos == previous_token.start_pos + len(previous_token.text)
+            ):
+                previous_token.whitespace_after = False
+
+            previous_token = token
+
+        return tokens
+
+    def id(self) -> str:
+        return (
+            self.__class__.__name__
+            + "_"
+            + self.model.meta["name"]
+            + "_"
+            + self.model.meta["version"]
+        )
+
+
+class SegTokTokenizer(Tokenizer):
+    """
+        Tokenizer using segtok, a third party library dedicated to rules-based Indo-European languages.
+
+        For further details see: https://github.com/fnl/segtok
+    """
+
+    def tokenize(self, text: str) -> List[Token]:
+        tokens: List[Token] = []
+        words: List[str] = []
+
+        sentences = split_single(text)
+        for sentence in sentences:
+            contractions = split_contractions(word_tokenizer(sentence))
+            words.extend(contractions)
+
+        words = list(filter(None, words))
+
+        # determine offsets for whitespace_after field
+        index = text.index
+        current_offset = 0
+        previous_word_offset = -1
+        previous_token = None
+        for word in words:
+            try:
+                word_offset = index(word, current_offset)
+                start_position = word_offset
+            except:
+                word_offset = previous_word_offset + 1
+                start_position = (
+                    current_offset + 1 if current_offset > 0 else current_offset
+                )
+
+            if word:
+                token = Token(
+                    text=word, start_position=start_position, whitespace_after=True
+                )
+                tokens.append(token)
+
+            if (previous_token is not None) and word_offset - 1 == previous_word_offset:
+                previous_token.whitespace_after = False
+
+            current_offset = word_offset + len(word)
+            previous_word_offset = current_offset - 1
+            previous_token = token
+
+        return tokens
+
+    def id(self) -> str:
+        return self.__class__.__name__
