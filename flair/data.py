@@ -9,6 +9,8 @@ import logging
 from collections import Counter
 from collections import defaultdict
 
+from deprecated import deprecated
+
 from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
@@ -730,18 +732,21 @@ class TokenizerWrapper(Tokenizer):
         return self.__class__.__name__ + "_" + self.tokenizer_func.__name__
 
 
+@deprecated(version="0.5", reason="Use 'flair.data.SpaceTokenizer' instead.")
 def space_tokenizer(text: str) -> List[Token]:
     # We don't want to create a SpaceTokenizer object each time this function is called,
     # so delegate the call directly to the static run_tokenize method
     return SpaceTokenizer.run_tokenize(text)
 
 
+@deprecated(version="0.5", reason="Use 'flair.data.SegTokTokenizer' instead.")
 def segtok_tokenizer(text: str) -> List[Token]:
     # We don't want to create a SegTokTokenizer object each time this function is called,
     # so delegate the call directly to the static run_tokenize method
     return SegTokTokenizer.run_tokenize(text)
 
 
+@deprecated(version="0.5", reason="Use 'flair.data.SpacyTokenizer' instead.")
 def build_spacy_tokenizer(model) -> Callable[[str], List[Token]]:
     spacy_tokenizer = SpacyTokenizer(model)
 
@@ -751,6 +756,7 @@ def build_spacy_tokenizer(model) -> Callable[[str], List[Token]]:
     return tokenizer
 
 
+@deprecated(version="0.5", reason="Use 'flair.data.JapaneseTokenizer' instead.")
 def build_japanese_tokenizer(tokenizer: str = "MeCab"):
     japanese_tokenizer = JapaneseTokenizer(tokenizer)
 
