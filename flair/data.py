@@ -1458,18 +1458,24 @@ class SpacyTokenizer(Tokenizer):
     """
     Implementation of :class:`Tokenizer`, using models from Spacy.
 
-    :param model a Spacy V2 model
+    :param model a Spacy V2 model or the name of the model to load.
     """
 
     def __init__(self, model):
         try:
+            import spacy
             from spacy.language import Language
         except ImportError:
             raise ImportError(
                 "Please install Spacy v2.0 or better before using the Spacy tokenizer, otherwise you can use segtok_tokenizer as advanced tokenizer."
             )
 
-        self.model: Language = model
+        if isinstance(model, Language):
+            self.model: Language = model
+        elif isinstance(model, str):
+            self.model: Language = spacy.load(model)
+        else:
+            raise AssertionError(f"Unexpected type of parameter model. Please provide a loaded spacy model or the name of the model to load.")
 
     def tokenize(self, text: str) -> List[Token]:
         from spacy.tokens.doc import Doc
