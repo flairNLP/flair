@@ -1440,8 +1440,9 @@ class Tokenizer(ABC):
 
     Tokenizers are used to represent algorithms and models to split plain text into
     individual tokens / words. All subclasses should overwrite :meth:`tokenize`, which
-    splits the given plain text into tokens, and :meth:`id`, returning a unique identifier
-    representing the tokenizer's configuration.
+    splits the given plain text into tokens. Moreover, subclasses may overwrite
+    :meth:`name`, returning a unique identifier representing the tokenizer's
+    configuration.
     """
 
     @abstractmethod
@@ -1449,9 +1450,8 @@ class Tokenizer(ABC):
         raise NotImplementedError()
 
     @property
-    @abstractmethod
-    def id(self) -> str:
-        raise NotImplementedError()
+    def name(self) -> str:
+        return self.__class__.__name__
 
 
 class SpacyTokenizer(Tokenizer):
@@ -1494,7 +1494,8 @@ class SpacyTokenizer(Tokenizer):
 
         return tokens
 
-    def id(self) -> str:
+    @property
+    def name(self) -> str:
         return (
             self.__class__.__name__
             + "_"
@@ -1551,6 +1552,3 @@ class SegTokTokenizer(Tokenizer):
             previous_token = token
 
         return tokens
-
-    def id(self) -> str:
-        return self.__class__.__name__
