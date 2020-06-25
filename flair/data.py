@@ -1552,3 +1552,115 @@ class SegTokTokenizer(Tokenizer):
             previous_token = token
 
         return tokens
+
+
+class SpaceTokenizer(Tokenizer):
+    """
+        Tokenizer based on space character only.
+    """
+
+    def tokenize(self, text: str) -> List[Token]:
+        tokens: List[Token] = []
+        word = ""
+        index = -1
+        for index, char in enumerate(text):
+            if char == " ":
+                if len(word) > 0:
+                    start_position = index - len(word)
+                    tokens.append(
+                        Token(
+                            text=word, start_position=start_position, whitespace_after=True
+                        )
+                    )
+
+                word = ""
+            else:
+                word += char
+        # increment for last token in sentence if not followed by whitespace
+        index += 1
+        if len(word) > 0:
+            start_position = index - len(word)
+            tokens.append(
+                Token(text=word, start_position=start_position, whitespace_after=False)
+            )
+
+        return tokens
+
+
+class JapaneseTokenizer(Tokenizer):
+    """
+        Tokenizer using konoha, a third party library which supports
+        multiple Japanese tokenizer such as MeCab, KyTea and SudachiPy.
+
+        For further details see:
+            https://github.com/himkt/konoha
+    """
+
+    def __init__(self, tokenizer: str):
+        if tokenizer.lower() != "mecab":
+            raise NotImplementedError("Currently, MeCab is only supported.")
+
+        try:
+            import konoha
+        except ModuleNotFoundError:
+            log.warning("-" * 100)
+            log.warning('ATTENTION! The library "konoha" is not installed!')
+            log.warning(
+                'To use Japanese tokenizer, please first install with the following steps:'
+            )
+            log.warning(
+                '- Install mecab with "sudo apt install mecab libmecab-dev mecab-ipadic"'
+            )
+            log.warning('- Install konoha with "pip install konoha[mecab]"')
+            log.warning("-" * 100)
+            pass
+
+        self.tokenizer = tokenizer
+        self.sentence_tokenizer = konoha.SentenceTokenizer()
+        self.word_tokenizer = konoha.WordTokenizer(tokenizer)
+
+    def tokenize(self, text: str) -> List[Token]:
+        tokens: List[Token] = []
+        words: List[str] = []
+
+        sentences = self.sentence_tokenizer.tokenize(text)
+        for sentence in sentences:
+            konoha_tokens = self.word_tokenizer.tokenize(sentence)
+            words.extend(list(map(str, konoha_tokens)))
+
+        # determine offsets for whitespace_after field
+        index = text.index
+        current_offset = 0
+        previous_word_offset = -1
+        previous_token = None
+        for word in words:
+            try:
+                word_offset = index(word, current_offset)
+                start_position = word_offset
+            except:
+                word_offset = previous_word_offset + 1
+                start_position = (
+                    current_offset + 1 if current_offset > 0 else current_offset
+                )
+
+            token = Token(
+                text=word, start_position=start_position, whitespace_after=True
+            )
+            tokens.append(token)
+
+            if (previous_token is not None) and word_offset - 1 == previous_word_offset:
+                previous_token.whitespace_after = False
+
+            current_offset = word_offset + len(word)
+            previous_word_offset = current_offset - 1
+            previous_token = token
+
+        return tokens
+
+    @property
+    def name(self) -> str:
+        return (
+            self.__class__.__name__
+            + "_"
+            + self.tokenizer
+        )
