@@ -12,6 +12,9 @@ from flair.data import (
     Corpus,
     Span,
     SegTokTokenizer,
+    SpacyTokenizer,
+    JapaneseTokenizer,
+    TokenizerWrapper
 )
 
 
@@ -44,17 +47,56 @@ def test_create_sentence_without_tokenizer():
     assert "love" == sentence.tokens[1].text
     assert "Berlin." == sentence.tokens[2].text
 
+def test_create_sentence_with_tokenizer():
+    sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=True)
+
+    assert 4 == len(sentence.tokens)
+    assert "I" == sentence.tokens[0].text
+    assert "love" == sentence.tokens[1].text
+    assert "Berlin" == sentence.tokens[2].text
+    assert "." == sentence.tokens[3].text
+
+
+def test_create_sentence_with_custom_tokenizer():
+    def custom_tokenizer(text: str) -> List[Token]:
+        return [Token(text, 0)]
+
+    sentence:Sentence = Sentence("I love Berlin.", use_tokenizer=TokenizerWrapper(custom_tokenizer))
+    assert 1 == len(sentence.tokens)
+    assert "I love Berlin." == sentence.tokens[0].text
+
+
+def test_create_sentence_with_callable():
+    def custom_tokenizer(text: str) -> List[Token]:
+        return [Token(text, 0)]
+
+    sentence:Sentence = Sentence("I love Berlin.", use_tokenizer=custom_tokenizer)
+    assert 1 == len(sentence.tokens)
+    assert "I love Berlin." == sentence.tokens[0].text
+
+
+@pytest.mark.skip(reason="SpacyTokenizer needs optional requirements, so we skip the test by default")
+def test_create_sentence_with_spacy_tokenizer():
+    sentence:Sentence = Sentence("I love Berlin.", use_tokenizer=SpacyTokenizer("en_core_sci_sm"))
+
+    assert 4 == len(sentence.tokens)
+    assert "I" == sentence.tokens[0].text
+    assert "love" == sentence.tokens[1].text
+    assert "Berlin" == sentence.tokens[2].text
+    assert "." == sentence.tokens[3].text
+
 
 # skip because it is optional https://github.com/flairNLP/flair/pull/1296
-# def test_create_sentence_using_japanese_tokenizer():
-#     sentence: Sentence = Sentence("私はベルリンが好き", use_tokenizer=build_japanese_tokenizer())
-#
-#     assert 5 == len(sentence.tokens)
-#     assert "私" == sentence.tokens[0].text
-#     assert "は" == sentence.tokens[1].text
-#     assert "ベルリン" == sentence.tokens[2].text
-#     assert "が" == sentence.tokens[3].text
-#     assert "好き" == sentence.tokens[4].text
+@pytest.mark.skip(reason="JapaneseTokenizer need optional requirements, so we skip the test by default")
+def test_create_sentence_using_japanese_tokenizer():
+    sentence: Sentence = Sentence("私はベルリンが好き", use_tokenizer=JapaneseTokenizer("mecab"))
+
+    assert 5 == len(sentence.tokens)
+    assert "私" == sentence.tokens[0].text
+    assert "は" == sentence.tokens[1].text
+    assert "ベルリン" == sentence.tokens[2].text
+    assert "が" == sentence.tokens[3].text
+    assert "好き" == sentence.tokens[4].text
 
 
 def test_problem_sentences():
@@ -99,7 +141,7 @@ def test_token_indices():
     assert text == sentence.to_original_text()
 
 
-def test_create_sentence_with_tokenizer():
+def test_create_sentence_with_segtoktokenizer():
     sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=SegTokTokenizer())
 
     assert 4 == len(sentence.tokens)
