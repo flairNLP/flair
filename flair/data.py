@@ -1238,189 +1238,6 @@ def iob_iobes(tags):
             raise Exception("Invalid IOB format!")
     return new_tags
 
-
-def space_tokenizer(text: str) -> List[Token]:
-    """
-    Tokenizer based on space character only.
-    """
-    tokens: List[Token] = []
-    word = ""
-    index = -1
-    for index, char in enumerate(text):
-        if char == " ":
-            if len(word) > 0:
-                start_position = index - len(word)
-                tokens.append(
-                    Token(
-                        text=word, start_position=start_position, whitespace_after=True
-                    )
-                )
-
-            word = ""
-        else:
-            word += char
-    # increment for last token in sentence if not followed by whitespace
-    index += 1
-    if len(word) > 0:
-        start_position = index - len(word)
-        tokens.append(
-            Token(text=word, start_position=start_position, whitespace_after=False)
-        )
-    return tokens
-
-
-def build_japanese_tokenizer(tokenizer: str = "MeCab"):
-    if tokenizer.lower() != "mecab":
-        raise NotImplementedError("Currently, MeCab is only supported.")
-
-    try:
-        import konoha
-    except ModuleNotFoundError:
-        log.warning("-" * 100)
-        log.warning('ATTENTION! The library "konoha" is not installed!')
-        log.warning(
-            'To use Japanese tokenizer, please first install with the following steps:'
-        )
-        log.warning(
-            '- Install mecab with "sudo apt install mecab libmecab-dev mecab-ipadic"'
-        )
-        log.warning('- Install konoha with "pip install konoha[mecab]"')
-        log.warning("-" * 100)
-        pass
-
-    sentence_tokenizer = konoha.SentenceTokenizer()
-    word_tokenizer = konoha.WordTokenizer(tokenizer)
-
-    def tokenizer(text: str) -> List[Token]:
-        """
-        Tokenizer using konoha, a third party library which supports
-        multiple Japanese tokenizer such as MeCab, KyTea and SudachiPy.
-        """
-        tokens: List[Token] = []
-        words: List[str] = []
-
-        sentences = sentence_tokenizer.tokenize(text)
-        for sentence in sentences:
-            konoha_tokens = word_tokenizer.tokenize(sentence)
-            words.extend(list(map(str, konoha_tokens)))
-
-        # determine offsets for whitespace_after field
-        index = text.index
-        current_offset = 0
-        previous_word_offset = -1
-        previous_token = None
-        for word in words:
-            try:
-                word_offset = index(word, current_offset)
-                start_position = word_offset
-            except:
-                word_offset = previous_word_offset + 1
-                start_position = (
-                    current_offset + 1 if current_offset > 0 else current_offset
-                )
-
-            token = Token(
-                text=word, start_position=start_position, whitespace_after=True
-            )
-            tokens.append(token)
-
-            if (previous_token is not None) and word_offset - 1 == previous_word_offset:
-                previous_token.whitespace_after = False
-
-            current_offset = word_offset + len(word)
-            previous_word_offset = current_offset - 1
-            previous_token = token
-
-        return tokens
-
-    return tokenizer
-
-
-def segtok_tokenizer(text: str) -> List[Token]:
-    """
-    Tokenizer using segtok, a third party library dedicated to rules-based Indo-European languages.
-    https://github.com/fnl/segtok
-    """
-    tokens: List[Token] = []
-
-    words: List[str] = []
-    sentences = split_single(text)
-    for sentence in sentences:
-        contractions = split_contractions(word_tokenizer(sentence))
-        words.extend(contractions)
-
-    words = list(filter(None, words))
-
-    # determine offsets for whitespace_after field
-    index = text.index
-    current_offset = 0
-    previous_word_offset = -1
-    previous_token = None
-    for word in words:
-        try:
-            word_offset = index(word, current_offset)
-            start_position = word_offset
-        except:
-            word_offset = previous_word_offset + 1
-            start_position = (
-                current_offset + 1 if current_offset > 0 else current_offset
-            )
-
-        if word:
-            token = Token(
-                text=word, start_position=start_position, whitespace_after=True
-            )
-            tokens.append(token)
-
-        if (previous_token is not None) and word_offset - 1 == previous_word_offset:
-            previous_token.whitespace_after = False
-
-        current_offset = word_offset + len(word)
-        previous_word_offset = current_offset - 1
-        previous_token = token
-
-    return tokens
-
-
-def build_spacy_tokenizer(model) -> Callable[[str], List[Token]]:
-    """
-    Wrap Spacy model to build a tokenizer for the Sentence class.
-    :param model a Spacy V2 model
-    :return a tokenizer function to provide to Sentence class constructor
-    """
-    try:
-        from spacy.language import Language
-        from spacy.tokens.doc import Doc
-        from spacy.tokens.token import Token as SpacyToken
-    except ImportError:
-        raise ImportError(
-            "Please install Spacy v2.0 or better before using the Spacy tokenizer, otherwise you can use segtok_tokenizer as advanced tokenizer."
-        )
-
-    model: Language = model
-
-    def tokenizer(text: str) -> List[Token]:
-        doc: Doc = model.make_doc(text)
-        previous_token = None
-        tokens: List[Token] = []
-        for word in doc:
-            word: SpacyToken = word
-            token = Token(
-                text=word.text, start_position=word.idx, whitespace_after=True
-            )
-            tokens.append(token)
-
-            if (previous_token is not None) and (
-                token.start_pos == previous_token.start_pos + len(previous_token.text)
-            ):
-                previous_token.whitespace_after = False
-
-            previous_token = token
-        return tokens
-
-    return tokenizer
-
-
 def randomly_split_into_two_datasets(dataset, length_of_first):
 
     import random
@@ -1519,6 +1336,10 @@ class SegTokTokenizer(Tokenizer):
     """
 
     def tokenize(self, text: str) -> List[Token]:
+        return SegTokTokenizer.run_tokenize(text)
+
+    @staticmethod
+    def run_tokenize(text: str) -> List[Token]:
         tokens: List[Token] = []
         words: List[str] = []
 
@@ -1564,8 +1385,11 @@ class SpaceTokenizer(Tokenizer):
     """
         Tokenizer based on space character only.
     """
-
     def tokenize(self, text: str) -> List[Token]:
+        return SpaceTokenizer.run_tokenize(text)
+
+    @staticmethod
+    def run_tokenize(text: str) -> List[Token]:
         tokens: List[Token] = []
         word = ""
         index = -1
@@ -1670,3 +1494,33 @@ class JapaneseTokenizer(Tokenizer):
             + "_"
             + self.tokenizer
         )
+
+
+def space_tokenizer(text: str) -> List[Token]:
+    # We don't want to create a SpaceTokenizer object each time this function is called,
+    # so delegate the call directly to the static run_tokenize method
+    return SpaceTokenizer.run_tokenize(text)
+
+
+def segtok_tokenizer(text: str) -> List[Token]:
+    # We don't want to create a SegTokTokenizer object each time this function is called,
+    # so delegate the call directly to the static run_tokenize method
+    return SegTokTokenizer.run_tokenize(text)
+
+
+def build_spacy_tokenizer(model) -> Callable[[str], List[Token]]:
+    spacy_tokenizer = SpacyTokenizer(model)
+
+    def tokenizer(text: str) -> List[Token]:
+        return spacy_tokenizer.tokenize(text)
+
+    return tokenizer
+
+
+def build_japanese_tokenizer(tokenizer: str = "MeCab"):
+    japanese_tokenizer = JapaneseTokenizer(tokenizer)
+
+    def tokenizer(text: str) -> List[Token]:
+        return japanese_tokenizer.tokenize(text)
+
+    return tokenizer
