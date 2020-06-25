@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Union, Callable, Dict, Optional
+from typing import List, Union, Dict, Optional
 
 import torch
 import torch.nn as nn
@@ -11,12 +11,11 @@ import numpy as np
 import sklearn.metrics as metrics
 import flair.nn
 import flair.embeddings
-from flair.data import Dictionary, Sentence, Label, Token, space_tokenizer, DataPoint
-from flair.datasets import SentenceDataset, StringDataset, DataLoader
+from flair.data import Dictionary, Sentence, Label, DataPoint
+from flair.datasets import SentenceDataset, DataLoader
 from flair.file_utils import cached_path
 from flair.training_utils import (
     convert_labels_to_one_hot,
-    Metric,
     Result,
     store_embeddings,
 )

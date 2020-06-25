@@ -10,8 +10,9 @@ from flair.data import (
     Sentence,
     Token,
     FlairDataset,
-    space_tokenizer,
-    segtok_tokenizer,
+    Tokenizer,
+    SegTokTokenizer,
+    SpaceTokenizer
 )
 
 
@@ -97,15 +98,15 @@ class StringDataset(FlairDataset):
     def __init__(
             self,
             texts: Union[str, List[str]],
-            use_tokenizer: Union[bool, Callable[[str], List[Token]]] = space_tokenizer,
+            use_tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
     ):
         """
         Instantiate StringDataset
         :param texts: a string or List of string that make up StringDataset
-        :param use_tokenizer: a custom tokenizer (default is space based tokenizer,
-        more advanced options are segtok_tokenizer to use segtok or build_spacy_tokenizer to use Spacy library
-        if available). Check the code of space_tokenizer to implement your own (if you need it).
-        If instead of providing a function, this parameter is just set to True, segtok will be used.
+        :param use_tokenizer: Custom tokenizer to use (default is SpaceTokenizer,
+        more advanced options are SegTokTokenizer to use segtok or SpacyTokenizer to use Spacy library models
+        if available). Check the code of subclasses of Tokenizer to implement your own (if you need it).
+        If instead of providing a function, this parameter is just set to True, SegTokTokenizer will be used.
         """
         # cast to list if necessary
         if type(texts) == Sentence:
@@ -137,7 +138,7 @@ class MongoDataset(FlairDataset):
             categories_field: List[str] = None,
             max_tokens_per_doc: int = -1,
             max_chars_per_doc: int = -1,
-            tokenizer=segtok_tokenizer,
+            tokenizer: Union[Callable[[str], List[Token]], Tokenizer] = SegTokTokenizer(),
             in_memory: bool = True,
     ):
         """
@@ -215,7 +216,7 @@ class MongoDataset(FlairDataset):
             self.total_sentence_count = self.__cursor.count_documents()
 
     def _parse_document_to_sentence(
-            self, text: str, labels: List[str], tokenizer: Callable[[str], List[Token]]
+            self, text: str, labels: List[str], tokenizer: Union[Callable[[str], List[Token]], Tokenizer]
     ):
         if self.max_chars_per_doc > 0:
             text = text[: self.max_chars_per_doc]
