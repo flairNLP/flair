@@ -1,6 +1,4 @@
 import logging
-from warnings import warn
-
 import flair
 import ftfy
 import json
@@ -10,15 +8,15 @@ import shutil
 from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from copy import copy
-from operator import attrgetter
-from pathlib import Path
-from typing import Union, Callable, Dict, List, Tuple, Iterable
 from lxml import etree
 from lxml.etree import XMLSyntaxError
+from typing import Union, Callable, Dict, List, Tuple, Iterable
+from operator import attrgetter
+from pathlib import Path
+from warnings import warn
 
-from datasets import ColumnDataset
 from flair.file_utils import cached_path, Tqdm, unpack_file
-from flair.datasets import ColumnCorpus
+from flair.datasets import ColumnCorpus, ColumnDataset
 
 DISEASE_TAG = "Disease"
 CHEMICAL_TAG = "Chemical"
