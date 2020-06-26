@@ -1,11 +1,12 @@
-import os
-from typing import List, Dict, Union, Callable
-import re
 import logging
-from enum import Enum
-from pathlib import Path
+import os
+import re
 
 from deprecated import deprecated
+from enum import Enum
+from pathlib import Path
+from typing import List, Dict, Union
+
 
 import flair
 from flair.data import (
@@ -14,7 +15,7 @@ from flair.data import (
     Token,
     MultiCorpus,
     Tokenizer,
-    SegTokTokenizer,
+    SegtokTokenizer,
     SpaceTokenizer
 )
 from flair.file_utils import cached_path
@@ -236,7 +237,7 @@ class NLPTaskDataFetcher:
             tokenizer: Tokenizer = SpaceTokenizer() if task in [
                 NLPTask.TREC_6.value,
                 NLPTask.TREC_50.value,
-            ] else SegTokTokenizer()
+            ] else SegtokTokenizer()
 
             return NLPTaskDataFetcher.load_classification_corpus(
                 data_folder, tokenizer=tokenizer
@@ -251,7 +252,7 @@ class NLPTaskDataFetcher:
 
         if task.startswith("wassa"):
             return NLPTaskDataFetcher.load_classification_corpus(
-                data_folder, tokenizer=SegTokTokenizer()
+                data_folder, tokenizer=SegtokTokenizer()
             )
 
     @staticmethod
@@ -404,7 +405,7 @@ class NLPTaskDataFetcher:
         train_file=None,
         test_file=None,
         dev_file=None,
-        tokenizer: Union[Callable[[str], List[Token]], Tokenizer] = SegTokTokenizer(),
+        tokenizer: Tokenizer = SegtokTokenizer(),
         max_tokens_per_doc=-1,
     ) -> Corpus:
         """
@@ -414,7 +415,7 @@ class NLPTaskDataFetcher:
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
-        :param tokenizer: tokenizer to use
+        :param tokenizer: Custom tokenizer to use (default SegtokTokenizer)
         :return: a Corpus with annotated train, dev and test data
         """
 
@@ -479,7 +480,7 @@ class NLPTaskDataFetcher:
     def read_text_classification_file(
         path_to_file: Union[str, Path],
         max_tokens_per_doc=-1,
-        tokenizer: Union[Callable[[str], List[Token]], Tokenizer] = SegTokTokenizer(),
+        tokenizer: Tokenizer = SegtokTokenizer(),
     ) -> List[Sentence]:
         """
         Reads a data file for text classification. The file should contain one document/text per line.
@@ -489,7 +490,7 @@ class NLPTaskDataFetcher:
         __label__<class_name_1> __label__<class_name_2> <text>
         :param path_to_file: the path to the data file
         :param max_tokens_per_doc: Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.
-        :param tokenizer: Tokenizer to use to prepare the data set
+        :param tokenizer: Custom tokenizer to use to prepare the data set (default SegtokTokenizer)
         :return: list of sentences
         """
         label_prefix = "__label__"

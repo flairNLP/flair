@@ -1,23 +1,26 @@
-from abc import abstractmethod, ABC
-from operator import itemgetter
-from typing import List, Dict, Union, Callable, Optional
-import re
-
 import torch, flair
 import logging
+import re
+
+from abc import abstractmethod, ABC
 
 from collections import Counter
 from collections import defaultdict
 
 from deprecated import deprecated
+from flair.file_utils import Tqdm
+from operator import itemgetter
 
 from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions
 from segtok.tokenizer import word_tokenizer
+
 from torch.utils.data import Dataset, random_split
 from torch.utils.data.dataset import ConcatDataset, Subset
 
-from flair.file_utils import Tqdm
+from typing import List, Dict, Union, Callable, Optional
+
+
 
 log = logging.getLogger("flair")
 
@@ -541,17 +544,17 @@ class SpacyTokenizer(Tokenizer):
         )
 
 
-class SegTokTokenizer(Tokenizer):
+class SegtokTokenizer(Tokenizer):
     """
         Tokenizer using segtok, a third party library dedicated to rules-based Indo-European languages.
 
         For further details see: https://github.com/fnl/segtok
     """
     def __init__(self):
-        super(SegTokTokenizer, self).__init__()
+        super(SegtokTokenizer, self).__init__()
 
     def tokenize(self, text: str) -> List[Token]:
-        return SegTokTokenizer.run_tokenize(text)
+        return SegtokTokenizer.run_tokenize(text)
 
     @staticmethod
     def run_tokenize(text: str) -> List[Token]:
@@ -739,11 +742,11 @@ def space_tokenizer(text: str) -> List[Token]:
     return SpaceTokenizer.run_tokenize(text)
 
 
-@deprecated(version="0.5", reason="Use 'flair.data.SegTokTokenizer' instead.")
+@deprecated(version="0.5", reason="Use 'flair.data.SegtokTokenizer' instead.")
 def segtok_tokenizer(text: str) -> List[Token]:
-    # We don't want to create a SegTokTokenizer object each time this function is called,
+    # We don't want to create a SegtokTokenizer object each time this function is called,
     # so delegate the call directly to the static run_tokenize method
-    return SegTokTokenizer.run_tokenize(text)
+    return SegtokTokenizer.run_tokenize(text)
 
 
 @deprecated(version="0.5", reason="Use 'flair.data.SpacyTokenizer' instead.")
@@ -774,7 +777,7 @@ class Sentence(DataPoint):
     def __init__(
         self,
         text: str = None,
-        use_tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = False,
+        use_tokenizer: Union[bool, Tokenizer] = False,
         language_code: str = None,
     ):
         """
@@ -783,7 +786,7 @@ class Sentence(DataPoint):
         :param use_tokenizer: a custom tokenizer (default is SpaceTokenizer)
         more advanced options are SegTokTokenizer to use segtok or SpacyTokenizer to use Spacy library
         if available). Check the implementations of abstract class Tokenizer or implement your own subclass (if you need it).
-        If instead of providing a Tokenizer or a function, this parameter is just set to True, SegTokTokenizer will be used.
+        If instead of providing a Tokenizer, this parameter is just set to True, SegtokTokenizer will be used.
         :param labels:
         :param language_code:
         """
@@ -800,10 +803,10 @@ class Sentence(DataPoint):
         elif hasattr(use_tokenizer, "__call__"):
             tokenizer = TokenizerWrapper(use_tokenizer)
         elif type(use_tokenizer) == bool:
-            tokenizer = SegTokTokenizer() if use_tokenizer else SpaceTokenizer()
+            tokenizer = SegtokTokenizer() if use_tokenizer else SpaceTokenizer()
         else:
             raise AssertionError("Unexpected type of parameter 'use_tokenizer'. " +
-                                 "Parameter should be bool, Callable[[str], List[Token]], Tokenizer")
+                                 "Parameter should be bool, Callable[[str], List[Token]] (deprecated), Tokenizer")
 
 
         # if text is passed, instantiate sentence with tokens (words)

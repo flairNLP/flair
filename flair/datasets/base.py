@@ -11,7 +11,7 @@ from flair.data import (
     Token,
     FlairDataset,
     Tokenizer,
-    SegTokTokenizer,
+    SegtokTokenizer,
     SpaceTokenizer
 )
 
@@ -138,7 +138,7 @@ class MongoDataset(FlairDataset):
             categories_field: List[str] = None,
             max_tokens_per_doc: int = -1,
             max_chars_per_doc: int = -1,
-            tokenizer: Union[Callable[[str], List[Token]], Tokenizer] = SegTokTokenizer(),
+            tokenizer: Tokenizer = SegtokTokenizer(),
             in_memory: bool = True,
     ):
         """
@@ -163,6 +163,7 @@ class MongoDataset(FlairDataset):
         :param max_tokens_per_doc: Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.
         :param max_tokens_per_doc: If set, truncates each Sentence to a maximum number of Tokens
         :param max_chars_per_doc: If set, truncates each Sentence to a maximum number of chars
+        :param tokenizer: Custom tokenizer to use (default SegtokTokenizer)
         :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
         :return: list of sentences
         """
