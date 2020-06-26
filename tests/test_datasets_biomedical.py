@@ -10,7 +10,9 @@ from typing import List, Callable, Type, Optional, Tuple
 from tqdm import tqdm
 
 import flair
-from flair.datasets import ColumnCorpus, biomedical
+import flair.datasets.biomedical as biomedical
+
+from flair.datasets import ColumnCorpus
 from flair.datasets.biomedical import (
     Entity,
     InternalBioNerDataset,
@@ -284,9 +286,8 @@ def sanity_check_all_corpora(check: Callable[[ColumnCorpus], None]):
         check(corpus)
 
 
-@pytest.mark.slow
-@pytest.mark.xfail
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
+@pytest.mark.skip(msg="We skip this test because it's only relevant for development purposes")
 def test_sanity_not_starting_with_minus(CorpusType: Type[ColumnCorpus]):
     corpus = CorpusType()
     entities_starting_with_minus = []
@@ -303,9 +304,8 @@ def test_sanity_not_starting_with_minus(CorpusType: Type[ColumnCorpus]):
     )
 
 
-@pytest.mark.slow
-@pytest.mark.xfail
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
+@pytest.mark.skip(msg="We skip this test because it's only relevant for development purposes")
 def test_sanity_no_repeating_Bs(CorpusType: Type[ColumnCorpus]):
     corpus = CorpusType()
     longest_repeat_tokens = []
@@ -324,9 +324,8 @@ def test_sanity_no_repeating_Bs(CorpusType: Type[ColumnCorpus]):
     assert len(longest_repeat_tokens) < 4
 
 
-@pytest.mark.slow
-@pytest.mark.xfail
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
+@pytest.mark.skip(msg="We skip this test because it's only relevant for development purposes")
 def test_sanity_no_long_entities(CorpusType: Type[ColumnCorpus]):
     corpus = CorpusType()
     longest_entity = []
@@ -339,9 +338,8 @@ def test_sanity_no_long_entities(CorpusType: Type[ColumnCorpus]):
     assert len(longest_entity) < 10, " ".join(longest_entity)
 
 
-@pytest.mark.slow
-@pytest.mark.xfail
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
+@pytest.mark.skip(msg="We skip this test because it's only relevant for development purposes")
 def test_sanity_no_unmatched_parentheses(CorpusType: Type[ColumnCorpus]):
     corpus = CorpusType()
     unbalanced_entities = []
@@ -355,9 +353,8 @@ def test_sanity_no_unmatched_parentheses(CorpusType: Type[ColumnCorpus]):
     assert unbalanced_entities == []
 
 
-@pytest.mark.slow
-@pytest.mark.xfail
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
+@pytest.mark.skip(msg="We skip this test because it's only relevant for development purposes")
 def test_sanity_not_too_many_entities(CorpusType: Type[ColumnCorpus]):
     corpus = CorpusType()
     n_entities_per_sentence = []
@@ -371,9 +368,8 @@ def test_sanity_not_too_many_entities(CorpusType: Type[ColumnCorpus]):
     assert avg_entities_per_sentence <= 5
 
 
-@pytest.mark.slow
-@pytest.mark.xfail
 @pytest.mark.parametrize("CorpusType", ALL_DATASETS)
+@pytest.mark.skip(msg="We skip this test because it's only relevant for development purposes")
 def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
     dataset_name = CorpusType.__class__.__name__.lower()
     base_path = Path(flair.cache_root) / "datasets"
@@ -408,7 +404,7 @@ def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
         assert len(misaligned_ends) <= len(entities) // 10
 
 
-@pytest.mark.slow
+@pytest.mark.skip(msg="We skip this test because it's only relevant for development purposes")
 def test_scispacy_tokenization():
     tokenizer = build_spacy_tokenizer()
     assert tokenizer("HBeAg(+) patients")[0] == ["HBeAg", "(", "+", ")", "patients"]
