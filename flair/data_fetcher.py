@@ -13,11 +13,10 @@ from flair.data import (
     Sentence,
     Corpus,
     Token,
-    MultiCorpus,
     Tokenizer,
-    SegtokTokenizer,
-    SpaceTokenizer
+    MultiCorpus
 )
+from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")

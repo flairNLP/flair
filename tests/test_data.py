@@ -1,21 +1,18 @@
+import flair
 import os
-from typing import List
-
 import pytest
 
-import flair.datasets
+from typing import List
+
 from flair.data import (
     Sentence,
     Label,
     Token,
     Dictionary,
     Corpus,
-    Span,
-    SegtokTokenizer,
-    SpacyTokenizer,
-    JapaneseTokenizer,
-    TokenizerWrapper
+    Span
 )
+from flair.tokenization import SpacyTokenizer, SegtokTokenizer, JapaneseTokenizer, TokenizerWrapper
 
 
 def test_get_head():

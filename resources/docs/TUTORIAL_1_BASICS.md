@@ -83,7 +83,8 @@ print(sentence)
 You can also pass custom tokenizers to the initialization method. Instead of passing a boolean `True` value to the `use_tokenizer` parameter, you can pass an implementation of `Tokenizer` class, like this:
 
 ```python
-from flair.data import Sentence, SegtokTokenizer
+from flair.data import Sentence
+from flair.tokenization import SegtokTokenizer
 
 # Make a sentence object by passing an untokenized string and a tokenizer
 sentence = Sentence('The grass is green.', use_tokenizer=SegtokTokenizer())
@@ -98,7 +99,7 @@ This should print:
 Sentence: "The grass is green ." - 5 Tokens
 ```
 
-The second way allows you to write your own tokenization routine. Check the code of `flair.data.Tokenizer` and it's implementations (e.g. `flair.data.SegtokTokenizer` or `flair.data.SpacyTokenizer`) to have an idea of how to add your own tokenization.  
+The second way allows you to write your own tokenization routine. Check the code of `flair.data.Tokenizer` and it's implementations (e.g. `flair.tokenization.SegtokTokenizer` or `flair.tokenization.SpacyTokenizer`) to have an idea of how to add your own tokenization.  
 
 ## Adding Labels
 

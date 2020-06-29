@@ -9,12 +9,10 @@ from torch.utils.data.dataset import Subset, ConcatDataset
 from flair.data import (
     Sentence,
     Token,
-    FlairDataset,
     Tokenizer,
-    SegtokTokenizer,
-    SpaceTokenizer
+    FlairDataset
 )
-
+from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 
 log = logging.getLogger("flair")
 

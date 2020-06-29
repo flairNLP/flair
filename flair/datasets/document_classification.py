@@ -11,10 +11,9 @@ from flair.data import (
     Corpus,
     Token,
     FlairDataset,
-    Tokenizer,
-    SegtokTokenizer,
-    SpaceTokenizer
+    Tokenizer
 )
+from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unzip_file
 
