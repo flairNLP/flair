@@ -5294,52 +5294,6 @@ class CRAFT_V4(ColumnCorpus):
             documents=documents, entities_per_document=entities_per_document
         )
 
-
-class CRAFT_V4_GENE(CRAFT_V4):
-    """
-        Version 4.0.1 of the CRAFT corpus containing only gene annotations.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            *args, **kwargs,
-        )
-
-    def filter_entities(self, corpus: InternalBioNerDataset) -> InternalBioNerDataset:
-        entity_type_mapping = {"pr": GENE_TAG}
-        return filter_and_map_entities(corpus, entity_type_mapping)
-
-
-class CRAFT_V4_CHEMICAL(CRAFT_V4):
-    """
-        Version 4.0.1 of the CRAFT corpus containing only chemical annotations.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            *args, **kwargs,
-        )
-
-    def filter_entities(self, corpus: InternalBioNerDataset) -> InternalBioNerDataset:
-        entity_type_mapping = {"chebi": CHEMICAL_TAG}
-        return filter_and_map_entities(corpus, entity_type_mapping)
-
-
-class CRAFT_V4_SPECIES(CRAFT_V4):
-    """
-        Version 4.0.1 of the CRAFT corpus containing only chemical annotations.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            *args, **kwargs,
-        )
-
-    def filter_entities(self, corpus: InternalBioNerDataset) -> InternalBioNerDataset:
-        entity_type_mapping = {"ncbitaxon": SPECIES_TAG}
-        return filter_and_map_entities(corpus, entity_type_mapping)
-
-
 class AZDZ(ColumnCorpus):
     """
          Arizona Disease Corpus from the Biomedical Informatics Lab at Arizona State University.
