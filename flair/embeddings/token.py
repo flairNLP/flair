@@ -954,10 +954,10 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
             while subtoken_ids_sentence:
                 nr_sentence_parts += 1
-                encoded_inputs = self.tokenizer.prepare_for_model(subtoken_ids_sentence,
-                                                                  max_length=self.max_subtokens_sequence_length,
-                                                                  stride=self.stride,
-                                                                  return_overflowing_tokens=self.allow_long_sentences)
+                encoded_inputs = self.tokenizer.encode_plus(subtoken_ids_sentence,
+                                                            max_length=self.max_subtokens_sequence_length,
+                                                            stride=self.stride,
+                                                            return_overflowing_tokens=self.allow_long_sentences)
 
                 subtoken_ids_split_sentence = encoded_inputs['input_ids']
                 subtokenized_sentences.append(torch.tensor(subtoken_ids_split_sentence, dtype=torch.long))
