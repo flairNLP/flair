@@ -1612,7 +1612,7 @@ class ELMoEmbeddings(TokenEmbeddings):
             log.warning("-" * 100)
             log.warning('ATTENTION! The library "allennlp" is not installed!')
             log.warning(
-                'To use ELMoEmbeddings, please first install with "pip install allennlp"'
+                'To use ELMoEmbeddings, please first install with "pip install allennlp==0.9.0"'
             )
             log.warning("-" * 100)
             pass
