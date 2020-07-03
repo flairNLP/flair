@@ -313,6 +313,10 @@ class TextClassifier(flair.nn.Model):
 
                 store_embeddings(batch, embedding_storage_mode)
 
+            # remove predicted labels
+            for sentence in sentences:
+                sentence.annotation_layers['predicted'] = []
+
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
