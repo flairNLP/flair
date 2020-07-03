@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Union, Callable, Dict, Optional
+from typing import List, Union, Dict, Optional
 
 import torch
 import torch.nn as nn
@@ -11,12 +11,11 @@ import numpy as np
 import sklearn.metrics as metrics
 import flair.nn
 import flair.embeddings
-from flair.data import Dictionary, Sentence, Label, Token, space_tokenizer, DataPoint
-from flair.datasets import SentenceDataset, StringDataset, DataLoader
+from flair.data import Dictionary, Sentence, Label, DataPoint
+from flair.datasets import SentenceDataset, DataLoader
 from flair.file_utils import cached_path
 from flair.training_utils import (
     convert_labels_to_one_hot,
-    Metric,
     Result,
     store_embeddings,
 )
@@ -231,7 +230,7 @@ class TextClassifier(flair.nn.Model):
 
                 for (sentence, labels) in zip(batch, predicted_labels):
                     for label in labels:
-                        if self.multi_label:
+                        if self.multi_label or multi_class_prob:
                             sentence.add_label(label_name, label.value, label.score)
                         else:
                             sentence.set_label(label_name, label.value, label.score)
@@ -323,14 +322,14 @@ class TextClassifier(flair.nn.Model):
             for i in range(len(self.label_dictionary)):
                 target_names.append(self.label_dictionary.get_item_for_index(i))
             classification_report = metrics.classification_report(y_true, y_pred, digits=4,
-                                                                  target_names=target_names, zero_division=1)
+                                                                  target_names=target_names, zero_division=0)
 
             # get scores
-            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro'), 4)
+            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0), 4)
             accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
-            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro'), 4)
-            precision_score = round(metrics.precision_score(y_true, y_pred, average='macro'), 4)
-            recall_score = round(metrics.recall_score(y_true, y_pred, average='macro'), 4)
+            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro', zero_division=0), 4)
+            precision_score = round(metrics.precision_score(y_true, y_pred, average='macro', zero_division=0), 4)
+            recall_score = round(metrics.recall_score(y_true, y_pred, average='macro', zero_division=0), 4)
 
             detailed_result = (
                     "\nResults:"
@@ -469,6 +468,11 @@ class TextClassifier(flair.nn.Model):
         )
         model_map["sentiment-fast"] = "/".join(
             [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn.pt"]
+        )
+        
+        #Communicative Functions Model
+        model_map["communicative-functions"] = "/".join(
+            [hu_path, "communicative-functions", "communicative-functions.pt"]
         )
 
         cache_dir = Path("models")

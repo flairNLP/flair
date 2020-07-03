@@ -117,6 +117,33 @@ def test_transformer_weird_sentences():
     for token in sentence:
         assert len(token.get_embedding()) == 768
 
+    sentence = Sentence("🤟 🤟  🤟 hüllo")
+    embeddings.embed(sentence)
+    for token in sentence:
+        assert len(token.get_embedding()) == 768
+
+    sentence = Sentence("🤟hallo 🤟 🤟 🤟 🤟")
+    embeddings.embed(sentence)
+    for token in sentence:
+        assert len(token.get_embedding()) == 768
+
+    sentence = Sentence("🤟hallo 🤟 🤟 🤟 🤟")
+    embeddings.embed(sentence)
+    for token in sentence:
+        assert len(token.get_embedding()) == 768
+
+    sentence = Sentence("🤟")
+    embeddings.embed(sentence)
+    for token in sentence:
+        assert len(token.get_embedding()) == 768
+
+    sentence = Sentence("🤟")
+    sentence_2 = Sentence("second sentence")
+    embeddings.embed([sentence, sentence_2])
+    for token in sentence:
+        assert len(token.get_embedding()) == 768
+    for token in sentence_2:
+        assert len(token.get_embedding()) == 768
 
 def test_fine_tunable_flair_embedding():
     language_model_forward = LanguageModel(

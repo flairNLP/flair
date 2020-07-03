@@ -730,14 +730,6 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
         # set the memory method
         self.pooling = pooling
-        if pooling == "mean":
-            self.aggregate_op = torch.add
-        elif pooling == "fade":
-            self.aggregate_op = torch.add
-        elif pooling == "max":
-            self.aggregate_op = torch.max
-        elif pooling == "min":
-            self.aggregate_op = torch.min
 
     def train(self, mode=True):
         super().train(mode=mode)
@@ -766,11 +758,18 @@ class PooledFlairEmbeddings(TokenEmbeddings):
                             self.word_embeddings[token.text] = local_embedding
                             self.word_count[token.text] = 1
                         else:
-                            aggregated_embedding = self.aggregate_op(
-                                self.word_embeddings[token.text], local_embedding
-                            )
-                            if self.pooling == "fade":
+
+                            # set aggregation operation
+                            if self.pooling == "mean":
+                                aggregated_embedding = torch.add(self.word_embeddings[token.text], local_embedding)
+                            elif self.pooling == "fade":
+                                aggregated_embedding = torch.add(self.word_embeddings[token.text], local_embedding)
                                 aggregated_embedding /= 2
+                            elif self.pooling == "max":
+                                aggregated_embedding = torch.max(self.word_embeddings[token.text], local_embedding)
+                            elif self.pooling == "min":
+                                aggregated_embedding = torch.min(self.word_embeddings[token.text], local_embedding)
+
                             self.word_embeddings[token.text] = aggregated_embedding
                             self.word_count[token.text] += 1
 
@@ -813,7 +812,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         batch_size: int = 1,
         use_scalar_mix: bool = False,
         fine_tune: bool = False,
-        allow_long_sentences: bool = False
+        allow_long_sentences: bool = False,
+        **kwargs
     ):
         """
         Bidirectional transformer embeddings of words from various transformer architectures.
@@ -830,9 +830,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         super().__init__()
 
         # load tokenizer and transformer model
-        self.tokenizer = AutoTokenizer.from_pretrained(model)
-        config = AutoConfig.from_pretrained(model, output_hidden_states=True)
-        self.model = AutoModel.from_pretrained(model, config=config)
+        self.tokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
+        config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
+        self.model = AutoModel.from_pretrained(model, config=config, **kwargs)
 
         self.allow_long_sentences = allow_long_sentences
 
@@ -927,6 +927,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             self.allow_long_sentences = False
             self.stride = 0
 
+        non_empty_sentences = []
+        empty_sentences = []
+
         for sentence in sentences:
             tokenized_string = sentence.to_tokenized_string()
 
@@ -936,6 +939,12 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             # method 2:
             # transformer specific tokenization
             subtokenized_sentence = self.tokenizer.tokenize(tokenized_string)
+            if len(subtokenized_sentence) == 0:
+                empty_sentences.append(sentence)
+                continue
+            else:
+                non_empty_sentences.append(sentence)
+
             token_subtoken_lengths = self.reconstruct_tokens_from_subtokens(sentence, subtokenized_sentence)
             subtokenized_sentences_token_lengths.append(token_subtoken_lengths)
 
@@ -945,14 +954,13 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
             while subtoken_ids_sentence:
                 nr_sentence_parts += 1
-                encoded_inputs = self.tokenizer.prepare_for_model(subtoken_ids_sentence,
-                                                                  max_length=self.max_subtokens_sequence_length,
-                                                                  stride=self.stride,
-                                                                  return_overflowing_tokens=self.allow_long_sentences)
+                encoded_inputs = self.tokenizer.encode_plus(subtoken_ids_sentence,
+                                                            max_length=self.max_subtokens_sequence_length,
+                                                            stride=self.stride,
+                                                            return_overflowing_tokens=self.allow_long_sentences)
 
                 subtoken_ids_split_sentence = encoded_inputs['input_ids']
                 subtokenized_sentences.append(torch.tensor(subtoken_ids_split_sentence, dtype=torch.long))
-
 
                 if 'overflowing_tokens' in encoded_inputs:
                     subtoken_ids_sentence = encoded_inputs['overflowing_tokens']
@@ -960,6 +968,15 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                     subtoken_ids_sentence = None
 
             sentence_parts_lengths.append(nr_sentence_parts)
+
+        # empty sentences get zero embeddings
+        for sentence in empty_sentences:
+            for token in sentence:
+                token.set_embedding(self.name, torch.zeros(self.embedding_length))
+
+        # only embed non-empty sentences and if there is at least one
+        sentences = non_empty_sentences
+        if len(sentences) == 0: return
 
         # find longest sentence in batch
         longest_sequence_in_batch: int = len(max(subtokenized_sentences, key=len))
@@ -1074,9 +1091,12 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
             # some BERT tokenizers somehow omit words - in such cases skip to next token
             if subtoken_count == 0 and not token_text.startswith(subtoken.lower()):
-                token_subtoken_lengths.append(0)
-                token = next(word_iterator)
-                token_text = self._get_processed_token_text(token)
+
+                while True:
+                    token_subtoken_lengths.append(0)
+                    token = next(word_iterator)
+                    token_text = self._get_processed_token_text(token)
+                    if token_text.startswith(subtoken.lower()): break
 
             subtoken_count += 1
 
@@ -1099,6 +1119,13 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                     token_text = self._get_processed_token_text(token)
                 else:
                     break
+
+        # if tokens are unaccounted for
+        while len(token_subtoken_lengths) < len(sentence) and len(token.text) == 1:
+            token_subtoken_lengths.append(0)
+            if len(token_subtoken_lengths) == len(sentence): break
+            token = next(word_iterator)
+
         # check if all tokens were matched to subtokens
         if token != sentence[-1]:
             log.error(f"Tokenization MISMATCH in sentence '{sentence.to_tokenized_string()}'")
@@ -1134,7 +1161,10 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # reload tokenizer to get around serialization issues
         model_name = self.name.split('transformer-word-')[-1]
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        except:
+            pass
 
 
 class FastTextEmbeddings(TokenEmbeddings):
@@ -1612,14 +1642,14 @@ class ELMoEmbeddings(TokenEmbeddings):
             if model == "pubmed":
                 options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_options.json"
                 weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_weights_PubMed_only.hdf5"
-
+        
         if embedding_mode == "all":
-            self.embedding_mode_fn = lambda x: torch.cat(x, 0)
+            self.embedding_mode_fn = self.use_layers_all
         elif embedding_mode == "top":
-            self.embedding_mode_fn = lambda x: x[-1]
+            self.embedding_mode_fn = self.use_layers_top 
         elif embedding_mode == "average":
-            self.embedding_mode_fn = lambda x: torch.mean(torch.stack(x), 0)
-
+            self.embedding_mode_fn = self.use_layers_average   
+                    
         # put on Cuda if available
         from flair import device
 
@@ -1645,9 +1675,21 @@ class ELMoEmbeddings(TokenEmbeddings):
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
-
+    
+    def use_layers_all(self,x):
+        return torch.cat(x, 0)
+    
+    def use_layers_top(self,x):
+        return x[-1]
+    
+    def use_layers_average(self,x):
+        return torch.mean(torch.stack(x), 0)
+        
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
+        # ELMoEmbeddings before Release 0.5 did not set self.embedding_mode_fn
+        if not getattr(self, "embedding_mode_fn", None):
+            self.embedding_mode_fn = self.use_layers_all
+            
         sentence_words: List[List[str]] = []
         for sentence in sentences:
             sentence_words.append([token.text for token in sentence])
