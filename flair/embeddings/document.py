@@ -6,8 +6,6 @@ import torch
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from transformers import BertTokenizer, AlbertTokenizer, AutoTokenizer, AutoConfig, AutoModel
 
-from sentence_transformers import SentenceTransformer
-
 import flair
 from flair.data import Sentence
 from flair.embeddings.base import Embeddings, ScalarMix
@@ -532,6 +530,18 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
         :param convert_to_numpy: bool whether the encode() returns a numpy array or PyTorch tensor
         """
         super().__init__()
+
+        try:
+            from sentence_transformers import SentenceTransformer
+        except ModuleNotFoundError:
+            log.warning("-" * 100)
+            log.warning('ATTENTION! The library "sentence-transformers" is not installed!')
+            log.warning(
+                'To use Sentence Transformers, please first install with "pip install sentence-transformers"'
+            )
+            log.warning("-" * 100)
+            pass
+
         self.model = SentenceTransformer(model)
         self.name = 'sentence-transformers-' + str(model)
         self.batch_size = batch_size

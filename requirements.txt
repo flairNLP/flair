@@ -10,8 +10,7 @@ scikit-learn>=0.21.3
 sqlitedict>=1.6.0
 deprecated>=1.2.4
 hyperopt>=0.1.1
-transformers>=2.10.0
-sentence-transformers>=0.2.6.1
+transformers>=3.0.0
 bpemb>=0.2.9
 regex
 tabulate
