@@ -12,33 +12,20 @@ All document embedding classes inherit from the `DocumentEmbeddings` class and i
 need to call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains
 hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
 
-All embeddings produced with our methods are PyTorch vectors, so they can be immediately used for training and
-fine-tuning. There are four main document embeddings in Flair: (1) `DocumentPoolEmbeddings` that simply do an average over all word embeddings in the sentence, (2) `DocumentRNNEmbeddings` that train an RNN over all word embeddings in a sentence, and (3) `TransformerDocumentEmbeddings` / (4) `SentenceTransformerDocumentEmbeddings` that both use a pre-trained transformer: 
+There are four main document embeddings in Flair:
+ 1. `DocumentPoolEmbeddings` that simply do an average over all word embeddings in the sentence,
+ 2. `DocumentRNNEmbeddings` that train an RNN over all word embeddings in a sentence
+ 3. `TransformerDocumentEmbeddings` that use pre-trained transformers and are **recommended** for most text classification tasks
+ 4. `SentenceTransformerDocumentEmbeddings` that use pre-trained transformers and are *recommended* if you need a good vector representation of a sentence
 
-```python
-from flair.embeddings import TransformerDocumentEmbeddings, DocumentPoolEmbeddings, DocumentRNNEmbeddings, SentenceTransformerDocumentEmbeddings
-
-# document embedding is a mean over GloVe word embeddings
-pooled_embeddings = DocumentPoolEmbeddings([WordEmbeddings('glove')], pooling='mean')
-
-# document embedding is an LSTM over GloVe word embeddings
-lstm_embeddings = DocumentRNNEmbeddings([WordEmbeddings('glove')], rnn_type='lstm')
-
-# document embedding is a pre-trained transformer
-transformer_embeddings = TransformerDocumentEmbeddings('bert-base-uncased')
-
-# document embedding is a pre-trained transformer
-sent_transformer_embeddings = SentenceTransformerDocumentEmbeddings('bert-base-nli-mean-tokens')
-```
-
-Simply call embed() to embed your sentence with one of these three options: 
+Initialize one of these four options and call `embed()` to embed your sentence: 
 
 ```python
 # example sentence
 sentence = Sentence('The grass is green.')
 
 # embed with pooled embeddings
-pooled_embeddings.embed(sentence)
+embeddings.embed(sentence)
 
 # print embedding for whole sentence
 print(sentence.embedding)
