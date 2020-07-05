@@ -50,6 +50,11 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         """
         super().__init__()
 
+        # temporary fix to disable tokenizer parallelism warning
+        # (see https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning)
+        import os
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
         # load tokenizer and transformer model
         self.tokenizer = AutoTokenizer.from_pretrained(model)
         config = AutoConfig.from_pretrained(model, output_hidden_states=True)
