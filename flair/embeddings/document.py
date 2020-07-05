@@ -113,7 +113,9 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
                 # tokenize and truncate to 512 subtokens (TODO: check better truncation strategies)
                 subtokenized_sentence = self.tokenizer.encode(sentence.to_tokenized_string(),
                                                               add_special_tokens=True,
-                                                              max_length=512)
+                                                              max_length=512,
+                                                              truncation=True,
+                                                              )
                 subtokenized_sentences.append(
                     torch.tensor(subtokenized_sentence, dtype=torch.long, device=flair.device))
 

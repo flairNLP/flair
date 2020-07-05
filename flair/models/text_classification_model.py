@@ -476,7 +476,7 @@ class TextClassifier(flair.nn.Model):
         
         #Communicative Functions Model
         model_map["communicative-functions"] = "/".join(
-            [hu_path, "communicative-functions", "communicative-functions.pt"]
+            [hu_path, "comfunc", "communicative-functions-v0.5b.pt"]
         )
 
         cache_dir = Path("models")

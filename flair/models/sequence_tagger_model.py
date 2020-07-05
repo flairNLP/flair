@@ -1128,7 +1128,7 @@ class SequenceTagger(flair.nn.Model):
             [aws_resource_path_v04, "release-fr-ner-0", "fr-ner-wikiner-0.4.pt"]
         )
         model_map["nl-ner"] = "/".join(
-            [hu_path, "dutch-ner_0", "nl-ner-bert-conll02-v0.5.pt"]
+            [hu_path, "dutch-ner_0", "nl-ner-bert-conll02-v0.5b.pt"]
         )
         model_map["nl-ner-rnn"] = "/".join(
             [hu_path, "dutch-ner-flair-0", "nl-ner-conll02-v0.5.pt"]
