@@ -18,20 +18,7 @@ There are four main document embeddings in Flair:
  3. `TransformerDocumentEmbeddings` that use pre-trained transformers and are **recommended** for most text classification tasks
  4. `SentenceTransformerDocumentEmbeddings` that use pre-trained transformers and are *recommended* if you need a good vector representation of a sentence
 
-Initialize one of these four options and call `embed()` to embed your sentence: 
-
-```python
-# example sentence
-sentence = Sentence('The grass is green.')
-
-# embed with pooled embeddings
-embeddings.embed(sentence)
-
-# print embedding for whole sentence
-print(sentence.embedding)
-```
-
-We give details on all four document embeddings in the following:
+Initialize one of these four options and call `embed()` to embed your sentence. We give details on all four document embeddings in the following:
 
 ## Document Pool Embeddings
 
