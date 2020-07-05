@@ -25,7 +25,7 @@ document embeddings, including our proposed **[Flair embeddings](https://drive.g
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to 
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.5](https://github.com/flairNLP/flair/releases)!
+Now at [version 0.5.1](https://github.com/flairNLP/flair/releases)!
 
 ## Comparison with State-of-the-Art
 
@@ -195,18 +195,6 @@ To also run slow tests, such as loading and using the embeddings provided by fla
 ```bash
 pytest --runslow tests/
 ```
-
-### Code Style
-
-To ensure a standardized code style we use the formatter [black](https://github.com/ambv/black).
-If your code is not formatted properly, travis will fail to build.
-
-If you want to automatically format your code on every commit, you can use [pre-commit](https://pre-commit.com/).
-Just install it via `pip install pre-commit` and execute `pre-commit install` in the root folder.
-This will add a hook to the repository, which reformats files on every commit.
-
-If you want to set it up manually, install black via `pip install black`.
-To reformat files execute `black .`.
 
 ## [License](/LICENSE)
 
