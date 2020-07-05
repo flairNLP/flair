@@ -18,7 +18,9 @@ There are four main document embeddings in Flair:
  3. `TransformerDocumentEmbeddings` that use pre-trained transformers and are **recommended** for most text classification tasks
  4. `SentenceTransformerDocumentEmbeddings` that use pre-trained transformers and are *recommended* if you need a good vector representation of a sentence
 
-Initialize one of these four options and call `embed()` to embed your sentence. We give details on all four document embeddings in the following:
+Initialize one of these four options and call `embed()` to embed your sentence. 
+
+We give details on all four document embeddings in the following:
 
 ## Document Pool Embeddings
 
@@ -53,7 +55,7 @@ print(sentence.embedding)
 
 This prints out the embedding of the document. Since the document embedding is derived from word embeddings, its dimensionality depends on the dimensionality of word embeddings you are using. For more details on these embeddings, check [here](/resources/docs/embeddings/DOCUMENT_POOL_EMBEDDINGS.md). 
 
-One advantage of DocumentPoolEmbeddings is that they do not need to be trained, you can immediately use them to embed your documents. 
+One advantage of `DocumentPoolEmbeddings` is that they do not need to be trained, you can immediately use them to embed your documents. 
 
 ## Document RNN Embeddings
 
@@ -121,7 +123,9 @@ embedding.embed(sentence)
 
 ## SentenceTransformerDocumentEmbeddings
 
-You can also get several embeddings from the [`sentence-transformer`](https://github.com/UKPLab/sentence-transformers) library. The procedure is similar to the TransformerDocumentEmbeddings class:  
+You can also get several embeddings from 
+the [`sentence-transformer`](https://github.com/UKPLab/sentence-transformers) library. 
+These models are pre-trained to ive good general-purpose vector representations for sentences. 
 
 ```python
 from flair.data import Sentence
@@ -138,6 +142,10 @@ embedding.embed(sentence)
 ```
 
 You can find a full list of their pretained models [here](https://docs.google.com/spreadsheets/d/14QplCdTCDwEmTqrn1LH4yrbKvdogK4oQvYO1K1aPR5M/edit#gid=0).
+
+**Note**: To use this embedding, you need to install `sentence-transformers` 
+with `pip install sentence-transformers`. This library currently requires an older version of `transformers`, 
+so installing it will uninstall the latest `transformers`, causing other transformer embeddings to break.
 
 ## Next
 
