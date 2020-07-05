@@ -275,7 +275,7 @@ tagger. Depending on your resources, you might want to play around with this par
 ## Tagging with Pre-Trained Text Classification Models
 
 Let's use a pre-trained model for detecting positive or negative comments.
-This model was trained over the [IMDB](http://ai.stanford.edu/~amaas/data/sentiment/) dataset and can recognize positive
+This model was trained over a mix of product and movie review datasets and can recognize positive
 and negative sentiment in English text.
 
 ```python
