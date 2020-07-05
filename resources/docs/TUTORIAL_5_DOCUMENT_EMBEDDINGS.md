@@ -125,7 +125,7 @@ embedding.embed(sentence)
 
 You can also get several embeddings from 
 the [`sentence-transformer`](https://github.com/UKPLab/sentence-transformers) library. 
-These models are pre-trained to ive good general-purpose vector representations for sentences. 
+These models are pre-trained to give good general-purpose vector representations for sentences. 
 
 ```python
 from flair.data import Sentence
