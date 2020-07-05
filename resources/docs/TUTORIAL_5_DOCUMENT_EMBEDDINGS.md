@@ -10,7 +10,7 @@ library and how [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) 
 
 All document embedding classes inherit from the `DocumentEmbeddings` class and implement the `embed()` method which you
 need to call to embed your text. This means that for most users of Flair, the complexity of different embeddings remains
-hidden behind this interface. Simply instantiate the embedding class you require and call `embed()` to embed your text.
+hidden behind this interface. 
 
 There are four main document embeddings in Flair:
  1. `DocumentPoolEmbeddings` that simply do an average over all word embeddings in the sentence,
