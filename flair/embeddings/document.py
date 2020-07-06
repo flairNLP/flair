@@ -50,6 +50,11 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         """
         super().__init__()
 
+        # temporary fix to disable tokenizer parallelism warning
+        # (see https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning)
+        import os
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
         # load tokenizer and transformer model
         self.tokenizer = AutoTokenizer.from_pretrained(model)
         config = AutoConfig.from_pretrained(model, output_hidden_states=True)
@@ -108,7 +113,9 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
                 # tokenize and truncate to 512 subtokens (TODO: check better truncation strategies)
                 subtokenized_sentence = self.tokenizer.encode(sentence.to_tokenized_string(),
                                                               add_special_tokens=True,
-                                                              max_length=512)
+                                                              max_length=512,
+                                                              truncation=True,
+                                                              )
                 subtokenized_sentences.append(
                     torch.tensor(subtokenized_sentence, dtype=torch.long, device=flair.device))
 
@@ -515,3 +522,60 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
                     )
 
         return sentences
+
+class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
+    def __init__(
+        self,
+        model: str = "bert-base-nli-mean-tokens",
+        batch_size: int = 1,
+        convert_to_numpy: bool = False,
+    ):
+        """
+        :param model: string name of models from SentencesTransformer Class
+        :param name: string name of embedding type which will be set to Sentence object
+        :param batch_size: int number of sentences to processed in one batch
+        :param convert_to_numpy: bool whether the encode() returns a numpy array or PyTorch tensor
+        """
+        super().__init__()
+
+        try:
+            from sentence_transformers import SentenceTransformer
+        except ModuleNotFoundError:
+            log.warning("-" * 100)
+            log.warning('ATTENTION! The library "sentence-transformers" is not installed!')
+            log.warning(
+                'To use Sentence Transformers, please first install with "pip install sentence-transformers"'
+            )
+            log.warning("-" * 100)
+            pass
+
+        self.model = SentenceTransformer(model)
+        self.name = 'sentence-transformers-' + str(model)
+        self.batch_size = batch_size
+        self.convert_to_numpy = convert_to_numpy
+        self.static_embeddings = True
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        sentence_batches = [sentences[i * self.batch_size:(i + 1) * self.batch_size]
+                            for i in range((len(sentences) + self.batch_size - 1) // self.batch_size)]
+
+        for batch in sentence_batches:
+            self._add_embeddings_to_sentences(batch)
+
+        return sentences
+
+    def _add_embeddings_to_sentences(self, sentences: List[Sentence]):
+
+        # convert to plain strings, embedded in a list for the encode function
+        sentences_plain_text = [sentence.to_plain_string() for sentence in sentences]
+
+        embeddings = self.model.encode(sentences_plain_text, convert_to_numpy=self.convert_to_numpy)
+        for sentence, embedding in zip(sentences, embeddings):
+            sentence.set_embedding(self.name, embedding)
+
+    @property
+    @abstractmethod
+    def embedding_length(self) -> int:
+        """Returns the length of the embedding vector."""
+        return self.model.get_sentence_embedding_dimension()

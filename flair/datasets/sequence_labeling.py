@@ -94,7 +94,6 @@ class ColumnCorpus(Corpus):
 
 
 class ColumnDataset(FlairDataset):
-
     # special key for space after
     SPACE_AFTER_KEY = "space-after"
 
@@ -447,52 +446,50 @@ class CONLL_03_DUTCH(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
         )
-        
-        
+
+
 def add_IOB2_tags(data_file: Union[str, Path], encoding: str = "utf8"):
-        """
-    Function that adds IOB2 tags if only chunk names are provided (e.g. words are tagged PER instead
-    of B-PER or I-PER). Replaces '0' with 'O' as the no-chunk tag since ColumnCorpus expects
-    the letter 'O'. Additionaly it removes lines with no tags in the data file and can also
-    be used if the data is only partialy IOB tagged.
-    Parameters
-    ----------
-    data_file : Union[str, Path]
-        Path to the data file. 
-    encoding : str, optional
-        Encoding used in open function. The default is "utf8".
-
     """
-        with open(file=data_file, mode='r', encoding=encoding) as f:
-            lines = f.readlines()
-        with open(file=data_file, mode='w', encoding=encoding) as f:
-            pred = 'O'  #remembers tag of predecessing line
-            for line in lines:
-                line_list = line.split()
-                if len(line_list) == 2: # word with tag
-                    word = line_list[0]
-                    tag = line_list[1]
-                    if tag in ['0','O']: #no chunk
-                        f.write(word + ' O\n')
-                        pred = 'O'
-                    elif '-' not in tag: #no IOB tags
-                        if pred == 'O': #found a new chunk
-                            f.write(word + ' B-'+ tag +'\n')
-                            pred = tag
-                        else: #found further part of chunk or new chunk directly after old chunk
-                            if pred == tag:
-                                f.write(word + ' I-'+ tag +'\n')
-                            else:
-                                f.write(word + ' B-'+ tag +'\n')
-                                pred = tag
-                    else: #line already has IOB tag (tag contains '-')
-                        f.write(line)
-                        pred = tag.split('-')[1]
-                elif len(line_list) == 0: #empty line
-                    f.write('\n')
-                    pred = 'O'
+Function that adds IOB2 tags if only chunk names are provided (e.g. words are tagged PER instead
+of B-PER or I-PER). Replaces '0' with 'O' as the no-chunk tag since ColumnCorpus expects
+the letter 'O'. Additionaly it removes lines with no tags in the data file and can also
+be used if the data is only partialy IOB tagged.
+Parameters
+----------
+data_file : Union[str, Path]
+    Path to the data file.
+encoding : str, optional
+    Encoding used in open function. The default is "utf8".
 
-                
+"""
+    with open(file=data_file, mode='r', encoding=encoding) as f:
+        lines = f.readlines()
+    with open(file=data_file, mode='w', encoding=encoding) as f:
+        pred = 'O'  # remembers tag of predecessing line
+        for line in lines:
+            line_list = line.split()
+            if len(line_list) == 2:  # word with tag
+                word = line_list[0]
+                tag = line_list[1]
+                if tag in ['0', 'O']:  # no chunk
+                    f.write(word + ' O\n')
+                    pred = 'O'
+                elif '-' not in tag:  # no IOB tags
+                    if pred == 'O':  # found a new chunk
+                        f.write(word + ' B-' + tag + '\n')
+                        pred = tag
+                    else:  # found further part of chunk or new chunk directly after old chunk
+                        if pred == tag:
+                            f.write(word + ' I-' + tag + '\n')
+                        else:
+                            f.write(word + ' B-' + tag + '\n')
+                            pred = tag
+                else:  # line already has IOB tag (tag contains '-')
+                    f.write(line)
+                    pred = tag.split('-')[1]
+            elif len(line_list) == 0:  # empty line
+                f.write('\n')
+                pred = 'O'
 
 
 class CONLL_03_SPANISH(ColumnCorpus):
@@ -690,7 +687,6 @@ class GERMEVAL_14(ColumnCorpus):
 
         # check if data there
         if not data_folder.exists():
-
             log.warning("-" * 100)
             log.warning(f'WARNING: GermEval-14 dataset not found at "{data_folder}".')
             log.warning(
@@ -708,10 +704,10 @@ class GERMEVAL_14(ColumnCorpus):
 
 class INSPEC(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "keyword",
-        in_memory: bool = True,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "keyword",
+            in_memory: bool = True,
     ):
 
         if type(base_path) == str:
@@ -733,11 +729,54 @@ class INSPEC(ColumnCorpus):
         cached_path(f"{inspec_path}/test.txt", Path("datasets") / dataset_name)
         if not "dev.txt" in os.listdir(data_folder):
             cached_path(f"{inspec_path}/valid.txt", Path("datasets") / dataset_name)
-            #rename according to train - test - dev - convention
+            # rename according to train - test - dev - convention
             os.rename(data_folder / "valid.txt", data_folder / "dev.txt")
 
         super(INSPEC, self).__init__(
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+        )
+
+
+class LER_GERMAN(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = False,
+    ):
+        """
+        Initialize the LER_GERMAN (Legal Entity Recognition) corpus. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ler_path = "https://raw.githubusercontent.com/elenanereiss/Legal-Entity-Recognition/master/data/"
+        cached_path(f"{ler_path}ler.conll", Path("datasets") / dataset_name)
+
+        super(LER_GERMAN, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            train_file='ler.conll'
         )
 
 
@@ -822,13 +861,14 @@ class NER_FINNISH(ColumnCorpus):
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, skip_first_line=True
         )
 
+
 def _remove_lines_without_annotations(data_file: Union[str, Path] = None):
-        with open(data_file, 'r') as f:
-            lines = f.readlines()
-        with open(data_file, 'w') as f:
-            for line in lines:
-                if len(line.split()) != 1:
-                    f.write(line)
+    with open(data_file, 'r') as f:
+        lines = f.readlines()
+    with open(data_file, 'w') as f:
+        for line in lines:
+            if len(line.split()) != 1:
+                f.write(line)
 
 
 class NER_SWEDISH(ColumnCorpus):
@@ -880,10 +920,10 @@ class NER_SWEDISH(ColumnCorpus):
 
 class SEMEVAL2017(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "keyword",
-        in_memory: bool = True,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "keyword",
+            in_memory: bool = True,
     ):
 
         if type(base_path) == str:
@@ -912,10 +952,10 @@ class SEMEVAL2017(ColumnCorpus):
 
 class SEMEVAL2010(ColumnCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        tag_to_bioes: str = "keyword",
-        in_memory: bool = True,
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "keyword",
+            in_memory: bool = True,
     ):
 
         if type(base_path) == str:
@@ -1270,6 +1310,7 @@ def _download_wikiner(language_code: str, dataset_name: str):
                 / dataset_name
                 / f"aij-wikiner-{lc}-wp3.train",
                 "w",
+                encoding="utf-8"
         ) as out:
             for line in f:
                 line = line.decode("utf-8")
