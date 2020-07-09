@@ -1280,7 +1280,6 @@ class BIOSCOPE(ColumnCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
-            tag_to_bioes: str = "ner",
             in_memory: bool = True,
     ):
         if type(base_path) == str:
@@ -1299,12 +1298,10 @@ class BIOSCOPE(ColumnCorpus):
 
         # download data if necessary
         bioscope_path = "https://raw.githubusercontent.com/whoisjones/BioScopeSequenceLabelingData/master/sequence_labeled/"
-        cached_path(f"{bioscope_path}train.txt", Path("datasets") / dataset_name)
-        cached_path(f"{bioscope_path}test.txt", Path("datasets") / dataset_name)
-        cached_path(f"{bioscope_path}dev.txt", Path("datasets") / dataset_name)
+        cached_path(f"{bioscope_path}output.txt", Path("datasets") / dataset_name)
 
         super(BIOSCOPE, self).__init__(
-            data_folder, columns, in_memory=in_memory
+            data_folder, columns, in_memory=in_memory, train_file="output.txt"
         )
 
 

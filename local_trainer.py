@@ -15,7 +15,7 @@ print(tag_dictionary)
 
 # 4. initialize embeddings
 embedding_types = [
-    WordEmbeddings('glove'),
+    WordEmbeddings('en'),
     FlairEmbeddings('news-forward'),
     FlairEmbeddings('news-backward'),
 ]
@@ -40,4 +40,6 @@ trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 trainer.train('resources/taggers/negation-speculation-tagger',
               learning_rate=0.1,
               mini_batch_size=32,
-              max_epochs=150)
+              max_epochs=150,
+              initial_extra_patience=2,
+              embeddings_storage_mode='gpu')
