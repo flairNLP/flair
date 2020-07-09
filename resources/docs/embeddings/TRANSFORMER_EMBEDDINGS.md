@@ -48,6 +48,7 @@ There are several options that you can set when you init the TransformerWordEmbe
 | `use_scalar_mix`     | `False`             | See [Scalar mix section](#Scalar-mix).
 | `batch_size`     | 1             | How many sentences to push through transformer simultaneously (high means faster but more memory usage)
 | `fine_tune`     | `False`             | Whether or not embeddings are fine-tuneable.
+| `allow_long_sentences`     | `False`             | Whether or not texts longer than maximal sequence length are supported.
 
 
 ### Layers
