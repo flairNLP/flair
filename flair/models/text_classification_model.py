@@ -114,6 +114,7 @@ class TextClassifier(flair.nn.Model):
             "state_dict": self.state_dict(),
             "document_embeddings": self.document_embeddings,
             "label_dictionary": self.label_dictionary,
+            "label_type": self.label_type,
             "multi_label": self.multi_label,
             "beta": self.beta,
             "weight_dict": self.weight_dict,
@@ -176,7 +177,7 @@ class TextClassifier(flair.nn.Model):
         'gpu' to store embeddings in GPU memory.
         """
         if label_name == None:
-            label_name = self.label_type if self.label_type is not None else 'class'
+            label_name = self.label_type if self.label_type is not None else 'label'
 
         with torch.no_grad():
             if not sentences:
@@ -268,6 +269,12 @@ class TextClassifier(flair.nn.Model):
 
                 batch_count += 1
 
+                # remove previously predicted labels
+                [sentence.remove_labels('predicted') for sentence in batch]
+
+                # get the gold labels
+                true_values_for_batch = [sentence.get_labels(self.label_type) for sentence in batch]
+
                 # predict for batch
                 loss = self.predict(batch,
                                     embedding_storage_mode=embedding_storage_mode,
@@ -279,7 +286,7 @@ class TextClassifier(flair.nn.Model):
 
                 sentences_for_batch = [sent.to_plain_string() for sent in batch]
 
-                true_values_for_batch = [sentence.get_labels(self.label_type) for sentence in batch]
+                # get the predicted labels
                 predictions = [sentence.get_labels('predicted') for sentence in batch]
 
                 for sentence, prediction, true_value in zip(
