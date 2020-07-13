@@ -4243,7 +4243,7 @@ class BioNLPCorpus(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None
     ):
         """
            :param base_path: Path to the corpus on your machine
@@ -4305,16 +4305,13 @@ class BioNLPCorpus(ColumnCorpus):
             name = txt_file.with_suffix("").name
             a1_file = txt_file.with_suffix(".a1")
 
-            #FIXME: Add support for a2!
-            a2_file = txt_file.with_suffix(".a2")
-
             with txt_file.open() as f:
                 documents[name] = f.read()
 
-            with a1_file.open() as f_a1:
+            with a1_file.open() as ann_reader:
                 entities = []
 
-                for line in f_a1:
+                for line in ann_reader:
                     fields = line.strip().split("\t")
                     if fields[0].startswith("T"):
                         ann_type, start, end = fields[1].split()
@@ -4341,27 +4338,26 @@ class BIONLP2013_PC(BioNLPCorpus):
 
     @staticmethod
     def download_corpus(download_folder: Path) -> Tuple[Path, Path, Path]:
-        train_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_training_data.tar.gz?attredirects=0"
-        dev_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_development_data.tar.gz?attredirects=0"
-        test_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_test_data.tar.gz?attredirects=0"
+        train_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_training_data.tar.gz"
+        dev_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_development_data.tar.gz"
+        test_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_test_data.tar.gz"
 
         cached_path(train_url, download_folder)
         cached_path(dev_url, download_folder)
         cached_path(test_url, download_folder)
 
         unpack_file(
-            download_folder / "BioNLP-ST_2013_PC_training_data.tar.gz?attredirects=0",
+            download_folder / "BioNLP-ST_2013_PC_training_data.tar.gz",
             download_folder,
             keep=False,
         )
         unpack_file(
-            download_folder
-            / "BioNLP-ST_2013_PC_development_data.tar.gz?attredirects=0",
+            download_folder / "BioNLP-ST_2013_PC_development_data.tar.gz",
             download_folder,
             keep=False,
         )
         unpack_file(
-            download_folder / "BioNLP-ST_2013_PC_test_data.tar.gz?attredirects=0",
+            download_folder / "BioNLP-ST_2013_PC_test_data.tar.gz",
             download_folder,
             keep=False,
         )
@@ -4384,32 +4380,28 @@ class BIONLP2013_CG(BioNLPCorpus):
 
     @staticmethod
     def download_corpus(download_folder: Path) -> Tuple[Path, Path, Path]:
-        train_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_CG_training_data.tar.gz?attredirects=0"
-        dev_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_CG_development_data.tar.gz?attredirects=0"
-        test_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_CG_test_data.tar.gz?attredirects=0"
+        train_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_CG_training_data.tar.gz"
+        dev_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_CG_development_data.tar.gz"
+        test_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_CG_test_data.tar.gz"
 
         cached_path(train_url, download_folder)
         cached_path(dev_url, download_folder)
         cached_path(test_url, download_folder)
 
         unpack_file(
-            download_folder / "BioNLP-ST_2013_CG_training_data.tar.gz?attredirects=0",
+            download_folder / "BioNLP-ST_2013_CG_training_data.tar.gz",
             download_folder,
-            keep=False,
-            mode="targz",
+            keep=False
         )
         unpack_file(
-            download_folder
-            / "BioNLP-ST_2013_CG_development_data.tar.gz?attredirects=0",
+            download_folder / "BioNLP-ST_2013_CG_development_data.tar.gz",
             download_folder,
-            keep=False,
-            mode="targz",
+            keep=False
         )
         unpack_file(
-            download_folder / "BioNLP-ST_2013_CG_test_data.tar.gz?attredirects=0",
+            download_folder / "BioNLP-ST_2013_CG_test_data.tar.gz",
             download_folder,
-            keep=False,
-            mode="targz",
+            keep=False
         )
 
         train_folder = download_folder / "BioNLP-ST_2013_CG_training_data"
@@ -4460,9 +4452,9 @@ class ANAT_EM(ColumnCorpus):
 
         sentence_splitter = TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=tokenizer)
 
-        train_file = data_folder / f"{sentence_splitter.name()}_train.conll"
-        dev_file = data_folder / f"{sentence_splitter.name()}_dev.conll"
-        test_file = data_folder / f"{sentence_splitter.name()}_test.conll"
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
+        dev_file = data_folder / f"{sentence_splitter.name}_dev.conll"
+        test_file = data_folder / f"{sentence_splitter.name}_test.conll"
 
         if not (train_file.exists() and dev_file.exists() and test_file.exists()):
             corpus_folder = self.download_corpus(data_folder)
