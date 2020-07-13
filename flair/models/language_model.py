@@ -400,35 +400,29 @@ class LanguageModel(nn.Module):
         return perplexity
 
     def _apply(self, fn):
-        major, minor, build, *_ = (int(info)
-                                for info in torch.__version__.replace("+",".").split('.') if info.isdigit())
 
-        # fixed RNN change format for torch 1.4.0
-        if major >= 1 and minor >= 4:
-            for child_module in self.children():
-                if isinstance(child_module, torch.nn.RNNBase):
-                    _flat_weights_names = []
-                    num_direction = None
+        # models that were serialized using torch versions older than 1.4.0 lack the _flat_weights_names attribute
+        # check if this is the case and if so, set it
+        for child_module in self.children():
+            if isinstance(child_module, torch.nn.RNNBase) and not hasattr(child_module, "_flat_weights_names"):
+                _flat_weights_names = []
 
-                    if child_module.__dict__["bidirectional"]:
-                        num_direction = 2
-                    else:
-                        num_direction = 1
-                    for layer in range(child_module.__dict__["num_layers"]):
-                        for direction in range(num_direction):
-                            suffix = "_reverse" if direction == 1 else ""
-                            param_names = ["weight_ih_l{}{}", "weight_hh_l{}{}"]
-                            if child_module.__dict__["bias"]:
-                                param_names += ["bias_ih_l{}{}", "bias_hh_l{}{}"]
-                            param_names = [
-                                x.format(layer, suffix) for x in param_names
-                            ]
-                            _flat_weights_names.extend(param_names)
+                if child_module.__dict__["bidirectional"]:
+                    num_direction = 2
+                else:
+                    num_direction = 1
+                for layer in range(child_module.__dict__["num_layers"]):
+                    for direction in range(num_direction):
+                        suffix = "_reverse" if direction == 1 else ""
+                        param_names = ["weight_ih_l{}{}", "weight_hh_l{}{}"]
+                        if child_module.__dict__["bias"]:
+                            param_names += ["bias_ih_l{}{}", "bias_hh_l{}{}"]
+                        param_names = [
+                            x.format(layer, suffix) for x in param_names
+                        ]
+                        _flat_weights_names.extend(param_names)
 
-                    setattr(child_module, "_flat_weights_names",
-                            _flat_weights_names)
+                setattr(child_module, "_flat_weights_names",
+                        _flat_weights_names)
 
-                child_module._apply(fn)
-
-        else:
-            super()._apply(fn)
+            child_module._apply(fn)
