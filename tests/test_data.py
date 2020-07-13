@@ -12,7 +12,7 @@ from flair.data import (
     Corpus,
     Span
 )
-from flair.tokenization import SpacyTokenizer, SegtokTokenizer, JapaneseTokenizer, TokenizerWrapper
+from flair.tokenization import SpacyTokenizer, SegtokTokenizer, JapaneseTokenizer, TokenizerWrapper, BioSpacyTokenizer
 
 
 def test_get_head():
@@ -95,6 +95,32 @@ def test_create_sentence_using_japanese_tokenizer():
     assert "が" == sentence.tokens[3].text
     assert "好き" == sentence.tokens[4].text
 
+
+def test_create_sentence_using_bioscispacy_tokenizer():
+    sentence: Sentence = Sentence(
+        "Spinal and bulbar muscular atrophy (SBMA) is an inherited motor neuron",
+        use_tokenizer=BioSpacyTokenizer()
+    )
+
+    assert 13 == len(sentence.tokens)
+    assert "Spinal" == sentence.tokens[0].text
+    assert "and" == sentence.tokens[1].text
+    assert "bulbar" == sentence.tokens[2].text
+    assert "muscular" == sentence.tokens[3].text
+    assert "atrophy" == sentence.tokens[4].text
+    assert "(" == sentence.tokens[5].text
+    assert "SBMA" == sentence.tokens[6].text
+    assert ")" == sentence.tokens[7].text
+    assert "is" == sentence.tokens[8].text
+    assert "an" == sentence.tokens[9].text
+    assert "inherited" == sentence.tokens[10].text
+    assert "motor" == sentence.tokens[11].text
+    assert "neuron" == sentence.tokens[12].text
+
+    assert True == sentence.tokens[4].whitespace_after
+    assert False == sentence.tokens[5].whitespace_after
+    assert False == sentence.tokens[6].whitespace_after
+    assert True == sentence.tokens[7].whitespace_after
 
 def test_problem_sentences():
     text = "so out of the norm ❤ ️ enjoyed every moment️"

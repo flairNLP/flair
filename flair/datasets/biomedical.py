@@ -4,6 +4,7 @@ import ftfy
 import json
 import os
 import shutil
+import re
 
 from abc import ABC, abstractmethod
 from collections import defaultdict, deque
@@ -15,8 +16,11 @@ from operator import attrgetter
 from pathlib import Path
 from warnings import warn
 
+from flair.data import Tokenizer
 from flair.file_utils import cached_path, Tqdm, unpack_file
 from flair.datasets import ColumnCorpus, ColumnDataset
+from flair.tokenization import SentenceSplitter, BioSpacySentenceSplitter, OneSentenceSplitter, \
+    TagSentenceSplitter, BioSpacyTokenizer, NewlineSentenceSplitter, SpaceTokenizer
 
 DISEASE_TAG = "Disease"
 CHEMICAL_TAG = "Chemical"
@@ -171,44 +175,6 @@ def filter_nested_entities(dataset: InternalBioNerDataset) -> None:
         )
 
 
-def whitespace_tokenize(text: str) -> Tuple[List[str], List[int]]:
-    offset = 0
-    tokens = []
-    offsets = []
-    for token in text.split():
-        tokens.append(token)
-        offsets.append(offset)
-        offset += len(token) + 1
-
-    return tokens, offsets
-
-
-def sentence_split_at_tag(text: str) -> Tuple[List[str], List[int]]:
-    sentences = text.split(SENTENCE_TAG)
-    offsets = []
-    last_offset = 0
-    for sent in sentences:
-        offsets += [last_offset]
-        last_offset += len(sent) + len(SENTENCE_TAG)
-
-    return sentences, offsets
-
-
-def sentence_split_at_newline(text: str) -> Tuple[List[str], List[int]]:
-    sentences = text.split("\n")
-    offsets = []
-    last_offset = 0
-    for sent in sentences:
-        offsets += [last_offset]
-        last_offset += len(sent) + 1
-
-    return sentences, offsets
-
-
-def sentence_split_one_sentence_per_doc(text: str) -> Tuple[List[str], List[int]]:
-    return [text], [0]
-
-
 def bioc_to_internal(bioc_file: Path):
     tree = etree.parse(str(bioc_file))
     texts_per_document = {}
@@ -227,8 +193,8 @@ def bioc_to_internal(bioc_file: Path):
             passage_texts = passage.xpath("text/text()")
             if len(passage_texts) == 0:
                 continue
-
             text = passage_texts[0]
+
             passage_offset = int(
                 passage.xpath("./offset/text()")[0]
             )  # from BioC annotation
@@ -349,14 +315,12 @@ def brat_to_internal(corpus_dir: Path, ann_file_suffixes=None) -> InternalBioNer
 class CoNLLWriter:
     def __init__(
         self,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]],
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]],
+        sentence_splitter: SentenceSplitter,
     ):
         """
-        :param tokenizer: Callable that segments a sentence into words
-        :param sentence_splitter: Callable that segments a document into sentences
+        :param sentence_splitter: Implementation of :class:`SentenceSplitter` which
+        segments the text into sentences and tokens
         """
-        self.tokenizer = tokenizer
         self.sentence_splitter = sentence_splitter
 
     def process_dataset(
@@ -377,7 +341,13 @@ class CoNLLWriter:
                 desc="Converting to CoNLL",
             ):
                 document_text = ftfy.fix_text(dataset.documents[document_id])
-                sentences, sentence_offsets = self.sentence_splitter(document_text)
+                document_text = re.sub(r"[\u2000-\u200B]", " ", document_text) # replace unicode space characters!
+                document_text = document_text.replace(u'\xa0', " ") # replace non-break space
+
+                offsets_and_sentences = self.sentence_splitter.split(document_text)
+                sentences = [sentence for _, sentence in offsets_and_sentences]
+                sentence_offsets = [offset for offset, _ in offsets_and_sentences]
+
                 entities = deque(
                     sorted(
                         dataset.entities_per_document[document_id],
@@ -390,10 +360,10 @@ class CoNLLWriter:
                 for sentence, sentence_offset in zip(sentences, sentence_offsets):
                     in_entity = False
                     sentence_had_tokens = False
-                    tokens, token_offsets = self.tokenizer(sentence)
-                    for token, token_offset in zip(tokens, token_offsets):
-                        token = token.strip()
-                        offset = sentence_offset + token_offset
+
+                    for flair_token in sentence.tokens:
+                        token = flair_token.text.strip()
+                        offset = sentence_offset + flair_token.start_pos
 
                         if current_entity and offset >= current_entity.char_span.stop:
                             in_entity = False
@@ -417,130 +387,13 @@ class CoNLLWriter:
                             tag = "O"
                             in_entity = False
 
-                        whitespace_after = "+"
-                        next_token_offset = offset + len(token)
-                        sentence_end_offset = sentence_offset + len(sentence)
-                        if (
-                            next_token_offset < sentence_end_offset
-                            and not document_text[next_token_offset].isspace()
-                        ):
-                            whitespace_after = "-"
-
+                        whitespace_after = "+" if flair_token.whitespace_after else "-"
                         if len(token) > 0:
                             f.write(" ".join([token, tag, whitespace_after]) + "\n")
                             sentence_had_tokens = True
+
                     if sentence_had_tokens:
                         f.write("\n")
-
-
-def segtok_tokenizer(text: str) -> Tuple[List[str], List[int]]:
-    tokens = flair.data.segtok_tokenizer(text)
-    tokens_text = [i.text for i in tokens]
-    tokens_offset = [i.start_pos for i in tokens]
-
-    return tokens_text, tokens_offset
-
-
-class SciSpacyTokenizer:
-    def __init__(self):
-        import spacy
-        from spacy.lang import char_classes
-
-        def combined_rule_prefixes() -> List[str]:
-            """Helper function that returns the prefix pattern for the tokenizer.
-               It is a helper function to accomodate spacy tests that only test
-               prefixes.
-            """
-            prefix_punct = char_classes.PUNCT.replace("|", " ")
-
-            prefixes = (
-                ["§", "%", "=", r"\+"]
-                + char_classes.split_chars(prefix_punct)
-                + char_classes.LIST_ELLIPSES
-                + char_classes.LIST_QUOTES
-                + char_classes.LIST_CURRENCY
-                + char_classes.LIST_ICONS
-            )
-            return prefixes
-
-        infixes = (
-            char_classes.LIST_ELLIPSES
-            + char_classes.LIST_ICONS
-            + [
-                r"×",  # added this special x character to tokenize it separately
-                r"[\(\)\[\]\{\}]",  # want to split at every bracket
-                r"/",  # want to split at every slash
-                r"(?<=[0-9])[+\-\*^](?=[0-9-])",
-                r"(?<=[{al}])\.(?=[{au}])".format(
-                    al=char_classes.ALPHA_LOWER, au=char_classes.ALPHA_UPPER
-                ),
-                r"(?<=[{a}]),(?=[{a}])".format(a=char_classes.ALPHA),
-                r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(
-                    a=char_classes.ALPHA, h=char_classes.HYPHENS
-                ),
-                r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=char_classes.ALPHA),
-            ]
-        )
-
-        prefix_re = spacy.util.compile_prefix_regex(combined_rule_prefixes())
-        infix_re = spacy.util.compile_infix_regex(infixes)
-
-        self.nlp = spacy.load(
-            "en_core_sci_sm", disable=["tagger", "ner", "parser", "textcat"]
-        )
-        self.nlp.tokenizer.prefix_search = prefix_re.search
-        self.nlp.tokenizer.infix_finditer = infix_re.finditer
-
-    def __call__(self, sentence: str):
-        sentence = self.nlp(sentence)
-        tokens = [str(tok) for tok in sentence]
-        offsets = [tok.idx for tok in sentence]
-
-        return tokens, offsets
-
-
-class SciSpacySentenceSplitter:
-    def __init__(self):
-        import spacy
-
-        self.nlp = spacy.load("en_core_sci_sm", disable=["tagger", "ner", "textcat"])
-
-    def __call__(self, text: str):
-        doc = self.nlp(text)
-        sentences = [str(sent) for sent in doc.sents]
-        offsets = [sent.start_char for sent in doc.sents]
-
-        return sentences, offsets
-
-
-def build_spacy_tokenizer() -> SciSpacyTokenizer:
-    try:
-        import spacy
-
-        return SciSpacyTokenizer()
-    except ImportError:
-        raise ValueError(
-            "Default tokenizer is scispacy."
-            " Install packages 'scispacy' and"
-            " 'https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy"
-            "/releases/v0.2.4/en_core_sci_sm-0.2.4.tar.gz' via pip"
-            " or choose a different tokenizer"
-        )
-
-
-def build_spacy_sentence_splitter() -> SciSpacySentenceSplitter:
-    try:
-        import spacy
-
-        return SciSpacySentenceSplitter()
-    except ImportError:
-        raise ValueError(
-            "Default sentence splitter is scispacy."
-            " Install packages 'scispacy' and"
-            "'https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy"
-            "/releases/v0.2.4/en_core_sci_sm-0.2.4.tar.gz' via pip"
-            " or choose a different sentence splitter"
-        )
 
 
 class HunerDataset(ColumnCorpus, ABC):
@@ -580,17 +433,15 @@ class HunerDataset(ColumnCorpus, ABC):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
         sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param tokenizer: Callable that segments a sentence into words,
-                          defaults to scispacy
-        :param sentence_splitter: Callable that segments a document into sentences,
-                                  defaults to scispacy
+        :param sentence_splitter: Custom implementation of :class:`SentenceSplitter` which
+            segments the text into sentences and tokens (default BioSpacySentenceSplitter())
         """
+
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
@@ -605,33 +456,29 @@ class HunerDataset(ColumnCorpus, ABC):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
-        dev_file = data_folder / "dev.conll"
-        test_file = data_folder / "test.conll"
+        cw_sentence_splitter = self.get_corpus_sentence_splitter()
+        if not cw_sentence_splitter:
+            cw_sentence_splitter = (
+                sentence_splitter
+                if sentence_splitter
+                else BioSpacySentenceSplitter()
+            )
+        else:
+            if sentence_splitter:
+                warn(
+                    "Ignoring non-default sentence splitter for corpus with predefined sentences"
+                )
+
+        # Create tokenization-dependent CONLL files!
+        train_file = data_folder / f"{cw_sentence_splitter.name}_train.conll"
+        dev_file = data_folder / f"{cw_sentence_splitter.name}_dev.conll"
+        test_file = data_folder / f"{cw_sentence_splitter.name}_test.conll"
 
         if not (train_file.exists() and dev_file.exists() and test_file.exists()):
             splits_dir = data_folder / "splits"
             os.makedirs(splits_dir, exist_ok=True)
 
-            cw_tokenizer = tokenizer if tokenizer else build_spacy_tokenizer()
-
-            cw_sentence_splitter = self.get_corpus_sentence_splitter()
-            if not cw_sentence_splitter:
-                cw_sentence_splitter = (
-                    sentence_splitter
-                    if sentence_splitter
-                    else build_spacy_sentence_splitter()
-                )
-            else:
-                if sentence_splitter:
-                    warn(
-                        "Ignoring non-default sentence splitter for corpus with predefined sentences"
-                    )
-
-            writer = CoNLLWriter(
-                tokenizer=cw_tokenizer, sentence_splitter=cw_sentence_splitter
-            )
-
+            writer = CoNLLWriter(sentence_splitter=cw_sentence_splitter)
             internal_dataset = self.to_internal(data_folder)
 
             train_data = self.get_subset(internal_dataset, "train", splits_dir)
@@ -697,13 +544,9 @@ class BIO_INFER(ColumnCorpus):
             corpus_folder = self.download_dataset(data_folder)
             corpus_data = self.parse_dataset(corpus_folder)
 
-            tokenizer = whitespace_tokenize
+            sentence_splitter = OneSentenceSplitter(tokenizer=SpaceTokenizer())
 
-            sentence_splitter = sentence_split_one_sentence_per_doc
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
         super(BIO_INFER, self).__init__(
@@ -876,7 +719,8 @@ class JNLPBA(ColumnCorpus):
         )
 
 
-class HunerJNLPBA:
+class HunerJNLPBA(object):
+
     @classmethod
     def download_and_prepare_train(
         cls, data_folder: Path, sentence_tag: str
@@ -986,8 +830,8 @@ class HUNER_GENE_JNLPBA(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/genia"
 
-    def get_corpus_sentence_splitter(self):
-        return sentence_split_at_tag
+    def get_corpus_sentence_splitter(self) -> SentenceSplitter:
+        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=BioSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         orig_folder = data_dir / "original"
@@ -1014,8 +858,8 @@ class HUNER_CELL_LINE_JNLPBA(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/genia"
 
-    def get_corpus_sentence_splitter(self):
-        return sentence_split_at_tag
+    def get_corpus_sentence_splitter(self) -> SentenceSplitter:
+        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=BioSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         download_folder = data_dir / "original"
@@ -1045,16 +889,13 @@ class CELL_FINDER(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param tokenizer: Callable that segments a sentence into words,
-                          defaults to scispacy
-        :param sentence_splitter: Callable that segments a document into sentences,
-                                  defaults to scispacy
+        :param sentence_splitter: Custom implementation of :class:`SentenceSplitter` which segments
+            the text into sentences and tokens.
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1065,25 +906,21 @@ class CELL_FINDER(ColumnCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
         # default dataset folder is the cache root
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
         if not (train_file.exists()):
             train_corpus = self.download_and_prepare(data_folder)
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter,
-            )
+            writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             writer.write_to_conll(train_corpus, train_file)
+
         super(CELL_FINDER, self).__init__(
             data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
         )
@@ -1185,8 +1022,7 @@ class MIRNA(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -1210,26 +1046,22 @@ class MIRNA(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
-        test_file = data_folder / "test.conll"
+        sentence_separator = " "
+        if sentence_splitter is None:
+            sentence_separator = SENTENCE_TAG
+            sentence_splitter = TagSentenceSplitter(
+                tag=sentence_separator,
+                tokenizer=BioSpacyTokenizer()
+            )
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
+        test_file = data_folder / f"{sentence_splitter.name}_test.conll"
 
         if not (train_file.exists() and test_file.exists()):
             download_folder = data_folder / "original"
             os.makedirs(str(download_folder), exist_ok=True)
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = sentence_split_at_tag
-
-            sentence_separator = (
-                SENTENCE_TAG if sentence_splitter == sentence_split_at_tag else " "
-            )
-
-            writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter,
-            )
+            writer = CoNLLWriter(sentence_splitter=sentence_splitter)
 
             train_corpus = self.download_and_prepare_train(
                 download_folder, sentence_separator
@@ -1341,7 +1173,7 @@ class HUNER_GENE_MIRNA(HunerDataset):
         )
 
     def get_corpus_sentence_splitter(self):
-        return sentence_split_at_tag
+        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=BioSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         download_folder = data_dir / "original"
@@ -1376,8 +1208,8 @@ class HUNER_SPECIES_MIRNA(HunerDataset):
             dataset, f"{self.split_url()}.{split}", split_dir
         )
 
-    def get_corpus_sentence_splitter(self):
-        return sentence_split_at_tag
+    def get_corpus_sentence_splitter(self) -> SentenceSplitter:
+        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=BioSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         download_folder = data_dir / "original"
@@ -1412,8 +1244,8 @@ class HUNER_DISEASE_MIRNA(HunerDataset):
             dataset, f"{self.split_url()}.{split}", split_dir
         )
 
-    def get_corpus_sentence_splitter(self):
-        return sentence_split_at_tag
+    def get_corpus_sentence_splitter(self) -> SentenceSplitter:
+        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=BioSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         download_folder = data_dir / "original"
@@ -1576,8 +1408,8 @@ class HUNER_CELL_LINE_CLL(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/cll"
 
-    def get_corpus_sentence_splitter(self):
-        return sentence_split_at_tag
+    def get_corpus_sentence_splitter(self) -> SentenceSplitter:
+        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=BioSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         KaewphanCorpusHelper.download_cll_dataset(data_dir)
@@ -1650,8 +1482,8 @@ class HUNER_CELL_LINE_GELLUS(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/gellus"
 
-    def get_corpus_sentence_splitter(self):
-        return sentence_split_at_tag
+    def get_corpus_sentence_splitter(self) -> SentenceSplitter:
+        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=BioSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         KaewphanCorpusHelper.download_gellus_dataset(data_dir)
@@ -1672,16 +1504,13 @@ class LOCTEXT(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param tokenizer: Callable that segments a sentence into words,
-                          defaults to scispacy
-        :param sentence_splitter: Callable that segments a document into sentences,
-                                  defaults to scispacy
+        :param sentence_splitter: Custom implementation of :class:`SentenceSplitter`
+            that segments a document into sentences and tokens (default BioSpacySentenceSplitter)
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1697,21 +1526,16 @@ class LOCTEXT(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
         if not (train_file.exists()):
             self.download_dataset(data_folder)
             full_dataset = self.parse_dataset(data_folder)
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(full_dataset, train_file)
 
         super(LOCTEXT, self).__init__(
@@ -1819,16 +1643,13 @@ class CHEMDNER(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param tokenizer: Callable that segments a sentence into words,
-                          defaults to scispacy
-        :param sentence_splitter: Callable that segments a document into sentences,
-                                  defaults to scispacy
+        :param sentence_splitter: Custom implementation of :class:`SentenceSplitter` which
+            segements documents into sentences and tokens
         """
 
         if type(base_path) == str:
@@ -1848,9 +1669,12 @@ class CHEMDNER(ColumnCorpus):
         else:
             data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
-        dev_file = data_folder / "dev.conll"
-        test_file = data_folder / "test.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
+        dev_file = data_folder / f"{sentence_splitter.name}_dev.conll"
+        test_file = data_folder / f"{sentence_splitter.name}_test.conll"
 
         if not (train_file.exists() and dev_file.exists() and test_file.exists()):
             download_dir = data_folder / "original"
@@ -1867,15 +1691,8 @@ class CHEMDNER(ColumnCorpus):
                 download_dir / "chemdner_corpus" / "evaluation.bioc.xml"
             )
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
 
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
@@ -1948,15 +1765,13 @@ class IEPA(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        tokenizer: Tokenizer = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
-           :param sentence_splitter: Callable that segments a document into sentences,
-                                     defaults to scispacy
+           :param tokenizer: Custom implementation of :class:`Tokenizer` which
+                segments sentences into tokens (default BioSpacyTokenizer)
            """
 
         if type(base_path) == str:
@@ -1973,7 +1788,12 @@ class IEPA(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
+        if tokenizer is None:
+            tokenizer = BioSpacyTokenizer()
+
+        sentence_splitter = NewlineSentenceSplitter(tokenizer=tokenizer)
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
         if not (train_file.exists()):
             download_dir = data_folder / "original"
@@ -1982,12 +1802,7 @@ class IEPA(ColumnCorpus):
 
             all_data = bioc_to_internal(download_dir / "iepa_bioc.xml")
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_split_at_newline
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(all_data, train_file)
 
         super(IEPA, self).__init__(
@@ -2015,8 +1830,8 @@ class HUNER_GENE_IEPA(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/iepa"
 
-    def get_corpus_sentence_splitter(self):
-        return sentence_split_at_newline
+    def get_corpus_sentence_splitter(self) -> SentenceSplitter:
+        return NewlineSentenceSplitter(tokenizer=BioSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         os.makedirs(str(data_dir), exist_ok=True)
@@ -2046,8 +1861,8 @@ class LINNEAUS(ColumnCorpus):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
+           :param tokenizer: Custom implementation of :class:`Tokenizer` which segments
+                sentence into tokens (default BioSpacyTokenizer)
            """
 
         if type(base_path) == str:
@@ -2064,20 +1879,19 @@ class LINNEAUS(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
+        if tokenizer is None:
+            tokenizer = BioSpacyTokenizer()
+
+        sentence_splitter = TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=tokenizer)
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
         if not (train_file.exists()):
             dataset = self.download_and_parse_dataset(data_folder)
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            sentence_splitter = sentence_split_at_tag
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(dataset, train_file)
+
         super(LINNEAUS, self).__init__(
             data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
         )
@@ -2153,16 +1967,13 @@ class CDR(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
         sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param tokenizer: Callable that segments a sentence into words,
-                          defaults to scispacy
-        :param sentence_splitter: Callable that segments a document into sentences,
-                                  defaults to scispacy
+        :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
+            documents into sentences and tokens (default BioSpacySentenceSplitter)
         """
 
         if type(base_path) == str:
@@ -2179,9 +1990,12 @@ class CDR(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
-        dev_file = data_folder / "dev.conll"
-        test_file = data_folder / "test.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
+        dev_file = data_folder / f"{sentence_splitter.name}_dev.conll"
+        test_file = data_folder / f"{sentence_splitter.name}_test.conll"
 
         if not (train_file.exists() and dev_file.exists() and test_file.exists()):
             download_dir = data_folder / "original"
@@ -2207,15 +2021,7 @@ class CDR(ColumnCorpus):
                 / "CDR_TestSet.BioC.xml"
             )
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
@@ -2305,16 +2111,13 @@ class VARIOME(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
         sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
-           :param sentence_splitter: Callable that segments a document into sentences,
-                                     defaults to scispacy
+           :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
+                documents into sentences and tokens (default BioSpacySentenceSplitter)
            """
 
         if type(base_path) == str:
@@ -2331,7 +2134,10 @@ class VARIOME(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
         if not (train_file.exists()):
             download_dir = data_folder / "original"
@@ -2340,15 +2146,7 @@ class VARIOME(ColumnCorpus):
 
             all_data = self.parse_corpus(download_dir / "hvp_bioc.xml")
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(all_data, train_file)
 
         super(VARIOME, self).__init__(
@@ -2375,6 +2173,7 @@ class VARIOME(ColumnCorpus):
             original_length = len(document_text)
 
             text_cleaned = document_text.replace("** IGNORE LINE **\n", "")
+            text_cleaned = text_cleaned.replace("\n\n", " \n")
             offset = original_length - len(text_cleaned)
 
             if offset != 0:
@@ -2481,16 +2280,13 @@ class NCBI_DISEASE(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
-           :param sentence_splitter: Callable that segments a document into sentences,
-                                     defaults to scispacy
+           :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
+                documents into sentences and tokens (default BioSpacySentenceSplitter)
            """
 
         if type(base_path) == str:
@@ -2507,9 +2303,12 @@ class NCBI_DISEASE(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
-        dev_file = data_folder / "dev.conll"
-        test_file = data_folder / "test.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
+        dev_file = data_folder / f"{sentence_splitter.name}_dev.conll"
+        test_file = data_folder / f"{sentence_splitter.name}_test.conll"
 
         if not (train_file.exists() and dev_file.exists() and test_file.exists()):
             orig_folder = self.download_corpus(data_folder)
@@ -2518,15 +2317,7 @@ class NCBI_DISEASE(ColumnCorpus):
             dev_data = self.parse_input_file(orig_folder / "NCBIdevelopset_corpus.txt")
             test_data = self.parse_input_file(orig_folder / "NCBItestset_corpus.txt")
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
@@ -2660,10 +2451,8 @@ class ScaiCorpus(ColumnCorpus):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
-           :param sentence_splitter: Callable that segments a document into sentences,
-                                     defaults to scispacy
+           :param sentence_splitter:  Implementation of :class:`SentenceSplitter` which segments
+                documents into sentences and tokens (default BioSpacySentenceSplitter)
            """
 
         if type(base_path) == str:
@@ -2680,18 +2469,16 @@ class ScaiCorpus(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
         if not (train_file.exists()):
             dataset_file = self.download_corpus(data_folder)
             train_data = self.parse_input_file(dataset_file)
 
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=whitespace_tokenize, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(train_data, train_file)
 
         super(ScaiCorpus, self).__init__(
@@ -2880,17 +2667,14 @@ class OSIRIS(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
         load_original_unfixed_annotation=False,
     ):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
-           :param sentence_splitter: Callable that segments a document into sentences,
-                                     defaults to scispacy
+           :param sentence_splitter: Implementation of :class:`SentenceSplitter` which
+                segments documents into sentences and tokens (default BioSpacySentenceSplitter)
            :param load_original_unfixed_annotation: The original annotation of Osiris
                 erroneously annotates two sentences as a protein. Set to True if you don't
                 want the fixed version.
@@ -2910,7 +2694,10 @@ class OSIRIS(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
         if not (train_file.exists()):
             corpus_folder = self.download_dataset(data_folder)
@@ -2918,15 +2705,7 @@ class OSIRIS(ColumnCorpus):
                 corpus_folder, fix_annotation=not load_original_unfixed_annotation
             )
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
         super(OSIRIS, self).__init__(
@@ -3028,16 +2807,13 @@ class S800(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
-           :param sentence_splitter: Callable that segments a document into sentences,
-                                     defaults to scispacy
+           :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
+                into sentences and tokens (default BioSpacySentenceSplitter)
            """
 
         if type(base_path) == str:
@@ -3054,7 +2830,10 @@ class S800(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
         if not (train_file.exists()):
             download_dir = data_folder / "original"
@@ -3063,15 +2842,7 @@ class S800(ColumnCorpus):
 
             all_data = self.parse_dataset(download_dir)
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(all_data, train_file)
 
         super(S800, self).__init__(
@@ -3138,16 +2909,13 @@ class GPRO(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
-           :param sentence_splitter: Callable that segments a document into sentences,
-                                     defaults to scispacy
+           :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
+                into sentences and tokens (default BioSpacySentenceSplitter)
            """
 
         if type(base_path) == str:
@@ -3164,8 +2932,11 @@ class GPRO(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
-        dev_file = data_folder / "dev.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
+        dev_file = data_folder / f"{sentence_splitter.name}_dev.conll"
 
         if not (train_file.exists() and dev_file.exists()):
             train_folder = self.download_train_corpus(data_folder)
@@ -3178,15 +2949,7 @@ class GPRO(ColumnCorpus):
             dev_ann_file = dev_folder / "chemdner_gpro_gold_standard_development.tsv"
             dev_data = self.parse_input_file(dev_text_file, dev_ann_file)
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(dev_data, dev_file)
 
@@ -3298,16 +3061,13 @@ class DECA(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
-           :param sentence_splitter: Callable that segments a document into sentences,
-                                     defaults to scispacy
+           :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
+                documents into sentences and tokens (default BioSpacySentenceSpliiter)
            """
 
         if type(base_path) == str:
@@ -3324,6 +3084,9 @@ class DECA(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
         train_file = data_folder / "train.conll"
 
         if not train_file.exists():
@@ -3332,16 +3095,7 @@ class DECA(ColumnCorpus):
             gold_file = corpus_dir / "gold.txt"
 
             corpus_data = self.parse_corpus(text_dir, gold_file)
-
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
         super(DECA, self).__init__(
@@ -3425,10 +3179,6 @@ class FSU(ColumnCorpus):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
-           :param sentence_splitter: Callable that segments a document into sentences,
-                                     defaults to scispacy
            """
 
         if type(base_path) == str:
@@ -3445,15 +3195,14 @@ class FSU(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
+        sentence_splitter = TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=SpaceTokenizer())
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
         if not train_file.exists():
             corpus_dir = self.download_corpus(data_folder)
             corpus_data = self.parse_corpus(corpus_dir, SENTENCE_TAG)
 
-            conll_writer = CoNLLWriter(
-                tokenizer=whitespace_tokenize, sentence_splitter=sentence_split_at_tag
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
         super(FSU, self).__init__(
@@ -3571,8 +3320,8 @@ class HUNER_GENE_FSU(HunerDataset):
     def split_url() -> str:
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/fsu"
 
-    def get_corpus_sentence_splitter(self):
-        return sentence_split_at_tag
+    def get_corpus_sentence_splitter(self) -> SentenceSplitter:
+        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=BioSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         corpus_dir = FSU.download_corpus(data_dir)
@@ -3601,16 +3350,13 @@ class CRAFT(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
-           :param sentence_splitter: Callable that segments a document into sentences,
-                                     defaults to scispacy
+           :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
+                into sentences and tokens (default BioSpacySentenceSplitter)
            """
 
         if type(base_path) == str:
@@ -3627,22 +3373,16 @@ class CRAFT(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
         if not train_file.exists():
             corpus_dir = self.download_corpus(data_folder)
-
             corpus_data = self.parse_corpus(corpus_dir)
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
         super(CRAFT, self).__init__(
@@ -3775,16 +3515,13 @@ class BIOSEMANTICS(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param tokenizer: Callable that segments a sentence into words,
-                          defaults to scispacy
-        :param sentence_splitter: Callable that segments a document into sentences,
-                                  defaults to scispacy
+        :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
+            into sentences and tokens (default BioSpacySentenceSplitter)
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -3800,21 +3537,16 @@ class BIOSEMANTICS(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
         if not (train_file.exists()):
             corpus_dir = self.download_dataset(data_folder)
             full_dataset = self.parse_dataset(corpus_dir)
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(full_dataset, train_file)
 
         super(BIOSEMANTICS, self).__init__(
@@ -3983,16 +3715,13 @@ class BC2GM(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
         sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param tokenizer: Callable that segments a sentence into words,
-                          defaults to scispacy
-        :param sentence_splitter: Callable that segments a document into sentences,
-                                  defaults to scispacy
+        :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
+            into sentences and tokens (default BioSpacySentenceSplitter)
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -4008,24 +3737,18 @@ class BC2GM(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
-        test_file = data_folder / "test.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
+        test_file = data_folder / f"{sentence_splitter.name}_test.conll"
 
         if not (train_file.exists() and test_file.exists()):
             data_folder = self.download_dataset(data_folder)
             train_data = self.parse_train_dataset(data_folder)
             test_data = self.parse_test_dataset(data_folder)
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
-
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(test_data, test_file)
 
@@ -4143,16 +3866,13 @@ class CEMP(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
         sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
-           :param sentence_splitter: Callable that segments a document into sentences,
-                                     defaults to scispacy
+           :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
+                documents into sentences and tokens (default BioSpacySentenceSplitter)
            """
 
         if type(base_path) == str:
@@ -4169,8 +3889,11 @@ class CEMP(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
-        dev_file = data_folder / "dev.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
+        dev_file = data_folder / f"{sentence_splitter.name}_dev.conll"
 
         if not (train_file.exists() and dev_file.exists()):
             train_folder = self.download_train_corpus(data_folder)
@@ -4185,15 +3908,7 @@ class CEMP(ColumnCorpus):
             )
             dev_data = self.parse_input_file(dev_text_file, dev_ann_file)
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(dev_data, dev_file)
 
@@ -4319,18 +4034,16 @@ class CHEBI(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
         annotator: int = 0,
     ):
         """
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param tokenizer: Callable that segments a sentence into words,
-                          defaults to scispacy
-        :param sentence_splitter: Callable that segments a document into sentences,
-                                  defaults to scispacy
-        :param annotator: The abstracts have been annotated by two annotators, which can be selected by choosing annotator 1 or 2. If annotator is 0, the union of both annotations is used.
+        :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
+                into sentences and tokens (default BioSpacySentenceSplitter)
+        :param annotator: The abstracts have been annotated by two annotators, which can be
+                selected by choosing annotator 1 or 2. If annotator is 0, the union of both annotations is used.
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -4346,21 +4059,16 @@ class CHEBI(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
         if not (train_file.exists()):
             corpus_dir = self.download_dataset(data_folder)
             full_dataset = self.parse_dataset(corpus_dir, annotator=annotator)
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(full_dataset, train_file)
 
         super(CHEBI, self).__init__(
@@ -4511,16 +4219,13 @@ class BioNLPCorpus(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
         sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
-           :param sentence_splitter: Callable that segments a document into sentences,
-                                     defaults to scispacy
+           :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
+                into sentences and tokens (default BioSpacySentenceSplitter)
            """
 
         if type(base_path) == str:
@@ -4537,27 +4242,23 @@ class BioNLPCorpus(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
-        dev_file = data_folder / "dev.conll"
-        test_file = data_folder / "test.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
+        dev_file = data_folder / f"{sentence_splitter.name}_dev.conll"
+        test_file = data_folder / f"{sentence_splitter.name}_test.conll"
 
         if not (train_file.exists() and dev_file.exists() and test_file.exists()):
             train_folder, dev_folder, test_folder = self.download_corpus(
                 data_folder / "original"
             )
+
             train_data = self.parse_input_files(train_folder)
             dev_data = self.parse_input_files(dev_folder)
             test_data = self.parse_input_files(test_folder)
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
@@ -4579,6 +4280,8 @@ class BioNLPCorpus(ColumnCorpus):
         for txt_file in input_folder.glob("*.txt"):
             name = txt_file.with_suffix("").name
             a1_file = txt_file.with_suffix(".a1")
+
+            #FIXME: Add support for a2!
             a2_file = txt_file.with_suffix(".a2")
 
             with txt_file.open() as f:
@@ -4706,15 +4409,13 @@ class ANAT_EM(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        tokenizer: Tokenizer = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
-           :param sentence_splitter: Callable that segments a document into sentences,
-                                     defaults to scispacy
+           :param sentence_splitter: Implementation of :class:`Tokenizer` which segments
+                sentences into tokens (default BioSpacyTokenizer)
            """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -4730,9 +4431,14 @@ class ANAT_EM(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
-        dev_file = data_folder / "dev.conll"
-        test_file = data_folder / "test.conll"
+        if tokenizer is None:
+            tokenizer = BioSpacyTokenizer()
+
+        sentence_splitter = TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=tokenizer)
+
+        train_file = data_folder / f"{sentence_splitter.name()}_train.conll"
+        dev_file = data_folder / f"{sentence_splitter.name()}_dev.conll"
+        test_file = data_folder / f"{sentence_splitter.name()}_test.conll"
 
         if not (train_file.exists() and dev_file.exists() and test_file.exists()):
             corpus_folder = self.download_corpus(data_folder)
@@ -4747,13 +4453,7 @@ class ANAT_EM(ColumnCorpus):
                 corpus_folder / "nersuite" / "test", SENTENCE_TAG
             )
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_split_at_tag
-            )
-
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
@@ -4895,6 +4595,7 @@ class BioBertHelper(ColumnCorpus):
 
 
 class BIOBERT_CHEMICAL_BC4CHEMD(ColumnCorpus):
+
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
@@ -4914,6 +4615,7 @@ class BIOBERT_CHEMICAL_BC4CHEMD(ColumnCorpus):
             common_path = base_path / "biobert_common"
             if not (common_path / "BC4CHEMD").exists():
                 BioBertHelper.download_corpora(common_path)
+
             BioBertHelper.convert_and_write(
                 common_path / "BC4CHEMD", data_folder, tag_type=CHEMICAL_TAG
             )
@@ -4923,6 +4625,7 @@ class BIOBERT_CHEMICAL_BC4CHEMD(ColumnCorpus):
 
 
 class BIOBERT_GENE_BC2GM(ColumnCorpus):
+
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
@@ -4951,6 +4654,7 @@ class BIOBERT_GENE_BC2GM(ColumnCorpus):
 
 
 class BIOBERT_GENE_JNLPBA(ColumnCorpus):
+
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
@@ -4979,6 +4683,7 @@ class BIOBERT_GENE_JNLPBA(ColumnCorpus):
 
 
 class BIOBERT_CHEMICAL_BC5CDR(ColumnCorpus):
+
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
@@ -5007,6 +4712,7 @@ class BIOBERT_CHEMICAL_BC5CDR(ColumnCorpus):
 
 
 class BIOBERT_DISEASE_BC5CDR(ColumnCorpus):
+
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
@@ -5035,6 +4741,7 @@ class BIOBERT_DISEASE_BC5CDR(ColumnCorpus):
 
 
 class BIOBERT_DISEASE_NCBI(ColumnCorpus):
+
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
@@ -5063,6 +4770,7 @@ class BIOBERT_DISEASE_NCBI(ColumnCorpus):
 
 
 class BIOBERT_SPECIES_LINNAEUS(ColumnCorpus):
+
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
@@ -5091,6 +4799,7 @@ class BIOBERT_SPECIES_LINNAEUS(ColumnCorpus):
 
 
 class BIOBERT_SPECIES_S800(ColumnCorpus):
+
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
@@ -5130,16 +4839,13 @@ class CRAFT_V4(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter= None,
     ):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
-           :param sentence_splitter: Callable that segments a document into sentences,
-                                     defaults to scispacy
+           :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
+                documents into sentences and tokens (default BioSpacySentenceSplitter)
            """
 
         if type(base_path) == str:
@@ -5156,9 +4862,12 @@ class CRAFT_V4(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
-        dev_file = data_folder / "dev.conll"
-        test_file = data_folder / "test.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
+        dev_file = data_folder / f"{sentence_splitter.name}_dev.conll"
+        test_file = data_folder / f"{sentence_splitter.name}_test.conll"
 
         if not (train_file.exists() and dev_file.exists() and test_file.exists()):
             corpus_dir = self.download_corpus(data_folder)
@@ -5171,15 +4880,7 @@ class CRAFT_V4(ColumnCorpus):
                 data_folder, corpus_data
             )
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
@@ -5306,13 +5007,13 @@ class AZDZ(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
+        tokenizer: Tokenizer = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
+           :param tokenizer: Implementation of :class:`Tokenizer` which segments sentences
+                into tokens (default BioSpacyTokenizer)
            """
 
         if type(base_path) == str:
@@ -5329,18 +5030,17 @@ class AZDZ(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
+        if tokenizer is None:
+            tokenizer = BioSpacyTokenizer()
+        sentence_splitter = TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=tokenizer)
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
         if not train_file.exists():
             corpus_file = self.download_corpus(data_folder)
             corpus_data = self.parse_corpus(corpus_file)
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_split_at_tag
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
         super(AZDZ, self).__init__(
@@ -5424,16 +5124,13 @@ class PDR(ColumnCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        tokenizer: Callable[[str], Tuple[List[str], List[int]]] = None,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
-           :param tokenizer: Callable that segments a sentence into words,
-                             defaults to scispacy
-           :param sentence_splitter: Callable that segments a document into sentences,
-                                     defaults to scispacy
+           :param sentence_splitter: Implementation of :class:`SentenceSplitter` which
+                segments documents into sentences and tokens (default BioSpacySentenceSplitter)
            """
 
         if type(base_path) == str:
@@ -5450,7 +5147,10 @@ class PDR(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_file = data_folder / "train.conll"
+        if sentence_splitter is None:
+            sentence_splitter = BioSpacySentenceSplitter()
+
+        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
         if not train_file.exists():
             corpus_folder = self.download_corpus(data_folder)
@@ -5458,15 +5158,7 @@ class PDR(ColumnCorpus):
                 corpus_folder, ann_file_suffixes=[".ann", ".ann2"]
             )
 
-            if tokenizer is None:
-                tokenizer = build_spacy_tokenizer()
-
-            if sentence_splitter is None:
-                sentence_splitter = build_spacy_sentence_splitter()
-
-            conll_writer = CoNLLWriter(
-                tokenizer=tokenizer, sentence_splitter=sentence_splitter
-            )
+            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
         super(PDR, self).__init__(
@@ -5480,3 +5172,7 @@ class PDR(ColumnCorpus):
         unpack_file(data_path, data_dir)
 
         return data_dir / "Plant-Disease_Corpus"
+
+
+if __name__ == "__main__":
+    HUNER_GENE_MIRNA()

@@ -1,30 +1,28 @@
 import inspect
-import os
-import re
-import tempfile
-from operator import itemgetter
-
-from pathlib import Path
-from typing import List, Callable, Type, Optional, Tuple
-
-from tqdm import tqdm
-
 import flair
 import flair.datasets.biomedical as biomedical
+import os
+import tempfile
+import pytest
 
+from operator import itemgetter
+from pathlib import Path
+from typing import List, Callable, Type
+from tqdm import tqdm
+
+from flair.tokenization import BioSpacyTokenizer, TokenizerWrapper, \
+    SpaceTokenizer, TagSentenceSplitter, SentenceSplitter, OneSentenceSplitter
+
+from flair.data import Token
 from flair.datasets import ColumnCorpus
 from flair.datasets.biomedical import (
     Entity,
     InternalBioNerDataset,
-    whitespace_tokenize,
     CoNLLWriter,
     filter_nested_entities,
-    sentence_split_at_tag,
     SENTENCE_TAG,
-    build_spacy_tokenizer,
     HunerDataset,
 )
-import pytest
 
 
 def has_balanced_parantheses(text: str) -> bool:
@@ -103,16 +101,33 @@ ALL_DATASETS = (
 )
 
 
-def simple_tokenizer(text: str) -> Tuple[List[str], List[int]]:
-    offset = 0
-    tokens = []
-    offsets = []
-    for token in re.split(r"[\s\\-]", text):
-        tokens.append(token)
-        offsets.append(offset)
-        offset += len(token) + 1
+def simple_tokenizer(text: str) -> List[Token]:
+    tokens: List[Token] = []
+    word = ""
+    index = -1
+    for index, char in enumerate(text):
+        if char == " " or char == "-":
+            if len(word) > 0:
+                start_position = index - len(word)
+                tokens.append(
+                    Token(
+                        text=word, start_position=start_position, whitespace_after=(char == " ")
+                    )
+                )
 
-    return tokens, offsets
+            word = ""
+        else:
+            word += char
+
+    # increment for last token in sentence if not followed by whitespace
+    index += 1
+    if len(word) > 0:
+        start_position = index - len(word)
+        tokens.append(
+            Token(text=word, start_position=start_position, whitespace_after=False)
+        )
+
+    return tokens
 
 
 def test_write_to_conll():
@@ -145,7 +160,7 @@ def test_write_to_conll():
         "and O +",
         "a B-E +",
         "long I-E +",
-        "entity3 I-E +",
+        "entity3 I-E -",
     ]
     assert_conll_writer_output(dataset, expected_labeling)
 
@@ -166,7 +181,7 @@ def test_conll_writer_one_token_multiple_entities1():
     )
 
     assert_conll_writer_output(
-        dataset, ["This O +", "is O +", "entity1 B-E +", "entity2 B-E +"]
+        dataset, ["This O +", "is O +", "entity1 B-E +", "entity2 B-E -"]
     )
 
 
@@ -183,12 +198,12 @@ def test_conll_writer_one_token_multiple_entities2():
     )
 
     assert_conll_writer_output(
-        dataset, ["This O +", "is O +", "entity1 B-E +", "entity2 O +"]
+        dataset, ["This O +", "is O +", "entity1 B-E +", "entity2 O -"]
     )
 
 
 def test_conll_writer_whitespace_after():
-    text = f"A sentence with cardio-dependent.{SENTENCE_TAG}Clark et al. reported that"
+    text = f"A sentence with cardio-dependent. {SENTENCE_TAG}Clark et al. reported that"
     dataset = InternalBioNerDataset(
         documents={"1": text}, entities_per_document={"1": []},
     )
@@ -205,28 +220,27 @@ def test_conll_writer_whitespace_after():
             "et O +",
             "al. O +",
             "reported O +",
-            "that O +",
+            "that O -",
         ],
-        simple_tokenizer,
-        sentence_split_at_tag,
+        TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=TokenizerWrapper(simple_tokenizer))
     )
 
 
 def assert_conll_writer_output(
     dataset: InternalBioNerDataset,
     expected_output: List[str],
-    tokenizer: Optional[Callable] = None,
-    sentence_splitter: Optional[Callable] = None,
+    sentence_splitter: SentenceSplitter = None,
 ):
     outfile_path = tempfile.mkstemp()[1]
     try:
-        tokenizer = tokenizer if tokenizer else whitespace_tokenize
         sentence_splitter = (
-            sentence_splitter if sentence_splitter else lambda x: ([x], [0])
+            sentence_splitter if sentence_splitter else OneSentenceSplitter(tokenizer=SpaceTokenizer())
         )
-        writer = CoNLLWriter(tokenizer=tokenizer, sentence_splitter=sentence_splitter)
+
+        writer = CoNLLWriter(sentence_splitter=sentence_splitter)
         writer.write_to_conll(dataset, Path(outfile_path))
         contents = [l.strip() for l in open(outfile_path).readlines() if l.strip()]
+
     finally:
         os.remove(outfile_path)
 
@@ -268,16 +282,6 @@ def test_filter_nested_entities():
             sorted(entities, key=lambda x: str(x)),
         ):
             assert str(e1) == str(e2)
-
-
-def test_whitespace_tokenizer():
-    tokens, offsets = whitespace_tokenize("Abc def .")
-    assert tokens == ["Abc", "def", "."]
-    assert offsets == [0, 4, 8]
-
-    tokens, offsets = whitespace_tokenize("Abc Abc .")
-    assert tokens == ["Abc", "Abc", "."]
-    assert offsets == [0, 4, 8]
 
 
 def sanity_check_all_corpora(check: Callable[[ColumnCorpus], None]):
@@ -374,7 +378,7 @@ def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
     dataset_name = CorpusType.__class__.__name__.lower()
     base_path = Path(flair.cache_root) / "datasets"
     data_folder = base_path / dataset_name
-    tokenizer = build_spacy_tokenizer()
+    tokenizer = BioSpacyTokenizer()
 
     corpus = CorpusType()
     internal = corpus.to_internal(data_folder)
@@ -384,7 +388,7 @@ def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
 
         token_starts = set()
         token_ends = set()
-        for token, token_start in zip(*tokenizer(doc_text)):
+        for token, token_start in zip(*tokenizer.tokenize(doc_text)):
             token_starts.add(token_start)
             token_ends.add(token_start + len(token))
 
@@ -406,23 +410,37 @@ def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
 
 @pytest.mark.skip(msg="We skip this test because it's only relevant for development purposes")
 def test_scispacy_tokenization():
-    tokenizer = build_spacy_tokenizer()
-    assert tokenizer("HBeAg(+) patients")[0] == ["HBeAg", "(", "+", ")", "patients"]
-    assert tokenizer("HBeAg(+)/HBsAg(+)")[0] == [
-        "HBeAg",
-        "(",
-        "+",
-        ")",
-        "/",
-        "HBsAg",
-        "(",
-        "+",
-        ")",
-    ]
-    assert tokenizer("doxorubicin (DOX)-induced")[0] == [
-        "doxorubicin",
-        "(",
-        "DOX",
-        ")",
-        "-induced",
-    ]
+    tokenizer = BioSpacyTokenizer()
+
+    tokens = tokenizer.tokenize("HBeAg(+) patients")
+
+    assert len(tokens) == 5
+    assert tokens[0].text == "HBeAg"
+    assert tokens[1].text == "("
+    assert tokens[2].text == "+"
+    assert tokens[3].text == ")"
+    assert tokens[4].text == "patients"
+
+    tokens = tokenizer.tokenize("HBeAg(+)/HBsAg(+)")
+
+    assert len(tokens) == 9
+
+    assert tokens[0].text == "HBeAg"
+    assert tokens[1].text == "("
+    assert tokens[2].text == "+"
+    assert tokens[3].text == ")"
+    assert tokens[4].text == "/"
+    assert tokens[5].text == "HBsAg"
+    assert tokens[6].text == "("
+    assert tokens[7].text == "+"
+    assert tokens[8].text == ")"
+
+    tokens = tokenizer.tokenize("doxorubicin (DOX)-induced")
+
+    assert len(tokens) == 5
+    assert tokens[0].text == "doxorubicin"
+    assert tokens[1].text == "("
+    assert tokens[2].text == "DOX"
+    assert tokens[3].text == ")"
+    assert tokens[4].text == "-induced"
+
