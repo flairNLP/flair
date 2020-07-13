@@ -1270,17 +1270,43 @@ class KaewphanCorpusHelper:
         unpack_file(data_path, data_folder)
 
     @staticmethod
-    def prepare_and_save_dataset(conll_folder: Path, output_file: Path):
-        sentences = []
-        for file in os.listdir(str(conll_folder)):
-            if not file.endswith(".conll"):
+    def prepare_and_save_dataset(nersuite_folder: Path, output_file: Path):
+        writer = open(str(output_file), "w", encoding="utf8")
+        out_newline = False
+
+        for file in os.listdir(str(nersuite_folder)):
+            if not file.endswith(".nersuite"):
                 continue
 
-            with open(os.path.join(str(conll_folder), file), "r") as reader:
-                sentences.append(reader.read())
+            annotations = []
+            with open(os.path.join(str(nersuite_folder), file), "r") as reader:
+                for line in reader.readlines():
+                    columns = line.split("\t")
+                    annotations.append(columns[:4])
 
-        with open(str(output_file), "w", encoding="utf8") as writer:
-            writer.writelines(sentences)
+            num_annotations = len(annotations)
+            for i, annotation in enumerate(annotations):
+                if len(annotation) == 1:
+                    assert annotation[0] == "\n"
+                    if not out_newline:
+                        writer.write("\n")
+                    out_newline = True
+                    continue
+
+                has_whitespace = "+"
+
+                next_annotation = annotations[i+1] if (i+1) < num_annotations and len(annotations[i+1]) > 1 else None
+                if next_annotation and next_annotation[1] == annotation[2]:
+                    has_whitespace = "-"
+
+                writer.write(" ".join([annotation[3], annotation[0], has_whitespace]) + "\n")
+                out_newline = False
+
+            if not out_newline:
+                writer.write("\n")
+                out_newline = True
+
+        writer.close()
 
     @staticmethod
     def download_gellus_dataset(data_folder: Path):
@@ -1372,7 +1398,7 @@ class CLL(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "ner", 1: "text"}
+        columns = {0: "text", 1: "ner"}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1387,9 +1413,8 @@ class CLL(ColumnCorpus):
         if not (train_file.exists()):
             KaewphanCorpusHelper.download_cll_dataset(data_folder)
 
-            # FIXME: Use nersuite annotations because conll annotation seem to be broken
-            conll_folder = data_folder / "CLL-1.0.2" / "conll"
-            KaewphanCorpusHelper.prepare_and_save_dataset(conll_folder, train_file)
+            nersuite_folder = data_folder / "CLL-1.0.2" / "nersuite"
+            KaewphanCorpusHelper.prepare_and_save_dataset(nersuite_folder, train_file)
 
         super(CLL, self).__init__(
             data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
@@ -1455,15 +1480,14 @@ class GELLUS(ColumnCorpus):
         if not (train_file.exists() and dev_file.exists() and test_file.exists()):
             KaewphanCorpusHelper.download_gellus_dataset(data_folder)
 
-            # FIXME: Use nersuite folder instead of conll, since conll annotation seem to be broken
-            conll_train = data_folder / "GELLUS-1.0.3" / "conll" / "train"
-            KaewphanCorpusHelper.prepare_and_save_dataset(conll_train, train_file)
+            nersuite_train = data_folder / "GELLUS-1.0.3" / "nersuite" / "train"
+            KaewphanCorpusHelper.prepare_and_save_dataset(nersuite_train, train_file)
 
-            conll_dev = data_folder / "GELLUS-1.0.3" / "conll" / "devel"
-            KaewphanCorpusHelper.prepare_and_save_dataset(conll_dev, dev_file)
+            nersuite_dev = data_folder / "GELLUS-1.0.3" / "nersuite" / "devel"
+            KaewphanCorpusHelper.prepare_and_save_dataset(nersuite_dev, dev_file)
 
-            conll_test = data_folder / "GELLUS-1.0.3" / "conll" / "test"
-            KaewphanCorpusHelper.prepare_and_save_dataset(conll_test, test_file)
+            nersuite_test = data_folder / "GELLUS-1.0.3" / "nersuite" / "test"
+            KaewphanCorpusHelper.prepare_and_save_dataset(nersuite_test, test_file)
 
         super(GELLUS, self).__init__(
             data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
@@ -5173,6 +5197,3 @@ class PDR(ColumnCorpus):
 
         return data_dir / "Plant-Disease_Corpus"
 
-
-if __name__ == "__main__":
-    HUNER_GENE_MIRNA()
