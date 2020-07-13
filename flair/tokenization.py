@@ -1,14 +1,12 @@
 import logging
-from abc import ABC, abstractmethod
 
+from abc import ABC, abstractmethod
 from typing import List, Callable, Tuple
 
 from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions, word_tokenizer
-from sentence_transformers.models.tokenizer import WhitespaceTokenizer
 
 from flair.data import Sentence, Tokenizer, Token
-
 
 log = logging.getLogger("flair")
 

@@ -1,9 +1,10 @@
 import inspect
 import flair
-import flair.datasets.biomedical as biomedical
 import os
 import tempfile
 import pytest
+
+import flair.datasets.biomedical as biomedical
 
 from operator import itemgetter
 from pathlib import Path
