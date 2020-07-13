@@ -37,7 +37,7 @@ embedding_types = [([
 ]
 
 train_with_dev_list = [(True, '_trained_with_dev'), (False, '_trained_without_dev')]
-mini_batch_size_list = [(16, '_16_batch'), (32, '_32_batch')]
+mini_batch_size_list = [(32, '_32_batch')]
 for mini_batch_size, batch_suffix in mini_batch_size_list:
     for train_with_dev, train_with_dev_suffix in train_with_dev_list:
         for embedding_type, embedding_suffix in embedding_types:
