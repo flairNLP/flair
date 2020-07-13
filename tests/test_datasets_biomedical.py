@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import List, Callable, Type
 from tqdm import tqdm
 
-from flair.tokenization import BioSpacyTokenizer, TokenizerWrapper, \
-    SpaceTokenizer, TagSentenceSplitter, SentenceSplitter, OneSentenceSplitter
+from flair.tokenization import TokenizerWrapper, SpaceTokenizer, TagSentenceSplitter, \
+    SentenceSplitter, OneSentenceSplitter
 
 from flair.data import Token
 from flair.datasets import ColumnCorpus
@@ -379,6 +379,8 @@ def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
     dataset_name = CorpusType.__class__.__name__.lower()
     base_path = Path(flair.cache_root) / "datasets"
     data_folder = base_path / dataset_name
+
+    from flair.tokenization import BioSpacyTokenizer
     tokenizer = BioSpacyTokenizer()
 
     corpus = CorpusType()
@@ -411,6 +413,7 @@ def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
 
 @pytest.mark.skip(msg="We skip this test because it's only relevant for development purposes")
 def test_scispacy_tokenization():
+    from flair.tokenization import BioSpacyTokenizer
     tokenizer = BioSpacyTokenizer()
 
     tokens = tokenizer.tokenize("HBeAg(+) patients")
