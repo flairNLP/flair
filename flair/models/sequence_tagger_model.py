@@ -1140,6 +1140,10 @@ class SequenceTagger(flair.nn.Model):
             [hu_path, "keyphrase-semeval2017-scibert", "keyphrase-en-scibert.pt"]
         )
 
+        model_map["negation-speculation"] = "/".join(
+            ["temp", "model", "negation-speculation-model.pt"]
+        )
+
         cache_dir = Path("models")
         if model_name in model_map:
             model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
