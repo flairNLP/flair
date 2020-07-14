@@ -42,7 +42,7 @@ embedding_types = [([
     , (False, '_trained_without_dev')
 """
 
-train_with_dev_list = [(True, '_trained_with_dev')]
+train_with_dev_list = [(False, '_trained_without_dev')]
 mini_batch_size_list = [(64, '_64_batch')]
 for mini_batch_size, batch_suffix in mini_batch_size_list:
     for train_with_dev, train_with_dev_suffix in train_with_dev_list:
