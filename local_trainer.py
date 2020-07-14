@@ -18,7 +18,11 @@ embedding_types = [([
     WordEmbeddings('en'),
     FlairEmbeddings('/glusterfs/dfs-gfs-dist/weberple-pub/pm_pmc-forward/best-lm.pt'),
     FlairEmbeddings('/glusterfs/dfs-gfs-dist/weberple-pub/pm_pmc-backward/best-lm.pt'),
-    ], '_EN_BIOFLAIR'),
+    ], '_EN_BIOFLAIR')
+]
+
+"""
+,
     ([
         WordEmbeddings('glove'),
         FlairEmbeddings('/glusterfs/dfs-gfs-dist/weberple-pub/pm_pmc-forward/best-lm.pt'),
@@ -34,10 +38,12 @@ embedding_types = [([
         FlairEmbeddings('news-forward'),
         FlairEmbeddings('news-backward'),
     ], '_GLOVE_NEWSFLAIR')
-]
+    
+    , (False, '_trained_without_dev')
+"""
 
-train_with_dev_list = [(True, '_trained_with_dev'), (False, '_trained_without_dev')]
-mini_batch_size_list = [(32, '_32_batch')]
+train_with_dev_list = [(True, '_trained_with_dev')]
+mini_batch_size_list = [(64, '_64_batch')]
 for mini_batch_size, batch_suffix in mini_batch_size_list:
     for train_with_dev, train_with_dev_suffix in train_with_dev_list:
         for embedding_type, embedding_suffix in embedding_types:
