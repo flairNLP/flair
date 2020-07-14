@@ -218,6 +218,10 @@ class DataPoint:
 
         return self
 
+    def remove_labels(self, label_type: str):
+        if label_type in self.annotation_layers.keys():
+            del self.annotation_layers[label_type]
+
     def get_labels(self, label_type: str = None):
         if label_type is None:
             return self.labels
