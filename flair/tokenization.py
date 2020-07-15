@@ -383,7 +383,7 @@ class SpacySentenceSplitter(SentenceSplitter):
     :param tokenizer Custom tokenizer to use (default SpacyTokenizer)
     """
 
-    def __init__(self, model: str, tokenizer: Tokenizer = SpacyTokenizer("en_core_sci_sm")):
+    def __init__(self, model: str, tokenizer: Tokenizer = None):
         super(SpacySentenceSplitter, self).__init__()
 
         try:
@@ -399,7 +399,10 @@ class SpacySentenceSplitter(SentenceSplitter):
         elif isinstance(model, str):
             self.model: Language = spacy.load(model)
 
-        self.tokenizer = tokenizer
+        if tokenizer is None:
+            self.tokenizer =  SpacyTokenizer("en_core_sci_sm")
+        else:
+            self.tokenizer = tokenizer
 
     def split(self, text: str) -> List[Tuple[int, Sentence]]:
         document = self.model(text)
