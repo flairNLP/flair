@@ -4450,7 +4450,7 @@ class BIONLP2013_CG(BioNLPCorpus):
 
 class ANAT_EM(ColumnCorpus):
     """
-          Anatomical entity mention recognition
+          Corpus for anatomical named entity mention recognition.
 
           For further information see Pyysalo and Ananiadou:
             Anatomical entity mention recognition at literature scale
@@ -4596,6 +4596,15 @@ class ANAT_EM(ColumnCorpus):
 
 
 class BioBertHelper(ColumnCorpus):
+    """
+        Helper class to convert corpora and the respective train, dev and test split
+        used by BioBERT.
+
+        For further details see Lee et al.:
+            https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+            https://github.com/dmis-lab/biobert
+    """
+
     @staticmethod
     def download_corpora(download_dir: Path):
         from google_drive_downloader import GoogleDriveDownloader as gdd
@@ -4648,7 +4657,14 @@ class BioBertHelper(ColumnCorpus):
 
 
 class BIOBERT_CHEMICAL_BC4CHEMD(ColumnCorpus):
+    """
+        BC4CHEMD corpus with chemical annotations as used in the evaluation
+        of BioBERT.
 
+        For further details regarding BioBERT and it's evaluation, see Lee et al.:
+            https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+            https://github.com/dmis-lab/biobert
+    """
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
@@ -4678,7 +4694,14 @@ class BIOBERT_CHEMICAL_BC4CHEMD(ColumnCorpus):
 
 
 class BIOBERT_GENE_BC2GM(ColumnCorpus):
+    """
+        BC4CHEMD corpus with gene annotations as used in the evaluation
+        of BioBERT.
 
+        For further details regarding BioBERT and it's evaluation, see Lee et al.:
+            https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+            https://github.com/dmis-lab/biobert
+    """
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
@@ -4707,7 +4730,14 @@ class BIOBERT_GENE_BC2GM(ColumnCorpus):
 
 
 class BIOBERT_GENE_JNLPBA(ColumnCorpus):
+    """
+        JNLPBA corpus with gene annotations as used in the evaluation
+        of BioBERT.
 
+        For further details regarding BioBERT and it's evaluation, see Lee et al.:
+            https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+            https://github.com/dmis-lab/biobert
+    """
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
@@ -4736,7 +4766,14 @@ class BIOBERT_GENE_JNLPBA(ColumnCorpus):
 
 
 class BIOBERT_CHEMICAL_BC5CDR(ColumnCorpus):
+    """
+        BC5CDR corpus with chemical annotations as used in the evaluation
+        of BioBERT.
 
+        For further details regarding BioBERT and it's evaluation, see Lee et al.:
+            https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+            https://github.com/dmis-lab/biobert
+    """
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
@@ -4765,7 +4802,14 @@ class BIOBERT_CHEMICAL_BC5CDR(ColumnCorpus):
 
 
 class BIOBERT_DISEASE_BC5CDR(ColumnCorpus):
+    """
+        BC5CDR corpus with disease annotations as used in the evaluation
+        of BioBERT.
 
+        For further details regarding BioBERT and it's evaluation, see Lee et al.:
+            https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+            https://github.com/dmis-lab/biobert
+    """
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
@@ -4794,7 +4838,13 @@ class BIOBERT_DISEASE_BC5CDR(ColumnCorpus):
 
 
 class BIOBERT_DISEASE_NCBI(ColumnCorpus):
+    """
+        NCBI disease corpus as used in the evaluation of BioBERT.
 
+        For further details regarding BioBERT and it's evaluation, see Lee et al.:
+            https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+            https://github.com/dmis-lab/biobert
+    """
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
@@ -4823,7 +4873,14 @@ class BIOBERT_DISEASE_NCBI(ColumnCorpus):
 
 
 class BIOBERT_SPECIES_LINNAEUS(ColumnCorpus):
+    """
+        Linneaeus corpus with species annotations as used in the evaluation
+        of BioBERT.
 
+        For further details regarding BioBERT and it's evaluation, see Lee et al.:
+            https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+            https://github.com/dmis-lab/biobert
+    """
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
@@ -4852,7 +4909,14 @@ class BIOBERT_SPECIES_LINNAEUS(ColumnCorpus):
 
 
 class BIOBERT_SPECIES_S800(ColumnCorpus):
+    """
+        S800 corpus with species annotations as used in the evaluation
+        of BioBERT.
 
+        For further details regarding BioBERT and it's evaluation, see Lee et al.:
+            https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+            https://github.com/dmis-lab/biobert
+    """
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         columns = {0: "text", 1: "ner"}
         # this dataset name
@@ -5048,6 +5112,7 @@ class CRAFT_V4(ColumnCorpus):
             documents=documents, entities_per_document=entities_per_document
         )
 
+
 class AZDZ(ColumnCorpus):
     """
          Arizona Disease Corpus from the Biomedical Informatics Lab at Arizona State University.
@@ -5164,7 +5229,7 @@ class AZDZ(ColumnCorpus):
 
 class PDR(ColumnCorpus):
     """
-        Corpus of plant-disease relation from Kim et al., consisting of named entity annotations
+        Corpus of plant-disease relations from Kim et al., consisting of named entity annotations
         for plants and disease.
 
           For further information see Kim et al.:
