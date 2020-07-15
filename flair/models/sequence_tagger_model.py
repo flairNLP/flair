@@ -1141,7 +1141,7 @@ class SequenceTagger(flair.nn.Model):
         )
 
         model_map["negation-speculation"] = "/".join(
-            ["temp", "model", "negation-speculation-model.pt"]
+            [hu_path, "negation-speculation-EN-bioflair", "negation-speculation-model.pt"]
         )
 
         cache_dir = Path("models")
