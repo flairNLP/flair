@@ -84,8 +84,9 @@ are provided:
 | 'chunk' |  Syntactic Chunking   |  Conll-2000     |  **96.47** (F1) |
 | 'pos' |  Part-of-Speech Tagging (fine-grained) |  Ontonotes     |  **98.19** (Accuracy) |
 | 'upos' |  Part-of-Speech Tagging (universal) |  Ontonotes     |  **98.6** (Accuracy) |
-| 'keyphrase' |  Methods and materials in science papers (BETA) |  Semeval2017   |   |
+| 'keyphrase' |  Methods and materials in science papers (BETA) |  Semeval2017   |  **47.3** (F1)  |
 | 'frame'  |   Semantic Frame Detection |  Propbank 3.0     |  **97.54** (F1) |
+| 'negation-speculation'  |  Negations and speculations in biomedical articles  |  Bioscope  |  **80.2** (F1) |
 
 
 #### Fast English Models
