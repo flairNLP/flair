@@ -11,8 +11,13 @@ from pathlib import Path
 from typing import List, Callable, Type
 from tqdm import tqdm
 
-from flair.tokenization import TokenizerWrapper, SpaceTokenizer, TagSentenceSplitter, \
-    SentenceSplitter, OneSentenceSplitter
+from flair.tokenization import (
+    TokenizerWrapper,
+    SpaceTokenizer,
+    TagSentenceSplitter,
+    SentenceSplitter,
+    NoSentenceSplitter
+)
 
 from flair.data import Token
 from flair.datasets import ColumnCorpus
@@ -235,7 +240,7 @@ def assert_conll_writer_output(
     outfile_path = tempfile.mkstemp()[1]
     try:
         sentence_splitter = (
-            sentence_splitter if sentence_splitter else OneSentenceSplitter(tokenizer=SpaceTokenizer())
+            sentence_splitter if sentence_splitter else NoSentenceSplitter(tokenizer=SpaceTokenizer())
         )
 
         writer = CoNLLWriter(sentence_splitter=sentence_splitter)
@@ -380,8 +385,8 @@ def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
     base_path = Path(flair.cache_root) / "datasets"
     data_folder = base_path / dataset_name
 
-    from flair.tokenization import BioSpacyTokenizer
-    tokenizer = BioSpacyTokenizer()
+    from flair.tokenization import SciSpacyTokenizer
+    tokenizer = SciSpacyTokenizer()
 
     corpus = CorpusType()
     internal = corpus.to_internal(data_folder)
@@ -413,31 +418,45 @@ def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
 
 @pytest.mark.skip(msg="We skip this test because it's only relevant for development purposes")
 def test_scispacy_tokenization():
-    from flair.tokenization import BioSpacyTokenizer
-    tokenizer = BioSpacyTokenizer()
+    from flair.tokenization import SciSpacyTokenizer
+    tokenizer = SciSpacyTokenizer()
 
     tokens = tokenizer.tokenize("HBeAg(+) patients")
 
     assert len(tokens) == 5
     assert tokens[0].text == "HBeAg"
+    assert tokens[0].start_pos == 0
     assert tokens[1].text == "("
+    assert tokens[1].start_pos == 5
     assert tokens[2].text == "+"
+    assert tokens[2].start_pos == 6
     assert tokens[3].text == ")"
+    assert tokens[3].start_pos == 7
     assert tokens[4].text == "patients"
+    assert tokens[4].start_pos == 9
 
     tokens = tokenizer.tokenize("HBeAg(+)/HBsAg(+)")
 
     assert len(tokens) == 9
 
     assert tokens[0].text == "HBeAg"
+    assert tokens[0].start_pos == 0
     assert tokens[1].text == "("
+    assert tokens[1].start_pos == 5
     assert tokens[2].text == "+"
+    assert tokens[2].start_pos == 6
     assert tokens[3].text == ")"
+    assert tokens[3].start_pos == 7
     assert tokens[4].text == "/"
+    assert tokens[4].start_pos == 8
     assert tokens[5].text == "HBsAg"
+    assert tokens[5].start_pos == 9
     assert tokens[6].text == "("
+    assert tokens[6].start_pos == 14
     assert tokens[7].text == "+"
+    assert tokens[7].start_pos == 15
     assert tokens[8].text == ")"
+    assert tokens[8].start_pos == 16
 
     tokens = tokenizer.tokenize("doxorubicin (DOX)-induced")
 

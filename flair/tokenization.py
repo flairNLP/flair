@@ -3,7 +3,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import List, Callable, Tuple
 
-from segtok.segmenter import split_single
+from segtok.segmenter import split_single, split_multi
 from segtok.tokenizer import split_contractions, word_tokenizer
 
 from flair.data import Sentence, Tokenizer, Token
@@ -261,17 +261,28 @@ class TokenizerWrapper(Tokenizer):
         return self.__class__.__name__ + "_" + self.tokenizer_func.__name__
 
 
-class BioSpacyTokenizer(Tokenizer):
+class SciSpacyTokenizer(Tokenizer):
+    """
+        Implementation of :class:`Tokenizer` which uses the en_core_sci_sm Spacy model
+        extended by special heuristics to consider characters such as "(", ")" "-" as
+        additional token separators. The latter distinguishs this implementation from
+        :class:`SpacyTokenizer`.
+
+        Note, you if you want to use the "normal" SciSpacy tokenization just use
+        :class:`SpacyTokenizer` and pass a SciSpacy model (e.g. en_core_sci_sm or
+        en_core_sci_lg) as parameter.
+    """
 
     def __init__(self):
-        super(BioSpacyTokenizer, self).__init__()
+        super(SciSpacyTokenizer, self).__init__()
 
         try:
             import spacy
             from spacy.lang import char_classes
         except ImportError:
             raise ImportError(
-                "Please install Spacy v2.0 or better before using the Spacy tokenizer, otherwise you can use segtok_tokenizer as advanced tokenizer."
+                "Please install Spacy v2.0 or better before using the Spacy tokenizer, "
+                "otherwise you can use segtok_tokenizer as advanced tokenizer."
             )
 
         def combined_rule_prefixes() -> List[str]:
@@ -375,6 +386,40 @@ class SentenceSplitter(ABC):
         return self.__class__.__name__
 
 
+class SegtokSentenceSplitter(SentenceSplitter):
+    """
+        Implementation of :class:`SentenceSplitter` using the SegTok library.
+
+        For further details see: https://github.com/fnl/segtok
+    """
+
+    def __init__(self, tokenizer: Tokenizer = SegtokTokenizer()):
+        super(SegtokSentenceSplitter, self).__init__()
+        self.tokenizer = tokenizer
+
+    def split(self, text: str) -> List[Tuple[int, Sentence]]:
+        sentences = []
+        offsets = []
+        offset = 0
+
+        plain_sentences = split_multi(text)
+        for sentence in plain_sentences:
+            sentences += [Sentence(sentence, use_tokenizer=self.tokenizer)]
+            sentence_offset = text.find(sentence, offset)
+
+            if sentence_offset == -1:
+                raise AssertionError(f"Can't find offset for sentences {plain_sentences} "
+                                     f"starting from {offset}")
+
+            offsets += [sentence_offset]
+            offset += len(sentence)
+
+        return list(zip(offsets, sentences))
+
+    def name(self) -> str:
+        return self.__class__.__name__
+
+
 class SpacySentenceSplitter(SentenceSplitter):
     """
     Implementation of :class:`SentenceSplitter`, using models from Spacy.
@@ -426,14 +471,14 @@ class SpacySentenceSplitter(SentenceSplitter):
         )
 
 
-class BioSpacySentenceSplitter(SpacySentenceSplitter):
+class SciSpacySentenceSplitter(SpacySentenceSplitter):
     """
     Convenience class to instantiate :class:`SpacySentenceSplitter` with Spacy model `en_core_sci_sm`
-    for sentence splitting and BioSpacyTokenizer as tokenizer.ree
+    for sentence splitting and :class:`SciSpacyTokenizer` as tokenizer.
     """
 
     def __init__(self):
-        super(BioSpacySentenceSplitter, self).__init__("en_core_sci_sm", BioSpacyTokenizer())
+        super(SciSpacySentenceSplitter, self).__init__("en_core_sci_sm", SciSpacyTokenizer())
 
 
 class TagSentenceSplitter(SentenceSplitter):
@@ -455,7 +500,7 @@ class TagSentenceSplitter(SentenceSplitter):
         last_offset = 0
 
         for sentence in plain_sentences:
-            if len(sentence) == 0:
+            if len(sentence.strip()) == 0:
                 continue
 
             offsets += [last_offset]
@@ -493,13 +538,13 @@ class NewlineSentenceSplitter(TagSentenceSplitter):
         )
 
 
-class OneSentenceSplitter(SentenceSplitter):
+class NoSentenceSplitter(SentenceSplitter):
     """
     Implementation of :class:`SentenceSplitter` which treats the complete text as one sentence.
     """
 
     def __init__(self, tokenizer: Tokenizer = SegtokTokenizer()):
-        super(OneSentenceSplitter, self).__init__()
+        super(NoSentenceSplitter, self).__init__()
         self.tokenizer = tokenizer
 
     def split(self, text: str) -> List[Tuple[int, Sentence]]:

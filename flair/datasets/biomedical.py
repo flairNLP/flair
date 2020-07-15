@@ -19,8 +19,16 @@ from warnings import warn
 from flair.data import Tokenizer
 from flair.file_utils import cached_path, Tqdm, unpack_file
 from flair.datasets import ColumnCorpus, ColumnDataset
-from flair.tokenization import SentenceSplitter, BioSpacySentenceSplitter, OneSentenceSplitter, \
-    TagSentenceSplitter, BioSpacyTokenizer, NewlineSentenceSplitter, SpaceTokenizer
+from flair.tokenization import (
+    SentenceSplitter,
+    SciSpacySentenceSplitter,
+    NoSentenceSplitter,
+    TagSentenceSplitter,
+    SciSpacyTokenizer,
+    NewlineSentenceSplitter,
+    SpaceTokenizer
+)
+
 
 DISEASE_TAG = "Disease"
 CHEMICAL_TAG = "Chemical"
@@ -34,6 +42,12 @@ logger = logging.getLogger("flair")
 
 
 class Entity:
+    """
+        Internal class to represent entities while converting biomedical NER corpora to a standardized format
+        (only used for pre-processing purposes!). Each entity consists of the char span it addresses in
+        the original text as well as the type of entity (e.g. Chemical, Gene, and so on).
+    """
+
     def __init__(self, char_span: Tuple[int, int], entity_type: str):
         assert char_span[0] < char_span[1]
         self.char_span = range(*char_span)
@@ -83,6 +97,9 @@ class Entity:
 
 
 class InternalBioNerDataset:
+    """
+        Internal class to represent a corpus and it's entities.
+    """
     def __init__(
         self, documents: Dict[str, str], entities_per_document: Dict[str, List[Entity]]
     ):
@@ -176,6 +193,13 @@ def filter_nested_entities(dataset: InternalBioNerDataset) -> None:
 
 
 def bioc_to_internal(bioc_file: Path):
+    """
+        Helper function to parse corpora that are given in BIOC format. See
+
+            http://bioc.sourceforge.net/
+
+        for details.
+    """
     tree = etree.parse(str(bioc_file))
     texts_per_document = {}
     entities_per_document = {}
@@ -269,6 +293,14 @@ def bioc_to_internal(bioc_file: Path):
 
 
 def brat_to_internal(corpus_dir: Path, ann_file_suffixes=None) -> InternalBioNerDataset:
+    """
+        Helper function to parse corpora that are annotated using BRAT. See
+
+            https://brat.nlplab.org/
+
+        for details.
+
+    """
     if ann_file_suffixes is None:
         ann_file_suffixes = [".ann"]
 
@@ -313,6 +345,10 @@ def brat_to_internal(corpus_dir: Path, ann_file_suffixes=None) -> InternalBioNer
 
 
 class CoNLLWriter:
+    """
+        Class which implements the output CONLL file generation of corpora given as instances of
+        :class:`InternalBioNerDataset`.
+    """
     def __init__(
         self,
         sentence_splitter: SentenceSplitter,
@@ -439,7 +475,7 @@ class HunerDataset(ColumnCorpus, ABC):
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Custom implementation of :class:`SentenceSplitter` which
-            segments the text into sentences and tokens (default BioSpacySentenceSplitter())
+            segments the text into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
 
         if type(base_path) == str:
@@ -461,7 +497,7 @@ class HunerDataset(ColumnCorpus, ABC):
             cw_sentence_splitter = (
                 sentence_splitter
                 if sentence_splitter
-                else BioSpacySentenceSplitter()
+                else SciSpacySentenceSplitter()
             )
         else:
             if sentence_splitter:
@@ -469,7 +505,8 @@ class HunerDataset(ColumnCorpus, ABC):
                     "Ignoring non-default sentence splitter for corpus with predefined sentences"
                 )
 
-        # Create tokenization-dependent CONLL files!
+        # Create tokenization-dependent CONLL files. This is necessary to prevent
+        # from caching issues (e.g. loading the same corpus with different sentence splitters)
         train_file = data_folder / f"{cw_sentence_splitter.name}_train.conll"
         dev_file = data_folder / f"{cw_sentence_splitter.name}_dev.conll"
         test_file = data_folder / f"{cw_sentence_splitter.name}_test.conll"
@@ -544,7 +581,7 @@ class BIO_INFER(ColumnCorpus):
             corpus_folder = self.download_dataset(data_folder)
             corpus_data = self.parse_dataset(corpus_folder)
 
-            sentence_splitter = OneSentenceSplitter(tokenizer=SpaceTokenizer())
+            sentence_splitter = NoSentenceSplitter(tokenizer=SpaceTokenizer())
 
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
@@ -831,7 +868,7 @@ class HUNER_GENE_JNLPBA(HunerDataset):
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/genia"
 
     def get_corpus_sentence_splitter(self) -> SentenceSplitter:
-        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=BioSpacyTokenizer())
+        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=SciSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         orig_folder = data_dir / "original"
@@ -859,7 +896,7 @@ class HUNER_CELL_LINE_JNLPBA(HunerDataset):
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/genia"
 
     def get_corpus_sentence_splitter(self) -> SentenceSplitter:
-        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=BioSpacyTokenizer())
+        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=SciSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         download_folder = data_dir / "original"
@@ -907,7 +944,7 @@ class CELL_FINDER(ColumnCorpus):
         dataset_name = self.__class__.__name__.lower()
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         # default dataset folder is the cache root
         if not base_path:
@@ -1051,7 +1088,7 @@ class MIRNA(ColumnCorpus):
             sentence_separator = SENTENCE_TAG
             sentence_splitter = TagSentenceSplitter(
                 tag=sentence_separator,
-                tokenizer=BioSpacyTokenizer()
+                tokenizer=SciSpacyTokenizer()
             )
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
@@ -1173,7 +1210,7 @@ class HUNER_GENE_MIRNA(HunerDataset):
         )
 
     def get_corpus_sentence_splitter(self):
-        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=BioSpacyTokenizer())
+        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=SciSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         download_folder = data_dir / "original"
@@ -1209,7 +1246,7 @@ class HUNER_SPECIES_MIRNA(HunerDataset):
         )
 
     def get_corpus_sentence_splitter(self) -> SentenceSplitter:
-        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=BioSpacyTokenizer())
+        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=SciSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         download_folder = data_dir / "original"
@@ -1245,7 +1282,7 @@ class HUNER_DISEASE_MIRNA(HunerDataset):
         )
 
     def get_corpus_sentence_splitter(self) -> SentenceSplitter:
-        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=BioSpacyTokenizer())
+        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=SciSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         download_folder = data_dir / "original"
@@ -1434,7 +1471,7 @@ class HUNER_CELL_LINE_CLL(HunerDataset):
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/cll"
 
     def get_corpus_sentence_splitter(self) -> SentenceSplitter:
-        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=BioSpacyTokenizer())
+        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=SciSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         KaewphanCorpusHelper.download_cll_dataset(data_dir)
@@ -1507,7 +1544,7 @@ class HUNER_CELL_LINE_GELLUS(HunerDataset):
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/gellus"
 
     def get_corpus_sentence_splitter(self) -> SentenceSplitter:
-        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=BioSpacyTokenizer())
+        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=SciSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         KaewphanCorpusHelper.download_gellus_dataset(data_dir)
@@ -1534,7 +1571,7 @@ class LOCTEXT(ColumnCorpus):
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Custom implementation of :class:`SentenceSplitter`
-            that segments a document into sentences and tokens (default BioSpacySentenceSplitter)
+            that segments a document into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1551,7 +1588,7 @@ class LOCTEXT(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
@@ -1694,7 +1731,7 @@ class CHEMDNER(ColumnCorpus):
             data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
         dev_file = data_folder / f"{sentence_splitter.name}_dev.conll"
@@ -1795,7 +1832,7 @@ class IEPA(ColumnCorpus):
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param tokenizer: Custom implementation of :class:`Tokenizer` which
-                segments sentences into tokens (default BioSpacyTokenizer)
+                segments sentences into tokens (default :class:`SciSpacyTokenizer`)
            """
 
         if type(base_path) == str:
@@ -1813,7 +1850,7 @@ class IEPA(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if tokenizer is None:
-            tokenizer = BioSpacyTokenizer()
+            tokenizer = SciSpacyTokenizer()
 
         sentence_splitter = NewlineSentenceSplitter(tokenizer=tokenizer)
 
@@ -1855,7 +1892,7 @@ class HUNER_GENE_IEPA(HunerDataset):
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/iepa"
 
     def get_corpus_sentence_splitter(self) -> SentenceSplitter:
-        return NewlineSentenceSplitter(tokenizer=BioSpacyTokenizer())
+        return NewlineSentenceSplitter(tokenizer=SciSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         os.makedirs(str(data_dir), exist_ok=True)
@@ -1886,7 +1923,7 @@ class LINNEAUS(ColumnCorpus):
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param tokenizer: Custom implementation of :class:`Tokenizer` which segments
-                sentence into tokens (default BioSpacyTokenizer)
+                sentence into tokens (default :class:`SciSpacyTokenizer`)
            """
 
         if type(base_path) == str:
@@ -1904,7 +1941,7 @@ class LINNEAUS(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if tokenizer is None:
-            tokenizer = BioSpacyTokenizer()
+            tokenizer = SciSpacyTokenizer()
 
         sentence_splitter = TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=tokenizer)
 
@@ -1997,7 +2034,7 @@ class CDR(ColumnCorpus):
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
-            documents into sentences and tokens (default BioSpacySentenceSplitter)
+            documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
 
         if type(base_path) == str:
@@ -2015,7 +2052,7 @@ class CDR(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
         dev_file = data_folder / f"{sentence_splitter.name}_dev.conll"
@@ -2141,7 +2178,7 @@ class VARIOME(ColumnCorpus):
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
-                documents into sentences and tokens (default BioSpacySentenceSplitter)
+                documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
         if type(base_path) == str:
@@ -2159,7 +2196,7 @@ class VARIOME(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
@@ -2310,7 +2347,7 @@ class NCBI_DISEASE(ColumnCorpus):
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
-                documents into sentences and tokens (default BioSpacySentenceSplitter)
+                documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
         if type(base_path) == str:
@@ -2328,7 +2365,7 @@ class NCBI_DISEASE(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
         dev_file = data_folder / f"{sentence_splitter.name}_dev.conll"
@@ -2476,7 +2513,7 @@ class ScaiCorpus(ColumnCorpus):
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param sentence_splitter:  Implementation of :class:`SentenceSplitter` which segments
-                documents into sentences and tokens (default BioSpacySentenceSplitter)
+                documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
         if type(base_path) == str:
@@ -2494,7 +2531,7 @@ class ScaiCorpus(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
@@ -2698,7 +2735,7 @@ class OSIRIS(ColumnCorpus):
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param sentence_splitter: Implementation of :class:`SentenceSplitter` which
-                segments documents into sentences and tokens (default BioSpacySentenceSplitter)
+                segments documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            :param load_original_unfixed_annotation: The original annotation of Osiris
                 erroneously annotates two sentences as a protein. Set to True if you don't
                 want the fixed version.
@@ -2719,7 +2756,7 @@ class OSIRIS(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
@@ -2837,7 +2874,7 @@ class S800(ColumnCorpus):
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
-                into sentences and tokens (default BioSpacySentenceSplitter)
+                into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
         if type(base_path) == str:
@@ -2855,7 +2892,7 @@ class S800(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
@@ -2939,7 +2976,7 @@ class GPRO(ColumnCorpus):
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
-                into sentences and tokens (default BioSpacySentenceSplitter)
+                into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
         if type(base_path) == str:
@@ -2957,7 +2994,7 @@ class GPRO(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
         dev_file = data_folder / f"{sentence_splitter.name}_dev.conll"
@@ -3109,7 +3146,7 @@ class DECA(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / "train.conll"
 
@@ -3345,7 +3382,7 @@ class HUNER_GENE_FSU(HunerDataset):
         return "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/fsu"
 
     def get_corpus_sentence_splitter(self) -> SentenceSplitter:
-        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=BioSpacyTokenizer())
+        return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=SciSpacyTokenizer())
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         corpus_dir = FSU.download_corpus(data_dir)
@@ -3380,7 +3417,7 @@ class CRAFT(ColumnCorpus):
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
-                into sentences and tokens (default BioSpacySentenceSplitter)
+                into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
         if type(base_path) == str:
@@ -3398,7 +3435,7 @@ class CRAFT(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
@@ -3545,7 +3582,7 @@ class BIOSEMANTICS(ColumnCorpus):
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
-            into sentences and tokens (default BioSpacySentenceSplitter)
+            into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -3562,7 +3599,7 @@ class BIOSEMANTICS(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
@@ -3745,7 +3782,7 @@ class BC2GM(ColumnCorpus):
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
-            into sentences and tokens (default BioSpacySentenceSplitter)
+            into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -3762,7 +3799,7 @@ class BC2GM(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
         test_file = data_folder / f"{sentence_splitter.name}_test.conll"
@@ -3896,7 +3933,7 @@ class CEMP(ColumnCorpus):
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
-                documents into sentences and tokens (default BioSpacySentenceSplitter)
+                documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
         if type(base_path) == str:
@@ -3914,7 +3951,7 @@ class CEMP(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
         dev_file = data_folder / f"{sentence_splitter.name}_dev.conll"
@@ -4065,7 +4102,7 @@ class CHEBI(ColumnCorpus):
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
-                into sentences and tokens (default BioSpacySentenceSplitter)
+                into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         :param annotator: The abstracts have been annotated by two annotators, which can be
                 selected by choosing annotator 1 or 2. If annotator is 0, the union of both annotations is used.
         """
@@ -4084,7 +4121,7 @@ class CHEBI(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
@@ -4249,7 +4286,7 @@ class BioNLPCorpus(ColumnCorpus):
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
-                into sentences and tokens (default BioSpacySentenceSplitter)
+                into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
         if type(base_path) == str:
@@ -4267,7 +4304,7 @@ class BioNLPCorpus(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
         dev_file = data_folder / f"{sentence_splitter.name}_dev.conll"
@@ -4431,7 +4468,7 @@ class ANAT_EM(ColumnCorpus):
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param sentence_splitter: Implementation of :class:`Tokenizer` which segments
-                sentences into tokens (default BioSpacyTokenizer)
+                sentences into tokens (default :class:`SciSpacyTokenizer`)
            """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -4448,7 +4485,7 @@ class ANAT_EM(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if tokenizer is None:
-            tokenizer = BioSpacyTokenizer()
+            tokenizer = SciSpacyTokenizer()
 
         sentence_splitter = TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=tokenizer)
 
@@ -4861,7 +4898,7 @@ class CRAFT_V4(ColumnCorpus):
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
-                documents into sentences and tokens (default BioSpacySentenceSplitter)
+                documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
         if type(base_path) == str:
@@ -4879,7 +4916,7 @@ class CRAFT_V4(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
         dev_file = data_folder / f"{sentence_splitter.name}_dev.conll"
@@ -5029,7 +5066,7 @@ class AZDZ(ColumnCorpus):
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param tokenizer: Implementation of :class:`Tokenizer` which segments sentences
-                into tokens (default BioSpacyTokenizer)
+                into tokens (default :class:`SciSpacyTokenizer`)
            """
 
         if type(base_path) == str:
@@ -5047,7 +5084,7 @@ class AZDZ(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if tokenizer is None:
-            tokenizer = BioSpacyTokenizer()
+            tokenizer = SciSpacyTokenizer()
         sentence_splitter = TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=tokenizer)
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
@@ -5146,7 +5183,7 @@ class PDR(ColumnCorpus):
            :param base_path: Path to the corpus on your machine
            :param in_memory: If True, keeps dataset in memory giving speedups in training.
            :param sentence_splitter: Implementation of :class:`SentenceSplitter` which
-                segments documents into sentences and tokens (default BioSpacySentenceSplitter)
+                segments documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
            """
 
         if type(base_path) == str:
@@ -5164,7 +5201,7 @@ class PDR(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
-            sentence_splitter = BioSpacySentenceSplitter()
+            sentence_splitter = SciSpacySentenceSplitter()
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
