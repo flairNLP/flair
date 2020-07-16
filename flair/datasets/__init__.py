@@ -100,3 +100,90 @@ from .text_text import OpusParallelCorpus
 # Expose all text-image datasets
 from .text_image import FeideggerCorpus
 from .text_image import FeideggerDataset
+
+# Expose all biomedical data sets
+from .biomedical import ANAT_EM
+from .biomedical import AZDZ
+from .biomedical import BIONLP2013_PC
+from .biomedical import BIONLP2013_CG
+from .biomedical import BIO_INFER
+from .biomedical import BIOSEMANTICS
+from .biomedical import BC2GM
+from .biomedical import CELL_FINDER
+from .biomedical import CEMP
+from .biomedical import CDR
+from .biomedical import CHEMDNER
+from .biomedical import CRAFT
+from .biomedical import CRAFT_V4
+from .biomedical import CLL
+from .biomedical import DECA
+from .biomedical import FSU
+from .biomedical import GELLUS
+from .biomedical import GPRO
+from .biomedical import IEPA
+from .biomedical import JNLPBA
+from .biomedical import LOCTEXT
+from .biomedical import LINNEAUS
+from .biomedical import NCBI_DISEASE
+from .biomedical import MIRNA
+from .biomedical import OSIRIS
+from .biomedical import PDR
+from .biomedical import S800
+from .biomedical import SCAI_CHEMICALS
+from .biomedical import SCAI_DISEASE
+from .biomedical import VARIOME
+
+# Expose all biomedical data sets using the HUNER splits
+from .biomedical import HUNER_CHEMICAL_BIOSEMANTICS
+from .biomedical import HUNER_CHEMICAL_CHEBI
+from .biomedical import HUNER_CHEMICAL_CRAFT
+from .biomedical import HUNER_CHEMICAL_CHEMDNER
+from .biomedical import HUNER_CHEMICAL_CDR
+from .biomedical import HUNER_CHEMICAL_CEMP
+from .biomedical import HUNER_CHEMICAL_SCAI
+# -
+from .biomedical import HUNER_CELL_LINE_CLL
+from .biomedical import HUNER_CELL_LINE_CELL_FINDER
+from .biomedical import HUNER_CELL_LINE_GELLUS
+from .biomedical import HUNER_CELL_LINE_JNLPBA
+# -
+from .biomedical import HUNER_DISEASE_BIOSEMANTICS
+from .biomedical import HUNER_DISEASE_CDR
+from .biomedical import HUNER_DISEASE_MIRNA
+from .biomedical import HUNER_DISEASE_NCBI
+from .biomedical import HUNER_DISEASE_SCAI
+from .biomedical import HUNER_DISEASE_VARIOME
+# -
+from .biomedical import HUNER_GENE_BIO_INFER
+from .biomedical import HUNER_GENE_BC2GM
+from .biomedical import HUNER_GENE_CHEBI
+from .biomedical import HUNER_GENE_CRAFT
+from .biomedical import HUNER_GENE_CELL_FINDER
+from .biomedical import HUNER_GENE_DECA
+from .biomedical import HUNER_GENE_FSU
+from .biomedical import HUNER_GENE_GPRO
+from .biomedical import HUNER_GENE_IEPA
+from .biomedical import HUNER_GENE_JNLPBA
+from .biomedical import HUNER_GENE_LOCTEXT
+from .biomedical import HUNER_GENE_MIRNA
+from .biomedical import HUNER_GENE_OSIRIS
+from .biomedical import HUNER_GENE_VARIOME
+# -
+from .biomedical import HUNER_SPECIES_CELL_FINDER
+from .biomedical import HUNER_SPECIES_CHEBI
+from .biomedical import HUNER_SPECIES_CRAFT
+from .biomedical import HUNER_SPECIES_LOCTEXT
+from .biomedical import HUNER_SPECIES_LINNEAUS
+from .biomedical import HUNER_SPECIES_MIRNA
+from .biomedical import HUNER_SPECIES_S800
+from .biomedical import HUNER_SPECIES_VARIOME
+
+# Expose all biomedical data sets used for the evaluation of BioBERT
+from .biomedical import BIOBERT_CHEMICAL_BC4CHEMD
+from .biomedical import BIOBERT_CHEMICAL_BC5CDR
+from .biomedical import BIOBERT_DISEASE_NCBI
+from .biomedical import BIOBERT_DISEASE_BC5CDR
+from .biomedical import BIOBERT_SPECIES_LINNAEUS
+from .biomedical import BIOBERT_SPECIES_S800
+from .biomedical import BIOBERT_GENE_BC2GM
+from .biomedical import BIOBERT_GENE_JNLPBA
