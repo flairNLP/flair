@@ -26,7 +26,8 @@ class SpacyTokenizer(Tokenizer):
             from spacy.language import Language
         except ImportError:
             raise ImportError(
-                "Please install Spacy v2.0 or better before using the Spacy tokenizer, otherwise you can use segtok_tokenizer as advanced tokenizer."
+                "Please install Spacy v2.0 or better before using the Spacy tokenizer, "
+                "otherwise you can use SegtokTokenizer as advanced tokenizer."
             )
 
         if isinstance(model, Language):
@@ -34,7 +35,8 @@ class SpacyTokenizer(Tokenizer):
         elif isinstance(model, str):
             self.model: Language = spacy.load(model)
         else:
-            raise AssertionError(f"Unexpected type of parameter model. Please provide a loaded spacy model or the name of the model to load.")
+            raise AssertionError(f"Unexpected type of parameter model. Please provide a loaded "
+                                 f"spacy model or the name of the model to load.")
 
     def tokenize(self, text: str) -> List[Token]:
         from spacy.tokens.doc import Doc
@@ -45,6 +47,9 @@ class SpacyTokenizer(Tokenizer):
         tokens: List[Token] = []
         for word in doc:
             word: SpacyToken = word
+            if len(word.text.strip()) == 0:
+                continue
+
             token = Token(
                 text=word.text, start_position=word.idx, whitespace_after=True
             )
@@ -369,16 +374,16 @@ class SentenceSplitter(ABC):
 
     Sentence splitters are used to represent algorithms and models to split plain text into
     sentences and individual tokens / words. All subclasses should overwrite :meth:`splits`,
-    which splits the given plain text into a sequence of sentences (:class:`Sentence`) and
-    their corresponding text offsets. The individual sentences are in turn subdivided into
-    tokens / words.
+    which splits the given plain text into a sequence of sentences (:class:`Sentence`). The
+    individual sentences are in turn subdivided into tokens / words. In most cases, this can
+    be controlled by passing custom implementation of :class:`Tokenizer`.
 
     Moreover, subclasses may overwrite :meth:`name`, returning a unique identifier representing
     the sentence splitter's configuration.
     """
 
     @abstractmethod
-    def split(self, text: str) -> List[Tuple[int, Sentence]]:
+    def split(self, text: str) -> List[Sentence]:
         raise NotImplementedError()
 
     @property
@@ -397,25 +402,31 @@ class SegtokSentenceSplitter(SentenceSplitter):
         super(SegtokSentenceSplitter, self).__init__()
         self.tokenizer = tokenizer
 
-    def split(self, text: str) -> List[Tuple[int, Sentence]]:
+    def split(self, text: str) -> List[Sentence]:
         sentences = []
-        offsets = []
         offset = 0
 
         plain_sentences = split_multi(text)
         for sentence in plain_sentences:
-            sentences += [Sentence(sentence, use_tokenizer=self.tokenizer)]
             sentence_offset = text.find(sentence, offset)
 
             if sentence_offset == -1:
                 raise AssertionError(f"Can't find offset for sentences {plain_sentences} "
                                      f"starting from {offset}")
 
-            offsets += [sentence_offset]
+            sentences += [
+                Sentence(
+                    text=sentence,
+                    use_tokenizer=self.tokenizer,
+                    start_position=sentence_offset
+                )
+            ]
+
             offset += len(sentence)
 
-        return list(zip(offsets, sentences))
+        return sentences
 
+    @property
     def name(self) -> str:
         return self.__class__.__name__
 
@@ -425,7 +436,7 @@ class SpacySentenceSplitter(SentenceSplitter):
     Implementation of :class:`SentenceSplitter`, using models from Spacy.
 
     :param model Spacy V2 model or the name of the model to load.
-    :param tokenizer Custom tokenizer to use (default SpacyTokenizer)
+    :param tokenizer Custom tokenizer to use (default :class:`SpacyTokenizer`)
     """
 
     def __init__(self, model: str, tokenizer: Tokenizer = None):
@@ -436,7 +447,8 @@ class SpacySentenceSplitter(SentenceSplitter):
             from spacy.language import Language
         except ImportError:
             raise ImportError(
-                "Please install Spacy v2.0 or better before using the Spacy tokenizer, otherwise you can use segtok_tokenizer as advanced tokenizer."
+                "Please install Spacy v2.0 or better before using the Spacy tokenizer, "
+                "otherwise you can use segtok_tokenizer as advanced tokenizer."
             )
 
         if isinstance(model, Language):
@@ -449,12 +461,18 @@ class SpacySentenceSplitter(SentenceSplitter):
         else:
             self.tokenizer = tokenizer
 
-    def split(self, text: str) -> List[Tuple[int, Sentence]]:
+    def split(self, text: str) -> List[Sentence]:
         document = self.model(text)
 
-        sentences = [(sentence.start_char, Sentence(str(sentence), use_tokenizer=self.tokenizer))
-                     for sentence in document.sents
-                     if len(str(sentence)) > 0]
+        sentences = [
+            Sentence(
+                text=str(spacy_sent),
+                use_tokenizer=self.tokenizer,
+                start_position=spacy_sent.start_char
+            )
+            for spacy_sent in document.sents
+            if len(str(spacy_sent)) > 0
+        ]
 
         return sentences
 
@@ -492,10 +510,9 @@ class TagSentenceSplitter(SentenceSplitter):
         self.tokenizer = tokenizer
         self.tag = tag
 
-    def split(self, text: str) -> List[Tuple[int, Sentence]]:
+    def split(self, text: str) -> List[Sentence]:
         plain_sentences = text.split(self.tag)
 
-        offsets = []
         sentences = []
         last_offset = 0
 
@@ -503,11 +520,17 @@ class TagSentenceSplitter(SentenceSplitter):
             if len(sentence.strip()) == 0:
                 continue
 
-            offsets += [last_offset]
-            sentences += [Sentence(sentence, use_tokenizer=self.tokenizer)]
+            sentences += [
+                Sentence(
+                    text=sentence,
+                    use_tokenizer=self.tokenizer,
+                    start_position=last_offset
+                )
+            ]
+
             last_offset += len(sentence) + len(self.tag)
 
-        return list(zip(offsets, sentences))
+        return sentences
 
     @property
     def name(self) -> str:
@@ -547,8 +570,14 @@ class NoSentenceSplitter(SentenceSplitter):
         super(NoSentenceSplitter, self).__init__()
         self.tokenizer = tokenizer
 
-    def split(self, text: str) -> List[Tuple[int, Sentence]]:
-        return [(0, Sentence(text, use_tokenizer=self.tokenizer))]
+    def split(self, text: str) -> List[Sentence]:
+        return [
+            Sentence(
+                text=text,
+                use_tokenizer=self.tokenizer,
+                start_position=0
+            )
+        ]
 
     @property
     def name(self) -> str:

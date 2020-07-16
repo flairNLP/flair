@@ -380,26 +380,23 @@ class CoNLLWriter:
                 document_text = re.sub(r"[\u2000-\u200B]", " ", document_text) # replace unicode space characters!
                 document_text = document_text.replace(u'\xa0', " ") # replace non-break space
 
-                offsets_and_sentences = self.sentence_splitter.split(document_text)
-                sentences = [sentence for _, sentence in offsets_and_sentences]
-                sentence_offsets = [offset for offset, _ in offsets_and_sentences]
-
                 entities = deque(
                     sorted(
                         dataset.entities_per_document[document_id],
                         key=attrgetter("char_span.start", "char_span.stop"),
                     )
                 )
-
                 current_entity = entities.popleft() if entities else None
 
-                for sentence, sentence_offset in zip(sentences, sentence_offsets):
+                sentences = self.sentence_splitter.split(document_text)
+
+                for sentence in sentences:
                     in_entity = False
                     sentence_had_tokens = False
 
                     for flair_token in sentence.tokens:
                         token = flair_token.text.strip()
-                        offset = sentence_offset + flair_token.start_pos
+                        offset = sentence.start_pos + flair_token.start_pos
 
                         if current_entity and offset >= current_entity.char_span.stop:
                             in_entity = False
@@ -2234,7 +2231,6 @@ class VARIOME(ColumnCorpus):
             original_length = len(document_text)
 
             text_cleaned = document_text.replace("** IGNORE LINE **\n", "")
-            text_cleaned = text_cleaned.replace("\n\n", " \n")
             offset = original_length - len(text_cleaned)
 
             if offset != 0:

@@ -523,7 +523,7 @@ def build_japanese_tokenizer(tokenizer: str = "MeCab"):
 
 class Sentence(DataPoint):
     """
-       A Sentence is a list of Tokens and is used to represent a sentence or text fragment.
+       A Sentence is a list of tokens and is used to represent a sentence or text fragment.
     """
 
     def __init__(
@@ -531,16 +531,18 @@ class Sentence(DataPoint):
         text: str = None,
         use_tokenizer: Union[bool, Tokenizer] = False,
         language_code: str = None,
+        start_position: int = None
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
         :param text: original string
-        :param use_tokenizer: a custom tokenizer (default is SpaceTokenizer)
-        more advanced options are SegTokTokenizer to use segtok or SpacyTokenizer to use Spacy library
-        if available). Check the implementations of abstract class Tokenizer or implement your own subclass (if you need it).
-        If instead of providing a Tokenizer, this parameter is just set to True, SegtokTokenizer will be used.
-        :param labels:
-        :param language_code:
+        :param use_tokenizer: a custom tokenizer (default is :class:`SpaceTokenizer`)
+            more advanced options are :class:`SegTokTokenizer` to use segtok or :class:`SpacyTokenizer`
+            to use Spacy library if available). Check the implementations of abstract class Tokenizer or
+            implement your own subclass (if you need it). If instead of providing a Tokenizer, this parameter
+            is just set to True (deprecated), :class:`SegtokTokenizer` will be used.
+        :param language_code: Language of the sentence
+        :param start_position: Start char offset of the sentence in the superordinate document
         """
         super().__init__()
 
@@ -549,6 +551,11 @@ class Sentence(DataPoint):
         self._embeddings: Dict = {}
 
         self.language_code: str = language_code
+
+        self.start_pos = start_position
+        self.end_pos = (
+            start_position + len(text) if start_position is not None else None
+        )
 
         if isinstance(use_tokenizer, Tokenizer):
             tokenizer = use_tokenizer
@@ -561,7 +568,6 @@ class Sentence(DataPoint):
         else:
             raise AssertionError("Unexpected type of parameter 'use_tokenizer'. " +
                                  "Parameter should be bool, Callable[[str], List[Token]] (deprecated), Tokenizer")
-
 
         # if text is passed, instantiate sentence with tokens (words)
         if text is not None:
