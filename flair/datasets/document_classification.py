@@ -1461,8 +1461,8 @@ def _download_wassa_if_not_there(emotion, data_folder, dataset_name):
 
             path = cached_path(url, Path("datasets") / dataset_name)
 
-            with open(path, "r") as f:
-                with open(data_file, "w") as out:
+            with open(path, "r", encoding="UTF-8") as f:
+                with open(data_file, "w", encoding="UTF-8") as out:
                     next(f)
                     for line in f:
                         fields = line.split("\t")
