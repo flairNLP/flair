@@ -6,9 +6,12 @@ from typing import List, Union, Callable
 import torch.utils.data.dataloader
 from torch.utils.data.dataset import Subset, ConcatDataset
 
+import scipy.sparse
+
 from flair.data import (
     Sentence,
     Token,
+    DataTuple,
     FlairDataset,
     space_tokenizer,
     segtok_tokenizer,
@@ -293,3 +296,74 @@ def find_train_dev_test_files(data_folder, dev_file, test_file, train_file):
     log.info("Test: {}".format(test_file))
 
     return dev_file, test_file, train_file
+
+
+class PairCorpus:
+
+    def __init__(self,
+                 train,
+                 dev=None,
+                 test=None):
+
+        self._train = train
+        self._dev = dev
+        self._test = test
+
+    @property
+    def train(self):
+        return self._train
+
+    @property
+    def dev(self):
+        return self._dev
+
+    @property
+    def test(self):
+        return self._test
+
+    def __str__(self):
+        return f'Train: {self._train}, Dev: {self._dev}, Test: {self._test}'
+
+
+class PairDataset(FlairDataset):
+
+    def __init__(self, datasets, score_tensor):
+        self.datasets = datasets
+        self.score_tensor = score_tensor
+        self.dims = list(self.score_tensor.shape)
+        for di, d in enumerate(self.dims):
+            assert(len(self.datasets[di]) == d)
+
+    def __getitem__(self, index):
+        # TODO: check if __getitem__ should be using flat index
+        item = []
+        for di, i in enumerate(index):
+            item.append(self.datasets[di][i])
+        item = DataTuple(item)
+        item.set_label(self.score_tensor.__getitem__(*index))
+        return item
+
+    def __len__(self):
+        return self.dims[0]
+
+    def __str__(self):
+        return ' '.join([str(d) for d in self.datasets])
+
+
+def ConcatPairDataset(pair_datasets, dim=0):
+    if dim == 0:
+        assert(pair_datasets[0].datasets[1] == pair_datasets[1].datasets[1])
+        return PairDataset([ConcatDataset([pair_dataset.datasets[0] for pair_dataset in pair_datasets]),
+                            pair_datasets[0].datasets[1]],
+                           scipy.sparse.vstack([pair_dataset.score_tensor for pair_dataset in pair_datasets]))
+    else:
+        raise Exception('Not implemented')
+
+
+def SubsetPairDataset(pair_dataset, indices, dim=0):
+    if dim == 0:
+        return PairDataset([Subset(pair_dataset.datasets[0], indices),
+                            pair_dataset.datasets[1]],
+                           pair_dataset.score_tensor[indices.numpy().astype('int32'), :])
+    else:
+        raise Exception('Not implemented')

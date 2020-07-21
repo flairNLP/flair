@@ -15,7 +15,7 @@ from flair.data import (
     Sentence,
     Corpus,
     FlairDataset,
-    DataPair,
+    DataTuple,
     Image,
 )
 from flair.file_utils import cached_path
@@ -64,7 +64,7 @@ class FeideggerDataset(FlairDataset):
     def __init__(self, dataset_info, in_memory: bool = True, **kwargs):
         super(FeideggerDataset, self).__init__()
 
-        self.data_points: List[DataPair] = []
+        self.data_points: List[DataTuple] = []
         self.split: List[int] = []
 
         preprocessor = lambda x: x
@@ -76,12 +76,12 @@ class FeideggerDataset(FlairDataset):
             for caption in image_info["descriptions"]:
                 # append Sentence-Image data point
                 self.data_points.append(
-                    DataPair(Sentence(preprocessor(caption), use_tokenizer=True), image)
+                    DataTuple([Sentence(preprocessor(caption), use_tokenizer=True), image])
                 )
                 self.split.append(int(image_info["split"]))
 
     def __len__(self):
         return len(self.data_points)
 
-    def __getitem__(self, index: int = 0) -> DataPair:
+    def __getitem__(self, index: int = 0) -> DataTuple:
         return self.data_points[index]

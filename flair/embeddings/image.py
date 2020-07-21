@@ -57,21 +57,22 @@ class IdentityImageEmbeddings(ImageEmbeddings):
 
 
 class PrecomputedImageEmbeddings(ImageEmbeddings):
-    def __init__(self, url2tensor_dict, name):
-        self.url2tensor_dict = url2tensor_dict
+    def __init__(self, name, size, dtype=None):
         self.name = name
-        self.__embedding_length = len(list(self.url2tensor_dict.values())[0])
+        self.dtype = dtype
+        self.__embedding_length = size
         self.static_embeddings = True
         super().__init__()
 
     def _add_embeddings_internal(self, images: List[Image]) -> List[Image]:
+        if type(images) is Image:
+            images = [images]
+
         for image in images:
-            if image.imageURL in self.url2tensor_dict:
-                image.set_embedding(self.name, self.url2tensor_dict[image.imageURL])
-            else:
-                image.set_embedding(
-                    self.name, torch.zeros(self.__embedding_length, device=flair.device)
-                )
+            image_data = image.data if image.data is not None else torch.zeros(self.__embedding_length)
+            if self.dtype:
+                image_data = image_data.to(device=flair.device, dtype=self.dtype)
+            image.set_embedding(self.name, image_data)
 
     @property
     def embedding_length(self) -> int:

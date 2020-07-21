@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 import flair
-from flair.data import DataPoint, DataPair
+
 from flair.embeddings import Embeddings
 from flair.datasets import DataLoader
 from flair.training_utils import Result
@@ -45,7 +45,7 @@ class ModelSimilarity(SimilarityMeasure):
     """
     Similarity defined by the model. The model parameters are given by the first element of the pair.
     The similarity is evaluated by doing the forward pass (inference) on the parametrized model with
-    the second element of the pair as input.
+    the second element of the pair as input. Used for hyper-networks.
     """
 
     def __init__(self, model):
@@ -111,32 +111,41 @@ class PairwiseBCELoss(SimilarityLoss):
         self.balanced = balanced
 
     def forward(self, inputs, targets):
-        n = inputs.shape[0]
-        neg_targets = torch.ones_like(targets).to(flair.device) - targets
+        ignore_mask = (targets != 0).float()
+        targets = (targets == 1).float()
+
         # we want that logits for corresponding pairs are high, and for non-corresponding low
-        bce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction="none")
+        bce_loss = F.binary_cross_entropy_with_logits(inputs,
+                                                      targets,
+                                                      reduction="none") * ignore_mask
+
         if self.balanced:
-            # TODO: this assumes eye matrix
-            weight_matrix = n * (targets / 2.0 + neg_targets / (2.0 * (n - 1)))
-            bce_loss *= weight_matrix
-        loss = bce_loss.mean()
+            not_ignore_mask = 1.0 - ignore_mask
+            n_pos = torch.sum(targets * not_ignore_mask, dim=1)
+            n_neg = torch.sum((1.0 - targets) * not_ignore_mask, dim=1)
+            n_all = torch.sum(not_ignore_mask, dim=1)
+            alpha = (n_neg / n_all) * targets
+            beta = (n_pos / n_all) * (1.0 - targets)
+            bce_loss *= (alpha + beta)
 
-        return loss
+        # return bce_loss.sum() / (1.0 - ignore_mask).sum()
+        return bce_loss
 
 
-class RankingLoss(SimilarityLoss):
+class TripletRankingLoss(SimilarityLoss):
     """
     Triplet ranking loss between pair similarities and pair labels.
     """
 
     def __init__(self, margin=0.1, direction_weights=[0.5, 0.5]):
-        super(RankingLoss, self).__init__()
+        super(TripletRankingLoss, self).__init__()
         self.margin = margin
         self.direction_weights = direction_weights
 
     def forward(self, inputs, targets):
         n = inputs.shape[0]
-        neg_targets = torch.ones_like(targets) - targets
+        neg_targets = (targets == -1).float()
+
         # loss matrices for two directions of alignment, from modality 0 => modality 1 and vice versa
         ranking_loss_matrix_01 = neg_targets * F.relu(
             self.margin + inputs - torch.diag(inputs).view(n, 1)
@@ -144,14 +153,10 @@ class RankingLoss(SimilarityLoss):
         ranking_loss_matrix_10 = neg_targets * F.relu(
             self.margin + inputs - torch.diag(inputs).view(1, n)
         )
-        neg_targets_01_sum = torch.sum(neg_targets, dim=1)
-        neg_targets_10_sum = torch.sum(neg_targets, dim=0)
-        loss = self.direction_weights[0] * torch.mean(
-            torch.sum(ranking_loss_matrix_01 / neg_targets_01_sum, dim=1)
-        ) + self.direction_weights[1] * torch.mean(
-            torch.sum(ranking_loss_matrix_10 / neg_targets_10_sum, dim=0)
-        )
+        loss = self.direction_weights[0] * ranking_loss_matrix_01 + \
+               self.direction_weights[1] * ranking_loss_matrix_10
 
+        # return loss.mean()
         return loss
 
 
@@ -186,9 +191,6 @@ class SimilarityLearner(flair.nn.Model):
 
     def _embed_source(self, data_points):
 
-        if type(data_points[0]) == DataPair:
-            data_points = [point.first for point in data_points]
-
         self.source_embeddings.embed(data_points)
 
         source_embedding_tensor = torch.stack(
@@ -201,9 +203,6 @@ class SimilarityLearner(flair.nn.Model):
         return source_embedding_tensor
 
     def _embed_target(self, data_points):
-
-        if type(data_points[0]) == DataPair:
-            data_points = [point.second for point in data_points]
 
         self.target_embeddings.embed(data_points)
 
@@ -227,10 +226,10 @@ class SimilarityLearner(flair.nn.Model):
         )
 
     def forward_loss(
-        self, data_points: Union[List[DataPoint], DataPoint]
+        self, batch: tuple
     ) -> torch.tensor:
-        mapped_source_embeddings = self._embed_source(data_points)
-        mapped_target_embeddings = self._embed_target(data_points)
+        mapped_source_embeddings = self._embed_source(batch[0])
+        mapped_target_embeddings = self._embed_target(batch[1])
 
         if self.interleave_embedding_updates:
             # 1/3 only source branch of model, 1/3 only target branch of model, 1/3 both
@@ -244,28 +243,8 @@ class SimilarityLearner(flair.nn.Model):
             (mapped_source_embeddings, mapped_target_embeddings)
         )
 
-        def add_to_index_map(hashmap, key, val):
-            if key not in hashmap:
-                hashmap[key] = [val]
-            else:
-                hashmap[key] += [val]
-
-        index_map = {"first": {}, "second": {}}
-        for data_point_id, data_point in enumerate(data_points):
-            add_to_index_map(index_map["first"], str(data_point.first), data_point_id)
-            add_to_index_map(index_map["second"], str(data_point.second), data_point_id)
-
-        targets = torch.zeros_like(similarity_matrix).to(flair.device)
-
-        for data_point in data_points:
-            first_indices = index_map["first"][str(data_point.first)]
-            second_indices = index_map["second"][str(data_point.second)]
-            for first_index, second_index in itertools.product(
-                first_indices, second_indices
-            ):
-                targets[first_index, second_index] = 1.0
-
-        loss = self.similarity_loss(similarity_matrix, targets)
+        loss_matrix = self.similarity_loss(similarity_matrix, batch[2])
+        loss = loss_matrix.mean()
 
         return loss
 

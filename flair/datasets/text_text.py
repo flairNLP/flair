@@ -7,7 +7,7 @@ from flair.data import (
     Sentence,
     Corpus,
     FlairDataset,
-    DataPair,
+    DataTuple,
 )
 from flair.file_utils import cached_path, unzip_file
 
@@ -141,7 +141,7 @@ class ParallelTextDataset(FlairDataset):
         self.total_sentence_count: int = 0
 
         if self.in_memory:
-            self.bi_sentences: List[DataPair] = []
+            self.bi_sentences: List[DataTuple] = []
         else:
             self.source_lines: List[str] = []
             self.target_lines: List[str] = []
@@ -185,12 +185,12 @@ class ParallelTextDataset(FlairDataset):
             source_sentence.tokens = source_sentence.tokens[: self.max_tokens_per_doc]
             target_sentence.tokens = target_sentence.tokens[: self.max_tokens_per_doc]
 
-        return DataPair(source_sentence, target_sentence)
+        return DataTuple([source_sentence, target_sentence])
 
     def __len__(self):
         return self.total_sentence_count
 
-    def __getitem__(self, index: int = 0) -> DataPair:
+    def __getitem__(self, index: int = 0) -> DataTuple:
         if self.in_memory:
             return self.bi_sentences[index]
         else:

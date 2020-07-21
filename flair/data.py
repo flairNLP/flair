@@ -233,32 +233,40 @@ class DataPoint:
         return all_labels
 
 
-class DataPair(DataPoint):
-    def __init__(self, first: DataPoint, second: DataPoint):
+class DataTuple(DataPoint):
+    def __init__(self, data_list: List[DataPoint]):
         super().__init__()
-        self.first = first
-        self.second = second
+        self.data_list: List = data_list
 
     def to(self, device: str, pin_memory: bool = False):
-        self.first.to(device, pin_memory)
-        self.second.to(device, pin_memory)
+        for data_point in self.data_list:
+            data_point.to(device, pin_memory)
 
-    def clear_embeddings(self, embedding_names: List[str] = None):
-        self.first.clear_embeddings(embedding_names)
-        self.second.clear_embeddings(embedding_names)
+    def clear_embeddings(self):
+        for data_point in self.data_list:
+            data_point.clear_embeddings()
 
     @property
     def embedding(self):
-        return torch.cat([self.first.embedding, self.second.embedding])
+        embeddings_list = [data.embedding for data in self.data_list]
+        if hasattr(self, '_embedding_f'):
+            return self._embedding_f(embeddings_list, self._embedding_f_attr)
+        else:
+            return torch.cat(embeddings_list, dim=0)
 
     def __str__(self):
-        return f"DataPair:\n − First {self.first}\n − Second {self.second}\n − Labels: {self.labels}"
+        string = "DataTuple:\n" + \
+            '\n'.join([f" - {i}. element {e}" for i, e in enumerate(self.data_list)]) + \
+            f" - Labels: {self.labels}"
+        return string
 
     def to_plain_string(self):
-        return f"DataPair: First {self.first}  ||  Second {self.second}"
+        string = "DataTuple:" + \
+            ' || '.join([f"{i}. element {e}" for i, e in enumerate(self.data_list)])
+        return string
 
     def __len__(self):
-        return len(self.first) + len(self.second)
+        return len(self.data_list)
 
 
 class Token(DataPoint):

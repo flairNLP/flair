@@ -6,7 +6,7 @@ import torch
 import logging
 
 import flair
-from flair.data import Sentence, Image
+from flair.data import Sentence, Image, DataTuple
 
 
 log = logging.getLogger("flair")
@@ -40,7 +40,7 @@ class Embeddings(torch.nn.Module):
         are non-static."""
 
         # if only one sentence is passed, convert to list of sentence
-        if (type(sentences) is Sentence) or (type(sentences) is Image):
+        if type(sentences) is Sentence or type(sentences) is Image:
             sentences = [sentences]
 
         everything_embedded: bool = True
@@ -72,6 +72,41 @@ class Embeddings(torch.nn.Module):
         this embedding. But in some cases, the embedding is made up by different embeddings (StackedEmbedding).
         Then, the list contains the names of all embeddings in the stack."""
         return [self.name]
+
+
+class TupleEmbeddings(Embeddings):
+    """Embedding for DataTuples uses a list of DataPoint embeddings given in constructor"""
+    """where each embedding in the list corresponds to an element of the DataTuple"""
+
+    def __init__(self, embeddings_list: List[Embeddings], combo_mode='cat'):
+        super().__init__()
+        self.embeddings_list = embeddings_list
+        self.combo_mode = combo_mode
+        if self.combo_mode == 'cat':
+            self._embedding_length = sum([embedding.embedding_length for embedding in self.embeddings_list])
+            self._embedding_f = None
+            self._embedding_f_args = None
+            self.name = 'tuple_cat'
+
+    def embed(self, datatuples: Union[DataTuple, List[DataTuple]]):
+        if type(datatuples) is DataTuple:
+            datatuples = [datatuples]
+
+        # embed each modality separately
+        for embedding_id, embedding in enumerate(self.embeddings_list):
+            embedding.embed([datatuple.data_list[embedding_id] for datatuple in datatuples])
+
+        # for the default embedding combo we don't need to supply combo function
+        # for the others we do
+        if self._embedding_f is not None:
+            for datatuple in datatuples:
+                datatuple._embedding_f = self._embedding_f
+                datatuple._embedding_f_args = self._embedding_f_args
+
+    @property
+    def embedding_length(self) -> int:
+        """Returns the length of the embedding vector."""
+        return self._embedding_length
 
 
 class ScalarMix(torch.nn.Module):

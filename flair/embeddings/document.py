@@ -41,7 +41,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         """
         Bidirectional transformer embeddings of words from various transformer architectures.
         :param model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for
-        options)
+        options) or a tuple (tokenizer_folder, model_config)
         :param fine_tune: If True, allows transformers to be fine-tuned during training
         :param batch_size: How many sentence to push through transformer at once. Set to 1 by default since transformer
         models tend to be huge.
@@ -51,9 +51,27 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         super().__init__()
 
         # load tokenizer and transformer model
-        self.tokenizer = AutoTokenizer.from_pretrained(model)
-        config = AutoConfig.from_pretrained(model, output_hidden_states=True)
-        self.model = AutoModel.from_pretrained(model, config=config)
+        if type(model) is str:
+            self.tokenizer = AutoTokenizer.from_pretrained(model)
+            config = AutoConfig.from_pretrained(model, output_hidden_states=True)
+            self.model = AutoModel.from_pretrained(model, config=config)
+        else:
+            # TODO: for now we support only Bert tokenizer because we can
+            # load the tokenizer pre-trained with HuggingFace Tokenizers lib
+            # using HuggingFace Transformers lib
+            if type(model) is not tuple:
+                raise Exception('If model is not string it should be a tuple (tokenizer_folder, model_config).')
+            tokenizer_folder, model_config = model
+            model_config.output_hidden_states = True  # the rest of the code assumes all hidden states are returned by the model
+            self.tokenizer = BertTokenizer.from_pretrained(tokenizer_folder)
+            if self.tokenizer.decode([self.tokenizer.encode('')[0]]) != '[CLS]':
+                raise Exception('BertTokenizer is missing CLS token.')
+            tokenizer_vocab_size = len(self.tokenizer)
+            if tokenizer_vocab_size != model_config.vocab_size:
+                raise Exception(f'Tokenizer size ({tokenizer_vocab_size}) and model vocab size ({model_config.vocab_size}) should be the same.')
+            self.model = AutoModel.from_config(model_config)
+            model_config_hash = hash(' '.join([f'({first}, {second})' for first, second in model_config.to_dict().items()]))
+            model = f'custom-{model_config_hash}'
 
         # model name
         self.name = 'transformer-document-' + str(model)
