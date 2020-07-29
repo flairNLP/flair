@@ -66,6 +66,11 @@ A `Corpus` contains a bunch of useful helper functions.
 For instance, you can downsample the data by calling `downsample()` and passing a ratio. So, if you normally get a 
 corpus like this:
 
+```python
+import flair.datasets
+downsampled_corpus = flair.datasets.UD_ENGLISH()
+```
+
 then you can downsample the corpus, simply like this:
 
 ```python
