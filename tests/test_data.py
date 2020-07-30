@@ -83,10 +83,8 @@ def test_create_sentence_with_spacy_tokenizer():
     assert "." == sentence.tokens[3].text
 
 
-# skip because it is optional https://github.com/flairNLP/flair/pull/1296
-@pytest.mark.skip(reason="JapaneseTokenizer need optional requirements, so we skip the test by default")
 def test_create_sentence_using_japanese_tokenizer():
-    sentence: Sentence = Sentence("私はベルリンが好き", use_tokenizer=JapaneseTokenizer("mecab"))
+    sentence: Sentence = Sentence("私はベルリンが好き", use_tokenizer=JapaneseTokenizer("janome"))
 
     assert 5 == len(sentence.tokens)
     assert "私" == sentence.tokens[0].text
