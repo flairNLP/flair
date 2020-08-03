@@ -16,6 +16,7 @@ from flair.data import Dictionary, Sentence, Label
 from flair.datasets import SentenceDataset, DataLoader
 from flair.embeddings import TokenEmbeddings
 from flair.file_utils import cached_path, unzip_file
+from flair.tokenization import SciSpacySentenceSplitter
 from flair.training_utils import Metric, Result, store_embeddings
 
 log = logging.getLogger("flair")
@@ -75,7 +76,7 @@ class SequenceTagger(flair.nn.Model):
         dropout: float = 0.0,
         word_dropout: float = 0.05,
         locked_dropout: float = 0.5,
-        reproject_embeddings: Union[bool,int] = True,
+        reproject_embeddings: Union[bool, int] = True,
         train_initial_hidden_state: bool = False,
         rnn_type: str = "LSTM",
         pickle_module: str = "pickle",
@@ -129,7 +130,7 @@ class SequenceTagger(flair.nn.Model):
         # Initialize the weight tensor
         if loss_weights is not None:
             n_classes = len(self.tag_dictionary)
-            weight_list = [1. for i in range(n_classes)]
+            weight_list = [1.0 for i in range(n_classes)]
             for i, tag in enumerate(self.tag_dictionary.get_items()):
                 if tag in loss_weights.keys():
                     weight_list[i] = loss_weights[tag]
@@ -269,7 +270,11 @@ class SequenceTagger(flair.nn.Model):
         )
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
-        reproject_embeddings = True if "reproject_embeddings" not in state.keys() else state["reproject_embeddings"]
+        reproject_embeddings = (
+            True
+            if "reproject_embeddings" not in state.keys()
+            else state["reproject_embeddings"]
+        )
         if "reproject_to" in state.keys():
             reproject_embeddings = state["reproject_to"]
 
@@ -300,7 +305,7 @@ class SequenceTagger(flair.nn.Model):
         all_tag_prob: bool = False,
         verbose: bool = False,
         label_name: Optional[str] = None,
-        return_loss = False,
+        return_loss=False,
         embedding_storage_mode="none",
     ):
         """
@@ -393,11 +398,13 @@ class SequenceTagger(flair.nn.Model):
     def _requires_span_F1_evaluation(self) -> bool:
         span_F1 = False
         for item in self.tag_dictionary.get_items():
-            if item.startswith('B-'):
+            if item.startswith("B-"):
                 span_F1 = True
         return span_F1
 
-    def _evaluate_with_span_F1(self, data_loader, embedding_storage_mode, mini_batch_size, out_path):
+    def _evaluate_with_span_F1(
+        self, data_loader, embedding_storage_mode, mini_batch_size, out_path
+    ):
         eval_loss = 0
 
         batch_no: int = 0
@@ -412,11 +419,13 @@ class SequenceTagger(flair.nn.Model):
         for batch in data_loader:
 
             # predict for batch
-            loss = self.predict(batch,
-                                embedding_storage_mode=embedding_storage_mode,
-                                mini_batch_size=mini_batch_size,
-                                label_name='predicted',
-                                return_loss=True)
+            loss = self.predict(
+                batch,
+                embedding_storage_mode=embedding_storage_mode,
+                mini_batch_size=mini_batch_size,
+                label_name="predicted",
+                return_loss=True,
+            )
             eval_loss += loss
             batch_no += 1
 
@@ -448,21 +457,29 @@ class SequenceTagger(flair.nn.Model):
                 if out_path:
                     for token in sentence:
                         # check if in gold spans
-                        gold_tag = 'O'
+                        gold_tag = "O"
                         for span in gold_spans:
                             if token in span:
-                                gold_tag = 'B-' + span.tag if token == span[0] else 'I-' + span.tag
+                                gold_tag = (
+                                    "B-" + span.tag
+                                    if token == span[0]
+                                    else "I-" + span.tag
+                                )
                         tags_gold.append(gold_tag)
 
-                        predicted_tag = 'O'
+                        predicted_tag = "O"
                         # check if in predicted spans
                         for span in predicted_spans:
                             if token in span:
-                                predicted_tag = 'B-' + span.tag if token == span[0] else 'I-' + span.tag
+                                predicted_tag = (
+                                    "B-" + span.tag
+                                    if token == span[0]
+                                    else "I-" + span.tag
+                                )
                         tags_pred.append(predicted_tag)
 
-                        lines.append(f'{token.text} {gold_tag} {predicted_tag}\n')
-                    lines.append('\n')
+                        lines.append(f"{token.text} {gold_tag} {predicted_tag}\n")
+                    lines.append("\n")
 
                 y_true.append(tags_gold)
                 y_pred.append(tags_pred)
@@ -477,7 +494,7 @@ class SequenceTagger(flair.nn.Model):
             "\nResults:"
             f"\n- F1-score (micro) {metric.micro_avg_f_score():.4f}"
             f"\n- F1-score (macro) {metric.macro_avg_f_score():.4f}"
-            '\n\nBy class:'
+            "\n\nBy class:"
         )
 
         for class_name in metric.get_classes():
@@ -510,11 +527,15 @@ class SequenceTagger(flair.nn.Model):
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
         if not isinstance(sentences, Dataset):
             sentences = SentenceDataset(sentences)
-        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
+        data_loader = DataLoader(
+            sentences, batch_size=mini_batch_size, num_workers=num_workers
+        )
 
         # if span F1 needs to be used, use separate eval method
         if self._requires_span_F1_evaluation():
-            return self._evaluate_with_span_F1(data_loader, embedding_storage_mode, mini_batch_size, out_path)
+            return self._evaluate_with_span_F1(
+                data_loader, embedding_storage_mode, mini_batch_size, out_path
+            )
 
         # else, use scikit-learn to evaluate
         y_true = []
@@ -529,11 +550,13 @@ class SequenceTagger(flair.nn.Model):
         for batch in data_loader:
 
             # predict for batch
-            loss = self.predict(batch,
-                                embedding_storage_mode=embedding_storage_mode,
-                                mini_batch_size=mini_batch_size,
-                                label_name='predicted',
-                                return_loss=True)
+            loss = self.predict(
+                batch,
+                embedding_storage_mode=embedding_storage_mode,
+                mini_batch_size=mini_batch_size,
+                label_name="predicted",
+                return_loss=True,
+            )
             eval_loss += loss
             batch_no += 1
 
@@ -545,13 +568,13 @@ class SequenceTagger(flair.nn.Model):
                     y_true.append(labels.add_item(gold_tag))
 
                     # add predicted tag
-                    predicted_tag = token.get_tag('predicted').value
+                    predicted_tag = token.get_tag("predicted").value
                     y_pred.append(labels.add_item(predicted_tag))
 
                     # for file output
-                    lines.append(f'{token.text} {gold_tag} {predicted_tag}\n')
+                    lines.append(f"{token.text} {gold_tag} {predicted_tag}\n")
 
-                lines.append('\n')
+                lines.append("\n")
 
         if out_path:
             with open(Path(out_path), "w", encoding="utf-8") as outfile:
@@ -566,11 +589,17 @@ class SequenceTagger(flair.nn.Model):
         target_names = []
         for i in range(len(labels)):
             target_names.append(labels.get_item_for_index(i))
-        classification_report = metrics.classification_report(y_true, y_pred, digits=4, target_names=target_names, zero_division=1)
+        classification_report = metrics.classification_report(
+            y_true, y_pred, digits=4, target_names=target_names, zero_division=1
+        )
 
         # get scores
-        macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro'), 4)
-        micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro'), 4)
+        macro_f_score = round(
+            metrics.fbeta_score(y_true, y_pred, beta=self.beta, average="micro"), 4
+        )
+        micro_f_score = round(
+            metrics.fbeta_score(y_true, y_pred, beta=self.beta, average="macro"), 4
+        )
         accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
 
         detailed_result = (
@@ -578,7 +607,7 @@ class SequenceTagger(flair.nn.Model):
             f"\n- F-score (micro) {macro_f_score}"
             f"\n- F-score (macro) {micro_f_score}"
             f"\n- Accuracy {accuracy_score}"
-            '\n\nBy class:\n' + classification_report
+            "\n\nBy class:\n" + classification_report
         )
 
         # line for log file
@@ -968,7 +997,9 @@ class SequenceTagger(flair.nn.Model):
 
         model_map = {}
 
-        aws_resource_path_v04 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4"
+        aws_resource_path_v04 = (
+            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4"
+        )
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
         model_map["ner"] = "/".join(
@@ -1031,11 +1062,7 @@ class SequenceTagger(flair.nn.Model):
         )
 
         model_map["pos"] = "/".join(
-            [
-                hu_path,
-                "release-pos-0",
-                "en-pos-ontonotes-v0.5.pt",
-            ]
+            [hu_path, "release-pos-0", "en-pos-ontonotes-v0.5.pt",]
         )
 
         model_map["upos-fast"] = "/".join(
@@ -1047,11 +1074,7 @@ class SequenceTagger(flair.nn.Model):
         )
 
         model_map["pos-fast"] = "/".join(
-            [
-                hu_path,
-                "release-pos-fast-0",
-                "en-pos-ontonotes-fast-v0.5.pt",
-            ]
+            [hu_path, "release-pos-fast-0", "en-pos-ontonotes-fast-v0.5.pt",]
         )
 
         for key in ["pos-multi", "multi-pos"]:
@@ -1133,11 +1156,41 @@ class SequenceTagger(flair.nn.Model):
         model_map["nl-ner-rnn"] = "/".join(
             [hu_path, "dutch-ner-flair-0", "nl-ner-conll02-v0.5.pt"]
         )
-        model_map["ml-pos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt"
-        model_map["ml-upos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-upos-model.pt"
+        model_map[
+            "ml-pos"
+        ] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt"
+        model_map[
+            "ml-upos"
+        ] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-upos-model.pt"
 
         model_map["keyphrase"] = "/".join(
             [hu_path, "keyphrase-semeval2017-scibert", "keyphrase-en-scibert.pt"]
+        )
+
+        model_map["hunflair-cellline"] = "/".join(
+            [
+                hu_path,
+                "hunflair_smallish_models",
+                "cellline",
+                "hunflair-celline-v1.0.pt",
+            ]
+        )
+        model_map["hunflair-chemical"] = "/".join(
+            [
+                hu_path,
+                "hunflair_smallish_models",
+                "chemical",
+                "hunflair-chemical-v1.0.pt",
+            ]
+        )
+        model_map["hunflair-disease"] = "/".join(
+            [hu_path, "hunflair_smallish_models", "disease", "hunflair-disease-v1.0.pt"]
+        )
+        model_map["hunflair-gene"] = "/".join(
+            [hu_path, "hunflair_smallish_models", "gene", "hunflair-gene-v1.0.pt"]
+        )
+        model_map["hunflair-species"] = "/".join(
+            [hu_path, "hunflair_smallish_models", "species", "hunflair-species-v1.0.pt"]
         )
 
         cache_dir = Path("models")
@@ -1146,32 +1199,72 @@ class SequenceTagger(flair.nn.Model):
 
         # the historical German taggers by the @redewiegergabe project
         if model_name == "de-historic-indirect":
-            model_file = Path(flair.cache_root)  / cache_dir / 'indirect' / 'final-model.pt'
+            model_file = (
+                Path(flair.cache_root) / cache_dir / "indirect" / "final-model.pt"
+            )
             if not model_file.exists():
-                cached_path('http://www.redewiedergabe.de/models/indirect.zip', cache_dir=cache_dir)
-                unzip_file(Path(flair.cache_root)  / cache_dir / 'indirect.zip', Path(flair.cache_root)  / cache_dir)
-            model_name = str(Path(flair.cache_root)  / cache_dir / 'indirect' / 'final-model.pt')
+                cached_path(
+                    "http://www.redewiedergabe.de/models/indirect.zip",
+                    cache_dir=cache_dir,
+                )
+                unzip_file(
+                    Path(flair.cache_root) / cache_dir / "indirect.zip",
+                    Path(flair.cache_root) / cache_dir,
+                )
+            model_name = str(
+                Path(flair.cache_root) / cache_dir / "indirect" / "final-model.pt"
+            )
 
         if model_name == "de-historic-direct":
-            model_file = Path(flair.cache_root)  / cache_dir / 'direct' / 'final-model.pt'
+            model_file = (
+                Path(flair.cache_root) / cache_dir / "direct" / "final-model.pt"
+            )
             if not model_file.exists():
-                cached_path('http://www.redewiedergabe.de/models/direct.zip', cache_dir=cache_dir)
-                unzip_file(Path(flair.cache_root)  / cache_dir / 'direct.zip', Path(flair.cache_root)  / cache_dir)
-            model_name = str(Path(flair.cache_root)  / cache_dir / 'direct' / 'final-model.pt')
+                cached_path(
+                    "http://www.redewiedergabe.de/models/direct.zip",
+                    cache_dir=cache_dir,
+                )
+                unzip_file(
+                    Path(flair.cache_root) / cache_dir / "direct.zip",
+                    Path(flair.cache_root) / cache_dir,
+                )
+            model_name = str(
+                Path(flair.cache_root) / cache_dir / "direct" / "final-model.pt"
+            )
 
         if model_name == "de-historic-reported":
-            model_file = Path(flair.cache_root)  / cache_dir / 'reported' / 'final-model.pt'
+            model_file = (
+                Path(flair.cache_root) / cache_dir / "reported" / "final-model.pt"
+            )
             if not model_file.exists():
-                cached_path('http://www.redewiedergabe.de/models/reported.zip', cache_dir=cache_dir)
-                unzip_file(Path(flair.cache_root)  / cache_dir / 'reported.zip', Path(flair.cache_root)  / cache_dir)
-            model_name = str(Path(flair.cache_root)  / cache_dir / 'reported' / 'final-model.pt')
+                cached_path(
+                    "http://www.redewiedergabe.de/models/reported.zip",
+                    cache_dir=cache_dir,
+                )
+                unzip_file(
+                    Path(flair.cache_root) / cache_dir / "reported.zip",
+                    Path(flair.cache_root) / cache_dir,
+                )
+            model_name = str(
+                Path(flair.cache_root) / cache_dir / "reported" / "final-model.pt"
+            )
 
         if model_name == "de-historic-free-indirect":
-            model_file = Path(flair.cache_root)  / cache_dir / 'freeIndirect' / 'final-model.pt'
+            model_file = (
+                Path(flair.cache_root) / cache_dir / "freeIndirect" / "final-model.pt"
+            )
             if not model_file.exists():
-                cached_path('http://www.redewiedergabe.de/models/freeIndirect.zip', cache_dir=cache_dir)
-                unzip_file(Path(flair.cache_root)  / cache_dir / 'freeIndirect.zip', Path(flair.cache_root)  / cache_dir)
-            model_name = str(Path(flair.cache_root)  / cache_dir / 'freeIndirect' / 'final-model.pt')
+                cached_path(
+                    "http://www.redewiedergabe.de/models/freeIndirect.zip",
+                    cache_dir=cache_dir,
+                )
+                unzip_file(
+                    Path(flair.cache_root) / cache_dir / "freeIndirect.zip",
+                    Path(flair.cache_root) / cache_dir,
+                )
+            model_name = str(
+                Path(flair.cache_root) / cache_dir / "freeIndirect" / "final-model.pt"
+            )
 
         return model_name
 
@@ -1189,10 +1282,12 @@ class SequenceTagger(flair.nn.Model):
         print(tabulate(data, headers=["FROM", "TO", "SCORE"]))
 
     def __str__(self):
-        return super(flair.nn.Model, self).__str__().rstrip(')') + \
-               f'  (beta): {self.beta}\n' + \
-               f'  (weights): {self.weight_dict}\n' + \
-               f'  (weight_tensor) {self.loss_weights}\n)'
+        return (
+            super(flair.nn.Model, self).__str__().rstrip(")")
+            + f"  (beta): {self.beta}\n"
+            + f"  (weights): {self.weight_dict}\n"
+            + f"  (weight_tensor) {self.loss_weights}\n)"
+        )
 
 
 class MultiTagger:
@@ -1201,14 +1296,12 @@ class MultiTagger:
         self.name_to_tagger = name_to_tagger
 
     def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            mini_batch_size=32,
-            all_tag_prob: bool = False,
-            verbose: bool = False,
-            label_name: Optional[str] = None,
-            return_loss: bool = False,
-            embedding_storage_mode="none",
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size=32,
+        all_tag_prob: bool = False,
+        verbose: bool = False,
+        return_loss: bool = False,
     ):
         """
         Predict sequence tags for Named Entity Recognition task
@@ -1219,26 +1312,37 @@ class MultiTagger:
         otherwise only the score of the best tag is returned
         :param verbose: set to True to display a progress bar
         :param return_loss: set to True to return loss
-        :param label_name: set this to change the name of the label type that is predicted
-        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
-        you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
-        'gpu' to store embeddings in GPU memory.
         """
         if isinstance(sentences, Sentence):
             sentences = [sentences]
         for name, tagger in self.name_to_tagger.items():
-            tagger.predict(sentences=sentences,
-                           mini_batch_size=mini_batch_size,
-                           all_tag_prob=all_tag_prob,
-                           verbose=verbose,
-                           label_name=name,
-                           return_loss=return_loss,
-                           embedding_storage_mode=embedding_storage_mode
-                           )
+            tagger.predict(
+                sentences=sentences,
+                mini_batch_size=mini_batch_size,
+                all_tag_prob=all_tag_prob,
+                verbose=verbose,
+                label_name=name,
+                return_loss=return_loss,
+                embedding_storage_mode="cpu",
+            )
 
     @classmethod
-    def load(cls, tagger_names: List[str]):
-        taggers = {name: SequenceTagger.load(name) for name in tagger_names}
+    def load(cls, model_names: Union[List[str], str]):
+        if model_names == "hunflair":
+            model_names = [
+                "hunflair-cellline",
+                "hunflair-chemical",
+                "hunflair-disease",
+                "hunflair-gene",
+                "hunflair-species",
+            ]
+        elif isinstance(model_names, str):
+            model_names = [model_names]
+
+        taggers = {}
+        for model_name in model_names:
+            taggers[model_name] = SequenceTagger.load(model_name)
+
         return cls(taggers)
 
     def get_all_spans(self, sentence: Sentence):
