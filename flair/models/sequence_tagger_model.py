@@ -1136,6 +1136,10 @@ class SequenceTagger(flair.nn.Model):
         model_map["ml-pos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt"
         model_map["ml-upos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-upos-model.pt"
 
+        model_map["pt-pos-clinical"] = "/".join(
+            [hu_path, "clinical-pos-pt", "pucpr-flair-clinical-pos-tagging-best-model.pt"]
+        )
+
         model_map["keyphrase"] = "/".join(
             [hu_path, "keyphrase-semeval2017-scibert", "keyphrase-en-scibert.pt"]
         )
