@@ -97,6 +97,7 @@ class StackedEmbeddings(TokenEmbeddings):
             names.extend(embedding.get_names())
         return names
 
+
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
