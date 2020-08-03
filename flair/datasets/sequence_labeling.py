@@ -1275,6 +1275,35 @@ class WNUT_17(ColumnCorpus):
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
+class BIOSCOPE(ColumnCorpus):
+
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+    ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "tag"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        bioscope_path = "https://raw.githubusercontent.com/whoisjones/BioScopeSequenceLabelingData/master/sequence_labeled/"
+        cached_path(f"{bioscope_path}output.txt", Path("datasets") / dataset_name)
+
+        super(BIOSCOPE, self).__init__(
+            data_folder, columns, in_memory=in_memory, train_file="output.txt"
+        )
+
 
 def _download_wikiner(language_code: str, dataset_name: str):
     # download data if necessary

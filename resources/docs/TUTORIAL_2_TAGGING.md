@@ -84,8 +84,9 @@ are provided:
 | 'chunk' |  Syntactic Chunking   |  Conll-2000     |  **96.47** (F1) |
 | 'pos' |  Part-of-Speech Tagging (fine-grained) |  Ontonotes     |  **98.19** (Accuracy) |
 | 'upos' |  Part-of-Speech Tagging (universal) |  Ontonotes     |  **98.6** (Accuracy) |
-| 'keyphrase' |  Methods and materials in science papers (BETA) |  Semeval2017   |   |
+| 'keyphrase' |  Methods and materials in science papers (BETA) |  Semeval2017   |  **47.3** (F1)  |
 | 'frame'  |   Semantic Frame Detection |  Propbank 3.0     |  **97.54** (F1) |
+| 'negation-speculation'  |  Negations and speculations in biomedical articles  |  Bioscope  |  **80.2** (F1) |
 
 
 #### Fast English Models
@@ -150,6 +151,7 @@ Thanks to our contributors we are also able to distribute a couple of models for
 | 'da-pos' | Named Entity Recognition |  [Danish Dependency Treebank](https://github.com/UniversalDependencies/UD_Danish-DDT/blob/master/README.md)  |  | [AmaliePauli](https://github.com/AmaliePauli) |
 | 'ml-pos' | Part-of-Speech Tagging (fine-grained) |  30000 Malayalam sentences  | **83** | [sabiqueqb](https://github.com/sabiqueqb) |
 | 'ml-upos' | Part-of-Speech Tagging (universal)| 30000 Malayalam sentences | **87** | [sabiqueqb](https://github.com/sabiqueqb) |
+| 'pt-pos-clinical' | Part-of-Speech Tagging (fine-grained) for clinical texts | [PUCPR](https://github.com/HAILab-PUCPR/portuguese-clinical-pos-tagger) | **92.39** | [LucasFerroHAILab](https://github.com/LucasFerroHAILab) |
 
 
 ### Tagging a German sentence
