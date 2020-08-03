@@ -134,6 +134,7 @@ from .biomedical import SCAI_DISEASE
 from .biomedical import VARIOME
 
 # Expose all biomedical data sets using the HUNER splits
+from .biomedical import HUNER_CHEMICAL
 from .biomedical import HUNER_CHEMICAL_BIOSEMANTICS
 from .biomedical import HUNER_CHEMICAL_CHEBI
 from .biomedical import HUNER_CHEMICAL_CRAFT
@@ -142,11 +143,13 @@ from .biomedical import HUNER_CHEMICAL_CDR
 from .biomedical import HUNER_CHEMICAL_CEMP
 from .biomedical import HUNER_CHEMICAL_SCAI
 # -
+from .biomedical import HUNER_CELL_LINE
 from .biomedical import HUNER_CELL_LINE_CLL
 from .biomedical import HUNER_CELL_LINE_CELL_FINDER
 from .biomedical import HUNER_CELL_LINE_GELLUS
 from .biomedical import HUNER_CELL_LINE_JNLPBA
 # -
+from .biomedical import HUNER_DISEASE
 from .biomedical import HUNER_DISEASE_BIOSEMANTICS
 from .biomedical import HUNER_DISEASE_CDR
 from .biomedical import HUNER_DISEASE_MIRNA
@@ -154,6 +157,7 @@ from .biomedical import HUNER_DISEASE_NCBI
 from .biomedical import HUNER_DISEASE_SCAI
 from .biomedical import HUNER_DISEASE_VARIOME
 # -
+from .biomedical import HUNER_GENE
 from .biomedical import HUNER_GENE_BIO_INFER
 from .biomedical import HUNER_GENE_BC2GM
 from .biomedical import HUNER_GENE_CHEBI
@@ -169,6 +173,7 @@ from .biomedical import HUNER_GENE_MIRNA
 from .biomedical import HUNER_GENE_OSIRIS
 from .biomedical import HUNER_GENE_VARIOME
 # -
+from .biomedical import HUNER_SPECIES
 from .biomedical import HUNER_SPECIES_CELL_FINDER
 from .biomedical import HUNER_SPECIES_CHEBI
 from .biomedical import HUNER_SPECIES_CRAFT

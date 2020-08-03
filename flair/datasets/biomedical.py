@@ -1,10 +1,12 @@
 import logging
+import inspect
 import flair
 import ftfy
 import json
 import os
 import shutil
 import re
+import sys
 
 from abc import ABC, abstractmethod
 from collections import defaultdict, deque
@@ -16,6 +18,7 @@ from operator import attrgetter
 from pathlib import Path
 from warnings import warn
 
+from flair.data import MultiCorpus
 from flair.data import Tokenizer
 from flair.file_utils import cached_path, Tqdm, unpack_file
 from flair.datasets import ColumnCorpus, ColumnDataset
@@ -1558,6 +1561,13 @@ class HUNER_CELL_LINE_GELLUS(HunerDataset):
 
 
 class LOCTEXT(ColumnCorpus):
+    """
+        Original LOCTEXT corpus containing species annotations.
+
+        For further information see Cejuela et al.:
+            LocText: relation extraction of protein localizations to assist database curation
+            https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2021-9
+    """
     def __init__(
         self,
         base_path: Union[str, Path] = None,
@@ -2160,6 +2170,7 @@ class HUNER_CHEMICAL_CDR(HunerDataset):
 class VARIOME(ColumnCorpus):
     """
         Variome corpus as provided by http://corpora.informatik.hu-berlin.de/corpora/brat2bioc/hvp_bioc.xml.zip
+
         For further information see Verspoor et al.:
           Annotating the biomedical literature for the human variome
           https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3676157/
@@ -2716,7 +2727,7 @@ class OSIRIS(ColumnCorpus):
        Original OSIRIS corpus containing variation and gene annotations.
 
        For further information see Furlong et al.:
-          Osirisv1.2: a named entity recognition system for sequence variants of genes in biomedical literature
+          Osiris v1.2: a named entity recognition system for sequence variants of genes in biomedical literature
           https://www.ncbi.nlm.nih.gov/pubmed/18251998
     """
 
@@ -5287,3 +5298,70 @@ class PDR(ColumnCorpus):
 
         return data_dir / "Plant-Disease_Corpus"
 
+
+class HunerMultiCorpus(MultiCorpus):
+    """
+        Base class to build the union of all HUNER data sets considering a particular entity type.
+    """
+
+    def __init__(self, entity_type: str):
+        self.entity_type = entity_type
+        def entity_type_predicate(member):
+            return f"HUNER_{entity_type}_" in str(member) and inspect.isclass(member)
+
+        self.huner_corpora = inspect.getmembers(sys.modules[__name__], predicate=entity_type_predicate)
+        self.huner_corpora = [constructor_func() for name, constructor_func in self.huner_corpora]
+
+        super(HunerMultiCorpus, self).__init__(
+            corpora=self.huner_corpora,
+            name=f"HUNER-{entity_type}"
+        )
+
+    def __str__(self):
+        corpora_names = "\n".join([corpus.__class__.__name__ + "-" + str(corpus) for corpus in self.corpora])
+        return f"HUNER_{self.entity_type}(\n{corpora_names}\n)"
+
+
+class HUNER_CELL_LINE(HunerMultiCorpus):
+    """
+        Union of all HUNER cell line data sets.
+    """
+
+    def __init__(self):
+        super(HUNER_CELL_LINE, self).__init__("CELL_LINE")
+
+
+class HUNER_CHEMICAL(HunerMultiCorpus):
+    """
+        Union of all HUNER chemical data sets.
+    """
+
+    def __init__(self):
+        super(HUNER_CHEMICAL, self).__init__("CHEMICAL")
+
+
+class HUNER_DISEASE(HunerMultiCorpus):
+    """
+        Union of all HUNER disease data sets.
+    """
+
+    def __init__(self):
+        super(HUNER_DISEASE, self).__init__("DISEASE")
+
+
+class HUNER_GENE(HunerMultiCorpus):
+    """
+        Union of all HUNER gene data sets.
+    """
+
+    def __init__(self):
+        super(HUNER_GENE, self).__init__("GENE")
+
+
+class HUNER_SPECIES(HunerMultiCorpus):
+    """
+        Union of all HUNER species data sets.
+    """
+
+    def __init__(self):
+        super(HUNER_SPECIES, self).__init__("SPECIES")
