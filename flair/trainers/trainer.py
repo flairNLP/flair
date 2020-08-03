@@ -1,7 +1,7 @@
 import copy
 import logging
 from pathlib import Path
-from typing import Union
+from typing import List, Union
 import time
 import datetime
 import sys
@@ -30,6 +30,7 @@ from flair.training_utils import (
     store_embeddings,
     AnnealOnPlateau,
 )
+from torch.optim.lr_scheduler import OneCycleLR
 from flair.models import SequenceTagger
 import random
 
@@ -67,6 +68,7 @@ class ModelTrainer:
         mini_batch_chunk_size: int = None,
         max_epochs: int = 100,
         scheduler = AnnealOnPlateau,
+        cycle_momentum: bool = False,
         anneal_factor: float = 0.5,
         patience: int = 3,
         initial_extra_patience = 0,
@@ -93,10 +95,12 @@ class ModelTrainer:
         """
         Trains any class that implements the flair.nn.Model interface.
         :param base_path: Main path to which all output during training is logged and models are saved
-        :param learning_rate: Initial learning rate
+        :param learning_rate: Initial learning rate (or max, if scheduler is OneCycleLR)
         :param mini_batch_size: Size of mini-batches during training
         :param mini_batch_chunk_size: If mini-batches are larger than this number, they get broken down into chunks of this size for processing purposes
         :param max_epochs: Maximum number of epochs to train. Terminates training if this number is surpassed.
+        :param scheduler: The learning rate scheduler to use
+        :param cycle_momentum: If scheduler is OneCycleLR, whether the scheduler should cycle also the momentum
         :param anneal_factor: The factor by which the learning rate is annealed
         :param patience: Patience is the number of epochs with no improvement the Trainer waits
          until annealing the learning rate
@@ -226,15 +230,28 @@ class ModelTrainer:
 
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev else "max"
-
-        lr_scheduler = scheduler(
-            optimizer,
-            factor=anneal_factor,
-            patience=patience,
-            initial_extra_patience=initial_extra_patience,
-            mode=anneal_mode,
-            verbose=True,
-        )
+        
+        if scheduler == OneCycleLR:
+            dataset_size = len(self.corpus.train)
+            if train_with_dev:
+                dataset_size += len(self.corpus.dev)
+            lr_scheduler = OneCycleLR(optimizer,
+                                   max_lr=learning_rate,
+                                   steps_per_epoch=dataset_size//mini_batch_size + 1,
+                                   epochs=max_epochs-self.epoch, # if we load a checkpoint, we have already trained for self.epoch
+                                   cycle_momentum=cycle_momentum)
+        else:
+            lr_scheduler = scheduler(
+                optimizer,
+                factor=anneal_factor,
+                patience=patience,
+                initial_extra_patience=initial_extra_patience,
+                mode=anneal_mode,
+                verbose=True,
+            )
+        
+        if (isinstance(lr_scheduler, OneCycleLR) and batch_growth_annealing):
+            raise ValueError("Batch growth with OneCycle policy is not implemented.")
 
         train_data = self.corpus.train
 
@@ -260,6 +277,10 @@ class ModelTrainer:
         # At any point you can hit Ctrl + C to break out of training early.
         try:
             previous_learning_rate = learning_rate
+            momentum = 0
+            for group in optimizer.param_groups:
+                if "momentum" in group:
+                    momentum = group["momentum"]
 
             for self.epoch in range(self.epoch + 1, max_epochs + 1):
                 log_line(log)
@@ -302,7 +323,7 @@ class ModelTrainer:
                 previous_learning_rate = learning_rate
 
                 # stop training if learning rate becomes too small
-                if learning_rate < min_learning_rate:
+                if (not isinstance(lr_scheduler, OneCycleLR)) and learning_rate < min_learning_rate:
                     log_line(log)
                     log.info("learning rate too small - quitting training!")
                     log_line(log)
@@ -358,6 +379,15 @@ class ModelTrainer:
                     # do the optimizer step
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
                     optimizer.step()
+                    
+                    # do the scheduler step if one-cycle
+                    if isinstance(lr_scheduler, OneCycleLR):
+                        lr_scheduler.step()
+                        # get new learning rate
+                        for group in optimizer.param_groups:
+                            learning_rate = group["lr"]
+                            if "momentum" in group:
+                                momentum = group["momentum"]                    
 
                     seen_batches += 1
                     train_loss += loss.item()
@@ -370,6 +400,7 @@ class ModelTrainer:
                         log.info(
                             f"epoch {self.epoch} - iter {seen_batches}/{total_number_of_batches} - loss "
                             f"{train_loss / seen_batches:.8f} - samples/sec: {mini_batch_size * modulo / batch_time:.2f}"
+                            f" - lr: {learning_rate:.6f} - momentum: {momentum:.4f}"
                         )
                         batch_time = 0
                         iteration = self.epoch * total_number_of_batches + batch_no
@@ -474,7 +505,7 @@ class ModelTrainer:
                 # determine learning rate annealing through scheduler. Use auxiliary metric for AnnealOnPlateau
                 if not train_with_dev and isinstance(lr_scheduler, AnnealOnPlateau):
                     lr_scheduler.step(current_score, dev_loss)
-                else:
+                elif not isinstance(lr_scheduler, OneCycleLR):
                     lr_scheduler.step(current_score)
 
                 train_loss_history.append(train_loss)
@@ -542,6 +573,7 @@ class ModelTrainer:
                 if (
                     (not train_with_dev or anneal_with_restarts or anneal_with_prestarts)
                     and not param_selection_mode
+                    and not isinstance(lr_scheduler, OneCycleLR)
                     and current_score == lr_scheduler.best
                     and bad_epochs == 0
                 ):
