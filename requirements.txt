@@ -16,3 +16,4 @@ regex
 tabulate
 langdetect
 sentencepiece!=0.1.92
+konoha[janome]<5.0.0,>=4.0.0
