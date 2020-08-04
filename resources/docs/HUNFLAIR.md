@@ -43,14 +43,8 @@ tagger.predict(sentence)
 ```
 Done! The Sentence now has entity annotations. Let's print the entities found by the tagger:
 ```python
-for gene in sentence.get_spans("hunflair-gene"):
-    print(gene)
-
-for disease in sentence.get_spans("hunflair-disease"):
-    print(disease)
-
-for species in sentence.get_spans("hunflair-species"):
-    print(species)
+for entity in tagger.get_all_spans(sentence):
+    print(entity)
 ```
 This should print:
 ~~~
@@ -71,14 +65,15 @@ or any of the competitor tools.
 
 | Corpus         | Entity Type  | Misc<sup><sub>[1](#f1)</sub></sup>   | SciSpaCy | HUNER | HunFlair | 
 | ---            | ---          | ---    | ---   | ---  | ---         |
-| [CRAFT v4.0](https://github.com/UCDenver-ccp/CRAFT)     | Chemical     | 42.88 | 32.03 | 42.99 | *__59.83__* |
-|                | Gene/Protein | 64.93 | 49.37 | 50.77 | *__73.51__* |
-|                | Species      | 81.15 | 47.07 | 84.45 | *__85.04__* |
-| [BioNLP 2013 CG](https://www.aclweb.org/anthology/W13-2008/) | Chemical     | 72.15 | 59.93 | 67.37 | *__81.82__* |
-|                | Disease      | 55.64 | 56.27 | 55.32 | *__65.07__* |
-|                | Gene/Protein | 68.97 | 65.80 | 71.22 | *__87.71__* |
-|                | Species      | *__80.53__* | 58.47 | 67.84 | 76.41 |
-| [Plant-Disease](http://gcancer.org/pdr/)  | Species      | 80.63 | 74.51 | 73.64 | *__83.44__*  |
+| [CRAFT v4.0](https://github.com/UCDenver-ccp/CRAFT)     | Chemical     | 42.88 | 35.73 | 42.99 | *__59.83__* |
+|                | Gene/Protein | 64.93 | 47.76 | 50.77 | *__73.51__* |
+|                | Species      | 81.15 | 54.21 | 84.45 | *__85.04__* |
+| [BioNLP 2013 CG](https://www.aclweb.org/anthology/W13-2008/) | Chemical     | 72.15 | 58.43 | 67.37 | *__81.82__* |
+|                | Disease      | 55.64 | 56.48 | 55.32 | *__65.07__* |
+|                | Gene/Protein | 68.97 | 66.18 | 71.22 | *__87.71__* |
+|                | Species      | *__80.53__* | 57.11 | 67.84 | 76.41 |
+| [Plant-Disease](http://gcancer.org/pdr/)  | Species      | 80.63 | 75.90 | 73.64 | *__83.44__*  |
+
 <sub>All results are F1 scores using partial matching of predicted text offsets with the original char offsets 
 of the gold standard data. We allow a shift by max one character.</sub>
 
