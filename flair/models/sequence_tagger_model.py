@@ -14,7 +14,7 @@ from tqdm import tqdm
 import flair.nn
 from flair.data import Dictionary, Sentence, Label
 from flair.datasets import SentenceDataset, DataLoader
-from flair.embeddings import TokenEmbeddings
+from flair.embeddings import TokenEmbeddings, StackedEmbeddings, Embeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.training_utils import Metric, Result, store_embeddings
 
@@ -1228,6 +1228,7 @@ class SequenceTagger(flair.nn.Model):
                f'  (weights): {self.weight_dict}\n' + \
                f'  (weight_tensor) {self.loss_weights}\n)'
 
+
 class MultiTagger:
     def __init__(self, name_to_tagger: Dict[str, SequenceTagger]):
         super().__init__()
@@ -1264,6 +1265,11 @@ class MultiTagger:
                 embedding_storage_mode="cpu",
             )
 
+        # clear embeddings after predicting
+        for sentence in sentences:
+            sentence.clear_embeddings()
+
+
     @classmethod
     def load(cls, model_names: Union[List[str], str]):
         if model_names == "hunflair":
@@ -1278,8 +1284,56 @@ class MultiTagger:
             model_names = [model_names]
 
         taggers = {}
+        models = []
+
+        # load each model
         for model_name in model_names:
-            taggers[model_name] = SequenceTagger.load(model_name)
+
+            model = SequenceTagger.load(model_name)
+
+            # check if the same embeddings were already loaded previously
+            # if the model uses StackedEmbedding, make a new stack with previous objects
+            if type(model.embeddings) == StackedEmbeddings:
+
+                new_stack = []
+                for embedding in model.embeddings.embeddings:
+
+                    # check previous embeddings and add if found
+                    embedding_found = False
+                    for previous_model in models:
+
+                        # only re-use static embeddings
+                        if not embedding.static_embeddings: continue
+
+                        if embedding.name in previous_model.embeddings.get_named_embeddings_dict():
+                            previous_embedding = previous_model.embeddings.get_named_embeddings_dict()[embedding.name]
+                            previous_embedding.name = previous_embedding.name[2:]
+                            new_stack.append(previous_embedding)
+                            embedding_found = True
+                            break
+
+                    # if not found, use existing embedding
+                    if not embedding_found:
+                        embedding.name = embedding.name[2:]
+                        new_stack.append(embedding)
+
+                # initialize new stack
+                model.embeddings = None
+                model.embeddings = StackedEmbeddings(new_stack)
+
+            else:
+                # of the model uses regular embedding, re-load if previous version found
+                if not model.embeddings.static_embeddings:
+
+                    for previous_model in models:
+                        if model.embeddings.name in previous_model.embeddings.get_named_embeddings_dict():
+                            previous_embedding = previous_model.embeddings.get_named_embeddings_dict()[model.embeddings.name]
+                            if not previous_embedding.static_embeddings:
+                                model.embeddings = previous_embedding
+                                break
+
+            taggers[model_name] = model
+            models.append(model)
 
         return cls(taggers)
 
