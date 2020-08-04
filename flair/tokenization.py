@@ -172,17 +172,21 @@ class SpaceTokenizer(Tokenizer):
 class JapaneseTokenizer(Tokenizer):
     """
         Tokenizer using konoha, a third party library which supports
-        multiple Japanese tokenizer such as MeCab, KyTea and SudachiPy.
+        multiple Japanese tokenizer such as MeCab, Janome and SudachiPy.
 
         For further details see:
             https://github.com/himkt/konoha
     """
 
-    def __init__(self, tokenizer: str):
+    def __init__(self, tokenizer: str, sudachi_mode: str="A"):
         super(JapaneseTokenizer, self).__init__()
 
-        if tokenizer.lower() != "mecab":
-            raise NotImplementedError("Currently, MeCab is only supported.")
+        available_tokenizers = ["mecab", "janome", "sudachi"]
+
+        if tokenizer.lower() not in available_tokenizers:
+            raise NotImplementedError(
+                f"Currently, {tokenizer} is only supported. Supported tokenizers: {available_tokenizers}."
+            )
 
         try:
             import konoha
@@ -190,18 +194,16 @@ class JapaneseTokenizer(Tokenizer):
             log.warning("-" * 100)
             log.warning('ATTENTION! The library "konoha" is not installed!')
             log.warning(
-                'To use Japanese tokenizer, please first install with the following steps:'
+                '- If you want to use MeCab, install mecab with "sudo apt install mecab libmecab-dev mecab-ipadic".'
             )
-            log.warning(
-                '- Install mecab with "sudo apt install mecab libmecab-dev mecab-ipadic"'
-            )
-            log.warning('- Install konoha with "pip install konoha[mecab]"')
+            log.warning('- Install konoha with "pip install konoha[{tokenizer_name}]"')
+            log.warning('  - You can choose tokenizer from ["mecab", "janome", "sudachi"].')
             log.warning("-" * 100)
-            pass
+            exit()
 
         self.tokenizer = tokenizer
         self.sentence_tokenizer = konoha.SentenceTokenizer()
-        self.word_tokenizer = konoha.WordTokenizer(tokenizer)
+        self.word_tokenizer = konoha.WordTokenizer(tokenizer, mode=sudachi_mode)
 
     def tokenize(self, text: str) -> List[Token]:
         tokens: List[Token] = []
