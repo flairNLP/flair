@@ -1049,6 +1049,37 @@ class Corpus:
         self._dev = Corpus._filter_empty_sentences(self._dev)
         log.info(self)
 
+    def filter_long_sentences(self, max_charlength: int):
+        log.info("Filtering long sentences")
+        self._train = Corpus._filter_long_sentences(self._train, max_charlength)
+        self._test = Corpus._filter_long_sentences(self._test, max_charlength)
+        self._dev = Corpus._filter_long_sentences(self._dev, max_charlength)
+        log.info(self)
+
+    @staticmethod
+    def _filter_long_sentences(dataset, max_charlength: int) -> Dataset:
+
+        # find out empty sentence indices
+        empty_sentence_indices = []
+        non_empty_sentence_indices = []
+        index = 0
+
+        from flair.datasets import DataLoader
+
+        for batch in DataLoader(dataset):
+            for sentence in batch:
+                if len(sentence.to_plain_string()) > max_charlength:
+                    empty_sentence_indices.append(index)
+                else:
+                    non_empty_sentence_indices.append(index)
+                index += 1
+
+        # create subset of non-empty sentence indices
+        subset = Subset(dataset, non_empty_sentence_indices)
+
+        return subset
+
+
     @staticmethod
     def _filter_empty_sentences(dataset) -> Dataset:
 
@@ -1266,7 +1297,9 @@ class MultiCorpus(Corpus):
         )
 
     def __str__(self):
-        return "\n".join([str(corpus) for corpus in self.corpora])
+        output = f"MultiCorpus: {len(self.train)} train + {len(self.dev)} dev + {len(self.test)} test sentences\n - "
+        output += "\n - ".join([f'{type(corpus).__name__} {str(corpus)}' for corpus in self.corpora])
+        return output
 
 
 def iob2(tags):

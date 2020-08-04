@@ -1,7 +1,7 @@
 import hashlib
 from abc import abstractmethod
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Dict
 from collections import Counter
 from functools import lru_cache
 
@@ -97,6 +97,13 @@ class StackedEmbeddings(TokenEmbeddings):
             names.extend(embedding.get_names())
         return names
 
+    def get_named_embeddings_dict(self) -> Dict:
+
+        named_embeddings_dict = {}
+        for embedding in self.embeddings:
+            named_embeddings_dict.update(embedding.get_named_embeddings_dict())
+
+        return named_embeddings_dict
 
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""

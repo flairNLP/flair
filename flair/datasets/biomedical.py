@@ -5317,10 +5317,6 @@ class HunerMultiCorpus(MultiCorpus):
             name=f"HUNER-{entity_type}"
         )
 
-    def __str__(self):
-        corpora_names = "\n".join([corpus.__class__.__name__ + "-" + str(corpus) for corpus in self.corpora])
-        return f"HUNER_{self.entity_type}(\n{corpora_names}\n)"
-
 
 class HUNER_CELL_LINE(HunerMultiCorpus):
     """
