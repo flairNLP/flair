@@ -7,7 +7,7 @@ Let's use the pre-trained HunFlair model for biomedical named entity recognition
 This model was trained over 24 biomedical NER data sets and can recognize 5 different entity types,
 i.e. cell lines, chemicals, disease, gene / proteins and species.
 ```python
-from flair.models.sequence_tagger_model import MultiTagger
+from flair.models import MultiTagger
 
 tagger = MultiTagger.load("hunflair")
 ```
