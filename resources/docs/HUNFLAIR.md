@@ -3,7 +3,7 @@
 <i>HunFlair</i> is a state-of-the-art NER tagger for biomedical texts. It comes with 
 models for genes/proteins, chemicals, diseases, species and cell lines. <i>HunFlair</i> 
 builds on pretrained domain-specific language models and outperforms other biomedical 
-NER tools on unseen corpora. Furthermore, it contains harmonized versions of [29 biomedical 
+NER tools on unseen corpora. Furthermore, it contains harmonized versions of [31 biomedical 
 NER data sets](HUNFLAIR_CORPORA.md).
 
 
@@ -26,8 +26,8 @@ pip install flair
 Furthermore, we recommend to install [SciSpaCy](https://allenai.github.io/scispacy/) for improved pre-processing 
 and tokenization of scientific / biomedical texts:
  ```
-pip install scispacy
-pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.4/en_core_sci_md-0.2.4.tar.gz
+pip install scispacy==0.2.5
+pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_core_sci_sm-0.2.5.tar.gz
 ```
  
 #### Example Usage

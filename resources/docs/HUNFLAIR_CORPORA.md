@@ -4,7 +4,7 @@ Here you can find an overview about biomedical NER data sets integrated in *HunF
 __Content:__ [Overview](#overview) | [HUNER Data Sets](#huner-data-sets) | [BioBERT Evaluation Splits](#biobert-evaluation-splits)
 
 ## Overview
-HunFlair integrates 29 biomedical named entity recognition (NER) data sets and provides 
+HunFlair integrates 31 biomedical named entity recognition (NER) data sets and provides 
 them in an unified format to foster the development and evaluation of new NER models. All
 data set implementations can be found in `flair.datasets.biomedical`.
 
@@ -17,6 +17,7 @@ data set implementations can be found in `flair.datasets.biomedical`.
 | BioInfer | `BIO_INFER` |  Gene/Protein | [Paper](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-8-50)   |
 | BioNLP'2013 Cancer Genetics (ST) | `BIONLP2013_CG` | Chemical, Disease, Gene/Protein, Species | [Paper](https://www.aclweb.org/anthology/W13-2008/)   |
 | BioNLP'2013 Pathway Curation (ST)| `BIONLP2013_PC` | Chemical, Gene/Proteins  | [Paper](http://diego.asu.edu/index.php)   |
+| BioSemantics<sup>*</sup> | `BIOSEMANTICS` | Chemical, Disease | [Paper](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0107477), [Website](https://biosemantics.erasmusmc.nl/index.php/resources/chemical-patent-corpus)|
 | CellFinder | `CELL_FINDER` | Cell line, Gene Species  | [Paper](https://pdfs.semanticscholar.org/38e3/75aeeeb1937d03c3c80128a70d8e7a74441f.pdf)   |
 | CEMP | `CEMP` | Chemical | [Website](https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/cemp-detailed-task-description/)   |
 | CHEBI | `CHEBI` | Chemical, Gene, Species  | [Paper](http://www.lrec-conf.org/proceedings/lrec2018/pdf/229.pdf)   |
@@ -25,7 +26,8 @@ data set implementations can be found in `flair.datasets.biomedical`.
 | DECA | `DECA` | Gene/Protein | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2828111/)   |
 | FSU | `FSU` | Gene/Protein  | [Paper](https://www.aclweb.org/anthology/W10-1838/)   |
 | GPRO | `GPRO` | Gene/Protein  | [Website](https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/gpro-detailed-task-description/)   |
-| CRAFT (v4.0.1) | `CRAFT_V4` | Chemical, Gene, Species  | [Paper](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-13-161), [Website](https://github.com/UCDenver-ccp/CRAFT)   |
+| CRAFT (v2.0) | `CRAFT` | Chemical, Gene, Species  | [Paper](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-13-161)  |
+| CRAFT (v4.0.1) | `CRAFT_V4` | Chemical, Gene, Species  | [Website](https://github.com/UCDenver-ccp/CRAFT)   |
 | GELLUS | `GELLUS` | Cell line  | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/)   |
 | IEPA | `IEPA` | Gene/Protein  | [Paper](hhttps://www.ncbi.nlm.nih.gov/pubmed/11928487)   |
 | JNLPBA | `JNLPBA` | Disease  | [Paper](https://www.aclweb.org/anthology/W04-1213.pdf)   |
@@ -44,6 +46,11 @@ data set implementations can be found in `flair.datasets.biomedical`.
 Note: The table just gives an overview about the entity types of the individual corpora. 
 Please refer to the original publications for annotation details. 
 </sub>
+<p>
+<sub>
+* The corpus is currently not available, but will be re-published online soon. 
+</sub>
+</p>
 
 ## HUNER Data Sets
 Next to the integration of the biomedical data sets, *HunFlair* provides the fixed splits used by 
@@ -61,9 +68,15 @@ improve comparability of evaluations
 ## BioBERT evaluation splits
 To ease comparison with BioBERT, *HunFlair* provides the splits used by 
 [Lee et al.](https://academic.oup.com/bioinformatics/article/36/4/1234/5566506):
-`BIOBERT_CHEMICAL_BC4CHEMD`, `BIOBERT_GENE_BC2GM`, `BIOBERT_GENE_JNLPBA`, `BIOBERT_CHEMICAL_BC5CDR`,
+`BIOBERT_GENE_BC4CHEMD`, `BIOBERT_GENE_BC2GM`, `BIOBERT_GENE_JNLPBA`, `BIOBERT_CHEMICAL_BC5CDR`,
 `BIOBERT_DISEASE_BC5CDR`, `BIOBERT_DISEASE_NCBI`, `BIOBERT_SPECIES_LINNAEUS`, and `BIOBERT_SPECIES_S800`
 
+
+Note: To download and use the BioBERT corpora you need to install the package _googledrivedownloader_, since the
+files are hosted in Google Drive:
+~~~
+pip install googledrivedownloader
+~~~ 
 
 
 

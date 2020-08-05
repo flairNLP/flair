@@ -5453,7 +5453,7 @@ class HunerMultiCorpus(MultiCorpus):
 
                 self.huner_corpora.append(corpus)
             except:
-                print(f"Can't download corpus {name}:\n\t{sys.exc_info()}\n\n")
+                print(f"Can't download and prepare corpus {name}:\n{sys.exc_info()[1]}\n\n")
 
         super(HunerMultiCorpus, self).__init__(
             corpora=self.huner_corpora, name=f"HUNER-{entity_type}"

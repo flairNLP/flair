@@ -276,8 +276,7 @@ class SciSpacyTokenizer(Tokenizer):
         :class:`SpacyTokenizer`.
 
         Note, you if you want to use the "normal" SciSpacy tokenization just use
-        :class:`SpacyTokenizer` and pass a SciSpacy model (e.g. en_core_sci_sm or
-        en_core_sci_lg) as parameter.
+        :class:`SpacyTokenizer`.
     """
 
     def __init__(self):
@@ -288,8 +287,13 @@ class SciSpacyTokenizer(Tokenizer):
             from spacy.lang import char_classes
         except ImportError:
             raise ImportError(
-                "Please install Spacy v2.0 or better before using the Spacy tokenizer, "
-                "otherwise you can use segtok_tokenizer as advanced tokenizer."
+                "  Please install scispacy version 0.2.5 (recommended) or higher before using the SciSpacy tokenizer, "
+                "otherwise you can use SegtokTokenizer as alternative implementation.\n"
+                "  You can install scispacy (version 0.2.5) by running:\n\n"
+                "     pip install scispacy==0.2.5\n\n"
+                "  By default HunFlair uses the `en_core_sci_sm` model. You can install the model by running:\n\n"
+                "     pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_core_sci_sm-0.2.5.tar.gz\n\n"
+                "  Note that the scispacy version and the version of the model must match to work properly!"
             )
 
         def combined_rule_prefixes() -> List[str]:
@@ -449,8 +453,8 @@ class SpacySentenceSplitter(SentenceSplitter):
             from spacy.language import Language
         except ImportError:
             raise ImportError(
-                "Please install Spacy v2.0 or better before using the Spacy tokenizer, "
-                "otherwise you can use segtok_tokenizer as advanced tokenizer."
+                "Please install spacy v2.3.2 or higher before using the SpacySentenceSplitter, "
+                "otherwise you can use SegtokSentenceSplitter as alternative implementation."
             )
 
         if isinstance(model, Language):
