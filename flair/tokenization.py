@@ -396,6 +396,14 @@ class SentenceSplitter(ABC):
     def name(self) -> str:
         return self.__class__.__name__
 
+    @property
+    def tokenizer(self) -> Tokenizer:
+        raise NotImplementedError()
+
+    @tokenizer.setter
+    def tokenizer(self, value: Tokenizer):
+        raise NotImplementedError()
+
 
 class SegtokSentenceSplitter(SentenceSplitter):
     """
@@ -406,7 +414,7 @@ class SegtokSentenceSplitter(SentenceSplitter):
 
     def __init__(self, tokenizer: Tokenizer = SegtokTokenizer()):
         super(SegtokSentenceSplitter, self).__init__()
-        self.tokenizer = tokenizer
+        self._tokenizer = tokenizer
 
     def split(self, text: str) -> List[Sentence]:
         sentences = []
@@ -423,7 +431,7 @@ class SegtokSentenceSplitter(SentenceSplitter):
             sentences += [
                 Sentence(
                     text=sentence,
-                    use_tokenizer=self.tokenizer,
+                    use_tokenizer=self._tokenizer,
                     start_position=sentence_offset
                 )
             ]
@@ -435,6 +443,14 @@ class SegtokSentenceSplitter(SentenceSplitter):
     @property
     def name(self) -> str:
         return self.__class__.__name__
+
+    @property
+    def tokenizer(self) -> Tokenizer:
+        return self._tokenizer
+
+    @tokenizer.setter
+    def tokenizer(self, value: Tokenizer):
+        self._tokenizer = value
 
 
 class SpacySentenceSplitter(SentenceSplitter):
@@ -463,9 +479,9 @@ class SpacySentenceSplitter(SentenceSplitter):
             self.model: Language = spacy.load(model)
 
         if tokenizer is None:
-            self.tokenizer =  SpacyTokenizer("en_core_sci_sm")
+            self._tokenizer = SpacyTokenizer("en_core_sci_sm")
         else:
-            self.tokenizer = tokenizer
+            self._tokenizer = tokenizer
 
     def split(self, text: str) -> List[Sentence]:
         document = self.model(text)
@@ -473,7 +489,7 @@ class SpacySentenceSplitter(SentenceSplitter):
         sentences = [
             Sentence(
                 text=str(spacy_sent),
-                use_tokenizer=self.tokenizer,
+                use_tokenizer=self._tokenizer,
                 start_position=spacy_sent.start_char
             )
             for spacy_sent in document.sents
@@ -481,6 +497,14 @@ class SpacySentenceSplitter(SentenceSplitter):
         ]
 
         return sentences
+
+    @property
+    def tokenizer(self) -> Tokenizer:
+        return self._tokenizer
+
+    @tokenizer.setter
+    def tokenizer(self, value: Tokenizer):
+        self._tokenizer = value
 
     @property
     def name(self) -> str:
@@ -491,7 +515,7 @@ class SpacySentenceSplitter(SentenceSplitter):
             + "_"
             + self.model.meta["version"]
             + "_"
-            + self.tokenizer.name
+            + self._tokenizer.name
         )
 
 
@@ -513,7 +537,7 @@ class TagSentenceSplitter(SentenceSplitter):
 
     def __init__(self, tag: str, tokenizer: Tokenizer = SegtokTokenizer()):
         super(TagSentenceSplitter, self).__init__()
-        self.tokenizer = tokenizer
+        self._tokenizer = tokenizer
         self.tag = tag
 
     def split(self, text: str) -> List[Sentence]:
@@ -529,7 +553,7 @@ class TagSentenceSplitter(SentenceSplitter):
             sentences += [
                 Sentence(
                     text=sentence,
-                    use_tokenizer=self.tokenizer,
+                    use_tokenizer=self._tokenizer,
                     start_position=last_offset
                 )
             ]
@@ -539,13 +563,21 @@ class TagSentenceSplitter(SentenceSplitter):
         return sentences
 
     @property
+    def tokenizer(self) -> Tokenizer:
+        return self._tokenizer
+
+    @tokenizer.setter
+    def tokenizer(self, value: Tokenizer):
+        self._tokenizer = value
+
+    @property
     def name(self) -> str:
         return (
             self.__class__.__name__
             + "_"
             + self.tag
             + "_"
-            + self.tokenizer.name
+            + self._tokenizer.name
         )
 
 
@@ -563,7 +595,7 @@ class NewlineSentenceSplitter(TagSentenceSplitter):
         return (
             self.__class__.__name__
             + "_"
-            + self.tokenizer.name
+            + self._tokenizer.name
         )
 
 
@@ -574,21 +606,29 @@ class NoSentenceSplitter(SentenceSplitter):
 
     def __init__(self, tokenizer: Tokenizer = SegtokTokenizer()):
         super(NoSentenceSplitter, self).__init__()
-        self.tokenizer = tokenizer
+        self._tokenizer = tokenizer
 
     def split(self, text: str) -> List[Sentence]:
         return [
             Sentence(
                 text=text,
-                use_tokenizer=self.tokenizer,
+                use_tokenizer=self._tokenizer,
                 start_position=0
             )
         ]
+
+    @property
+    def tokenizer(self) -> Tokenizer:
+        return self._tokenizer
+
+    @tokenizer.setter
+    def tokenizer(self, value: Tokenizer):
+        self._tokenizer = value
 
     @property
     def name(self) -> str:
         return (
             self.__class__.__name__
             + "_"
-            + self.tokenizer.name
+            + self._tokenizer.name
         )

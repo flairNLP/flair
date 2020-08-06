@@ -505,9 +505,10 @@ class HunerDataset(ColumnCorpus, ABC):
         else:
             if sentence_splitter:
                 warn(
-                    "You are using a non-default sentence splitter for corpus with pre-defined sentences"
+                    f"The corpus {self.__class__.__name__} has a pre-defined sentence splitting, "
+                    f"thus just the tokenizer of the given sentence splitter ist used"
                 )
-                self.sentence_splitter = sentence_splitter
+                self.sentence_splitter.tokenizer = sentence_splitter.tokenizer
 
         # Create tokenization-dependent CONLL files. This is necessary to prevent
         # from caching issues (e.g. loading the same corpus with different sentence splitters)
