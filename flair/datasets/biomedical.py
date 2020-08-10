@@ -5088,7 +5088,7 @@ class HUNER_SPECIES_CRAFT_V4(HunerDataset):
         corpus_dir = CRAFT_V4.download_corpus(data_dir)
         corpus = CRAFT_V4.parse_corpus(corpus_dir)
 
-        entity_type_mapping = {"ncbitaxon": GENE_TAG}
+        entity_type_mapping = {"ncbitaxon": SPECIES_TAG}
         return filter_and_map_entities(corpus, entity_type_mapping)
 
 
