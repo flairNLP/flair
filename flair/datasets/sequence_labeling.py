@@ -627,7 +627,7 @@ class DANE(ColumnCorpus):
         train_data_file = data_path / "ddt.train.conllu"
         if not train_data_file.is_file():
             temp_file = cached_path(
-                'https://danlp.s3.eu-central-1.amazonaws.com/datasets/ddt.zip',
+                'https://danlp.alexandra.dk/304bd159d5de/datasets/ddt.zip',
                 Path("datasets") / dataset_name
             )
             from zipfile import ZipFile
