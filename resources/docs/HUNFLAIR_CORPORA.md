@@ -16,8 +16,8 @@ data set implementations can be found in `flair.datasets.biomedical`.
 | BioCreative V CDR task | `CDR` | Chemical, Disease  | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4860626/), [Website](https://github.com/JHnlp/BioCreative-V-CDR-Corpus)   |
 | BioInfer | `BIO_INFER` |  Gene/Protein | [Paper](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-8-50)   |
 | BioNLP'2013 Cancer Genetics (ST) | `BIONLP2013_CG` | Chemical, Disease, Gene/Protein, Species | [Paper](https://www.aclweb.org/anthology/W13-2008/)   |
-| BioNLP'2013 Pathway Curation (ST)| `BIONLP2013_PC` |  | [Paper](http://diego.asu.edu/index.php)   |
-| BioSemantics | `BIOSEMANTICS` | Chemical, Disease  | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4182036/), [Website](https://biosemantics.erasmusmc.nl/index.php/resources/chemical-patent-corpus)   |
+| BioNLP'2013 Pathway Curation (ST)| `BIONLP2013_PC` | Chemical, Gene/Proteins  | [Paper](http://diego.asu.edu/index.php)   |
+| BioSemantics<sup>*</sup> | `BIOSEMANTICS` | Chemical, Disease | [Paper](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0107477), [Website](https://biosemantics.erasmusmc.nl/index.php/resources/chemical-patent-corpus)|
 | CellFinder | `CELL_FINDER` | Cell line, Gene Species  | [Paper](https://pdfs.semanticscholar.org/38e3/75aeeeb1937d03c3c80128a70d8e7a74441f.pdf)   |
 | CEMP | `CEMP` | Chemical | [Website](https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/cemp-detailed-task-description/)   |
 | CHEBI | `CHEBI` | Chemical, Gene, Species  | [Paper](http://www.lrec-conf.org/proceedings/lrec2018/pdf/229.pdf)   |
@@ -26,7 +26,7 @@ data set implementations can be found in `flair.datasets.biomedical`.
 | DECA | `DECA` | Gene/Protein | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2828111/)   |
 | FSU | `FSU` | Gene/Protein  | [Paper](https://www.aclweb.org/anthology/W10-1838/)   |
 | GPRO | `GPRO` | Gene/Protein  | [Website](https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/gpro-detailed-task-description/)   |
-| CRAFT (v2.0) | `CRAFT` | Chemical, Gene, Species  | [Paper](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-13-161)   |
+| CRAFT (v2.0) | `CRAFT` | Chemical, Gene, Species  | [Paper](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-13-161)  |
 | CRAFT (v4.0.1) | `CRAFT_V4` | Chemical, Gene, Species  | [Website](https://github.com/UCDenver-ccp/CRAFT)   |
 | GELLUS | `GELLUS` | Cell line  | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/)   |
 | IEPA | `IEPA` | Gene/Protein  | [Paper](hhttps://www.ncbi.nlm.nih.gov/pubmed/11928487)   |
@@ -46,6 +46,11 @@ data set implementations can be found in `flair.datasets.biomedical`.
 Note: The table just gives an overview about the entity types of the individual corpora. 
 Please refer to the original publications for annotation details. 
 </sub>
+<p>
+<sub>
+* The corpus is currently not available, but will be re-published online soon. 
+</sub>
+</p>
 
 ## HUNER Data Sets
 Next to the integration of the biomedical data sets, *HunFlair* provides the fixed splits used by 
@@ -55,17 +60,23 @@ improve comparability of evaluations
  | Entity Type  | Data Set Class   | Contained Data Sets | 
 | ---           | ---              | ---                 |
 | Cell Line    | `HUNER_CELL_LINE` | `HUNER_CELL_LINE_CELL_FINDER`, `HUNER_CELL_LINE_CLL`, `HUNER_CELL_LINE_GELLUS`, `HUNER_CELL_LINE_JNLPBA` |
-| Chemical     | `HUNER_CHEMICAL`  | `HUNER_CHEMICAL_BIOSEMANTICS`, `HUNER_CHEMICAL_CDR`, `HUNER_CHEMICAL_CEMP`, `HUNER_CHEMICAL_CHEBI`, `HUNER_CHEMICAL_CHEMDNER`, `HUNER_CHEMICAL_CRAFT`, `HUNER_CHEMICAL_SCAI` |
-| Disease      | `HUNER_DISEASE`   | `HUNER_DISEASE_BIOSEMANTICS`, `HUNER_DISEASE_CDR`, `HUNER_DISEASE_MIRNA`, `HUNER_DISEASE_NCBI`, `HUNER_DISEASE_SCAI`, `HUNER_DISEASE_VARIOME` |
-| Gene/Protein | `HUNER_GENE`      | `HUNER_GENE_BC2GM`, `HUNER_GENE_BIO_INFER`, `HUNER_GENE_CELL_FINDER`, `HUNER_GENE_CHEBI`, `HUNER_GENE_CRAFT`, `HUNER_GENE_DECA`, `HUNER_GENE_FSU`, `HUNER_GENE_GPRO`, `HUNER_GENE_IEPA`, `HUNER_GENE_JNLPBA`, `HUNER_GENE_LOCTEXT`, `HUNER_GENE_MIRNA`, `HUNER_GENE_OSIRIS`, `HUNER_GENE_VARIOME` |
-| Species      | `HUNER_SPECIES`   | `HUNER_SPECIES_CELL_FINDER`, `HUNER_SPECIES_CHEBI`, `HUNER_SPECIES_CRAFT`, `HUNER_SPECIES_LINNEAUS`, `HUNER_SPECIES_LOCTEXT`, `HUNER_SPECIES_MIRNA`, `HUNER_SPECIES_S800`, `HUNER_SPECIES_VARIOME`|
+| Chemical     | `HUNER_CHEMICAL`  | `HUNER_CHEMICAL_CDR`, `HUNER_CHEMICAL_CEMP`, `HUNER_CHEMICAL_CHEBI`, `HUNER_CHEMICAL_CHEMDNER`, `HUNER_CHEMICAL_CRAFT_V4`, `HUNER_CHEMICAL_SCAI` |
+| Disease      | `HUNER_DISEASE`   | `HUNER_DISEASE_CDR`, `HUNER_DISEASE_MIRNA`, `HUNER_DISEASE_NCBI`, `HUNER_DISEASE_SCAI`, `HUNER_DISEASE_VARIOME` |
+| Gene/Protein | `HUNER_GENE`      | `HUNER_GENE_BC2GM`, `HUNER_GENE_BIO_INFER`, `HUNER_GENE_CELL_FINDER`, `HUNER_GENE_CHEBI`, `HUNER_GENE_CRAFT_V4`, `HUNER_GENE_DECA`, `HUNER_GENE_FSU`, `HUNER_GENE_GPRO`, `HUNER_GENE_IEPA`, `HUNER_GENE_JNLPBA`, `HUNER_GENE_LOCTEXT`, `HUNER_GENE_MIRNA`, `HUNER_GENE_OSIRIS`, `HUNER_GENE_VARIOME` |
+| Species      | `HUNER_SPECIES`   | `HUNER_SPECIES_CELL_FINDER`, `HUNER_SPECIES_CHEBI`, `HUNER_SPECIES_CRAFT_V4`, `HUNER_SPECIES_LINNEAUS`, `HUNER_SPECIES_LOCTEXT`, `HUNER_SPECIES_MIRNA`, `HUNER_SPECIES_S800`, `HUNER_SPECIES_VARIOME`|
 
 ## BioBERT evaluation splits
 To ease comparison with BioBERT, *HunFlair* provides the splits used by 
 [Lee et al.](https://academic.oup.com/bioinformatics/article/36/4/1234/5566506):
-`BIOBERT_CHEMICAL_BC4CHEMD`, `BIOBERT_GENE_BC2GM`, `BIOBERT_GENE_JNLPBA`, `BIOBERT_CHEMICAL_BC5CDR`,
+`BIOBERT_GENE_BC4CHEMD`, `BIOBERT_GENE_BC2GM`, `BIOBERT_GENE_JNLPBA`, `BIOBERT_CHEMICAL_BC5CDR`,
 `BIOBERT_DISEASE_BC5CDR`, `BIOBERT_DISEASE_NCBI`, `BIOBERT_SPECIES_LINNAEUS`, and `BIOBERT_SPECIES_S800`
 
+
+Note: To download and use the BioBERT corpora you need to install the package _googledrivedownloader_, since the
+files are hosted in Google Drive:
+~~~
+pip install googledrivedownloader
+~~~ 
 
 
 

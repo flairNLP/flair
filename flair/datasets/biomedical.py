@@ -13,7 +13,7 @@ from collections import defaultdict, deque
 from copy import copy
 from lxml import etree
 from lxml.etree import XMLSyntaxError
-from typing import Union, Callable, Dict, List, Tuple, Iterable
+from typing import Union, Callable, Dict, List, Tuple, Iterable, Optional
 from operator import attrgetter
 from pathlib import Path
 from warnings import warn
@@ -462,7 +462,7 @@ class HunerDataset(ColumnCorpus, ABC):
     def split_url() -> str:
         raise NotImplementedError()
 
-    def get_corpus_sentence_splitter(self):
+    def get_corpus_sentence_splitter(self) -> Optional[SentenceSplitter]:
         """
             If the corpus has a pre-defined sentence splitting, then this method returns
             the sentence splitter to be used to reconstruct the original splitting.
@@ -474,7 +474,7 @@ class HunerDataset(ColumnCorpus, ABC):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        sentence_splitter: Callable[[str], Tuple[List[str], List[int]]] = None,
+        sentence_splitter: SentenceSplitter = None,
     ):
         """
         :param base_path: Path to the corpus on your machine
@@ -497,28 +497,30 @@ class HunerDataset(ColumnCorpus, ABC):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        cw_sentence_splitter = self.get_corpus_sentence_splitter()
-        if not cw_sentence_splitter:
-            cw_sentence_splitter = (
+        self.sentence_splitter = self.get_corpus_sentence_splitter()
+        if not self.sentence_splitter:
+            self.sentence_splitter = (
                 sentence_splitter if sentence_splitter else SciSpacySentenceSplitter()
             )
         else:
             if sentence_splitter:
                 warn(
-                    "Ignoring non-default sentence splitter for corpus with predefined sentences"
+                    f"The corpus {self.__class__.__name__} has a pre-defined sentence splitting, "
+                    f"thus just the tokenizer of the given sentence splitter ist used"
                 )
+                self.sentence_splitter.tokenizer = sentence_splitter.tokenizer
 
         # Create tokenization-dependent CONLL files. This is necessary to prevent
         # from caching issues (e.g. loading the same corpus with different sentence splitters)
-        train_file = data_folder / f"{cw_sentence_splitter.name}_train.conll"
-        dev_file = data_folder / f"{cw_sentence_splitter.name}_dev.conll"
-        test_file = data_folder / f"{cw_sentence_splitter.name}_test.conll"
+        train_file = data_folder / f"{self.sentence_splitter.name}_train.conll"
+        dev_file = data_folder / f"{self.sentence_splitter.name}_dev.conll"
+        test_file = data_folder / f"{self.sentence_splitter.name}_test.conll"
 
         if not (train_file.exists() and dev_file.exists() and test_file.exists()):
             splits_dir = data_folder / "splits"
             os.makedirs(splits_dir, exist_ok=True)
 
-            writer = CoNLLWriter(sentence_splitter=cw_sentence_splitter)
+            writer = CoNLLWriter(sentence_splitter=self.sentence_splitter)
             internal_dataset = self.to_internal(data_folder)
 
             train_data = self.get_subset(internal_dataset, "train", splits_dir)
@@ -531,7 +533,13 @@ class HunerDataset(ColumnCorpus, ABC):
             writer.write_to_conll(test_data, test_file)
 
         super(HunerDataset, self).__init__(
-            data_folder, columns, tag_to_bioes="ner", in_memory=in_memory
+            data_folder=data_folder,
+            train_file=train_file.name,
+            dev_file=dev_file.name,
+            test_file=test_file.name,
+            column_format=columns,
+            tag_to_bioes="ner",
+            in_memory=in_memory
         )
 
     def get_subset(self, dataset: InternalBioNerDataset, split: str, split_dir: Path):
@@ -679,6 +687,9 @@ class BIO_INFER(ColumnCorpus):
 
 
 class HUNER_GENE_BIO_INFER(HunerDataset):
+    """
+        HUNER version of the BioInfer corpus containing only gene/protein annotations
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -876,10 +887,14 @@ class HUNER_GENE_JNLPBA(HunerDataset):
         orig_folder = data_dir / "original"
         os.makedirs(str(orig_folder), exist_ok=True)
 
-        train_data = HunerJNLPBA.download_and_prepare_train(orig_folder, SENTENCE_TAG)
+        sentence_separator = " "
+        if isinstance(self.sentence_splitter, TagSentenceSplitter):
+            sentence_separator = self.sentence_splitter.tag
+
+        train_data = HunerJNLPBA.download_and_prepare_train(orig_folder, sentence_separator)
         train_data = filter_and_map_entities(train_data, {"protein": GENE_TAG})
 
-        test_data = HunerJNLPBA.download_and_prepare_test(orig_folder, SENTENCE_TAG)
+        test_data = HunerJNLPBA.download_and_prepare_test(orig_folder, sentence_separator)
         test_data = filter_and_map_entities(test_data, {"protein": GENE_TAG})
 
         return merge_datasets([train_data, test_data])
@@ -904,12 +919,14 @@ class HUNER_CELL_LINE_JNLPBA(HunerDataset):
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
-        train_data = HunerJNLPBA.download_and_prepare_train(
-            download_folder, SENTENCE_TAG
-        )
+        sentence_separator = " "
+        if isinstance(self.sentence_splitter, TagSentenceSplitter):
+            sentence_separator = self.sentence_splitter.tag
+
+        train_data = HunerJNLPBA.download_and_prepare_train(download_folder, sentence_separator)
         train_data = filter_and_map_entities(train_data, {"cell_line": CELL_LINE_TAG})
 
-        test_data = HunerJNLPBA.download_and_prepare_test(download_folder, SENTENCE_TAG)
+        test_data = HunerJNLPBA.download_and_prepare_test(download_folder, sentence_separator)
         test_data = filter_and_map_entities(test_data, {"cell_line": CELL_LINE_TAG})
 
         return merge_datasets([train_data, test_data])
@@ -1004,6 +1021,9 @@ class CELL_FINDER(ColumnCorpus):
 
 
 class HUNER_CELL_LINE_CELL_FINDER(HunerDataset):
+    """
+        HUNER version of the CellFinder corpus containing only cell line annotations.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -1019,6 +1039,9 @@ class HUNER_CELL_LINE_CELL_FINDER(HunerDataset):
 
 
 class HUNER_SPECIES_CELL_FINDER(HunerDataset):
+    """
+        HUNER version of the CellFinder corpus containing only species annotations.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -1034,6 +1057,9 @@ class HUNER_SPECIES_CELL_FINDER(HunerDataset):
 
 
 class HUNER_GENE_CELL_FINDER(HunerDataset):
+    """
+        HUNER version of the CellFinder corpus containing only gene annotations.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -1217,10 +1243,14 @@ class HUNER_GENE_MIRNA(HunerDataset):
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
-        train_data = MIRNA.download_and_prepare_train(download_folder, SENTENCE_TAG)
+        sentence_separator = " "
+        if isinstance(self.sentence_splitter, TagSentenceSplitter):
+            sentence_separator = self.sentence_splitter.tag
+
+        train_data = MIRNA.download_and_prepare_train(download_folder, sentence_separator)
         train_data = filter_and_map_entities(train_data, {"Genes/Proteins": GENE_TAG})
 
-        test_data = MIRNA.download_and_prepare_test(download_folder, SENTENCE_TAG)
+        test_data = MIRNA.download_and_prepare_test(download_folder, sentence_separator)
         test_data = filter_and_map_entities(test_data, {"Genes/Proteins": GENE_TAG})
 
         return merge_datasets([train_data, test_data])
@@ -1253,10 +1283,14 @@ class HUNER_SPECIES_MIRNA(HunerDataset):
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
-        train_data = MIRNA.download_and_prepare_train(download_folder, SENTENCE_TAG)
+        sentence_separator = " "
+        if isinstance(self.sentence_splitter, TagSentenceSplitter):
+            sentence_separator = self.sentence_splitter.tag
+
+        train_data = MIRNA.download_and_prepare_train(download_folder, sentence_separator)
         train_data = filter_and_map_entities(train_data, {"Species": SPECIES_TAG})
 
-        test_data = MIRNA.download_and_prepare_test(download_folder, SENTENCE_TAG)
+        test_data = MIRNA.download_and_prepare_test(download_folder, sentence_separator)
         test_data = filter_and_map_entities(test_data, {"Species": SPECIES_TAG})
 
         return merge_datasets([train_data, test_data])
@@ -1289,10 +1323,14 @@ class HUNER_DISEASE_MIRNA(HunerDataset):
         download_folder = data_dir / "original"
         os.makedirs(str(download_folder), exist_ok=True)
 
-        train_data = MIRNA.download_and_prepare_train(download_folder, SENTENCE_TAG)
+        sentence_separator = " "
+        if isinstance(self.sentence_splitter, TagSentenceSplitter):
+            sentence_separator = self.sentence_splitter.tag
+
+        train_data = MIRNA.download_and_prepare_train(download_folder, sentence_separator)
         train_data = filter_and_map_entities(train_data, {"Diseases": DISEASE_TAG})
 
-        test_data = MIRNA.download_and_prepare_test(download_folder, SENTENCE_TAG)
+        test_data = MIRNA.download_and_prepare_test(download_folder, sentence_separator)
         test_data = filter_and_map_entities(test_data, {"Diseases": DISEASE_TAG})
 
         return merge_datasets([train_data, test_data])
@@ -1483,8 +1521,12 @@ class HUNER_CELL_LINE_CLL(HunerDataset):
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         KaewphanCorpusHelper.download_cll_dataset(data_dir)
 
+        sentence_separator = " "
+        if isinstance(self.sentence_splitter, TagSentenceSplitter):
+            sentence_separator = self.sentence_splitter.tag
+
         nersuite_folder = data_dir / "CLL-1.0.2" / "nersuite"
-        orig_dataset = KaewphanCorpusHelper.read_dataset(nersuite_folder, SENTENCE_TAG)
+        orig_dataset = KaewphanCorpusHelper.read_dataset(nersuite_folder, sentence_separator)
 
         return filter_and_map_entities(orig_dataset, {"CL": CELL_LINE_TAG})
 
@@ -1556,11 +1598,15 @@ class HUNER_CELL_LINE_GELLUS(HunerDataset):
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         KaewphanCorpusHelper.download_gellus_dataset(data_dir)
 
+        sentence_separator = " "
+        if isinstance(self.sentence_splitter, TagSentenceSplitter):
+            sentence_separator = self.sentence_splitter.tag
+
         splits = []
         for folder in ["train", "devel", "test"]:
             nersuite_folder = data_dir / "GELLUS-1.0.3" / "nersuite" / folder
             splits.append(
-                KaewphanCorpusHelper.read_dataset(nersuite_folder, SENTENCE_TAG)
+                KaewphanCorpusHelper.read_dataset(nersuite_folder, sentence_separator)
             )
 
         full_dataset = merge_datasets(splits)
@@ -1899,7 +1945,7 @@ class HUNER_GENE_IEPA(HunerDataset):
         HUNER version of the IEPA corpus containing gene annotations.
     """
 
-    def __init__(self, *args, sentence_splitter=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2958,6 +3004,9 @@ class S800(ColumnCorpus):
 
 
 class HUNER_SPECIES_S800(HunerDataset):
+    """
+        HUNER version of the S800 corpus containing species annotations.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -3403,7 +3452,12 @@ class HUNER_GENE_FSU(HunerDataset):
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         corpus_dir = FSU.download_corpus(data_dir)
-        corpus = FSU.parse_corpus(corpus_dir, SENTENCE_TAG)
+
+        sentence_separator = " "
+        if isinstance(self.sentence_splitter, TagSentenceSplitter):
+            sentence_separator = self.sentence_splitter.tag
+
+        corpus = FSU.parse_corpus(corpus_dir, sentence_separator)
 
         entity_type_mapping = {
             "protein": GENE_TAG,
@@ -5382,18 +5436,25 @@ class HunerMultiCorpus(MultiCorpus):
         Base class to build the union of all HUNER data sets considering a particular entity type.
     """
 
-    def __init__(self, entity_type: str):
+    def __init__(self, entity_type: str, sentence_splitter: SentenceSplitter = None):
         self.entity_type = entity_type
 
         def entity_type_predicate(member):
             return f"HUNER_{entity_type}_" in str(member) and inspect.isclass(member)
 
-        self.huner_corpora = inspect.getmembers(
-            sys.modules[__name__], predicate=entity_type_predicate
-        )
-        self.huner_corpora = [
-            constructor_func() for name, constructor_func in self.huner_corpora
-        ]
+
+        self.huner_corpora_classes = inspect.getmembers(sys.modules[__name__], predicate=entity_type_predicate)
+        self.huner_corpora = []
+        for name, constructor_func in self.huner_corpora_classes:
+            try:
+                if not sentence_splitter:
+                    corpus = constructor_func()
+                else:
+                    corpus = constructor_func(sentence_splitter=sentence_splitter)
+
+                self.huner_corpora.append(corpus)
+            except:
+                print(f"Can't download and prepare corpus {name}:\n{sys.exc_info()[1]}\n\n")
 
         super(HunerMultiCorpus, self).__init__(
             corpora=self.huner_corpora, name=f"HUNER-{entity_type}"
@@ -5405,8 +5466,11 @@ class HUNER_CELL_LINE(HunerMultiCorpus):
         Union of all HUNER cell line data sets.
     """
 
-    def __init__(self):
-        super(HUNER_CELL_LINE, self).__init__("CELL_LINE")
+    def __init__(self, sentence_splitter: SentenceSplitter = None):
+        super(HUNER_CELL_LINE, self).__init__(
+            entity_type="CELL_LINE",
+            sentence_splitter=sentence_splitter
+        )
 
 
 class HUNER_CHEMICAL(HunerMultiCorpus):
@@ -5414,8 +5478,11 @@ class HUNER_CHEMICAL(HunerMultiCorpus):
         Union of all HUNER chemical data sets.
     """
 
-    def __init__(self):
-        super(HUNER_CHEMICAL, self).__init__("CHEMICAL")
+    def __init__(self, sentence_splitter: SentenceSplitter = None):
+        super(HUNER_CHEMICAL, self).__init__(
+            entity_type="CHEMICAL",
+            sentence_splitter=sentence_splitter
+        )
 
 
 class HUNER_DISEASE(HunerMultiCorpus):
@@ -5423,8 +5490,11 @@ class HUNER_DISEASE(HunerMultiCorpus):
         Union of all HUNER disease data sets.
     """
 
-    def __init__(self):
-        super(HUNER_DISEASE, self).__init__("DISEASE")
+    def __init__(self, sentence_splitter: SentenceSplitter = None):
+        super(HUNER_DISEASE, self).__init__(
+            entity_type="DISEASE",
+            sentence_splitter=sentence_splitter
+        )
 
 
 class HUNER_GENE(HunerMultiCorpus):
@@ -5432,8 +5502,11 @@ class HUNER_GENE(HunerMultiCorpus):
         Union of all HUNER gene data sets.
     """
 
-    def __init__(self):
-        super(HUNER_GENE, self).__init__("GENE")
+    def __init__(self, sentence_splitter: SentenceSplitter = None):
+        super(HUNER_GENE, self).__init__(
+            entity_type="GENE",
+            sentence_splitter=sentence_splitter
+        )
 
 
 class HUNER_SPECIES(HunerMultiCorpus):
@@ -5441,5 +5514,9 @@ class HUNER_SPECIES(HunerMultiCorpus):
         Union of all HUNER species data sets.
     """
 
-    def __init__(self):
-        super(HUNER_SPECIES, self).__init__("SPECIES")
+    def __init__(self, sentence_splitter: SentenceSplitter = None):
+        super(HUNER_SPECIES, self).__init__(
+            entity_type="SPECIES",
+            sentence_splitter=sentence_splitter
+        )
+

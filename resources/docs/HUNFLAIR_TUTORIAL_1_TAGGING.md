@@ -7,7 +7,7 @@ Let's use the pre-trained HunFlair model for biomedical named entity recognition
 This model was trained over 24 biomedical NER data sets and can recognize 5 different entity types,
 i.e. cell lines, chemicals, disease, gene / proteins and species.
 ```python
-from flair.models.sequence_tagger_model import MultiTagger
+from flair.models import MultiTagger
 
 tagger = MultiTagger.load("hunflair")
 ```
@@ -75,8 +75,8 @@ This can be unfavourable if applied to biomedical texts.
 HunFlair integrates [SciSpaCy](https://allenai.github.io/scispacy/), a library specially designed to work with scientific text. 
 To use the library we first have to install it and download one of it's models:
 ~~~
-pip install scispacy
-pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.4/en_core_sci_md-0.2.4.tar.gz
+pip install scispacy==0.2.5
+pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_core_sci_sm-0.2.5.tar.gz
 ~~~
 
 To use the tokenizer we just have to pass it as parameter to when instancing a sentence:

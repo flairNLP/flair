@@ -1,6 +1,9 @@
 import logging
+import sys
+
 from pathlib import Path
 from typing import List, Union, Optional, Dict
+from warnings import warn
 
 import numpy as np
 import torch
@@ -1252,6 +1255,15 @@ class MultiTagger:
         :param verbose: set to True to display a progress bar
         :param return_loss: set to True to return loss
         """
+        if any(["hunflair" in name for name in self.name_to_tagger.keys()]):
+            if "spacy" not in sys.modules:
+                warn(
+                    "We recommend to use SciSpaCy for tokenization and sentence splitting "
+                    "if HunFlair is applied to biomedical text, e.g.\n\n"
+                    "from flair.tokenization import SciSpacySentenceSplitter\n"
+                    "sentence = Sentence('Your biomed text', use_tokenizer=SciSpacySentenceSplitter())\n"
+                )
+
         if isinstance(sentences, Sentence):
             sentences = [sentences]
         for name, tagger in self.name_to_tagger.items():

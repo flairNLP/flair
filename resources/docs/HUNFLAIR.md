@@ -23,11 +23,11 @@ Then, in your favorite virtual environment, simply do:
 ```
 pip install flair
 ```
-You may also want to install [SciSpaCy](https://allenai.github.io/scispacy/) for improved pre-processing 
+Furthermore, we recommend to install [SciSpaCy](https://allenai.github.io/scispacy/) for improved pre-processing 
 and tokenization of scientific / biomedical texts:
  ```
-pip install scispacy
-pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.4/en_core_sci_md-0.2.4.tar.gz
+pip install scispacy==0.2.5
+pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_core_sci_sm-0.2.5.tar.gz
 ```
  
 #### Example Usage
@@ -35,10 +35,14 @@ Let's run named entity recognition (NER) over an example sentence. All you need 
 make a Sentence, load a pre-trained model and use it to predict tags for the sentence:
 ```python
 import flair
+from flair.tokenization import SciSpacyTokenizer
 
-sentence = flair.data.Sentence("Behavioral Abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome")
+sentence = flair.data.Sentence(
+    "Behavioral Abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome",
+    use_tokenizer=SciSpacyTokenizer()
+)
 
-tagger = flair.models.sequence_tagger_model.MultiTagger.load("hunflair")
+tagger = flair.models.MultiTagger.load("hunflair")
 tagger.predict(sentence)
 ```
 Done! The Sentence now has entity annotations. Let's print the entities found by the tagger:
