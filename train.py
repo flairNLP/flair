@@ -2,24 +2,18 @@ from typing import List
 
 import flair.datasets
 from flair.data import Corpus
-
-import flair
-flair.cache_root = 'hallo/'
-print(flair.cache_root)
-print(flair.device)
-flair.device = 'cpu'
-print(flair.device)
-import flair
-print(flair.device)
-print(flair.cache_root)
 from flair.embeddings import (
     TokenEmbeddings,
+    WordEmbeddings,
     StackedEmbeddings,
-    BytePairEmbeddings,
+    FlairEmbeddings,
+    CharacterEmbeddings,
 )
+from flair.training_utils import EvaluationMetric
+from flair.visual.training_curves import Plotter
 
 # 1. get the corpus
-corpus: Corpus = flair.datasets.UD_ENGLISH().downsample(0.01)
+corpus: Corpus = flair.datasets.UD_ENGLISH()
 print(corpus)
 
 # 2. what tag do we want to predict?
@@ -31,7 +25,14 @@ print(tag_dictionary.idx2item)
 
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
-    BytePairEmbeddings("en", cache_dir='different_cache/'),
+    WordEmbeddings("glove"),
+    # comment in this line to use character embeddings
+    # CharacterEmbeddings(),
+    # comment in these lines to use contextual string embeddings
+    #
+    # FlairEmbeddings('news-forward'),
+    #
+    # FlairEmbeddings('news-backward'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
@@ -53,9 +54,13 @@ from flair.trainers import ModelTrainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train(
-    "resources/taggers/bpe-test",
+    "resources/taggers/example-ner",
     learning_rate=0.1,
-    mini_batch_size=4,
-    max_epochs=10,
-    shuffle=True,
+    mini_batch_size=32,
+    max_epochs=20,
+    shuffle=False,
 )
+
+plotter = Plotter()
+plotter.plot_training_curves("resources/taggers/example-ner/loss.tsv")
+plotter.plot_weights("resources/taggers/example-ner/weights.txt")
