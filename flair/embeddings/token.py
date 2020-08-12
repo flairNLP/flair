@@ -1559,7 +1559,7 @@ class BytePairEmbeddings(TokenEmbeddings):
         language: str = None,
         dim: int = 50,
         syllables: int = 100000,
-        cache_dir=Path(flair.cache_root) / "embeddings",
+        cache_dir= None,
         model_file_path: Path = None,
         embedding_file_path: Path = None,
         **kwargs,
@@ -1567,6 +1567,8 @@ class BytePairEmbeddings(TokenEmbeddings):
         """
         Initializes BP embeddings. Constructor downloads required files if not there.
         """
+        if not cache_dir:
+            cache_dir = Path(flair.cache_root) / "embeddings"
         if language:
             self.name: str = f"bpe-{language}-{syllables}-{dim}"
         else:
@@ -1575,7 +1577,7 @@ class BytePairEmbeddings(TokenEmbeddings):
             ), "Need to specify model_file_path and embedding_file_path if no language is given in BytePairEmbeddings(...)"
             dim=None
 
-        self.embedder = BPEmb(
+        self.embedder = BPEmbSerializable(
             lang=language,
             vs=syllables,
             dim=dim,
