@@ -108,6 +108,57 @@ def unzip_file(file: Union[str, Path], unzip_to: Union[str, Path]):
         # Extract all the contents of zip file in current directory
         zipObj.extractall(Path(unzip_to))
 
+def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True):
+    """
+        Unpacks a file to the given location.
+
+        :param file Archive file to unpack
+        :param unpack_to Destination where to store the output
+        :param mode Type of the archive (zip, tar, gz, targz, rar)
+        :param keep Indicates whether to keep the archive after extraction or delete it
+    """
+    if mode == "zip" or (mode is None and str(file).endswith("zip")):
+        from zipfile import ZipFile
+
+        with ZipFile(file, "r") as zipObj:
+            # Extract all the contents of zip file in current directory
+            zipObj.extractall(unpack_to)
+
+    elif mode == "targz" or (
+            mode is None and str(file).endswith("tar.gz") or str(file).endswith("tgz")
+    ):
+        import tarfile
+
+        with tarfile.open(file, "r:gz") as tarObj:
+            tarObj.extractall(unpack_to)
+
+    elif mode == "tar" or (mode is None and str(file).endswith("tar")):
+        import tarfile
+
+        with tarfile.open(file, "r") as tarObj:
+            tarObj.extractall(unpack_to)
+
+    elif mode == "gz" or (mode is None and str(file).endswith("gz")):
+        import gzip
+
+        with gzip.open(str(file), "rb") as f_in:
+            with open(str(unpack_to), "wb") as f_out:
+                shutil.copyfileobj(f_in, f_out)
+
+    elif mode == "rar" or (mode is None and str(file).endswith("rar")):
+        import patoolib
+
+        patoolib.extract_archive(str(file), outdir=unpack_to, interactive=False)
+
+    else:
+        if mode is None:
+            raise AssertionError(f"Can't infer archive type from {file}")
+        else:
+            raise AssertionError(f"Unsupported mode {mode}")
+
+    if not keep:
+        os.remove(str(file))
+
 
 def download_file(url: str, cache_dir: Union[str, Path]):
     if type(cache_dir) is str:
@@ -161,7 +212,7 @@ def get_from_cache(url: str, cache_dir: Path = None) -> Path:
         return cache_path
 
     # make HEAD request to check ETag
-    response = requests.head(url, headers={"User-Agent": "Flair"})
+    response = requests.head(url, headers={"User-Agent": "Flair"}, allow_redirects=True)
     if response.status_code != 200:
         raise IOError(
             f"HEAD request failed for url {url} with status code {response.status_code}."

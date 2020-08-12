@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Union, List
+from typing import Union, List, Dict
 from torch.nn import ParameterList, Parameter
 
 import torch
@@ -7,7 +7,6 @@ import logging
 
 import flair
 from flair.data import Sentence, Image
-
 
 log = logging.getLogger("flair")
 
@@ -72,6 +71,9 @@ class Embeddings(torch.nn.Module):
         this embedding. But in some cases, the embedding is made up by different embeddings (StackedEmbedding).
         Then, the list contains the names of all embeddings in the stack."""
         return [self.name]
+
+    def get_named_embeddings_dict(self) -> Dict:
+        return {self.name: self}
 
 
 class ScalarMix(torch.nn.Module):
