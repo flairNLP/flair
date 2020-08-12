@@ -1298,7 +1298,7 @@ class MultiTagger:
                 "hunflair-paper-gene",
                 "hunflair-paper-species",
             ]
-        elif model_names == "hunflair":
+        elif model_names == "hunflair" or model_names == "bioner":
             model_names = [
                 "hunflair-cellline",
                 "hunflair-chemical",
