@@ -50,6 +50,6 @@ trainer.train(
     "resources/taggers/bpe-test",
     learning_rate=0.1,
     mini_batch_size=4,
-    max_epochs=20,
+    max_epochs=10,
     shuffle=True,
 )
