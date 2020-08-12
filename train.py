@@ -2,15 +2,21 @@ from typing import List
 
 import flair.datasets
 from flair.data import Corpus
+
+import flair
+flair.cache_root = 'hallo/'
+print(flair.cache_root)
+print(flair.device)
+flair.device = 'cpu'
+print(flair.device)
+import flair
+print(flair.device)
+print(flair.cache_root)
 from flair.embeddings import (
     TokenEmbeddings,
-    WordEmbeddings,
     StackedEmbeddings,
-    FlairEmbeddings,
-    CharacterEmbeddings, BytePairEmbeddings,
+    BytePairEmbeddings,
 )
-from flair.training_utils import EvaluationMetric
-from flair.visual.training_curves import Plotter
 
 # 1. get the corpus
 corpus: Corpus = flair.datasets.UD_ENGLISH().downsample(0.01)
@@ -25,7 +31,7 @@ print(tag_dictionary.idx2item)
 
 # initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
-    BytePairEmbeddings("en"),
+    BytePairEmbeddings("en", cache_dir='different_cache/'),
 ]
 
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
