@@ -1151,30 +1151,36 @@ class SequenceTagger(flair.nn.Model):
             [hu_path, "negation-speculation-EN-bioflair", "negation-speculation-model.pt"]
         )
 
-        model_map["hunflair-cellline"] = "/".join(
-            [
-                hu_path,
-                "hunflair_smallish_models",
-                "cellline",
-                "hunflair-celline-v1.0.pt",
-            ]
+        model_map["hunflair-paper-cellline"] = "/".join(
+            [hu_path, "hunflair_smallish_models", "cellline", "hunflair-celline-v1.0.pt"]
         )
-        model_map["hunflair-chemical"] = "/".join(
-            [
-                hu_path,
-                "hunflair_smallish_models",
-                "chemical",
-                "hunflair-chemical-v1.0.pt",
-            ]
+        model_map["hunflair-paper-chemical"] = "/".join(
+            [hu_path, "hunflair_smallish_models", "chemical", "hunflair-chemical-v1.0.pt"]
         )
-        model_map["hunflair-disease"] = "/".join(
+        model_map["hunflair-paper-disease"] = "/".join(
             [hu_path, "hunflair_smallish_models", "disease", "hunflair-disease-v1.0.pt"]
         )
-        model_map["hunflair-gene"] = "/".join(
+        model_map["hunflair-paper-gene"] = "/".join(
             [hu_path, "hunflair_smallish_models", "gene", "hunflair-gene-v1.0.pt"]
         )
-        model_map["hunflair-species"] = "/".join(
+        model_map["hunflair-paper-species"] = "/".join(
             [hu_path, "hunflair_smallish_models", "species", "hunflair-species-v1.0.pt"]
+        )
+
+        model_map["hunflair-cellline"] = "/".join(
+            [hu_path, "hunflair_smallish_models", "cellline", "hunflair-celline-v1.0.pt"]
+        )
+        model_map["hunflair-chemical"] = "/".join(
+            [hu_path, "hunflair_allcorpus_models", "huner-chemical", "hunflair-chemical-full-v1.0.pt"]
+        )
+        model_map["hunflair-disease"] = "/".join(
+            [hu_path, "hunflair_allcorpus_models", "huner-disease", "hunflair-disease-full-v1.0.pt"]
+        )
+        model_map["hunflair-gene"] = "/".join(
+            [hu_path, "hunflair_allcorpus_models", "huner-gene", "hunflair-gene-full-v1.0.pt"]
+        )
+        model_map["hunflair-species"] = "/".join(
+            [hu_path, "hunflair_allcorpus_models", "huner-species", "hunflair-species-full-v1.1.pt"]
         )
 
         cache_dir = Path("models")
@@ -1284,7 +1290,15 @@ class MultiTagger:
 
     @classmethod
     def load(cls, model_names: Union[List[str], str]):
-        if model_names == "hunflair":
+        if model_names == "hunflair-paper":
+            model_names = [
+                "hunflair-paper-cellline",
+                "hunflair-paper-chemical",
+                "hunflair-paper-disease",
+                "hunflair-paper-gene",
+                "hunflair-paper-species",
+            ]
+        elif model_names == "hunflair":
             model_names = [
                 "hunflair-cellline",
                 "hunflair-chemical",
