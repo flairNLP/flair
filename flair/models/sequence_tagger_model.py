@@ -1282,7 +1282,6 @@ class MultiTagger:
                 return_loss=return_loss,
                 embedding_storage_mode="cpu",
             )
-            print(sentences)
 
         # clear embeddings after predicting
         for sentence in sentences:
