@@ -36,12 +36,16 @@ from flair.data import Sentence
 from flair.models import MultiTagger
 from flair.tokenization import SciSpacyTokenizer
 
+# make a sentence (tokenize with SciSpaCy)
 sentence = Sentence(
     "Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome",
     use_tokenizer=SciSpacyTokenizer()
 )
 
+# load biomedical tagger
 tagger = MultiTagger.load("hunflair")
+
+# tag sentence
 tagger.predict(sentence)
 ```
 Done! The Sentence now has entity annotations. Let's print the entities found by the tagger:
