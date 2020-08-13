@@ -76,6 +76,8 @@ Sometimes you want to predict several types of annotation at once, for instance 
 For this, you can use our new `MultiTagger` object, like this: 
 
 ```python
+from flair.models import MultiTagger
+
 # load tagger for POS and NER 
 tagger = MultiTagger.load(['pos', 'ner'])
 
@@ -273,17 +275,20 @@ list of `Sentence` objects to the `.predict()` method.
 For instance, you can use the sentence splitter of segtok to split your text:
 
 ```python
+from flair.models import SequenceTagger
+from flair.tokenization import SegtokSentenceSplitter
 
-# your text of many sentences
+# example text with many sentences
 text = "This is a sentence. This is another sentence. I love Berlin."
 
-# use a library to split into sentences
-from segtok.segmenter import split_single
+# initialize sentence splitter
+splitter = SegtokSentenceSplitter()
 
-sentences = [Sentence(sent, use_tokenizer=True) for sent in split_single(text)]
+# use splitter to split text into list of sentences
+sentences = splitter.split(text)
 
-# predict tags for list of sentences
-tagger: SequenceTagger = SequenceTagger.load('ner')
+# predict tags for sentences
+tagger = SequenceTagger.load('ner')
 tagger.predict(sentences)
 
 # iterate through sentences and print predicted labels
