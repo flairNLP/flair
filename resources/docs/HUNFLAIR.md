@@ -6,8 +6,6 @@ builds on pretrained domain-specific language models and outperforms other biome
 NER tools on unseen corpora. Furthermore, it contains harmonized versions of [31 biomedical 
 NER data sets](HUNFLAIR_CORPORA.md).
 
-
-
 <b>Content:</b> 
 [Quick Start](#quick-start) | 
 [BioNER-Tool Comparison](#comparison-to-other-biomedical-ner-tools) |
@@ -34,15 +32,16 @@ pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/e
 Let's run named entity recognition (NER) over an example sentence. All you need to do is 
 make a Sentence, load a pre-trained model and use it to predict tags for the sentence:
 ```python
-import flair
+from flair.data import Sentence
+from flair.models import MultiTagger
 from flair.tokenization import SciSpacyTokenizer
 
-sentence = flair.data.Sentence(
-    "Behavioral Abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome",
+sentence = Sentence(
+    "Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome",
     use_tokenizer=SciSpacyTokenizer()
 )
 
-tagger = flair.models.MultiTagger.load("hunflair")
+tagger = MultiTagger.load("hunflair")
 tagger.predict(sentence)
 ```
 Done! The Sentence now has entity annotations. Let's print the entities found by the tagger:
@@ -85,7 +84,6 @@ of the gold standard data. We allow a shift by max one character.</sub>
 [tmChem](https://www.ncbi.nlm.nih.gov/research/bionlp/Tools/tmchem/) for Chemical, 
 [GNormPus](https://www.ncbi.nlm.nih.gov/research/bionlp/Tools/gnormplus/) for Gene and Species, and 
 [DNorm](https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/tmTools/DNorm.html) for Disease
-
 
 Here's how to [reproduce these numbers](XXX) using Flair. You can also find detailed evaluations and discussions in our paper.
 
