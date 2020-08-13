@@ -180,6 +180,10 @@ data the first time you call the corresponding constructor ID. The following dat
 | 'WIKINER_POLISH' | Polish  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
 | 'WIKINER_RUSSIAN'  | Russian  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
 
+#### Biomedical Named Entity Recognition
+
+We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
+
 #### Universal Dependency Treebanks
 
 | ID(s) | Languages | Description |
