@@ -821,7 +821,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         batch_size: int = 1,
         use_scalar_mix: bool = False,
         fine_tune: bool = False,
-        allow_long_sentences: bool = False,
+        allow_long_sentences: bool = True,
         **kwargs
     ):
         """
@@ -854,7 +854,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             self.max_subtokens_sequence_length = self.tokenizer.model_max_length
             self.stride = self.tokenizer.model_max_length//2
         else:
-            self.max_subtokens_sequence_length = None
+            self.max_subtokens_sequence_length = self.tokenizer.model_max_length
             self.stride = 0
 
         # model name
