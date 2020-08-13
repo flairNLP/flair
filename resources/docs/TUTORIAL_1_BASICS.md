@@ -93,10 +93,10 @@ from flair.tokenization import JapaneseTokenizer
 tokenizer = JapaneseTokenizer("janome")
 
 # make sentence (and tokenize)
-sentence = Sentence("私はベルリンが好き", use_tokenizer=tokenizer)
+japanese_sentence = Sentence("私はベルリンが好き", use_tokenizer=tokenizer)
 
 # output tokenized sentence
-print(sentence)
+print(japanese_sentence)
 ```
 
 This should print:
