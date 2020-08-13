@@ -1362,10 +1362,3 @@ class MultiTagger:
             models.append(model)
 
         return cls(taggers)
-
-    def get_all_spans(self, sentence: Sentence):
-        spans = []
-        for name in self.name_to_tagger:
-            spans.extend(sentence.get_spans(name))
-
-        return spans

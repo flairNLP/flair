@@ -614,9 +614,7 @@ class Sentence(DataPoint):
             label_names.append(label.value)
         return label_names
 
-    def get_spans(self, label_type: str, min_score=-1) -> List[Span]:
-
-        spans: List[Span] = []
+    def _add_spans_internal(self, spans: List[Span], label_type: str, min_score):
 
         current_span = []
 
@@ -686,6 +684,24 @@ class Sentence(DataPoint):
                     score=span_score)
                 spans.append(span)
 
+        return spans
+
+    def get_spans(self, label_type: Optional[str] = None, min_score=-1) -> List[Span]:
+
+        spans: List[Span] = []
+
+        # if label type is explicitly specified, get spans for this label type
+        if label_type:
+            return self._add_spans_internal(spans, label_type, min_score)
+
+        # else determine all label types in sentence and get all spans
+        label_types = []
+        for token in self:
+            for annotation in token.annotation_layers.keys():
+                if annotation not in label_types: label_types.append(annotation)
+
+        for label_type in label_types:
+            self._add_spans_internal(spans, label_type, min_score)
         return spans
 
     @property
