@@ -47,7 +47,7 @@ tagger.predict(sentence)
 ```
 Done! The Sentence now has entity annotations. Let's print the entities found by the tagger:
 ```python
-for entity in tagger.get_all_spans(sentence):
+for entity in sentence.get_spans():
     print(entity)
 ```
 This should print:

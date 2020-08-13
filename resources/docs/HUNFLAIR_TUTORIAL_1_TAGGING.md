@@ -16,7 +16,7 @@ This will add predicted tags to the tokens in the sentence. Lets use a sentence 
 ```python
 from flair.data import Sentence
 
-sentence = Sentence("Behavioral Abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome")
+sentence = Sentence("Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome")
 
 # predict NER tags
 tagger.predict(sentence)
@@ -83,7 +83,7 @@ To use the tokenizer we just have to pass it as parameter to when instancing a s
 ```python
 from flair.tokenization import SciSpacyTokenizer
 
-sentence = Sentence("Behavioral Abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome",  
+sentence = Sentence("Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome",  
                     use_tokenizer=SciSpacyTokenizer())
 ```
 
