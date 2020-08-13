@@ -14,10 +14,7 @@ Flair is:
 
 * **A powerful NLP library.** Flair allows you to apply our state-of-the-art natural language processing (NLP)
 models to your text, such as named entity recognition (NER), part-of-speech tagging (PoS),
- sense disambiguation and classification, with support for many languages. 
- 
-* **Multilingual.** Thanks to the Flair community, we support a rapidly growing number of languages. We also now include
-'*one model, many languages*' taggers, i.e. single models that predict PoS or NER tags for input text in various languages.
+ sense disambiguation and classification, with support for a rapidly growing number of languages. 
  
 * **A biomedical NER library.** Flair has special support for [biomedical data](/resources/docs/HUNFLAIR.md) with 
 state-of-the-art models for biomedical NER and support for over 32 biomedical datasets.
