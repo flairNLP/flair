@@ -68,7 +68,7 @@ corpus like this:
 
 ```python
 import flair.datasets
-downsampled_corpus = flair.datasets.UD_ENGLISH()
+corpus = flair.datasets.UD_ENGLISH()
 ```
 
 then you can downsample the corpus, simply like this:
