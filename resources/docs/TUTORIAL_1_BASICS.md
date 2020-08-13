@@ -72,10 +72,10 @@ when instantiating your `Sentence` with an untokenized string:
 from flair.data import Sentence
 
 # Make a sentence object by passing an untokenized string and the 'use_tokenizer' flag
-sentence = Sentence('The grass is green.', use_tokenizer=False)
+untokenized_sentence = Sentence('The grass is green.', use_tokenizer=False)
 
 # Print the object to see what's in there
-print(sentence)
+print(untokenized_sentence)
 ```
 
 In this case, no tokenization is performed and the text is split on whitespaces, thus resulting in only 4 tokens here. 
