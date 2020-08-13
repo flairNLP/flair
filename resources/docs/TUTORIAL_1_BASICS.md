@@ -13,8 +13,8 @@ Let's start by making a `Sentence` object for an example sentence.
 # The sentence objects holds a sentence that we may want to embed or tag
 from flair.data import Sentence
 
-# Make a sentence object by passing a whitespace tokenized string
-sentence = Sentence('The grass is green .')
+# Make a sentence object by passing a string
+sentence = Sentence('The grass is green.')
 
 # Print the object to see what's in there
 print(sentence)
@@ -62,44 +62,52 @@ Token: 5 .
 
 ## Tokenization
 
-In some use cases, you might not have your text already tokenized. For this case, we added a simple tokenizer using the
+When you create a `Sentence` as above, the text is automatically tokenized using the
 lightweight [segtok library](https://pypi.org/project/segtok/). 
 
-If you want to use this tokenizer, simply set the `use_tokenizer` flag when instantiating your `Sentence` with an untokenized string:
+If you *do not* want to use this tokenizer, simply set the `use_tokenizer` flag to `False`
+when instantiating your `Sentence` with an untokenized string:
 
 ```python
 from flair.data import Sentence
 
 # Make a sentence object by passing an untokenized string and the 'use_tokenizer' flag
-sentence = Sentence('The grass is green.', use_tokenizer=True)
+sentence = Sentence('The grass is green.', use_tokenizer=False)
 
 # Print the object to see what's in there
 print(sentence)
 ```
 
+In this case, no tokenization is performed and the text is split on whitespaces, thus resulting in only 4 tokens here. 
 
-### Adding Custom Tokenizers
+### Using a Different Tokenizer
 
-You can also pass custom tokenizers to the initialization method. Instead of passing a boolean `True` value to the `use_tokenizer` parameter, you can pass an implementation of `Tokenizer` class, like this:
+You can also pass custom tokenizers to the initialization method. For instance, if you want to tokenize a Japanese
+sentence you can use the 'janome' tokenizer instead, like this: 
 
 ```python
 from flair.data import Sentence
-from flair.tokenization import SegtokTokenizer
+from flair.tokenization import JapaneseTokenizer
 
-# Make a sentence object by passing an untokenized string and a tokenizer
-sentence = Sentence('The grass is green.', use_tokenizer=SegtokTokenizer())
+# init japanese tokenizer
+tokenizer = JapaneseTokenizer("janome")
 
-# Print the object to see what's in there
+# make sentence (and tokenize)
+sentence = Sentence("私はベルリンが好き", use_tokenizer=tokenizer)
+
+# output tokenized sentence
 print(sentence)
 ```
 
 This should print:
 
 ```console
-Sentence: "The grass is green ." - 5 Tokens
+Sentence: "私 は ベルリン が 好き"   [− Tokens: 5]
 ```
 
-The second way allows you to write your own tokenization routine. Check the code of `flair.data.Tokenizer` and it's implementations (e.g. `flair.tokenization.SegtokTokenizer` or `flair.tokenization.SpacyTokenizer`) to have an idea of how to add your own tokenization.  
+You can write your own tokenization routine. Check the code of `flair.data.Tokenizer` and its implementations
+ (e.g. `flair.tokenization.SegtokTokenizer` or `flair.tokenization.SpacyTokenizer`) to get an idea of how to add 
+ your own tokenization method.  
 
 ## Adding Labels
 
