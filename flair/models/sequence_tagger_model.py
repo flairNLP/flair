@@ -1282,6 +1282,7 @@ class MultiTagger:
                 return_loss=return_loss,
                 embedding_storage_mode="cpu",
             )
+            print(sentences)
 
         # clear embeddings after predicting
         for sentence in sentences:
@@ -1321,8 +1322,13 @@ class MultiTagger:
             # if the model uses StackedEmbedding, make a new stack with previous objects
             if type(model.embeddings) == StackedEmbeddings:
 
+                # sort embeddings by key alphabetically
                 new_stack = []
-                for embedding in model.embeddings.embeddings:
+                d = model.embeddings.get_named_embeddings_dict()
+                import collections
+                od = collections.OrderedDict(sorted(d.items()))
+
+                for k, embedding in od.items():
 
                     # check previous embeddings and add if found
                     embedding_found = False
