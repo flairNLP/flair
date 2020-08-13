@@ -72,7 +72,7 @@ This should print:
 
 ### Multi-Tagging 
 
-Sometimes you want to predict several types of annotation at once, for instance NER and part-of-speech (POS) tagging. 
+Sometimes you want to predict several types of annotation at once, for instance NER and part-of-speech (POS) tags. 
 For this, you can use our new `MultiTagger` object, like this: 
 
 ```python
