@@ -53,7 +53,7 @@ def test_create_sentence_on_empty_string():
 
 
 def test_create_sentence_without_tokenizer():
-    sentence: Sentence = Sentence("I love Berlin.")
+    sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=False)
 
     assert 3 == len(sentence.tokens)
     assert 0 == sentence.tokens[0].start_pos

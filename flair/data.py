@@ -529,7 +529,7 @@ class Sentence(DataPoint):
     def __init__(
         self,
         text: str = None,
-        use_tokenizer: Union[bool, Tokenizer] = False,
+        use_tokenizer: Union[bool, Tokenizer] = True,
         language_code: str = None,
         start_position: int = None
     ):
