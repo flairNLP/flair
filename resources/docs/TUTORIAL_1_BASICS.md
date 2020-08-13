@@ -241,6 +241,7 @@ This should print:
 France is the current world cup winner.
  - classified as "sports" with score 1.0
  - classified as "soccer" with score 1.0
+ - classified as "English" with score 1.0
 ```
 
 If you are interested only in the labels of one layer of annotation, you can access them like this: 
