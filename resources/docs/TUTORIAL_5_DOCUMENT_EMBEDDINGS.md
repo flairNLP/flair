@@ -144,8 +144,7 @@ embedding.embed(sentence)
 You can find a full list of their pretained models [here](https://docs.google.com/spreadsheets/d/14QplCdTCDwEmTqrn1LH4yrbKvdogK4oQvYO1K1aPR5M/edit#gid=0).
 
 **Note**: To use this embedding, you need to install `sentence-transformers` 
-with `pip install sentence-transformers`. This library currently requires an older version of `transformers`, 
-so installing it will uninstall the latest `transformers`, causing other transformer embeddings to break.
+with `pip install sentence-transformers`. 
 
 ## Next
 
