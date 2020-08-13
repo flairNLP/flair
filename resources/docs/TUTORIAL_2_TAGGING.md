@@ -69,6 +69,27 @@ This should print:
     ]}
 ```
 
+
+### Multi-Tagging 
+
+Sometimes you want to predict several types of annotation at once, for instance NER and part-of-speech (POS) tagging. 
+For this, you can use our new `MultiTagger` object, like this: 
+
+```python
+# load tagger for POS and NER 
+tagger = MultiTagger.load(['pos', 'ner'])
+
+# make example sentence
+sentence = Sentence("George Washington went to Washington.")
+
+# predict with both models
+tagger.predict(sentence)
+
+print(sentence)
+``` 
+
+The sentence now has two types of annotation: POS and NER. 
+
 ### List of Pre-Trained Sequence Tagger Models
 
 You choose which pre-trained model you load by passing the appropriate
