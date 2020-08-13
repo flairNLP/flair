@@ -103,11 +103,13 @@ Again we can apply the integration of the [SciSpaCy](https://allenai.github.io/s
 ```python
 from flair.tokenization import SciSpacySentenceSplitter
 
-# Split the text into sentences
+# initialize the sentence splitter
 splitter = SciSpacySentenceSplitter()
+
+# split text into a list of Sentence objects
 sentences = splitter.split(abstract)
 
-# Apply HunFlair to each sentence
+# you can apply the HunFlair tagger directly to this list
 tagger.predict(sentences)
 ```
 We can access the annotations of the single sentences by just iterating over the list:
