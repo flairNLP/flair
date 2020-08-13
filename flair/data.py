@@ -771,6 +771,8 @@ class Sentence(DataPoint):
 
                 if token.get_labels(label_type)[0].value == "O":
                     continue
+                if token.get_labels(label_type)[0].value == "_":
+                    continue
 
                 tags.append(token.get_labels(label_type)[0].value)
             all_tags = "<" + "/".join(tags) + ">"
