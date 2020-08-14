@@ -117,52 +117,38 @@ class WordEmbeddings(TokenEmbeddings):
         """
         self.embeddings = embeddings
 
-        old_base_path = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/"
-        )
-        base_path = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/"
-        )
-        embeddings_path_v4 = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/"
-        )
+        old_base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/"
+        base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/"
+        embeddings_path_v4 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/"
         embeddings_path_v4_1 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/"
+        hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/"
 
         cache_dir = Path("embeddings")
 
         # GLOVE embeddings
         if embeddings.lower() == "glove" or embeddings.lower() == "en-glove":
             cached_path(f"{old_base_path}glove.gensim.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(
-                f"{old_base_path}glove.gensim", cache_dir=cache_dir
-            )
+            embeddings = cached_path(f"{old_base_path}glove.gensim", cache_dir=cache_dir)
 
         # TURIAN embeddings
         elif embeddings.lower() == "turian" or embeddings.lower() == "en-turian":
-            cached_path(
-                f"{embeddings_path_v4_1}turian.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{embeddings_path_v4_1}turian", cache_dir=cache_dir
-            )
+            cached_path(f"{embeddings_path_v4_1}turian.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{embeddings_path_v4_1}turian", cache_dir=cache_dir)
 
         # KOMNINOS embeddings
         elif embeddings.lower() == "extvec" or embeddings.lower() == "en-extvec":
-            cached_path(
-                f"{old_base_path}extvec.gensim.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{old_base_path}extvec.gensim", cache_dir=cache_dir
-            )
+            cached_path(f"{old_base_path}extvec.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{old_base_path}extvec.gensim", cache_dir=cache_dir)
+
+        # pubmed embeddings
+        elif embeddings.lower() == "pubmed" or embeddings.lower() == "en-pubmed":
+            cached_path(f"{hu_path}pubmed_pmc_wiki_sg_1M.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}pubmed_pmc_wiki_sg_1M.gensim", cache_dir=cache_dir)
 
         # FT-CRAWL embeddings
         elif embeddings.lower() == "crawl" or embeddings.lower() == "en-crawl":
-            cached_path(
-                f"{base_path}en-fasttext-crawl-300d-1M.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{base_path}en-fasttext-crawl-300d-1M", cache_dir=cache_dir
-            )
+            cached_path(f"{base_path}en-fasttext-crawl-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{base_path}en-fasttext-crawl-300d-1M", cache_dir=cache_dir)
 
         # FT-CRAWL embeddings
         elif (
@@ -170,21 +156,13 @@ class WordEmbeddings(TokenEmbeddings):
             or embeddings.lower() == "en-news"
             or embeddings.lower() == "en"
         ):
-            cached_path(
-                f"{base_path}en-fasttext-news-300d-1M.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{base_path}en-fasttext-news-300d-1M", cache_dir=cache_dir
-            )
+            cached_path(f"{base_path}en-fasttext-news-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{base_path}en-fasttext-news-300d-1M", cache_dir=cache_dir)
 
         # twitter embeddings
         elif embeddings.lower() == "twitter" or embeddings.lower() == "en-twitter":
-            cached_path(
-                f"{old_base_path}twitter.gensim.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{old_base_path}twitter.gensim", cache_dir=cache_dir
-            )
+            cached_path(f"{old_base_path}twitter.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{old_base_path}twitter.gensim", cache_dir=cache_dir)
 
         # two-letter language code wiki embeddings
         elif len(embeddings.lower()) == 2:
@@ -540,8 +518,10 @@ class FlairEmbeddings(TokenEmbeddings):
             "pt-forward": f"{aws_path}/embeddings-v0.4/lm-pt-forward.pt",
             "pt-backward": f"{aws_path}/embeddings-v0.4/lm-pt-backward.pt",
             # Pubmed
-            "pubmed-forward": f"{aws_path}/embeddings-v0.4.1/pubmed-2015-fw-lm.pt",
-            "pubmed-backward": f"{aws_path}/embeddings-v0.4.1/pubmed-2015-bw-lm.pt",
+            "pubmed-forward": f"{hu_path}/embeddings/pm_pmc-forward/pubmed-forward.pt",
+            "pubmed-backward": f"{hu_path}/embeddings/pm_pmc-backward/pubmed-backward.pt",
+            "pubmed-2015-forward": f"{aws_path}/embeddings-v0.4.1/pubmed-2015-fw-lm.pt",
+            "pubmed-2015-backward": f"{aws_path}/embeddings-v0.4.1/pubmed-2015-bw-lm.pt",
             # Slovenian
             "sl-forward": f"{aws_path}/embeddings-stefan-it/lm-sl-opus-large-forward-v0.1.pt",
             "sl-backward": f"{aws_path}/embeddings-stefan-it/lm-sl-opus-large-backward-v0.1.pt",
