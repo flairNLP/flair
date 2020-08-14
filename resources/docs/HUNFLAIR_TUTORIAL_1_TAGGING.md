@@ -1,9 +1,9 @@
 # HunFlair Tutorial 1: Tagging
 
-This is part 1 of the tutorial, in which we show how to use our pre-trained HunFlair models to tag your text.
+This is part 1 of the tutorial, in which we show how to use our pre-trained *HunFlair* models to tag your text.
 
 ### Tagging with Pre-trained HunFlair-Models
-Let's use the pre-trained HunFlair model for biomedical named entity recognition (NER). 
+Let's use the pre-trained *HunFlair* model for biomedical named entity recognition (NER). 
 This model was trained over 24 biomedical NER data sets and can recognize 5 different entity types,
 i.e. cell lines, chemicals, disease, gene / proteins and species.
 ```python
@@ -88,7 +88,7 @@ Tokenization, i.e. separating a text into tokens / words, is an important issue 
 in general and biomedical text mining in particular. So far, we used a tokenizer for general domain text. 
 This can be unfavourable if applied to biomedical texts. 
 
-HunFlair integrates [SciSpaCy](https://allenai.github.io/scispacy/), a library specially designed to work with scientific text. 
+*HunFlair* integrates [SciSpaCy](https://allenai.github.io/scispacy/), a library specially designed to work with scientific text. 
 To use the library we first have to install it and download one of it's models:
 ~~~
 pip install scispacy==0.2.5

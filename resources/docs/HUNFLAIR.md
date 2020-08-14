@@ -1,7 +1,7 @@
 # HunFlair
 
-<i>HunFlair</i> is a state-of-the-art NER tagger for biomedical texts. It comes with 
-models for genes/proteins, chemicals, diseases, species and cell lines. <i>HunFlair</i> 
+*HunFlair* is a state-of-the-art NER tagger for biomedical texts. It comes with 
+models for genes/proteins, chemicals, diseases, species and cell lines. *HunFlair* 
 builds on pretrained domain-specific language models and outperforms other biomedical 
 NER tools on unseen corpora. Furthermore, it contains harmonized versions of [31 biomedical 
 NER data sets](HUNFLAIR_CORPORA.md).
@@ -15,7 +15,7 @@ NER data sets](HUNFLAIR_CORPORA.md).
 ## Quick Start
 
 #### Requirements and Installation
-<i>HunFlair</i> is based on Flair 0.6+ and Python 3.6+. 
+*HunFlair* is based on Flair 0.6+ and Python 3.6+. 
 If you do not have Python 3.6, install it first. [Here is how for Ubuntu 16.04](https://vsupalov.com/developing-with-python3-6-on-ubuntu-16-04/).
 Then, in your favorite virtual environment, simply do:
 ```
@@ -61,11 +61,11 @@ Span [7]: "Mouse"   [− Labels: Species (0.9979)]
 
 ## Comparison to other biomedical NER tools
 Tools for biomedical NER are typically trained and evaluated on rather small gold standard data sets. 
-However, they are applied "in the wild", i.e., to a much larger collection of texts, often varying in 
+However, they are applied "in the wild" to a much larger collection of texts, often varying in 
 topic, entity distribution, genre (e.g. patents vs. scientific articles) and text type (e.g. abstract 
 vs. full text), which can lead to severe drops in performance.
 
-<i>HunFlair</i> outperforms other biomedical NER tools on corpora not used for training of neither HunFlair
+*HunFlair* outperforms other biomedical NER tools on corpora not used for training of neither *HunFlair*
 or any of the competitor tools.
 
 | Corpus         | Entity Type  | Misc<sup><sub>[1](#f1)</sub></sup>   | SciSpaCy | HUNER | HunFlair | 
@@ -89,14 +89,14 @@ of the gold standard data. We allow a shift by max one character.</sub>
 </sub>
 
 Here's how to [reproduce these numbers](https://github.com/hu-ner/hunflair-experiments) using Flair. 
-You can also find detailed evaluations and discussions in our paper.
+You can find detailed evaluations and discussions in [our paper](http://arxiv.org/abs/XXX).
 
 ## Tutorials
-We provide a set of quick tutorials to get you started with HunFlair:
+We provide a set of quick tutorials to get you started with *HunFlair*:
 * [Tutorial 1: Tagging](HUNFLAIR_TUTORIAL_1_TAGGING.md)
 
 ## Citing HunFlair
-Please cite the following paper when using HunFlair:
+Please cite the following paper when using *HunFlair*:
 ~~~
 @article{weber2020hunflair,
   author    = {Weber, Leon and S{\"a}nger, Mario and M{\"u}nchmeyer, Jannes and Habibi, Maryam and Leser, Ulf and Akbik, Alan},

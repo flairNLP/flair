@@ -4,7 +4,7 @@ Here you can find an overview about biomedical NER data sets integrated in *HunF
 __Content:__ [Overview](#overview) | [HUNER Data Sets](#huner-data-sets) | [BioBERT Evaluation Splits](#biobert-evaluation-splits)
 
 ## Overview
-HunFlair integrates 31 biomedical named entity recognition (NER) data sets and provides 
+*HunFlair* integrates 31 biomedical named entity recognition (NER) data sets and provides 
 them in an unified format to foster the development and evaluation of new NER models. All
 data set implementations can be found in `flair.datasets.biomedical`.
 
