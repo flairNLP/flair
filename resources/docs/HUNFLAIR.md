@@ -4,7 +4,9 @@
 models for genes/proteins, chemicals, diseases, species and cell lines. *HunFlair* 
 builds on pretrained domain-specific language models and outperforms other biomedical 
 NER tools on unseen corpora. Furthermore, it contains harmonized versions of [31 biomedical 
-NER data sets](HUNFLAIR_CORPORA.md).
+NER data sets](HUNFLAIR_CORPORA.md) and comes with a Flair language model ("pubmed-X") and
+FastText embeddings ("pubmed") that were trained on roughly 3 million full texts and about
+25 million abstracts from the biomedical domain.
 
 <b>Content:</b> 
 [Quick Start](#quick-start) | 
