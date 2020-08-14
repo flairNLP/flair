@@ -94,6 +94,7 @@ You can find detailed evaluations and discussions in [our paper](http://arxiv.or
 ## Tutorials
 We provide a set of quick tutorials to get you started with *HunFlair*:
 * [Tutorial 1: Tagging](HUNFLAIR_TUTORIAL_1_TAGGING.md)
+* [Tutorial 2: Training biomedical NER models](HUNFLAIR_TUTORIAL_2_TRAINING.md)
 
 ## Citing HunFlair
 Please cite the following paper when using *HunFlair*:
