@@ -53,10 +53,10 @@ for entity in sentence.get_spans():
 ```
 This should print:
 ~~~
-Span [5]: "Fmr1"   [− Labels: Gene (0.6896)]
-Span [1,2]: "Behavioral Abnormalities"   [− Labels: Disease (0.706)]
-Span [10,11,12]: "Fragile X Syndrome"   [− Labels: Disease (0.9863)]
-Span [7]: "Mouse"   [− Labels: Species (0.9517)]
+Span [1,2]: "Behavioral abnormalities"   [− Labels: Disease (0.6736)]
+Span [10,11,12]: "Fragile X Syndrome"   [− Labels: Disease (0.99)]
+Span [5]: "Fmr1"   [− Labels: Gene (0.838)]
+Span [7]: "Mouse"   [− Labels: Species (0.9979)]
 ~~~
 
 ## Comparison to other biomedical NER tools
@@ -82,12 +82,14 @@ or any of the competitor tools.
 <sub>All results are F1 scores using partial matching of predicted text offsets with the original char offsets 
 of the gold standard data. We allow a shift by max one character.</sub>
 
-<a name="f1">1</a>:  Misc displays the results of multiple taggers: 
+<sub><a name="f1">1</a>:  Misc displays the results of multiple taggers: 
 [tmChem](https://www.ncbi.nlm.nih.gov/research/bionlp/Tools/tmchem/) for Chemical, 
 [GNormPus](https://www.ncbi.nlm.nih.gov/research/bionlp/Tools/gnormplus/) for Gene and Species, and 
 [DNorm](https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/tmTools/DNorm.html) for Disease
+</sub>
 
-Here's how to [reproduce these numbers](XXX) using Flair. You can also find detailed evaluations and discussions in our paper.
+Here's how to [reproduce these numbers](https://github.com/hu-ner/hunflair-experiments) using Flair. 
+You can also find detailed evaluations and discussions in our paper.
 
 ## Tutorials
 We provide a set of quick tutorials to get you started with HunFlair:

@@ -28,9 +28,9 @@ data set implementations can be found in `flair.datasets.biomedical`.
 | GPRO | `GPRO` | Gene/Protein  | [Website](https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/gpro-detailed-task-description/)   |
 | CRAFT (v2.0) | `CRAFT` | Chemical, Gene, Species  | [Paper](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-13-161)  |
 | CRAFT (v4.0.1) | `CRAFT_V4` | Chemical, Gene, Species  | [Website](https://github.com/UCDenver-ccp/CRAFT)   |
-| GELLUS | `GELLUS` | Cell line  | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/)   |
-| IEPA | `IEPA` | Gene/Protein  | [Paper](hhttps://www.ncbi.nlm.nih.gov/pubmed/11928487)   |
-| JNLPBA | `JNLPBA` | Disease  | [Paper](https://www.aclweb.org/anthology/W04-1213.pdf)   |
+| GELLUS | `GELLUS` | Cell line  | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/) |
+| IEPA | `IEPA` | Gene/Protein  | [Paper](https://www.ncbi.nlm.nih.gov/pubmed/11928487) |
+| JNLPBA | `JNLPBA` | Disease  | [Paper](https://www.aclweb.org/anthology/W04-1213.pdf) |
 | LINNEAUS | `LINNEAUS` | Species  | [Paper](https://www.ncbi.nlm.nih.gov/pubmed/20149233)   |
 | LocText | `LOCTEXT` | Disease  | [Paper](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2021-9)   |
 | miRNA | `MIRNA` | Disease  | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4602280/)   |
