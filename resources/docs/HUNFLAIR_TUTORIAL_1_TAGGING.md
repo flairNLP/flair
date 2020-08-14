@@ -1,9 +1,9 @@
 # HunFlair Tutorial 1: Tagging
 
-This is part 1 of the tutorial, in which we show how to use our pre-trained models to tag your text.
+This is part 1 of the tutorial, in which we show how to use our pre-trained *HunFlair* models to tag your text.
 
 ### Tagging with Pre-trained HunFlair-Models
-Let's use the pre-trained HunFlair model for biomedical named entity recognition (NER). 
+Let's use the pre-trained *HunFlair* model for biomedical named entity recognition (NER). 
 This model was trained over 24 biomedical NER data sets and can recognize 5 different entity types,
 i.e. cell lines, chemicals, disease, gene / proteins and species.
 ```python
@@ -12,7 +12,8 @@ from flair.models import MultiTagger
 tagger = MultiTagger.load("hunflair")
 ```
 All you need to do is use the predict() method of the tagger on a sentence. 
-This will add predicted tags to the tokens in the sentence. Lets use a sentence with two named entities:
+This will add predicted tags to the tokens in the sentence. 
+Lets use a sentence with four named entities:
 ```python
 from flair.data import Sentence
 
@@ -24,11 +25,15 @@ tagger.predict(sentence)
 # print sentence with predicted tags
 print(sentence.to_tagged_string())
 ```
-
 This should print:
 ~~~
 Behavioral <B-Disease> Abnormalities <E-Disease> in the Fmr1 <S-Gene> KO2 Mouse <S-Species> Model of Fragile <B-Disease> X <I-Disease> Syndrome <E-Disease>
 ~~~
+The output contains the words of the original text extended by tags indicating whether
+the word is the beginning (B), inside (I) or end (E) of an entity. 
+For example, "Fragil" is the first word of the disease "Fragil X Syndrom".
+Entities consisting of just one word are marked with a special single tag (S). 
+For example, "Mouse" refers to a species entity. 
 
 ### Getting Annotated Spans
 Often named entities consist of multiple words spanning a certain text span in the input text, such as 
@@ -40,8 +45,8 @@ for disease in sentence.get_spans("hunflair-disease"):
 ```
 This should print:
 ~~~
-Span [1,2]: "Behavioral Abnormalities"   [− Labels: Disease (0.706)]
-Span [10,11,12]: "Fragile X Syndrome"   [− Labels: Disease (0.9863)]
+Span [1,2]: "Behavioral abnormalities"   [− Labels: Disease (0.6736)]
+Span [10,11,12]: "Fragile X Syndrome"   [− Labels: Disease (0.99)]
 ~~~
 
 Which indicates that "_Behavioral Abnormalities_" or "_Fragile X Syndrome_" are both disease. 
@@ -54,25 +59,36 @@ print(sentence.to_dict("hunflair-disease"))
 This should print:
 ~~~
 {
-   'text': 'Behavioral Abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome', 
-   'labels': [], 
-   'entities': [
-        {'text': 'Behavioral Abnormalities', 'start_pos': 0, 'end_pos': 24, 'labels': [Disease (0.706)]}, 
-        {'text': 'Fragile X Syndrome', 'start_pos': 56, 'end_pos': 74, 'labels': [Disease (0.9863)]}
-   ]
+    'text': 'Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome', 
+    'labels': [], 
+    'entities': [
+        { 'text': 'Behavioral abnormalities', 'start_pos': 0, 'end_pos': 24, 'labels': [Disease (0.6736)]}, 
+        {'text': 'Fragile X Syndrome', 'start_pos': 56, 'end_pos': 74, 'labels': [Disease (0.99)]}
+    ]
 }
 ~~~
 
 You can retrieve all annotated entities of the other entity types in analogous way using `hunflair-cellline`
 for cell lines,  `hunflair-chemical` for chemicals, `hunflair-gene` for genes and proteins, and `hunflair-species`
-for species.   
+for species. To get all entities in one you can run:
+```python
+for entity in sentence.get_spans():
+    print(entity)
+```   
+This should print:
+~~~
+Span [1,2]: "Behavioral abnormalities"   [− Labels: Disease (0.6736)]
+Span [10,11,12]: "Fragile X Syndrome"   [− Labels: Disease (0.99)]
+Span [5]: "Fmr1"   [− Labels: Gene (0.838)]
+Span [7]: "Mouse"   [− Labels: Species (0.9979)]
+~~~
 
 ### Using a Biomedical Tokenizer
 Tokenization, i.e. separating a text into tokens / words, is an important issue in natural language processing 
 in general and biomedical text mining in particular. So far, we used a tokenizer for general domain text. 
 This can be unfavourable if applied to biomedical texts. 
 
-HunFlair integrates [SciSpaCy](https://allenai.github.io/scispacy/), a library specially designed to work with scientific text. 
+*HunFlair* integrates [SciSpaCy](https://allenai.github.io/scispacy/), a library specially designed to work with scientific text. 
 To use the library we first have to install it and download one of it's models:
 ~~~
 pip install scispacy==0.2.5
@@ -117,12 +133,11 @@ We can access the annotations of the single sentences by just iterating over the
 for sentence in sentences:
     print(sentence.to_tagged_string())
 ```
-This sould print:
+This should print:
 ~~~
 Fragile <B-Disease> X <I-Disease> syndrome <E-Disease> ( FXS <S-Disease> ) is a developmental <B-Disease> disorder <E-Disease> caused by a mutation in the X - linked FMR1 <S-Gene> gene , coding for the FMRP <S-Gene> protein which is largely involved in synaptic function .
-FXS <S-Disease> patients <S-Species> present several behavioral <B-Disease> abnormalities <E-Disease> , including hyperactivity <S-Disease> , anxiety <S-Disease> , sensory hyper - responsiveness , and cognitive <B-Disease> deficits <E-Disease> .
-Autistic <B-Disease> symptoms <E-Disease> , e.g. , altered social interaction and communication , are also often observed : FXS <S-Disease> is indeed the most common monogenic cause of autism <S-Disease> .
-...
+FXS <S-Disease> patients present several behavioral <B-Disease> abnormalities <E-Disease> , including hyperactivity <S-Disease> , anxiety <S-Disease> , sensory hyper - responsiveness , and cognitive <B-Disease> deficits <E-Disease> .
+Autistic <B-Disease> symptoms <E-Disease> , e.g. , altered social interaction and communication , are also often observed : FXS <S-Disease> is indeed the most common monogenic cause of autism <S-Disease>.
 ~~~
 
 
