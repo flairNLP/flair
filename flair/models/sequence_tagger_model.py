@@ -978,6 +978,10 @@ class SequenceTagger(flair.nn.Model):
             [aws_resource_path_v04, "NER-conll03-english", "en-ner-conll03-v0.4.pt"]
         )
 
+        model_map["ner-pooled"] = "/".join(
+            [hu_path, "NER-conll03-english-pooled", "en-ner-conll03-pooled-v0.5.pt"]
+        )
+
         model_map["ner-fast"] = "/".join(
             [
                 aws_resource_path_v04,
