@@ -84,6 +84,7 @@ class ModelTrainer:
         batch_growth_annealing: bool = False,
         shuffle: bool = True,
         param_selection_mode: bool = False,
+        write_weights: bool = False,
         num_workers: int = 6,
         sampler=None,
         use_amp: bool = False,
@@ -405,7 +406,7 @@ class ModelTrainer:
                         )
                         batch_time = 0
                         iteration = self.epoch * total_number_of_batches + batch_no
-                        if not param_selection_mode:
+                        if not param_selection_mode and write_weights:
                             weight_extractor.extract_weights(
                                 self.model.state_dict(), iteration
                             )
