@@ -58,9 +58,9 @@ SPECIES_CORPORA = [
 # 2. initialize embeddings
 from flair.embeddings import WordEmbeddings, FlairEmbeddings, StackedEmbeddings
 embedding_types = [
-    WordEmbeddings("pubmed_pmc_wiki_sg_1M.gensim"),
-    FlairEmbeddings('pm_pmc-forward/best-lm.pt'),
-    FlairEmbeddings('pm_pmc-backward/best-lm.pt'),
+    WordEmbeddings("pubmed"),
+    FlairEmbeddings("pubmed-forward"),
+    FlairEmbeddings("pubmed-backward"),
 
 ]
 
