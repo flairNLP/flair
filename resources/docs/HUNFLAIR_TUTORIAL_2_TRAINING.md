@@ -82,7 +82,7 @@ If the model works well, it will correctly tag "breast cancer" as disease in thi
 Women who smoke 20 cigarettes a day are four times more likely to develop breast <B-Disease> cancer <E-Disease> .
 ~~~
 
-## Fine-tunning HunFlair models 
+## Fine-tuning HunFlair models 
 Next to training a model completely from scratch, there is also the opportunity to just fine-tune 
 the *HunFlair* models (or any other pre-trained model) to your target domain / corpus. 
 This can be advantageous because the pre-trained models are based on a much broader data base, 

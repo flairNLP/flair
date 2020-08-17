@@ -103,6 +103,7 @@ are provided:
 | ID | Task | Training Dataset | Accuracy |
 | -------------    | ------------- |------------- |------------- |
 | 'ner' | 4-class Named Entity Recognition |  Conll-03  |  **93.03** (F1) |
+| 'ner-pooled' | 4-class Named Entity Recognition (memory inefficient) |  Conll-03  |  **93.24** (F1) |
 | 'ner-ontonotes' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.06** (F1) |
 | 'chunk' |  Syntactic Chunking   |  Conll-2000     |  **96.47** (F1) |
 | 'pos' |  Part-of-Speech Tagging (fine-grained) |  Ontonotes     |  **98.19** (Accuracy) |
