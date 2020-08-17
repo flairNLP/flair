@@ -978,6 +978,10 @@ class SequenceTagger(flair.nn.Model):
             [aws_resource_path_v04, "NER-conll03-english", "en-ner-conll03-v0.4.pt"]
         )
 
+        model_map["ner-pooled"] = "/".join(
+            [hu_path, "NER-conll03-english-pooled", "en-ner-conll03-pooled-v0.5.pt"]
+        )
+
         model_map["ner-fast"] = "/".join(
             [
                 aws_resource_path_v04,
@@ -1321,8 +1325,13 @@ class MultiTagger:
             # if the model uses StackedEmbedding, make a new stack with previous objects
             if type(model.embeddings) == StackedEmbeddings:
 
+                # sort embeddings by key alphabetically
                 new_stack = []
-                for embedding in model.embeddings.embeddings:
+                d = model.embeddings.get_named_embeddings_dict()
+                import collections
+                od = collections.OrderedDict(sorted(d.items()))
+
+                for k, embedding in od.items():
 
                     # check previous embeddings and add if found
                     embedding_found = False
@@ -1362,10 +1371,3 @@ class MultiTagger:
             models.append(model)
 
         return cls(taggers)
-
-    def get_all_spans(self, sentence: Sentence):
-        spans = []
-        for name in self.name_to_tagger:
-            spans.extend(sentence.get_spans(name))
-
-        return spans

@@ -68,7 +68,7 @@ corpus like this:
 
 ```python
 import flair.datasets
-downsampled_corpus = flair.datasets.UD_ENGLISH()
+corpus = flair.datasets.UD_ENGLISH()
 ```
 
 then you can downsample the corpus, simply like this:
@@ -179,6 +179,10 @@ data the first time you call the corresponding constructor ID. The following dat
 | 'WIKINER_PORTUGUESE' | Portuguese  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
 | 'WIKINER_POLISH' | Polish  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
 | 'WIKINER_RUSSIAN'  | Russian  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
+
+#### Biomedical Named Entity Recognition
+
+We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
 
 #### Universal Dependency Treebanks
 

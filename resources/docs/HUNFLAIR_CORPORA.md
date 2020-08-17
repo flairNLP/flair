@@ -4,7 +4,7 @@ Here you can find an overview about biomedical NER data sets integrated in *HunF
 __Content:__ [Overview](#overview) | [HUNER Data Sets](#huner-data-sets) | [BioBERT Evaluation Splits](#biobert-evaluation-splits)
 
 ## Overview
-HunFlair integrates 31 biomedical named entity recognition (NER) data sets and provides 
+*HunFlair* integrates 31 biomedical named entity recognition (NER) data sets and provides 
 them in an unified format to foster the development and evaluation of new NER models. All
 data set implementations can be found in `flair.datasets.biomedical`.
 
@@ -12,31 +12,31 @@ data set implementations can be found in `flair.datasets.biomedical`.
 | ---             | --- | ---  | ---    |
 | AnatEM | `ANAT_EM` | Anatomical entities | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3957068/), [Website](http://nactem.ac.uk/anatomytagger/#AnatEM)   |
 | Arizona Disease | `AZDZ` | Disease | [Website](http://diego.asu.edu/index.php)   |
-| BioCreative II GM | `BC2GM` | Disease | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2559986/)   |
+| BioCreative II GM | `BC2GM` | Gene | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2559986/)   |
 | BioCreative V CDR task | `CDR` | Chemical, Disease  | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4860626/), [Website](https://github.com/JHnlp/BioCreative-V-CDR-Corpus)   |
 | BioInfer | `BIO_INFER` |  Gene/Protein | [Paper](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-8-50)   |
 | BioNLP'2013 Cancer Genetics (ST) | `BIONLP2013_CG` | Chemical, Disease, Gene/Protein, Species | [Paper](https://www.aclweb.org/anthology/W13-2008/)   |
 | BioNLP'2013 Pathway Curation (ST)| `BIONLP2013_PC` | Chemical, Gene/Proteins  | [Paper](http://diego.asu.edu/index.php)   |
 | BioSemantics<sup>*</sup> | `BIOSEMANTICS` | Chemical, Disease | [Paper](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0107477), [Website](https://biosemantics.erasmusmc.nl/index.php/resources/chemical-patent-corpus)|
-| CellFinder | `CELL_FINDER` | Cell line, Gene Species  | [Paper](https://pdfs.semanticscholar.org/38e3/75aeeeb1937d03c3c80128a70d8e7a74441f.pdf)   |
+| CellFinder | `CELL_FINDER` | Cell line, Gene, Species  | [Paper](https://pdfs.semanticscholar.org/38e3/75aeeeb1937d03c3c80128a70d8e7a74441f.pdf)   |
 | CEMP | `CEMP` | Chemical | [Website](https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/cemp-detailed-task-description/)   |
 | CHEBI | `CHEBI` | Chemical, Gene, Species  | [Paper](http://www.lrec-conf.org/proceedings/lrec2018/pdf/229.pdf)   |
 | CHEMDNER | `CHEMDNER` | Chemical  | [Paper](https://jcheminf.biomedcentral.com/articles/10.1186/1758-2946-7-S1-S2)   |
 | CLL | `CLL` | Cell line  | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/)   |
-| DECA | `DECA` | Gene/Protein | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2828111/)   |
-| FSU | `FSU` | Gene/Protein  | [Paper](https://www.aclweb.org/anthology/W10-1838/)   |
-| GPRO | `GPRO` | Gene/Protein  | [Website](https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/gpro-detailed-task-description/)   |
+| DECA | `DECA` | Gene | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2828111/)   |
+| FSU | `FSU` | Gene  | [Paper](https://www.aclweb.org/anthology/W10-1838/)   |
+| GPRO | `GPRO` | Gene  | [Website](https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/gpro-detailed-task-description/)   |
 | CRAFT (v2.0) | `CRAFT` | Chemical, Gene, Species  | [Paper](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-13-161)  |
 | CRAFT (v4.0.1) | `CRAFT_V4` | Chemical, Gene, Species  | [Website](https://github.com/UCDenver-ccp/CRAFT)   |
-| GELLUS | `GELLUS` | Cell line  | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/)   |
-| IEPA | `IEPA` | Gene/Protein  | [Paper](hhttps://www.ncbi.nlm.nih.gov/pubmed/11928487)   |
-| JNLPBA | `JNLPBA` | Disease  | [Paper](https://www.aclweb.org/anthology/W04-1213.pdf)   |
+| GELLUS | `GELLUS` | Cell line  | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/) |
+| IEPA | `IEPA` | Gene  | [Paper](https://www.ncbi.nlm.nih.gov/pubmed/11928487) |
+| JNLPBA | `JNLPBA` | Cell line, Gene  | [Paper](https://www.aclweb.org/anthology/W04-1213.pdf) |
 | LINNEAUS | `LINNEAUS` | Species  | [Paper](https://www.ncbi.nlm.nih.gov/pubmed/20149233)   |
-| LocText | `LOCTEXT` | Disease  | [Paper](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2021-9)   |
-| miRNA | `MIRNA` | Disease  | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4602280/)   |
+| LocText | `LOCTEXT` | Gene, Species  | [Paper](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2021-9)   |
+| miRNA | `MIRNA` | Disease, Gene, Species  | [Paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4602280/)   |
 | NCBI Disease | `NCBI_DISEASE` | Disease  | [Paper](https://www.ncbi.nlm.nih.gov/pubmed/24393765)   |
-| Osiris v1.2 | `OSIRIS` | Gene/Protein, Mutation  | [Paper](https://www.ncbi.nlm.nih.gov/pubmed/18251998)   |
-| Plant-Disease-Relations | `PDR` | Disease, Plant  | [Paper](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0221582), [Website](http://gcancer.org/pdr/)   |
+| Osiris v1.2 | `OSIRIS` | Gene  | [Paper](https://www.ncbi.nlm.nih.gov/pubmed/18251998)   |
+| Plant-Disease-Relations | `PDR` | Disease  | [Paper](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0221582), [Website](http://gcancer.org/pdr/)   |
 | S800 | `S800` | Species  | [Paper](http://www.plosone.org/article/info:doi%2F10.1371%2Fjournal.pone.0065390)   |
 | SCAI Chemicals | `SCAI_CHEMICALS` | Chemical  | [Paper](https://pub.uni-bielefeld.de/record/2603498)   |
 | SCAI Disease | `SCAI_DISEASE` | Disease  | [Paper](https://pub.uni-bielefeld.de/record/2603398)   |

@@ -1,12 +1,12 @@
 # HunFlair
 
-<i>HunFlair</i> is a state-of-the-art NER tagger for biomedical texts. It comes with 
-models for genes/proteins, chemicals, diseases, species and cell lines. <i>HunFlair</i> 
+*HunFlair* is a state-of-the-art NER tagger for biomedical texts. It comes with 
+models for genes/proteins, chemicals, diseases, species and cell lines. *HunFlair* 
 builds on pretrained domain-specific language models and outperforms other biomedical 
 NER tools on unseen corpora. Furthermore, it contains harmonized versions of [31 biomedical 
-NER data sets](HUNFLAIR_CORPORA.md).
-
-
+NER data sets](HUNFLAIR_CORPORA.md) and comes with a Flair language model ("pubmed-X") and
+FastText embeddings ("pubmed") that were trained on roughly 3 million full texts and about
+25 million abstracts from the biomedical domain.
 
 <b>Content:</b> 
 [Quick Start](#quick-start) | 
@@ -17,7 +17,7 @@ NER data sets](HUNFLAIR_CORPORA.md).
 ## Quick Start
 
 #### Requirements and Installation
-<i>HunFlair</i> is based on Flair 0.6+ and Python 3.6+. 
+*HunFlair* is based on Flair 0.6+ and Python 3.6+. 
 If you do not have Python 3.6, install it first. [Here is how for Ubuntu 16.04](https://vsupalov.com/developing-with-python3-6-on-ubuntu-16-04/).
 Then, in your favorite virtual environment, simply do:
 ```
@@ -34,37 +34,40 @@ pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/e
 Let's run named entity recognition (NER) over an example sentence. All you need to do is 
 make a Sentence, load a pre-trained model and use it to predict tags for the sentence:
 ```python
-import flair
+from flair.data import Sentence
+from flair.models import MultiTagger
 from flair.tokenization import SciSpacyTokenizer
 
-sentence = flair.data.Sentence(
-    "Behavioral Abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome",
-    use_tokenizer=SciSpacyTokenizer()
-)
+# make a sentence and tokenize with SciSpaCy
+sentence = Sentence("Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome",
+                    use_tokenizer=SciSpacyTokenizer())
 
-tagger = flair.models.MultiTagger.load("hunflair")
+# load biomedical tagger
+tagger = MultiTagger.load("hunflair")
+
+# tag sentence
 tagger.predict(sentence)
 ```
 Done! The Sentence now has entity annotations. Let's print the entities found by the tagger:
 ```python
-for entity in tagger.get_all_spans(sentence):
+for entity in sentence.get_spans():
     print(entity)
 ```
 This should print:
 ~~~
-Span [5]: "Fmr1"   [− Labels: Gene (0.6896)]
-Span [1,2]: "Behavioral Abnormalities"   [− Labels: Disease (0.706)]
-Span [10,11,12]: "Fragile X Syndrome"   [− Labels: Disease (0.9863)]
-Span [7]: "Mouse"   [− Labels: Species (0.9517)]
+Span [1,2]: "Behavioral abnormalities"   [− Labels: Disease (0.6736)]
+Span [10,11,12]: "Fragile X Syndrome"   [− Labels: Disease (0.99)]
+Span [5]: "Fmr1"   [− Labels: Gene (0.838)]
+Span [7]: "Mouse"   [− Labels: Species (0.9979)]
 ~~~
 
 ## Comparison to other biomedical NER tools
 Tools for biomedical NER are typically trained and evaluated on rather small gold standard data sets. 
-However, they are applied "in the wild", i.e., to a much larger collection of texts, often varying in 
+However, they are applied "in the wild" to a much larger collection of texts, often varying in 
 topic, entity distribution, genre (e.g. patents vs. scientific articles) and text type (e.g. abstract 
 vs. full text), which can lead to severe drops in performance.
 
-<i>HunFlair</i> outperforms other biomedical NER tools on corpora not used for training of neither HunFlair
+*HunFlair* outperforms other biomedical NER tools on corpora not used for training of neither *HunFlair*
 or any of the competitor tools.
 
 | Corpus         | Entity Type  | Misc<sup><sub>[1](#f1)</sub></sup>   | SciSpaCy | HUNER | HunFlair | 
@@ -81,20 +84,22 @@ or any of the competitor tools.
 <sub>All results are F1 scores using partial matching of predicted text offsets with the original char offsets 
 of the gold standard data. We allow a shift by max one character.</sub>
 
-<a name="f1">1</a>:  Misc displays the results of multiple taggers: 
+<sub><a name="f1">1</a>:  Misc displays the results of multiple taggers: 
 [tmChem](https://www.ncbi.nlm.nih.gov/research/bionlp/Tools/tmchem/) for Chemical, 
 [GNormPus](https://www.ncbi.nlm.nih.gov/research/bionlp/Tools/gnormplus/) for Gene and Species, and 
 [DNorm](https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/tmTools/DNorm.html) for Disease
+</sub>
 
-
-Here's how to [reproduce these numbers](XXX) using Flair. You can also find detailed evaluations and discussions in our paper.
+Here's how to [reproduce these numbers](HUNFLAIR_EXPERIMENTS.md) using Flair. 
+You can find detailed evaluations and discussions in [our paper](http://arxiv.org/abs/XXX).
 
 ## Tutorials
-We provide a set of quick tutorials to get you started with HunFlair:
+We provide a set of quick tutorials to get you started with *HunFlair*:
 * [Tutorial 1: Tagging](HUNFLAIR_TUTORIAL_1_TAGGING.md)
+* [Tutorial 2: Training biomedical NER models](HUNFLAIR_TUTORIAL_2_TRAINING.md)
 
 ## Citing HunFlair
-Please cite the following paper when using HunFlair:
+Please cite the following paper when using *HunFlair*:
 ~~~
 @article{weber2020hunflair,
   author    = {Weber, Leon and S{\"a}nger, Mario and M{\"u}nchmeyer, Jannes and Habibi, Maryam and Leser, Ulf and Akbik, Alan},

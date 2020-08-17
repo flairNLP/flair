@@ -14,18 +14,18 @@ Flair is:
 
 * **A powerful NLP library.** Flair allows you to apply our state-of-the-art natural language processing (NLP)
 models to your text, such as named entity recognition (NER), part-of-speech tagging (PoS),
- sense disambiguation and classification.
-
-* **Multilingual.** Thanks to the Flair community, we support a rapidly growing number of languages. We also now include
-'*one model, many languages*' taggers, i.e. single models that predict PoS or NER tags for input text in various languages.
+ sense disambiguation and classification, with support for a rapidly growing number of languages. 
+ 
+* **A biomedical NER library.** Flair has special support for [biomedical data](/resources/docs/HUNFLAIR.md) with 
+state-of-the-art models for biomedical NER and support for over 32 biomedical datasets.
 
 * **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and 
-document embeddings, including our proposed **[Flair embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)**, BERT embeddings and ELMo embeddings.
+document embeddings, including our proposed **[Flair embeddings](https://www.aclweb.org/anthology/C18-1139/)**, BERT embeddings and ELMo embeddings.
 
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to 
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.5.1](https://github.com/flairNLP/flair/releases)!
+Now at [version 0.6](https://github.com/flairNLP/flair/releases)!
 
 ## Comparison with State-of-the-Art
 
@@ -125,6 +125,9 @@ We provide a set of quick tutorials to get you started with the library:
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
 text, how you can embed your text with different word or document embeddings, and how you can train your own 
 language models, sequence labeling models, and text classification models. Let us know if anything is unclear.
+
+There is also a dedicated landing page for our **[biomedical NER and datasets](/resources/docs/HUNFLAIR.md)** with 
+installation instructions and tutorials.
 
 There are also good third-party articles and posts that illustrate how to use Flair: 
 * [How to build a text classifier with Flair](https://towardsdatascience.com/text-classification-with-state-of-the-art-nlp-library-flair-b541d7add21f)
