@@ -140,6 +140,8 @@ FXS <S-Disease> patients present several behavioral <B-Disease> abnormalities <E
 Autistic <B-Disease> symptoms <E-Disease> , e.g. , altered social interaction and communication , are also often observed : FXS <S-Disease> is indeed the most common monogenic cause of autism <S-Disease>.
 ~~~
 
+### Next
+Now, let us look at how to [train your own biomedical models](HUNFLAIR_TUTORIAL_2_TRAINING.md) to tag your text.
 
 
  

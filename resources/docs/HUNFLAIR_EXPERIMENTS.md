@@ -1,5 +1,5 @@
 # Training the models from the paper
-Here's how we trained the models that we evaluated in the paper ("hunflair-paper")
+Here's how we trained the models that we evaluated in [our paper](http://arxiv.org/abs/XXX).
 
 ```python
 # 1. define corpora

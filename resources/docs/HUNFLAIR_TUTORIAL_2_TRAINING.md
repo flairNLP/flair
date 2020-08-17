@@ -30,8 +30,8 @@ embedding_types = [
     WordEmbeddings("pubmed"),
 
     # flair embeddings trained on PubMed and PMC
-    FlairEmbeddings('pubmed-forward'),
-    FlairEmbeddings('pubmed-backward'),
+    FlairEmbeddings("pubmed-forward"),
+    FlairEmbeddings("pubmed-backward"),
 ]
 
 
@@ -125,8 +125,8 @@ corpus = HUNER_CELL_LINE()
 from flair.embeddings import WordEmbeddings, FlairEmbeddings, StackedEmbeddings
 embedding_types = [
     WordEmbeddings("pubmed"),
-    FlairEmbeddings('pubmed-forward'),
-    FlairEmbeddings('pubmed-backward'),
+    FlairEmbeddings("pubmed-forward"),
+    FlairEmbeddings("pubmed-backward"),
 
 ]
 
