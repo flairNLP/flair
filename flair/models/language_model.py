@@ -75,7 +75,8 @@ class LanguageModel(nn.Module):
         encoded = self.encoder(input)
         emb = self.drop(encoded)
 
-        self.rnn.flatten_parameters()
+        if hasttr(self.rnn, "flatten_parameters"):
+            self.rnn.flatten_parameters()
 
         output, hidden = self.rnn(emb, hidden)
 
