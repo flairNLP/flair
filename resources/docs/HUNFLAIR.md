@@ -90,7 +90,7 @@ of the gold standard data. We allow a shift by max one character.</sub>
 [DNorm](https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/tmTools/DNorm.html) for Disease
 </sub>
 
-Here's how to [reproduce these numbers](https://github.com/hu-ner/hunflair-experiments) using Flair. 
+Here's how to [reproduce these numbers](HUNFLAIR_EXPERIMENTS.md) using Flair. 
 You can find detailed evaluations and discussions in [our paper](http://arxiv.org/abs/XXX).
 
 ## Tutorials
