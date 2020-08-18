@@ -1,5 +1,5 @@
 # Training the models from the paper
-Here's how we trained the models that we evaluated in [our paper](http://arxiv.org/abs/XXX).
+Here's how we trained the models that we evaluated in [our paper](https://arxiv.org/abs/2008.07347).
 
 ```python
 # 1. define corpora

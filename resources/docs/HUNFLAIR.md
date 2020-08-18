@@ -91,7 +91,7 @@ of the gold standard data. We allow a shift by max one character.</sub>
 </sub>
 
 Here's how to [reproduce these numbers](HUNFLAIR_EXPERIMENTS.md) using Flair. 
-You can find detailed evaluations and discussions in [our paper](http://arxiv.org/abs/XXX).
+You can find detailed evaluations and discussions in [our paper](https://arxiv.org/abs/2008.07347).
 
 ## Tutorials
 We provide a set of quick tutorials to get you started with *HunFlair*:
@@ -101,12 +101,12 @@ We provide a set of quick tutorials to get you started with *HunFlair*:
 ## Citing HunFlair
 Please cite the following paper when using *HunFlair*:
 ~~~
-@article{weber2020hunflair,
-  author    = {Weber, Leon and S{\"a}nger, Mario and M{\"u}nchmeyer, Jannes and Habibi, Maryam and Leser, Ulf and Akbik, Alan},
-  title     = {HunFlair: An Easy-to-Use Tool for State-of-the-ArtBiomedical Named Entity Recognition},
-  journal   = {},
-  volume    = {},
-  year      = {2020},
-  ee        = {http://arxiv.org/abs/XXX}
+@misc{weber2020hunflair,
+    title={HunFlair: An Easy-to-Use Tool for State-of-the-Art Biomedical Named Entity Recognition},
+    author={Leon Weber and Mario S{\"a}nger and Jannes Mü{\"u}nchmeyer and Maryam Habibi and Ulf Leser and Alan Akbik},
+    year={2020},
+    eprint={2008.07347},
+    archivePrefix={arXiv},
+    primaryClass={cs.CL}
 }
 ~~~
