@@ -112,8 +112,9 @@ trainer.train(
 ```
 ## Training HunFlair from scratch
 *HunFlair* consists of distinct models for the entity types cell line, chemical, disease, gene/protein
-and species. For each entity multiple corpora are used to train the model for the specific entity.   
-The following code examples illustrates the training process of *HunFlair* for *cell line*:
+and species. For each entity multiple corpora are used to train the model for the specific entity. The 
+following code examples illustrates the training process of *HunFlair* for *cell line*:
+
 ```python
 from flair.datasets import HUNER_CELL_LINE
 
