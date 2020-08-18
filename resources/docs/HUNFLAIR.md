@@ -101,12 +101,10 @@ We provide a set of quick tutorials to get you started with *HunFlair*:
 ## Citing HunFlair
 Please cite the following paper when using *HunFlair*:
 ~~~
-@misc{weber2020hunflair,
+@article{weber2020hunflair,
     title={HunFlair: An Easy-to-Use Tool for State-of-the-Art Biomedical Named Entity Recognition},
-    author={Leon Weber and Mario S{\"a}nger and Jannes M{\"u}nchmeyer and Maryam Habibi and Ulf Leser and Alan Akbik},
-    year={2020},
-    eprint={2008.07347},
-    archivePrefix={arXiv},
-    primaryClass={cs.CL}
+    author={Weber, Leon and S{\"a}nger, Mario and M{\"u}nchmeyer, Jannes  and Habibi, Maryam and Leser, Ulf and Akbik, Alan},
+    journal={arXiv preprint arXiv:2008.07347},
+    year={2020}
 }
 ~~~
