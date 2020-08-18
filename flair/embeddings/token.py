@@ -356,14 +356,6 @@ class POSEmbeddings(TokenEmbeddings):
                 word_embedding = np.concatenate((word_embedding, self.precomputed_word_embeddings[
                     word_with_tag.replace(".", "")
                 ]))
-            elif re.sub(r"\d", "#", word_with_tag) in self.precomputed_word_embeddings:
-                word_embedding = np.concatenate((word_embedding, self.precomputed_word_embeddings[
-                    re.sub(r"\d", "#", word_with_tag)
-                ]))
-            elif re.sub(r"\d", "0", word_with_tag) in self.precomputed_word_embeddings:
-                word_embedding = np.concatenate((self.precomputed_word_embeddings[
-                    re.sub(r"\d", "0", word_with_tag)
-                ]))
             else:
                 word_embedding = np.concatenate((word_embedding, np.zeros(self.embedding_length, dtype="float")))
 
