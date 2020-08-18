@@ -120,6 +120,8 @@ class WordEmbeddings(TokenEmbeddings):
         )
         embeddings_path_v4_1 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/"
 
+        hu_path: str = "https://flair.informatik.hu-berlin.de/resources"
+
         cache_dir = Path("embeddings")
 
         # GLOVE embeddings
@@ -178,6 +180,13 @@ class WordEmbeddings(TokenEmbeddings):
                 f"{old_base_path}twitter.gensim", cache_dir=cache_dir
             )
 
+        # part of speech embeddings
+        elif embeddings.lower() == "pos_embeddings" or embeddings.lower() == "pos-embeddings":
+            cached_path(f"{hu_path}/embeddings/pos_embeddings_100d.txt", cache_dir=cache_dir)
+            embeddings = cached_path(
+                f"{hu_path}/embeddings/pos_embeddings_100d.txt", cache_dir=cache_dir
+            )
+
         # two-letter language code wiki embeddings
         elif len(embeddings.lower()) == 2:
             cached_path(
@@ -223,6 +232,12 @@ class WordEmbeddings(TokenEmbeddings):
             self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
                 str(embeddings), binary=True
             )
+        if str(embeddings).endswith(".txt"):
+            log.info("Loading POS Embeddings...")
+            self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
+                str(embeddings), binary=False
+            )
+            log.info("Done.")
         else:
             self.precomputed_word_embeddings = gensim.models.KeyedVectors.load(
                 str(embeddings)
@@ -253,6 +268,104 @@ class WordEmbeddings(TokenEmbeddings):
             ]
         else:
             word_embedding = np.zeros(self.embedding_length, dtype="float")
+
+        word_embedding = torch.tensor(
+            word_embedding.tolist(), device=flair.device, dtype=torch.float
+        )
+        return word_embedding
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        for i, sentence in enumerate(sentences):
+
+            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+
+                if "field" not in self.__dict__ or self.field is None:
+                    word = token.text
+                else:
+                    word = token.get_tag(self.field).value
+
+                word_embedding = self.get_cached_vec(word=word)
+
+                token.set_embedding(self.name, word_embedding)
+
+        return sentences
+
+    def __str__(self):
+        return self.name
+
+    def extra_repr(self):
+        # fix serialized models
+        if "embeddings" not in self.__dict__:
+            self.embeddings = self.name
+
+        return f"'{self.embeddings}'"
+
+class POSEmbeddings(TokenEmbeddings):
+    """Standard static word embeddings, such as GloVe or FastText."""
+
+    def __init__(self, dim: int = 100, field: str = None):
+        """
+        Initializes classic word embeddings. Constructor downloads required files if not there.
+        :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or custom
+        If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
+        """
+        embeddings = f"pos_embeddings_{dim}d"
+
+        self.embeddings = embeddings
+
+        hu_path: str = "https://flair.informatik.hu-berlin.de/resources"
+
+        cache_dir = Path("embeddings")
+
+        # part of speech embeddings
+        cached_path(f"{hu_path}/embeddings/{embeddings}.txt", cache_dir=cache_dir)
+        embeddings = cached_path(
+            f"{hu_path}/embeddings/{embeddings}.txt", cache_dir=cache_dir
+        )
+
+        self.name: str = str(embeddings)
+        self.static_embeddings = True
+        self.POS_types = ["PN", "N", "V", "REST"]
+
+        if str(embeddings).endswith(".txt"):
+            log.info("Loading POS Embeddings...")
+            self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
+                str(embeddings), binary=False
+            )
+            log.info("Done.")
+
+        self.field = field
+
+        self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
+        self.__total_embedding_length: int = self.precomputed_word_embeddings.vector_size * len(self.POS_types)
+        super().__init__()
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    @lru_cache(maxsize=10000, typed=False)
+    def get_cached_vec(self, word: str) -> torch.Tensor:
+        word_embedding = np.array([], dtype=float)
+        for POS_type in self.POS_types:
+            word_with_tag = f"{word.lower()}_{POS_type}"
+            if word_with_tag in self.precomputed_word_embeddings:
+                word_embedding = np.concatenate((word_embedding, self.precomputed_word_embeddings[word_with_tag]))
+            elif word_with_tag.replace(".", "") in self.precomputed_word_embeddings:
+                word_embedding = np.concatenate((word_embedding, self.precomputed_word_embeddings[
+                    word_with_tag.replace(".", "")
+                ]))
+            elif re.sub(r"\d", "#", word_with_tag) in self.precomputed_word_embeddings:
+                word_embedding = np.concatenate((word_embedding, self.precomputed_word_embeddings[
+                    re.sub(r"\d", "#", word_with_tag)
+                ]))
+            elif re.sub(r"\d", "0", word_with_tag) in self.precomputed_word_embeddings:
+                word_embedding = np.concatenate((self.precomputed_word_embeddings[
+                    re.sub(r"\d", "0", word_with_tag)
+                ]))
+            else:
+                word_embedding = np.concatenate((word_embedding, np.zeros(self.embedding_length, dtype="float")))
 
         word_embedding = torch.tensor(
             word_embedding.tolist(), device=flair.device, dtype=torch.float

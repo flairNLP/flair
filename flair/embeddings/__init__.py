@@ -6,6 +6,7 @@ from .base import ScalarMix
 from .token import TokenEmbeddings
 from .token import StackedEmbeddings
 from .token import WordEmbeddings
+from .token import POSEmbeddings
 from .token import CharacterEmbeddings
 from .token import FlairEmbeddings
 from .token import PooledFlairEmbeddings
