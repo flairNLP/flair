@@ -627,7 +627,7 @@ class DANE(ColumnCorpus):
         train_data_file = data_path / "ddt.train.conllu"
         if not train_data_file.is_file():
             temp_file = cached_path(
-                'https://danlp.s3.eu-central-1.amazonaws.com/datasets/ddt.zip',
+                'https://danlp.alexandra.dk/304bd159d5de/datasets/ddt.zip',
                 Path("datasets") / dataset_name
             )
             from zipfile import ZipFile
@@ -665,7 +665,7 @@ class GERMEVAL_14(ColumnCorpus):
     ):
         """
         Initialize the GermEval NER corpus for German. This is only possible if you've manually downloaded it to your
-        machine. Obtain the corpus from https://sites.google.com/site/germeval2014ner/home/ and put it into some folder.
+        machine. Obtain the corpus from https://sites.google.com/site/germeval2014ner/data and put it into some folder.
         Then point the base_path parameter in the constructor to this folder
         :param base_path: Path to the GermEval corpus on your machine
         :param tag_to_bioes: 'ner' by default, should not be changed.
@@ -690,7 +690,7 @@ class GERMEVAL_14(ColumnCorpus):
             log.warning("-" * 100)
             log.warning(f'WARNING: GermEval-14 dataset not found at "{data_folder}".')
             log.warning(
-                'Instructions for obtaining the data can be found here: https://sites.google.com/site/germeval2014ner/home/"'
+                'Instructions for obtaining the data can be found here: https://sites.google.com/site/germeval2014ner/data"'
             )
             log.warning("-" * 100)
         super(GERMEVAL_14, self).__init__(

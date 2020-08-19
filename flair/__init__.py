@@ -24,7 +24,7 @@ from .training_utils import AnnealOnPlateau
 
 import logging.config
 
-__version__ = "0.5.1"
+__version__ = "0.6"
 
 logging.config.dictConfig(
     {

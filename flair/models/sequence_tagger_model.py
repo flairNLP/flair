@@ -1,6 +1,9 @@
 import logging
+import sys
+
 from pathlib import Path
 from typing import List, Union, Optional, Dict
+from warnings import warn
 
 import numpy as np
 import torch
@@ -14,7 +17,7 @@ from tqdm import tqdm
 import flair.nn
 from flair.data import Dictionary, Sentence, Label
 from flair.datasets import SentenceDataset, DataLoader
-from flair.embeddings import TokenEmbeddings
+from flair.embeddings import TokenEmbeddings, StackedEmbeddings, Embeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.training_utils import Metric, Result, store_embeddings
 
@@ -976,6 +979,10 @@ class SequenceTagger(flair.nn.Model):
             [aws_resource_path_v04, "NER-conll03-english", "en-ner-conll03-v0.4.pt"]
         )
 
+        model_map["ner-pooled"] = "/".join(
+            [hu_path, "NER-conll03-english-pooled", "en-ner-conll03-pooled-v0.5.pt"]
+        )
+
         model_map["ner-fast"] = "/".join(
             [
                 aws_resource_path_v04,
@@ -1149,6 +1156,38 @@ class SequenceTagger(flair.nn.Model):
             [hu_path, "negation-speculation-EN-bioflair", "negation-speculation-model.pt"]
         )
 
+        model_map["hunflair-paper-cellline"] = "/".join(
+            [hu_path, "hunflair_smallish_models", "cellline", "hunflair-celline-v1.0.pt"]
+        )
+        model_map["hunflair-paper-chemical"] = "/".join(
+            [hu_path, "hunflair_smallish_models", "chemical", "hunflair-chemical-v1.0.pt"]
+        )
+        model_map["hunflair-paper-disease"] = "/".join(
+            [hu_path, "hunflair_smallish_models", "disease", "hunflair-disease-v1.0.pt"]
+        )
+        model_map["hunflair-paper-gene"] = "/".join(
+            [hu_path, "hunflair_smallish_models", "gene", "hunflair-gene-v1.0.pt"]
+        )
+        model_map["hunflair-paper-species"] = "/".join(
+            [hu_path, "hunflair_smallish_models", "species", "hunflair-species-v1.0.pt"]
+        )
+
+        model_map["hunflair-cellline"] = "/".join(
+            [hu_path, "hunflair_smallish_models", "cellline", "hunflair-celline-v1.0.pt"]
+        )
+        model_map["hunflair-chemical"] = "/".join(
+            [hu_path, "hunflair_allcorpus_models", "huner-chemical", "hunflair-chemical-full-v1.0.pt"]
+        )
+        model_map["hunflair-disease"] = "/".join(
+            [hu_path, "hunflair_allcorpus_models", "huner-disease", "hunflair-disease-full-v1.0.pt"]
+        )
+        model_map["hunflair-gene"] = "/".join(
+            [hu_path, "hunflair_allcorpus_models", "huner-gene", "hunflair-gene-full-v1.0.pt"]
+        )
+        model_map["hunflair-species"] = "/".join(
+            [hu_path, "hunflair_allcorpus_models", "huner-species", "hunflair-species-full-v1.1.pt"]
+        )
+
         cache_dir = Path("models")
         if model_name in model_map:
             model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
@@ -1202,3 +1241,134 @@ class SequenceTagger(flair.nn.Model):
                f'  (beta): {self.beta}\n' + \
                f'  (weights): {self.weight_dict}\n' + \
                f'  (weight_tensor) {self.loss_weights}\n)'
+
+
+class MultiTagger:
+    def __init__(self, name_to_tagger: Dict[str, SequenceTagger]):
+        super().__init__()
+        self.name_to_tagger = name_to_tagger
+
+    def predict(
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size=32,
+            all_tag_prob: bool = False,
+            verbose: bool = False,
+            return_loss: bool = False,
+    ):
+        """
+        Predict sequence tags for Named Entity Recognition task
+        :param sentences: a Sentence or a List of Sentence
+        :param mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
+        up to a point when it has no more effect.
+        :param all_tag_prob: True to compute the score for each tag on each token,
+        otherwise only the score of the best tag is returned
+        :param verbose: set to True to display a progress bar
+        :param return_loss: set to True to return loss
+        """
+        if any(["hunflair" in name for name in self.name_to_tagger.keys()]):
+            if "spacy" not in sys.modules:
+                warn(
+                    "We recommend to use SciSpaCy for tokenization and sentence splitting "
+                    "if HunFlair is applied to biomedical text, e.g.\n\n"
+                    "from flair.tokenization import SciSpacySentenceSplitter\n"
+                    "sentence = Sentence('Your biomed text', use_tokenizer=SciSpacySentenceSplitter())\n"
+                )
+
+        if isinstance(sentences, Sentence):
+            sentences = [sentences]
+        for name, tagger in self.name_to_tagger.items():
+            tagger.predict(
+                sentences=sentences,
+                mini_batch_size=mini_batch_size,
+                all_tag_prob=all_tag_prob,
+                verbose=verbose,
+                label_name=name,
+                return_loss=return_loss,
+                embedding_storage_mode="cpu",
+            )
+
+        # clear embeddings after predicting
+        for sentence in sentences:
+            sentence.clear_embeddings()
+
+
+    @classmethod
+    def load(cls, model_names: Union[List[str], str]):
+        if model_names == "hunflair-paper":
+            model_names = [
+                "hunflair-paper-cellline",
+                "hunflair-paper-chemical",
+                "hunflair-paper-disease",
+                "hunflair-paper-gene",
+                "hunflair-paper-species",
+            ]
+        elif model_names == "hunflair" or model_names == "bioner":
+            model_names = [
+                "hunflair-cellline",
+                "hunflair-chemical",
+                "hunflair-disease",
+                "hunflair-gene",
+                "hunflair-species",
+            ]
+        elif isinstance(model_names, str):
+            model_names = [model_names]
+
+        taggers = {}
+        models = []
+
+        # load each model
+        for model_name in model_names:
+
+            model = SequenceTagger.load(model_name)
+
+            # check if the same embeddings were already loaded previously
+            # if the model uses StackedEmbedding, make a new stack with previous objects
+            if type(model.embeddings) == StackedEmbeddings:
+
+                # sort embeddings by key alphabetically
+                new_stack = []
+                d = model.embeddings.get_named_embeddings_dict()
+                import collections
+                od = collections.OrderedDict(sorted(d.items()))
+
+                for k, embedding in od.items():
+
+                    # check previous embeddings and add if found
+                    embedding_found = False
+                    for previous_model in models:
+
+                        # only re-use static embeddings
+                        if not embedding.static_embeddings: continue
+
+                        if embedding.name in previous_model.embeddings.get_named_embeddings_dict():
+                            previous_embedding = previous_model.embeddings.get_named_embeddings_dict()[embedding.name]
+                            previous_embedding.name = previous_embedding.name[2:]
+                            new_stack.append(previous_embedding)
+                            embedding_found = True
+                            break
+
+                    # if not found, use existing embedding
+                    if not embedding_found:
+                        embedding.name = embedding.name[2:]
+                        new_stack.append(embedding)
+
+                # initialize new stack
+                model.embeddings = None
+                model.embeddings = StackedEmbeddings(new_stack)
+
+            else:
+                # of the model uses regular embedding, re-load if previous version found
+                if not model.embeddings.static_embeddings:
+
+                    for previous_model in models:
+                        if model.embeddings.name in previous_model.embeddings.get_named_embeddings_dict():
+                            previous_embedding = previous_model.embeddings.get_named_embeddings_dict()[model.embeddings.name]
+                            if not previous_embedding.static_embeddings:
+                                model.embeddings = previous_embedding
+                                break
+
+            taggers[model_name] = model
+            models.append(model)
+
+        return cls(taggers)

@@ -84,6 +84,7 @@ class ModelTrainer:
         batch_growth_annealing: bool = False,
         shuffle: bool = True,
         param_selection_mode: bool = False,
+        write_weights: bool = False,
         num_workers: int = 6,
         sampler=None,
         use_amp: bool = False,
@@ -397,14 +398,15 @@ class ModelTrainer:
 
                     batch_time += time.time() - start_time
                     if seen_batches % modulo == 0:
+                        momentum_info = f' - momentum: {momentum:.4f}' if cycle_momentum else ''
                         log.info(
                             f"epoch {self.epoch} - iter {seen_batches}/{total_number_of_batches} - loss "
                             f"{train_loss / seen_batches:.8f} - samples/sec: {mini_batch_size * modulo / batch_time:.2f}"
-                            f" - lr: {learning_rate:.6f} - momentum: {momentum:.4f}"
+                            f" - lr: {learning_rate:.6f}{momentum_info}"
                         )
                         batch_time = 0
                         iteration = self.epoch * total_number_of_batches + batch_no
-                        if not param_selection_mode:
+                        if not param_selection_mode and write_weights:
                             weight_extractor.extract_weights(
                                 self.model.state_dict(), iteration
                             )

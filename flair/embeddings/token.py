@@ -1,7 +1,7 @@
 import hashlib
 from abc import abstractmethod
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Dict
 from collections import Counter
 from functools import lru_cache
 
@@ -97,6 +97,14 @@ class StackedEmbeddings(TokenEmbeddings):
             names.extend(embedding.get_names())
         return names
 
+    def get_named_embeddings_dict(self) -> Dict:
+
+        named_embeddings_dict = {}
+        for embedding in self.embeddings:
+            named_embeddings_dict.update(embedding.get_named_embeddings_dict())
+
+        return named_embeddings_dict
+
 
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
@@ -109,16 +117,11 @@ class WordEmbeddings(TokenEmbeddings):
         """
         self.embeddings = embeddings
 
-        old_base_path = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/"
-        )
-        base_path = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/"
-        )
-        embeddings_path_v4 = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/"
-        )
+        old_base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/"
+        base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/"
+        embeddings_path_v4 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/"
         embeddings_path_v4_1 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/"
+        hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/"
 
         hu_path: str = "https://flair.informatik.hu-berlin.de/resources"
 
@@ -127,36 +130,27 @@ class WordEmbeddings(TokenEmbeddings):
         # GLOVE embeddings
         if embeddings.lower() == "glove" or embeddings.lower() == "en-glove":
             cached_path(f"{old_base_path}glove.gensim.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(
-                f"{old_base_path}glove.gensim", cache_dir=cache_dir
-            )
+            embeddings = cached_path(f"{old_base_path}glove.gensim", cache_dir=cache_dir)
 
         # TURIAN embeddings
         elif embeddings.lower() == "turian" or embeddings.lower() == "en-turian":
-            cached_path(
-                f"{embeddings_path_v4_1}turian.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{embeddings_path_v4_1}turian", cache_dir=cache_dir
-            )
+            cached_path(f"{embeddings_path_v4_1}turian.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{embeddings_path_v4_1}turian", cache_dir=cache_dir)
 
         # KOMNINOS embeddings
         elif embeddings.lower() == "extvec" or embeddings.lower() == "en-extvec":
-            cached_path(
-                f"{old_base_path}extvec.gensim.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{old_base_path}extvec.gensim", cache_dir=cache_dir
-            )
+            cached_path(f"{old_base_path}extvec.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{old_base_path}extvec.gensim", cache_dir=cache_dir)
+
+        # pubmed embeddings
+        elif embeddings.lower() == "pubmed" or embeddings.lower() == "en-pubmed":
+            cached_path(f"{hu_path}pubmed_pmc_wiki_sg_1M.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}pubmed_pmc_wiki_sg_1M.gensim", cache_dir=cache_dir)
 
         # FT-CRAWL embeddings
         elif embeddings.lower() == "crawl" or embeddings.lower() == "en-crawl":
-            cached_path(
-                f"{base_path}en-fasttext-crawl-300d-1M.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{base_path}en-fasttext-crawl-300d-1M", cache_dir=cache_dir
-            )
+            cached_path(f"{base_path}en-fasttext-crawl-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{base_path}en-fasttext-crawl-300d-1M", cache_dir=cache_dir)
 
         # FT-CRAWL embeddings
         elif (
@@ -164,21 +158,13 @@ class WordEmbeddings(TokenEmbeddings):
             or embeddings.lower() == "en-news"
             or embeddings.lower() == "en"
         ):
-            cached_path(
-                f"{base_path}en-fasttext-news-300d-1M.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{base_path}en-fasttext-news-300d-1M", cache_dir=cache_dir
-            )
+            cached_path(f"{base_path}en-fasttext-news-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{base_path}en-fasttext-news-300d-1M", cache_dir=cache_dir)
 
         # twitter embeddings
         elif embeddings.lower() == "twitter" or embeddings.lower() == "en-twitter":
-            cached_path(
-                f"{old_base_path}twitter.gensim.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{old_base_path}twitter.gensim", cache_dir=cache_dir
-            )
+            cached_path(f"{old_base_path}twitter.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{old_base_path}twitter.gensim", cache_dir=cache_dir)
 
         # part of speech embeddings
         elif embeddings.lower() == "pos_embeddings" or embeddings.lower() == "pos-embeddings":
@@ -637,8 +623,10 @@ class FlairEmbeddings(TokenEmbeddings):
             "pt-forward": f"{aws_path}/embeddings-v0.4/lm-pt-forward.pt",
             "pt-backward": f"{aws_path}/embeddings-v0.4/lm-pt-backward.pt",
             # Pubmed
-            "pubmed-forward": f"{aws_path}/embeddings-v0.4.1/pubmed-2015-fw-lm.pt",
-            "pubmed-backward": f"{aws_path}/embeddings-v0.4.1/pubmed-2015-bw-lm.pt",
+            "pubmed-forward": f"{hu_path}/embeddings/pm_pmc-forward/pubmed-forward.pt",
+            "pubmed-backward": f"{hu_path}/embeddings/pm_pmc-backward/pubmed-backward.pt",
+            "pubmed-2015-forward": f"{aws_path}/embeddings-v0.4.1/pubmed-2015-fw-lm.pt",
+            "pubmed-2015-backward": f"{aws_path}/embeddings-v0.4.1/pubmed-2015-bw-lm.pt",
             # Slovenian
             "sl-forward": f"{aws_path}/embeddings-stefan-it/lm-sl-opus-large-forward-v0.1.pt",
             "sl-backward": f"{aws_path}/embeddings-stefan-it/lm-sl-opus-large-backward-v0.1.pt",
@@ -918,7 +906,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         batch_size: int = 1,
         use_scalar_mix: bool = False,
         fine_tune: bool = False,
-        allow_long_sentences: bool = False,
+        allow_long_sentences: bool = True,
         **kwargs
     ):
         """
@@ -951,7 +939,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             self.max_subtokens_sequence_length = self.tokenizer.model_max_length
             self.stride = self.tokenizer.model_max_length//2
         else:
-            self.max_subtokens_sequence_length = None
+            self.max_subtokens_sequence_length = self.tokenizer.model_max_length
             self.stride = 0
 
         # model name
@@ -1657,7 +1645,7 @@ class BytePairEmbeddings(TokenEmbeddings):
         language: str = None,
         dim: int = 50,
         syllables: int = 100000,
-        cache_dir=Path(flair.cache_root) / "embeddings",
+        cache_dir= None,
         model_file_path: Path = None,
         embedding_file_path: Path = None,
         **kwargs,
@@ -1665,6 +1653,8 @@ class BytePairEmbeddings(TokenEmbeddings):
         """
         Initializes BP embeddings. Constructor downloads required files if not there.
         """
+        if not cache_dir:
+            cache_dir = Path(flair.cache_root) / "embeddings"
         if language:
             self.name: str = f"bpe-{language}-{syllables}-{dim}"
         else:
@@ -1673,7 +1663,7 @@ class BytePairEmbeddings(TokenEmbeddings):
             ), "Need to specify model_file_path and embedding_file_path if no language is given in BytePairEmbeddings(...)"
             dim=None
 
-        self.embedder = BPEmb(
+        self.embedder = BPEmbSerializable(
             lang=language,
             vs=syllables,
             dim=dim,
@@ -1849,6 +1839,22 @@ class ELMoEmbeddings(TokenEmbeddings):
 
     def __str__(self):
         return self.name
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+
+        if re.fullmatch(r"cuda:[0-9]+", str(flair.device)):
+            cuda_device = int(str(flair.device).split(":")[-1])
+        elif str(flair.device) == "cpu":
+            cuda_device = -1
+        else:
+            cuda_device = 0
+
+        self.ee.cuda_device = cuda_device
+
+        self.ee.elmo_bilm.to(device=flair.device)
+        self.ee.elmo_bilm._elmo_lstm._states = tuple(
+            [state.to(flair.device) for state in self.ee.elmo_bilm._elmo_lstm._states])
 
 
 class NILCEmbeddings(WordEmbeddings):

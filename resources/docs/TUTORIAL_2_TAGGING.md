@@ -69,6 +69,29 @@ This should print:
     ]}
 ```
 
+
+### Multi-Tagging 
+
+Sometimes you want to predict several types of annotation at once, for instance NER and part-of-speech (POS) tags. 
+For this, you can use our new `MultiTagger` object, like this: 
+
+```python
+from flair.models import MultiTagger
+
+# load tagger for POS and NER 
+tagger = MultiTagger.load(['pos', 'ner'])
+
+# make example sentence
+sentence = Sentence("George Washington went to Washington.")
+
+# predict with both models
+tagger.predict(sentence)
+
+print(sentence)
+``` 
+
+The sentence now has two types of annotation: POS and NER. 
+
 ### List of Pre-Trained Sequence Tagger Models
 
 You choose which pre-trained model you load by passing the appropriate
@@ -80,6 +103,7 @@ are provided:
 | ID | Task | Training Dataset | Accuracy |
 | -------------    | ------------- |------------- |------------- |
 | 'ner' | 4-class Named Entity Recognition |  Conll-03  |  **93.03** (F1) |
+| 'ner-pooled' | 4-class Named Entity Recognition (memory inefficient) |  Conll-03  |  **93.24** (F1) |
 | 'ner-ontonotes' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.06** (F1) |
 | 'chunk' |  Syntactic Chunking   |  Conll-2000     |  **96.47** (F1) |
 | 'pos' |  Part-of-Speech Tagging (fine-grained) |  Ontonotes     |  **98.19** (Accuracy) |
@@ -252,17 +276,20 @@ list of `Sentence` objects to the `.predict()` method.
 For instance, you can use the sentence splitter of segtok to split your text:
 
 ```python
+from flair.models import SequenceTagger
+from flair.tokenization import SegtokSentenceSplitter
 
-# your text of many sentences
+# example text with many sentences
 text = "This is a sentence. This is another sentence. I love Berlin."
 
-# use a library to split into sentences
-from segtok.segmenter import split_single
+# initialize sentence splitter
+splitter = SegtokSentenceSplitter()
 
-sentences = [Sentence(sent, use_tokenizer=True) for sent in split_single(text)]
+# use splitter to split text into list of sentences
+sentences = splitter.split(text)
 
-# predict tags for list of sentences
-tagger: SequenceTagger = SequenceTagger.load('ner')
+# predict tags for sentences
+tagger = SequenceTagger.load('ner')
 tagger.predict(sentences)
 
 # iterate through sentences and print predicted labels

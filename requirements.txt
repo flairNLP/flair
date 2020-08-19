@@ -15,5 +15,7 @@ bpemb>=0.3.2
 regex
 tabulate
 langdetect
+lxml
+ftfy
 sentencepiece!=0.1.92
 konoha[janome]<5.0.0,>=4.0.0

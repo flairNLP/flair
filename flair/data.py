@@ -523,24 +523,26 @@ def build_japanese_tokenizer(tokenizer: str = "MeCab"):
 
 class Sentence(DataPoint):
     """
-       A Sentence is a list of Tokens and is used to represent a sentence or text fragment.
+       A Sentence is a list of tokens and is used to represent a sentence or text fragment.
     """
 
     def __init__(
         self,
         text: str = None,
-        use_tokenizer: Union[bool, Tokenizer] = False,
+        use_tokenizer: Union[bool, Tokenizer] = True,
         language_code: str = None,
+        start_position: int = None
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
         :param text: original string
-        :param use_tokenizer: a custom tokenizer (default is SpaceTokenizer)
-        more advanced options are SegTokTokenizer to use segtok or SpacyTokenizer to use Spacy library
-        if available). Check the implementations of abstract class Tokenizer or implement your own subclass (if you need it).
-        If instead of providing a Tokenizer, this parameter is just set to True, SegtokTokenizer will be used.
-        :param labels:
-        :param language_code:
+        :param use_tokenizer: a custom tokenizer (default is :class:`SpaceTokenizer`)
+            more advanced options are :class:`SegTokTokenizer` to use segtok or :class:`SpacyTokenizer`
+            to use Spacy library if available). Check the implementations of abstract class Tokenizer or
+            implement your own subclass (if you need it). If instead of providing a Tokenizer, this parameter
+            is just set to True (deprecated), :class:`SegtokTokenizer` will be used.
+        :param language_code: Language of the sentence
+        :param start_position: Start char offset of the sentence in the superordinate document
         """
         super().__init__()
 
@@ -549,6 +551,11 @@ class Sentence(DataPoint):
         self._embeddings: Dict = {}
 
         self.language_code: str = language_code
+
+        self.start_pos = start_position
+        self.end_pos = (
+            start_position + len(text) if start_position is not None else None
+        )
 
         if isinstance(use_tokenizer, Tokenizer):
             tokenizer = use_tokenizer
@@ -561,7 +568,6 @@ class Sentence(DataPoint):
         else:
             raise AssertionError("Unexpected type of parameter 'use_tokenizer'. " +
                                  "Parameter should be bool, Callable[[str], List[Token]] (deprecated), Tokenizer")
-
 
         # if text is passed, instantiate sentence with tokens (words)
         if text is not None:
@@ -608,9 +614,7 @@ class Sentence(DataPoint):
             label_names.append(label.value)
         return label_names
 
-    def get_spans(self, label_type: str, min_score=-1) -> List[Span]:
-
-        spans: List[Span] = []
+    def _add_spans_internal(self, spans: List[Span], label_type: str, min_score):
 
         current_span = []
 
@@ -682,6 +686,24 @@ class Sentence(DataPoint):
 
         return spans
 
+    def get_spans(self, label_type: Optional[str] = None, min_score=-1) -> List[Span]:
+
+        spans: List[Span] = []
+
+        # if label type is explicitly specified, get spans for this label type
+        if label_type:
+            return self._add_spans_internal(spans, label_type, min_score)
+
+        # else determine all label types in sentence and get all spans
+        label_types = []
+        for token in self:
+            for annotation in token.annotation_layers.keys():
+                if annotation not in label_types: label_types.append(annotation)
+
+        for label_type in label_types:
+            self._add_spans_internal(spans, label_type, min_score)
+        return spans
+
     @property
     def embedding(self):
         return self.get_embedding()
@@ -748,6 +770,8 @@ class Sentence(DataPoint):
                     continue
 
                 if token.get_labels(label_type)[0].value == "O":
+                    continue
+                if token.get_labels(label_type)[0].value == "_":
                     continue
 
                 tags.append(token.get_labels(label_type)[0].value)
@@ -1043,6 +1067,37 @@ class Corpus:
         self._dev = Corpus._filter_empty_sentences(self._dev)
         log.info(self)
 
+    def filter_long_sentences(self, max_charlength: int):
+        log.info("Filtering long sentences")
+        self._train = Corpus._filter_long_sentences(self._train, max_charlength)
+        self._test = Corpus._filter_long_sentences(self._test, max_charlength)
+        self._dev = Corpus._filter_long_sentences(self._dev, max_charlength)
+        log.info(self)
+
+    @staticmethod
+    def _filter_long_sentences(dataset, max_charlength: int) -> Dataset:
+
+        # find out empty sentence indices
+        empty_sentence_indices = []
+        non_empty_sentence_indices = []
+        index = 0
+
+        from flair.datasets import DataLoader
+
+        for batch in DataLoader(dataset):
+            for sentence in batch:
+                if len(sentence.to_plain_string()) > max_charlength:
+                    empty_sentence_indices.append(index)
+                else:
+                    non_empty_sentence_indices.append(index)
+                index += 1
+
+        # create subset of non-empty sentence indices
+        subset = Subset(dataset, non_empty_sentence_indices)
+
+        return subset
+
+
     @staticmethod
     def _filter_empty_sentences(dataset) -> Dataset:
 
@@ -1260,7 +1315,9 @@ class MultiCorpus(Corpus):
         )
 
     def __str__(self):
-        return "\n".join([str(corpus) for corpus in self.corpora])
+        output = f"MultiCorpus: {len(self.train)} train + {len(self.dev)} dev + {len(self.test)} test sentences\n - "
+        output += "\n - ".join([f'{type(corpus).__name__} {str(corpus)}' for corpus in self.corpora])
+        return output
 
 
 def iob2(tags):
