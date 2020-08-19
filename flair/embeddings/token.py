@@ -359,6 +359,10 @@ class POSEmbeddings(TokenEmbeddings):
             else:
                 word_embedding = np.concatenate((word_embedding, np.zeros(self.embedding_length, dtype="float")))
 
+        if word_embedding.shape != (400,):
+            log.info(word)
+            log.info(word_embedding.shape)
+
         word_embedding = torch.tensor(
             word_embedding.tolist(), device=flair.device, dtype=torch.float
         )
