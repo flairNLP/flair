@@ -603,6 +603,8 @@ class SequenceTagger(flair.nn.Model):
 
         self.embeddings.embed(sentences)
 
+        print(f"length sentences: {len(sentences)}")
+
         names = self.embeddings.get_names()
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]

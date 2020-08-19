@@ -349,8 +349,6 @@ class Token(DataPoint):
             if (flair.embedding_storage_mode == "cpu") and embed.device != flair.device:
                 embed = embed.to(flair.device)
             embeddings.append(embed)
-        for emb in embeddings:
-            log.info(emb.shape)
         return embeddings
 
     def get_embedding(self, names: Optional[List[str]] = None) -> torch.tensor:
