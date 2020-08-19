@@ -617,8 +617,8 @@ class SequenceTagger(flair.nn.Model):
         all_embs = list()
         for sentence in sentences:
             for token in sentence:
-                dim = token.get_each_embedding()
-                print(dim)
+                dim = token.get_each_embedding()[0]
+                print(dim.shape)
             all_embs += [
                 emb for token in sentence for emb in token.get_each_embedding(names)
             ]
