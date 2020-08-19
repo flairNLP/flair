@@ -3,7 +3,7 @@ from flair.embeddings import POSEmbeddings, StackedEmbeddings
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
 
-corpus = flair.datasets.WIKINER_ENGLISH().downsample(0.01)
+corpus = flair.datasets.WIKINER_ENGLISH().downsample(0.001)
 
 tag_type = 'ner'
 
