@@ -603,7 +603,11 @@ class SequenceTagger(flair.nn.Model):
 
         self.embeddings.embed(sentences)
 
-        print(f"length sentences: {len(sentences)}")
+        tokens = 0
+        for sentence in sentences:
+            for token in sentence:
+                tokens += 1
+        print(f"# of tokens: {tokens}")
 
         names = self.embeddings.get_names()
 
