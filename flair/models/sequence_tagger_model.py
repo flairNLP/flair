@@ -629,7 +629,7 @@ class SequenceTagger(flair.nn.Model):
         log.info(f"length sentences: {len(sentences)}")
         log.info(f"longest token seq: {longest_token_sequence_in_batch}")
         log.info(f"embedding length: {self.embeddings.embedding_length}")
-        log.info(f"all: {all_embs}")
+        log.info(f"all: {len(all_embs)}")
         sentence_tensor = torch.cat(all_embs).view(
             [
                 len(sentences),
