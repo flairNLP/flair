@@ -626,7 +626,7 @@ class SequenceTagger(flair.nn.Model):
                     : self.embeddings.embedding_length * nb_padding_tokens
                 ]
                 all_embs.append(t)
-                
+
         sentence_tensor = torch.cat(all_embs).view(
             [
                 len(sentences),
