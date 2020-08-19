@@ -615,13 +615,18 @@ class SequenceTagger(flair.nn.Model):
         )
 
         all_embs = list()
+        all_embs2 = list()
         for sentence in sentences:
-            for token in sentence:
-                for emb in token.get_each_embedding(names):
-                    print(emb[0].shape)
             all_embs += [
                 emb for token in sentence for emb in token.get_each_embedding(names)
             ]
+            all_embs2 += [
+                (sentence, emb for token in sentence for emb in token.get_each_embedding(names))
+            ]
+
+            for tuple in all_embs2:
+                print(tuple[0])
+                print(tuple[1])
             nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
 
             if nb_padding_tokens > 0:
