@@ -352,15 +352,12 @@ class POSEmbeddings(TokenEmbeddings):
             word_with_tag = f"{word.lower()}_{POS_type}"
             if word_with_tag in self.precomputed_word_embeddings:
                 word_embedding = np.concatenate((word_embedding, self.precomputed_word_embeddings[word_with_tag]))
-            elif word_with_tag.replace(".", "") in self.precomputed_word_embeddings:
+            elif word_with_tag.endswith(".") and word_with_tag.replace(".", "") in self.precomputed_word_embeddings:
                 word_embedding = np.concatenate((word_embedding, self.precomputed_word_embeddings[
                     word_with_tag.replace(".", "")
                 ]))
             else:
                 word_embedding = np.concatenate((word_embedding, np.zeros(self.embedding_length, dtype="float")))
-
-        log.info(word)
-        log.info(word_embedding.shape)
 
         word_embedding = torch.tensor(
             word_embedding.tolist(), device=flair.device, dtype=torch.float
