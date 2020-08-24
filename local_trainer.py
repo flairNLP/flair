@@ -13,20 +13,20 @@ embedding_types = [
     POSEmbeddings(),
 
     # contextual string embeddings, forward
-    FlairEmbeddings('news-forward', pooling='min'),
+    FlairEmbeddings('news-forward'),
 
     # contextual string embeddings, backward
-    FlairEmbeddings('news-backward', pooling='min'),
+    FlairEmbeddings('news-backward'),
     ],
     [
     # GloVe embeddings
     WordEmbeddings('glove'),
 
     # contextual string embeddings, forward
-    FlairEmbeddings('news-forward', pooling='min'),
+    FlairEmbeddings('news-forward'),
 
     # contextual string embeddings, backward
-    FlairEmbeddings('news-backward', pooling='min'),
+    FlairEmbeddings('news-backward'),
     ]]
 
 
