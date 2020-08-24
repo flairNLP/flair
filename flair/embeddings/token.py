@@ -323,8 +323,8 @@ class POSEmbeddings(TokenEmbeddings):
 
         self.field = field
 
-        self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
-        self.__total_embedding_length: int = self.precomputed_word_embeddings.vector_size * len(self.POS_types)
+        self.__embedding_length: int = self.precomputed_word_embeddings.vector_size * len(self.POS_types)
+        self.__sub_embedding_length: int = self.precomputed_word_embeddings.vector_size
         super().__init__()
 
     @property
@@ -343,7 +343,7 @@ class POSEmbeddings(TokenEmbeddings):
                     word_with_tag.replace(".", "")
                 ]))
             else:
-                word_embedding = np.concatenate((word_embedding, np.zeros(self.embedding_length, dtype="float")))
+                word_embedding = np.concatenate((word_embedding, np.zeros(self.__sub_embedding_length, dtype="float")))
 
         word_embedding = torch.tensor(
             word_embedding.tolist(), device=flair.device, dtype=torch.float
