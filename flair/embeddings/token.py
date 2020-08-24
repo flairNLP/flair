@@ -218,12 +218,6 @@ class WordEmbeddings(TokenEmbeddings):
             self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
                 str(embeddings), binary=True
             )
-        if str(embeddings).endswith(".txt"):
-            log.info("Loading POS Embeddings...")
-            self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
-                str(embeddings), binary=False
-            )
-            log.info("Done.")
         else:
             self.precomputed_word_embeddings = gensim.models.KeyedVectors.load(
                 str(embeddings)
@@ -305,21 +299,20 @@ class POSEmbeddings(TokenEmbeddings):
         cache_dir = Path("embeddings")
 
         # part of speech embeddings
-        cached_path(f"{hu_path}/embeddings/{embeddings}.txt", cache_dir=cache_dir)
+        cached_path(f"{hu_path}/embeddings/pos/{embeddings}.vectors.npy", cache_dir=cache_dir)
         embeddings = cached_path(
-            f"{hu_path}/embeddings/{embeddings}.txt", cache_dir=cache_dir
+            f"{hu_path}/embeddings/pos/{embeddings}", cache_dir=cache_dir
         )
 
         self.name: str = str(embeddings)
         self.static_embeddings = True
         self.POS_types = ["PN", "N", "V", "REST"]
 
-        if str(embeddings).endswith(".txt"):
-            log.info("Loading POS Embeddings...")
-            self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
-                str(embeddings), binary=False
-            )
-            log.info("Done.")
+        log.info("Loading POS Embeddings...")
+        self.precomputed_word_embeddings = gensim.models.KeyedVectors.load(
+            str(embeddings)
+        )
+        log.info("Done.")
 
         self.field = field
 
