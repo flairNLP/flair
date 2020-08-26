@@ -9,10 +9,11 @@ from gensim.models import KeyedVectors
 from gensim.scripts.glove2word2vec import glove2word2vec
 
 embedding_types = [
-    [POSEmbeddings(),],
-    [WordEmbeddings('glove'),],
+    [POSEmbeddings(dim=25),],
+    [WordEmbeddings('glove_normal100/normal_embeddings_100d'),],
+    [POSEmbeddings(dim=100),],
+    [WordEmbeddings('glove_normal400/normal_embeddings_400d'),],
     ]
-
 
 for idx, embedding_type in enumerate(embedding_types):
 
