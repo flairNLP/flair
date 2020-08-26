@@ -4,30 +4,14 @@ from flair.embeddings import POSEmbeddings, StackedEmbeddings, WordEmbeddings, F
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
 
+from gensim.test.utils import datapath, get_tmpfile
+from gensim.models import KeyedVectors
+from gensim.scripts.glove2word2vec import glove2word2vec
+
 embedding_types = [
     [POSEmbeddings(),],
     [WordEmbeddings('glove'),],
-    [
-
-    # GloVe embeddings
-    POSEmbeddings(),
-
-    # contextual string embeddings, forward
-    FlairEmbeddings('news-forward'),
-
-    # contextual string embeddings, backward
-    FlairEmbeddings('news-backward'),
-    ],
-    [
-    # GloVe embeddings
-    WordEmbeddings('glove'),
-
-    # contextual string embeddings, forward
-    FlairEmbeddings('news-forward'),
-
-    # contextual string embeddings, backward
-    FlairEmbeddings('news-backward'),
-    ]]
+    ]
 
 
 for idx, embedding_type in enumerate(embedding_types):

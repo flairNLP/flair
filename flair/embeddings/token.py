@@ -308,11 +308,9 @@ class POSEmbeddings(TokenEmbeddings):
         self.static_embeddings = True
         self.POS_types = ["PN", "N", "V", "REST"]
 
-        log.info("Loading POS Embeddings...")
         self.precomputed_word_embeddings = gensim.models.KeyedVectors.load(
             str(embeddings)
         )
-        log.info("Done.")
 
         self.field = field
 
