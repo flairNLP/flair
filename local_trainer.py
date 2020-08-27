@@ -16,25 +16,25 @@ embedding_types = [
     ]
 
 for idx, embedding_type in enumerate(embedding_types):
+    for idx2 in range(3):
+        corpus: Corpus = CONLL_03()
 
-    corpus: Corpus = CONLL_03()
+        tag_type = 'ner'
 
-    tag_type = 'ner'
+        tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 
-    tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+        embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_type)
 
-    embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_type)
+        tagger: SequenceTagger = SequenceTagger(hidden_size=256,
+                                                embeddings=embeddings,
+                                                tag_dictionary=tag_dictionary,
+                                                tag_type=tag_type,
+                                                use_crf=True)
 
-    tagger: SequenceTagger = SequenceTagger(hidden_size=256,
-                                            embeddings=embeddings,
-                                            tag_dictionary=tag_dictionary,
-                                            tag_type=tag_type,
-                                            use_crf=True)
+        trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
-
-    trainer.train(f'resources/taggers/ner-tagger-with-pos-embeddings-{idx}',
-                  learning_rate=0.1,
-                  mini_batch_size=32,
-                  max_epochs=150,
-                  embeddings_storage_mode='gpu')
+        trainer.train(f'resources/taggers/ner-tagger-with-pos-embeddings-{idx}-run{idx2}',
+                      learning_rate=0.1,
+                      mini_batch_size=32,
+                      max_epochs=150,
+                      embeddings_storage_mode='gpu')
