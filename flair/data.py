@@ -112,7 +112,7 @@ class Dictionary:
     @classmethod
     def load(cls, name: str):
         from flair.file_utils import cached_path
-        hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/characters"
+        hu_path: str = "https://flair.informatik.hu-berlin.de/resources/characters"
         if name == "chars" or name == "common-chars":
             char_dict = cached_path(f"{hu_path}/common_characters", cache_dir="datasets")
             return Dictionary.load_from_file(char_dict)
