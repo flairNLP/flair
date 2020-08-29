@@ -121,24 +121,24 @@ class WordEmbeddings(TokenEmbeddings):
         base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/"
         embeddings_path_v4 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/"
         embeddings_path_v4_1 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/"
-        hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/"
+        hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/token"
 
         cache_dir = Path("embeddings")
 
         # GLOVE embeddings
         if embeddings.lower() == "glove" or embeddings.lower() == "en-glove":
-            cached_path(f"{old_base_path}glove.gensim.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(f"{old_base_path}glove.gensim", cache_dir=cache_dir)
+            cached_path(f"{hu_path}/glove.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/glove.gensim", cache_dir=cache_dir)
 
         # TURIAN embeddings
         elif embeddings.lower() == "turian" or embeddings.lower() == "en-turian":
-            cached_path(f"{embeddings_path_v4_1}turian.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(f"{embeddings_path_v4_1}turian", cache_dir=cache_dir)
+            cached_path(f"{hu_path}/turian.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/turian", cache_dir=cache_dir)
 
         # KOMNINOS embeddings
         elif embeddings.lower() == "extvec" or embeddings.lower() == "en-extvec":
-            cached_path(f"{old_base_path}extvec.gensim.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(f"{old_base_path}extvec.gensim", cache_dir=cache_dir)
+            cached_path(f"{hu_path}/extvec.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/extvec.gensim", cache_dir=cache_dir)
 
         # pubmed embeddings
         elif embeddings.lower() == "pubmed" or embeddings.lower() == "en-pubmed":
