@@ -120,7 +120,6 @@ class WordEmbeddings(TokenEmbeddings):
         old_base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/"
         base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/"
         embeddings_path_v4 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/"
-        embeddings_path_v4_1 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/"
         hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/token"
 
         cache_dir = Path("embeddings")

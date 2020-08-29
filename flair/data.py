@@ -112,20 +112,17 @@ class Dictionary:
     @classmethod
     def load(cls, name: str):
         from flair.file_utils import cached_path
-
+        hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/characters"
         if name == "chars" or name == "common-chars":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters"
-            char_dict = cached_path(base_path, cache_dir="datasets")
+            char_dict = cached_path(f"{hu_path}/common_characters", cache_dir="datasets")
             return Dictionary.load_from_file(char_dict)
 
         if name == "chars-large" or name == "common-chars-large":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters_large"
-            char_dict = cached_path(base_path, cache_dir="datasets")
+            char_dict = cached_path(f"{hu_path}/common_characters_large", cache_dir="datasets")
             return Dictionary.load_from_file(char_dict)
 
         if name == "chars-xl" or name == "common-chars-xl":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters_xl"
-            char_dict = cached_path(base_path, cache_dir="datasets")
+            char_dict = cached_path(f"{hu_path}/common_characters_xl", cache_dir="datasets")
             return Dictionary.load_from_file(char_dict)
 
         return Dictionary.load_from_file(name)
