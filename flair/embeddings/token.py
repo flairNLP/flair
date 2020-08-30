@@ -117,9 +117,6 @@ class WordEmbeddings(TokenEmbeddings):
         """
         self.embeddings = embeddings
 
-        old_base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/"
-        base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/"
-        embeddings_path_v4 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/"
         hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/token"
 
         cache_dir = Path("embeddings")
@@ -141,60 +138,38 @@ class WordEmbeddings(TokenEmbeddings):
 
         # pubmed embeddings
         elif embeddings.lower() == "pubmed" or embeddings.lower() == "en-pubmed":
-            cached_path(f"{hu_path}pubmed_pmc_wiki_sg_1M.gensim.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(f"{hu_path}pubmed_pmc_wiki_sg_1M.gensim", cache_dir=cache_dir)
+            cached_path(f"{hu_path}/pubmed_pmc_wiki_sg_1M.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/pubmed_pmc_wiki_sg_1M.gensim", cache_dir=cache_dir)
 
         # FT-CRAWL embeddings
         elif embeddings.lower() == "crawl" or embeddings.lower() == "en-crawl":
-            cached_path(f"{base_path}en-fasttext-crawl-300d-1M.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(f"{base_path}en-fasttext-crawl-300d-1M", cache_dir=cache_dir)
+            cached_path(f"{hu_path}/en-fasttext-crawl-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/en-fasttext-crawl-300d-1M", cache_dir=cache_dir)
 
         # FT-CRAWL embeddings
-        elif (
-            embeddings.lower() == "news"
-            or embeddings.lower() == "en-news"
-            or embeddings.lower() == "en"
-        ):
-            cached_path(f"{base_path}en-fasttext-news-300d-1M.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(f"{base_path}en-fasttext-news-300d-1M", cache_dir=cache_dir)
+        elif embeddings.lower() in["news", "en-news", "en"]:
+            cached_path(f"{hu_path}/en-fasttext-news-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/en-fasttext-news-300d-1M", cache_dir=cache_dir)
 
         # twitter embeddings
-        elif embeddings.lower() == "twitter" or embeddings.lower() == "en-twitter":
-            cached_path(f"{old_base_path}twitter.gensim.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(f"{old_base_path}twitter.gensim", cache_dir=cache_dir)
+        elif embeddings.lower() in ["twitter", "en-twitter"]:
+            cached_path(f"{hu_path}/twitter.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/twitter.gensim", cache_dir=cache_dir)
 
         # two-letter language code wiki embeddings
         elif len(embeddings.lower()) == 2:
-            cached_path(
-                f"{embeddings_path_v4}{embeddings}-wiki-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings = cached_path(
-                f"{embeddings_path_v4}{embeddings}-wiki-fasttext-300d-1M",
-                cache_dir=cache_dir,
-            )
+            cached_path(f"{hu_path}/{embeddings}-wiki-fasttext-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/{embeddings}-wiki-fasttext-300d-1M", cache_dir=cache_dir)
 
         # two-letter language code wiki embeddings
         elif len(embeddings.lower()) == 7 and embeddings.endswith("-wiki"):
-            cached_path(
-                f"{embeddings_path_v4}{embeddings[:2]}-wiki-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings = cached_path(
-                f"{embeddings_path_v4}{embeddings[:2]}-wiki-fasttext-300d-1M",
-                cache_dir=cache_dir,
-            )
+            cached_path(f"{hu_path}/{embeddings[:2]}-wiki-fasttext-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/{embeddings[:2]}-wiki-fasttext-300d-1M",  cache_dir=cache_dir)
 
         # two-letter language code crawl embeddings
         elif len(embeddings.lower()) == 8 and embeddings.endswith("-crawl"):
-            cached_path(
-                f"{embeddings_path_v4}{embeddings[:2]}-crawl-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings = cached_path(
-                f"{embeddings_path_v4}{embeddings[:2]}-crawl-fasttext-300d-1M",
-                cache_dir=cache_dir,
-            )
+            cached_path(f"{hu_path}/{embeddings[:2]}-crawl-fasttext-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/{embeddings[:2]}-crawl-fasttext-300d-1M", cache_dir=cache_dir)
 
         elif not Path(embeddings).exists():
             raise ValueError(
