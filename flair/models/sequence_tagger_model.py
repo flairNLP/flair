@@ -971,189 +971,74 @@ class SequenceTagger(flair.nn.Model):
 
         model_map = {}
 
-        aws_resource_path_v04 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4"
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
-        model_map["ner"] = "/".join(
-            [aws_resource_path_v04, "NER-conll03-english", "en-ner-conll03-v0.4.pt"]
-        )
+        model_map["ner"] = "/".join([hu_path, "ner", "en-ner-conll03-v0.4.pt"])
 
-        model_map["ner-pooled"] = "/".join(
-            [hu_path, "NER-conll03-english-pooled", "en-ner-conll03-pooled-v0.5.pt"]
-        )
+        model_map["ner-pooled"] = "/".join([hu_path, "ner-pooled", "en-ner-conll03-pooled-v0.5.pt"])
 
-        model_map["ner-fast"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "NER-conll03--h256-l1-b32-p3-0.5-%2Bglove%2Bnews-forward-fast%2Bnews-backward-fast-normal-locked0.5-word0.05--release_4",
-                "en-ner-fast-conll03-v0.4.pt",
-            ]
-        )
+        model_map["ner-fast"] = "/".join([hu_path,  "ner-fast",  "en-ner-fast-conll03-v0.4.pt"])
 
-        model_map["ner-ontonotes"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "release-ner-ontonotes-0",
-                "en-ner-ontonotes-v0.4.pt",
-            ]
-        )
+        model_map["ner-ontonotes"] = "/".join([hu_path, "ner-ontonotes", "en-ner-ontonotes-v0.4.pt"])
 
-        model_map["ner-ontonotes-fast"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "release-ner-ontonotes-fast-0",
-                "en-ner-ontonotes-fast-v0.4.pt",
-            ]
-        )
+        model_map["ner-ontonotes-fast"] = "/".join([hu_path, "ner-ontonotes-fast", "en-ner-ontonotes-fast-v0.4.pt"])
 
         for key in ["ner-multi", "multi-ner"]:
-            model_map[key] = "/".join(
-                [
-                    aws_resource_path_v04,
-                    "release-quadner-512-l2-multi-embed",
-                    "quadner-large.pt",
-                ]
-            )
+            model_map[key] = "/".join([hu_path, "multi-ner", "quadner-large.pt"])
 
         for key in ["ner-multi-fast", "multi-ner-fast"]:
-            model_map[key] = "/".join(
-                [aws_resource_path_v04, "NER-multi-fast", "ner-multi-fast.pt"]
-            )
+            model_map[key] = "/".join([hu_path, "multi-ner-fast", "ner-multi-fast.pt"])
 
-        for key in ["ner-multi-fast-learn", "multi-ner-fast-learn"]:
-            model_map[key] = "/".join(
-                [
-                    aws_resource_path_v04,
-                    "NER-multi-fast-evolve",
-                    "ner-multi-fast-learn.pt",
-                ]
-            )
+        model_map["upos"] = "/".join([hu_path, "upos",  "en-pos-ontonotes-v0.4.pt"])
 
-        model_map["upos"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "POS-ontonotes--h256-l1-b32-p3-0.5-%2Bglove%2Bnews-forward%2Bnews-backward-normal-locked0.5-word0.05--v0.4_0",
-                "en-pos-ontonotes-v0.4.pt",
-            ]
-        )
+        model_map["upos-fast"] = "/".join([hu_path, "upos-fast", "en-pos-ontonotes-fast-v0.4.pt"])
 
-        model_map["pos"] = "/".join(
-            [
-                hu_path,
-                "release-pos-0",
-                "en-pos-ontonotes-v0.5.pt",
-            ]
-        )
+        model_map["pos"] = "/".join([hu_path, "pos", "en-pos-ontonotes-v0.5.pt"])
 
-        model_map["upos-fast"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "release-pos-fast-0",
-                "en-pos-ontonotes-fast-v0.4.pt",
-            ]
-        )
-
-        model_map["pos-fast"] = "/".join(
-            [
-                hu_path,
-                "release-pos-fast-0",
-                "en-pos-ontonotes-fast-v0.5.pt",
-            ]
-        )
+        model_map["pos-fast"] = "/".join([hu_path, "pos-fast", "en-pos-ontonotes-fast-v0.5.pt"])
 
         for key in ["pos-multi", "multi-pos"]:
-            model_map[key] = "/".join(
-                [
-                    aws_resource_path_v04,
-                    "release-dodekapos-512-l2-multi",
-                    "pos-multi-v0.1.pt",
-                ]
-            )
+            model_map[key] = "/".join([hu_path, "multi-pos", "pos-multi-v0.1.pt"])
 
         for key in ["pos-multi-fast", "multi-pos-fast"]:
-            model_map[key] = "/".join(
-                [aws_resource_path_v04, "UPOS-multi-fast", "pos-multi-fast.pt"]
-            )
+            model_map[key] = "/".join([hu_path, "multi-pos-fast", "pos-multi-fast.pt"])
 
-        model_map["frame"] = "/".join(
-            [aws_resource_path_v04, "release-frame-1", "en-frame-ontonotes-v0.4.pt"]
-        )
+        model_map["frame"] = "/".join([hu_path, "frame", "en-frame-ontonotes-v0.4.pt"])
 
-        model_map["frame-fast"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "release-frame-fast-0",
-                "en-frame-ontonotes-fast-v0.4.pt",
-            ]
-        )
+        model_map["frame-fast"] = "/".join([hu_path, "frame-fast", "en-frame-ontonotes-fast-v0.4.pt"])
 
-        model_map["chunk"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "NP-conll2000--h256-l1-b32-p3-0.5-%2Bnews-forward%2Bnews-backward-normal-locked0.5-word0.05--v0.4_0",
-                "en-chunk-conll2000-v0.4.pt",
-            ]
-        )
+        model_map["chunk"] = "/".join([hu_path, "chunk", "en-chunk-conll2000-v0.4.pt"])
 
-        model_map["chunk-fast"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "release-chunk-fast-0",
-                "en-chunk-conll2000-fast-v0.4.pt",
-            ]
-        )
+        model_map["chunk-fast"] = "/".join([hu_path, "chunk-fast", "en-chunk-conll2000-fast-v0.4.pt"])
 
-        model_map["da-pos"] = "/".join(
-            [aws_resource_path_v04, "POS-danish", "da-pos-v0.1.pt"]
-        )
+        model_map["da-pos"] = "/".join([hu_path, "da-pos", "da-pos-v0.1.pt"])
 
-        model_map["da-ner"] = "/".join(
-            [aws_resource_path_v04, "NER-danish", "da-ner-v0.1.pt"]
-        )
+        model_map["da-ner"] = "/".join([hu_path, "NER-danish", "da-ner-v0.1.pt"])
 
-        model_map["de-pos"] = "/".join(
-            [hu_path, "release-de-pos-0", "de-pos-ud-hdt-v0.5.pt"]
-        )
+        model_map["de-pos"] = "/".join([hu_path, "de-pos", "de-pos-ud-hdt-v0.5.pt"])
 
-        model_map["de-pos-tweets"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "POS-fine-grained-german-tweets",
-                "de-pos-twitter-v0.1.pt",
-            ]
-        )
+        model_map["de-pos-tweets"] = "/".join([hu_path, "de-pos-tweets", "de-pos-twitter-v0.1.pt"])
 
-        model_map["de-ner"] = "/".join(
-            [aws_resource_path_v04, "release-de-ner-0", "de-ner-conll03-v0.4.pt"]
-        )
+        model_map["de-ner"] = "/".join([hu_path, "de-ner", "de-ner-conll03-v0.4.pt"])
 
-        model_map["de-ner-germeval"] = "/".join(
-            [aws_resource_path_v04, "NER-germeval", "de-ner-germeval-0.4.1.pt"]
-        )
+        model_map["de-ner-germeval"] = "/".join([hu_path, "de-ner-germeval", "de-ner-germeval-0.4.1.pt"])
 
-        model_map["fr-ner"] = "/".join(
-            [aws_resource_path_v04, "release-fr-ner-0", "fr-ner-wikiner-0.4.pt"]
-        )
-        model_map["nl-ner"] = "/".join(
-            [hu_path, "dutch-ner_0", "nl-ner-bert-conll02-v0.5b.pt"]
-        )
-        model_map["nl-ner-rnn"] = "/".join(
-            [hu_path, "dutch-ner-flair-0", "nl-ner-conll02-v0.5.pt"]
-        )
+        model_map["fr-ner"] = "/".join([hu_path, "fr-ner", "fr-ner-wikiner-0.4.pt"])
+
+        model_map["nl-ner"] = "/".join([hu_path, "nl-ner", "nl-ner-bert-conll02-v0.5b.pt"])
+
+        model_map["nl-ner-rnn"] = "/".join([hu_path, "nl-ner-rnn", "nl-ner-conll02-v0.5.pt"])
+
         model_map["ml-pos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt"
         model_map["ml-upos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-upos-model.pt"
 
         model_map["pt-pos-clinical"] = "/".join(
-            [hu_path, "clinical-pos-pt", "pucpr-flair-clinical-pos-tagging-best-model.pt"]
+            [hu_path, "pt-pos-clinical", "pucpr-flair-clinical-pos-tagging-best-model.pt"]
         )
 
-        model_map["keyphrase"] = "/".join(
-            [hu_path, "keyphrase-semeval2017-scibert", "keyphrase-en-scibert.pt"]
-        )
+        model_map["keyphrase"] = "/".join([hu_path, "keyphrase", "keyphrase-en-scibert.pt"])
 
-        model_map["negation-speculation"] = "/".join(
-            [hu_path, "negation-speculation-EN-bioflair", "negation-speculation-model.pt"]
-        )
+        model_map["negation-speculation"] = "/".join([hu_path, "negation-speculation", "negation-speculation-model.pt"])
 
         model_map["hunflair-paper-cellline"] = "/".join(
             [hu_path, "hunflair_smallish_models", "cellline", "hunflair-celline-v1.0.pt"]
@@ -1170,7 +1055,6 @@ class SequenceTagger(flair.nn.Model):
         model_map["hunflair-paper-species"] = "/".join(
             [hu_path, "hunflair_smallish_models", "species", "hunflair-species-v1.0.pt"]
         )
-
         model_map["hunflair-cellline"] = "/".join(
             [hu_path, "hunflair_smallish_models", "cellline", "hunflair-celline-v1.0.pt"]
         )
