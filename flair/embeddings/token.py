@@ -117,85 +117,59 @@ class WordEmbeddings(TokenEmbeddings):
         """
         self.embeddings = embeddings
 
-        old_base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/"
-        base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/"
-        embeddings_path_v4 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/"
-        embeddings_path_v4_1 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/"
-        hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/"
+        hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/token"
 
         cache_dir = Path("embeddings")
 
         # GLOVE embeddings
         if embeddings.lower() == "glove" or embeddings.lower() == "en-glove":
-            cached_path(f"{old_base_path}glove.gensim.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(f"{old_base_path}glove.gensim", cache_dir=cache_dir)
+            cached_path(f"{hu_path}/glove.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/glove.gensim", cache_dir=cache_dir)
 
         # TURIAN embeddings
         elif embeddings.lower() == "turian" or embeddings.lower() == "en-turian":
-            cached_path(f"{embeddings_path_v4_1}turian.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(f"{embeddings_path_v4_1}turian", cache_dir=cache_dir)
+            cached_path(f"{hu_path}/turian.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/turian", cache_dir=cache_dir)
 
         # KOMNINOS embeddings
         elif embeddings.lower() == "extvec" or embeddings.lower() == "en-extvec":
-            cached_path(f"{old_base_path}extvec.gensim.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(f"{old_base_path}extvec.gensim", cache_dir=cache_dir)
+            cached_path(f"{hu_path}/extvec.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/extvec.gensim", cache_dir=cache_dir)
 
         # pubmed embeddings
         elif embeddings.lower() == "pubmed" or embeddings.lower() == "en-pubmed":
-            cached_path(f"{hu_path}pubmed_pmc_wiki_sg_1M.gensim.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(f"{hu_path}pubmed_pmc_wiki_sg_1M.gensim", cache_dir=cache_dir)
+            cached_path(f"{hu_path}/pubmed_pmc_wiki_sg_1M.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/pubmed_pmc_wiki_sg_1M.gensim", cache_dir=cache_dir)
 
         # FT-CRAWL embeddings
         elif embeddings.lower() == "crawl" or embeddings.lower() == "en-crawl":
-            cached_path(f"{base_path}en-fasttext-crawl-300d-1M.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(f"{base_path}en-fasttext-crawl-300d-1M", cache_dir=cache_dir)
+            cached_path(f"{hu_path}/en-fasttext-crawl-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/en-fasttext-crawl-300d-1M", cache_dir=cache_dir)
 
         # FT-CRAWL embeddings
-        elif (
-            embeddings.lower() == "news"
-            or embeddings.lower() == "en-news"
-            or embeddings.lower() == "en"
-        ):
-            cached_path(f"{base_path}en-fasttext-news-300d-1M.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(f"{base_path}en-fasttext-news-300d-1M", cache_dir=cache_dir)
+        elif embeddings.lower() in["news", "en-news", "en"]:
+            cached_path(f"{hu_path}/en-fasttext-news-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/en-fasttext-news-300d-1M", cache_dir=cache_dir)
 
         # twitter embeddings
-        elif embeddings.lower() == "twitter" or embeddings.lower() == "en-twitter":
-            cached_path(f"{old_base_path}twitter.gensim.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(f"{old_base_path}twitter.gensim", cache_dir=cache_dir)
+        elif embeddings.lower() in ["twitter", "en-twitter"]:
+            cached_path(f"{hu_path}/twitter.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/twitter.gensim", cache_dir=cache_dir)
 
         # two-letter language code wiki embeddings
         elif len(embeddings.lower()) == 2:
-            cached_path(
-                f"{embeddings_path_v4}{embeddings}-wiki-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings = cached_path(
-                f"{embeddings_path_v4}{embeddings}-wiki-fasttext-300d-1M",
-                cache_dir=cache_dir,
-            )
+            cached_path(f"{hu_path}/{embeddings}-wiki-fasttext-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/{embeddings}-wiki-fasttext-300d-1M", cache_dir=cache_dir)
 
         # two-letter language code wiki embeddings
         elif len(embeddings.lower()) == 7 and embeddings.endswith("-wiki"):
-            cached_path(
-                f"{embeddings_path_v4}{embeddings[:2]}-wiki-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings = cached_path(
-                f"{embeddings_path_v4}{embeddings[:2]}-wiki-fasttext-300d-1M",
-                cache_dir=cache_dir,
-            )
+            cached_path(f"{hu_path}/{embeddings[:2]}-wiki-fasttext-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/{embeddings[:2]}-wiki-fasttext-300d-1M",  cache_dir=cache_dir)
 
         # two-letter language code crawl embeddings
         elif len(embeddings.lower()) == 8 and embeddings.endswith("-crawl"):
-            cached_path(
-                f"{embeddings_path_v4}{embeddings[:2]}-crawl-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings = cached_path(
-                f"{embeddings_path_v4}{embeddings[:2]}-crawl-fasttext-300d-1M",
-                cache_dir=cache_dir,
-            )
+            cached_path(f"{hu_path}/{embeddings[:2]}-crawl-fasttext-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/{embeddings[:2]}-crawl-fasttext-300d-1M", cache_dir=cache_dir)
 
         elif not Path(embeddings).exists():
             raise ValueError(
@@ -411,130 +385,129 @@ class FlairEmbeddings(TokenEmbeddings):
 
         cache_dir = Path("embeddings")
 
-        aws_path: str = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources"
-        hu_path: str = "https://flair.informatik.hu-berlin.de/resources"
+        hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/flair"
         clef_hipe_path: str = "https://files.ifi.uzh.ch/cl/siclemat/impresso/clef-hipe-2020/flair"
 
         self.PRETRAINED_MODEL_ARCHIVE_MAP = {
             # multilingual models
-            "multi-forward": f"{aws_path}/embeddings-v0.4.3/lm-jw300-forward-v0.1.pt",
-            "multi-backward": f"{aws_path}/embeddings-v0.4.3/lm-jw300-backward-v0.1.pt",
-            "multi-v0-forward": f"{aws_path}/embeddings-v0.4/lm-multi-forward-v0.1.pt",
-            "multi-v0-backward": f"{aws_path}/embeddings-v0.4/lm-multi-backward-v0.1.pt",
-            "multi-v0-forward-fast": f"{aws_path}/embeddings-v0.4/lm-multi-forward-fast-v0.1.pt",
-            "multi-v0-backward-fast": f"{aws_path}/embeddings-v0.4/lm-multi-backward-fast-v0.1.pt",
+            "multi-forward": f"{hu_path}/lm-jw300-forward-v0.1.pt",
+            "multi-backward": f"{hu_path}/lm-jw300-backward-v0.1.pt",
+            "multi-v0-forward": f"{hu_path}/lm-multi-forward-v0.1.pt",
+            "multi-v0-backward": f"{hu_path}/lm-multi-backward-v0.1.pt",
+            "multi-v0-forward-fast": f"{hu_path}/lm-multi-forward-fast-v0.1.pt",
+            "multi-v0-backward-fast": f"{hu_path}/lm-multi-backward-fast-v0.1.pt",
             # English models
-            "en-forward": f"{aws_path}/embeddings-v0.4.1/big-news-forward--h2048-l1-d0.05-lr30-0.25-20/news-forward-0.4.1.pt",
-            "en-backward": f"{aws_path}/embeddings-v0.4.1/big-news-backward--h2048-l1-d0.05-lr30-0.25-20/news-backward-0.4.1.pt",
-            "en-forward-fast": f"{aws_path}/embeddings/lm-news-english-forward-1024-v0.2rc.pt",
-            "en-backward-fast": f"{aws_path}/embeddings/lm-news-english-backward-1024-v0.2rc.pt",
-            "news-forward": f"{aws_path}/embeddings-v0.4.1/big-news-forward--h2048-l1-d0.05-lr30-0.25-20/news-forward-0.4.1.pt",
-            "news-backward": f"{aws_path}/embeddings-v0.4.1/big-news-backward--h2048-l1-d0.05-lr30-0.25-20/news-backward-0.4.1.pt",
-            "news-forward-fast": f"{aws_path}/embeddings/lm-news-english-forward-1024-v0.2rc.pt",
-            "news-backward-fast": f"{aws_path}/embeddings/lm-news-english-backward-1024-v0.2rc.pt",
-            "mix-forward": f"{aws_path}/embeddings/lm-mix-english-forward-v0.2rc.pt",
-            "mix-backward": f"{aws_path}/embeddings/lm-mix-english-backward-v0.2rc.pt",
+            "en-forward": f"{hu_path}/news-forward-0.4.1.pt",
+            "en-backward": f"{hu_path}/news-backward-0.4.1.pt",
+            "en-forward-fast": f"{hu_path}/lm-news-english-forward-1024-v0.2rc.pt",
+            "en-backward-fast": f"{hu_path}/lm-news-english-backward-1024-v0.2rc.pt",
+            "news-forward": f"{hu_path}/news-forward-0.4.1.pt",
+            "news-backward": f"{hu_path}/news-backward-0.4.1.pt",
+            "news-forward-fast": f"{hu_path}/lm-news-english-forward-1024-v0.2rc.pt",
+            "news-backward-fast": f"{hu_path}/lm-news-english-backward-1024-v0.2rc.pt",
+            "mix-forward": f"{hu_path}/lm-mix-english-forward-v0.2rc.pt",
+            "mix-backward": f"{hu_path}/lm-mix-english-backward-v0.2rc.pt",
             # Arabic
-            "ar-forward": f"{aws_path}/embeddings-stefan-it/lm-ar-opus-large-forward-v0.1.pt",
-            "ar-backward": f"{aws_path}/embeddings-stefan-it/lm-ar-opus-large-backward-v0.1.pt",
+            "ar-forward": f"{hu_path}/lm-ar-opus-large-forward-v0.1.pt",
+            "ar-backward": f"{hu_path}/lm-ar-opus-large-backward-v0.1.pt",
             # Bulgarian
-            "bg-forward-fast": f"{aws_path}/embeddings-v0.3/lm-bg-small-forward-v0.1.pt",
-            "bg-backward-fast": f"{aws_path}/embeddings-v0.3/lm-bg-small-backward-v0.1.pt",
-            "bg-forward": f"{aws_path}/embeddings-stefan-it/lm-bg-opus-large-forward-v0.1.pt",
-            "bg-backward": f"{aws_path}/embeddings-stefan-it/lm-bg-opus-large-backward-v0.1.pt",
+            "bg-forward-fast": f"{hu_path}/lm-bg-small-forward-v0.1.pt",
+            "bg-backward-fast": f"{hu_path}/lm-bg-small-backward-v0.1.pt",
+            "bg-forward": f"{hu_path}/lm-bg-opus-large-forward-v0.1.pt",
+            "bg-backward": f"{hu_path}/lm-bg-opus-large-backward-v0.1.pt",
             # Czech
-            "cs-forward": f"{aws_path}/embeddings-stefan-it/lm-cs-opus-large-forward-v0.1.pt",
-            "cs-backward": f"{aws_path}/embeddings-stefan-it/lm-cs-opus-large-backward-v0.1.pt",
-            "cs-v0-forward": f"{aws_path}/embeddings-v0.4/lm-cs-large-forward-v0.1.pt",
-            "cs-v0-backward": f"{aws_path}/embeddings-v0.4/lm-cs-large-backward-v0.1.pt",
+            "cs-forward": f"{hu_path}/lm-cs-opus-large-forward-v0.1.pt",
+            "cs-backward": f"{hu_path}/lm-cs-opus-large-backward-v0.1.pt",
+            "cs-v0-forward": f"{hu_path}/lm-cs-large-forward-v0.1.pt",
+            "cs-v0-backward": f"{hu_path}/lm-cs-large-backward-v0.1.pt",
             # Danish
-            "da-forward": f"{aws_path}/embeddings-stefan-it/lm-da-opus-large-forward-v0.1.pt",
-            "da-backward": f"{aws_path}/embeddings-stefan-it/lm-da-opus-large-backward-v0.1.pt",
+            "da-forward": f"{hu_path}/lm-da-opus-large-forward-v0.1.pt",
+            "da-backward": f"{hu_path}/lm-da-opus-large-backward-v0.1.pt",
             # German
-            "de-forward": f"{aws_path}/embeddings/lm-mix-german-forward-v0.2rc.pt",
-            "de-backward": f"{aws_path}/embeddings/lm-mix-german-backward-v0.2rc.pt",
-            "de-historic-ha-forward": f"{aws_path}/embeddings-stefan-it/lm-historic-hamburger-anzeiger-forward-v0.1.pt",
-            "de-historic-ha-backward": f"{aws_path}/embeddings-stefan-it/lm-historic-hamburger-anzeiger-backward-v0.1.pt",
-            "de-historic-wz-forward": f"{aws_path}/embeddings-stefan-it/lm-historic-wiener-zeitung-forward-v0.1.pt",
-            "de-historic-wz-backward": f"{aws_path}/embeddings-stefan-it/lm-historic-wiener-zeitung-backward-v0.1.pt",
-            "de-historic-rw-forward": f"{hu_path}/embeddings/redewiedergabe_lm_forward.pt",
-            "de-historic-rw-backward": f"{hu_path}/embeddings/redewiedergabe_lm_backward.pt",
+            "de-forward": f"{hu_path}/lm-mix-german-forward-v0.2rc.pt",
+            "de-backward": f"{hu_path}/lm-mix-german-backward-v0.2rc.pt",
+            "de-historic-ha-forward": f"{hu_path}/lm-historic-hamburger-anzeiger-forward-v0.1.pt",
+            "de-historic-ha-backward": f"{hu_path}/lm-historic-hamburger-anzeiger-backward-v0.1.pt",
+            "de-historic-wz-forward": f"{hu_path}/lm-historic-wiener-zeitung-forward-v0.1.pt",
+            "de-historic-wz-backward": f"{hu_path}/lm-historic-wiener-zeitung-backward-v0.1.pt",
+            "de-historic-rw-forward": f"{hu_path}/redewiedergabe_lm_forward.pt",
+            "de-historic-rw-backward": f"{hu_path}/redewiedergabe_lm_backward.pt",
             # Spanish
-            "es-forward": f"{aws_path}/embeddings-v0.4/language_model_es_forward_long/lm-es-forward.pt",
-            "es-backward": f"{aws_path}/embeddings-v0.4/language_model_es_backward_long/lm-es-backward.pt",
-            "es-forward-fast": f"{aws_path}/embeddings-v0.4/language_model_es_forward/lm-es-forward-fast.pt",
-            "es-backward-fast": f"{aws_path}/embeddings-v0.4/language_model_es_backward/lm-es-backward-fast.pt",
+            "es-forward": f"{hu_path}/lm-es-forward.pt",
+            "es-backward": f"{hu_path}/lm-es-backward.pt",
+            "es-forward-fast": f"{hu_path}/lm-es-forward-fast.pt",
+            "es-backward-fast": f"{hu_path}/lm-es-backward-fast.pt",
             # Basque
-            "eu-forward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-forward-v0.2.pt",
-            "eu-backward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-backward-v0.2.pt",
-            "eu-v1-forward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-forward-v0.1.pt",
-            "eu-v1-backward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-backward-v0.1.pt",
-            "eu-v0-forward": f"{aws_path}/embeddings-v0.4/lm-eu-large-forward-v0.1.pt",
-            "eu-v0-backward": f"{aws_path}/embeddings-v0.4/lm-eu-large-backward-v0.1.pt",
+            "eu-forward": f"{hu_path}/lm-eu-opus-large-forward-v0.2.pt",
+            "eu-backward": f"{hu_path}/lm-eu-opus-large-backward-v0.2.pt",
+            "eu-v1-forward": f"{hu_path}/lm-eu-opus-large-forward-v0.1.pt",
+            "eu-v1-backward": f"{hu_path}/lm-eu-opus-large-backward-v0.1.pt",
+            "eu-v0-forward": f"{hu_path}/lm-eu-large-forward-v0.1.pt",
+            "eu-v0-backward": f"{hu_path}/lm-eu-large-backward-v0.1.pt",
             # Persian
-            "fa-forward": f"{aws_path}/embeddings-stefan-it/lm-fa-opus-large-forward-v0.1.pt",
-            "fa-backward": f"{aws_path}/embeddings-stefan-it/lm-fa-opus-large-backward-v0.1.pt",
+            "fa-forward": f"{hu_path}/lm-fa-opus-large-forward-v0.1.pt",
+            "fa-backward": f"{hu_path}/lm-fa-opus-large-backward-v0.1.pt",
             # Finnish
-            "fi-forward": f"{aws_path}/embeddings-stefan-it/lm-fi-opus-large-forward-v0.1.pt",
-            "fi-backward": f"{aws_path}/embeddings-stefan-it/lm-fi-opus-large-backward-v0.1.pt",
+            "fi-forward": f"{hu_path}/lm-fi-opus-large-forward-v0.1.pt",
+            "fi-backward": f"{hu_path}/lm-fi-opus-large-backward-v0.1.pt",
             # French
-            "fr-forward": f"{aws_path}/embeddings/lm-fr-charlm-forward.pt",
-            "fr-backward": f"{aws_path}/embeddings/lm-fr-charlm-backward.pt",
+            "fr-forward": f"{hu_path}/lm-fr-charlm-forward.pt",
+            "fr-backward": f"{hu_path}/lm-fr-charlm-backward.pt",
             # Hebrew
-            "he-forward": f"{aws_path}/embeddings-stefan-it/lm-he-opus-large-forward-v0.1.pt",
-            "he-backward": f"{aws_path}/embeddings-stefan-it/lm-he-opus-large-backward-v0.1.pt",
+            "he-forward": f"{hu_path}/lm-he-opus-large-forward-v0.1.pt",
+            "he-backward": f"{hu_path}/lm-he-opus-large-backward-v0.1.pt",
             # Hindi
-            "hi-forward": f"{aws_path}/embeddings-stefan-it/lm-hi-opus-large-forward-v0.1.pt",
-            "hi-backward": f"{aws_path}/embeddings-stefan-it/lm-hi-opus-large-backward-v0.1.pt",
+            "hi-forward": f"{hu_path}/lm-hi-opus-large-forward-v0.1.pt",
+            "hi-backward": f"{hu_path}/lm-hi-opus-large-backward-v0.1.pt",
             # Croatian
-            "hr-forward": f"{aws_path}/embeddings-stefan-it/lm-hr-opus-large-forward-v0.1.pt",
-            "hr-backward": f"{aws_path}/embeddings-stefan-it/lm-hr-opus-large-backward-v0.1.pt",
+            "hr-forward": f"{hu_path}/lm-hr-opus-large-forward-v0.1.pt",
+            "hr-backward": f"{hu_path}/lm-hr-opus-large-backward-v0.1.pt",
             # Indonesian
-            "id-forward": f"{aws_path}/embeddings-stefan-it/lm-id-opus-large-forward-v0.1.pt",
-            "id-backward": f"{aws_path}/embeddings-stefan-it/lm-id-opus-large-backward-v0.1.pt",
+            "id-forward": f"{hu_path}/lm-id-opus-large-forward-v0.1.pt",
+            "id-backward": f"{hu_path}/lm-id-opus-large-backward-v0.1.pt",
             # Italian
-            "it-forward": f"{aws_path}/embeddings-stefan-it/lm-it-opus-large-forward-v0.1.pt",
-            "it-backward": f"{aws_path}/embeddings-stefan-it/lm-it-opus-large-backward-v0.1.pt",
+            "it-forward": f"{hu_path}/lm-it-opus-large-forward-v0.1.pt",
+            "it-backward": f"{hu_path}/lm-it-opus-large-backward-v0.1.pt",
             # Japanese
-            "ja-forward": f"{aws_path}/embeddings-v0.4.1/lm__char-forward__ja-wikipedia-3GB/japanese-forward.pt",
-            "ja-backward": f"{aws_path}/embeddings-v0.4.1/lm__char-backward__ja-wikipedia-3GB/japanese-backward.pt",
+            "ja-forward": f"{hu_path}/japanese-forward.pt",
+            "ja-backward": f"{hu_path}/japanese-backward.pt",
             # Malayalam
             "ml-forward": f"https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/ml-forward.pt",
             "ml-backward": f"https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/ml-backward.pt",
             # Dutch
-            "nl-forward": f"{aws_path}/embeddings-stefan-it/lm-nl-opus-large-forward-v0.1.pt",
-            "nl-backward": f"{aws_path}/embeddings-stefan-it/lm-nl-opus-large-backward-v0.1.pt",
-            "nl-v0-forward": f"{aws_path}/embeddings-v0.4/lm-nl-large-forward-v0.1.pt",
-            "nl-v0-backward": f"{aws_path}/embeddings-v0.4/lm-nl-large-backward-v0.1.pt",
+            "nl-forward": f"{hu_path}/lm-nl-opus-large-forward-v0.1.pt",
+            "nl-backward": f"{hu_path}/lm-nl-opus-large-backward-v0.1.pt",
+            "nl-v0-forward": f"{hu_path}/lm-nl-large-forward-v0.1.pt",
+            "nl-v0-backward": f"{hu_path}/lm-nl-large-backward-v0.1.pt",
             # Norwegian
-            "no-forward": f"{aws_path}/embeddings-stefan-it/lm-no-opus-large-forward-v0.1.pt",
-            "no-backward": f"{aws_path}/embeddings-stefan-it/lm-no-opus-large-backward-v0.1.pt",
+            "no-forward": f"{hu_path}/lm-no-opus-large-forward-v0.1.pt",
+            "no-backward": f"{hu_path}/lm-no-opus-large-backward-v0.1.pt",
             # Polish
-            "pl-forward": f"{aws_path}/embeddings/lm-polish-forward-v0.2.pt",
-            "pl-backward": f"{aws_path}/embeddings/lm-polish-backward-v0.2.pt",
-            "pl-opus-forward": f"{aws_path}/embeddings-stefan-it/lm-pl-opus-large-forward-v0.1.pt",
-            "pl-opus-backward": f"{aws_path}/embeddings-stefan-it/lm-pl-opus-large-backward-v0.1.pt",
+            "pl-forward": f"{hu_path}/lm-polish-forward-v0.2.pt",
+            "pl-backward": f"{hu_path}/lm-polish-backward-v0.2.pt",
+            "pl-opus-forward": f"{hu_path}/lm-pl-opus-large-forward-v0.1.pt",
+            "pl-opus-backward": f"{hu_path}/lm-pl-opus-large-backward-v0.1.pt",
             # Portuguese
-            "pt-forward": f"{aws_path}/embeddings-v0.4/lm-pt-forward.pt",
-            "pt-backward": f"{aws_path}/embeddings-v0.4/lm-pt-backward.pt",
+            "pt-forward": f"{hu_path}/lm-pt-forward.pt",
+            "pt-backward": f"{hu_path}/lm-pt-backward.pt",
             # Pubmed
-            "pubmed-forward": f"{hu_path}/embeddings/pm_pmc-forward/pubmed-forward.pt",
-            "pubmed-backward": f"{hu_path}/embeddings/pm_pmc-backward/pubmed-backward.pt",
-            "pubmed-2015-forward": f"{aws_path}/embeddings-v0.4.1/pubmed-2015-fw-lm.pt",
-            "pubmed-2015-backward": f"{aws_path}/embeddings-v0.4.1/pubmed-2015-bw-lm.pt",
+            "pubmed-forward": f"{hu_path}/pubmed-forward.pt",
+            "pubmed-backward": f"{hu_path}/pubmed-backward.pt",
+            "pubmed-2015-forward": f"{hu_path}/pubmed-2015-fw-lm.pt",
+            "pubmed-2015-backward": f"{hu_path}/pubmed-2015-bw-lm.pt",
             # Slovenian
-            "sl-forward": f"{aws_path}/embeddings-stefan-it/lm-sl-opus-large-forward-v0.1.pt",
-            "sl-backward": f"{aws_path}/embeddings-stefan-it/lm-sl-opus-large-backward-v0.1.pt",
-            "sl-v0-forward": f"{aws_path}/embeddings-v0.3/lm-sl-large-forward-v0.1.pt",
-            "sl-v0-backward": f"{aws_path}/embeddings-v0.3/lm-sl-large-backward-v0.1.pt",
+            "sl-forward": f"{hu_path}/lm-sl-opus-large-forward-v0.1.pt",
+            "sl-backward": f"{hu_path}/lm-sl-opus-large-backward-v0.1.pt",
+            "sl-v0-forward": f"{hu_path}/lm-sl-large-forward-v0.1.pt",
+            "sl-v0-backward": f"{hu_path}/lm-sl-large-backward-v0.1.pt",
             # Swedish
-            "sv-forward": f"{aws_path}/embeddings-stefan-it/lm-sv-opus-large-forward-v0.1.pt",
-            "sv-backward": f"{aws_path}/embeddings-stefan-it/lm-sv-opus-large-backward-v0.1.pt",
-            "sv-v0-forward": f"{aws_path}/embeddings-v0.4/lm-sv-large-forward-v0.1.pt",
-            "sv-v0-backward": f"{aws_path}/embeddings-v0.4/lm-sv-large-backward-v0.1.pt",
+            "sv-forward": f"{hu_path}/lm-sv-opus-large-forward-v0.1.pt",
+            "sv-backward": f"{hu_path}/lm-sv-opus-large-backward-v0.1.pt",
+            "sv-v0-forward": f"{hu_path}/lm-sv-large-forward-v0.1.pt",
+            "sv-v0-backward": f"{hu_path}/lm-sv-large-backward-v0.1.pt",
             # Tamil
-            "ta-forward": f"{aws_path}/embeddings-stefan-it/lm-ta-opus-large-forward-v0.1.pt",
-            "ta-backward": f"{aws_path}/embeddings-stefan-it/lm-ta-opus-large-backward-v0.1.pt",
+            "ta-forward": f"{hu_path}/lm-ta-opus-large-forward-v0.1.pt",
+            "ta-backward": f"{hu_path}/lm-ta-opus-large-backward-v0.1.pt",
             # CLEF HIPE Shared task
             "de-impresso-hipe-v1-forward": f"{clef_hipe_path}/de-hipe-flair-v1-forward/best-lm.pt",
             "de-impresso-hipe-v1-backward": f"{clef_hipe_path}/de-hipe-flair-v1-backward/best-lm.pt",

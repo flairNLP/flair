@@ -67,23 +67,23 @@ def pad_tensors(tensor_list):
 
 class SequenceTagger(flair.nn.Model):
     def __init__(
-        self,
-        hidden_size: int,
-        embeddings: TokenEmbeddings,
-        tag_dictionary: Dictionary,
-        tag_type: str,
-        use_crf: bool = True,
-        use_rnn: bool = True,
-        rnn_layers: int = 1,
-        dropout: float = 0.0,
-        word_dropout: float = 0.05,
-        locked_dropout: float = 0.5,
-        reproject_embeddings: Union[bool,int] = True,
-        train_initial_hidden_state: bool = False,
-        rnn_type: str = "LSTM",
-        pickle_module: str = "pickle",
-        beta: float = 1.0,
-        loss_weights: Dict[str, float] = None,
+            self,
+            hidden_size: int,
+            embeddings: TokenEmbeddings,
+            tag_dictionary: Dictionary,
+            tag_type: str,
+            use_crf: bool = True,
+            use_rnn: bool = True,
+            rnn_layers: int = 1,
+            dropout: float = 0.0,
+            word_dropout: float = 0.05,
+            locked_dropout: float = 0.5,
+            reproject_embeddings: Union[bool, int] = True,
+            train_initial_hidden_state: bool = False,
+            rnn_type: str = "LSTM",
+            pickle_module: str = "pickle",
+            beta: float = 1.0,
+            loss_weights: Dict[str, float] = None,
     ):
         """
         Initializes a SequenceTagger
@@ -222,11 +222,11 @@ class SequenceTagger(flair.nn.Model):
             )
 
             self.transitions.detach()[
-                self.tag_dictionary.get_idx_for_item(START_TAG), :
+            self.tag_dictionary.get_idx_for_item(START_TAG), :
             ] = -10000
 
             self.transitions.detach()[
-                :, self.tag_dictionary.get_idx_for_item(STOP_TAG)
+            :, self.tag_dictionary.get_idx_for_item(STOP_TAG)
             ] = -10000
 
         self.to(flair.device)
@@ -297,14 +297,14 @@ class SequenceTagger(flair.nn.Model):
         return model
 
     def predict(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        mini_batch_size=32,
-        all_tag_prob: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss = False,
-        embedding_storage_mode="none",
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size=32,
+            all_tag_prob: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
     ):
         """
         Predict sequence tags for Named Entity Recognition task
@@ -502,12 +502,12 @@ class SequenceTagger(flair.nn.Model):
         return result, eval_loss
 
     def evaluate(
-        self,
-        sentences: Union[List[Sentence], Dataset],
-        out_path: Union[str, Path] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
-        num_workers: int = 8,
+            self,
+            sentences: Union[List[Sentence], Dataset],
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: int = 8,
     ) -> (Result, float):
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
@@ -569,7 +569,8 @@ class SequenceTagger(flair.nn.Model):
         target_names = []
         for i in range(len(labels)):
             target_names.append(labels.get_item_for_index(i))
-        classification_report = metrics.classification_report(y_true, y_pred, digits=4, target_names=target_names, zero_division=1)
+        classification_report = metrics.classification_report(y_true, y_pred, digits=4, target_names=target_names,
+                                                              zero_division=1)
 
         # get scores
         macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro'), 4)
@@ -577,11 +578,11 @@ class SequenceTagger(flair.nn.Model):
         accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
 
         detailed_result = (
-            "\nResults:"
-            f"\n- F-score (micro) {macro_f_score}"
-            f"\n- F-score (macro) {micro_f_score}"
-            f"\n- Accuracy {accuracy_score}"
-            '\n\nBy class:\n' + classification_report
+                "\nResults:"
+                f"\n- F-score (micro) {macro_f_score}"
+                f"\n- F-score (macro) {micro_f_score}"
+                f"\n- Accuracy {accuracy_score}"
+                '\n\nBy class:\n' + classification_report
         )
 
         # line for log file
@@ -597,7 +598,7 @@ class SequenceTagger(flair.nn.Model):
         return result, eval_loss
 
     def forward_loss(
-        self, data_points: Union[List[Sentence], Sentence], sort=True
+            self, data_points: Union[List[Sentence], Sentence], sort=True
     ) -> torch.tensor:
         features = self.forward(data_points)
         return self._calculate_loss(features, data_points)
@@ -627,7 +628,7 @@ class SequenceTagger(flair.nn.Model):
             if nb_padding_tokens > 0:
                 t = pre_allocated_zero_tensor[
                     : self.embeddings.embedding_length * nb_padding_tokens
-                ]
+                    ]
                 all_embs.append(t)
 
         sentence_tensor = torch.cat(all_embs).view(
@@ -698,7 +699,7 @@ class SequenceTagger(flair.nn.Model):
         pad_stop_tags = torch.cat([tags, stop], 1)
 
         for i in range(len(lens_)):
-            pad_stop_tags[i, lens_[i] :] = self.tag_dictionary.get_idx_for_item(
+            pad_stop_tags[i, lens_[i]:] = self.tag_dictionary.get_idx_for_item(
                 STOP_TAG
             )
 
@@ -716,7 +717,7 @@ class SequenceTagger(flair.nn.Model):
         return score
 
     def _calculate_loss(
-        self, features: torch.tensor, sentences: List[Sentence]
+            self, features: torch.tensor, sentences: List[Sentence]
     ) -> float:
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
@@ -746,7 +747,7 @@ class SequenceTagger(flair.nn.Model):
         else:
             score = 0
             for sentence_feats, sentence_tags, sentence_length in zip(
-                features, tag_list, lengths
+                    features, tag_list, lengths
             ):
                 sentence_feats = sentence_feats[:sentence_length]
                 score += torch.nn.functional.cross_entropy(
@@ -756,11 +757,11 @@ class SequenceTagger(flair.nn.Model):
             return score
 
     def _obtain_labels(
-        self,
-        feature: torch.Tensor,
-        batch_sentences: List[Sentence],
-        transitions: Optional[np.ndarray],
-        get_all_tags: bool,
+            self,
+            feature: torch.Tensor,
+            batch_sentences: List[Sentence],
+            transitions: Optional[np.ndarray],
+            get_all_tags: bool,
     ) -> (List[List[Label]], List[List[List[Label]]]):
         """
         Returns a tuple of two lists:
@@ -826,7 +827,7 @@ class SequenceTagger(flair.nn.Model):
         return y / y.sum(axis=axis, keepdims=True)
 
     def _viterbi_decode(
-        self, feats: np.ndarray, transitions: np.ndarray, all_scores: bool
+            self, feats: np.ndarray, transitions: np.ndarray, all_scores: bool
     ):
         id_start = self.tag_dictionary.get_idx_for_item(START_TAG)
         id_stop = self.tag_dictionary.get_idx_for_item(STOP_TAG)
@@ -918,11 +919,11 @@ class SequenceTagger(flair.nn.Model):
             emit_score = feats[:, i, :]
 
             tag_var = (
-                emit_score[:, :, None].repeat(1, 1, transitions.shape[2])
-                + transitions
-                + forward_var[:, i, :][:, :, None]
-                .repeat(1, 1, transitions.shape[2])
-                .transpose(2, 1)
+                    emit_score[:, :, None].repeat(1, 1, transitions.shape[2])
+                    + transitions
+                    + forward_var[:, i, :][:, :, None]
+                    .repeat(1, 1, transitions.shape[2])
+                    .transpose(2, 1)
             )
 
             max_tag_var, _ = torch.max(tag_var, dim=2)
@@ -941,8 +942,8 @@ class SequenceTagger(flair.nn.Model):
         forward_var = forward_var[range(forward_var.shape[0]), lens_, :]
 
         terminal_var = forward_var + self.transitions[
-            self.tag_dictionary.get_idx_for_item(STOP_TAG)
-        ][None, :].repeat(forward_var.shape[0], 1)
+                                         self.tag_dictionary.get_idx_for_item(STOP_TAG)
+                                     ][None, :].repeat(forward_var.shape[0], 1)
 
         alpha = log_sum_exp_batch(terminal_var)
 
@@ -969,223 +970,88 @@ class SequenceTagger(flair.nn.Model):
     @staticmethod
     def _fetch_model(model_name) -> str:
 
-        model_map = {}
-
-        aws_resource_path_v04 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4"
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
-        model_map["ner"] = "/".join(
-            [aws_resource_path_v04, "NER-conll03-english", "en-ner-conll03-v0.4.pt"]
-        )
-
-        model_map["ner-pooled"] = "/".join(
-            [hu_path, "NER-conll03-english-pooled", "en-ner-conll03-pooled-v0.5.pt"]
-        )
-
-        model_map["ner-fast"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "NER-conll03--h256-l1-b32-p3-0.5-%2Bglove%2Bnews-forward-fast%2Bnews-backward-fast-normal-locked0.5-word0.05--release_4",
-                "en-ner-fast-conll03-v0.4.pt",
-            ]
-        )
-
-        model_map["ner-ontonotes"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "release-ner-ontonotes-0",
-                "en-ner-ontonotes-v0.4.pt",
-            ]
-        )
-
-        model_map["ner-ontonotes-fast"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "release-ner-ontonotes-fast-0",
-                "en-ner-ontonotes-fast-v0.4.pt",
-            ]
-        )
-
-        for key in ["ner-multi", "multi-ner"]:
-            model_map[key] = "/".join(
-                [
-                    aws_resource_path_v04,
-                    "release-quadner-512-l2-multi-embed",
-                    "quadner-large.pt",
-                ]
-            )
-
-        for key in ["ner-multi-fast", "multi-ner-fast"]:
-            model_map[key] = "/".join(
-                [aws_resource_path_v04, "NER-multi-fast", "ner-multi-fast.pt"]
-            )
-
-        for key in ["ner-multi-fast-learn", "multi-ner-fast-learn"]:
-            model_map[key] = "/".join(
-                [
-                    aws_resource_path_v04,
-                    "NER-multi-fast-evolve",
-                    "ner-multi-fast-learn.pt",
-                ]
-            )
-
-        model_map["upos"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "POS-ontonotes--h256-l1-b32-p3-0.5-%2Bglove%2Bnews-forward%2Bnews-backward-normal-locked0.5-word0.05--v0.4_0",
-                "en-pos-ontonotes-v0.4.pt",
-            ]
-        )
-
-        model_map["pos"] = "/".join(
-            [
-                hu_path,
-                "release-pos-0",
-                "en-pos-ontonotes-v0.5.pt",
-            ]
-        )
-
-        model_map["upos-fast"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "release-pos-fast-0",
-                "en-pos-ontonotes-fast-v0.4.pt",
-            ]
-        )
-
-        model_map["pos-fast"] = "/".join(
-            [
-                hu_path,
-                "release-pos-fast-0",
-                "en-pos-ontonotes-fast-v0.5.pt",
-            ]
-        )
-
-        for key in ["pos-multi", "multi-pos"]:
-            model_map[key] = "/".join(
-                [
-                    aws_resource_path_v04,
-                    "release-dodekapos-512-l2-multi",
-                    "pos-multi-v0.1.pt",
-                ]
-            )
-
-        for key in ["pos-multi-fast", "multi-pos-fast"]:
-            model_map[key] = "/".join(
-                [aws_resource_path_v04, "UPOS-multi-fast", "pos-multi-fast.pt"]
-            )
-
-        model_map["frame"] = "/".join(
-            [aws_resource_path_v04, "release-frame-1", "en-frame-ontonotes-v0.4.pt"]
-        )
-
-        model_map["frame-fast"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "release-frame-fast-0",
-                "en-frame-ontonotes-fast-v0.4.pt",
-            ]
-        )
-
-        model_map["chunk"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "NP-conll2000--h256-l1-b32-p3-0.5-%2Bnews-forward%2Bnews-backward-normal-locked0.5-word0.05--v0.4_0",
-                "en-chunk-conll2000-v0.4.pt",
-            ]
-        )
-
-        model_map["chunk-fast"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "release-chunk-fast-0",
-                "en-chunk-conll2000-fast-v0.4.pt",
-            ]
-        )
-
-        model_map["da-pos"] = "/".join(
-            [aws_resource_path_v04, "POS-danish", "da-pos-v0.1.pt"]
-        )
-
-        model_map["da-ner"] = "/".join(
-            [aws_resource_path_v04, "NER-danish", "da-ner-v0.1.pt"]
-        )
-
-        model_map["de-pos"] = "/".join(
-            [hu_path, "release-de-pos-0", "de-pos-ud-hdt-v0.5.pt"]
-        )
-
-        model_map["de-pos-tweets"] = "/".join(
-            [
-                aws_resource_path_v04,
-                "POS-fine-grained-german-tweets",
-                "de-pos-twitter-v0.1.pt",
-            ]
-        )
-
-        model_map["de-ner"] = "/".join(
-            [aws_resource_path_v04, "release-de-ner-0", "de-ner-conll03-v0.4.pt"]
-        )
-
-        model_map["de-ner-germeval"] = "/".join(
-            [aws_resource_path_v04, "NER-germeval", "de-ner-germeval-0.4.1.pt"]
-        )
-
-        model_map["fr-ner"] = "/".join(
-            [aws_resource_path_v04, "release-fr-ner-0", "fr-ner-wikiner-0.4.pt"]
-        )
-        model_map["nl-ner"] = "/".join(
-            [hu_path, "dutch-ner_0", "nl-ner-bert-conll02-v0.5b.pt"]
-        )
-        model_map["nl-ner-rnn"] = "/".join(
-            [hu_path, "dutch-ner-flair-0", "nl-ner-conll02-v0.5.pt"]
-        )
-        model_map["ml-pos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt"
-        model_map["ml-upos"] = "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-upos-model.pt"
-
-        model_map["pt-pos-clinical"] = "/".join(
-            [hu_path, "clinical-pos-pt", "pucpr-flair-clinical-pos-tagging-best-model.pt"]
-        )
-
-        model_map["keyphrase"] = "/".join(
-            [hu_path, "keyphrase-semeval2017-scibert", "keyphrase-en-scibert.pt"]
-        )
-
-        model_map["negation-speculation"] = "/".join(
-            [hu_path, "negation-speculation-EN-bioflair", "negation-speculation-model.pt"]
-        )
-
-        model_map["hunflair-paper-cellline"] = "/".join(
-            [hu_path, "hunflair_smallish_models", "cellline", "hunflair-celline-v1.0.pt"]
-        )
-        model_map["hunflair-paper-chemical"] = "/".join(
-            [hu_path, "hunflair_smallish_models", "chemical", "hunflair-chemical-v1.0.pt"]
-        )
-        model_map["hunflair-paper-disease"] = "/".join(
-            [hu_path, "hunflair_smallish_models", "disease", "hunflair-disease-v1.0.pt"]
-        )
-        model_map["hunflair-paper-gene"] = "/".join(
-            [hu_path, "hunflair_smallish_models", "gene", "hunflair-gene-v1.0.pt"]
-        )
-        model_map["hunflair-paper-species"] = "/".join(
-            [hu_path, "hunflair_smallish_models", "species", "hunflair-species-v1.0.pt"]
-        )
-
-        model_map["hunflair-cellline"] = "/".join(
-            [hu_path, "hunflair_smallish_models", "cellline", "hunflair-celline-v1.0.pt"]
-        )
-        model_map["hunflair-chemical"] = "/".join(
-            [hu_path, "hunflair_allcorpus_models", "huner-chemical", "hunflair-chemical-full-v1.0.pt"]
-        )
-        model_map["hunflair-disease"] = "/".join(
-            [hu_path, "hunflair_allcorpus_models", "huner-disease", "hunflair-disease-full-v1.0.pt"]
-        )
-        model_map["hunflair-gene"] = "/".join(
-            [hu_path, "hunflair_allcorpus_models", "huner-gene", "hunflair-gene-full-v1.0.pt"]
-        )
-        model_map["hunflair-species"] = "/".join(
-            [hu_path, "hunflair_allcorpus_models", "huner-species", "hunflair-species-full-v1.1.pt"]
-        )
+        model_map = {
+            # English NER models
+            "ner": "/".join([hu_path, "ner", "en-ner-conll03-v0.4.pt"]),
+            "ner-pooled": "/".join([hu_path, "ner-pooled", "en-ner-conll03-pooled-v0.5.pt"]),
+            "ner-fast": "/".join([hu_path, "ner-fast", "en-ner-fast-conll03-v0.4.pt"]),
+            "ner-ontonotes": "/".join([hu_path, "ner-ontonotes", "en-ner-ontonotes-v0.4.pt"]),
+            "ner-ontonotes-fast": "/".join([hu_path, "ner-ontonotes-fast", "en-ner-ontonotes-fast-v0.4.pt"]),
+            # Multilingual NER models
+            "ner-multi": "/".join([hu_path, "multi-ner", "quadner-large.pt"]),
+            "multi-ner": "/".join([hu_path, "multi-ner", "quadner-large.pt"]),
+            "ner-multi-fast": "/".join([hu_path, "multi-ner-fast", "ner-multi-fast.pt"]),
+            # English POS models
+            "upos": "/".join([hu_path, "upos", "en-pos-ontonotes-v0.4.pt"]),
+            "upos-fast": "/".join([hu_path, "upos-fast", "en-pos-ontonotes-fast-v0.4.pt"]),
+            "pos": "/".join([hu_path, "pos", "en-pos-ontonotes-v0.5.pt"]),
+            "pos-fast": "/".join([hu_path, "pos-fast", "en-pos-ontonotes-fast-v0.5.pt"]),
+            # Multilingual POS models
+            "pos-multi": "/".join([hu_path, "multi-pos", "pos-multi-v0.1.pt"]),
+            "multi-pos": "/".join([hu_path, "multi-pos", "pos-multi-v0.1.pt"]),
+            "pos-multi-fast": "/".join([hu_path, "multi-pos-fast", "pos-multi-fast.pt"]),
+            "multi-pos-fast": "/".join([hu_path, "multi-pos-fast", "pos-multi-fast.pt"]),
+            # English SRL models
+            "frame": "/".join([hu_path, "frame", "en-frame-ontonotes-v0.4.pt"]),
+            "frame-fast": "/".join([hu_path, "frame-fast", "en-frame-ontonotes-fast-v0.4.pt"]),
+            # English chunking models
+            "chunk": "/".join([hu_path, "chunk", "en-chunk-conll2000-v0.4.pt"]),
+            "chunk-fast": "/".join([hu_path, "chunk-fast", "en-chunk-conll2000-fast-v0.4.pt"]),
+            # Danish models
+            "da-pos": "/".join([hu_path, "da-pos", "da-pos-v0.1.pt"]),
+            "da-ner": "/".join([hu_path, "NER-danish", "da-ner-v0.1.pt"]),
+            # German models
+            "de-pos": "/".join([hu_path, "de-pos", "de-pos-ud-hdt-v0.5.pt"]),
+            "de-pos-tweets": "/".join([hu_path, "de-pos-tweets", "de-pos-twitter-v0.1.pt"]),
+            "de-ner": "/".join([hu_path, "de-ner", "de-ner-conll03-v0.4.pt"]),
+            "de-ner-germeval": "/".join([hu_path, "de-ner-germeval", "de-ner-germeval-0.4.1.pt"]),
+            # French models
+            "fr-ner": "/".join([hu_path, "fr-ner", "fr-ner-wikiner-0.4.pt"]),
+            # Dutch models
+            "nl-ner": "/".join([hu_path, "nl-ner", "nl-ner-bert-conll02-v0.5b.pt"]),
+            "nl-ner-rnn": "/".join([hu_path, "nl-ner-rnn", "nl-ner-conll02-v0.5.pt"]),
+            # Malayalam models
+            "ml-pos": "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt",
+            "ml-upos": "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-upos-model.pt",
+            # Portuguese models
+            "pt-pos-clinical": "/".join([hu_path, "pt-pos-clinical", "pucpr-flair-clinical-pos-tagging-best-model.pt"]),
+            # Keyphase models
+            "keyphrase": "/".join([hu_path, "keyphrase", "keyphrase-en-scibert.pt"]),
+            "negation-speculation": "/".join(
+                [hu_path, "negation-speculation", "negation-speculation-model.pt"]),
+            # Biomedical models
+            "hunflair-paper-cellline": "/".join(
+                [hu_path, "hunflair_smallish_models", "cellline", "hunflair-celline-v1.0.pt"]
+            ),
+            "hunflair-paper-chemical": "/".join(
+                [hu_path, "hunflair_smallish_models", "chemical", "hunflair-chemical-v1.0.pt"]
+            ),
+            "hunflair-paper-disease": "/".join(
+                [hu_path, "hunflair_smallish_models", "disease", "hunflair-disease-v1.0.pt"]
+            ),
+            "hunflair-paper-gene": "/".join(
+                [hu_path, "hunflair_smallish_models", "gene", "hunflair-gene-v1.0.pt"]
+            ),
+            "hunflair-paper-species": "/".join(
+                [hu_path, "hunflair_smallish_models", "species", "hunflair-species-v1.0.pt"]
+            ),
+            "hunflair-cellline": "/".join(
+                [hu_path, "hunflair_smallish_models", "cellline", "hunflair-celline-v1.0.pt"]
+            ),
+            "hunflair-chemical": "/".join(
+                [hu_path, "hunflair_allcorpus_models", "huner-chemical", "hunflair-chemical-full-v1.0.pt"]
+            ),
+            "hunflair-disease": "/".join(
+                [hu_path, "hunflair_allcorpus_models", "huner-disease", "hunflair-disease-full-v1.0.pt"]
+            ),
+            "hunflair-gene": "/".join(
+                [hu_path, "hunflair_allcorpus_models", "huner-gene", "hunflair-gene-full-v1.0.pt"]
+            ),
+            "hunflair-species": "/".join(
+                [hu_path, "hunflair_allcorpus_models", "huner-species", "hunflair-species-full-v1.1.pt"]
+            )}
 
         cache_dir = Path("models")
         if model_name in model_map:
@@ -1193,32 +1059,32 @@ class SequenceTagger(flair.nn.Model):
 
         # the historical German taggers by the @redewiegergabe project
         if model_name == "de-historic-indirect":
-            model_file = Path(flair.cache_root)  / cache_dir / 'indirect' / 'final-model.pt'
+            model_file = Path(flair.cache_root) / cache_dir / 'indirect' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/indirect.zip', cache_dir=cache_dir)
-                unzip_file(Path(flair.cache_root)  / cache_dir / 'indirect.zip', Path(flair.cache_root)  / cache_dir)
-            model_name = str(Path(flair.cache_root)  / cache_dir / 'indirect' / 'final-model.pt')
+                unzip_file(Path(flair.cache_root) / cache_dir / 'indirect.zip', Path(flair.cache_root) / cache_dir)
+            model_name = str(Path(flair.cache_root) / cache_dir / 'indirect' / 'final-model.pt')
 
         if model_name == "de-historic-direct":
-            model_file = Path(flair.cache_root)  / cache_dir / 'direct' / 'final-model.pt'
+            model_file = Path(flair.cache_root) / cache_dir / 'direct' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/direct.zip', cache_dir=cache_dir)
-                unzip_file(Path(flair.cache_root)  / cache_dir / 'direct.zip', Path(flair.cache_root)  / cache_dir)
-            model_name = str(Path(flair.cache_root)  / cache_dir / 'direct' / 'final-model.pt')
+                unzip_file(Path(flair.cache_root) / cache_dir / 'direct.zip', Path(flair.cache_root) / cache_dir)
+            model_name = str(Path(flair.cache_root) / cache_dir / 'direct' / 'final-model.pt')
 
         if model_name == "de-historic-reported":
-            model_file = Path(flair.cache_root)  / cache_dir / 'reported' / 'final-model.pt'
+            model_file = Path(flair.cache_root) / cache_dir / 'reported' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/reported.zip', cache_dir=cache_dir)
-                unzip_file(Path(flair.cache_root)  / cache_dir / 'reported.zip', Path(flair.cache_root)  / cache_dir)
-            model_name = str(Path(flair.cache_root)  / cache_dir / 'reported' / 'final-model.pt')
+                unzip_file(Path(flair.cache_root) / cache_dir / 'reported.zip', Path(flair.cache_root) / cache_dir)
+            model_name = str(Path(flair.cache_root) / cache_dir / 'reported' / 'final-model.pt')
 
         if model_name == "de-historic-free-indirect":
-            model_file = Path(flair.cache_root)  / cache_dir / 'freeIndirect' / 'final-model.pt'
+            model_file = Path(flair.cache_root) / cache_dir / 'freeIndirect' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/freeIndirect.zip', cache_dir=cache_dir)
-                unzip_file(Path(flair.cache_root)  / cache_dir / 'freeIndirect.zip', Path(flair.cache_root)  / cache_dir)
-            model_name = str(Path(flair.cache_root)  / cache_dir / 'freeIndirect' / 'final-model.pt')
+                unzip_file(Path(flair.cache_root) / cache_dir / 'freeIndirect.zip', Path(flair.cache_root) / cache_dir)
+            model_name = str(Path(flair.cache_root) / cache_dir / 'freeIndirect' / 'final-model.pt')
 
         return model_name
 
@@ -1291,7 +1157,6 @@ class MultiTagger:
         for sentence in sentences:
             sentence.clear_embeddings()
 
-
     @classmethod
     def load(cls, model_names: Union[List[str], str]):
         if model_names == "hunflair-paper":
@@ -1362,7 +1227,8 @@ class MultiTagger:
 
                     for previous_model in models:
                         if model.embeddings.name in previous_model.embeddings.get_named_embeddings_dict():
-                            previous_embedding = previous_model.embeddings.get_named_embeddings_dict()[model.embeddings.name]
+                            previous_embedding = previous_model.embeddings.get_named_embeddings_dict()[
+                                model.embeddings.name]
                             if not previous_embedding.static_embeddings:
                                 model.embeddings = previous_embedding
                                 break
