@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Union, Dict, List
 
 import flair
-from flair.data import Corpus, FlairDataset, Sentence, Token
+from flair.data import Corpus, MultiCorpus, FlairDataset, Sentence, Token
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path
 
@@ -599,6 +599,163 @@ class CONLL_2000(ColumnCorpus):
         super(CONLL_2000, self).__init__(
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
+        
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& 
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& 
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&         
+"""     
+class XTREME(MultiCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            languages: List[str] = [],
+    ):
+        #wenn keine Sprachen angegeben werden, werden alle 40 Sprachen von XTREME geladen
+        if len(languages)==0:
+            self.languages = ["af", "ar", "bg", "bn", "de", "el", "en", "es", "et", "eu", "fa", "fi", "fr", "he", "hi", "hu", 
+                              "id", "it", "ja", "jv", "ka", "kk", "ko", "ml", "mr", "ms", "my", "nl", "pt", "ru", "sw", "ta", 
+                              "te", "th", "tl", "tr", "ur", "vi", "yo","zh"]
+        
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = "xtreme"
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+        
+        #TODO: For each language in languages, the file needs to be downloaded if not existent
+        #Then a comlumncorpus of that data needs to be created and saved in a list
+        #this list is handed to the multicorpus
+
+        panx_path = "https://www.amazon.com/clouddrive/share/d3KGCRCIYwhKJF0H3eWA26hjg2ZCRhjpEQtDL70FSBN/folder/C43gs51bSIaq5sFTQkWNCQ?_encoding=UTF8&*Version*=1&*entries*=0&mgh=1"
+        
+ 
+        super(XTREME, self).__init__(
+            corpora: List[Corpus], name: str = "xtreme"
+        )
+        
+        
+def xtreme_to_simple_ner_annotation(data_file: Union[str, Path] = None):
+    with open(data_file, 'r',encoding='utf-8') as f:
+        lines = f.readlines()
+    with open(data_file, 'w',encoding='utf-8') as f:
+        for line in lines:
+            if line == '\n':
+                f.write(line)
+            else:
+                liste = line.split()
+                f.write(liste[0].split(':',1)[1] + ' ' + liste[1] + '\n')
+        
+"""
+                
+                                
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++    
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class WIKIANN(MultiCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            languages: List[str] = [],
+    ):
+        #if no language is provided we put 'en' in the list
+        if len(languages) == 0:
+            languages = ["en"]
+        
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = "wikiann"
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+        
+        #For each language in languages, the file needs to be downloaded if not existent
+        #Then a comlumncorpus of that data needs to be created and saved in a list
+        #this list is handed to the multicorpus
+        corpora = []#list that contains the columncopora
+        
+        wikiann_google_drive_path = 'https://drive.google.com/uc?id='
+        # download data if necessary
+        first = True
+        for language in languages:
+            language_folder = data_folder / language
+            file_name = 'wikiann-'+ language + '.bio'
+            print(language_folder)
+            
+            #if language not downloaded yet, download it
+            if not language_folder.exists():
+                if first == True:
+                    import gdown
+                    import tarfile
+                    first = False
+                os.makedirs(language_folder)#create folder
+                google_id = google_drive_id_from_language_name(language)#get google drive id from list
+                url = wikiann_google_drive_path + google_id
+                print(url)
+                gdown.download(url,str(language_folder / language) + '.tar.gz' ) #download from google drive
+                
+                #unzip
+                tar = tarfile.open(str(language_folder / language) + '.tar.gz', "r:gz")
+                #tar.extractall(language_folder,members=[tar.getmember(file_name)])
+                tar.extract(file_name,str(language_folder))
+                tar.close()
+                
+                #transform data into required format
+                silver_standard_to_simple_ner_annotation(str(language_folder / file_name))
+                
+                
+            #initialize comlumncorpus and add it to list
+            corp = ColumnCorpus(data_folder = language_folder,
+                                column_format = columns,
+                                train_file = file_name,
+                                tag_to_bioes = 'ner'
+                               )
+            corpora.append(corp)
+                
+                
+        super(WIKIANN, self).__init__(
+            corpora, name = 'wikiann'
+        )
+
+def google_drive_id_from_language_name(language):
+    languages_ids = {
+            'aa': '1tDDlydKq7KQQ3_23Ysbtke4HJOe4snIk',
+            'ab': '1hB8REj2XA_0DjI9hdQvNvSDpuBIb8qRf',
+            'ace': '1WENJS2ppHcZqaBEXRZyk2zY-PqXkTkgG'
+            }
+    return languages_ids[language]
+                
+def silver_standard_to_simple_ner_annotation(data_file: Union[str, Path] = None):
+    with open(data_file, 'r',encoding='utf-8') as f:
+        lines = f.readlines()
+    with open(data_file, 'w',encoding='utf-8') as f:
+        for line in lines:
+            if line == '\n':
+                f.write(line)
+            else:
+                liste = line.split()
+                f.write(liste[0] + ' ' + liste[-1] + '\n')
+                
+            
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& 
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& 
+#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& 
 
 
 class DANE(ColumnCorpus):
