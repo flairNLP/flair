@@ -16,7 +16,7 @@ log = logging.getLogger("flair")
 
 
 class DocumentEmbeddings(Embeddings):
-    """Abstract base class for all document-level embeddings. Ever new type of document embedding must implement these methods."""
+    """Abstract base class for all document-level embeddings. Every new type of document embedding must implement these methods."""
 
     @property
     @abstractmethod
