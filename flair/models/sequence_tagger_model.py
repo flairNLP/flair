@@ -985,7 +985,7 @@ class SequenceTagger(flair.nn.Model):
             "ner-multi-fast": "/".join([hu_path, "multi-ner-fast", "ner-multi-fast.pt"]),
             # English POS models
             "upos": "/".join([hu_path, "upos", "en-pos-ontonotes-v0.4.pt"]),
-            "upos-fast": "/".join([hu_path, "upos-fast", "en-pos-ontonotes-fast-v0.4.pt"]),
+            "upos-fast": "/".join([hu_path, "upos-fast", "en-upos-ontonotes-fast-v0.4.pt"]),
             "pos": "/".join([hu_path, "pos", "en-pos-ontonotes-v0.5.pt"]),
             "pos-fast": "/".join([hu_path, "pos-fast", "en-pos-ontonotes-fast-v0.5.pt"]),
             # Multilingual POS models
