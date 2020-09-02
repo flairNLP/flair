@@ -1437,14 +1437,14 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
             if language_code not in self.language_embeddings:
                 log.info(f"Loading up MUSE embeddings for '{language_code}'!")
                 # download if necessary
-                webpath = "https://alan-nlp.s3.eu-central-1.amazonaws.com/resources/embeddings-muse"
+                hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/muse"
                 cache_dir = Path("embeddings") / "MUSE"
                 cached_path(
-                    f"{webpath}/muse.{language_code}.vec.gensim.vectors.npy",
+                    f"{hu_path}/muse.{language_code}.vec.gensim.vectors.npy",
                     cache_dir=cache_dir,
                 )
                 embeddings_file = cached_path(
-                    f"{webpath}/muse.{language_code}.vec.gensim", cache_dir=cache_dir
+                    f"{hu_path}/muse.{language_code}.vec.gensim", cache_dir=cache_dir
                 )
 
                 # load the model
