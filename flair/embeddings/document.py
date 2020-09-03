@@ -16,7 +16,7 @@ log = logging.getLogger("flair")
 
 
 class DocumentEmbeddings(Embeddings):
-    """Abstract base class for all document-level embeddings. Ever new type of document embedding must implement these methods."""
+    """Abstract base class for all document-level embeddings. Every new type of document embedding must implement these methods."""
 
     @property
     @abstractmethod
@@ -49,6 +49,11 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         :param use_scalar_mix: If True, uses a scalar mix of layers as embedding
         """
         super().__init__()
+
+        # temporary fix to disable tokenizer parallelism warning
+        # (see https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning)
+        import os
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
         # load tokenizer and transformer model
         self.tokenizer = AutoTokenizer.from_pretrained(model)
@@ -105,10 +110,14 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
 
             # subtokenize sentences
             for sentence in sentences:
-                # tokenize and truncate to 512 subtokens (TODO: check better truncation strategies)
+
+                # tokenize and truncate to max subtokens (TODO: check better truncation strategies)
                 subtokenized_sentence = self.tokenizer.encode(sentence.to_tokenized_string(),
                                                               add_special_tokens=True,
-                                                              max_length=512)
+                                                              max_length=self.tokenizer.model_max_length,
+                                                              truncation=True,
+                                                              )
+
                 subtokenized_sentences.append(
                     torch.tensor(subtokenized_sentence, dtype=torch.long, device=flair.device))
 
@@ -437,38 +446,32 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             sentence.set_embedding(self.name, embedding)
 
     def _apply(self, fn):
-        major, minor, build, *_ = (int(info)
-                                for info in torch.__version__.replace("+",".").split('.') if info.isdigit())
 
-        # fixed RNN change format for torch 1.4.0
-        if major >= 1 and minor >= 4:
-            for child_module in self.children():
-                if isinstance(child_module, torch.nn.RNNBase):
-                    _flat_weights_names = []
-                    num_direction = None
+        # models that were serialized using torch versions older than 1.4.0 lack the _flat_weights_names attribute
+        # check if this is the case and if so, set it
+        for child_module in self.children():
+            if isinstance(child_module, torch.nn.RNNBase) and not hasattr(child_module, "_flat_weights_names"):
+                _flat_weights_names = []
 
-                    if child_module.__dict__["bidirectional"]:
-                        num_direction = 2
-                    else:
-                        num_direction = 1
-                    for layer in range(child_module.__dict__["num_layers"]):
-                        for direction in range(num_direction):
-                            suffix = "_reverse" if direction == 1 else ""
-                            param_names = ["weight_ih_l{}{}", "weight_hh_l{}{}"]
-                            if child_module.__dict__["bias"]:
-                                param_names += ["bias_ih_l{}{}", "bias_hh_l{}{}"]
-                            param_names = [
-                                x.format(layer, suffix) for x in param_names
-                            ]
-                            _flat_weights_names.extend(param_names)
+                if child_module.__dict__["bidirectional"]:
+                    num_direction = 2
+                else:
+                    num_direction = 1
+                for layer in range(child_module.__dict__["num_layers"]):
+                    for direction in range(num_direction):
+                        suffix = "_reverse" if direction == 1 else ""
+                        param_names = ["weight_ih_l{}{}", "weight_hh_l{}{}"]
+                        if child_module.__dict__["bias"]:
+                            param_names += ["bias_ih_l{}{}", "bias_hh_l{}{}"]
+                        param_names = [
+                            x.format(layer, suffix) for x in param_names
+                        ]
+                        _flat_weights_names.extend(param_names)
 
-                    setattr(child_module, "_flat_weights_names",
-                            _flat_weights_names)
+                setattr(child_module, "_flat_weights_names",
+                        _flat_weights_names)
 
-                child_module._apply(fn)
-
-        else:
-            super()._apply(fn)
+            child_module._apply(fn)
 
 
 class DocumentLMEmbeddings(DocumentEmbeddings):
@@ -515,3 +518,60 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
                     )
 
         return sentences
+
+class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
+    def __init__(
+        self,
+        model: str = "bert-base-nli-mean-tokens",
+        batch_size: int = 1,
+        convert_to_numpy: bool = False,
+    ):
+        """
+        :param model: string name of models from SentencesTransformer Class
+        :param name: string name of embedding type which will be set to Sentence object
+        :param batch_size: int number of sentences to processed in one batch
+        :param convert_to_numpy: bool whether the encode() returns a numpy array or PyTorch tensor
+        """
+        super().__init__()
+
+        try:
+            from sentence_transformers import SentenceTransformer
+        except ModuleNotFoundError:
+            log.warning("-" * 100)
+            log.warning('ATTENTION! The library "sentence-transformers" is not installed!')
+            log.warning(
+                'To use Sentence Transformers, please first install with "pip install sentence-transformers"'
+            )
+            log.warning("-" * 100)
+            pass
+
+        self.model = SentenceTransformer(model)
+        self.name = 'sentence-transformers-' + str(model)
+        self.batch_size = batch_size
+        self.convert_to_numpy = convert_to_numpy
+        self.static_embeddings = True
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        sentence_batches = [sentences[i * self.batch_size:(i + 1) * self.batch_size]
+                            for i in range((len(sentences) + self.batch_size - 1) // self.batch_size)]
+
+        for batch in sentence_batches:
+            self._add_embeddings_to_sentences(batch)
+
+        return sentences
+
+    def _add_embeddings_to_sentences(self, sentences: List[Sentence]):
+
+        # convert to plain strings, embedded in a list for the encode function
+        sentences_plain_text = [sentence.to_plain_string() for sentence in sentences]
+
+        embeddings = self.model.encode(sentences_plain_text, convert_to_numpy=self.convert_to_numpy)
+        for sentence, embedding in zip(sentences, embeddings):
+            sentence.set_embedding(self.name, embedding)
+
+    @property
+    @abstractmethod
+    def embedding_length(self) -> int:
+        """Returns the length of the embedding vector."""
+        return self.model.get_sentence_embedding_dimension()

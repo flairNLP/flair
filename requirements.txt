@@ -10,8 +10,13 @@ scikit-learn>=0.21.3
 sqlitedict>=1.6.0
 deprecated>=1.2.4
 hyperopt>=0.1.1
-transformers>=2.10.0
-bpemb>=0.2.9
+transformers>=3.0.0
+bpemb>=0.3.2
 regex
 tabulate
 langdetect
+lxml
+ftfy
+sentencepiece!=0.1.92
+konoha<5.0.0,>=4.0.0
+janome

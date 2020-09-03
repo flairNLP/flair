@@ -32,3 +32,10 @@ on the [byte pair embeddings](https://nlp.h-its.org/bpemb/) web page.
 # init embedding
 embedding = BytePairEmbeddings('multi')
 ```
+
+You can also load custom `BytePairEmbeddings` by specifying a path to model_file_path and embedding_file_path arguments. They correspond respectively to a SentencePiece model file and to an embedding file (Word2Vec plain text or GenSim binary). For example:
+
+```python
+# init custom embedding
+embedding = BytePairEmbeddings(model_file_path='your/path/m.model', embedding_file_path='your/path/w2v.txt')
+```

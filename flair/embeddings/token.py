@@ -1,7 +1,7 @@
 import hashlib
 from abc import abstractmethod
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Dict
 from collections import Counter
 from functools import lru_cache
 
@@ -97,6 +97,15 @@ class StackedEmbeddings(TokenEmbeddings):
             names.extend(embedding.get_names())
         return names
 
+    def get_named_embeddings_dict(self) -> Dict:
+
+        named_embeddings_dict = {}
+        for embedding in self.embeddings:
+            named_embeddings_dict.update(embedding.get_named_embeddings_dict())
+
+        return named_embeddings_dict
+
+
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
@@ -108,107 +117,59 @@ class WordEmbeddings(TokenEmbeddings):
         """
         self.embeddings = embeddings
 
-        old_base_path = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/"
-        )
-        base_path = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.3/"
-        )
-        embeddings_path_v4 = (
-            "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4/"
-        )
-        embeddings_path_v4_1 = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings-v0.4.1/"
+        hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/token"
 
         cache_dir = Path("embeddings")
 
         # GLOVE embeddings
         if embeddings.lower() == "glove" or embeddings.lower() == "en-glove":
-            cached_path(f"{old_base_path}glove.gensim.vectors.npy", cache_dir=cache_dir)
-            embeddings = cached_path(
-                f"{old_base_path}glove.gensim", cache_dir=cache_dir
-            )
+            cached_path(f"{hu_path}/glove.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/glove.gensim", cache_dir=cache_dir)
 
         # TURIAN embeddings
         elif embeddings.lower() == "turian" or embeddings.lower() == "en-turian":
-            cached_path(
-                f"{embeddings_path_v4_1}turian.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{embeddings_path_v4_1}turian", cache_dir=cache_dir
-            )
+            cached_path(f"{hu_path}/turian.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/turian", cache_dir=cache_dir)
 
         # KOMNINOS embeddings
         elif embeddings.lower() == "extvec" or embeddings.lower() == "en-extvec":
-            cached_path(
-                f"{old_base_path}extvec.gensim.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{old_base_path}extvec.gensim", cache_dir=cache_dir
-            )
+            cached_path(f"{hu_path}/extvec.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/extvec.gensim", cache_dir=cache_dir)
+
+        # pubmed embeddings
+        elif embeddings.lower() == "pubmed" or embeddings.lower() == "en-pubmed":
+            cached_path(f"{hu_path}/pubmed_pmc_wiki_sg_1M.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/pubmed_pmc_wiki_sg_1M.gensim", cache_dir=cache_dir)
 
         # FT-CRAWL embeddings
         elif embeddings.lower() == "crawl" or embeddings.lower() == "en-crawl":
-            cached_path(
-                f"{base_path}en-fasttext-crawl-300d-1M.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{base_path}en-fasttext-crawl-300d-1M", cache_dir=cache_dir
-            )
+            cached_path(f"{hu_path}/en-fasttext-crawl-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/en-fasttext-crawl-300d-1M", cache_dir=cache_dir)
 
         # FT-CRAWL embeddings
-        elif (
-            embeddings.lower() == "news"
-            or embeddings.lower() == "en-news"
-            or embeddings.lower() == "en"
-        ):
-            cached_path(
-                f"{base_path}en-fasttext-news-300d-1M.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{base_path}en-fasttext-news-300d-1M", cache_dir=cache_dir
-            )
+        elif embeddings.lower() in["news", "en-news", "en"]:
+            cached_path(f"{hu_path}/en-fasttext-news-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/en-fasttext-news-300d-1M", cache_dir=cache_dir)
 
         # twitter embeddings
-        elif embeddings.lower() == "twitter" or embeddings.lower() == "en-twitter":
-            cached_path(
-                f"{old_base_path}twitter.gensim.vectors.npy", cache_dir=cache_dir
-            )
-            embeddings = cached_path(
-                f"{old_base_path}twitter.gensim", cache_dir=cache_dir
-            )
+        elif embeddings.lower() in ["twitter", "en-twitter"]:
+            cached_path(f"{hu_path}/twitter.gensim.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/twitter.gensim", cache_dir=cache_dir)
 
         # two-letter language code wiki embeddings
         elif len(embeddings.lower()) == 2:
-            cached_path(
-                f"{embeddings_path_v4}{embeddings}-wiki-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings = cached_path(
-                f"{embeddings_path_v4}{embeddings}-wiki-fasttext-300d-1M",
-                cache_dir=cache_dir,
-            )
+            cached_path(f"{hu_path}/{embeddings}-wiki-fasttext-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/{embeddings}-wiki-fasttext-300d-1M", cache_dir=cache_dir)
 
         # two-letter language code wiki embeddings
         elif len(embeddings.lower()) == 7 and embeddings.endswith("-wiki"):
-            cached_path(
-                f"{embeddings_path_v4}{embeddings[:2]}-wiki-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings = cached_path(
-                f"{embeddings_path_v4}{embeddings[:2]}-wiki-fasttext-300d-1M",
-                cache_dir=cache_dir,
-            )
+            cached_path(f"{hu_path}/{embeddings[:2]}-wiki-fasttext-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/{embeddings[:2]}-wiki-fasttext-300d-1M",  cache_dir=cache_dir)
 
         # two-letter language code crawl embeddings
         elif len(embeddings.lower()) == 8 and embeddings.endswith("-crawl"):
-            cached_path(
-                f"{embeddings_path_v4}{embeddings[:2]}-crawl-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings = cached_path(
-                f"{embeddings_path_v4}{embeddings[:2]}-crawl-fasttext-300d-1M",
-                cache_dir=cache_dir,
-            )
+            cached_path(f"{hu_path}/{embeddings[:2]}-crawl-fasttext-300d-1M.vectors.npy", cache_dir=cache_dir)
+            embeddings = cached_path(f"{hu_path}/{embeddings[:2]}-crawl-fasttext-300d-1M", cache_dir=cache_dir)
 
         elif not Path(embeddings).exists():
             raise ValueError(
@@ -424,128 +385,129 @@ class FlairEmbeddings(TokenEmbeddings):
 
         cache_dir = Path("embeddings")
 
-        aws_path: str = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources"
-        hu_path: str = "https://flair.informatik.hu-berlin.de/resources"
+        hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/flair"
         clef_hipe_path: str = "https://files.ifi.uzh.ch/cl/siclemat/impresso/clef-hipe-2020/flair"
 
         self.PRETRAINED_MODEL_ARCHIVE_MAP = {
             # multilingual models
-            "multi-forward": f"{aws_path}/embeddings-v0.4.3/lm-jw300-forward-v0.1.pt",
-            "multi-backward": f"{aws_path}/embeddings-v0.4.3/lm-jw300-backward-v0.1.pt",
-            "multi-v0-forward": f"{aws_path}/embeddings-v0.4/lm-multi-forward-v0.1.pt",
-            "multi-v0-backward": f"{aws_path}/embeddings-v0.4/lm-multi-backward-v0.1.pt",
-            "multi-v0-forward-fast": f"{aws_path}/embeddings-v0.4/lm-multi-forward-fast-v0.1.pt",
-            "multi-v0-backward-fast": f"{aws_path}/embeddings-v0.4/lm-multi-backward-fast-v0.1.pt",
+            "multi-forward": f"{hu_path}/lm-jw300-forward-v0.1.pt",
+            "multi-backward": f"{hu_path}/lm-jw300-backward-v0.1.pt",
+            "multi-v0-forward": f"{hu_path}/lm-multi-forward-v0.1.pt",
+            "multi-v0-backward": f"{hu_path}/lm-multi-backward-v0.1.pt",
+            "multi-v0-forward-fast": f"{hu_path}/lm-multi-forward-fast-v0.1.pt",
+            "multi-v0-backward-fast": f"{hu_path}/lm-multi-backward-fast-v0.1.pt",
             # English models
-            "en-forward": f"{aws_path}/embeddings-v0.4.1/big-news-forward--h2048-l1-d0.05-lr30-0.25-20/news-forward-0.4.1.pt",
-            "en-backward": f"{aws_path}/embeddings-v0.4.1/big-news-backward--h2048-l1-d0.05-lr30-0.25-20/news-backward-0.4.1.pt",
-            "en-forward-fast": f"{aws_path}/embeddings/lm-news-english-forward-1024-v0.2rc.pt",
-            "en-backward-fast": f"{aws_path}/embeddings/lm-news-english-backward-1024-v0.2rc.pt",
-            "news-forward": f"{aws_path}/embeddings-v0.4.1/big-news-forward--h2048-l1-d0.05-lr30-0.25-20/news-forward-0.4.1.pt",
-            "news-backward": f"{aws_path}/embeddings-v0.4.1/big-news-backward--h2048-l1-d0.05-lr30-0.25-20/news-backward-0.4.1.pt",
-            "news-forward-fast": f"{aws_path}/embeddings/lm-news-english-forward-1024-v0.2rc.pt",
-            "news-backward-fast": f"{aws_path}/embeddings/lm-news-english-backward-1024-v0.2rc.pt",
-            "mix-forward": f"{aws_path}/embeddings/lm-mix-english-forward-v0.2rc.pt",
-            "mix-backward": f"{aws_path}/embeddings/lm-mix-english-backward-v0.2rc.pt",
+            "en-forward": f"{hu_path}/news-forward-0.4.1.pt",
+            "en-backward": f"{hu_path}/news-backward-0.4.1.pt",
+            "en-forward-fast": f"{hu_path}/lm-news-english-forward-1024-v0.2rc.pt",
+            "en-backward-fast": f"{hu_path}/lm-news-english-backward-1024-v0.2rc.pt",
+            "news-forward": f"{hu_path}/news-forward-0.4.1.pt",
+            "news-backward": f"{hu_path}/news-backward-0.4.1.pt",
+            "news-forward-fast": f"{hu_path}/lm-news-english-forward-1024-v0.2rc.pt",
+            "news-backward-fast": f"{hu_path}/lm-news-english-backward-1024-v0.2rc.pt",
+            "mix-forward": f"{hu_path}/lm-mix-english-forward-v0.2rc.pt",
+            "mix-backward": f"{hu_path}/lm-mix-english-backward-v0.2rc.pt",
             # Arabic
-            "ar-forward": f"{aws_path}/embeddings-stefan-it/lm-ar-opus-large-forward-v0.1.pt",
-            "ar-backward": f"{aws_path}/embeddings-stefan-it/lm-ar-opus-large-backward-v0.1.pt",
+            "ar-forward": f"{hu_path}/lm-ar-opus-large-forward-v0.1.pt",
+            "ar-backward": f"{hu_path}/lm-ar-opus-large-backward-v0.1.pt",
             # Bulgarian
-            "bg-forward-fast": f"{aws_path}/embeddings-v0.3/lm-bg-small-forward-v0.1.pt",
-            "bg-backward-fast": f"{aws_path}/embeddings-v0.3/lm-bg-small-backward-v0.1.pt",
-            "bg-forward": f"{aws_path}/embeddings-stefan-it/lm-bg-opus-large-forward-v0.1.pt",
-            "bg-backward": f"{aws_path}/embeddings-stefan-it/lm-bg-opus-large-backward-v0.1.pt",
+            "bg-forward-fast": f"{hu_path}/lm-bg-small-forward-v0.1.pt",
+            "bg-backward-fast": f"{hu_path}/lm-bg-small-backward-v0.1.pt",
+            "bg-forward": f"{hu_path}/lm-bg-opus-large-forward-v0.1.pt",
+            "bg-backward": f"{hu_path}/lm-bg-opus-large-backward-v0.1.pt",
             # Czech
-            "cs-forward": f"{aws_path}/embeddings-stefan-it/lm-cs-opus-large-forward-v0.1.pt",
-            "cs-backward": f"{aws_path}/embeddings-stefan-it/lm-cs-opus-large-backward-v0.1.pt",
-            "cs-v0-forward": f"{aws_path}/embeddings-v0.4/lm-cs-large-forward-v0.1.pt",
-            "cs-v0-backward": f"{aws_path}/embeddings-v0.4/lm-cs-large-backward-v0.1.pt",
+            "cs-forward": f"{hu_path}/lm-cs-opus-large-forward-v0.1.pt",
+            "cs-backward": f"{hu_path}/lm-cs-opus-large-backward-v0.1.pt",
+            "cs-v0-forward": f"{hu_path}/lm-cs-large-forward-v0.1.pt",
+            "cs-v0-backward": f"{hu_path}/lm-cs-large-backward-v0.1.pt",
             # Danish
-            "da-forward": f"{aws_path}/embeddings-stefan-it/lm-da-opus-large-forward-v0.1.pt",
-            "da-backward": f"{aws_path}/embeddings-stefan-it/lm-da-opus-large-backward-v0.1.pt",
+            "da-forward": f"{hu_path}/lm-da-opus-large-forward-v0.1.pt",
+            "da-backward": f"{hu_path}/lm-da-opus-large-backward-v0.1.pt",
             # German
-            "de-forward": f"{aws_path}/embeddings/lm-mix-german-forward-v0.2rc.pt",
-            "de-backward": f"{aws_path}/embeddings/lm-mix-german-backward-v0.2rc.pt",
-            "de-historic-ha-forward": f"{aws_path}/embeddings-stefan-it/lm-historic-hamburger-anzeiger-forward-v0.1.pt",
-            "de-historic-ha-backward": f"{aws_path}/embeddings-stefan-it/lm-historic-hamburger-anzeiger-backward-v0.1.pt",
-            "de-historic-wz-forward": f"{aws_path}/embeddings-stefan-it/lm-historic-wiener-zeitung-forward-v0.1.pt",
-            "de-historic-wz-backward": f"{aws_path}/embeddings-stefan-it/lm-historic-wiener-zeitung-backward-v0.1.pt",
-            "de-historic-rw-forward": f"{hu_path}/embeddings/redewiedergabe_lm_forward.pt",
-            "de-historic-rw-backward": f"{hu_path}/embeddings/redewiedergabe_lm_backward.pt",
+            "de-forward": f"{hu_path}/lm-mix-german-forward-v0.2rc.pt",
+            "de-backward": f"{hu_path}/lm-mix-german-backward-v0.2rc.pt",
+            "de-historic-ha-forward": f"{hu_path}/lm-historic-hamburger-anzeiger-forward-v0.1.pt",
+            "de-historic-ha-backward": f"{hu_path}/lm-historic-hamburger-anzeiger-backward-v0.1.pt",
+            "de-historic-wz-forward": f"{hu_path}/lm-historic-wiener-zeitung-forward-v0.1.pt",
+            "de-historic-wz-backward": f"{hu_path}/lm-historic-wiener-zeitung-backward-v0.1.pt",
+            "de-historic-rw-forward": f"{hu_path}/redewiedergabe_lm_forward.pt",
+            "de-historic-rw-backward": f"{hu_path}/redewiedergabe_lm_backward.pt",
             # Spanish
-            "es-forward": f"{aws_path}/embeddings-v0.4/language_model_es_forward_long/lm-es-forward.pt",
-            "es-backward": f"{aws_path}/embeddings-v0.4/language_model_es_backward_long/lm-es-backward.pt",
-            "es-forward-fast": f"{aws_path}/embeddings-v0.4/language_model_es_forward/lm-es-forward-fast.pt",
-            "es-backward-fast": f"{aws_path}/embeddings-v0.4/language_model_es_backward/lm-es-backward-fast.pt",
+            "es-forward": f"{hu_path}/lm-es-forward.pt",
+            "es-backward": f"{hu_path}/lm-es-backward.pt",
+            "es-forward-fast": f"{hu_path}/lm-es-forward-fast.pt",
+            "es-backward-fast": f"{hu_path}/lm-es-backward-fast.pt",
             # Basque
-            "eu-forward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-forward-v0.2.pt",
-            "eu-backward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-backward-v0.2.pt",
-            "eu-v1-forward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-forward-v0.1.pt",
-            "eu-v1-backward": f"{aws_path}/embeddings-stefan-it/lm-eu-opus-large-backward-v0.1.pt",
-            "eu-v0-forward": f"{aws_path}/embeddings-v0.4/lm-eu-large-forward-v0.1.pt",
-            "eu-v0-backward": f"{aws_path}/embeddings-v0.4/lm-eu-large-backward-v0.1.pt",
+            "eu-forward": f"{hu_path}/lm-eu-opus-large-forward-v0.2.pt",
+            "eu-backward": f"{hu_path}/lm-eu-opus-large-backward-v0.2.pt",
+            "eu-v1-forward": f"{hu_path}/lm-eu-opus-large-forward-v0.1.pt",
+            "eu-v1-backward": f"{hu_path}/lm-eu-opus-large-backward-v0.1.pt",
+            "eu-v0-forward": f"{hu_path}/lm-eu-large-forward-v0.1.pt",
+            "eu-v0-backward": f"{hu_path}/lm-eu-large-backward-v0.1.pt",
             # Persian
-            "fa-forward": f"{aws_path}/embeddings-stefan-it/lm-fa-opus-large-forward-v0.1.pt",
-            "fa-backward": f"{aws_path}/embeddings-stefan-it/lm-fa-opus-large-backward-v0.1.pt",
+            "fa-forward": f"{hu_path}/lm-fa-opus-large-forward-v0.1.pt",
+            "fa-backward": f"{hu_path}/lm-fa-opus-large-backward-v0.1.pt",
             # Finnish
-            "fi-forward": f"{aws_path}/embeddings-stefan-it/lm-fi-opus-large-forward-v0.1.pt",
-            "fi-backward": f"{aws_path}/embeddings-stefan-it/lm-fi-opus-large-backward-v0.1.pt",
+            "fi-forward": f"{hu_path}/lm-fi-opus-large-forward-v0.1.pt",
+            "fi-backward": f"{hu_path}/lm-fi-opus-large-backward-v0.1.pt",
             # French
-            "fr-forward": f"{aws_path}/embeddings/lm-fr-charlm-forward.pt",
-            "fr-backward": f"{aws_path}/embeddings/lm-fr-charlm-backward.pt",
+            "fr-forward": f"{hu_path}/lm-fr-charlm-forward.pt",
+            "fr-backward": f"{hu_path}/lm-fr-charlm-backward.pt",
             # Hebrew
-            "he-forward": f"{aws_path}/embeddings-stefan-it/lm-he-opus-large-forward-v0.1.pt",
-            "he-backward": f"{aws_path}/embeddings-stefan-it/lm-he-opus-large-backward-v0.1.pt",
+            "he-forward": f"{hu_path}/lm-he-opus-large-forward-v0.1.pt",
+            "he-backward": f"{hu_path}/lm-he-opus-large-backward-v0.1.pt",
             # Hindi
-            "hi-forward": f"{aws_path}/embeddings-stefan-it/lm-hi-opus-large-forward-v0.1.pt",
-            "hi-backward": f"{aws_path}/embeddings-stefan-it/lm-hi-opus-large-backward-v0.1.pt",
+            "hi-forward": f"{hu_path}/lm-hi-opus-large-forward-v0.1.pt",
+            "hi-backward": f"{hu_path}/lm-hi-opus-large-backward-v0.1.pt",
             # Croatian
-            "hr-forward": f"{aws_path}/embeddings-stefan-it/lm-hr-opus-large-forward-v0.1.pt",
-            "hr-backward": f"{aws_path}/embeddings-stefan-it/lm-hr-opus-large-backward-v0.1.pt",
+            "hr-forward": f"{hu_path}/lm-hr-opus-large-forward-v0.1.pt",
+            "hr-backward": f"{hu_path}/lm-hr-opus-large-backward-v0.1.pt",
             # Indonesian
-            "id-forward": f"{aws_path}/embeddings-stefan-it/lm-id-opus-large-forward-v0.1.pt",
-            "id-backward": f"{aws_path}/embeddings-stefan-it/lm-id-opus-large-backward-v0.1.pt",
+            "id-forward": f"{hu_path}/lm-id-opus-large-forward-v0.1.pt",
+            "id-backward": f"{hu_path}/lm-id-opus-large-backward-v0.1.pt",
             # Italian
-            "it-forward": f"{aws_path}/embeddings-stefan-it/lm-it-opus-large-forward-v0.1.pt",
-            "it-backward": f"{aws_path}/embeddings-stefan-it/lm-it-opus-large-backward-v0.1.pt",
+            "it-forward": f"{hu_path}/lm-it-opus-large-forward-v0.1.pt",
+            "it-backward": f"{hu_path}/lm-it-opus-large-backward-v0.1.pt",
             # Japanese
-            "ja-forward": f"{aws_path}/embeddings-v0.4.1/lm__char-forward__ja-wikipedia-3GB/japanese-forward.pt",
-            "ja-backward": f"{aws_path}/embeddings-v0.4.1/lm__char-backward__ja-wikipedia-3GB/japanese-backward.pt",
+            "ja-forward": f"{hu_path}/japanese-forward.pt",
+            "ja-backward": f"{hu_path}/japanese-backward.pt",
             # Malayalam
             "ml-forward": f"https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/ml-forward.pt",
             "ml-backward": f"https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/ml-backward.pt",
             # Dutch
-            "nl-forward": f"{aws_path}/embeddings-stefan-it/lm-nl-opus-large-forward-v0.1.pt",
-            "nl-backward": f"{aws_path}/embeddings-stefan-it/lm-nl-opus-large-backward-v0.1.pt",
-            "nl-v0-forward": f"{aws_path}/embeddings-v0.4/lm-nl-large-forward-v0.1.pt",
-            "nl-v0-backward": f"{aws_path}/embeddings-v0.4/lm-nl-large-backward-v0.1.pt",
+            "nl-forward": f"{hu_path}/lm-nl-opus-large-forward-v0.1.pt",
+            "nl-backward": f"{hu_path}/lm-nl-opus-large-backward-v0.1.pt",
+            "nl-v0-forward": f"{hu_path}/lm-nl-large-forward-v0.1.pt",
+            "nl-v0-backward": f"{hu_path}/lm-nl-large-backward-v0.1.pt",
             # Norwegian
-            "no-forward": f"{aws_path}/embeddings-stefan-it/lm-no-opus-large-forward-v0.1.pt",
-            "no-backward": f"{aws_path}/embeddings-stefan-it/lm-no-opus-large-backward-v0.1.pt",
+            "no-forward": f"{hu_path}/lm-no-opus-large-forward-v0.1.pt",
+            "no-backward": f"{hu_path}/lm-no-opus-large-backward-v0.1.pt",
             # Polish
-            "pl-forward": f"{aws_path}/embeddings/lm-polish-forward-v0.2.pt",
-            "pl-backward": f"{aws_path}/embeddings/lm-polish-backward-v0.2.pt",
-            "pl-opus-forward": f"{aws_path}/embeddings-stefan-it/lm-pl-opus-large-forward-v0.1.pt",
-            "pl-opus-backward": f"{aws_path}/embeddings-stefan-it/lm-pl-opus-large-backward-v0.1.pt",
+            "pl-forward": f"{hu_path}/lm-polish-forward-v0.2.pt",
+            "pl-backward": f"{hu_path}/lm-polish-backward-v0.2.pt",
+            "pl-opus-forward": f"{hu_path}/lm-pl-opus-large-forward-v0.1.pt",
+            "pl-opus-backward": f"{hu_path}/lm-pl-opus-large-backward-v0.1.pt",
             # Portuguese
-            "pt-forward": f"{aws_path}/embeddings-v0.4/lm-pt-forward.pt",
-            "pt-backward": f"{aws_path}/embeddings-v0.4/lm-pt-backward.pt",
+            "pt-forward": f"{hu_path}/lm-pt-forward.pt",
+            "pt-backward": f"{hu_path}/lm-pt-backward.pt",
             # Pubmed
-            "pubmed-forward": f"{aws_path}/embeddings-v0.4.1/pubmed-2015-fw-lm.pt",
-            "pubmed-backward": f"{aws_path}/embeddings-v0.4.1/pubmed-2015-bw-lm.pt",
+            "pubmed-forward": f"{hu_path}/pubmed-forward.pt",
+            "pubmed-backward": f"{hu_path}/pubmed-backward.pt",
+            "pubmed-2015-forward": f"{hu_path}/pubmed-2015-fw-lm.pt",
+            "pubmed-2015-backward": f"{hu_path}/pubmed-2015-bw-lm.pt",
             # Slovenian
-            "sl-forward": f"{aws_path}/embeddings-stefan-it/lm-sl-opus-large-forward-v0.1.pt",
-            "sl-backward": f"{aws_path}/embeddings-stefan-it/lm-sl-opus-large-backward-v0.1.pt",
-            "sl-v0-forward": f"{aws_path}/embeddings-v0.3/lm-sl-large-forward-v0.1.pt",
-            "sl-v0-backward": f"{aws_path}/embeddings-v0.3/lm-sl-large-backward-v0.1.pt",
+            "sl-forward": f"{hu_path}/lm-sl-opus-large-forward-v0.1.pt",
+            "sl-backward": f"{hu_path}/lm-sl-opus-large-backward-v0.1.pt",
+            "sl-v0-forward": f"{hu_path}/lm-sl-large-forward-v0.1.pt",
+            "sl-v0-backward": f"{hu_path}/lm-sl-large-backward-v0.1.pt",
             # Swedish
-            "sv-forward": f"{aws_path}/embeddings-stefan-it/lm-sv-opus-large-forward-v0.1.pt",
-            "sv-backward": f"{aws_path}/embeddings-stefan-it/lm-sv-opus-large-backward-v0.1.pt",
-            "sv-v0-forward": f"{aws_path}/embeddings-v0.4/lm-sv-large-forward-v0.1.pt",
-            "sv-v0-backward": f"{aws_path}/embeddings-v0.4/lm-sv-large-backward-v0.1.pt",
+            "sv-forward": f"{hu_path}/lm-sv-opus-large-forward-v0.1.pt",
+            "sv-backward": f"{hu_path}/lm-sv-opus-large-backward-v0.1.pt",
+            "sv-v0-forward": f"{hu_path}/lm-sv-large-forward-v0.1.pt",
+            "sv-v0-backward": f"{hu_path}/lm-sv-large-backward-v0.1.pt",
             # Tamil
-            "ta-forward": f"{aws_path}/embeddings-stefan-it/lm-ta-opus-large-forward-v0.1.pt",
-            "ta-backward": f"{aws_path}/embeddings-stefan-it/lm-ta-opus-large-backward-v0.1.pt",
+            "ta-forward": f"{hu_path}/lm-ta-opus-large-forward-v0.1.pt",
+            "ta-backward": f"{hu_path}/lm-ta-opus-large-backward-v0.1.pt",
             # CLEF HIPE Shared task
             "de-impresso-hipe-v1-forward": f"{clef_hipe_path}/de-hipe-flair-v1-forward/best-lm.pt",
             "de-impresso-hipe-v1-backward": f"{clef_hipe_path}/de-hipe-flair-v1-backward/best-lm.pt",
@@ -730,14 +692,6 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
         # set the memory method
         self.pooling = pooling
-        if pooling == "mean":
-            self.aggregate_op = torch.add
-        elif pooling == "fade":
-            self.aggregate_op = torch.add
-        elif pooling == "max":
-            self.aggregate_op = torch.max
-        elif pooling == "min":
-            self.aggregate_op = torch.min
 
     def train(self, mode=True):
         super().train(mode=mode)
@@ -766,11 +720,18 @@ class PooledFlairEmbeddings(TokenEmbeddings):
                             self.word_embeddings[token.text] = local_embedding
                             self.word_count[token.text] = 1
                         else:
-                            aggregated_embedding = self.aggregate_op(
-                                self.word_embeddings[token.text], local_embedding
-                            )
-                            if self.pooling == "fade":
+
+                            # set aggregation operation
+                            if self.pooling == "mean":
+                                aggregated_embedding = torch.add(self.word_embeddings[token.text], local_embedding)
+                            elif self.pooling == "fade":
+                                aggregated_embedding = torch.add(self.word_embeddings[token.text], local_embedding)
                                 aggregated_embedding /= 2
+                            elif self.pooling == "max":
+                                aggregated_embedding = torch.max(self.word_embeddings[token.text], local_embedding)
+                            elif self.pooling == "min":
+                                aggregated_embedding = torch.min(self.word_embeddings[token.text], local_embedding)
+
                             self.word_embeddings[token.text] = aggregated_embedding
                             self.word_count[token.text] += 1
 
@@ -812,7 +773,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         pooling_operation: str = "first",
         batch_size: int = 1,
         use_scalar_mix: bool = False,
-        fine_tune: bool = False
+        fine_tune: bool = False,
+        allow_long_sentences: bool = True,
+        **kwargs
     ):
         """
         Bidirectional transformer embeddings of words from various transformer architectures.
@@ -828,10 +791,24 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         """
         super().__init__()
 
+        # temporary fix to disable tokenizer parallelism warning
+        # (see https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning)
+        import os
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
         # load tokenizer and transformer model
-        self.tokenizer = AutoTokenizer.from_pretrained(model)
-        config = AutoConfig.from_pretrained(model, output_hidden_states=True)
-        self.model = AutoModel.from_pretrained(model, config=config)
+        self.tokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
+        config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
+        self.model = AutoModel.from_pretrained(model, config=config, **kwargs)
+
+        self.allow_long_sentences = allow_long_sentences
+
+        if allow_long_sentences:
+            self.max_subtokens_sequence_length = self.tokenizer.model_max_length
+            self.stride = self.tokenizer.model_max_length//2
+        else:
+            self.max_subtokens_sequence_length = self.tokenizer.model_max_length
+            self.stride = 0
 
         # model name
         self.name = 'transformer-word-' + str(model)
@@ -893,8 +870,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         return text
 
     def _get_processed_token_text(self, token: Token) -> str:
-        pieces = self.tokenizer.convert_ids_to_tokens(
-            self.tokenizer.encode(token.text, add_special_tokens=False))
+        pieces = self.tokenizer.tokenize(token.text)
         token_text = ''
         for piece in pieces:
             token_text += self._remove_special_markup(piece)
@@ -908,87 +884,81 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         subtokenized_sentences = []
         subtokenized_sentences_token_lengths = []
 
-        for sentence in sentences:
+        sentence_parts_lengths = []
 
+        # TODO: keep for backwards compatibility, but remove in future
+        # some pretrained models do not have this property, applying default settings now.
+        # can be set manually after loading the model.
+        if not hasattr(self, 'max_subtokens_sequence_length'):
+            self.max_subtokens_sequence_length = None
+            self.allow_long_sentences = False
+            self.stride = 0
+
+        non_empty_sentences = []
+        empty_sentences = []
+
+        for sentence in sentences:
             tokenized_string = sentence.to_tokenized_string()
 
             # method 1: subtokenize sentence
             # subtokenized_sentence = self.tokenizer.encode(tokenized_string, add_special_tokens=True)
 
             # method 2:
-            ids = self.tokenizer.encode(tokenized_string, add_special_tokens=False)
-            subtokenized_sentence = self.tokenizer.build_inputs_with_special_tokens(ids)
+            # transformer specific tokenization
+            subtokenized_sentence = self.tokenizer.tokenize(tokenized_string)
+            if len(subtokenized_sentence) == 0:
+                empty_sentences.append(sentence)
+                continue
+            else:
+                non_empty_sentences.append(sentence)
 
-            subtokenized_sentences.append(torch.tensor(subtokenized_sentence, dtype=torch.long))
-            subtokens = self.tokenizer.convert_ids_to_tokens(subtokenized_sentence)
-
-            word_iterator = iter(sentence)
-            token = next(word_iterator)
-            token_text = self._get_processed_token_text(token)
-
-            token_subtoken_lengths = []
-            reconstructed_token = ''
-            subtoken_count = 0
-
-            # iterate over subtokens and reconstruct tokens
-            for subtoken_id, subtoken in enumerate(subtokens):
-
-                # remove special markup
-                subtoken = self._remove_special_markup(subtoken)
-
-                # check if subtoken is special begin token ([CLS] or similar)
-                if subtoken in self.special_tokens and subtoken_id == 0:
-                    continue
-
-                # some BERT tokenizers somehow omit words - in such cases skip to next token
-                if subtoken_count == 0 and not token_text.startswith(subtoken.lower()):
-                    token_subtoken_lengths.append(0)
-                    token = next(word_iterator)
-                    token_text = self._get_processed_token_text(token)
-
-                subtoken_count += 1
-
-                # append subtoken to reconstruct token
-                reconstructed_token = reconstructed_token + subtoken
-
-                # check if reconstructed token is the same as current token
-                if reconstructed_token.lower() == token_text:
-
-                    # if so, add subtoken count
-                    token_subtoken_lengths.append(subtoken_count)
-
-                    # reset subtoken count and reconstructed token
-                    reconstructed_token = ''
-                    subtoken_count = 0
-
-                    # get next token
-                    if len(token_subtoken_lengths) < len(sentence):
-                        token = next(word_iterator)
-                        token_text = self._get_processed_token_text(token)
-                    # break from loop if all tokens are accounted for
-                    else:
-                        break
-
-            # check if all tokens were matched to subtokens
-            if token != sentence[-1]:
-                log.error(f"Tokenization MISMATCH in sentence '{sentence.to_tokenized_string()}'")
-                log.error(f"Last matched: '{token}'")
-                log.error(f"Last sentence: '{sentence[-1]}'")
-                log.error(f"subtokenized: '{subtokens}'")
-
+            token_subtoken_lengths = self.reconstruct_tokens_from_subtokens(sentence, subtokenized_sentence)
             subtokenized_sentences_token_lengths.append(token_subtoken_lengths)
+
+            subtoken_ids_sentence = self.tokenizer.convert_tokens_to_ids(subtokenized_sentence)
+
+            nr_sentence_parts = 0
+
+            while subtoken_ids_sentence:
+                nr_sentence_parts += 1
+                encoded_inputs = self.tokenizer.encode_plus(subtoken_ids_sentence,
+                                                            max_length=self.max_subtokens_sequence_length,
+                                                            stride=self.stride,
+                                                            return_overflowing_tokens=self.allow_long_sentences,
+                                                            truncation=True,
+                                                            )
+
+                subtoken_ids_split_sentence = encoded_inputs['input_ids']
+                subtokenized_sentences.append(torch.tensor(subtoken_ids_split_sentence, dtype=torch.long))
+
+                if 'overflowing_tokens' in encoded_inputs:
+                    subtoken_ids_sentence = encoded_inputs['overflowing_tokens']
+                else:
+                    subtoken_ids_sentence = None
+
+            sentence_parts_lengths.append(nr_sentence_parts)
+
+        # empty sentences get zero embeddings
+        for sentence in empty_sentences:
+            for token in sentence:
+                token.set_embedding(self.name, torch.zeros(self.embedding_length))
+
+        # only embed non-empty sentences and if there is at least one
+        sentences = non_empty_sentences
+        if len(sentences) == 0: return
 
         # find longest sentence in batch
         longest_sequence_in_batch: int = len(max(subtokenized_sentences, key=len))
 
+        total_sentence_parts = sum(sentence_parts_lengths)
         # initialize batch tensors and mask
         input_ids = torch.zeros(
-            [len(sentences), longest_sequence_in_batch],
+            [total_sentence_parts, longest_sequence_in_batch],
             dtype=torch.long,
             device=flair.device,
         )
         mask = torch.zeros(
-            [len(sentences), longest_sequence_in_batch],
+            [total_sentence_parts, longest_sequence_in_batch],
             dtype=torch.long,
             device=flair.device,
         )
@@ -999,6 +969,10 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # put encoded batch through transformer model to get all hidden states of all encoder layers
         hidden_states = self.model(input_ids, attention_mask=mask)[-1]
+        # make the tuple a tensor; makes working with it easier.
+        hidden_states = torch.stack(hidden_states)
+
+        sentence_idx_offset = 0
 
         # gradients are enabled if fine-tuning is enabled
         gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
@@ -1006,7 +980,18 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         with gradient_context:
 
             # iterate over all subtokenized sentences
-            for sentence_idx, (sentence, subtoken_lengths) in enumerate(zip(sentences, subtokenized_sentences_token_lengths)):
+            for sentence_idx, (sentence, subtoken_lengths, nr_sentence_parts) in enumerate(zip(sentences, subtokenized_sentences_token_lengths, sentence_parts_lengths)):
+
+                sentence_hidden_state = hidden_states[:, sentence_idx + sentence_idx_offset, ...]
+
+                for i in range(1, nr_sentence_parts):
+                    sentence_idx_offset += 1
+                    remainder_sentence_hidden_state = hidden_states[:, sentence_idx + sentence_idx_offset, ...]
+                    # remove stride_size//2 at end of sentence_hidden_state, and half at beginning of remainder,
+                    # in order to get some context into the embeddings of these words.
+                    # also don't include the embedding of the extra [CLS] and [SEP] tokens.
+                    sentence_hidden_state = torch.cat((sentence_hidden_state[:, :-1-self.stride//2, :],
+                                                       remainder_sentence_hidden_state[:, 1 + self.stride//2:, :]), 1)
 
                 subword_start_idx = self.begin_offset
 
@@ -1024,7 +1009,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
                     # get states from all selected layers, aggregate with pooling operation
                     for layer in self.layer_indexes:
-                        current_embeddings = hidden_states[layer][sentence_idx][subword_start_idx:subword_end_idx]
+                        current_embeddings = sentence_hidden_state[layer][subword_start_idx:subword_end_idx]
 
                         if self.pooling_operation == "first":
                             final_embedding: torch.FloatTensor = current_embeddings[0]
@@ -1055,6 +1040,69 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
                     subword_start_idx += number_of_subtokens
 
+    def reconstruct_tokens_from_subtokens(self, sentence, subtokens):
+        word_iterator = iter(sentence)
+        token = next(word_iterator)
+        token_text = self._get_processed_token_text(token)
+        token_subtoken_lengths = []
+        reconstructed_token = ''
+        subtoken_count = 0
+        # iterate over subtokens and reconstruct tokens
+        for subtoken_id, subtoken in enumerate(subtokens):
+
+            # remove special markup
+            subtoken = self._remove_special_markup(subtoken)
+
+            # TODO check if this is necessary is this method is called before prepare_for_model
+            # check if reconstructed token is special begin token ([CLS] or similar)
+            if subtoken in self.special_tokens and subtoken_id == 0:
+                continue
+
+            # some BERT tokenizers somehow omit words - in such cases skip to next token
+            if subtoken_count == 0 and not token_text.startswith(subtoken.lower()):
+
+                while True:
+                    token_subtoken_lengths.append(0)
+                    token = next(word_iterator)
+                    token_text = self._get_processed_token_text(token)
+                    if token_text.startswith(subtoken.lower()): break
+
+            subtoken_count += 1
+
+            # append subtoken to reconstruct token
+            reconstructed_token = reconstructed_token + subtoken
+
+            # check if reconstructed token is the same as current token
+            if reconstructed_token.lower() == token_text:
+
+                # if so, add subtoken count
+                token_subtoken_lengths.append(subtoken_count)
+
+                # reset subtoken count and reconstructed token
+                reconstructed_token = ''
+                subtoken_count = 0
+
+                # break from loop if all tokens are accounted for
+                if len(token_subtoken_lengths) < len(sentence):
+                    token = next(word_iterator)
+                    token_text = self._get_processed_token_text(token)
+                else:
+                    break
+
+        # if tokens are unaccounted for
+        while len(token_subtoken_lengths) < len(sentence) and len(token.text) == 1:
+            token_subtoken_lengths.append(0)
+            if len(token_subtoken_lengths) == len(sentence): break
+            token = next(word_iterator)
+
+        # check if all tokens were matched to subtokens
+        if token != sentence[-1]:
+            log.error(f"Tokenization MISMATCH in sentence '{sentence.to_tokenized_string()}'")
+            log.error(f"Last matched: '{token}'")
+            log.error(f"Last sentence: '{sentence[-1]}'")
+            log.error(f"subtokenized: '{subtokens}'")
+        return token_subtoken_lengths
+
     def train(self, mode=True):
         # if fine-tuning is not enabled (i.e. a "feature-based approach" used), this
         # module should never be in training mode
@@ -1082,7 +1130,10 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # reload tokenizer to get around serialization issues
         model_name = self.name.split('transformer-word-')[-1]
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        except:
+            pass
 
 
 class FastTextEmbeddings(TokenEmbeddings):
@@ -1386,14 +1437,14 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
             if language_code not in self.language_embeddings:
                 log.info(f"Loading up MUSE embeddings for '{language_code}'!")
                 # download if necessary
-                webpath = "https://alan-nlp.s3.eu-central-1.amazonaws.com/resources/embeddings-muse"
+                hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/muse"
                 cache_dir = Path("embeddings") / "MUSE"
                 cached_path(
-                    f"{webpath}/muse.{language_code}.vec.gensim.vectors.npy",
+                    f"{hu_path}/muse.{language_code}.vec.gensim.vectors.npy",
                     cache_dir=cache_dir,
                 )
                 embeddings_file = cached_path(
-                    f"{webpath}/muse.{language_code}.vec.gensim", cache_dir=cache_dir
+                    f"{hu_path}/muse.{language_code}.vec.gensim", cache_dir=cache_dir
                 )
 
                 # load the model
@@ -1459,18 +1510,40 @@ class BPEmbSerializable(BPEmb):
 class BytePairEmbeddings(TokenEmbeddings):
     def __init__(
         self,
-        language: str,
+        language: str = None,
         dim: int = 50,
         syllables: int = 100000,
-        cache_dir=Path(flair.cache_root) / "embeddings",
+        cache_dir= None,
+        model_file_path: Path = None,
+        embedding_file_path: Path = None,
+        **kwargs,
     ):
         """
         Initializes BP embeddings. Constructor downloads required files if not there.
         """
+        if not cache_dir:
+            cache_dir = Path(flair.cache_root) / "embeddings"
+        if language:
+            self.name: str = f"bpe-{language}-{syllables}-{dim}"
+        else:
+            assert (
+                model_file_path is not None and embedding_file_path is not None
+            ), "Need to specify model_file_path and embedding_file_path if no language is given in BytePairEmbeddings(...)"
+            dim=None
 
-        self.name: str = f"bpe-{language}-{syllables}-{dim}"
+        self.embedder = BPEmbSerializable(
+            lang=language,
+            vs=syllables,
+            dim=dim,
+            cache_dir=cache_dir,
+            model_file=model_file_path,
+            emb_file=embedding_file_path,
+            **kwargs,
+        )
+
+        if not language:
+            self.name: str = f"bpe-custom-{self.embedder.vs}-{self.embedder.dim}"
         self.static_embeddings = True
-        self.embedder = BPEmb(lang=language, vs=syllables, dim=dim, cache_dir=cache_dir)
 
         self.__embedding_length: int = self.embedder.emb.vector_size * 2
         super().__init__()
@@ -1530,7 +1603,7 @@ class ELMoEmbeddings(TokenEmbeddings):
             log.warning("-" * 100)
             log.warning('ATTENTION! The library "allennlp" is not installed!')
             log.warning(
-                'To use ELMoEmbeddings, please first install with "pip install allennlp"'
+                'To use ELMoEmbeddings, please first install with "pip install allennlp==0.9.0"'
             )
             log.warning("-" * 100)
             pass
@@ -1560,14 +1633,14 @@ class ELMoEmbeddings(TokenEmbeddings):
             if model == "pubmed":
                 options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_options.json"
                 weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_weights_PubMed_only.hdf5"
-
+        
         if embedding_mode == "all":
-            self.embedding_mode_fn = lambda x: torch.cat(x, 0)
+            self.embedding_mode_fn = self.use_layers_all
         elif embedding_mode == "top":
-            self.embedding_mode_fn = lambda x: x[-1]
+            self.embedding_mode_fn = self.use_layers_top 
         elif embedding_mode == "average":
-            self.embedding_mode_fn = lambda x: torch.mean(torch.stack(x), 0)
-
+            self.embedding_mode_fn = self.use_layers_average   
+                    
         # put on Cuda if available
         from flair import device
 
@@ -1593,9 +1666,21 @@ class ELMoEmbeddings(TokenEmbeddings):
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
-
+    
+    def use_layers_all(self,x):
+        return torch.cat(x, 0)
+    
+    def use_layers_top(self,x):
+        return x[-1]
+    
+    def use_layers_average(self,x):
+        return torch.mean(torch.stack(x), 0)
+        
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
+        # ELMoEmbeddings before Release 0.5 did not set self.embedding_mode_fn
+        if not getattr(self, "embedding_mode_fn", None):
+            self.embedding_mode_fn = self.use_layers_all
+            
         sentence_words: List[List[str]] = []
         for sentence in sentences:
             sentence_words.append([token.text for token in sentence])
@@ -1622,6 +1707,22 @@ class ELMoEmbeddings(TokenEmbeddings):
 
     def __str__(self):
         return self.name
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+
+        if re.fullmatch(r"cuda:[0-9]+", str(flair.device)):
+            cuda_device = int(str(flair.device).split(":")[-1])
+        elif str(flair.device) == "cpu":
+            cuda_device = -1
+        else:
+            cuda_device = 0
+
+        self.ee.cuda_device = cuda_device
+
+        self.ee.elmo_bilm.to(device=flair.device)
+        self.ee.elmo_bilm._elmo_lstm._states = tuple(
+            [state.to(flair.device) for state in self.ee.elmo_bilm._elmo_lstm._states])
 
 
 class NILCEmbeddings(WordEmbeddings):

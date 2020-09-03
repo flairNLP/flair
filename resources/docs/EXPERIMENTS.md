@@ -151,24 +151,23 @@ trainer.train('resources/taggers/example-ner',
 ```
 
 
-## CoNLL-03 Named Entity Recognition (Dutch)
+## CoNLL-02 Named Entity Recognition (Dutch)
 
 #### Current best score with Flair
 
-**90.44** F1-score, averaged over 5 runs.
+**92.38** F1-score, averaged over 5 runs.
 
 #### Data
 Data is included in Flair and will get automatically downloaded when you run the script.
 
 #### Best Known Configuration
-Once you have the data, reproduce our experiments exactly like for CoNLL-03, just with a different dataset and with
-FastText word embeddings and German contextual string embeddings. The full code then is as follows:
 
 ```python
 from flair.data import Corpus
 from flair.datasets import CONLL_03_DUTCH
-from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings, PooledFlairEmbeddings
-from typing import List
+from flair.embeddings import TransformerWordEmbeddings
+from flair.models import SequenceTagger
+from flair.trainers import ModelTrainer
 
 # 1. get the corpus
 corpus: Corpus = CONLL_03_DUTCH()
@@ -180,29 +179,19 @@ tag_type = 'ner'
 tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 
 # initialize embeddings
-embedding_types: List[TokenEmbeddings] = [
-    WordEmbeddings('nl'),
-    PooledFlairEmbeddings('dutch-forward', pooling='mean'),
-    PooledFlairEmbeddings('dutch-backward', pooling='mean'),
-]
-
-embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
+embeddings = TransformerWordEmbeddings('wietsedv/bert-base-dutch-cased', allow_long_sentences=True)
 
 # initialize sequence tagger
-from flair.models import SequenceTagger
-
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
                                         tag_dictionary=tag_dictionary,
                                         tag_type=tag_type)
 
 # initialize trainer
-from flair.trainers import ModelTrainer
-
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 trainer.train('resources/taggers/example-ner',
-              train_with_dev=True,  
+              train_with_dev=True,
               max_epochs=150)
 ```
 

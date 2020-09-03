@@ -8,24 +8,26 @@
 
 A very simple framework for **state-of-the-art NLP**. Developed by [Humboldt University of Berlin](https://www.informatik.hu-berlin.de/en/forschung-en/gebiete/ml-en/) and friends.
 
+* __IMPORTANT: (30.08.2020)__ *We moved our models to a new server. Please update your Flair to the newest version!*
+
 ---
 
 Flair is:
 
 * **A powerful NLP library.** Flair allows you to apply our state-of-the-art natural language processing (NLP)
 models to your text, such as named entity recognition (NER), part-of-speech tagging (PoS),
- sense disambiguation and classification.
+ sense disambiguation and classification, with support for a rapidly growing number of languages.
 
-* **Multilingual.** Thanks to the Flair community, we support a rapidly growing number of languages. We also now include
-'*one model, many languages*' taggers, i.e. single models that predict PoS or NER tags for input text in various languages.
+* **A biomedical NER library.** Flair has special support for [biomedical data](/resources/docs/HUNFLAIR.md) with
+state-of-the-art models for biomedical NER and support for over 32 biomedical datasets.
 
-* **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and 
-document embeddings, including our proposed **[Flair embeddings](https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing)**, BERT embeddings and ELMo embeddings.
+* **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and
+document embeddings, including our proposed **[Flair embeddings](https://www.aclweb.org/anthology/C18-1139/)**, BERT embeddings and ELMo embeddings.
 
-* **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to 
+* **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.5](https://github.com/flairNLP/flair/releases)!
+Now at [version 0.6](https://github.com/flairNLP/flair/releases)!
 
 ## Comparison with State-of-the-Art
 
@@ -40,13 +42,13 @@ Flair outperforms the previous best methods on a range of NLP tasks:
 | Chunking |English| Conll-2000  |  **96.72** (F1) | *96.36 [(Peters et al., 2017)](https://arxiv.org/pdf/1705.00108.pdf)*
 | Named Entity Recognition | German  | Conll-03    |  **88.27** (F1)  | *78.76 [(Lample et al., 2016)](https://arxiv.org/abs/1603.01360)* |
 | Named Entity Recognition |German  | Germeval    |  **84.65** (F1)  | *79.08 [(Hänig et al, 2014)](http://asv.informatik.uni-leipzig.de/publication/file/300/GermEval2014_ExB.pdf)*|
-| Named Entity Recognition | Dutch  | Conll-03    |  **90.44** (F1)  | *81.74 [(Lample et al., 2016)](https://arxiv.org/abs/1603.01360)* |
+| Named Entity Recognition | Dutch  | Conll-02    |  **92.38** (F1)  | *81.74 [(Lample et al., 2016)](https://arxiv.org/abs/1603.01360)* |
 | Named Entity Recognition |Polish  | PolEval-2018    |  **86.6** (F1) <br> [(Borchmann et al., 2018)](https://github.com/applicaai/poleval-2018) | *85.1 [(PolDeepNer)](https://github.com/CLARIN-PL/PolDeepNer/)*|
 
 Here's how to [reproduce these numbers](/resources/docs/EXPERIMENTS.md) using Flair. You can also find detailed evaluations and discussions in our papers:
 
 * *[Contextual String Embeddings for Sequence Labeling](https://www.aclweb.org/anthology/C18-1139/).
-Alan Akbik, Duncan Blythe and Roland Vollgraf. 
+Alan Akbik, Duncan Blythe and Roland Vollgraf.
 27th International Conference on Computational Linguistics, **COLING 2018**.*
 
 * *[Pooled Contextualized Embeddings for Named Entity Recognition](https://www.aclweb.org/anthology/papers/N/N19/N19-1078/).
@@ -71,7 +73,7 @@ pip install flair
 
 ### Example Usage
 
-Let's run named entity recognition (NER) over an example sentence. All you need to do is make a `Sentence`, load 
+Let's run named entity recognition (NER) over an example sentence. All you need to do is make a `Sentence`, load
 a pre-trained model and use it to predict tags for the sentence:
 
 ```python
@@ -99,12 +101,12 @@ for entity in sentence.get_spans('ner'):
     print(entity)
 ```
 
-This should print: 
+This should print:
 
 ```console
 Sentence: "I love Berlin ." - 4 Tokens
 
-The following NER tags are found: 
+The following NER tags are found:
 
 Span [3]: "Berlin"   [− Labels: LOC (0.9992)]
 ```
@@ -121,12 +123,15 @@ We provide a set of quick tutorials to get you started with the library:
 * [Tutorial 6: Loading a Dataset](/resources/docs/TUTORIAL_6_CORPUS.md)
 * [Tutorial 7: Training a Model](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
 * [Tutorial 8: Training your own Flair Embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
- 
+
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
-text, how you can embed your text with different word or document embeddings, and how you can train your own 
+text, how you can embed your text with different word or document embeddings, and how you can train your own
 language models, sequence labeling models, and text classification models. Let us know if anything is unclear.
 
-There are also good third-party articles and posts that illustrate how to use Flair: 
+There is also a dedicated landing page for our **[biomedical NER and datasets](/resources/docs/HUNFLAIR.md)** with
+installation instructions and tutorials.
+
+There are also good third-party articles and posts that illustrate how to use Flair:
 * [How to build a text classifier with Flair](https://towardsdatascience.com/text-classification-with-state-of-the-art-nlp-library-flair-b541d7add21f)
 * [How to build a microservice with Flair and Flask](https://shekhargulati.com/2019/01/04/building-a-sentiment-analysis-python-microservice-with-flair-and-flask/)
 * [A docker image for Flair](https://towardsdatascience.com/docker-image-for-nlp-5402c9a9069e)
@@ -134,10 +139,11 @@ There are also good third-party articles and posts that illustrate how to use Fl
 * [Visualisation tool for highlighting the extracted entities](https://github.com/lunayach/visNER)
 * [Practical approach of State-of-the-Art Flair in Named Entity Recognition](https://medium.com/analytics-vidhya/practical-approach-of-state-of-the-art-flair-in-named-entity-recognition-46a837e25e6b)
 * [Benchmarking NER algorithms](https://towardsdatascience.com/benchmark-ner-algorithm-d4ab01b2d4c3)
+* [Training a Flair text classifier on Google Cloud Platform (GCP) and serving predictions on GCP](https://github.com/robinvanschaik/flair-on-gcp)
 
 ## Citing Flair
 
-Please cite the following paper when using Flair: 
+Please cite the following paper when using Flair:
 
 ```
 @inproceedings{akbik2018coling,
@@ -161,18 +167,18 @@ If you use the pooled version of the Flair embeddings (PooledFlairEmbeddings), p
 }
 ```
 
-## Contact 
+## Contact
 
 Please email your questions or comments to [Alan Akbik](http://alanakbik.github.io/).
 
 ## Contributing
 
-Thanks for your interest in contributing! There are many ways to get involved; 
-start with our [contributor guidelines](CONTRIBUTING.md) and then 
+Thanks for your interest in contributing! There are many ways to get involved;
+start with our [contributor guidelines](CONTRIBUTING.md) and then
 check these [open issues](https://github.com/flairNLP/flair/issues) for specific tasks.
 
-For contributors looking to get deeper into the API we suggest cloning the repository and checking out the unit 
-tests for examples of how to call methods. Nearly all classes and methods are documented, so finding your way around 
+For contributors looking to get deeper into the API we suggest cloning the repository and checking out the unit
+tests for examples of how to call methods. Nearly all classes and methods are documented, so finding your way around
 the code should hopefully be easy.
 
 ### Running unit tests locally
@@ -196,18 +202,6 @@ To also run slow tests, such as loading and using the embeddings provided by fla
 pytest --runslow tests/
 ```
 
-### Code Style
-
-To ensure a standardized code style we use the formatter [black](https://github.com/ambv/black).
-If your code is not formatted properly, travis will fail to build.
-
-If you want to automatically format your code on every commit, you can use [pre-commit](https://pre-commit.com/).
-Just install it via `pip install pre-commit` and execute `pre-commit install` in the root folder.
-This will add a hook to the repository, which reformats files on every commit.
-
-If you want to set it up manually, install black via `pip install black`.
-To reformat files execute `black .`.
-
 ## [License](/LICENSE)
 
 The MIT License (MIT)
@@ -219,4 +213,3 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-

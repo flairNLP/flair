@@ -123,6 +123,8 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
 
     model.predict(sentence, multi_class_prob=True)
 
+    assert len(sentence.labels) > 1
+
     for label in sentence.labels:
         assert label.value is not None
         assert 0.0 <= label.score <= 1.0

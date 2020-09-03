@@ -69,6 +69,29 @@ This should print:
     ]}
 ```
 
+
+### Multi-Tagging 
+
+Sometimes you want to predict several types of annotation at once, for instance NER and part-of-speech (POS) tags. 
+For this, you can use our new `MultiTagger` object, like this: 
+
+```python
+from flair.models import MultiTagger
+
+# load tagger for POS and NER 
+tagger = MultiTagger.load(['pos', 'ner'])
+
+# make example sentence
+sentence = Sentence("George Washington went to Washington.")
+
+# predict with both models
+tagger.predict(sentence)
+
+print(sentence)
+``` 
+
+The sentence now has two types of annotation: POS and NER. 
+
 ### List of Pre-Trained Sequence Tagger Models
 
 You choose which pre-trained model you load by passing the appropriate
@@ -80,11 +103,14 @@ are provided:
 | ID | Task | Training Dataset | Accuracy |
 | -------------    | ------------- |------------- |------------- |
 | 'ner' | 4-class Named Entity Recognition |  Conll-03  |  **93.03** (F1) |
+| 'ner-pooled' | 4-class Named Entity Recognition (memory inefficient) |  Conll-03  |  **93.24** (F1) |
 | 'ner-ontonotes' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.06** (F1) |
 | 'chunk' |  Syntactic Chunking   |  Conll-2000     |  **96.47** (F1) |
 | 'pos' |  Part-of-Speech Tagging (fine-grained) |  Ontonotes     |  **98.19** (Accuracy) |
 | 'upos' |  Part-of-Speech Tagging (universal) |  Ontonotes     |  **98.6** (Accuracy) |
+| 'keyphrase' |  Methods and materials in science papers (BETA) |  Semeval2017   |  **47.3** (F1)  |
 | 'frame'  |   Semantic Frame Detection |  Propbank 3.0     |  **97.54** (F1) |
+| 'negation-speculation'  |  Negations and speculations in biomedical articles  |  Bioscope  |  **80.2** (F1) |
 
 
 #### Fast English Models
@@ -143,11 +169,13 @@ Thanks to our contributors we are also able to distribute a couple of models for
 | ID | Task | Training Dataset | Accuracy | Contributor |
 | -------------    | ------------- |------------- |------------- |------------- |
 | 'fr-ner' | Named Entity Recognition |  [WikiNER (aij-wikiner-fr-wp3)](https://github.com/dice-group/FOX/tree/master/input/Wikiner)  |  **95.57** (F1) | [mhham](https://github.com/mhham) |
-| 'nl-ner' | Named Entity Recognition |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **89.56** (F1) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/conll2002-ner-dutch) |
+| 'nl-ner' | Named Entity Recognition |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **92.58** (F1) |  |
+| 'nl-ner-rnn' | Named Entity Recognition |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **90.79** (F1) | |
 | 'da-ner' | Named Entity Recognition |  [Danish NER dataset](https://github.com/alexandrainst/danlp)  |   | [AmaliePauli](https://github.com/AmaliePauli) |
 | 'da-pos' | Named Entity Recognition |  [Danish Dependency Treebank](https://github.com/UniversalDependencies/UD_Danish-DDT/blob/master/README.md)  |  | [AmaliePauli](https://github.com/AmaliePauli) |
 | 'ml-pos' | Part-of-Speech Tagging (fine-grained) |  30000 Malayalam sentences  | **83** | [sabiqueqb](https://github.com/sabiqueqb) |
 | 'ml-upos' | Part-of-Speech Tagging (universal)| 30000 Malayalam sentences | **87** | [sabiqueqb](https://github.com/sabiqueqb) |
+| 'pt-pos-clinical' | Part-of-Speech Tagging (fine-grained) for clinical texts | [PUCPR](https://github.com/HAILab-PUCPR/portuguese-clinical-pos-tagger) | **92.39** | [LucasFerroHAILab](https://github.com/LucasFerroHAILab) |
 
 
 ### Tagging a German sentence
@@ -248,17 +276,20 @@ list of `Sentence` objects to the `.predict()` method.
 For instance, you can use the sentence splitter of segtok to split your text:
 
 ```python
+from flair.models import SequenceTagger
+from flair.tokenization import SegtokSentenceSplitter
 
-# your text of many sentences
+# example text with many sentences
 text = "This is a sentence. This is another sentence. I love Berlin."
 
-# use a library to split into sentences
-from segtok.segmenter import split_single
+# initialize sentence splitter
+splitter = SegtokSentenceSplitter()
 
-sentences = [Sentence(sent, use_tokenizer=True) for sent in split_single(text)]
+# use splitter to split text into list of sentences
+sentences = splitter.split(text)
 
-# predict tags for list of sentences
-tagger: SequenceTagger = SequenceTagger.load('ner')
+# predict tags for sentences
+tagger = SequenceTagger.load('ner')
 tagger.predict(sentences)
 
 # iterate through sentences and print predicted labels
@@ -273,7 +304,7 @@ tagger. Depending on your resources, you might want to play around with this par
 ## Tagging with Pre-Trained Text Classification Models
 
 Let's use a pre-trained model for detecting positive or negative comments.
-This model was trained over the [IMDB](http://ai.stanford.edu/~amaas/data/sentiment/) dataset and can recognize positive
+This model was trained over a mix of product and movie review datasets and can recognize positive
 and negative sentiment in English text.
 
 ```python
@@ -315,6 +346,7 @@ are provided:
 | ------------- | ---- | ------------- |------------- |------------- |
 | 'sentiment' | English | detecting positive and negative sentiment (transformer-based) | movie and product reviews |  **98.87** |
 | 'sentiment-fast' | English | detecting positive and negative sentiment (RNN-based) | movie and product reviews |  **96.83**|
+| 'communicative-functions' | English | detecting function of sentence in research paper (BETA) | scholarly papers |  |
 | 'de-offensive-language' | German | detecting offensive language | [GermEval 2018 Task 1](https://projects.fzai.h-da.de/iggsa/projekt/) |  **75.71** (Macro F1) |
 
 

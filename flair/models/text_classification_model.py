@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Union, Callable, Dict, Optional
+from typing import List, Union, Dict, Optional
 
 import torch
 import torch.nn as nn
@@ -11,12 +11,11 @@ import numpy as np
 import sklearn.metrics as metrics
 import flair.nn
 import flair.embeddings
-from flair.data import Dictionary, Sentence, Label, Token, space_tokenizer, DataPoint
-from flair.datasets import SentenceDataset, StringDataset, DataLoader
+from flair.data import Dictionary, Sentence, Label, DataPoint
+from flair.datasets import SentenceDataset, DataLoader
 from flair.file_utils import cached_path
 from flair.training_utils import (
     convert_labels_to_one_hot,
-    Metric,
     Result,
     store_embeddings,
 )
@@ -115,6 +114,7 @@ class TextClassifier(flair.nn.Model):
             "state_dict": self.state_dict(),
             "document_embeddings": self.document_embeddings,
             "label_dictionary": self.label_dictionary,
+            "label_type": self.label_type,
             "multi_label": self.multi_label,
             "beta": self.beta,
             "weight_dict": self.weight_dict,
@@ -177,7 +177,7 @@ class TextClassifier(flair.nn.Model):
         'gpu' to store embeddings in GPU memory.
         """
         if label_name == None:
-            label_name = self.label_type if self.label_type is not None else 'class'
+            label_name = self.label_type if self.label_type is not None else 'label'
 
         with torch.no_grad():
             if not sentences:
@@ -231,7 +231,7 @@ class TextClassifier(flair.nn.Model):
 
                 for (sentence, labels) in zip(batch, predicted_labels):
                     for label in labels:
-                        if self.multi_label:
+                        if self.multi_label or multi_class_prob:
                             sentence.add_label(label_name, label.value, label.score)
                         else:
                             sentence.set_label(label_name, label.value, label.score)
@@ -269,6 +269,12 @@ class TextClassifier(flair.nn.Model):
 
                 batch_count += 1
 
+                # remove previously predicted labels
+                [sentence.remove_labels('predicted') for sentence in batch]
+
+                # get the gold labels
+                true_values_for_batch = [sentence.get_labels(self.label_type) for sentence in batch]
+
                 # predict for batch
                 loss = self.predict(batch,
                                     embedding_storage_mode=embedding_storage_mode,
@@ -280,7 +286,7 @@ class TextClassifier(flair.nn.Model):
 
                 sentences_for_batch = [sent.to_plain_string() for sent in batch]
 
-                true_values_for_batch = [sentence.get_labels(self.label_type) for sentence in batch]
+                # get the predicted labels
                 predictions = [sentence.get_labels('predicted') for sentence in batch]
 
                 for sentence, prediction, true_value in zip(
@@ -314,6 +320,10 @@ class TextClassifier(flair.nn.Model):
 
                 store_embeddings(batch, embedding_storage_mode)
 
+            # remove predicted labels
+            for sentence in sentences:
+                sentence.annotation_layers['predicted'] = []
+
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
@@ -323,14 +333,14 @@ class TextClassifier(flair.nn.Model):
             for i in range(len(self.label_dictionary)):
                 target_names.append(self.label_dictionary.get_item_for_index(i))
             classification_report = metrics.classification_report(y_true, y_pred, digits=4,
-                                                                  target_names=target_names, zero_division=1)
+                                                                  target_names=target_names, zero_division=0)
 
             # get scores
-            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro'), 4)
+            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0), 4)
             accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
-            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro'), 4)
-            precision_score = round(metrics.precision_score(y_true, y_pred, average='macro'), 4)
-            recall_score = round(metrics.recall_score(y_true, y_pred, average='macro'), 4)
+            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro', zero_division=0), 4)
+            precision_score = round(metrics.precision_score(y_true, y_pred, average='macro', zero_division=0), 4)
+            recall_score = round(metrics.recall_score(y_true, y_pred, average='macro', zero_division=0), 4)
 
             detailed_result = (
                     "\nResults:"
@@ -449,26 +459,26 @@ class TextClassifier(flair.nn.Model):
     def _fetch_model(model_name) -> str:
 
         model_map = {}
-        aws_resource_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4"
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
         model_map["de-offensive-language"] = "/".join(
-            [
-                aws_resource_path,
-                "classy-offensive-de-rnn-cuda%3A0",
-                "germ-eval-2018-task-1-v0.4.pt",
-            ]
+            [hu_path, "de-offensive-language", "germ-eval-2018-task-1-v0.4.pt"]
         )
 
         # English sentiment models
         model_map["sentiment"] = "/".join(
-            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert.pt"]
+            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_3.1.pt"]
         )
         model_map["en-sentiment"] = "/".join(
-            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert.pt"]
+            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_3.1.pt"]
         )
         model_map["sentiment-fast"] = "/".join(
             [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn.pt"]
+        )
+        
+        #Communicative Functions Model
+        model_map["communicative-functions"] = "/".join(
+            [hu_path, "comfunc", "communicative-functions-v0.5b.pt"]
         )
 
         cache_dir = Path("models")
