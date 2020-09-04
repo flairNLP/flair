@@ -15,6 +15,7 @@ from .sequence_labeling import CONLL_03_DUTCH
 from .sequence_labeling import CONLL_03_SPANISH
 from .sequence_labeling import CONLL_2000
 from .sequence_labeling import DANE
+from .sequence_labeling import EUROPARL_NER_GERMAN
 from .sequence_labeling import GERMEVAL_14
 from .sequence_labeling import INSPEC
 from .sequence_labeling import LER_GERMAN
