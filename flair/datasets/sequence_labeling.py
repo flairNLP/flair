@@ -447,7 +447,7 @@ class CONLL_03_DUTCH(ColumnCorpus):
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
         )
 
-class MIT_Restaurants(ColumnCorpus):
+class MIT_RESTAURANTS(ColumnCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -481,11 +481,10 @@ class MIT_Restaurants(ColumnCorpus):
 
         # download data if necessary
         mit_restaurants_path = "https://megantosh.s3.eu-central-1.amazonaws.com/MITRestoCorpus/"
-        cached_path(f"{mit_restaurants_path}dev.txt", Path("datasets") / dataset_name)
         cached_path(f"{mit_restaurants_path}test.txt", Path("datasets") / dataset_name)
         cached_path(f"{mit_restaurants_path}train.txt", Path("datasets") / dataset_name)
 
-        super(MIT_Restaurants, self).__init__(
+        super(MIT_RESTAURANTS, self).__init__(
             data_folder,
             columns,
             tag_to_bioes=tag_to_bioes,
