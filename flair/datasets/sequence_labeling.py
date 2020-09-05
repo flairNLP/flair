@@ -448,12 +448,72 @@ class CONLL_03_DUTCH(ColumnCorpus):
         )
 
 
+def add_IOB_tags(data_file: Union[str, Path], encoding: str = "utf8", ner_column: int = 1):
+    """
+Function that adds IOB tags if only chunk names are provided (e.g. words are tagged PER instead
+of B-PER or I-PER). Replaces '0' with 'O' as the no-chunk tag since ColumnCorpus expects
+the letter 'O'. Additionally it removes lines with no tags in the data file and can also
+be used if the data is only partially IOB tagged.
+Parameters
+----------
+data_file : Union[str, Path]
+    Path to the data file.
+encoding : str, optional
+    Encoding used in open function. The default is "utf8".
+ner_column : int, optional
+    Specifies the ner-tagged column. The default is 1 (the second column).
+
+"""
+    def add_I_prefix(current_line: List[str], ner: int, tag: str):
+        for i in range(0, len(current_line)):
+            if i == 0:
+                f.write(line_list[i])
+            elif i == ner:
+                f.write(' I-' + tag)
+            else:
+                f.write(' ' + current_line[i])
+        f.write('\n')
+
+
+    with open(file=data_file, mode='r', encoding=encoding) as f:
+        lines = f.readlines()
+    with open(file=data_file, mode='w', encoding=encoding) as f:
+        pred = 'O'  # remembers ner tag of predecessing line
+        for line in lines:
+            line_list = line.split()
+            if len(line_list) > 2:  # word with tags
+                ner_tag = line_list[ner_column]
+                if ner_tag in ['0', 'O']:  # no chunk
+                    for i in range(0,len(line_list)):
+                        if i == 0:
+                            f.write(line_list[i])
+                        elif i == ner_column:
+                            f.write(' O')
+                        else:
+                            f.write(' ' + line_list[i])
+                    f.write('\n')
+                    pred = 'O'
+                elif '-' not in ner_tag:  # no IOB tags
+                    if pred == 'O':  # found a new chunk
+                        add_I_prefix(line_list, ner_column, ner_tag)
+                        pred = ner_tag
+                    else:  # found further part of chunk or new chunk directly after old chunk
+                        add_I_prefix(line_list, ner_column, ner_tag)
+                        pred = ner_tag
+                else:  # line already has IOB tag (tag contains '-')
+                    f.write(line)
+                    pred = ner_tag.split('-')[1]
+            elif len(line_list) == 0:  # empty line
+                f.write('\n')
+                pred = 'O'
+
+
 def add_IOB2_tags(data_file: Union[str, Path], encoding: str = "utf8"):
     """
 Function that adds IOB2 tags if only chunk names are provided (e.g. words are tagged PER instead
 of B-PER or I-PER). Replaces '0' with 'O' as the no-chunk tag since ColumnCorpus expects
-the letter 'O'. Additionaly it removes lines with no tags in the data file and can also
-be used if the data is only partialy IOB tagged.
+the letter 'O'. Additionally it removes lines with no tags in the data file and can also
+be used if the data is only partially IOB tagged.
 Parameters
 ----------
 data_file : Union[str, Path]
@@ -691,6 +751,9 @@ class EUROPARL_NER_GERMAN(ColumnCorpus):
         europarl_ner_german_path = "https://nlpado.de/~sebastian/software/ner/"
         cached_path(f"{europarl_ner_german_path}ep-96-04-15.conll", Path("datasets") / dataset_name)
         cached_path(f"{europarl_ner_german_path}ep-96-04-16.conll", Path("datasets") / dataset_name)
+
+        add_IOB_tags(data_file=Path(data_folder / "ep-96-04-15.conll"), encoding="latin-1", ner_column=4)
+        add_IOB_tags(data_file=Path(data_folder / "ep-96-04-16.conll"), encoding="latin-1", ner_column=4)
 
         super(EUROPARL_NER_GERMAN, self).__init__(
             data_folder,
