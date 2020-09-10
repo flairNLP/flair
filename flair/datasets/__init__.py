@@ -24,6 +24,7 @@ from .sequence_labeling import NER_SWEDISH
 from .sequence_labeling import SEMEVAL2010
 from .sequence_labeling import SEMEVAL2017
 from .sequence_labeling import WIKIANN
+from .sequence_labeling import XTREME
 from .sequence_labeling import WIKINER_ENGLISH
 from .sequence_labeling import WIKINER_GERMAN
 from .sequence_labeling import WIKINER_DUTCH

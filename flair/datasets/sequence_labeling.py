@@ -604,7 +604,7 @@ class CONLL_2000(ColumnCorpus):
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& 
 #&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&         
     
-"""   
+   
 class XTREME(MultiCorpus):
     def __init__(
             self,
@@ -614,7 +614,7 @@ class XTREME(MultiCorpus):
     ):
         #if no languages are given as argument all languages used in XTREME are being loaded
         if not languages:
-            self.languages = ["af", "ar", "bg", "bn", "de", "el", "en", "es", "et", "eu", "fa", "fi", "fr", "he", "hi", "hu", 
+            languages = ["af", "ar", "bg", "bn", "de", "el", "en", "es", "et", "eu", "fa", "fi", "fr", "he", "hi", "hu", 
                               "id", "it", "ja", "jv", "ka", "kk", "ko", "ml", "mr", "ms", "my", "nl", "pt", "ru", "sw", "ta", 
                               "te", "th", "tl", "tr", "ur", "vi", "yo","zh"]
             
@@ -636,52 +636,46 @@ class XTREME(MultiCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
         
-        #TODO: For each language in languages, the file needs to be downloaded if not existent
-        #Then a comlumncorpus of that data needs to be created and saved in a list
-        #this list is handed to the multicorpus
-
-        panx_path = "https://www.amazon.com/clouddrive/share/d3KGCRCIYwhKJF0H3eWA26hjg2ZCRhjpEQtDL70FSBN/folder/C43gs51bSIaq5sFTQkWNCQ?_encoding=UTF8&*Version*=1&*entries*=0&mgh=1"
+        #For each language in languages, the file is downloaded if not existent
+        #Then a comlumncorpus of that data is created and saved in a list
+        #This list is handed to the multicorpus
         
-        #5555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555
         #list that contains the columncopora
         corpora = []
         
+        hu_path = "https://nlp.informatik.hu-berlin.de/resources/datasets/panx_dataset"
+        
         # download data if necessary
-        first = True
         for language in languages:
             
             language_folder = data_folder / language
-            file_name = 'wikiann-'+ language + '.bio'
             
             #if language not downloaded yet, download it
             if not language_folder.exists():
-                if first == True:
-                    import gdown
-                    import tarfile
-                    first = False
+                
+                file_name = language + '.tar.gz'
                 #create folder
                 os.makedirs(language_folder)
-                #get google drive id from list
-                google_id = google_drive_id_from_language_name(language)
-                url = google_drive_path + google_id
                 
-                #download from google drive
-                gdown.download(url,str(language_folder / language) + '.tar.gz' ) 
+                #download from HU Server
+                temp_file = cached_path(
+                hu_path + "/" + file_name,
+                Path("datasets") / dataset_name / language
+                )
                 
                 #unzip
                 print("Extract data...")
-                tar = tarfile.open(str(language_folder / language) + '.tar.gz', "r:gz")
-                #tar.extractall(language_folder,members=[tar.getmember(file_name)])
-                tar.extract(file_name,str(language_folder))
+                import tarfile
+                tar =  tarfile.open(str(temp_file), "r:gz")
+                for part in ["train", "test", "dev"]:
+                    tar.extract(part,str(language_folder))
                 tar.close()
                 print('...done.')
                 
                 #transform data into required format
-                #the processed dataset has the additional ending "_new"
                 print("Process dataset...")
-                silver_standard_to_simple_ner_annotation(str(language_folder / file_name))
-                #remove the unprocessed dataset
-                os.remove(str(language_folder / file_name))
+                for part in ["train", "test", "dev"]:
+                    xtreme_to_simple_ner_annotation(str(language_folder / part))
                 print('...done.')
                 
                 
@@ -689,13 +683,11 @@ class XTREME(MultiCorpus):
             print("Read data into corpus...")
             corp = ColumnCorpus(data_folder = language_folder,
                                 column_format = columns,
-                                train_file = file_name + '_new',
+                                #train_file = file_name + '_new',
                                 tag_to_bioes = tag_to_bioes
                                )
             corpora.append(corp)
             print("...done.")
-        
-        #5555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555
         
  
         super(XTREME, self).__init__(
@@ -703,7 +695,7 @@ class XTREME(MultiCorpus):
         )
         
         
-def xtreme_to_simple_ner_annotation(data_file: Union[str, Path] = None):
+def xtreme_to_simple_ner_annotation(data_file: Union[str, Path]):
     with open(data_file, 'r',encoding='utf-8') as f:
         lines = f.readlines()
     with open(data_file, 'w',encoding='utf-8') as f:
@@ -715,10 +707,6 @@ def xtreme_to_simple_ner_annotation(data_file: Union[str, Path] = None):
                 f.write(liste[0].split(':',1)[1] + ' ' + liste[1] + '\n')
         
 
-"""                
-                                
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++    
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 class WIKIANN(MultiCorpus):
     def __init__(
@@ -826,7 +814,7 @@ class WIKIANN(MultiCorpus):
         )
         
 
-def silver_standard_to_simple_ner_annotation(data_file: Union[str, Path] = None):
+def silver_standard_to_simple_ner_annotation(data_file: Union[str, Path]):
     f_read = open(data_file, 'r',encoding='utf-8')
     f_write = open(data_file + '_new', 'w+',encoding='utf-8')
     while True:
