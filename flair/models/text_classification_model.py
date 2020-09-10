@@ -459,23 +459,18 @@ class TextClassifier(flair.nn.Model):
     def _fetch_model(model_name) -> str:
 
         model_map = {}
-        aws_resource_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4"
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
         model_map["de-offensive-language"] = "/".join(
-            [
-                aws_resource_path,
-                "classy-offensive-de-rnn-cuda%3A0",
-                "germ-eval-2018-task-1-v0.4.pt",
-            ]
+            [hu_path, "de-offensive-language", "germ-eval-2018-task-1-v0.4.pt"]
         )
 
         # English sentiment models
         model_map["sentiment"] = "/".join(
-            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert.pt"]
+            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_3.1.pt"]
         )
         model_map["en-sentiment"] = "/".join(
-            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert.pt"]
+            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_3.1.pt"]
         )
         model_map["sentiment-fast"] = "/".join(
             [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn.pt"]
