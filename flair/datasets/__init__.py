@@ -12,9 +12,11 @@ from .sequence_labeling import BIOSCOPE
 from .sequence_labeling import CONLL_03
 from .sequence_labeling import CONLL_03_GERMAN
 from .sequence_labeling import CONLL_03_DUTCH
+from .sequence_labeling import TWITTER_NER
 from .sequence_labeling import CONLL_03_SPANISH
 from .sequence_labeling import CONLL_2000
 from .sequence_labeling import DANE
+from .sequence_labeling import EUROPARL_NER_GERMAN
 from .sequence_labeling import GERMEVAL_14
 from .sequence_labeling import INSPEC
 from .sequence_labeling import LER_GERMAN
@@ -33,6 +35,7 @@ from .sequence_labeling import WIKINER_PORTUGUESE
 from .sequence_labeling import WIKINER_POLISH
 from .sequence_labeling import WIKINER_RUSSIAN
 from .sequence_labeling import WNUT_17
+from .sequence_labeling import MIT_RESTAURANTS
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus

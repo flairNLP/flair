@@ -8,6 +8,8 @@
 
 A very simple framework for **state-of-the-art NLP**. Developed by [Humboldt University of Berlin](https://www.informatik.hu-berlin.de/en/forschung-en/gebiete/ml-en/) and friends.
 
+* __IMPORTANT: (30.08.2020)__ *We moved our models to a new server. Please update your Flair to the newest version!*
+
 ---
 
 Flair is:
