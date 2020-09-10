@@ -753,9 +753,7 @@ class CONLL_2000(ColumnCorpus):
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
         
-#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& 
-#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& 
-#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&         
+
     
    
 class XTREME(MultiCorpus):
@@ -765,7 +763,26 @@ class XTREME(MultiCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
     ):
-        #if no languages are given as argument all languages used in XTREME are being loaded
+        """
+        Xtreme corpus for cross-lingual NER consisting of datasets of a total of 176 languages. The data comes from the google 
+        research work XTREME https://github.com/google-research/xtreme. All datasets for NER and respective language abbreviations (e.g. 
+        "en" for english can be found here https://www.amazon.com/clouddrive/share/d3KGCRCIYwhKJF0H3eWA26hjg2ZCRhjpEQtDL70FSBN/folder/C43gs51bSIaq5sFTQkWNCQ?_encoding=UTF8&*Version*=1&*entries*=0&mgh=1 )
+        The data is derived from the wikiann dataset https://elisa-ie.github.io/wikiann/ (license: https://opendatacommons.org/licenses/by/)
+
+        Parameters
+        ----------
+        languages : Union[str, List[str]], optional
+            Default the 40 languages that are used in XTREME are loaded. Otherwise on can hand over a strings or a list of strings 
+            consisiting of abbreviations for languages. All datasets will be loaded in a MultiCorpus object.
+        base_path : Union[str, Path], optional
+            Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+            to point to a different folder but typically this should not be necessary.
+        tag_to_bioes : str, optional
+            The data is in bio-format. It will by default (with the string "ner" as value) be transformed
+            into the bioes format. If you dont want that set it to None.
+
+        """
+        #if no languages are given as argument all languages used in XTREME will be loaded
         if not languages:
             languages = ["af", "ar", "bg", "bn", "de", "el", "en", "es", "et", "eu", "fa", "fi", "fr", "he", "hi", "hu", 
                               "id", "it", "ja", "jv", "ka", "kk", "ko", "ml", "mr", "ms", "my", "nl", "pt", "ru", "sw", "ta", 
@@ -870,8 +887,8 @@ class WIKIANN(MultiCorpus):
     ):
         """
         WkiAnn corpus for cross-lingual NER consisting of datasets from 282 languages that exist
-        in Wikipedia. See https://elisa-ie.github.io/wikiann/ for details and for the languges and their
-        respective abbreveations, i.e. "en" for english. 
+        in Wikipedia. See https://elisa-ie.github.io/wikiann/ for details and for the languages and their
+        respective abbreveations, i.e. "en" for english. (license: https://opendatacommons.org/licenses/by/)
         Parameters
         ----------
         languages : Union[str, List[str]]
@@ -1291,10 +1308,6 @@ def google_drive_id_from_language_name(language):
                 
                 
             
-#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& 
-#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& 
-#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& 
-
 
 class DANE(ColumnCorpus):
     def __init__(
