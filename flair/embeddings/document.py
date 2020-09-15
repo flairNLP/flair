@@ -172,12 +172,20 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             else self.model.config.hidden_size
         )
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state["tokenizer"] = None
+        return state
+
     def __setstate__(self, d):
         self.__dict__ = d
 
         # reload tokenizer to get around serialization issues
         model_name = self.name.split('transformer-document-')[-1]
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        except:
+            pass
 
 
 class DocumentPoolEmbeddings(DocumentEmbeddings):
