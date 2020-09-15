@@ -1125,6 +1125,11 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         return length
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state["tokenizer"] = None
+        return state
+
     def __setstate__(self, d):
         self.__dict__ = d
 
