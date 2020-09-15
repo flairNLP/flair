@@ -1597,3 +1597,97 @@ def _download_wikiner(language_code: str, dataset_name: str):
                 words = line.split(" ")
                 for word in words:
                     out.write("\t".join(word.split("|")) + "\n")
+
+class UP_GERMAN(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+    ):
+        """
+        Initialize the German dataset from the Universal Propositions Bank, comming from that webpage:
+        https://github.com/System-T/UniversalPropositions.
+
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {1: "text", 10: "frame"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        up_de_path = "https://raw.githubusercontent.com/System-T/UniversalPropositions/master/UP_German/"
+        cached_path(f"{up_de_path}de-up-train.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{up_de_path}de-up-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{up_de_path}de-up-test.conllu", Path("datasets") / dataset_name)
+
+        super(UP_GERMAN, self).__init__(
+            data_folder,
+            columns,
+            encoding="utf-8",
+            train_file="de-up-train.conllu",
+            test_file="de-up-dev.conllu",
+            dev_file="de-up-test.conllu",
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+        )
+
+class UP_FRENCH(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+    ):
+        """
+        Initialize the French dataset from the Universal Propositions Bank, comming from that webpage:
+        https://github.com/System-T/UniversalPropositions.
+
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {1: "text", 10: "frame"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        up_fr_path = "https://raw.githubusercontent.com/System-T/UniversalPropositions/master/UP_French/"
+        cached_path(f"{up_fr_path}fr-up-train.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{up_fr_path}fr-up-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{up_fr_path}fr-up-test.conllu", Path("datasets") / dataset_name)
+
+        super(UP_FRENCH, self).__init__(
+            data_folder,
+            columns,
+            encoding="utf-8",
+            train_file="fr-up-train.conllu",
+            test_file="fr-up-dev.conllu",
+            dev_file="fr-up-test.conllu",
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+        )
