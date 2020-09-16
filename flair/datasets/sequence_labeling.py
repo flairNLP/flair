@@ -1618,7 +1618,7 @@ class UP_GERMAN(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {1: "text", 10: "frame"}
+        columns = {1: "text", 9: "frame"}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1643,6 +1643,7 @@ class UP_GERMAN(ColumnCorpus):
             dev_file="de-up-test.conllu",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            comment_symbol="#",
         )
 
 class UP_FRENCH(ColumnCorpus):
@@ -1665,7 +1666,7 @@ class UP_FRENCH(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {1: "text", 10: "frame"}
+        columns = {1: "text", 9: "frame"}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1690,4 +1691,5 @@ class UP_FRENCH(ColumnCorpus):
             dev_file="fr-up-test.conllu",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            comment_symbol="#",
         )
