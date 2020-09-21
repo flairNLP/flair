@@ -1007,6 +1007,8 @@ class SequenceTagger(flair.nn.Model):
             "de-pos-tweets": "/".join([hu_path, "de-pos-tweets", "de-pos-twitter-v0.1.pt"]),
             "de-ner": "/".join([hu_path, "de-ner", "de-ner-conll03-v0.4.pt"]),
             "de-ner-germeval": "/".join([hu_path, "de-ner-germeval", "de-ner-germeval-0.4.1.pt"]),
+            "de-ler": "/".join([hu_path, "de-ner-legal", "de-ner-legal.pt"]),
+            "de-ner-legal": "/".join([hu_path, "de-ner-legal", "de-ner-legal.pt"]),
             # French models
             "fr-ner": "/".join([hu_path, "fr-ner", "fr-ner-wikiner-0.4.pt"]),
             # Dutch models
