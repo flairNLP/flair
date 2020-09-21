@@ -204,7 +204,7 @@ class ColumnDataset(FlairDataset):
             self.total_sentence_count += 1
 
     def _parse_token(self, line: str) -> Token:
-        fields: List[str] = re.split(self.column_delimiter, line)
+        fields: List[str] = re.split(self.column_delimiter, line.rstrip())
         token = Token(fields[self.text_column])
         for column in self.column_name_map:
             if len(fields) > column:
