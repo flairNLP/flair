@@ -573,14 +573,14 @@ class SequenceTagger(flair.nn.Model):
                                                               zero_division=1)
 
         # get scores
-        macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro'), 4)
-        micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro'), 4)
+        micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro'), 4)
+        macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro'), 4)
         accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
 
         detailed_result = (
                 "\nResults:"
-                f"\n- F-score (micro) {macro_f_score}"
-                f"\n- F-score (macro) {micro_f_score}"
+                f"\n- F-score (micro) {micro_f_score}"
+                f"\n- F-score (macro) {macro_f_score}"
                 f"\n- Accuracy {accuracy_score}"
                 '\n\nBy class:\n' + classification_report
         )
@@ -590,7 +590,7 @@ class SequenceTagger(flair.nn.Model):
         log_line = f"\t{accuracy_score}"
 
         result = Result(
-            main_score=macro_f_score,
+            main_score=micro_f_score,
             log_line=log_line,
             log_header=log_header,
             detailed_results=detailed_result,
