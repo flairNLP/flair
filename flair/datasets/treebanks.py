@@ -1070,7 +1070,8 @@ class UD_BASQUE(UniversalDependenciesCorpus):
         )
 
         super(UD_BASQUE, self).__init__(data_folder, in_memory=in_memory)
-        
+
+
 class UD_CHINESE_KYOTO(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
 
@@ -1095,4 +1096,4 @@ class UD_CHINESE_KYOTO(UniversalDependenciesCorpus):
             f"{web_path}/lzh_kyoto-ud-train.conllu", Path("datasets") / dataset_name
         )
 
-        super(UD_CHINESE_KYOTO, self).__init__(data_folder, in_memory=in_memory)        
+        super(UD_CHINESE_KYOTO, self).__init__(data_folder, in_memory=in_memory)
