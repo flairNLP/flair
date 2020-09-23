@@ -154,6 +154,7 @@ We also distribute German models.
 | -------------    | ------------- |------------- |------------- |------------- |
 | 'de-ner' | 4-class Named Entity Recognition |  Conll-03  |  **87.94** (F1) | |
 | 'de-ner-germeval' | 4+4-class Named Entity Recognition |  Germeval  |  **84.90** (F1) | |
+| 'de-ner-legal' | NER for German legal text |  [LER](https://github.com/elenanereiss/Legal-Entity-Recognition) dataset  |  **96.35** (F1) | |
 | 'de-pos' | Part-of-Speech Tagging |  UD German - HDT  |  **98.50** (Accuracy) | |
 | 'de-pos-tweets' | Part-of-Speech Tagging |  German Tweets  |  **93.06** (Accuracy) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/pos-twitter-german) |
 | 'de-historic-indirect' | historical German speech and thought (indirect) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
