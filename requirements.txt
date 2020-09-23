@@ -1,7 +1,6 @@
 python-dateutil>=2.6.1
 torch>=1.1.0
 gensim>=3.4.0
-pytest>=5.3.2
 tqdm>=4.26.0
 segtok>=1.5.7
 matplotlib>=2.2.3
