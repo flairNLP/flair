@@ -98,6 +98,9 @@ class WordEmbeddingsStore:
                 t = torch.tensor(self._get_vector(word=token.text.lower()))
                 token.set_embedding(self.name, t)
 
+    def get_names(self):
+        return [self.name]
+                
     @staticmethod
     def _get_store_path(embedding, backend='sqlite'):
         """
