@@ -462,7 +462,7 @@ class TextClassifier(flair.nn.Model):
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
         model_map["de-offensive-language"] = "/".join(
-            [hu_path, "de-offensive-language", "germ-eval-2018-task-1-v0.4.pt"]
+            [hu_path, "de-offensive-language", "germ-eval-2018-task-1-v0.5.pt"]
         )
 
         # English sentiment models

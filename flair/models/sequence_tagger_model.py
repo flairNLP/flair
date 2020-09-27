@@ -573,14 +573,14 @@ class SequenceTagger(flair.nn.Model):
                                                               zero_division=1)
 
         # get scores
-        macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro'), 4)
-        micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro'), 4)
+        micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro'), 4)
+        macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro'), 4)
         accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
 
         detailed_result = (
                 "\nResults:"
-                f"\n- F-score (micro) {macro_f_score}"
-                f"\n- F-score (macro) {micro_f_score}"
+                f"\n- F-score (micro) {micro_f_score}"
+                f"\n- F-score (macro) {macro_f_score}"
                 f"\n- Accuracy {accuracy_score}"
                 '\n\nBy class:\n' + classification_report
         )
@@ -590,7 +590,7 @@ class SequenceTagger(flair.nn.Model):
         log_line = f"\t{accuracy_score}"
 
         result = Result(
-            main_score=macro_f_score,
+            main_score=micro_f_score,
             log_line=log_line,
             log_header=log_header,
             detailed_results=detailed_result,
@@ -1007,10 +1007,12 @@ class SequenceTagger(flair.nn.Model):
             "de-pos-tweets": "/".join([hu_path, "de-pos-tweets", "de-pos-twitter-v0.1.pt"]),
             "de-ner": "/".join([hu_path, "de-ner", "de-ner-conll03-v0.4.pt"]),
             "de-ner-germeval": "/".join([hu_path, "de-ner-germeval", "de-ner-germeval-0.4.1.pt"]),
+            "de-ler": "/".join([hu_path, "de-ner-legal", "de-ner-legal.pt"]),
+            "de-ner-legal": "/".join([hu_path, "de-ner-legal", "de-ner-legal.pt"]),
             # French models
             "fr-ner": "/".join([hu_path, "fr-ner", "fr-ner-wikiner-0.4.pt"]),
             # Dutch models
-            "nl-ner": "/".join([hu_path, "nl-ner", "nl-ner-bert-conll02-v0.5b.pt"]),
+            "nl-ner": "/".join([hu_path, "nl-ner", "nl-ner-bert-conll02-v0.6.pt"]),
             "nl-ner-rnn": "/".join([hu_path, "nl-ner-rnn", "nl-ner-conll02-v0.5.pt"]),
             # Malayalam models
             "ml-pos": "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt",
