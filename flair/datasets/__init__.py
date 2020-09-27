@@ -42,7 +42,6 @@ from .sequence_labeling import UP_FINNISH
 from .sequence_labeling import UP_FRENCH
 from .sequence_labeling import UP_GERMAN
 from .sequence_labeling import UP_ITALIAN
-from .sequence_labeling import UP_PORTUGUESE
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
