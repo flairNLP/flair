@@ -39,8 +39,11 @@ from .sequence_labeling import WIKINER_POLISH
 from .sequence_labeling import WIKINER_RUSSIAN
 from .sequence_labeling import WNUT_17
 from .sequence_labeling import MIT_RESTAURANTS
-from .sequence_labeling import UP_GERMAN
+from .sequence_labeling import UP_CHINESE
+from .sequence_labeling import UP_FINNISH
 from .sequence_labeling import UP_FRENCH
+from .sequence_labeling import UP_GERMAN
+from .sequence_labeling import UP_ITALIAN
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
