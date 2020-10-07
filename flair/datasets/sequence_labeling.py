@@ -2192,6 +2192,54 @@ class UP_CHINESE(ColumnCorpus):
             comment_symbol="#",
         )
 
+class UP_ENGLISH(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+    ):
+        """
+        Initialize the English dataset from the Universal Propositions Bank, comming from that webpage:
+        https://github.com/System-T/UniversalPropositions.
+
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {1: "text", 10: "frame"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        up_en_path = "https://raw.githubusercontent.com/System-T/UniversalPropositions/master/UP_English-EWT/"
+        cached_path(f"{up_en_path}en_ewt-up-train.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{up_en_path}en_ewt-up-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{up_en_path}en_ewt-up-test.conllu", Path("datasets") / dataset_name)
+
+        super(UP_ENGLISH, self).__init__(
+            data_folder,
+            columns,
+            encoding="utf-8",
+            train_file="en_ewt-up-train.conllu",
+            test_file="en_ewt-up-test.conllu",
+            dev_file="en_ewt-up-dev.conllu",
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            comment_symbol="#",
+        )
+
 class UP_FRENCH(ColumnCorpus):
     def __init__(
             self,
@@ -2379,6 +2427,102 @@ class UP_ITALIAN(ColumnCorpus):
             train_file="it-up-train.conllu",
             test_file="it-up-test.conllu",
             dev_file="it-up-dev.conllu",
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            comment_symbol="#",
+        )
+
+class UP_SPANISH(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+    ):
+        """
+        Initialize the Spanish dataset from the Universal Propositions Bank, comming from that webpage:
+        https://github.com/System-T/UniversalPropositions
+
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {1: "text", 9: "frame"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        up_es_path = "https://raw.githubusercontent.com/System-T/UniversalPropositions/master/UP_Spanish/"
+        cached_path(f"{up_es_path}es-up-train.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{up_es_path}es-up-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{up_es_path}es-up-test.conllu", Path("datasets") / dataset_name)
+
+        super(UP_SPANISH, self).__init__(
+            data_folder,
+            columns,
+            encoding="utf-8",
+            train_file="es-up-train.conllu",
+            test_file="es-up-test.conllu",
+            dev_file="es-up-dev.conllu",
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            comment_symbol="#",
+        )
+
+class UP_SPANISH_ANCORA(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+    ):
+        """
+        Initialize the Spanish AnCora dataset from the Universal Propositions Bank, comming from that webpage:
+        https://github.com/System-T/UniversalPropositions
+
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {1: "text", 9: "frame"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        up_es_path = "https://raw.githubusercontent.com/System-T/UniversalPropositions/master/UP_Spanish-AnCora/"
+        cached_path(f"{up_es_path}es_ancora-up-train.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{up_es_path}es_ancora-up-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{up_es_path}es_ancora-up-test.conllu", Path("datasets") / dataset_name)
+
+        super(UP_SPANISH_ANCORA, self).__init__(
+            data_folder,
+            columns,
+            encoding="utf-8",
+            train_file="es_ancora-up-train.conllu",
+            test_file="es_ancora-up-test.conllu",
+            dev_file="es_ancora-up-dev.conllu",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
