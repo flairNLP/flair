@@ -47,6 +47,7 @@ from .sequence_labeling import UP_GERMAN
 from .sequence_labeling import UP_ITALIAN
 from .sequence_labeling import UP_SPANISH
 from .sequence_labeling import UP_SPANISH_ANCORA
+from .sequence_labeling import ANER_CORP
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
