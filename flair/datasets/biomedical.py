@@ -312,11 +312,11 @@ def brat_to_internal(corpus_dir: Path, ann_file_suffixes=None) -> InternalBioNer
     documents = {}
     entities_per_document = defaultdict(list)
     for text_file in text_files:
-        document_text = open(str(text_file)).read().strip()
+        document_text = open(str(text_file), encoding="utf8").read().strip()
         document_id = text_file.stem
 
         for suffix in ann_file_suffixes:
-            with open(str(text_file.with_suffix(suffix)), "r") as ann_file:
+            with open(str(text_file.with_suffix(suffix)), "r", encoding="utf8") as ann_file:
                 for line in ann_file:
                     fields = line.strip().split("\t")
 
@@ -374,7 +374,7 @@ class CoNLLWriter:
         os.makedirs(str(output_file.parent), exist_ok=True)
         filter_nested_entities(dataset)
 
-        with output_file.open("w") as f:
+        with output_file.open("w", encoding="utf8") as f:
             for document_id in Tqdm.tqdm(
                 dataset.documents.keys(),
                 total=len(dataset.documents),
@@ -545,7 +545,7 @@ class HunerDataset(ColumnCorpus, ABC):
     def get_subset(self, dataset: InternalBioNerDataset, split: str, split_dir: Path):
         split_file = cached_path(f"{self.split_url()}.{split}", split_dir)
 
-        with split_file.open() as f:
+        with split_file.open(encoding="utf8") as f:
             ids = [l.strip() for l in f if l.strip()]
             ids = sorted(id_ for id_ in ids if id_ in dataset.documents)
 
@@ -800,7 +800,7 @@ class HunerJNLPBA(object):
         documents = {}
         entities_per_document = defaultdict(list)
 
-        with open(str(input_iob_file), "r") as file_reader:
+        with open(str(input_iob_file), "r", encoding="utf8") as file_reader:
             document_id = None
             document_text = None
 
@@ -995,7 +995,7 @@ class CELL_FINDER(ColumnCorpus):
         documents = {}
         entities_per_document = defaultdict(list)
         for ann_file in ann_files:
-            with ann_file.open() as f_ann, ann_file.with_suffix(".txt").open() as f_txt:
+            with ann_file.open(encoding="utf8") as f_ann, ann_file.with_suffix(".txt").open(encoding="utf8") as f_txt:
                 document_text = f_txt.read().strip()
 
                 document_id = ann_file.stem
@@ -1205,7 +1205,7 @@ class HunerMiRNAHelper(object):
     ):
         split_file = cached_path(split_url, split_dir)
 
-        with split_file.open() as f:
+        with split_file.open(encoding="utf8") as f:
             ids = [l.strip() for l in f if l.strip()]
             ids = [id + "-train" for id in ids] + [id + "-test" for id in ids]
             ids = sorted(id_ for id_ in ids if id_ in dataset.documents)
@@ -1355,7 +1355,7 @@ class KaewphanCorpusHelper:
                 continue
 
             annotations = []
-            with open(os.path.join(str(nersuite_folder), file), "r") as reader:
+            with open(os.path.join(str(nersuite_folder), file), "r", encoding="utf8") as reader:
                 for line in reader.readlines():
                     columns = line.split("\t")
                     annotations.append(columns[:4])
@@ -1408,7 +1408,7 @@ class KaewphanCorpusHelper:
 
             document_id = file.replace(".nersuite", "")
 
-            with open(os.path.join(str(nersuite_folder), file), "r") as reader:
+            with open(os.path.join(str(nersuite_folder), file), "r", encoding="utf8") as reader:
                 document_text = ""
                 entities = []
 
@@ -1687,7 +1687,7 @@ class LOCTEXT(ColumnCorpus):
             document_id = file.strip(".json")
             entities = []
 
-            with open(os.path.join(str(loctext_json_folder), file), "r") as f_in:
+            with open(os.path.join(str(loctext_json_folder), file), "r", encoding="utf8") as f_in:
                 data = json.load(f_in)
                 document_text = data["text"].strip()
                 document_text = document_text.replace("\n", " ")
@@ -2032,12 +2032,12 @@ class LINNEAUS(ColumnCorpus):
         for filename in os.listdir(str(texts_directory)):
             document_id = filename.strip(".txt")
 
-            with open(os.path.join(str(texts_directory), filename), "r") as file:
+            with open(os.path.join(str(texts_directory), filename), "r", encoding="utf8") as file:
                 documents[document_id] = file.read().strip()
 
         # Read annotations
         tag_file = data_dir / "manual-corpus-species-1.0" / "filtered_tags.tsv"
-        with open(str(tag_file), "r") as file:
+        with open(str(tag_file), "r", encoding="utf8") as file:
             next(file)  # Ignore header row
 
             for line in file:
@@ -2475,8 +2475,8 @@ class NCBI_DISEASE(ColumnCorpus):
         patch_lines = {
             3249: '10923035\t711\t761\tgeneralized epilepsy and febrile seizures " plus "\tSpecificDisease\tD004829+D003294\n'
         }
-        with open(str(orig_train_file), "r") as input:
-            with open(str(patched_file), "w") as output:
+        with open(str(orig_train_file), "r", encoding="utf8") as input:
+            with open(str(patched_file), "w", encoding="utf8") as output:
                 line_no = 1
 
                 for line in input:
@@ -2490,7 +2490,7 @@ class NCBI_DISEASE(ColumnCorpus):
         documents = {}
         entities_per_document = {}
 
-        with open(str(input_file), "r") as file:
+        with open(str(input_file), "r", encoding="utf8") as file:
             document_id = None
             document_text = None
             entities = []
@@ -2854,7 +2854,7 @@ class OSIRIS(ColumnCorpus):
         ]
         for text_file in input_files:
 
-            with open(os.path.join(str(corpus_folder), text_file)) as text_reader:
+            with open(os.path.join(str(corpus_folder), text_file), encoding="utf8") as text_reader:
                 document_text = text_reader.read()
                 if not document_text:
                     continue
@@ -2864,7 +2864,7 @@ class OSIRIS(ColumnCorpus):
                 text_offset = document_text.find(article_parts[1])
                 document_text = (article_parts[1] + "  " + article_parts[2]).strip()
 
-            with open(os.path.join(str(corpus_folder), text_file + ".ann")) as ann_file:
+            with open(os.path.join(str(corpus_folder), text_file + ".ann"), encoding="utf8") as ann_file:
                 entities = []
 
                 tree = etree.parse(ann_file)
@@ -2981,7 +2981,7 @@ class S800(ColumnCorpus):
     def parse_dataset(data_dir: Path) -> InternalBioNerDataset:
         entities_per_document = defaultdict(list)
         texts_per_document = {}
-        with (data_dir / "S800.tsv").open() as f:
+        with (data_dir / "S800.tsv").open(encoding="utf8") as f:
             for line in f:
                 fields = line.strip().split("\t")
                 if not fields:
@@ -2995,7 +2995,7 @@ class S800(ColumnCorpus):
                 entities_per_document[fname].append(Entity((start, end), "Species"))
 
         for fname in entities_per_document:
-            with (data_dir / "abstracts" / fname).with_suffix(".txt").open() as f:
+            with (data_dir / "abstracts" / fname).with_suffix(".txt").open(encoding="utf8") as f:
                 texts_per_document[fname] = f.read()
 
         return InternalBioNerDataset(
@@ -3111,7 +3111,7 @@ class GPRO(ColumnCorpus):
 
         document_title_length = {}
 
-        with open(str(text_file), "r") as text_reader:
+        with open(str(text_file), "r", encoding="utf8") as text_reader:
             for line in text_reader:
                 if not line:
                     continue
@@ -3122,7 +3122,7 @@ class GPRO(ColumnCorpus):
 
                 entities_per_document[document_id] = []
 
-        with open(str(ann_file), "r") as ann_reader:
+        with open(str(ann_file), "r", encoding="utf8") as ann_reader:
             for line in ann_reader:
                 if not line:
                     continue
@@ -3246,11 +3246,11 @@ class DECA(ColumnCorpus):
 
         for file in text_files:
             document_id = file.strip(".txt")
-            with open(os.path.join(str(text_dir), file), "r") as text_file:
+            with open(os.path.join(str(text_dir), file), "r", encoding="utf8") as text_file:
                 documents[document_id] = text_file.read().strip()
                 entities_per_document[document_id] = []
 
-        with open(str(gold_file), "r") as gold_reader:
+        with open(str(gold_file), "r", encoding="utf8") as gold_reader:
             for line in gold_reader:
                 if not line:
                     continue
@@ -3358,13 +3358,13 @@ class FSU(ColumnCorpus):
                 if not doc.is_dir():
                     continue
                 try:
-                    with open(doc / "Basedata" / "Basedata.xml", "r") as word_f:
+                    with open(doc / "Basedata" / "Basedata.xml", "r", encoding="utf8") as word_f:
                         word_tree = etree.parse(word_f)
-                    with open(doc / "Markables" / "sentence.xml", "r") as sentence_f:
+                    with open(doc / "Markables" / "sentence.xml", "r", encoding="utf8") as sentence_f:
                         sentence_tree = etree.parse(sentence_f).getroot()
-                    with open(doc / "Markables" / "proteins.xml", "r") as protein_f:
+                    with open(doc / "Markables" / "proteins.xml", "r", encoding="utf8") as protein_f:
                         protein_tree = etree.parse(protein_f).getroot()
-                    with open(doc / "Basedata.uri", "r") as id_f:
+                    with open(doc / "Basedata.uri", "r", encoding="utf8") as id_f:
                         document_id = id_f.read().strip()
                 except FileNotFoundError:
                     # Incomplete article
@@ -3545,14 +3545,14 @@ class CRAFT(ColumnCorpus):
         for doc in Tqdm.tqdm(document_texts, desc="Converting to internal"):
             document_id = doc.name.split(".")[0]
 
-            with open(doc, "r") as f_txt:
+            with open(doc, "r", encoding="utf8") as f_txt:
                 documents[document_id] = f_txt.read()
 
             entities = []
 
             for annotation_dir in annotation_dirs:
                 with open(
-                    annotation_dir / (doc.name + ".annotations.xml"), "r"
+                    annotation_dir / (doc.name + ".annotations.xml"), "r", encoding="utf8"
                 ) as f_ann:
                     ann_tree = etree.parse(f_ann)
                 for annotation in ann_tree.xpath("//annotation"):
@@ -3651,7 +3651,7 @@ class BIOSEMANTICS(ColumnCorpus):
 
         for text_file in sorted(text_files):
             document_id = os.path.basename(text_file).split("_")[0]
-            with open(text_file, "r") as file_reader:
+            with open(text_file, "r", encoding="utf8") as file_reader:
                 file_text = file_reader.read().replace("\n", " ")
 
             offset = 0
@@ -3664,7 +3664,7 @@ class BIOSEMANTICS(ColumnCorpus):
 
             entities = []
             dirty_file = False
-            with open(text_file[:-4] + ".ann") as file_reader:
+            with open(text_file[:-4] + ".ann", encoding="utf8") as file_reader:
                 for line in file_reader:
                     if line[-1] == "\n":
                         line = line[:-1]
@@ -3797,7 +3797,7 @@ class BC2GM(ColumnCorpus):
         documents = {}
         entities_per_document = {}
 
-        with open(str(text_file), "r") as text_file_reader:
+        with open(str(text_file), "r", encoding="utf8") as text_file_reader:
             for line in text_file_reader:
                 line = line.strip()
                 offset = line.find(" ")
@@ -3806,7 +3806,7 @@ class BC2GM(ColumnCorpus):
                 documents[document_id] = document_text
                 entities_per_document[document_id] = []
 
-        with open(str(ann_file), "r") as ann_file_reader:
+        with open(str(ann_file), "r", encoding="utf8") as ann_file_reader:
             for line in ann_file_reader:
                 columns = line.strip().split("|")
                 document_id = columns[0]
@@ -3954,7 +3954,7 @@ class CEMP(ColumnCorpus):
         entities_per_document = {}
         document_abstract_length = {}
 
-        with open(str(text_file), "r") as text_reader:
+        with open(str(text_file), "r", encoding="utf8") as text_reader:
             for line in text_reader:
                 if not line:
                     continue
@@ -3967,7 +3967,7 @@ class CEMP(ColumnCorpus):
 
                 entities_per_document[document_id] = []
 
-        with open(str(ann_file), "r") as ann_reader:
+        with open(str(ann_file), "r", encoding="utf8") as ann_reader:
             for line in ann_reader:
                 if not line:
                     continue
@@ -4120,23 +4120,23 @@ class CHEBI(ColumnCorpus):
         for abstract_id in abstract_ids:
             abstract_id_output = abstract_id + "_A"
             with open(
-                abstract_folder / annotation_dirs[0] / f"{abstract_id}.txt", "r"
+                abstract_folder / annotation_dirs[0] / f"{abstract_id}.txt", "r", encoding="utf8"
             ) as f:
                 documents[abstract_id_output] = f.read()
 
             for annotation_dir in annotation_dirs:
                 with open(
-                    abstract_folder / annotation_dir / f"{abstract_id}.ann", "r"
+                    abstract_folder / annotation_dir / f"{abstract_id}.ann", "r", encoding="utf8"
                 ) as f:
                     entities = CHEBI.get_entities(f)
             entities_per_document[abstract_id_output] = entities
 
         for fulltext_id in fulltext_ids:
             fulltext_id_output = fulltext_id + "_F"
-            with open(fulltext_folder / f"{fulltext_id}.txt", "r") as f:
+            with open(fulltext_folder / f"{fulltext_id}.txt", "r", encoding="utf8") as f:
                 documents[fulltext_id_output] = f.read()
 
-            with open(fulltext_folder / f"{fulltext_id}.ann", "r") as f:
+            with open(fulltext_folder / f"{fulltext_id}.ann", "r", encoding="utf8") as f:
                 entities = CHEBI.get_entities(f)
             entities_per_document[fulltext_id_output] = entities
 
@@ -4291,10 +4291,10 @@ class BioNLPCorpus(ColumnCorpus):
             name = txt_file.with_suffix("").name
             a1_file = txt_file.with_suffix(".a1")
 
-            with txt_file.open() as f:
+            with txt_file.open(encoding="utf8") as f:
                 documents[name] = f.read()
 
-            with a1_file.open() as ann_reader:
+            with a1_file.open(encoding="utf8") as ann_reader:
                 entities = []
 
                 for line in ann_reader:
@@ -4510,7 +4510,7 @@ class ANAT_EM(ColumnCorpus):
             sent_offset = 0
             last_offset = 0
 
-            input_file = open(str(input_dir / input_file), "r")
+            input_file = open(str(input_dir / input_file), "r", encoding="utf8")
             for line in input_file.readlines():
                 line = line.strip()
                 if line:
@@ -4577,9 +4577,9 @@ class BioBertHelper(ColumnCorpus):
     @staticmethod
     def convert_and_write(download_folder, data_folder, tag_type):
         data_folder.mkdir(parents=True, exist_ok=True)
-        with (download_folder / "train.tsv").open() as f_in, (
+        with (download_folder / "train.tsv").open(encoding="utf8") as f_in, (
             data_folder / "train.conll"
-        ).open("w") as f_out:
+        ).open("w", encoding="utf8") as f_out:
             for line in f_in:
                 if not line.strip():
                     f_out.write("\n")
@@ -4590,9 +4590,9 @@ class BioBertHelper(ColumnCorpus):
                     tag = tag + "-" + tag_type
                 f_out.write(f"{token} {tag}\n")
 
-        with (download_folder / "devel.tsv").open() as f_in, (
+        with (download_folder / "devel.tsv").open(encoding="utf8") as f_in, (
             data_folder / "dev.conll"
-        ).open("w") as f_out:
+        ).open("w", encoding="utf8") as f_out:
             for line in f_in:
                 if not line.strip():
                     f_out.write("\n")
@@ -4602,9 +4602,9 @@ class BioBertHelper(ColumnCorpus):
                     tag = tag + "-" + tag_type
                 f_out.write(f"{token} {tag}\n")
 
-        with (download_folder / "test.tsv").open() as f_in, (
+        with (download_folder / "test.tsv").open(encoding="utf8") as f_in, (
             data_folder / "test.conll"
-        ).open("w") as f_out:
+        ).open("w", encoding="utf8") as f_out:
             for line in f_in:
                 if not line.strip():
                     f_out.write("\n")
@@ -5001,7 +5001,7 @@ class CRAFT_V4(ColumnCorpus):
         splits = {}
         for url in split_urls:
             split_file = cached_path(url, splits_dir)
-            with open(str(split_file), "r") as split_reader:
+            with open(str(split_file), "r", encoding="utf8") as split_reader:
                 splits[url.split(".")[-1]] = [
                     line.strip() for line in split_reader if line.strip()
                 ]
@@ -5053,7 +5053,7 @@ class CRAFT_V4(ColumnCorpus):
         for doc in Tqdm.tqdm(document_texts, desc="Converting to internal"):
             document_id = doc.name.split(".")[0]
 
-            with open(doc, "r") as f_txt:
+            with open(doc, "r", encoding="utf8") as f_txt:
                 documents[document_id] = f_txt.read()
 
             entities = []
@@ -5065,6 +5065,7 @@ class CRAFT_V4(ColumnCorpus):
                     / "knowtator"
                     / (doc.name + ".knowtator.xml"),
                     "r",
+                    encoding="utf8"
                 ) as f_ann:
                     ann_tree = etree.parse(f_ann)
                 for annotation in ann_tree.xpath("//annotation"):
@@ -5441,7 +5442,6 @@ class HunerMultiCorpus(MultiCorpus):
 
         def entity_type_predicate(member):
             return f"HUNER_{entity_type}_" in str(member) and inspect.isclass(member)
-
 
         self.huner_corpora_classes = inspect.getmembers(sys.modules[__name__], predicate=entity_type_predicate)
         self.huner_corpora = []
