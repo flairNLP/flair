@@ -33,6 +33,7 @@ from flair.training_utils import (
 from torch.optim.lr_scheduler import OneCycleLR
 from flair.models import SequenceTagger
 import random
+from tqdm import tqdm
 
 log = logging.getLogger("flair")
 
@@ -67,11 +68,11 @@ class ModelTrainer:
         mini_batch_size: int = 32,
         mini_batch_chunk_size: int = None,
         max_epochs: int = 100,
-        scheduler = AnnealOnPlateau,
+        scheduler=AnnealOnPlateau,
         cycle_momentum: bool = False,
         anneal_factor: float = 0.5,
         patience: int = 3,
-        initial_extra_patience = 0,
+        initial_extra_patience=0,
         min_learning_rate: float = 0.0001,
         train_with_dev: bool = False,
         monitor_train: bool = False,
@@ -91,6 +92,7 @@ class ModelTrainer:
         amp_opt_level: str = "O1",
         eval_on_train_fraction=0.0,
         eval_on_train_shuffle=False,
+        progress_bar_refresh_rate=1,
         **kwargs,
     ) -> dict:
         """
@@ -124,6 +126,7 @@ class ModelTrainer:
         if 'dev' the size is determined from dev set size
         :param eval_on_train_shuffle: if True the train data fraction is determined on the start of training
         and kept fixed during training, otherwise it's sampled at beginning of each epoch
+        :param progress_bar_refresh_rate: How often to refresh progress bar (in steps). Value ``0`` disables progress bar.
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
@@ -184,9 +187,15 @@ class ModelTrainer:
         log.info(f"Device: {flair.device}")
         log_line(log)
         log.info(f"Embeddings storage mode: {embeddings_storage_mode}")
-        if isinstance(self.model, SequenceTagger) and self.model.weight_dict and self.model.use_crf:
+        if (
+            isinstance(self.model, SequenceTagger)
+            and self.model.weight_dict
+            and self.model.use_crf
+        ):
             log_line(log)
-            log.warning(f'WARNING: Specified class weights will not take effect when using CRF')
+            log.warning(
+                f"WARNING: Specified class weights will not take effect when using CRF"
+            )
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False
@@ -231,16 +240,19 @@ class ModelTrainer:
 
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev else "max"
-        
+
         if scheduler == OneCycleLR:
             dataset_size = len(self.corpus.train)
             if train_with_dev:
                 dataset_size += len(self.corpus.dev)
-            lr_scheduler = OneCycleLR(optimizer,
-                                   max_lr=learning_rate,
-                                   steps_per_epoch=dataset_size//mini_batch_size + 1,
-                                   epochs=max_epochs-self.epoch, # if we load a checkpoint, we have already trained for self.epoch
-                                   cycle_momentum=cycle_momentum)
+            lr_scheduler = OneCycleLR(
+                optimizer,
+                max_lr=learning_rate,
+                steps_per_epoch=dataset_size // mini_batch_size + 1,
+                epochs=max_epochs
+                - self.epoch,  # if we load a checkpoint, we have already trained for self.epoch
+                cycle_momentum=cycle_momentum,
+            )
         else:
             lr_scheduler = scheduler(
                 optimizer,
@@ -250,8 +262,8 @@ class ModelTrainer:
                 mode=anneal_mode,
                 verbose=True,
             )
-        
-        if (isinstance(lr_scheduler, OneCycleLR) and batch_growth_annealing):
+
+        if isinstance(lr_scheduler, OneCycleLR) and batch_growth_annealing:
             raise ValueError("Batch growth with OneCycle policy is not implemented.")
 
         train_data = self.corpus.train
@@ -318,13 +330,17 @@ class ModelTrainer:
                     if anneal_with_prestarts:
                         log.info("resetting to pre-best model")
                         self.model.load_state_dict(
-                            self.model.load(base_path / "pre-best-model.pt").state_dict()
+                            self.model.load(
+                                base_path / "pre-best-model.pt"
+                            ).state_dict()
                         )
 
                 previous_learning_rate = learning_rate
 
                 # stop training if learning rate becomes too small
-                if (not isinstance(lr_scheduler, OneCycleLR)) and learning_rate < min_learning_rate:
+                if (
+                    not isinstance(lr_scheduler, OneCycleLR)
+                ) and learning_rate < min_learning_rate:
                     log_line(log)
                     log.info("learning rate too small - quitting training!")
                     log_line(log)
@@ -346,7 +362,7 @@ class ModelTrainer:
                 total_number_of_batches = len(batch_loader)
 
                 modulo = max(1, int(total_number_of_batches / 10))
-
+                progress_bar = tqdm(total=total_number_of_batches)
                 # process mini-batches
                 batch_time = 0
                 for batch_no, batch in enumerate(batch_loader):
@@ -380,7 +396,7 @@ class ModelTrainer:
                     # do the optimizer step
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
                     optimizer.step()
-                    
+
                     # do the scheduler step if one-cycle
                     if isinstance(lr_scheduler, OneCycleLR):
                         lr_scheduler.step()
@@ -388,22 +404,34 @@ class ModelTrainer:
                         for group in optimizer.param_groups:
                             learning_rate = group["lr"]
                             if "momentum" in group:
-                                momentum = group["momentum"]                    
+                                momentum = group["momentum"]
 
                     seen_batches += 1
+                    progress_bar.update()
                     train_loss += loss.item()
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(batch, embeddings_storage_mode)
 
                     batch_time += time.time() - start_time
-                    if seen_batches % modulo == 0:
-                        momentum_info = f' - momentum: {momentum:.4f}' if cycle_momentum else ''
-                        log.info(
-                            f"epoch {self.epoch} - iter {seen_batches}/{total_number_of_batches} - loss "
-                            f"{train_loss / seen_batches:.8f} - samples/sec: {mini_batch_size * modulo / batch_time:.2f}"
-                            f" - lr: {learning_rate:.6f}{momentum_info}"
+                    if batch_no % progress_bar_refresh_rate == 0:
+                        momentum_info = (
+                            f" - momentum: {momentum:.4f}" if cycle_momentum else ""
                         )
+                        progress_bar.set_description(
+                            f"epoch: {self.epoch}"
+                            + f" - loss: {train_loss / seen_batches:.8f}"
+                            + f" - lr: {learning_rate:.6f}{momentum_info}"
+                        )
+                    if seen_batches % modulo == 0:
+                        momentum_info = (
+                            f" - momentum: {momentum:.4f}" if cycle_momentum else ""
+                        )
+                        # log.info(
+                        #     f"epoch {self.epoch} - iter {seen_batches}/{total_number_of_batches} - loss "
+                        #     f"{train_loss / seen_batches:.8f} - samples/sec: {mini_batch_size * modulo / batch_time:.2f}"
+                        #     f" - lr: {learning_rate:.6f}{momentum_info}"
+                        # )
                         batch_time = 0
                         iteration = self.epoch * total_number_of_batches + batch_no
                         if not param_selection_mode and write_weights:
@@ -412,6 +440,7 @@ class ModelTrainer:
                             )
 
                 train_loss /= seen_batches
+                progress_bar.close()
 
                 self.model.eval()
 
@@ -521,7 +550,8 @@ class ModelTrainer:
                     new_learning_rate = group["lr"]
                 if new_learning_rate != previous_learning_rate:
                     bad_epochs = patience + 1
-                    if previous_learning_rate == initial_learning_rate: bad_epochs += initial_extra_patience
+                    if previous_learning_rate == initial_learning_rate:
+                        bad_epochs += initial_extra_patience
 
                 # log bad epochs
                 log.info(f"BAD EPOCHS (no improvement): {bad_epochs}")
@@ -573,7 +603,11 @@ class ModelTrainer:
 
                 # if we use dev data, remember best model based on dev evaluation score
                 if (
-                    (not train_with_dev or anneal_with_restarts or anneal_with_prestarts)
+                    (
+                        not train_with_dev
+                        or anneal_with_restarts
+                        or anneal_with_prestarts
+                    )
                     and not param_selection_mode
                     and not isinstance(lr_scheduler, OneCycleLR)
                     and current_score == lr_scheduler.best
@@ -636,7 +670,10 @@ class ModelTrainer:
         return model
 
     def final_test(
-        self, base_path: Union[Path, str], eval_mini_batch_size: int, num_workers: int = 8
+        self,
+        base_path: Union[Path, str],
+        eval_mini_batch_size: int,
+        num_workers: int = 8,
     ):
         if type(base_path) is str:
             base_path = Path(base_path)
