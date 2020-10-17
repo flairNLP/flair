@@ -48,6 +48,8 @@ from .sequence_labeling import UP_ITALIAN
 from .sequence_labeling import UP_SPANISH
 from .sequence_labeling import UP_SPANISH_ANCORA
 from .sequence_labeling import ANER_CORP
+from .sequence_labeling import MITMovieNERSimple
+from .sequence_labeling import MITMovieNERComplex
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus

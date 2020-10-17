@@ -2576,3 +2576,93 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
         )
+
+class MITMovieNERSimple(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+    ):
+        """
+        Initialize the eng corpus of the MIT Movie Corpus (it has simpler queries compared to the trivia10k13 corpus)
+        in BIO format. The first time you call this constructor it will automatically download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
+        # column format
+        columns = {0: "ner", 1: "text"}
+
+        # dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # data folder: default dataset folder is the cache root
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path: Path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        mit_movie_path = "https://groups.csail.mit.edu/sls/downloads/movie/"
+        train_file = "engtrain.bio"
+        test_file = "engtest.bio"
+        cached_path(f"{mit_movie_path}{train_file}", Path("datasets") / dataset_name)
+        cached_path(f"{mit_movie_path}{test_file}", Path("datasets") / dataset_name)
+
+        super(MITMovieNERSimple, self).__init__(
+            data_folder,
+            columns,
+            train_file=train_file,
+            test_file=test_file,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+        )
+
+class MITMovieNERComplex(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+    ):
+        """
+        Initialize the trivia10k13 corpus of the MIT Movie Corpus (it has more complex queries compared to the eng corpus)
+        in BIO format. The first time you call this constructor it will automatically download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
+        # column format
+        columns = {0: "ner", 1: "text"}
+
+        # dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # data folder: default dataset folder is the cache root
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+        if not base_path:
+            base_path: Path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        mit_movie_path = "https://groups.csail.mit.edu/sls/downloads/movie/"
+        train_file = "trivia10k13train.bio"
+        test_file = "trivia10k13test.bio"
+        cached_path(f"{mit_movie_path}{train_file}", Path("datasets") / dataset_name)
+        cached_path(f"{mit_movie_path}{test_file}", Path("datasets") / dataset_name)
+
+        super(MITMovieNERComplex, self).__init__(
+            data_folder,
+            columns,
+            train_file=train_file,
+            test_file=test_file,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+        )
