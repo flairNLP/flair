@@ -185,6 +185,8 @@ data the first time you call the corresponding constructor ID. The following dat
 | 'WIKINER_POLISH' | Polish  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
 | 'WIKINER_RUSSIAN'  | Russian  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
 | 'XTREME' | 176 languages  |  [Xtreme](https://github.com/google-research/xtreme) corpus by Google Research for cross-lingual NER consisting of datasets of a total of 176 languages |
+| 'MITMovieNERSimple' | English | [eng](https://groups.csail.mit.edu/sls/downloads/movie) NER movie corpus collected by MIT (simpler queries) |
+| 'MITMovieNERComplex' | English | [trivia10k13](https://groups.csail.mit.edu/sls/downloads/movie) NER movie corpus collected by MIT (more complex queries) |
 #### Biomedical Named Entity Recognition
 
 We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
