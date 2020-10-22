@@ -90,7 +90,7 @@ Sentence: "I am so glad you liked it !"   [− Tokens: 8  − Sentence-Labels: {
 ```
 
 
-## Use Case #3: As a Zero-shot Predictor on a Unseen Task
+## Use Case #3: As a Zero-shot Predictor on an Unseen Task
 ```python
 
 # 1. Load the trained model
