@@ -1,5 +1,7 @@
 # Tutorial 10: Training a Zero-shot Classifier (TARS)
 
+* __NOTE: (23.10.2020)__ *At the moment you would need to install flair from master branch to be able to follow this.*
+
 Task Aware Representation of Sentences (TARS) was introduced by Halder et. al. It formulates the
 traditional document level text classification problem as a universal binary text classification
 problem. It uses the label names in the classification process, and leverages on the attention mechanism
@@ -7,15 +9,14 @@ of transformer based language models. This model is implemented by the `TARSClas
 tutorial, we will show you how to use this class in different scenarios involving training, testing on
 unseen datasets.
 
+Once a TARS classification model is trained on one (or multiple) dataset(s), the final 
+model can be used in many different ways such as:
+ 1. [A regular text classifier.](#use-case-1-as-a-regular-text-classifier)
+ 2. [A Zero-shot predictor on an arbitrary ad-hoc set of labels.](#use-case-2-as-a-zero-shot-predictor-on-arbitrary-ad-hoc-set-of-labels)
+ 3. [A Zero-shot predictor on a previously unseen classification dataset.](#use-case-3-as-a-zero-shot-predictor-on-an-unseen-task)
+ 4. [A base model to continue training on other datasets.](#use-case-4-as-a-base-model-to-continue-training-on-other-datasets)
+
 ## Training a TARS Classification Model
-
-Once a TARS classification model is trained on one (or multiple) dataset(s), the final model
-can be used in many different ways such as:
-* A regular text classifier.
-* A Zero-shot predictor on an arbitrary ad-hoc set of labels.
-* A Zero-shot predictor on a previously unseen classification dataset. 
-* A base model to continue training on other datasets.
-
 ```python
 import flair
 from flair.data import Corpus
@@ -65,7 +66,7 @@ classifier.predict(sentence)
 print(sentence)
 
 ```
-It should output:
+The output should look like:
 ```
 loading file resources/taggers/trec/best-model.pt
 Sentence: "What is the full form of NASA ?"   [− Tokens: 8  − Sentence-Labels: {'label': [question about abbreviation (0.9922)]}]
@@ -83,7 +84,7 @@ classifier.predict_zero_shot(sentence, ["happy", "sad"])
 print(sentence)
 
 ```
-It should output:
+The output should look like:
 ```
 loading file resources/taggers/trec/best-model.pt
 Sentence: "I am so glad you liked it !"   [− Tokens: 8  − Sentence-Labels: {'label': [happy (0.9874)]}]
@@ -105,7 +106,7 @@ classifier.predict(sentence)
 print(sentence)
 
 ```
-It should output:
+The output should look like:
 ```
 loading file resources/taggers/trec/best-model.pt
 Sentence: "I am so glad you liked it !"   [− Tokens: 8  − Sentence-Labels: {'label': [happy (0.9874)]}]
@@ -157,11 +158,12 @@ classifier.list_existing_tasks()
 # 3. Switch to a particular task that exists in the above list
 classifier.switch_to_task("GO_EMOTIONS")
 
+# 4. Prepare a test sentence
 sentence = flair.data.Sentence("I absolutely love this!")
 classifier.predict(sentence)
 print(sentence)
 ```
-It should output the following:
+The output should look like:
 ```
 loading file resources/taggers/go_emotions/best-model.pt
 Existing tasks are:
@@ -174,7 +176,7 @@ Sentence: "I absolutely love this !"   [− Tokens: 5  − Sentence-Labels: {'la
 
 ```
 @inproceedings{halder2020coling,
-  title={Task-Aware Representation of Sentences for Generic Text Classification},
+  title={Task Aware Representation of Sentences for Generic Text Classification},
   author={Halder, Kishaloy and Akbik, Alan and Krapac, Josip and Vollgraf, Roland},
   booktitle = {{COLING} 2020, 28th International Conference on Computational Linguistics},
   year      = {2020}

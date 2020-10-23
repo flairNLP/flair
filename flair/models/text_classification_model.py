@@ -541,6 +541,10 @@ class TARSClassifier(TextClassifier):
         :param batch_size: batch size for forward pass while using BERT
         :param document_embeddings: name of the pre-trained transformer model e.g.,
         'bert-base-uncased' etc
+        :num_negative_labels_to_sample: number of negative labels to sample for each 
+        positive labels against a sentence during training. Defaults to 2 negative 
+        labels for each positive label. The model would sample all the negative labels 
+        if None is passed. That slows down the training considerably.
         :param multi_label: auto-detected by default, but you can set this to True
         to force multi-label predictionor False to force single-label prediction
         :param multi_label_threshold: If multi-label you can set the threshold to make predictions
@@ -879,7 +883,7 @@ class TARSClassifier(TextClassifier):
         Defaults to False
         """
 
-        #check if candidate_label_set is empty
+        # check if candidate_label_set is empty
         if candidate_label_set is None or len(candidate_label_set) == 0:
             log.warning("Provided candidate_label_set is empty")
             return
@@ -887,19 +891,23 @@ class TARSClassifier(TextClassifier):
         label_dictionary = TARSClassifier._make_ad_hoc_label_dictionary(candidate_label_set,
                                                                         multi_label)
 
-        #note current task
+        # note current task
         existing_current_task = self.current_task
 
-        #create a temporary task
+        # create a temporary task
         self.add_and_switch_to_new_task(TARSClassifier.static_adhoc_task_identifier,
                                         label_dictionary, multi_label)
 
-        #make zero shot predictions
-        self.predict(sentences)
+        try:
+            #make zero shot predictions
+            self.predict(sentences)
+        except:
+            log.error("Something went wrong during prediction. Ensure you pass Sentence objects.")
 
-        #switch to the pre-existing task
-        self.switch_to_task(existing_current_task)
+        finally:
+            # switch to the pre-existing task
+            self.switch_to_task(existing_current_task)
 
-        self._drop_task(TARSClassifier.static_adhoc_task_identifier)
+            self._drop_task(TARSClassifier.static_adhoc_task_identifier)
 
         return
