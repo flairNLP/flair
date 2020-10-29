@@ -77,7 +77,6 @@ class SentenceDataset(FlairDataset):
             sentences = [sentences]
         self.sentences = sentences
 
-    @abstractmethod
     def is_in_memory(self) -> bool:
         return True
 
