@@ -2577,6 +2577,7 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
             comment_symbol="#",
         )
 
+
 class MITMovieNERSimple(ColumnCorpus):
     def __init__(
             self,
@@ -2621,6 +2622,7 @@ class MITMovieNERSimple(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
         )
+
 
 class MITMovieNERComplex(ColumnCorpus):
     def __init__(
