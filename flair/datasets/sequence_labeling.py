@@ -2668,3 +2668,40 @@ class MITMovieNERComplex(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
         )
+class SEC_FILLINGS(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None, 
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+    ):
+        
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "pos", 3: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        SEC_FILLINGS_Path = "https://raw.githubusercontent.com/juand-r/entity-recognition-datasets/master/data/SEC-filings/CONLL-format/data/"
+        cached_path(f"{SEC_FILLINGS_Path}test/FIN3.txt", Path("datasets") / dataset_name)
+        cached_path(f"{SEC_FILLINGS_Path}train/FIN5.txt", Path("datasets") / dataset_name)
+
+        super(SEC_FILLINGS, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            encoding="utf-8",
+            in_memory=in_memory,
+            train_file='FIN5.txt',
+            test_file="FIN3.txt",
+            skip_first_line=True
+        )
