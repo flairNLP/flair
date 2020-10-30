@@ -123,7 +123,7 @@ We provide a set of quick tutorials to get you started with the library:
 * [Tutorial 6: Loading a Dataset](/resources/docs/TUTORIAL_6_CORPUS.md)
 * [Tutorial 7: Training a Model](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
 * [Tutorial 8: Training your own Flair Embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
-* [Tutorial 9: Training a Zero Shot Text Classifier](/resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)
+* [Tutorial 9: Training a Zero Shot Text Classifier (TARS)](/resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)
 
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
 text, how you can embed your text with different word or document embeddings, and how you can train your own
