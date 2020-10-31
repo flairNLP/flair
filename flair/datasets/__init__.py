@@ -73,6 +73,7 @@ from .document_classification import WASSA_ANGER
 from .document_classification import WASSA_FEAR
 from .document_classification import WASSA_JOY
 from .document_classification import WASSA_SADNESS
+from .document_classification import GO_EMOTIONS
 
 # Expose all treebanks
 from .treebanks import UniversalDependenciesCorpus
