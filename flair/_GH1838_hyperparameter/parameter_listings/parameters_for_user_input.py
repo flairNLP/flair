@@ -61,12 +61,11 @@ class SequenceTagger(Enum):
     DROPOUT = "dropout"
     WORD_DROPOUT = "word_dropout"
     LOCKED_DROPOUT = "locked_dropout"
-    REPROJECT_TO = "reproject_to"
+    REPROJECT_EMBEDDINGS = "reproject_embeddings"
     TRAIN_INITIAL_HIDDEN_STATE = "train_initial_hidden_state"
     BETA = "beta"
 
 class TextClassifier(Enum):
-    DOCUMENT_EMBEDDINGS = "document_embeddings"
     BETA = "beta"
 
 """

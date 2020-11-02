@@ -1,286 +1,244 @@
 import time
+import logging
+from datetime import datetime
 from enum import Enum
 from abc import abstractmethod
 
-from .sampling_functions import func
-from .parameters import Budget, EvaluationMetric, OptimizationValue
+from .parameter_collections import ParameterStorage, TrainingConfigurations
+from FlairParamOptimizer.parameter_listings.parameters_for_user_input import Budget, EvaluationMetric, OptimizationValue
+from FlairParamOptimizer.parameter_listings.parameter_groups import DOCUMENT_EMBEDDINGS
+from flair.embeddings import BytePairEmbeddings, CharacterEmbeddings, ELMoEmbeddings, FlairEmbeddings, PooledFlairEmbeddings, TransformerWordEmbeddings, FastTextEmbeddings, WordEmbeddings
 
-"""
-The Search Space object acts as a data object containing all configurations for the hyperparameter optimization.
-We currently support two types of downstream task for hyperparameter optimization:
-    Text Classification
-    Sequence Labeling
-    
-Steering parameters which have to bet set independent of downstream task:
-    Steering params:                        function to use:
-    A budget preventing a long runtime      add_budget()
-    A evaluation metric for training        add_evaluation_metric()
-    An optimization value for training      add_optimization_value()
-    Max epochs per training run             add_max_epochs_training() (default: 50)
-    
-For text classification, please first set document embeddings since you probably add document specific embeddings
-
-Add parameters like this:
-
-import GeneticParamOptimizer.hyperparameter.parameters as param
-from GeneticParamOptimizer.hyperparameter.utils import func
-
-search_space.add_parameter(param.[TYPE OF PARAMETER TO BE SET].[CONCRETE PARAMETER],
-                           func.[FUNCTION TO PICK FROM VALUE RANGE],
-                           options=[LIST OF PARAMETER VALUES] or range=[BOUNDS OF PARAMETER VALUES])
-
-Note following combinations of functions and type of parameter values are possible:
-
-    function:   value range argument:   explanation:
-    choice      options=[1,2,3]         choose from different options
-    uniform     bounds=[0, 0.5]         take a uniform sample between lower and upper bound
-"""
+log = logging.getLogger("flair")
 
 class SearchSpace(object):
-    """
-    Search space main class.
 
-    Attributes:
-        parameters                  Parameters of all configurations
-        budget                      Budget for the hyperparameter optimization
-        optimization_value          Metric which will be optimized during training
-        evaluation_metric           Metric which is used for selecting the best configuration
-        max_epochs_per_training     max. number of iterations per training for a single configuration
-    """
-
-    def __init__(self, document_embedding_specific: bool):
-        self.parameters = {}
-        self.budget = {}
+    def __init__(self):
+        self.parameter_storage = ParameterStorage()
+        self.training_configurations = TrainingConfigurations()
+        self.budget = Budget()
+        self.current_run = 0
         self.optimization_value = {}
         self.evaluation_metric = {}
-        self.max_epochs_per_training = 50
-        self.document_embedding_specific = document_embedding_specific
+        self.max_epochs_per_training_run = 50
 
     @abstractmethod
-    def add_parameter(self,
-                      parameter: Enum,
-                      func: func,
-                      **kwargs):
-        """
-        Adds single parameter configuration to search space. Overwritten by child class.
-        :param parameter: passed
-        :param func: passed
-        :param kwargs: passed
-        :return: passed
-        """
+    def add_parameter(self, parameter: Enum, options):
         pass
 
-    def add_budget(self,
-                   budget: Budget,
-                   value):
-        """
-        Adds a budget for the entire hyperparameter optimization.
-        :param budget: Type of budget which is going to be used
-        :param value: Budget value - depending on budget type
-        :return: none
-        """
-        self.budget[budget.value] = value
+    @abstractmethod
+    def add_word_embeddings(self, parameter: Enum, options):
+        pass
 
-        if budget.value == "time_in_h":
-            self.start_time = time.time()
+    @abstractmethod
+    def check_completeness(self, search_strategy: str):
+        pass
+
+    def add_budget(self, budget: Budget, amount: int):
+        self.budget.add(budget_type=budget.value, amount=amount)
 
     def add_optimization_value(self, optimization_value: OptimizationValue):
-        """
-        Adds optimization value to the search space.
-        :param optimization_value: Optimization Value from Enum class.
-        :return: none
-        """
         self.optimization_value = optimization_value.value
 
     def add_evaluation_metric(self, evaluation_metric: EvaluationMetric):
-        """
-        Sets evaluation metric for training
-        :param evaluation_metric:
-        :return:
-        """
         self.evaluation_metric = evaluation_metric.value
 
-    def add_max_epochs_per_training(self, max_epochs: int):
-        """
-        Set max iteration per training for a single configuration
-        :param max_epochs:
-        :return:
-        """
-        self.max_epochs_per_training = max_epochs
+    def add_max_epochs_per_training_run(self, max_epochs: int):
+        self.max_epochs_per_training_run = max_epochs
 
-    def _check_function_param_match(self, kwargs):
-        """
-        Checks whether options or bounds are provided as value search space.
-        :param kwargs:
-        :return:
-        """
-        if len(kwargs) != 1 and \
-                not "options" in kwargs and \
-                not "bounds" in kwargs:
-            raise Exception("Please provide either options or bounds depending on your function.")
+    def _check_steering_parameters(self):
+        if not all([self.budget, self.optimization_value, self.evaluation_metric]):
+            raise AttributeError("Please provide a budget, parameters, a optimization value and a evaluation metric for an optimizer.")
 
-    def _check_document_embeddings_are_set(self, parameter: Enum):
-        """
-        Checks whether Document Embeddings have been. They need to come first in order to assign Document specific parameters.
-        :param parameter: Parameter to be set
-        :return: None
-        """
-        if self.document_embedding_specific == False:
-            print("Warning: You can only check for search spaces which have document embeddings specific parameters.")
-            return
+        if self.parameter_storage.is_empty():
+            raise AttributeError("Parameters haven't been set.")
 
-        if not self.parameters and parameter.name != "DOCUMENT_EMBEDDINGS":
-            raise Exception("Please provide first the document embeddings in order to assign model specific attributes")
+    def _check_budget_type_matches_search_strategy(self, search_strategy: str):
+        if 'generations' in self.budget.budget_type and search_strategy != "EvolutionarySearch":
+            log.info("Can't assign generations to a an Optimizer which is not a GeneticOptimizer. Switching to runs.")
+            self.budget.budget_type = "runs"
 
-    def _check_mandatory_parameters_are_set(self, optimizer_type: str):
-        if not all([self.budget, self.parameters, self.optimization_value, self.evaluation_metric]) \
-                and self._check_budget_type(optimizer_type):
-            raise Exception("Please provide a budget, parameters, a optimization value and a evaluation metric for an optimizer.")
+    def _set_additional_budget_parameters(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
-    def _check_budget_type(self, optimizer_type):
-        if 'generations' in self.budget and optimizer_type == "GeneticOptimizer":
-            return True
-        elif 'runs' in self.budget or 'time_in_h' in self.budget:
-            return True
-        else:
-            return False
+    def _encode_word_embeddings(self, embeddings_list: list) -> list:
+        # Encode Embeddings as strings and class placeholders since pickling embeddings later is getting very large
+        encoded_embeddings_list = []
+        for stacked_embeddings in embeddings_list:
+            encoded_stacked_embeddings = []
+            for embedding in stacked_embeddings:
+
+                embedding_class = embedding.__class__
+
+                if embedding_class == WordEmbeddings:
+                    class_args = {"embeddings":embedding.embeddings}
+                    encoded_stacked_embeddings.append({"embedding_class":embedding_class, "class_arguments":class_args})
+
+                elif embedding_class in [FlairEmbeddings, PooledFlairEmbeddings]:
+                    class_args = {"model":embedding.name}
+                    encoded_stacked_embeddings.append({"embedding_class":embedding_class, "class_arguments":class_args})
+
+                elif embedding_class == TransformerWordEmbeddings:
+                    class_args = {"model":embedding.name.replace("transformer-word-", "")}
+                    encoded_stacked_embeddings.append({"embedding_class":embedding_class, "class_arguments":class_args})
+
+                elif embedding_class == BytePairEmbeddings:
+                    language, syllables, dim = embedding.name.replace("bpe-", "").split("-")
+                    class_args = {"language":language, "syllables":syllables, "dim":dim}
+                    encoded_stacked_embeddings.append({"embedding_class":embedding_class, "class_arguments":class_args})
+
+                elif embedding_class == CharacterEmbeddings:
+                    #only default dictionary possible so far
+                    char_embedding_dim = embedding.char_embedding_dim
+                    hidden_size_char = embedding.hidden_size_char
+                    class_args = {"char_embedding_dim":char_embedding_dim,"hidden_size_char":hidden_size_char}
+                    encoded_stacked_embeddings.append({"embedding_class":embedding_class, "class_arguments":class_args})
+
+                elif embedding_class == ELMoEmbeddings:
+                    model, embedding_mode = embedding.name.replace("elmo-", "").split("-")
+                    class_args = {"model":model, "embedding_mode":embedding_mode}
+                    encoded_stacked_embeddings.append({"embedding_class":embedding_class, "class_arguments":class_args})
+
+                elif embedding_class == FastTextEmbeddings:
+                    class_args = {"embeddings": embedding.name}
+                    encoded_stacked_embeddings.append({"embedding_class":embedding_class, "class_arguments":class_args})
+
+                else:
+                    raise Exception("Not a supported word embedding for hyper-parameter optimization.")
+
+            encoded_embeddings_list.append(encoded_stacked_embeddings)
+        return encoded_embeddings_list
+
 
 class TextClassifierSearchSpace(SearchSpace):
-    """
-    Search space for the text classification downstream task
 
-    Attributes:
-        inherited from SearchSpace object
-    """
-
-    def __init__(self):
-        super().__init__(
-            document_embedding_specific=True
-        )
+    def __init__(self, multi_label: bool = False):
+        super().__init__()
+        self.multi_label = multi_label
 
     def add_parameter(self,
                       parameter: Enum,
-                      func: func,
-                      **kwargs):
-        """
-        Adds configuration for a single parameter to the search space.
-        :param parameter: Type of parameter
-        :param func: Function how to choose values from the parameter configuration
-        :param kwargs: Either options or bounds depending on the function
-        :return: None
-        """
-        self._check_function_param_match(kwargs)
+                      options: list):
+        embedding_key_and_value_range_arguments = self._extract_embedding_keys_and_value_range_arguments(parameter, options)
+        self.parameter_storage.add(parameter_name=parameter.value, **embedding_key_and_value_range_arguments)
 
-        # This needs to be checked here,
-        # since we want to set document embeddings specific parameters
-        self._check_document_embeddings_are_set(parameter)
-
-        if parameter.name == "DOCUMENT_EMBEDDINGS":
-            self._add_document_embeddings(parameter, func, **kwargs)
+    def _extract_embedding_keys_and_value_range_arguments(self, parameter: Enum, options: list,) -> list:
+        function_arguments = {}
+        if parameter.__class__.__name__ in DOCUMENT_EMBEDDINGS:
+            function_arguments["embedding_key"] = parameter.__class__.__name__
+            function_arguments["value_range"] = options
         else:
-            self._add_parameters(parameter, func, kwargs)
+            function_arguments["value_range"] = options
+        return function_arguments
 
+    def add_word_embeddings(self,
+                            parameter: Enum,
+                            options: list):
+        embedding_key_and_value_range_arguments = self._extract_embedding_keys_and_value_range_arguments(parameter, options)
+        self.parameter_storage.add(parameter_name=parameter.value, **embedding_key_and_value_range_arguments)
 
-    def _add_document_embeddings(self,
-                                 parameter: Enum,
-                                 func: func,
-                                 options):
-        """
-        Adds document embeddings to search space.
-        :param parameter: Document Embedding to be set
-        :param func: Function to pick from value range
-        :param options: Value range
-        :return: None
-        """
-        try:
-            for embedding in options:
-                self.parameters[embedding.__name__] = {parameter.value: {"options": [embedding], "method": func}}
-        except:
-            raise Exception("Document embeddings only takes options as arguments")
+    def check_completeness(self, search_strategy: str):
+        self._check_steering_parameters()
+        self._check_budget_type_matches_search_strategy(search_strategy)
+        self._check_document_embeddings_are_set()
 
+    def _check_document_embeddings_are_set(self):
+        currently_set_parameters = self.parameter_storage.__dict__.keys()
+        if not any(check in currently_set_parameters for check in DOCUMENT_EMBEDDINGS):
+            raise AttributeError("Embeddings are required but missing.")
 
-    def _add_parameters(self,
-                        parameter: Enum,
-                        func: func,
-                        kwargs):
-        """
-        Wrapper function to add document embedding specific parameter or universal parameter
-        :param parameter: Parameter to be set
-        :param func: Function to pick from value range
-        :param kwargs: Value range
-        :return: None
-        """
-        if "Document" in parameter.__class__.__name__:
-            self._add_embedding_specific_parameter(parameter, func, kwargs)
-        else:
-            self._add_universal_parameter(parameter, func, kwargs)
-
-    def _add_embedding_specific_parameter(self,
-                                          parameter: Enum,
-                                          func: func,
-                                          kwargs):
-        """
-        Adds a document embedding specific parameter.
-        :param parameter: Parameter to be set
-        :param func: Function to pick from value range
-        :param kwargs: Value range
-        :return: None
-        """
-        try:
-            for key, values in kwargs.items():
-                self.parameters[parameter.__class__.__name__].update({parameter.value: {key: values, "method": func}})
-        except:
-            raise Exception("If your want to assign document embedding specific parameters, make sure it is included in the search space.")
-
-    def _add_universal_parameter(self,
-                                 parameter: Enum,
-                                 func: func,
-                                 kwargs):
-        """
-        Adds a universal training parameter independent from the document embeddings
-        :param parameter: Parameter to be set
-        :param func: Function to pick from value range
-        :param kwargs: Value range
-        :return: None
-        """
-        for embedding in self.parameters:
-            for key, values in kwargs.items():
-                self.parameters[embedding].update({parameter.value: {key: values, "method": func}})
+        union_of_embedding_types = [embedding for embedding in currently_set_parameters if embedding in DOCUMENT_EMBEDDINGS]
+        for embedding in union_of_embedding_types:
+            if not bool(getattr(self.parameter_storage, embedding).get("embeddings")) and embedding != "TransformerDocumentEmbeddings":
+                raise KeyError("Please set WordEmbeddings for DocumentEmbeddings.")
 
 
 class SequenceTaggerSearchSpace(SearchSpace):
-    """
-    Search space for the sequence tagging downstream task
-
-    Attributes:
-        tag_type    Type of sequence labels
-    """
 
     def __init__(self):
-        super().__init__(
-            document_embedding_specific=False
-        )
-
+        super().__init__()
         self.tag_type = ""
 
-    def add_tag_type(self, tag_type : str):
-        """
-        Adds the tag type to the search space object
-        :param tag_type: Tag type from corpus
-        :return: None
-        """
+    def add_tag_type(self, tag_type: str):
         self.tag_type = tag_type
 
     def add_parameter(self,
                       parameter: Enum,
-                      func: func,
-                      **kwargs):
-        """
-        Adds parameter to the
-        :param parameter:
-        :param func:
-        :param kwargs:
-        :return:
-        """
-        for key, values in kwargs.items():
-            self.parameters.update({parameter.value : {key: values, "method": func}})
+                      options: list):
+        self.parameter_storage.add(parameter_name=parameter.value, value_range=options)
+
+    def add_word_embeddings(self,
+                            parameter: Enum,
+                            options: list):
+        encoded_embeddings = self._encode_word_embeddings(options)
+        self.parameter_storage.add(parameter_name=parameter.value, value_range=encoded_embeddings)
+
+    def check_completeness(self, search_strategy: str):
+        self._check_steering_parameters()
+        self._check_budget_type_matches_search_strategy(search_strategy)
+        self._check_word_embeddings_are_set()
+
+    def _check_word_embeddings_are_set(self):
+        if self.parameter_storage.GeneralParameters.get("embeddings"):
+            pass
+        else:
+            raise Exception("Word Embeddings haven't been set.")
+
+
+class Budget(object):
+
+    def __init__(self):
+        self.internal_counter_for_generations_budget = 0
+        # Will be set if EvolutionarySearch is used
+        self.population_size = None
+
+    def add(self, budget_type: str, amount: int):
+        self.budget_type = budget_type
+        self.amount = amount
+        if budget_type == "time_in_h":
+            self.start_time = time.time()
+
+    def _is_not_used_up(self):
+        if self.budget_type == 'time_in_h':
+            is_used_up = self._is_time_budget_left()
+        elif self.budget_type == 'runs':
+            is_used_up = self._is_runs_budget_left()
+        elif self.budget_type == 'generations':
+            is_used_up = self._is_generations_budget_left()
+        self.internal_counter_for_generations_budget += 1
+        return is_used_up
+
+    def _is_time_budget_left(self):
+        time_passed_since_start = datetime.fromtimestamp(time.time()) - datetime.fromtimestamp(self.start_time)
+        if (time_passed_since_start.total_seconds()) / 3600 < self.amount:
+            return True
+        else:
+            return False
+
+    def _is_runs_budget_left(self):
+        if self.amount > 0:
+            self.amount -= 1
+            return True
+        else:
+            return False
+
+    def _is_generations_budget_left(self):
+        # Decrease generations every X iterations (X is amount of individuals per generation)
+        if self.amount > 1 \
+                and self.internal_counter_for_generations_budget % self.population_size == 0 \
+                and self.internal_counter_for_generations_budget != 0:
+            self.amount -= 1
+            return True
+        # If last generation, budget is used up
+        elif self.amount == 1 \
+                and self.internal_counter_for_generations_budget % self.population_size == 0 \
+                and self.internal_counter_for_generations_budget != 0:
+            self.amount -= 1
+            return False
+        # If enough budget, pass
+        elif self.amount > 0:
+            return True
+
+    def _set_population_size(self, population_size: int):
+        self.population_size = population_size
