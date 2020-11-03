@@ -568,12 +568,20 @@ class SequenceTagger(flair.nn.Model):
         # make "classification report"
         target_names = []
         labels_to_report = []
+        all_labels = []
+        all_indices = []
         for i in range(len(labels)):
             label = labels.get_item_for_index(i)
-            if label == '_': continue
-            if label == '': continue
+            all_labels.append(label)
+            all_indices.append(i)
+            if label == '_' or label == '': continue
             target_names.append(label)
             labels_to_report.append(i)
+
+        # report over all in case there are no labels
+        if not labels_to_report:
+            target_names = all_labels
+            labels_to_report = all_indices
 
         classification_report = metrics.classification_report(y_true, y_pred, digits=4, target_names=target_names,
                                                               zero_division=1, labels=labels_to_report)
