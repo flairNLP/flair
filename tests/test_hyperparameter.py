@@ -18,7 +18,7 @@ glove_embedding: WordEmbeddings = WordEmbeddings("glove")
 
 def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
 
     # define search space
