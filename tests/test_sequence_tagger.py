@@ -59,7 +59,7 @@ def test_load_use_tagger_keep_embedding():
 @pytest.mark.integration
 def test_train_load_use_tagger(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
@@ -186,7 +186,7 @@ def test_train_load_use_tagger_flair_embeddings(results_base_path, tasks_base_pa
 @pytest.mark.integration
 def test_train_load_use_tagger_adam(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
@@ -229,7 +229,7 @@ def test_train_load_use_tagger_adam(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
     corpus_1 = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
     corpus_2 = flair.datasets.GERMEVAL_14(base_path=tasks_base_path)
 
@@ -275,7 +275,7 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_train_resume_tagger(results_base_path, tasks_base_path):
     corpus_1 = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
     corpus_2 = flair.datasets.GERMEVAL_14(base_path=tasks_base_path)
 
@@ -306,7 +306,7 @@ def test_train_resume_tagger(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_find_learning_rate(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
     tag_dictionary = corpus.make_tag_dictionary("ner")
 
