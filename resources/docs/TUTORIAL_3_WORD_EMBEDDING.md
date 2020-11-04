@@ -25,6 +25,7 @@ you want to use GloVe embeddings, pass the string 'glove' to the constructor:
 
 ```python
 from flair.embeddings import WordEmbeddings
+from flair.data import Sentence
 
 # init embedding
 glove_embedding = WordEmbeddings('glove')
