@@ -38,6 +38,7 @@ from .sequence_labeling import WIKINER_PORTUGUESE
 from .sequence_labeling import WIKINER_POLISH
 from .sequence_labeling import WIKINER_RUSSIAN
 from .sequence_labeling import WNUT_17
+from .sequence_labeling import WNUT_2020_NER
 from .sequence_labeling import MIT_RESTAURANTS
 from .sequence_labeling import UP_CHINESE
 from .sequence_labeling import UP_ENGLISH

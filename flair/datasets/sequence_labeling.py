@@ -1,6 +1,7 @@
 import logging
 import re
 import os
+import shutil
 from pathlib import Path
 from typing import Union, Dict, List
 
@@ -443,6 +444,73 @@ class CONLL_03_DUTCH(ColumnCorpus):
             columns,
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+        )
+
+
+
+class WNUT_2020_NER(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+    ):
+        """
+        Initialize the WNUT_2020_NER corpus. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, since it is the only option of the WNUT corpus.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        github_url = "https://github.com/jeniyat/WNUT_2020_NER/archive/master.zip"
+
+        for sample in ["train", "test", "dev"]:
+
+            sample_file = data_folder / (sample + ".txt")
+            if not sample_file.is_file():
+
+                zip_path = cached_path(
+                    f"{github_url}", Path("datasets") / dataset_name
+                    )
+
+                # unzip the downloaded repo and merge the train, dev and test datasets 
+                unpack_file(zip_path, data_folder, "zip", False) # unzipped folder name: WNUT_2020_NER-master
+
+                file_path = data_folder / Path("WNUT_2020_NER-master/data/" + sample + "_data/Conll_Format/")
+                filenames = os.listdir(file_path)
+                with open(data_folder / (sample + '.txt'), 'w') as outfile: 
+                    for fname in filenames:
+                        with open(file_path / fname) as infile:
+                            lines = infile.read()
+                            outfile.write(lines[:-3]) # get rid of the extra 2 empty at the end of each .txt file
+
+                shutil.rmtree(str(data_folder / "WNUT_2020_NER-master")) # clean up when done
+
+        super(WNUT_2020_NER, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            encoding="utf-8",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
         )
