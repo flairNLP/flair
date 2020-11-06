@@ -8,7 +8,7 @@ from typing import Union, Dict, List
 import flair
 from flair.data import Corpus, MultiCorpus, FlairDataset, Sentence, Token
 from flair.datasets.base import find_train_dev_test_files
-from flair.file_utils import cached_path
+from flair.file_utils import cached_path, unpack_file
 
 log = logging.getLogger("flair")
 
@@ -502,7 +502,7 @@ class WNUT_2020_NER(ColumnCorpus):
                     for fname in filenames:
                         with open(file_path / fname) as infile:
                             lines = infile.read()
-                            outfile.write(lines[:-3]) # get rid of the extra 2 empty at the end of each .txt file
+                            outfile.write(lines)
 
                 shutil.rmtree(str(data_folder / "WNUT_2020_NER-master")) # clean up when done
 
