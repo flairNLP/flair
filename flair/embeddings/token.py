@@ -1,4 +1,6 @@
 import hashlib
+import pickle
+import inspect
 from abc import abstractmethod
 from pathlib import Path
 from typing import List, Union, Dict
@@ -35,6 +37,15 @@ class TokenEmbeddings(Embeddings):
     @property
     def embedding_type(self) -> str:
         return "word-level"
+
+    @staticmethod
+    def get_instance_parameters(locals: dict) -> dict:
+        class_definition = locals.get("__class__")
+        default_instance_parameters = set(inspect.getfullargspec(class_definition.__init__).args)
+        filtered_instance_parameters = default_instance_parameters.difference(set(["self"]))
+        instance_parameters = {class_attribute: attribute_value for class_attribute, attribute_value in locals.items() if class_attribute in filtered_instance_parameters}
+        return instance_parameters
+
 
 
 class StackedEmbeddings(TokenEmbeddings):
@@ -116,6 +127,8 @@ class WordEmbeddings(TokenEmbeddings):
         If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
         """
         self.embeddings = embeddings
+
+        self.instance_parameters = self.get_instance_parameters(locals=locals())
 
         hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/token"
 
@@ -260,6 +273,7 @@ class CharacterEmbeddings(TokenEmbeddings):
         super().__init__()
         self.name = "Char"
         self.static_embeddings = False
+        self.instance_parameters = self.get_instance_parameters(locals=locals())
 
         # use list of common characters if none provided
         if path_to_char_dict is None:
@@ -382,6 +396,7 @@ class FlairEmbeddings(TokenEmbeddings):
                 False might be better.
         """
         super().__init__()
+        self.instance_parameters = self.get_instance_parameters(locals=locals())
 
         cache_dir = Path("embeddings")
 
@@ -667,6 +682,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
     ):
 
         super().__init__()
+        self.instance_parameters = self.get_instance_parameters(locals=locals())
 
         # use the character language model embeddings as basis
         if type(contextual_embeddings) is str:
@@ -790,6 +806,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         :param fine_tune: If True, allows transformers to be fine-tuned during training
         """
         super().__init__()
+        self.instance_parameters = self.get_instance_parameters(locals=locals())
 
         # temporary fix to disable tokenizer parallelism warning
         # (see https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning)
@@ -1152,6 +1169,7 @@ class FastTextEmbeddings(TokenEmbeddings):
         :param embeddings: path to your embeddings '.bin' file
         :param use_local: set this to False if you are using embeddings from a remote source
         """
+        self.instance_parameters = self.get_instance_parameters(locals=locals())
 
         cache_dir = Path("embeddings")
 
@@ -1240,6 +1258,7 @@ class OneHotEmbeddings(TokenEmbeddings):
         self.static_embeddings = False
         self.min_freq = min_freq
         self.field = field
+        self.instance_parameters = self.get_instance_parameters(locals=locals())
 
         tokens = list(map((lambda s: s.tokens), corpus.train))
         tokens = [token for sublist in tokens for token in sublist]
@@ -1329,6 +1348,7 @@ class HashEmbeddings(TokenEmbeddings):
         super().__init__()
         self.name = "hash"
         self.static_embeddings = False
+        self.instance_parameters = self.get_instance_parameters(locals=locals())
 
         self.__num_embeddings = num_embeddings
         self.__embedding_length = embedding_length
@@ -1526,6 +1546,8 @@ class BytePairEmbeddings(TokenEmbeddings):
         """
         Initializes BP embeddings. Constructor downloads required files if not there.
         """
+        self.instance_parameters = self.get_instance_parameters(locals=locals())
+
         if not cache_dir:
             cache_dir = Path(flair.cache_root) / "embeddings"
         if language:
@@ -1601,6 +1623,8 @@ class ELMoEmbeddings(TokenEmbeddings):
         self, model: str = "original", options_file: str = None, weight_file: str = None, embedding_mode: str = "all"
     ):
         super().__init__()
+
+        self.instance_parameters = self.get_instance_parameters(locals=locals())
 
         try:
             import allennlp.commands.elmo
@@ -1739,6 +1763,8 @@ class NILCEmbeddings(WordEmbeddings):
         :param model: one of: 'skip' or 'cbow'. This is not applicable to glove.
         :param size: one of: 50, 100, 300, 600 or 1000.
         """
+
+        self.instance_parameters = self.get_instance_parameters(locals=locals())
 
         base_path = "http://143.107.183.175:22980/download.php?file=embeddings/"
 
