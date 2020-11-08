@@ -41,9 +41,10 @@ class TokenEmbeddings(Embeddings):
     @staticmethod
     def get_instance_parameters(locals: dict) -> dict:
         class_definition = locals.get("__class__")
-        default_instance_parameters = set(inspect.getfullargspec(class_definition.__init__).args)
-        filtered_instance_parameters = default_instance_parameters.difference(set(["self"]))
-        instance_parameters = {class_attribute: attribute_value for class_attribute, attribute_value in locals.items() if class_attribute in filtered_instance_parameters}
+        instance_parameters = set(inspect.getfullargspec(class_definition.__init__).args)
+        instance_parameters.difference_update(set(["self"]))
+        instance_parameters.update(set(["__class__"]))
+        instance_parameters = {class_attribute: attribute_value for class_attribute, attribute_value in locals.items() if class_attribute in instance_parameters}
         return instance_parameters
 
 
