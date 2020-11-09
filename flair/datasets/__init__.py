@@ -38,6 +38,7 @@ from .sequence_labeling import WIKINER_PORTUGUESE
 from .sequence_labeling import WIKINER_POLISH
 from .sequence_labeling import WIKINER_RUSSIAN
 from .sequence_labeling import WNUT_17
+from .sequence_labeling import WEIBO_NER
 from .sequence_labeling import MIT_RESTAURANTS
 from .sequence_labeling import UP_CHINESE
 from .sequence_labeling import UP_ENGLISH
@@ -50,6 +51,7 @@ from .sequence_labeling import UP_SPANISH_ANCORA
 from .sequence_labeling import ANER_CORP
 from .sequence_labeling import MITMovieNERSimple
 from .sequence_labeling import MITMovieNERComplex
+from .sequence_labeling import TURKU_NER
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
@@ -111,6 +113,7 @@ from .treebanks import UD_CHINESE
 from .treebanks import UD_KOREAN
 from .treebanks import UD_BASQUE
 from .treebanks import UD_GREEK
+from .treebanks import UD_LIVVI
 
 # Expose all text-text datasets
 from .text_text import ParallelTextCorpus

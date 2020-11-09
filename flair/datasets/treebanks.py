@@ -44,10 +44,10 @@ class UniversalDependenciesCorpus(Corpus):
         train = UniversalDependenciesDataset(train_file, in_memory=in_memory)
 
         # get test data
-        test = UniversalDependenciesDataset(test_file, in_memory=in_memory)
+        test = UniversalDependenciesDataset(test_file, in_memory=in_memory) if test_file is not None else None
 
         # get dev data
-        dev = UniversalDependenciesDataset(dev_file, in_memory=in_memory)
+        dev = UniversalDependenciesDataset(dev_file, in_memory=in_memory) if dev_file is not None else None
 
         super(UniversalDependenciesCorpus, self).__init__(
             train, dev, test, name=str(data_folder)
@@ -1125,6 +1125,7 @@ class UD_GREEK(UniversalDependenciesCorpus):
 
         super(UD_GREEK, self).__init__(data_folder, in_memory=in_memory)
         
+
 class UD_NAIJA(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
 
@@ -1149,4 +1150,26 @@ class UD_NAIJA(UniversalDependenciesCorpus):
             f"{web_path}//pcm_nsc-ud-train.conllu", Path("datasets") / dataset_name
         )
 
-        super(UD_NAIJA, self).__init__(data_folder, in_memory=in_memory)
+        super(UD_NAIJA, self).__init__(data_folder, in_memory=in_memory) 
+
+
+class UD_LIVVI(UniversalDependenciesCorpus):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Livvi-KKPP/master"
+        cached_path(f"{web_path}/olo_kkpp-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/olo_kkpp-ud-train.conllu", Path("datasets") / dataset_name)
+
+        super(UD_LIVVI, self).__init__(data_folder, in_memory=in_memory)
