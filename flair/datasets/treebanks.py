@@ -44,10 +44,10 @@ class UniversalDependenciesCorpus(Corpus):
         train = UniversalDependenciesDataset(train_file, in_memory=in_memory)
 
         # get test data
-        test = UniversalDependenciesDataset(test_file, in_memory=in_memory)
+        test = UniversalDependenciesDataset(test_file, in_memory=in_memory) if test_file is not None else None
 
         # get dev data
-        dev = UniversalDependenciesDataset(dev_file, in_memory=in_memory)
+        dev = UniversalDependenciesDataset(dev_file, in_memory=in_memory) if dev_file is not None else None
 
         super(UniversalDependenciesCorpus, self).__init__(
             train, dev, test, name=str(data_folder)
