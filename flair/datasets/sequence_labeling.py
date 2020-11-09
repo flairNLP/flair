@@ -496,7 +496,10 @@ class WNUT_2020_NER(ColumnCorpus):
                 # unzip the downloaded repo and merge the train, dev and test datasets 
                 unpack_file(zip_path, data_folder, "zip", False) # unzipped folder name: WNUT_2020_NER-master
 
-                file_path = data_folder / Path("WNUT_2020_NER-master/data/" + sample + "_data/Conll_Format/")
+                if sample == "test":
+                	file_path = data_folder / Path("WNUT_2020_NER-master/data/" + sample + "_data_2020/Conll_Format/")
+                else:
+                	file_path = data_folder / Path("WNUT_2020_NER-master/data/" + sample + "_data/Conll_Format/")
                 filenames = os.listdir(file_path)
                 with open(data_folder / (sample + '.txt'), 'w') as outfile: 
                     for fname in filenames:
