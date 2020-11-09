@@ -1190,7 +1190,7 @@ class UD_BURYAT(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Buryat-BDT/master"git
+        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Buryat-BDT/master"
         cached_path(
             f"{web_path}/bxr_bdt-ud-test.conllu", Path("datasets") / dataset_name
         )
