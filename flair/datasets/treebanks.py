@@ -1199,3 +1199,29 @@ class UD_BURYAT(UniversalDependenciesCorpus):
         )
 
         super(UD_BURYAT, self).__init__(data_folder, in_memory=in_memory)
+
+
+class UD_NORTH_SAMI(UniversalDependenciesCorpus):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_North_Sami-Giella/master"
+        cached_path(
+            f"{web_path}/sme_giella-ud-test.conllu", Path("datasets") / dataset_name
+        )
+        cached_path(
+            f"{web_path}/sme_giella-ud-train.conllu", Path("datasets") / dataset_name
+        )
+
+        super(UD_NORTH_SAMI, self).__init__(data_folder, in_memory=in_memory)
