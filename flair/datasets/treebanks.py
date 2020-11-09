@@ -1141,12 +1141,9 @@ class UD_LIVVI(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/hebecked/UD_Livvi-KKPP/dev"
-        #uncomment the line below and delete the line above once the pull request has been accepted and dev is merged with master
-        #web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Livvi-KKPP/master"
+        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Livvi-KKPP/master"
         cached_path(f"{web_path}/olo_kkpp-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/olo_kkpp-ud-train.conllu", Path("datasets") / dataset_name)
-        cached_path(f"{web_path}/olo_kkpp-ud-dev.conllu", Path("datasets") / dataset_name)
 
         super(UD_LIVVI, self).__init__(data_folder, in_memory=in_memory)
 
