@@ -1107,7 +1107,7 @@ class Corpus:
 
         for batch in DataLoader(dataset):
             for sentence in batch:
-                if len(sentence) == 0:
+                if len(sentence) in [0,1]:#== 0:#temporäre Änderung
                     empty_sentence_indices.append(index)
                 else:
                     non_empty_sentence_indices.append(index)

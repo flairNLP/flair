@@ -911,3 +911,322 @@ class TARSClassifier(TextClassifier):
             self._drop_task(TARSClassifier.static_adhoc_task_identifier)
 
         return
+    
+    
+    
+class DistClassifier(flair.nn.Model):
+    """
+    DistClassifier
+    Model to predict distance between two words given their embeddings. Takes (contextual) word embedding as input.
+    The pair of word embeddings is passed through a linear layer that predicts their distance in a sentence. 
+    
+    """
+
+    def __init__(
+        self,
+        word_embeddings: flair.embeddings.TokenEmbeddings, 
+        max_distance: int = 20, 
+        beta: float = 1.0,
+        loss_weights: Dict[str, float] = None,
+    ):
+        """
+        Initializes a DistClassifier
+        :param word_embeddings: embeddings used to embed each sentence
+        .param max_distance: max dist between word pairs = number of predicted classes - 1
+        :param beta: Parameter for F-beta score for evaluation and training annealing
+        :param loss_weights: Dictionary of weights for labels for the loss function
+        (if any label's weight is unspecified it will default to 1.0)
+        """
+
+        super(DistClassifier, self).__init__()
+
+        self.word_embeddings: flair.embeddings.TokenEmbeddings = word_embeddings
+        
+        self.beta = beta
+        
+        self.max_distance = max_distance
+
+        self.weight_dict = loss_weights #TODO
+        
+        """
+        # Initialize the weight tensor
+        if loss_weights is not None:
+            n_classes = self.max_distance + 1
+            weight_list = [1. for i in range(n_classes)]
+            for i, tag in enumerate(self.label_dictionary.get_items()):
+                if tag in loss_weights.keys():
+                    weight_list[i] = loss_weights[tag]
+            self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
+        else:"""
+        self.loss_weights = None
+        
+        #iput size is two times wordembedding size since we use pair of words as input
+        #the output size is max_distance + 1, i.e. we allow 0,1,...,max_distance words between pairs
+        self.decoder = nn.Linear(
+            self.word_embeddings.embedding_length*2, self.max_distance + 1)
+                                                     
+    
+        nn.init.xavier_uniform_(self.decoder.weight)
+
+
+        self.loss_function = nn.CrossEntropyLoss(weight=self.loss_weights)
+
+        # auto-spawn on GPU if available
+        self.to(flair.device)
+       
+
+    #forward allows only a single sentcence!! 
+    def forward(self, sentence: Sentence):
+
+        #embed words of sentence
+        self.word_embeddings.embed(sentence)
+
+        #go through all pairs of words with a maximum number of max_distance in between
+        numberOfWords = len(sentence)
+        text_embedding_list = []
+        #go through all pairs
+        for i in range(numberOfWords):
+            for j in range(i+1,min(i+self.max_distance + 2,numberOfWords)):
+                text_embedding_list.append(torch.cat((sentence[i].embedding,sentence[j].embedding)).unsqueeze(0))
+                
+        #2-dim matrix whose rows are the embeddings of word pairs of the sentence
+        text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
+
+        label_scores = self.decoder(text_embedding_tensor)
+
+        return label_scores
+
+    def _get_state_dict(self):
+        model_state = {
+            "state_dict": self.state_dict(),
+            "word_embeddings": self.word_embeddings,
+            "max_distance": self.max_distance,
+            "beta": self.beta,
+            "weight_dict": self.weight_dict,
+        }
+        return model_state
+
+    @staticmethod
+    def _init_model_with_state_dict(state):
+        beta = 1.0 if "beta" not in state.keys() else state["beta"]
+        weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
+
+        model = DistClassifier(
+            word_embeddings=state["word_embeddings"],
+            max_distance= state["max_distance"],
+            beta=beta,
+            loss_weights=weights,
+        )
+
+        model.load_state_dict(state["state_dict"])
+        return model
+
+    #So far only one sentence allowed
+    #If list of sentences is handed the function works with the first sentence of the list
+    def forward_loss(
+        self, data_points: Union[List[Sentence], Sentence]
+    ) -> torch.tensor:
+        
+        if isinstance(data_points,list): #first sentence
+            data_points = data_points[0]
+        
+        scores = self.forward(data_points)
+
+        return self._calculate_loss(scores, data_points)
+
+    #Assume data_points is a single sentence!!!
+    #scores are the predictions for each word pair
+    def _calculate_loss(self, scores, data_points):
+        
+        indices = []
+        numberOfWords = len(data_points)
+
+        for i in range(numberOfWords):
+            for j in range(i+1,min(i+self.max_distance + 2,numberOfWords)):
+                indices.append(torch.LongTensor([j-i-1]))#distance between words
+                
+        labels = torch.cat(indices, 0).to(flair.device)
+        
+
+        return self.loss_function(scores, labels)
+
+    #only single sentences as input
+    def _forward_scores_and_loss(
+            self, data_points: Union[List[Sentence], Sentence], return_loss=False):
+        
+        if isinstance(data_points,list): #first sentence
+            data_points = data_points[0]
+        
+        scores = self.forward(data_points)
+
+        loss = None
+        if return_loss:
+            loss = self._calculate_loss(scores, data_points)
+
+        return scores, loss
+
+      
+    def evaluate(
+        self,
+        sentences: Union[List[DataPoint], Dataset],
+        out_path: Union[str, Path] = None,
+        embedding_storage_mode: str = "none",
+        mini_batch_size: int = 1,#unnecessary, but trainer.train calls evaluate with this parameter
+        num_workers: int = 8,
+    ) -> (Result, float):
+
+        # read Dataset into data loader (if list of sentences passed, make Dataset first)
+        if not isinstance(sentences, Dataset):
+            sentences = SentenceDataset(sentences)
+
+        # use scikit-learn to evaluate
+        y_true = []
+        y_pred = []
+
+        with torch.no_grad():
+            eval_loss = 0
+
+            lines: List[str] = []
+            #we iterate over each sentence, instead of batches
+            for sentence in sentences:
+                #print(sentence)
+
+                scores, loss = self._forward_scores_and_loss(sentence, return_loss=True)
+                #print(scores)
+
+                
+                #get single labels from scores
+                predictions = [self._get_single_label(s) for s in scores]
+                #print(predictions)
+
+                #gold labels
+                true_values_for_sentence = []
+                numberOfPairs = 0
+                numberOfWords = len(sentence)
+                for i in range(numberOfWords):
+                    for j in range(i+1,min(i+self.max_distance + 2,numberOfWords)):
+                        true_values_for_sentence.append(j-i-1)
+                        
+                        #for output text file
+                        eval_line = "{}\t({},{})\t{}\t{}\n".format(
+                        sentence, i,j,j-i-1, predictions[numberOfPairs]
+                        )
+                        lines.append(eval_line)
+                        
+                        numberOfPairs +=1
+                        
+                #print(true_values_for_sentence)
+                        
+                eval_loss += loss/numberOfPairs#add average loss of word pairs
+
+
+                for prediction_for_sentence, true_value_for_sentence in zip(
+                    predictions, true_values_for_sentence
+                ):
+
+                    #hot one vector of true value
+                    y_true_instance = np.zeros(self.max_distance+1, dtype=int)
+                    y_true_instance[true_value_for_sentence] = 1
+                    y_true.append(y_true_instance.tolist())
+
+
+                    #hot one vector of predicted value
+                    y_pred_instance = np.zeros(self.max_distance+1, dtype=int)
+                    y_pred_instance[prediction_for_sentence] = 1
+                    y_pred.append(y_pred_instance.tolist())
+
+                #print(y_true)
+                #print(y_pred)
+                store_embeddings(sentence, embedding_storage_mode)#speichert embeddings, falls embedding_storage!= 'None'
+
+            
+            if out_path is not None:
+                with open(out_path, "w", encoding="utf-8") as outfile:
+                    outfile.write("".join(lines))
+                    
+            """
+            # make "classification report"
+            target_names = []#liste aller labels, ins unserem Fall 
+            for i in range(len(self.label_dictionary)):
+                target_names.append(self.label_dictionary.get_item_for_index(i))
+            classification_report = metrics.classification_report(y_true, y_pred, digits=4,
+                                                                  target_names=target_names, zero_division=0)
+            """
+
+            # get scores
+            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0), 4)
+            accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
+            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro', zero_division=0), 4)
+            precision_score = round(metrics.precision_score(y_true, y_pred, average='macro', zero_division=0), 4)
+            recall_score = round(metrics.recall_score(y_true, y_pred, average='macro', zero_division=0), 4)
+
+            detailed_result = (
+                    "\nResults:"
+                    f"\n- F-score (micro) {micro_f_score}"
+                    f"\n- F-score (macro) {macro_f_score}"
+                    f"\n- Accuracy {accuracy_score}"
+                    #'\n\nBy class:\n' + classification_report
+            )
+
+            # line for log file
+            log_header = "ACCURACY"
+            log_line = f"\t{accuracy_score}"
+
+
+            result = Result(
+                main_score=micro_f_score,
+                log_line=log_line,
+                log_header=log_header,
+                detailed_results=detailed_result,
+            )
+
+            eval_loss /= len(sentences)
+
+            return result, eval_loss        
+        
+
+    @staticmethod
+    def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
+        filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
+        if len(sentences) != len(filtered_sentences):
+            log.warning(
+                "Ignore {} sentence(s) with no tokens.".format(
+                    len(sentences) - len(filtered_sentences)
+                )
+            )
+        return filtered_sentences
+
+    def _obtain_labels(
+        self, scores: List[List[float]], predict_prob: bool = False
+    ) -> List[List[Label]]:
+        """
+        Predicts the labels of sentences.
+        :param scores: the prediction scores from the model
+        :return: list of predicted labels
+        """
+
+        if predict_prob:
+            return [self._predict_label_prob(s) for s in scores]
+
+        return [self._get_single_label(s) for s in scores]
+
+
+    def _get_single_label(self, label_scores): #-> List[Label]:
+        softmax = torch.nn.functional.softmax(label_scores, dim=0)
+        conf, idx = torch.max(softmax, 0)
+
+        return idx.item()
+
+    def _predict_label_prob(self, label_scores) -> List[Label]:
+        softmax = torch.nn.functional.softmax(label_scores, dim=0)
+        label_probs = []
+        for idx, conf in enumerate(softmax):
+            label_probs.append(Label(idx, conf.item()))
+        return label_probs
+
+
+    def __str__(self):
+        return super(flair.nn.Model, self).__str__().rstrip(')') + \
+               f'  (beta): {self.beta}\n' + \
+               f'  (weights): {self.weight_dict}\n' + \
+               f'  (weight_tensor) {self.loss_weights}\n)'
