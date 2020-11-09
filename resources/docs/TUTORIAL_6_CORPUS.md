@@ -188,6 +188,9 @@ data the first time you call the corresponding constructor ID. The following dat
 | 'XTREME' | 176 languages  |  [Xtreme](https://github.com/google-research/xtreme) corpus by Google Research for cross-lingual NER consisting of datasets of a total of 176 languages |
 | 'MITMovieNERSimple' | English | [eng](https://groups.csail.mit.edu/sls/downloads/movie) NER movie corpus collected by MIT (simpler queries) |
 | 'MITMovieNERComplex' | English | [trivia10k13](https://groups.csail.mit.edu/sls/downloads/movie) NER movie corpus collected by MIT (more complex queries) |
+| 'TURKU_NER' | Finnish | [TURKU_NER](https://github.com/TurkuNLP/turku-ner-corpus) NER corpus created by the Turku NLP Group, University of Turku, Finland |
+
+
 #### Biomedical Named Entity Recognition
 
 We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).

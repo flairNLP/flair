@@ -39,6 +39,7 @@ from .sequence_labeling import WIKINER_POLISH
 from .sequence_labeling import WIKINER_RUSSIAN
 from .sequence_labeling import WNUT_17
 from .sequence_labeling import WNUT_2020_NER
+from .sequence_labeling import WEIBO_NER
 from .sequence_labeling import MIT_RESTAURANTS
 from .sequence_labeling import UP_CHINESE
 from .sequence_labeling import UP_ENGLISH
@@ -51,6 +52,7 @@ from .sequence_labeling import UP_SPANISH_ANCORA
 from .sequence_labeling import ANER_CORP
 from .sequence_labeling import MITMovieNERSimple
 from .sequence_labeling import MITMovieNERComplex
+from .sequence_labeling import TURKU_NER
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
