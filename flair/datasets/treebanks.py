@@ -1242,13 +1242,13 @@ class UD_MARATHI(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_English-EWT/master"
-        cached_path(f"{web_path}/en_ewt-ud-dev.conllu", Path("datasets") / dataset_name)
+        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Marathi-UFAL/master"
+        cached_path(f"{web_path}/mr_ufal-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(
-            f"{web_path}/en_ewt-ud-test.conllu", Path("datasets") / dataset_name
+            f"{web_path}/mr_ufal-ud-test.conllu", Path("datasets") / dataset_name
         )
         cached_path(
-            f"{web_path}/en_ewt-ud-train.conllu", Path("datasets") / dataset_name
+            f"{web_path}/mr_ufal-ud-train.conllu", Path("datasets") / dataset_name
         )
 
         super(UD_MARATHI, self).__init__(data_folder, in_memory=in_memory) 
