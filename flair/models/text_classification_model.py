@@ -1029,6 +1029,9 @@ class DistClassifier(flair.nn.Model):
         
         if isinstance(data_points,list): #first sentence
             data_points = data_points[0]
+            
+        if len(data_points) < 2:
+            return torch.tensor([0.],requires_grad=True)
         
         scores = self.forward(data_points)
 
@@ -1089,6 +1092,9 @@ class DistClassifier(flair.nn.Model):
             lines: List[str] = []
             #we iterate over each sentence, instead of batches
             for sentence in sentences:
+                
+                if len(sentence) < 2:#we need at least 2 words per sentence
+                    continue
                 #print(sentence)
 
                 scores, loss = self._forward_scores_and_loss(sentence, return_loss=True)
