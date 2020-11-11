@@ -117,6 +117,7 @@ from .treebanks import UD_GREEK
 from .treebanks import UD_LIVVI
 from .treebanks import UD_NORTH_SAMI
 from .treebanks import UD_MALTESE
+from .treebanks import UD_AFRIKAANS
 
 # Expose all text-text datasets
 from .text_text import ParallelTextCorpus
