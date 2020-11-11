@@ -1276,4 +1276,4 @@ class UD_AFRIKAANS(UniversalDependenciesCorpus):
             f"{web_path}/af_afribooms-ud-train.conllu", Path("datasets") / dataset_name
         )
 
-        super(UD_MALTESE, self).__init__(data_folder, in_memory=in_memory)
+        super(UD_AFRIKAANS, self).__init__(data_folder, in_memory=in_memory)
