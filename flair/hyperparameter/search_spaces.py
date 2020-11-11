@@ -5,8 +5,8 @@ from enum import Enum
 from abc import abstractmethod
 
 from .parameter_collections import ParameterStorage, TrainingConfigurations
-from FlairParamOptimizer.parameter_listings.parameters_for_user_input import Budget, EvaluationMetric, OptimizationValue
-from FlairParamOptimizer.parameter_listings.parameter_groups import DOCUMENT_EMBEDDINGS
+from flair.hyperparameter.parameter_listings.parameters_for_user_input import Budget, EvaluationMetric, OptimizationValue
+from flair.hyperparameter.parameter_listings.parameter_groups import DOCUMENT_EMBEDDINGS
 from flair.embeddings import BytePairEmbeddings, CharacterEmbeddings, ELMoEmbeddings, FlairEmbeddings, PooledFlairEmbeddings, TransformerWordEmbeddings, FastTextEmbeddings, WordEmbeddings
 
 log = logging.getLogger("flair")
@@ -27,7 +27,7 @@ class SearchSpace(object):
         pass
 
     @abstractmethod
-    def add_word_embeddings(self, parameter: Enum, options):
+    def add_word_embeddings(self, options):
         pass
 
     @abstractmethod
@@ -46,7 +46,7 @@ class SearchSpace(object):
     def add_max_epochs_per_training_run(self, max_epochs: int):
         self.max_epochs_per_training_run = max_epochs
 
-    def _check_steering_parameters(self):
+    def _check_for_mandatory_steering_parameters(self):
         if not all([self.budget, self.optimization_value, self.evaluation_metric]):
             raise AttributeError("Please provide a budget, parameters, a optimization value and a evaluation metric for an optimizer.")
 
@@ -58,55 +58,11 @@ class SearchSpace(object):
             log.info("Can't assign generations to a an Optimizer which is not a GeneticOptimizer. Switching to runs.")
             self.budget.budget_type = "runs"
 
-    def _set_additional_budget_parameters(self, **kwargs):
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-
-    def _encode_word_embeddings(self, embeddings_list: list) -> list:
-        # Encode Embeddings as strings and class placeholders since pickling embeddings later is getting very large
+    def _encode_embeddings_for_serialization(self, embeddings_list: list) -> list:
+        # Since Word Embeddings take much memory upon creation, we only store the its parameters for further processing
         encoded_embeddings_list = []
         for stacked_embeddings in embeddings_list:
-            encoded_stacked_embeddings = []
-            for embedding in stacked_embeddings:
-
-                embedding_class = embedding.__class__
-
-                if embedding_class == WordEmbeddings:
-                    class_args = {"embeddings":embedding.embeddings}
-                    encoded_stacked_embeddings.append({"embedding_class":embedding_class, "class_arguments":class_args})
-
-                elif embedding_class in [FlairEmbeddings, PooledFlairEmbeddings]:
-                    class_args = {"model":embedding.name}
-                    encoded_stacked_embeddings.append({"embedding_class":embedding_class, "class_arguments":class_args})
-
-                elif embedding_class == TransformerWordEmbeddings:
-                    class_args = {"model":embedding.name.replace("transformer-word-", "")}
-                    encoded_stacked_embeddings.append({"embedding_class":embedding_class, "class_arguments":class_args})
-
-                elif embedding_class == BytePairEmbeddings:
-                    language, syllables, dim = embedding.name.replace("bpe-", "").split("-")
-                    class_args = {"language":language, "syllables":syllables, "dim":dim}
-                    encoded_stacked_embeddings.append({"embedding_class":embedding_class, "class_arguments":class_args})
-
-                elif embedding_class == CharacterEmbeddings:
-                    #only default dictionary possible so far
-                    char_embedding_dim = embedding.char_embedding_dim
-                    hidden_size_char = embedding.hidden_size_char
-                    class_args = {"char_embedding_dim":char_embedding_dim,"hidden_size_char":hidden_size_char}
-                    encoded_stacked_embeddings.append({"embedding_class":embedding_class, "class_arguments":class_args})
-
-                elif embedding_class == ELMoEmbeddings:
-                    model, embedding_mode = embedding.name.replace("elmo-", "").split("-")
-                    class_args = {"model":model, "embedding_mode":embedding_mode}
-                    encoded_stacked_embeddings.append({"embedding_class":embedding_class, "class_arguments":class_args})
-
-                elif embedding_class == FastTextEmbeddings:
-                    class_args = {"embeddings": embedding.name}
-                    encoded_stacked_embeddings.append({"embedding_class":embedding_class, "class_arguments":class_args})
-
-                else:
-                    raise Exception("Not a supported word embedding for hyper-parameter optimization.")
-
+            encoded_stacked_embeddings = [embedding.instance_parameters for embedding in stacked_embeddings]
             encoded_embeddings_list.append(encoded_stacked_embeddings)
         return encoded_embeddings_list
 
@@ -117,11 +73,14 @@ class TextClassifierSearchSpace(SearchSpace):
         super().__init__()
         self.multi_label = multi_label
 
-    def add_parameter(self,
-                      parameter: Enum,
-                      options: list):
+    def add_parameter(self, parameter: Enum, options: list):
         embedding_key_and_value_range_arguments = self._extract_embedding_keys_and_value_range_arguments(parameter, options)
         self.parameter_storage.add(parameter_name=parameter.value, **embedding_key_and_value_range_arguments)
+
+    def add_word_embeddings(self, parameter: Enum, options: list):
+        encoded_embeddings = self._encode_embeddings_for_serialization(options)
+        embedding_key_and_value_range_arguments = self._extract_embedding_keys_and_value_range_arguments(parameter, encoded_embeddings)
+        self.parameter_storage.add(parameter_name="embeddings", **embedding_key_and_value_range_arguments)
 
     def _extract_embedding_keys_and_value_range_arguments(self, parameter: Enum, options: list,) -> list:
         function_arguments = {}
@@ -132,14 +91,8 @@ class TextClassifierSearchSpace(SearchSpace):
             function_arguments["value_range"] = options
         return function_arguments
 
-    def add_word_embeddings(self,
-                            parameter: Enum,
-                            options: list):
-        embedding_key_and_value_range_arguments = self._extract_embedding_keys_and_value_range_arguments(parameter, options)
-        self.parameter_storage.add(parameter_name=parameter.value, **embedding_key_and_value_range_arguments)
-
     def check_completeness(self, search_strategy: str):
-        self._check_steering_parameters()
+        self._check_for_mandatory_steering_parameters()
         self._check_budget_type_matches_search_strategy(search_strategy)
         self._check_document_embeddings_are_set()
 
@@ -163,19 +116,15 @@ class SequenceTaggerSearchSpace(SearchSpace):
     def add_tag_type(self, tag_type: str):
         self.tag_type = tag_type
 
-    def add_parameter(self,
-                      parameter: Enum,
-                      options: list):
+    def add_parameter(self, parameter: Enum, options: list):
         self.parameter_storage.add(parameter_name=parameter.value, value_range=options)
 
-    def add_word_embeddings(self,
-                            parameter: Enum,
-                            options: list):
-        encoded_embeddings = self._encode_word_embeddings(options)
-        self.parameter_storage.add(parameter_name=parameter.value, value_range=encoded_embeddings)
+    def add_word_embeddings(self, options: list):
+        encoded_embeddings = self._encode_embeddings_for_serialization(options)
+        self.parameter_storage.add(parameter_name="embeddings", value_range=encoded_embeddings)
 
     def check_completeness(self, search_strategy: str):
-        self._check_steering_parameters()
+        self._check_for_mandatory_steering_parameters()
         self._check_budget_type_matches_search_strategy(search_strategy)
         self._check_word_embeddings_are_set()
 

@@ -3,12 +3,11 @@ from pathlib import Path
 
 import flair.nn
 from flair.data import Corpus
-from flair.embeddings import DocumentRNNEmbeddings, DocumentPoolEmbeddings, TransformerDocumentEmbeddings, StackedEmbeddings
-from flair.embeddings import BytePairEmbeddings, CharacterEmbeddings, ELMoEmbeddings, FlairEmbeddings, PooledFlairEmbeddings, TransformerWordEmbeddings, WordEmbeddings
+from flair.embeddings import StackedEmbeddings
 from flair.models import TextClassifier, SequenceTagger
 from flair.trainers import ModelTrainer
 
-from FlairParamOptimizer.parameter_listings.parameter_groups import *
+from .parameter_listings.parameter_groups import *
 
 
 class DownstreamTaskModel(object):
@@ -24,6 +23,18 @@ class DownstreamTaskModel(object):
     def _train(self, corpus: Corpus, params: dict, base_path: Path, max_epochs: int, optimization_value: str):
         pass
 
+    def _make_word_embeddings_from_attributes(self, word_embedding_attributes: list):
+
+        word_embeddings = []
+
+        for idx, embedding in enumerate(word_embedding_attributes):
+            WordEmbeddingClass = embedding.get("__class__")
+            instance_parameters = {parameter: value for parameter, value in embedding.items() if
+                                   parameter != "__class__"}
+            word_embeddings.append(WordEmbeddingClass(**instance_parameters))
+
+        return word_embeddings
+
 class TextClassification(DownstreamTaskModel):
 
     def __init__(self, multi_label: bool = False):
@@ -31,54 +42,89 @@ class TextClassification(DownstreamTaskModel):
         self.multi_label = multi_label
 
     def _set_up_model(self, params: dict, label_dictionary):
-        document_embedding = params['document_embeddings'].__name__
-        if document_embedding == "DocumentRNNEmbeddings":
-            embedding_params = {
-                key: params[key] for key, value in params.items() if key in DOCUMENT_RNN_EMBEDDING_PARAMETERS
-            }
-            embedding_params['embeddings'] = [WordEmbeddings(TokenEmbedding) if type(params['embeddings']) == list
-                                              else WordEmbeddings(params['embeddings']) for TokenEmbedding in params['embeddings']]
-            document_embedding = DocumentRNNEmbeddings(**embedding_params)
 
-        elif document_embedding == "DocumentPoolEmbeddings":
-            embedding_params = {
-                key: params[key] for key, value in params.items() if key in DOCUMENT_POOL_EMBEDDING_PARAMETERS
-            }
-            embedding_params['embeddings'] = [WordEmbeddings(TokenEmbedding) for TokenEmbedding in params['embeddings']]
-            document_embedding = DocumentPoolEmbeddings(**embedding_params)
+        document_embedding_name = params['document_embeddings'].__name__
 
-        elif document_embedding == "TransformerDocumentEmbeddings":
-            embedding_params = {
-                key: params[key] for key, value in params.items() if key in DOCUMENT_TRANSFORMER_EMBEDDING_PARAMETERS
-            }
-            document_embedding = TransformerDocumentEmbeddings(**embedding_params)
+        document_embedding_parameters = self._get_document_embedding_parameters(document_embedding_name, params)
 
-        else:
-            raise Exception("Please provide a flair document embedding class")
+        DocumentEmbeddingClass = params.pop("document_embeddings")
+
+        if "embeddings" in params:
+            word_embeddings_attributes = params.pop("embeddings")
+            document_embedding_parameters["embeddings"] = self._make_word_embeddings_from_attributes(word_embeddings_attributes)
+
+        DocumentEmbedding = DocumentEmbeddingClass(**document_embedding_parameters)
 
         text_classifier: TextClassifier = TextClassifier(
             label_dictionary=label_dictionary,
             multi_label=self.multi_label,
-            document_embeddings=document_embedding,
+            document_embeddings=DocumentEmbedding,
         )
+
         return text_classifier
 
+    def _get_document_embedding_parameters(self, document_embedding_class: str, params: dict):
+
+        if document_embedding_class == "DocumentEmbeddings":
+            embedding_params = {
+                key: params[key] for key, value in params.items() if key in DOCUMENT_EMBEDDING_PARAMETERS
+            }
+
+        elif document_embedding_class == "DocumentRNNEmbeddings":
+            embedding_params = {
+                key: params[key] for key, value in params.items() if key in DOCUMENT_RNN_EMBEDDING_PARAMETERS
+            }
+
+        elif document_embedding_class == "DocumentPoolEmbeddings":
+            embedding_params = {
+                key: params[key] for key, value in params.items() if key in DOCUMENT_POOL_EMBEDDING_PARAMETERS
+            }
+
+        elif document_embedding_class == "DocumentLMEmbeddings":
+            embedding_params = {
+                key: params[key] for key, value in params.items() if key in DOCUMENT_POOL_EMBEDDING_PARAMETERS
+            }
+
+        elif document_embedding_class == "TransformerDocumentEmbeddings":
+            embedding_params = {
+                key: params[key] for key, value in params.items() if key in DOCUMENT_TRANSFORMER_EMBEDDING_PARAMETERS
+            }
+
+        elif document_embedding_class == "SentenceTransformerDocumentEmbeddings":
+            embedding_params = {
+                key: params[key] for key, value in params.items() if key in DOCUMENT_TRANSFORMER_EMBEDDING_PARAMETERS
+            }
+
+        else:
+            raise Exception("Please provide a flair document embedding class")
+
+        return embedding_params
+
     def _train(self, corpus: Corpus, params: dict, base_path: Path, max_epochs: int, optimization_value: str):
+
         corpus = corpus
+
         label_dict = corpus.make_label_dictionary()
+
         for sent in corpus.get_all_sentences():
             sent.clear_embeddings()
+
         model = self._set_up_model(params, label_dict)
+
         training_parameters = {
             key: params[key] for key, value in params.items() if key in TRAINING_PARAMETERS
         }
+
         model_trainer_parameters = {
             key: params[key] for key, value in params.items() if key in MODEL_TRAINER_PARAMETERS and key != 'model'
         }
+
         trainer: ModelTrainer = ModelTrainer(
             model, corpus, **model_trainer_parameters
         )
+
         path = base_path
+
         results = trainer.train(
             path,
             max_epochs=max_epochs,
@@ -142,13 +188,11 @@ class SequenceTagging(DownstreamTaskModel):
             key: params[key] for key in params if key in SEQUENCE_TAGGER_PARAMETERS
         }
 
-        embedding_types = []
-        for embedding in params['embeddings']:
-            EmbeddingClass = embedding.get("embedding_class")
-            class_arguments = embedding.get("class_arguments")
-            embedding_types.append(EmbeddingClass(**class_arguments))
+        if "embeddings" in params:
+            word_embeddings_attributes = params.pop("embeddings")
+            word_embeddings = self._make_word_embeddings_from_attributes(word_embeddings_attributes)
 
-        embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
+        embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=word_embeddings)
 
         sequence_tagger_params['embeddings'] = embeddings
 

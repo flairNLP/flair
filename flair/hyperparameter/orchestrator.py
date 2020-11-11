@@ -6,10 +6,10 @@ from typing import Union
 from pathlib import Path
 from torch import cuda
 
-from FlairParamOptimizer.search_strategies import *
-from FlairParamOptimizer.search_spaces import SearchSpace
-from FlairParamOptimizer.downstream_task_models import TextClassification, SequenceTagging
-from FlairParamOptimizer.parameter_listings.parameter_groups import *
+from flair.hyperparameter.search_strategies import *
+from flair.hyperparameter.search_spaces import SearchSpace
+from flair.hyperparameter.downstream_task_models import TextClassification, SequenceTagging
+from flair.hyperparameter.parameter_listings.parameter_groups import *
 
 import flair.nn
 from flair.data import Corpus

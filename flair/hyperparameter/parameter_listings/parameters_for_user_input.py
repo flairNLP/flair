@@ -95,3 +95,12 @@ class TransformerDocumentEmbeddings(Enum):
     BATCH_SIZE = "batch_size"
     LAYERS = "layers"
     USE_SCALER_MIX = "use_scalar_mix"
+
+class DocumentEmbeddings(Enum):
+    pass
+
+class DocumentLMEmbeddings(Enum):
+    pass
+
+class SentenceTransformerDocumentEmbeddings(Enum):
+    pass

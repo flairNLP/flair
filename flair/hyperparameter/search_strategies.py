@@ -4,8 +4,8 @@ import logging
 import numpy as np
 from random import randrange
 
-from FlairParamOptimizer.parameter_collections import ParameterStorage
-from FlairParamOptimizer.search_spaces import SearchSpace
+from flair.hyperparameter.parameter_collections import ParameterStorage
+from flair.hyperparameter.search_spaces import SearchSpace
 
 log = logging.getLogger("flair")
 
