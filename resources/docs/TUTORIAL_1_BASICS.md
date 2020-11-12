@@ -121,7 +121,7 @@ print(my_sent)
 This should print:
 
 ```console
-Sentence: "The grass is green."   [− Tokens: 5]
+Sentence: "The grass is green ."   [− Tokens: 5]
 ```
 
 
