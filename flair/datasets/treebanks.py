@@ -1294,7 +1294,7 @@ class UD_OLD_FRENCH(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://github.com/UniversalDependencies/UD_Old_French-SRCMF/tree/master"
+        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Old_French-SRCMF/master"
         cached_path(f"{web_path}/fro_srcmf-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(
             f"{web_path}/fro_srcmf-ud-test.conllu", Path("datasets") / dataset_name
