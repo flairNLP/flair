@@ -119,6 +119,7 @@ from .treebanks import UD_NORTH_SAMI
 from .treebanks import UD_MARATHI
 from .treebanks import UD_MALTESE
 from .treebanks import UD_AFRIKAANS
+from .treebanks import UD_OLD_FRENCH
 from .treebanks import UD_GOTHIC
 
 # Expose all text-text datasets
