@@ -870,6 +870,6 @@ def test_sentence_to_dict():
 
 def test_pretokenized():
     pretoks = ['The', 'grass', 'is', 'green', '.']
-    sent = Sentence(pretoks, is_pretokenized=True)
+    sent = Sentence(pretoks)
     for i, token in enumerate(sent):
         assert token.text == pretoks[i]
