@@ -919,7 +919,7 @@ class DistClassifier(flair.nn.Model):
     DistClassifier
     Model to predict distance between two words given their embeddings. Takes (contextual) word embedding as input.
     The pair of word embeddings is passed through a linear layer that predicts their distance in a sentence. 
-    
+    Note: When used for training the batch size must be set to 1!!!
     """
 
     def __init__(
@@ -927,7 +927,7 @@ class DistClassifier(flair.nn.Model):
         word_embeddings: flair.embeddings.TokenEmbeddings, 
         max_distance: int = 20, 
         beta: float = 1.0,
-        loss_weights: Dict[str, float] = None,
+        loss_max_weight: float = 1,
     ):
         """
         Initializes a DistClassifier
@@ -936,6 +936,9 @@ class DistClassifier(flair.nn.Model):
         :param beta: Parameter for F-beta score for evaluation and training annealing
         :param loss_weights: Dictionary of weights for labels for the loss function
         (if any label's weight is unspecified it will default to 1.0)
+        :param loss_max_weight: since small distances between word pairs occur mor frequent it makes sense to give them less weight
+        in the loss function. loss_max_weight will be used as the weight for the maximum distance and should be a number >=1
+        The other weights decrease with equidistant steps from high to low distance.
         """
 
         super(DistClassifier, self).__init__()
@@ -946,20 +949,19 @@ class DistClassifier(flair.nn.Model):
         
         self.max_distance = max_distance
 
-        self.weight_dict = loss_weights #TODO
+        self.loss_max_weight = loss_max_weight 
         
-        """
-        # Initialize the weight tensor
-        if loss_weights is not None:
-            n_classes = self.max_distance + 1
-            weight_list = [1. for i in range(n_classes)]
-            for i, tag in enumerate(self.label_dictionary.get_items()):
-                if tag in loss_weights.keys():
-                    weight_list[i] = loss_weights[tag]
+        if self.loss_max_weight > 1:
+            step = (self.loss_max_weight - 1)/self.max_distance
+            
+            weight_list = [1.+i*step for i in range(self.max_distance + 1)]
+            
             self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
-        else:"""
-        self.loss_weights = None
-        
+
+        else:
+            self.loss_weights = None
+            
+
         #iput size is two times wordembedding size since we use pair of words as input
         #the output size is max_distance + 1, i.e. we allow 0,1,...,max_distance words between pairs
         self.decoder = nn.Linear(
@@ -1002,20 +1004,20 @@ class DistClassifier(flair.nn.Model):
             "word_embeddings": self.word_embeddings,
             "max_distance": self.max_distance,
             "beta": self.beta,
-            "weight_dict": self.weight_dict,
+            "loss_max_weight": self.loss_max_weight,
         }
         return model_state
 
     @staticmethod
     def _init_model_with_state_dict(state):
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
-        weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
+        weight = 1 if "loss_max_weight" not in state.keys() else state["loss_max_weight"]
 
         model = DistClassifier(
             word_embeddings=state["word_embeddings"],
             max_distance= state["max_distance"],
             beta=beta,
-            loss_weights=weights,
+            loss_max_weight=weight,
         )
 
         model.load_state_dict(state["state_dict"])
@@ -1095,15 +1097,12 @@ class DistClassifier(flair.nn.Model):
                 
                 if len(sentence) < 2:#we need at least 2 words per sentence
                     continue
-                #print(sentence)
 
                 scores, loss = self._forward_scores_and_loss(sentence, return_loss=True)
-                #print(scores)
 
                 
                 #get single labels from scores
                 predictions = [self._get_single_label(s) for s in scores]
-                #print(predictions)
 
                 #gold labels
                 true_values_for_sentence = []
@@ -1121,7 +1120,6 @@ class DistClassifier(flair.nn.Model):
                         
                         numberOfPairs +=1
                         
-                #print(true_values_for_sentence)
                         
                 eval_loss += loss/numberOfPairs#add average loss of word pairs
 
@@ -1141,8 +1139,6 @@ class DistClassifier(flair.nn.Model):
                     y_pred_instance[prediction_for_sentence] = 1
                     y_pred.append(y_pred_instance.tolist())
 
-                #print(y_true)
-                #print(y_pred)
                 store_embeddings(sentence, embedding_storage_mode)#speichert embeddings, falls embedding_storage!= 'None'
 
             
@@ -1234,5 +1230,5 @@ class DistClassifier(flair.nn.Model):
     def __str__(self):
         return super(flair.nn.Model, self).__str__().rstrip(')') + \
                f'  (beta): {self.beta}\n' + \
-               f'  (weights): {self.weight_dict}\n' + \
-               f'  (weight_tensor) {self.loss_weights}\n)'
+               f'  (loss_max_weight): {self.loss_max_weight}\n' + \
+               f'  (max_distance) {self.max_distance}\n)'
