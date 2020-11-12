@@ -6,6 +6,7 @@ from abc import abstractmethod, ABC
 
 from collections import Counter
 from collections import defaultdict
+from collections.abc import Iterable
 
 from deprecated import deprecated
 from flair.file_utils import Tqdm
@@ -525,19 +526,21 @@ class Sentence(DataPoint):
 
     def __init__(
         self,
-        text: str = None,
+        text: Union[str, List[str]] = None,
         use_tokenizer: Union[bool, Tokenizer] = True,
+        is_pretokenized: bool = False,
         language_code: str = None,
         start_position: int = None
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
-        :param text: original string
+        :param text: original string (sentence), or a list of string tokens (words)
         :param use_tokenizer: a custom tokenizer (default is :class:`SpaceTokenizer`)
             more advanced options are :class:`SegTokTokenizer` to use segtok or :class:`SpacyTokenizer`
             to use Spacy library if available). Check the implementations of abstract class Tokenizer or
             implement your own subclass (if you need it). If instead of providing a Tokenizer, this parameter
             is just set to True (deprecated), :class:`SegtokTokenizer` will be used.
+        :param is_pretokenized: Flag if "text" is expected to be a list of tokens
         :param language_code: Language of the sentence
         :param start_position: Start char offset of the sentence in the superordinate document
         """
@@ -570,6 +573,9 @@ class Sentence(DataPoint):
         if text is not None:
             text = self._restore_windows_1252_characters(text)
             [self.add_token(token) for token in tokenizer.tokenize(text)]
+        elif is_pretokenized and isinstance(text, Iterable):
+            [self.add_token(self._restore_windows_1252_characters(token))
+             for token in text]
 
         # log a warning if the dataset is empty
         if text == "":
