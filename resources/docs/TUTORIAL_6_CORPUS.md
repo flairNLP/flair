@@ -175,6 +175,7 @@ data the first time you call the corresponding constructor ID. The following dat
 | 'TWITTER_NER' | English  |  [Twitter NER dataset](https://github.com/aritter/twitter_nlp/) |
 | 'WIKIANN' | 282 languages  | Gigantic [corpus for cross-lingual NER derived from Wikipedia](https://elisa-ie.github.io/wikiann/).  |
 | 'WNUT_17' | English  |  [WNUT-17](https://noisy-text.github.io/2017/files/) emerging entity detection |
+| 'WNUT_20' | English  |  [WNUT-20](https://github.com/jeniyat/WNUT_2020_NER) named entity extraction |
 | 'WIKIGOLD_NER' | English  |  [Wikigold](https://github.com/juand-r/entity-recognition-datasets/tree/master/data/wikigold) a manually annotated collection of Wikipedia text |
 | 'WIKINER_ENGLISH' | English  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
 | 'WIKINER_GERMAN'  | German  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
@@ -187,6 +188,9 @@ data the first time you call the corresponding constructor ID. The following dat
 | 'XTREME' | 176 languages  |  [Xtreme](https://github.com/google-research/xtreme) corpus by Google Research for cross-lingual NER consisting of datasets of a total of 176 languages |
 | 'MITMovieNERSimple' | English | [eng](https://groups.csail.mit.edu/sls/downloads/movie) NER movie corpus collected by MIT (simpler queries) |
 | 'MITMovieNERComplex' | English | [trivia10k13](https://groups.csail.mit.edu/sls/downloads/movie) NER movie corpus collected by MIT (more complex queries) |
+| 'TURKU_NER' | Finnish | [TURKU_NER](https://github.com/TurkuNLP/turku-ner-corpus) NER corpus created by the Turku NLP Group, University of Turku, Finland |
+
+
 #### Biomedical Named Entity Recognition
 
 We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
