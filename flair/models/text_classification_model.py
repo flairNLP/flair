@@ -1114,14 +1114,13 @@ class DistClassifier(flair.nn.Model):
                 true_values_for_sentence = []
                 numberOfPairs = 0
                 numberOfWords = len(sentence)
+                lines.append(sentence.to_tokenized_string() + '\n')
                 for i in range(numberOfWords):
                     for j in range(i+1,min(i+self.max_distance + 2,numberOfWords)):
                         true_values_for_sentence.append(j-i-1)
                         
                         #for output text file
-                        eval_line = "{}\t({},{})\t{}\t{}\n".format(
-                        sentence, i,j,j-i-1, predictions[numberOfPairs]
-                        )
+                        eval_line = "({},{})\t{}\t{}\n".format(i,j,j-i-1, predictions[numberOfPairs])
                         lines.append(eval_line)
                         
                         numberOfPairs +=1
@@ -1152,28 +1151,27 @@ class DistClassifier(flair.nn.Model):
                 with open(out_path, "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
                     
-            """
+
             # make "classification report"
             target_names = []#liste aller labels, ins unserem Fall 
-            for i in range(len(self.label_dictionary)):
-                target_names.append(self.label_dictionary.get_item_for_index(i))
+            for i in range(self.max_distance +1):
+                target_names.append(str(i))
             classification_report = metrics.classification_report(y_true, y_pred, digits=4,
                                                                   target_names=target_names, zero_division=0)
-            """
 
             # get scores
             micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0), 4)
             accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
             macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro', zero_division=0), 4)
-            precision_score = round(metrics.precision_score(y_true, y_pred, average='macro', zero_division=0), 4)
-            recall_score = round(metrics.recall_score(y_true, y_pred, average='macro', zero_division=0), 4)
+            # precision_score = round(metrics.precision_score(y_true, y_pred, average='macro', zero_division=0), 4)
+            # recall_score = round(metrics.recall_score(y_true, y_pred, average='macro', zero_division=0), 4)
 
             detailed_result = (
                     "\nResults:"
                     f"\n- F-score (micro) {micro_f_score}"
                     f"\n- F-score (macro) {macro_f_score}"
                     f"\n- Accuracy {accuracy_score}"
-                    #'\n\nBy class:\n' + classification_report
+                    '\n\nBy class:\n' + classification_report
             )
 
             # line for log file
