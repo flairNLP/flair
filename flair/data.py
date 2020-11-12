@@ -528,7 +528,6 @@ class Sentence(DataPoint):
         self,
         text: Union[str, List[str]] = None,
         use_tokenizer: Union[bool, Tokenizer] = True,
-        is_pretokenized: bool = False,
         language_code: str = None,
         start_position: int = None
     ):
@@ -540,7 +539,6 @@ class Sentence(DataPoint):
             to use Spacy library if available). Check the implementations of abstract class Tokenizer or
             implement your own subclass (if you need it). If instead of providing a Tokenizer, this parameter
             is just set to True (deprecated), :class:`SegtokTokenizer` will be used.
-        :param is_pretokenized: Flag if "text" is expected to be a list of tokens
         :param language_code: Language of the sentence
         :param start_position: Start char offset of the sentence in the superordinate document
         """
@@ -571,7 +569,7 @@ class Sentence(DataPoint):
 
         # if text is passed, instantiate sentence with tokens (words)
         if text is not None:
-            if is_pretokenized and isinstance(text, Iterable):
+            if isinstance(text, Iterable):
                 [self.add_token(self._restore_windows_1252_characters(token))
                  for token in text]
             else:

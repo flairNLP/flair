@@ -114,7 +114,7 @@ You can pass pass a pretokenized sequence as list of words, e.g.
 
 ```python
 from flair.data import Sentence
-my_sent = Sentence(['The', 'grass', 'is', 'green', '.'], is_pretokenized=True)
+my_sent = Sentence(['The', 'grass', 'is', 'green', '.'])
 print(my_sent)
 ```
 
