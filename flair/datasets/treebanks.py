@@ -1371,6 +1371,10 @@ class UD_WOLOF(UniversalDependenciesCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
         
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Wolof-WTB/master"
         cached_path(
 			f"{web_path}/wo_wtb-ud-dev.conllu", Path("datasets") / dataset_name
