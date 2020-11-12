@@ -571,11 +571,12 @@ class Sentence(DataPoint):
 
         # if text is passed, instantiate sentence with tokens (words)
         if text is not None:
-            text = self._restore_windows_1252_characters(text)
-            [self.add_token(token) for token in tokenizer.tokenize(text)]
-        elif is_pretokenized and isinstance(text, Iterable):
-            [self.add_token(self._restore_windows_1252_characters(token))
-             for token in text]
+            if is_pretokenized and isinstance(text, Iterable):
+                [self.add_token(self._restore_windows_1252_characters(token))
+                 for token in text]
+            else:
+                text = self._restore_windows_1252_characters(text)
+                [self.add_token(token) for token in tokenizer.tokenize(text)]
 
         # log a warning if the dataset is empty
         if text == "":
