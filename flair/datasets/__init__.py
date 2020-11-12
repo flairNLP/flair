@@ -120,6 +120,7 @@ from .treebanks import UD_MARATHI
 from .treebanks import UD_MALTESE
 from .treebanks import UD_AFRIKAANS
 from .treebanks import UD_GOTHIC
+from .treebanks import UD_WOLOF
 
 # Expose all text-text datasets
 from .text_text import ParallelTextCorpus
