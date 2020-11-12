@@ -1344,7 +1344,7 @@ class UD_OLD_FRENCH(UniversalDependenciesCorpus):
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-         # default dataset folder is the cache root
+        # default dataset folder is the cache root
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
