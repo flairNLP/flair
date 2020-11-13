@@ -1,5 +1,5 @@
 from flair.hyperparameter import search_strategies, search_spaces, orchestrator
-import flair.hyperparameter.parameter_listings.parameters_for_user_input as param
+import flair.hyperparameter.parameters as param
 from flair.embeddings import FlairEmbeddings, TransformerWordEmbeddings, WordEmbeddings
 from torch.optim import SGD, Adam
 

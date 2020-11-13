@@ -1,6 +1,6 @@
 import inspect
 
-from .parameters_for_user_input import *
+from flair.hyperparameter.parameters import *
 
 from flair.trainers import ModelTrainer
 from flair.embeddings import *

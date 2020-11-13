@@ -1,7 +1,7 @@
 import itertools
 import random
-from .parameter_listings.parameter_groups import DOCUMENT_EMBEDDINGS
-from flair.embeddings import DocumentRNNEmbeddings, TransformerDocumentEmbeddings, DocumentPoolEmbeddings
+from flair.hyperparameter.parameter_groups import DOCUMENT_EMBEDDINGS
+
 
 class ParameterStorage():
 

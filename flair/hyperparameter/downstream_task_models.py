@@ -3,11 +3,8 @@ from pathlib import Path
 
 import flair.nn
 from flair.data import Corpus
-from flair.embeddings import StackedEmbeddings
-from flair.models import TextClassifier, SequenceTagger
-from flair.trainers import ModelTrainer
 
-from .parameter_listings.parameter_groups import *
+from flair.hyperparameter.parameter_groups import *
 
 
 class DownstreamTaskModel(object):

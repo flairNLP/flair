@@ -1,4 +1,3 @@
-import logging
 import pickle
 from datetime import datetime
 from operator import getitem
@@ -9,13 +8,8 @@ from torch import cuda
 from flair.hyperparameter.search_strategies import *
 from flair.hyperparameter.search_spaces import SearchSpace
 from flair.hyperparameter.downstream_task_models import TextClassification, SequenceTagging
-from flair.hyperparameter.parameter_listings.parameter_groups import *
 
-import flair.nn
 from flair.data import Corpus
-from flair.embeddings import DocumentRNNEmbeddings, DocumentPoolEmbeddings, WordEmbeddings, StackedEmbeddings
-from flair.models import TextClassifier, SequenceTagger
-from flair.trainers import ModelTrainer
 
 log = logging.getLogger("flair")
 
