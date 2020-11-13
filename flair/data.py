@@ -6,7 +6,6 @@ from abc import abstractmethod, ABC
 
 from collections import Counter
 from collections import defaultdict
-from collections.abc import Iterable
 
 from deprecated import deprecated
 from flair.file_utils import Tqdm
@@ -569,7 +568,7 @@ class Sentence(DataPoint):
 
         # if text is passed, instantiate sentence with tokens (words)
         if text is not None:
-            if isinstance(text, Iterable):
+            if isinstance(text, (list, tuple)):
                 [self.add_token(self._restore_windows_1252_characters(token))
                  for token in text]
             else:
