@@ -34,14 +34,14 @@ class TextClassifier(flair.nn.Model):
     """
 
     def __init__(
-        self,
-        document_embeddings: flair.embeddings.DocumentEmbeddings,
-        label_dictionary: Dictionary,
-        label_type: str = None,
-        multi_label: bool = None,
-        multi_label_threshold: float = 0.5,
-        beta: float = 1.0,
-        loss_weights: Dict[str, float] = None,
+            self,
+            document_embeddings: flair.embeddings.DocumentEmbeddings,
+            label_dictionary: Dictionary,
+            label_type: str = None,
+            multi_label: bool = None,
+            multi_label_threshold: float = 0.5,
+            beta: float = 1.0,
+            loss_weights: Dict[str, float] = None,
     ):
         """
         Initializes a TextClassifier
@@ -142,7 +142,7 @@ class TextClassifier(flair.nn.Model):
         return model
 
     def forward_loss(
-        self, data_points: Union[List[Sentence], Sentence]
+            self, data_points: Union[List[Sentence], Sentence]
     ) -> torch.tensor:
 
         scores = self.forward(data_points)
@@ -167,14 +167,14 @@ class TextClassifier(flair.nn.Model):
         return scores, loss
 
     def predict(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        mini_batch_size: int = 32,
-        multi_class_prob: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss = False,
-        embedding_storage_mode="none",
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size: int = 32,
+            multi_class_prob: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
     ):
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
@@ -255,12 +255,12 @@ class TextClassifier(flair.nn.Model):
                 return overall_loss / batch_no
 
     def evaluate(
-        self,
-        sentences: Union[List[DataPoint], Dataset],
-        out_path: Union[str, Path] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
-        num_workers: int = 8,
+            self,
+            sentences: Union[List[DataPoint], Dataset],
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: int = 8,
     ) -> (Result, float):
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
@@ -302,9 +302,9 @@ class TextClassifier(flair.nn.Model):
                 predictions = [sentence.get_labels('predicted') for sentence in batch]
 
                 for sentence, prediction, true_value in zip(
-                    sentences_for_batch,
-                    predictions,
-                    true_values_for_batch,
+                        sentences_for_batch,
+                        predictions,
+                        true_values_for_batch,
                 ):
                     eval_line = "{}\t{}\t{}\n".format(
                         sentence, true_value, prediction
@@ -312,7 +312,7 @@ class TextClassifier(flair.nn.Model):
                     lines.append(eval_line)
 
                 for predictions_for_sentence, true_values_for_sentence in zip(
-                    predictions, true_values_for_batch
+                        predictions, true_values_for_batch
                 ):
 
                     true_values_for_sentence = [label.value for label in true_values_for_sentence]
@@ -348,9 +348,11 @@ class TextClassifier(flair.nn.Model):
                                                                   target_names=target_names, zero_division=0)
 
             # get scores
-            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0), 4)
+            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0),
+                                  4)
             accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
-            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro', zero_division=0), 4)
+            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro', zero_division=0),
+                                  4)
             precision_score = round(metrics.precision_score(y_true, y_pred, average='macro', zero_division=0), 4)
             recall_score = round(metrics.recall_score(y_true, y_pred, average='macro', zero_division=0), 4)
 
@@ -396,7 +398,7 @@ class TextClassifier(flair.nn.Model):
         return filtered_sentences
 
     def _obtain_labels(
-        self, scores: List[List[float]], predict_prob: bool = False
+            self, scores: List[List[float]], predict_prob: bool = False
     ) -> List[List[Label]]:
         """
         Predicts the labels of sentences.
@@ -487,8 +489,8 @@ class TextClassifier(flair.nn.Model):
         model_map["sentiment-fast"] = "/".join(
             [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn.pt"]
         )
-        
-        #Communicative Functions Model
+
+        # Communicative Functions Model
         model_map["communicative-functions"] = "/".join(
             [hu_path, "comfunc", "communicative-functions-v0.5b.pt"]
         )
@@ -670,7 +672,7 @@ class TARSClassifier(TextClassifier):
             for column_index, other_label in enumerate(all_labels):
                 if label != other_label:
                     negative_label_probabilities[label][other_label] = \
-                    similarity_matrix[row_index][column_index]
+                        similarity_matrix[row_index][column_index]
         self.label_nearest_map = negative_label_probabilities
 
     def train(self, mode=True):
@@ -705,7 +707,6 @@ class TARSClassifier(TextClassifier):
             plausible_label_probabilities += 1e-08
             plausible_label_probabilities /= np.sum(plausible_label_probabilities)
 
-            
             if len(plausible_labels) > 0:
                 num_samples = min(self.num_negative_labels_to_sample, len(plausible_labels))
                 sampled_negative_labels = np.random.choice(plausible_labels,
@@ -905,7 +906,7 @@ class TARSClassifier(TextClassifier):
                                         label_dictionary, multi_label)
 
         try:
-            #make zero shot predictions
+            # make zero shot predictions
             self.predict(sentences)
         except:
             log.error("Something went wrong during prediction. Ensure you pass Sentence objects.")
@@ -917,9 +918,8 @@ class TARSClassifier(TextClassifier):
             self._drop_task(TARSClassifier.static_adhoc_task_identifier)
 
         return
-    
-    
-    
+
+
 class DistClassifier(flair.nn.Model):
     """
     DistClassifier
@@ -929,11 +929,11 @@ class DistClassifier(flair.nn.Model):
     """
 
     def __init__(
-        self,
-        word_embeddings: flair.embeddings.TokenEmbeddings, 
-        max_distance: int = 20, 
-        beta: float = 1.0,
-        loss_max_weight: float = 1,
+            self,
+            word_embeddings: flair.embeddings.TokenEmbeddings,
+            max_distance: int = 20,
+            beta: float = 1.0,
+            loss_max_weight: float = 1,
     ):
         """
         Initializes a DistClassifier
@@ -950,54 +950,50 @@ class DistClassifier(flair.nn.Model):
         super(DistClassifier, self).__init__()
 
         self.word_embeddings: flair.embeddings.TokenEmbeddings = word_embeddings
-        
+
         self.beta = beta
-        
+
         self.max_distance = max_distance
 
-        self.loss_max_weight = loss_max_weight 
-        
+        self.loss_max_weight = loss_max_weight
+
         if self.loss_max_weight > 1:
-            step = (self.loss_max_weight - 1)/self.max_distance
-            
-            weight_list = [1.+i*step for i in range(self.max_distance + 1)]
-            
+            step = (self.loss_max_weight - 1) / self.max_distance
+
+            weight_list = [1. + i * step for i in range(self.max_distance + 1)]
+
             self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
 
         else:
             self.loss_weights = None
-            
 
-        #iput size is two times wordembedding size since we use pair of words as input
-        #the output size is max_distance + 1, i.e. we allow 0,1,...,max_distance words between pairs
+        # iput size is two times wordembedding size since we use pair of words as input
+        # the output size is max_distance + 1, i.e. we allow 0,1,...,max_distance words between pairs
         self.decoder = nn.Linear(
-            self.word_embeddings.embedding_length*2, self.max_distance + 1)
-                                                     
-    
-        nn.init.xavier_uniform_(self.decoder.weight)
+            self.word_embeddings.embedding_length * 2, self.max_distance + 1)
 
+        nn.init.xavier_uniform_(self.decoder.weight)
 
         self.loss_function = nn.CrossEntropyLoss(weight=self.loss_weights)
 
         # auto-spawn on GPU if available
         self.to(flair.device)
-       
 
-    #forward allows only a single sentcence!! 
+    # forward allows only a single sentcence!!
     def forward(self, sentence: Sentence):
 
-        #embed words of sentence
+        # embed words of sentence
         self.word_embeddings.embed(sentence)
 
-        #go through all pairs of words with a maximum number of max_distance in between
+        # go through all pairs of words with a maximum number of max_distance in between
         numberOfWords = len(sentence)
         text_embedding_list = []
-        #go through all pairs
+        # go through all pairs
         for i in range(numberOfWords):
-            for j in range(i+1,min(i+self.max_distance + 2,numberOfWords)):
-                text_embedding_list.append(torch.cat((sentence[i].embedding,sentence[j].embedding)).unsqueeze(0))
-                
-        #2-dim matrix whose rows are the embeddings of word pairs of the sentence
+            for j in range(i + 1, min(i + self.max_distance + 2, numberOfWords)):
+                text_embedding_list.append(torch.cat((sentence[i].embedding, sentence[j].embedding)).unsqueeze(0))
+
+        # 2-dim matrix whose rows are the embeddings of word pairs of the sentence
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
         label_scores = self.decoder(text_embedding_tensor)
@@ -1021,7 +1017,7 @@ class DistClassifier(flair.nn.Model):
 
         model = DistClassifier(
             word_embeddings=state["word_embeddings"],
-            max_distance= state["max_distance"],
+            max_distance=state["max_distance"],
             beta=beta,
             loss_max_weight=weight,
         )
@@ -1029,45 +1025,44 @@ class DistClassifier(flair.nn.Model):
         model.load_state_dict(state["state_dict"])
         return model
 
-    #So far only one sentence allowed
-    #If list of sentences is handed the function works with the first sentence of the list
+    # So far only one sentence allowed
+    # If list of sentences is handed the function works with the first sentence of the list
     def forward_loss(
-        self, data_points: Union[List[Sentence], Sentence]
+            self, data_points: Union[List[Sentence], Sentence]
     ) -> torch.tensor:
-        
-        if isinstance(data_points,list): #first sentence
+
+        if isinstance(data_points, list):  # first sentence
             data_points = data_points[0]
-            
+
         if len(data_points) < 2:
-            return torch.tensor([0.],requires_grad=True)
-        
+            return torch.tensor([0.], requires_grad=True)
+
         scores = self.forward(data_points)
 
         return self._calculate_loss(scores, data_points)
 
-    #Assume data_points is a single sentence!!!
-    #scores are the predictions for each word pair
+    # Assume data_points is a single sentence!!!
+    # scores are the predictions for each word pair
     def _calculate_loss(self, scores, data_points):
-        
+
         indices = []
         numberOfWords = len(data_points)
 
         for i in range(numberOfWords):
-            for j in range(i+1,min(i+self.max_distance + 2,numberOfWords)):
-                indices.append(torch.LongTensor([j-i-1]))#distance between words
-                
+            for j in range(i + 1, min(i + self.max_distance + 2, numberOfWords)):
+                indices.append(torch.LongTensor([j - i - 1]))  # distance between words
+
         labels = torch.cat(indices, 0).to(flair.device)
-        
 
         return self.loss_function(scores, labels)
 
-    #only single sentences as input
+    # only single sentences as input
     def _forward_scores_and_loss(
             self, data_points: Union[List[Sentence], Sentence], return_loss=False):
-        
-        if isinstance(data_points,list): #first sentence
+
+        if isinstance(data_points, list):  # first sentence
             data_points = data_points[0]
-        
+
         scores = self.forward(data_points)
 
         loss = None
@@ -1076,14 +1071,13 @@ class DistClassifier(flair.nn.Model):
 
         return scores, loss
 
-      
     def evaluate(
-        self,
-        sentences: Union[List[DataPoint], Dataset],
-        out_path: Union[str, Path] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 1,#unnecessary, but trainer.train calls evaluate with this parameter
-        num_workers: int = 8,
+            self,
+            sentences: Union[List[DataPoint], Dataset],
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 1,  # unnecessary, but trainer.train calls evaluate with this parameter
+            num_workers: int = 8,
     ) -> (Result, float):
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
@@ -1098,71 +1092,67 @@ class DistClassifier(flair.nn.Model):
             eval_loss = 0
 
             lines: List[str] = []
-            #we iterate over each sentence, instead of batches
+            # we iterate over each sentence, instead of batches
             for sentence in sentences:
-                
-                if len(sentence) < 2:#we need at least 2 words per sentence
+
+                if len(sentence) < 2:  # we need at least 2 words per sentence
                     continue
 
                 scores, loss = self._forward_scores_and_loss(sentence, return_loss=True)
 
-                
-                #get single labels from scores
+                # get single labels from scores
                 predictions = [self._get_single_label(s) for s in scores]
 
-                #gold labels
+                # gold labels
                 true_values_for_sentence = []
                 numberOfPairs = 0
                 numberOfWords = len(sentence)
                 lines.append(sentence.to_tokenized_string() + '\n')
                 for i in range(numberOfWords):
-                    for j in range(i+1,min(i+self.max_distance + 2,numberOfWords)):
-                        true_values_for_sentence.append(j-i-1)
-                        
-                        #for output text file
-                        eval_line = "({},{})\t{}\t{}\n".format(i,j,j-i-1, predictions[numberOfPairs])
-                        lines.append(eval_line)
-                        
-                        numberOfPairs +=1
-                        
-                        
-                eval_loss += loss/numberOfPairs#add average loss of word pairs
+                    for j in range(i + 1, min(i + self.max_distance + 2, numberOfWords)):
+                        true_values_for_sentence.append(j - i - 1)
 
+                        # for output text file
+                        eval_line = "({},{})\t{}\t{}\n".format(i, j, j - i - 1, predictions[numberOfPairs])
+                        lines.append(eval_line)
+
+                        numberOfPairs += 1
+
+                eval_loss += loss / numberOfPairs  # add average loss of word pairs
 
                 for prediction_for_sentence, true_value_for_sentence in zip(
-                    predictions, true_values_for_sentence
+                        predictions, true_values_for_sentence
                 ):
-
-                    #hot one vector of true value
-                    y_true_instance = np.zeros(self.max_distance+1, dtype=int)
+                    # hot one vector of true value
+                    y_true_instance = np.zeros(self.max_distance + 1, dtype=int)
                     y_true_instance[true_value_for_sentence] = 1
                     y_true.append(y_true_instance.tolist())
 
-
-                    #hot one vector of predicted value
-                    y_pred_instance = np.zeros(self.max_distance+1, dtype=int)
+                    # hot one vector of predicted value
+                    y_pred_instance = np.zeros(self.max_distance + 1, dtype=int)
                     y_pred_instance[prediction_for_sentence] = 1
                     y_pred.append(y_pred_instance.tolist())
+                    
+                # speichert embeddings, falls embedding_storage!= 'None'
+                store_embeddings(sentence, embedding_storage_mode)
 
-                store_embeddings(sentence, embedding_storage_mode)#speichert embeddings, falls embedding_storage!= 'None'
-
-            
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
-                    
 
             # make "classification report"
-            target_names = []#liste aller labels, ins unserem Fall 
-            for i in range(self.max_distance +1):
+            target_names = []  # liste aller labels, ins unserem Fall
+            for i in range(self.max_distance + 1):
                 target_names.append(str(i))
             classification_report = metrics.classification_report(y_true, y_pred, digits=4,
                                                                   target_names=target_names, zero_division=0)
 
             # get scores
-            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0), 4)
+            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0),
+                                  4)
             accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
-            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro', zero_division=0), 4)
+            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro', zero_division=0),
+                                  4)
             # precision_score = round(metrics.precision_score(y_true, y_pred, average='macro', zero_division=0), 4)
             # recall_score = round(metrics.recall_score(y_true, y_pred, average='macro', zero_division=0), 4)
 
@@ -1178,7 +1168,6 @@ class DistClassifier(flair.nn.Model):
             log_header = "ACCURACY"
             log_line = f"\t{accuracy_score}"
 
-
             result = Result(
                 main_score=micro_f_score,
                 log_line=log_line,
@@ -1188,8 +1177,7 @@ class DistClassifier(flair.nn.Model):
 
             eval_loss /= len(sentences)
 
-            return result, eval_loss        
-        
+            return result, eval_loss
 
     @staticmethod
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
@@ -1203,7 +1191,7 @@ class DistClassifier(flair.nn.Model):
         return filtered_sentences
 
     def _obtain_labels(
-        self, scores: List[List[float]], predict_prob: bool = False
+            self, scores: List[List[float]], predict_prob: bool = False
     ) -> List[List[Label]]:
         """
         Predicts the labels of sentences.
@@ -1216,8 +1204,7 @@ class DistClassifier(flair.nn.Model):
 
         return [self._get_single_label(s) for s in scores]
 
-
-    def _get_single_label(self, label_scores): #-> List[Label]:
+    def _get_single_label(self, label_scores):  # -> List[Label]:
         softmax = torch.nn.functional.softmax(label_scores, dim=0)
         conf, idx = torch.max(softmax, 0)
 
@@ -1229,7 +1216,6 @@ class DistClassifier(flair.nn.Model):
         for idx, conf in enumerate(softmax):
             label_probs.append(Label(idx, conf.item()))
         return label_probs
-
 
     def __str__(self):
         return super(flair.nn.Model, self).__str__().rstrip(')') + \
