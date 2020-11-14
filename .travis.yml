@@ -5,7 +5,8 @@ env:
 python:
   - "3.6"
 install:
-  - python setup.py develop -q --use-feature=2020-resolver
+  - pip install -r requirements.txt --use-feature=2020-resolver
+  - python setup.py develop -q
 before_script: cd tests
 script:
   - pip freeze
