@@ -1104,6 +1104,24 @@ class SequenceTagger(flair.nn.Model):
                 unzip_file(Path(flair.cache_root) / cache_dir / 'freeIndirect.zip', Path(flair.cache_root) / cache_dir)
             model_name = str(Path(flair.cache_root) / cache_dir / 'freeIndirect' / 'final-model.pt')
 
+        # Fallback to Hugging Face model hub
+        if not Path(model_name).exists() and not model_name.startswith("http"):
+            # e.g. stefan-it/flair-ner-conll03 is a valid namespace
+            # and  stefan-it/flair-ner-conll03@main supports specifying a commit/branch name
+            hf_model_name = "model.bin"
+            revision = "main"
+
+            if "@" in model_name:
+                model_name_splitted = model_name.split("@")
+                revision = model_name_splitted[-1]
+                model_name = model_name_splitted[0]
+
+            # Lazy import
+            from transformers import file_utils
+
+            url = file_utils.hf_bucket_url(model_id=model_name, revision=revision, filename=hf_model_name)
+            model_name = file_utils.cached_path(url_or_filename=url)
+
         return model_name
 
     def get_transition_matrix(self):
