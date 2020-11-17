@@ -2,7 +2,6 @@ from flair.hyperparameter import search_strategies, search_spaces, orchestrator
 import flair.hyperparameter.parameters as parameter
 from flair.embeddings import FlairEmbeddings, TransformerWordEmbeddings, WordEmbeddings
 from torch.optim import SGD, Adam
-
 from flair.datasets import WNUT_17
 
 corpus = WNUT_17()
@@ -11,7 +10,7 @@ search_space = search_spaces.SequenceTaggerSearchSpace()
 search_strategy = search_strategies.GridSearch()
 
 search_space.add_tag_type("ner")
-search_space.add_budget(parameter.Budget.TIME_IN_H, 24)
+search_space.add_budget(parameter.BudgetConstraint.TIME_IN_H, 24)
 search_space.add_evaluation_metric(parameter.EvaluationMetric.MICRO_F1_SCORE)
 search_space.add_optimization_value(parameter.OptimizationValue.DEV_SCORE)
 search_space.add_max_epochs_per_training_run(25)

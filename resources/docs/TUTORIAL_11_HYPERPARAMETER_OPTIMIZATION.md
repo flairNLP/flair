@@ -43,7 +43,7 @@ from flair.embeddings import WordEmbeddings
 
 # mandatory steering parameters
 
-search_space.add_budget(parameter.Budget.TIME_IN_H, 24)
+search_space.add_budget(parameter.BudgetConstraint.TIME_IN_H, 24)
 search_space.add_evaluation_metric(parameter.EvaluationMetric.MICRO_F1_SCORE)
 search_space.add_optimization_value(parameter.OptimizationValue.DEV_SCORE)
 search_space.add_max_epochs_per_training_run(25)

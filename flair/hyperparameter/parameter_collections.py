@@ -3,10 +3,10 @@ import random
 from .parameter_groups import DOCUMENT_EMBEDDINGS
 
 
-class ParameterStorage():
+class ParameterStorage:
 
     def __init__(self):
-        pass
+        self.GeneralParameters = None
 
     def add(self, parameter_name: str, value_range: list, embedding_key : str  = "GeneralParameters"):
         if hasattr(self, embedding_key):
@@ -29,7 +29,7 @@ class ParameterStorage():
             return True
 
 
-class TrainingConfigurations():
+class TrainingConfigurations:
 
     def __init__(self):
         self.configurations = []

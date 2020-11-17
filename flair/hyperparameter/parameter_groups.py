@@ -15,7 +15,7 @@ def extractClasses(importModule):
 DOCUMENT_EMBEDDINGS = extractClasses(document_embeddings)
 TOKEN_EMBEDDINGS = extractClasses(token_embeddings)
 
-BUDGETS = [option.value for option in Budget]
+BUDGETS = [option.value for option in BudgetConstraint]
 
 OPTIMIZER_PARAMETERS = [param.value for param in Optimizer]
 DOCUMENT_TRANSFORMER_EMBEDDING_PARAMETERS = inspect.getfullargspec(TransformerDocumentEmbeddings).args

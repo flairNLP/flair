@@ -14,7 +14,7 @@ class OptimizationValue(Enum):
     DEV_LOSS = "loss"
     DEV_SCORE = "score"
 
-class Budget(Enum):
+class BudgetConstraint(Enum):
     RUNS = "runs"
     GENERATIONS = "generations"
     TIME_IN_H = "time_in_h"
