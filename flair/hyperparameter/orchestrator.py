@@ -5,9 +5,9 @@ from typing import Union
 from pathlib import Path
 from torch import cuda
 
-from flair.hyperparameter.search_strategies import *
-from flair.hyperparameter.search_spaces import SearchSpace
-from flair.hyperparameter.downstream_task_models import TextClassification, SequenceTagging
+from .search_strategies import *
+from.search_spaces import SearchSpace
+from .downstream_task_models import TextClassification, SequenceTagging
 
 from flair.data import Corpus
 

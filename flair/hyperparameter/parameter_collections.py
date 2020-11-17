@@ -1,6 +1,6 @@
 import itertools
 import random
-from flair.hyperparameter.parameter_groups import DOCUMENT_EMBEDDINGS
+from .parameter_groups import DOCUMENT_EMBEDDINGS
 
 
 class ParameterStorage():

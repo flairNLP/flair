@@ -5,8 +5,8 @@ from enum import Enum
 from abc import abstractmethod
 
 from .parameter_collections import ParameterStorage, TrainingConfigurations
-from flair.hyperparameter.parameters import Budget, EvaluationMetric, OptimizationValue
-from flair.hyperparameter.parameter_groups import DOCUMENT_EMBEDDINGS
+from .parameters import Budget, EvaluationMetric, OptimizationValue
+from .parameter_groups import DOCUMENT_EMBEDDINGS
 
 log = logging.getLogger("flair")
 

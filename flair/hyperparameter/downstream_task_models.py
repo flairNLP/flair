@@ -4,7 +4,7 @@ from pathlib import Path
 import flair.nn
 from flair.data import Corpus
 
-from flair.hyperparameter.parameter_groups import *
+from .parameter_groups import *
 
 
 class DownstreamTaskModel(object):
