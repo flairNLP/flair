@@ -17,6 +17,7 @@ from flair.data import Dictionary, Sentence, Label, DataPoint
 from flair.datasets import SentenceDataset, DataLoader
 from flair.file_utils import cached_path
 from flair.training_utils import (
+    MetricRegression,
     convert_labels_to_one_hot,
     Result,
     store_embeddings,
