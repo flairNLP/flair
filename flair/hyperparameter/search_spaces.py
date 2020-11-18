@@ -13,7 +13,7 @@ log = logging.getLogger("flair")
 
 class SearchSpace(object):
 
-    def __init__(self):
+    def __init__(self, has_document_embeddings: bool):
         self.parameter_storage = ParameterStorage()
         self.training_configurations = TrainingConfigurations()
         self.budget = Budget()
@@ -21,6 +21,7 @@ class SearchSpace(object):
         self.optimization_value = {}
         self.evaluation_metric = {}
         self.max_epochs_per_training_run = 50
+        self.has_document_embeddings = has_document_embeddings
 
     @abstractmethod
     def add_parameter(self, parameter: Enum, options):
@@ -72,7 +73,7 @@ class SearchSpace(object):
 class TextClassifierSearchSpace(SearchSpace):
 
     def __init__(self, multi_label: bool = False):
-        super().__init__()
+        super().__init__(has_document_embeddings=True)
         self.multi_label = multi_label
 
     def add_parameter(self, parameter: Enum, options: list):
@@ -118,7 +119,7 @@ class TextClassifierSearchSpace(SearchSpace):
 class SequenceTaggerSearchSpace(SearchSpace):
 
     def __init__(self):
-        super().__init__()
+        super().__init__(has_document_embeddings=False)
         self.tag_type = ""
 
     def add_tag_type(self, tag_type: str):

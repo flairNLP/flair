@@ -27,7 +27,7 @@ class GridSearch(SearchStrategy):
 
     def make_configurations(self, search_space: SearchSpace):
         search_space.check_completeness(self.search_strategy_name)
-        search_space.training_configurations.make_grid_configurations(search_space.parameter_storage)
+        search_space.training_configurations.make_grid_configurations(search_space.parameter_storage, search_space.has_document_embeddings)
         if self.shuffle:
             random.shuffle(search_space.training_configurations.configurations)
 
@@ -52,7 +52,7 @@ class EvolutionarySearch(SearchStrategy):
 
     def make_configurations(self, search_space: SearchSpace):
         search_space.check_completeness(self.search_strategy_name)
-        search_space.training_configurations.make_evolutionary_configurations(search_space.parameter_storage, self.population_size)
+        search_space.training_configurations.make_evolutionary_configurations(search_space.parameter_storage, search_space.has_document_embeddings ,self.population_size)
 
     def _evolve_required(self, current_run: int):
         if current_run % (self.population_size) == 0:
