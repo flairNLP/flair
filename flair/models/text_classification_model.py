@@ -934,6 +934,7 @@ class DistClassifier(flair.nn.Model):
             max_distance: int = 20,
             beta: float = 1.0,
             loss_max_weight: float = 1,
+            regression = False
     ):
         """
         Initializes a DistClassifier
@@ -942,9 +943,10 @@ class DistClassifier(flair.nn.Model):
         :param beta: Parameter for F-beta score for evaluation and training annealing
         :param loss_weights: Dictionary of weights for labels for the loss function
         (if any label's weight is unspecified it will default to 1.0)
-        :param loss_max_weight: since small distances between word pairs occur mor frequent it makes sense to give them less weight
+        :param loss_max_weight: Only for classification: Since small distances between word pairs occur mor frequent it makes sense to give them less weight
         in the loss function. loss_max_weight will be used as the weight for the maximum distance and should be a number >=1
         The other weights decrease with equidistant steps from high to low distance.
+        :param regression: if True the class does regression instead of classification
         """
 
         super(DistClassifier, self).__init__()
@@ -956,6 +958,8 @@ class DistClassifier(flair.nn.Model):
         self.max_distance = max_distance
 
         self.loss_max_weight = loss_max_weight
+        
+        self.regression = regression
 
         if self.loss_max_weight > 1:
             step = (self.loss_max_weight - 1) / self.max_distance
@@ -967,14 +971,23 @@ class DistClassifier(flair.nn.Model):
         else:
             self.loss_weights = None
 
+        if not regression:
         # iput size is two times wordembedding size since we use pair of words as input
         # the output size is max_distance + 1, i.e. we allow 0,1,...,max_distance words between pairs
-        self.decoder = nn.Linear(
-            self.word_embeddings.embedding_length * 2, self.max_distance + 1)
+            self.decoder = nn.Linear(
+                self.word_embeddings.embedding_length * 2, self.max_distance + 1)
+            
+            self.loss_function = nn.CrossEntropyLoss(weight=self.loss_weights)
+        else:
+            self.decoder = nn.Linear(
+                self.word_embeddings.embedding_length * 2, 1)# regression
+            
+            self.loss_function = nn.MSELoss()
+            
 
         nn.init.xavier_uniform_(self.decoder.weight)
 
-        self.loss_function = nn.CrossEntropyLoss(weight=self.loss_weights)
+        
 
         # auto-spawn on GPU if available
         self.to(flair.device)
@@ -997,7 +1010,10 @@ class DistClassifier(flair.nn.Model):
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
         label_scores = self.decoder(text_embedding_tensor)
-
+        
+        if self.regression:
+            return label_scores.squeeze(1)
+        
         return label_scores
 
     def _get_state_dict(self):
@@ -1007,6 +1023,7 @@ class DistClassifier(flair.nn.Model):
             "max_distance": self.max_distance,
             "beta": self.beta,
             "loss_max_weight": self.loss_max_weight,
+            "regression": self.regression
         }
         return model_state
 
@@ -1020,6 +1037,7 @@ class DistClassifier(flair.nn.Model):
             max_distance=state["max_distance"],
             beta=beta,
             loss_max_weight=weight,
+            regression=state["regression"]
         )
 
         model.load_state_dict(state["state_dict"])
@@ -1048,11 +1066,19 @@ class DistClassifier(flair.nn.Model):
         indices = []
         numberOfWords = len(data_points)
 
-        for i in range(numberOfWords):
-            for j in range(i + 1, min(i + self.max_distance + 2, numberOfWords)):
-                indices.append(torch.LongTensor([j - i - 1]))  # distance between words
+        # classification needs labels to be integers, regression needs labels to be float
+        # this is due to the different loss functions
+        if not self.regression:
+            for i in range(numberOfWords):
+                for j in range(i + 1, min(i + self.max_distance + 2, numberOfWords)):
+                    indices.append(torch.LongTensor([j - i - 1]))  # distance between words
+        else:
+            for i in range(numberOfWords):
+                for j in range(i + 1, min(i + self.max_distance + 2, numberOfWords)):            
+                    indices.append(torch.Tensor([j - i - 1])) # distance between words
 
         labels = torch.cat(indices, 0).to(flair.device)
+        
 
         return self.loss_function(scores, labels)
 
@@ -1070,7 +1096,7 @@ class DistClassifier(flair.nn.Model):
             loss = self._calculate_loss(scores, data_points)
 
         return scores, loss
-
+    
     def evaluate(
             self,
             sentences: Union[List[DataPoint], Dataset],
@@ -1079,10 +1105,96 @@ class DistClassifier(flair.nn.Model):
             mini_batch_size: int = 1,  # unnecessary, but trainer.train calls evaluate with this parameter
             num_workers: int = 8,
     ) -> (Result, float):
+        
+        if self.regression:
+            return self.evaluate_regression(
+            sentences = sentences,
+            out_path = out_path,
+            embedding_storage_mode=embedding_storage_mode,
+                )
+        
+        return self.evaluate_classification(
+            sentences = sentences,
+            out_path = out_path,
+            embedding_storage_mode=embedding_storage_mode,
+            )
+    
+    def evaluate_regression(
+            self,
+            sentences: Union[List[DataPoint], Dataset],
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+    ) -> (Result, float):
+        
+        with torch.no_grad():
+            
+            eval_loss = 0
 
-        # read Dataset into data loader (if list of sentences passed, make Dataset first)
-        if not isinstance(sentences, Dataset):
-            sentences = SentenceDataset(sentences)
+            metric = MetricRegression("Evaluation")
+
+            lines: List[str] = []
+            
+            for sentence in sentences:
+                
+                if len(sentence) < 2:  # we need at least 2 words per sentence
+                    continue
+
+                scores, loss = self._forward_scores_and_loss(sentence, return_loss=True)
+
+                predictions = scores.tolist()
+
+                # gold labels
+                true_values_for_sentence = []
+                numberOfPairs = 0
+                numberOfWords = len(sentence)
+                lines.append(sentence.to_tokenized_string() + '\n')
+                for i in range(numberOfWords):
+                    for j in range(i + 1, min(i + self.max_distance + 2, numberOfWords)):
+                        true_values_for_sentence.append(j - i - 1)
+
+                        # for output text file
+                        eval_line = "({},{})\t{}\t{}\n".format(i, j, j - i - 1, predictions[numberOfPairs])
+                        lines.append(eval_line)
+
+                        numberOfPairs += 1
+                        
+                eval_loss += loss/numberOfPairs
+
+                metric.true.extend(true_values_for_sentence)
+                metric.pred.extend(predictions)
+
+                store_embeddings(sentence, embedding_storage_mode)
+
+            eval_loss /= len(sentences)
+
+            ##TODO: not saving lines yet
+            if out_path is not None:
+                with open(out_path, "w", encoding="utf-8") as outfile:
+                    outfile.write("".join(lines))
+
+            log_line = f"{metric.mean_squared_error()}\t{metric.spearmanr()}\t{metric.pearsonr()}"
+            log_header = "MSE\tSPEARMAN\tPEARSON"
+
+            detailed_result = (
+                f"AVG: mse: {metric.mean_squared_error():.4f} - "
+                f"mae: {metric.mean_absolute_error():.4f} - "
+                f"pearson: {metric.pearsonr():.4f} - "
+                f"spearman: {metric.spearmanr():.4f}"
+            )
+
+            result: Result = Result(
+                metric.pearsonr(), log_header, log_line, detailed_result
+            )
+
+
+            return result, eval_loss           
+
+    def evaluate_classification(
+            self,
+            sentences: Union[List[DataPoint], Dataset],
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+    ) -> (Result, float):
 
         # use scikit-learn to evaluate
         y_true = []
