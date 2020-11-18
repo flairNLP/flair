@@ -1,12 +1,15 @@
 import itertools
 import random
+
+from flair.embeddings.document import *
+
 from .parameter_groups import DOCUMENT_EMBEDDINGS
 
 
 class ParameterStorage:
 
     def __init__(self):
-        self.GeneralParameters = None
+        self.GeneralParameters = {}
 
     def add(self, parameter_name: str, value_range: list, embedding_key : str  = "GeneralParameters"):
         if hasattr(self, embedding_key):

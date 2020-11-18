@@ -102,15 +102,17 @@ class TextClassifierSearchSpace(SearchSpace):
 
     def _check_document_embeddings_are_set(self):
         currently_set_parameters = self.parameter_storage.__dict__.keys()
-        if not any(check in currently_set_parameters for check in DOCUMENT_EMBEDDINGS):
-            raise AttributeError("Embeddings are required but missing.")
 
-        union_of_embedding_types = [embedding for embedding in currently_set_parameters if
-                                    embedding in DOCUMENT_EMBEDDINGS]
-        for embedding in union_of_embedding_types:
-            if not bool(getattr(self.parameter_storage, embedding).get(
-                    "embeddings")) and embedding != "TransformerDocumentEmbeddings":
-                raise KeyError("Please set WordEmbeddings for DocumentEmbeddings.")
+        document_embeddings = [embedding for embedding in currently_set_parameters
+                               if embedding in DOCUMENT_EMBEDDINGS]
+
+        if not document_embeddings:
+            raise Exception("No document embeddings have been set.")
+
+        for single_embedding in document_embeddings:
+            if not bool(getattr(self.parameter_storage, single_embedding).get("embeddings")) \
+                    and single_embedding != "TransformerDocumentEmbeddings":
+                raise Exception("Please set WordEmbeddings for DocumentEmbeddings.")
 
 
 class SequenceTaggerSearchSpace(SearchSpace):
