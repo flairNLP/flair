@@ -1,5 +1,5 @@
-from flair.hyperparameter import search_strategies, search_spaces, orchestrator
-import flair.hyperparameter.parameters as parameter
+from .flair.hyperparameter import search_strategies, search_spaces, orchestrator
+import .flair.hyperparameter.parameters as parameter
 from flair.embeddings import FlairEmbeddings, TransformerWordEmbeddings, WordEmbeddings
 from torch.optim import SGD, Adam
 from flair.datasets import WNUT_17
