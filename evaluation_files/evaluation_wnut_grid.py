@@ -13,7 +13,7 @@ search_space.add_tag_type("ner")
 search_space.add_budget(parameter.BudgetConstraint.TIME_IN_H, 24)
 search_space.add_evaluation_metric(parameter.EvaluationMetric.MICRO_F1_SCORE)
 search_space.add_optimization_value(parameter.OptimizationValue.DEV_SCORE)
-search_space.add_max_epochs_per_training_run(25)
+search_space.add_max_epochs_per_training_run(50)
 
 search_space.add_parameter(parameter.ModelTrainer.LEARNING_RATE, options=[0.1, 0.05, 0.01, 3e-5])
 search_space.add_parameter(parameter.ModelTrainer.MINI_BATCH_SIZE, options=[16, 32, 64])

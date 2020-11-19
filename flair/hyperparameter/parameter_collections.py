@@ -40,15 +40,42 @@ class TrainingConfigurations:
     def get_configuration(self):
         return self.configurations.pop(0)
 
-    def _format_from_parameter_storage(self, parameter_storage: ParameterStorage, has_document_embeddings: bool):
+    def make_grid_configurations(self, parameter_storage: ParameterStorage, has_document_embeddings: bool):
         embedding_specific_keys, general_keys = self._split_storage_keys(parameter_storage)
         if has_document_embeddings:
-            formatted_parameters = self._combine_general_and_embedding_parameters(embedding_specific_keys,
-                                                                                           general_keys,
-                                                                                           parameter_storage)
+            formatted_parameters = self._combine_general_and_embedding_parameters(embedding_specific_keys, general_keys, parameter_storage)
         else:
             formatted_parameters = self._format_only_general_parameters(general_keys, parameter_storage)
-        return formatted_parameters
+        grid_configurations = self._make_cartesian_product(formatted_parameters)
+        self.configurations.extend(grid_configurations)
+
+    def _make_cartesian_product(self, parameters: list):
+        cartesian_product = []
+        for parameter_dict in parameters:
+            keys, values = zip(*parameter_dict.items())
+            training_configurations = itertools.product(*values)
+            for configuration in training_configurations:
+                cartesian_product.append(dict(zip(keys, configuration)))
+        return cartesian_product
+
+    def make_evolutionary_configurations(self, parameter_storage: ParameterStorage, has_document_embeddings: bool, number_of_configurations: int):
+        embedding_specific_keys, general_keys = self._split_storage_keys(parameter_storage)
+
+        if has_document_embeddings:
+            formatted_parameters = self._combine_general_and_embedding_parameters(embedding_specific_keys, general_keys, parameter_storage)
+        else:
+            formatted_parameters = self._format_only_general_parameters(general_keys, parameter_storage)
+
+        number_of_different_embedding_types = len(formatted_parameters)
+        configurations_per_embedding_type = self._equally_distribute_configurations_per_embedding(number_of_different_embedding_types,
+                                                                                                  number_of_configurations)
+
+        for parameter_dictionary, amount_configurations in zip(formatted_parameters, configurations_per_embedding_type):
+            # typecasting needed here since cartesian_product only accepts list of parameter dictionaries
+            # but we want to sample equally from each embedding and append it to our initial population
+            entire_configuration = self._make_cartesian_product([parameter_dictionary])
+            evolutionary_configurations = random.sample(entire_configuration, amount_configurations)
+            self.configurations.extend(evolutionary_configurations)
 
     def _split_storage_keys(self, parameter_storage: ParameterStorage):
         embedding_specific_keys = parameter_storage.__dict__.keys() & DOCUMENT_EMBEDDINGS
@@ -68,49 +95,27 @@ class TrainingConfigurations:
         formatted_parameters = []
         general_key = general_keys.pop()
         general_parameters = getattr(parameter_storage, general_key)
-        formatted_parameters.append(general_parameters)
+        if bool(general_parameters.get("embeddings")):
+            embeddings = general_parameters.pop("embeddings")
+            for each_embedding in embeddings:
+                parameters = general_parameters.copy()
+                parameters["embeddings"] = [each_embedding]
+                formatted_parameters.append(parameters)
+        else:
+            formatted_parameters.append(general_parameters)
         return formatted_parameters
 
-    def make_grid_configurations(self, parameter_storage: ParameterStorage, has_document_embeddings: bool):
-        formatted_parameters = self._format_from_parameter_storage(parameter_storage, has_document_embeddings)
-        grid_configurations = self._make_cartesian_product(formatted_parameters)
-        self.configurations.extend(grid_configurations)
-
-    def _make_cartesian_product(self, parameters: list):
-        cartesian_product = []
-        for parameter_dict in parameters:
-            keys, values = zip(*parameter_dict.items())
-            training_configurations = itertools.product(*values)
-            for configuration in training_configurations:
-                cartesian_product.append(dict(zip(keys, configuration)))
-        return cartesian_product
-
-    def make_evolutionary_configurations(self, parameter_storage: ParameterStorage, has_document_embeddings: bool, number_of_configurations: int):
-        combined_parameters = self._format_from_parameter_storage(parameter_storage, has_document_embeddings)
-        number_of_different_embedding_types = self._get_number_of_different_embeddings(combined_parameters)
-        configurations_per_embedding_type = self._equally_distribute_configurations_per_embedding(number_of_different_embedding_types,
-                                                                                                  number_of_configurations)
-        #if has_document_embeddings:
-
-        for parameter_dictionary, amount_configurations in zip(combined_parameters, configurations_per_embedding_type):
-            # typecasting needed here since cartesian_product only accepts list of parameter dictionaries
-            # but we want to sample equally from each embedding and append it to our initial population
-            entire_configuration = self._make_cartesian_product([parameter_dictionary])
-            evolutionary_configurations = random.sample(entire_configuration, amount_configurations)
-            self.configurations.extend(evolutionary_configurations)
-
-    def _get_number_of_different_embeddings(self, combined_parameters: list):
+    def _get_number_of_different_embeddings(self, combined_parameters: list, has_document_embeddings: bool):
         # If the length of combined parameters is only 1, we need to check if there are only word embeddings set in the search space
         # in order to ensure that we take each word embedding in the initial population
-        if len(combined_parameters) > 1:
+        if has_document_embeddings:
             return len(combined_parameters)
-        elif len(combined_parameters) == 1:
+        else:
             parameters = combined_parameters[0]
-            if not bool(parameters.get("document_embeddings")):
+            if bool(parameters.get("embeddings")):
                 return len(parameters.get("embeddings"))
             else:
                 return len(combined_parameters)
-
 
     def _equally_distribute_configurations_per_embedding(self, number_of_different_embeddings: int, number_of_configurations: int) -> list:
         configurations_per_embedding = [number_of_configurations // number_of_different_embeddings +
