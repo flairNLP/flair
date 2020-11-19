@@ -26,22 +26,21 @@ search_space.add_parameter(param.Optimizer.WEIGHT_DECAY, options=[1e-2, 0])
 
 #Define parameters for document embeddings RNN
 search_space.add_parameter(param.DocumentRNNEmbeddings.HIDDEN_SIZE, options=[128, 256, 512])
-search_space.add_parameter(param.DocumentRNNEmbeddings.DROPOUT, options=[0, 0.1, 0.2, 0.3, 0.4, 0.5])
+search_space.add_parameter(param.DocumentRNNEmbeddings.DROPOUT, options=[0, 0.1, 0.2])
 search_space.add_parameter(param.DocumentRNNEmbeddings.REPROJECT_WORDS, options=[True, False])
-search_space.add_word_embeddings(param.DocumentRNNEmbeddings.WORD_EMBEDDINGS, options=[[WordEmbeddings('glove')],
-                                                                                 [WordEmbeddings('en')],
-                                                                                 [WordEmbeddings('en'), WordEmbeddings('glove')]])
+search_space.add_word_embeddings(param.DocumentRNNEmbeddings.WORD_EMBEDDINGS, options=[[WordEmbeddings('en'), WordEmbeddings('glove')]])
 
 #Define parameters for document embeddings Pool
-search_space.add_word_embeddings(param.DocumentPoolEmbeddings.WORD_EMBEDDINGS, options=[[WordEmbeddings('glove')],
-                                                                                 [WordEmbeddings('en')],
-                                                                                 [WordEmbeddings('en'), WordEmbeddings('glove')]])
+search_space.add_word_embeddings(param.DocumentPoolEmbeddings.WORD_EMBEDDINGS, options=[[WordEmbeddings('en'), WordEmbeddings('glove')]])
 search_space.add_parameter(param.DocumentPoolEmbeddings.POOLING, options=['mean', 'max', 'min'])
+
+search_space.add_parameter(param.TransformerDocumentEmbeddings.MODEL, options=['bert-base-uncased', 'distilbert-base-uncased', 'roberta-base'])
+search_space.add_parameter(param.TransformerDocumentEmbeddings.BATCH_SIZE, options=[8, 16, 32])
 
 search_strategy.make_configurations(search_space)
 
 orchestrator = orchestrator.Orchestrator(corpus=corpus,
-                                         base_path='resources/evaluation-senteval-sst-random',
+                                         base_path='resources/evaluation-senteval-sst-grid',
                                          search_space=search_space,
                                          search_strategy=search_strategy)
 
