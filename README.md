@@ -27,7 +27,7 @@ document embeddings, including our proposed **[Flair embeddings](https://www.acl
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.6](https://github.com/flairNLP/flair/releases)!
+Now at [version 0.6.1](https://github.com/flairNLP/flair/releases)!
 
 ## Comparison with State-of-the-Art
 
@@ -123,6 +123,7 @@ We provide a set of quick tutorials to get you started with the library:
 * [Tutorial 6: Loading a Dataset](/resources/docs/TUTORIAL_6_CORPUS.md)
 * [Tutorial 7: Training a Model](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
 * [Tutorial 8: Training your own Flair Embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
+* [Tutorial 9: Training a Zero Shot Text Classifier (TARS)](/resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)
 
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
 text, how you can embed your text with different word or document embeddings, and how you can train your own

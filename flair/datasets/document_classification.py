@@ -1230,6 +1230,114 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
             memory_mode=memory_mode,
             **corpusargs,
         )
+        
+
+class GO_EMOTIONS(ClassificationCorpus):
+    """
+    GoEmotions dataset containing 58k Reddit comments labeled with 27 emotion categories, see. https://github.com/google-research/google-research/tree/master/goemotions
+    """
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SegtokTokenizer(),
+            memory_mode: str = 'partial',
+            **corpusargs,
+    ):
+        """
+        Parameters
+        ----------
+        base_path : Provide this only if you want to store the corpus in a specific folder, otherwise use default.
+        tokenizer : Default is SegtokTokenizer().
+        memory_mode : Set to what degree to keep corpus in memory ('full', 'partial' or 'disk'). Use 'full'
+        if full corpus and all embeddings fits into memory for speedups during training. Otherwise use 'partial' and if
+        even this is too much for your memory, use 'disk'.
+        **corpusargs : Other args for ClassificationCorpus.
+
+        """
+        
+        
+        label_name_map = {'0': 'ADMIRATION',
+                          '1': 'AMUSEMENT',
+                          '2': 'ANGER',
+                          '3': 'ANNOYANCE',
+                          '4': 'APPROVAL',
+                          '5': 'CARING',
+                          '6': 'CONFUSION',
+                          '7': 'CURIOSITY',
+                          '8': 'DESIRE',
+                          '9': 'DISAPPOINTMENT',
+                          '10': 'DISAPPROVAL',
+                          '11': 'DISGUST', 
+                          '12': 'EMBARRASSMENT',
+                          '13': 'EXCITEMENT',
+                          '14': 'FEAR',
+                          '15': 'GRATITUDE',
+                          '16': 'GRIEF',
+                          '17': 'JOY',
+                          '18': 'LOVE',
+                          '19': 'NERVOUSNESS',
+                          '20': 'OPTIMISM',
+                          '21': 'PRIDE',
+                          '22': 'REALIZATION',
+                          '23': 'RELIEF',
+                          '24': 'REMORSE',
+                          '25': 'SADNESS',
+                          '26': 'SURPRISE',
+                          '27': 'NEUTRAL'}
+        
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        if not (data_folder / "train.txt").is_file():
+
+            # download datasets if necessary 
+            goemotions_url = "https://raw.githubusercontent.com/google-research/google-research/master/goemotions/data/"
+            for name in ["train.tsv","test.tsv","dev.tsv"]:
+                cached_path(goemotions_url+name, Path("datasets") / dataset_name / 'raw')
+                
+            
+            # create dataset directory if necessary
+            if not os.path.exists(data_folder):
+                os.makedirs(data_folder)
+            
+
+            data_path = Path(flair.cache_root) / "datasets" / dataset_name / 'raw'
+            # create correctly formated txt files 
+            for name in ["train","test","dev"]:
+                with open(data_folder / (name +'.txt'), "w", encoding='utf-8') as txt_file:
+                    with open(data_path  / (name +".tsv"), "r",encoding = 'utf-8') as tsv_file:
+                        
+                        lines = tsv_file.readlines()
+                        for line in lines:
+                            row = line.split('\t')
+                            text = row[0]
+                            #multiple labels are possible
+                            labels = row[1].split(',')
+                            label_string = ""
+                            for label in labels:
+                                label_string +=  '__label__'
+                                label_string += label
+                                label_string += ' '
+                            txt_file.write(f"{label_string}{text}\n")
+
+
+            
+
+        super(GO_EMOTIONS, self).__init__(
+            data_folder, label_type='sentiment', tokenizer=tokenizer,
+            memory_mode=memory_mode, label_name_map=label_name_map, **corpusargs,
+        )
 
 
 class TREC_50(ClassificationCorpus):

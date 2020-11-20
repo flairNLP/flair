@@ -624,7 +624,7 @@ class Sentence(DataPoint):
             tag_value = tag.value
 
             # non-set tags are OUT tags
-            if tag_value == "" or tag_value == "O":
+            if tag_value == "" or tag_value == "O" or tag_value == "_":
                 tag_value = "O-"
 
             # anything that is not a BIOES tag is a SINGLE tag
