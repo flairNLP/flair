@@ -1,13 +1,14 @@
 import logging
 import re
 import os
+import shutil
 from pathlib import Path
 from typing import Union, Dict, List
 
 import flair
 from flair.data import Corpus, MultiCorpus, FlairDataset, Sentence, Token
 from flair.datasets.base import find_train_dev_test_files
-from flair.file_utils import cached_path
+from flair.file_utils import cached_path, unpack_file
 
 log = logging.getLogger("flair")
 
@@ -443,6 +444,76 @@ class CONLL_03_DUTCH(ColumnCorpus):
             columns,
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+        )
+
+
+
+class WNUT_2020_NER(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+    ):
+        """
+        Initialize the WNUT_2020_NER corpus. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, since it is the only option of the WNUT corpus.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        github_url = "https://github.com/jeniyat/WNUT_2020_NER/archive/master.zip"
+
+        for sample in ["train", "test", "dev"]:
+
+            sample_file = data_folder / (sample + ".txt")
+            if not sample_file.is_file():
+
+                zip_path = cached_path(
+                    f"{github_url}", Path("datasets") / dataset_name
+                    )
+
+                # unzip the downloaded repo and merge the train, dev and test datasets 
+                unpack_file(zip_path, data_folder, "zip", False) # unzipped folder name: WNUT_2020_NER-master
+
+                if sample == "test":
+                	file_path = data_folder / Path("WNUT_2020_NER-master/data/" + sample + "_data_2020/Conll_Format/")
+                else:
+                	file_path = data_folder / Path("WNUT_2020_NER-master/data/" + sample + "_data/Conll_Format/")
+                filenames = os.listdir(file_path)
+                with open(data_folder / (sample + '.txt'), 'w') as outfile: 
+                    for fname in filenames:
+                        with open(file_path / fname) as infile:
+                            lines = infile.read()
+                            outfile.write(lines)
+
+                shutil.rmtree(str(data_folder / "WNUT_2020_NER-master")) # clean up when done
+
+        super(WNUT_2020_NER, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            encoding="utf-8",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
         )
@@ -2120,6 +2191,56 @@ class WNUT_17(ColumnCorpus):
             data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
         )
 
+class WEIBO_NER(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+    ):
+        """
+        Initialize the WEIBO_NER corpus . The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: 'text', 1: 'ner'}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        weiboNER_conll_path = "https://raw.githubusercontent.com/87302380/WEIBO_NER/main/data/"
+        cached_path(f"{weiboNER_conll_path}weiboNER_2nd_conll_format.train", Path("datasets") / dataset_name)
+        cached_path(f"{weiboNER_conll_path}weiboNER_2nd_conll_format.test", Path("datasets") / dataset_name)
+        cached_path(f"{weiboNER_conll_path}weiboNER_2nd_conll_format.dev", Path("datasets") / dataset_name)
+
+
+        super(WEIBO_NER, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            encoding="utf-8",
+            in_memory=in_memory,
+            train_file="weiboNER_2nd_conll_format.train",
+            test_file="weiboNER_2nd_conll_format.test",
+            dev_file="weiboNER_2nd_conll_format.dev",
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+        )
 
 class BIOSCOPE(ColumnCorpus):
 
@@ -2623,7 +2744,6 @@ class MITMovieNERSimple(ColumnCorpus):
             in_memory=in_memory,
         )
 
-
 class MITMovieNERComplex(ColumnCorpus):
     def __init__(
             self,
@@ -2668,6 +2788,7 @@ class MITMovieNERComplex(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
         )
+
 class SEC_FILLINGS(ColumnCorpus):
     def __init__(
             self,
@@ -2704,4 +2825,58 @@ class SEC_FILLINGS(ColumnCorpus):
             train_file='FIN5.txt',
             test_file="FIN3.txt",
             skip_first_line=True
+        )
+
+class TURKU_NER(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+    ):
+        """
+        Initialize the Finnish TurkuNER corpus. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        conll_path = "https://raw.githubusercontent.com/TurkuNLP/turku-ner-corpus/master/data/conll"
+        dev_file = "dev.tsv"
+        test_file = "test.tsv"
+        train_file = "train.tsv"
+        cached_path(f"{conll_path}/{dev_file}", Path("datasets") / dataset_name)
+        cached_path(f"{conll_path}/{test_file}", Path("datasets") / dataset_name)
+        cached_path(f"{conll_path}/{train_file}", Path("datasets") / dataset_name)
+
+        super(TURKU_NER, self).__init__(
+            data_folder,
+            columns,
+            dev_file=dev_file,
+            test_file=test_file,
+            train_file=train_file,
+            column_delimiter="\t",
+            tag_to_bioes=tag_to_bioes,
+            encoding="latin-1",
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
         )
