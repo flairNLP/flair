@@ -919,6 +919,7 @@ class TARSClassifier(TextClassifier):
             self._drop_task(TARSClassifier.static_adhoc_task_identifier)
 
         return
+    
 
 
 class DistClassifier(flair.nn.Model):
@@ -935,19 +936,21 @@ class DistClassifier(flair.nn.Model):
             max_distance: int = 20,
             beta: float = 1.0,
             loss_max_weight: float = 1,
-            regression = False
+            regression = False,
+            regr_loss_step = 0
     ):
         """
         Initializes a DistClassifier
         :param word_embeddings: embeddings used to embed each sentence
         .param max_distance: max dist between word pairs = number of predicted classes - 1
         :param beta: Parameter for F-beta score for evaluation and training annealing
-        :param loss_weights: Dictionary of weights for labels for the loss function
-        (if any label's weight is unspecified it will default to 1.0)
         :param loss_max_weight: Only for classification: Since small distances between word pairs occur mor frequent it makes sense to give them less weight
         in the loss function. loss_max_weight will be used as the weight for the maximum distance and should be a number >=1
         The other weights decrease with equidistant steps from high to low distance.
         :param regression: if True the class does regression instead of classification
+        :param regr_loss_step: if > 0, the MSE-Loss in regression will be weighted. Word pairs with 
+        distance 0 have weight 1. Then, as the distance increases, the weight in the loss function,
+        increases step by step with size regr_loss_step 
         """
 
         super(DistClassifier, self).__init__()
@@ -956,34 +959,46 @@ class DistClassifier(flair.nn.Model):
 
         self.beta = beta
 
-        self.max_distance = max_distance
-
         self.loss_max_weight = loss_max_weight
-        
+                            
         self.regression = regression
 
-        if self.loss_max_weight > 1:
-            step = (self.loss_max_weight - 1) / self.max_distance
-
-            weight_list = [1. + i * step for i in range(self.max_distance + 1)]
-
-            self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
-
-        else:
-            self.loss_weights = None
+        self.regr_loss_step = regr_loss_step
 
         if not regression:
-        # iput size is two times wordembedding size since we use pair of words as input
-        # the output size is max_distance + 1, i.e. we allow 0,1,...,max_distance words between pairs
+            self.max_distance = max_distance
+            
+            # weights for loss function
+            if self.loss_max_weight > 1:
+                step = (self.loss_max_weight - 1) / self.max_distance
+
+                weight_list = [1. + i * step for i in range(self.max_distance + 1)]
+
+                self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
+                
+            else:
+                self.loss_weights = None
+            
+            # iput size is two times wordembedding size since we use pair of words as input
+            # the output size is max_distance + 1, i.e. we allow 0,1,...,max_distance words between pairs
             self.decoder = nn.Linear(
                 self.word_embeddings.embedding_length * 2, self.max_distance + 1)
             
             self.loss_function = nn.CrossEntropyLoss(weight=self.loss_weights)
+        
+        # regression
         else:
-            self.decoder = nn.Linear(
-                self.word_embeddings.embedding_length * 2, 1)# regression
+            self.max_distance = float('inf')
             
-            self.loss_function = nn.MSELoss()
+            # iput size is two times wordembedding size since we use pair of words as input
+            # the output size is 1
+            self.decoder = nn.Linear(
+                self.word_embeddings.embedding_length * 2, 1)
+            
+            if regr_loss_step > 0:
+                self.loss_function = self.weighted_mse_loss
+            else:
+                self.loss_function = nn.MSELoss()
             
 
         nn.init.xavier_uniform_(self.decoder.weight)
@@ -992,6 +1007,13 @@ class DistClassifier(flair.nn.Model):
 
         # auto-spawn on GPU if available
         self.to(flair.device)
+        
+        
+    # all input should be tensors
+    def weighted_mse_loss(self,predictions, target):
+        weight = 1 + self.regr_loss_step * target
+        return (weight * ((predictions - target) ** 2)).mean()
+        
 
     # forward allows only a single sentcence!!
     def forward(self, sentence: Sentence):
@@ -1024,7 +1046,8 @@ class DistClassifier(flair.nn.Model):
             "max_distance": self.max_distance,
             "beta": self.beta,
             "loss_max_weight": self.loss_max_weight,
-            "regression": self.regression
+            "regression": self.regression,
+            "regr_loss_step": self.regr_loss_step
         }
         return model_state
 
@@ -1038,7 +1061,8 @@ class DistClassifier(flair.nn.Model):
             max_distance=state["max_distance"],
             beta=beta,
             loss_max_weight=weight,
-            regression=state["regression"]
+            regression=state["regression"],
+            regr_loss_step=state["regr_loss_step"]
         )
 
         model.load_state_dict(state["state_dict"])
@@ -1080,7 +1104,6 @@ class DistClassifier(flair.nn.Model):
 
         labels = torch.cat(indices, 0).to(flair.device)
         
-
         return self.loss_function(scores, labels)
 
     # only single sentences as input
@@ -1168,7 +1191,6 @@ class DistClassifier(flair.nn.Model):
 
             eval_loss /= len(sentences)
 
-            ##TODO: not saving lines yet
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
