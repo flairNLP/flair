@@ -2244,7 +2244,7 @@ class WEIBO_NER(ColumnCorpus):
 
 def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
     """
-    Function that converts the UFSAC format into the needed CoNLL format. The IOB2 format will be used if chunks
+    Function that converts the UFSAC format into the needed CoNLL format. The IOB2 format will be used if
     chunks reside within the data.
     Parameters
     ----------
