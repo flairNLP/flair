@@ -16,7 +16,7 @@ tabulate
 langdetect
 lxml
 ftfy
-sentencepiece!=0.1.92
+sentencepiece<=0.1.91
 konoha<5.0.0,>=4.0.0
 janome
 gdown
