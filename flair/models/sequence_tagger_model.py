@@ -1358,7 +1358,7 @@ class SimpleSequenceTagger(flair.nn.Model):
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
 
-        model = SequenceTagger(
+        model = SimpleSequenceTagger(
             embeddings=state["embeddings"],
             tag_dictionary=state["tag_dictionary"],
             tag_type=state["tag_type"],
