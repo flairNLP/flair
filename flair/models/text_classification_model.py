@@ -925,3 +925,17 @@ class TARSClassifier(TextClassifier):
             self._drop_task(TARSClassifier.static_adhoc_task_identifier)
 
         return
+
+    @staticmethod
+    def _fetch_model(model_name) -> str:
+
+        model_map = {}
+        hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
+
+        model_map["tars-base"] = "/".join([hu_path, "tars-base", "tars-base.pt"])
+
+        cache_dir = Path("models")
+        if model_name in model_map:
+            model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
+
+        return model_name
