@@ -34,14 +34,14 @@ class TextClassifier(flair.nn.Model):
     """
 
     def __init__(
-        self,
-        document_embeddings: flair.embeddings.DocumentEmbeddings,
-        label_dictionary: Dictionary,
-        label_type: str = None,
-        multi_label: bool = None,
-        multi_label_threshold: float = 0.5,
-        beta: float = 1.0,
-        loss_weights: Dict[str, float] = None,
+            self,
+            document_embeddings: flair.embeddings.DocumentEmbeddings,
+            label_dictionary: Dictionary,
+            label_type: str = None,
+            multi_label: bool = None,
+            multi_label_threshold: float = 0.5,
+            beta: float = 1.0,
+            loss_weights: Dict[str, float] = None,
     ):
         """
         Initializes a TextClassifier
@@ -142,7 +142,7 @@ class TextClassifier(flair.nn.Model):
         return model
 
     def forward_loss(
-        self, data_points: Union[List[Sentence], Sentence]
+            self, data_points: Union[List[Sentence], Sentence]
     ) -> torch.tensor:
 
         scores = self.forward(data_points)
@@ -167,14 +167,14 @@ class TextClassifier(flair.nn.Model):
         return scores, loss
 
     def predict(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        mini_batch_size: int = 32,
-        multi_class_prob: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss = False,
-        embedding_storage_mode="none",
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size: int = 32,
+            multi_class_prob: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
     ):
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
@@ -255,12 +255,12 @@ class TextClassifier(flair.nn.Model):
                 return overall_loss / batch_no
 
     def evaluate(
-        self,
-        sentences: Union[List[DataPoint], Dataset],
-        out_path: Union[str, Path] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
-        num_workers: int = 8,
+            self,
+            sentences: Union[List[DataPoint], Dataset],
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: int = 8,
     ) -> (Result, float):
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
@@ -302,9 +302,9 @@ class TextClassifier(flair.nn.Model):
                 predictions = [sentence.get_labels('predicted') for sentence in batch]
 
                 for sentence, prediction, true_value in zip(
-                    sentences_for_batch,
-                    predictions,
-                    true_values_for_batch,
+                        sentences_for_batch,
+                        predictions,
+                        true_values_for_batch,
                 ):
                     eval_line = "{}\t{}\t{}\n".format(
                         sentence, true_value, prediction
@@ -312,7 +312,7 @@ class TextClassifier(flair.nn.Model):
                     lines.append(eval_line)
 
                 for predictions_for_sentence, true_values_for_sentence in zip(
-                    predictions, true_values_for_batch
+                        predictions, true_values_for_batch
                 ):
 
                     true_values_for_sentence = [label.value for label in true_values_for_sentence]
@@ -348,9 +348,11 @@ class TextClassifier(flair.nn.Model):
                                                                   target_names=target_names, zero_division=0)
 
             # get scores
-            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0), 4)
+            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0),
+                                  4)
             accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
-            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro', zero_division=0), 4)
+            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro', zero_division=0),
+                                  4)
             precision_score = round(metrics.precision_score(y_true, y_pred, average='macro', zero_division=0), 4)
             recall_score = round(metrics.recall_score(y_true, y_pred, average='macro', zero_division=0), 4)
 
@@ -396,7 +398,7 @@ class TextClassifier(flair.nn.Model):
         return filtered_sentences
 
     def _obtain_labels(
-        self, scores: List[List[float]], predict_prob: bool = False
+            self, scores: List[List[float]], predict_prob: bool = False
     ) -> List[List[Label]]:
         """
         Predicts the labels of sentences.
@@ -487,8 +489,8 @@ class TextClassifier(flair.nn.Model):
         model_map["sentiment-fast"] = "/".join(
             [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn.pt"]
         )
-        
-        #Communicative Functions Model
+
+        # Communicative Functions Model
         model_map["communicative-functions"] = "/".join(
             [hu_path, "comfunc", "communicative-functions-v0.5b.pt"]
         )
@@ -593,7 +595,7 @@ class TARSClassifier(TextClassifier):
 
     def add_and_switch_to_new_task(self,
                                    task_name,
-                                   label_dictionary: Union[List, Set, Dictionary],
+                                   label_dictionary: Union[List, Set, Dictionary, str],
                                    multi_label: bool = None,
                                    multi_label_threshold: float = 0.5,
                                    label_type: str = None,
@@ -612,7 +614,7 @@ class TARSClassifier(TextClassifier):
         if task_name in self.task_specific_attributes:
             log.warning("Task `%s` already exists in TARS model. Switching to it.", task_name)
         else:
-            if isinstance(label_dictionary, (list, set)):
+            if isinstance(label_dictionary, (list, set, str)):
                 if multi_label is None:
                     multi_label = False
                 label_dictionary = TARSClassifier._make_ad_hoc_label_dictionary(label_dictionary,
@@ -670,7 +672,7 @@ class TARSClassifier(TextClassifier):
             for column_index, other_label in enumerate(all_labels):
                 if label != other_label:
                     negative_label_probabilities[label][other_label] = \
-                    similarity_matrix[row_index][column_index]
+                        similarity_matrix[row_index][column_index]
         self.label_nearest_map = negative_label_probabilities
 
     def train(self, mode=True):
@@ -705,7 +707,6 @@ class TARSClassifier(TextClassifier):
             plausible_label_probabilities += 1e-08
             plausible_label_probabilities /= np.sum(plausible_label_probabilities)
 
-            
             if len(plausible_labels) > 0:
                 num_samples = min(self.num_negative_labels_to_sample, len(plausible_labels))
                 sampled_negative_labels = np.random.choice(plausible_labels,
@@ -853,8 +854,8 @@ class TARSClassifier(TextClassifier):
         return [Label(label, conf.item())]
 
     @staticmethod
-    def _make_ad_hoc_label_dictionary(candidate_label_set: set = None,
-                                      multi_label=True) -> Dictionary:
+    def _make_ad_hoc_label_dictionary(candidate_label_set: Union[List[str], Set[str], str],
+                                      multi_label: bool = True) -> Dictionary:
         """
         Creates a dictionary given a set of candidate labels
         :return: dictionary of labels
@@ -862,6 +863,11 @@ class TARSClassifier(TextClassifier):
         label_dictionary: Dictionary = Dictionary(add_unk=False)
         label_dictionary.multi_label = multi_label
 
+        # make list if only one candidate label is passed
+        if isinstance(candidate_label_set, str):
+            candidate_label_set = {candidate_label_set}
+
+        # if list is passed, convert to set
         if not isinstance(candidate_label_set, set):
             candidate_label_set = set(candidate_label_set)
 
@@ -880,7 +886,10 @@ class TARSClassifier(TextClassifier):
         else:
             log.warning("No task exists with the name `%s`.", task_name)
 
-    def predict_zero_shot(self, sentences, candidate_label_set, multi_label=False):
+    def predict_zero_shot(self,
+                          sentences: Union[List[Sentence], Sentence],
+                          candidate_label_set: Union[List[str], Set[str], str],
+                          multi_label: bool = False):
         """
         Method to make zero shot predictions from the TARS model
         :param sentences: input sentence objects to classify
@@ -894,8 +903,7 @@ class TARSClassifier(TextClassifier):
             log.warning("Provided candidate_label_set is empty")
             return
 
-        label_dictionary = TARSClassifier._make_ad_hoc_label_dictionary(candidate_label_set,
-                                                                        multi_label)
+        label_dictionary = TARSClassifier._make_ad_hoc_label_dictionary(candidate_label_set, multi_label)
 
         # note current task
         existing_current_task = self.current_task
@@ -905,7 +913,7 @@ class TARSClassifier(TextClassifier):
                                         label_dictionary, multi_label)
 
         try:
-            #make zero shot predictions
+            # make zero shot predictions
             self.predict(sentences)
         except:
             log.error("Something went wrong during prediction. Ensure you pass Sentence objects.")
