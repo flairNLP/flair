@@ -237,9 +237,7 @@ class TextClassifier(flair.nn.Model):
                 if return_loss:
                     overall_loss += loss
 
-                predicted_labels = self._obtain_labels(
-                    scores, predict_prob=multi_class_prob
-                )
+                predicted_labels = self._obtain_labels(scores, predict_prob=multi_class_prob)
 
                 for (sentence, labels) in zip(batch, predicted_labels):
                     for label in labels:
@@ -630,13 +628,11 @@ class TARSClassifier(TextClassifier):
 
         self.switch_to_task(task_name)
 
-    def list_existing_tasks(self):
+    def list_existing_tasks(self) -> Set[str]:
         """
         Lists existing tasks in the loaded TARS model on the console.
         """
-        print("Existing tasks are:")
-        for task_name in self.task_specific_attributes:
-            print(task_name)
+        return set(self.task_specific_attributes.keys())
 
     def _get_cleaned_up_label(self, label):
         """
@@ -849,9 +845,13 @@ class TARSClassifier(TextClassifier):
 
     def _get_single_label(self, label_scores) -> List[Label]:
         conf, idx = torch.max(label_scores, 0)
-        label = self.label_dictionary.get_item_for_index(idx.item())
-
-        return [Label(label, conf.item())]
+        # TARS does not do a softmax, so confidence of the best predicted class might be very low.
+        # Therefore enforce a min confidence of 0.5 for a match.
+        if conf > 0.5:
+            label = self.label_dictionary.get_item_for_index(idx.item())
+            return [Label(label, conf.item())]
+        else:
+            return []
 
     @staticmethod
     def _make_ad_hoc_label_dictionary(candidate_label_set: Union[List[str], Set[str], str],
@@ -925,6 +925,19 @@ class TARSClassifier(TextClassifier):
             self._drop_task(TARSClassifier.static_adhoc_task_identifier)
 
         return
+
+    def predict_all_tasks(self, sentences: Union[List[Sentence], Sentence]):
+
+        # remember current task
+        existing_current_task = self.current_task
+
+        # predict with each task model
+        for task in self.list_existing_tasks():
+            self.switch_to_task(task)
+            self.predict(sentences, label_name=task)
+
+        # switch to the pre-existing task
+        self.switch_to_task(existing_current_task)
 
     @staticmethod
     def _fetch_model(model_name) -> str:
