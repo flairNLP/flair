@@ -7,6 +7,7 @@ import torch.nn as nn
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 import numpy as np
+from math import floor
 
 import sklearn.metrics as metrics
 from sklearn.metrics.pairwise import cosine_similarity
@@ -1152,6 +1153,8 @@ class DistClassifier(flair.nn.Model):
         
         with torch.no_grad():
             
+            buckets = [0 for _ in range(11)]
+            
             eval_loss = 0
 
             metric = MetricRegression("Evaluation")
@@ -1179,6 +1182,13 @@ class DistClassifier(flair.nn.Model):
                         # for output text file
                         eval_line = "({},{})\t{}\t{}\n".format(i, j, j - i - 1, predictions[numberOfPairs])
                         lines.append(eval_line)
+                        
+                        #for buckets
+                        dist = abs(j - i - 1 - predictions[numberOfPairs])
+                        if dist >= 10:
+                            buckets[10] += 1
+                        else:
+                            buckets[floor(dist)] += 1
 
                         numberOfPairs += 1
                         
@@ -1189,7 +1199,14 @@ class DistClassifier(flair.nn.Model):
 
                 store_embeddings(sentence, embedding_storage_mode)
 
-            eval_loss /= len(sentences)
+            eval_loss /= len(sentences)# w.r.t self.loss
+            
+            eval_line = "Number of Sentences: {}\nBuckets:\n | 0-1 | 1-2 | 2-3 | 3-4 | 4-5 | 5-6 | 6-7 | 7-8 | 8-9 | 9-10 | >10 |\n".format(len(sentences))
+            lines.append(eval_line)
+            eval_line = "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |".format(buckets[0],buckets[1],buckets[2],buckets[3],
+                                                                                          buckets[4],buckets[5],buckets[6],buckets[7],
+                                                                                          buckets[8],buckets[9],buckets[10])
+            lines.append(eval_line)
 
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
