@@ -91,6 +91,7 @@ class ModelTrainer:
         amp_opt_level: str = "O1",
         eval_on_train_fraction=0.0,
         eval_on_train_shuffle=False,
+        save_model_at_each_epoch=False,
         **kwargs,
     ) -> dict:
         """
@@ -124,6 +125,7 @@ class ModelTrainer:
         if 'dev' the size is determined from dev set size
         :param eval_on_train_shuffle: if True the train data fraction is determined on the start of training
         and kept fixed during training, otherwise it's sampled at beginning of each epoch
+        :param save_model_at_each_epoch: If True, at each epoch the thus far trained model will be saved
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
@@ -587,6 +589,11 @@ class ModelTrainer:
                         self.model.load_state_dict(last_epoch_model_state_dict)
                         self.model.save(base_path / "pre-best-model.pt")
                         self.model.load_state_dict(current_state_dict)
+                        
+                if save_model_at_each_epoch:
+                    print("saving model of current epoch")
+                    model_name = "model_epoch_" + str(self.epoch) + ".pt"
+                    self.model.save(base_path / model_name)
 
             # if we do not use dev data for model selection, save final model
             if save_final_model and not param_selection_mode:
