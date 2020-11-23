@@ -109,6 +109,22 @@ You can write your own tokenization routine. Check the code of `flair.data.Token
  (e.g. `flair.tokenization.SegtokTokenizer` or `flair.tokenization.SpacyTokenizer`) to get an idea of how to add 
  your own tokenization method.  
 
+### Using pretokenized sequences
+You can pass pass a pretokenized sequence as list of words, e.g.
+
+```python
+from flair.data import Sentence
+my_sent = Sentence(['The', 'grass', 'is', 'green', '.'])
+print(my_sent)
+```
+
+This should print:
+
+```console
+Sentence: "The grass is green ."   [− Tokens: 5]
+```
+
+
 ## Adding Labels
 
 In Flair, any data point can be labeled. For instance, you can label a word or label a sentence:
