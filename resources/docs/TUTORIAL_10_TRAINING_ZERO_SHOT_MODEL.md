@@ -130,7 +130,7 @@ is because TARS remembers the last task it was trained to do and will do this by
 Of course, more than 4 training examples works even better. Try it out! 
 
 
-## Use Case #3: Training your own Base TARS Model
+## Use Case #3: Training Your Own Base TARS Model
 
 Our base TARS model was trained for English using the bert-base-uncased model with 9 text classification
 datasets. But for many reasons you might
