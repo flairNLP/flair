@@ -6,15 +6,6 @@ This model is implemented in Flair by the `TARSClassifier` class.
  
 In this tutorial, we will show you different ways of using TARS: 
 
- 1. [Use case 1: Use pre-trained TARS as zero-shot classifier.](#use-case-1-as-a-regular-text-classifier) 
-    Sometimes you need to classify text but have no training data at all. Zero-shot TARS might be able to help.
-    
- 2. [Use case 2: Use pre-trained TARS as few-shot classifier.](#use-case-1-as-a-regular-text-classifier) 
-    While TARS can do zero-shot, even labeling a handful of examples for your task will greatly improve accuracy.
-    Follow these instructions to train TARS with a few examples to do new text classification tasks.
-    
- 3. [Use case 3: Training your own base TARS model.](#use-case-1-as-a-regular-text-classifier) For many reasons, 
-    you might want to train your own base TARS model, using a different transformer or for a new language.
     
 ## Use Case #1: As a Zero-shot Predictor for New Classes
 
@@ -42,7 +33,7 @@ tars.predict_zero_shot(sentence, classes)
 print(sentence)
 ```
 The output should look like:
-```
+```console
 Sentence: "I am so glad you liked it !"   [− Tokens: 8  − Sentence-Labels: {'label': [happy (0.9312)]}]
 ```
 
@@ -137,16 +128,6 @@ The model should work much better now! Note that now we just used `predict` inst
 is because TARS remembers the last task it was trained to do and will do this by default.
 
 Of course, more than 4 training examples works even better. Try it out! 
-
-The output should look like:
-```
-Sentence: "I am so glad you liked it !"   [− Tokens: 8  − Sentence-Labels: {'label': [happy (0.9312)]}]
-```
-
-So the label "happy" was chosen for this sentence. 
-
-Try it out with some other labels! Zero-shot prediction will sometimes (*but not always*) work remarkably well. 
-
 
 
 ## Use Case #3: Training your own Base TARS Model
