@@ -1120,7 +1120,7 @@ class SequenceTagger(flair.nn.Model):
             from transformers import file_utils
 
             url = file_utils.hf_bucket_url(model_id=model_name, revision=revision, filename=hf_model_name)
-            model_name = file_utils.cached_path(url_or_filename=url)
+            model_name = file_utils.cached_path(url_or_filename=url, cache_dir=flair.cache_root)
 
         return model_name
 
