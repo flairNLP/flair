@@ -2273,7 +2273,15 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
 
 
     with open(file=data_file, mode='r', encoding=encoding) as f: # get file lines
+
         lines = f.readlines()
+
+        # check if file is already converted
+        test_line = lines[0].split()
+
+        if '<c' not in test_line[0]:  # check if file is already in CoNLL
+
+            return
 
     with open(file=data_file, mode='w', encoding=encoding) as f: # alter file to CoNLL format
 
@@ -2399,10 +2407,6 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
             elif line_list[0] == '</sentence>':  # handle end of sentence
 
                 f.write('\n')
-
-            elif not ('<' in line_list[0]):
-
-                return
 
 
 class WSD_UFSAC(ColumnCorpus):
