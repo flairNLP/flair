@@ -1,13 +1,14 @@
-# Tutorial 10: Training a Zero-shot Classifier (TARS)
+# Tutorial 10: Few-Shot and Zero-Shot Classification (TARS)
 
 Task-aware representation of sentences (TARS) was introduced by Halder et al. (2020) as a simple and effective 
-method for **few-shot and even zero-shot learning for text classification**. 
+method for **few-shot and even zero-shot learning for text classification**. This means you can classify
+text without (m)any training examples. 
 This model is implemented in Flair by the `TARSClassifier` class.
  
 In this tutorial, we will show you different ways of using TARS: 
 
     
-## Use Case #1: As a Zero-shot Predictor for New Classes
+## Use Case #1: Classify Text Without Training Data (Zero-Shot)
 
 In some cases, you might not have any training data for the text classification task you want to solve. In this case, 
 you can load our default TARS model and do zero-shot prediction. That is, you use the `predict_zero_shot` method
@@ -42,7 +43,7 @@ So the label "happy" was chosen for this sentence.
 Try it out with some other labels! Zero-shot prediction will sometimes (*but not always*) work remarkably well. 
 
 
-## Use Case #2: As a Few-shot Predictor for New Classes
+## Use Case #2: Classify Text With Very Little Training Data (Few-Shot)
  
 While TARS can predict new classes even without training data, it's always better to provide some training examples.
 TARS can learn remarkably well from as few as 1 - 10 training examples. 
@@ -54,14 +55,14 @@ For instance, assume you want to predict whether a text talks about "food" or "d
 tars = TARSClassifier.load('tars-base')
 
 # 2. Prepare a test sentence
-sentence = flair.data.Sentence("I am so glad you like coffee!")
+sentence = flair.data.Sentence("I am so glad you like burritos!")
 
 # 3. Predict zero-shot for classes "food" and "drink", and print results 
 tars.predict_zero_shot(sentence, ["food", "drink"])
 print(sentence)
 ```
 
-In this case, zero-shot prediction fails to predict "drink" for the sentence "I am so glad you like coffee!". 
+In this case, zero-shot prediction false predicts "drink" for the sentence "I am so glad you like burritos!". 
 
 To improve this, let's first create a small corpus of 4 training and 2 testing examples: 
 
@@ -130,7 +131,7 @@ is because TARS remembers the last task it was trained to do and will do this by
 Of course, more than 4 training examples works even better. Try it out! 
 
 
-## Use Case #3: Training Your Own Base TARS Model
+## Use Case #3: Train Your Own Base TARS Model
 
 Our base TARS model was trained for English using the bert-base-uncased model with 9 text classification
 datasets. But for many reasons you might
