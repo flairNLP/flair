@@ -1001,10 +1001,7 @@ class DistClassifier(flair.nn.Model):
             else:
                 self.loss_function = nn.MSELoss()
             
-
         nn.init.xavier_uniform_(self.decoder.weight)
-
-        
 
         # auto-spawn on GPU if available
         self.to(flair.device)
@@ -1012,7 +1009,9 @@ class DistClassifier(flair.nn.Model):
         
     # all input should be tensors
     def weighted_mse_loss(self,predictions, target):
+        
         weight = 1 + self.regr_loss_step * target
+        
         return (weight * ((predictions - target) ** 2)).mean()
         
 
@@ -1161,6 +1160,12 @@ class DistClassifier(flair.nn.Model):
 
             lines: List[str] = []
             
+            max_dist_plus_one = max([len(sent) for sent in sentences]) - 1
+            
+            num_occurences = [0 for _ in range(max_dist_plus_one)]
+            
+            cumulated_values = [0 for _ in range(max_dist_plus_one)]
+            
             for sentence in sentences:
                 
                 if len(sentence) < 2:  # we need at least 2 words per sentence
@@ -1177,18 +1182,25 @@ class DistClassifier(flair.nn.Model):
                 lines.append(sentence.to_tokenized_string() + '\n')
                 for i in range(numberOfWords):
                     for j in range(i + 1, min(i + self.max_distance + 2, numberOfWords)):
-                        true_values_for_sentence.append(j - i - 1)
+                        true_dist = j - i - 1
+                        pred = predictions[numberOfPairs]
+                        
+                        true_values_for_sentence.append(true_dist)
 
                         # for output text file
-                        eval_line = "({},{})\t{}\t{}\n".format(i, j, j - i - 1, predictions[numberOfPairs])
+                        eval_line = f"({i},{j})\t{true_dist}\t{pred:.2f}\n"
                         lines.append(eval_line)
                         
-                        #for buckets
-                        dist = abs(j - i - 1 - predictions[numberOfPairs])
-                        if dist >= 10:
+                        # for buckets
+                        error = abs(true_dist - pred)
+                        if error >= 10:
                             buckets[10] += 1
                         else:
-                            buckets[floor(dist)] += 1
+                            buckets[floor(error)] += 1
+                            
+                        # for average prediction
+                        num_occurences[true_dist] += 1
+                        cumulated_values[true_dist] += pred
 
                         numberOfPairs += 1
                         
@@ -1199,14 +1211,25 @@ class DistClassifier(flair.nn.Model):
 
                 store_embeddings(sentence, embedding_storage_mode)
 
-            eval_loss /= len(sentences)# w.r.t self.loss
+            eval_loss /= len(sentences) # w.r.t self.loss
             
-            eval_line = "Number of Sentences: {}\nBuckets:\n | 0-1 | 1-2 | 2-3 | 3-4 | 4-5 | 5-6 | 6-7 | 7-8 | 8-9 | 9-10 | >10 |\n".format(len(sentences))
+            # add some statistics to the output
+            eval_line = f"Number of Sentences: {len(sentences)}\nBuckets:\n | 0-1 | 1-2 | 2-3 | 3-4 | 4-5 | 5-6 | 6-7 | 7-8 | 8-9 | 9-10 | >10 |\n"
             lines.append(eval_line)
             eval_line = "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |".format(buckets[0],buckets[1],buckets[2],buckets[3],
                                                                                           buckets[4],buckets[5],buckets[6],buckets[7],
                                                                                           buckets[8],buckets[9],buckets[10])
             lines.append(eval_line)
+            lines.append("\nAverage predicted values per distance:\n")
+            eval_line = ""
+            for i in range(max_dist_plus_one):
+                eval_line += str(i) + ": " + f"{cumulated_values[i]/num_occurences[i]:.2f}" + " "
+                if i!=0 and i%15==0:
+                    eval_line += "\n"
+            
+            lines.append(eval_line)
+                
+            
 
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
