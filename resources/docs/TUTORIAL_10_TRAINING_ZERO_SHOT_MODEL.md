@@ -22,7 +22,7 @@ Just use TARS with this snippet:
 tars = TARSClassifier.load('tars-base')
 
 # 2. Prepare a test sentence
-sentence = flair.data.Sentence("I am so glad you liked it!")
+sentence = Sentence("I am so glad you liked it!")
 
 # 3. Define some classes that you want to predict using descriptive names
 classes = ["happy", "sad"]
@@ -55,7 +55,7 @@ For instance, assume you want to predict whether a text talks about "food" or "d
 tars = TARSClassifier.load('tars-base')
 
 # 2. Prepare a test sentence
-sentence = flair.data.Sentence("I am so glad you like burritos!")
+sentence = Sentence("I am so glad you like burritos!")
 
 # 3. Predict zero-shot for classes "food" and "drink", and print results 
 tars.predict_zero_shot(sentence, ["food", "drink"])
@@ -118,7 +118,7 @@ Done! Let's load the newly trained model and see if it does better:
 tars = TARSClassifier.load('resources/taggers/food_drink/final-model.pt')
 
 # 2. Prepare a test sentence
-sentence = flair.data.Sentence("I am so glad you like coffee")
+sentence = Sentence("I am so glad you like coffee")
 
 # 3. Predict for food and drink
 tars.predict(sentence)
@@ -238,22 +238,20 @@ tasks a TARS model was trained on, and then switch to one of them as needed.
 tars = TARSClassifier.load('tars-base')
 
 # 2. Check out what datasets it was trained on
-print(tars.list_existing_tasks())
+existing_tasks = tars.list_existing_tasks()
+print(f"Existing tasks are: {existing_tasks}")
 
 # 3. Switch to a particular task that exists in the above list
 tars.switch_to_task("GO_EMOTIONS")
 
 # 4. Prepare a test sentence
-sentence = flair.data.Sentence("I absolutely love this!")
+sentence = Sentence("I absolutely love this!")
 tars.predict(sentence)
 print(sentence)
 ```
 The output should look like:
 ```
-loading file resources/taggers/go_emotions/best-model.pt
-Existing tasks are:
-TREC_6
-GO_EMOTIONS
+Existing tasks are: {'AGNews', 'DBPedia', 'IMDB', 'SST', 'TREC_6', 'NEWS_CATEGORY', 'Amazon', 'Yelp', 'GO_EMOTIONS'}
 Sentence: "I absolutely love this !"   [− Tokens: 5  − Sentence-Labels: {'label': [LOVE (0.9708)]}]
 ```
 
