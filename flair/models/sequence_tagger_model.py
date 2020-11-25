@@ -1109,7 +1109,7 @@ class SequenceTagger(flair.nn.Model):
         if not Path(model_name).exists() and not model_name.startswith("http"):
             # e.g. stefan-it/flair-ner-conll03 is a valid namespace
             # and  stefan-it/flair-ner-conll03@main supports specifying a commit/branch name
-            hf_model_name = "model.bin"
+            hf_model_name = "pytorch_model.bin"
             revision = "main"
 
             if "@" in model_name:
