@@ -594,7 +594,7 @@ class TARSClassifier(TextClassifier):
     def add_and_switch_to_new_task(self,
                                    task_name,
                                    label_dictionary: Union[List, Set, Dictionary, str],
-                                   multi_label: bool = None,
+                                   multi_label: bool = True,
                                    multi_label_threshold: float = 0.5,
                                    label_type: str = None,
                                    beta: float = 1.0
@@ -605,24 +605,21 @@ class TARSClassifier(TextClassifier):
         size and negative sampling. This method does not store the resultant model onto disk.
         :param task_name: a string depicting the name of the task
         :param label_dictionary: dictionary of the labels you want to predict
-        :param multi_label: auto-detect if a corpus label dictionary is provided. Defaults to
-        False otherwise
+        :param multi_label: auto-detect if a corpus label dictionary is provided. Defaults to True otherwise
         :param multi_label_threshold: If multi-label you can set the threshold to make predictions
         """
         if task_name in self.task_specific_attributes:
             log.warning("Task `%s` already exists in TARS model. Switching to it.", task_name)
         else:
+
+            # make label dictionary if no Dictionary object is passed
             if isinstance(label_dictionary, (list, set, str)):
-                if multi_label is None:
-                    multi_label = False
-                label_dictionary = TARSClassifier._make_ad_hoc_label_dictionary(label_dictionary,
-                                                                                multi_label)
+                label_dictionary = TARSClassifier._make_ad_hoc_label_dictionary(label_dictionary, multi_label)
+
             self.task_specific_attributes[task_name] = {}
             self.task_specific_attributes[task_name]['label_dictionary'] = label_dictionary
-            self.task_specific_attributes[task_name]['multi_label'] = multi_label \
-                if multi_label is not None else label_dictionary.multi_label
-            self.task_specific_attributes[task_name]['multi_label_threshold'] = \
-                multi_label_threshold
+            self.task_specific_attributes[task_name]['multi_label'] = label_dictionary.multi_label
+            self.task_specific_attributes[task_name]['multi_label_threshold'] = multi_label_threshold
             self.task_specific_attributes[task_name]['label_type'] = label_type
             self.task_specific_attributes[task_name]['beta'] = beta
 
@@ -695,8 +692,7 @@ class TARSClassifier(TextClassifier):
                     continue
                 else:
                     plausible_labels.append(plausible_label)
-                    plausible_label_probabilities.append( \
-                        self.label_nearest_map[label][plausible_label])
+                    plausible_label_probabilities.append(self.label_nearest_map[label][plausible_label])
 
             # make sure the probabilities always sum up to 1
             plausible_label_probabilities = np.array(plausible_label_probabilities, dtype='float64')
@@ -847,11 +843,8 @@ class TARSClassifier(TextClassifier):
         conf, idx = torch.max(label_scores, 0)
         # TARS does not do a softmax, so confidence of the best predicted class might be very low.
         # Therefore enforce a min confidence of 0.5 for a match.
-        if conf > 0.5:
-            label = self.label_dictionary.get_item_for_index(idx.item())
-            return [Label(label, conf.item())]
-        else:
-            return []
+        label = self.label_dictionary.get_item_for_index(idx.item())
+        return [Label(label, conf.item())]
 
     @staticmethod
     def _make_ad_hoc_label_dictionary(candidate_label_set: Union[List[str], Set[str], str],
@@ -889,7 +882,7 @@ class TARSClassifier(TextClassifier):
     def predict_zero_shot(self,
                           sentences: Union[List[Sentence], Sentence],
                           candidate_label_set: Union[List[str], Set[str], str],
-                          multi_label: bool = False):
+                          multi_label: bool = True):
         """
         Method to make zero shot predictions from the TARS model
         :param sentences: input sentence objects to classify

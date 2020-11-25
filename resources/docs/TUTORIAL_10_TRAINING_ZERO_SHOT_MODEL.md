@@ -1,6 +1,6 @@
 # Tutorial 10: Few-Shot and Zero-Shot Classification (TARS)
 
-Task-aware representation of sentences (TARS) was introduced by Halder et al. (2020) as a simple and effective 
+Task-aware representation of sentences (TARS) was introduced by [Halder et al. (2020)](https://kishaloyhalder.github.io/pdfs/tars_coling2020.pdf) as a simple and effective 
 method for **few-shot and even zero-shot learning for text classification**. This means you can classify
 text without (m)any training examples. 
 This model is implemented in Flair by the `TARSClassifier` class.
@@ -235,17 +235,17 @@ tasks a TARS model was trained on, and then switch to one of them as needed.
 ```python
 
 # 1. Load a pre-trained TARS model
-classifier = TARSClassifier.load('tars-base')
+tars = TARSClassifier.load('tars-base')
 
 # 2. Check out what datasets it was trained on
-classifier.list_existing_tasks()
+print(tars.list_existing_tasks())
 
 # 3. Switch to a particular task that exists in the above list
-classifier.switch_to_task("GO_EMOTIONS")
+tars.switch_to_task("GO_EMOTIONS")
 
 # 4. Prepare a test sentence
 sentence = flair.data.Sentence("I absolutely love this!")
-classifier.predict(sentence)
+tars.predict(sentence)
 print(sentence)
 ```
 The output should look like:
