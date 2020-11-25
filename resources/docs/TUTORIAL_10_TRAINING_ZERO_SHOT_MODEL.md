@@ -62,7 +62,7 @@ tars.predict_zero_shot(sentence, ["food", "drink"])
 print(sentence)
 ```
 
-In this case, zero-shot prediction false predicts "drink" for the sentence "I am so glad you like burritos!". 
+In this case, zero-shot prediction falsely predicts "drink" for the sentence "I am so glad you like burritos!". 
 
 To improve this, let's first create a small corpus of 4 training and 2 testing examples: 
 
