@@ -28,6 +28,7 @@ class ColumnCorpus(Corpus):
             document_separator_token: str = None,
             skip_first_line: bool = False,
             in_memory: bool = True,
+            tag_name_map: Dict[str, str] = None,
     ):
         """
         Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
@@ -46,6 +47,7 @@ class ColumnCorpus(Corpus):
         :param skip_first_line: set to True if your dataset has a header line
         :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
         :return: a Corpus with annotated train, dev and test data
+        :param tag_name_map: Optionally map tag names to different schema.
         """
 
         # find train, dev and test files if not specified
@@ -63,6 +65,7 @@ class ColumnCorpus(Corpus):
             in_memory=in_memory,
             document_separator_token=document_separator_token,
             skip_first_line=skip_first_line,
+            tag_name_map=tag_name_map,
         )
 
         # read in test file if exists
@@ -76,6 +79,7 @@ class ColumnCorpus(Corpus):
             in_memory=in_memory,
             document_separator_token=document_separator_token,
             skip_first_line=skip_first_line,
+            tag_name_map=tag_name_map,
         ) if test_file is not None else None
 
         # read in dev file if exists
@@ -89,6 +93,7 @@ class ColumnCorpus(Corpus):
             in_memory=in_memory,
             document_separator_token=document_separator_token,
             skip_first_line=skip_first_line,
+            tag_name_map=tag_name_map,
         ) if dev_file is not None else None
 
         super(ColumnCorpus, self).__init__(train, dev, test, name=str(data_folder))
@@ -109,6 +114,7 @@ class ColumnDataset(FlairDataset):
             document_separator_token: str = None,
             encoding: str = "utf-8",
             skip_first_line: bool = False,
+            tag_name_map: Dict[str, str] = None,
     ):
         """
         Instantiates a column dataset (typically used for sequence labeling or word-level prediction).
@@ -123,6 +129,7 @@ class ColumnDataset(FlairDataset):
         :param document_separator_token: If provided, multiple sentences are read into one object. Provide the string token
         that indicates that a new document begins
         :param skip_first_line: set to True if your dataset has a header line
+        :param tag_name_map: Optionally map tag names to different schema.
         """
         if type(path_to_column_file) is str:
             path_to_column_file = Path(path_to_column_file)
@@ -133,6 +140,7 @@ class ColumnDataset(FlairDataset):
         self.column_delimiter = column_delimiter
         self.comment_symbol = comment_symbol
         self.document_separator_token = document_separator_token
+        self.tag_name_map = tag_name_map
 
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
@@ -210,9 +218,18 @@ class ColumnDataset(FlairDataset):
         for column in self.column_name_map:
             if len(fields) > column:
                 if column != self.text_column and self.column_name_map[column] != self.SPACE_AFTER_KEY:
-                    token.add_label(
-                        self.column_name_map[column], fields[column]
-                    )
+                    task = self.column_name_map[column] # for example 'pos'
+                    tag = fields[column] 
+                    if tag.count("-") >= 1: # tag with prefix, for example tag='B-OBJ'
+                        split_at_first_hyphen = tag.split("-", 1)
+                        tagging_format_prefix = split_at_first_hyphen[0]
+                        tag_without_tagging_format = split_at_first_hyphen[1]
+                        if self.tag_name_map and tag_without_tagging_format in self.tag_name_map.keys():
+                            tag = tagging_format_prefix + "-" + self.tag_name_map[tag_without_tagging_format] # for example, transforming 'B-OBJ' to 'B-part of speech object'
+                    else: # tag without prefix, for example tag='PPER'
+                        if self.tag_name_map and tag in self.tag_name_map.keys():
+                            tag = self.tag_name_map[tag] # for example, transforming 'PPER' to 'person'
+                    token.add_label(task, tag)
                 if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == '-':
                     token.whitespace_after = False
         return token
@@ -273,6 +290,7 @@ class BIOFID(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
+            tag_name_map: Dict[str, str] = None,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -295,7 +313,7 @@ class BIOFID(ColumnCorpus):
         cached_path(f"{biofid_path}test.conll", Path("datasets") / dataset_name)
 
         super(BIOFID, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, tag_name_map=tag_name_map,
         )
 
 
@@ -306,6 +324,7 @@ class CONLL_03(ColumnCorpus):
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            tag_name_map: Dict[str, str] = None,
     ):
         """
         Initialize the CoNLL-03 corpus. This is only possible if you've manually downloaded it to your machine.
@@ -317,6 +336,7 @@ class CONLL_03(ColumnCorpus):
         POS tags or chunks respectively
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        :param tag_name_map: Optionally map tag names to different schema.
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -347,6 +367,7 @@ class CONLL_03(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            tag_name_map=tag_name_map,
         )
 
 
@@ -357,6 +378,7 @@ class CONLL_03_GERMAN(ColumnCorpus):
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            tag_name_map: Dict[str, str] = None,
     ):
         """
         Initialize the CoNLL-03 corpus for German. This is only possible if you've manually downloaded it to your machine.
@@ -368,6 +390,7 @@ class CONLL_03_GERMAN(ColumnCorpus):
         word lemmas, POS tags or chunks respectively
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        :param tag_name_map: Optionally map tag names to different schema.
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -398,6 +421,7 @@ class CONLL_03_GERMAN(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            tag_name_map=tag_name_map,
         )
 
 
@@ -1479,6 +1503,7 @@ class EUROPARL_NER_GERMAN(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = False,
+            tag_name_map: Dict[str, str] = None,
     ):
         """
         Initialize the EUROPARL_NER_GERMAN corpus. The first time you call this constructor it will automatically
@@ -1488,6 +1513,7 @@ class EUROPARL_NER_GERMAN(ColumnCorpus):
         :param tag_to_bioes: 'ner' by default, should not be changed.
         :param in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        :param tag_name_map: Optionally map tag names to different schema.
         """
 
         if type(base_path) == str:
@@ -1519,7 +1545,8 @@ class EUROPARL_NER_GERMAN(ColumnCorpus):
             encoding="latin-1",
             in_memory=in_memory,
             train_file='ep-96-04-16.conll',
-            test_file='ep-96-04-15.conll'
+            test_file='ep-96-04-15.conll',
+            tag_name_map=tag_name_map,
         )
 
 
