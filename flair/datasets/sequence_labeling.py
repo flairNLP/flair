@@ -28,7 +28,7 @@ class ColumnCorpus(Corpus):
             document_separator_token: str = None,
             skip_first_line: bool = False,
             in_memory: bool = True,
-            tag_name_map: Dict[str, str] = None,
+            label_name_map: Dict[str, str] = None,
     ):
         """
         Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
@@ -47,7 +47,7 @@ class ColumnCorpus(Corpus):
         :param skip_first_line: set to True if your dataset has a header line
         :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
         :return: a Corpus with annotated train, dev and test data
-        :param tag_name_map: Optionally map tag names to different schema.
+        :param label_name_map: Optionally map tag names to different schema.
         """
 
         # find train, dev and test files if not specified
@@ -65,7 +65,7 @@ class ColumnCorpus(Corpus):
             in_memory=in_memory,
             document_separator_token=document_separator_token,
             skip_first_line=skip_first_line,
-            tag_name_map=tag_name_map,
+            label_name_map=label_name_map,
         )
 
         # read in test file if exists
@@ -79,7 +79,7 @@ class ColumnCorpus(Corpus):
             in_memory=in_memory,
             document_separator_token=document_separator_token,
             skip_first_line=skip_first_line,
-            tag_name_map=tag_name_map,
+            label_name_map=label_name_map,
         ) if test_file is not None else None
 
         # read in dev file if exists
@@ -93,7 +93,7 @@ class ColumnCorpus(Corpus):
             in_memory=in_memory,
             document_separator_token=document_separator_token,
             skip_first_line=skip_first_line,
-            tag_name_map=tag_name_map,
+            label_name_map=label_name_map,
         ) if dev_file is not None else None
 
         super(ColumnCorpus, self).__init__(train, dev, test, name=str(data_folder))
@@ -114,7 +114,7 @@ class ColumnDataset(FlairDataset):
             document_separator_token: str = None,
             encoding: str = "utf-8",
             skip_first_line: bool = False,
-            tag_name_map: Dict[str, str] = None,
+            label_name_map: Dict[str, str] = None,
     ):
         """
         Instantiates a column dataset (typically used for sequence labeling or word-level prediction).
@@ -129,7 +129,7 @@ class ColumnDataset(FlairDataset):
         :param document_separator_token: If provided, multiple sentences are read into one object. Provide the string token
         that indicates that a new document begins
         :param skip_first_line: set to True if your dataset has a header line
-        :param tag_name_map: Optionally map tag names to different schema.
+        :param label_name_map: Optionally map tag names to different schema.
         """
         if type(path_to_column_file) is str:
             path_to_column_file = Path(path_to_column_file)
@@ -140,7 +140,7 @@ class ColumnDataset(FlairDataset):
         self.column_delimiter = column_delimiter
         self.comment_symbol = comment_symbol
         self.document_separator_token = document_separator_token
-        self.tag_name_map = tag_name_map
+        self.label_name_map = label_name_map
 
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
@@ -224,11 +224,11 @@ class ColumnDataset(FlairDataset):
                         split_at_first_hyphen = tag.split("-", 1)
                         tagging_format_prefix = split_at_first_hyphen[0]
                         tag_without_tagging_format = split_at_first_hyphen[1]
-                        if self.tag_name_map and tag_without_tagging_format in self.tag_name_map.keys():
-                            tag = tagging_format_prefix + "-" + self.tag_name_map[tag_without_tagging_format] # for example, transforming 'B-OBJ' to 'B-part of speech object'
+                        if self.label_name_map and tag_without_tagging_format in self.label_name_map.keys():
+                            tag = tagging_format_prefix + "-" + self.label_name_map[tag_without_tagging_format] # for example, transforming 'B-OBJ' to 'B-part of speech object'
                     else: # tag without prefix, for example tag='PPER'
-                        if self.tag_name_map and tag in self.tag_name_map.keys():
-                            tag = self.tag_name_map[tag] # for example, transforming 'PPER' to 'person'
+                        if self.label_name_map and tag in self.label_name_map.keys():
+                            tag = self.label_name_map[tag] # for example, transforming 'PPER' to 'person'
                     token.add_label(task, tag)
                 if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == '-':
                     token.whitespace_after = False
@@ -290,7 +290,7 @@ class BIOFID(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            tag_name_map: Dict[str, str] = None,
+            **corpusargs,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -313,7 +313,7 @@ class BIOFID(ColumnCorpus):
         cached_path(f"{biofid_path}test.conll", Path("datasets") / dataset_name)
 
         super(BIOFID, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, tag_name_map=tag_name_map,
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs,
         )
 
 
@@ -324,7 +324,7 @@ class CONLL_03(ColumnCorpus):
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
             document_as_sequence: bool = False,
-            tag_name_map: Dict[str, str] = None,
+            **corpusargs,
     ):
         """
         Initialize the CoNLL-03 corpus. This is only possible if you've manually downloaded it to your machine.
@@ -336,7 +336,6 @@ class CONLL_03(ColumnCorpus):
         POS tags or chunks respectively
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
-        :param tag_name_map: Optionally map tag names to different schema.
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -367,7 +366,7 @@ class CONLL_03(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
-            tag_name_map=tag_name_map,
+            **corpusargs,
         )
 
 
@@ -378,7 +377,7 @@ class CONLL_03_GERMAN(ColumnCorpus):
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
             document_as_sequence: bool = False,
-            tag_name_map: Dict[str, str] = None,
+            **corpusargs,
     ):
         """
         Initialize the CoNLL-03 corpus for German. This is only possible if you've manually downloaded it to your machine.
@@ -390,7 +389,6 @@ class CONLL_03_GERMAN(ColumnCorpus):
         word lemmas, POS tags or chunks respectively
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
-        :param tag_name_map: Optionally map tag names to different schema.
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -421,7 +419,7 @@ class CONLL_03_GERMAN(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
-            tag_name_map=tag_name_map,
+            **corpusargs,
         )
 
 
@@ -432,6 +430,7 @@ class CONLL_03_DUTCH(ColumnCorpus):
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize the CoNLL-03 corpus for Dutch. The first time you call this constructor it will automatically
@@ -470,6 +469,7 @@ class CONLL_03_DUTCH(ColumnCorpus):
             encoding="latin-1",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            **corpusargs,
         )
 
 
@@ -481,6 +481,7 @@ class WNUT_2020_NER(ColumnCorpus):
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize the WNUT_2020_NER corpus. The first time you call this constructor it will automatically
@@ -540,6 +541,7 @@ class WNUT_2020_NER(ColumnCorpus):
             encoding="utf-8",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            **corpusargs,
         )
 
 
@@ -550,6 +552,7 @@ class WIKIGOLD_NER(ColumnCorpus):
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize the wikigold corpus. The first time you call this constructor it will automatically
@@ -586,6 +589,7 @@ class WIKIGOLD_NER(ColumnCorpus):
             in_memory=in_memory,
             train_file='wikigold.conll.txt',
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            **corpusargs,
         )
 
 
@@ -596,6 +600,7 @@ class TWITTER_NER(ColumnCorpus):
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize a dataset called twitter_ner which can be found on the following page:
@@ -635,6 +640,7 @@ class TWITTER_NER(ColumnCorpus):
             train_file="ner.txt",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            **corpusargs,
         )
 
 
@@ -645,6 +651,7 @@ class MIT_RESTAURANTS(ColumnCorpus):
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize the experimental MIT Restaurant corpus available on https://groups.csail.mit.edu/sls/downloads/restaurant/.
@@ -682,6 +689,7 @@ class MIT_RESTAURANTS(ColumnCorpus):
             encoding="latin-1",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            **corpusargs,
         )
 
 
@@ -795,6 +803,7 @@ class CONLL_03_SPANISH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
+            **corpusargs,
     ):
         """
         Initialize the CoNLL-03 corpus for Spanish. The first time you call this constructor it will automatically
@@ -831,6 +840,7 @@ class CONLL_03_SPANISH(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
+            **corpusargs,
         )
 
 
@@ -840,6 +850,7 @@ class CONLL_2000(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "np",
             in_memory: bool = True,
+            **corpusargs,
     ):
         """
         Initialize the CoNLL-2000 corpus for English chunking.
@@ -894,7 +905,7 @@ class CONLL_2000(ColumnCorpus):
                     shutil.copyfileobj(f_in, f_out)
 
         super(CONLL_2000, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs,
         )
 
 
@@ -905,6 +916,7 @@ class XTREME(MultiCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = False,
+            **corpusargs,
     ):
         """
         Xtreme corpus for cross-lingual NER consisting of datasets of a total of 176 languages. The data comes from the google 
@@ -1002,7 +1014,7 @@ class XTREME(MultiCorpus):
             print("...done.")
 
         super(XTREME, self).__init__(
-            corpora, name='xtreme'
+            corpora, name='xtreme', **corpusargs,
         )
 
 
@@ -1025,6 +1037,7 @@ class WIKIANN(MultiCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = False,
+            **corpusargs,
     ):
         """
         WkiAnn corpus for cross-lingual NER consisting of datasets from 282 languages that exist
@@ -1120,7 +1133,7 @@ class WIKIANN(MultiCorpus):
             print("...done.")
 
         super(WIKIANN, self).__init__(
-            corpora, name='wikiann'
+            corpora, name='wikiann', **corpusargs,
         )
 
 
@@ -1448,6 +1461,7 @@ class DANE(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
+            **corpusargs,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1492,8 +1506,11 @@ class DANE(ColumnCorpus):
                 print(data_path / data_file)
 
         super(DANE, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes,
-            in_memory=in_memory, comment_symbol="#"
+            data_folder, columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            comment_symbol="#",
+            **corpusargs,
         )
 
 
@@ -1503,7 +1520,7 @@ class EUROPARL_NER_GERMAN(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = False,
-            tag_name_map: Dict[str, str] = None,
+            **corpusargs,
     ):
         """
         Initialize the EUROPARL_NER_GERMAN corpus. The first time you call this constructor it will automatically
@@ -1513,7 +1530,6 @@ class EUROPARL_NER_GERMAN(ColumnCorpus):
         :param tag_to_bioes: 'ner' by default, should not be changed.
         :param in_memory: If True, keeps dataset in memory giving speedups in training. Not recommended due to heavy RAM usage.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
-        :param tag_name_map: Optionally map tag names to different schema.
         """
 
         if type(base_path) == str:
@@ -1546,7 +1562,7 @@ class EUROPARL_NER_GERMAN(ColumnCorpus):
             in_memory=in_memory,
             train_file='ep-96-04-16.conll',
             test_file='ep-96-04-15.conll',
-            tag_name_map=tag_name_map,
+            **corpusargs,
         )
 
 
@@ -1556,6 +1572,7 @@ class GERMEVAL_14(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
+            **corpusargs,
     ):
         """
         Initialize the GermEval NER corpus for German. This is only possible if you've manually downloaded it to your
@@ -1593,6 +1610,7 @@ class GERMEVAL_14(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             comment_symbol="#",
             in_memory=in_memory,
+            **corpusargs,
         )
 
 
@@ -1602,6 +1620,7 @@ class INSPEC(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "keyword",
             in_memory: bool = True,
+            **corpusargs,
     ):
 
         if type(base_path) == str:
@@ -1627,7 +1646,7 @@ class INSPEC(ColumnCorpus):
             os.rename(data_folder / "valid.txt", data_folder / "dev.txt")
 
         super(INSPEC, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs,
         )
 
 
@@ -1637,6 +1656,7 @@ class LER_GERMAN(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = False,
+            **corpusargs,
     ):
         """
         Initialize the LER_GERMAN (Legal Entity Recognition) corpus. The first time you call this constructor it will automatically
@@ -1670,7 +1690,8 @@ class LER_GERMAN(ColumnCorpus):
             columns,
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
-            train_file='ler.conll'
+            train_file='ler.conll',
+            **corpusargs,
         )
 
 class ANER_CORP(ColumnCorpus):
@@ -1680,6 +1701,7 @@ class ANER_CORP(ColumnCorpus):
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize a preprocessed version of the Arabic Named Entity Recognition Corpus (ANERCorp) dataset available
@@ -1720,6 +1742,7 @@ class ANER_CORP(ColumnCorpus):
             encoding="utf-8",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            **corpusargs,
         )
 
 
@@ -1729,6 +1752,7 @@ class NER_BASQUE(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
+            **corpusargs,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1767,7 +1791,7 @@ class NER_BASQUE(ColumnCorpus):
                     shutil.move(f"{data_path}/{corpus_file}", data_path)
 
         super(NER_BASQUE, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs,
         )
 
 
@@ -1777,6 +1801,7 @@ class NER_FINNISH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
+            **corpusargs,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1801,7 +1826,7 @@ class NER_FINNISH(ColumnCorpus):
         _remove_lines_without_annotations(data_file=Path(data_folder / "digitoday.2015.test.csv"))
 
         super(NER_FINNISH, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, skip_first_line=True
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, skip_first_line=True, **corpusargs,
         )
 
 
@@ -1820,6 +1845,7 @@ class NER_SWEDISH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
+            **corpusargs,
     ):
         """
         Initialize the NER_SWEDISH corpus for Swedish. The first time you call this constructor it will automatically
@@ -1858,6 +1884,7 @@ class NER_SWEDISH(ColumnCorpus):
             columns,
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
+            **corpusargs,
         )
 
 
@@ -1867,6 +1894,7 @@ class SEMEVAL2017(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "keyword",
             in_memory: bool = True,
+            **corpusargs,
     ):
 
         if type(base_path) == str:
@@ -1889,7 +1917,7 @@ class SEMEVAL2017(ColumnCorpus):
         cached_path(f"{semeval2017_path}/dev.txt", Path("datasets") / dataset_name)
 
         super(SEMEVAL2017, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs,
         )
 
 
@@ -1899,6 +1927,7 @@ class SEMEVAL2010(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "keyword",
             in_memory: bool = True,
+            **corpusargs,
     ):
 
         if type(base_path) == str:
@@ -1920,7 +1949,7 @@ class SEMEVAL2010(ColumnCorpus):
         cached_path(f"{semeval2010_path}/test.txt", Path("datasets") / dataset_name)
 
         super(SEMEVAL2010, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs,
         )
 
 
@@ -1930,6 +1959,7 @@ class WIKINER_ENGLISH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = False,
+            **corpusargs,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1949,7 +1979,7 @@ class WIKINER_ENGLISH(ColumnCorpus):
         _download_wikiner("en", dataset_name)
 
         super(WIKINER_ENGLISH, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs,
         )
 
 
@@ -1959,6 +1989,7 @@ class WIKINER_GERMAN(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = False,
+            **corpusargs,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1978,7 +2009,7 @@ class WIKINER_GERMAN(ColumnCorpus):
         _download_wikiner("de", dataset_name)
 
         super(WIKINER_GERMAN, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs,
         )
 
 
@@ -1988,6 +2019,7 @@ class WIKINER_DUTCH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = False,
+            **corpusargs,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -2007,7 +2039,7 @@ class WIKINER_DUTCH(ColumnCorpus):
         _download_wikiner("nl", dataset_name)
 
         super(WIKINER_DUTCH, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs,
         )
 
 
@@ -2017,6 +2049,7 @@ class WIKINER_FRENCH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = False,
+            **corpusargs,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -2036,7 +2069,7 @@ class WIKINER_FRENCH(ColumnCorpus):
         _download_wikiner("fr", dataset_name)
 
         super(WIKINER_FRENCH, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs,
         )
 
 
@@ -2046,6 +2079,7 @@ class WIKINER_ITALIAN(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = False,
+            **corpusargs,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -2065,7 +2099,7 @@ class WIKINER_ITALIAN(ColumnCorpus):
         _download_wikiner("it", dataset_name)
 
         super(WIKINER_ITALIAN, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs,
         )
 
 
@@ -2075,6 +2109,7 @@ class WIKINER_SPANISH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = False,
+            **corpusargs,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -2094,7 +2129,7 @@ class WIKINER_SPANISH(ColumnCorpus):
         _download_wikiner("es", dataset_name)
 
         super(WIKINER_SPANISH, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs,
         )
 
 
@@ -2104,6 +2139,7 @@ class WIKINER_PORTUGUESE(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = False,
+            **corpusargs,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -2123,7 +2159,7 @@ class WIKINER_PORTUGUESE(ColumnCorpus):
         _download_wikiner("pt", dataset_name)
 
         super(WIKINER_PORTUGUESE, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs,
         )
 
 
@@ -2133,6 +2169,7 @@ class WIKINER_POLISH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = False,
+            **corpusargs,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -2152,7 +2189,7 @@ class WIKINER_POLISH(ColumnCorpus):
         _download_wikiner("pl", dataset_name)
 
         super(WIKINER_POLISH, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs,
         )
 
 
@@ -2162,6 +2199,7 @@ class WIKINER_RUSSIAN(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = False,
+            **corpusargs,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -2181,7 +2219,7 @@ class WIKINER_RUSSIAN(ColumnCorpus):
         _download_wikiner("ru", dataset_name)
 
         super(WIKINER_RUSSIAN, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs,
         )
 
 
@@ -2191,6 +2229,7 @@ class WNUT_17(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
+            **corpusargs,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -2215,7 +2254,7 @@ class WNUT_17(ColumnCorpus):
         )
 
         super(WNUT_17, self).__init__(
-            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory
+            data_folder, columns, tag_to_bioes=tag_to_bioes, in_memory=in_memory, **corpusargs,
         )
 
 class WEIBO_NER(ColumnCorpus):
@@ -2225,6 +2264,7 @@ class WEIBO_NER(ColumnCorpus):
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize the WEIBO_NER corpus . The first time you call this constructor it will automatically
@@ -2267,6 +2307,7 @@ class WEIBO_NER(ColumnCorpus):
             test_file="weiboNER_2nd_conll_format.test",
             dev_file="weiboNER_2nd_conll_format.dev",
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            **corpusargs,
         )
 
 class BIOSCOPE(ColumnCorpus):
@@ -2275,6 +2316,7 @@ class BIOSCOPE(ColumnCorpus):
             self,
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
+            **corpusargs,
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -2295,7 +2337,7 @@ class BIOSCOPE(ColumnCorpus):
         cached_path(f"{bioscope_path}output.txt", Path("datasets") / dataset_name)
 
         super(BIOSCOPE, self).__init__(
-            data_folder, columns, in_memory=in_memory, train_file="output.txt"
+            data_folder, columns, in_memory=in_memory, train_file="output.txt", **corpusargs,
         )
 
 
@@ -2347,6 +2389,7 @@ class UP_CHINESE(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize the Chinese dataset from the Universal Propositions Bank, comming from that webpage:
@@ -2387,6 +2430,7 @@ class UP_CHINESE(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            **corpusargs,
         )
 
 class UP_ENGLISH(ColumnCorpus):
@@ -2395,6 +2439,7 @@ class UP_ENGLISH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize the English dataset from the Universal Propositions Bank, comming from that webpage:
@@ -2435,6 +2480,7 @@ class UP_ENGLISH(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            **corpusargs,
         )
 
 class UP_FRENCH(ColumnCorpus):
@@ -2443,6 +2489,7 @@ class UP_FRENCH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize the French dataset from the Universal Propositions Bank, comming from that webpage:
@@ -2483,6 +2530,7 @@ class UP_FRENCH(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            **corpusargs,
         )
 
 class UP_FINNISH(ColumnCorpus):
@@ -2491,6 +2539,7 @@ class UP_FINNISH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize the Finnish dataset from the Universal Propositions Bank, comming from that webpage:
@@ -2531,6 +2580,7 @@ class UP_FINNISH(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            **corpusargs,
         )
 
 class UP_GERMAN(ColumnCorpus):
@@ -2539,6 +2589,7 @@ class UP_GERMAN(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize the German dataset from the Universal Propositions Bank, comming from that webpage:
@@ -2579,6 +2630,7 @@ class UP_GERMAN(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            **corpusargs,
         )
 
 class UP_ITALIAN(ColumnCorpus):
@@ -2587,6 +2639,7 @@ class UP_ITALIAN(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize the Italian dataset from the Universal Propositions Bank, comming from that webpage:
@@ -2627,6 +2680,7 @@ class UP_ITALIAN(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            **corpusargs,
         )
 
 class UP_SPANISH(ColumnCorpus):
@@ -2635,6 +2689,7 @@ class UP_SPANISH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize the Spanish dataset from the Universal Propositions Bank, comming from that webpage:
@@ -2675,6 +2730,7 @@ class UP_SPANISH(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            **corpusargs,
         )
 
 class UP_SPANISH_ANCORA(ColumnCorpus):
@@ -2683,6 +2739,7 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize the Spanish AnCora dataset from the Universal Propositions Bank, comming from that webpage:
@@ -2723,6 +2780,7 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            **corpusargs,
         )
 
 
@@ -2732,6 +2790,7 @@ class MITMovieNERSimple(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
+            **corpusargs,
     ):
         """
         Initialize the eng corpus of the MIT Movie Corpus (it has simpler queries compared to the trivia10k13 corpus)
@@ -2769,6 +2828,7 @@ class MITMovieNERSimple(ColumnCorpus):
             test_file=test_file,
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
+            **corpusargs,
         )
 
 class MITMovieNERComplex(ColumnCorpus):
@@ -2777,6 +2837,7 @@ class MITMovieNERComplex(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
+            **corpusargs,
     ):
         """
         Initialize the trivia10k13 corpus of the MIT Movie Corpus (it has more complex queries compared to the eng corpus)
@@ -2814,6 +2875,7 @@ class MITMovieNERComplex(ColumnCorpus):
             test_file=test_file,
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
+            **corpusargs,
         )
 
 class SEC_FILLINGS(ColumnCorpus):
@@ -2822,6 +2884,7 @@ class SEC_FILLINGS(ColumnCorpus):
             base_path: Union[str, Path] = None, 
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
+            **corpusargs,
     ):
         
         if type(base_path) == str:
@@ -2852,6 +2915,7 @@ class SEC_FILLINGS(ColumnCorpus):
             train_file='FIN5.txt',
             test_file="FIN3.txt",
             skip_first_line=True
+            **corpusargs,
         )
 
 class TURKU_NER(ColumnCorpus):
@@ -2861,6 +2925,7 @@ class TURKU_NER(ColumnCorpus):
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            **corpusargs,
     ):
         """
         Initialize the Finnish TurkuNER corpus. The first time you call this constructor it will automatically
@@ -2906,4 +2971,5 @@ class TURKU_NER(ColumnCorpus):
             encoding="latin-1",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            **corpusargs,
         )
