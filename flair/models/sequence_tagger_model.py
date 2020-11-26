@@ -2,7 +2,7 @@ import logging
 import sys
 
 from pathlib import Path
-from typing import List, Union, Optional, Dict, Set
+from typing import List, Union, Optional, Dict
 from warnings import warn
 
 import numpy as np
@@ -1273,3 +1273,4 @@ class MultiTagger:
             models.append(model)
 
         return cls(taggers)
+        
