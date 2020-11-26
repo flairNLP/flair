@@ -1506,7 +1506,8 @@ class DANE(ColumnCorpus):
                 print(data_path / data_file)
 
         super(DANE, self).__init__(
-            data_folder, columns,
+            data_folder,
+            columns,
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             comment_symbol="#",
