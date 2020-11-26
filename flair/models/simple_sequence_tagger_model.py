@@ -9,24 +9,17 @@ import numpy as np
 import torch
 import torch.nn
 import torch.nn.functional as F
-from tabulate import tabulate
-from torch.nn.parameter import Parameter
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair.nn
 from flair.data import Dictionary, Sentence, Label
 from flair.datasets import SentenceDataset, DataLoader
-from flair.embeddings import TokenEmbeddings, StackedEmbeddings, Embeddings
+from flair.embeddings import TokenEmbeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.training_utils import Metric, Result, store_embeddings
 
 log = logging.getLogger("flair")
-
-START_TAG: str = "<START>"
-STOP_TAG: str = "<STOP>"
-
-
 
 class SimpleSequenceTagger(flair.nn.Model):
     def __init__(
@@ -34,7 +27,6 @@ class SimpleSequenceTagger(flair.nn.Model):
             embeddings: TokenEmbeddings,
             tag_dictionary: Dictionary,
             tag_type: str,
-            pickle_module: str = "pickle",
             beta: float = 1.0,
     ):
         """
@@ -57,9 +49,6 @@ class SimpleSequenceTagger(flair.nn.Model):
 
         # linear layer
         self.linear = torch.nn.Linear(self.embeddings.embedding_length, len(tag_dictionary))
-
-        # serialization
-        self.pickle_module = pickle_module
 
         # F-beta score
         self.beta = beta
