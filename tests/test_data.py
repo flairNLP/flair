@@ -866,3 +866,10 @@ def test_sentence_to_dict():
     assert "Facebook, Inc." == dict["entities"][0]["text"]
     assert "Google" == dict["entities"][1]["text"]
     assert 0 == len(dict["labels"])
+
+
+def test_pretokenized():
+    pretoks = ['The', 'grass', 'is', 'green', '.']
+    sent = Sentence(pretoks)
+    for i, token in enumerate(sent):
+        assert token.text == pretoks[i]
