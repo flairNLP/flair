@@ -18,6 +18,8 @@ For instance, say you want to predict whether text is "happy" or "sad" but you h
 Just use TARS with this snippet:
 
 ```python
+from flair.models.text_classification_model import TARSClassifier
+
 # 1. Load our pre-trained TARS model for English
 tars = TARSClassifier.load('tars-base')
 
