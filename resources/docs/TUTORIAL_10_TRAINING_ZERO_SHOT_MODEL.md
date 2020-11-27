@@ -19,6 +19,7 @@ Just use TARS with this snippet:
 
 ```python
 from flair.models.text_classification_model import TARSClassifier
+from flair.data import Sentence
 
 # 1. Load our pre-trained TARS model for English
 tars = TARSClassifier.load('tars-base')
@@ -69,6 +70,8 @@ In this case, zero-shot prediction falsely predicts "drink" for the sentence "I 
 To improve this, let's first create a small corpus of 4 training and 2 testing examples: 
 
 ```python
+from flair.datasets import SentenceDataset
+
 # training dataset consisting of four sentences (2 labeled as "food" and 2 labeled as "drink")
 train = SentenceDataset(
     [
