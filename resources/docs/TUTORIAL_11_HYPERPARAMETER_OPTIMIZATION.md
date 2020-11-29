@@ -17,17 +17,14 @@ Document Embeddings), *search_spaces* are task-specific, currently supporting th
 
 ## Setup hyper-parameter configuration
 ```python
-from flair.data import Corpus
 from flair.datasets import TREC_6
 from flair.hyperparameter import search_strategies, search_spaces
 
-# 1. get the corpus                  
-corpus: Corpus = TREC_6()
+# 1.) Define your corpus
+corpus = TREC_6()
 
-# 2. define task-specific search space
-search_space = search_spaces.TextClassifierSearchSpace()
-
-# 3. define a search_strategy
+# 2.) create an search space
+search_space = search_spaces.TextClassifierSearchSpace(multi_label=True)
 search_strategy = search_strategies.EvolutionarySearch()
 ```
 
