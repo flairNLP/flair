@@ -239,9 +239,7 @@ class TextClassifier(flair.nn.Model):
                 if return_loss:
                     overall_loss += loss
 
-                predicted_labels = self._obtain_labels(
-                    scores, predict_prob=multi_class_prob
-                )
+                predicted_labels = self._obtain_labels(scores, predict_prob=multi_class_prob)
 
                 for (sentence, labels) in zip(batch, predicted_labels):
                     for label in labels:
@@ -597,8 +595,8 @@ class TARSClassifier(TextClassifier):
 
     def add_and_switch_to_new_task(self,
                                    task_name,
-                                   label_dictionary: Union[List, Set, Dictionary],
-                                   multi_label: bool = None,
+                                   label_dictionary: Union[List, Set, Dictionary, str],
+                                   multi_label: bool = True,
                                    multi_label_threshold: float = 0.5,
                                    label_type: str = None,
                                    beta: float = 1.0
@@ -609,36 +607,31 @@ class TARSClassifier(TextClassifier):
         size and negative sampling. This method does not store the resultant model onto disk.
         :param task_name: a string depicting the name of the task
         :param label_dictionary: dictionary of the labels you want to predict
-        :param multi_label: auto-detect if a corpus label dictionary is provided. Defaults to
-        False otherwise
+        :param multi_label: auto-detect if a corpus label dictionary is provided. Defaults to True otherwise
         :param multi_label_threshold: If multi-label you can set the threshold to make predictions
         """
         if task_name in self.task_specific_attributes:
             log.warning("Task `%s` already exists in TARS model. Switching to it.", task_name)
         else:
-            if isinstance(label_dictionary, (list, set)):
-                if multi_label is None:
-                    multi_label = False
-                label_dictionary = TARSClassifier._make_ad_hoc_label_dictionary(label_dictionary,
-                                                                                multi_label)
+
+            # make label dictionary if no Dictionary object is passed
+            if isinstance(label_dictionary, (list, set, str)):
+                label_dictionary = TARSClassifier._make_ad_hoc_label_dictionary(label_dictionary, multi_label)
+
             self.task_specific_attributes[task_name] = {}
             self.task_specific_attributes[task_name]['label_dictionary'] = label_dictionary
-            self.task_specific_attributes[task_name]['multi_label'] = multi_label \
-                if multi_label is not None else label_dictionary.multi_label
-            self.task_specific_attributes[task_name]['multi_label_threshold'] = \
-                multi_label_threshold
+            self.task_specific_attributes[task_name]['multi_label'] = label_dictionary.multi_label
+            self.task_specific_attributes[task_name]['multi_label_threshold'] = multi_label_threshold
             self.task_specific_attributes[task_name]['label_type'] = label_type
             self.task_specific_attributes[task_name]['beta'] = beta
 
         self.switch_to_task(task_name)
 
-    def list_existing_tasks(self):
+    def list_existing_tasks(self) -> Set[str]:
         """
         Lists existing tasks in the loaded TARS model on the console.
         """
-        print("Existing tasks are:")
-        for task_name in self.task_specific_attributes:
-            print(task_name)
+        return set(self.task_specific_attributes.keys())
 
     def _get_cleaned_up_label(self, label):
         """
@@ -701,8 +694,7 @@ class TARSClassifier(TextClassifier):
                     continue
                 else:
                     plausible_labels.append(plausible_label)
-                    plausible_label_probabilities.append( \
-                        self.label_nearest_map[label][plausible_label])
+                    plausible_label_probabilities.append(self.label_nearest_map[label][plausible_label])
 
             # make sure the probabilities always sum up to 1
             plausible_label_probabilities = np.array(plausible_label_probabilities, dtype='float64')
@@ -851,13 +843,14 @@ class TARSClassifier(TextClassifier):
 
     def _get_single_label(self, label_scores) -> List[Label]:
         conf, idx = torch.max(label_scores, 0)
+        # TARS does not do a softmax, so confidence of the best predicted class might be very low.
+        # Therefore enforce a min confidence of 0.5 for a match.
         label = self.label_dictionary.get_item_for_index(idx.item())
-
         return [Label(label, conf.item())]
 
     @staticmethod
-    def _make_ad_hoc_label_dictionary(candidate_label_set: set = None,
-                                      multi_label=True) -> Dictionary:
+    def _make_ad_hoc_label_dictionary(candidate_label_set: Union[List[str], Set[str], str],
+                                      multi_label: bool = True) -> Dictionary:
         """
         Creates a dictionary given a set of candidate labels
         :return: dictionary of labels
@@ -865,6 +858,11 @@ class TARSClassifier(TextClassifier):
         label_dictionary: Dictionary = Dictionary(add_unk=False)
         label_dictionary.multi_label = multi_label
 
+        # make list if only one candidate label is passed
+        if isinstance(candidate_label_set, str):
+            candidate_label_set = {candidate_label_set}
+
+        # if list is passed, convert to set
         if not isinstance(candidate_label_set, set):
             candidate_label_set = set(candidate_label_set)
 
@@ -883,7 +881,10 @@ class TARSClassifier(TextClassifier):
         else:
             log.warning("No task exists with the name `%s`.", task_name)
 
-    def predict_zero_shot(self, sentences, candidate_label_set, multi_label=False):
+    def predict_zero_shot(self,
+                          sentences: Union[List[Sentence], Sentence],
+                          candidate_label_set: Union[List[str], Set[str], str],
+                          multi_label: bool = True):
         """
         Method to make zero shot predictions from the TARS model
         :param sentences: input sentence objects to classify
@@ -897,8 +898,7 @@ class TARSClassifier(TextClassifier):
             log.warning("Provided candidate_label_set is empty")
             return
 
-        label_dictionary = TARSClassifier._make_ad_hoc_label_dictionary(candidate_label_set,
-                                                                        multi_label)
+        label_dictionary = TARSClassifier._make_ad_hoc_label_dictionary(candidate_label_set, multi_label)
 
         # note current task
         existing_current_task = self.current_task
@@ -920,8 +920,35 @@ class TARSClassifier(TextClassifier):
             self._drop_task(TARSClassifier.static_adhoc_task_identifier)
 
         return
-    
+      
+    def predict_all_tasks(self, sentences: Union[List[Sentence], Sentence]):
 
+        # remember current task
+        existing_current_task = self.current_task
+
+        # predict with each task model
+        for task in self.list_existing_tasks():
+            self.switch_to_task(task)
+            self.predict(sentences, label_name=task)
+
+        # switch to the pre-existing task
+        self.switch_to_task(existing_current_task)
+
+    @staticmethod
+    def _fetch_model(model_name) -> str:
+
+        model_map = {}
+        hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
+
+        model_map["tars-base"] = "/".join([hu_path, "tars-base", "tars-base.pt"])
+
+        cache_dir = Path("models")
+        if model_name in model_map:
+            model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
+
+        return model_name
+
+    
 
 class DistClassifier(flair.nn.Model):
     """
@@ -1397,3 +1424,4 @@ class DistClassifier(flair.nn.Model):
                f'  (beta): {self.beta}\n' + \
                f'  (loss_max_weight): {self.loss_max_weight}\n' + \
                f'  (max_distance) {self.max_distance}\n)'
+
