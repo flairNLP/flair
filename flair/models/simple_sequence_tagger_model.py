@@ -18,6 +18,18 @@ from flair.training_utils import Metric, Result, store_embeddings
 
 log = logging.getLogger("flair")
 
+"""
+This class is a simple version of the SequenceTagger class. 
+The purpose of this class is to demonstrate the basic hierarchy of a 
+sequence tagger (this could be helpful for new developers).
+It only uses the given embeddings and maps them with a linear layer to
+the tag_dictionary dimension.
+Thus, this class misses following functionalities from the SequenceTagger:
+- CRF,
+- RNN,
+- Reprojection.
+As a result, only poor results can be expected.
+"""
 class SimpleSequenceTagger(flair.nn.Model):
     def __init__(
             self,
