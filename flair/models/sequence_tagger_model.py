@@ -1273,4 +1273,3 @@ class MultiTagger:
             models.append(model)
 
         return cls(taggers)
-        

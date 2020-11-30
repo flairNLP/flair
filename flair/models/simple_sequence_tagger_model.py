@@ -1,9 +1,7 @@
 import logging
-import sys
 
 from pathlib import Path
-from typing import List, Union, Optional, Dict, Set
-from warnings import warn
+from typing import List, Union, Optional
 
 import numpy as np
 import torch
@@ -16,7 +14,6 @@ import flair.nn
 from flair.data import Dictionary, Sentence, Label
 from flair.datasets import SentenceDataset, DataLoader
 from flair.embeddings import TokenEmbeddings
-from flair.file_utils import cached_path, unzip_file
 from flair.training_utils import Metric, Result, store_embeddings
 
 log = logging.getLogger("flair")
@@ -186,13 +183,11 @@ class SimpleSequenceTagger(flair.nn.Model):
 
     @staticmethod
     def _init_model_with_state_dict(state):
-        beta = 1.0 if "beta" not in state.keys() else state["beta"]
-
         model = SimpleSequenceTagger(
             embeddings=state["embeddings"],
             tag_dictionary=state["tag_dictionary"],
             tag_type=state["tag_type"],
-            beta=beta,
+            beta=state["beta"],
         )
         model.load_state_dict(state["state_dict"])
         return model
@@ -221,7 +216,7 @@ class SimpleSequenceTagger(flair.nn.Model):
         you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
         'gpu' to store embeddings in GPU memory.
         """
-        if label_name == None:
+        if label_name is None:
             label_name = self.tag_type
 
         with torch.no_grad():
@@ -270,7 +265,6 @@ class SimpleSequenceTagger(flair.nn.Model):
                 tags, all_tags = self._obtain_labels(
                     feature=feature,
                     batch_sentences=batch,
-                    transitions=None,
                     get_all_tags=all_tag_prob,
                 )
 
@@ -361,7 +355,6 @@ class SimpleSequenceTagger(flair.nn.Model):
             self,
             feature: torch.Tensor,
             batch_sentences: List[Sentence],
-            transitions: Optional[np.ndarray],
             get_all_tags: bool,
     ) -> (List[List[Label]], List[List[List[Label]]]):
         """
