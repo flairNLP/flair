@@ -99,6 +99,8 @@ whether a sentence mentions food or drink.
 Now, let's take the Corpus we created and do few-shot learning with our pre-trained TARS: 
 
 ```python
+from flair.trainers import ModelTrainer
+
 # 1. load base TARS
 tars = TARSClassifier.load('tars-base')
 
