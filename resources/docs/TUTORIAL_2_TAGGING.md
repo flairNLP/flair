@@ -350,8 +350,14 @@ are provided:
 | 'communicative-functions' | English | detecting function of sentence in research paper (BETA) | scholarly papers |  |
 | 'de-offensive-language' | German | detecting offensive language | [GermEval 2018 Task 1](https://projects.fzai.h-da.de/iggsa/projekt/) |  **75.71** (Macro F1) |
 
+## Tagging new classes without training data
+
+In case you need to label classes that are not included you can also try
+our pre-trained zero-shot classifier TARS 
+(skip ahead to the [zero-shot tutorial](/resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)).
+TARS can perform text classification for arbitrary classes. 
 
 ## Next 
 
 Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) to embed your
-text.
+text. 
