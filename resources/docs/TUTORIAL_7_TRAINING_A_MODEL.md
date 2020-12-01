@@ -246,11 +246,20 @@ This gives you a multilingual model. Try experimenting with more languages!
 ## Plotting Training Curves and Weights
 
 Flair includes a helper method to plot training curves and weights in the neural network.
-The `ModelTrainer` automatically generates a `loss.tsv` and a `weights.txt` file in the result folder.
+The `ModelTrainer` automatically generates a `loss.tsv` in the result folder. If you set
+`write_weights=True` during training, it will also generate a `weights.txt` file.
 
 After training, simple point the plotter to these files:
 
 ```python
+# set write_weights to True to write weights
+trainer.train('resources/taggers/example-universal-pos',
+               ...                
+               write_weights=True,
+               ...
+              )
+
+# visualize
 from flair.visual.training_curves import Plotter
 plotter = Plotter()
 plotter.plot_training_curves('loss.tsv')
