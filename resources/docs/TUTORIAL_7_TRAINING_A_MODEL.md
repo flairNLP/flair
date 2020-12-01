@@ -364,4 +364,9 @@ However, if the dataset fits into CUDA memory, this option is the fastest one.
 
 ## Next
 
-You can now look into [training your own embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md).
+If you don't have training data (or only very little), our TARS approach might be best for you. 
+Check out the TARS tutorial on [few-shot and zero-shot classification](/resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)). 
+
+Alternatively, you can
+ look into [training your own embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md).
+

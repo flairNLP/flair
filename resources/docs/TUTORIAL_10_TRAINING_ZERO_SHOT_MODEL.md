@@ -123,7 +123,7 @@ Done! Let's load the newly trained model and see if it does better:
 tars = TARSClassifier.load('resources/taggers/food_drink/final-model.pt')
 
 # 2. Prepare a test sentence
-sentence = Sentence("I am so glad you like coffee")
+sentence = Sentence("I am so glad you like burritos")
 
 # 3. Predict for food and drink
 tars.predict(sentence)
