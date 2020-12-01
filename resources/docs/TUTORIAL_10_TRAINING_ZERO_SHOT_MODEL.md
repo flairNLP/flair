@@ -70,6 +70,7 @@ In this case, zero-shot prediction falsely predicts "drink" for the sentence "I 
 To improve this, let's first create a small corpus of 4 training and 2 testing examples: 
 
 ```python
+from flair.data import Corpus
 from flair.datasets import SentenceDataset
 
 # training dataset consisting of four sentences (2 labeled as "food" and 2 labeled as "drink")
