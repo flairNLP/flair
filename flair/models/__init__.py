@@ -1,4 +1,5 @@
 from .sequence_tagger_model import SequenceTagger, MultiTagger
+from .simple_sequence_tagger_model import SimpleSequenceTagger
 from .language_model import LanguageModel
 from .text_classification_model import TextClassifier
 from .text_classification_model import DistClassifier
