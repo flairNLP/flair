@@ -4,7 +4,6 @@
 [![GitHub Issues](https://img.shields.io/github/issues/flairNLP/flair.svg)](https://github.com/flairNLP/flair/issues)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
-[![Travis](https://img.shields.io/travis/flairNLP/flair.svg)](https://travis-ci.org/flairNLP/flair)
 
 A very simple framework for **state-of-the-art NLP**. Developed by [Humboldt University of Berlin](https://www.informatik.hu-berlin.de/en/forschung-en/gebiete/ml-en/) and friends.
 
@@ -27,7 +26,7 @@ document embeddings, including our proposed **[Flair embeddings](https://www.acl
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.6.1](https://github.com/flairNLP/flair/releases)!
+Now at [version 0.7](https://github.com/flairNLP/flair/releases)!
 
 ## Comparison with State-of-the-Art
 

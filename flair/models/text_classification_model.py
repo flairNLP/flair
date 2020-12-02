@@ -16,11 +16,7 @@ import flair.embeddings
 from flair.data import Dictionary, Sentence, Label, DataPoint
 from flair.datasets import SentenceDataset, DataLoader
 from flair.file_utils import cached_path
-from flair.training_utils import (
-    convert_labels_to_one_hot,
-    Result,
-    store_embeddings,
-)
+from flair.training_utils import convert_labels_to_one_hot, Result, store_embeddings
 
 log = logging.getLogger("flair")
 
@@ -887,8 +883,7 @@ class TARSClassifier(TextClassifier):
         Method to make zero shot predictions from the TARS model
         :param sentences: input sentence objects to classify
         :param candidate_label_set: set of candidate labels
-        :param multi_label: indicates whether multi-label or single class prediction.
-        Defaults to False
+        :param multi_label: indicates whether multi-label or single class prediction. Defaults to True.
         """
 
         # check if candidate_label_set is empty
