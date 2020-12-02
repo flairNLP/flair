@@ -57,12 +57,12 @@ After that, the orchestrator takes care of the optimization process.
 ```python
 from flair.hyperparameter import orchestrator
 
-orchestrator = orchestrator.Orchestrator(corpus=corpus,
+orch = orchestrator.Orchestrator(corpus=corpus,
                                          base_path='hyperopt/trec6',
                                          search_space=search_space,
                                          search_strategy=search_strategy)
 
-orchestrator.optimize()
+orch.optimize()
 ```
 
 When the budget is used up, you'll be provided with the best configuration and the respective weights of the net.
