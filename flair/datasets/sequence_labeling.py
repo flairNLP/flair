@@ -1737,17 +1737,29 @@ class WSD_UFSAC(ColumnCorpus):
 
             convert_ufsac_to_conll(data_file=Path(data_folder / "test.xml"), encoding="latin-1")
 
+            super(WSD_UFSAC, self).__init__(
+                data_folder,
+                columns,
+                tag_to_bioes=None,
+                encoding="latin-1",
+                in_memory=in_memory,
+                document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+                train_file='train.xml',
+                test_file='test.xml'
+            )
 
-        super(WSD_UFSAC, self).__init__(
-            data_folder,
-            columns,
-            tag_to_bioes=None,
-            encoding="latin-1",
-            in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
-            train_file='train.xml',
-            test_file='test.xml'
-        )
+        else:
+
+            super(WSD_UFSAC, self).__init__(
+                data_folder,
+                columns,
+                tag_to_bioes=None,
+                encoding="latin-1",
+                in_memory=in_memory,
+                document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+                train_file='train.xml'
+            )
+
 
 class BIOSCOPE(ColumnCorpus):
 
