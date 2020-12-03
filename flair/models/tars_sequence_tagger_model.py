@@ -7,7 +7,6 @@ import numpy as np
 import torch
 import torch.nn
 import torch.nn.functional as F
-from tabulate import tabulate
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
@@ -17,8 +16,6 @@ from sklearn.preprocessing import minmax_scale
 import flair.nn
 from flair.data import Dictionary, Sentence, Label
 from flair.datasets import SentenceDataset, DataLoader
-from flair.embeddings import TokenEmbeddings
-from flair.file_utils import cached_path, unzip_file
 from flair.training_utils import Metric, Result, store_embeddings
 
 log = logging.getLogger("flair")
@@ -27,15 +24,15 @@ START_TAG: str = "<START>"
 STOP_TAG: str = "<STOP>"
 
 class TARSSequenceTagger(flair.nn.Model):
-    static_tag_beginning = "BEGINNING"
-    static_tag_inside = "INSIDE"
-    static_tag_outside = "OUTSIDE"
+    # tags used in BIO2 format: B, I, O
+    static_tag_beginning = "B"
+    static_tag_inside = "I"
+    static_tag_outside = "O"
     static_tag_type = "tars_tag"
     static_adhoc_task_identifier = "adhoc_dummy"
 
     def __init__(
             self,
-            embeddings: TokenEmbeddings,
             tag_dictionary: Dictionary,
             tag_type: str,
             task_name: str,
@@ -99,10 +96,7 @@ class TARSSequenceTagger(flair.nn.Model):
         # Store task specific tags since TARS can handle multiple tasks
         self.current_task = None
         self.task_specific_attributes = {}
-        self.add_and_switch_to_new_task(task_name, tag_dictionary, tag_type, beta)
-
-        # embeddings
-        self.embeddings = embeddings # TODO: are those embeddings even required? I dont think so, only the WordTransformerEmbeddings should be required.
+        self.add_and_switch_to_new_task(task_name, tag_dictionary, tag_type, beta, loss_weights)
 
         # dictionaries
         self.tag_dictionary: Dictionary = tag_dictionary
@@ -144,7 +138,6 @@ class TARSSequenceTagger(flair.nn.Model):
     def _get_state_dict(self):
         model_state = {
             "state_dict": self.state_dict(),
-            "embeddings": self.embeddings,
             "tag_dictionary": self.tag_dictionary,
             "tag_type": self.tag_type,
             "task_name": self.task_name,
@@ -174,7 +167,6 @@ class TARSSequenceTagger(flair.nn.Model):
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
 
         model = TARSSequenceTagger(
-            embeddings=state["embeddings"],
             tag_dictionary=state["tag_dictionary"],
             tag_type=state["tag_type"],
             task_name=state["task_name"],
@@ -194,7 +186,8 @@ class TARSSequenceTagger(flair.nn.Model):
                                    task_name,
                                    tag_dictionary: Union[List, Set, Dictionary],
                                    tag_type: str = None,
-                                   beta: float = 1.0
+                                   beta: float = 1.0,
+                                   weight_dict: Dict[str, float] = None,
                                    ):
         """
         Adds a new task to an existing TARS model. Sets necessary attributes and finally 'switches'
@@ -213,6 +206,7 @@ class TARSSequenceTagger(flair.nn.Model):
             self.task_specific_attributes[task_name]['tag_type'] = tag_type
             self.task_specific_attributes[task_name]['beta'] = beta
             # TODO: further implement here: loss-weights? dropout? num_negative_samples?
+            self.task_specific_attributes[task_name]['weight_dict'] = weight_dict
         self.switch_to_task(task_name)
 
     def switch_to_task(self, task_name):
@@ -228,6 +222,16 @@ class TARSSequenceTagger(flair.nn.Model):
             self.tag_type = self.task_specific_attributes[task_name]['tag_type']
             self.beta = self.task_specific_attributes[task_name]['beta']
             # TODO: further implement here: loss-weights? dropout? num_negative_samples?
+            self.weight_dict = self.task_specific_attributes[task_name]['weight_dict']
+            if self.weight_dict is not None:
+                n_classes = len(self.tag_dictionary)
+                weight_list = [1. for i in range(n_classes)]
+                for i, tag in enumerate(self.tag_dictionary.get_items()):
+                    if tag in self.weight_dict.keys():
+                        weight_list[i] = self.weight_dict[tag]
+                self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
+            else:
+                self.loss_weights = None
 
     def _drop_task(self, task_name):
         if task_name in self.task_specific_attributes:
@@ -330,7 +334,7 @@ class TARSSequenceTagger(flair.nn.Model):
         tag_text_pair = " ".join([self._get_cleaned_up_tag(tag_no_prefix),
                                   self.transformer_word_embeddings.tokenizer.sep_token,
                                   sentence.to_tokenized_string()])
-        tag_text_pair_sentence = Sentence(tag_text_pair)
+        tag_text_pair_sentence = Sentence(tag_text_pair, use_tokenizer=False)
 
         offset = len(tag_text_pair_sentence) - len(sentence) # amount of tokens of tag and sep_token
         for idx_in_new_sent in range(offset, len(tag_text_pair_sentence)): # ignore tokens of tag and sep_token
@@ -365,10 +369,7 @@ class TARSSequenceTagger(flair.nn.Model):
                     tag_text_pairs_for_sentence.append( \
                         self._get_tars_formatted_sentence(tag, sentence))
             else:
-                tags_of_sentence = {self._split_tag(token.get_tag(self.tag_type).value)[1] for token in sentence \
-                                    if token.get_tag(self.tag_type).value != "O"}
                 for tag in all_tags:
-                    #tars_tag = None if len(positive_tags) == 0 else tag in positive_tags
                     tag_text_pairs_for_sentence.append( \
                         self._get_tars_formatted_sentence(tag, sentence))
             tag_text_pairs.extend(tag_text_pairs_for_sentence)
@@ -503,18 +504,17 @@ class TARSSequenceTagger(flair.nn.Model):
                 tags, all_tags = self._obtain_labels(
                     feature=feature,
                     batch_sentences=batch,
-                    transitions=None,
                     get_all_tags=all_tag_prob,
                 )
 
                 for (sentence, sent_tags) in zip(batch, tags):
                     for (token, tag) in zip(sentence.tokens, sent_tags):
-                        token.add_tag_label(label_name, tag)
+                        token.add_tag_label(tag_name, tag)
 
                 # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
                 for (sentence, sent_all_tags) in zip(batch, all_tags):
                     for (token, token_all_tags) in zip(sentence.tokens, sent_all_tags):
-                        token.add_tags_proba_dist(label_name, token_all_tags)
+                        token.add_tags_proba_dist(tag_name, token_all_tags)
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
@@ -745,98 +745,118 @@ class TARSSequenceTagger(flair.nn.Model):
     def forward_loss(
             self, data_points: Union[List[Sentence], Sentence], sort=True
     ) -> torch.tensor:
+        if isinstance(data_points, Sentence):
+            data_points = [data_points]
         features = self.forward(data_points)
         return self._calculate_loss(features, data_points)
 
+    def _transform_tars_scores(self, tars_scores):
+        # M: num_classes in task, N: num_samples
+        # reshape scores MN x 2 -> N x M x 2
+        # import torch
+        # a = torch.arange(30)
+        # b = torch.reshape(a, (-1, 3, 2))
+        # c = b[:,:,1]
+        tars_scores = torch.nn.functional.softmax(tars_scores, dim=1)
+        scores = torch.reshape(tars_scores, (-1, len(self.tag_dictionary.item2idx), 2))
+
+        # target shape N x M
+        target_scores = scores[:, :, 1]
+        return target_scores
+
     def forward(self, sentences: List[Sentence]):
+        transformed_sentences = self._get_tars_formatted_sentences(sentences)
+        # tag_scores = self.tars_model.forward(transformed_sentences)
+        # tag_scores = ???
 
-        self.embeddings.embed(sentences)
+        # Transform input data into TARS format
+        sentences = self._get_tars_formatted_sentences(sentences)
 
-        names = self.embeddings.get_names()
+        print("embedding_length")
+        print(self.transformer_word_embeddings.embedding_length)
 
-        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
-        longest_token_sequence_in_batch: int = max(lengths)
+        self.transformer_word_embeddings.embed(sentences)
+        for sent in sentences:
+            print(sent)
+            print("token emb")
+            for tkn in sent:
+                # TOO: nicht jedes Token zählen, sondern nur die zwischen ersten und zweitem [SEP]
+                print(tkn)
+                print("get_embedding")
+                print(tkn.get_embedding().shape)
+                print(tkn.get_embedding())
 
-        pre_allocated_zero_tensor = torch.zeros(
-            self.embeddings.embedding_length * longest_token_sequence_in_batch,
-            dtype=torch.float,
-            device=flair.device,
-        )
+                out = self.linear(tkn.get_embedding())
+                print("out")
+                print(out)
+        tag_scores = self.linear(sentences[0][0].get_embedding())
 
-        all_embs = list()
-        for sentence in sentences:
-            all_embs += [
-                emb for token in sentence for emb in token.get_each_embedding(names)
-            ]
-            nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
+        # pre_allocated_zero_tensor = torch.zeros(
+        #     self.embeddings.embedding_length * longest_token_sequence_in_batch,
+        #     dtype=torch.float,
+        #     device=flair.device,
+        # )
+        # sentences_tensor =
+        # ..dropouts...
+        # tag_scores = self.linear(sentences_tensor)
 
-            if nb_padding_tokens > 0:
-                t = pre_allocated_zero_tensor[
-                    : self.embeddings.embedding_length * nb_padding_tokens
-                    ]
-                all_embs.append(t)
+        # Transform label_scores into current task's desired format
+        transformed_scores = self._transform_tars_scores(tag_scores)
 
-        sentence_tensor = torch.cat(all_embs).view(
-            [
-                len(sentences),
-                longest_token_sequence_in_batch,
-                self.embeddings.embedding_length,
-            ]
-        )
+        return transformed_scores
 
-        # --------------------------------------------------------------------
-        # FF PART
-        # --------------------------------------------------------------------
-        if self.use_dropout > 0.0:
-            sentence_tensor = self.dropout(sentence_tensor)
-        if self.use_word_dropout > 0.0:
-            sentence_tensor = self.word_dropout(sentence_tensor)
-        if self.use_locked_dropout > 0.0:
-            sentence_tensor = self.locked_dropout(sentence_tensor)
-
-        features = self.linear(sentence_tensor)
-
-        return features
-
-    def _score_sentence(self, feats, tags, lens_):
-
-        start = torch.tensor(
-            [self.tag_dictionary.get_idx_for_item(START_TAG)], device=flair.device
-        )
-        start = start[None, :].repeat(tags.shape[0], 1)
-
-        stop = torch.tensor(
-            [self.tag_dictionary.get_idx_for_item(STOP_TAG)], device=flair.device
-        )
-        stop = stop[None, :].repeat(tags.shape[0], 1)
-
-        pad_start_tags = torch.cat([start, tags], 1)
-        pad_stop_tags = torch.cat([tags, stop], 1)
-
-        for i in range(len(lens_)):
-            pad_stop_tags[i, lens_[i]:] = self.tag_dictionary.get_idx_for_item(
-                STOP_TAG
-            )
-
-        score = torch.FloatTensor(feats.shape[0]).to(flair.device)
-
-        for i in range(feats.shape[0]):
-            r = torch.LongTensor(range(lens_[i])).to(flair.device)
-
-            score[i] = torch.sum(
-                self.transitions[
-                    pad_stop_tags[i, : lens_[i] + 1], pad_start_tags[i, : lens_[i] + 1]
-                ]
-            ) + torch.sum(feats[i, r, tags[i, : lens_[i]]])
-
-        return score
+        ## before:
+        # self.embeddings.embed(sentences)
+        # names = self.embeddings.get_names()
+        #
+        # lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        # longest_token_sequence_in_batch: int = max(lengths)
+        #
+        # pre_allocated_zero_tensor = torch.zeros(
+        #     self.embeddings.embedding_length * longest_token_sequence_in_batch,
+        #     dtype=torch.float,
+        #     device=flair.device,
+        # )
+        #
+        # all_embs = list()
+        # for sentence in sentences:
+        #     all_embs += [
+        #         emb for token in sentence for emb in token.get_each_embedding(names)
+        #     ]
+        #     nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
+        #
+        #     if nb_padding_tokens > 0:
+        #         t = pre_allocated_zero_tensor[
+        #             : self.embeddings.embedding_length * nb_padding_tokens
+        #             ]
+        #         all_embs.append(t)
+        #
+        # sentence_tensor = torch.cat(all_embs).view(
+        #     [
+        #         len(sentences),
+        #         longest_token_sequence_in_batch,
+        #         self.embeddings.embedding_length,
+        #     ]
+        # )
+        #
+        # # --------------------------------------------------------------------
+        # # FF PART
+        # # --------------------------------------------------------------------
+        # if self.use_dropout > 0.0:
+        #     sentence_tensor = self.dropout(sentence_tensor)
+        # if self.use_word_dropout > 0.0:
+        #     sentence_tensor = self.word_dropout(sentence_tensor)
+        # if self.use_locked_dropout > 0.0:
+        #     sentence_tensor = self.locked_dropout(sentence_tensor)
+        #
+        # features = self.linear(sentence_tensor)
+        #
+        # return features
 
     def _calculate_loss(
             self, features: torch.tensor, sentences: List[Sentence]
     ) -> float:
-
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
-
         tag_list: List = []
         for s_id, sentence in enumerate(sentences):
             # get the tags in this sentence
@@ -847,7 +867,6 @@ class TARSSequenceTagger(flair.nn.Model):
             # add tags as tensor
             tag = torch.tensor(tag_idx, device=flair.device)
             tag_list.append(tag)
-
         score = 0
         for sentence_feats, sentence_tags, sentence_length in zip(
                 features, tag_list, lengths
@@ -863,7 +882,6 @@ class TARSSequenceTagger(flair.nn.Model):
             self,
             feature: torch.Tensor,
             batch_sentences: List[Sentence],
-            transitions: Optional[np.ndarray],
             get_all_tags: bool,
     ) -> (List[List[Label]], List[List[List[Label]]]):
         """
@@ -913,136 +931,6 @@ class TARSSequenceTagger(flair.nn.Model):
         return tags, all_tags
 
     @staticmethod
-    def _softmax(x, axis):
-        # reduce raw values to avoid NaN during exp
-        x_norm = x - x.max(axis=axis, keepdims=True)
-        y = np.exp(x_norm)
-        return y / y.sum(axis=axis, keepdims=True)
-
-    def _viterbi_decode(
-            self, feats: np.ndarray, transitions: np.ndarray, all_scores: bool
-    ):
-        id_start = self.tag_dictionary.get_idx_for_item(START_TAG)
-        id_stop = self.tag_dictionary.get_idx_for_item(STOP_TAG)
-
-        backpointers = np.empty(shape=(feats.shape[0], self.tagset_size), dtype=np.int_)
-        backscores = np.empty(
-            shape=(feats.shape[0], self.tagset_size), dtype=np.float32
-        )
-
-        init_vvars = np.expand_dims(
-            np.repeat(-10000.0, self.tagset_size), axis=0
-        ).astype(np.float32)
-        init_vvars[0][id_start] = 0
-
-        forward_var = init_vvars
-        for index, feat in enumerate(feats):
-            # broadcasting will do the job of reshaping and is more efficient than calling repeat
-            next_tag_var = forward_var + transitions
-            bptrs_t = next_tag_var.argmax(axis=1)
-            viterbivars_t = next_tag_var[np.arange(bptrs_t.shape[0]), bptrs_t]
-            forward_var = viterbivars_t + feat
-            backscores[index] = forward_var
-            forward_var = forward_var[np.newaxis, :]
-            backpointers[index] = bptrs_t
-
-        terminal_var = forward_var.squeeze() + transitions[id_stop]
-        terminal_var[id_stop] = -10000.0
-        terminal_var[id_start] = -10000.0
-        best_tag_id = terminal_var.argmax()
-
-        best_path = [best_tag_id]
-        for bptrs_t in reversed(backpointers):
-            best_tag_id = bptrs_t[best_tag_id]
-            best_path.append(best_tag_id)
-
-        start = best_path.pop()
-        assert start == id_start
-        best_path.reverse()
-
-        best_scores_softmax = self._softmax(backscores, axis=1)
-        best_scores_np = np.max(best_scores_softmax, axis=1)
-
-        # default value
-        all_scores_np = np.zeros(0, dtype=np.float64)
-        if all_scores:
-            all_scores_np = best_scores_softmax
-            for index, (tag_id, tag_scores) in enumerate(zip(best_path, all_scores_np)):
-                if type(tag_id) != int and tag_id.item() != tag_scores.argmax():
-                    swap_index_score = tag_scores.argmax()
-                    (
-                        all_scores_np[index][tag_id.item()],
-                        all_scores_np[index][swap_index_score],
-                    ) = (
-                        all_scores_np[index][swap_index_score],
-                        all_scores_np[index][tag_id.item()],
-                    )
-                elif type(tag_id) == int and tag_id != tag_scores.argmax():
-                    swap_index_score = tag_scores.argmax()
-                    (
-                        all_scores_np[index][tag_id],
-                        all_scores_np[index][swap_index_score],
-                    ) = (
-                        all_scores_np[index][swap_index_score],
-                        all_scores_np[index][tag_id],
-                    )
-
-        return best_scores_np.tolist(), best_path, all_scores_np.tolist()
-
-    def _forward_alg(self, feats, lens_):
-
-        init_alphas = torch.FloatTensor(self.tagset_size).fill_(-10000.0)
-        init_alphas[self.tag_dictionary.get_idx_for_item(START_TAG)] = 0.0
-
-        forward_var = torch.zeros(
-            feats.shape[0],
-            feats.shape[1] + 1,
-            feats.shape[2],
-            dtype=torch.float,
-            device=flair.device,
-        )
-
-        forward_var[:, 0, :] = init_alphas[None, :].repeat(feats.shape[0], 1)
-
-        transitions = self.transitions.view(
-            1, self.transitions.shape[0], self.transitions.shape[1]
-        ).repeat(feats.shape[0], 1, 1)
-
-        for i in range(feats.shape[1]):
-            emit_score = feats[:, i, :]
-
-            tag_var = (
-                    emit_score[:, :, None].repeat(1, 1, transitions.shape[2])
-                    + transitions
-                    + forward_var[:, i, :][:, :, None]
-                    .repeat(1, 1, transitions.shape[2])
-                    .transpose(2, 1)
-            )
-
-            max_tag_var, _ = torch.max(tag_var, dim=2)
-
-            tag_var = tag_var - max_tag_var[:, :, None].repeat(
-                1, 1, transitions.shape[2]
-            )
-
-            agg_ = torch.log(torch.sum(torch.exp(tag_var), dim=2))
-
-            cloned = forward_var.clone()
-            cloned[:, i + 1, :] = max_tag_var + agg_
-
-            forward_var = cloned
-
-        forward_var = forward_var[range(forward_var.shape[0]), lens_, :]
-
-        terminal_var = forward_var + self.transitions[
-                                         self.tag_dictionary.get_idx_for_item(STOP_TAG)
-                                     ][None, :].repeat(forward_var.shape[0], 1)
-
-        alpha = log_sum_exp_batch(terminal_var)
-
-        return alpha
-
-    @staticmethod
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
         filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
         if len(sentences) != len(filtered_sentences):
@@ -1050,28 +938,6 @@ class TARSSequenceTagger(flair.nn.Model):
                 f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens."
             )
         return filtered_sentences
-
-    @staticmethod
-    def _filter_empty_string(texts: List[str]) -> List[str]:
-        filtered_texts = [text for text in texts if text]
-        if len(texts) != len(filtered_texts):
-            log.warning(
-                f"Ignore {len(texts) - len(filtered_texts)} string(s) with no tokens."
-            )
-        return filtered_texts
-
-    def get_transition_matrix(self):
-        data = []
-        for to_idx, row in enumerate(self.transitions):
-            for from_idx, column in enumerate(row):
-                row = [
-                    self.tag_dictionary.get_item_for_index(from_idx),
-                    self.tag_dictionary.get_item_for_index(to_idx),
-                    column.item(),
-                ]
-                data.append(row)
-            data.append(["----"])
-        print(tabulate(data, headers=["FROM", "TO", "SCORE"]))
 
     def __str__(self): # TODO
         return super(flair.nn.Model, self).__str__().rstrip(')') + \
