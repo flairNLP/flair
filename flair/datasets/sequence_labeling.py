@@ -1790,7 +1790,6 @@ def _download_wikiner(language_code: str, dataset_name: str):
 
         cached_path(
             f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2", Path("datasets") / dataset_name
-            **corpusargs,
         )
 
 
