@@ -40,14 +40,17 @@ class TextClassification(DownstreamTaskModel):
 
     def _set_up_model(self, params: dict, label_dictionary):
 
-        document_embedding_name = params['document_embeddings'].__name__
+        #needed since we store a pointer in our configurations list
+        params_copy = params.copy()
 
-        document_embedding_parameters = self._get_document_embedding_parameters(document_embedding_name, params)
+        document_embedding_name = params_copy['document_embeddings'].__name__
 
-        DocumentEmbeddingClass = params.pop("document_embeddings")
+        document_embedding_parameters = self._get_document_embedding_parameters(document_embedding_name, params_copy)
 
-        if "embeddings" in params:
-            word_embeddings_attributes = params.pop("embeddings")
+        DocumentEmbeddingClass = params_copy.pop("document_embeddings")
+
+        if "embeddings" in params_copy:
+            word_embeddings_attributes = params_copy.pop("embeddings")
             document_embedding_parameters["embeddings"] = self._make_word_embeddings_from_attributes(word_embeddings_attributes)
 
         DocumentEmbedding = DocumentEmbeddingClass(**document_embedding_parameters)
