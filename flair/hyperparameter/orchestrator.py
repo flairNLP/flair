@@ -46,7 +46,7 @@ class Orchestrator(object):
         return model
 
     def optimize(self, train_on_multiple_gpus : bool = False):
-        while self.search_space.budget._is_not_used_up():
+        while self.search_space.budget._is_not_used_up() and self.search_space.training_configurations.has_configurations_left():
             current_configuration = self.search_space.training_configurations.get_configuration()
             if train_on_multiple_gpus and self._sufficient_available_gpus():
                 self._perform_training_on_multiple_gpus(current_configuration)

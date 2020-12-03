@@ -37,6 +37,12 @@ class TrainingConfigurations:
     def __init__(self):
         self.configurations = []
 
+    def has_configurations_left(self) -> bool:
+        if self.configurations:
+            return True
+        else:
+            return False
+
     def get_configuration(self):
         return self.configurations.pop(0)
 
