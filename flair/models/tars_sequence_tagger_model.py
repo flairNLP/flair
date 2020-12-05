@@ -25,9 +25,11 @@ STOP_TAG: str = "<STOP>"
 
 class TARSSequenceTagger(flair.nn.Model):
     # tags used in BIO2 format: B, I, O
-    static_tag_beginning = "B"
-    static_tag_inside = "I"
-    static_tag_outside = "O"
+    # static_tag_beginning = "B"
+    # static_tag_inside = "I"
+    # static_tag_outside = "O"
+    static_tag_yes = "YES"
+    static_tag_no = "NO"
     static_tag_type = "tars_tag"
     static_adhoc_task_identifier = "adhoc_dummy"
 
@@ -84,9 +86,11 @@ class TARSSequenceTagger(flair.nn.Model):
 
         # prepare BIO2 tag dictionary
         self.tars_tag_dictionary = Dictionary(add_unk=False)
-        self.tars_tag_dictionary.add_item(self.static_tag_beginning)
-        self.tars_tag_dictionary.add_item(self.static_tag_inside)
-        self.tars_tag_dictionary.add_item(self.static_tag_outside)
+        # self.tars_tag_dictionary.add_item(self.static_tag_beginning)
+        # self.tars_tag_dictionary.add_item(self.static_tag_inside)
+        # self.tars_tag_dictionary.add_item(self.static_tag_outside)
+        self.tars_tag_dictionary.add_item(self.static_tag_yes)
+        self.tars_tag_dictionary.add_item(self.static_tag_no)
 
         # tag specific variables
         self.num_negative_tags_to_sample = num_negative_tags_to_sample
@@ -267,12 +271,6 @@ class TARSSequenceTagger(flair.nn.Model):
         # get and embed all tags by making a Sentence object that contains only the label text
         all_tags = [tag.decode("utf-8") for tag in self.tag_dictionary.idx2item]
         tag_sentences = [Sentence(self._get_cleaned_up_tag(tag)) for tag in all_tags]
-        # self.transformer_document_embeddings.embed(tag_sentences) # TODO: replace be word transformer and later use mean of vectors
-        #
-        # # get each tag embedding and scale between 0 and 1
-        # encodings_np = [sentence.get_embedding().cpu().detach().numpy() for \
-        #                 sentence in tag_sentences]
-        # normalized_encoding = minmax_scale(encodings_np)
 
         self.transformer_word_embeddings.embed(tag_sentences)
         encodings_np = []
@@ -330,7 +328,6 @@ class TARSSequenceTagger(flair.nn.Model):
             plausible_tag_probabilities = np.array(plausible_tag_probabilities, dtype='float64')
             plausible_tag_probabilities += 1e-08
             plausible_tag_probabilities /= np.sum(plausible_tag_probabilities)
-            print(plausible_tag_probabilities)
 
             if len(plausible_tags) > 0:
                 num_samples = min(self.num_negative_tags_to_sample, len(plausible_tags))
@@ -342,8 +339,8 @@ class TARSSequenceTagger(flair.nn.Model):
 
         return nearest_tags
 
-    def _get_tars_formatted_sentence(self, tag_no_prefix, sentence: Sentence):
-        tag_text_pair = " ".join([self._get_cleaned_up_tag(tag_no_prefix),
+    def _get_tars_formatted_sentence(self, tag, sentence: Sentence):
+        tag_text_pair = " ".join([self._get_cleaned_up_tag(tag),
                                   self.transformer_word_embeddings.tokenizer.sep_token,
                                   sentence.to_tokenized_string()])
         tag_text_pair_sentence = Sentence(tag_text_pair, use_tokenizer=False)
@@ -352,17 +349,11 @@ class TARSSequenceTagger(flair.nn.Model):
         for idx_in_new_sent in range(offset, len(tag_text_pair_sentence)): # ignore tokens of tag and sep_token
             idx_in_old_sent = idx_in_new_sent - offset
             old_tag = sentence[idx_in_old_sent].get_tag(self.tag_type).value
-            old_prefix, old_tag_no_prefix = self._split_tag(old_tag)
 
-            if old_tag_no_prefix == tag_no_prefix:
-                if old_prefix == "B":
-                    tag_text_pair_sentence[idx_in_new_sent].add_tag(self.static_tag_type, self.static_tag_beginning)
-                elif old_prefix == "I":
-                    tag_text_pair_sentence[idx_in_new_sent].add_tag(self.static_tag_type, self.static_tag_inside)
-                else:
-                    print("case not handled: whether B or I prefix (maybe corpus not in BIO2 or corrupt data).")
+            if old_tag == tag:
+                tag_text_pair_sentence[idx_in_new_sent].add_tag(self.static_tag_type, self.static_tag_yes)
             else:
-                tag_text_pair_sentence[idx_in_new_sent].add_tag(self.static_tag_type, self.static_tag_outside)
+                tag_text_pair_sentence[idx_in_new_sent].add_tag(self.static_tag_type, self.static_tag_no)
         return tag_text_pair_sentence
 
     def _get_tars_formatted_sentences(self, sentences):
@@ -370,29 +361,29 @@ class TARSSequenceTagger(flair.nn.Model):
         all_tags = [tag.decode("utf-8") for tag in self.tag_dictionary.idx2item]
         for sentence in sentences:
             tag_text_pairs_for_sentence = []
-            if self.training and self.num_negative_tags_to_sample is not None:
-                tags_of_sentence = {self._split_tag(token.get_tag(self.tag_type).value)[1] for token in sentence \
-                                    if token.get_tag(self.tag_type).value != "O"}
-                sampled_tags_not_in_sentence = self._get_nearest_tags_for(tags_of_sentence)
-                for tag in tags_of_sentence:
-                    tag_text_pairs_for_sentence.append( \
-                        self._get_tars_formatted_sentence(tag, sentence))
-                for tag in sampled_tags_not_in_sentence:
-                    tag_text_pairs_for_sentence.append( \
-                        self._get_tars_formatted_sentence(tag, sentence))
-            else:
-                for tag in all_tags:
-                    tag_text_pairs_for_sentence.append( \
-                        self._get_tars_formatted_sentence(tag, sentence))
+            # if self.training and self.num_negative_tags_to_sample is not None:
+            #     tags_of_sentence = {token.get_tag(self.tag_type).value for token in sentence \
+            #                         if token.get_tag(self.tag_type).value != "O"}
+            #     sampled_tags_not_in_sentence = self._get_nearest_tags_for(tags_of_sentence)
+            #     for tag in tags_of_sentence:
+            #         tag_text_pairs_for_sentence.append( \
+            #             self._get_tars_formatted_sentence(tag, sentence))
+            #     for tag in sampled_tags_not_in_sentence:
+            #         tag_text_pairs_for_sentence.append( \
+            #             self._get_tars_formatted_sentence(tag, sentence))
+            # else:
+            for tag in all_tags:
+                tag_text_pairs_for_sentence.append( \
+                    self._get_tars_formatted_sentence(tag, sentence))
             tag_text_pairs.extend(tag_text_pairs_for_sentence)
         return tag_text_pairs
 
-    def _split_tag(self, tag: str):
-        if "-" in tag:
-            tag_split = tag.split("-")
-            return tag_split[0], "-".join(tag_split[1:])
-        else:
-            return None, tag
+    # def _split_tag(self, tag: str):
+    #     if "-" in tag:
+    #         tag_split = tag.split("-")
+    #         return tag_split[0], "-".join(tag_split[1:])
+    #     else:
+    #         return None, tag
 
     @staticmethod
     def _make_ad_hoc_tag_dictionary(candidate_tag_set: set = None) -> Dictionary:
@@ -762,20 +753,13 @@ class TARSSequenceTagger(flair.nn.Model):
         features = self.forward(data_points)
         return self._calculate_loss(features, data_points)
 
-    def _transform_tars_scores(self, tars_scores):
-        # M: num_classes in task, N: num_samples
-        # reshape scores MN x 2 -> N x M x 2
-        # import torch
-        # a = torch.arange(30)
-        # b = torch.reshape(a, (-1, 3, 2))
-        # c = b[:,:,1]
-        tars_scores = torch.nn.functional.softmax(tars_scores, dim=1)
-        scores = torch.reshape(tars_scores, (-1, len(self.tag_dictionary.item2idx), 3))
-        print(scores.shape)
+    def _transform_tars_scores(self, tars_scores, max_sequence_length: int):
+        # M: num_classes in task, N: num_samples, L: max_sequence_length
+        tars_scores = torch.nn.functional.softmax(tars_scores, dim=1)  # shape: N*L*M x 2
+        scores = torch.reshape(tars_scores, (-1, len(self.tag_dictionary.item2idx), 2))  # shape: N*L x M x 2
 
-        # target shape N x M
-        target_scores = scores[:, :, 1]
-        print(target_scores.shape)
+        target_scores = scores[:, :, 1]  # shape: N*L x M
+        target_scores = torch.reshape(target_scores, (-1, max_sequence_length, len(self.tag_dictionary.item2idx))) # shape: N x L x M
         return target_scores
 
     def forward(self, sentences: List[Sentence]):
@@ -798,12 +782,13 @@ class TARSSequenceTagger(flair.nn.Model):
             print("token emb")
 
             sep_token_reached = False
+            offset = 0
             for tkn in sent:
                 # nicht jedes Token zählen, sondern nur die nach erstem [SEP]
                 if not sep_token_reached:
-                    if tkn.get_tag(self.tag_type).value == self.transformer_word_embeddings.tokenizer.sep_token:
+                    offset += 1
+                    if tkn.text == self.transformer_word_embeddings.tokenizer.sep_token:
                         sep_token_reached = True
-                        continue
                     continue
 
                 embed = tkn.get_embedding()
@@ -811,17 +796,17 @@ class TARSSequenceTagger(flair.nn.Model):
                 print(tkn)
                 print(embed)
                 print("----------------------------------")
-                nb_padding_tokens = longest_token_sequence_in_batch - len(sent)
 
-                if nb_padding_tokens > 0:
-                    t = pre_allocated_zero_tensor[:self.transformer_word_embeddings.embedding_length * nb_padding_tokens]
-                    all_embs.append(t)
+            nb_padding_tokens = longest_token_sequence_in_batch - len(sent)
+            if nb_padding_tokens > 0:
+                t = pre_allocated_zero_tensor[:self.transformer_word_embeddings.embedding_length * nb_padding_tokens]
+                all_embs.append(t)
 
         print(all_embs)
         sentence_tensor = torch.cat(all_embs).view(
             [
                 len(sentences),
-                longest_token_sequence_in_batch,
+                longest_token_sequence_in_batch - offset,
                 self.transformer_word_embeddings.embedding_length,
             ]
         )
@@ -835,7 +820,7 @@ class TARSSequenceTagger(flair.nn.Model):
 
         tag_scores = self.linear(sentence_tensor)
         print(tag_scores)
-        transformed_scores = self._transform_tars_scores(tag_scores)
+        transformed_scores = self._transform_tars_scores(tag_scores, longest_token_sequence_in_batch - offset)
         print(transformed_scores)
         return transformed_scores
 
@@ -858,6 +843,8 @@ class TARSSequenceTagger(flair.nn.Model):
                 features, tag_list, lengths
         ):
             sentence_feats = sentence_feats[:sentence_length]
+            print(sentence_feats)
+            print(sentence_tags)
             score += torch.nn.functional.cross_entropy(
                 sentence_feats, sentence_tags, weight=self.loss_weights
             )
