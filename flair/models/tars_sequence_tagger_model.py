@@ -525,6 +525,183 @@ class TARSSequenceTagger(flair.nn.Model):
             if return_loss:
                 return overall_loss / batch_no
 
+    @staticmethod
+    def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
+        filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
+        if len(sentences) != len(filtered_sentences):
+            log.warning(
+                f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens."
+            )
+        return filtered_sentences
+
+    def forward_loss(
+            self, data_points: Union[List[Sentence], Sentence], sort=True
+    ) -> torch.tensor:
+        if isinstance(data_points, Sentence):
+            data_points = [data_points]
+        features = self.forward(data_points)
+        return self._calculate_loss(features, data_points)
+
+    def _transform_tars_scores(self, tars_scores, max_sequence_length: int):
+        # M: num_classes in task, N: num_samples, L: max_sequence_length
+        tars_scores = torch.nn.functional.softmax(tars_scores, dim=1)  # shape: N*L*M x 2
+        scores = torch.reshape(tars_scores, (-1, len(self.tag_dictionary.item2idx), 2))  # shape: N*L x M x 2
+
+        # choosing 1 instead of 0 here is not important, it is only important that always the same is seen as the true one
+        # TODO: discuss whether the other one makes any sense or just the "YES" label could be enough
+        target_scores = scores[:, :, 1]  # shape: N*L x M
+        target_scores = torch.reshape(target_scores, (-1, max_sequence_length, len(self.tag_dictionary.item2idx))) # shape: N x L x M
+        return target_scores
+
+    def forward(self, sentences: List[Sentence]):
+        # Transform input data into TARS format
+        sentences = self._get_tars_formatted_sentences(sentences)
+
+        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        longest_token_sequence_in_batch: int = max(lengths)
+        pre_allocated_zero_tensor = torch.zeros(
+            self.transformer_word_embeddings.embedding_length * longest_token_sequence_in_batch,
+            dtype=torch.float,
+            device=flair.device,
+        )
+
+        # feed one tensor into linear layer instead of every item once
+        all_embs = list()
+        self.transformer_word_embeddings.embed(sentences)
+        for sent in sentences:
+            print(sent)
+            print("token emb")
+
+            sep_token_reached = False
+            offset = 0
+            for tkn in sent:
+                # nicht jedes Token zählen, sondern nur die nach erstem [SEP]
+                if not sep_token_reached:
+                    offset += 1
+                    if tkn.text == self.transformer_word_embeddings.tokenizer.sep_token:
+                        sep_token_reached = True
+                    continue
+
+                embed = tkn.get_embedding()
+                all_embs.append(embed)
+                print(tkn)
+                print(embed)
+                print("----------------------------------")
+
+            nb_padding_tokens = longest_token_sequence_in_batch - len(sent)
+            if nb_padding_tokens > 0:
+                t = pre_allocated_zero_tensor[:self.transformer_word_embeddings.embedding_length * nb_padding_tokens]
+                all_embs.append(t)
+
+        print(all_embs)
+        sentence_tensor = torch.cat(all_embs).view(
+            [
+                len(sentences),
+                longest_token_sequence_in_batch - offset,
+                self.transformer_word_embeddings.embedding_length,
+            ]
+        )
+
+        if self.use_dropout > 0.0:
+            sentence_tensor = self.dropout(sentence_tensor)
+        if self.use_word_dropout > 0.0:
+            sentence_tensor = self.word_dropout(sentence_tensor)
+        if self.use_locked_dropout > 0.0:
+            sentence_tensor = self.locked_dropout(sentence_tensor)
+
+        tag_scores = self.linear(sentence_tensor)
+        print(tag_scores)
+        transformed_scores = self._transform_tars_scores(tag_scores, longest_token_sequence_in_batch - offset)
+        print(transformed_scores)
+        return transformed_scores
+
+    def _calculate_loss(
+            self, features: torch.tensor, sentences: List[Sentence]
+    ) -> float:
+        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        tag_list: List = []
+        for s_id, sentence in enumerate(sentences):
+            # get the tags in this sentence
+            tag_idx: List[int] = [
+                self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value)
+                for token in sentence
+            ]
+            # add tags as tensor
+            tag = torch.tensor(tag_idx, device=flair.device)
+            tag_list.append(tag)
+        score = 0
+        for sentence_feats, sentence_tags, sentence_length in zip(
+                features, tag_list, lengths
+        ):
+            sentence_feats = sentence_feats[:sentence_length]
+            print(sentence_feats)
+            print(sentence_tags)
+            score += torch.nn.functional.cross_entropy(
+                sentence_feats, sentence_tags, weight=self.loss_weights
+            )
+        score /= len(features)
+        return score
+
+    def _obtain_labels(
+            self,
+            feature: torch.Tensor,
+            batch_sentences: List[Sentence],
+            get_all_tags: bool,
+    ) -> (List[List[Label]], List[List[List[Label]]]):
+        """
+        Returns a tuple of two lists:
+         - The first list corresponds to the most likely `Label` per token in each sentence.
+         - The second list contains a probability distribution over all `Labels` for each token
+           in a sentence for all sentences.
+        """
+
+        lengths: List[int] = [len(sentence.tokens) for sentence in batch_sentences]
+
+        tags = []
+        all_tags = []
+        feature = feature.cpu()
+        for index, length in enumerate(lengths):
+            feature[index, length:] = 0
+        softmax_batch = F.softmax(feature, dim=2).cpu()
+        scores_batch, prediction_batch = torch.max(softmax_batch, dim=2)
+        feature = zip(softmax_batch, scores_batch, prediction_batch)
+
+        for feats, length in zip(feature, lengths):
+            softmax, score, prediction = feats
+            confidences = score[:length].tolist()
+            tag_seq = prediction[:length].tolist()
+            scores = softmax[:length].tolist()
+
+            tags.append(
+                [
+                    Label(self.tag_dictionary.get_item_for_index(tag), conf)
+                    for conf, tag in zip(confidences, tag_seq)
+                ]
+            )
+
+            if get_all_tags:
+                all_tags.append(
+                    [
+                        [
+                            Label(
+                                self.tag_dictionary.get_item_for_index(score_id), score
+                            )
+                            for score_id, score in enumerate(score_dist)
+                        ]
+                        for score_dist in scores
+                    ]
+                )
+
+        return tags, all_tags
+
+    def __str__(self): # TODO
+        return super(flair.nn.Model, self).__str__().rstrip(')') + \
+               f'  (beta): {self.beta}\n' + \
+               f'  (weights): {self.weight_dict}\n' + \
+               f'  (weight_tensor) {self.loss_weights}\n)'
+
+    # TODO: methods that have to be overseen and maybe reworked:
+
     def _requires_span_F1_evaluation(self) -> bool:
         span_F1 = False
         for item in self.tag_dictionary.get_items():
@@ -744,176 +921,3 @@ class TARSSequenceTagger(flair.nn.Model):
             detailed_results=detailed_result,
         )
         return result, eval_loss
-
-    def forward_loss(
-            self, data_points: Union[List[Sentence], Sentence], sort=True
-    ) -> torch.tensor:
-        if isinstance(data_points, Sentence):
-            data_points = [data_points]
-        features = self.forward(data_points)
-        return self._calculate_loss(features, data_points)
-
-    def _transform_tars_scores(self, tars_scores, max_sequence_length: int):
-        # M: num_classes in task, N: num_samples, L: max_sequence_length
-        tars_scores = torch.nn.functional.softmax(tars_scores, dim=1)  # shape: N*L*M x 2
-        scores = torch.reshape(tars_scores, (-1, len(self.tag_dictionary.item2idx), 2))  # shape: N*L x M x 2
-
-        target_scores = scores[:, :, 1]  # shape: N*L x M
-        target_scores = torch.reshape(target_scores, (-1, max_sequence_length, len(self.tag_dictionary.item2idx))) # shape: N x L x M
-        return target_scores
-
-    def forward(self, sentences: List[Sentence]):
-        # Transform input data into TARS format
-        sentences = self._get_tars_formatted_sentences(sentences)
-
-        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
-        longest_token_sequence_in_batch: int = max(lengths)
-        pre_allocated_zero_tensor = torch.zeros(
-            self.transformer_word_embeddings.embedding_length * longest_token_sequence_in_batch,
-            dtype=torch.float,
-            device=flair.device,
-        )
-
-        # feed one tensor into linear layer instead of every item once
-        all_embs = list()
-        self.transformer_word_embeddings.embed(sentences)
-        for sent in sentences:
-            print(sent)
-            print("token emb")
-
-            sep_token_reached = False
-            offset = 0
-            for tkn in sent:
-                # nicht jedes Token zählen, sondern nur die nach erstem [SEP]
-                if not sep_token_reached:
-                    offset += 1
-                    if tkn.text == self.transformer_word_embeddings.tokenizer.sep_token:
-                        sep_token_reached = True
-                    continue
-
-                embed = tkn.get_embedding()
-                all_embs.append(embed)
-                print(tkn)
-                print(embed)
-                print("----------------------------------")
-
-            nb_padding_tokens = longest_token_sequence_in_batch - len(sent)
-            if nb_padding_tokens > 0:
-                t = pre_allocated_zero_tensor[:self.transformer_word_embeddings.embedding_length * nb_padding_tokens]
-                all_embs.append(t)
-
-        print(all_embs)
-        sentence_tensor = torch.cat(all_embs).view(
-            [
-                len(sentences),
-                longest_token_sequence_in_batch - offset,
-                self.transformer_word_embeddings.embedding_length,
-            ]
-        )
-
-        if self.use_dropout > 0.0:
-            sentence_tensor = self.dropout(sentence_tensor)
-        if self.use_word_dropout > 0.0:
-            sentence_tensor = self.word_dropout(sentence_tensor)
-        if self.use_locked_dropout > 0.0:
-            sentence_tensor = self.locked_dropout(sentence_tensor)
-
-        tag_scores = self.linear(sentence_tensor)
-        print(tag_scores)
-        transformed_scores = self._transform_tars_scores(tag_scores, longest_token_sequence_in_batch - offset)
-        print(transformed_scores)
-        return transformed_scores
-
-    def _calculate_loss(
-            self, features: torch.tensor, sentences: List[Sentence]
-    ) -> float:
-        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
-        tag_list: List = []
-        for s_id, sentence in enumerate(sentences):
-            # get the tags in this sentence
-            tag_idx: List[int] = [
-                self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value)
-                for token in sentence
-            ]
-            # add tags as tensor
-            tag = torch.tensor(tag_idx, device=flair.device)
-            tag_list.append(tag)
-        score = 0
-        for sentence_feats, sentence_tags, sentence_length in zip(
-                features, tag_list, lengths
-        ):
-            sentence_feats = sentence_feats[:sentence_length]
-            print(sentence_feats)
-            print(sentence_tags)
-            score += torch.nn.functional.cross_entropy(
-                sentence_feats, sentence_tags, weight=self.loss_weights
-            )
-        score /= len(features)
-        return score
-
-    def _obtain_labels(
-            self,
-            feature: torch.Tensor,
-            batch_sentences: List[Sentence],
-            get_all_tags: bool,
-    ) -> (List[List[Label]], List[List[List[Label]]]):
-        """
-        Returns a tuple of two lists:
-         - The first list corresponds to the most likely `Label` per token in each sentence.
-         - The second list contains a probability distribution over all `Labels` for each token
-           in a sentence for all sentences.
-        """
-
-        lengths: List[int] = [len(sentence.tokens) for sentence in batch_sentences]
-
-        tags = []
-        all_tags = []
-        feature = feature.cpu()
-        for index, length in enumerate(lengths):
-            feature[index, length:] = 0
-        softmax_batch = F.softmax(feature, dim=2).cpu()
-        scores_batch, prediction_batch = torch.max(softmax_batch, dim=2)
-        feature = zip(softmax_batch, scores_batch, prediction_batch)
-
-        for feats, length in zip(feature, lengths):
-            softmax, score, prediction = feats
-            confidences = score[:length].tolist()
-            tag_seq = prediction[:length].tolist()
-            scores = softmax[:length].tolist()
-
-            tags.append(
-                [
-                    Label(self.tag_dictionary.get_item_for_index(tag), conf)
-                    for conf, tag in zip(confidences, tag_seq)
-                ]
-            )
-
-            if get_all_tags:
-                all_tags.append(
-                    [
-                        [
-                            Label(
-                                self.tag_dictionary.get_item_for_index(score_id), score
-                            )
-                            for score_id, score in enumerate(score_dist)
-                        ]
-                        for score_dist in scores
-                    ]
-                )
-
-        return tags, all_tags
-
-    @staticmethod
-    def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
-        filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
-        if len(sentences) != len(filtered_sentences):
-            log.warning(
-                f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens."
-            )
-        return filtered_sentences
-
-    def __str__(self): # TODO
-        return super(flair.nn.Model, self).__str__().rstrip(')') + \
-               f'  (beta): {self.beta}\n' + \
-               f'  (weights): {self.weight_dict}\n' + \
-               f'  (weight_tensor) {self.loss_weights}\n)'
