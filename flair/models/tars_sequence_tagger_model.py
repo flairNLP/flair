@@ -267,11 +267,22 @@ class TARSSequenceTagger(flair.nn.Model):
         # get and embed all tags by making a Sentence object that contains only the label text
         all_tags = [tag.decode("utf-8") for tag in self.tag_dictionary.idx2item]
         tag_sentences = [Sentence(self._get_cleaned_up_tag(tag)) for tag in all_tags]
-        self.transformer_document_embeddings.embed(tag_sentences) # TODO: discuss whether this is good or not
+        # self.transformer_document_embeddings.embed(tag_sentences) # TODO: replace be word transformer and later use mean of vectors
+        #
+        # # get each tag embedding and scale between 0 and 1
+        # encodings_np = [sentence.get_embedding().cpu().detach().numpy() for \
+        #                 sentence in tag_sentences]
+        # normalized_encoding = minmax_scale(encodings_np)
 
-        # get each tag embedding and scale between 0 and 1
-        encodings_np = [sentence.get_embedding().cpu().detach().numpy() for \
-                        sentence in tag_sentences]
+        self.transformer_word_embeddings.embed(tag_sentences)
+        encodings_np = []
+        for sentence in tag_sentences:
+            embed_sum = np.zeros(self.transformer_word_embeddings.embedding_length)
+            for token in sentence:
+                embed = token.get_embedding().cpu().detach().numpy()
+                embed_sum += embed
+            embed_mean = embed_sum / len(sentence)
+            encodings_np.append(embed_mean)
         normalized_encoding = minmax_scale(encodings_np)
 
         # compute similarity matrix
@@ -308,7 +319,7 @@ class TARSSequenceTagger(flair.nn.Model):
             plausible_tags = []
             plausible_tag_probabilities = []
             for plausible_tag in self.tag_nearest_map[tag]:
-                if plausible_tag in nearest_tags:
+                if plausible_tag in nearest_tags or plausible_tag in tags:
                     continue
                 else:
                     plausible_tags.append(plausible_tag)
@@ -319,6 +330,7 @@ class TARSSequenceTagger(flair.nn.Model):
             plausible_tag_probabilities = np.array(plausible_tag_probabilities, dtype='float64')
             plausible_tag_probabilities += 1e-08
             plausible_tag_probabilities /= np.sum(plausible_tag_probabilities)
+            print(plausible_tag_probabilities)
 
             if len(plausible_tags) > 0:
                 num_samples = min(self.num_negative_tags_to_sample, len(plausible_tags))
@@ -758,100 +770,74 @@ class TARSSequenceTagger(flair.nn.Model):
         # b = torch.reshape(a, (-1, 3, 2))
         # c = b[:,:,1]
         tars_scores = torch.nn.functional.softmax(tars_scores, dim=1)
-        scores = torch.reshape(tars_scores, (-1, len(self.tag_dictionary.item2idx), 2))
+        scores = torch.reshape(tars_scores, (-1, len(self.tag_dictionary.item2idx), 3))
+        print(scores.shape)
 
         # target shape N x M
         target_scores = scores[:, :, 1]
+        print(target_scores.shape)
         return target_scores
 
     def forward(self, sentences: List[Sentence]):
-        transformed_sentences = self._get_tars_formatted_sentences(sentences)
-        # tag_scores = self.tars_model.forward(transformed_sentences)
-        # tag_scores = ???
-
         # Transform input data into TARS format
         sentences = self._get_tars_formatted_sentences(sentences)
 
-        print("embedding_length")
-        print(self.transformer_word_embeddings.embedding_length)
+        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        longest_token_sequence_in_batch: int = max(lengths)
+        pre_allocated_zero_tensor = torch.zeros(
+            self.transformer_word_embeddings.embedding_length * longest_token_sequence_in_batch,
+            dtype=torch.float,
+            device=flair.device,
+        )
 
+        # feed one tensor into linear layer instead of every item once
+        all_embs = list()
         self.transformer_word_embeddings.embed(sentences)
         for sent in sentences:
             print(sent)
             print("token emb")
+
+            sep_token_reached = False
             for tkn in sent:
-                # TOO: nicht jedes Token zählen, sondern nur die zwischen ersten und zweitem [SEP]
+                # nicht jedes Token zählen, sondern nur die nach erstem [SEP]
+                if not sep_token_reached:
+                    if tkn.get_tag(self.tag_type).value == self.transformer_word_embeddings.tokenizer.sep_token:
+                        sep_token_reached = True
+                        continue
+                    continue
+
+                embed = tkn.get_embedding()
+                all_embs.append(embed)
                 print(tkn)
-                print("get_embedding")
-                print(tkn.get_embedding().shape)
-                print(tkn.get_embedding())
+                print(embed)
+                print("----------------------------------")
+                nb_padding_tokens = longest_token_sequence_in_batch - len(sent)
 
-                out = self.linear(tkn.get_embedding())
-                print("out")
-                print(out)
-        tag_scores = self.linear(sentences[0][0].get_embedding())
+                if nb_padding_tokens > 0:
+                    t = pre_allocated_zero_tensor[:self.transformer_word_embeddings.embedding_length * nb_padding_tokens]
+                    all_embs.append(t)
 
-        # pre_allocated_zero_tensor = torch.zeros(
-        #     self.embeddings.embedding_length * longest_token_sequence_in_batch,
-        #     dtype=torch.float,
-        #     device=flair.device,
-        # )
-        # sentences_tensor =
-        # ..dropouts...
-        # tag_scores = self.linear(sentences_tensor)
+        print(all_embs)
+        sentence_tensor = torch.cat(all_embs).view(
+            [
+                len(sentences),
+                longest_token_sequence_in_batch,
+                self.transformer_word_embeddings.embedding_length,
+            ]
+        )
 
-        # Transform label_scores into current task's desired format
+        if self.use_dropout > 0.0:
+            sentence_tensor = self.dropout(sentence_tensor)
+        if self.use_word_dropout > 0.0:
+            sentence_tensor = self.word_dropout(sentence_tensor)
+        if self.use_locked_dropout > 0.0:
+            sentence_tensor = self.locked_dropout(sentence_tensor)
+
+        tag_scores = self.linear(sentence_tensor)
+        print(tag_scores)
         transformed_scores = self._transform_tars_scores(tag_scores)
-
+        print(transformed_scores)
         return transformed_scores
-
-        ## before:
-        # self.embeddings.embed(sentences)
-        # names = self.embeddings.get_names()
-        #
-        # lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
-        # longest_token_sequence_in_batch: int = max(lengths)
-        #
-        # pre_allocated_zero_tensor = torch.zeros(
-        #     self.embeddings.embedding_length * longest_token_sequence_in_batch,
-        #     dtype=torch.float,
-        #     device=flair.device,
-        # )
-        #
-        # all_embs = list()
-        # for sentence in sentences:
-        #     all_embs += [
-        #         emb for token in sentence for emb in token.get_each_embedding(names)
-        #     ]
-        #     nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
-        #
-        #     if nb_padding_tokens > 0:
-        #         t = pre_allocated_zero_tensor[
-        #             : self.embeddings.embedding_length * nb_padding_tokens
-        #             ]
-        #         all_embs.append(t)
-        #
-        # sentence_tensor = torch.cat(all_embs).view(
-        #     [
-        #         len(sentences),
-        #         longest_token_sequence_in_batch,
-        #         self.embeddings.embedding_length,
-        #     ]
-        # )
-        #
-        # # --------------------------------------------------------------------
-        # # FF PART
-        # # --------------------------------------------------------------------
-        # if self.use_dropout > 0.0:
-        #     sentence_tensor = self.dropout(sentence_tensor)
-        # if self.use_word_dropout > 0.0:
-        #     sentence_tensor = self.word_dropout(sentence_tensor)
-        # if self.use_locked_dropout > 0.0:
-        #     sentence_tensor = self.locked_dropout(sentence_tensor)
-        #
-        # features = self.linear(sentence_tensor)
-        #
-        # return features
 
     def _calculate_loss(
             self, features: torch.tensor, sentences: List[Sentence]
