@@ -72,17 +72,15 @@ class TARSSequenceTagger(flair.nn.Model):
 
         # prepare transformer word embeddings
         from flair.embeddings.token import TransformerWordEmbeddings
+        self.transformer_word_embeddings_type: str = transformer_word_embeddings
         self.transformer_word_embeddings = TransformerWordEmbeddings(
             model=transformer_word_embeddings,
             fine_tune=True,
             batch_size=batch_size,
         )
-        from flair.embeddings.document import TransformerDocumentEmbeddings
-        self.transformer_document_embeddings = TransformerDocumentEmbeddings(
-            model=transformer_word_embeddings, # TODO: same values for both available?
-            fine_tune=True,
-            batch_size=batch_size,
-        )
+
+        # all stats are required for state dict
+        self.batch_size = batch_size
 
         # prepare BIO2 tag dictionary
         self.tars_tag_dictionary = Dictionary(add_unk=False)
@@ -144,7 +142,7 @@ class TARSSequenceTagger(flair.nn.Model):
             "state_dict": self.state_dict(),
             "tag_dictionary": self.tag_dictionary,
             "tag_type": self.tag_type,
-            "task_name": self.task_name,
+            "task_name": self.current_task,
             "use_dropout": self.use_dropout,
             "use_word_dropout": self.use_word_dropout,
             "use_locked_dropout": self.use_locked_dropout,
@@ -152,7 +150,7 @@ class TARSSequenceTagger(flair.nn.Model):
             "weight_dict": self.weight_dict,
             "num_negative_tags_to_sample": self.num_negative_tags_to_sample,
             "batch_size": self.batch_size,
-            "transformer_word_embeddings": self.transformer_word_embeddings,
+            "transformer_word_embeddings": self.transformer_word_embeddings_type,
         }
         return model_state
 
@@ -579,19 +577,10 @@ class TARSSequenceTagger(flair.nn.Model):
             dtype=torch.float,
             device=flair.device,
         )
-        print(sentence_offsets)
-        print(sentence_rest_lengths)
-
-
 
         all_embs = list()
-        print(len(sentences))
-        print("------")
         self.transformer_word_embeddings.embed(sentences)
         for sent_idx, sent in enumerate(sentences):
-            print(len(sent))
-            print(sent)
-            print("---")
             for tkn_idx in range(sentence_offsets[sent_idx], len(sent)):
                 tkn = sent[tkn_idx]
                 embed = tkn.get_embedding()
@@ -602,7 +591,6 @@ class TARSSequenceTagger(flair.nn.Model):
                 t = pre_allocated_zero_tensor[:self.transformer_word_embeddings.embedding_length * nb_padding_tokens]
                 all_embs.append(t)
 
-        print(all_embs)
         sentence_tensor = torch.cat(all_embs).view(
             [
                 len(sentences),
