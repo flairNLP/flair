@@ -557,40 +557,56 @@ class TARSSequenceTagger(flair.nn.Model):
         # Transform input data into TARS format
         sentences = self._get_tars_formatted_sentences(sentences)
 
-        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
-        longest_token_sequence_in_batch: int = max(lengths)
+        sentence_offsets = []
+        sentence_rest_lengths = []
+        for sent in sentences:
+            sep_token_reached = False
+            offset = 0
+            rest_length = 0
+            for tkn in sent:
+                if not sep_token_reached:
+                    offset += 1
+                    if tkn.text == self.transformer_word_embeddings.tokenizer.sep_token:
+                        sep_token_reached = True
+                else:
+                    rest_length += 1
+            sentence_offsets.append(offset)
+            sentence_rest_lengths.append(rest_length)
+        longest_token_sequence_in_batch = max(sentence_rest_lengths)
+
         pre_allocated_zero_tensor = torch.zeros(
             self.transformer_word_embeddings.embedding_length * longest_token_sequence_in_batch,
             dtype=torch.float,
             device=flair.device,
         )
+        print(sentence_offsets)
+        print(sentence_rest_lengths)
 
-        # feed one tensor into linear layer instead of every item once
+
+
         all_embs = list()
+        print(len(sentences))
+        print("------")
         self.transformer_word_embeddings.embed(sentences)
-        for sent in sentences:
-            sep_token_reached = False
-            offset = 0
-            for tkn in sent:
-                # nicht jedes Token zählen, sondern nur die nach erstem [SEP]
-                if not sep_token_reached:
-                    offset += 1
-                    if tkn.text == self.transformer_word_embeddings.tokenizer.sep_token:
-                        sep_token_reached = True
-                    continue
-
+        for sent_idx, sent in enumerate(sentences):
+            print(len(sent))
+            print(sent)
+            print("---")
+            for tkn_idx in range(sentence_offsets[sent_idx], len(sent)):
+                tkn = sent[tkn_idx]
                 embed = tkn.get_embedding()
                 all_embs.append(embed)
 
-            nb_padding_tokens = longest_token_sequence_in_batch - len(sent)
+            nb_padding_tokens = longest_token_sequence_in_batch - sentence_rest_lengths[sent_idx]
             if nb_padding_tokens > 0:
                 t = pre_allocated_zero_tensor[:self.transformer_word_embeddings.embedding_length * nb_padding_tokens]
                 all_embs.append(t)
 
+        print(all_embs)
         sentence_tensor = torch.cat(all_embs).view(
             [
                 len(sentences),
-                longest_token_sequence_in_batch - offset,
+                longest_token_sequence_in_batch,
                 self.transformer_word_embeddings.embedding_length,
             ]
         )
@@ -603,7 +619,7 @@ class TARSSequenceTagger(flair.nn.Model):
             sentence_tensor = self.locked_dropout(sentence_tensor)
 
         tag_scores = self.linear(sentence_tensor)
-        transformed_scores = self._transform_tars_scores(tag_scores, longest_token_sequence_in_batch - offset)
+        transformed_scores = self._transform_tars_scores(tag_scores, longest_token_sequence_in_batch)
         return transformed_scores
 
     def _calculate_loss(
