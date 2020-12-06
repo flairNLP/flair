@@ -569,9 +569,6 @@ class TARSSequenceTagger(flair.nn.Model):
         all_embs = list()
         self.transformer_word_embeddings.embed(sentences)
         for sent in sentences:
-            print(sent)
-            print("token emb")
-
             sep_token_reached = False
             offset = 0
             for tkn in sent:
@@ -584,16 +581,12 @@ class TARSSequenceTagger(flair.nn.Model):
 
                 embed = tkn.get_embedding()
                 all_embs.append(embed)
-                print(tkn)
-                print(embed)
-                print("----------------------------------")
 
             nb_padding_tokens = longest_token_sequence_in_batch - len(sent)
             if nb_padding_tokens > 0:
                 t = pre_allocated_zero_tensor[:self.transformer_word_embeddings.embedding_length * nb_padding_tokens]
                 all_embs.append(t)
 
-        print(all_embs)
         sentence_tensor = torch.cat(all_embs).view(
             [
                 len(sentences),
@@ -610,9 +603,7 @@ class TARSSequenceTagger(flair.nn.Model):
             sentence_tensor = self.locked_dropout(sentence_tensor)
 
         tag_scores = self.linear(sentence_tensor)
-        print(tag_scores)
         transformed_scores = self._transform_tars_scores(tag_scores, longest_token_sequence_in_batch - offset)
-        print(transformed_scores)
         return transformed_scores
 
     def _calculate_loss(
@@ -634,8 +625,6 @@ class TARSSequenceTagger(flair.nn.Model):
                 features, tag_list, lengths
         ):
             sentence_feats = sentence_feats[:sentence_length]
-            print(sentence_feats)
-            print(sentence_tags)
             score += torch.nn.functional.cross_entropy(
                 sentence_feats, sentence_tags, weight=self.loss_weights
             )
@@ -700,14 +689,14 @@ class TARSSequenceTagger(flair.nn.Model):
                f'  (weights): {self.weight_dict}\n' + \
                f'  (weight_tensor) {self.loss_weights}\n)'
 
-    # TODO: methods that have to be overseen and maybe reworked:
-
     def _requires_span_F1_evaluation(self) -> bool:
         span_F1 = False
         for item in self.tag_dictionary.get_items():
             if item.startswith('B-'):
                 span_F1 = True
         return span_F1
+
+    # TODO: methods that have to be overseen and maybe reworked:
 
     def _evaluate_with_span_F1(self, data_loader, embedding_storage_mode, mini_batch_size, out_path):
         eval_loss = 0
@@ -727,7 +716,7 @@ class TARSSequenceTagger(flair.nn.Model):
             loss = self.predict(batch,
                                 embedding_storage_mode=embedding_storage_mode,
                                 mini_batch_size=mini_batch_size,
-                                label_name='predicted',
+                                tag_name='predicted',
                                 return_loss=True)
             eval_loss += loss
             batch_no += 1
@@ -844,7 +833,7 @@ class TARSSequenceTagger(flair.nn.Model):
             loss = self.predict(batch,
                                 embedding_storage_mode=embedding_storage_mode,
                                 mini_batch_size=mini_batch_size,
-                                label_name='predicted',
+                                tag_name='predicted',
                                 return_loss=True)
             eval_loss += loss
             batch_no += 1
