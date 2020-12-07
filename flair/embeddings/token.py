@@ -1078,7 +1078,16 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                     # set the extracted embedding for the token
                     token.set_embedding(self.name, torch.cat(subtoken_embeddings))
 
+                    # move embeddings from context back to original sentence (if using context)
+                    if self.use_context and token_idx >= self.context_length and token_idx < self.context_length + len(
+                            original_sentence.tokens):
+                        original_sentence.tokens[token_idx - self.context_length].set_embedding(self.name, torch.cat(
+                            subtoken_embeddings))
+
                     subword_start_idx += number_of_subtokens
+
+                if self.use_context:
+                    sentence = original_sentence
 
     def reconstruct_tokens_from_subtokens(self, sentence, subtokens):
         word_iterator = iter(sentence)
