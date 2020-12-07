@@ -792,6 +792,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         use_scalar_mix: bool = False,
         fine_tune: bool = False,
         allow_long_sentences: bool = True,
+        use_context: bool = False,
         **kwargs
     ):
         """
@@ -830,6 +831,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # model name
         self.name = 'transformer-word-' + str(model)
+
+        # store whether to use context
+        self.use_context = use_context
 
         # when initializing, embeddings are in eval mode by default
         self.model.eval()
@@ -917,7 +921,20 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         non_empty_sentences = []
         empty_sentences = []
 
+        if self.use_context:
+            self.context_length = len(sentences[0].left_context.split(" "))
+
         for sentence in sentences:
+
+            # tokenized string may include context
+            if self.use_context:
+                original_sentence = sentence
+
+                sentence = Sentence()
+                sentence.tokens = [Token(token) for token in original_sentence.left_context.split(" ") +
+                                                             original_sentence.to_tokenized_string().split(" ") +
+                                                             original_sentence.right_context.split(" ")]
+
             tokenized_string = sentence.to_tokenized_string()
 
             # method 1: subtokenize sentence
