@@ -1683,17 +1683,21 @@ class WSD_UFSAC(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            train_file: str = None,
+            test_file: str = None
     ):
         """
         Initialize a custom corpus with any two WSD datasets in the UFSAC format. This is only possible if you've
         manually downloaded the WSD datasets in UFSAC format to your machine.
         Obtain the most recent datasets from https://drive.google.com/file/d/1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO and copy
-        any two of the datasets in a folder called 'wsd_ufsac'. Then rename the files in the folder to train.xml and
-        test.xml (optional) according to which file you want to train and test the model on. Then set the base_path
-        parameter in the constructor to the path to the parent directory where the 'wsd_ufsac' folder resides.
+        up to two of the datasets in a folder called 'wsd_ufsac'.Then set the base_path parameter in the constructor to
+        the path to the parent directory where the 'wsd_ufsac' folder resides and respectively set the train_file and
+        test_file parameter in the constructor according to the file names.
         :param base_path: Path to the custom WSD corpus ('wsd_ufsac' folder) on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        :param train_file: Name of the training dataset (e.g. 'semcor.xml')
+        :param test_file: Name of the testing dataset
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1719,8 +1723,6 @@ class WSD_UFSAC(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        path_to_train_file = data_folder / "test.xml"
-
         # check if data there
         if not data_folder.exists():
             log.warning("-" * 100)
@@ -1731,34 +1733,25 @@ class WSD_UFSAC(ColumnCorpus):
             log.warning("-" * 100)
 
         # convert the files to CoNLL
-        convert_ufsac_to_conll(data_file=Path(data_folder / "train.xml"), encoding="latin-1")
 
-        if path_to_train_file.exists():
+        if train_file is not None:
 
-            convert_ufsac_to_conll(data_file=Path(data_folder / "test.xml"), encoding="latin-1")
+            convert_ufsac_to_conll(data_file=Path(data_folder / train_file), encoding="latin-1")
 
-            super(WSD_UFSAC, self).__init__(
-                data_folder,
-                columns,
-                tag_to_bioes=None,
-                encoding="latin-1",
-                in_memory=in_memory,
-                document_separator_token=None if not document_as_sequence else "-DOCSTART-",
-                train_file='train.xml',
-                test_file='test.xml'
-            )
+        if test_file is not None:
 
-        else:
+            convert_ufsac_to_conll(data_file=Path(data_folder / test_file), encoding="latin-1")
 
-            super(WSD_UFSAC, self).__init__(
-                data_folder,
-                columns,
-                tag_to_bioes=None,
-                encoding="latin-1",
-                in_memory=in_memory,
-                document_separator_token=None if not document_as_sequence else "-DOCSTART-",
-                train_file='train.xml'
-            )
+        super(WSD_UFSAC, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes=None,
+            encoding="latin-1",
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            train_file=train_file,
+            test_file=test_file
+        )
 
 
 class BIOSCOPE(ColumnCorpus):
