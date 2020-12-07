@@ -1508,6 +1508,301 @@ class TWITTER_NER(ColumnCorpus):
             **corpusargs,
         )
 
+def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
+    """
+    Function that converts the UFSAC format into the needed CoNLL format. The IOB2 format will be used if
+    chunks reside within the data.
+    Parameters
+    ----------
+    data_file : Union[str, Path]
+        Path to the data file.
+    encoding : str, optional
+        Encoding used in open function. The default is "utf8".
+
+    """
+
+    def add_tag(string: str):
+        """
+        Function that extracts a tag from a string and writes it correctly in the new file.
+        Parameters
+        ----------
+        string : str
+            String that contains a tag to extract.
+        """
+
+        tag_start = string.find('"') + 1
+        tag_end = string.find('"', tag_start)
+        tag = string[tag_start:tag_end]
+
+        temp.append(tag)
+        f.write(' B-' + tag)
+
+
+    with open(file=data_file, mode='r', encoding=encoding) as f: # get file lines
+
+        # check if file is already converted
+        first_line = f.readline().split()
+
+        if '<c' not in first_line[0]:  # check if file is already in CoNLL
+
+            return
+
+        else:
+
+            lines = f.readlines()
+
+    with open(file=data_file, mode='w', encoding=encoding) as f: # alter file to CoNLL format
+
+        for line in lines:
+
+            line_list = line.split()
+
+            if len(line_list) > 3:  # sentence parts have at least 4 tokens
+
+                # tokens to ignore (edit here for variation)
+                blacklist = ['<word','wn1','wn2','id=']
+
+                # counter to keep track how many tags have been found in line
+                ctr = 0
+
+                # variable to count of how many words a chunk consists
+                words = 1
+
+                # indicates if surface form is chunk or not
+                is_chunk = False
+
+                # array to save tags temporarily for handling chunks
+                temp = []
+
+                for token in line_list:
+
+                    if any(substring in token for substring in blacklist):
+
+                        continue
+
+                    if 'surface_form=' in token:
+
+                        # cut token to get chunk
+                        chunk_start = token.find('"') + 1
+                        chunk_end = token.find('"', chunk_start)
+                        chunk = token[chunk_start:chunk_end]
+
+                        for character in chunk:
+
+                            if '_' in character:
+
+                                words += 1
+
+                        if words > 1: # gather single words of chunk
+
+                            is_chunk = True
+
+                            # save single words of chunk
+                            chunk_parts = []
+
+                            # handle first word of chunk
+                            word_start = 0
+                            word_end = chunk.find('_', word_start)
+                            f.write(chunk[word_start:word_end])
+                            word_start = word_end+1
+
+                            for _ in range(words-1):
+
+                                word_end = chunk.find('_', word_start)
+
+                                if word_end == -1:
+
+                                    chunk_parts.append(chunk[word_start:])
+
+                                else:
+
+                                    chunk_parts.append(chunk[word_start:word_end])
+
+                                word_start = word_end+1
+
+                        else:
+
+                            f.write(chunk)
+
+                        ctr += 1
+                        continue
+
+                    elif 'pos=' in token:
+
+                        if ctr != 2:
+
+                            temp.append(' O')
+                            f.write(' O')
+
+                        add_tag(token)
+                        ctr = 3
+                        continue
+
+                    elif '"' in token:
+
+                        add_tag(token)
+                        ctr += 1
+                        continue
+
+                    else:
+
+                        # edit here for variation
+                        for _ in range(4-ctr):
+
+                            temp.append(' O')
+                            f.write(' O')
+
+                        f.write('\n')
+
+                if is_chunk: # handle chunks
+
+                    for word in chunk_parts:
+
+                        f.write(word)
+
+                        for elem in temp:
+
+                            if ' O' in elem:
+
+                                f.write(elem)
+
+                            else:
+
+                                f.write(' I-' + elem)
+
+                        f.write('\n')
+
+            elif line_list[0] == '</sentence>':  # handle end of sentence
+
+                f.write('\n')
+
+
+class WSD_UFSAC(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+            train_file: str = None,
+            test_file: str = None
+    ):
+        """
+        Initialize a custom corpus with any two WSD datasets in the UFSAC format. This is only possible if you've
+        manually downloaded the WSD datasets in UFSAC format to your machine.
+        Obtain the most recent datasets from https://drive.google.com/file/d/1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO and copy
+        up to two of the datasets in a folder called 'wsd_ufsac'.Then set the base_path parameter in the constructor to
+        the path to the parent directory where the 'wsd_ufsac' folder resides and respectively set the train_file and
+        test_file parameter in the constructor according to the file names.
+        :param base_path: Path to the custom WSD corpus ('wsd_ufsac' folder) on your machine
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        :param train_file: Name of the training dataset (e.g. 'semcor.xml')
+        :param test_file: Name of the testing dataset
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        #
+        # since only the WordNet 3.0 version for senses is consistently available for all provided datasets we will
+        # only consider this version
+        #
+        # also we ignore the id annotation used in datasets that were originally created for evaluation tasks
+        #
+        # if the other annotations should be needed simply add the columns in correct order according
+        # to the chosen datasets here and respectively change the values of the blacklist array and
+        # the range value of the else case in the token for loop in the convert_ufsac_to_conll function
+
+        columns = {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # check if data there
+        if not data_folder.exists():
+            log.warning("-" * 100)
+            log.warning(f'WARNING: UFSAC corpus not found at "{data_folder}".')
+            log.warning(
+                'Necessary data can be found here: "https://drive.google.com/file/d/1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO"'
+            )
+            log.warning("-" * 100)
+
+        # convert the files to CoNLL
+
+        if train_file is not None:
+
+            convert_ufsac_to_conll(data_file=Path(data_folder / train_file), encoding="latin-1")
+
+        if test_file is not None:
+
+            convert_ufsac_to_conll(data_file=Path(data_folder / test_file), encoding="latin-1")
+
+        super(WSD_UFSAC, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes=None,
+            encoding="latin-1",
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            train_file=train_file,
+            test_file=test_file
+        )
+
+
+class BIOSCOPE(ColumnCorpus):
+
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+    ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "tag"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        bioscope_path = "https://raw.githubusercontent.com/whoisjones/BioScopeSequenceLabelingData/master/sequence_labeled/"
+        cached_path(f"{bioscope_path}output.txt", Path("datasets") / dataset_name)
+
+        super(BIOSCOPE, self).__init__(
+            data_folder, columns, in_memory=in_memory, train_file="output.txt"
+        )
+
+
+def _download_wikiner(language_code: str, dataset_name: str):
+    # download data if necessary
+    wikiner_path = (
+        "https://raw.githubusercontent.com/dice-group/FOX/master/input/Wikiner/"
+    )
+    lc = language_code
+
+    data_file = (
+            Path(flair.cache_root)
+            / "datasets"
+            / dataset_name
+            / f"aij-wikiner-{lc}-wp3.train"
+    )
+    if not data_file.is_file():
+
+        cached_path(
+            f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2", Path("datasets") / dataset_name
+        )
+
 
 class UP_CHINESE(ColumnCorpus):
     def __init__(
