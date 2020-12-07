@@ -9,7 +9,7 @@ from functools import lru_cache
 
 import torch
 from bpemb import BPEmb
-from transformers import XLNetTokenizer, T5Tokenizer, GPT2Tokenizer, AutoTokenizer, AutoConfig, AutoModel
+from transformers import TransfoXLTokenizer, XLNetTokenizer, T5Tokenizer, GPT2Tokenizer, AutoTokenizer, AutoConfig, AutoModel
 
 import flair
 import gensim
@@ -864,6 +864,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             self.begin_offset = 0
         if type(self.tokenizer) == GPT2Tokenizer:
             self.begin_offset = 0
+        if type(self.tokenizer) == TransfoXLTokenizer:
+            self.begin_offset = 0
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
         """Add embeddings to all words in a list of sentences."""
@@ -984,10 +986,13 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             sequence_length = len(sentence)
             input_ids[s_id][:sequence_length] = sentence
             mask[s_id][:sequence_length] = torch.ones(sequence_length)
-
+        
         # put encoded batch through transformer model to get all hidden states of all encoder layers
-        hidden_states = self.model(input_ids, attention_mask=mask)[-1]
-        # make the tuple a tensor; makes working with it easier.
+        if type(self.tokenizer) == TransfoXLTokenizer:
+            hidden_states = self.model(input_ids)[-1]
+        else:
+            hidden_states = self.model(input_ids, attention_mask=mask)[-1]   # make the tuple a tensor; makes working with it easier.
+
         hidden_states = torch.stack(hidden_states)
 
         sentence_idx_offset = 0
