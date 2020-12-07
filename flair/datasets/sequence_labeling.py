@@ -575,7 +575,7 @@ class CONLL_03(ColumnCorpus):
             cached_path(f"{conll_yago_path}combinedENG.testa", Path("datasets") / dataset_name)
             cached_path(f"{conll_yago_path}combinedENG.testb", Path("datasets") / dataset_name)
             cached_path(f"{conll_yago_path}combinedENG.train", Path("datasets") / dataset_name)
-            
+
 
 
         # check if data there
@@ -597,7 +597,7 @@ class CONLL_03(ColumnCorpus):
                 document_separator_token="-DOCSTART-",
                 **corpusargs,
             )
-        else:    
+        else:
             super(CONLL_03, self).__init__(
                 data_folder,
                 columns,
@@ -1696,7 +1696,7 @@ class MIT_RESTAURANT_NER(ColumnCorpus):
             **corpusargs,
         )
 
-        
+
 class IGBO_NER(ColumnCorpus):
     def __init__(
             self,
@@ -1743,8 +1743,8 @@ class IGBO_NER(ColumnCorpus):
             in_memory=in_memory,
             **corpusargs,
         )
-        
-        
+
+
 class HAUSA_NER(ColumnCorpus):
     def __init__(
             self,
@@ -1966,7 +1966,7 @@ class NAIJA_PIDGIN_NER(ColumnCorpus):
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
-        
+
         corpus_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/pcm/"
 
         cached_path(f"{corpus_path}test.txt", Path("datasets") / dataset_name)
@@ -2403,6 +2403,62 @@ class CONLL_04(ColumnCorpus):
             encoding="latin-1",
             in_memory=in_memory,
             comment_symbol='#',
+            **corpusargs,
+        )
+
+class CONLL04(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+            **corpusargs,
+    ):
+        """
+        Initialize the CoNLL04. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner", 2: "relation", 3: "relation_dep"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        conll_path = "https://raw.githubusercontent.com/bekou/multihead_joint_entity_relation_extraction/master/data/CoNLL04/"
+        dev_file = "dev.txt"
+        test_file = "test.txt"
+        train_file = "train.txt"
+        cached_path(f"{conll_path}/{dev_file}", Path("datasets") / dataset_name)
+        cached_path(f"{conll_path}/{test_file}", Path("datasets") / dataset_name)
+        cached_path(f"{conll_path}/{train_file}", Path("datasets") / dataset_name)
+
+        super(CONLL04, self).__init__(
+            data_folder,
+            columns,
+            dev_file=dev_file,
+            test_file=test_file,
+            train_file=train_file,
+            column_delimiter="\t",
+            tag_to_bioes=tag_to_bioes,
+            encoding="latin-1",
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             **corpusargs,
         )
 
@@ -4248,7 +4304,7 @@ class REDDIT_EL_GOLD(ColumnCorpus):
             **corpusargs,
     ):
         """
-        Initialize the Reddit Entity Linking corpus containing gold annotations only (https://arxiv.org/abs/2101.01228v2) in the NER-like column format. 
+        Initialize the Reddit Entity Linking corpus containing gold annotations only (https://arxiv.org/abs/2101.01228v2) in the NER-like column format.
         The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -4321,7 +4377,7 @@ class REDDIT_EL_GOLD(ColumnCorpus):
 
                         # Keep track of the current comment thread and its corresponding key, on which the annotations are matched.
                         # Each comment thread is handled as one 'document'.
-                        self.curr_comm = self.curr_row[4] 
+                        self.curr_comm = self.curr_row[4]
                         comm_key = self.curr_row[0]
 
                         # Python's csv package for some reason fails to correctly parse a handful of rows inside the comments.tsv file.
@@ -4344,13 +4400,13 @@ class REDDIT_EL_GOLD(ColumnCorpus):
                             self._text_to_cols(Sentence(self.curr_comm, use_tokenizer = True), link_annots, txtout)
                         else:
                             # In two of the comment thread a case of capital letter spacing occurs, which the SegtokTokenizer cannot properly handle.
-                            # The following if-elif condition handles these two cases and as result writes full capitalized words in each corresponding row, 
+                            # The following if-elif condition handles these two cases and as result writes full capitalized words in each corresponding row,
                             # and not just single letters into single rows.
                             if comm_key == "dv74ybb":
                                 self.curr_comm = " ".join([word.replace(" ", "") for word in self.curr_comm.split("  ")])
                             elif comm_key == "eci2lut":
-                                self.curr_comm = (self.curr_comm[:18] + self.curr_comm[18:27].replace(" ", "") + self.curr_comm[27:55] + 
-                                self.curr_comm[55:68].replace(" ", "") + self.curr_comm[68:85] + self.curr_comm[85:92].replace(" ", "") + 
+                                self.curr_comm = (self.curr_comm[:18] + self.curr_comm[18:27].replace(" ", "") + self.curr_comm[27:55] +
+                                self.curr_comm[55:68].replace(" ", "") + self.curr_comm[68:85] + self.curr_comm[85:92].replace(" ", "") +
                                 self.curr_comm[92:])
 
                             self._text_to_cols(Sentence(self.curr_comm, use_tokenizer = True), link_annots, txtout)
@@ -4400,10 +4456,10 @@ class REDDIT_EL_GOLD(ColumnCorpus):
             # incorrectly, in order to keep the desired format (empty line as a sentence separator).
             try:
                 if ((sentence[i].text in {".", "!", "?", "!*"}) and
-                    (sentence[i+1].text not in {'"', '“', "'", "''", "!", "?", ";)", "."}) and 
+                    (sentence[i+1].text not in {'"', '“', "'", "''", "!", "?", ";)", "."}) and
                     ("." not in sentence[i-1].text)):
                     outfile.writelines("\n")
-            except IndexError: 
+            except IndexError:
             # Thrown when the second check above happens, but the last token of a sentence is reached.
             # Indicates that the EOS punctuaion mark is present, therefore an empty line needs to be written below.
                 outfile.writelines("\n")
@@ -4447,7 +4503,7 @@ class REDDIT_EL_GOLD(ColumnCorpus):
             # Check if further annotations belong to the current sentence as well
             try:
                 next_row = next(self.comments) if not fix_flag else next(self.parsed_row)
-                if len(next_row) < 2: 
+                if len(next_row) < 2:
                     # 'else "  "' is needed to keep the proper token positions (for accordance with annotations)
                     self.curr_comm += next_row[0] if any(next_row) else "  "
                 else:
