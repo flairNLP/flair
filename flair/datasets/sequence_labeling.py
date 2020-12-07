@@ -2454,6 +2454,61 @@ class TURKU_NER(ColumnCorpus):
             **corpusargs,
         )
 
+class CONLL04(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+            **corpusargs,
+    ):
+        """
+        Initialize the CoNLL04. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner", 2: "relation", 3: "relation_dep"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        conll_path = "https://raw.githubusercontent.com/bekou/multihead_joint_entity_relation_extraction/master/data/CoNLL04/"
+        dev_file = "dev.txt"
+        test_file = "test.txt"
+        train_file = "train.txt"
+        cached_path(f"{conll_path}/{dev_file}", Path("datasets") / dataset_name)
+        cached_path(f"{conll_path}/{test_file}", Path("datasets") / dataset_name)
+        cached_path(f"{conll_path}/{train_file}", Path("datasets") / dataset_name)
+
+        super(CONLL04, self).__init__(
+            data_folder,
+            columns,
+            dev_file=dev_file,
+            test_file=test_file,
+            train_file=train_file,
+            column_delimiter="\t",
+            tag_to_bioes=tag_to_bioes,
+            encoding="latin-1",
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            **corpusargs,
+        )
 
 class TWITTER_NER(ColumnCorpus):
     def __init__(
