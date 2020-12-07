@@ -1303,6 +1303,12 @@ class Corpus:
         tag_dictionary.add_item("<STOP>")
         return tag_dictionary
 
+    def contextualize(self, tokens: int, max_sentences: int = 24):
+        contextualize(tokens, sentences=self.train, max_sentences=max_sentences)
+        contextualize(tokens, sentences=self.dev, max_sentences=max_sentences)
+        contextualize(tokens, sentences=self.test, max_sentences=max_sentences)
+        return self
+
 
 class MultiCorpus(Corpus):
     def __init__(self, corpora: List[Corpus], name: str = "multicorpus"):
@@ -1319,6 +1325,36 @@ class MultiCorpus(Corpus):
         output = f"MultiCorpus: {len(self.train)} train + {len(self.dev)} dev + {len(self.test)} test sentences\n - "
         output += "\n - ".join([f'{type(corpus).__name__} {str(corpus)}' for corpus in self.corpora])
         return output
+
+
+def contextualize(tokens: int, sentences: Union[FlairDataset, List[Sentence]], max_sentences: int = 24):
+
+    # go through each sentence
+    for index, sentence in enumerate(sentences):
+        left_sentences = []
+        right_sentences = []
+
+        # gather left context for sentence
+        for i in range(index - 1, index - 1 - max_sentences, -1):
+            sanitized_index = i % len(sentences)
+            left_sentences.append(sentences[sanitized_index])
+        left_sentences.reverse()
+
+        # gather right context for sentence
+        for i in range(index + 1, index + 1 + max_sentences):
+            sanitized_index = i % len(sentences)
+            right_sentences.append(sentences[sanitized_index])
+
+        # create string representation of left and right context
+        left_context = " ".join(sent.to_tokenized_string() for sent in left_sentences).split(" ")[-tokens:]
+        right_context = " ".join(sent.to_tokenized_string() for sent in right_sentences).split(" ")[:tokens]
+
+        assert len(left_context) == tokens
+        assert len(right_context) == tokens
+
+        # save context to sentence
+        sentence.left_context = " ".join(left_context)
+        sentence.right_context = " ".join(right_context)
 
 
 def iob2(tags):
