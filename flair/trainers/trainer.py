@@ -242,6 +242,7 @@ class ModelTrainer:
                                    max_lr=learning_rate,
                                    steps_per_epoch=dataset_size//mini_batch_size + 1,
                                    epochs=max_epochs-self.epoch, # if we load a checkpoint, we have already trained for self.epoch
+                                   pct_start=0.0,
                                    cycle_momentum=cycle_momentum)
         else:
             lr_scheduler = scheduler(
