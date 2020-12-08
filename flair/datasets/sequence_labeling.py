@@ -2526,7 +2526,7 @@ class CONLL_04(ColumnCorpus):
             **corpusargs,
         )
 
-class CONLL04(ColumnCorpus):
+class CONLL_04(ColumnCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -2536,7 +2536,7 @@ class CONLL04(ColumnCorpus):
             **corpusargs,
     ):
         """
-        Initialize the CoNLL04. The first time you call this constructor it will automatically
+        Initialize the CoNLL_04. The first time you call this constructor it will automatically
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -2568,7 +2568,7 @@ class CONLL04(ColumnCorpus):
         cached_path(f"{conll_path}/{test_file}", Path("datasets") / dataset_name)
         cached_path(f"{conll_path}/{train_file}", Path("datasets") / dataset_name)
 
-        super(CONLL04, self).__init__(
+        super(CONLL_04, self).__init__(
             data_folder,
             columns,
             dev_file=dev_file,
