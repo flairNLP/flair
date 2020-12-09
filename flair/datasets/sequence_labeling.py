@@ -216,17 +216,19 @@ class ColumnDataset(FlairDataset):
         for column in self.column_name_map:
             if len(fields) > column:
                 if column != self.text_column and self.column_name_map[column] != self.SPACE_AFTER_KEY:
-                    task = self.column_name_map[column] # for example 'pos'
+                    task = self.column_name_map[column]  # for example 'pos'
                     tag = fields[column]
-                    if tag.count("-") >= 1: # tag with prefix, for example tag='B-OBJ'
+                    if tag.count("-") >= 1:  # tag with prefix, for example tag='B-OBJ'
                         split_at_first_hyphen = tag.split("-", 1)
                         tagging_format_prefix = split_at_first_hyphen[0]
                         tag_without_tagging_format = split_at_first_hyphen[1]
                         if self.label_name_map and tag_without_tagging_format in self.label_name_map.keys():
-                            tag = tagging_format_prefix + "-" + self.label_name_map[tag_without_tagging_format].replace("-", " ") # for example, transforming 'B-OBJ' to 'B-part-of-speech-object'
-                    else: # tag without prefix, for example tag='PPER'
+                            tag = tagging_format_prefix + "-" + self.label_name_map[tag_without_tagging_format].replace(
+                                "-", " ")  # for example, transforming 'B-OBJ' to 'B-part-of-speech-object'
+                    else:  # tag without prefix, for example tag='PPER'
                         if self.label_name_map and tag in self.label_name_map.keys():
-                            tag = self.label_name_map[tag].replace("-", " ") # for example, transforming 'PPER' to 'person'
+                            tag = self.label_name_map[tag].replace("-",
+                                                                   " ")  # for example, transforming 'PPER' to 'person'
                     token.add_label(task, tag)
                 if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == '-':
                     token.whitespace_after = False
@@ -1508,16 +1510,24 @@ class TWITTER_NER(ColumnCorpus):
             **corpusargs,
         )
 
-def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
+
+def from_ufsac_to_conll(xml_file: Union[str, Path], conll_file: Union[str, Path], encoding: str = "utf8",
+                        cut_multisense: bool = True):
     """
-    Function that converts the UFSAC format into the needed CoNLL format. The IOB2 format will be used if
+    Function that converts the UFSAC format into the needed CoNLL format in a new file. The IOB2 format will be used if
     chunks reside within the data.
     Parameters
     ----------
-    data_file : Union[str, Path]
-        Path to the data file.
+    xml_file : Union[str, Path]
+        Path to the xml file.
+    conll_file : Union[str, Path]
+        Path for the new conll file.
     encoding : str, optional
         Encoding used in open function. The default is "utf8".
+    cut_multisense : bool, optional
+        Boolean that determines whether or not the wn30_key tag should be cut if it contains multiple possible senses.
+        If True only the first listed sense will be used. Otherwise the whole list of senses will be detected
+        as one new sense. The default is True.
 
     """
 
@@ -1531,27 +1541,24 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
         """
 
         tag_start = string.find('"') + 1
-        tag_end = string.find('"', tag_start)
-        tag = string[tag_start:tag_end]
 
-        temp.append(tag)
-        f.write(' B-' + tag)
+        if string.count('%') > 1 and cut_multisense is True:  # check for multisense
 
-
-    with open(file=data_file, mode='r', encoding=encoding) as f: # get file lines
-
-        # check if file is already converted
-        first_line = f.readline().split()
-
-        if '<c' not in first_line[0]:  # check if file is already in CoNLL
-
-            return
+            tag_end = string.find(';', tag_start)
 
         else:
 
-            lines = f.readlines()
+            tag_end = string.find('"', tag_start)
 
-    with open(file=data_file, mode='w', encoding=encoding) as f: # alter file to CoNLL format
+        tag = string[tag_start:tag_end]
+        temp.append(tag)
+        f.write(' B-' + tag)
+
+    with open(file=xml_file, mode='r', encoding=encoding) as f:  # get file lines
+
+        lines = f.readlines()
+
+    with open(file=conll_file, mode='w', encoding=encoding) as f:  # alter file to CoNLL format
 
         for line in lines:
 
@@ -1560,7 +1567,7 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
             if len(line_list) > 3:  # sentence parts have at least 4 tokens
 
                 # tokens to ignore (edit here for variation)
-                blacklist = ['<word','wn1','wn2','id=']
+                blacklist = ['<word', 'wn1', 'wn2', 'id=']
 
                 # counter to keep track how many tags have been found in line
                 ctr = 0
@@ -1577,7 +1584,6 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
                 for token in line_list:
 
                     if any(substring in token for substring in blacklist):
-
                         continue
 
                     if 'surface_form=' in token:
@@ -1590,10 +1596,9 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
                         for character in chunk:
 
                             if '_' in character:
-
                                 words += 1
 
-                        if words > 1: # gather single words of chunk
+                        if words > 1:  # gather single words of chunk
 
                             is_chunk = True
 
@@ -1604,9 +1609,9 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
                             word_start = 0
                             word_end = chunk.find('_', word_start)
                             f.write(chunk[word_start:word_end])
-                            word_start = word_end+1
+                            word_start = word_end + 1
 
-                            for _ in range(words-1):
+                            for _ in range(words - 1):
 
                                 word_end = chunk.find('_', word_start)
 
@@ -1618,7 +1623,7 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
 
                                     chunk_parts.append(chunk[word_start:word_end])
 
-                                word_start = word_end+1
+                                word_start = word_end + 1
 
                         else:
 
@@ -1630,7 +1635,6 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
                     elif 'pos=' in token:
 
                         if ctr != 2:
-
                             temp.append(' O')
                             f.write(' O')
 
@@ -1647,14 +1651,13 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
                     else:
 
                         # edit here for variation
-                        for _ in range(4-ctr):
-
+                        for _ in range(4 - ctr):
                             temp.append(' O')
                             f.write(' O')
 
                         f.write('\n')
 
-                if is_chunk: # handle chunks
+                if is_chunk:  # handle chunks
 
                     for word in chunk_parts:
 
@@ -1677,6 +1680,49 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
                 f.write('\n')
 
 
+def determine_conll_file(file: str, data_folder: str, cut_multisense: bool = True):
+    """
+    Function that returns the given file in the CoNLL format.
+    ----------
+    string : str
+        String that contains the name of the file.
+    data_folder : str
+        String that contains the name of the folder in which the CoNLL file should reside.
+    cut_multisense : bool, optional
+        Boolean that determines whether or not the wn30_key tag should be cut if it contains multiple possible senses.
+        If True only the first listed sense will be used. Otherwise the whole list of senses will be detected
+        as one new sense. The default is True.
+    """
+
+    # check if converted file exists
+
+    if file is not None and not '.conll' in file:
+
+        if cut_multisense is True:
+
+            conll_file = file[:-4] + '_cut.conll'
+
+        else:
+
+            conll_file = file[:-3] + 'conll'
+
+        path_to_conll_file = data_folder / conll_file
+
+        if not path_to_conll_file.exists():
+            # convert the file to CoNLL
+
+            from_ufsac_to_conll(xml_file=Path(data_folder / file),
+                                conll_file=Path(data_folder / conll_file),
+                                encoding="latin-1",
+                                cut_multisense=cut_multisense)
+
+        return conll_file
+
+    else:
+
+        return file
+
+
 class WSD_UFSAC(ColumnCorpus):
     def __init__(
             self,
@@ -1684,7 +1730,8 @@ class WSD_UFSAC(ColumnCorpus):
             in_memory: bool = True,
             document_as_sequence: bool = False,
             train_file: str = None,
-            test_file: str = None
+            test_file: str = None,
+            cut_multisense: bool = True
     ):
         """
         Initialize a custom corpus with any two WSD datasets in the UFSAC format. This is only possible if you've
@@ -1698,6 +1745,10 @@ class WSD_UFSAC(ColumnCorpus):
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         :param train_file: Name of the training dataset (e.g. 'semcor.xml')
         :param test_file: Name of the testing dataset
+        :param cut_multisense: Boolean that determines whether or not the wn30_key tag should be cut if it contains
+                               multiple possible senses. If True only the first listed sense will be used and the
+                               suffix '_cut' will be added to the name of the CoNLL file. Otherwise the whole list of
+                               senses will be detected as one new sense. The default is True.
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1711,7 +1762,7 @@ class WSD_UFSAC(ColumnCorpus):
         #
         # if the other annotations should be needed simply add the columns in correct order according
         # to the chosen datasets here and respectively change the values of the blacklist array and
-        # the range value of the else case in the token for loop in the convert_ufsac_to_conll function
+        # the range value of the else case in the token for loop in the from_ufsac_to_conll function
 
         columns = {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
 
@@ -1732,15 +1783,10 @@ class WSD_UFSAC(ColumnCorpus):
             )
             log.warning("-" * 100)
 
-        # convert the files to CoNLL
+        # determine correct CoNLL files
 
-        if train_file is not None:
-
-            convert_ufsac_to_conll(data_file=Path(data_folder / train_file), encoding="latin-1")
-
-        if test_file is not None:
-
-            convert_ufsac_to_conll(data_file=Path(data_folder / test_file), encoding="latin-1")
+        train_file = determine_conll_file(file=train_file, data_folder=data_folder, cut_multisense=cut_multisense)
+        test_file = determine_conll_file(file=test_file, data_folder=data_folder, cut_multisense=cut_multisense)
 
         super(WSD_UFSAC, self).__init__(
             data_folder,
@@ -1798,7 +1844,6 @@ def _download_wikiner(language_code: str, dataset_name: str):
             / f"aij-wikiner-{lc}-wp3.train"
     )
     if not data_file.is_file():
-
         cached_path(
             f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2", Path("datasets") / dataset_name
         )
