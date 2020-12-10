@@ -5,7 +5,7 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import List, Union, Dict
 from collections import Counter
-from functools import lru_cache
+from methodtools import lru_cache
 
 import torch
 from bpemb import BPEmb
