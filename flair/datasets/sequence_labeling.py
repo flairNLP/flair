@@ -1730,6 +1730,7 @@ class WSD_UFSAC(ColumnCorpus):
             in_memory: bool = True,
             document_as_sequence: bool = False,
             train_file: str = None,
+            dev_file: str = None,
             test_file: str = None,
             cut_multisense: bool = True
     ):
@@ -1737,13 +1738,14 @@ class WSD_UFSAC(ColumnCorpus):
         Initialize a custom corpus with any two WSD datasets in the UFSAC format. This is only possible if you've
         manually downloaded the WSD datasets in UFSAC format to your machine.
         Obtain the most recent datasets from https://drive.google.com/file/d/1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO and copy
-        up to two of the datasets in a folder called 'wsd_ufsac'.Then set the base_path parameter in the constructor to
-        the path to the parent directory where the 'wsd_ufsac' folder resides and respectively set the train_file and
-        test_file parameter in the constructor according to the file names.
+        up to three of the datasets in a folder called 'wsd_ufsac'.Then set the base_path parameter in the constructor
+        to the path to the parent directory where the 'wsd_ufsac' folder resides and respectively set the train_file,
+        dev_file and test_file parameter in the constructor according to the file names.
         :param base_path: Path to the custom WSD corpus ('wsd_ufsac' folder) on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         :param train_file: Name of the training dataset (e.g. 'semcor.xml')
+        :param dev_file: Name of the development dataset
         :param test_file: Name of the testing dataset
         :param cut_multisense: Boolean that determines whether or not the wn30_key tag should be cut if it contains
                                multiple possible senses. If True only the first listed sense will be used and the
@@ -1786,6 +1788,7 @@ class WSD_UFSAC(ColumnCorpus):
         # determine correct CoNLL files
 
         train_file = determine_conll_file(file=train_file, data_folder=data_folder, cut_multisense=cut_multisense)
+        dev_file = determine_conll_file(file=dev_file, data_folder=data_folder, cut_multisense=cut_multisense)
         test_file = determine_conll_file(file=test_file, data_folder=data_folder, cut_multisense=cut_multisense)
 
         super(WSD_UFSAC, self).__init__(
@@ -1796,6 +1799,7 @@ class WSD_UFSAC(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             train_file=train_file,
+            dev_file=dev_file,
             test_file=test_file
         )
 
