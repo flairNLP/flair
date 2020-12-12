@@ -6,15 +6,15 @@ from pathlib import Path
 from torch import cuda
 
 from .search_strategies import *
-from.search_spaces import SearchSpace
+from .search_spaces import SearchSpace
 from .downstream_task_models import TextClassification, SequenceTagging
 
 from flair.data import Corpus
 
 log = logging.getLogger("flair")
 
-class Orchestrator(object):
 
+class Orchestrator(object):
     def __init__(
             self,
             corpus: Corpus,
@@ -32,9 +32,10 @@ class Orchestrator(object):
         self.current_run = 0
         self.results = {}
 
-        # This is required because we'll calculate generations budget with modulo operator (decrease budget every X configurations)
+        # This is required because we'll calculate generations budget with modulo operator
+        # (decrease budget every X configurations)
         if search_strategy.search_strategy_name == "EvolutionarySearch":
-            search_space.budget._set_population_size(search_strategy.population_size)
+            search_space.budget.set_population_size(search_strategy.population_size)
 
     def _get_downstream_task_model_from_class_name(self, downstream_task):
         if downstream_task == "TextClassifierSearchSpace":
@@ -45,16 +46,21 @@ class Orchestrator(object):
             raise Exception("No known downstream task provided.")
         return model
 
-    def optimize(self, train_on_multiple_gpus : bool = False):
-        while self.search_space.budget._is_not_used_up() and self.search_space.training_configurations.has_configurations_left():
+    def optimize(self, train_on_multiple_gpus: bool = False):
+
+        while self.search_space.budget.is_not_used_up() and self.search_space.training_configurations.has_configurations_left():
+
             current_configuration = self.search_space.training_configurations.get_configuration()
             if train_on_multiple_gpus and self._sufficient_available_gpus():
                 self._perform_training_on_multiple_gpus(current_configuration)
             else:
                 self._perform_training(current_configuration)
+
             if self.search_strategy.search_strategy_name == "EvolutionarySearch":
-                if self.search_strategy._evolve_required(current_run=len(self.results)):
-                    self.search_strategy._evolve(self.search_space, self.results)
+                self.search_strategy: EvolutionarySearch = self.search_strategy
+                if self.search_strategy.evolve_required(current_run=len(self.results)):
+                    self.search_strategy.evolve(self.search_space, self.results)
+
         self._log_results()
 
     def _perform_training(self, params: dict):
@@ -62,11 +68,11 @@ class Orchestrator(object):
         training_run_number = f"training-run-{current_run}"
         base_path = self.base_path / training_run_number
         try:
-            self.results[training_run_number] = self.downstream_task_model._train(corpus=self.corpus,
-                                                                                  params=params,
-                                                                                  base_path= base_path,
-                                                                                  max_epochs=self.search_space.max_epochs_per_training_run,
-                                                                                  optimization_value=self.search_space.optimization_value)
+            self.results[training_run_number] = self.downstream_task_model.train(corpus=self.corpus,
+                                                                                 params=params,
+                                                                                 base_path=base_path,
+                                                                                 max_epochs=self.search_space.max_epochs_per_training_run,
+                                                                                 optimization_value=self.search_space.optimization_value)
         except RuntimeError:
             self.results[training_run_number] = {'result': 0, 'params': params}
         self._store_results(result=self.results[training_run_number], current_run=current_run)
@@ -78,15 +84,15 @@ class Orchestrator(object):
             log.info("There are less than 2 GPUs available, switching to standard calculation.")
 
     def _perform_training_on_multiple_gpus(self, params: dict):
-        #TODO to be implemented
+        # TODO to be implemented
         pass
 
     def _log_results(self):
         sorted_results = sorted(self.results.items(), key=lambda x: getitem(x[1], 'result'), reverse=True)[:5]
         log.info("The top 5 results are:")
         for idx, config in enumerate(sorted_results):
-            log.info(50*'-')
-            log.info(idx+1)
+            log.info(50 * '-')
+            log.info(idx + 1)
             log.info(f"{config[0]} with a score of {config[1]['result']}.")
             log.info("with following configurations:")
             for parameter, value in config[1]['params'].items():

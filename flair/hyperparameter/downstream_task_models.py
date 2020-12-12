@@ -17,11 +17,11 @@ class DownstreamTaskModel(object):
         pass
 
     @abstractmethod
-    def _train(self, corpus: Corpus, params: dict, base_path: Path, max_epochs: int, optimization_value: str):
+    def train(self, corpus: Corpus, params: dict, base_path: Path, max_epochs: int, optimization_value: str):
         pass
 
-    def _make_word_embeddings_from_attributes(self, word_embedding_attributes: list):
-
+    @staticmethod
+    def _make_word_embeddings_from_attributes(word_embedding_attributes: list):
         word_embeddings = []
 
         for idx, embedding in enumerate(word_embedding_attributes):
@@ -32,6 +32,7 @@ class DownstreamTaskModel(object):
 
         return word_embeddings
 
+
 class TextClassification(DownstreamTaskModel):
 
     def __init__(self, multi_label: bool = False):
@@ -40,7 +41,7 @@ class TextClassification(DownstreamTaskModel):
 
     def _set_up_model(self, params: dict, label_dictionary):
 
-        #needed since we store a pointer in our configurations list
+        # needed since we store a pointer in our configurations list
         params_copy = params.copy()
 
         document_embedding_name = params_copy['document_embeddings'].__name__
@@ -51,7 +52,8 @@ class TextClassification(DownstreamTaskModel):
 
         if "embeddings" in params_copy:
             word_embeddings_attributes = params_copy.pop("embeddings")
-            document_embedding_parameters["embeddings"] = self._make_word_embeddings_from_attributes(word_embeddings_attributes)
+            document_embedding_parameters["embeddings"] = self._make_word_embeddings_from_attributes(
+                word_embeddings_attributes)
 
         DocumentEmbedding = DocumentEmbeddingClass(**document_embedding_parameters)
 
@@ -63,7 +65,8 @@ class TextClassification(DownstreamTaskModel):
 
         return text_classifier
 
-    def _get_document_embedding_parameters(self, document_embedding_class: str, params: dict):
+    @staticmethod
+    def _get_document_embedding_parameters(document_embedding_class: str, params: dict):
 
         if document_embedding_class == "DocumentEmbeddings":
             embedding_params = {
@@ -100,7 +103,7 @@ class TextClassification(DownstreamTaskModel):
 
         return embedding_params
 
-    def _train(self, corpus: Corpus, params: dict, base_path: Path, max_epochs: int, optimization_value: str):
+    def train(self, corpus: Corpus, params: dict, base_path: Path, max_epochs: int, optimization_value: str):
 
         corpus = corpus
 
@@ -139,13 +142,14 @@ class TextClassification(DownstreamTaskModel):
 
         return {'result': result, 'params': params}
 
+
 class SequenceTagging(DownstreamTaskModel):
 
     def __init__(self, tag_type: str):
         super().__init__()
         self.tag_type = tag_type
 
-    def _train(self, corpus: Corpus, params: dict, base_path: Path, max_epochs: int, optimization_value: str):
+    def train(self, corpus: Corpus, params: dict, base_path: Path, max_epochs: int, optimization_value: str):
         """
         trains a sequence tagger model
         :param params: dict containing the parameters

@@ -9,6 +9,7 @@ from .search_spaces import SearchSpace
 
 log = logging.getLogger("flair")
 
+
 class SearchStrategy(object):
 
     def __init__(self):
@@ -21,13 +22,14 @@ class SearchStrategy(object):
 
 class GridSearch(SearchStrategy):
 
-    def __init__(self, shuffle : bool = False):
+    def __init__(self, shuffle: bool = False):
         super().__init__()
         self.shuffle = shuffle
 
     def make_configurations(self, search_space: SearchSpace):
         search_space.check_completeness(self.search_strategy_name)
-        search_space.training_configurations.make_grid_configurations(search_space.parameter_storage, search_space.has_document_embeddings)
+        search_space.training_configurations.make_grid_configurations(search_space.parameter_storage,
+                                                                      search_space.has_document_embeddings)
         if self.shuffle:
             random.shuffle(search_space.training_configurations.configurations)
 
@@ -36,6 +38,7 @@ class RandomSearch(GridSearch):
 
     def __init__(self):
         super().__init__(shuffle=True)
+
 
 class EvolutionarySearch(SearchStrategy):
 
@@ -52,17 +55,19 @@ class EvolutionarySearch(SearchStrategy):
 
     def make_configurations(self, search_space: SearchSpace):
         search_space.check_completeness(self.search_strategy_name)
-        search_space.training_configurations.make_evolutionary_configurations(search_space.parameter_storage, search_space.has_document_embeddings ,self.population_size)
+        search_space.training_configurations.make_evolutionary_configurations(search_space.parameter_storage,
+                                                                              search_space.has_document_embeddings,
+                                                                              self.population_size)
 
-    def _evolve_required(self, current_run: int):
-        if current_run % (self.population_size) == 0:
+    def evolve_required(self, current_run: int) -> bool:
+        if current_run % self.population_size == 0:
             return True
         else:
             return False
 
-    def _evolve(self, search_space: SearchSpace, results: dict):
+    def evolve(self, search_space: SearchSpace, results: dict):
         current_results = self._get_current_results(results)
-        log.info(50*'-')
+        log.info(50 * '-')
         log.info("Starting evolution - this generation had following results:")
         for idx, result in enumerate(current_results.values()):
             log.info(f"Configuration {idx} with a result of {result.get('result')}.")
@@ -73,10 +78,10 @@ class EvolutionarySearch(SearchStrategy):
             log.info(f"Performing crossover and mutation for configuration {idx}.")
             child = self._crossover(child, parent_population)
             child = self._mutate(child, search_space.parameter_storage)
-            search_space.training_configurations._add_configuration(child)
+            search_space.training_configurations.add_configuration(child)
         log.info("Evolution completed.")
 
-    def _get_current_results(self, results:dict):
+    def _get_current_results(self, results: dict):
         most_recent_ids = np.arange(0, len(results))[-self.population_size:]
         key_generator = lambda id: f"training-run-{id}"
         current_keys = list(map(key_generator, most_recent_ids))
@@ -88,7 +93,8 @@ class EvolutionarySearch(SearchStrategy):
         grouped_parent_population = self._group_by_embedding_keys(parent_population)
         return grouped_parent_population
 
-    def _extract_configurations_from_results(self, results: dict) -> list:
+    @staticmethod
+    def _extract_configurations_from_results(results: dict) -> list:
         configurations = []
         for configuration in results.values():
             configurations.append(configuration.get("params"))
@@ -105,7 +111,8 @@ class EvolutionarySearch(SearchStrategy):
                 grouped_parent_population[embedding_key] = [embedding_value]
         return grouped_parent_population
 
-    def _get_embedding_key(self, embedding: dict):
+    @staticmethod
+    def _get_embedding_key(embedding: dict):
         if embedding.get("document_embeddings") is not None:
             embedding_key = embedding.get('document_embeddings').__name__
         else:
@@ -118,9 +125,11 @@ class EvolutionarySearch(SearchStrategy):
         log.info(50 * '-')
         for idx, prob in enumerate(evolution_probabilities):
             log.info(f"The evolution probability for configuration {idx} is: {prob}.")
-        return np.random.choice(current_configurations, size=self.population_size, replace=True, p=evolution_probabilities)
+        return np.random.choice(current_configurations, size=self.population_size, replace=True,
+                                p=evolution_probabilities)
 
-    def _get_fitness(self, results: dict):
+    @staticmethod
+    def _get_fitness(results: dict):
         fitness = np.asarray([configuration['result'] for configuration in results.values()])
         probabilities = fitness / (sum([configuration['result'] for configuration in results.values()]))
         return probabilities
@@ -153,5 +162,6 @@ class EvolutionarySearch(SearchStrategy):
         log.info(f"{np.sum(mutation_points)} parameters have been mutated.")
         return child
 
-    def _sample_parameter(self, key: str, parameter: str, parameter_storage: ParameterStorage):
+    @staticmethod
+    def _sample_parameter(key: str, parameter: str, parameter_storage: ParameterStorage):
         return random.sample(getattr(parameter_storage, key).get(parameter), 1).pop()
