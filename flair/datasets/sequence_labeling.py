@@ -142,10 +142,6 @@ class ColumnDataset(FlairDataset):
 
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
-        if self.in_memory:
-            self.sentences: List[Sentence] = []
-        else:
-            self.indices: List[int] = []
 
         self.total_sentence_count: int = 0
 
@@ -170,11 +166,18 @@ class ColumnDataset(FlairDataset):
 
                 line = file.readline()
                 position = 0
+                sentence_started = False
                 while line:
-                    if self.__line_completes_sentence(line):
+                    if sentence_started and self.__line_completes_sentence(line):
                         self.indices.append(position)
                         position = file.tell()
+                        sentence_started = False
+                    elif not line.isspace():
+                        sentence_started = True
                     line = file.readline()
+
+                if sentence_started:
+                    self.indices.append(position)
 
                 self.total_sentence_count = len(self.indices)
 
@@ -193,7 +196,6 @@ class ColumnDataset(FlairDataset):
         line = file.readline()
         sentence: Sentence = Sentence()
         while line:
-
             # skip comments
             if self.comment_symbol is not None and line.startswith(self.comment_symbol):
                 line = file.readline()
@@ -214,6 +216,8 @@ class ColumnDataset(FlairDataset):
                 sentence.add_token(token)
 
             line = file.readline()
+
+        if len(sentence) > 0: return sentence
 
     def _parse_token(self, line: str) -> Token:
         fields: List[str] = re.split(self.column_delimiter, line.rstrip())
