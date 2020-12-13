@@ -138,7 +138,7 @@ class SequenceTaggerSearchSpace(SearchSpace):
         self._check_word_embeddings_are_set()
 
     def _check_word_embeddings_are_set(self):
-        if self.parameter_storage.GeneralParameters.get("embeddings"):
+        if self.parameter_storage.general_parameters.get("embeddings"):
             pass
         else:
             raise Exception("Word Embeddings haven't been set.")
