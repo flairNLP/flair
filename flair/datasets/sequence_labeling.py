@@ -158,57 +158,62 @@ class ColumnDataset(FlairDataset):
         # determine encoding of text file
         self.encoding = encoding
 
-        sentence: Sentence = Sentence()
-        sentence_started: bool = False
-        with open(str(self.path_to_column_file), encoding=self.encoding) as f:
+        with open(str(self.path_to_column_file), encoding=self.encoding) as file:
 
             # skip first line if to selected
             if skip_first_line:
-                f.readline()
+                file.readline()
 
-            line = f.readline()
-            position = 0
+            # option 1: read only sentence boundaries as offset positions
+            if not self.in_memory:
+                self.indices: List[int] = []
 
-            while line:
+                line = file.readline()
+                position = 0
+                while line:
+                    if self.__line_completes_sentence(line):
+                        self.indices.append(position)
+                        position = file.tell()
+                    line = file.readline()
 
-                if self.comment_symbol is not None and line.startswith(comment_symbol):
-                    line = f.readline()
-                    continue
+                self.total_sentence_count = len(self.indices)
 
-                if self.__line_completes_sentence(line):
-
-                    if sentence_started:
-
-                        if self.in_memory:
-                            if self.tag_to_bioes is not None:
-                                sentence.convert_tag_scheme(
-                                    tag_type=self.tag_to_bioes, target_scheme="iobes"
-                                )
-                            self.sentences.append(sentence)
-                        else:
-                            self.indices.append(position)
-                            position = f.tell()
-                        self.total_sentence_count += 1
-                    sentence: Sentence = Sentence()
-                    sentence_started = False
-
-                elif self.in_memory:
-                    token = self._parse_token(line)
-                    if not line.isspace():
-                        sentence.add_token(token)
-                        sentence_started = True
-
-                elif not line.isspace():
-                    sentence_started = True
-
-                line = f.readline()
-
-        if sentence_started:
+            # option 2: keep everything in memory
             if self.in_memory:
-                self.sentences.append(sentence)
+                self.sentences: List[Sentence] = []
+
+                while True:
+                    sentence = self._read_next_sentence(file)
+                    if not sentence: break
+                    self.sentences.append(sentence)
+
+                self.total_sentence_count = len(self.sentences)
+
+    def _read_next_sentence(self, file):
+        line = file.readline()
+        sentence: Sentence = Sentence()
+        while line:
+
+            # skip comments
+            if self.comment_symbol is not None and line.startswith(self.comment_symbol):
+                line = file.readline()
+                continue
+
+            # if sentence ends, convert and return
+            if self.__line_completes_sentence(line):
+                if len(sentence) > 0:
+                    if self.tag_to_bioes is not None:
+                        sentence.convert_tag_scheme(
+                            tag_type=self.tag_to_bioes, target_scheme="iobes"
+                        )
+                    return sentence
+
+            # otherwise, this line is a token. parse and add to sentence
             else:
-                self.indices.append(position)
-            self.total_sentence_count += 1
+                token = self._parse_token(line)
+                sentence.add_token(token)
+
+            line = file.readline()
 
     def _parse_token(self, line: str) -> Token:
         fields: List[str] = re.split(self.column_delimiter, line.rstrip())
@@ -233,7 +238,7 @@ class ColumnDataset(FlairDataset):
         return token
 
     def __line_completes_sentence(self, line: str) -> bool:
-        sentence_completed = line.isspace()
+        sentence_completed = line.isspace() or line == ''
         if self.document_separator_token:
             sentence_completed = False
             fields: List[str] = re.split(self.column_delimiter, line)
@@ -250,35 +255,16 @@ class ColumnDataset(FlairDataset):
 
     def __getitem__(self, index: int = 0) -> Sentence:
 
+        # if in memory, retrieve parsed sentence
         if self.in_memory:
             sentence = self.sentences[index]
 
+        # else skip to position in file where sentence begins
         else:
             with open(str(self.path_to_column_file), encoding=self.encoding) as file:
                 file.seek(self.indices[index])
-                line = file.readline()
-                sentence: Sentence = Sentence()
-                while line:
-                    if self.comment_symbol is not None and line.startswith(
-                            self.comment_symbol
-                    ):
-                        line = file.readline()
-                        continue
+                sentence = self._read_next_sentence(file)
 
-                    if self.__line_completes_sentence(line):
-                        if len(sentence) > 0:
-                            if self.tag_to_bioes is not None:
-                                sentence.convert_tag_scheme(
-                                    tag_type=self.tag_to_bioes, target_scheme="iobes"
-                                )
-                            return sentence
-
-                    else:
-                        token = self._parse_token(line)
-                        if not line.isspace():
-                            sentence.add_token(token)
-
-                    line = file.readline()
         return sentence
 
 
