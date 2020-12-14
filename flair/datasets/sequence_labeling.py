@@ -2550,6 +2550,7 @@ class CONLL_04(ColumnCorpus):
 
         # column format
         columns = {0: "text", 1: "ner", 2: "relation", 3: "relation_dep"}
+        # columns = {1: "text", 2: "ner", 3: "relation", 4: "relation_dep"}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
