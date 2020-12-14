@@ -2340,7 +2340,6 @@ class CONLL_04(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
@@ -2357,8 +2356,7 @@ class CONLL_04(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner", 2: "relation", 3: "relation_dep"}
-        # columns = {1: "text", 2: "ner", 3: "relation", 4: "relation_dep"}
+        columns = {1: "text", 2: "ner", 3: "relation", 4: "relation_dep"}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -2377,6 +2375,20 @@ class CONLL_04(ColumnCorpus):
         cached_path(f"{conll_path}/{test_file}", Path("datasets") / dataset_name)
         cached_path(f"{conll_path}/{train_file}", Path("datasets") / dataset_name)
 
+        # add extra blank lines in-between sentences for document separation
+        for dataset_part in ["dev", "test", "train"]:
+            with open(Path(flair.cache_root) / "datasets" / dataset_name / f"{dataset_part}.txt", "r") as file:
+                lines = file.readlines()
+
+            lines_with_separating_blank_lines = []
+            for line in lines:
+                if line.startswith("#doc"):
+                    lines_with_separating_blank_lines.append("\n")
+                lines_with_separating_blank_lines.append(line)
+
+            with open(Path(flair.cache_root) / "datasets" / dataset_name / f"{dataset_part}.txt", "w") as file:
+                file.writelines(lines_with_separating_blank_lines)
+
         super(CONLL_04, self).__init__(
             data_folder,
             columns,
@@ -2387,7 +2399,7 @@ class CONLL_04(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            comment_symbol='#',
             **corpusargs,
         )
 
