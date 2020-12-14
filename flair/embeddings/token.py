@@ -923,12 +923,17 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             self.allow_long_sentences = False
             self.stride = 0
 
+        # list to filter between empty and non-empty sentences
         non_empty_sentences = []
         empty_sentences = []
 
+        # in case of contextualization, we must remember non-expanded sentences and each sentence length of left context
+        original_sentences = []
+        context_offsets = []
+
         for sentence in sentences:
 
-            # if we also use context
+            # if we also use context, first expand sentence to include context
             if self.context_length > 0:
 
                 # remember original sentence
@@ -945,6 +950,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                     if len(left_context.split(" ")) > self.context_length:
                         left_context = " ".join(left_context.split(" ")[-self.context_length:])
                         break
+                context_length = len(left_context.split(" ")) if not left_context == '' else 0
+                context_offsets.append(context_length)
 
                 # get right context
                 sentence = original_sentence
@@ -964,6 +971,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 sentence.tokens = [Token(token) for token in left_context.split(" ") +
                                    original_sentence.to_tokenized_string().split(" ") +
                                    right_context.split(" ")]
+
+                original_sentences.append(sentence)
 
             tokenized_string = sentence.to_tokenized_string()
 
@@ -1018,6 +1027,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         longest_sequence_in_batch: int = len(max(subtokenized_sentences, key=len))
 
         total_sentence_parts = sum(sentence_parts_lengths)
+
         # initialize batch tensors and mask
         input_ids = torch.zeros(
             [total_sentence_parts, longest_sequence_in_batch],
@@ -1111,15 +1121,22 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                     token.set_embedding(self.name, torch.cat(subtoken_embeddings))
 
                     # move embeddings from context back to original sentence (if using context)
-                    if self.context_length > 0 and token_idx >= self.context_length \
-                            and token_idx < self.context_length + len(original_sentence.tokens):
-                        original_sentence.tokens[token_idx - self.context_length] \
-                            .set_embedding(self.name, torch.cat(subtoken_embeddings))
+                    if self.context_length > 0:
+
+                        sentence_without_context = original_sentences[sentence_idx]
+
+                        # get context offset
+                        offset = context_offsets[sentence_idx]
+
+                        # set embeddings for non-context sentences
+                        if offset <= token_idx < offset + len(sentence_without_context.tokens):
+                            sentence_without_context.tokens[token_idx - offset]\
+                                .set_embedding(self.name, torch.cat(subtoken_embeddings))
 
                     subword_start_idx += number_of_subtokens
 
                 if self.context_length > 0:
-                    sentence = original_sentence
+                    sentence = sentence_without_context
 
     def reconstruct_tokens_from_subtokens(self, sentence, subtokens):
         word_iterator = iter(sentence)
