@@ -933,6 +933,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         for sentence in sentences:
 
+            original_sentences.append(sentence)
+
             # if we also use context, first expand sentence to include context
             if self.context_length > 0:
 
@@ -971,8 +973,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 sentence.tokens = [Token(token) for token in left_context.split(" ") +
                                    original_sentence.to_tokenized_string().split(" ") +
                                    right_context.split(" ")]
-
-                original_sentences.append(sentence)
 
             tokenized_string = sentence.to_tokenized_string()
 
