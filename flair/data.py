@@ -940,6 +940,32 @@ class Sentence(DataPoint):
 
         return re.sub(r"[\u0080-\u0099]", to_windows_1252, text)
 
+    def next_sentence(self):
+
+        if '_next_sentence' in self.__dict__.keys():
+            return self._next_sentence
+
+        if '_position_in_dataset' in self.__dict__.keys():
+            dataset = self._position_in_dataset[0]
+            index = self._position_in_dataset[1] + 1
+            if index < len(dataset):
+                return dataset[index]
+
+        return None
+
+    def previous_sentence(self):
+
+        if '_previous_sentence' in self.__dict__.keys():
+            return self._previous_sentence
+
+        if '_position_in_dataset' in self.__dict__.keys():
+            dataset = self._position_in_dataset[0]
+            index = self._position_in_dataset[1] - 1
+            if index >= 0:
+                return dataset[index]
+
+        return None
+
 
 class Image(DataPoint):
 
