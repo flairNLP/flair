@@ -937,7 +937,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 # get left context
                 left_context = ''
                 while True:
-                    sentence = sentence.previous()
+                    sentence = sentence.previous_sentence()
                     if sentence is None: break
 
                     left_context = sentence.to_tokenized_string() + ' ' + left_context
@@ -950,7 +950,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 sentence = original_sentence
                 right_context = ''
                 while True:
-                    sentence = sentence.next()
+                    sentence = sentence.next_sentence()
                     if sentence is None: break
 
                     right_context += ' ' + sentence.to_tokenized_string()

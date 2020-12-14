@@ -164,21 +164,28 @@ class ColumnDataset(FlairDataset):
             # option 1: read only sentence boundaries as offset positions
             if not self.in_memory:
                 self.indices: List[int] = []
+                # self.raw = []
 
                 line = file.readline()
                 position = 0
                 sentence_started = False
+                sentence_rep = []
                 while line:
+                    sentence_rep.append(line)
                     if sentence_started and self.__line_completes_sentence(line):
                         self.indices.append(position)
                         position = file.tell()
                         sentence_started = False
+                        # self.raw.append(sentence_rep)
+                        sentence_rep = []
+
                     elif not line.isspace():
                         sentence_started = True
                     line = file.readline()
 
                 if sentence_started:
                     self.indices.append(position)
+                    # self.raw.append(sentence_rep)
 
                 self.total_sentence_count = len(self.indices)
 
@@ -187,16 +194,55 @@ class ColumnDataset(FlairDataset):
                 self.sentences: List[Sentence] = []
 
                 while True:
-                    sentence = self._read_next_sentence(file)
+                    sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
                     if not sentence: break
                     self.sentences.append(sentence)
 
                 self.total_sentence_count = len(self.sentences)
 
     def _read_next_sentence(self, file):
+        lines = []
+        line = file.readline()
+        while line:
+            lines.append(line)
+
+            # if sentence ends, break
+            if self.__line_completes_sentence(line):
+                break
+
+            line = file.readline()
+        return lines
+
+    def _convert_lines_to_sentence(self, lines):
+
+        sentence: Sentence = Sentence()
+        for line in lines:
+            # skip comments
+            if self.comment_symbol is not None and line.startswith(self.comment_symbol):
+                continue
+
+            # if sentence ends, convert and return
+            if self.__line_completes_sentence(line):
+                if len(sentence) > 0:
+                    if self.tag_to_bioes is not None:
+                        sentence.convert_tag_scheme(
+                            tag_type=self.tag_to_bioes, target_scheme="iobes"
+                        )
+                    return sentence
+
+            # otherwise, this line is a token. parse and add to sentence
+            else:
+                token = self._parse_token(line)
+                sentence.add_token(token)
+
+        if len(sentence) > 0: return sentence
+
+    def _read_next_sentence_old(self, file):
+        lines = []
         line = file.readline()
         sentence: Sentence = Sentence()
         while line:
+            lines.append(line)
             # skip comments
             if self.comment_symbol is not None and line.startswith(self.comment_symbol):
                 line = file.readline()
@@ -265,16 +311,24 @@ class ColumnDataset(FlairDataset):
         # if in memory, retrieve parsed sentence
         if self.in_memory:
             sentence = self.sentences[index]
+            sentence._next_sentence = self.sentences[index + 1] if index < self.total_sentence_count - 1 else None
+            sentence._previous_sentence = self.sentences[index - 1] if index > 0 else None
 
         # else skip to position in file where sentence begins
         else:
+            # print(self.raw[index])
+            # sentence = self._convert_lines_to_sentence(self.raw[index])
+            # print(self.raw[index])
+
             with open(str(self.path_to_column_file), encoding=self.encoding) as file:
                 file.seek(self.indices[index])
-                sentence = self._read_next_sentence(file)
+                sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
 
-        # set sentence context using partials
-        sentence.next = partial(self.__getitem__, index + 1) if index < self.total_sentence_count - 1 else partial(self.__none)
-        sentence.previous = partial(self.__getitem__, index - 1) if index > 0 else partial(self.__none)
+            # set sentence context using partials
+            sentence._position_in_dataset = (self, index)
+
+        # sentence.next = partial(self.__getitem__, index + 1) if index < self.total_sentence_count - 1 else partial(self.__none)
+        # sentence.previous = partial(self.__getitem__, index - 1) if index > 0 else partial(self.__none)
         return sentence
 
     def __none(self):
