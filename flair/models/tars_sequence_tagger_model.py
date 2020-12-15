@@ -20,9 +20,6 @@ from flair.training_utils import Metric, Result, store_embeddings
 
 log = logging.getLogger("flair")
 
-START_TAG: str = "<START>"
-STOP_TAG: str = "<STOP>"
-
 class TARSSequenceTagger(flair.nn.Model):
     # tags used in BIO2 format: B, I, O
     # static_tag_beginning = "B"
@@ -115,9 +112,9 @@ class TARSSequenceTagger(flair.nn.Model):
         if dropout > 0.0:
             self.dropout = torch.nn.Dropout(dropout)
         if word_dropout > 0.0:
-            self.word_dropout = flair.nn.WordDropout(word_dropout)
+            self.word_dropout = flair.nn.WordDropout(word_dropout, dims=4)
         if locked_dropout > 0.0:
-            self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
+            self.locked_dropout = flair.nn.LockedDropout(locked_dropout, dims=4)
 
         # F-beta score
         self.beta = beta
@@ -605,12 +602,12 @@ class TARSSequenceTagger(flair.nn.Model):
         )
 
         # TODO: fix drop out application
-        # if self.use_dropout > 0.0:
-        #     sentence_tensor = self.dropout(sentence_tensor)
-        # if self.use_word_dropout > 0.0:
-        #     sentence_tensor = self.word_dropout(sentence_tensor)
-        # if self.use_locked_dropout > 0.0:
-        #     sentence_tensor = self.locked_dropout(sentence_tensor)
+        if self.use_dropout > 0.0:
+            sentence_tensor = self.dropout(sentence_tensor)
+        if self.use_word_dropout > 0.0:
+            sentence_tensor = self.word_dropout(sentence_tensor)
+        if self.use_locked_dropout > 0.0:
+            sentence_tensor = self.locked_dropout(sentence_tensor)
 
         tag_scores = self.linear(sentence_tensor)
         transformed_scores = self._transform_tars_scores(tag_scores, longest_token_sequence_in_batch)
