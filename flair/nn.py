@@ -100,20 +100,30 @@ class LockedDropout(torch.nn.Module):
     Implementation of locked (or variational) dropout. Randomly drops out entire parameters in embedding space.
     """
 
-    def __init__(self, dropout_rate=0.5, batch_first=True, inplace=False):
+    def __init__(self, dropout_rate=0.5, batch_first=True, inplace=False, dims=3):
         super(LockedDropout, self).__init__()
         self.dropout_rate = dropout_rate
         self.batch_first = batch_first
         self.inplace = inplace
+        self.dims = dims
 
     def forward(self, x):
         if not self.training or not self.dropout_rate:
             return x
 
-        if not self.batch_first:
-            m = x.data.new(1, x.size(1), x.size(2)).bernoulli_(1 - self.dropout_rate)
+        if self.dims == 4: # TODO: check if it does correct job for dims==4 (dropping out the desired parts and not others)
+            if not self.batch_first:
+                m = x.data.new(1, x.size(1), x.size(2), x.size(3)).bernoulli_(1 - self.dropout_rate)
+            else:
+                m = x.data.new(x.size(0), 1, x.size(2), x.size(3)).bernoulli_(1 - self.dropout_rate)
+        elif self.dims == 3:
+            if not self.batch_first:
+                m = x.data.new(1, x.size(1), x.size(2)).bernoulli_(1 - self.dropout_rate)
+            else:
+                m = x.data.new(x.size(0), 1, x.size(2)).bernoulli_(1 - self.dropout_rate)
         else:
-            m = x.data.new(x.size(0), 1, x.size(2)).bernoulli_(1 - self.dropout_rate)
+            print("LockedDropout not implemented for " + str(self.dims) + " dimensions!")
+            return x
 
         mask = torch.autograd.Variable(m, requires_grad=False) / (1 - self.dropout_rate)
         mask = mask.expand_as(x)
@@ -129,16 +139,23 @@ class WordDropout(torch.nn.Module):
     Implementation of word dropout. Randomly drops out entire words (or characters) in embedding space.
     """
 
-    def __init__(self, dropout_rate=0.05, inplace=False):
+    def __init__(self, dropout_rate=0.05, inplace=False, dims=3):
         super(WordDropout, self).__init__()
         self.dropout_rate = dropout_rate
         self.inplace = inplace
+        self.dims = dims
 
     def forward(self, x):
         if not self.training or not self.dropout_rate:
             return x
 
-        m = x.data.new(x.size(0), x.size(1), 1).bernoulli_(1 - self.dropout_rate)
+        if self.dims == 4:
+            m = x.data.new(x.size(0), x.size(1), x.size(2), 1).bernoulli_(1 - self.dropout_rate)
+        elif self.dims == 3:
+            m = x.data.new(x.size(0), x.size(1), 1).bernoulli_(1 - self.dropout_rate)
+        else:
+            print("WordDropout not implemented for " + str(self.dims) + " dimensions!")
+            return x
 
         mask = torch.autograd.Variable(m, requires_grad=False)
         return mask * x
