@@ -933,6 +933,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         for sentence in sentences:
 
+            print(sentence)
+
             original_sentences.append(sentence)
 
             # if we also use context, first expand sentence to include context
@@ -952,8 +954,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                     if len(left_context.split(" ")) > self.context_length:
                         left_context = " ".join(left_context.split(" ")[-self.context_length:])
                         break
-                context_length = len(left_context.split(" ")) if not left_context == '' else 0
+                context_length = len(left_context.split(" "))
                 context_offsets.append(context_length)
+                original_sentence.left_context = left_context
 
                 # get right context
                 sentence = original_sentence
@@ -967,6 +970,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                     if len(right_context.split(" ")) > self.context_length:
                         right_context = " ".join(right_context.split(" ")[:self.context_length])
                         break
+                original_sentence.right_context = right_context
 
                 # make expanded sentence
                 sentence = Sentence()
