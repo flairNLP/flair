@@ -106,7 +106,7 @@ class TARSSequenceTagger(flair.nn.Model):
         self.tagset_size: int = len(tag_dictionary)
 
         # linear layer
-        self.linear = torch.nn.Linear(self.transformer_word_embeddings.embedding_length, len(self.tars_tag_dictionary))
+        self.linear = torch.nn.Linear(self.transformer_word_embeddings.embedding_length, 1) # 1 replaces 2=len(self.tars_tag_dictionary)
 
         # dropouts
         self.use_dropout: float = dropout
@@ -348,10 +348,10 @@ class TARSSequenceTagger(flair.nn.Model):
             idx_in_old_sent = idx_in_new_sent - offset
             old_tag = sentence[idx_in_old_sent].get_tag(self.tag_type).value
 
-            if old_tag == tag:
-                tag_text_pair_sentence[idx_in_new_sent].add_tag(self.static_tag_type, self.static_tag_yes)
-            else:
-                tag_text_pair_sentence[idx_in_new_sent].add_tag(self.static_tag_type, self.static_tag_no)
+            # if old_tag == tag:
+            #     tag_text_pair_sentence[idx_in_new_sent].add_tag(self.static_tag_type, self.static_tag_yes)
+            # else:
+            #     tag_text_pair_sentence[idx_in_new_sent].add_tag(self.static_tag_type, self.static_tag_no)
         return tag_text_pair_sentence
 
     def _get_tars_formatted_sentences(self, sentences):
@@ -541,23 +541,20 @@ class TARSSequenceTagger(flair.nn.Model):
         return self._calculate_loss(features, data_points)
 
     def _transform_tars_scores(self, tars_scores, max_sequence_length: int):
-        # M: num_classes in task, N: num_samples, L: max_sequence_length
-        tars_scores = torch.nn.functional.softmax(tars_scores, dim=1)  # shape: N*L*M x 2
-        scores = torch.reshape(tars_scores, (-1, len(self.tag_dictionary.item2idx), 2))  # shape: N*L x M x 2
-
-        # choosing 1 instead of 0 here is not important, it is only important that always the same is seen as the true one
-        # TODO: discuss whether the other one makes any sense or just the "YES" label could be enough
-        target_scores = scores[:, :, 1]  # shape: N*L x M
-        target_scores = torch.reshape(target_scores, (-1, max_sequence_length, len(self.tag_dictionary.item2idx))) # shape: N x L x M
-        return target_scores
+        # M: num_classes in task, N: num_samples (batch_size), L: max_sequence_length
+        # reshape from NxLxMx1 to NxLxM:
+        tars_scores = torch.reshape(tars_scores, (-1, max_sequence_length, len(self.tag_dictionary.item2idx)))
+        print("(batch_size, max_seq_len_of_batch, num_tags_in_task): " + str(tars_scores.shape))
+        #tars_scores = torch.nn.functional.softmax(tars_scores, dim=2) ## TODO: softmax not required because it is already used in obtain_labels?
+        return tars_scores
 
     def forward(self, sentences: List[Sentence]):
         # Transform input data into TARS format
-        sentences = self._get_tars_formatted_sentences(sentences)
+        formatted_sentences = self._get_tars_formatted_sentences(sentences)
 
         sentence_offsets = []
         sentence_rest_lengths = []
-        for sent in sentences:
+        for sent in formatted_sentences:
             sep_token_reached = False
             offset = 0
             rest_length = 0
@@ -572,39 +569,48 @@ class TARSSequenceTagger(flair.nn.Model):
             sentence_rest_lengths.append(rest_length)
         longest_token_sequence_in_batch = max(sentence_rest_lengths)
 
+        m = len(self.tag_dictionary.item2idx)
         pre_allocated_zero_tensor = torch.zeros(
-            self.transformer_word_embeddings.embedding_length * longest_token_sequence_in_batch,
+            self.transformer_word_embeddings.embedding_length * longest_token_sequence_in_batch * m,  # E * L * M
             dtype=torch.float,
             device=flair.device,
         )
 
         all_embs = list()
-        self.transformer_word_embeddings.embed(sentences)
-        for sent_idx, sent in enumerate(sentences):
-            for tkn_idx in range(sentence_offsets[sent_idx], len(sent)):
-                tkn = sent[tkn_idx]
-                embed = tkn.get_embedding()
-                all_embs.append(embed)
+        self.transformer_word_embeddings.embed(formatted_sentences)
+        for sentence_in_batch in range(len(sentences)):  # for each in 0,...,N batch sentences
+            for token_in_sentence in range(longest_token_sequence_in_batch):  # for each in the 0,...,L (or less) tokens
+                for tag_idx in range(m):  # for each in the 0,...,M tags
+                    sent_idx = sentence_in_batch * m + tag_idx  # index of the current sentence in batch with prepended current tag
+                    sent = formatted_sentences[sent_idx]
 
-            nb_padding_tokens = longest_token_sequence_in_batch - sentence_rest_lengths[sent_idx]
+                    if token_in_sentence < sentence_rest_lengths[sent_idx]:  # token existiert in diesem satz
+                        tkn_idx = token_in_sentence + sentence_offsets[sent_idx]  # wo liegt der fuer dieses label?
+                        tkn = sent[tkn_idx]
+                        embed = tkn.get_embedding()
+                        all_embs.append(embed)
+            nb_padding_tokens = longest_token_sequence_in_batch - len(sentences[sentence_in_batch])
             if nb_padding_tokens > 0:
-                t = pre_allocated_zero_tensor[:self.transformer_word_embeddings.embedding_length * nb_padding_tokens]
+                t = pre_allocated_zero_tensor[
+                    :self.transformer_word_embeddings.embedding_length * nb_padding_tokens * m]
                 all_embs.append(t)
 
         sentence_tensor = torch.cat(all_embs).view(
             [
-                len(sentences),
-                longest_token_sequence_in_batch,
+                len(sentences),  # N (batch_size)
+                longest_token_sequence_in_batch,  # L
+                len(self.tag_dictionary.item2idx),  # M
                 self.transformer_word_embeddings.embedding_length,
             ]
         )
 
-        if self.use_dropout > 0.0:
-            sentence_tensor = self.dropout(sentence_tensor)
-        if self.use_word_dropout > 0.0:
-            sentence_tensor = self.word_dropout(sentence_tensor)
-        if self.use_locked_dropout > 0.0:
-            sentence_tensor = self.locked_dropout(sentence_tensor)
+        # TODO: fix drop out application
+        # if self.use_dropout > 0.0:
+        #     sentence_tensor = self.dropout(sentence_tensor)
+        # if self.use_word_dropout > 0.0:
+        #     sentence_tensor = self.word_dropout(sentence_tensor)
+        # if self.use_locked_dropout > 0.0:
+        #     sentence_tensor = self.locked_dropout(sentence_tensor)
 
         tag_scores = self.linear(sentence_tensor)
         transformed_scores = self._transform_tars_scores(tag_scores, longest_token_sequence_in_batch)
