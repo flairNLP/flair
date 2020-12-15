@@ -2567,10 +2567,13 @@ class CONLL_04(ColumnCorpus):
         cached_path(f"{conll_path}/{test_file}", Path("datasets") / dataset_name)
         cached_path(f"{conll_path}/{train_file}", Path("datasets") / dataset_name)
 
-        # add extra blank lines in-between sentences for document separation
+        # add extra blank lines in-between sentences for document separation if necessary
         for dataset_part in ["dev", "test", "train"]:
             with open(Path(flair.cache_root) / "datasets" / dataset_name / f"{dataset_part}.txt", "r") as file:
                 lines = file.readlines()
+
+            if lines[0] == "\n":
+                continue
 
             lines_with_separating_blank_lines = []
             for line in lines:
