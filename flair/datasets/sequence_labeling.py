@@ -193,10 +193,18 @@ class ColumnDataset(FlairDataset):
             if self.in_memory:
                 self.sentences: List[Sentence] = []
 
+                # pointer to previous
+                previous_sentence = None
                 while True:
                     sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
                     if not sentence: break
+                    sentence._previous_sentence = previous_sentence
+                    sentence._next_sentence = None
+
+                    if previous_sentence: previous_sentence._next_sentence = sentence
+
                     self.sentences.append(sentence)
+                    previous_sentence = sentence
 
                 self.total_sentence_count = len(self.sentences)
 
@@ -311,8 +319,8 @@ class ColumnDataset(FlairDataset):
         # if in memory, retrieve parsed sentence
         if self.in_memory:
             sentence = self.sentences[index]
-            sentence._next_sentence = self.sentences[index + 1] if index < self.total_sentence_count - 1 else None
-            sentence._previous_sentence = self.sentences[index - 1] if index > 0 else None
+            # sentence._next_sentence = self.sentences[index + 1] if index < self.total_sentence_count - 1 else None
+            # sentence._previous_sentence = self.sentences[index - 1] if index > 0 else None
 
         # else skip to position in file where sentence begins
         else:
