@@ -933,8 +933,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         for sentence in sentences:
 
-            print(sentence)
-
             original_sentences.append(sentence)
 
             # if we also use context, first expand sentence to include context
