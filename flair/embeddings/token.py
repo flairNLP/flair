@@ -788,10 +788,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
     def __init__(
             self,
             model: str = "bert-base-uncased",
-            layers: str = "-1,-2,-3,-4",
+            layers: str = "all",
             pooling_operation: str = "first",
-            batch_size: int = 1,
-            use_scalar_mix: bool = False,
+            use_scalar_mix: bool = True,
             fine_tune: bool = False,
             allow_long_sentences: bool = True,
             use_context: Union[bool, int] = False,
@@ -804,8 +803,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         :param layers: string indicating which layers to take for embedding (-1 is topmost layer)
         :param pooling_operation: how to get from token piece embeddings to token embedding. Either take the first
         subtoken ('first'), the last subtoken ('last'), both first and last ('first_last') or a mean over all ('mean')
-        :param batch_size: How many sentence to push through transformer at once. Set to 1 by default since transformer
-        models tend to be huge.
         :param use_scalar_mix: If True, uses a scalar mix of layers as embedding
         :param fine_tune: If True, allows transformers to be fine-tuned during training
         """
@@ -856,7 +853,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         self.use_scalar_mix = use_scalar_mix
         self.fine_tune = fine_tune
         self.static_embeddings = not self.fine_tune
-        self.batch_size = batch_size
 
         self.special_tokens = []
         # check if special tokens exist to circumvent error message
@@ -875,19 +871,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             self.begin_offset = 0
         if type(self.tokenizer) == TransfoXLTokenizer:
             self.begin_offset = 0
-
-    # def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-    #     """Add embeddings to all words in a list of sentences."""
-    #
-    #     # split into micro batches of size self.batch_size before pushing through transformer
-    #     sentence_batches = [sentences[i * self.batch_size:(i + 1) * self.batch_size]
-    #                         for i in range((len(sentences) + self.batch_size - 1) // self.batch_size)]
-    #
-    #     # embed each micro-batch
-    #     for batch in sentence_batches:
-    #         self._add_embeddings_to_sentences(batch)
-
-    # return sentences
 
     @staticmethod
     def _remove_special_markup(text: str):
