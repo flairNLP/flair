@@ -293,9 +293,6 @@ class ColumnDataset(FlairDataset):
 
         return sentence
 
-    def __none(self):
-        return None
-
 
 class ANER_CORP(ColumnCorpus):
     def __init__(
@@ -461,7 +458,6 @@ class CONLL_03(ColumnCorpus):
             columns,
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
-            # document_as_sequence=document_as_sequence,
             document_separator_token="-DOCSTART-",
             **corpusargs,
         )

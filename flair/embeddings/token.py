@@ -848,7 +848,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             self.layer_indexes = [int(x) for x in range(len(hidden_states))]
         else:
             self.layer_indexes = [int(x) for x in layers.split(",")]
-        # self.mix = ScalarMix(mixture_size=len(self.layer_indexes), trainable=False)
+
         self.pooling_operation = subtoken_pooling
         self.layer_mean = layer_mean
         self.fine_tune = fine_tune
@@ -1055,7 +1055,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 left_context = " ".join(left_context.split(" ")[-self.context_length:])
                 break
         context_length = len(left_context.split(" "))
-        # context_offsets.append(context_length)
         original_sentence.left_context = left_context
 
         # get right context

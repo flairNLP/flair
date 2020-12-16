@@ -1344,12 +1344,6 @@ class Corpus:
         tag_dictionary.add_item("<STOP>")
         return tag_dictionary
 
-    def contextualize(self, tokens: int, max_sentences: int = 24):
-        contextualize(tokens, sentences=self.train, max_sentences=max_sentences)
-        contextualize(tokens, sentences=self.dev, max_sentences=max_sentences)
-        contextualize(tokens, sentences=self.test, max_sentences=max_sentences)
-        return self
-
 
 class MultiCorpus(Corpus):
     def __init__(self, corpora: List[Corpus], name: str = "multicorpus"):
