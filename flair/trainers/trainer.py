@@ -74,6 +74,7 @@ class ModelTrainer:
         initial_extra_patience = 0,
         min_learning_rate: float = 0.0001,
         train_with_dev: bool = False,
+        train_with_test: bool = False,
         monitor_train: bool = False,
         monitor_test: bool = False,
         embeddings_storage_mode: str = "cpu",
@@ -197,7 +198,7 @@ class ModelTrainer:
             if (not param_selection_mode and self.corpus.test and monitor_test)
             else False
         )
-        log_dev = True if not train_with_dev else False
+        log_dev = False if train_with_dev or not self.corpus.dev else True
         log_train_part = (
             True
             if (eval_on_train_fraction == "dev" or eval_on_train_fraction > 0.0)
@@ -259,9 +260,14 @@ class ModelTrainer:
 
         train_data = self.corpus.train
 
-        # if training also uses dev data, include in training set
-        if train_with_dev:
-            train_data = ConcatDataset([self.corpus.train, self.corpus.dev])
+        # if training also uses dev/train data, include in training set
+        if train_with_dev or train_with_test:
+
+            parts = [self.corpus.train]
+            if train_with_dev: parts.append(self.corpus.dev)
+            if train_with_test: parts.append(self.corpus.test)
+
+            train_data = ConcatDataset(parts)
 
         # initialize sampler if provided
         if sampler is not None:
@@ -509,7 +515,7 @@ class ModelTrainer:
                         )
 
                 # determine learning rate annealing through scheduler. Use auxiliary metric for AnnealOnPlateau
-                if not train_with_dev and isinstance(lr_scheduler, AnnealOnPlateau):
+                if log_dev and isinstance(lr_scheduler, AnnealOnPlateau):
                     lr_scheduler.step(current_score, dev_loss)
                 elif not isinstance(lr_scheduler, OneCycleLR):
                     lr_scheduler.step(current_score)
@@ -614,7 +620,7 @@ class ModelTrainer:
                 log.info("Done.")
 
         # test best model if test data is present
-        if self.corpus.test:
+        if self.corpus.test and not train_with_test:
             final_score = self.final_test(base_path, mini_batch_chunk_size, num_workers)
         else:
             final_score = 0
