@@ -463,6 +463,7 @@ class ModelTrainer:
                         self.corpus.dev,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
+                        out_path=base_path / "dev.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
