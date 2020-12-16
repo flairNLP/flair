@@ -29,6 +29,7 @@ class ColumnCorpus(Corpus):
             skip_first_line: bool = False,
             in_memory: bool = True,
             label_name_map: Dict[str, str] = None,
+            **corpusargs,
     ):
         """
         Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
@@ -94,7 +95,7 @@ class ColumnCorpus(Corpus):
             label_name_map=label_name_map,
         ) if dev_file is not None else None
 
-        super(ColumnCorpus, self).__init__(train, dev, test, name=str(data_folder))
+        super(ColumnCorpus, self).__init__(train, dev, test, name=str(data_folder), **corpusargs)
 
 
 class ColumnDataset(FlairDataset):
@@ -380,7 +381,6 @@ class BIOFID(ColumnCorpus):
 
 
 class BIOSCOPE(ColumnCorpus):
-
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -416,7 +416,6 @@ class CONLL_03(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
@@ -469,7 +468,6 @@ class CONLL_03_GERMAN(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
@@ -511,7 +509,7 @@ class CONLL_03_GERMAN(ColumnCorpus):
             columns,
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            document_separator_token="-DOCSTART-",
             **corpusargs,
         )
 
@@ -522,7 +520,6 @@ class CONLL_03_DUTCH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
@@ -561,7 +558,7 @@ class CONLL_03_DUTCH(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            document_separator_token="-DOCSTART-",
             **corpusargs,
         )
 
@@ -1122,7 +1119,6 @@ class MIT_RESTAURANT_NER(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
@@ -1160,7 +1156,6 @@ class MIT_RESTAURANT_NER(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             **corpusargs,
         )
 
@@ -1419,7 +1414,6 @@ class TURKU_NER(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
@@ -1465,7 +1459,7 @@ class TURKU_NER(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            document_separator_token="-DOCSTART-",
             **corpusargs,
         )
 
@@ -1476,7 +1470,6 @@ class TWITTER_NER(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
@@ -1516,7 +1509,6 @@ class TWITTER_NER(ColumnCorpus):
             encoding="latin-1",
             train_file="ner.txt",
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             **corpusargs,
         )
 
@@ -1738,11 +1730,11 @@ class WSD_UFSAC(ColumnCorpus):
             self,
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             train_file: str = None,
             dev_file: str = None,
             test_file: str = None,
-            cut_multisense: bool = True
+            cut_multisense: bool = True,
+            **corpusargs,
     ):
         """
         Initialize a custom corpus with any two WSD datasets in the UFSAC format. This is only possible if you've
@@ -1807,40 +1799,10 @@ class WSD_UFSAC(ColumnCorpus):
             tag_to_bioes=None,
             encoding="latin-1",
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             train_file=train_file,
             dev_file=dev_file,
-            test_file=test_file
-        )
-
-
-class BIOSCOPE(ColumnCorpus):
-
-    def __init__(
-            self,
-            base_path: Union[str, Path] = None,
-            in_memory: bool = True,
-    ):
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
-
-        # column format
-        columns = {0: "text", 1: "tag"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        bioscope_path = "https://raw.githubusercontent.com/whoisjones/BioScopeSequenceLabelingData/master/sequence_labeled/"
-        cached_path(f"{bioscope_path}output.txt", Path("datasets") / dataset_name)
-
-        super(BIOSCOPE, self).__init__(
-            data_folder, columns, in_memory=in_memory, train_file="output.txt"
+            test_file=test_file,
+            **corpusargs,
         )
 
 

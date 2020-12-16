@@ -1053,12 +1053,13 @@ class Corpus:
             dev: FlairDataset = None,
             test: FlairDataset = None,
             name: str = "corpus",
+            sample_missing_splits: bool = True,
     ):
         # set name
         self.name: str = name
 
         # sample test data if none is provided
-        if test is None:
+        if test is None and sample_missing_splits:
             train_length = len(train)
             test_size: int = round(train_length / 10)
             splits = randomly_split_into_two_datasets(train, test_size)
@@ -1066,7 +1067,7 @@ class Corpus:
             train = splits[1]
 
         # sample dev data if none is provided
-        if dev is None:
+        if dev is None and sample_missing_splits:
             train_length = len(train)
             dev_size: int = round(train_length / 10)
             splits = randomly_split_into_two_datasets(train, dev_size)
@@ -1279,9 +1280,9 @@ class Corpus:
 
     def __str__(self) -> str:
         return "Corpus: %d train + %d dev + %d test sentences" % (
-            len(self.train),
-            len(self.dev),
-            len(self.test),
+            len(self.train) if self.train else 0,
+            len(self.dev) if self.dev else 0,
+            len(self.test) if self.test else 0,
         )
 
     def make_label_dictionary(self, label_type: str = None) -> Dictionary:
@@ -1330,7 +1331,11 @@ class Corpus:
         return class_to_count
 
     def get_all_sentences(self) -> Dataset:
-        return ConcatDataset([self.train, self.dev, self.test])
+        parts = []
+        if self.train: parts.append(self.train)
+        if self.dev: parts.append(self.dev)
+        if self.test: parts.append(self.test)
+        return ConcatDataset(parts)
 
     def make_tag_dictionary(self, tag_type: str) -> Dictionary:
 
