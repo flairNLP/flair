@@ -966,7 +966,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
             # embed each sentence split
             hidden_states_of_all_splits = []
-            for split_number, sentence_split in enumerate(sentence_splits):
+            for sentence_split in sentence_splits:
 
                 # initialize batch tensors and mask
                 input_ids = sentence_split.unsqueeze(0).to(flair.device)
@@ -1021,7 +1021,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
                     subtoken_embeddings.append(final_embedding)
 
-                # use scalar mix of embeddings if so selected
+                # use layer mean of embeddings if so selected
                 if self.layer_mean and len(self.layer_indexes) > 1:
                     sm_embeddings = torch.mean(torch.stack(subtoken_embeddings, dim=1), dim=1)
                     subtoken_embeddings = [sm_embeddings]
