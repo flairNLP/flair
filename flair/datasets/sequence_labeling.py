@@ -41,8 +41,7 @@ class ColumnCorpus(Corpus):
         :param column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t"
         to split only on tabs
         :param comment_symbol: if set, lines that begin with this symbol are treated as comments
-        :param document_separator_token: If provided, multiple sentences are read into one object. Provide the string token
-        that indicates that a new document begins
+        :param document_separator_token: If provided, sentences that function as document boundaries are so marked
         :param skip_first_line: set to True if your dataset has a header line
         :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
         :return: a Corpus with annotated train, dev and test data
@@ -124,8 +123,7 @@ class ColumnDataset(FlairDataset):
         to split only on tabs
         :param comment_symbol: if set, lines that begin with this symbol are treated as comments
         :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
-        :param document_separator_token: If provided, multiple sentences are read into one object. Provide the string token
-        that indicates that a new document begins
+        :param document_separator_token: If provided, sentences that function as document boundaries are so marked
         :param skip_first_line: set to True if your dataset has a header line
         :param label_name_map: Optionally map tag names to different schema.
         """
@@ -142,10 +140,6 @@ class ColumnDataset(FlairDataset):
 
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
-        if self.in_memory:
-            self.sentences: List[Sentence] = []
-        else:
-            self.indices: List[int] = []
 
         self.total_sentence_count: int = 0
 
@@ -158,57 +152,95 @@ class ColumnDataset(FlairDataset):
         # determine encoding of text file
         self.encoding = encoding
 
-        sentence: Sentence = Sentence()
-        sentence_started: bool = False
-        with open(str(self.path_to_column_file), encoding=self.encoding) as f:
+        with open(str(self.path_to_column_file), encoding=self.encoding) as file:
 
             # skip first line if to selected
             if skip_first_line:
-                f.readline()
+                file.readline()
 
-            line = f.readline()
-            position = 0
+            # option 1: read only sentence boundaries as offset positions
+            if not self.in_memory:
+                self.indices: List[int] = []
 
-            while line:
+                line = file.readline()
+                position = 0
+                sentence_started = False
+                while line:
+                    if sentence_started and self.__line_completes_sentence(line):
+                        self.indices.append(position)
+                        position = file.tell()
+                        sentence_started = False
 
-                if self.comment_symbol is not None and line.startswith(comment_symbol):
-                    line = f.readline()
-                    continue
-
-                if self.__line_completes_sentence(line):
-
-                    if sentence_started:
-
-                        if self.in_memory:
-                            if self.tag_to_bioes is not None:
-                                sentence.convert_tag_scheme(
-                                    tag_type=self.tag_to_bioes, target_scheme="iobes"
-                                )
-                            self.sentences.append(sentence)
-                        else:
-                            self.indices.append(position)
-                            position = f.tell()
-                        self.total_sentence_count += 1
-                    sentence: Sentence = Sentence()
-                    sentence_started = False
-
-                elif self.in_memory:
-                    token = self._parse_token(line)
-                    if not line.isspace():
-                        sentence.add_token(token)
+                    elif not line.isspace():
                         sentence_started = True
+                    line = file.readline()
 
-                elif not line.isspace():
-                    sentence_started = True
+                if sentence_started:
+                    self.indices.append(position)
 
-                line = f.readline()
+                self.total_sentence_count = len(self.indices)
 
-        if sentence_started:
+            # option 2: keep everything in memory
             if self.in_memory:
-                self.sentences.append(sentence)
+                self.sentences: List[Sentence] = []
+
+                # pointer to previous
+                previous_sentence = None
+                while True:
+                    sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
+                    if not sentence: break
+                    sentence._previous_sentence = previous_sentence
+                    sentence._next_sentence = None
+
+                    if previous_sentence: previous_sentence._next_sentence = sentence
+
+                    self.sentences.append(sentence)
+                    previous_sentence = sentence
+
+                self.total_sentence_count = len(self.sentences)
+
+    def _read_next_sentence(self, file):
+        lines = []
+        line = file.readline()
+        while line:
+            if not line.isspace():
+                lines.append(line)
+
+            # if sentence ends, break
+            if len(lines) > 0 and self.__line_completes_sentence(line):
+                break
+
+            line = file.readline()
+        return lines
+
+    def _convert_lines_to_sentence(self, lines):
+
+        sentence: Sentence = Sentence()
+        for line in lines:
+            # skip comments
+            if self.comment_symbol is not None and line.startswith(self.comment_symbol):
+                continue
+
+            # if sentence ends, convert and return
+            if self.__line_completes_sentence(line):
+                if len(sentence) > 0:
+                    if self.tag_to_bioes is not None:
+                        sentence.convert_tag_scheme(
+                            tag_type=self.tag_to_bioes, target_scheme="iobes"
+                        )
+                    # check if this sentence is a document boundary
+                    if sentence.to_original_text() == self.document_separator_token:
+                        sentence.is_document_boundary = True
+                    return sentence
+
+            # otherwise, this line is a token. parse and add to sentence
             else:
-                self.indices.append(position)
-            self.total_sentence_count += 1
+                token = self._parse_token(line)
+                sentence.add_token(token)
+
+        # check if this sentence is a document boundary
+        if sentence.to_original_text() == self.document_separator_token: sentence.is_document_boundary = True
+        if len(sentence) > 0: return sentence
 
     def _parse_token(self, line: str) -> Token:
         fields: List[str] = re.split(self.column_delimiter, line.rstrip())
@@ -235,13 +267,7 @@ class ColumnDataset(FlairDataset):
         return token
 
     def __line_completes_sentence(self, line: str) -> bool:
-        sentence_completed = line.isspace()
-        if self.document_separator_token:
-            sentence_completed = False
-            fields: List[str] = re.split(self.column_delimiter, line)
-            if len(fields) >= self.text_column:
-                if fields[self.text_column] == self.document_separator_token:
-                    sentence_completed = True
+        sentence_completed = line.isspace() or line == ''
         return sentence_completed
 
     def is_in_memory(self) -> bool:
@@ -252,35 +278,19 @@ class ColumnDataset(FlairDataset):
 
     def __getitem__(self, index: int = 0) -> Sentence:
 
+        # if in memory, retrieve parsed sentence
         if self.in_memory:
             sentence = self.sentences[index]
 
+        # else skip to position in file where sentence begins
         else:
             with open(str(self.path_to_column_file), encoding=self.encoding) as file:
                 file.seek(self.indices[index])
-                line = file.readline()
-                sentence: Sentence = Sentence()
-                while line:
-                    if self.comment_symbol is not None and line.startswith(
-                            self.comment_symbol
-                    ):
-                        line = file.readline()
-                        continue
+                sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
 
-                    if self.__line_completes_sentence(line):
-                        if len(sentence) > 0:
-                            if self.tag_to_bioes is not None:
-                                sentence.convert_tag_scheme(
-                                    tag_type=self.tag_to_bioes, target_scheme="iobes"
-                                )
-                            return sentence
+            # set sentence context using partials
+            sentence._position_in_dataset = (self, index)
 
-                    else:
-                        token = self._parse_token(line)
-                        if not line.isspace():
-                            sentence.add_token(token)
-
-                    line = file.readline()
         return sentence
 
 
@@ -448,7 +458,7 @@ class CONLL_03(ColumnCorpus):
             columns,
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            document_separator_token="-DOCSTART-",
             **corpusargs,
         )
 

@@ -242,6 +242,7 @@ class ModelTrainer:
                                    max_lr=learning_rate,
                                    steps_per_epoch=dataset_size//mini_batch_size + 1,
                                    epochs=max_epochs-self.epoch, # if we load a checkpoint, we have already trained for self.epoch
+                                   pct_start=0.0,
                                    cycle_momentum=cycle_momentum)
         else:
             lr_scheduler = scheduler(
@@ -462,6 +463,7 @@ class ModelTrainer:
                         self.corpus.dev,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
+                        out_path=base_path / "dev.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
