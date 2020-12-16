@@ -20,3 +20,4 @@ sentencepiece<=0.1.91
 konoha<5.0.0,>=4.0.0
 janome
 gdown
+numpy<1.20.0

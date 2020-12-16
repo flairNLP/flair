@@ -1521,16 +1521,23 @@ class TWITTER_NER(ColumnCorpus):
         )
 
 
-def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
+def from_ufsac_to_conll(xml_file: Union[str, Path], conll_file: Union[str, Path], encoding: str = "utf8",
+                        cut_multisense: bool = True):
     """
-    Function that converts the UFSAC format into the needed CoNLL format. The IOB2 format will be used if
+    Function that converts the UFSAC format into the needed CoNLL format in a new file. The IOB2 format will be used if
     chunks reside within the data.
     Parameters
     ----------
-    data_file : Union[str, Path]
-        Path to the data file.
+    xml_file : Union[str, Path]
+        Path to the xml file.
+    conll_file : Union[str, Path]
+        Path for the new conll file.
     encoding : str, optional
         Encoding used in open function. The default is "utf8".
+    cut_multisense : bool, optional
+        Boolean that determines whether or not the wn30_key tag should be cut if it contains multiple possible senses.
+        If True only the first listed sense will be used. Otherwise the whole list of senses will be detected
+        as one new sense. The default is True.
 
     """
 
@@ -1544,26 +1551,24 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
         """
 
         tag_start = string.find('"') + 1
-        tag_end = string.find('"', tag_start)
-        tag = string[tag_start:tag_end]
 
-        temp.append(tag)
-        f.write(' B-' + tag)
+        if string.count('%') > 1 and cut_multisense is True:  # check for multisense
 
-    with open(file=data_file, mode='r', encoding=encoding) as f:  # get file lines
-
-        # check if file is already converted
-        first_line = f.readline().split()
-
-        if '<c' not in first_line[0]:  # check if file is already in CoNLL
-
-            return
+            tag_end = string.find(';', tag_start)
 
         else:
 
-            lines = f.readlines()
+            tag_end = string.find('"', tag_start)
 
-    with open(file=data_file, mode='w', encoding=encoding) as f:  # alter file to CoNLL format
+        tag = string[tag_start:tag_end]
+        temp.append(tag)
+        f.write(' B-' + tag)
+
+    with open(file=xml_file, mode='r', encoding=encoding) as f:  # get file lines
+
+        lines = f.readlines()
+
+    with open(file=conll_file, mode='w', encoding=encoding) as f:  # alter file to CoNLL format
 
         for line in lines:
 
@@ -1685,6 +1690,49 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
                 f.write('\n')
 
 
+def determine_conll_file(file: str, data_folder: str, cut_multisense: bool = True):
+    """
+    Function that returns the given file in the CoNLL format.
+    ----------
+    string : str
+        String that contains the name of the file.
+    data_folder : str
+        String that contains the name of the folder in which the CoNLL file should reside.
+    cut_multisense : bool, optional
+        Boolean that determines whether or not the wn30_key tag should be cut if it contains multiple possible senses.
+        If True only the first listed sense will be used. Otherwise the whole list of senses will be detected
+        as one new sense. The default is True.
+    """
+
+    # check if converted file exists
+
+    if file is not None and not '.conll' in file:
+
+        if cut_multisense is True:
+
+            conll_file = file[:-4] + '_cut.conll'
+
+        else:
+
+            conll_file = file[:-3] + 'conll'
+
+        path_to_conll_file = data_folder / conll_file
+
+        if not path_to_conll_file.exists():
+            # convert the file to CoNLL
+
+            from_ufsac_to_conll(xml_file=Path(data_folder / file),
+                                conll_file=Path(data_folder / conll_file),
+                                encoding="latin-1",
+                                cut_multisense=cut_multisense)
+
+        return conll_file
+
+    else:
+
+        return file
+
+
 class WSD_UFSAC(ColumnCorpus):
     def __init__(
             self,
@@ -1692,20 +1740,27 @@ class WSD_UFSAC(ColumnCorpus):
             in_memory: bool = True,
             document_as_sequence: bool = False,
             train_file: str = None,
-            test_file: str = None
+            dev_file: str = None,
+            test_file: str = None,
+            cut_multisense: bool = True
     ):
         """
         Initialize a custom corpus with any two WSD datasets in the UFSAC format. This is only possible if you've
         manually downloaded the WSD datasets in UFSAC format to your machine.
         Obtain the most recent datasets from https://drive.google.com/file/d/1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO and copy
-        up to two of the datasets in a folder called 'wsd_ufsac'.Then set the base_path parameter in the constructor to
-        the path to the parent directory where the 'wsd_ufsac' folder resides and respectively set the train_file and
-        test_file parameter in the constructor according to the file names.
+        up to three of the datasets in a folder called 'wsd_ufsac'.Then set the base_path parameter in the constructor
+        to the path to the parent directory where the 'wsd_ufsac' folder resides and respectively set the train_file,
+        dev_file and test_file parameter in the constructor according to the file names.
         :param base_path: Path to the custom WSD corpus ('wsd_ufsac' folder) on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         :param train_file: Name of the training dataset (e.g. 'semcor.xml')
+        :param dev_file: Name of the development dataset
         :param test_file: Name of the testing dataset
+        :param cut_multisense: Boolean that determines whether or not the wn30_key tag should be cut if it contains
+                               multiple possible senses. If True only the first listed sense will be used and the
+                               suffix '_cut' will be added to the name of the CoNLL file. Otherwise the whole list of
+                               senses will be detected as one new sense. The default is True.
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -1719,7 +1774,7 @@ class WSD_UFSAC(ColumnCorpus):
         #
         # if the other annotations should be needed simply add the columns in correct order according
         # to the chosen datasets here and respectively change the values of the blacklist array and
-        # the range value of the else case in the token for loop in the convert_ufsac_to_conll function
+        # the range value of the else case in the token for loop in the from_ufsac_to_conll function
 
         columns = {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
 
@@ -1740,13 +1795,11 @@ class WSD_UFSAC(ColumnCorpus):
             )
             log.warning("-" * 100)
 
-        # convert the files to CoNLL
+        # determine correct CoNLL files
 
-        if train_file is not None:
-            convert_ufsac_to_conll(data_file=Path(data_folder / train_file), encoding="latin-1")
-
-        if test_file is not None:
-            convert_ufsac_to_conll(data_file=Path(data_folder / test_file), encoding="latin-1")
+        train_file = determine_conll_file(file=train_file, data_folder=data_folder, cut_multisense=cut_multisense)
+        dev_file = determine_conll_file(file=dev_file, data_folder=data_folder, cut_multisense=cut_multisense)
+        test_file = determine_conll_file(file=test_file, data_folder=data_folder, cut_multisense=cut_multisense)
 
         super(WSD_UFSAC, self).__init__(
             data_folder,
@@ -1756,6 +1809,7 @@ class WSD_UFSAC(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             train_file=train_file,
+            dev_file=dev_file,
             test_file=test_file
         )
 
