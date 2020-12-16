@@ -90,7 +90,7 @@ def test_transformer_word_embeddings():
         assert len(token.get_embedding()) == 0
     del embeddings
 
-    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', use_scalar_mix=True)
+    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', layer_mean=True)
 
     embeddings.embed(sentence)
 
@@ -105,7 +105,7 @@ def test_transformer_word_embeddings():
 
 def test_transformer_weird_sentences():
 
-    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', use_scalar_mix=True)
+    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', layer_mean=True)
 
     sentence = Sentence("Hybrid mesons , qq ̄ states with an admixture")
     embeddings.embed(sentence)

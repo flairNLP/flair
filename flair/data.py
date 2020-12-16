@@ -524,11 +524,11 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-        self,
-        text: Union[str, List[str]] = None,
-        use_tokenizer: Union[bool, Tokenizer] = True,
-        language_code: str = None,
-        start_position: int = None
+            self,
+            text: Union[str, List[str]] = None,
+            use_tokenizer: Union[bool, Tokenizer] = True,
+            language_code: str = None,
+            start_position: int = None
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
@@ -582,6 +582,9 @@ class Sentence(DataPoint):
             )
 
         self.tokenized = None
+
+        # some sentences represent a document boundary (but most do not)
+        self.is_document_boundary: bool = False
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
@@ -940,6 +943,45 @@ class Sentence(DataPoint):
 
         return re.sub(r"[\u0080-\u0099]", to_windows_1252, text)
 
+    def next_sentence(self):
+        """
+        Get the next sentence in the document (works only if context is set through dataloader or elsewhere)
+        :return: next Sentence in document if set, otherwise None
+        """
+        if '_next_sentence' in self.__dict__.keys():
+            return self._next_sentence
+
+        if '_position_in_dataset' in self.__dict__.keys():
+            dataset = self._position_in_dataset[0]
+            index = self._position_in_dataset[1] + 1
+            if index < len(dataset):
+                return dataset[index]
+
+        return None
+
+    def previous_sentence(self):
+        """
+        Get the previous sentence in the document (works only if context is set through dataloader or elsewhere)
+        :return: previous Sentence in document if set, otherwise None
+        """
+        if '_previous_sentence' in self.__dict__.keys():
+            return self._previous_sentence
+
+        if '_position_in_dataset' in self.__dict__.keys():
+            dataset = self._position_in_dataset[0]
+            index = self._position_in_dataset[1] - 1
+            if index >= 0:
+                return dataset[index]
+
+        return None
+
+    def is_context_set(self) -> bool:
+        """
+        Return True or False depending on whether context is set (for instance in dataloader or elsewhere)
+        :return: True if context is set, else False
+        """
+        return '_previous_sentence' in self.__dict__.keys() or '_position_in_dataset' in self.__dict__.keys()
+
 
 class Image(DataPoint):
 
@@ -1097,7 +1139,6 @@ class Corpus:
         subset = Subset(dataset, non_empty_sentence_indices)
 
         return subset
-
 
     @staticmethod
     def _filter_empty_sentences(dataset) -> Dataset:
@@ -1303,12 +1344,6 @@ class Corpus:
         tag_dictionary.add_item("<STOP>")
         return tag_dictionary
 
-    def contextualize(self, tokens: int, max_sentences: int = 24):
-        contextualize(tokens, sentences=self.train, max_sentences=max_sentences)
-        contextualize(tokens, sentences=self.dev, max_sentences=max_sentences)
-        contextualize(tokens, sentences=self.test, max_sentences=max_sentences)
-        return self
-
 
 class MultiCorpus(Corpus):
     def __init__(self, corpora: List[Corpus], name: str = "multicorpus"):
@@ -1328,7 +1363,6 @@ class MultiCorpus(Corpus):
 
 
 def contextualize(tokens: int, sentences: Union[FlairDataset, List[Sentence]], max_sentences: int = 24):
-
     # go through each sentence
     for index, sentence in enumerate(sentences):
         left_sentences = []
@@ -1401,8 +1435,8 @@ def iob_iobes(tags):
             raise Exception("Invalid IOB format!")
     return new_tags
 
-def randomly_split_into_two_datasets(dataset, length_of_first):
 
+def randomly_split_into_two_datasets(dataset, length_of_first):
     import random
     indices = [i for i in range(len(dataset))]
     random.shuffle(indices)

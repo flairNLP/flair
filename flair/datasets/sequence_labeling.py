@@ -2,6 +2,7 @@ import logging
 import re
 import os
 import shutil
+from functools import partial
 from pathlib import Path
 from typing import Union, Dict, List
 
@@ -41,8 +42,7 @@ class ColumnCorpus(Corpus):
         :param column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t"
         to split only on tabs
         :param comment_symbol: if set, lines that begin with this symbol are treated as comments
-        :param document_separator_token: If provided, multiple sentences are read into one object. Provide the string token
-        that indicates that a new document begins
+        :param document_separator_token: If provided, sentences that function as document boundaries are so marked
         :param skip_first_line: set to True if your dataset has a header line
         :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
         :return: a Corpus with annotated train, dev and test data
@@ -124,8 +124,7 @@ class ColumnDataset(FlairDataset):
         to split only on tabs
         :param comment_symbol: if set, lines that begin with this symbol are treated as comments
         :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
-        :param document_separator_token: If provided, multiple sentences are read into one object. Provide the string token
-        that indicates that a new document begins
+        :param document_separator_token: If provided, sentences that function as document boundaries are so marked
         :param skip_first_line: set to True if your dataset has a header line
         :param label_name_map: Optionally map tag names to different schema.
         """
@@ -172,6 +171,7 @@ class ColumnDataset(FlairDataset):
                         self.indices.append(position)
                         position = file.tell()
                         sentence_started = False
+
                     elif not line.isspace():
                         sentence_started = True
                     line = file.readline()
@@ -185,20 +185,40 @@ class ColumnDataset(FlairDataset):
             if self.in_memory:
                 self.sentences: List[Sentence] = []
 
+                # pointer to previous
+                previous_sentence = None
                 while True:
-                    sentence = self._read_next_sentence(file)
+                    sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
                     if not sentence: break
+                    sentence._previous_sentence = previous_sentence
+                    sentence._next_sentence = None
+
+                    if previous_sentence: previous_sentence._next_sentence = sentence
+
                     self.sentences.append(sentence)
+                    previous_sentence = sentence
 
                 self.total_sentence_count = len(self.sentences)
 
     def _read_next_sentence(self, file):
+        lines = []
         line = file.readline()
-        sentence: Sentence = Sentence()
         while line:
+            lines.append(line)
+
+            # if sentence ends, break
+            if self.__line_completes_sentence(line):
+                break
+
+            line = file.readline()
+        return lines
+
+    def _convert_lines_to_sentence(self, lines):
+
+        sentence: Sentence = Sentence()
+        for line in lines:
             # skip comments
             if self.comment_symbol is not None and line.startswith(self.comment_symbol):
-                line = file.readline()
                 continue
 
             # if sentence ends, convert and return
@@ -208,6 +228,9 @@ class ColumnDataset(FlairDataset):
                         sentence.convert_tag_scheme(
                             tag_type=self.tag_to_bioes, target_scheme="iobes"
                         )
+                    # check if this sentence is a document boundary
+                    if sentence.to_original_text() == self.document_separator_token:
+                        sentence.is_document_boundary = True
                     return sentence
 
             # otherwise, this line is a token. parse and add to sentence
@@ -215,8 +238,8 @@ class ColumnDataset(FlairDataset):
                 token = self._parse_token(line)
                 sentence.add_token(token)
 
-            line = file.readline()
-
+        # check if this sentence is a document boundary
+        if sentence.to_original_text() == self.document_separator_token: sentence.is_document_boundary = True
         if len(sentence) > 0: return sentence
 
     def _parse_token(self, line: str) -> Token:
@@ -225,17 +248,19 @@ class ColumnDataset(FlairDataset):
         for column in self.column_name_map:
             if len(fields) > column:
                 if column != self.text_column and self.column_name_map[column] != self.SPACE_AFTER_KEY:
-                    task = self.column_name_map[column] # for example 'pos'
+                    task = self.column_name_map[column]  # for example 'pos'
                     tag = fields[column]
-                    if tag.count("-") >= 1: # tag with prefix, for example tag='B-OBJ'
+                    if tag.count("-") >= 1:  # tag with prefix, for example tag='B-OBJ'
                         split_at_first_hyphen = tag.split("-", 1)
                         tagging_format_prefix = split_at_first_hyphen[0]
                         tag_without_tagging_format = split_at_first_hyphen[1]
                         if self.label_name_map and tag_without_tagging_format in self.label_name_map.keys():
-                            tag = tagging_format_prefix + "-" + self.label_name_map[tag_without_tagging_format].replace("-", " ") # for example, transforming 'B-OBJ' to 'B-part-of-speech-object'
-                    else: # tag without prefix, for example tag='PPER'
+                            tag = tagging_format_prefix + "-" + self.label_name_map[tag_without_tagging_format].replace(
+                                "-", " ")  # for example, transforming 'B-OBJ' to 'B-part-of-speech-object'
+                    else:  # tag without prefix, for example tag='PPER'
                         if self.label_name_map and tag in self.label_name_map.keys():
-                            tag = self.label_name_map[tag].replace("-", " ") # for example, transforming 'PPER' to 'person'
+                            tag = self.label_name_map[tag].replace("-",
+                                                                   " ")  # for example, transforming 'PPER' to 'person'
                     token.add_label(task, tag)
                 if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == '-':
                     token.whitespace_after = False
@@ -243,12 +268,6 @@ class ColumnDataset(FlairDataset):
 
     def __line_completes_sentence(self, line: str) -> bool:
         sentence_completed = line.isspace() or line == ''
-        if self.document_separator_token:
-            sentence_completed = False
-            fields: List[str] = re.split(self.column_delimiter, line)
-            if len(fields) >= self.text_column:
-                if fields[self.text_column] == self.document_separator_token:
-                    sentence_completed = True
         return sentence_completed
 
     def is_in_memory(self) -> bool:
@@ -267,7 +286,10 @@ class ColumnDataset(FlairDataset):
         else:
             with open(str(self.path_to_column_file), encoding=self.encoding) as file:
                 file.seek(self.indices[index])
-                sentence = self._read_next_sentence(file)
+                sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
+
+            # set sentence context using partials
+            sentence._position_in_dataset = (self, index)
 
         return sentence
 
@@ -436,7 +458,7 @@ class CONLL_03(ColumnCorpus):
             columns,
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            document_separator_token="-DOCSTART-",
             **corpusargs,
         )
 
@@ -1498,6 +1520,7 @@ class TWITTER_NER(ColumnCorpus):
             **corpusargs,
         )
 
+
 def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
     """
     Function that converts the UFSAC format into the needed CoNLL format. The IOB2 format will be used if
@@ -1527,8 +1550,7 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
         temp.append(tag)
         f.write(' B-' + tag)
 
-
-    with open(file=data_file, mode='r', encoding=encoding) as f: # get file lines
+    with open(file=data_file, mode='r', encoding=encoding) as f:  # get file lines
 
         # check if file is already converted
         first_line = f.readline().split()
@@ -1541,7 +1563,7 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
 
             lines = f.readlines()
 
-    with open(file=data_file, mode='w', encoding=encoding) as f: # alter file to CoNLL format
+    with open(file=data_file, mode='w', encoding=encoding) as f:  # alter file to CoNLL format
 
         for line in lines:
 
@@ -1550,7 +1572,7 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
             if len(line_list) > 3:  # sentence parts have at least 4 tokens
 
                 # tokens to ignore (edit here for variation)
-                blacklist = ['<word','wn1','wn2','id=']
+                blacklist = ['<word', 'wn1', 'wn2', 'id=']
 
                 # counter to keep track how many tags have been found in line
                 ctr = 0
@@ -1567,7 +1589,6 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
                 for token in line_list:
 
                     if any(substring in token for substring in blacklist):
-
                         continue
 
                     if 'surface_form=' in token:
@@ -1580,10 +1601,9 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
                         for character in chunk:
 
                             if '_' in character:
-
                                 words += 1
 
-                        if words > 1: # gather single words of chunk
+                        if words > 1:  # gather single words of chunk
 
                             is_chunk = True
 
@@ -1594,9 +1614,9 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
                             word_start = 0
                             word_end = chunk.find('_', word_start)
                             f.write(chunk[word_start:word_end])
-                            word_start = word_end+1
+                            word_start = word_end + 1
 
-                            for _ in range(words-1):
+                            for _ in range(words - 1):
 
                                 word_end = chunk.find('_', word_start)
 
@@ -1608,7 +1628,7 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
 
                                     chunk_parts.append(chunk[word_start:word_end])
 
-                                word_start = word_end+1
+                                word_start = word_end + 1
 
                         else:
 
@@ -1620,7 +1640,6 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
                     elif 'pos=' in token:
 
                         if ctr != 2:
-
                             temp.append(' O')
                             f.write(' O')
 
@@ -1637,14 +1656,13 @@ def convert_ufsac_to_conll(data_file: Union[str, Path], encoding: str = "utf8"):
                     else:
 
                         # edit here for variation
-                        for _ in range(4-ctr):
-
+                        for _ in range(4 - ctr):
                             temp.append(' O')
                             f.write(' O')
 
                         f.write('\n')
 
-                if is_chunk: # handle chunks
+                if is_chunk:  # handle chunks
 
                     for word in chunk_parts:
 
@@ -1725,11 +1743,9 @@ class WSD_UFSAC(ColumnCorpus):
         # convert the files to CoNLL
 
         if train_file is not None:
-
             convert_ufsac_to_conll(data_file=Path(data_folder / train_file), encoding="latin-1")
 
         if test_file is not None:
-
             convert_ufsac_to_conll(data_file=Path(data_folder / test_file), encoding="latin-1")
 
         super(WSD_UFSAC, self).__init__(
@@ -1788,7 +1804,6 @@ def _download_wikiner(language_code: str, dataset_name: str):
             / f"aij-wikiner-{lc}-wp3.train"
     )
     if not data_file.is_file():
-
         cached_path(
             f"{wikiner_path}aij-wikiner-{lc}-wp3.bz2", Path("datasets") / dataset_name
         )
