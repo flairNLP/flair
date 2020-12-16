@@ -583,6 +583,8 @@ class Sentence(DataPoint):
 
         self.tokenized = None
 
+        self.is_document_boundary: bool = False
+
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
             if token.idx == token_id:

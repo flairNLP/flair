@@ -789,8 +789,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             self,
             model: str = "bert-base-uncased",
             layers: str = "all",
-            pooling_operation: str = "first",
-            use_scalar_mix: bool = True,
+            subtoken_pooling: str = "first",
+            layer_mean: bool = True,
             fine_tune: bool = False,
             allow_long_sentences: bool = True,
             use_context: Union[bool, int] = False,
@@ -801,9 +801,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         :param model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for
         options)
         :param layers: string indicating which layers to take for embedding (-1 is topmost layer)
-        :param pooling_operation: how to get from token piece embeddings to token embedding. Either take the first
+        :param subtoken_pooling: how to get from token piece embeddings to token embedding. Either take the first
         subtoken ('first'), the last subtoken ('last'), both first and last ('first_last') or a mean over all ('mean')
-        :param use_scalar_mix: If True, uses a scalar mix of layers as embedding
+        :param layer_mean: If True, uses a scalar mix of layers as embedding
         :param fine_tune: If True, allows transformers to be fine-tuned during training
         """
         super().__init__()
@@ -849,8 +849,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         else:
             self.layer_indexes = [int(x) for x in layers.split(",")]
         # self.mix = ScalarMix(mixture_size=len(self.layer_indexes), trainable=False)
-        self.pooling_operation = pooling_operation
-        self.use_scalar_mix = use_scalar_mix
+        self.pooling_operation = subtoken_pooling
+        self.layer_mean = layer_mean
         self.fine_tune = fine_tune
         self.static_embeddings = not self.fine_tune
 
@@ -1022,32 +1022,20 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                     subtoken_embeddings.append(final_embedding)
 
                 # use scalar mix of embeddings if so selected
-                if self.use_scalar_mix:
+                if self.layer_mean and len(self.layer_indexes) > 1:
                     sm_embeddings = torch.mean(torch.stack(subtoken_embeddings, dim=1), dim=1)
-                    # sm_embeddings = self.mix(subtoken_embeddings)
-
                     subtoken_embeddings = [sm_embeddings]
 
                 # set the extracted embedding for the token
                 token.set_embedding(self.name, torch.cat(subtoken_embeddings))
 
-                # move embeddings from context back to original sentence (if using context)
-                if self.context_length > 0:
-
-                    sentence_without_context = original_sentence
-
-                    # get context offset
-                    offset = context_offset
-
-                    # set embeddings for non-context sentences
-                    if offset <= token_idx < offset + len(sentence_without_context.tokens):
-                        sentence_without_context.tokens[token_idx - offset] \
-                            .set_embedding(self.name, torch.cat(subtoken_embeddings))
-
                 subword_start_idx += number_of_subtokens
 
+            # move embeddings from context back to original sentence (if using context)
             if self.context_length > 0:
-                sentence = sentence_without_context
+                for token_idx, token in enumerate(original_sentence):
+                    token.set_embedding(self.name, sentence[token_idx+context_offset].get_embedding(self.name))
+                sentence = original_sentence
 
     def _expand_sentence_with_context(self, sentence):
 
@@ -1166,7 +1154,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         """Returns the length of the embedding vector."""
 
-        if not self.use_scalar_mix:
+        if not self.layer_mean:
             length = len(self.layer_indexes) * self.model.config.hidden_size
         else:
             length = self.model.config.hidden_size
