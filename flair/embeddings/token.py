@@ -1047,7 +1047,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         while True:
             sentence = sentence.previous_sentence()
             if sentence is None: break
-            # if sentence.is_document_boundary: break
+            if sentence.is_document_boundary: break
 
             left_context = sentence.to_tokenized_string() + ' ' + left_context
             left_context = left_context.strip()
@@ -1064,7 +1064,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         while True:
             sentence = sentence.next_sentence()
             if sentence is None: break
-            # if sentence.is_document_boundary: break
+            if sentence.is_document_boundary: break
 
             right_context += ' ' + sentence.to_tokenized_string()
             right_context = right_context.strip()
