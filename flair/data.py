@@ -583,6 +583,7 @@ class Sentence(DataPoint):
 
         self.tokenized = None
 
+        # some sentences represent a document boundary (but most do not)
         self.is_document_boundary: bool = False
 
     def get_token(self, token_id: int) -> Token:

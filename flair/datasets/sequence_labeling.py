@@ -42,8 +42,7 @@ class ColumnCorpus(Corpus):
         :param column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t"
         to split only on tabs
         :param comment_symbol: if set, lines that begin with this symbol are treated as comments
-        :param document_separator_token: If provided, multiple sentences are read into one object. Provide the string token
-        that indicates that a new document begins
+        :param document_separator_token: If provided, sentences that function as document boundaries are so marked
         :param skip_first_line: set to True if your dataset has a header line
         :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
         :return: a Corpus with annotated train, dev and test data
@@ -125,8 +124,7 @@ class ColumnDataset(FlairDataset):
         to split only on tabs
         :param comment_symbol: if set, lines that begin with this symbol are treated as comments
         :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
-        :param document_separator_token: If provided, multiple sentences are read into one object. Provide the string token
-        that indicates that a new document begins
+        :param document_separator_token: If provided, sentences that function as document boundaries are so marked
         :param skip_first_line: set to True if your dataset has a header line
         :param label_name_map: Optionally map tag names to different schema.
         """
@@ -164,20 +162,15 @@ class ColumnDataset(FlairDataset):
             # option 1: read only sentence boundaries as offset positions
             if not self.in_memory:
                 self.indices: List[int] = []
-                # self.raw = []
 
                 line = file.readline()
                 position = 0
                 sentence_started = False
-                sentence_rep = []
                 while line:
-                    sentence_rep.append(line)
                     if sentence_started and self.__line_completes_sentence(line):
                         self.indices.append(position)
                         position = file.tell()
                         sentence_started = False
-                        # self.raw.append(sentence_rep)
-                        sentence_rep = []
 
                     elif not line.isspace():
                         sentence_started = True
@@ -185,7 +178,6 @@ class ColumnDataset(FlairDataset):
 
                 if sentence_started:
                     self.indices.append(position)
-                    # self.raw.append(sentence_rep)
 
                 self.total_sentence_count = len(self.indices)
 
@@ -236,6 +228,9 @@ class ColumnDataset(FlairDataset):
                         sentence.convert_tag_scheme(
                             tag_type=self.tag_to_bioes, target_scheme="iobes"
                         )
+                    # check if this sentence is a document boundary
+                    if sentence.to_original_text() == self.document_separator_token:
+                        sentence.is_document_boundary = True
                     return sentence
 
             # otherwise, this line is a token. parse and add to sentence
@@ -243,35 +238,8 @@ class ColumnDataset(FlairDataset):
                 token = self._parse_token(line)
                 sentence.add_token(token)
 
-        if len(sentence) > 0: return sentence
-
-    def _read_next_sentence_old(self, file):
-        lines = []
-        line = file.readline()
-        sentence: Sentence = Sentence()
-        while line:
-            lines.append(line)
-            # skip comments
-            if self.comment_symbol is not None and line.startswith(self.comment_symbol):
-                line = file.readline()
-                continue
-
-            # if sentence ends, convert and return
-            if self.__line_completes_sentence(line):
-                if len(sentence) > 0:
-                    if self.tag_to_bioes is not None:
-                        sentence.convert_tag_scheme(
-                            tag_type=self.tag_to_bioes, target_scheme="iobes"
-                        )
-                    return sentence
-
-            # otherwise, this line is a token. parse and add to sentence
-            else:
-                token = self._parse_token(line)
-                sentence.add_token(token)
-
-            line = file.readline()
-
+        # check if this sentence is a document boundary
+        if sentence.to_original_text() == self.document_separator_token: sentence.is_document_boundary = True
         if len(sentence) > 0: return sentence
 
     def _parse_token(self, line: str) -> Token:
@@ -300,12 +268,6 @@ class ColumnDataset(FlairDataset):
 
     def __line_completes_sentence(self, line: str) -> bool:
         sentence_completed = line.isspace() or line == ''
-        if self.document_separator_token:
-            sentence_completed = False
-            fields: List[str] = re.split(self.column_delimiter, line)
-            if len(fields) >= self.text_column:
-                if fields[self.text_column] == self.document_separator_token:
-                    sentence_completed = True
         return sentence_completed
 
     def is_in_memory(self) -> bool:
@@ -319,15 +281,9 @@ class ColumnDataset(FlairDataset):
         # if in memory, retrieve parsed sentence
         if self.in_memory:
             sentence = self.sentences[index]
-            # sentence._next_sentence = self.sentences[index + 1] if index < self.total_sentence_count - 1 else None
-            # sentence._previous_sentence = self.sentences[index - 1] if index > 0 else None
 
         # else skip to position in file where sentence begins
         else:
-            # print(self.raw[index])
-            # sentence = self._convert_lines_to_sentence(self.raw[index])
-            # print(self.raw[index])
-
             with open(str(self.path_to_column_file), encoding=self.encoding) as file:
                 file.seek(self.indices[index])
                 sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
@@ -335,8 +291,6 @@ class ColumnDataset(FlairDataset):
             # set sentence context using partials
             sentence._position_in_dataset = (self, index)
 
-        # sentence.next = partial(self.__getitem__, index + 1) if index < self.total_sentence_count - 1 else partial(self.__none)
-        # sentence.previous = partial(self.__getitem__, index - 1) if index > 0 else partial(self.__none)
         return sentence
 
     def __none(self):
@@ -507,7 +461,8 @@ class CONLL_03(ColumnCorpus):
             columns,
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            # document_as_sequence=document_as_sequence,
+            document_separator_token="-DOCSTART-",
             **corpusargs,
         )
 
