@@ -2,7 +2,6 @@ import logging
 import re
 import os
 import shutil
-from functools import partial
 from pathlib import Path
 from typing import Union, Dict, List
 
