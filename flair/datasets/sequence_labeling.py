@@ -203,10 +203,11 @@ class ColumnDataset(FlairDataset):
         lines = []
         line = file.readline()
         while line:
-            lines.append(line)
+            if not line.isspace():
+                lines.append(line)
 
             # if sentence ends, break
-            if self.__line_completes_sentence(line):
+            if len(lines) > 0 and self.__line_completes_sentence(line):
                 break
 
             line = file.readline()
