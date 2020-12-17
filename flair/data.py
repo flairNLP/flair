@@ -1354,10 +1354,18 @@ class MultiCorpus(Corpus):
     def __init__(self, corpora: List[Corpus], name: str = "multicorpus"):
         self.corpora: List[Corpus] = corpora
 
+        train_parts = []
+        dev_parts = []
+        test_parts = []
+        for corpus in self.corpora:
+            if corpus.train: train_parts.append(corpus.train)
+            if corpus.dev: dev_parts.append(corpus.dev)
+            if corpus.test: test_parts.append(corpus.test)
+
         super(MultiCorpus, self).__init__(
-            ConcatDataset([corpus.train for corpus in self.corpora]),
-            ConcatDataset([corpus.dev for corpus in self.corpora]),
-            ConcatDataset([corpus.test for corpus in self.corpora]),
+            ConcatDataset(train_parts) if len(train_parts) > 0 else None,
+            ConcatDataset(dev_parts) if len(dev_parts) > 0 else None,
+            ConcatDataset(test_parts) if len(test_parts) > 0 else None,
             name=name,
         )
 

@@ -681,13 +681,14 @@ class ModelTrainer:
         if type(self.corpus) is MultiCorpus:
             for subcorpus in self.corpus.corpora:
                 log_line(log)
-                self.model.evaluate(
-                    subcorpus.test,
-                    mini_batch_size=eval_mini_batch_size,
-                    num_workers=num_workers,
-                    out_path=base_path / f"{subcorpus.name}-test.tsv",
-                    embedding_storage_mode="none",
-                )
+                if subcorpus.test:
+                    self.model.evaluate(
+                        subcorpus.test,
+                        mini_batch_size=eval_mini_batch_size,
+                        num_workers=num_workers,
+                        out_path=base_path / f"{subcorpus.name}-test.tsv",
+                        embedding_storage_mode="none",
+                    )
 
         # get and return the final test score of best model
         final_score = test_results.main_score
