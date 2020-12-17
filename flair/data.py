@@ -1053,12 +1053,13 @@ class Corpus:
             dev: FlairDataset = None,
             test: FlairDataset = None,
             name: str = "corpus",
+            sample_missing_splits: bool = True,
     ):
         # set name
         self.name: str = name
 
         # sample test data if none is provided
-        if test is None:
+        if test is None and sample_missing_splits:
             train_length = len(train)
             test_size: int = round(train_length / 10)
             splits = randomly_split_into_two_datasets(train, test_size)
@@ -1066,7 +1067,7 @@ class Corpus:
             train = splits[1]
 
         # sample dev data if none is provided
-        if dev is None:
+        if dev is None and sample_missing_splits:
             train_length = len(train)
             dev_size: int = round(train_length / 10)
             splits = randomly_split_into_two_datasets(train, dev_size)
@@ -1279,9 +1280,9 @@ class Corpus:
 
     def __str__(self) -> str:
         return "Corpus: %d train + %d dev + %d test sentences" % (
-            len(self.train),
-            len(self.dev),
-            len(self.test),
+            len(self.train) if self.train else 0,
+            len(self.dev) if self.dev else 0,
+            len(self.test) if self.test else 0,
         )
 
     def make_label_dictionary(self, label_type: str = None) -> Dictionary:
@@ -1330,7 +1331,11 @@ class Corpus:
         return class_to_count
 
     def get_all_sentences(self) -> Dataset:
-        return ConcatDataset([self.train, self.dev, self.test])
+        parts = []
+        if self.train: parts.append(self.train)
+        if self.dev: parts.append(self.dev)
+        if self.test: parts.append(self.test)
+        return ConcatDataset(parts)
 
     def make_tag_dictionary(self, tag_type: str) -> Dictionary:
 
@@ -1346,18 +1351,30 @@ class Corpus:
 
 
 class MultiCorpus(Corpus):
-    def __init__(self, corpora: List[Corpus], name: str = "multicorpus"):
+    def __init__(self, corpora: List[Corpus], name: str = "multicorpus", **corpusargs):
         self.corpora: List[Corpus] = corpora
 
+        train_parts = []
+        dev_parts = []
+        test_parts = []
+        for corpus in self.corpora:
+            if corpus.train: train_parts.append(corpus.train)
+            if corpus.dev: dev_parts.append(corpus.dev)
+            if corpus.test: test_parts.append(corpus.test)
+
         super(MultiCorpus, self).__init__(
-            ConcatDataset([corpus.train for corpus in self.corpora]),
-            ConcatDataset([corpus.dev for corpus in self.corpora]),
-            ConcatDataset([corpus.test for corpus in self.corpora]),
+            ConcatDataset(train_parts) if len(train_parts) > 0 else None,
+            ConcatDataset(dev_parts) if len(dev_parts) > 0 else None,
+            ConcatDataset(test_parts) if len(test_parts) > 0 else None,
             name=name,
+            **corpusargs,
         )
 
     def __str__(self):
-        output = f"MultiCorpus: {len(self.train)} train + {len(self.dev)} dev + {len(self.test)} test sentences\n - "
+        output = f"MultiCorpus: " \
+                 f"{len(self.train) if self.train else 0} train + " \
+                 f"{len(self.dev) if self.dev else 0} dev + " \
+                 f"{len(self.test) if self.test else 0} test sentences\n - "
         output += "\n - ".join([f'{type(corpus).__name__} {str(corpus)}' for corpus in self.corpora])
         return output
 
