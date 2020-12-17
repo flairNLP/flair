@@ -29,6 +29,7 @@ class ColumnCorpus(Corpus):
             skip_first_line: bool = False,
             in_memory: bool = True,
             label_name_map: Dict[str, str] = None,
+            autofind_splits: bool = True,
             **corpusargs,
     ):
         """
@@ -51,7 +52,7 @@ class ColumnCorpus(Corpus):
 
         # find train, dev and test files if not specified
         dev_file, test_file, train_file = \
-            find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
+            find_train_dev_test_files(data_folder, dev_file, test_file, train_file, autofind_splits)
 
         # get train data
         train = ColumnDataset(
@@ -65,7 +66,7 @@ class ColumnCorpus(Corpus):
             document_separator_token=document_separator_token,
             skip_first_line=skip_first_line,
             label_name_map=label_name_map,
-        )
+        ) if train_file is not None else None
 
         # read in test file if exists
         test = ColumnDataset(

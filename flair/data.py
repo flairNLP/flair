@@ -1351,7 +1351,7 @@ class Corpus:
 
 
 class MultiCorpus(Corpus):
-    def __init__(self, corpora: List[Corpus], name: str = "multicorpus"):
+    def __init__(self, corpora: List[Corpus], name: str = "multicorpus", **corpusargs):
         self.corpora: List[Corpus] = corpora
 
         train_parts = []
@@ -1367,10 +1367,14 @@ class MultiCorpus(Corpus):
             ConcatDataset(dev_parts) if len(dev_parts) > 0 else None,
             ConcatDataset(test_parts) if len(test_parts) > 0 else None,
             name=name,
+            **corpusargs,
         )
 
     def __str__(self):
-        output = f"MultiCorpus: {len(self.train)} train + {len(self.dev)} dev + {len(self.test)} test sentences\n - "
+        output = f"MultiCorpus: " \
+                 f"{len(self.train) if self.train else 0} train + " \
+                 f"{len(self.dev) if self.dev else 0} dev + " \
+                 f"{len(self.test) if self.test else 0} test sentences\n - "
         output += "\n - ".join([f'{type(corpus).__name__} {str(corpus)}' for corpus in self.corpora])
         return output
 

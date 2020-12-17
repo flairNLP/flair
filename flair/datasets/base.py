@@ -249,7 +249,7 @@ class MongoDataset(FlairDataset):
             return sentence
 
 
-def find_train_dev_test_files(data_folder, dev_file, test_file, train_file):
+def find_train_dev_test_files(data_folder, dev_file, test_file, train_file, autofind_splits=True):
     if type(data_folder) == str:
         data_folder: Path = Path(data_folder)
 
@@ -263,7 +263,7 @@ def find_train_dev_test_files(data_folder, dev_file, test_file, train_file):
     suffixes_to_ignore = {".gz", ".swp"}
 
     # automatically identify train / test / dev files
-    if train_file is None:
+    if train_file is None and autofind_splits:
         for file in data_folder.iterdir():
             file_name = file.name
             if not suffixes_to_ignore.isdisjoint(file.suffixes):
@@ -278,7 +278,7 @@ def find_train_dev_test_files(data_folder, dev_file, test_file, train_file):
                 test_file = file
 
         # if no test file is found, take any file with 'test' in name
-        if test_file is None:
+        if test_file is None and autofind_splits:
             for file in data_folder.iterdir():
                 file_name = file.name
                 if not suffixes_to_ignore.isdisjoint(file.suffixes):
