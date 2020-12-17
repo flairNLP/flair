@@ -10,10 +10,17 @@ class EvaluationMetric(Enum):
     MACRO_F1_SCORE = "macro-average f1-score"
     MEAN_SQUARED_ERROR = "mean squared error"
 
+
+"""
+Parameter for possible optimization values
+"""
 class OptimizationValue(Enum):
     DEV_LOSS = "loss"
     DEV_SCORE = "score"
 
+"""
+Parameters for budget constraint
+"""
 class BudgetConstraint(Enum):
     RUNS = "runs"
     GENERATIONS = "generations"
@@ -84,11 +91,17 @@ class DocumentRNNEmbeddings(Enum):
     RNN_TYPE = "rnn_type"
     FINE_TUNE = "fine_tune"
 
+"""
+Parameter for DocumentPool Embeddings
+"""
 class DocumentPoolEmbeddings(Enum):
     WORD_EMBEDDINGS = "embeddings"
     FINE_TUNE_MODE = "fine_tune_mode"
     POOLING = "pooling"
 
+"""
+Parameter for TransformerDocumentEmbeddings
+"""
 class TransformerDocumentEmbeddings(Enum):
     MODEL = "model"
     FINE_TUNE = "fine_tune"

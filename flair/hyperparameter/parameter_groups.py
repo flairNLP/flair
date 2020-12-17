@@ -10,6 +10,11 @@ import flair.embeddings.token as token_embeddings
 
 
 def extractClasses(importModule):
+    """
+    Finds all child classes of a parent class
+    :param importModule: parent class
+    :return: list of child classes
+    """
     return [m[0] for m in inspect.getmembers(importModule, inspect.isclass) if m[1].__module__ == importModule.__name__]
 
 DOCUMENT_EMBEDDINGS = extractClasses(document_embeddings)
