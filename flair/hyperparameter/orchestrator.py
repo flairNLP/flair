@@ -9,12 +9,16 @@ from .search_strategies import *
 from .search_spaces import SearchSpace
 from .downstream_task_models import TextClassification, SequenceTagging
 
+import flair.nn
 from flair.data import Corpus
 
 log = logging.getLogger("flair")
 
 
 class Orchestrator(object):
+    """
+    Orchestrates the optimization procedure
+    """
     def __init__(
             self,
             corpus: Corpus,
@@ -22,6 +26,12 @@ class Orchestrator(object):
             search_space: SearchSpace,
             search_strategy: SearchStrategy
     ):
+        """
+        :param corpus: task to optimize over
+        :param base_path: path to store results
+        :param search_space: search space object containing all parameters to optimize over
+        :param search_strategy: search strategy defining the optimization procedure
+        """
         if type(base_path) is str:
             base_path = Path(base_path)
         self.corpus = corpus
@@ -37,7 +47,12 @@ class Orchestrator(object):
         if search_strategy.search_strategy_name == "EvolutionarySearch":
             search_space.budget.set_population_size(search_strategy.population_size)
 
-    def _get_downstream_task_model_from_class_name(self, downstream_task):
+    def _get_downstream_task_model_from_class_name(self, downstream_task:str) -> flair.nn.Model:
+        """
+        instantiate the respective model
+        :param downstream_task: string defining the downstream task
+        :return: respective downstream model
+        """
         if downstream_task == "TextClassifierSearchSpace":
             model = TextClassification(self.search_space.multi_label)
         elif downstream_task == "SequenceTaggerSearchSpace":
@@ -47,6 +62,11 @@ class Orchestrator(object):
         return model
 
     def optimize(self, train_on_multiple_gpus: bool = False):
+        """
+        Optimization procedure. Trains configurations according to selected search strategy as long as budget is available.
+        :param train_on_multiple_gpus: bool. If true distribute over multiple gpus. (In Progress)
+        :return: -
+        """
 
         while self.search_space.budget.is_not_used_up() and self.search_space.training_configurations.has_configurations_left():
 
@@ -64,6 +84,10 @@ class Orchestrator(object):
         self._log_results()
 
     def _perform_training(self, params: dict):
+        """
+        Perfom standard training on single core.
+        :param params: dict containing all parameters for a single model training
+        """
         current_run = len(self.results)
         training_run_number = f"training-run-{current_run}"
         base_path = self.base_path / training_run_number
@@ -78,6 +102,10 @@ class Orchestrator(object):
         self._store_results(result=self.results[training_run_number], current_run=current_run)
 
     def _sufficient_available_gpus(self):
+        """
+        Checks if more than one gpu is available.
+        :return: True if more than one is available.
+        """
         if cuda.device_count() > 1:
             return True
         else:
@@ -88,6 +116,9 @@ class Orchestrator(object):
         pass
 
     def _log_results(self):
+        """
+        Prints out best 5 configurations after optimization is finished.
+        """
         sorted_results = sorted(self.results.items(), key=lambda x: getitem(x[1], 'result'), reverse=True)[:5]
         log.info("The top 5 results are:")
         for idx, config in enumerate(sorted_results):
@@ -99,6 +130,12 @@ class Orchestrator(object):
                 log.info(f"{parameter}:  {value}")
 
     def _store_results(self, result: dict, current_run: int):
+        """
+        Pickles the results after each optimizaton run.
+        :param result: dict containing the configuration and its result
+        :param current_run: int of current run
+        :return: -
+        """
         result['timestamp'] = datetime.now()
         entry = f"training-run-{current_run}"
         try:
@@ -107,6 +144,11 @@ class Orchestrator(object):
             self._initialize_results_pickle(entry, result)
 
     def _load_and_pickle_results(self, entry: str, result: dict):
+        """
+        Pickles current results, file already exists.
+        :param entry: str identifying the current run
+        :param result: dict containing result and configuration of training run
+        """
         pickle_file = open(self.base_path / "results.pkl", 'rb')
         results_dict = pickle.load(pickle_file)
         pickle_file.close()
@@ -116,6 +158,10 @@ class Orchestrator(object):
         pickle_file.close()
 
     def _initialize_results_pickle(self, entry: str, result: dict):
+        """
+        Initializes a pickle file to store results in
+        :return: -
+        """
         results_dict = {}
         pickle_file = open(self.base_path / "results.pkl", 'wb')
         results_dict[entry] = result

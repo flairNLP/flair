@@ -8,20 +8,45 @@ from .parameter_groups import *
 
 
 class DownstreamTaskModel(object):
+    """
+    Parent class for all downstream tasks models like Sequence Tagging or Text Classification.
+    Child classes need to overwrite _set_up_model() and train() in which one has to take care
+    of handling document and word specific embeddings.
+    """
 
     def __init__(self):
         pass
 
     @abstractmethod
     def _set_up_model(self, params: dict, label_dictionary) -> flair.nn.Model:
+        """
+        sets up downstream task model according to given parameters
+        :param params: dict containing key-value pairs as "hyperparameter":"value for hyperparameter" (value is not necessarily a string)
+        :return: flair.nn.Model
+        """
         pass
 
     @abstractmethod
-    def train(self, corpus: Corpus, params: dict, base_path: Path, max_epochs: int, optimization_value: str):
+    def train(self, corpus: Corpus, params: dict, base_path: Path, max_epochs: int, optimization_value: str) -> dict:
+        """
+        trains a downstream task and returns a dict containing the configuration and its result
+        :param corpus: task to optimize over
+        :param params: dict containing the hyperparameter for a single training run
+        :param base_path: storage path
+        :param max_epochs: max iterations for training the model
+        :param optimization_value: metric to be optimized
+        :return: dict containing result and configuration
+        """
         pass
 
     @staticmethod
-    def _make_word_embeddings_from_attributes(word_embedding_attributes: list):
+    def _make_word_embeddings_from_attributes(word_embedding_attributes: list) -> list:
+        """
+        Instantiate word embeddings object during runtime, since only class reference is kept in parameter storage object.
+        Otherwise all word embeddings instances during optimization will be kept in memory.
+        :param word_embedding_attributes: list containing dicts of word embeddings as "word embedding class":"class parameters"
+        :return: instances of word embeddings
+        """
         word_embeddings = []
 
         for idx, embedding in enumerate(word_embedding_attributes):
@@ -34,12 +59,20 @@ class DownstreamTaskModel(object):
 
 
 class TextClassification(DownstreamTaskModel):
+    """
+    Text Classification downstream task.
+    """
 
     def __init__(self, multi_label: bool = False):
         super().__init__()
         self.multi_label = multi_label
 
     def _set_up_model(self, params: dict, label_dictionary):
+        """
+        setup method for text classification downstream tasks, handling document and word embeddings for optimization
+        :param params: dict containing the parameters
+        :return: a text classifier instance
+        """
 
         # needed since we store a pointer in our configurations list
         params_copy = params.copy()
@@ -67,6 +100,13 @@ class TextClassification(DownstreamTaskModel):
 
     @staticmethod
     def _get_document_embedding_parameters(document_embedding_class: str, params: dict):
+        """
+        Filter method for document embedding class attributes
+        :param document_embedding_class: string defining the Document Embedding
+        :param params: dict containing the parameters for current training run. will be filtered to use only
+        the respective document embedding parameters
+        :return: dict containing only the parameters for the document embedding class
+        """
 
         if document_embedding_class == "DocumentEmbeddings":
             embedding_params = {
@@ -104,6 +144,11 @@ class TextClassification(DownstreamTaskModel):
         return embedding_params
 
     def train(self, corpus: Corpus, params: dict, base_path: Path, max_epochs: int, optimization_value: str):
+        """
+        trains a text classification model
+        :param params: dict containing the parameters
+        :return: dict containing result and configuration
+        """
 
         corpus = corpus
 
@@ -144,6 +189,9 @@ class TextClassification(DownstreamTaskModel):
 
 
 class SequenceTagging(DownstreamTaskModel):
+    """
+    Instantiates a sequence tagger object
+    """
 
     def __init__(self, tag_type: str):
         super().__init__()
@@ -187,6 +235,11 @@ class SequenceTagging(DownstreamTaskModel):
         return {'result': result, 'params': params}
 
     def _set_up_model(self, params: dict, tag_dictionary):
+        """
+        setup method for sequence classification downstream tasks, handling word embeddings for optimization.
+        :param params: dict containing the parameters
+        :return: a sequence tagger instance
+        """
 
         sequence_tagger_params = {
             key: params[key] for key in params if key in SEQUENCE_TAGGER_PARAMETERS
