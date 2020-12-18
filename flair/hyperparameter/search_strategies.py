@@ -203,11 +203,25 @@ class EvolutionarySearch(SearchStrategy):
 
     @staticmethod
     def _get_fitness(results: dict):
+        """
+        calculates the fitness by taking each training configuration's score. selection probabilities are then given
+        by dividing the individual score with the total sum of scores.
+        :param results: dict containing the results
+        :return probabilities: np.array containing selection probabilities per individual in generation
+        """
         fitness = np.asarray([configuration['result'] for configuration in results.values()])
         probabilities = fitness / (sum([configuration['result'] for configuration in results.values()]))
         return probabilities
 
     def _crossover(self, child: dict, parent_population: dict):
+        """
+        performs crossover between a parent configuration (from previous generation) and a selected configuration for the upcoming generation.
+        selects randomly a matching training configuration from previous generation (parent) and then checks for all parameters whether the
+        parameter configuration from parent is given to the new configuration according the the crossover probability set.
+        :param child: dict containing the parameters of a child
+        :param parent_population: dict containing all configurations from previous population
+        :return: crossover child
+        """
         child_type = self._get_embedding_key(child)
         configuration_with_same_embedding = len(parent_population[child_type])
         DNA_size = len(child)
@@ -224,6 +238,13 @@ class EvolutionarySearch(SearchStrategy):
         return child
 
     def _mutate(self, child: dict, parameter_storage: ParameterStorage):
+        """
+        performs mutation (randomly select a parameter value from the parameter storage) to a child according the mutation
+        probability set.
+        :param child: dict containing the current training configuration
+        :param parameter_storage: ParameterStorage Object
+        :return: mutated training configuration
+        """
         child_type = self._get_embedding_key(child)
         mutation_points = np.where(np.random.rand(len(child)) < self.mutation_rate, 1, 0).astype(bool)
         for parameter, replace in zip(child.keys(), mutation_points):
@@ -237,4 +258,11 @@ class EvolutionarySearch(SearchStrategy):
 
     @staticmethod
     def _sample_parameter(key: str, parameter: str, parameter_storage: ParameterStorage):
+        """
+        Samples a parameter from the ParameterStorage
+        :param key: str if embedding specific key or general
+        :param parameter: str of parameter to sample from
+        :param parameter_storage: Storage object containing the value range of all parameters
+        :return: sampled parameter value from storage object
+        """
         return random.sample(getattr(parameter_storage, key).get(parameter), 1).pop()
