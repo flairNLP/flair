@@ -81,9 +81,6 @@ class TARSSequenceTagger(flair.nn.Model):
 
         # prepare BIO2 tag dictionary
         self.tars_tag_dictionary = Dictionary(add_unk=False)
-        # self.tars_tag_dictionary.add_item(self.static_tag_beginning)
-        # self.tars_tag_dictionary.add_item(self.static_tag_inside)
-        # self.tars_tag_dictionary.add_item(self.static_tag_outside)
         self.tars_tag_dictionary.add_item(self.static_tag_no)
         self.tars_tag_dictionary.add_item(self.static_tag_yes)
 
@@ -103,7 +100,7 @@ class TARSSequenceTagger(flair.nn.Model):
         self.tagset_size: int = len(tag_dictionary)
 
         # linear layer
-        self.linear = torch.nn.Linear(self.transformer_word_embeddings.embedding_length, 2) # 1 replaces 2=len(self.tars_tag_dictionary)
+        self.linear = torch.nn.Linear(self.transformer_word_embeddings.embedding_length, len(self.tars_tag_dictionary))
 
         # dropouts
         self.use_dropout: float = dropout
@@ -294,6 +291,13 @@ class TARSSequenceTagger(flair.nn.Model):
                         similarity_matrix[row_index][column_index]
         self.tag_nearest_map = negative_tag_probabilities
 
+    # def _split_tag(self, tag: str):
+    # if "-" in tag:
+    # tag_split = tag.split("-")
+    # return tag_split[0], "-".join(tag_split[1:])
+    # else:
+    # return None, tag
+
     def train(self, mode=True):
         """Populate tag similarity map based on cosine similarity before running epoch
 
@@ -361,8 +365,8 @@ class TARSSequenceTagger(flair.nn.Model):
 
             #if self.training and self.num_negative_tags_to_sample is not None:
             if dual_space and self.num_negative_tags_to_sample is not None:
-                tags_of_sentence = {token.get_tag(self.tag_type).value for token in sentence \
-                                    if token.get_tag(self.tag_type).value != "O"}
+                tags_of_sentence = {token.get_tag(self.tag_type).value for token in sentence} # \
+                                    #if token.get_tag(self.tag_type).value != "O"}
                 sampled_tags_not_in_sentence = self._get_nearest_tags_for(tags_of_sentence)
                 # print(tags_of_sentence)
                 # print(sampled_tags_not_in_sentence)
@@ -379,13 +383,6 @@ class TARSSequenceTagger(flair.nn.Model):
                         self._get_tars_formatted_sentence(tag, sentence))
             tag_text_pairs.extend(tag_text_pairs_for_sentence)
         return tag_text_pairs
-
-    # def _split_tag(self, tag: str):
-    #     if "-" in tag:
-    #         tag_split = tag.split("-")
-    #         return tag_split[0], "-".join(tag_split[1:])
-    #     else:
-    #         return None, tag
 
     @staticmethod
     def _make_ad_hoc_tag_dictionary(candidate_tag_set: set = None) -> Dictionary:
@@ -607,8 +604,8 @@ class TARSSequenceTagger(flair.nn.Model):
             sentence_tensor = self.word_dropout_three_dims(sentence_tensor)
         if self.use_locked_dropout > 0.0:
             sentence_tensor = self.locked_dropout_three_dims(sentence_tensor)
-
         features = self.linear(sentence_tensor)
+        features = torch.nn.functional.softmax(features, dim=2)
 
         # calculate loss
         target_tag_list_dual_space: List = []
