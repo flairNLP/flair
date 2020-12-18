@@ -44,6 +44,7 @@ class TARSSequenceTagger(flair.nn.Model):
             num_negative_tags_to_sample: int = 2,
             batch_size: int = 16,
             transformer_word_embeddings: str = 'bert-base-uncased',
+            dual_space_loss: bool = False,
     ):
         """
         Initializes a TARSSequenceTagger
@@ -75,6 +76,9 @@ class TARSSequenceTagger(flair.nn.Model):
             fine_tune=True,
             batch_size=batch_size,
         )
+
+        # loss calculation
+        self.dual_space = dual_space_loss
 
         # all stats are required for state dict
         self.batch_size = batch_size
@@ -534,8 +538,7 @@ class TARSSequenceTagger(flair.nn.Model):
         if isinstance(data_points, Sentence):
             data_points = [data_points]
 
-        dual_space = True
-        if dual_space:
+        if self.dual_space:
             # VERSION B: less labels and in dual tag space (can only be used in training)
             # further, this version uses the near tag map to take the most relevant tags for training
             return self._forward_loss_dual_space(data_points)
