@@ -25,10 +25,11 @@ class TARSSequenceTagger(flair.nn.Model):
     # static_tag_beginning = "B"
     # static_tag_inside = "I"
     # static_tag_outside = "O"
-    static_tag_yes = "YES"
     static_tag_no = "NO"
+    static_tag_yes = "YES"
+
     static_tag_type = "tars_tag"
-    static_adhoc_task_identifier = "adhoc_dummy"
+    static_adhoc_task_identifier = "ADHOC_TASK_DUMMY"
 
     def __init__(
             self,
@@ -46,7 +47,6 @@ class TARSSequenceTagger(flair.nn.Model):
     ):
         """
         Initializes a TARSSequenceTagger
-        :param embeddings: word embeddings used in tagger
         :param tag_dictionary: dictionary of tags you want to predict
         :param tag_type: string identifier for tag type
         :param dropout: dropout probability
@@ -79,10 +79,10 @@ class TARSSequenceTagger(flair.nn.Model):
         # all stats are required for state dict
         self.batch_size = batch_size
 
-        # prepare BIO2 tag dictionary
+        # prepare tars tag dictionary
         self.tars_tag_dictionary = Dictionary(add_unk=False)
-        self.tars_tag_dictionary.add_item(self.static_tag_no)
-        self.tars_tag_dictionary.add_item(self.static_tag_yes)
+        self.tars_tag_dictionary.add_item(self.static_tag_no) # index 0
+        self.tars_tag_dictionary.add_item(self.static_tag_yes) # index 1
 
         # tag specific variables
         self.num_negative_tags_to_sample = num_negative_tags_to_sample
@@ -93,11 +93,6 @@ class TARSSequenceTagger(flair.nn.Model):
         self.current_task = None
         self.task_specific_attributes = {}
         self.add_and_switch_to_new_task(task_name, tag_dictionary, tag_type, beta, loss_weights)
-
-        # dictionaries
-        self.tag_dictionary: Dictionary = tag_dictionary
-        self.tag_type: str = tag_type
-        self.tagset_size: int = len(tag_dictionary)
 
         # linear layer
         self.linear = torch.nn.Linear(self.transformer_word_embeddings.embedding_length, len(self.tars_tag_dictionary))
@@ -340,7 +335,7 @@ class TARSSequenceTagger(flair.nn.Model):
 
         return nearest_tags
 
-    def _get_tars_formatted_sentence(self, tag, sentence: Sentence):
+    def _get_tars_formatted_sentence(self, tag: str, sentence: Sentence):
         tag_text_pair = " ".join([self._get_cleaned_up_tag(tag),
                                   self.transformer_word_embeddings.tokenizer.sep_token,
                                   sentence.to_tokenized_string()])
@@ -629,11 +624,11 @@ class TARSSequenceTagger(flair.nn.Model):
 
     def _transform_tars_scores(self, tars_scores, max_sequence_length: int):
         # M: num_classes in task, N: num_samples (batch_size), L: max_sequence_length
-        # reshape from NxLxMx2 to NxLxM:
+        # reshape from NxLxMx2 to NxLxMx1 to NxLxM:
         tars_scores = tars_scores[:,:,:,1]
         tars_scores = torch.reshape(tars_scores, (-1, max_sequence_length, len(self.tag_dictionary.item2idx)))
         #print("(batch_size, max_seq_len_of_batch, num_tags_in_task): " + str(tars_scores.shape))
-        #tars_scores = torch.nn.functional.softmax(tars_scores, dim=2) ## TODO: softmax not required because it is already used in obtain_labels?
+        tars_scores = torch.nn.functional.softmax(tars_scores, dim=2) ## TODO: softmax not required because it is already used in obtain_labels?
         return tars_scores
 
     def forward(self, sentences: List[Sentence]):
