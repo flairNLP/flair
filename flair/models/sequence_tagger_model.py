@@ -276,6 +276,8 @@ class SequenceTagger(flair.nn.Model):
         if "reproject_to" in state.keys():
             reproject_embeddings = state["reproject_to"]
 
+        print(state["embeddings"])
+
         model = SequenceTagger(
             hidden_size=state["hidden_size"],
             embeddings=state["embeddings"],

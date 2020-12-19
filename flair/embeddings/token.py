@@ -10,7 +10,7 @@ from functools import lru_cache
 import torch
 from bpemb import BPEmb
 from transformers import TransfoXLTokenizer, XLNetTokenizer, T5Tokenizer, GPT2Tokenizer, AutoTokenizer, AutoConfig, \
-    AutoModel
+    AutoModel, CONFIG_MAPPING
 
 import flair
 import gensim
@@ -854,6 +854,16 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         self.fine_tune = fine_tune
         self.static_embeddings = not self.fine_tune
 
+        # calculate embedding length
+        if not self.layer_mean:
+            length = len(self.layer_indexes) * self.model.config.hidden_size
+        else:
+            length = self.model.config.hidden_size
+        if self.pooling_operation == 'first_last': length *= 2
+
+        # return length
+        self.embedding_length_internal = length
+
         self.special_tokens = []
         # check if special tokens exist to circumvent error message
         if self.tokenizer._bos_token:
@@ -1151,10 +1161,12 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             super().train(mode)
 
     @property
-    @abstractmethod
     def embedding_length(self) -> int:
-        """Returns the length of the embedding vector."""
 
+        if "embedding_length_internal" in self.__dict__.keys():
+            return self.embedding_length_internal
+
+        # """Returns the length of the embedding vector."""
         if not self.layer_mean:
             length = len(self.layer_indexes) * self.model.config.hidden_size
         else:
@@ -1162,15 +1174,64 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         if self.pooling_operation == 'first_last': length *= 2
 
+        self.__embedding_length = length
+
         return length
 
     def __getstate__(self):
         state = self.__dict__.copy()
         state["tokenizer"] = None
+
+        # special handling for serializing transformer models
+        config_state_dict = self.model.config.__dict__
+        model_state_dict = self.model.state_dict()
+        state["config_state_dict"] = config_state_dict
+        state["model_state_dict"] = model_state_dict
+        state["embedding_length_internal"] = self.embedding_length
+        state["model"] = None
+
+        # for key in state.keys():
+        #     print(key)
+        #     if key.startswith("_") and not key in \
+        #                    ['_modules', '_parameters', '_buffers', '_load_state_dict_pre_hooks']:
+        #         state[key] = None
+        #     print(repr(state[key])[:100])
+
+        # print(state)
+
         return state
 
     def __setstate__(self, d):
         self.__dict__ = d
+        print('jo')
+        print(d.keys())
+
+        # necessary for reverse compatibility with Flair <= 0.7
+        if 'use_scalar_mix' in self.__dict__.keys():
+            self.__dict__['layer_mean'] = d['use_scalar_mix']
+        if 'pooling_operation' in self.__dict__.keys():
+            self.__dict__['subtoken_pooling'] = d['pooling_operation']
+        if not 'context_length' in self.__dict__.keys():
+            self.__dict__['context_length'] = 0
+
+        # special handling for deserializing transformer models
+        if "config_state_dict" in d:
+
+            config_class = CONFIG_MAPPING[d["config_state_dict"]["model_type"]]
+            loaded_config = config_class.from_dict(d["config_state_dict"])
+
+            # print(loaded_config)
+
+            model = AutoModel.from_pretrained(None, config=loaded_config, state_dict=d["model_state_dict"])\
+                .to(flair.device)
+            self.__dict__["model"] = model
+
+            # print(model)
+            # self.model = model
+            # self.add_module(f"model", model)
+
+            # self = TransformerWordEmbeddings()
+            # return self
 
         # reload tokenizer to get around serialization issues
         model_name = self.name.split('transformer-word-')[-1]
