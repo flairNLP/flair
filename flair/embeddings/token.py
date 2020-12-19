@@ -3,14 +3,14 @@ import pickle
 import inspect
 from abc import abstractmethod
 from pathlib import Path
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Tuple
 from collections import Counter
 from functools import lru_cache
 
 import torch
 from bpemb import BPEmb
 from transformers import TransfoXLTokenizer, XLNetTokenizer, T5Tokenizer, GPT2Tokenizer, AutoTokenizer, AutoConfig, \
-    AutoModel, CONFIG_MAPPING
+    AutoModel, CONFIG_MAPPING, PreTrainedTokenizer
 
 import flair
 import gensim
@@ -787,7 +787,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 class TransformerWordEmbeddings(TokenEmbeddings):
     def __init__(
             self,
-            model: str = "bert-base-uncased",
+            model: Union[str, Tuple] = "bert-base-uncased",
             layers: str = "all",
             subtoken_pooling: str = "first",
             layer_mean: bool = True,
@@ -815,9 +815,15 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
         # load tokenizer and transformer model
-        self.tokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
-        config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
-        self.model = AutoModel.from_pretrained(model, config=config, **kwargs)
+        if type(model) == str:
+            self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
+            config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
+            self.model = AutoModel.from_pretrained(model, config=config, **kwargs)
+
+        # or pass tokenizer and transformer model as a tuple
+        else:
+            self.tokenizer: PreTrainedTokenizer = model[0]
+            self.model = model[1]
 
         self.allow_long_sentences = allow_long_sentences
 
@@ -955,20 +961,36 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # if sentence is too long, will be split into multiple parts
         sentence_splits = []
-        while subtoken_ids_sentence:
-            encoded_inputs = self.tokenizer.encode_plus(subtoken_ids_sentence,
+
+        import transformers
+        if transformers.__version__.startswith('3'):
+
+            while subtoken_ids_sentence:
+                encoded_inputs = self.tokenizer.encode_plus(subtoken_ids_sentence,
+                                                            max_length=self.max_subtokens_sequence_length,
+                                                            stride=self.stride,
+                                                            return_overflowing_tokens=self.allow_long_sentences,
+                                                            truncation=True,
+                                                            )
+
+                sentence_splits.append(torch.tensor(encoded_inputs['input_ids'], dtype=torch.long))
+
+                if 'overflowing_tokens' in encoded_inputs:
+                    subtoken_ids_sentence = encoded_inputs['overflowing_tokens']
+                else:
+                    subtoken_ids_sentence = None
+
+        else:
+            encoded_inputs = self.tokenizer.encode_plus(tokenized_string,
                                                         max_length=self.max_subtokens_sequence_length,
                                                         stride=self.stride,
                                                         return_overflowing_tokens=self.allow_long_sentences,
                                                         truncation=True,
                                                         )
 
-            sentence_splits.append(torch.tensor(encoded_inputs['input_ids'], dtype=torch.long))
-
-            if 'overflowing_tokens' in encoded_inputs:
-                subtoken_ids_sentence = encoded_inputs['overflowing_tokens']
-            else:
-                subtoken_ids_sentence = None
+            for encoded_input in encoded_inputs['input_ids']:
+                sentence_splits.append(torch.tensor(encoded_input, dtype=torch.long))
+            print(sentence_splits)
 
         # gradients are enabled if fine-tuning is enabled
         gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
@@ -1180,31 +1202,46 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        state["tokenizer"] = None
-
-        # special handling for serializing transformer models
+        print("calling get state")
+        # state["tokenizer"] = None
+        #
+        # # special handling for serializing transformer models
         config_state_dict = self.model.config.__dict__
         model_state_dict = self.model.state_dict()
-        state["config_state_dict"] = config_state_dict
-        state["model_state_dict"] = model_state_dict
-        state["embedding_length_internal"] = self.embedding_length
-        state["model"] = None
+        # state["config_state_dict"] = config_state_dict
+        # state["model_state_dict"] = model_state_dict
+        # state["embedding_length_internal"] = self.embedding_length
+        # state["model"] = None
+
+        model_state = {
+            "config_state_dict": config_state_dict,
+            "model_state_dict": model_state_dict,
+            "embedding_length_internal": self.embedding_length,
+
+            "name": self.name,
+            "layer_indexes": self.layer_indexes,
+            "subtoken_pooling": self.pooling_operation,
+            "context_length": self.context_length,
+            "layer_mean": self.layer_mean,
+            "fine_tune": self.fine_tune,
+            "allow_long_sentences": self.allow_long_sentences,
+        }
 
         # for key in state.keys():
-        #     print(key)
-        #     if key.startswith("_") and not key in \
-        #                    ['_modules', '_parameters', '_buffers', '_load_state_dict_pre_hooks']:
+        #     # print(key)
+        #     if key.startswith("_"): # and not key in \
+        #                    # ['_modules', '_parameters', '_buffers', '_load_state_dict_pre_hooks']:
         #         state[key] = None
-        #     print(repr(state[key])[:100])
+            # print(repr(state[key])[:100])
 
         # print(state)
 
-        return state
+        return model_state
 
     def __setstate__(self, d):
         self.__dict__ = d
-        print('jo')
-        print(d.keys())
+        # print('jo')
+        # print(d.keys())
 
         # necessary for reverse compatibility with Flair <= 0.7
         if 'use_scalar_mix' in self.__dict__.keys():
@@ -1214,31 +1251,76 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         if not 'context_length' in self.__dict__.keys():
             self.__dict__['context_length'] = 0
 
+        # constructor arguments
+        layers = ','.join([str(idx) for idx in self.__dict__['layer_indexes']])
+        subtoken_pooling = self.__dict__['subtoken_pooling']
+        context_length = self.__dict__['context_length']
+        layer_mean = self.__dict__['layer_mean']
+        fine_tune = self.__dict__['fine_tune']
+        allow_long_sentences = self.__dict__['allow_long_sentences']
+
+        # reload tokenizer to get around serialization issues
+        model_name = self.__dict__['name'].split('transformer-word-')[-1]
+        # print(model_name)
+        try:
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            # print(tokenizer)
+        except:
+            pass
+
         # special handling for deserializing transformer models
         if "config_state_dict" in d:
 
             config_class = CONFIG_MAPPING[d["config_state_dict"]["model_type"]]
             loaded_config = config_class.from_dict(d["config_state_dict"])
 
-            # print(loaded_config)
-
             model = AutoModel.from_pretrained(None, config=loaded_config, state_dict=d["model_state_dict"])\
                 .to(flair.device)
-            self.__dict__["model"] = model
 
             # print(model)
             # self.model = model
             # self.add_module(f"model", model)
 
-            # self = TransformerWordEmbeddings()
-            # return self
+            # self.__dict__['tokenizer'] = tokenizer
+            # self.__dict__["model"] = model
+            embedding = TransformerWordEmbeddings((tokenizer, model),
+                                              layers=layers,
+                                              subtoken_pooling=subtoken_pooling,
+                                              context_length=context_length,
+                                              layer_mean=layer_mean,
+                                              fine_tune=fine_tune,
+                                              allow_long_sentences = allow_long_sentences,
+                                              )
 
-        # reload tokenizer to get around serialization issues
-        model_name = self.name.split('transformer-word-')[-1]
-        try:
-            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        except:
-            pass
+            # setattr(self, slot, d[slot])
+            for key in embedding.__dict__.keys():
+                # print(key)
+                # print(str(embedding.__dict__[key])[:50])
+                self.__dict__[key] = embedding.__dict__[key]
+
+            # sentence = Sentence('hello world')
+            # embedding.embed(sentence)
+            # print(sentence[0].embedding[:5])
+            # print(embedding.__dict__.keys())
+
+            # self.__dict__['tokenizer'] = embedding.__dict__['tokenizer']
+            # self.__dict__['special_tokens'] = embedding.__dict__['special_tokens']
+            # self.__dict__['begin_offset'] = embedding.__dict__['begin_offset']
+            # self.__dict__['model'] = model
+
+            # self.__dict__['special_tokens'] =
+            # print(model.__dict__.keys())
+            #
+            # self = model
+            # print("afteR:")
+            # print(self.__dict__.keys())
+            # self.load_state_dict(model.__dict__)
+
+            # print(model)
+            # return model
+
+        # self.tokenizer = tokenizer
+        # return self
 
 
 class FastTextEmbeddings(TokenEmbeddings):
