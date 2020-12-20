@@ -1,14 +1,15 @@
-from abc import abstractmethod
-import random
 import logging
+import random
 import numpy as np
+
+from abc import abstractmethod
 from random import randrange
 
 from .parameter_collections import ParameterStorage
 from .search_spaces import SearchSpace
+from ..training_utils import add_file_handler
 
-log = logging.getLogger("flair")
-
+log = logging.getLogger(__name__)
 
 class SearchStrategy(object):
     """
@@ -17,6 +18,7 @@ class SearchStrategy(object):
 
     def __init__(self):
         self.search_strategy_name = self.__class__.__name__
+        self.log_path = None
 
     @abstractmethod
     def make_configurations(self, parameter_storage: ParameterStorage):
@@ -110,8 +112,10 @@ class EvolutionarySearch(SearchStrategy):
         :return: -
         """
         current_results = self._get_current_results(results)
+        log_handler = add_file_handler(log, self.log_path, mode="a")
         log.info(50 * '-')
-        log.info("Starting evolution - this generation had following results:")
+        log.info("Generation over, starting evolution.")
+        log.info("This generation had following results:")
         for idx, result in enumerate(current_results.values()):
             log.info(f"Configuration {idx} with a result of {result.get('result')}.")
         parent_population = self._get_parent_population(current_results)
@@ -123,6 +127,8 @@ class EvolutionarySearch(SearchStrategy):
             child = self._mutate(child, search_space.parameter_storage)
             search_space.training_configurations.add_configuration(child)
         log.info("Evolution completed.")
+        log.info(50 * "-")
+        log.removeHandler(log_handler)
 
     def _get_current_results(self, results: dict):
         """
@@ -195,9 +201,11 @@ class EvolutionarySearch(SearchStrategy):
         """
         current_configurations = [result.get("params") for result in current_results.values()]
         evolution_probabilities = self._get_fitness(current_results)
+        log_handler = add_file_handler(log, self.log_path, mode="a")
         log.info(50 * '-')
         for idx, prob in enumerate(evolution_probabilities):
             log.info(f"The evolution probability for configuration {idx} is: {prob}.")
+        log.removeHandler(log_handler)
         return np.random.choice(current_configurations, size=self.population_size, replace=True,
                                 p=evolution_probabilities)
 

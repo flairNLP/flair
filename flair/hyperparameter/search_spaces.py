@@ -1,5 +1,3 @@
-import logging
-
 from enum import Enum
 from abc import abstractmethod
 
@@ -7,8 +5,6 @@ from .budget import Budget
 from .parameter_collections import ParameterStorage, TrainingConfigurations
 from .parameters import BudgetConstraint, EvaluationMetric, OptimizationValue
 from .parameter_groups import DOCUMENT_EMBEDDINGS
-
-log = logging.getLogger("flair")
 
 
 class SearchSpace(object):
@@ -106,7 +102,7 @@ class SearchSpace(object):
         :return: -
         """
         if 'generations' in self.budget.budget_type and search_strategy != "EvolutionarySearch":
-            log.info("Can't assign generations to a an Optimizer which is not a GeneticOptimizer. Switching to runs.")
+            print("Can't assign generations to a an Optimizer which is not a GeneticOptimizer. Switching to runs.")
             self.budget.budget_type = "runs"
 
     @staticmethod

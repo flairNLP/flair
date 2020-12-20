@@ -12,7 +12,7 @@ class ParameterStorage:
     """
 
     def __init__(self):
-        self.general_parameters = {}
+        pass
 
     def add(self, parameter_name: str, value_range: list, embedding_key: str = "GeneralParameters"):
         """

@@ -1,4 +1,5 @@
 import pickle
+import logging
 from datetime import datetime
 from operator import getitem
 from typing import Union
@@ -11,9 +12,9 @@ from .downstream_task_models import TextClassification, SequenceTagging
 
 import flair.nn
 from flair.data import Corpus
+from flair.training_utils import add_file_handler
 
-log = logging.getLogger("flair")
-
+log = logging.getLogger(__name__)
 
 class Orchestrator(object):
     """
@@ -36,11 +37,28 @@ class Orchestrator(object):
             base_path = Path(base_path)
         self.corpus = corpus
         self.base_path = base_path
+        self.log_path = base_path / "hyperparameter-optimization.log"
         self.search_space = search_space
         self.search_strategy = search_strategy
+        self.search_strategy.log_path = self.log_path
         self.downstream_task_model = self._get_downstream_task_model_from_class_name(search_space.__class__.__name__)
         self.current_run = 0
         self.results = {}
+
+        log_handler = add_file_handler(log, self.log_path, mode="a")
+        log.info(50 * '-')
+        log.info('Starting hyperparameter optimization with following configurations:')
+        log.info('Corpus: %s', self.corpus.name)
+        log.info('Task: %s', self.downstream_task_model.__class__)
+        log.info('Optimization procedure: %s', self.search_strategy.search_strategy_name)
+        log.info('Budget: %s %s', self.search_space.budget.budget_type, self.search_space.budget.amount)
+        if self.search_strategy.search_strategy_name == "EvolutionarySearch":
+            log.info("Evolutionary Search with following configuration:")
+            log.info("Size per generation: %s", self.search_strategy.population_size)
+            log.info("Crossover probability: %s", self.search_strategy.cross_rate)
+            log.info("Mutation probability: %s", self.search_strategy.mutation_rate)
+        log.info(50 * '-')
+        log.removeHandler(log_handler)
 
         # This is required because we'll calculate generations budget with modulo operator
         # (decrease budget every X configurations)
@@ -67,10 +85,10 @@ class Orchestrator(object):
         :param train_on_multiple_gpus: bool. If true distribute over multiple gpus. (In Progress)
         :return: -
         """
-
         while self.search_space.budget.is_not_used_up() and self.search_space.training_configurations.has_configurations_left():
 
             current_configuration = self.search_space.training_configurations.get_configuration()
+
             if train_on_multiple_gpus and self._sufficient_available_gpus():
                 self._perform_training_on_multiple_gpus(current_configuration)
             else:
@@ -92,11 +110,18 @@ class Orchestrator(object):
         training_run_number = f"training-run-{current_run}"
         base_path = self.base_path / training_run_number
         try:
+            log_handler = add_file_handler(log, self.log_path, mode="a")
+            log.info(50 * "-")
+            log.info("Training Run # %s", current_run)
+            log.info("Configuration: %s", params)
             self.results[training_run_number] = self.downstream_task_model.train(corpus=self.corpus,
                                                                                  params=params,
                                                                                  base_path=base_path,
                                                                                  max_epochs=self.search_space.max_epochs_per_training_run,
                                                                                  optimization_value=self.search_space.optimization_value)
+            log.info("Score of Training Run # %s: %s", current_run, self.results[training_run_number].get("result"))
+            log.info(50 * "-")
+            log.removeHandler(log_handler)
         except RuntimeError:
             self.results[training_run_number] = {'result': 0, 'params': params}
         self._store_results(result=self.results[training_run_number], current_run=current_run)
@@ -109,7 +134,7 @@ class Orchestrator(object):
         if cuda.device_count() > 1:
             return True
         else:
-            log.info("There are less than 2 GPUs available, switching to standard calculation.")
+            print("There are less than 2 GPUs available, switching to standard calculation.")
 
     def _perform_training_on_multiple_gpus(self, params: dict):
         # TODO to be implemented
@@ -120,6 +145,7 @@ class Orchestrator(object):
         Prints out best 5 configurations after optimization is finished.
         """
         sorted_results = sorted(self.results.items(), key=lambda x: getitem(x[1], 'result'), reverse=True)[:5]
+        log_handler = add_file_handler(log, self.log_path, mode="a")
         log.info("The top 5 results are:")
         for idx, config in enumerate(sorted_results):
             log.info(50 * '-')
@@ -128,6 +154,8 @@ class Orchestrator(object):
             log.info("with following configurations:")
             for parameter, value in config[1]['params'].items():
                 log.info(f"{parameter}:  {value}")
+            log.info(50 * "-")
+        log.removeHandler(log_handler)
 
     def _store_results(self, result: dict, current_run: int):
         """
