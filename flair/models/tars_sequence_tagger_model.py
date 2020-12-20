@@ -628,10 +628,9 @@ class TARSSequenceTagger(flair.nn.Model):
     def _transform_tars_scores(self, tars_scores, max_sequence_length: int):
         # M: num_classes in task, N: num_samples (batch_size), L: max_sequence_length
         # reshape from NxLxMx2 to NxLxMx1 to NxLxM:
-        tars_scores = tars_scores[:,:,:,1]
+        tars_scores = torch.nn.functional.softmax(tars_scores, dim=3) # softmax onto true-false-mapping
+        tars_scores = tars_scores[:,:,:,1] # only use index 1 (true-mapping)
         tars_scores = torch.reshape(tars_scores, (-1, max_sequence_length, len(self.tag_dictionary.item2idx)))
-        #print("(batch_size, max_seq_len_of_batch, num_tags_in_task): " + str(tars_scores.shape))
-        tars_scores = torch.nn.functional.softmax(tars_scores, dim=2) ## TODO: softmax not required because it is already used in obtain_labels?
         return tars_scores
 
     def forward(self, sentences: List[Sentence]):
