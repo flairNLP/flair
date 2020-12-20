@@ -962,6 +962,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         # if sentence is too long, will be split into multiple parts
         sentence_splits = []
 
+        # check if transformer version 3 is used - in this case use old handling
         import transformers
         if transformers.__version__.startswith('3'):
 
@@ -980,6 +981,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 else:
                     subtoken_ids_sentence = None
 
+        # else if current transformer is used, use default handling
         else:
             encoded_inputs = self.tokenizer.encode_plus(tokenized_string,
                                                         max_length=self.max_subtokens_sequence_length,
@@ -988,9 +990,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                                                         truncation=True,
                                                         )
 
+            # overlong sentences are handled as multiple splits
             for encoded_input in encoded_inputs['input_ids']:
                 sentence_splits.append(torch.tensor(encoded_input, dtype=torch.long))
-            print(sentence_splits)
 
         # gradients are enabled if fine-tuning is enabled
         gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
@@ -1201,18 +1203,11 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         return length
 
     def __getstate__(self):
-        state = self.__dict__.copy()
-        print("calling get state")
-        # state["tokenizer"] = None
-        #
-        # # special handling for serializing transformer models
+        # special handling for serializing transformer models
         config_state_dict = self.model.config.__dict__
         model_state_dict = self.model.state_dict()
-        # state["config_state_dict"] = config_state_dict
-        # state["model_state_dict"] = model_state_dict
-        # state["embedding_length_internal"] = self.embedding_length
-        # state["model"] = None
 
+        # serialize the transformer models and the constructor arguments (but nothing else)
         model_state = {
             "config_state_dict": config_state_dict,
             "model_state_dict": model_state_dict,
@@ -1227,21 +1222,10 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             "allow_long_sentences": self.allow_long_sentences,
         }
 
-        # for key in state.keys():
-        #     # print(key)
-        #     if key.startswith("_"): # and not key in \
-        #                    # ['_modules', '_parameters', '_buffers', '_load_state_dict_pre_hooks']:
-        #         state[key] = None
-            # print(repr(state[key])[:100])
-
-        # print(state)
-
         return model_state
 
     def __setstate__(self, d):
         self.__dict__ = d
-        # print('jo')
-        # print(d.keys())
 
         # necessary for reverse compatibility with Flair <= 0.7
         if 'use_scalar_mix' in self.__dict__.keys():
@@ -1250,6 +1234,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             self.__dict__['subtoken_pooling'] = d['pooling_operation']
         if not 'context_length' in self.__dict__.keys():
             self.__dict__['context_length'] = 0
+        if 'use_context' in self.__dict__.keys():
+            self.__dict__['context_length'] = 64 if self.__dict__['use_context'] == True else 0
 
         # constructor arguments
         layers = ','.join([str(idx) for idx in self.__dict__['layer_indexes']])
@@ -1261,66 +1247,37 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # reload tokenizer to get around serialization issues
         model_name = self.__dict__['name'].split('transformer-word-')[-1]
-        # print(model_name)
         try:
             tokenizer = AutoTokenizer.from_pretrained(model_name)
-            # print(tokenizer)
+
         except:
             pass
 
         # special handling for deserializing transformer models
         if "config_state_dict" in d:
 
+            # load transformer model
             config_class = CONFIG_MAPPING[d["config_state_dict"]["model_type"]]
             loaded_config = config_class.from_dict(d["config_state_dict"])
-
             model = AutoModel.from_pretrained(None, config=loaded_config, state_dict=d["model_state_dict"])\
                 .to(flair.device)
 
-            # print(model)
-            # self.model = model
-            # self.add_module(f"model", model)
-
-            # self.__dict__['tokenizer'] = tokenizer
-            # self.__dict__["model"] = model
+            # re-initialize transformer word embeddings with constructor arguments
             embedding = TransformerWordEmbeddings((tokenizer, model),
                                               layers=layers,
                                               subtoken_pooling=subtoken_pooling,
-                                              context_length=context_length,
+                                              use_context=context_length,
                                               layer_mean=layer_mean,
                                               fine_tune=fine_tune,
-                                              allow_long_sentences = allow_long_sentences,
+                                              allow_long_sentences=allow_long_sentences,
                                               )
 
-            # setattr(self, slot, d[slot])
+            # I have no idea why this is necessary, but otherwise it doesn't work
             for key in embedding.__dict__.keys():
-                # print(key)
-                # print(str(embedding.__dict__[key])[:50])
                 self.__dict__[key] = embedding.__dict__[key]
 
-            # sentence = Sentence('hello world')
-            # embedding.embed(sentence)
-            # print(sentence[0].embedding[:5])
-            # print(embedding.__dict__.keys())
-
-            # self.__dict__['tokenizer'] = embedding.__dict__['tokenizer']
-            # self.__dict__['special_tokens'] = embedding.__dict__['special_tokens']
-            # self.__dict__['begin_offset'] = embedding.__dict__['begin_offset']
-            # self.__dict__['model'] = model
-
-            # self.__dict__['special_tokens'] =
-            # print(model.__dict__.keys())
-            #
-            # self = model
-            # print("afteR:")
-            # print(self.__dict__.keys())
-            # self.load_state_dict(model.__dict__)
-
-            # print(model)
-            # return model
-
-        # self.tokenizer = tokenizer
-        # return self
+        else:
+            self.tokenizer = tokenizer
 
 
 class FastTextEmbeddings(TokenEmbeddings):
