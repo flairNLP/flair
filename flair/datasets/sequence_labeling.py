@@ -29,6 +29,8 @@ class ColumnCorpus(Corpus):
             skip_first_line: bool = False,
             in_memory: bool = True,
             label_name_map: Dict[str, str] = None,
+            autofind_splits: bool = True,
+            **corpusargs,
     ):
         """
         Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
@@ -41,8 +43,7 @@ class ColumnCorpus(Corpus):
         :param column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t"
         to split only on tabs
         :param comment_symbol: if set, lines that begin with this symbol are treated as comments
-        :param document_separator_token: If provided, multiple sentences are read into one object. Provide the string token
-        that indicates that a new document begins
+        :param document_separator_token: If provided, sentences that function as document boundaries are so marked
         :param skip_first_line: set to True if your dataset has a header line
         :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
         :return: a Corpus with annotated train, dev and test data
@@ -51,7 +52,7 @@ class ColumnCorpus(Corpus):
 
         # find train, dev and test files if not specified
         dev_file, test_file, train_file = \
-            find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
+            find_train_dev_test_files(data_folder, dev_file, test_file, train_file, autofind_splits)
 
         # get train data
         train = ColumnDataset(
@@ -65,7 +66,7 @@ class ColumnCorpus(Corpus):
             document_separator_token=document_separator_token,
             skip_first_line=skip_first_line,
             label_name_map=label_name_map,
-        )
+        ) if train_file is not None else None
 
         # read in test file if exists
         test = ColumnDataset(
@@ -95,7 +96,7 @@ class ColumnCorpus(Corpus):
             label_name_map=label_name_map,
         ) if dev_file is not None else None
 
-        super(ColumnCorpus, self).__init__(train, dev, test, name=str(data_folder))
+        super(ColumnCorpus, self).__init__(train, dev, test, name=str(data_folder), **corpusargs)
 
 
 class ColumnDataset(FlairDataset):
@@ -124,8 +125,7 @@ class ColumnDataset(FlairDataset):
         to split only on tabs
         :param comment_symbol: if set, lines that begin with this symbol are treated as comments
         :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
-        :param document_separator_token: If provided, multiple sentences are read into one object. Provide the string token
-        that indicates that a new document begins
+        :param document_separator_token: If provided, sentences that function as document boundaries are so marked
         :param skip_first_line: set to True if your dataset has a header line
         :param label_name_map: Optionally map tag names to different schema.
         """
@@ -142,10 +142,6 @@ class ColumnDataset(FlairDataset):
 
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
-        if self.in_memory:
-            self.sentences: List[Sentence] = []
-        else:
-            self.indices: List[int] = []
 
         self.total_sentence_count: int = 0
 
@@ -158,57 +154,95 @@ class ColumnDataset(FlairDataset):
         # determine encoding of text file
         self.encoding = encoding
 
-        sentence: Sentence = Sentence()
-        sentence_started: bool = False
-        with open(str(self.path_to_column_file), encoding=self.encoding) as f:
+        with open(str(self.path_to_column_file), encoding=self.encoding) as file:
 
             # skip first line if to selected
             if skip_first_line:
-                f.readline()
+                file.readline()
 
-            line = f.readline()
-            position = 0
+            # option 1: read only sentence boundaries as offset positions
+            if not self.in_memory:
+                self.indices: List[int] = []
 
-            while line:
+                line = file.readline()
+                position = 0
+                sentence_started = False
+                while line:
+                    if sentence_started and self.__line_completes_sentence(line):
+                        self.indices.append(position)
+                        position = file.tell()
+                        sentence_started = False
 
-                if self.comment_symbol is not None and line.startswith(comment_symbol):
-                    line = f.readline()
-                    continue
-
-                if self.__line_completes_sentence(line):
-
-                    if sentence_started:
-
-                        if self.in_memory:
-                            if self.tag_to_bioes is not None:
-                                sentence.convert_tag_scheme(
-                                    tag_type=self.tag_to_bioes, target_scheme="iobes"
-                                )
-                            self.sentences.append(sentence)
-                        else:
-                            self.indices.append(position)
-                            position = f.tell()
-                        self.total_sentence_count += 1
-                    sentence: Sentence = Sentence()
-                    sentence_started = False
-
-                elif self.in_memory:
-                    token = self._parse_token(line)
-                    if not line.isspace():
-                        sentence.add_token(token)
+                    elif not line.isspace():
                         sentence_started = True
+                    line = file.readline()
 
-                elif not line.isspace():
-                    sentence_started = True
+                if sentence_started:
+                    self.indices.append(position)
 
-                line = f.readline()
+                self.total_sentence_count = len(self.indices)
 
-        if sentence_started:
+            # option 2: keep everything in memory
             if self.in_memory:
-                self.sentences.append(sentence)
+                self.sentences: List[Sentence] = []
+
+                # pointer to previous
+                previous_sentence = None
+                while True:
+                    sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
+                    if not sentence: break
+                    sentence._previous_sentence = previous_sentence
+                    sentence._next_sentence = None
+
+                    if previous_sentence: previous_sentence._next_sentence = sentence
+
+                    self.sentences.append(sentence)
+                    previous_sentence = sentence
+
+                self.total_sentence_count = len(self.sentences)
+
+    def _read_next_sentence(self, file):
+        lines = []
+        line = file.readline()
+        while line:
+            if not line.isspace():
+                lines.append(line)
+
+            # if sentence ends, break
+            if len(lines) > 0 and self.__line_completes_sentence(line):
+                break
+
+            line = file.readline()
+        return lines
+
+    def _convert_lines_to_sentence(self, lines):
+
+        sentence: Sentence = Sentence()
+        for line in lines:
+            # skip comments
+            if self.comment_symbol is not None and line.startswith(self.comment_symbol):
+                continue
+
+            # if sentence ends, convert and return
+            if self.__line_completes_sentence(line):
+                if len(sentence) > 0:
+                    if self.tag_to_bioes is not None:
+                        sentence.convert_tag_scheme(
+                            tag_type=self.tag_to_bioes, target_scheme="iobes"
+                        )
+                    # check if this sentence is a document boundary
+                    if sentence.to_original_text() == self.document_separator_token:
+                        sentence.is_document_boundary = True
+                    return sentence
+
+            # otherwise, this line is a token. parse and add to sentence
             else:
-                self.indices.append(position)
-            self.total_sentence_count += 1
+                token = self._parse_token(line)
+                sentence.add_token(token)
+
+        # check if this sentence is a document boundary
+        if sentence.to_original_text() == self.document_separator_token: sentence.is_document_boundary = True
+        if len(sentence) > 0: return sentence
 
     def _parse_token(self, line: str) -> Token:
         fields: List[str] = re.split(self.column_delimiter, line.rstrip())
@@ -235,13 +269,7 @@ class ColumnDataset(FlairDataset):
         return token
 
     def __line_completes_sentence(self, line: str) -> bool:
-        sentence_completed = line.isspace()
-        if self.document_separator_token:
-            sentence_completed = False
-            fields: List[str] = re.split(self.column_delimiter, line)
-            if len(fields) >= self.text_column:
-                if fields[self.text_column] == self.document_separator_token:
-                    sentence_completed = True
+        sentence_completed = line.isspace() or line == ''
         return sentence_completed
 
     def is_in_memory(self) -> bool:
@@ -252,35 +280,19 @@ class ColumnDataset(FlairDataset):
 
     def __getitem__(self, index: int = 0) -> Sentence:
 
+        # if in memory, retrieve parsed sentence
         if self.in_memory:
             sentence = self.sentences[index]
 
+        # else skip to position in file where sentence begins
         else:
             with open(str(self.path_to_column_file), encoding=self.encoding) as file:
                 file.seek(self.indices[index])
-                line = file.readline()
-                sentence: Sentence = Sentence()
-                while line:
-                    if self.comment_symbol is not None and line.startswith(
-                            self.comment_symbol
-                    ):
-                        line = file.readline()
-                        continue
+                sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
 
-                    if self.__line_completes_sentence(line):
-                        if len(sentence) > 0:
-                            if self.tag_to_bioes is not None:
-                                sentence.convert_tag_scheme(
-                                    tag_type=self.tag_to_bioes, target_scheme="iobes"
-                                )
-                            return sentence
+            # set sentence context using partials
+            sentence._position_in_dataset = (self, index)
 
-                    else:
-                        token = self._parse_token(line)
-                        if not line.isspace():
-                            sentence.add_token(token)
-
-                    line = file.readline()
         return sentence
 
 
@@ -370,7 +382,6 @@ class BIOFID(ColumnCorpus):
 
 
 class BIOSCOPE(ColumnCorpus):
-
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -406,7 +417,6 @@ class CONLL_03(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
@@ -448,7 +458,7 @@ class CONLL_03(ColumnCorpus):
             columns,
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            document_separator_token="-DOCSTART-",
             **corpusargs,
         )
 
@@ -459,7 +469,6 @@ class CONLL_03_GERMAN(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
@@ -501,7 +510,7 @@ class CONLL_03_GERMAN(ColumnCorpus):
             columns,
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            document_separator_token="-DOCSTART-",
             **corpusargs,
         )
 
@@ -512,7 +521,6 @@ class CONLL_03_DUTCH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
@@ -551,7 +559,7 @@ class CONLL_03_DUTCH(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            document_separator_token="-DOCSTART-",
             **corpusargs,
         )
 
@@ -1112,7 +1120,6 @@ class MIT_RESTAURANT_NER(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
@@ -1150,7 +1157,6 @@ class MIT_RESTAURANT_NER(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             **corpusargs,
         )
 
@@ -1409,7 +1415,6 @@ class TURKU_NER(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
@@ -1455,7 +1460,7 @@ class TURKU_NER(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            document_separator_token="-DOCSTART-",
             **corpusargs,
         )
 
@@ -1466,7 +1471,6 @@ class TWITTER_NER(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
@@ -1506,7 +1510,6 @@ class TWITTER_NER(ColumnCorpus):
             encoding="latin-1",
             train_file="ner.txt",
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             **corpusargs,
         )
 
@@ -1728,22 +1731,24 @@ class WSD_UFSAC(ColumnCorpus):
             self,
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             train_file: str = None,
+            dev_file: str = None,
             test_file: str = None,
-            cut_multisense: bool = True
+            cut_multisense: bool = True,
+            **corpusargs,
     ):
         """
         Initialize a custom corpus with any two WSD datasets in the UFSAC format. This is only possible if you've
         manually downloaded the WSD datasets in UFSAC format to your machine.
         Obtain the most recent datasets from https://drive.google.com/file/d/1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO and copy
-        up to two of the datasets in a folder called 'wsd_ufsac'.Then set the base_path parameter in the constructor to
-        the path to the parent directory where the 'wsd_ufsac' folder resides and respectively set the train_file and
-        test_file parameter in the constructor according to the file names.
+        up to three of the datasets in a folder called 'wsd_ufsac'.Then set the base_path parameter in the constructor
+        to the path to the parent directory where the 'wsd_ufsac' folder resides and respectively set the train_file,
+        dev_file and test_file parameter in the constructor according to the file names.
         :param base_path: Path to the custom WSD corpus ('wsd_ufsac' folder) on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         :param train_file: Name of the training dataset (e.g. 'semcor.xml')
+        :param dev_file: Name of the development dataset
         :param test_file: Name of the testing dataset
         :param cut_multisense: Boolean that determines whether or not the wn30_key tag should be cut if it contains
                                multiple possible senses. If True only the first listed sense will be used and the
@@ -1786,6 +1791,7 @@ class WSD_UFSAC(ColumnCorpus):
         # determine correct CoNLL files
 
         train_file = determine_conll_file(file=train_file, data_folder=data_folder, cut_multisense=cut_multisense)
+        dev_file = determine_conll_file(file=dev_file, data_folder=data_folder, cut_multisense=cut_multisense)
         test_file = determine_conll_file(file=test_file, data_folder=data_folder, cut_multisense=cut_multisense)
 
         super(WSD_UFSAC, self).__init__(
@@ -1794,39 +1800,10 @@ class WSD_UFSAC(ColumnCorpus):
             tag_to_bioes=None,
             encoding="latin-1",
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             train_file=train_file,
-            test_file=test_file
-        )
-
-
-class BIOSCOPE(ColumnCorpus):
-
-    def __init__(
-            self,
-            base_path: Union[str, Path] = None,
-            in_memory: bool = True,
-    ):
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
-
-        # column format
-        columns = {0: "text", 1: "tag"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        bioscope_path = "https://raw.githubusercontent.com/whoisjones/BioScopeSequenceLabelingData/master/sequence_labeled/"
-        cached_path(f"{bioscope_path}output.txt", Path("datasets") / dataset_name)
-
-        super(BIOSCOPE, self).__init__(
-            data_folder, columns, in_memory=in_memory, train_file="output.txt"
+            dev_file=dev_file,
+            test_file=test_file,
+            **corpusargs,
         )
 
 
