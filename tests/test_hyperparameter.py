@@ -29,7 +29,7 @@ def test_sequence_tagger_evolutionary_search(results_base_path, tasks_base_path)
 
     # Define parameters for document embeddings RNN
     search_space.add_parameter(parameters.DocumentRNNEmbeddings.HIDDEN_SIZE, options=[128, 256, 512])
-    search_space.add_word_embeddings(parameters.DocumentRNNEmbeddings.WORD_EMBEDDINGS, options=[[WordEmbeddings('glove')]])
+    search_space.add_word_embeddings(options=[[WordEmbeddings('glove')]])
 
     search_strategy.make_configurations(search_space)
 
@@ -68,8 +68,7 @@ def test_sequence_tagger_random_search(results_base_path, tasks_base_path):
 
     # Define parameters for document embeddings RNN
     search_space.add_parameter(parameters.DocumentRNNEmbeddings.HIDDEN_SIZE, options=[128, 256, 512])
-    search_space.add_word_embeddings(parameters.DocumentRNNEmbeddings.WORD_EMBEDDINGS,
-                                     options=[[WordEmbeddings('glove')]])
+    search_space.add_word_embeddings(options=[[WordEmbeddings('glove')]])
 
     search_strategy.make_configurations(search_space)
 
@@ -108,8 +107,7 @@ def test_sequence_tagger_grid_search(results_base_path, tasks_base_path):
 
     # Define parameters for document embeddings RNN
     search_space.add_parameter(parameters.DocumentRNNEmbeddings.HIDDEN_SIZE, options=[128, 256, 512])
-    search_space.add_word_embeddings(parameters.DocumentRNNEmbeddings.WORD_EMBEDDINGS,
-                                     options=[[WordEmbeddings('glove')]])
+    search_space.add_word_embeddings(options=[[WordEmbeddings('glove')]])
 
     search_strategy.make_configurations(search_space)
 
