@@ -240,13 +240,15 @@ class SequenceTagging(DownstreamTaskModel):
         :param params: dict containing the parameters
         :return: a sequence tagger instance
         """
+        # needed since we store a pointer in our configurations list
+        params_copy = params.copy()
 
         sequence_tagger_params = {
-            key: params[key] for key in params if key in SEQUENCE_TAGGER_PARAMETERS
+            key: params_copy[key] for key in params_copy if key in SEQUENCE_TAGGER_PARAMETERS
         }
 
         if "embeddings" in params:
-            word_embeddings_attributes = params.pop("embeddings")
+            word_embeddings_attributes = params_copy.pop("embeddings")
             word_embeddings = self._make_word_embeddings_from_attributes(word_embeddings_attributes)
 
         embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=word_embeddings)
