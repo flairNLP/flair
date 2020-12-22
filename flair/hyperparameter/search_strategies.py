@@ -217,8 +217,14 @@ class EvolutionarySearch(SearchStrategy):
         :param results: dict containing the results
         :return probabilities: np.array containing selection probabilities per individual in generation
         """
-        fitness = np.asarray([configuration['result'] for configuration in results.values()])
-        probabilities = fitness / (sum([configuration['result'] for configuration in results.values()]))
+        scores = [configuration['result'] for configuration in results.values()]
+        fitness = np.asarray(scores)
+        sum_fitness = (sum(scores))
+        if sum_fitness:
+            probabilities = fitness / (sum([configuration['result'] for configuration in results.values()]))
+        else:
+            #if no model scored, uniform distribution to continue
+            probabilities = np.ones(len(scores))/len(scores)
         return probabilities
 
     def _crossover(self, child: dict, parent_population: dict):
