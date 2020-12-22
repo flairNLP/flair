@@ -74,6 +74,7 @@ class ModelTrainer:
         initial_extra_patience = 0,
         min_learning_rate: float = 0.0001,
         train_with_dev: bool = False,
+        train_with_test: bool = False,
         monitor_train: bool = False,
         monitor_test: bool = False,
         embeddings_storage_mode: str = "cpu",
@@ -197,7 +198,7 @@ class ModelTrainer:
             if (not param_selection_mode and self.corpus.test and monitor_test)
             else False
         )
-        log_dev = True if not train_with_dev else False
+        log_dev = False if train_with_dev or not self.corpus.dev else True
         log_train_part = (
             True
             if (eval_on_train_fraction == "dev" or eval_on_train_fraction > 0.0)
@@ -242,6 +243,7 @@ class ModelTrainer:
                                    max_lr=learning_rate,
                                    steps_per_epoch=dataset_size//mini_batch_size + 1,
                                    epochs=max_epochs-self.epoch, # if we load a checkpoint, we have already trained for self.epoch
+                                   pct_start=0.0,
                                    cycle_momentum=cycle_momentum)
         else:
             lr_scheduler = scheduler(
@@ -258,9 +260,14 @@ class ModelTrainer:
 
         train_data = self.corpus.train
 
-        # if training also uses dev data, include in training set
-        if train_with_dev:
-            train_data = ConcatDataset([self.corpus.train, self.corpus.dev])
+        # if training also uses dev/train data, include in training set
+        if train_with_dev or train_with_test:
+
+            parts = [self.corpus.train]
+            if train_with_dev: parts.append(self.corpus.dev)
+            if train_with_test: parts.append(self.corpus.test)
+
+            train_data = ConcatDataset(parts)
 
         # initialize sampler if provided
         if sampler is not None:
@@ -462,6 +469,7 @@ class ModelTrainer:
                         self.corpus.dev,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
+                        out_path=base_path / "dev.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
@@ -507,7 +515,7 @@ class ModelTrainer:
                         )
 
                 # determine learning rate annealing through scheduler. Use auxiliary metric for AnnealOnPlateau
-                if not train_with_dev and isinstance(lr_scheduler, AnnealOnPlateau):
+                if log_dev and isinstance(lr_scheduler, AnnealOnPlateau):
                     lr_scheduler.step(current_score, dev_loss)
                 elif not isinstance(lr_scheduler, OneCycleLR):
                     lr_scheduler.step(current_score)
@@ -612,7 +620,7 @@ class ModelTrainer:
                 log.info("Done.")
 
         # test best model if test data is present
-        if self.corpus.test:
+        if self.corpus.test and not train_with_test:
             final_score = self.final_test(base_path, mini_batch_chunk_size, num_workers)
         else:
             final_score = 0
@@ -673,13 +681,16 @@ class ModelTrainer:
         if type(self.corpus) is MultiCorpus:
             for subcorpus in self.corpus.corpora:
                 log_line(log)
-                self.model.evaluate(
-                    subcorpus.test,
-                    mini_batch_size=eval_mini_batch_size,
-                    num_workers=num_workers,
-                    out_path=base_path / f"{subcorpus.name}-test.tsv",
-                    embedding_storage_mode="none",
-                )
+                if subcorpus.test:
+                    subcorpus_results, subcorpus_loss = self.model.evaluate(
+                        subcorpus.test,
+                        mini_batch_size=eval_mini_batch_size,
+                        num_workers=num_workers,
+                        out_path=base_path / f"{subcorpus.name}-test.tsv",
+                        embedding_storage_mode="none",
+                    )
+                    log.info(subcorpus.name)
+                    log.info(subcorpus_results.log_line)
 
         # get and return the final test score of best model
         final_score = test_results.main_score
