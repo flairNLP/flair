@@ -254,7 +254,7 @@ class SequenceTaggerSearchSpace(SearchSpace):
         Passes if at least 1 have been set, else raises Exception
         :return: -
         """
-        if self.parameter_storage.general_parameters.get("embeddings"):
+        if self.parameter_storage.GeneralParameters.get("embeddings"):
             pass
         else:
             raise Exception("Word Embeddings haven't been set.")
