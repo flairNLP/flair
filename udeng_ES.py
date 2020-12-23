@@ -1,0 +1,43 @@
+from flair.datasets import UD_ENGLISH
+from flair.hyperparameter import search_strategies, search_spaces
+from flair.hyperparameter import parameters
+from flair.hyperparameter import orchestrator
+from flair.embeddings import WordEmbeddings, FlairEmbeddings, TransformerWordEmbeddings
+
+def main():
+    corpus = UD_ENGLISH().downsample(0.5)
+
+    # define search space
+    search_space = search_spaces.SequenceTaggerSearchSpace()
+    search_space.add_tag_type("pos")
+
+    search_strategy = search_strategies.EvolutionarySearch(population_size=12)
+
+    # mandatory steering parameters
+    search_space.add_budget(parameters.BudgetConstraint.GENERATIONS, 10)
+    search_space.add_evaluation_metric(parameters.EvaluationMetric.MICRO_F1_SCORE)
+    search_space.add_optimization_value(parameters.OptimizationValue.DEV_SCORE)
+    search_space.add_max_epochs_per_training_run(50)
+
+    search_space.add_parameter(parameters.SequenceTagger.HIDDEN_SIZE, options=[128, 256, 512])
+    search_space.add_parameter(parameters.SequenceTagger.DROPOUT, options=[0, 0.1, 0.2, 0.3])
+    search_space.add_parameter(parameters.SequenceTagger.WORD_DROPOUT, options=[0, 0.01, 0.05, 0.1])
+    search_space.add_parameter(parameters.SequenceTagger.RNN_LAYERS, options=[2, 3, 4, 5, 6])
+    search_space.add_parameter(parameters.SequenceTagger.USE_RNN, options=[True, False])
+    search_space.add_parameter(parameters.SequenceTagger.USE_CRF, options=[True, False])
+    search_space.add_parameter(parameters.SequenceTagger.REPROJECT_EMBEDDINGS, options=[True, False])
+    search_space.add_word_embeddings(options=[[WordEmbeddings('glove'), WordEmbeddings('en')],
+                                              [FlairEmbeddings('news-forward'), FlairEmbeddings('news-backward'), WordEmbeddings('glove')],
+                                              [TransformerWordEmbeddings('distilbert-base-uncased')]])
+
+    search_strategy.make_configurations(search_space)
+
+    orch = orchestrator.Orchestrator(corpus=corpus,
+                                     base_path="evaluation_results/ud_eng/evolutionary_search",
+                                     search_space=search_space,
+                                     search_strategy=search_strategy)
+
+    orch.optimize()
+
+if __name__ == "__main__":
+    main()
