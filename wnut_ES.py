@@ -1,15 +1,15 @@
-from flair.datasets import UD_ENGLISH
+from flair.datasets import WNUT_17
 from flair.hyperparameter import search_strategies, search_spaces
 from flair.hyperparameter import parameters
 from flair.hyperparameter import orchestrator
 from flair.embeddings import WordEmbeddings, FlairEmbeddings, TransformerWordEmbeddings
 
 def main():
-    corpus = UD_ENGLISH().downsample(0.5)
+    corpus = WNUT_17()
 
     # define search space
     search_space = search_spaces.SequenceTaggerSearchSpace()
-    search_space.add_tag_type("pos")
+    search_space.add_tag_type("ner")
 
     search_strategy = search_strategies.EvolutionarySearch(population_size=12)
 
@@ -38,7 +38,7 @@ def main():
     search_strategy.make_configurations(search_space)
 
     orch = orchestrator.Orchestrator(corpus=corpus,
-                                     base_path="evaluation_results/ud_eng/evolutionary_search",
+                                     base_path="evaluation_results/wnut/evolutionary_search",
                                      search_space=search_space,
                                      search_strategy=search_strategy)
 

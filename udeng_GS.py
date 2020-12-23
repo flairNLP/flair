@@ -11,10 +11,10 @@ def main():
     search_space = search_spaces.SequenceTaggerSearchSpace()
     search_space.add_tag_type("pos")
 
-    search_strategy = search_strategies.EvolutionarySearch(population_size=12)
+    search_strategy = search_strategies.GridSearch()
 
     # mandatory steering parameters
-    search_space.add_budget(parameters.BudgetConstraint.GENERATIONS, 10)
+    search_space.add_budget(parameters.BudgetConstraint.TIME_IN_H, 24)
     search_space.add_evaluation_metric(parameters.EvaluationMetric.MICRO_F1_SCORE)
     search_space.add_optimization_value(parameters.OptimizationValue.DEV_SCORE)
     search_space.add_max_epochs_per_training_run(50)
@@ -38,7 +38,7 @@ def main():
     search_strategy.make_configurations(search_space)
 
     orch = orchestrator.Orchestrator(corpus=corpus,
-                                     base_path="evaluation_results/ud_eng/evolutionary_search",
+                                     base_path="evaluation_results/ud_eng/grid_search",
                                      search_space=search_space,
                                      search_strategy=search_strategy)
 
