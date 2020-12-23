@@ -1134,10 +1134,12 @@ class SequenceTagger(flair.nn.Model):
                 model_name = model_name_splitted[0]
 
             # Lazy import
-            from transformers import file_utils
+            from huggingface_hub import file_download
 
-            url = file_utils.hf_bucket_url(model_id=model_name, revision=revision, filename=hf_model_name)
-            model_name = file_utils.cached_path(url_or_filename=url, cache_dir=flair.cache_root)
+            url = file_download.hf_hub_url(model_id=model_name, revision=revision, filename=hf_model_name)
+            model_name = file_download.cached_download(url=url, library_name="flair",
+                                                       library_version=flair.__version__,
+                                                       cache_dir=flair.cache_root)
 
         return model_name
 
