@@ -648,9 +648,7 @@ class TARSSequenceTagger(flair.nn.Model):
     # N x L x M x 2
     def _forward_four_dims(self, sentences: List[Sentence]):
         # Transform input data into TARS format
-        print(len(sentences))
         formatted_sentences = self._get_tars_formatted_sentences(sentences)
-        print(len(formatted_sentences))
 
         sentence_offsets = []
         sentence_rest_lengths = []
@@ -670,8 +668,6 @@ class TARSSequenceTagger(flair.nn.Model):
         longest_token_sequence_in_batch = max(sentence_rest_lengths)
 
         m = len(self.tag_dictionary.item2idx)
-        print("m:")
-        print(m)
         pre_allocated_zero_tensor = torch.zeros(
             self.transformer_word_embeddings.embedding_length * longest_token_sequence_in_batch * m,  # E * L * M
             dtype=torch.float,
