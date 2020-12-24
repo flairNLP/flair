@@ -1136,8 +1136,8 @@ class SequenceTagger(flair.nn.Model):
             # Lazy import
             from huggingface_hub import hf_hub_url, cached_download
 
-            url = file_download.hf_hub_url(model_id=model_name, revision=revision, filename=hf_model_name)
-            model_name = file_download.cached_download(url=url, library_name="flair",
+            url = hf_hub_url(model_id=model_name, revision=revision, filename=hf_model_name)
+            model_name = cached_download(url=url, library_name="flair",
                                                        library_version=flair.__version__,
                                                        cache_dir=flair.cache_root)
 
