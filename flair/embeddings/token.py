@@ -997,88 +997,88 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             for encoded_input in encoded_inputs['input_ids']:
                 sentence_splits.append(torch.tensor(encoded_input, dtype=torch.long))
 
-        # gradients are enabled if fine-tuning is enabled
-        gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
-        with gradient_context:
+        # embed each sentence split
+        hidden_states_of_all_splits = []
+        for split_number, sentence_split in enumerate(sentence_splits):
 
-            # embed each sentence split
-            hidden_states_of_all_splits = []
-            for split_number, sentence_split in enumerate(sentence_splits):
+            # initialize batch tensors and mask
+            input_ids = sentence_split.unsqueeze(0).to(flair.device)
 
-                # initialize batch tensors and mask
-                input_ids = sentence_split.unsqueeze(0).to(flair.device)
+            # propagate gradients if fine-tuning and only during training
+            propagate_gradients = self.fine_tune and self.training
+            # increase memory effectiveness by skipping all but last sentence split
+            if propagate_gradients and self.memory_effective_training and split_number < len(sentence_splits) - 1:
+                propagate_gradients = False
 
-                if self.memory_effective_training and split_number < len(sentence_splits) - 1:
-                    print("skipping")
-                    with torch.no_grad():
-                        hidden_states = self.model(input_ids)[-1]
-                else:
-                    # print("not skipping")
-                    # put encoded batch through transformer model to get all hidden states of all encoder layers
-                    hidden_states = self.model(input_ids)[-1]  # make the tuple a tensor; makes working with it easier.
+            # put encoded batch through transformer model to get all hidden states of all encoder layers
+            if propagate_gradients:
+                hidden_states = self.model(input_ids)[-1]  # make the tuple a tensor; makes working with it easier.
+            else:
+                with torch.no_grad(): # deactivate gradients if not necessary
+                    hidden_states = self.model(input_ids)[-1]
 
-                # get hidden states as single tensor
-                split_hidden_state = torch.stack(hidden_states)[:, 0, ...]
-                hidden_states_of_all_splits.append(split_hidden_state)
+            # get hidden states as single tensor
+            split_hidden_state = torch.stack(hidden_states)[:, 0, ...]
+            hidden_states_of_all_splits.append(split_hidden_state)
 
-            # put splits back together into one tensor using overlapping strides
-            hidden_states = hidden_states_of_all_splits[0]
-            for i in range(1, len(hidden_states_of_all_splits)):
-                hidden_states = hidden_states[:, :-1 - self.stride // 2, :]
-                next_split = hidden_states_of_all_splits[i]
-                next_split = next_split[:, 1 + self.stride // 2:, :]
-                hidden_states = torch.cat([hidden_states, next_split], 1)
+        # put splits back together into one tensor using overlapping strides
+        hidden_states = hidden_states_of_all_splits[0]
+        for i in range(1, len(hidden_states_of_all_splits)):
+            hidden_states = hidden_states[:, :-1 - self.stride // 2, :]
+            next_split = hidden_states_of_all_splits[i]
+            next_split = next_split[:, 1 + self.stride // 2:, :]
+            hidden_states = torch.cat([hidden_states, next_split], 1)
 
-            subword_start_idx = self.begin_offset
+        subword_start_idx = self.begin_offset
 
-            # for each token, get embedding
-            for token_idx, (token, number_of_subtokens) in enumerate(zip(sentence, token_subtoken_lengths)):
+        # for each token, get embedding
+        for token_idx, (token, number_of_subtokens) in enumerate(zip(sentence, token_subtoken_lengths)):
 
-                # some tokens have no subtokens at all (if omitted by BERT tokenizer) so return zero vector
-                if number_of_subtokens == 0:
-                    token.set_embedding(self.name, torch.zeros(self.embedding_length))
-                    continue
+            # some tokens have no subtokens at all (if omitted by BERT tokenizer) so return zero vector
+            if number_of_subtokens == 0:
+                token.set_embedding(self.name, torch.zeros(self.embedding_length))
+                continue
 
-                subword_end_idx = subword_start_idx + number_of_subtokens
+            subword_end_idx = subword_start_idx + number_of_subtokens
 
-                subtoken_embeddings: List[torch.FloatTensor] = []
+            subtoken_embeddings: List[torch.FloatTensor] = []
 
-                # get states from all selected layers, aggregate with pooling operation
-                for layer in self.layer_indexes:
-                    current_embeddings = hidden_states[layer][subword_start_idx:subword_end_idx]
+            # get states from all selected layers, aggregate with pooling operation
+            for layer in self.layer_indexes:
+                current_embeddings = hidden_states[layer][subword_start_idx:subword_end_idx]
 
-                    if self.pooling_operation == "first":
-                        final_embedding: torch.FloatTensor = current_embeddings[0]
+                if self.pooling_operation == "first":
+                    final_embedding: torch.FloatTensor = current_embeddings[0]
 
-                    if self.pooling_operation == "last":
-                        final_embedding: torch.FloatTensor = current_embeddings[-1]
+                if self.pooling_operation == "last":
+                    final_embedding: torch.FloatTensor = current_embeddings[-1]
 
-                    if self.pooling_operation == "first_last":
-                        final_embedding: torch.Tensor = torch.cat([current_embeddings[0], current_embeddings[-1]])
+                if self.pooling_operation == "first_last":
+                    final_embedding: torch.Tensor = torch.cat([current_embeddings[0], current_embeddings[-1]])
 
-                    if self.pooling_operation == "mean":
-                        all_embeddings: List[torch.FloatTensor] = [
-                            embedding.unsqueeze(0) for embedding in current_embeddings
-                        ]
-                        final_embedding: torch.Tensor = torch.mean(torch.cat(all_embeddings, dim=0), dim=0)
+                if self.pooling_operation == "mean":
+                    all_embeddings: List[torch.FloatTensor] = [
+                        embedding.unsqueeze(0) for embedding in current_embeddings
+                    ]
+                    final_embedding: torch.Tensor = torch.mean(torch.cat(all_embeddings, dim=0), dim=0)
 
-                    subtoken_embeddings.append(final_embedding)
+                subtoken_embeddings.append(final_embedding)
 
-                # use layer mean of embeddings if so selected
-                if self.layer_mean and len(self.layer_indexes) > 1:
-                    sm_embeddings = torch.mean(torch.stack(subtoken_embeddings, dim=1), dim=1)
-                    subtoken_embeddings = [sm_embeddings]
+            # use layer mean of embeddings if so selected
+            if self.layer_mean and len(self.layer_indexes) > 1:
+                sm_embeddings = torch.mean(torch.stack(subtoken_embeddings, dim=1), dim=1)
+                subtoken_embeddings = [sm_embeddings]
 
-                # set the extracted embedding for the token
-                token.set_embedding(self.name, torch.cat(subtoken_embeddings))
+            # set the extracted embedding for the token
+            token.set_embedding(self.name, torch.cat(subtoken_embeddings))
 
-                subword_start_idx += number_of_subtokens
+            subword_start_idx += number_of_subtokens
 
-            # move embeddings from context back to original sentence (if using context)
-            if self.context_length > 0:
-                for token_idx, token in enumerate(original_sentence):
-                    token.set_embedding(self.name, sentence[token_idx+context_offset].get_embedding(self.name))
-                sentence = original_sentence
+        # move embeddings from context back to original sentence (if using context)
+        if self.context_length > 0:
+            for token_idx, token in enumerate(original_sentence):
+                token.set_embedding(self.name, sentence[token_idx+context_offset].get_embedding(self.name))
+            sentence = original_sentence
 
     def _expand_sentence_with_context(self, sentence):
 
