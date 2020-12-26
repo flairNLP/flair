@@ -794,6 +794,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             fine_tune: bool = False,
             allow_long_sentences: bool = True,
             use_context: Union[bool, int] = False,
+            memory_effective_training: bool = True,
             **kwargs
     ):
         """
@@ -836,6 +837,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # model name
         self.name = 'transformer-word-' + str(model)
+
+        # whether to detach gradients on overlong sentences
+        self.memory_effective_training = memory_effective_training
 
         # store whether to use context (and how much)
         if type(use_context) == bool:
@@ -1005,7 +1009,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 # initialize batch tensors and mask
                 input_ids = sentence_split.unsqueeze(0).to(flair.device)
 
-                if split_number < len(sentence_splits) - 1:
+                if self.memory_effective_training and split_number < len(sentence_splits) - 1:
                     with torch.no_grad():
                         hidden_states = self.model(input_ids)[-1]
                 else:
