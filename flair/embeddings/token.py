@@ -1000,13 +1000,17 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
             # embed each sentence split
             hidden_states_of_all_splits = []
-            for sentence_split in sentence_splits:
+            for split_number, sentence_split in enumerate(sentence_splits):
 
                 # initialize batch tensors and mask
                 input_ids = sentence_split.unsqueeze(0).to(flair.device)
 
-                # put encoded batch through transformer model to get all hidden states of all encoder layers
-                hidden_states = self.model(input_ids)[-1]  # make the tuple a tensor; makes working with it easier.
+                if split_number < len(sentence_splits) - 1:
+                    with torch.no_grad():
+                        hidden_states = self.model(input_ids)[-1]
+                else:
+                    # put encoded batch through transformer model to get all hidden states of all encoder layers
+                    hidden_states = self.model(input_ids)[-1]  # make the tuple a tensor; makes working with it easier.
 
                 # get hidden states as single tensor
                 split_hidden_state = torch.stack(hidden_states)[:, 0, ...]
