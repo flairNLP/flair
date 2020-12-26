@@ -787,7 +787,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 class TransformerWordEmbeddings(TokenEmbeddings):
     def __init__(
             self,
-            model: Union[str, Tuple] = "bert-base-uncased",
+            model: str = "bert-base-uncased",
             layers: str = "all",
             subtoken_pooling: str = "first",
             layer_mean: bool = True,
@@ -816,7 +816,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
         # load tokenizer and transformer model
-        # if type(model) == str:
         self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
         if not 'config' in kwargs:
             config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
