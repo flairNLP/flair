@@ -958,15 +958,15 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         # determine into how many subtokens each token is split
         token_subtoken_lengths = self.reconstruct_tokens_from_subtokens(sentence, subtokenized_sentence)
 
-        # get sentence as list of subtoken ids
-        subtoken_ids_sentence = self.tokenizer.convert_tokens_to_ids(subtokenized_sentence)
-
         # if sentence is too long, will be split into multiple parts
         sentence_splits = []
 
         # check if transformer version 3 is used - in this case use old handling
         import transformers
         if transformers.__version__.startswith('3'):
+
+            # get sentence as list of subtoken ids
+            subtoken_ids_sentence = self.tokenizer.convert_tokens_to_ids(subtokenized_sentence)
 
             while subtoken_ids_sentence:
                 encoded_inputs = self.tokenizer.encode_plus(subtoken_ids_sentence,
