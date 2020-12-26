@@ -816,15 +816,13 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
         # load tokenizer and transformer model
-        if type(model) == str:
-            self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
+        # if type(model) == str:
+        self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
+        if not 'config' in kwargs:
             config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
             self.model = AutoModel.from_pretrained(model, config=config, **kwargs)
-
-        # or pass tokenizer and transformer model as a tuple
         else:
-            self.tokenizer: PreTrainedTokenizer = model[0]
-            self.model = model[1]
+            self.model = AutoModel.from_pretrained(None, **kwargs)
 
         self.allow_long_sentences = allow_long_sentences
 
@@ -837,6 +835,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # model name
         self.name = 'transformer-word-' + str(model)
+        self.base_model = str(model)
 
         # whether to detach gradients on overlong sentences
         self.memory_effective_training = memory_effective_training
@@ -1010,9 +1009,11 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 input_ids = sentence_split.unsqueeze(0).to(flair.device)
 
                 if self.memory_effective_training and split_number < len(sentence_splits) - 1:
+                    print("skipping")
                     with torch.no_grad():
                         hidden_states = self.model(input_ids)[-1]
                 else:
+                    # print("not skipping")
                     # put encoded batch through transformer model to get all hidden states of all encoder layers
                     hidden_states = self.model(input_ids)[-1]  # make the tuple a tensor; makes working with it easier.
 
@@ -1238,6 +1239,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         # necessary for reverse compatibility with Flair <= 0.7
         if 'use_scalar_mix' in self.__dict__.keys():
             self.__dict__['layer_mean'] = d['use_scalar_mix']
+        if not 'memory_effective_training' in self.__dict__.keys():
+            self.__dict__['memory_effective_training'] = True
         if 'pooling_operation' in self.__dict__.keys():
             self.__dict__['subtoken_pooling'] = d['pooling_operation']
         if not 'context_length' in self.__dict__.keys():
@@ -1253,13 +1256,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         fine_tune = self.__dict__['fine_tune']
         allow_long_sentences = self.__dict__['allow_long_sentences']
 
-        # reload tokenizer to get around serialization issues
         model_name = self.__dict__['name'].split('transformer-word-')[-1]
-        try:
-            tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-        except:
-            pass
 
         # special handling for deserializing transformer models
         if "config_state_dict" in d:
@@ -1267,17 +1264,17 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             # load transformer model
             config_class = CONFIG_MAPPING[d["config_state_dict"]["model_type"]]
             loaded_config = config_class.from_dict(d["config_state_dict"])
-            model = AutoModel.from_pretrained(None, config=loaded_config, state_dict=d["model_state_dict"])\
-                .to(flair.device)
 
             # re-initialize transformer word embeddings with constructor arguments
-            embedding = TransformerWordEmbeddings((tokenizer, model),
+            embedding = TransformerWordEmbeddings(model_name,
                                               layers=layers,
                                               subtoken_pooling=subtoken_pooling,
                                               use_context=context_length,
                                               layer_mean=layer_mean,
                                               fine_tune=fine_tune,
                                               allow_long_sentences=allow_long_sentences,
+                                              config=loaded_config,
+                                              state_dict=d["model_state_dict"],
                                               )
 
             # I have no idea why this is necessary, but otherwise it doesn't work
@@ -1285,6 +1282,14 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 self.__dict__[key] = embedding.__dict__[key]
 
         else:
+
+            # reload tokenizer to get around serialization issues
+            try:
+                tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+            except:
+                pass
+
             self.tokenizer = tokenizer
 
 
