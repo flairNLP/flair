@@ -8,7 +8,7 @@ from typing import Union, Dict, List
 import flair
 from flair.data import Corpus, MultiCorpus, FlairDataset, Sentence, Token
 from flair.datasets.base import find_train_dev_test_files
-from flair.file_utils import cached_path, unpack_file
+from flair.file_utils import cached_path, unpack_file , unzip_file
 
 log = logging.getLogger("flair")
 
@@ -560,6 +560,112 @@ class CONLL_03_DUTCH(ColumnCorpus):
             encoding="latin-1",
             in_memory=in_memory,
             document_separator_token="-DOCSTART-",
+            **corpusargs,
+        )
+
+
+class BUSINESS_HUN(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+            **corpusargs,
+    ):
+        """
+        Initialize the NER Business corpus for Hungarian. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+        
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        hun_ner_path = "https://rgai.sed.hu/sites/rgai.sed.hu/files/business_NER.zip"
+        path_to_zipped_corpus = cached_path(hun_ner_path, Path("datasets") / dataset_name)
+        unpack_file(
+            path_to_zipped_corpus , 
+            data_folder,
+            mode = "zip",
+            keep= False #We can delete the .zip file once we extracted it
+            )
+
+        """
+            Please review these 2 assumptions , as the writer was not an expert on the field.
+
+            Assumption 1:
+            We will try to keep the ratio of elements referring to entities the same in each of 3 files.
+            In order to achieve this distribution , we will split the corpus from sentences.
+            For that we will look for periods.
+
+            Assumption 2:
+            We will split the corpus into train dev , test , train sets each of which will respectively 
+            receive 60% , 20% , 20%. You can modify this by changing the next line. 
+        """
+        portions = {
+            'train' : (0,60) , 
+            'dev' : (60,80) , 
+            'test' : (80,100)
+            }
+
+        dev = open(data_folder / "dev.txt" , "w" , encoding = "latin1")
+        test = open(data_folder / "test.txt" , "w" , encoding = "latin1" )
+        train = open(data_folder / "train.txt" , "w" , encoding = "latin1")
+
+
+        from random import randint
+        with open(data_folder / "hun_ner_corpus.txt" , encoding = "latin1") as corpus:
+            sentence = []
+            
+            while True:  
+                line = corpus.readline()
+                if not line:
+                    break
+                elif line == '\n':
+
+                    sentence.append(line) 
+                    portion = randint(0,100) 
+                    
+                    if portions['test'][0] <= portion and portion < portions['test'][1]:
+                        test.writelines(sentence)
+                    elif portions['dev'][0] <= portion and portion < portions['dev'][1]:
+                        dev.writelines(sentence)
+                    else:
+                        train.writelines(sentence)
+                    sentence = []
+                    
+                else :
+                    sentence.append(line)        
+
+        dev.close()
+        test.close()
+        train.close()
+
+
+        super(BUSINESS_HUN, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes=None,
+            encoding="latin-1",
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             **corpusargs,
         )
 
