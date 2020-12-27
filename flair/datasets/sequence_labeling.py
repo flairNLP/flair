@@ -242,6 +242,12 @@ class ColumnDataset(FlairDataset):
 
         # check if this sentence is a document boundary
         if sentence.to_original_text() == self.document_separator_token: sentence.is_document_boundary = True
+
+        if self.tag_to_bioes is not None:
+            sentence.convert_tag_scheme(
+                tag_type=self.tag_to_bioes, target_scheme="iobes"
+            )
+
         if len(sentence) > 0: return sentence
 
     def _parse_token(self, line: str) -> Token:
