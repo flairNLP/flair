@@ -795,6 +795,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             allow_long_sentences: bool = True,
             use_context: Union[bool, int] = False,
             memory_effective_training: bool = True,
+            respect_document_boundaries: bool = True,
             **kwargs
     ):
         """
@@ -844,6 +845,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             self.context_length: int = 64 if use_context else 0
         if type(use_context) == int:
             self.context_length: int = use_context
+
+        # if using context, can we cross document boundaries?
+        self.respect_document_boundaries = respect_document_boundaries
 
         # when initializing, embeddings are in eval mode by default
         self.model.eval()
@@ -1089,7 +1093,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         while True:
             sentence = sentence.previous_sentence()
             if sentence is None: break
-            if sentence.is_document_boundary: break
+            if self.respect_document_boundaries and sentence.is_document_boundary: break
 
             left_context = sentence.to_tokenized_string() + ' ' + left_context
             left_context = left_context.strip()
@@ -1105,7 +1109,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         while True:
             sentence = sentence.next_sentence()
             if sentence is None: break
-            if sentence.is_document_boundary: break
+            if self.respect_document_boundaries and sentence.is_document_boundary: break
 
             right_context += ' ' + sentence.to_tokenized_string()
             right_context = right_context.strip()
