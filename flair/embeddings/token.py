@@ -1232,6 +1232,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             "layer_mean": self.layer_mean,
             "fine_tune": self.fine_tune,
             "allow_long_sentences": self.allow_long_sentences,
+            "memory_effective_training": self.memory_effective_training,
+            "respect_document_boundaries": self.respect_document_boundaries,
         }
 
         return model_state
@@ -1251,6 +1253,11 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         if 'use_context' in self.__dict__.keys():
             self.__dict__['context_length'] = 64 if self.__dict__['use_context'] == True else 0
 
+        if not 'respect_document_boundaries' in self.__dict__.keys():
+            self.__dict__['respect_document_boundaries'] = True
+        if not 'memory_effective_training' in self.__dict__.keys():
+            self.__dict__['memory_effective_training'] = True
+
         # constructor arguments
         layers = ','.join([str(idx) for idx in self.__dict__['layer_indexes']])
         subtoken_pooling = self.__dict__['subtoken_pooling']
@@ -1258,6 +1265,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         layer_mean = self.__dict__['layer_mean']
         fine_tune = self.__dict__['fine_tune']
         allow_long_sentences = self.__dict__['allow_long_sentences']
+        respect_document_boundaries = self.__dict__['respect_document_boundaries']
+        memory_effective_training = self.__dict__['memory_effective_training']
 
         model_name = self.__dict__['name'].split('transformer-word-')[-1]
 
@@ -1276,6 +1285,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                                               layer_mean=layer_mean,
                                               fine_tune=fine_tune,
                                               allow_long_sentences=allow_long_sentences,
+                                              respect_document_boundaries=respect_document_boundaries,
+                                              memory_effective_training=memory_effective_training,
                                               config=loaded_config,
                                               state_dict=d["model_state_dict"],
                                               )
