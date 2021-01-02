@@ -568,7 +568,7 @@ class STACKOVERFLOW_NER(ColumnCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
-            tag_to_bioes: str = "NE",
+            tag_to_bioes: str = "ner",
             in_memory: bool = True,
             document_as_sequence: bool = False,
             **corpusargs,
