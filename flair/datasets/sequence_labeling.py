@@ -568,13 +568,13 @@ class STACKOVERFLOW_NER(ColumnCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
-            tag_to_bioes: str = "ner",
+            tag_to_bioes: str = "NE",
             in_memory: bool = True,
             document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
-        Initialize the CoNLL-03 corpus for Dutch. The first time you call this constructor it will automatically
+        Initialize the STACKOVERFLOW_NER corpus. The first time you call this constructor it will automatically
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -587,7 +587,7 @@ class STACKOVERFLOW_NER(ColumnCorpus):
             base_path: Path = Path(base_path)
 
 
-        """Datasets are represented in the Conll format.
+        """The Datasets are represented in the Conll format.
            In this format each line of the Dataset is in the following format:
            <word>+"\t"+<NE>"\t"+<word>+"\t"<markdown>
            The end of sentence is marked with an empty line.
@@ -616,9 +616,12 @@ class STACKOVERFLOW_NER(ColumnCorpus):
             data_folder,
             columns,
             tag_to_bioes=tag_to_bioes,
-            encoding="latin-1",
+            encoding="utf-8",
             in_memory=in_memory,
-            document_separator_token="-DOCSTART-",
+            train_file='train.txt',
+            test_file="test.txt",
+            dev_file='dev.txt',
+            skip_first_line=True,
             **corpusargs,
         )
 
