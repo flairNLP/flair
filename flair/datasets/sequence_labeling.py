@@ -568,13 +568,13 @@ class STACKOVERFLOW_NER(ColumnCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
-            tag_to_bioes: str = "ner",
+            tag_to_bioes: str = "NE",
             in_memory: bool = True,
             document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
-        Initialize the STACKOVERFLOW_NER corpus. The first time you call this constructor it will automatically
+        Initialize the CoNLL-03 corpus for Dutch. The first time you call this constructor it will automatically
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -587,9 +587,9 @@ class STACKOVERFLOW_NER(ColumnCorpus):
             base_path: Path = Path(base_path)
 
 
-        """The Datasets are represented in the Conll format.
+        """Datasets are represented in the Conll format.
            In this format each line of the Dataset is in the following format:
-           <word>+"\ t"+<NE>"\ t"+<word>+"\ t"<markdown>
+           <word>+"\t"+<NE>"\t"+<word>+"\t"<markdown>
            The end of sentence is marked with an empty line.
            In each line NE represented the human annotated named entity 
            and <markdown> represented the code tags provided by the users who wrote the posts.
@@ -606,7 +606,7 @@ class STACKOVERFLOW_NER(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        STACKOVERFLOW_NER_path = "https://github.com/jeniyat/StackOverflowNER/tree/master/resources/annotated_ner_data/StackOverflow/"
+        STACKOVERFLOW_NER_path = "https://raw.githubusercontent.com/jeniyat/StackOverflowNER/master/resources/annotated_ner_data/StackOverflow/"
         cached_path(f"{STACKOVERFLOW_NER_path}train.txt", Path("datasets") / dataset_name)
         cached_path(f"{STACKOVERFLOW_NER_path}test.txt", Path("datasets") / dataset_name)
         cached_path(f"{STACKOVERFLOW_NER_path}dev.txt", Path("datasets") / dataset_name)
@@ -618,7 +618,7 @@ class STACKOVERFLOW_NER(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
-            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            document_separator_token="-DOCSTART-",
             **corpusargs,
         )
 
