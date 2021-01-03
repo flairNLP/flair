@@ -604,65 +604,14 @@ class BUSINESS_HUN(ColumnCorpus):
             path_to_zipped_corpus , 
             data_folder,
             mode = "zip",
-            keep= False #We can delete the .zip file once we extracted it
+            keep= True 
             )
-
-        """
-            Please review these 2 assumptions , as the writer was not an expert on the field.
-
-            Assumption 1:
-            We will try to keep the ratio of elements referring to entities the same in each of 3 files.
-            In order to achieve this distribution , we will split the corpus from sentences.
-            For that we will look for periods.
-
-            Assumption 2:
-            We will split the corpus into train dev , test , train sets each of which will respectively 
-            receive 60% , 20% , 20%. You can modify this by changing the next line. 
-        """
-        portions = {
-            'train' : (0,60) , 
-            'dev' : (60,80) , 
-            'test' : (80,100)
-            }
-
-        dev = open(data_folder / "dev.txt" , "w" , encoding = "latin1")
-        test = open(data_folder / "test.txt" , "w" , encoding = "latin1" )
-        train = open(data_folder / "train.txt" , "w" , encoding = "latin1")
-
-
-        from random import randint
-        with open(data_folder / "hun_ner_corpus.txt" , encoding = "latin1") as corpus:
-            sentence = []
-            
-            while True:  
-                line = corpus.readline()
-                if not line:
-                    break
-                elif line == '\n':
-
-                    sentence.append(line) 
-                    portion = randint(0,100) 
-                    
-                    if portions['test'][0] <= portion and portion < portions['test'][1]:
-                        test.writelines(sentence)
-                    elif portions['dev'][0] <= portion and portion < portions['dev'][1]:
-                        dev.writelines(sentence)
-                    else:
-                        train.writelines(sentence)
-                    sentence = []
-                    
-                else :
-                    sentence.append(line)        
-
-        dev.close()
-        test.close()
-        train.close()
-
 
         super(BUSINESS_HUN, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=None,
+            train_file='hun_ner_corpus.txt',
+            tag_to_bioes= tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
