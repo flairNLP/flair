@@ -1,11 +1,9 @@
 import hashlib
-import pickle
 import inspect
 from abc import abstractmethod
 from pathlib import Path
 from typing import List, Union, Dict, Tuple
 from collections import Counter
-from functools import lru_cache
 
 import torch
 from bpemb import BPEmb
@@ -21,7 +19,7 @@ import numpy as np
 
 from flair.data import Sentence, Token, Corpus, Dictionary
 from flair.embeddings.base import Embeddings, ScalarMix
-from flair.file_utils import cached_path, open_inside_zip
+from flair.file_utils import cached_path, open_inside_zip, instance_lru_cache
 
 log = logging.getLogger("flair")
 
@@ -212,7 +210,7 @@ class WordEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    @lru_cache(maxsize=10000, typed=False)
+    @instance_lru_cache(maxsize=10000, typed=False)
     def get_cached_vec(self, word: str) -> torch.Tensor:
         if word in self.precomputed_word_embeddings:
             word_embedding = self.precomputed_word_embeddings[word]
@@ -1349,7 +1347,7 @@ class FastTextEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    @lru_cache(maxsize=10000, typed=False)
+    @instance_lru_cache(maxsize=10000, typed=False)
     def get_cached_vec(self, word: str) -> torch.Tensor:
         try:
             word_embedding = self.precomputed_word_embeddings[word]
@@ -1557,7 +1555,7 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
         self.language_embeddings = {}
         super().__init__()
 
-    @lru_cache(maxsize=10000, typed=False)
+    @instance_lru_cache(maxsize=10000, typed=False)
     def get_cached_vec(self, language_code: str, word: str) -> torch.Tensor:
         current_embedding_model = self.language_embeddings[language_code]
         if word in current_embedding_model:
