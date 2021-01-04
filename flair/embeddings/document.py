@@ -235,27 +235,16 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
 
             # I have no idea why this is necessary, but otherwise it doesn't work
             for key in embedding.__dict__.keys():
-                # print(key)
-                # print(embedding.__dict__[key])
                 self.__dict__[key] = embedding.__dict__[key]
 
         else:
-
             model_name = self.__dict__['name'].split('transformer-document-')[-1]
-
             # reload tokenizer to get around serialization issues
             try:
                 tokenizer = AutoTokenizer.from_pretrained(model_name)
-
             except:
                 pass
-
             self.tokenizer = tokenizer
-
-            # I have no idea why this is necessary, but otherwise it doesn't work
-            # for key in self.__dict__.keys():
-            #     print(key)
-            #     print(self.__dict__[key])
 
 
 class DocumentPoolEmbeddings(DocumentEmbeddings):
