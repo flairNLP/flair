@@ -889,7 +889,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         tokens = tokenizer.encode(test_string)
 
         for begin_offset, token in enumerate(tokens):
-            if tokenizer.decode(token) == test_string:
+            if tokenizer.decode([token]) == test_string or tokenizer.decode([token]) == tokenizer.unk_token:
                 break
         return begin_offset
 
@@ -1217,6 +1217,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         config_state_dict = self.model.config.__dict__
         model_state_dict = self.model.state_dict()
 
+        if not hasattr(self, "base_model_name"): self.base_model_name = self.name.split('transformer-word-')[-1]
+
         # serialize the transformer models and the constructor arguments (but nothing else)
         model_state = {
             "config_state_dict": config_state_dict,
@@ -1256,6 +1258,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             self.__dict__['respect_document_boundaries'] = True
         if not 'memory_effective_training' in self.__dict__.keys():
             self.__dict__['memory_effective_training'] = True
+        if not 'base_model_name' in self.__dict__.keys():
+            self.__dict__['base_model_name'] = self.__dict__['name'].split('transformer-word-')[-1]
 
         # special handling for deserializing transformer models
         if "config_state_dict" in d:
