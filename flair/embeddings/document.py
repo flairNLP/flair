@@ -4,7 +4,7 @@ from typing import List, Union
 
 import torch
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
-from transformers import BertTokenizer, AlbertTokenizer, AutoTokenizer, AutoConfig, AutoModel
+from transformers import AutoTokenizer, AutoConfig, AutoModel, CONFIG_MAPPING, PreTrainedTokenizer
 
 import flair
 from flair.data import Sentence
@@ -31,12 +31,13 @@ class DocumentEmbeddings(Embeddings):
 
 class TransformerDocumentEmbeddings(DocumentEmbeddings):
     def __init__(
-        self,
-        model: str = "bert-base-uncased",
-        fine_tune: bool = True,
-        batch_size: int = 1,
-        layers: str = "-1",
-        use_scalar_mix: bool = False,
+            self,
+            model: str = "bert-base-uncased",
+            fine_tune: bool = True,
+            batch_size: int = 1,
+            layers: str = "-1",
+            layer_mean: bool = False,
+            **kwargs
     ):
         """
         Bidirectional transformer embeddings of words from various transformer architectures.
@@ -46,7 +47,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         :param batch_size: How many sentence to push through transformer at once. Set to 1 by default since transformer
         models tend to be huge.
         :param layers: string indicating which layers to take for embedding (-1 is topmost layer)
-        :param use_scalar_mix: If True, uses a scalar mix of layers as embedding
+        :param layer_mean: If True, uses a scalar mix of layers as embedding
         """
         super().__init__()
 
@@ -56,12 +57,16 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
         # load tokenizer and transformer model
-        self.tokenizer = AutoTokenizer.from_pretrained(model)
-        config = AutoConfig.from_pretrained(model, output_hidden_states=True)
-        self.model = AutoModel.from_pretrained(model, config=config)
+        self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
+        if not 'config' in kwargs:
+            config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
+            self.model = AutoModel.from_pretrained(model, config=config, **kwargs)
+        else:
+            self.model = AutoModel.from_pretrained(None, **kwargs)
 
         # model name
         self.name = 'transformer-document-' + str(model)
+        self.base_model_name = str(model)
 
         # when initializing, embeddings are in eval mode by default
         self.model.eval()
@@ -75,15 +80,21 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         else:
             self.layer_indexes = [int(x) for x in layers.split(",")]
 
-        self.use_scalar_mix = use_scalar_mix
+        self.layer_mean = layer_mean
         self.fine_tune = fine_tune
         self.static_embeddings = not self.fine_tune
         self.batch_size = batch_size
 
+        # check whether CLS is at beginning or end
+        self.initial_cls_token: bool = self._has_initial_cls_token(tokenizer=self.tokenizer)
+
+    @staticmethod
+    def _has_initial_cls_token(tokenizer: PreTrainedTokenizer) -> bool:
         # most models have CLS token as last token (GPT-1, GPT-2, TransfoXL, XLNet, XLM), but BERT is initial
-        self.initial_cls_token: bool = False
-        if isinstance(self.tokenizer, BertTokenizer) or isinstance(self.tokenizer, AlbertTokenizer):
-            self.initial_cls_token = True
+        tokens = tokenizer.encode('a')
+        initial_cls_token: bool = False
+        if tokens[0] == tokenizer.cls_token_id: initial_cls_token = True
+        return initial_cls_token
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
         """Add embeddings to all words in a list of sentences."""
@@ -110,7 +121,6 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
 
             # subtokenize sentences
             for sentence in sentences:
-
                 # tokenize and truncate to max subtokens (TODO: check better truncation strategies)
                 subtokenized_sentence = self.tokenizer.encode(sentence.to_tokenized_string(),
                                                               add_special_tokens=True,
@@ -147,13 +157,13 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             # iterate over all subtokenized sentences
             for sentence_idx, (sentence, subtokens) in enumerate(zip(sentences, subtokenized_sentences)):
 
-                index_of_CLS_token = 0 if self.initial_cls_token else len(subtokens) -1
+                index_of_CLS_token = 0 if self.initial_cls_token else len(subtokens) - 1
 
                 cls_embeddings_all_layers: List[torch.FloatTensor] = \
                     [hidden_states[layer][sentence_idx][index_of_CLS_token] for layer in self.layer_indexes]
 
                 # use scalar mix of embeddings if so selected
-                if self.use_scalar_mix:
+                if self.layer_mean:
                     sm = ScalarMix(mixture_size=len(cls_embeddings_all_layers))
                     sm_embeddings = sm(cls_embeddings_all_layers)
 
@@ -168,32 +178,92 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         """Returns the length of the embedding vector."""
         return (
             len(self.layer_indexes) * self.model.config.hidden_size
-            if not self.use_scalar_mix
+            if not self.layer_mean
             else self.model.config.hidden_size
         )
 
     def __getstate__(self):
-        state = self.__dict__.copy()
-        state["tokenizer"] = None
-        return state
+        # special handling for serializing transformer models
+        config_state_dict = self.model.config.__dict__
+        model_state_dict = self.model.state_dict()
+
+        if not hasattr(self, "base_model_name"): self.base_model_name = self.name.split('transformer-document-')[-1]
+
+        # serialize the transformer models and the constructor arguments (but nothing else)
+        model_state = {
+            "config_state_dict": config_state_dict,
+            "model_state_dict": model_state_dict,
+            "embedding_length_internal": self.embedding_length,
+
+            "base_model_name": self.base_model_name,
+            "fine_tune": self.fine_tune,
+            "batch_size": self.batch_size,
+            "layer_indexes": self.layer_indexes,
+            "layer_mean": self.layer_mean,
+        }
+
+        return model_state
 
     def __setstate__(self, d):
         self.__dict__ = d
 
-        # reload tokenizer to get around serialization issues
-        model_name = self.name.split('transformer-document-')[-1]
-        try:
-            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        except:
-            pass
+        # necessary for reverse compatibility with Flair <= 0.7
+        if 'use_scalar_mix' in self.__dict__.keys():
+            self.__dict__['layer_mean'] = d['use_scalar_mix']
+
+        # special handling for deserializing transformer models
+        if "config_state_dict" in d:
+
+            # load transformer model
+            config_class = CONFIG_MAPPING[d["config_state_dict"]["model_type"]]
+            loaded_config = config_class.from_dict(d["config_state_dict"])
+
+            # constructor arguments
+            layers = ','.join([str(idx) for idx in self.__dict__['layer_indexes']])
+
+            # re-initialize transformer word embeddings with constructor arguments
+            embedding = TransformerDocumentEmbeddings(
+                model=self.__dict__['base_model_name'],
+                fine_tune=self.__dict__['fine_tune'],
+                batch_size=self.__dict__['batch_size'],
+                layers=layers,
+                layer_mean=self.__dict__['layer_mean'],
+
+                config=loaded_config,
+                state_dict=d["model_state_dict"],
+            )
+
+            # I have no idea why this is necessary, but otherwise it doesn't work
+            for key in embedding.__dict__.keys():
+                # print(key)
+                # print(embedding.__dict__[key])
+                self.__dict__[key] = embedding.__dict__[key]
+
+        else:
+
+            model_name = self.__dict__['name'].split('transformer-document-')[-1]
+
+            # reload tokenizer to get around serialization issues
+            try:
+                tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+            except:
+                pass
+
+            self.tokenizer = tokenizer
+
+            # I have no idea why this is necessary, but otherwise it doesn't work
+            # for key in self.__dict__.keys():
+            #     print(key)
+            #     print(self.__dict__[key])
 
 
 class DocumentPoolEmbeddings(DocumentEmbeddings):
     def __init__(
-        self,
-        embeddings: List[TokenEmbeddings],
-        fine_tune_mode: str = "none",
-        pooling: str = "mean",
+            self,
+            embeddings: List[TokenEmbeddings],
+            fine_tune_mode: str = "none",
+            pooling: str = "mean",
     ):
         """The constructor takes a list of embeddings to be combined.
         :param embeddings: a list of token embeddings
@@ -276,18 +346,18 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
 
 class DocumentRNNEmbeddings(DocumentEmbeddings):
     def __init__(
-        self,
-        embeddings: List[TokenEmbeddings],
-        hidden_size=128,
-        rnn_layers=1,
-        reproject_words: bool = True,
-        reproject_words_dimension: int = None,
-        bidirectional: bool = False,
-        dropout: float = 0.5,
-        word_dropout: float = 0.0,
-        locked_dropout: float = 0.0,
-        rnn_type="GRU",
-        fine_tune: bool = True,
+            self,
+            embeddings: List[TokenEmbeddings],
+            hidden_size=128,
+            rnn_layers=1,
+            reproject_words: bool = True,
+            reproject_words_dimension: int = None,
+            bidirectional: bool = False,
+            dropout: float = 0.5,
+            word_dropout: float = 0.0,
+            locked_dropout: float = 0.0,
+            rnn_type="GRU",
+            fine_tune: bool = True,
     ):
         """The constructor takes a list of embeddings to be combined.
         :param embeddings: a list of token embeddings
@@ -402,7 +472,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             if nb_padding_tokens > 0:
                 t = pre_allocated_zero_tensor[
                     : self.embeddings.embedding_length * nb_padding_tokens
-                ]
+                    ]
                 all_embs.append(t)
 
         sentence_tensor = torch.cat(all_embs).view(
@@ -527,12 +597,13 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
 
         return sentences
 
+
 class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
     def __init__(
-        self,
-        model: str = "bert-base-nli-mean-tokens",
-        batch_size: int = 1,
-        convert_to_numpy: bool = False,
+            self,
+            model: str = "bert-base-nli-mean-tokens",
+            batch_size: int = 1,
+            convert_to_numpy: bool = False,
     ):
         """
         :param model: string name of models from SentencesTransformer Class

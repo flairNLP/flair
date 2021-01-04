@@ -7,8 +7,7 @@ from collections import Counter
 
 import torch
 from bpemb import BPEmb
-from transformers import TransfoXLTokenizer, XLNetTokenizer, T5Tokenizer, GPT2Tokenizer, AutoTokenizer, AutoConfig, \
-    AutoModel, CONFIG_MAPPING, PreTrainedTokenizer
+from transformers import AutoTokenizer, AutoConfig, AutoModel, CONFIG_MAPPING, PreTrainedTokenizer
 
 import flair
 import gensim
@@ -882,15 +881,17 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             self.special_tokens.append(self.tokenizer.cls_token)
 
         # most models have an intial BOS token, except for XLNet, T5 and GPT2
-        self.begin_offset = 1
-        if type(self.tokenizer) == XLNetTokenizer:
-            self.begin_offset = 0
-        if type(self.tokenizer) == T5Tokenizer:
-            self.begin_offset = 0
-        if type(self.tokenizer) == GPT2Tokenizer:
-            self.begin_offset = 0
-        if type(self.tokenizer) == TransfoXLTokenizer:
-            self.begin_offset = 0
+        self.begin_offset = self._get_begin_offset_of_tokenizer(tokenizer=self.tokenizer)
+
+    @staticmethod
+    def _get_begin_offset_of_tokenizer(tokenizer: PreTrainedTokenizer) -> int:
+        test_string = 'a'
+        tokens = tokenizer.encode(test_string)
+
+        for begin_offset, token in enumerate(tokens):
+            if tokenizer.decode(token) == test_string:
+                break
+        return begin_offset
 
     @staticmethod
     def _remove_special_markup(text: str):
@@ -931,7 +932,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # if we also use context, first expand sentence to include context
         if self.context_length > 0:
-
             # in case of contextualization, we must remember non-expanded sentence
             original_sentence = sentence
 
@@ -1015,7 +1015,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             if propagate_gradients:
                 hidden_states = self.model(input_ids)[-1]  # make the tuple a tensor; makes working with it easier.
             else:
-                with torch.no_grad(): # deactivate gradients if not necessary
+                with torch.no_grad():  # deactivate gradients if not necessary
                     hidden_states = self.model(input_ids)[-1]
 
             # get hidden states as single tensor
@@ -1078,7 +1078,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         # move embeddings from context back to original sentence (if using context)
         if self.context_length > 0:
             for token_idx, token in enumerate(original_sentence):
-                token.set_embedding(self.name, sentence[token_idx+context_offset].get_embedding(self.name))
+                token.set_embedding(self.name, sentence[token_idx + context_offset].get_embedding(self.name))
             sentence = original_sentence
 
     def _expand_sentence_with_context(self, sentence):
@@ -1223,6 +1223,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             "model_state_dict": model_state_dict,
             "embedding_length_internal": self.embedding_length,
 
+            "base_model_name": self.base_model_name,
             "name": self.name,
             "layer_indexes": self.layer_indexes,
             "subtoken_pooling": self.pooling_operation,
@@ -1256,18 +1257,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         if not 'memory_effective_training' in self.__dict__.keys():
             self.__dict__['memory_effective_training'] = True
 
-        # constructor arguments
-        layers = ','.join([str(idx) for idx in self.__dict__['layer_indexes']])
-        subtoken_pooling = self.__dict__['subtoken_pooling']
-        context_length = self.__dict__['context_length']
-        layer_mean = self.__dict__['layer_mean']
-        fine_tune = self.__dict__['fine_tune']
-        allow_long_sentences = self.__dict__['allow_long_sentences']
-        respect_document_boundaries = self.__dict__['respect_document_boundaries']
-        memory_effective_training = self.__dict__['memory_effective_training']
-
-        model_name = self.__dict__['name'].split('transformer-word-')[-1]
-
         # special handling for deserializing transformer models
         if "config_state_dict" in d:
 
@@ -1275,19 +1264,24 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             config_class = CONFIG_MAPPING[d["config_state_dict"]["model_type"]]
             loaded_config = config_class.from_dict(d["config_state_dict"])
 
+            # constructor arguments
+            layers = ','.join([str(idx) for idx in self.__dict__['layer_indexes']])
+
             # re-initialize transformer word embeddings with constructor arguments
-            embedding = TransformerWordEmbeddings(model_name,
-                                              layers=layers,
-                                              subtoken_pooling=subtoken_pooling,
-                                              use_context=context_length,
-                                              layer_mean=layer_mean,
-                                              fine_tune=fine_tune,
-                                              allow_long_sentences=allow_long_sentences,
-                                              respect_document_boundaries=respect_document_boundaries,
-                                              memory_effective_training=memory_effective_training,
-                                              config=loaded_config,
-                                              state_dict=d["model_state_dict"],
-                                              )
+            embedding = TransformerWordEmbeddings(
+                model=self.__dict__['base_model_name'],
+                layers=layers,
+                subtoken_pooling=self.__dict__['subtoken_pooling'],
+                use_context=self.__dict__['context_length'],
+                layer_mean=self.__dict__['layer_mean'],
+                fine_tune=self.__dict__['fine_tune'],
+                allow_long_sentences=self.__dict__['allow_long_sentences'],
+                respect_document_boundaries=self.__dict__['respect_document_boundaries'],
+                memory_effective_training=self.__dict__['memory_effective_training'],
+
+                config=loaded_config,
+                state_dict=d["model_state_dict"],
+            )
 
             # I have no idea why this is necessary, but otherwise it doesn't work
             for key in embedding.__dict__.keys():
@@ -1296,9 +1290,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         else:
 
             # reload tokenizer to get around serialization issues
+            model_name = self.__dict__['name'].split('transformer-word-')[-1]
             try:
                 tokenizer = AutoTokenizer.from_pretrained(model_name)
-
             except:
                 pass
 
