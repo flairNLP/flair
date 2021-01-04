@@ -568,7 +568,7 @@ class STACKOVERFLOW_NER(ColumnCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
-            tag_to_bioes: str = "NE",
+            tag_to_bioes: str = "ner",
             in_memory: bool = True,
             document_as_sequence: bool = False,
             **corpusargs,
@@ -587,7 +587,8 @@ class STACKOVERFLOW_NER(ColumnCorpus):
             base_path: Path = Path(base_path)
 
 
-        """The Datasets are represented in the Conll format.
+        """
+        The Datasets are represented in the Conll format.
            In this format each line of the Dataset is in the following format:
            <word>+"\t"+<NE>"\t"+<word>+"\t"<markdown>
            The end of sentence is marked with an empty line.
@@ -595,7 +596,7 @@ class STACKOVERFLOW_NER(ColumnCorpus):
            and <markdown> represented the code tags provided by the users who wrote the posts.
            """
         # column format
-        columns = {0: "word", 1: "NE", 2: "word", 3: "markdown"}
+        columns = {0: "word", 1: "ner", 3: "markdown"}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -610,7 +611,7 @@ class STACKOVERFLOW_NER(ColumnCorpus):
         cached_path(f"{STACKOVERFLOW_NER_path}train.txt", Path("datasets") / dataset_name)
         cached_path(f"{STACKOVERFLOW_NER_path}test.txt", Path("datasets") / dataset_name)
         cached_path(f"{STACKOVERFLOW_NER_path}dev.txt", Path("datasets") / dataset_name)
-        cached_path(f"{STACKOVERFLOW_NER_path}train_merged_labels.txt", Path("datasets") / dataset_name)
+        #cached_path(f"{STACKOVERFLOW_NER_path}train_merged_labels.txt", Path("datasets") / dataset_name)
 
         super(STACKOVERFLOW_NER, self).__init__(
             data_folder,
@@ -618,10 +619,9 @@ class STACKOVERFLOW_NER(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             encoding="utf-8",
             in_memory=in_memory,
-            train_file='train.txt',
+            train_file="train.txt",
             test_file="test.txt",
-            dev_file='dev.txt',
-            skip_first_line=True,
+            dev_file="dev.txt",
             **corpusargs,
         )
 
