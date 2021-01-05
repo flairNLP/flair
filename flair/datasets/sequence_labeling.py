@@ -555,19 +555,42 @@ class CONLL_03_DUTCH(ColumnCorpus):
 
         # download data if necessary
         conll_02_path = "https://www.clips.uantwerpen.be/conll2002/ner/data/"
-        cached_path(f"{conll_02_path}ned.testa", Path("datasets") / dataset_name)
-        cached_path(f"{conll_02_path}ned.testb", Path("datasets") / dataset_name)
-        cached_path(f"{conll_02_path}ned.train", Path("datasets") / dataset_name)
+
+        # download files if not present locally
+        cached_path(f"{conll_02_path}ned.testa", data_folder / 'raw')
+        cached_path(f"{conll_02_path}ned.testb", data_folder / 'raw')
+        cached_path(f"{conll_02_path}ned.train", data_folder / 'raw')
+
+        # we need to slightly modify the original files by adding some new lines after document separators
+        train_data_file = data_folder / 'train.txt'
+        if not train_data_file.is_file():
+            self.__offset_docstarts(data_folder / 'raw' / "ned.train", data_folder / 'train.txt')
+            self.__offset_docstarts(data_folder / 'raw' / "ned.testa", data_folder / 'dev.txt')
+            self.__offset_docstarts(data_folder / 'raw' / "ned.testb", data_folder / 'test.txt')
 
         super(CONLL_03_DUTCH, self).__init__(
             data_folder,
             columns,
+            train_file='train.txt',
+            dev_file='dev.txt',
+            test_file='test.txt',
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
             document_separator_token="-DOCSTART-",
             **corpusargs,
         )
+
+    @staticmethod
+    def __offset_docstarts(file_in: Union[str, Path], file_out: Union[str, Path]):
+        with open(file_in, 'r', encoding="latin-1") as f:
+            lines = f.readlines()
+        with open(file_out, 'w', encoding="latin-1") as f:
+            for line in lines:
+                f.write(line)
+                if line.startswith('-DOCSTART-'):
+                    f.write("\n")
+
 
 
 def add_IOB_tags(data_file: Union[str, Path], encoding: str = "utf8", ner_column: int = 1):
