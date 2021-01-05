@@ -475,10 +475,10 @@ class TextClassifier(flair.nn.Model):
 
         # English sentiment models
         model_map["sentiment"] = "/".join(
-            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_3.1.pt"]
+            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_4.pt"]
         )
         model_map["en-sentiment"] = "/".join(
-            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_3.1.pt"]
+            [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_4.pt"]
         )
         model_map["sentiment-fast"] = "/".join(
             [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn.pt"]
