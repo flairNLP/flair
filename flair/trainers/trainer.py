@@ -342,7 +342,7 @@ class ModelTrainer:
                 batch_loader = DataLoader(
                     train_data,
                     batch_size=mini_batch_size,
-                    shuffle=shuffle,
+                    shuffle=shuffle if self.epoch > 1 else False, # never shuffle the first epoch
                     num_workers=num_workers,
                     sampler=sampler,
                 )
@@ -359,6 +359,7 @@ class ModelTrainer:
                 # process mini-batches
                 batch_time = 0
                 for batch_no, batch in enumerate(batch_loader):
+
                     start_time = time.time()
 
                     # zero the gradients on the model and optimizer
