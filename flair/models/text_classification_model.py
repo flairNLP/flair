@@ -774,6 +774,7 @@ class TARSClassifier(TextClassifier):
         task_name = state["current_task"]
         label_dictionary = state["task_specific_attributes"][task_name]['label_dictionary']
 
+        print("init TARS")
         model = TARSClassifier(task_name, label_dictionary)
         model.task_specific_attributes = state["task_specific_attributes"]
         model.tars_model = state["tars_model"]
@@ -933,7 +934,7 @@ class TARSClassifier(TextClassifier):
         model_map = {}
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
-        model_map["tars-base"] = "/".join([hu_path, "tars-base", "tars-base.pt"])
+        model_map["tars-base"] = "/".join([hu_path, "tars-base", "tars-base-t4.pt"])
 
         cache_dir = Path("models")
         if model_name in model_map:

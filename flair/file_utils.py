@@ -109,6 +109,7 @@ def unzip_file(file: Union[str, Path], unzip_to: Union[str, Path]):
         # Extract all the contents of zip file in current directory
         zipObj.extractall(Path(unzip_to))
 
+
 def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True):
     """
         Unpacks a file to the given location.
@@ -251,10 +252,10 @@ def get_from_cache(url: str, cache_dir: Path = None) -> Path:
 
 
 def open_inside_zip(
-    archive_path: str,
-    cache_dir: Union[str, Path],
-    member_path: Optional[str] = None,
-    encoding: str = "utf8",
+        archive_path: str,
+        cache_dir: Union[str, Path],
+        member_path: Optional[str] = None,
+        encoding: str = "utf8",
 ) -> iter:
     cached_archive_path = cached_path(archive_path, cache_dir=Path(cache_dir))
     archive = zipfile.ZipFile(cached_archive_path, "r")
@@ -267,7 +268,7 @@ def open_inside_zip(
 
 
 def get_the_only_file_in_the_archive(
-    members_list: Sequence[str], archive_path: str
+        members_list: Sequence[str], archive_path: str
 ) -> str:
     if len(members_list) > 1:
         raise ValueError(
@@ -284,7 +285,7 @@ def get_the_only_file_in_the_archive(
 
 
 def format_embeddings_file_uri(
-    main_file_path_or_url: str, path_inside_archive: Optional[str] = None
+        main_file_path_or_url: str, path_inside_archive: Optional[str] = None
 ) -> str:
     if path_inside_archive:
         return "({})#{}".format(main_file_path_or_url, path_inside_archive)
@@ -321,6 +322,7 @@ class Tqdm:
 
         return _tqdm(*args, **new_kwargs)
 
+
 def instance_lru_cache(*cache_args, **cache_kwargs):
     def decorator(func):
         @functools.wraps(func)
@@ -329,5 +331,7 @@ def instance_lru_cache(*cache_args, **cache_kwargs):
             instance_cache = instance_cache.__get__(self, self.__class__)
             setattr(self, func.__name__, instance_cache)
             return instance_cache(*args, **kwargs)
+
         return create_cache
+
     return decorator
