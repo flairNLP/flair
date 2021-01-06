@@ -597,23 +597,28 @@ class BUSINESS_HUN(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        # download data if necessary
-        hun_ner_path = "https://rgai.sed.hu/sites/rgai.sed.hu/files/business_NER.zip"
-        path_to_zipped_corpus = cached_path(hun_ner_path, Path("datasets") / dataset_name)
-        unpack_file(
-            path_to_zipped_corpus , 
-            data_folder,
-            mode = "zip",
-            keep= True 
-            )
-
+        # If the extracted corpus file is not yet present in dir
+        if not os.path.isfile(data_folder / 'hun_ner_corpus.txt'):
+            # download zip if necessary
+            hun_ner_path = "https://rgai.sed.hu/sites/rgai.sed.hu/files/business_NER.zip"
+            path_to_zipped_corpus = cached_path(hun_ner_path, Path("datasets") / dataset_name)
+            # extracted corpus is not present , so unpacking it.
+            unpack_file(
+                path_to_zipped_corpus , 
+                data_folder,
+                mode = "zip",
+                keep= True 
+                )
+       
         super(BUSINESS_HUN, self).__init__(
             data_folder,
             columns,
             train_file='hun_ner_corpus.txt',
+            column_delimiter= '\t' ,
             tag_to_bioes= tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
+            label_name_map={'0': 'O'},
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             **corpusargs,
         )
