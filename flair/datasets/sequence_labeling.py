@@ -8,7 +8,7 @@ from typing import Union, Dict, List
 import flair
 from flair.data import Corpus, MultiCorpus, FlairDataset, Sentence, Token
 from flair.datasets.base import find_train_dev_test_files
-from flair.file_utils import cached_path, unpack_file
+from flair.file_utils import cached_path, unpack_file , unzip_file
 
 log = logging.getLogger("flair")
 
@@ -591,6 +591,66 @@ class CONLL_03_DUTCH(ColumnCorpus):
                 if line.startswith('-DOCSTART-'):
                     f.write("\n")
 
+
+
+class BUSINESS_HUN(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+            **corpusargs,
+    ):
+        """
+        Initialize the NER Business corpus for Hungarian. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+        
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # If the extracted corpus file is not yet present in dir
+        if not os.path.isfile(data_folder / 'hun_ner_corpus.txt'):
+            # download zip if necessary
+            hun_ner_path = "https://rgai.sed.hu/sites/rgai.sed.hu/files/business_NER.zip"
+            path_to_zipped_corpus = cached_path(hun_ner_path, Path("datasets") / dataset_name)
+            # extracted corpus is not present , so unpacking it.
+            unpack_file(
+                path_to_zipped_corpus , 
+                data_folder,
+                mode = "zip",
+                keep= True 
+                )
+       
+        super(BUSINESS_HUN, self).__init__(
+            data_folder,
+            columns,
+            train_file='hun_ner_corpus.txt',
+            column_delimiter= '\t' ,
+            tag_to_bioes= tag_to_bioes,
+            encoding="latin-1",
+            in_memory=in_memory,
+            label_name_map={'0': 'O'},
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            **corpusargs,
+        )
 
 
 def add_IOB_tags(data_file: Union[str, Path], encoding: str = "utf8", ner_column: int = 1):

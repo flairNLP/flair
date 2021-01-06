@@ -54,6 +54,7 @@ from .sequence_labeling import WNUT_17
 from .sequence_labeling import WSD_UFSAC
 from .sequence_labeling import WNUT_2020_NER
 from .sequence_labeling import XTREME
+from .sequence_labeling import BUSINESS_HUN
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
