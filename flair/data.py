@@ -1,6 +1,7 @@
 import torch, flair
 import logging
 import re
+import ast
 
 from abc import abstractmethod, ABC
 
@@ -594,6 +595,8 @@ class Sentence(DataPoint):
         # some sentences represent a document boundary (but most do not)
         self.is_document_boundary: bool = False
 
+        self.relations = self._get_relations_from_tags()
+
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
             if token.idx == token_id:
@@ -989,6 +992,58 @@ class Sentence(DataPoint):
         :return: True if context is set, else False
         """
         return '_previous_sentence' in self.__dict__.keys() or '_position_in_dataset' in self.__dict__.keys()
+
+    def create_relations(self):
+        result = []
+        spans = self.get_spans('ner')
+        relations_from_tags = self._get_relations_from_tags()
+        for i, span_i in enumerate(spans):
+            for j, span_j in enumerate(spans):
+                if i == j:
+                    continue
+
+                relation_exists = False
+                for relation in relations_from_tags:
+                    if relation[0] == i and relation[1] == j:
+                        result.append(Relation(span_i, span_j, Label(relation[2])))
+                        relation_exists = True
+                if not relation_exists:
+                    result.append(Relation(span_i, span_j, Label('N')))
+
+        for relation in result:
+            print(relation)
+        return result
+
+    def _get_relations_from_tags(self):
+        result = []
+
+        for i, span in enumerate(self.get_spans('ner')):
+            print(span)
+            last_token_idx = span.tokens[-1].idx
+
+            raw_relations = self.get_spans('relation')
+            # raw_relations[last_token_idx - 1] possible if all negatives are explicitly tagged
+            raw_relations = [i for i in raw_relations if i.tokens[0].idx == last_token_idx][0]
+            relations = ast.literal_eval(raw_relations.labels[0].value)
+
+            raw_relation_deps = self.get_spans('relation_dep')
+            raw_relation_deps = [i for i in raw_relation_deps if i.tokens[0].idx == last_token_idx][0]
+            relation_deps = ast.literal_eval(raw_relation_deps.labels[0].value)
+
+            for j, relation in enumerate(relations):
+                if relation != 'N':
+                    dep_idx = self._get_span_idx_from_relation_idx(relation_deps[j])
+                    result.append((i, dep_idx, relation))
+
+        return result
+
+    def _get_span_idx_from_relation_idx(self, relation_idx: int):
+        ner_spans = self.get_spans('ner')
+        for span_idx, span in enumerate(ner_spans):
+            token_indices = [i.idx for i in span.tokens]
+            if relation_idx + 1 in token_indices:
+                return span_idx
+        return None
 
 
 class Image(DataPoint):
@@ -1443,3 +1498,32 @@ def randomly_split_into_two_datasets(dataset, length_of_first):
     second_dataset.sort()
 
     return [Subset(dataset, first_dataset), Subset(dataset, second_dataset)]
+
+
+class Relation(DataPoint):
+    def __init__(self, first: Span, second: Span, label: Label):
+        super().__init__()
+        self.first = first
+        self.second = second
+        self.add_label("relation_type", label.value, label.score)
+
+    def to(self, device: str, pin_memory: bool = False):
+        self.first.to(device, pin_memory)
+        self.second.to(device, pin_memory)
+
+    def clear_embeddings(self, embedding_names: List[str] = None):
+        self.first.clear_embeddings(embedding_names)
+        self.second.clear_embeddings(embedding_names)
+
+    @property
+    def embedding(self):
+        return torch.cat([self.first.embedding, self.second.embedding])
+
+    def __str__(self):
+        return f"Relation:\n − First {self.first}\n − Second {self.second}\n − Labels: {self.labels}"
+
+    def to_plain_string(self):
+        return f"Relation: First {self.first}  ||  Second {self.second}"
+
+    def __len__(self):
+        return len(self.first) + len(self.second)
