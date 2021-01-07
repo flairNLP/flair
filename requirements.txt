@@ -1,5 +1,5 @@
 python-dateutil>=2.6.1
-torch>=1.1.0
+torch>=1.5.0
 gensim>=3.4.0,<=3.8.3
 tqdm>=4.26.0
 segtok>=1.5.7
