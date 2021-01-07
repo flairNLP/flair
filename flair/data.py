@@ -419,7 +419,7 @@ class Span(DataPoint):
             pos += len(t.text)
 
         return str
-     
+
     def to_plain_string(self):
         plain = ""
         for token in self.tokens:
@@ -993,7 +993,6 @@ class Sentence(DataPoint):
         """
         return '_previous_sentence' in self.__dict__.keys() or '_position_in_dataset' in self.__dict__.keys()
 
-    def create_relations(self):
     def build_relations(self):
         result = []
         spans = self.get_spans('ner')
@@ -1042,7 +1041,6 @@ class Sentence(DataPoint):
             if relation_idx + 1 in token_indices:
                 return span_idx
         return None
-
 
 class Image(DataPoint):
 
@@ -1521,7 +1519,7 @@ class Relation(DataPoint):
         return f"Relation:\n − First {self.first}\n − Second {self.second}\n − Labels: {self.labels}"
 
     def to_plain_string(self):
-        return f"Relation: First {self.first}  ||  Second {self.second} || Labels: {self.labels}"
+        return f"Relation: First {self.first}  ||  Second {self.second}"
 
     def __len__(self):
         return len(self.first) + len(self.second)
