@@ -47,6 +47,32 @@ class TokenEmbeddings(Embeddings):
         return instance_parameters
 
 
+class DummyEmbeddings(TokenEmbeddings):
+    """
+    Dummy token embedding that can be passed to other models like the sequence tagger if all sentences are already embedded.
+    Otherwise, when called it will just create random embeddings for each token.
+    """
+
+    def __init__(self, embedding_dim, name="dummy"):
+        """constructor to create dummy embeddings of a given dimensionality and with a certain name"""
+        super().__init__()
+        self.name = name
+        self.static_embeddings = True
+        self.embedding_dim = embedding_dim
+
+    @property
+    def embedding_length(self) -> int:
+        """Returns the length of the embedding vector."""
+        return self.embedding_dim
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+        # in case we should be forced to create an embedding
+        for sentence in sentences:
+            for token in sentence:
+                token.set_embedding(self.name, torch.randn(self.embedding_dim, dtype=torch.float32))
+        return sentences
+
+
 class StackedEmbeddings(TokenEmbeddings):
     """A stack of embeddings, used if you need to combine several different embedding types."""
 
