@@ -966,11 +966,10 @@ class Sentence(DataPoint):
         result = []
 
         for i, span in enumerate(self.get_spans('ner')):
-            print(span)
             last_token_idx = span.tokens[-1].idx
 
             raw_relations = self.get_spans('relation')
-            # raw_relations[last_token_idx - 1] possible if all negatives are explicitly tagged
+            # raw_relations[last_token_idx - 1] possible if all negatives are explicitly tagged, otherwise:
             raw_relations = [i for i in raw_relations if i.tokens[0].idx == last_token_idx][0]
             relations = ast.literal_eval(raw_relations.labels[0].value)
 
@@ -1455,7 +1454,7 @@ class Relation(DataPoint):
         return f"Relation:\n − First {self.first}\n − Second {self.second}\n − Labels: {self.labels}"
 
     def to_plain_string(self):
-        return f"Relation: First {self.first}  ||  Second {self.second}"
+        return f"Relation: First {self.first}  ||  Second {self.second} || Labels: {self.labels}"
 
     def __len__(self):
         return len(self.first) + len(self.second)
