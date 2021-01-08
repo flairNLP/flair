@@ -1519,7 +1519,7 @@ class Relation(DataPoint):
         return f"Relation:\n − First {self.first}\n − Second {self.second}\n − Labels: {self.labels}"
 
     def to_plain_string(self):
-        return f"Relation: First {self.first}  ||  Second {self.second}"
+        return f"Relation: First {self.first}  ||  Second {self.second} || Labels: {self.labels}"
 
     def __len__(self):
         return len(self.first) + len(self.second)
