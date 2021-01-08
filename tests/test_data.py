@@ -10,7 +10,8 @@ from flair.data import (
     Token,
     Dictionary,
     Corpus,
-    Span, Relation
+    Span,
+    Relation
 )
 from flair.tokenization import (
     SpacyTokenizer,
