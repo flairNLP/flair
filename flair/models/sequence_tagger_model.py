@@ -330,6 +330,15 @@ class SequenceTagger(flair.nn.Model):
             if isinstance(sentences, Sentence):
                 sentences = [sentences]
 
+            # set context if not set already
+            previous_sentence = None
+            for sentence in sentences:
+                if sentence.is_context_set(): continue
+                sentence._previous_sentence = previous_sentence
+                sentence._next_sentence = None
+                if previous_sentence: previous_sentence._next_sentence = sentence
+                previous_sentence = sentence
+
             # reverse sort all sequences by their length
             rev_order_len_index = sorted(
                 range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True
@@ -508,6 +517,7 @@ class SequenceTagger(flair.nn.Model):
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 32,
             num_workers: int = 8,
+            wsd_evaluation: bool = False
     ) -> (Result, float):
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
@@ -516,7 +526,7 @@ class SequenceTagger(flair.nn.Model):
         data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
 
         # if span F1 needs to be used, use separate eval method
-        if self._requires_span_F1_evaluation():
+        if self._requires_span_F1_evaluation() and not wsd_evaluation:
             return self._evaluate_with_span_F1(data_loader, embedding_storage_mode, mini_batch_size, out_path)
 
         # else, use scikit-learn to evaluate
@@ -548,7 +558,14 @@ class SequenceTagger(flair.nn.Model):
                     y_true.append(labels.add_item(gold_tag))
 
                     # add predicted tag
-                    predicted_tag = token.get_tag('predicted').value
+                    if wsd_evaluation:
+                        if gold_tag == 'O':
+                            predicted_tag = 'O'
+                        else:
+                            predicted_tag = token.get_tag('predicted').value
+                    else:
+                        predicted_tag = token.get_tag('predicted').value
+
                     y_pred.append(labels.add_item(predicted_tag))
 
                     # for file output
@@ -1028,7 +1045,7 @@ class SequenceTagger(flair.nn.Model):
             # French models
             "fr-ner": "/".join([hu_path, "fr-ner", "fr-ner-wikiner-0.4.pt"]),
             # Dutch models
-            "nl-ner": "/".join([hu_path, "nl-ner", "nl-ner-bert-conll02-v0.6.pt"]),
+            "nl-ner": "/".join([hu_path, "nl-ner", "nl-ner-bert-conll02-v0.8.pt"]),
             "nl-ner-rnn": "/".join([hu_path, "nl-ner-rnn", "nl-ner-conll02-v0.5.pt"]),
             # Malayalam models
             "ml-pos": "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt",
