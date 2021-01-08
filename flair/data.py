@@ -994,6 +994,7 @@ class Sentence(DataPoint):
         return '_previous_sentence' in self.__dict__.keys() or '_position_in_dataset' in self.__dict__.keys()
 
     def create_relations(self):
+    def build_relations(self):
         result = []
         spans = self.get_spans('ner')
         relations_from_tags = self._get_relations_from_tags()
@@ -1010,8 +1011,6 @@ class Sentence(DataPoint):
                 if not relation_exists:
                     result.append(Relation(span_i, span_j, Label('N')))
 
-        for relation in result:
-            print(relation)
         return result
 
     def _get_relations_from_tags(self):

@@ -10,7 +10,7 @@ from flair.data import (
     Token,
     Dictionary,
     Corpus,
-    Span
+    Span, Relation
 )
 from flair.tokenization import (
     SpacyTokenizer,
@@ -897,61 +897,49 @@ def test_pretokenized():
         assert token.text == pretoks[i]
 
 
-def test_get_ner_span_idx_from_relation_idx():
-    sentence = Sentence("Person A works for company B .")
-
-    sentence[0].add_tag("ner", "B-Peop")
-    sentence[1].add_tag("ner", "I-Peop")
-    sentence[4].add_tag("ner", "B-Org")
-    sentence[5].add_tag("ner", "I-Org")
-
-    # token indices start at 1, conll04 indices start at 0
-    idx_loc = sentence._get_span_idx_from_relation_idx(5)
-    idx_peop = sentence._get_span_idx_from_relation_idx(1)
-    idx_non_ner = sentence._get_span_idx_from_relation_idx(2)
-    assert idx_loc == 1
-    assert idx_peop == 0
-    assert idx_non_ner is None
-
-
-def test_get_relations():
-    sentence = Sentence("Person A , born in city C , works for company B .")
+@pytest.fixture
+def sentence_with_relations():
+    # city single-token, person and company multi-token
+    sentence = Sentence("Person A , born in city , works for company B .")
 
     sentence[0].add_tag("ner", "B-Peop")
     sentence[1].add_tag("ner", "I-Peop")
     sentence[1].add_tag("relation", "['Born_In', 'Works_For']")
-    sentence[1].add_tag("relation_dep", "[6, 11]")
+    sentence[1].add_tag("relation_dep", "[5, 10]")
     sentence[5].add_tag("ner", "B-Loc")
-    sentence[6].add_tag("ner", "I-Loc")
-    sentence[10].add_tag("ner", "B-Org")
-    sentence[11].add_tag("ner", "I-Org")
+    sentence[9].add_tag("ner", "B-Org")
+    sentence[10].add_tag("ner", "I-Org")
     for i in range(len(sentence)):
         if i != 1:
             sentence[i].add_tag("relation", "['N']")
             sentence[i].add_tag("relation_dep", f"[{i}]")
 
-    result = sentence._get_relations_from_tags()
+    return sentence
+
+
+def test_get_ner_span_idx_from_relation_idx(sentence_with_relations):
+    result = [sentence_with_relations._get_span_idx_from_relation_idx(i) for i in range(len(sentence_with_relations))]
+    expected_result = [0, 0, None, None, None, 1, None, None, None, 2, 2, None]
+
+    assert result == expected_result
+
+
+def test_get_relations_from_tags(sentence_with_relations):
+    result = sentence_with_relations._get_relations_from_tags()
     expected_result = [(0, 1, 'Born_In'), (0, 2, 'Works_For')]
 
     assert result == expected_result
 
-def test_create_relations():
-    sentence = Sentence("Person A , born in city C , works for company B .")
 
-    sentence[0].add_tag("ner", "B-Peop")
-    sentence[1].add_tag("ner", "I-Peop")
-    sentence[1].add_tag("relation", "['Born_In', 'Works_For']")
-    sentence[1].add_tag("relation_dep", "[6, 11]")
-    sentence[5].add_tag("ner", "B-Loc")
-    sentence[6].add_tag("ner", "I-Loc")
-    sentence[10].add_tag("ner", "B-Org")
-    sentence[11].add_tag("ner", "I-Org")
-    for i in range(len(sentence)):
-        if i != 1:
-            sentence[i].add_tag("relation", "['N']")
-            sentence[i].add_tag("relation_dep", f"[{i}]")
+def test_build_relations(sentence_with_relations):
+    result = sentence_with_relations.build_relations()
 
-    result = sentence.create_relations()
-    expected_result = [(0, 1, 'Born_In'), (0, 2, 'Works_For')]
+    spans = sentence_with_relations.get_spans("ner")
+    expected_result = [Relation(spans[0], spans[1], Label('Born_In')),
+                       Relation(spans[0], spans[2], Label('Works_For')),
+                       Relation(spans[1], spans[0], Label('N')),
+                       Relation(spans[1], spans[2], Label('N')),
+                       Relation(spans[2], spans[0], Label('N')),
+                       Relation(spans[2], spans[1], Label('N')),]
 
-    assert result == expected_result
+    assert [str(relation) for relation in result] == [str(relation) for relation in expected_result]
