@@ -89,14 +89,14 @@ class TARSSequenceTagger2(flair.nn.Model):
         self.cleaned_up_tags = {}
 
         # insert tags missing in tag_dictionary (e.g. if only I-PER or only B-PER is in it, but the other not)
-        for tag in tag_dictionary.idx2item:
-            tag = tag.decode("utf-8")
-            tag_prefix, tag_no_prefix = self._split_tag(tag)
-            if tag_prefix == "B":
-                tag_dictionary.add_item("I-" + tag_no_prefix)
-            elif tag_prefix == "I":
-                tag_dictionary.add_item("B-" + tag_no_prefix)
-        print(tag_dictionary)
+        # for tag in tag_dictionary.idx2item:
+        #     tag = tag.decode("utf-8")
+        #     tag_prefix, tag_no_prefix = self._split_tag(tag)
+        #     if tag_prefix == "B":
+        #         tag_dictionary.add_item("I-" + tag_no_prefix)
+        #     elif tag_prefix == "I":
+        #         tag_dictionary.add_item("B-" + tag_no_prefix)
+        # print(tag_dictionary)
 
         # Store task specific tags since TARS can handle multiple tasks
         self.current_task = None
@@ -523,7 +523,7 @@ class TARSSequenceTagger2(flair.nn.Model):
                 if not batch:
                     continue
 
-                tag_scores, longest_token_sequence_in_batch = self._forward_four_dims(batch)
+                tag_scores = self._forward_four_dims(batch)
                 feature = self._transform_tars_scores(tag_scores)
                 if return_loss:
                     overall_loss += self._calculate_loss_four_dims(tag_scores, batch)
@@ -602,7 +602,7 @@ class TARSSequenceTagger2(flair.nn.Model):
         return self._calculate_loss_three_dims(tag_scores, data_points)
 
     def forward(self, sentences: List[Sentence]):
-        tag_scores, longest_token_sequence_in_batch = self._forward_four_dims(sentences)
+        tag_scores = self._forward_four_dims(sentences)
         transformed_scores = self._transform_tars_scores(tag_scores)
         return transformed_scores
 
@@ -671,7 +671,7 @@ class TARSSequenceTagger2(flair.nn.Model):
             sentence_tensor = self.locked_dropout_four_dims(sentence_tensor)
 
         tag_scores = self.linear(sentence_tensor)
-        return tag_scores, longest_token_sequence_in_batch
+        return tag_scores
 
     # N+ x L x 2
     def _forward_three_dims(self, sentences: List[Sentence]):
