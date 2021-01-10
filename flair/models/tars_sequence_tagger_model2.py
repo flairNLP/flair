@@ -372,7 +372,6 @@ class TARSSequenceTagger2(flair.nn.Model):
             else:
                 tag_text_pair_sentence[idx_in_new_sent].add_tag(self.static_tag_type, self.static_tag_outside)
 
-        #print(tag_text_pair_sentence)
         return tag_text_pair_sentence
 
     def _get_tars_formatted_sentences(self, sentences, full_forward=False):
@@ -385,11 +384,7 @@ class TARSSequenceTagger2(flair.nn.Model):
             if not full_forward and self.num_negative_tags_to_sample is not None:
                 tags_of_sentence = {self._split_tag(token.get_tag(self.tag_type).value)[1] for token in sentence}
                 tags_of_sentence = {tag for tag in tags_of_sentence if tag is not None}
-                #print("##################")
-                #print(tags_of_sentence)
                 sampled_tags_not_in_sentence = self._get_nearest_tags_for(tags_of_sentence)
-                #sampled_tags_not_in_sentence)
-                #print("##################")
                 for tag in tags_of_sentence:
                     tag_text_pairs_for_sentence.append( \
                         self._get_tars_formatted_sentence(tag, sentence))
@@ -520,7 +515,6 @@ class TARSSequenceTagger2(flair.nn.Model):
 
                 tag_scores, longest_token_sequence_in_batch = self._forward_four_dims(batch)
                 feature = self._transform_tars_scores(tag_scores)
-                print(feature)
                 if return_loss:
                     overall_loss += self._calculate_loss_four_dims(tag_scores, batch)
 
@@ -667,7 +661,6 @@ class TARSSequenceTagger2(flair.nn.Model):
             sentence_tensor = self.locked_dropout_four_dims(sentence_tensor)
 
         tag_scores = self.linear(sentence_tensor)
-        print(tag_scores)
         return tag_scores, longest_token_sequence_in_batch
 
     # N+ x L x 2
