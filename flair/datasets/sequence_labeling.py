@@ -22,6 +22,7 @@ class ColumnCorpus(Corpus):
             test_file=None,
             dev_file=None,
             tag_to_bioes=None,
+            tag_to_bio2=None,
             column_delimiter: str = r"\s+",
             comment_symbol: str = None,
             encoding: str = "utf-8",
@@ -59,6 +60,7 @@ class ColumnCorpus(Corpus):
             train_file,
             column_format,
             tag_to_bioes,
+            tag_to_bio2,
             encoding=encoding,
             comment_symbol=comment_symbol,
             column_delimiter=column_delimiter,
@@ -73,6 +75,7 @@ class ColumnCorpus(Corpus):
             test_file,
             column_format,
             tag_to_bioes,
+            tag_to_bio2,
             encoding=encoding,
             comment_symbol=comment_symbol,
             column_delimiter=column_delimiter,
@@ -87,6 +90,7 @@ class ColumnCorpus(Corpus):
             dev_file,
             column_format,
             tag_to_bioes,
+            tag_to_bio2,
             encoding=encoding,
             comment_symbol=comment_symbol,
             column_delimiter=column_delimiter,
@@ -108,6 +112,7 @@ class ColumnDataset(FlairDataset):
             path_to_column_file: Union[str, Path],
             column_name_map: Dict[int, str],
             tag_to_bioes: str = None,
+            tag_to_bio2: str = None,
             column_delimiter: str = r"\s+",
             comment_symbol: str = None,
             in_memory: bool = True,
@@ -134,6 +139,7 @@ class ColumnDataset(FlairDataset):
         assert path_to_column_file.exists()
         self.path_to_column_file = path_to_column_file
         self.tag_to_bioes = tag_to_bioes
+        self.tag_to_bio2 = tag_to_bio2
         self.column_name_map = column_name_map
         self.column_delimiter = column_delimiter
         self.comment_symbol = comment_symbol
@@ -295,6 +301,7 @@ class ColumnDataset(FlairDataset):
             with open(str(self.path_to_column_file), encoding=self.encoding) as file:
                 file.seek(self.indices[index])
                 sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
+
 
             # set sentence context using partials
             sentence._position_in_dataset = (self, index)
