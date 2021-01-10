@@ -88,6 +88,16 @@ class TARSSequenceTagger2(flair.nn.Model):
         self.tag_nearest_map = None
         self.cleaned_up_tags = {}
 
+        # insert tags missing in tag_dictionary (e.g. if only I-PER or only B-PER is in it, but the other not)
+        for tag in tag_dictionary.idx2item:
+            tag = tag.decode("utf-8")
+            tag_prefix, tag_no_prefix = self._split_tag(tag)
+            if tag_prefix == "B":
+                tag_dictionary.add_item("I-" + tag_no_prefix)
+            elif tag_prefix == "I":
+                tag_dictionary.add_item("B-" + tag_no_prefix)
+        print(tag_dictionary)
+
         # Store task specific tags since TARS can handle multiple tasks
         self.current_task = None
         self.task_specific_attributes = {}
