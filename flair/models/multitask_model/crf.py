@@ -13,33 +13,38 @@ class CRF(nn.Module):
 
     def __init__(self, hidden_dim, tag_dictionary, tagset_size):
         super(CRF, self).__init__()
+        self.tagset_size = tagset_size
+        self.tag_dictionary = tag_dictionary
         self.emission = nn.Linear(hidden_dim, tagset_size)
-        self.transitions = torch.nn.Parameter(torch.randn(self.tagset_size, self.tagset_size))
+        self.transitions = torch.nn.Parameter(torch.randn(tagset_size, tagset_size))
         self.transitions.detach()[tag_dictionary.get_idx_for_item(START_TAG), :] = -10000
         self.transitions.detach()[:, tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000
 
+    def forward(self, lstm_features):
+        emission_scores = self.emission(lstm_features)
+        return emission_scores
+
     def forward_alg(self, features, lengths):
-        emission_scores = self.emission(features)
 
         init_alphas = torch.FloatTensor(self.tagset_size).fill_(-10000.0)
         init_alphas[self.tag_dictionary.get_idx_for_item(START_TAG)] = 0.0
 
         forward_var = torch.zeros(
-            emission_scores.shape[0],
-            emission_scores.shape[1] + 1,
-            emission_scores.shape[2],
+            features.shape[0],
+            features.shape[1] + 1,
+            features.shape[2],
             dtype=torch.float,
             device=flair.device,
         )
 
-        forward_var[:, 0, :] = init_alphas[None, :].repeat(emission_scores.shape[0], 1)
+        forward_var[:, 0, :] = init_alphas[None, :].repeat(features.shape[0], 1)
 
         transitions = self.transitions.view(
             1, self.transitions.shape[0], self.transitions.shape[1]
-        ).repeat(emission_scores.shape[0], 1, 1)
+        ).repeat(features.shape[0], 1, 1)
 
-        for i in range(emission_scores.shape[1]):
-            emit_score = emission_scores[:, i, :]
+        for i in range(features.shape[1]):
+            emit_score = features[:, i, :]
 
             tag_var = (
                     emit_score[:, :, None].repeat(1, 1, transitions.shape[2])
@@ -64,9 +69,7 @@ class CRF(nn.Module):
 
         forward_var = forward_var[range(forward_var.shape[0]), lengths, :]
 
-        terminal_var = forward_var + self.transitions[
-                                         self.tag_dictionary.get_idx_for_item(STOP_TAG)
-                                     ][None, :].repeat(forward_var.shape[0], 1)
+        terminal_var = forward_var + self.transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)][None, :].repeat(forward_var.shape[0], 1)
 
         alpha = log_sum_exp_batch(terminal_var)
 

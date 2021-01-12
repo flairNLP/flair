@@ -16,13 +16,6 @@ def get_tags_tensor(sentences, tag_dictionary, tag_type):
         tag = torch.tensor(tag_idx, device=flair.device)
         tag_list.append(tag)
 
-    padded_tags_list = pad_sequence(tag_list, batch_first = True)
+    padded_tag_tensor = pad_sequence(tag_list, batch_first=True)
 
-    # This will be row_index (i.e. prev_tag) * n_columns (i.e. tagset_size) + column_index (i.e. cur_tag)
-    crf_tags = list(map(
-                lambda s: [tag_dictionary.get_idx_for_item('<START>') * len(tag_dictionary) + s[0]] + [s[i - 1] * len(tag_dictionary) + s[i]
-                for i in range(1, len(s))], padded_tags_list))
-
-    tags_tensor = torch.LongTensor(crf_tags)
-
-    return tags_tensor
+    return padded_tag_tensor

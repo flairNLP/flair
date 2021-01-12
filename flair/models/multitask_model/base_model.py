@@ -83,6 +83,8 @@ class BaseModel(flair.nn.Model):
         else:
             self.linear2tag = torch.nn.Linear(rnn_input_dim, len(tag_dictionary))
 
+        self.to(flair.device)
+
     @staticmethod
     def RNN(rnn_type: str, rnn_layers: int, hidden_size: int, bidirectional: bool, rnn_input_dim: int):
         RNN = getattr(torch.nn, rnn_type)(
@@ -129,12 +131,17 @@ class BaseModel(flair.nn.Model):
         else:
             pass
 
-        if self.use_dropout > 0.0:
-            sentence_tensor = self.dropout(sentence_tensor)
-        if self.use_locked_dropout > 0.0:
-            sentence_tensor = self.locked_dropout(sentence_tensor)
+        if self.use_crf:
+            features = self.crf(sentence_tensor)
+        else:
+            features = self.linear2tag(sentence_tensor)
 
-        return sentence_tensor
+        if self.use_dropout > 0.0:
+            features = self.dropout(features)
+        if self.use_locked_dropout > 0.0:
+            features = self.locked_dropout(features)
+
+        return features
 
 
     def loss(self, features, sentences):
@@ -145,7 +152,7 @@ class BaseModel(flair.nn.Model):
         if self.use_crf:
             forward_score = self.crf.forward_alg(features, lengths)
             gold_score = self.crf.score_sentence(features, tags_tensor, lengths)
-            loss = forward_score - gold_score
+            loss = (forward_score - gold_score).mean()
         else:
             loss = self.cross_entropy_loss(features, tags_tensor)
 
