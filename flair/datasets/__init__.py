@@ -26,6 +26,7 @@ from .sequence_labeling import MIT_RESTAURANT_NER
 from .sequence_labeling import NER_BASQUE
 from .sequence_labeling import NER_FINNISH
 from .sequence_labeling import NER_SWEDISH
+from .sequence_labeling import STACKOVERFLOW_NER
 from .sequence_labeling import SEMEVAL2010
 from .sequence_labeling import SEMEVAL2017
 from .sequence_labeling import TURKU_NER
