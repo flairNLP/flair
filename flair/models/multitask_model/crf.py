@@ -1,94 +1,105 @@
 import torch
 from torch import nn
-from torch.nn.utils.rnn import pack_padded_sequence
+from torch.nn.utils.rnn import pack_padded_sequence, pad_sequence
 
+import flair
 from flair.data import Dictionary
+from flair.models.sequence_tagger_model import log_sum_exp_batch
 
-from .utils import log_sum_exp
+START_TAG: str = "<START>"
+STOP_TAG: str = "<STOP>"
 
 class CRF(nn.Module):
-    """
-    Conditional Random Field.
-    """
 
-    def __init__(self, hidden_dim, tagset_size):
-        """
-        :param hidden_dim: size of word RNN/BLSTM's output
-        :param tagset_size: number of tags
-        """
+    def __init__(self, hidden_dim, tag_dictionary, tagset_size):
         super(CRF, self).__init__()
-        self.tagset_size = tagset_size
-        self.emission = nn.Linear(hidden_dim, self.tagset_size)
-        self.transition = nn.Parameter(torch.Tensor(self.tagset_size, self.tagset_size))
-        self.transition.data.zero_()
+        self.emission = nn.Linear(hidden_dim, tagset_size)
+        self.transitions = torch.nn.Parameter(torch.randn(self.tagset_size, self.tagset_size))
+        self.transitions.detach()[tag_dictionary.get_idx_for_item(START_TAG), :] = -10000
+        self.transitions.detach()[:, tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000
 
-    def forward(self, feats):
-        """
-        Forward propagation.
-        :param feats: output of word RNN/BLSTM, a tensor of dimensions (batch_size, timesteps, hidden_dim)
-        :return: CRF scores, a tensor of dimensions (batch_size, timesteps, tagset_size, tagset_size)
-        """
-        self.batch_size = feats.size(0)
-        self.timesteps = feats.size(1)
+    def forward_alg(self, features, lengths):
+        emission_scores = self.emission(features)
 
-        emission_scores = self.emission(feats)  # (batch_size, timesteps, tagset_size)
-        emission_scores = emission_scores.unsqueeze(2).expand(self.batch_size, self.timesteps, self.tagset_size,
-                                                              self.tagset_size)  # (batch_size, timesteps, tagset_size, tagset_size)
+        init_alphas = torch.FloatTensor(self.tagset_size).fill_(-10000.0)
+        init_alphas[self.tag_dictionary.get_idx_for_item(START_TAG)] = 0.0
 
-        crf_scores = emission_scores + self.transition.unsqueeze(0).unsqueeze(
-            0)  # (batch_size, timesteps, tagset_size, tagset_size)
-        return crf_scores
+        forward_var = torch.zeros(
+            emission_scores.shape[0],
+            emission_scores.shape[1] + 1,
+            emission_scores.shape[2],
+            dtype=torch.float,
+            device=flair.device,
+        )
 
+        forward_var[:, 0, :] = init_alphas[None, :].repeat(emission_scores.shape[0], 1)
 
-class ViterbiLoss(nn.Module):
-    """
-    Viterbi Loss.
-    """
+        transitions = self.transitions.view(
+            1, self.transitions.shape[0], self.transitions.shape[1]
+        ).repeat(emission_scores.shape[0], 1, 1)
 
-    def __init__(self, tag_dictionary: Dictionary):
-        """
-        :param tag_map: tag map
-        """
-        super(ViterbiLoss, self).__init__()
-        self.tagset_size = len(tag_dictionary)
-        self.start_tag = tag_dictionary['<start>']
-        self.end_tag = tag_dictionary['<end>']
+        for i in range(emission_scores.shape[1]):
+            emit_score = emission_scores[:, i, :]
 
-    def forward(self, scores, targets, lengths):
-        """
-        Forward propagation.
-        :param scores: CRF scores
-        :param targets: true tags indices in unrolled CRF scores
-        :param lengths: word sequence lengths
-        :return: viterbi loss
-        """
+            tag_var = (
+                    emit_score[:, :, None].repeat(1, 1, transitions.shape[2])
+                    + transitions
+                    + forward_var[:, i, :][:, :, None]
+                    .repeat(1, 1, transitions.shape[2])
+                    .transpose(2, 1)
+            )
 
-        batch_size = scores.size(0)
-        word_pad_len = scores.size(1)
+            max_tag_var, _ = torch.max(tag_var, dim=2)
 
-        targets = targets.unsqueeze(2)
-        scores_at_targets = torch.gather(scores.view(batch_size, word_pad_len, -1), 2, targets).squeeze(2)
+            tag_var = tag_var - max_tag_var[:, :, None].repeat(
+                1, 1, transitions.shape[2]
+            )
 
-        scores_at_targets, _ = pack_padded_sequence(scores_at_targets, lengths, batch_first=True)
-        gold_score = scores_at_targets.sum()
+            agg_ = torch.log(torch.sum(torch.exp(tag_var), dim=2))
 
-        scores_upto_t = torch.zeros(batch_size, self.tagset_size)
+            cloned = forward_var.clone()
+            cloned[:, i + 1, :] = max_tag_var + agg_
 
-        for t in range(max(lengths)):
-            batch_size_t = sum([l > t for l in lengths])  # effective batch size (sans pads) at this timestep
-            if t == 0:
-                scores_upto_t[:batch_size_t] = scores[:batch_size_t, t, self.start_tag, :]  # (batch_size, tagset_size)
-            else:
-                # We add scores at current timestep to scores accumulated up to previous timestep, and log-sum-exp
-                # Remember, the cur_tag of the previous timestep is the prev_tag of this timestep
-                # So, broadcast prev. timestep's cur_tag scores along cur. timestep's cur_tag dimension
-                scores_upto_t[:batch_size_t] = log_sum_exp(
-                    scores[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t].unsqueeze(2),
-                    dim=1)  # (batch_size, tagset_size)
+            forward_var = cloned
 
-        # We only need the final accumulated scores at the <end> tag
-        all_paths_scores = scores_upto_t[:, self.end_tag].sum()
+        forward_var = forward_var[range(forward_var.shape[0]), lengths, :]
 
-        viterbi_loss = all_paths_scores - gold_score
+        terminal_var = forward_var + self.transitions[
+                                         self.tag_dictionary.get_idx_for_item(STOP_TAG)
+                                     ][None, :].repeat(forward_var.shape[0], 1)
 
-        return viterbi_loss.mean()
+        alpha = log_sum_exp_batch(terminal_var)
+
+        return alpha
+
+    def score_sentence(self, features, tags, lengths):
+        start = torch.tensor(
+            [self.tag_dictionary.get_idx_for_item(START_TAG)], device=flair.device
+        )
+        start = start[None, :].repeat(tags.shape[0], 1)
+
+        stop = torch.tensor(
+            [self.tag_dictionary.get_idx_for_item(STOP_TAG)], device=flair.device
+        )
+        stop = stop[None, :].repeat(tags.shape[0], 1)
+
+        pad_start_tags = torch.cat([start, tags], 1)
+        pad_stop_tags = torch.cat([tags, stop], 1)
+
+        for i in range(len(lengths)):
+            pad_stop_tags[i, lengths[i]:] = self.tag_dictionary.get_idx_for_item(
+                STOP_TAG
+            )
+
+        score = torch.FloatTensor(features.shape[0]).to(flair.device)
+
+        for i in range(features.shape[0]):
+            r = torch.LongTensor(range(lengths[i])).to(flair.device)
+
+            score[i] = torch.sum(
+                self.transitions[
+                    pad_stop_tags[i, : lengths[i] + 1], pad_start_tags[i, : lengths[i] + 1]
+                ]
+            ) + torch.sum(features[i, r, tags[i, : lengths[i]]])
+
+        return score

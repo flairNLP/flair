@@ -1,20 +1,10 @@
 import torch
+from torch.nn.utils.rnn import pad_sequence
 
 import flair
 from flair.data import List
 
-def log_sum_exp(tensor, dim):
-    """
-    Calculates the log-sum-exponent of a tensor's dimension in a numerically stable way.
-    :param tensor: tensor
-    :param dim: dimension to calculate log-sum-exp of
-    :return: log-sum-exp
-    """
-    m, _ = torch.max(tensor, dim)
-    m_expanded = m.unsqueeze(dim).expand_as(tensor)
-    return m + torch.log(torch.sum(torch.exp(tensor - m_expanded), dim))
-
-def get_tag_list(sentences, tag_dictionary, tag_type):
+def get_tags_tensor(sentences, tag_dictionary, tag_type):
     tag_list = list()
     for s_id, sentence in enumerate(sentences):
         # get the tags in this sentence
@@ -25,4 +15,14 @@ def get_tag_list(sentences, tag_dictionary, tag_type):
         # add tags as tensor
         tag = torch.tensor(tag_idx, device=flair.device)
         tag_list.append(tag)
-    return tag_list
+
+    padded_tags_list = pad_sequence(tag_list, batch_first = True)
+
+    # This will be row_index (i.e. prev_tag) * n_columns (i.e. tagset_size) + column_index (i.e. cur_tag)
+    crf_tags = list(map(
+                lambda s: [tag_dictionary.get_idx_for_item('<START>') * len(tag_dictionary) + s[0]] + [s[i - 1] * len(tag_dictionary) + s[i]
+                for i in range(1, len(s))], padded_tags_list))
+
+    tags_tensor = torch.LongTensor(crf_tags)
+
+    return tags_tensor
