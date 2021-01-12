@@ -6,7 +6,7 @@ import flair
 import flair.embeddings
 import torch
 import torch.nn as nn
-from typing import List, Union
+from typing import List, Union, Optional
 
 from flair.datasets import DataLoader, SentenceDataset
 from flair.training_utils import MetricRegression, Result, store_embeddings
@@ -17,12 +17,13 @@ log = logging.getLogger("flair")
 
 
 class TextRegressor(flair.models.TextClassifier):
-    def __init__(self, document_embeddings: flair.embeddings.DocumentEmbeddings):
+    def __init__(self, document_embeddings: flair.embeddings.DocumentEmbeddings, label_name: str = 'label'):
 
         super(TextRegressor, self).__init__(
             document_embeddings=document_embeddings,
             label_dictionary=flair.data.Dictionary(),
             multi_label=False,
+            label_type=label_name,
         )
 
         log.info("Using REGRESSION - experimental")
@@ -42,11 +43,15 @@ class TextRegressor(flair.models.TextClassifier):
         return vec
 
     def predict(
-        self,
-        sentences: Union[Sentence, List[Sentence]],
-        mini_batch_size: int = 32,
-        embedding_storage_mode="none",
+            self,
+            sentences: Union[Sentence, List[Sentence]],
+            label_name: Optional[str] = None,
+            mini_batch_size: int = 32,
+            embedding_storage_mode="none",
     ) -> List[Sentence]:
+
+        if label_name == None:
+            label_name = self.label_type if self.label_type is not None else 'label'
 
         with torch.no_grad():
             if type(sentences) is Sentence:
@@ -58,7 +63,7 @@ class TextRegressor(flair.models.TextClassifier):
             store_embeddings(filtered_sentences, "none")
 
             batches = [
-                filtered_sentences[x : x + mini_batch_size]
+                filtered_sentences[x: x + mini_batch_size]
                 for x in range(0, len(filtered_sentences), mini_batch_size)
             ]
 
@@ -66,7 +71,7 @@ class TextRegressor(flair.models.TextClassifier):
                 scores = self.forward(batch)
 
                 for (sentence, score) in zip(batch, scores.tolist()):
-                    sentence.labels = [Label(value=str(score[0]))]
+                    sentence.set_label(label_name, value=str(score[0]))
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
@@ -74,7 +79,7 @@ class TextRegressor(flair.models.TextClassifier):
             return sentences
 
     def _calculate_loss(
-        self, scores: torch.tensor, sentences: List[Sentence]
+            self, scores: torch.tensor, sentences: List[Sentence]
     ) -> torch.tensor:
         """
         Calculates the loss.
@@ -85,7 +90,7 @@ class TextRegressor(flair.models.TextClassifier):
         return self.loss_function(scores.squeeze(1), self._labels_to_indices(sentences))
 
     def forward_labels_and_loss(
-        self, sentences: Union[Sentence, List[Sentence]]
+            self, sentences: Union[Sentence, List[Sentence]]
     ) -> (List[List[float]], torch.tensor):
 
         scores = self.forward(sentences)
@@ -93,12 +98,12 @@ class TextRegressor(flair.models.TextClassifier):
         return scores, loss
 
     def evaluate(
-        self,
-        sentences: Union[List[DataPoint], Dataset],
-        out_path: Union[str, Path] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
-        num_workers: int = 8,
+            self,
+            sentences: Union[List[DataPoint], Dataset],
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: int = 8,
     ) -> (Result, float):
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
@@ -139,7 +144,7 @@ class TextRegressor(flair.models.TextClassifier):
                 metric.pred.extend(results)
 
                 for sentence, prediction, true_value in zip(
-                    batch, results, true_values
+                        batch, results, true_values
                 ):
                     eval_line = "{}\t{}\t{}\n".format(
                         sentence.to_original_text(), true_value, prediction
