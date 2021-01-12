@@ -180,13 +180,16 @@ class TextRegressor(flair.models.TextClassifier):
         model_state = {
             "state_dict": self.state_dict(),
             "document_embeddings": self.document_embeddings,
+            "label_name": self.label_type,
         }
         return model_state
 
     @staticmethod
     def _init_model_with_state_dict(state):
 
-        model = TextRegressor(document_embeddings=state["document_embeddings"])
+        label_name = state["label_name"] if "label_name" in state.keys() else None
+
+        model = TextRegressor(document_embeddings=state["document_embeddings"], label_name=label_name)
 
         model.load_state_dict(state["state_dict"])
         return model
