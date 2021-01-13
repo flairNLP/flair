@@ -1092,7 +1092,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         left_context = ''
         right_context = ''
 
-        print(expand_context)
         if expand_context:
 
             # get left context
