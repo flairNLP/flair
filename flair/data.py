@@ -602,7 +602,7 @@ class Sentence(DataPoint):
         token.text = token.text.replace('\ufeff', '')
 
         # data with zero-width characters cannot be handled
-        if token.text.strip() == '':
+        if token.text == '':
             return
 
         self.tokens.append(token)
