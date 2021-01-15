@@ -9,7 +9,7 @@ import torch.nn
 import torch.nn.functional as F
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
-
+import math
 
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import minmax_scale
@@ -390,7 +390,6 @@ class TARSSequenceTagger2(flair.nn.Model):
         for sentence in sentences:
             tag_text_pairs_for_sentence = []
 
-            #if self.training and self.num_negative_tags_to_sample is not None:
             if not full_forward and self.num_negative_tags_to_sample is not None:
                 tags_of_sentence = {self._split_tag(token.get_tag(self.tag_type).value)[1] for token in sentence}
                 tags_of_sentence = {tag for tag in tags_of_sentence if tag is not None}
@@ -561,13 +560,13 @@ class TARSSequenceTagger2(flair.nn.Model):
     def _transform_tars_scores(self, tars_scores):
         # M: num_classes in task (all), N: num_samples (batch_size), L: max_sequence_length, m: num_classes (no prefix)
         # reshape from NxLxmx3 to NxLxM (m is approx. M/2):
-        tars_scores = torch.nn.functional.softmax(tars_scores, dim=3) # softmax onto B-I-O-mapping
+        tars_scores = torch.nn.functional.softmax(tars_scores, dim=3)  # softmax onto B-I-O-mapping
         transformed_scores = []
         for i in range(len(tars_scores)):  # N
             transformed_scores.append([])
             for j in range(len(tars_scores[i])):  # L
                 transformed_scores[i].append([])
-                tmp = [] # should get the length M (first index represents 0, then following other)
+                tmp = []  # should get the length M (first index represents 0, then following other)
                 for tag_idx, tag in enumerate(self.tag_dictionary.idx2item):
                     tmp.append([])
                     tag = tag.decode("utf-8")
@@ -577,16 +576,16 @@ class TARSSequenceTagger2(flair.nn.Model):
                         find highest B, or I value for the word and use the O value next to it.
                         """
                         max_k_idx = 0
-                        max = -9999999
+                        max = -math.inf
                         for k in range(len(tars_scores[i][j])):
                             for l in range(len(tars_scores[i][j][k])):
-                                if l is not 2 and max < tars_scores[i][j][k][l]:  # 2 is O
+                                if l is not 2 and max < tars_scores[i][j][k][l]:  # index 2 represents "O"
                                     max = tars_scores[i][j][k][l]
                                     max_k_idx = k
-                        tmp[tag_idx] = tars_scores[i][j][max_k_idx][2] # set it later to the value next to the hightest I, or B value
+                        tmp[tag_idx] = tars_scores[i][j][max_k_idx][2]  # set it to the value next to the hightest I, or B value
                     else:
-                        tag_no_prefix_idx = self.tag_dictionary_no_prefix.item2idx[tag_no_prefix.encode("UTF-8")] # evtl decoden oder andere map nehmen
-                        tag_prefix_idx = self.tars_tag_dictionary.item2idx[tag_prefix.encode("UTF-8")] # evtl decoden oder andere map
+                        tag_no_prefix_idx = self.tag_dictionary_no_prefix.item2idx[tag_no_prefix.encode("UTF-8")]
+                        tag_prefix_idx = self.tars_tag_dictionary.item2idx[tag_prefix.encode("UTF-8")]
                         tmp[tag_idx] = tars_scores[i][j][tag_no_prefix_idx][tag_prefix_idx]
                 transformed_scores[i][j] = tmp
         transformed_scores = torch.tensor(transformed_scores, dtype=torch.float, device=flair.device)
