@@ -151,7 +151,7 @@ class BaseModel(flair.nn.Model):
 
         if self.use_crf:
             forward_score = self.crf.forward_alg(features, lengths)
-            gold_score = self.crf.score_sentence(features, tags_tensor, lengths)
+            gold_score = self.crf.gold_score(features, tags_tensor, lengths)
             loss = (forward_score - gold_score).mean()
         else:
             loss = self.cross_entropy_loss(features, tags_tensor)

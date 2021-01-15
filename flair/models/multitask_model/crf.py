@@ -17,92 +17,75 @@ class CRF(nn.Module):
         self.tag_dictionary = tag_dictionary
         self.emission = nn.Linear(hidden_dim, tagset_size)
         self.transitions = torch.nn.Parameter(torch.randn(tagset_size, tagset_size))
-        self.transitions.detach()[tag_dictionary.get_idx_for_item(START_TAG), :] = -10000
-        self.transitions.detach()[:, tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000
+        self.transitions.detach()[:, tag_dictionary.get_idx_for_item(START_TAG)] = -10000
+        self.transitions.detach()[tag_dictionary.get_idx_for_item(STOP_TAG), :] = -10000
 
     def forward(self, lstm_features):
+        self.batch_size = lstm_features.size(0)
+        self.seq_len = lstm_features.size(1)
+
         emission_scores = self.emission(lstm_features)
-        return emission_scores
+        emission_scores = emission_scores.unsqueeze(2).expand(self.batch_size, self.seq_len, self.tagset_size, self.tagset_size)
+
+        crf_scores = emission_scores + self.transitions.unsqueeze(0).unsqueeze(0)
+        return crf_scores
 
     def forward_alg(self, features, lengths):
 
-        init_alphas = torch.FloatTensor(self.tagset_size).fill_(-10000.0)
-        init_alphas[self.tag_dictionary.get_idx_for_item(START_TAG)] = 0.0
-
-        forward_var = torch.zeros(
-            features.shape[0],
-            features.shape[1] + 1,
-            features.shape[2],
+        scores_up_to_t = torch.zeros(
+            self.batch_size,
+            self.seq_len + 1,
+            self.tagset_size,
             dtype=torch.float,
             device=flair.device,
         )
 
-        forward_var[:, 0, :] = init_alphas[None, :].repeat(features.shape[0], 1)
+        start_mask = torch.FloatTensor(self.tagset_size).fill_(-10000.0)
+        start_mask[self.tag_dictionary.get_idx_for_item(START_TAG)] = 0.0
+        scores_up_to_t[:, 0, :] = start_mask.unsqueeze(0).repeat(self.batch_size, 1)
 
-        transitions = self.transitions.view(
-            1, self.transitions.shape[0], self.transitions.shape[1]
-        ).repeat(features.shape[0], 1, 1)
-
-        for i in range(features.shape[1]):
-            emit_score = features[:, i, :]
+        for token_num in range(max(lengths)):
+            crf_score = features[:, token_num, :]
+            score_up_to_t = scores_up_to_t[:,token_num,:]
 
             tag_var = (
-                    emit_score[:, :, None].repeat(1, 1, transitions.shape[2])
-                    + transitions
-                    + forward_var[:, i, :][:, :, None]
-                    .repeat(1, 1, transitions.shape[2])
-                    .transpose(2, 1)
+                    crf_score
+                    + score_up_to_t.unsqueeze(2).repeat(1, 1, self.tagset_size)
             )
 
-            max_tag_var, _ = torch.max(tag_var, dim=2)
+            max_tag_var, _ = torch.max(tag_var, dim=1)
+            tag_var = tag_var - max_tag_var.unsqueeze(1).repeat(1, self.tagset_size, 1)
 
-            tag_var = tag_var - max_tag_var[:, :, None].repeat(
-                1, 1, transitions.shape[2]
-            )
+            agg_ = torch.log(torch.sum(torch.exp(tag_var), dim=1))
 
-            agg_ = torch.log(torch.sum(torch.exp(tag_var), dim=2))
+            cloned = scores_up_to_t.clone()
+            cloned[:, token_num + 1, :] = max_tag_var + agg_
 
-            cloned = forward_var.clone()
-            cloned[:, i + 1, :] = max_tag_var + agg_
+            scores_up_to_t = cloned
 
-            forward_var = cloned
+        indices = lengths.unsqueeze(-1).repeat(1, self.tagset_size).unsqueeze(1)
+        scores_up_to_t = torch.gather(scores_up_to_t, 1, indices).squeeze(1)
 
-        forward_var = forward_var[range(forward_var.shape[0]), lengths, :]
+        scores_up_to_t = scores_up_to_t + self.transitions[
+                                            :, self.tag_dictionary.get_idx_for_item(STOP_TAG)
+                                        ].unsqueeze(0).repeat(self.batch_size, 1)
 
-        terminal_var = forward_var + self.transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)][None, :].repeat(forward_var.shape[0], 1)
+        all_paths_scores = log_sum_exp_batch(scores_up_to_t)
 
-        alpha = log_sum_exp_batch(terminal_var)
+        return all_paths_scores
 
-        return alpha
+    def gold_score(self, crf_scores, tags, lengths):
+        start_tag = torch.LongTensor([self.tag_dictionary.get_idx_for_item(START_TAG)])
+        stop_tag = torch.LongTensor([self.tag_dictionary.get_idx_for_item(STOP_TAG)])
 
-    def score_sentence(self, features, tags, lengths):
-        start = torch.tensor(
-            [self.tag_dictionary.get_idx_for_item(START_TAG)], device=flair.device
-        )
-        start = start[None, :].repeat(tags.shape[0], 1)
+        gold_score = torch.FloatTensor(self.batch_size).to(flair.device)
 
-        stop = torch.tensor(
-            [self.tag_dictionary.get_idx_for_item(STOP_TAG)], device=flair.device
-        )
-        stop = stop[None, :].repeat(tags.shape[0], 1)
+        for batch_no in range(self.batch_size):
+            token_indices = torch.arange(lengths[batch_no]).to(flair.device)
+            gold_tags = tags[batch_no, : lengths[batch_no]]
+            from_tags = torch.cat([start_tag, gold_tags])
+            to_tags = torch.cat([gold_tags, stop_tag])
 
-        pad_start_tags = torch.cat([start, tags], 1)
-        pad_stop_tags = torch.cat([tags, stop], 1)
+            gold_score[batch_no] = torch.sum(crf_scores[batch_no, token_indices, from_tags[:-1], to_tags[:-1]]) + self.transitions[from_tags[-1], to_tags[-1]]
 
-        for i in range(len(lengths)):
-            pad_stop_tags[i, lengths[i]:] = self.tag_dictionary.get_idx_for_item(
-                STOP_TAG
-            )
-
-        score = torch.FloatTensor(features.shape[0]).to(flair.device)
-
-        for i in range(features.shape[0]):
-            r = torch.LongTensor(range(lengths[i])).to(flair.device)
-
-            score[i] = torch.sum(
-                self.transitions[
-                    pad_stop_tags[i, : lengths[i] + 1], pad_start_tags[i, : lengths[i] + 1]
-                ]
-            ) + torch.sum(features[i, r, tags[i, : lengths[i]]])
-
-        return score
+        return gold_score
