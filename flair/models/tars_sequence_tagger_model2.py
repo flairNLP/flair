@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 import math
+import random
 
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import minmax_scale
@@ -334,8 +335,18 @@ class TARSSequenceTagger2(flair.nn.Model):
             self._compute_tag_similarity_for_current_epoch()
         super(TARSSequenceTagger2, self).train(mode)
 
+    def _get_random_tags(self):
+        random_set = set()
+        rand_samples = random.sample(self.tag_dictionary_no_prefix.idx2item, self.num_negative_tags_to_sample)
+        for item in rand_samples:
+            random_set.add(item.decode("UTF-8"))
+        return random_set
+
     def _get_nearest_tags_for(self, tags):
         nearest_tags = set()
+
+        if len(tags) == 0:
+            return self._get_random_tags()
 
         for tag in tags:
             plausible_tags = []
