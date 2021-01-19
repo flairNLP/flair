@@ -1,20 +1,18 @@
 import logging
-from typing import Union, List, Optional
+from typing import Union, List
 
 import torch.nn
 from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
 
 import flair.nn
-from flair.embeddings import TokenEmbeddings
 from flair.data import Sentence, Dictionary
+from flair.embeddings import TokenEmbeddings
+from flair.models.sequence_tagger_model import START_TAG, STOP_TAG
 
 from .crf import CRF
 from .utils import get_tags_tensor
 
 log = logging.getLogger("flair")
-
-START_TAG: str = "<START>"
-STOP_TAG: str = "<STOP>"
 
 class BaseModel(flair.nn.Model):
     """
@@ -33,7 +31,6 @@ class BaseModel(flair.nn.Model):
          rnn_layers: int = 1,
          bidirectional: bool = True,
          use_crf: bool = True,
-         use_lm: bool = False,
          dropout: float = 0.0,
          word_dropout: float = 0.05,
          locked_dropout: float = 0.5
@@ -78,7 +75,6 @@ class BaseModel(flair.nn.Model):
 
         # CRF and LM specific attributes
         self.use_crf = use_crf
-        self.use_lm = use_lm
 
         # Dropout specific attributes
         self.use_dropout = True if dropout > 0.0 else False
@@ -86,6 +82,7 @@ class BaseModel(flair.nn.Model):
         self.use_locked_dropout = True if locked_dropout > 0.0 else False
 
         # Model layers
+        # Main task
         if self.use_dropout:
             self.dropout = torch.nn.Dropout(dropout)
         if self.use_word_dropout:
@@ -104,11 +101,12 @@ class BaseModel(flair.nn.Model):
         else:
             self.linear = torch.nn.Linear(rnn_input_dim, rnn_input_dim)
 
+        num_directions = 2 if bidirectional else 1
         if use_crf:
-            num_directions = 2 if bidirectional else 1
             self.crf = CRF(hidden_size * num_directions, tag_dictionary, self.tagset_size)
         else:
-            self.linear2tag = torch.nn.Linear(rnn_input_dim, len(tag_dictionary))
+            self.linear2tag = torch.nn.Linear(hidden_size * num_directions, len(tag_dictionary))
+            self.loss_criterion = torch.nn.CrossEntropyLoss()
 
         self.to(flair.device)
 
@@ -142,12 +140,21 @@ class BaseModel(flair.nn.Model):
 
         return RNN
 
-    def forward_loss(self, sentences: Union[List[Sentence], Sentence]):
+    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.Tensor:
+        """
+        Forward loss function from abstract base class in flair
+        :param sentences: list of sentences
+        """
         features = self.forward(sentences)
         return self.loss(features, sentences)
 
-    def forward(self, sentences):
+    def forward(self, sentences: Union[List[Sentence], Sentence]) -> torch.Tensor:
+        """
+        Forward method of base multitask model
+        :param sentences: list of sentences
+        """
 
+        # preparation of sentences and feed-forward part
         self.embeddings.embed(sentences)
 
         lengths = torch.LongTensor([len(sentence.tokens) for sentence in sentences])
@@ -157,7 +164,7 @@ class BaseModel(flair.nn.Model):
             tensor_list.append(sentence.get_sequence_tensor())
         sentence_tensor = pad_sequence(tensor_list, batch_first=True)
 
-        # Feedforward part
+        # feed-forward part
         if self.use_dropout:
             sentence_tensor = self.dropout(sentence_tensor)
         if self.use_word_dropout:
@@ -175,29 +182,37 @@ class BaseModel(flair.nn.Model):
         else:
             pass
 
+        if self.use_dropout > 0.0:
+            sentence_tensor = self.dropout(sentence_tensor)
+        if self.use_locked_dropout > 0.0:
+            sentence_tensor = self.locked_dropout(sentence_tensor)
+
         if self.use_crf:
             features = self.crf(sentence_tensor)
         else:
             features = self.linear2tag(sentence_tensor)
 
-        if self.use_dropout > 0.0:
-            features = self.dropout(features)
-        if self.use_locked_dropout > 0.0:
-            features = self.locked_dropout(features)
-
         return features
 
 
-    def loss(self, features, sentences):
+    def loss(self, features: torch.Tensor, sentences: Union[List[Sentence], Sentence]) -> torch.Tensor:
+        """
+        Loss function of multitask base model.
+        :param features: Output features / CRF scores from feed-forward function
+        :param sentences: list of sentences
+        """
 
+        # Preparation for loss function
         lengths = torch.LongTensor([len(sentence.tokens) for sentence in sentences])
         tags_tensor = get_tags_tensor(sentences, self.tag_dictionary, self.tag_type)
 
+        # If CRF is used, features come as CRF scores. Use forward_alg and gold_score function to get loss
+        # If no CRF, use cross_entropy_loss.
         if self.use_crf:
             forward_score = self.crf.forward_alg(features, lengths)
             gold_score = self.crf.gold_score(features, tags_tensor, lengths)
             loss = (forward_score - gold_score).mean()
         else:
-            loss = self.cross_entropy_loss(features, tags_tensor)
+            loss = self.loss_criterion(features.permute(0,2,1), tags_tensor)
 
         return loss

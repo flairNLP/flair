@@ -4,10 +4,7 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_sequence
 
 import flair
 from flair.data import Dictionary
-from flair.models.sequence_tagger_model import log_sum_exp_batch
-
-START_TAG: str = "<START>"
-STOP_TAG: str = "<STOP>"
+from flair.models.sequence_tagger_model import log_sum_exp_batch, START_TAG, STOP_TAG
 
 class CRF(nn.Module):
 
