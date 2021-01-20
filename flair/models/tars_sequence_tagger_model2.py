@@ -271,9 +271,7 @@ class TARSSequenceTagger2(flair.nn.Model):
             tag_split = tag.split("-")
             return tag_split[0], "-".join(tag_split[1:])
         else:
-            print("no - was found in a tag:")
-            print(tag)
-            print()
+            return None, None
 
     def _get_tag_dictionary_no_prefix(self):
         candidate_tag_set = set()
@@ -385,13 +383,13 @@ class TARSSequenceTagger2(flair.nn.Model):
             idx_in_old_sent = idx_in_new_sent - offset
             old_tag = sentence[idx_in_old_sent].get_tag(self.tag_type).value
             old_tag_prefix, old_tag_no_prefix = self._split_tag(old_tag)
-
-            if old_tag_no_prefix == tag and old_tag_prefix == self.static_tag_beginning:
-                tag_text_pair_sentence[idx_in_new_sent].add_tag(self.static_tag_type, self.static_tag_beginning)
-            elif old_tag_no_prefix == tag and old_tag_prefix == self.static_tag_inside:
-                tag_text_pair_sentence[idx_in_new_sent].add_tag(self.static_tag_type, self.static_tag_inside)
-            else:
-                tag_text_pair_sentence[idx_in_new_sent].add_tag(self.static_tag_type, self.static_tag_outside)
+            if old_tag_prefix != None:  # else the word in sentence is untagged at prediction moment
+                if old_tag_no_prefix == tag and old_tag_prefix == self.static_tag_beginning:
+                    tag_text_pair_sentence[idx_in_new_sent].add_tag(self.static_tag_type, self.static_tag_beginning)
+                elif old_tag_no_prefix == tag and old_tag_prefix == self.static_tag_inside:
+                    tag_text_pair_sentence[idx_in_new_sent].add_tag(self.static_tag_type, self.static_tag_inside)
+                else:
+                    tag_text_pair_sentence[idx_in_new_sent].add_tag(self.static_tag_type, self.static_tag_outside)
 
         return tag_text_pair_sentence
 
@@ -590,7 +588,7 @@ class TARSSequenceTagger2(flair.nn.Model):
                         max = -math.inf
                         for k in range(len(tars_scores[i][j])):
                             for l in range(len(tars_scores[i][j][k])):
-                                if l is not 2 and max < tars_scores[i][j][k][l]:  # index 2 represents "O"
+                                if l != 2 and max < tars_scores[i][j][k][l]:  # index 2 represents "O"
                                     max = tars_scores[i][j][k][l]
                                     max_k_idx = k
                         tmp[tag_idx] = tars_scores[i][j][max_k_idx][2]  # set it to the value next to the hightest I, or B value
