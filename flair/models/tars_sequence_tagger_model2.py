@@ -89,16 +89,6 @@ class TARSSequenceTagger2(flair.nn.Model):
         self.tag_nearest_map = None
         self.cleaned_up_tags = {}
 
-        # insert tags missing in tag_dictionary (e.g. if only I-PER or only B-PER is in it, but the other not)
-        for tag in tag_dictionary.idx2item:
-            tag = tag.decode("utf-8")
-            tag_prefix, tag_no_prefix = self._split_tag(tag)
-            if tag_prefix == "B":
-                tag_dictionary.add_item("I-" + tag_no_prefix)
-            elif tag_prefix == "I":
-                tag_dictionary.add_item("B-" + tag_no_prefix)
-        print(tag_dictionary)
-
         # Store task specific tags since TARS can handle multiple tasks
         self.current_task = None
         self.task_specific_attributes = {}
@@ -204,11 +194,20 @@ class TARSSequenceTagger2(flair.nn.Model):
         else:
             if isinstance(tag_dictionary, (list, set)):
                 tag_dictionary = TARSSequenceTagger2._make_ad_hoc_tag_dictionary(tag_dictionary)
+                # insert tags missing in tag_dictionary (e.g. if only I-PER or only B-PER is in it, but the other not)
+                for tag in tag_dictionary.idx2item:
+                    tag = tag.decode("utf-8")
+                    tag_prefix, tag_no_prefix = self._split_tag(tag)
+                    if tag_prefix == "B":
+                        tag_dictionary.add_item("I-" + tag_no_prefix)
+                    elif tag_prefix == "I":
+                        tag_dictionary.add_item("B-" + tag_no_prefix)
+                print(tag_dictionary)
             self.task_specific_attributes[task_name] = {}
             self.task_specific_attributes[task_name]['tag_dictionary'] = tag_dictionary
             self.task_specific_attributes[task_name]['tag_type'] = tag_type
             self.task_specific_attributes[task_name]['beta'] = beta
-            # TODO: further implement here: loss-weights? dropout? num_negative_samples?
+            # TODO: further implement here: loss-weights? dropout? num_negative_samples? (all of them required for further training)
             self.task_specific_attributes[task_name]['weight_dict'] = weight_dict
         self.switch_to_task(task_name)
 
@@ -452,7 +451,7 @@ class TARSSequenceTagger2(flair.nn.Model):
         existing_current_task = self.current_task
 
         # create a temporary task
-        self.add_and_switch_to_new_task(TARSSequenceTagger2.static_adhoc_task_identifier, tag_dictionary) #TODO: no tag_type needed here?
+        self.add_and_switch_to_new_task(TARSSequenceTagger2.static_adhoc_task_identifier, tag_dictionary, "ner") #TODO: no tag_type needed here?
 
         try:
             # make zero shot predictions
