@@ -807,10 +807,13 @@ class Sentence(DataPoint):
 
         if target_scheme == "iob":
             iob2(tags)
+            # TODO: check if fix does not destroy any other usage of this function
+            tags = [tag.value for tag in tags]
 
         if target_scheme == "iobes":
-            iob2(tags)
-            tags = iob_iobes(tags)
+            # [I - Location(1.0), O(1.0)]
+            iob2(tags)  # [B - Location(1.0), O(1.0)]
+            tags = iob_iobes(tags)  # ['S-Location', 'O']
 
         for index, tag in enumerate(tags):
             self.tokens[index].set_label(tag_type, tag)
