@@ -530,10 +530,10 @@ class TARSSequenceTagger2(flair.nn.Model):
                 if not batch:
                     continue
 
-                tag_scores = self._forward_four_dims(batch)
+                tag_scores, formatted_sentences, sentence_offsets, sentence_rest_lengths = self._forward_four_dims(batch)
                 feature = self._transform_tars_scores(tag_scores)
                 if return_loss:
-                    overall_loss += self._calculate_loss_four_dims(tag_scores, batch)
+                    overall_loss += self._calculate_loss_four_dims(tag_scores, formatted_sentences, sentence_offsets, sentence_rest_lengths)
 
                 tags, all_tags = self._obtain_labels(
                     feature=feature,
@@ -604,12 +604,12 @@ class TARSSequenceTagger2(flair.nn.Model):
     ) -> torch.tensor:
         if isinstance(data_points, Sentence):
             data_points = [data_points]
-        tag_scores = self._forward_three_dims(data_points)
+        tag_scores, formatted_sentences, sentence_offsets, sentence_rest_lengths = self._forward_three_dims(data_points)
 
-        return self._calculate_loss_three_dims(tag_scores, data_points)
+        return self._calculate_loss_three_dims(tag_scores, formatted_sentences, sentence_offsets, sentence_rest_lengths)
 
     def forward(self, sentences: List[Sentence]):
-        tag_scores = self._forward_four_dims(sentences)
+        tag_scores, _, _, _ = self._forward_four_dims(sentences)
         transformed_scores = self._transform_tars_scores(tag_scores)
         return transformed_scores
 
@@ -678,7 +678,7 @@ class TARSSequenceTagger2(flair.nn.Model):
             sentence_tensor = self.locked_dropout_four_dims(sentence_tensor)
 
         tag_scores = self.linear(sentence_tensor)
-        return tag_scores
+        return tag_scores, formatted_sentences, sentence_offsets, sentence_rest_lengths
 
     # N+ x L x 2
     def _forward_three_dims(self, sentences: List[Sentence]):
@@ -738,30 +738,13 @@ class TARSSequenceTagger2(flair.nn.Model):
         if self.use_locked_dropout > 0.0:
             sentence_tensor = self.locked_dropout_three_dims(sentence_tensor)
         features = self.linear(sentence_tensor)
-        # features = torch.nn.functional.softmax(features, dim=2) # TODO: required? not used in original tars at this place
-        return features
+
+        return features, formatted_sentences, sentence_offsets, sentence_rest_lengths
 
     # three dims dual_space loss
     def _calculate_loss_three_dims(
-            self, features: torch.tensor, sentences: List[Sentence]
+            self, features: torch.tensor, formatted_sentences, sentence_offsets, sentence_rest_lengths
     ) -> float:
-        formatted_sentences = self._get_tars_formatted_sentences(sentences)
-        sentence_offsets = []
-        sentence_rest_lengths = []
-        for sent in formatted_sentences:
-            sep_token_reached = False
-            offset = 0
-            rest_length = 0
-            for tkn in sent:
-                if not sep_token_reached:
-                    offset += 1
-                    if tkn.text == self.transformer_word_embeddings.tokenizer.sep_token:
-                        sep_token_reached = True
-                else:
-                    rest_length += 1
-            sentence_offsets.append(offset)
-            sentence_rest_lengths.append(rest_length)
-
         target_tag_list_bio_space: List = []
         for formatted_sentence_idx, formatted_sentence in enumerate(formatted_sentences):
             target_tag_idx_bio_space: List[int] = [
@@ -785,28 +768,12 @@ class TARSSequenceTagger2(flair.nn.Model):
 
     # four dims dual_space loss
     def _calculate_loss_four_dims(
-            self, features: torch.tensor, sentences: List[Sentence]
+            self, features: torch.tensor, formatted_sentences, sentence_offsets, sentence_rest_lengths
     ) -> float:
-        formatted_sentences = self._get_tars_formatted_sentences(sentences, full_forward=True)
-        sentence_offsets = []
-        sentence_rest_lengths = []
-        for sent in formatted_sentences:
-            sep_token_reached = False
-            offset = 0
-            rest_length = 0
-            for tkn in sent:
-                if not sep_token_reached:
-                    offset += 1
-                    if tkn.text == self.transformer_word_embeddings.tokenizer.sep_token:
-                        sep_token_reached = True
-                else:
-                    rest_length += 1
-            sentence_offsets.append(offset)
-            sentence_rest_lengths.append(rest_length)
-
+        n = len(features)
         m = len(self.tag_dictionary_no_prefix.item2idx)
         target_tag_list_bio_space: List = []
-        for sentence_in_batch in range(len(sentences)):  # for each in 0,...,N batch sentences
+        for sentence_in_batch in range(n):  # for each in 0,...,N batch sentences
             for tag_idx in range(m):  # for each in the 0,...,M tags
                 formatted_sentence_idx = sentence_in_batch * m + tag_idx
                 formatted_sentence = formatted_sentences[formatted_sentence_idx]
@@ -820,7 +787,7 @@ class TARSSequenceTagger2(flair.nn.Model):
                 target_tag_list_bio_space.append(target_tag_idx_bio_space_tensor)
 
         score = 0
-        for sentence_in_batch in range(len(sentences)):  # for each in 0,...,N batch sentences
+        for sentence_in_batch in range(n):  # for each in 0,...,N batch sentences
             for tag_idx in range(m):  # for each in the 0,...,M tags
                 formatted_sentence_idx = sentence_in_batch * m + tag_idx
                 sentence_length = sentence_rest_lengths[formatted_sentence_idx]
@@ -829,7 +796,7 @@ class TARSSequenceTagger2(flair.nn.Model):
                 score += torch.nn.functional.cross_entropy(
                     sentence_feats, sentence_tags
                 )
-        score /= len(sentences) * m
+        score /= n * m
         return score
 
 
