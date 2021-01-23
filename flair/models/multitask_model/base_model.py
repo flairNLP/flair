@@ -10,7 +10,7 @@ from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_se
 from torch.utils.data.dataset import Dataset
 
 import flair.nn
-from flair.data import Sentence, Dictionary, Label
+from flair.data import Sentence, Dictionary, Label, Token
 from flair.datasets import SentenceDataset, DataLoader
 from flair.embeddings import TokenEmbeddings
 from flair.training_utils import Result, store_embeddings
@@ -18,7 +18,7 @@ from flair.models.sequence_tagger_model import START_TAG, STOP_TAG
 
 from .crf import CRF
 from .viterbi import ViterbiLoss, ViterbiDecoder
-from .utils import get_tags_tensor
+from .utils import get_tags_tensor, init_stop_tag_embedding
 
 log = logging.getLogger("flair")
 
@@ -65,10 +65,11 @@ class BaseModel(flair.nn.Model):
 
         # Embeddings and task specific attributes
         self.embeddings = embeddings
+        self.stop_token_emb = init_stop_tag_embedding(embeddings.embedding_length)
         self.tag_dictionary = tag_dictionary
         self.tag_type = tag_type
         self.tagset_size: int = len(tag_dictionary)
-        embedding_dim: int = self.embeddings.embedding_length
+        embedding_dim: int = embeddings.embedding_length
         if use_crf:
             self.tag_dictionary.add_item(START_TAG)
             self.tag_dictionary.add_item(STOP_TAG)
@@ -111,11 +112,11 @@ class BaseModel(flair.nn.Model):
 
         num_directions = 2 if bidirectional else 1
         if use_crf:
-            self.crf = CRF(hidden_size * num_directions, tag_dictionary, self.tagset_size)
-            self.loss_criterion = ViterbiLoss()
+            self.crf = CRF(hidden_size * num_directions, self.tagset_size)
+            self.viterbi_loss = ViterbiLoss(tag_dictionary)
         else:
             self.linear2tag = torch.nn.Linear(hidden_size * num_directions, len(tag_dictionary))
-            self.loss_criterion = torch.nn.CrossEntropyLoss()
+            self.cross_entropy_loss = torch.nn.CrossEntropyLoss()
 
         self.to(flair.device)
 
@@ -154,10 +155,10 @@ class BaseModel(flair.nn.Model):
         Forward loss function from abstract base class in flair
         :param sentences: list of sentences
         """
-        features = self.forward(sentences)
-        return self.loss(features, sentences)
+        features, lengths = self.forward(sentences)
+        return self.loss(features, sentences, lengths)
 
-    def forward(self, sentences: Union[List[Sentence], Sentence]) -> torch.Tensor:
+    def forward(self, sentences: Union[List[Sentence], Sentence]):
         """
         Forward method of base multitask model
         :param sentences: list of sentences
@@ -166,12 +167,15 @@ class BaseModel(flair.nn.Model):
         # preparation of sentences and feed-forward part
         self.embeddings.embed(sentences)
 
-        lengths = torch.LongTensor([len(sentence.tokens) for sentence in sentences])
+        lengths = torch.LongTensor([len(sentence) + 1 for sentence in sentences])
+        lengths = lengths.sort(dim=0, descending=True)
 
-        tensor_list = list()
-        for sentence in sentences:
-            tensor_list.append(sentence.get_sequence_tensor())
+        tensor_list = list(map(lambda sent:
+                               sent.get_sequence_tensor(add_stop_tag_embedding=True, stop_tag_embedding=self.stop_token_emb)
+                               , sentences))
         sentence_tensor = pad_sequence(tensor_list, batch_first=True)
+        # Sorted sentences in decreasing order
+        sentence_tensor = sentence_tensor[lengths.indices]
 
         # feed-forward part
         if self.use_dropout:
@@ -185,7 +189,7 @@ class BaseModel(flair.nn.Model):
             sentence_tensor = self.embedding2nn(sentence_tensor)
 
         if self.use_rnn:
-            packed = pack_padded_sequence(sentence_tensor, lengths, enforce_sorted=False, batch_first=True)
+            packed = pack_padded_sequence(sentence_tensor, list(lengths.values), batch_first=True)
             rnn_output, hidden = self.rnn(packed)
             sentence_tensor, output_lengths = pad_packed_sequence(rnn_output, batch_first=True)
         else:
@@ -201,10 +205,10 @@ class BaseModel(flair.nn.Model):
         else:
             features = self.linear2tag(sentence_tensor)
 
-        return features #(32, 40, 12, 12)
+        return features, lengths
 
 
-    def loss(self, features: torch.Tensor, sentences: Union[List[Sentence], Sentence]) -> torch.Tensor:
+    def loss(self, features: torch.Tensor, sentences: Union[List[Sentence], Sentence], lengths: tuple) -> torch.Tensor:
         """
         Loss function of multitask base model.
         :param features: Output features / CRF scores from feed-forward function
@@ -213,14 +217,16 @@ class BaseModel(flair.nn.Model):
 
         # Preparation for loss function
         tags_tensor = get_tags_tensor(sentences, self.tag_dictionary, self.tag_type)
+        # Sort tag tensor same order as features in decreasing order by length
+        tags_tensor = tags_tensor[lengths.indices]
 
         if self.use_crf:
-            lengths = torch.LongTensor([len(sentence.tokens) for sentence in sentences])
-            forward_score = self.loss_criterion(features, tags_tensor)
-            gold_score = self.loss_criterion.gold_score(features, tags_tensor, lengths)
-            loss = (forward_score - gold_score).mean()
+            loss = self.viterbi_loss(features, tags_tensor, lengths.values)
+            #forward_score = self.loss_criterion(features, tags_tensor)
+            #gold_score = self.loss_criterion.gold_score(features, tags_tensor, lengths)
+            #loss = (forward_score - gold_score).mean()
         else:
-            loss = self.loss_criterion(features.permute(0,2,1), tags_tensor)
+            loss = self.cross_entropy_loss(features.permute(0,2,1), tags_tensor)
 
         return loss
 
@@ -517,24 +523,3 @@ class BaseModel(flair.nn.Model):
                 )
 
         return tags, all_tags
-
-    def _get_state_dict(self):
-        """
-        Implementation of flair.nn.Models interface function
-        """
-        model_state = {
-            "state_dict": self.state_dict(),
-            "embeddings": self.embeddings,
-            "hidden_size": self.hidden_size,
-            "tag_dictionary": self.tag_dictionary,
-            "tag_type": self.tag_type,
-            "use_crf": self.use_crf,
-            "use_rnn": self.use_rnn,
-            "rnn_layers": self.rnn_layers,
-            "use_dropout": self.use_dropout,
-            "use_word_dropout": self.use_word_dropout,
-            "use_locked_dropout": self.use_locked_dropout,
-            "rnn_type": self.rnn_type,
-            "reproject_embeddings": self.reproject_embeddings,
-        }
-        return model_state

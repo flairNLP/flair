@@ -48,12 +48,25 @@ def argmax_batch(vecs):
     return idx
 
 
+# TODO maybe replace with new func
 def log_sum_exp_batch(vecs):
     maxi = torch.max(vecs, 1)[0]
     maxi_bc = maxi[:, None].repeat(1, vecs.shape[1])
     recti_ = torch.log(torch.sum(torch.exp(vecs - maxi_bc), 1))
     return maxi + recti_
 
+# TODO cleanup
+def log_sum_exp_refactor(tensor, dim):
+    """
+    Calculates the log-sum-exponent of a tensor's dimension in a numerically stable way.
+
+    :param tensor: tensor
+    :param dim: dimension to calculate log-sum-exp of
+    :return: log-sum-exp
+    """
+    m, _ = torch.max(tensor, dim)
+    m_expanded = m.unsqueeze(dim).expand_as(tensor)
+    return m + torch.log(torch.sum(torch.exp(tensor - m_expanded), dim))
 
 def pad_tensors(tensor_list):
     ml = max([x.shape[0] for x in tensor_list])
@@ -641,12 +654,11 @@ class SequenceTagger(flair.nn.Model):
 
         self.embeddings.embed(sentences)
 
-        tensor_list = list()
-        for sentence in sentences:
-            tensor_list.append(sentence.get_sequence_tensor()) # get tensor of shape (seq_len, embedding_dim)
+        tensor_list = list(map(lambda sent:
+                               sent.get_sequence_tensor(add_stop_tag_embedding=True,
+                                                        stop_tag_embedding=self.stop_token_emb)
+                               , sentences))
         sentence_tensor = pad_sequence(tensor_list, batch_first=True)
-
-        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
 
         # --------------------------------------------------------------------
         # FF PART

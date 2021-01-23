@@ -4,7 +4,7 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_sequence
 
 import flair
 from flair.data import Dictionary
-from flair.models.sequence_tagger_model import START_TAG, STOP_TAG, log_sum_exp_batch
+from flair.models.sequence_tagger_model import START_TAG, STOP_TAG, log_sum_exp_refactor
 
 class ViterbiLoss(torch.nn.Module):
     """
@@ -16,19 +16,55 @@ class ViterbiLoss(torch.nn.Module):
         :param tag_dictionary: tag_dictionary of task
         """
         super(ViterbiLoss, self).__init__()
+        self.tag_dictionary = tag_dictionary
         self.tagset_size = len(tag_dictionary)
+        self.start_tag = tag_dictionary.get_idx_for_item(START_TAG)
+        self.stop_tag = tag_dictionary.get_idx_for_item(STOP_TAG)
 
-    def forward(self, features, lengths):
+    def forward(self, features: torch.Tensor, targets: torch.Tensor, lengths: torch.Tensor):
         """
         Forward propagation.
 
-        :param features: CRF scores
-        :param lengths: word sequence lengths
-        :return: forward score / loss
+        :param features: CRF scores from forward method
+        :param tags: true tags for sentences
+        :param lengths_sorted_indices: sorted lengths indices
+        :return: Viterbi Loss as average from (forward score - gold score)
         """
+        batch_size = features.size(0)
+        seq_len = features.size(1)
+        targets = targets.unsqueeze(2)
+
+        scores_at_targets = torch.gather(features.view(batch_size, seq_len, -1), 2, targets).squeeze(2)
+        scores_at_targets = pack_padded_sequence(scores_at_targets, lengths, batch_first=True)[0]
+        gold_score = scores_at_targets.sum()
+
+        scores_upto_t = torch.zeros(batch_size, self.tagset_size).to(flair.device)
+
+        for t in range(max(lengths)):
+            batch_size_t = sum([l > t for l in lengths])  # effective batch size (sans pads) at this timestep
+            if t == 0:
+                scores_upto_t[:batch_size_t] = features[:batch_size_t, t, self.start_tag, :]  # (batch_size, tagset_size)
+            else:
+                # We add scores at current timestep to scores accumulated up to previous timestep, and log-sum-exp
+                # Remember, the cur_tag of the previous timestep is the prev_tag of this timestep
+                # So, broadcast prev. timestep's cur_tag scores along cur. timestep's cur_tag dimension
+                scores_upto_t[:batch_size_t] = log_sum_exp_refactor(features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t].unsqueeze(2), dim=1)  # (batch_size, tagset_size)
+
+        # We only need the final accumulated scores at the <end> tag
+        all_paths_scores = scores_upto_t[:, self.stop_tag].sum()
+
+        viterbi_loss = all_paths_scores - gold_score
+        viterbi_loss = viterbi_loss / batch_size
+
+        return viterbi_loss
+    """
+    def forward(self, features: torch.Tensor, tags: torch.Tensor, lengths_sorted_indices: torch.Tensor):
+        batch_size = features.size(0)
+        seq_len = features.size(1)
+
         scores_up_to_t = torch.zeros(
-            self.batch_size,
-            self.seq_len + 1,
+            batch_size,
+            seq_len + 1,
             self.tagset_size,
             dtype=torch.float,
             device=flair.device,
@@ -36,7 +72,7 @@ class ViterbiLoss(torch.nn.Module):
 
         start_mask = torch.FloatTensor(self.tagset_size).fill_(-10000.0)
         start_mask[self.tag_dictionary.get_idx_for_item(START_TAG)] = 0.0
-        scores_up_to_t[:, 0, :] = start_mask.unsqueeze(0).repeat(self.batch_size, 1)
+        scores_up_to_t[:, 0, :] = start_mask.unsqueeze(0).repeat(batch_size, 1)
 
         for token_num in range(max(lengths)):
             crf_score = features[:, token_num, :]
@@ -83,6 +119,7 @@ class ViterbiLoss(torch.nn.Module):
             gold_score[batch_no] = torch.sum(crf_scores[batch_no, token_indices, from_tags[:-1], to_tags[:-1]]) + self.transitions[from_tags[-1], to_tags[-1]]
 
         return gold_score
+    """
 
 class ViterbiDecoder:
     """
