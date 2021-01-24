@@ -8,7 +8,7 @@ from typing import Union, Dict, List
 import flair
 from flair.data import Corpus, MultiCorpus, FlairDataset, Sentence, Token
 from flair.datasets.base import find_train_dev_test_files
-from flair.file_utils import cached_path, unpack_file , unzip_file
+from flair.file_utils import cached_path, unpack_file, unzip_file
 
 log = logging.getLogger("flair")
 
@@ -580,15 +580,24 @@ class CONLL_03_DUTCH(ColumnCorpus):
             document_separator_token="-DOCSTART-",
             **corpusargs,
         )
-        
-        
+
+    @staticmethod
+    def __offset_docstarts(file_in: Union[str, Path], file_out: Union[str, Path]):
+        with open(file_in, 'r', encoding="latin-1") as f:
+            lines = f.readlines()
+        with open(file_out, 'w', encoding="latin-1") as f:
+            for line in lines:
+                f.write(line)
+                if line.startswith('-DOCSTART-'):
+                    f.write("\n")
+
+
 class STACKOVERFLOW_NER(ColumnCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
@@ -603,7 +612,6 @@ class STACKOVERFLOW_NER(ColumnCorpus):
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
-
 
         """
         The Datasets are represented in the Conll format.
@@ -629,7 +637,7 @@ class STACKOVERFLOW_NER(ColumnCorpus):
         cached_path(f"{STACKOVERFLOW_NER_path}train.txt", Path("datasets") / dataset_name)
         cached_path(f"{STACKOVERFLOW_NER_path}test.txt", Path("datasets") / dataset_name)
         cached_path(f"{STACKOVERFLOW_NER_path}dev.txt", Path("datasets") / dataset_name)
-        #cached_path(f"{STACKOVERFLOW_NER_path}train_merged_labels.txt", Path("datasets") / dataset_name)
+        # cached_path(f"{STACKOVERFLOW_NER_path}train_merged_labels.txt", Path("datasets") / dataset_name)
 
         super(STACKOVERFLOW_NER, self).__init__(
             data_folder,
@@ -642,17 +650,6 @@ class STACKOVERFLOW_NER(ColumnCorpus):
             dev_file="dev.txt",
             **corpusargs,
         )
-
-    @staticmethod
-    def __offset_docstarts(file_in: Union[str, Path], file_out: Union[str, Path]):
-        with open(file_in, 'r', encoding="latin-1") as f:
-            lines = f.readlines()
-        with open(file_out, 'w', encoding="latin-1") as f:
-            for line in lines:
-                f.write(line)
-                if line.startswith('-DOCSTART-'):
-                    f.write("\n")
-
 
 
 class BUSINESS_HUN(ColumnCorpus):
@@ -676,7 +673,7 @@ class BUSINESS_HUN(ColumnCorpus):
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
-        
+
         # column format
         columns = {0: "text", 1: "ner"}
 
@@ -695,18 +692,18 @@ class BUSINESS_HUN(ColumnCorpus):
             path_to_zipped_corpus = cached_path(hun_ner_path, Path("datasets") / dataset_name)
             # extracted corpus is not present , so unpacking it.
             unpack_file(
-                path_to_zipped_corpus , 
+                path_to_zipped_corpus,
                 data_folder,
-                mode = "zip",
-                keep= True 
-                )
-       
+                mode="zip",
+                keep=True
+            )
+
         super(BUSINESS_HUN, self).__init__(
             data_folder,
             columns,
             train_file='hun_ner_corpus.txt',
-            column_delimiter= '\t' ,
-            tag_to_bioes= tag_to_bioes,
+            column_delimiter='\t',
+            tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
             label_name_map={'0': 'O'},
