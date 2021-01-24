@@ -10,7 +10,8 @@ from flair.data import (
     Token,
     Dictionary,
     Corpus,
-    Span
+    Span,
+    Relation
 )
 from flair.tokenization import (
     SpacyTokenizer,
@@ -873,3 +874,51 @@ def test_pretokenized():
     sent = Sentence(pretoks)
     for i, token in enumerate(sent):
         assert token.text == pretoks[i]
+
+
+@pytest.fixture
+def sentence_with_relations():
+    # city single-token, person and company multi-token
+    sentence = Sentence("Person A , born in city , works for company B .")
+
+    sentence[0].add_tag("ner", "B-Peop")
+    sentence[1].add_tag("ner", "I-Peop")
+    sentence[1].add_tag("relation", "['Born_In', 'Works_For']")
+    sentence[1].add_tag("relation_dep", "[5, 10]")
+    sentence[5].add_tag("ner", "B-Loc")
+    sentence[9].add_tag("ner", "B-Org")
+    sentence[10].add_tag("ner", "I-Org")
+    for i in range(len(sentence)):
+        if i != 1:
+            sentence[i].add_tag("relation", "['N']")
+            sentence[i].add_tag("relation_dep", f"[{i}]")
+
+    return sentence
+
+
+def test_get_ner_span_idx_from_relation_idx(sentence_with_relations):
+    result = [sentence_with_relations._get_span_idx_from_relation_idx(i) for i in range(len(sentence_with_relations))]
+    expected_result = [0, 0, None, None, None, 1, None, None, None, 2, 2, None]
+
+    assert result == expected_result
+
+
+def test_get_relations_from_tags(sentence_with_relations):
+    result = sentence_with_relations._get_relations_from_tags()
+    expected_result = [(0, 1, 'Born_In'), (0, 2, 'Works_For')]
+
+    assert result == expected_result
+
+
+def test_build_relations(sentence_with_relations):
+    result = sentence_with_relations.build_relations()
+
+    spans = sentence_with_relations.get_spans("ner")
+    expected_result = [Relation(spans[0], spans[1], Label('Born_In')),
+                       Relation(spans[0], spans[2], Label('Works_For')),
+                       Relation(spans[1], spans[0], Label('N')),
+                       Relation(spans[1], spans[2], Label('N')),
+                       Relation(spans[2], spans[0], Label('N')),
+                       Relation(spans[2], spans[1], Label('N')),]
+
+    assert [str(relation) for relation in result] == [str(relation) for relation in expected_result]
