@@ -637,7 +637,7 @@ class STACKOVERFLOW_NER(ColumnCorpus):
         cached_path(f"{STACKOVERFLOW_NER_path}train.txt", Path("datasets") / dataset_name)
         cached_path(f"{STACKOVERFLOW_NER_path}test.txt", Path("datasets") / dataset_name)
         cached_path(f"{STACKOVERFLOW_NER_path}dev.txt", Path("datasets") / dataset_name)
-        # cached_path(f"{STACKOVERFLOW_NER_path}train_merged_labels.txt", Path("datasets") / dataset_name)
+        # cached_path(f"{STACKOVERFLOW_NER_path}train_merged_labels.txt", Path("datasets") / dataset_name) # TODO: what is this?
 
         super(STACKOVERFLOW_NER, self).__init__(
             data_folder,
