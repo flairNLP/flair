@@ -946,6 +946,55 @@ class Sentence(DataPoint):
 
         return re.sub(r"[\u0080-\u0099]", to_windows_1252, text)
 
+    def build_relations(self):
+        result = []
+        spans = self.get_spans('ner')
+        relations_from_tags = self._get_relations_from_tags()
+        for i, span_i in enumerate(spans):
+            for j, span_j in enumerate(spans):
+                if i == j:
+                    continue
+
+                relation_exists = False
+                for relation in relations_from_tags:
+                    if relation[0] == i and relation[1] == j:
+                        result.append(Relation(span_i, span_j, Label(relation[2])))
+                        relation_exists = True
+                if not relation_exists:
+                    result.append(Relation(span_i, span_j, Label('N')))
+
+        return result
+
+    def _get_relations_from_tags(self):
+        result = []
+
+        for i, span in enumerate(self.get_spans('ner')):
+            last_token_idx = span.tokens[-1].idx
+
+            raw_relations = self.get_spans('relation')
+            # raw_relations[last_token_idx - 1] possible if all negatives are explicitly tagged, otherwise:
+            raw_relations = [i for i in raw_relations if i.tokens[0].idx == last_token_idx][0]
+            relations = ast.literal_eval(raw_relations.labels[0].value)
+
+            raw_relation_deps = self.get_spans('relation_dep')
+            raw_relation_deps = [i for i in raw_relation_deps if i.tokens[0].idx == last_token_idx][0]
+            relation_deps = ast.literal_eval(raw_relation_deps.labels[0].value)
+
+            for j, relation in enumerate(relations):
+                if relation != 'N':
+                    dep_idx = self._get_span_idx_from_relation_idx(relation_deps[j])
+                    result.append((i, dep_idx, relation))
+
+        return result
+
+    def _get_span_idx_from_relation_idx(self, relation_idx: int):
+        ner_spans = self.get_spans('ner')
+        for span_idx, span in enumerate(ner_spans):
+            token_indices = [i.idx for i in span.tokens]
+            if relation_idx + 1 in token_indices:
+                return span_idx
+        return None
+
     def next_sentence(self):
         """
         Get the next sentence in the document (works only if context is set through dataloader or elsewhere)
