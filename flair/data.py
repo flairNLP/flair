@@ -1375,6 +1375,35 @@ class Corpus:
 
         return label_dictionary
 
+    def make_relation_label_dictionary(self, label_type: str = None) -> Dictionary:
+        """
+        Creates a dictionary of all relation labels assigned to the sentences in the corpus.
+        :return: dictionary of labels
+        """
+        label_dictionary: Dictionary = Dictionary(add_unk=False)
+        label_dictionary.multi_label = False
+
+        from flair.datasets import DataLoader
+
+        data = ConcatDataset([self.train, self.test])
+        loader = DataLoader(data, batch_size=1)
+
+        log.info("Computing relation label dictionary. Progress:")
+        for batch in Tqdm.tqdm(iter(loader)):
+            for sentence in batch:
+                labels = [relation.get_labels("relation_type")[0] for relation in sentence.relations]
+
+                for label in labels:
+                    label_dictionary.add_item(label.value)
+
+                if not label_dictionary.multi_label:
+                    if len(labels) > 1:
+                        label_dictionary.multi_label = True
+
+        log.info(label_dictionary.idx2item)
+
+        return label_dictionary
+
     def get_label_distribution(self):
         class_to_count = defaultdict(lambda: 0)
         for sent in self.train:
