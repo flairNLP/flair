@@ -587,7 +587,7 @@ class Sentence(DataPoint):
         # some sentences represent a document boundary (but most do not)
         self.is_document_boundary: bool = False
 
-        self.relations = self._get_relations_from_tags()
+        self.relations: List[Relation] = self.build_relations()
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
@@ -986,7 +986,7 @@ class Sentence(DataPoint):
         return '_previous_sentence' in self.__dict__.keys() or '_position_in_dataset' in self.__dict__.keys()
 
     def build_relations(self):
-        result = []
+        result: List[Relation] = []
         spans = self.get_spans('ner')
         relations_from_tags = self._get_relations_from_tags()
         for i, span_i in enumerate(spans):

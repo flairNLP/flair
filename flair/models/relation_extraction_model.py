@@ -348,29 +348,36 @@ class RelationTagger(flair.nn.Model):
             self, features: torch.tensor, sentences: List[Sentence]
     ) -> float:
 
-        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        span_counts: List[int] = [len(sentence.get_spans("ner")) for sentence in sentences]
+        max_span_count: int = max(span_counts)
+        max_relations_count = max_span_count * (max_span_count - 1)
 
         tag_list: List = []
+        idx_no_relation = self.tag_dictionary.get_idx_for_item('N')
         for s_id, sentence in enumerate(sentences):
             # get the tags in this sentence
-            tag_idx: List[int] = [
-                self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value)
-                for token in sentence
-            ]
+            tag_idx: List[int] = [idx_no_relation for _ in range(max_relations_count)]
+            for r_id, relation in enumerate(sentence.relations):
+                idx = self._get_idx_in_list_with_max_span_count(r_id, span_counts[s_id], max_span_count)
+                tag_idx[idx] = self.tag_dictionary.get_idx_for_item(
+                    relation.get_labels()[0].value
+                )
             # add tags as tensor
             tag = torch.tensor(tag_idx, device=flair.device)
             tag_list.append(tag)
 
         score = 0
-        for sentence_feats, sentence_tags, sentence_length in zip(
-                features, tag_list, lengths
+        for sentence_feats, sentence_tags in zip(
+                features, tag_list
         ):
-            sentence_feats = sentence_feats[:sentence_length]
             score += torch.nn.functional.cross_entropy(
                 sentence_feats, sentence_tags
             )
         score /= len(features)
         return score
+
+    def _get_idx_in_list_with_max_span_count(self, idx, current_span_count, max_span_count):
+        return (idx // current_span_count) * max_span_count + (idx % current_span_count)
 
     def _obtain_labels(
             self,
