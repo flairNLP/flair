@@ -315,17 +315,15 @@ class RelationTagger(flair.nn.Model):
         for sentence in sentences:
             spans = sentence.get_spans("ner")
             spans_in_sentence = len(spans)
-            token_embs = [emb for token in sentence for emb in token.get_each_embedding(names)]
+            token_embs = [emb for span in spans for emb in span.tokens[0].get_each_embedding(names)]
             sentence_embs = list()
             for i in range(max_span_count):
                 for j in range(max_span_count):
                     if i == j:
                         continue
                     if max(i, j) < spans_in_sentence:
-                        i_idx_first_token = spans[i].tokens[0].idx
-                        j_idx_first_token = spans[j].tokens[0].idx
                         concatenated_tensors = torch.cat(
-                            (token_embs[i_idx_first_token], token_embs[j_idx_first_token]),
+                            (token_embs[i], token_embs[j]),
                             0
                         )
                         sentence_embs.append(concatenated_tensors)
