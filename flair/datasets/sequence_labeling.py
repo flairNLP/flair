@@ -310,7 +310,6 @@ class ColumnDataset(FlairDataset):
                 file.seek(self.indices[index])
                 sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
 
-
             # set sentence context using partials
             sentence._position_in_dataset = (self, index)
 
