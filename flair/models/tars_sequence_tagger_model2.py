@@ -799,26 +799,6 @@ class TARSSequenceTagger2(flair.nn.Model):
         score /= n * m
         return score
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def _obtain_labels(
             self,
             feature: torch.Tensor,
