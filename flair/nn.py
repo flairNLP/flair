@@ -111,7 +111,7 @@ class LockedDropout(torch.nn.Module):
         if not self.training or not self.dropout_rate:
             return x
 
-        if self.dims == 4: # TODO: check if it does correct job for dims==4 (dropping out the desired parts and not others)
+        if self.dims == 4:
             if not self.batch_first:
                 m = x.data.new(1, x.size(1), x.size(2), x.size(3)).bernoulli_(1 - self.dropout_rate)
             else:

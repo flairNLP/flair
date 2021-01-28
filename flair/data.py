@@ -807,7 +807,6 @@ class Sentence(DataPoint):
 
         if target_scheme == "iob":
             iob2(tags)
-            # TODO: check if fix does not destroy any other usage of this function
             tags = [tag.value for tag in tags]
 
         if target_scheme == "iobes":
