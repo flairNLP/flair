@@ -22,6 +22,7 @@ class ColumnCorpus(Corpus):
             test_file=None,
             dev_file=None,
             tag_to_bioes=None,
+            tag_to_bio2=None,
             column_delimiter: str = r"\s+",
             comment_symbol: str = None,
             encoding: str = "utf-8",
@@ -59,6 +60,7 @@ class ColumnCorpus(Corpus):
             train_file,
             column_format,
             tag_to_bioes,
+            tag_to_bio2,
             encoding=encoding,
             comment_symbol=comment_symbol,
             column_delimiter=column_delimiter,
@@ -73,6 +75,7 @@ class ColumnCorpus(Corpus):
             test_file,
             column_format,
             tag_to_bioes,
+            tag_to_bio2,
             encoding=encoding,
             comment_symbol=comment_symbol,
             column_delimiter=column_delimiter,
@@ -87,6 +90,7 @@ class ColumnCorpus(Corpus):
             dev_file,
             column_format,
             tag_to_bioes,
+            tag_to_bio2,
             encoding=encoding,
             comment_symbol=comment_symbol,
             column_delimiter=column_delimiter,
@@ -108,6 +112,7 @@ class ColumnDataset(FlairDataset):
             path_to_column_file: Union[str, Path],
             column_name_map: Dict[int, str],
             tag_to_bioes: str = None,
+            tag_to_bio2: str = None,
             column_delimiter: str = r"\s+",
             comment_symbol: str = None,
             in_memory: bool = True,
@@ -134,6 +139,7 @@ class ColumnDataset(FlairDataset):
         assert path_to_column_file.exists()
         self.path_to_column_file = path_to_column_file
         self.tag_to_bioes = tag_to_bioes
+        self.tag_to_bio2 = tag_to_bio2
         self.column_name_map = column_name_map
         self.column_delimiter = column_delimiter
         self.comment_symbol = comment_symbol
@@ -226,6 +232,10 @@ class ColumnDataset(FlairDataset):
             # if sentence ends, convert and return
             if self.__line_completes_sentence(line):
                 if len(sentence) > 0:
+                    if self.tag_to_bio2 is not None:
+                        sentence.convert_tag_scheme(
+                            tag_type=self.tag_to_bio2, target_scheme="iob"
+                        )
                     if self.tag_to_bioes is not None:
                         sentence.convert_tag_scheme(
                             tag_type=self.tag_to_bioes, target_scheme="iobes"
@@ -243,6 +253,10 @@ class ColumnDataset(FlairDataset):
         # check if this sentence is a document boundary
         if sentence.to_original_text() == self.document_separator_token: sentence.is_document_boundary = True
 
+        if self.tag_to_bio2 is not None:
+            sentence.convert_tag_scheme(
+                tag_type=self.tag_to_bio2, target_scheme="iob"
+            )
         if self.tag_to_bioes is not None:
             sentence.convert_tag_scheme(
                 tag_type=self.tag_to_bioes, target_scheme="iobes"
