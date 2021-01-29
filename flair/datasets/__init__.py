@@ -7,6 +7,7 @@ from .base import MongoDataset
 # Expose all sequence labeling datasets
 from .sequence_labeling import ColumnCorpus
 from .sequence_labeling import ColumnDataset
+from .sequence_labeling import ANER_CORP
 from .sequence_labeling import BIOFID
 from .sequence_labeling import BIOSCOPE
 from .sequence_labeling import CONLL_03
@@ -14,19 +15,32 @@ from .sequence_labeling import CONLL_03_GERMAN
 from .sequence_labeling import CONLL_03_DUTCH
 from .sequence_labeling import CONLL_03_SPANISH
 from .sequence_labeling import CONLL_2000
-from .sequence_labeling import TWITTER_NER
 from .sequence_labeling import DANE
 from .sequence_labeling import EUROPARL_NER_GERMAN
 from .sequence_labeling import GERMEVAL_14
 from .sequence_labeling import INSPEC
 from .sequence_labeling import LER_GERMAN
+from .sequence_labeling import MIT_MOVIE_NER_SIMPLE
+from .sequence_labeling import MIT_MOVIE_NER_COMPLEX
+from .sequence_labeling import MIT_RESTAURANT_NER
 from .sequence_labeling import NER_BASQUE
 from .sequence_labeling import NER_FINNISH
 from .sequence_labeling import NER_SWEDISH
+from .sequence_labeling import STACKOVERFLOW_NER
 from .sequence_labeling import SEMEVAL2010
 from .sequence_labeling import SEMEVAL2017
+from .sequence_labeling import TURKU_NER
+from .sequence_labeling import TWITTER_NER
+from .sequence_labeling import UP_CHINESE
+from .sequence_labeling import UP_ENGLISH
+from .sequence_labeling import UP_FINNISH
+from .sequence_labeling import UP_FRENCH
+from .sequence_labeling import UP_GERMAN
+from .sequence_labeling import UP_ITALIAN
+from .sequence_labeling import UP_SPANISH
+from .sequence_labeling import UP_SPANISH_ANCORA
+from .sequence_labeling import WEIBO_NER
 from .sequence_labeling import WIKIANN
-from .sequence_labeling import XTREME
 from .sequence_labeling import WIKIGOLD_NER
 from .sequence_labeling import WIKINER_ENGLISH
 from .sequence_labeling import WIKINER_GERMAN
@@ -38,18 +52,10 @@ from .sequence_labeling import WIKINER_PORTUGUESE
 from .sequence_labeling import WIKINER_POLISH
 from .sequence_labeling import WIKINER_RUSSIAN
 from .sequence_labeling import WNUT_17
-from .sequence_labeling import MIT_RESTAURANTS
-from .sequence_labeling import UP_CHINESE
-from .sequence_labeling import UP_ENGLISH
-from .sequence_labeling import UP_FINNISH
-from .sequence_labeling import UP_FRENCH
-from .sequence_labeling import UP_GERMAN
-from .sequence_labeling import UP_ITALIAN
-from .sequence_labeling import UP_SPANISH
-from .sequence_labeling import UP_SPANISH_ANCORA
-from .sequence_labeling import ANER_CORP
-from .sequence_labeling import MITMovieNERSimple
-from .sequence_labeling import MITMovieNERComplex
+from .sequence_labeling import WSD_UFSAC
+from .sequence_labeling import WNUT_2020_NER
+from .sequence_labeling import XTREME
+from .sequence_labeling import BUSINESS_HUN
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
@@ -110,6 +116,15 @@ from .treebanks import UD_JAPANESE
 from .treebanks import UD_CHINESE
 from .treebanks import UD_KOREAN
 from .treebanks import UD_BASQUE
+from .treebanks import UD_GREEK
+from .treebanks import UD_LIVVI
+from .treebanks import UD_NORTH_SAMI
+from .treebanks import UD_MARATHI
+from .treebanks import UD_MALTESE
+from .treebanks import UD_AFRIKAANS
+from .treebanks import UD_OLD_FRENCH
+from .treebanks import UD_GOTHIC
+from .treebanks import UD_WOLOF
 
 # Expose all text-text datasets
 from .text_text import ParallelTextCorpus

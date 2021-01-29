@@ -80,7 +80,7 @@ print(untokenized_sentence)
 
 In this case, no tokenization is performed and the text is split on whitespaces, thus resulting in only 4 tokens here. 
 
-### Using a Different Tokenizer
+### Using a different tokenizer
 
 You can also pass custom tokenizers to the initialization method. For instance, if you want to tokenize a Japanese
 sentence you can use the 'janome' tokenizer instead, like this: 
@@ -109,11 +109,27 @@ You can write your own tokenization routine. Check the code of `flair.data.Token
  (e.g. `flair.tokenization.SegtokTokenizer` or `flair.tokenization.SpacyTokenizer`) to get an idea of how to add 
  your own tokenization method.  
 
+### Using pretokenized sequences
+You can alternatively pass a pretokenized sequence as list of words, e.g.
+
+```python
+from flair.data import Sentence
+sentence = Sentence(['The', 'grass', 'is', 'green', '.'])
+print(sentence)
+```
+
+This should print:
+
+```console
+Sentence: "The grass is green ."   [− Tokens: 5]
+```
+
+
 ## Adding Labels
 
 In Flair, any data point can be labeled. For instance, you can label a word or label a sentence:
 
-### Adding Labels to Tokens
+### Adding labels to tokens
 
 A `Token` has fields for linguistic annotation, such as lemmas, part-of-speech tags or named entity tags. You can
 add a tag by specifying the tag type and the tag value. In this example, we're adding an NER tag of type 'color' to
@@ -155,7 +171,7 @@ This should print:
 Our color tag has a score of 1.0 since we manually added it. If a tag is predicted by our
 sequence labeler, the score value will indicate classifier confidence.
 
-### Adding Labels to Sentences
+### Adding labels to sentences
 
 You can also add a `Label` to a whole `Sentence`.
 For instance, the example below shows how we add the label 'sports' to a sentence, thereby labeling it
@@ -183,7 +199,7 @@ Sentence: "France is the current world cup winner."   [− Tokens: 7  − Senten
 
 Indicating that this sentence belongs to the topic 'sports' with confidence 1.0.
 
-### Multiple Labels
+### Multiple labels
 
 Any data point can be labeled multiple times. A sentence for instance might belong to two topics. In this case, add two labels with the same label name:
 
@@ -218,7 +234,7 @@ Sentence: "France is the current world cup winner."   [− Tokens: 7  − Senten
 
 Indicating that this sentence has two "topic" labels and one "language" label. 
 
-### Accessing a Sentence's Labels
+### Accessing a sentence's labels
 
 You can access these labels like this: 
 

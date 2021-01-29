@@ -524,15 +524,15 @@ class Sentence(DataPoint):
     """
 
     def __init__(
-        self,
-        text: str = None,
-        use_tokenizer: Union[bool, Tokenizer] = True,
-        language_code: str = None,
-        start_position: int = None
+            self,
+            text: Union[str, List[str]] = None,
+            use_tokenizer: Union[bool, Tokenizer] = True,
+            language_code: str = None,
+            start_position: int = None
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
-        :param text: original string
+        :param text: original string (sentence), or a list of string tokens (words)
         :param use_tokenizer: a custom tokenizer (default is :class:`SpaceTokenizer`)
             more advanced options are :class:`SegTokTokenizer` to use segtok or :class:`SpacyTokenizer`
             to use Spacy library if available). Check the implementations of abstract class Tokenizer or
@@ -568,8 +568,12 @@ class Sentence(DataPoint):
 
         # if text is passed, instantiate sentence with tokens (words)
         if text is not None:
-            text = self._restore_windows_1252_characters(text)
-            [self.add_token(token) for token in tokenizer.tokenize(text)]
+            if isinstance(text, (list, tuple)):
+                [self.add_token(self._restore_windows_1252_characters(token))
+                 for token in text]
+            else:
+                text = self._restore_windows_1252_characters(text)
+                [self.add_token(token) for token in tokenizer.tokenize(text)]
 
         # log a warning if the dataset is empty
         if text == "":
@@ -578,6 +582,9 @@ class Sentence(DataPoint):
             )
 
         self.tokenized = None
+
+        # some sentences represent a document boundary (but most do not)
+        self.is_document_boundary: bool = False
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
@@ -595,7 +602,7 @@ class Sentence(DataPoint):
         token.text = token.text.replace('\ufeff', '')
 
         # data with zero-width characters cannot be handled
-        if token.text.strip() == '':
+        if token.text == '':
             return
 
         self.tokens.append(token)
@@ -624,7 +631,7 @@ class Sentence(DataPoint):
             tag_value = tag.value
 
             # non-set tags are OUT tags
-            if tag_value == "" or tag_value == "O":
+            if tag_value == "" or tag_value == "O" or tag_value == "_":
                 tag_value = "O-"
 
             # anything that is not a BIOES tag is a SINGLE tag
@@ -936,6 +943,45 @@ class Sentence(DataPoint):
 
         return re.sub(r"[\u0080-\u0099]", to_windows_1252, text)
 
+    def next_sentence(self):
+        """
+        Get the next sentence in the document (works only if context is set through dataloader or elsewhere)
+        :return: next Sentence in document if set, otherwise None
+        """
+        if '_next_sentence' in self.__dict__.keys():
+            return self._next_sentence
+
+        if '_position_in_dataset' in self.__dict__.keys():
+            dataset = self._position_in_dataset[0]
+            index = self._position_in_dataset[1] + 1
+            if index < len(dataset):
+                return dataset[index]
+
+        return None
+
+    def previous_sentence(self):
+        """
+        Get the previous sentence in the document (works only if context is set through dataloader or elsewhere)
+        :return: previous Sentence in document if set, otherwise None
+        """
+        if '_previous_sentence' in self.__dict__.keys():
+            return self._previous_sentence
+
+        if '_position_in_dataset' in self.__dict__.keys():
+            dataset = self._position_in_dataset[0]
+            index = self._position_in_dataset[1] - 1
+            if index >= 0:
+                return dataset[index]
+
+        return None
+
+    def is_context_set(self) -> bool:
+        """
+        Return True or False depending on whether context is set (for instance in dataloader or elsewhere)
+        :return: True if context is set, else False
+        """
+        return '_previous_sentence' in self.__dict__.keys() or '_position_in_dataset' in self.__dict__.keys()
+
 
 class Image(DataPoint):
 
@@ -1007,12 +1053,13 @@ class Corpus:
             dev: FlairDataset = None,
             test: FlairDataset = None,
             name: str = "corpus",
+            sample_missing_splits: bool = True,
     ):
         # set name
         self.name: str = name
 
         # sample test data if none is provided
-        if test is None:
+        if test is None and sample_missing_splits:
             train_length = len(train)
             test_size: int = round(train_length / 10)
             splits = randomly_split_into_two_datasets(train, test_size)
@@ -1020,7 +1067,7 @@ class Corpus:
             train = splits[1]
 
         # sample dev data if none is provided
-        if dev is None:
+        if dev is None and sample_missing_splits:
             train_length = len(train)
             dev_size: int = round(train_length / 10)
             splits = randomly_split_into_two_datasets(train, dev_size)
@@ -1093,7 +1140,6 @@ class Corpus:
         subset = Subset(dataset, non_empty_sentence_indices)
 
         return subset
-
 
     @staticmethod
     def _filter_empty_sentences(dataset) -> Dataset:
@@ -1234,9 +1280,9 @@ class Corpus:
 
     def __str__(self) -> str:
         return "Corpus: %d train + %d dev + %d test sentences" % (
-            len(self.train),
-            len(self.dev),
-            len(self.test),
+            len(self.train) if self.train else 0,
+            len(self.dev) if self.dev else 0,
+            len(self.test) if self.test else 0,
         )
 
     def make_label_dictionary(self, label_type: str = None) -> Dictionary:
@@ -1285,7 +1331,11 @@ class Corpus:
         return class_to_count
 
     def get_all_sentences(self) -> Dataset:
-        return ConcatDataset([self.train, self.dev, self.test])
+        parts = []
+        if self.train: parts.append(self.train)
+        if self.dev: parts.append(self.dev)
+        if self.test: parts.append(self.test)
+        return ConcatDataset(parts)
 
     def make_tag_dictionary(self, tag_type: str) -> Dictionary:
 
@@ -1301,18 +1351,30 @@ class Corpus:
 
 
 class MultiCorpus(Corpus):
-    def __init__(self, corpora: List[Corpus], name: str = "multicorpus"):
+    def __init__(self, corpora: List[Corpus], name: str = "multicorpus", **corpusargs):
         self.corpora: List[Corpus] = corpora
 
+        train_parts = []
+        dev_parts = []
+        test_parts = []
+        for corpus in self.corpora:
+            if corpus.train: train_parts.append(corpus.train)
+            if corpus.dev: dev_parts.append(corpus.dev)
+            if corpus.test: test_parts.append(corpus.test)
+
         super(MultiCorpus, self).__init__(
-            ConcatDataset([corpus.train for corpus in self.corpora]),
-            ConcatDataset([corpus.dev for corpus in self.corpora]),
-            ConcatDataset([corpus.test for corpus in self.corpora]),
+            ConcatDataset(train_parts) if len(train_parts) > 0 else None,
+            ConcatDataset(dev_parts) if len(dev_parts) > 0 else None,
+            ConcatDataset(test_parts) if len(test_parts) > 0 else None,
             name=name,
+            **corpusargs,
         )
 
     def __str__(self):
-        output = f"MultiCorpus: {len(self.train)} train + {len(self.dev)} dev + {len(self.test)} test sentences\n - "
+        output = f"MultiCorpus: " \
+                 f"{len(self.train) if self.train else 0} train + " \
+                 f"{len(self.dev) if self.dev else 0} dev + " \
+                 f"{len(self.test) if self.test else 0} test sentences\n - "
         output += "\n - ".join([f'{type(corpus).__name__} {str(corpus)}' for corpus in self.corpora])
         return output
 
@@ -1361,8 +1423,8 @@ def iob_iobes(tags):
             raise Exception("Invalid IOB format!")
     return new_tags
 
-def randomly_split_into_two_datasets(dataset, length_of_first):
 
+def randomly_split_into_two_datasets(dataset, length_of_first):
     import random
     indices = [i for i in range(len(dataset))]
     random.shuffle(indices)

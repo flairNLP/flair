@@ -66,7 +66,7 @@ def test_stacked_embeddings():
 
 def test_transformer_word_embeddings():
 
-    embeddings = TransformerWordEmbeddings('distilbert-base-uncased')
+    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='-1,-2,-3,-4', layer_mean=False)
 
     sentence: Sentence = Sentence("I love Berlin")
     embeddings.embed(sentence)
@@ -78,7 +78,7 @@ def test_transformer_word_embeddings():
 
         assert len(token.get_embedding()) == 0
 
-    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all')
+    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', layer_mean=False)
 
     embeddings.embed(sentence)
 
@@ -90,7 +90,7 @@ def test_transformer_word_embeddings():
         assert len(token.get_embedding()) == 0
     del embeddings
 
-    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', use_scalar_mix=True)
+    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', layer_mean=True)
 
     embeddings.embed(sentence)
 
@@ -105,7 +105,7 @@ def test_transformer_word_embeddings():
 
 def test_transformer_weird_sentences():
 
-    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', use_scalar_mix=True)
+    embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', layer_mean=True)
 
     sentence = Sentence("Hybrid mesons , qq ̄ states with an admixture")
     embeddings.embed(sentence)
@@ -279,7 +279,7 @@ def test_transformer_document_embeddings():
 
     assert len(sentence.get_embedding()) == 0
 
-    embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased', layers='all', use_scalar_mix=True)
+    embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased', layers='all', layer_mean=True)
 
     embeddings.embed(sentence)
 

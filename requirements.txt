@@ -1,6 +1,6 @@
 python-dateutil>=2.6.1
-torch>=1.1.0
-gensim>=3.4.0
+torch>=1.5.0
+gensim>=3.4.0,<=3.8.3
 tqdm>=4.26.0
 segtok>=1.5.7
 matplotlib>=2.2.3
@@ -9,14 +9,16 @@ scikit-learn>=0.21.3
 sqlitedict>=1.6.0
 deprecated>=1.2.4
 hyperopt>=0.1.1
-transformers>=3.0.0
+transformers>=4.0.0
 bpemb>=0.3.2
 regex
 tabulate
 langdetect
 lxml
 ftfy
-sentencepiece!=0.1.92
+sentencepiece<=0.1.91
 konoha<5.0.0,>=4.0.0
 janome
 gdown
+numpy<1.20.0
+huggingface-hub
