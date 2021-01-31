@@ -1,1 +1,1 @@
-from .base_model import BaseModel
+from .embedding_shared_model import EmbeddingSharedModel, SequenceTaggerTask, TextClassificationTask

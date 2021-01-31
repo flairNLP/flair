@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 
 import torch
@@ -5,6 +6,12 @@ from torch import nn
 from torch.nn.utils.rnn import pad_sequence
 
 from flair.models.sequence_tagger_model import START_TAG, STOP_TAG
+
+from flair.data import MultitaskCorpus
+
+def make_inputs(*args) -> tuple[MultitaskCorpus, List]:
+    corpora = MultitaskCorpus(args)
+    return "mon", "tach"
 
 def get_tags_tensor(sentences, tag_dictionary, tag_type):
     # Transfrom each sentences into list of tokens
@@ -16,7 +23,7 @@ def get_tags_tensor(sentences, tag_dictionary, tag_type):
     # i.e. [[1,2,11], [1,2,3,11], ...] if STOP_TAG has ID = 11
     tag_list = list(map(lambda sentence:
                         list(map(lambda token:
-                                 tag_dictionary.get_idx_for_item(token.get_tag("ner").value), sentence))
+                                 tag_dictionary.get_idx_for_item(token.get_tag(tag_type).value), sentence))
                                  + [tag_dictionary.get_idx_for_item(STOP_TAG)]
                         , token_list))
 

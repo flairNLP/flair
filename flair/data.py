@@ -177,6 +177,38 @@ class Label:
         return f"{self._value} ({round(self._score, 4)})"
 
 
+class Task:
+    """
+    This class represents a task assignment (necessary for multitask models) in order
+    to determine which path to go in multitask models forward method
+    """
+
+    def __init__(self, task_id: str):
+        """
+        :param task_id
+        """
+        self.task_id = task_id
+        super().__init__()
+
+    @property
+    def task_id(self):
+        return self._task_id
+
+    @task_id.setter
+    def task_id(self, task_id):
+        if not task_id and task_id != "":
+            raise ValueError(
+                "Incorrect task provided."
+            )
+        else:
+            self._task_id = task_id
+
+    def __str__(self):
+        return f"This sentence belongs to multitask model ID: ({self._task_id})"
+
+    def __repr__(self):
+        return f"({self._task_id})"
+
 class DataPoint:
     """
     This is the parent class of all data points in Flair (including Token, Sentence, Image, etc.). Each DataPoint
@@ -187,6 +219,7 @@ class DataPoint:
 
     def __init__(self):
         self.annotation_layers = {}
+        self.multitask_annotations = None
 
     @property
     @abstractmethod
@@ -231,6 +264,20 @@ class DataPoint:
         for key in self.annotation_layers.keys():
             all_labels.extend(self.annotation_layers[key])
         return all_labels
+
+    def _add_task(self, task_id: str):
+
+        if self.multitask_annotations is None:
+            self.__setattr__("multitask_annotations", {})
+
+        key = "multitask_assignments"
+
+        if key not in self.multitask_annotations:
+            self.multitask_annotations[key] = [Task(task_id)]
+        else:
+            self.multitask_annotations[key].append(Task(task_id))
+
+        return self
 
 
 class DataPair(DataPoint):
@@ -917,7 +964,10 @@ class Sentence(DataPoint):
         # add Token labels to output if they exist
         token_labels = f'  − Token-Labels: "{tagged_string}"' if tokenized_string != tagged_string else ""
 
-        return f'Sentence: "{tokenized_string}"   [− Tokens: {len(self)}{token_labels}{sentence_labels}]'
+        # add Multitask assignments to output if they exist
+        multitask_labels = f" - Multitask-Labels: {self.multitask_annotations}" if self.multitask_annotations != None else ""
+
+        return f'Sentence: "{tokenized_string}"   [− Tokens: {len(self)}{token_labels}{sentence_labels}{multitask_labels}]'
 
     def __copy__(self):
         s = Sentence()
@@ -1374,6 +1424,14 @@ class Corpus:
         tag_dictionary.add_item("<STOP>")
         return tag_dictionary
 
+    def set_multitask_id(self, task_id: str):
+        """
+        Sets multitask id to all sentences in corpus
+        :param task_id: key to identify model in multitask forward method
+        """
+        for sentence in self.get_all_sentences():
+            sentence._add_task(task_id)
+
 
 class MultiCorpus(Corpus):
     def __init__(self, corpora: List[Corpus], name: str = "multicorpus", **corpusargs):
@@ -1460,3 +1518,54 @@ def randomly_split_into_two_datasets(dataset, length_of_first):
     second_dataset.sort()
 
     return [Subset(dataset, first_dataset), Subset(dataset, second_dataset)]
+
+
+class MultitaskCorpus(MultiCorpus):
+    """
+    MultitaskCorpus takes different tasks as parameters and is used for Multitask Model Training
+    Assigns to each corpus its respective task id
+    """
+
+    def __init__(self, *args):
+
+        self._assert_inputs(args)
+        self.tasks = {}
+
+        corpora = []
+
+        for id, corpus_config in enumerate(args):
+
+            task_id = f"task_{id}"
+            corpus = corpus_config.get("corpus")
+
+            corpus.set_multitask_id(task_id)
+            if not corpus in corpora: corpora.append(corpus)
+
+            self.tasks[task_id] = corpus_config
+
+        super(MultitaskCorpus, self).__init__(corpora)
+
+    @staticmethod
+    def _assert_inputs(args):
+        assert len(args) != 0, \
+            "Please provide corpus information."
+
+        # check - all args are dictionaries
+        assert all(map(lambda corpus_config: isinstance(corpus_config, dict), args)), \
+            "MultitaskCorpus takes an arbitrary number of dictionaries as input"
+
+        # check - corpus keyword in each dict
+        assert all(map(lambda corpus_config: "corpus" in corpus_config, args)), \
+            "All inputs need a corpus, defined by the keyword 'corpus'."
+
+        # check - corpus datatype provided to 'corpus' keyword
+        assert all(map(lambda corpus_config: isinstance(corpus_config["corpus"], Corpus), args)), \
+            "Provide only Corpus datatype to the keyword 'corpus'."
+
+        # check - task keyword in each dict
+        assert all(map(lambda corpus_config: "model" in corpus_config, args)), \
+            "All corpora need to be assigned to a downstream task defined by the keyword 'task'."
+
+        # check - corpus datatype provided to 'corpus' keyword
+        assert all(map(lambda corpus_config:isinstance(corpus_config["model"], torch.nn.Module), args)), \
+            "Multitask models need to torch.nn.Modules, coming from the multitask module."
