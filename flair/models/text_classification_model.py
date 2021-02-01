@@ -684,7 +684,7 @@ class TARSClassifier(TextClassifier):
             plausible_labels = []
             plausible_label_probabilities = []
             for plausible_label in self.label_nearest_map[label]:
-                if plausible_label in already_sampled_negative_labels:
+                if plausible_label in already_sampled_negative_labels or plausible_label in labels:
                     continue
                 else:
                     plausible_labels.append(plausible_label)
@@ -709,7 +709,7 @@ class TARSClassifier(TextClassifier):
         label_text_pair = " ".join([self._get_cleaned_up_label(label),
                                     self.tars_model.document_embeddings.tokenizer.sep_token,
                                     original_text])
-        label_text_pair_sentence = Sentence(label_text_pair)
+        label_text_pair_sentence = Sentence(label_text_pair, use_tokenizer=False)
         if tars_label is not None:
             if tars_label:
                 label_text_pair_sentence.add_label(self.tars_model.label_type,
@@ -772,13 +772,20 @@ class TARSClassifier(TextClassifier):
     @staticmethod
     def _init_model_with_state_dict(state):
         task_name = state["current_task"]
-        label_dictionary = state["task_specific_attributes"][task_name]['label_dictionary']
-
         print("init TARS")
-        model = TARSClassifier(task_name, label_dictionary)
+        
+        # init new TARS classifier
+        model = TARSClassifier(
+            task_name,
+            label_dictionary = state["task_specific_attributes"][task_name]['label_dictionary'],
+            document_embeddings=state["tars_model"].document_embeddings,
+            num_negative_labels_to_sample=state["num_negative_labels_to_sample"],
+        )
+        # set all task information
         model.task_specific_attributes = state["task_specific_attributes"]
-        model.tars_model = state["tars_model"]
-        model.num_negative_labels_to_sample = state["num_negative_labels_to_sample"]
+        # model.tars_model = state["tars_model"]
+        # model.num_negative_labels_to_sample = state["num_negative_labels_to_sample"]
+        # linear layers of internal classifier
         model.load_state_dict(state["state_dict"])
         return model
 
