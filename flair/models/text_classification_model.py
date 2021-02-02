@@ -783,8 +783,6 @@ class TARSClassifier(TextClassifier):
         )
         # set all task information
         model.task_specific_attributes = state["task_specific_attributes"]
-        # model.tars_model = state["tars_model"]
-        # model.num_negative_labels_to_sample = state["num_negative_labels_to_sample"]
         # linear layers of internal classifier
         model.load_state_dict(state["state_dict"])
         return model
