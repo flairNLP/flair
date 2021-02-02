@@ -12,6 +12,8 @@ from flair.embeddings.base import Embeddings, ScalarMix
 from flair.embeddings.token import TokenEmbeddings, StackedEmbeddings, FlairEmbeddings
 from flair.nn import LockedDropout, WordDropout
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+
 log = logging.getLogger("flair")
 
 
@@ -331,6 +333,49 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
 
     def extra_repr(self):
         return f"fine_tune_mode={self.fine_tune_mode}, pooling={self.pooling}"
+
+
+class DocumentTFIDFEmbeddings(DocumentEmbeddings):
+    def __init__(
+        self,
+        train_dataset,
+        **vectorizer_params,
+    ):
+        """The constructor for DocumentTFIDFEmbeddings.
+        :param train_dataset: the train dataset which will be used to construct vectorizer
+        :param vectorizer_params: parameters given to Scikit-learn's TfidfVectorizer constructor
+        """
+        super().__init__()
+
+        import numpy as np
+        self.vectorizer = TfidfVectorizer(dtype=np.float32, **vectorizer_params)
+        self.vectorizer.fit([s.to_original_text() for s in train_dataset])
+        
+        self.__embedding_length: int = len(self.vectorizer.vocabulary_)
+
+        self.to(flair.device)
+
+        self.name: str = f"document_tfidf"
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def embed(self, sentences: Union[List[Sentence], Sentence]):
+        """Add embeddings to every sentence in the given list of sentences."""
+
+        # if only one sentence is passed, convert to list of sentence
+        if isinstance(sentences, Sentence):
+            sentences = [sentences]
+
+        raw_sentences = [s.to_original_text() for s in sentences]
+        tfidf_vectors = torch.from_numpy(self.vectorizer.transform(raw_sentences).A)
+    
+        for sentence_id, sentence in enumerate(sentences):
+            sentence.set_embedding(self.name, tfidf_vectors[sentence_id])
+        
+    def _add_embeddings_internal(self, sentences: List[Sentence]):
+        pass
 
 
 class DocumentRNNEmbeddings(DocumentEmbeddings):
