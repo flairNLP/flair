@@ -368,7 +368,7 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
             sentences = [sentences]
 
         raw_sentences = [s.to_original_text() for s in sentences]
-        tfidf_vectors = torch.from_numpy(self.vectorizer.transform(raw_sentences).A)
+        tfidf_vectors = torch.from_numpy(self.vectorizer.transform(raw_sentences).A).float()
     
         for sentence_id, sentence in enumerate(sentences):
             sentence.set_embedding(self.name, tfidf_vectors[sentence_id])
