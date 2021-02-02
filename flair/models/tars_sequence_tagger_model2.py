@@ -72,7 +72,6 @@ class TARSSequenceTagger2(flair.nn.Model):
         self.transformer_word_embeddings = TransformerWordEmbeddings(
             model=transformer_word_embeddings,
             fine_tune=True,
-            batch_size=batch_size,
         )
 
         # all stats are required for state dict
@@ -202,7 +201,6 @@ class TARSSequenceTagger2(flair.nn.Model):
                         tag_dictionary.add_item("I-" + tag_no_prefix)
                     elif tag_prefix == "I":
                         tag_dictionary.add_item("B-" + tag_no_prefix)
-                print(tag_dictionary)
             self.task_specific_attributes[task_name] = {}
             self.task_specific_attributes[task_name]['tag_dictionary'] = tag_dictionary
             self.task_specific_attributes[task_name]['tag_type'] = tag_type
@@ -222,7 +220,6 @@ class TARSSequenceTagger2(flair.nn.Model):
             self.current_task = task_name
             self.tag_dictionary = self.task_specific_attributes[task_name]['tag_dictionary']
             self.tag_dictionary_no_prefix = self._get_tag_dictionary_no_prefix()
-            print(self.tag_dictionary_no_prefix)
             self.tag_type = self.task_specific_attributes[task_name]['tag_type']
             self.beta = self.task_specific_attributes[task_name]['beta']
             # TODO: further implement here: loss-weights? dropout? num_negative_samples?
@@ -334,7 +331,8 @@ class TARSSequenceTagger2(flair.nn.Model):
 
     def _get_random_tags(self):
         random_set = set()
-        rand_samples = random.sample(self.tag_dictionary_no_prefix.idx2item, self.num_negative_tags_to_sample)
+        sample_num = min(self.num_negative_tags_to_sample, len(self.tag_dictionary_no_prefix.idx2item))
+        rand_samples = random.sample(self.tag_dictionary_no_prefix.idx2item, sample_num)
         for item in rand_samples:
             random_set.add(item.decode("UTF-8"))
         return random_set
