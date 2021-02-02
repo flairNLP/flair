@@ -339,15 +339,16 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
     def __init__(
         self,
         train_dataset,
-        vectorizer_parms = {}
+        **vectorizer_params,
     ):
         """The constructor for DocumentTFIDFEmbeddings.
         :param train_dataset: the train dataset which will be used to construct vectorizer
-        :param vectorizer_parms: the dictionary of parameters given to Scikit-learn's TfidfVectorizer constructor
+        :param vectorizer_params: parameters given to Scikit-learn's TfidfVectorizer constructor
         """
         super().__init__()
 
-        self.vectorizer = TfidfVectorizer(**vectorizer_parms)
+        import numpy as np
+        self.vectorizer = TfidfVectorizer(dtype=np.float32, **vectorizer_params)
         self.vectorizer.fit([s.to_original_text() for s in train_dataset])
         
         self.__embedding_length: int = len(self.vectorizer.vocabulary_)
@@ -368,7 +369,7 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
             sentences = [sentences]
 
         raw_sentences = [s.to_original_text() for s in sentences]
-        tfidf_vectors = torch.from_numpy(self.vectorizer.transform(raw_sentences).A).float()
+        tfidf_vectors = torch.from_numpy(self.vectorizer.transform(raw_sentences).A)
     
         for sentence_id, sentence in enumerate(sentences):
             sentence.set_embedding(self.name, tfidf_vectors[sentence_id])
