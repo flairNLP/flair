@@ -3,17 +3,19 @@ from pathlib import Path
 
 import torch
 import torch.nn
-from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_sequence
 
+import flair.nn
 from flair.data import Sentence, Dictionary, Dataset
 from flair.datasets import SentenceDataset, DataLoader
-from flair.embeddings import TokenEmbeddings
+from flair.embeddings import TokenEmbeddings, DocumentEmbeddings
 from flair.training_utils import Metric, Result, store_embeddings
 from flair.models.sequence_tagger_model import START_TAG, STOP_TAG
 
 from .crf import CRF
 from .viterbi import ViterbiLoss, ViterbiDecoder
 from .utils import init_stop_tag_embedding, get_tags_tensor
+
 
 class SequenceTaggerTask(torch.nn.Module):
 
@@ -28,10 +30,19 @@ class SequenceTaggerTask(torch.nn.Module):
             rnn_layers: int = 1,
             bidirectional: bool = True,
             use_crf: bool = True,
+            reproject_embeddings: bool = True,
+            dropout: float = 0.0,
+            word_dropout: float = 0.0,
+            locked_dropout: float = 0.5,
             beta: float = 1.0,
     ):
         super(SequenceTaggerTask, self).__init__()
+
+        # Multitask logging info
+        self.name = f"{self._get_name()} - Task: {tag_type}"
+
         # Embedding specific
+        self.embeddings = embeddings
         embedding_dim: int = embeddings.embedding_length
         self.stop_token_emb = init_stop_tag_embedding(embedding_dim)
         self.tag_dictionary = tag_dictionary
@@ -39,6 +50,7 @@ class SequenceTaggerTask(torch.nn.Module):
         self.tag_type = tag_type
 
         # Evalulation specific attributes
+        self.metric = Metric("Evaluation", beta=beta)
         self.beta = beta
 
         # RNN specific attributes
@@ -46,6 +58,23 @@ class SequenceTaggerTask(torch.nn.Module):
         self.rnn_type = rnn_type
         self.hidden_size = hidden_size
         self.rnn_layers = rnn_layers
+
+        # Dropouts
+        # Dropout specific attributes
+        self.use_dropout = True if dropout > 0.0 else False
+        self.use_word_dropout = True if word_dropout > 0.0 else False
+        self.use_locked_dropout = True if locked_dropout > 0.0 else False
+
+        self.reproject_embeddings = reproject_embeddings
+        if self.reproject_embeddings:
+            self.embedding2nn = torch.nn.Linear(embedding_dim, embedding_dim)
+
+        if self.use_dropout:
+            self.dropout = torch.nn.Dropout(dropout)
+        if self.use_word_dropout:
+            self.word_dropout = flair.nn.WordDropout(word_dropout)
+        if self.use_locked_dropout:
+            self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
 
         # CRF specific
         self.use_crf = use_crf
@@ -98,40 +127,50 @@ class SequenceTaggerTask(torch.nn.Module):
 
         return RNN
 
-    def forward_loss(self, sentence_tensor: torch.Tensor) -> torch.Tensor:
+    def forward_loss(self, sentences) -> torch.Tensor:
         """
         Forward loss function from abstract base class in flair
         :param sentences: list of sentences
         """
-        # Prepare sentence tensor - extract embeddings
-        tensor_list = list(map(lambda sent:
-                               sent.get_sequence_tensor(add_stop_tag_embedding=True, stop_tag_embedding=self.stop_token_emb)
-                               , sentences))
-        sentence_tensor = pad_sequence(tensor_list, batch_first=True)
+        features, lengths = self.forward(sentences)
+        return self.loss(features, sentences, lengths)
 
-        # Sort sentences after length in decreasing order
-        # Add one since we're having an <STOP> tag append to our sequence
-        lengths = torch.LongTensor([len(sentence) + 1 for sentence in sentences])
-        lengths = lengths.sort(dim=0, descending=True)
-        sentence_tensor = sentence_tensor[lengths.indices]
-        features, lengths = self.forward(sentence_tensor)
-        return self.loss(features, sentence_tensor, lengths)
-
-    def forward(self, sentence_tensor: torch.Tensor, lengths) -> (torch.Tensor, torch.Tensor):
+    def forward(self, sentences) -> (torch.Tensor, torch.Tensor):
         """
         Forward method of base multitask model
         :param sentences: list of sentences
         """
+        self.embeddings.embed(sentences)
+
+        # Prepare sentence tensor - extract embeddings
+        tensor_list = list(map(lambda sent: torch.cat((sent.get_sequence_tensor(), self.stop_token_emb.unsqueeze(0)), dim=0), sentences))
+        sentence_tensor = pad_sequence(tensor_list, batch_first=True)
+
+        lengths = torch.LongTensor([len(sentence) + 1 for sentence in sentences])
+        lengths = lengths.sort(dim=0, descending=True)
+        sentence_tensor = sentence_tensor[lengths.indices]
+
+        # Feed-forward
+        if self.use_dropout:
+            sentence_tensor = self.dropout(sentence_tensor)
+        if self.use_word_dropout:
+            sentence_tensor = self.word_dropout(sentence_tensor)
+        if self.use_locked_dropout:
+            sentence_tensor = self.locked_dropout(sentence_tensor)
+
+        if self.reproject_embeddings:
+            sentence_tensor = self.embedding2nn(sentence_tensor)
+
         if self.use_rnn:
             packed = pack_padded_sequence(sentence_tensor, list(lengths.values), batch_first=True)
             rnn_output, hidden = self.rnn(packed)
             sentence_tensor, output_lengths = pad_packed_sequence(rnn_output, batch_first=True)
         else:
-            pass
+            sentence_tensor = self.linear(sentence_tensor)
 
-        if self.use_dropout > 0.0:
+        if self.use_dropout:
             sentence_tensor = self.dropout(sentence_tensor)
-        if self.use_locked_dropout > 0.0:
+        if self.use_locked_dropout:
             sentence_tensor = self.locked_dropout(sentence_tensor)
 
         if self.use_crf:
@@ -141,7 +180,7 @@ class SequenceTaggerTask(torch.nn.Module):
 
         return features, lengths
 
-    def loss(self, features: torch.Tensor, sentences: Union[List[Sentence], Sentence], lengths: tuple) -> torch.Tensor:
+    def loss(self, features: torch.Tensor, sentences: Union[List[Sentence], Sentence], lengths) -> torch.Tensor:
         """
         Loss function of multitask base model.
         :param features: Output features / CRF scores from feed-forward function
@@ -162,91 +201,24 @@ class SequenceTaggerTask(torch.nn.Module):
 
     def evaluate(
         self,
-        sentences: Union[List[Sentence], Dataset],
+        sentences,
         embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
-        num_workers: int = 8
     ) -> (Result, float):
 
-        # read Dataset into data loader (if list of sentences passed, make Dataset first)
-        if not isinstance(sentences, Dataset):
-            sentences = SentenceDataset(sentences)
-        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
+        loss = self.predict(sentences,
+                            embedding_storage_mode=embedding_storage_mode,
+                            label_name='predicted',
+                            return_loss=True)
 
-        eval_loss = 0
-        batch_no: int = 0
+        self.calculate_metric(sentences)
 
-        # check if we need to evaluate span of tags
-        if self._requires_span_F1_evaluation():
-            metric = Metric("Evaluation", beta=self.beta)
-        else:
-            metric = Dictionary(add_unk=False)
+        self.store_result()
 
-        # Predict and adds predicted labels to each sentence in batch
-        # performs forward(), loss(), ViterbiDecoder.decode() and adds predicted label to batch
-        for batch in data_loader:
-
-            loss = self.predict(batch,
-                                embedding_storage_mode=embedding_storage_mode,
-                                label_name='predicted',
-                                return_loss=True)
-
-            eval_loss += loss
-            batch_no += 1
-
-            # Add scores to metric
-            for sentence in batch:
-
-                # make list of gold tags
-                gold_spans = sentence.get_spans(self.tag_type)
-                gold_tags = [(span.tag, repr(span)) for span in gold_spans]
-
-                # make list of predicted tags
-                predicted_spans = sentence.get_spans("predicted")
-                predicted_tags = [(span.tag, repr(span)) for span in predicted_spans]
-
-                # check for true positives, false positives and false negatives
-                for tag, prediction in predicted_tags:
-                    if (tag, prediction) in gold_tags:
-                        metric.add_tp(tag)
-                    else:
-                        metric.add_fp(tag)
-
-                for tag, gold in gold_tags:
-                    if (tag, gold) not in predicted_tags:
-                        metric.add_fn(tag)
-
-        eval_loss /= batch_no
-
-        # Log results
-        detailed_result = (
-            "\nResults:"
-            f"\n- F1-score (micro) {metric.micro_avg_f_score():.4f}"
-            f"\n- F1-score (macro) {metric.macro_avg_f_score():.4f}"
-            '\n\nBy class:'
-        )
-
-        for class_name in metric.get_classes():
-            detailed_result += (
-                f"\n{class_name:<10} tp: {metric.get_tp(class_name)} - fp: {metric.get_fp(class_name)} - "
-                f"fn: {metric.get_fn(class_name)} - precision: "
-                f"{metric.precision(class_name):.4f} - recall: {metric.recall(class_name):.4f} - "
-                f"f1-score: "
-                f"{metric.f_score(class_name):.4f}"
-            )
-
-        result = Result(
-            main_score=metric.micro_avg_f_score(),
-            log_line=f"{metric.precision():.4f}\t{metric.recall():.4f}\t{metric.micro_avg_f_score():.4f}",
-            log_header="PRECISION\tRECALL\tF1",
-            detailed_results=detailed_result,
-        )
-
-        return result, eval_loss
+        return loss
 
     def predict(
             self,
-            sentences: Union[List[Sentence], Sentence],
+            sentences,
             label_name: Optional[str] = None,
             return_loss=False,
             embedding_storage_mode="none",
@@ -255,6 +227,7 @@ class SequenceTaggerTask(torch.nn.Module):
             label_name = self.tag_type
 
         with torch.no_grad():
+
             features, lengths = self.forward(sentences)
 
             if return_loss:
@@ -277,6 +250,76 @@ class SequenceTaggerTask(torch.nn.Module):
         if return_loss:
             return loss
 
+    def calculate_metric(self, sentences):
+
+        if self._requires_span_F1_evaluation():
+            self._span_F1_evaluation(sentences)
+        else:
+            self._tag_F1_evaluation(sentences)
+
+    def _span_F1_evaluation(self, sentences):
+        # Add scores to metric
+        for sentence in sentences:
+
+            # make list of gold tags
+            gold_spans = sentence.get_spans(self.tag_type)
+            gold_tags = [(span.tag, repr(span)) for span in gold_spans]
+
+            # make list of predicted tags
+            predicted_spans = sentence.get_spans("predicted")
+            predicted_tags = [(span.tag, repr(span)) for span in predicted_spans]
+
+            # check for true positives, false positives and false negatives
+            for tag, prediction in predicted_tags:
+                if (tag, prediction) in gold_tags:
+                    self.metric.add_tp(tag)
+                else:
+                    self.metric.add_fp(tag)
+
+            for tag, gold in gold_tags:
+                if (tag, gold) not in predicted_tags:
+                    self.metric.add_fn(tag)
+
+    def _tag_F1_evaluation(self, sentences):
+        for sentence in sentences:
+
+            for token in sentence:
+                # add gold tag
+                gold_tag = token.get_tag(self.tag_type).value
+                predicted_tag = token.get_tag('predicted').value
+
+                if gold_tag == predicted_tag:
+                    self.metric.add_tp(predicted_tag)
+                else:
+                    self.metric.add_fp(predicted_tag)
+                    self.metric.add_fn(gold_tag)
+
+    def store_result(self):
+        # Log results
+        detailed_result = (
+            "\nResults:"
+            f"\n- F1-score (micro) {self.metric.micro_avg_f_score():.4f}"
+            f"\n- F1-score (macro) {self.metric.macro_avg_f_score():.4f}"
+            '\n\nBy class:'
+        )
+
+        for class_name in self.metric.get_classes():
+            detailed_result += (
+                f"\n{class_name:<10} tp: {self.metric.get_tp(class_name)} - fp: {self.metric.get_fp(class_name)} - "
+                f"fn: {self.metric.get_fn(class_name)} - precision: "
+                f"{self.metric.precision(class_name):.4f} - recall: {self.metric.recall(class_name):.4f} - "
+                f"f1-score: "
+                f"{self.metric.f_score(class_name):.4f}"
+            )
+
+        self.result = Result(
+            main_score=self.metric.micro_avg_f_score(),
+            log_line=f"{self.metric.precision():.4f}\t{self.metric.recall():.4f}\t{self.metric.micro_avg_f_score():.4f}",
+            log_header="PRECISION\tRECALL\tF1",
+            detailed_results=detailed_result,
+            multitask_id=self.name,
+        )
+
     def _requires_span_F1_evaluation(self) -> bool:
         span_F1 = False
         for item in self.tag_dictionary.get_items():
@@ -284,24 +327,19 @@ class SequenceTaggerTask(torch.nn.Module):
                 span_F1 = True
         return span_F1
 
+    def _reset_eval_metrics(self):
+        self.metric = Metric("Evaluation", beta=self.beta)
+        self.result = None
+
 class TextClassificationTask(torch.nn.Module):
 
     def __init__(
             self,
-            embedding_length: int,
-            tag_dictionary: Dictionary,
-            tag_type: str,
-            use_crf: bool = True,
-            shared_rnn: bool = False):
+            embeddings: DocumentEmbeddings,
+            label_dictionary: Dictionary
+    ):
         super(TextClassificationTask, self).__init__()
-        self.stop_token_emb = init_stop_tag_embedding(embedding_length) # seq label specific
-        self.tag_type = tag_type # specific for seq label or none for tc
-        if use_crf: # seq label specific
-            self.tag_dictionary.add_item(START_TAG)
-            self.tag_dictionary.add_item(STOP_TAG)
-
-        # CRF specific attributes
-        self.use_crf = use_crf  # seq label specific
+        pass
 
     def forward(self):
         pass

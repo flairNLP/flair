@@ -477,6 +477,8 @@ class ModelTrainer:
                     log.info(
                         f"DEV : loss {dev_loss} - score {round(dev_eval_result.main_score, 4)}"
                     )
+                    if dev_eval_result.score_per_task:
+                        log.info(dev_eval_result.score_per_task)
                     # calculate scores using dev data if available
                     # append dev score to score history
                     dev_score_history.append(dev_eval_result.main_score)

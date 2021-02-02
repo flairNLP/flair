@@ -1,1 +1,2 @@
-from .embedding_shared_model import EmbeddingSharedModel, SequenceTaggerTask, TextClassificationTask
+from .multitask_model import MultitaskModel
+from .task_model import SequenceTaggerTask, TextClassificationTask

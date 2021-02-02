@@ -779,12 +779,7 @@ class Sentence(DataPoint):
 
         return torch.Tensor()
 
-    def get_sequence_tensor(self,
-                            add_stop_tag_embedding: bool = False,
-                            stop_tag_embedding: torch.Tensor = None) -> torch.Tensor:
-
-        if add_stop_tag_embedding and stop_tag_embedding == None:
-            raise Exception("Please provide a stop tag embedding to be appended.")
+    def get_sequence_tensor(self) -> torch.Tensor:
 
         if all(token.get_embedding().nelement() != 0 for token in self.tokens) \
         and all(token.get_embedding().shape for token in self.tokens): # Check if tokens and embeddings are set and dimension matches
@@ -793,13 +788,8 @@ class Sentence(DataPoint):
             sequence_tensor = torch.empty(size=(seq_len, embedding_dim), device=flair.device)
             for token_id, token in enumerate(self.tokens):
                 sequence_tensor[token_id] = token.embedding
-
-        if add_stop_tag_embedding:
-            # Sanity check
-            assert stop_tag_embedding.size(0) == sequence_tensor.size(1)
-            sequence_tensor = torch.cat((sequence_tensor, stop_tag_embedding.unsqueeze(0)))
         else:
-            sequence_tensor = torch.tensor([], device=flair.device)
+            sequence_tensor = torch.Tensor()
 
         return sequence_tensor
 
@@ -1529,7 +1519,7 @@ class MultitaskCorpus(MultiCorpus):
     def __init__(self, *args):
 
         self._assert_inputs(args)
-        self.tasks = {}
+        self.models = {}
 
         corpora = []
 
@@ -1541,7 +1531,7 @@ class MultitaskCorpus(MultiCorpus):
             corpus.set_multitask_id(task_id)
             if not corpus in corpora: corpora.append(corpus)
 
-            self.tasks[task_id] = corpus_config
+            self.models[task_id] = corpus_config.get("model")
 
         super(MultitaskCorpus, self).__init__(corpora)
 

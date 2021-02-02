@@ -18,13 +18,38 @@ from scipy.stats import pearsonr, spearmanr
 
 class Result(object):
     def __init__(
-        self, main_score: float, log_header: str, log_line: str, detailed_results: str
+        self, main_score, log_header: str, log_line: str, detailed_results: str, multitask_id: str = None
     ):
         self.main_score: float = main_score
         self.log_header: str = log_header
         self.log_line: str = log_line
         self.detailed_results: str = detailed_results
+        self.multitask_id = multitask_id
 
+class MultitaskResult(Result):
+    def __init__(self, results: List[Result]):
+        if not all([isinstance(result, Result) for result in results]):
+            raise Exception("Can only pass arguments of class Result to MultitaskResult object.")
+
+        main_score = 0
+        log_header = "\n"
+        log_line = "\n Results per task: \n"
+        detailed_results = ""
+        self.score_per_task = "\n"
+
+        for result in results:
+            self.score_per_task += f"{result.multitask_id} - {result.main_score} \n"
+            main_score += result.main_score
+            log_header += f"{result.multitask_id}\t{result.log_header} \n"
+            log_line += f"{result.multitask_id} - {result.log_line} \n"
+            detailed_results += f"{detailed_results} - {result.detailed_results} \n"
+
+        main_score /= len(results)
+
+        super(MultitaskResult, self).__init__(main_score=main_score,
+                                              log_header=log_header,
+                                              log_line=log_line,
+                                              detailed_results=detailed_results)
 
 class Metric(object):
     def __init__(self, name, beta=1):
