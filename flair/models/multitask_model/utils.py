@@ -9,10 +9,6 @@ from flair.models.sequence_tagger_model import START_TAG, STOP_TAG
 
 from flair.data import MultitaskCorpus
 
-def make_inputs(*args) -> tuple[MultitaskCorpus, List]:
-    corpora = MultitaskCorpus(args)
-    return "mon", "tach"
-
 def get_tags_tensor(sentences, tag_dictionary, tag_type):
     # Transfrom each sentences into list of tokens
     # i.e. [[token_1, token_2], [token_1, token_2, token_3], ...]
