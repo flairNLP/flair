@@ -35,7 +35,7 @@ class RelationTagger(flair.nn.Model):
             self,
             embeddings: TokenEmbeddings,
             tag_dictionary: Dictionary,
-            tag_type: str,
+            tag_type: Optional[str] = "relation_type",
             beta: float = 1.0,
     ):
         """
@@ -86,8 +86,8 @@ class RelationTagger(flair.nn.Model):
         data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
 
         # if span F1 needs to be used, use separate eval method
-        if self._requires_span_F1_evaluation():
-            return self._evaluate_with_span_F1(data_loader, embedding_storage_mode, mini_batch_size, out_path)
+        # if self._requires_span_F1_evaluation():
+        #     return self._evaluate_with_span_F1(data_loader, embedding_storage_mode, mini_batch_size, out_path)
 
         # else, use scikit-learn to evaluate
         y_true = []
@@ -112,17 +112,17 @@ class RelationTagger(flair.nn.Model):
 
             for sentence in batch:
 
-                for token in sentence:
+                for relation in sentence.relations:
                     # add gold tag
-                    gold_tag = token.get_tag(self.tag_type).value
+                    gold_tag = relation.get_tag(self.tag_type).value
                     y_true.append(labels.add_item(gold_tag))
 
                     # add predicted tag
-                    predicted_tag = token.get_tag('predicted').value
+                    predicted_tag = relation.get_tag('predicted').value
                     y_pred.append(labels.add_item(predicted_tag))
 
                     # for file output
-                    lines.append(f'{token.text} {gold_tag} {predicted_tag}\n')
+                    lines.append(f'{relation.print_span_text()} || Gold: {gold_tag} || Predicted: {predicted_tag}\n')
 
                 lines.append('\n')
 
@@ -130,6 +130,8 @@ class RelationTagger(flair.nn.Model):
             with open(Path(out_path), "w", encoding="utf-8") as outfile:
                 outfile.write("".join(lines))
 
+        print(y_true)
+        print(y_pred)
         eval_loss /= batch_no
 
         # use sklearn
@@ -144,7 +146,7 @@ class RelationTagger(flair.nn.Model):
             label = labels.get_item_for_index(i)
             all_labels.append(label)
             all_indices.append(i)
-            if label == '_' or label == '': continue
+            if label in ('_', '', 'N'): continue
             target_names.append(label)
             labels_to_report.append(i)
 
@@ -264,7 +266,8 @@ class RelationTagger(flair.nn.Model):
                 if verbose:
                     dataloader.set_description(f"Inferencing on batch {batch_no}")
 
-                batch = self._filter_empty_sentences(batch)
+                # batch = self._filter_empty_sentences(batch)
+                batch = self._filter_sentences_with_less_than_two_spans(batch)
                 # stop if all sentences are empty
                 if not batch:
                     continue
@@ -281,13 +284,13 @@ class RelationTagger(flair.nn.Model):
                 )
 
                 for (sentence, sent_tags) in zip(batch, tags):
-                    for (token, tag) in zip(sentence.tokens, sent_tags):
-                        token.add_tag_label(label_name, tag)
+                    for (relation, tag) in zip(sentence.relations, sent_tags):
+                        relation.add_tag_label(label_name, tag)
 
                 # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
                 for (sentence, sent_all_tags) in zip(batch, all_tags):
-                    for (token, token_all_tags) in zip(sentence.tokens, sent_all_tags):
-                        token.add_tags_proba_dist(label_name, token_all_tags)
+                    for (relation, relation_all_tags) in zip(sentence.relations, sent_all_tags):
+                        relation.add_tags_proba_dist(label_name, relation_all_tags)
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
@@ -312,23 +315,22 @@ class RelationTagger(flair.nn.Model):
         )
 
         all_embs = list()
-        for sentence in sentences:
+        for sentence, span_count in zip(sentences, span_counts):
             spans = sentence.get_spans("ner")
-            spans_in_sentence = len(spans)
             token_embs = [emb for span in spans for emb in span.tokens[0].get_each_embedding(names)]
             sentence_embs = list()
-            for i in range(max_span_count):
-                for j in range(max_span_count):
+            for i in range(span_count):
+                for j in range(span_count):
                     if i == j:
                         continue
-                    if max(i, j) < spans_in_sentence:
+                    else:
                         concatenated_tensors = torch.cat(
                             (token_embs[i], token_embs[j]),
                             0
                         )
                         sentence_embs.append(concatenated_tensors)
-                    else:
-                        sentence_embs.append(pre_allocated_zero_tensor)
+            for i in range(max_relations_count - (span_count * (span_count - 1))):
+                sentence_embs.append(pre_allocated_zero_tensor)
 
             all_embs += sentence_embs
 
@@ -358,8 +360,7 @@ class RelationTagger(flair.nn.Model):
             # get the tags in this sentence
             tag_idx: List[int] = [idx_no_relation for _ in range(max_relations_count)]
             for r_id, relation in enumerate(sentence.relations):
-                idx = self._get_idx_in_list_with_max_span_count(r_id, span_counts[s_id], max_span_count)
-                tag_idx[idx] = self.tag_dictionary.get_idx_for_item(
+                tag_idx[r_id] = self.tag_dictionary.get_idx_for_item(
                     relation.get_labels()[0].value
                 )
             # add tags as tensor
@@ -376,9 +377,6 @@ class RelationTagger(flair.nn.Model):
         score /= len(features)
         return score
 
-    def _get_idx_in_list_with_max_span_count(self, idx, current_span_count, max_span_count):
-        return (idx // current_span_count) * max_span_count + (idx % current_span_count)
-
     def _obtain_labels(
             self,
             feature: torch.Tensor,
@@ -387,27 +385,28 @@ class RelationTagger(flair.nn.Model):
     ) -> (List[List[Label]], List[List[List[Label]]]):
         """
         Returns a tuple of two lists:
-         - The first list corresponds to the most likely `Label` per token in each sentence.
-         - The second list contains a probability distribution over all `Labels` for each token
+         - The first list corresponds to the most likely `Label` per relation in each sentence.
+         - The second list contains a probability distribution over all `Labels` for each relation
            in a sentence for all sentences.
         """
 
-        lengths: List[int] = [len(sentence.tokens) for sentence in batch_sentences]
+        span_counts: List[int] = [len(sentence.get_spans("ner")) for sentence in batch_sentences]
+        relations_counts: List[int] = [span_count * (span_count - 1) for span_count in span_counts]
 
         tags = []
         all_tags = []
         feature = feature.cpu()
-        for index, length in enumerate(lengths):
-            feature[index, length:] = 0
+        for index, relations_count in enumerate(relations_counts):
+            feature[index, relations_count:] = 0
         softmax_batch = F.softmax(feature, dim=2).cpu()
         scores_batch, prediction_batch = torch.max(softmax_batch, dim=2)
         feature = zip(softmax_batch, scores_batch, prediction_batch)
 
-        for feats, length in zip(feature, lengths):
+        for feats, relations_count in zip(feature, relations_counts):
             softmax, score, prediction = feats
-            confidences = score[:length].tolist()
-            tag_seq = prediction[:length].tolist()
-            scores = softmax[:length].tolist()
+            confidences = score[:relations_count].tolist()
+            tag_seq = prediction[:relations_count].tolist()
+            scores = softmax[:relations_count].tolist()
 
             tags.append(
                 [
@@ -431,12 +430,21 @@ class RelationTagger(flair.nn.Model):
 
         return tags, all_tags
 
+    # @staticmethod
+    # def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
+    #     filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
+    #     if len(sentences) != len(filtered_sentences):
+    #         log.warning(
+    #             f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens."
+    #         )
+    #     return filtered_sentences
+
     @staticmethod
-    def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
-        filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
+    def _filter_sentences_with_less_than_two_spans(sentences: List[Sentence]) -> List[Sentence]:
+        filtered_sentences = [sentence for sentence in sentences if len(sentence.get_spans()) >= 2]
         if len(sentences) != len(filtered_sentences):
             log.warning(
-                f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens."
+                f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with less than 2 spans."
             )
         return filtered_sentences
 

@@ -1531,6 +1531,7 @@ class Relation(DataPoint):
         self.first = first
         self.second = second
         self.add_label("relation_type", label.value, label.score)
+        self.tags_proba_dist: List[Label] = []
 
     def to(self, device: str, pin_memory: bool = False):
         self.first.to(device, pin_memory)
@@ -1550,5 +1551,21 @@ class Relation(DataPoint):
     def to_plain_string(self):
         return f"Relation: First {self.first}  ||  Second {self.second} || Labels: {self.labels}"
 
+    def print_span_text(self):
+        return f"Relation: First {self.first}  ||  Second {self.second}"
+
     def __len__(self):
         return len(self.first) + len(self.second)
+
+    def add_tag_label(self, tag_type: str, tag: Label):
+        self.set_label(tag_type, tag.value, tag.score)
+
+    def get_tag(self, label_type: str = "relation_type"):
+        if len(self.get_labels(label_type)) == 0: return Label('')
+        return self.get_labels(label_type)[0]
+
+    def add_tags_proba_dist(self, tags: List[Label]):
+        self.tags_proba_dist = tags
+
+    def get_tags_proba_dist(self) -> List[Label]:
+        return self.tags_proba_dist
