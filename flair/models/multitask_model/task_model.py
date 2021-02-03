@@ -1,21 +1,22 @@
-from typing import Union, List, Optional
 from pathlib import Path
+import numpy as np
+from typing import Union, List, Optional, Dict
 
 import torch
 import torch.nn
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_sequence
+from tqdm import tqdm
 
 import flair.nn
-from flair.data import Sentence, Dictionary, Dataset
+from flair.data import Sentence, Dictionary, Dataset, DataPoint, Label
 from flair.datasets import SentenceDataset, DataLoader
 from flair.embeddings import TokenEmbeddings, DocumentEmbeddings
-from flair.training_utils import Metric, Result, store_embeddings
+from flair.training_utils import Metric, Result, store_embeddings, convert_labels_to_one_hot
 from flair.models.sequence_tagger_model import START_TAG, STOP_TAG
 
 from .crf import CRF
 from .viterbi import ViterbiLoss, ViterbiDecoder
 from .utils import init_stop_tag_embedding, get_tags_tensor
-
 
 class SequenceTaggerTask(torch.nn.Module):
 
@@ -65,6 +66,7 @@ class SequenceTaggerTask(torch.nn.Module):
         self.use_word_dropout = True if word_dropout > 0.0 else False
         self.use_locked_dropout = True if locked_dropout > 0.0 else False
 
+        # Model layers
         self.reproject_embeddings = reproject_embeddings
         if self.reproject_embeddings:
             self.embedding2nn = torch.nn.Linear(embedding_dim, embedding_dim)
@@ -205,14 +207,16 @@ class SequenceTaggerTask(torch.nn.Module):
         embedding_storage_mode: str = "none",
     ) -> (Result, float):
 
-        loss = self.predict(sentences,
-                            embedding_storage_mode=embedding_storage_mode,
-                            label_name='predicted',
-                            return_loss=True)
+        with torch.no_grad():
 
-        self.calculate_metric(sentences)
+            loss = self.predict(sentences,
+                                embedding_storage_mode=embedding_storage_mode,
+                                label_name='predicted',
+                                return_loss=True)
 
-        self.store_result()
+            self.calculate_metric(sentences)
+
+            self.store_result()
 
         return loss
 
@@ -226,29 +230,24 @@ class SequenceTaggerTask(torch.nn.Module):
         if label_name == None:
             label_name = self.tag_type
 
-        with torch.no_grad():
+        features, lengths = self.forward(sentences)
 
-            features, lengths = self.forward(sentences)
+        # features und lengths in der forward sortiert
+        tags = self.viterbi_decoder.decode(features, lengths)
 
-            if return_loss:
-                loss = self.loss(features, sentences, lengths)
+        # sorted sentences to match tags from decoder
+        sentences = [sentences[i] for i in lengths.indices]
 
-            # features und lengths in der forward sortiert
-            tags = self.viterbi_decoder.decode(features, lengths)
+        # Add predicted labels to sentences
+        for (sentence, sent_tags) in zip(sentences, tags):
+            for (token, tag) in zip(sentence.tokens, sent_tags):
+                token.add_tag_label(label_name, tag)
 
-            # sorted sentences to match tags from decoder
-            sentences = [sentences[i] for i in lengths.indices]
-
-            # Add predicted labels to sentences
-            for (sentence, sent_tags) in zip(sentences, tags):
-                for (token, tag) in zip(sentence.tokens, sent_tags):
-                    token.add_tag_label(label_name, tag)
-
-            # clearing token embeddings to save memory
-            store_embeddings(sentences, storage_mode=embedding_storage_mode)
+        # clearing token embeddings to save memory
+        store_embeddings(sentences, storage_mode=embedding_storage_mode)
 
         if return_loss:
-            return loss
+            return self.loss(features, sentences, lengths)
 
     def calculate_metric(self, sentences):
 
@@ -335,11 +334,264 @@ class TextClassificationTask(torch.nn.Module):
 
     def __init__(
             self,
-            embeddings: DocumentEmbeddings,
-            label_dictionary: Dictionary
+            document_embeddings: flair.embeddings.DocumentEmbeddings,
+            label_dictionary: Dictionary,
+            label_type: str = None,
+            multi_label: bool = None,
+            multi_label_threshold: float = 0.5,
+            beta: float = 1.0,
+            loss_weights: Dict[str, float] = None,
     ):
         super(TextClassificationTask, self).__init__()
-        pass
+        # Multitask logging info
+        self.name = f"{self._get_name()} - Task: {label_type}"
 
-    def forward(self):
-        pass
+        # Label information
+        self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
+        self.label_dictionary: Dictionary = label_dictionary
+        self.label_type = label_type
+
+        if multi_label is not None:
+            self.multi_label = multi_label
+        else:
+            self.multi_label = self.label_dictionary.multi_label
+        self.multi_label_threshold = multi_label_threshold
+
+        # Metric specific
+        self.metric = Metric("Evaluation", beta=beta)
+        self.beta = beta
+
+        # Initial loss weights
+        self.weight_dict = loss_weights
+        if loss_weights is not None:
+            self.init_loss_weights(loss_weights)
+        else:
+            self.loss_weights = None
+
+        # Model layers
+        self.decoder = torch.nn.Linear(
+            self.document_embeddings.embedding_length, len(self.label_dictionary)
+        )
+
+        torch.nn.init.xavier_uniform_(self.decoder.weight)
+
+        if self.multi_label:
+            self.loss_function = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights)
+        else:
+            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
+
+    def init_loss_weights(self, loss_weights: torch.Tensor):
+        n_classes = len(self.label_dictionary)
+        weight_list = [1. for i in range(n_classes)]
+        for i, tag in enumerate(self.label_dictionary.get_items()):
+            if tag in loss_weights.keys():
+                weight_list[i] = loss_weights[tag]
+        self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
+
+    def forward_loss(
+            self, sentences: Union[List[Sentence], Sentence]
+    ) -> torch.tensor:
+
+        scores = self.forward(sentences)
+
+        return self.loss(scores, sentences)
+
+    def forward(self, sentences):
+
+        self.document_embeddings.embed(sentences)
+
+        embedding_names = self.document_embeddings.get_names()
+
+        text_embedding_list = [
+            sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in sentences
+        ]
+        text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
+
+        label_scores = self.decoder(text_embedding_tensor)
+
+        return label_scores
+
+    def loss(self, scores, sentences):
+
+        if self.multi_label:
+            labels = self._labels_to_one_hot(sentences)
+        else:
+            labels = self._labels_to_indices(sentences)
+
+        return self.loss_function(scores, labels)
+
+    def evaluate(
+            self,
+            sentences: Union[List[DataPoint], Dataset],
+            embedding_storage_mode: str = "none",
+    ) -> (Result, float):
+
+        with torch.no_grad():
+
+            loss = self.predict(sentences,
+                                embedding_storage_mode=embedding_storage_mode,
+                                label_name='predicted',
+                                return_loss=True)
+
+            self.calculate_metric(sentences)
+
+            self.store_result()
+
+        return loss
+
+    def predict(
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            multi_class_prob: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
+    ):
+        """
+        Predicts the class labels for the given sentences. The labels are directly added to the sentences.
+        :param sentences: list of sentences
+        :param mini_batch_size: mini batch size to use
+        :param multi_class_prob : return probability for all class for multiclass
+        :param verbose: set to True to display a progress bar
+        :param return_loss: set to True to return loss
+        :param label_name: set this to change the name of the label type that is predicted
+        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
+        you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
+        'gpu' to store embeddings in GPU memory.
+        """
+        if label_name == None:
+            label_name = self.label_type if self.label_type is not None else 'label'
+
+        features = self.forward(sentences)
+
+        loss = self.loss(features, sentences)
+
+        predicted_labels = self._obtain_labels(features, predict_prob=multi_class_prob)
+
+        for (sentence, labels) in zip(sentences, predicted_labels):
+            for label in labels:
+                if self.multi_label or multi_class_prob:
+                    sentence.add_label(label_name, label.value, label.score)
+                else:
+                    sentence.set_label(label_name, label.value, label.score)
+
+        # clearing token embeddings to save memory
+        store_embeddings(sentences, storage_mode=embedding_storage_mode)
+
+        if return_loss:
+            return loss
+
+    def _obtain_labels(self, scores: List[List[float]], predict_prob: bool = False) -> List[List[Label]]:
+
+        if self.multi_label:
+            return [self._get_multi_label(s) for s in scores]
+
+        elif predict_prob:
+            return [self._predict_label_prob(s) for s in scores]
+
+        return [self._get_single_label(s) for s in scores]
+
+    def _get_single_label(self, label_scores) -> List[Label]:
+        softmax = torch.nn.functional.softmax(label_scores, dim=0)
+        conf, idx = torch.max(softmax, 0)
+        label = self.label_dictionary.get_item_for_index(idx.item())
+
+        return [Label(label, conf.item())]
+
+    def _get_multi_label(self, label_scores) -> List[Label]:
+        labels = []
+
+        sigmoid = torch.nn.Sigmoid()
+
+        results = list(map(lambda x: sigmoid(x), label_scores))
+        for idx, conf in enumerate(results):
+            if conf > self.multi_label_threshold:
+                label = self.label_dictionary.get_item_for_index(idx)
+                labels.append(Label(label, conf.item()))
+
+        return labels
+
+    def calculate_metric(self, sentences):
+        predicted_labels_batch = list(map(lambda sentence: sentence.get_labels('predicted'), sentences))
+        list(map(lambda sentence: sentence.remove_labels('predicted'), sentences))
+        gold_labels_batch = list(map(lambda sentence: sentence.get_labels(self.label_type), sentences))
+
+        for (gold_labels, predicted_labels) in zip(gold_labels_batch, predicted_labels_batch):
+            gold_labels = [label.value for label in gold_labels]
+            predicted_labels = [label.value for label in predicted_labels]
+
+            for prediction in predicted_labels:
+                if prediction in gold_labels:
+                    self.metric.add_tp(prediction)
+                else:
+                    self.metric.add_fp(prediction)
+
+            for gold_label in gold_labels:
+                if gold_label not in predicted_labels:
+                    self.metric.add_fn(gold_label)
+
+    def store_result(self):
+        detailed_result = (
+                "\nResults:"
+                f"\n- F-score (micro) {self.metric.micro_avg_f_score():.4f}"
+                f"\n- F-score (macro) {self.metric.macro_avg_f_score():.4f}"
+                '\n\nBy class:'
+        )
+
+        for class_name in self.metric.get_classes():
+            detailed_result += (
+                f"\n{class_name:<10} tp: {self.metric.get_tp(class_name)} - fp: {self.metric.get_fp(class_name)} - "
+                f"fn: {self.metric.get_fn(class_name)} - precision: "
+                f"{self.metric.precision(class_name):.4f} - recall: {self.metric.recall(class_name):.4f} - "
+                f"f1-score: "
+                f"{self.metric.f_score(class_name):.4f}"
+            )
+
+        if not self.multi_label:
+            log_header = "ACCURACY"
+            log_line = f"\t{self.metric.accuracy():.4f}"
+        else:
+            log_header = "PRECISION\tRECALL\tF1\tACCURACY"
+            log_line = f"{self.metric.precision()}\t" \
+                       f"{self.metric.recall()}\t" \
+                       f"{self.metric.macro_avg_f_score()}\t" \
+                       f"{self.metric.accuracy()}"
+
+        self.result = Result(
+            main_score=self.metric.f_score(),
+            log_line=log_line,
+            log_header=log_header,
+            detailed_results=detailed_result,
+            multitask_id=self.name
+        )
+
+    def _labels_to_one_hot(self, sentences: List[Sentence]):
+
+        label_list = []
+        for sentence in sentences:
+            label_list.append([label.value for label in sentence.get_labels(self.label_type)])
+
+        one_hot = convert_labels_to_one_hot(label_list, self.label_dictionary)
+        one_hot = [torch.FloatTensor(l).unsqueeze(0) for l in one_hot]
+        one_hot = torch.cat(one_hot, 0).to(flair.device)
+        return one_hot
+
+    def _labels_to_indices(self, sentences: List[Sentence]):
+
+        indices = [
+            torch.LongTensor(
+                [
+                    self.label_dictionary.get_idx_for_item(label.value)
+                    for label in sentence.get_labels(self.label_type)
+                ]
+            )
+            for sentence in sentences
+        ]
+
+        vec = torch.cat(indices, 0).to(flair.device)
+
+        return vec
+
+    def _reset_eval_metrics(self):
+        self.metric = Metric("Evaluation", beta=self.beta)
+        self.result = None

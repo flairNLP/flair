@@ -39,7 +39,6 @@ class MultitaskModel(flair.nn.Model):
         :param sentences: list of sentences
         """
         batch_split = self.split_batch_to_task_ids(sentences)
-
         loss = 0
         for model, split in batch_split.items():
             loss += self.__getattr__(model).forward_loss(sentences=[sentences[i] for i in split])
