@@ -270,22 +270,20 @@ class TARSSequenceTagger2(flair.nn.Model):
             return None, None
 
     def _get_tag_dictionary_no_prefix(self):
-        candidate_tag_set = set()
+        candidate_tag_list = []
         for tag in self.tag_dictionary.idx2item:
             tag = tag.decode("utf-8")
             spl = tag.split("-")
-            if tag == "O":
-                # do nothing (0 should not be explicit in the new dict)
-                unused_var = None
-            elif len(spl) == 1:
+            if len(spl) == 1: # no tag was found
                 print("no - was found in a tag:")
                 print(tag)
                 print()
-            else:
-                candidate_tag_set.add("-".join(spl[1:]))
+            elif tag != "O": # tag found that is either B or I
+                candidate_tag_list.append("-".join(spl[1:]))
+        candidate_tag_list = self._remove_not_unique_items_from_list(candidate_tag_list)
 
         tag_dictionary_no_prefix: Dictionary = Dictionary(add_unk=False)
-        for tag in candidate_tag_set:
+        for tag in candidate_tag_list:
             tag_dictionary_no_prefix.add_item(tag)
 
         return tag_dictionary_no_prefix
@@ -330,15 +328,15 @@ class TARSSequenceTagger2(flair.nn.Model):
         super(TARSSequenceTagger2, self).train(mode)
 
     def _get_random_tags(self):
-        random_set = set()
+        random_samples_decoded = []
         sample_num = min(self.num_negative_tags_to_sample, len(self.tag_dictionary_no_prefix.idx2item))
         rand_samples = random.sample(self.tag_dictionary_no_prefix.idx2item, sample_num)
         for item in rand_samples:
-            random_set.add(item.decode("UTF-8"))
-        return random_set
+            random_samples_decoded.append(item.decode("UTF-8"))
+        return random_samples_decoded
 
     def _get_nearest_tags_for(self, tags):
-        nearest_tags = set()
+        nearest_tags = []
 
         if len(tags) == 0:
             return self._get_random_tags()
@@ -365,7 +363,7 @@ class TARSSequenceTagger2(flair.nn.Model):
                                                          num_samples,
                                                          replace=False,
                                                          p=plausible_tag_probabilities)
-                nearest_tags.update(sampled_negative_tags)
+                nearest_tags.extend(sampled_negative_tags)
 
         return nearest_tags
 
@@ -397,9 +395,11 @@ class TARSSequenceTagger2(flair.nn.Model):
             tag_text_pairs_for_sentence = []
 
             if not full_forward and self.num_negative_tags_to_sample is not None:
-                tags_of_sentence = {self._split_tag(token.get_tag(self.tag_type).value)[1] for token in sentence}
-                tags_of_sentence = {tag for tag in tags_of_sentence if tag is not None}
+                tags_of_sentence = [self._split_tag(token.get_tag(self.tag_type).value)[1] for token in sentence]
+                tags_of_sentence = [tag for tag in tags_of_sentence if tag is not None]
+                tags_of_sentence = self._remove_not_unique_items_from_list(tags_of_sentence)
                 sampled_tags_not_in_sentence = self._get_nearest_tags_for(tags_of_sentence)
+                sampled_tags_not_in_sentence = self._remove_not_unique_items_from_list(sampled_tags_not_in_sentence)
                 for tag in tags_of_sentence:
                     tag_text_pairs_for_sentence.append( \
                         self._get_tars_formatted_sentence(tag, sentence))
@@ -413,6 +413,13 @@ class TARSSequenceTagger2(flair.nn.Model):
                         self._get_tars_formatted_sentence(tag, sentence))
             tag_text_pairs.extend(tag_text_pairs_for_sentence)
         return tag_text_pairs
+
+    def _remove_not_unique_items_from_list(self, l: list):
+        new_list = []
+        for item in l:
+            if item not in new_list:
+                new_list.append(item)
+        return new_list
 
     @staticmethod
     def _make_ad_hoc_tag_dictionary(candidate_tag_set: set = None) -> Dictionary:
