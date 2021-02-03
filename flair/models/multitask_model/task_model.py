@@ -26,6 +26,7 @@ class SequenceTaggerTask(torch.nn.Module):
             tag_dictionary: Dictionary,
             tag_type: str,
             use_rnn: bool = True,
+            rnn: Optional[torch.nn.Module] = None,
             rnn_type: str = "LSTM",
             hidden_size: int = 256,
             rnn_layers: int = 1,
@@ -56,9 +57,10 @@ class SequenceTaggerTask(torch.nn.Module):
 
         # RNN specific attributes
         self.use_rnn = use_rnn
-        self.rnn_type = rnn_type
-        self.hidden_size = hidden_size
-        self.rnn_layers = rnn_layers
+        self.rnn_type = rnn_type if not rnn else rnn._get_name()
+        self.hidden_size = hidden_size if not rnn else rnn.hidden_size
+        self.rnn_layers = rnn_layers if not rnn else rnn.num_layers
+        self.bidirectional = bidirectional if not rnn else rnn.bidirectional
 
         # Dropouts
         # Dropout specific attributes
@@ -86,17 +88,23 @@ class SequenceTaggerTask(torch.nn.Module):
 
         # Model layers
         if use_rnn:
-            self.rnn = self.RNN(rnn_type, rnn_layers,  hidden_size, bidirectional, rnn_input_dim=embedding_dim)
+            if not rnn:
+                self.rnn = self.RNN(rnn_type, rnn_layers,  hidden_size, bidirectional, rnn_input_dim=embedding_dim)
+            else:
+                self.rnn = rnn
+
+            num_directions = 2 if self.bidirectional else 1
+            hidden_output_dim = self.rnn.hidden_size * num_directions
         else:
             self.linear = torch.nn.Linear(embedding_dim, embedding_dim)
+            hidden_output_dim = embedding_dim
 
-        num_directions = 2 if bidirectional else 1
         if use_crf:
-            self.crf = CRF(hidden_size * num_directions, self.tagset_size)
+            self.crf = CRF(hidden_output_dim, self.tagset_size)
             self.viterbi_loss = ViterbiLoss(tag_dictionary)
             self.viterbi_decoder = ViterbiDecoder(tag_dictionary)
         else:
-            self.linear2tag = torch.nn.Linear(hidden_size * num_directions, len(tag_dictionary))
+            self.linear2tag = torch.nn.Linear(hidden_output_dim, self.tagset_size)
             self.cross_entropy_loss = torch.nn.CrossEntropyLoss()
 
     @staticmethod
