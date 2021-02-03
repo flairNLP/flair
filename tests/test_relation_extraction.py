@@ -1,6 +1,7 @@
 import pytest
 import flair.datasets
 from flair.data import Sentence, Relation, Label, Dictionary
+from flair.datasets import DataLoader, SentenceDataset
 from flair.embeddings import (
     TransformerWordEmbeddings,
 )
@@ -38,18 +39,37 @@ def two_sentences_with_relations():
     sentence2.relations = [Relation(spans[0], spans[1], Label('Kill')),
                            Relation(spans[1], spans[0], Label('N')), ]
 
-    return [sentence1, sentence2]
+    sentence3 = Sentence("In NYC B , C and D killed E .")
+    sentence3[1].add_tag("ner", "B-Loc")
+    sentence3[2].add_tag("ner", "B-Peop")
+    sentence3[4].add_tag("ner", "B-Peop")
+    sentence3[6].add_tag("ner", "B-Peop")
+    sentence3[8].add_tag("ner", "B-Peop")
+    spans = sentence3.get_spans("ner")
+    sentence3.relations = []
+    for i in range(5):
+        for j in range(5):
+            if i == j:
+                continue
+            if i != 0 and j == 4:
+                sentence3.relations.append(Relation(spans[i], spans[j], Label('Kill')))
+            else:
+                sentence3.relations.append(Relation(spans[i], spans[j], Label('N')))
+
+    return [sentence1, sentence2, sentence3]
 
 
 def test_forward(two_sentences_with_relations):
     sentences = two_sentences_with_relations
-    # corpus = flair.datasets.CONLL_04().downsample(0.03)
-    # for sentence in corpus.test:
-    #     sentence.relations = sentence.build_relations()
-    # for sentence in corpus.train:
-    #     sentence.relations = sentence.build_relations()
+    corpus = flair.datasets.CONLL_04().downsample(0.3)
+    for sentence in corpus.train:
+        sentence.relations = sentence.build_relations()
+    for sentence in corpus.dev:
+        sentence.relations = sentence.build_relations()
+    for sentence in corpus.test:
+        sentence.relations = sentence.build_relations()
 
-    # tag_dict = corpus.make_relation_label_dictionary()
+    tag_dict = corpus.make_relation_label_dictionary()
     label_dictionary: Dictionary = Dictionary(add_unk=False)
     label_dictionary.multi_label = True
     label_dictionary.add_item('N')
@@ -58,11 +78,29 @@ def test_forward(two_sentences_with_relations):
     label_dictionary.add_item('Kill')
 
     embs = TransformerWordEmbeddings()
-    rt_test = SimpleSequenceTagger(embeddings=embs, tag_dictionary=label_dictionary, tag_type="ner")
-    rt = RelationTagger(embeddings=embs, tag_dictionary=label_dictionary, tag_type="ner")
-    result = rt.forward(sentences)
-    print(result)
-    # sent = Sentence("Lee Harvey Oswald killed John F. Kennedy .")
-    # rt.predict(sent)
+    rt = RelationTagger(embeddings=embs, tag_dictionary=label_dictionary)
+    rt = RelationTagger(embeddings=embs, tag_dictionary=tag_dict)
+    trainer = ModelTrainer(rt, corpus)
+    trainer.train(
+        base_path="resources/relation-tagger",
+        learning_rate=0.1,
+        mini_batch_size=4,
+        mini_batch_chunk_size=None,
+        max_epochs=1
+    )
 
-    assert len(label_dictionary) == 1
+    # sentences = SentenceDataset(sentences)
+    # data_loader = DataLoader(sentences, batch_size=32, num_workers=8)
+    # for batch in data_loader:
+    # features = rt.forward(sentences)
+    # labels = rt._obtain_labels(features, sentences, True)
+    # print("labels", labels)
+    # loss = rt._calculate_loss(features, sentences)
+    # print("loss", loss)
+    # evaluate = rt.evaluate(sentences)
+    # # for sent in sentences:
+    # #     for rel in sent.relations:
+    # #         print(rel)
+    # print(evaluate[0].detailed_results)
+
+    assert False
