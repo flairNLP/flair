@@ -114,7 +114,7 @@ class ViterbiDecoder:
             pointer = decoded[:, t].unsqueeze(1)  # (batch_size, 1)
 
         # Sanity check
-        assert torch.equal(decoded[:, 0], torch.ones((batch_size), dtype=torch.long) * self.start_tag)
+        assert torch.equal(decoded[:, 0], torch.ones((batch_size).to(flair.device), dtype=torch.long) * self.start_tag)
 
         # Max + Softmax to get confidence score for predicted label
         confidences = torch.max(softmax(scores_upto_t, dim=2), dim=2)
