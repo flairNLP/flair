@@ -24,7 +24,7 @@ class FlairTokenizer(flair.nn.Model):
                  ):
 
         super(FlairTokenizer, self).__init__()
-        
+
         # TODO: This init method should be the same as your LSTMTagger
         pass
 
