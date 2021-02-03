@@ -45,4 +45,4 @@ def get_tags_tensor(sentences, tag_dictionary, tag_type):
 
 def init_stop_tag_embedding(embedding_length):
     bias = np.sqrt(3.0 / embedding_length)
-    return nn.init.uniform_(torch.FloatTensor(embedding_length, device=flair.device), -bias, bias)
+    return nn.init.uniform_(torch.FloatTensor(embedding_length), -bias, bias).to(flair.device)
