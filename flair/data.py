@@ -461,6 +461,20 @@ class Span(DataPoint):
         return self.labels[0].score
 
 
+class LabeledString(DataPoint):
+
+    def __init__(self, string: str):
+        super().__init__()
+        self.string = string
+
+    def __str__(self) -> str:
+
+        # add Sentence labels to output if they exist
+        sentence_labels = f"  − Labels: {self.annotation_layers}" if self.annotation_layers != {} else ""
+
+        return f'String: "{self.string}" {sentence_labels}'
+
+
 class Tokenizer(ABC):
     r"""An abstract class representing a :class:`Tokenizer`.
 
