@@ -5,9 +5,8 @@ import torch
 from torch import nn
 from torch.nn.utils.rnn import pad_sequence
 
+import flair
 from flair.models.sequence_tagger_model import START_TAG, STOP_TAG
-
-from flair.data import MultitaskCorpus
 
 def get_tags_tensor(sentences, tag_dictionary, tag_type):
     # Transfrom each sentences into list of tokens
@@ -46,4 +45,4 @@ def get_tags_tensor(sentences, tag_dictionary, tag_type):
 
 def init_stop_tag_embedding(embedding_length):
     bias = np.sqrt(3.0 / embedding_length)
-    return nn.init.uniform_(torch.FloatTensor(embedding_length), -bias, bias)
+    return nn.init.uniform_(torch.FloatTensor(embedding_length, device=flair.device), -bias, bias)

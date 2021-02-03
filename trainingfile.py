@@ -11,8 +11,8 @@ conll03: Corpus = CONLL_03()
 ner_dictionary = conll03.make_tag_dictionary('ner')
 pos_dictionary = conll03.make_tag_dictionary('pos')
 
-trec6: Corpus = TREC_6()
-trec_dictionary = trec6.make_label_dictionary()
+#trec6: Corpus = TREC_6()
+#trec_dictionary = trec6.make_label_dictionary()
 
 #subj: Corpus = SENTEVAL_SUBJ()
 #subj_dictionary = subj.make_label_dictionary()
