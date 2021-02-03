@@ -67,4 +67,5 @@ trainer: ModelTrainer = ModelTrainer(multitask_model, multi_corpus)
 trainer.train('results/multitask-1',
               learning_rate=0.1,
               mini_batch_size=64,
-              max_epochs=150)
+              max_epochs=150,
+              embeddings_storage_mode="gpu")

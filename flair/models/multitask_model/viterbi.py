@@ -85,12 +85,12 @@ class ViterbiDecoder:
         seq_len = features.size(1)
 
         # Create a tensor to hold accumulated sequence scores at each current tag
-        scores_upto_t = torch.zeros(batch_size, seq_len, self.tagset_size)
+        scores_upto_t = torch.zeros(batch_size, seq_len, self.tagset_size).to(flair.device)
 
         # Create a tensor to hold back-pointers
         # i.e., indices of the previous_tag that corresponds to maximum accumulated score at current tag
         # Let pads be the <end> tag index, since that was the last tag in the decoded sequence
-        backpointers = torch.ones((batch_size, seq_len, self.tagset_size), dtype=torch.long) * self.stop_tag
+        backpointers = torch.ones((batch_size, seq_len, self.tagset_size), dtype=torch.long).to(flair.device) * self.stop_tag
 
         for t in range(seq_len):
             batch_size_t = sum([l > t for l in lengths.values])  # effective batch size (sans pads) at this timestep
@@ -106,8 +106,8 @@ class ViterbiDecoder:
                     dim=1)  # (batch_size, tagset_size)
 
         # Decode/trace best path backwards
-        decoded = torch.zeros((batch_size, backpointers.size(1)), dtype=torch.long)
-        pointer = torch.ones((batch_size, 1), dtype=torch.long) * self.stop_tag  # the pointers at the ends are all <end> tags
+        decoded = torch.zeros((batch_size, backpointers.size(1)), dtype=torch.long).to(flair.device)
+        pointer = torch.ones((batch_size, 1), dtype=torch.long).to(flair.device) * self.stop_tag  # the pointers at the ends are all <end> tags
 
         for t in list(reversed(range(backpointers.size(1)))):
             decoded[:, t] = torch.gather(backpointers[:, t, :], 1, pointer).squeeze(1)
@@ -118,7 +118,6 @@ class ViterbiDecoder:
 
         # Max + Softmax to get confidence score for predicted label
         confidences = torch.max(softmax(scores_upto_t, dim=2), dim=2)
-
 
         for tag_seq, tag_seq_conf, length_seq in zip(decoded, confidences.values, lengths.values):
             tags.append(
