@@ -213,7 +213,7 @@ class SequenceTagger(flair.nn.Model):
             )
         else:
             self.linear = torch.nn.Linear(
-                self.embeddings.embedding_length, len(tag_dictionary)
+                rnn_input_dim, len(tag_dictionary)
             )
 
         if self.use_crf:
