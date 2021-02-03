@@ -1,6 +1,9 @@
 import logging
+import os
 from pathlib import Path
 from typing import List, Union
+from flair.datasets.base import find_train_dev_test_files
+
 
 import flair
 from flair.data import (
@@ -9,7 +12,7 @@ from flair.data import (
     FlairDataset,
     DataPair,
 )
-from flair.file_utils import cached_path, unzip_file
+from flair.file_utils import cached_path, unpack_file, unzip_file
 
 log = logging.getLogger("flair")
 
@@ -197,3 +200,386 @@ class ParallelTextDataset(FlairDataset):
             return self._make_bi_sentence(
                 self.source_lines[index], self.target_lines[index]
             )
+        
+class TextualEntailmentCorpus(Corpus):
+    def __init__(
+            self,
+            data_folder: Union[str, Path],
+            columns: List[int] = [0,1,2],
+            train_file=None,
+            test_file=None,
+            dev_file=None,
+            use_tokenizer: bool = True,
+            max_tokens_per_doc=-1,
+            max_chars_per_doc=-1,
+            in_memory: bool = True,
+            autofind_splits=True,
+            sample_missing_splits: bool = True,
+            skip_first_line: bool = False,
+            separator: str = '\t',
+            encoding: str = 'utf-8'
+    ):
+        """
+        :param data_folder: base folder with the task data
+        :param train_file: the name of the train file
+        :param test_file: the name of the test file
+        :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :param use_tokenizer: Whether or not to use in-built tokenizer
+        :param max_tokens_per_doc: If set, shortens sentences to this maximum number of tokens
+        :param max_chars_per_doc: If set, shortens sentences to this maximum number of characters
+        :param in_memory: If True, keeps dataset fully in memory
+        
+        :return: a Corpus with annotated train, dev and test data
+        """
+        
+        # find train, dev and test files if not specified
+        #hängt Dateinamen and Pfad data_folder
+        dev_file, test_file, train_file = \
+            find_train_dev_test_files(data_folder, dev_file, test_file, train_file, autofind_splits)
+            
+
+        train: FlairDataset = TextualEntailmentDataset(
+            train_file,
+            columns=columns,
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            skip_first_line=skip_first_line,
+            separator=separator,
+            encoding=encoding
+        ) if train_file is not None else None
+        
+        test: FlairDataset = TextualEntailmentDataset(
+            test_file,
+            columns=columns,
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            skip_first_line=skip_first_line,
+            separator=separator,
+            encoding=encoding
+        ) if test_file is not None else None
+
+        dev: FlairDataset = TextualEntailmentDataset(
+            dev_file,
+            columns=columns,
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            skip_first_line=skip_first_line,
+            separator=separator,
+            encoding=encoding
+        ) if dev_file is not None else None
+
+
+        super(TextualEntailmentCorpus, self).__init__(train, dev, test,
+                                                      sample_missing_splits=sample_missing_splits,
+                                                      name=str(data_folder))
+        
+        
+class TextualEntailmentDataset(FlairDataset):
+    def __init__(
+            self,
+            path_to_data: Union[str, Path],
+            columns: List[int] = [0,1,2],
+            max_tokens_per_doc=-1,
+            max_chars_per_doc=-1,
+            use_tokenizer=True,
+            in_memory: bool = True,
+            skip_first_line: bool = False,
+            separator: str = '\t',
+            encoding: str = 'utf-8',
+            label: bool = True
+    ):
+        """
+        Creates a Dataset for Recognizing Textual Entailment (RTE). The file needs to be in a column format, 
+        where each line has a column for the premise, the hypothesis and the label (entailment/not entailment) 
+        seperated by e.g. '\t' (just like in the glue RTE-dataset https://gluebenchmark.com/tasks) .
+        
+        :param path_to_data: path to the data file
+        :param columns: list of integers that indicate the respective columns. The first entry is the column
+        for the premise, the second for the hypothesis and the third for the label. Default [0,1,2]
+        :param use_tokenizer: Whether or not to use in-built tokenizer
+        :param max_tokens_per_doc: If set, shortens sentences to this maximum number of tokens
+        :param max_chars_per_doc: If set, shortens sentences to this maximum number of characters
+        :param in_memory: If True, keeps dataset fully in memory
+        
+        :return: a Corpus with annotated train, dev and test data
+        """
+        
+        if type(path_to_data) == str:
+            path_to_data: Path = Path(path_to_data)
+
+        assert path_to_data.exists()
+
+        self.in_memory = in_memory
+
+        self.use_tokenizer = use_tokenizer
+        
+        self.max_tokens_per_doc = max_tokens_per_doc
+        
+        self.label = label
+
+        self.total_data_count: int = 0
+
+        if self.in_memory:
+            self.bi_sentences: List[DataPair] = []
+        else:
+            self.premises: List[str] = []
+            self.hypothesises: List[str] = []
+            self.labels: List[str] = []
+
+        with open(str(path_to_data), encoding=encoding) as source_file:
+
+            source_line = source_file.readline()
+            
+            if skip_first_line:
+                source_line = source_file.readline()
+
+
+            while source_line:
+                
+                source_line_list = source_line.strip().split(separator)
+
+                premise = source_line_list[columns[0]]
+                hypothesis = source_line_list[columns[1]]
+                
+                if self.label:
+                    entailment_label = source_line_list[columns[2]]
+                else:
+                    entailment_label=None
+
+                if max_chars_per_doc > 0:
+                    premise = premise[:max_chars_per_doc]
+                    hypothesis = hypothesis[:max_chars_per_doc]
+
+                if self.in_memory:
+
+                    bi_sentence = self._make_entailment_pair(premise, hypothesis, entailment_label)
+                    self.bi_sentences.append(bi_sentence)
+                else:
+                    self.premises.append(premise)
+                    self.hypothesises.append(hypothesis)
+                    if self.label:
+                        self.labels.append(entailment_label)
+                    
+                self.total_data_count += 1
+                
+                source_line = source_file.readline()
+
+    def _make_entailment_pair(self, premise: str, hypothesis: str, label: str):
+
+        premise_sentence = Sentence(premise, use_tokenizer=self.use_tokenizer)
+        hypothesis_sentence = Sentence(hypothesis, use_tokenizer=self.use_tokenizer)
+
+        if self.max_tokens_per_doc > 0:
+            premise_sentence.tokens = premise_sentence.tokens[: self.max_tokens_per_doc]
+            hypothesis_sentence.tokens = hypothesis_sentence.tokens[: self.max_tokens_per_doc]
+
+        entailment_pair = DataPair(premise_sentence, hypothesis_sentence)
+        
+        if label:        
+            entailment_pair.add_label(label_type="textual_entailment", value=label)
+        
+        return entailment_pair
+    
+    def is_in_memory(self) -> bool:
+        
+        return self.in_memory
+
+    def __len__(self):
+        return self.total_data_count
+
+    def __getitem__(self, index: int = 0) -> DataPair:
+        if self.in_memory:
+            return self.bi_sentences[index]
+        elif self.label:
+            return self._make_entailment_pair(
+                self.premises[index], self.hypothesises[index], self.labels[index]
+            )
+        else:
+            return self._make_entailment_pair(
+                self.premises[index], self.hypothesises[index], None
+            )
+        
+        
+class GLUE_RTE(TextualEntailmentCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            max_tokens_per_doc=-1,
+            max_chars_per_doc=-1,
+            use_tokenizer=True,
+            in_memory: bool = True,   
+            sample_missing_splits: bool = True
+            ):
+        
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+            
+        dataset_name = "glue"
+
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name 
+        
+        data_file = data_folder / "RTE/train.tsv"
+        
+        if not data_file.is_file():
+        
+            #get the zip file
+            zipped_data_path = cached_path(
+                    'https://dl.fbaipublicfiles.com/glue/data/RTE.zip',
+                    Path("datasets") / dataset_name
+                )
+            
+            
+            unpack_file(
+                zipped_data_path , 
+                data_folder,
+                mode = "zip",
+                keep= False 
+                )
+            
+            os.rename(str(data_folder / "RTE/test.tsv"), str(data_folder / "RTE/eval_dataset.tsv"))
+            
+            
+        super(GLUE_RTE, self).__init__(
+            data_folder / "RTE",
+            columns=[1,2,3],
+            skip_first_line=True,
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            sample_missing_splits=sample_missing_splits
+
+        )
+        
+        self.eval_dataset =  TextualEntailmentDataset(
+            data_folder / "RTE/eval_dataset.tsv",
+            columns=[1,2,3],
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            skip_first_line=True,
+            label=False
+        )
+
+        
+        
+class SUPERGLUE_RTE(TextualEntailmentCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            max_tokens_per_doc=-1,
+            max_chars_per_doc=-1,
+            use_tokenizer=True,
+            in_memory: bool = True,   
+            sample_missing_splits: bool = True          
+            ):
+        
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+            
+        dataset_name = "superglue"
+
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name 
+        
+        data_file = data_folder / "RTE/train.tsv"
+        
+        if not data_file.is_file():
+        
+            #get the zip file
+            zipped_data_path = cached_path(
+                    'https://dl.fbaipublicfiles.com/glue/superglue/data/v2/RTE.zip',
+                    Path("datasets") / dataset_name
+                )
+            
+            
+            unpack_file(
+                zipped_data_path , 
+                data_folder,
+                mode = "zip",
+                keep= False 
+                )
+            
+            # transform to tsv and delete json files
+            rte_jsonl_to_tsv(data_folder / "RTE/train.jsonl", remove = True)
+            rte_jsonl_to_tsv(data_folder / "RTE/test.jsonl", remove = True, label=False)
+            rte_jsonl_to_tsv(data_folder / "RTE/val.jsonl", remove = True)
+            
+            os.rename(str(data_folder / "RTE/val.tsv"), str(data_folder / "RTE/dev.tsv"))
+            os.rename(str(data_folder / "RTE/test.tsv"), str(data_folder / "RTE/eval_dataset.tsv"))
+
+            
+        
+        super(SUPERGLUE_RTE, self).__init__(
+            data_folder / "RTE",
+            columns=[0,1,2],
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            sample_missing_splits=sample_missing_splits
+        )
+        
+        
+        self.eval_dataset =  TextualEntailmentDataset(
+            data_folder / "RTE/eval_dataset.tsv",
+            columns=[0,1,2],
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            skip_first_line=False,
+            label=False
+        )
+        
+        
+def rte_jsonl_to_tsv(file_path: Union[str, Path], label: bool = True, remove: bool = False, encoding='utf-8'):
+    
+    import json
+    
+    tsv_file = os.path.splitext(file_path)[0] + '.tsv'
+        
+    with open(file_path,'r', encoding=encoding) as jsonl_file:
+        with open(tsv_file,'w', encoding=encoding) as tsv_file:
+            
+            line = jsonl_file.readline()
+            
+            while line:
+                
+                obj = json.loads(line)
+                new_line = obj["premise"] + '\t' + obj["hypothesis"]
+                if label:
+                    new_line +=  '\t' + obj["label"]
+                new_line += '\n'
+                
+                tsv_file.write(new_line)
+                
+                line = jsonl_file.readline()
+                
+    
+    #remove json file 
+    if remove:
+        os.remove(file_path)       
+    
+
+            
+            
+
+
+
+
+
+
+
+
+
