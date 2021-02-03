@@ -36,7 +36,7 @@ def get_tags_tensor(sentences, tag_dictionary, tag_type):
                         , tag_list))
 
     # Transform list to a list of LongTensor
-    tag_list_as_tensor = list(map(lambda tags: torch.LongTensor(tags), tag_list))
+    tag_list_as_tensor = list(map(lambda tags: torch.LongTensor(tags).to(flair.device), tag_list))
 
     # pad tag_list so that we return a tensor of shape (batch_size, seq len + 1) since we're added transition to end tag
     padded_tag_tensor = pad_sequence(tag_list_as_tensor, batch_first=True)
