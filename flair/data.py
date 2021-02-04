@@ -740,6 +740,22 @@ class Sentence(DataPoint):
 
         return torch.Tensor()
 
+    def get_sequence_tensor(self) -> torch.Tensor:
+
+        if all(token.get_embedding().nelement() != 0 for token in self.tokens) \
+        and all(token.get_embedding().shape for token in self.tokens): # Check if tokens and embeddings are set and dimension matches
+            seq_len = len(self.tokens)
+            embedding_dim = self.tokens[0].embedding.shape[0]
+            sequence_tensor = torch.empty(size=(seq_len, embedding_dim), device=flair.device)
+            for token_id, token in enumerate(self.tokens):
+                sequence_tensor[token_id] = token.embedding
+
+        else:
+            sequence_tensor = torch.tensor([], device=flair.device)
+
+        return sequence_tensor
+
+
     def to(self, device: str, pin_memory: bool = False):
 
         # move sentence embeddings to device

@@ -9,6 +9,7 @@ import numpy as np
 import torch
 import torch.nn
 import torch.nn.functional as F
+from torch.nn.utils.rnn import pad_sequence
 from tabulate import tabulate
 from torch.nn.parameter import Parameter
 from torch.utils.data.dataset import Dataset
@@ -640,37 +641,12 @@ class SequenceTagger(flair.nn.Model):
 
         self.embeddings.embed(sentences)
 
-        names = self.embeddings.get_names()
+        tensor_list = list()
+        for sentence in sentences:
+            tensor_list.append(sentence.get_sequence_tensor()) # get tensor of shape (seq_len, embedding_dim)
+        sentence_tensor = pad_sequence(tensor_list, batch_first=True)
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
-        longest_token_sequence_in_batch: int = max(lengths)
-
-        pre_allocated_zero_tensor = torch.zeros(
-            self.embeddings.embedding_length * longest_token_sequence_in_batch,
-            dtype=torch.float,
-            device=flair.device,
-        )
-
-        all_embs = list()
-        for sentence in sentences:
-            all_embs += [
-                emb for token in sentence for emb in token.get_each_embedding(names)
-            ]
-            nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
-
-            if nb_padding_tokens > 0:
-                t = pre_allocated_zero_tensor[
-                    : self.embeddings.embedding_length * nb_padding_tokens
-                    ]
-                all_embs.append(t)
-
-        sentence_tensor = torch.cat(all_embs).view(
-            [
-                len(sentences),
-                longest_token_sequence_in_batch,
-                self.embeddings.embedding_length,
-            ]
-        )
 
         # --------------------------------------------------------------------
         # FF PART
