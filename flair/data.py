@@ -465,6 +465,14 @@ class Span(DataPoint):
             pos += len(t.text)
 
         return str
+     
+    def to_plain_string(self):
+        plain = ""
+        for token in self.tokens:
+            plain += token.text
+            if token.whitespace_after:
+                plain += " "
+        return plain.rstrip()
 
     def to_dict(self):
         return {
@@ -789,7 +797,7 @@ class Sentence(DataPoint):
             for token_id, token in enumerate(self.tokens):
                 sequence_tensor[token_id] = token.embedding
         else:
-            sequence_tensor = torch.Tensor()
+            sequence_tensor = torch.tensor([], device=flair.device)
 
         return sequence_tensor
 

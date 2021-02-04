@@ -23,6 +23,7 @@ from .token import NILCEmbeddings
 from .document import DocumentEmbeddings
 from .document import TransformerDocumentEmbeddings
 from .document import DocumentPoolEmbeddings
+from .document import DocumentTFIDFEmbeddings
 from .document import DocumentRNNEmbeddings
 from .document import DocumentLMEmbeddings
 from .document import SentenceTransformerDocumentEmbeddings
