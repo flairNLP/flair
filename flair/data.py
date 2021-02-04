@@ -1558,5 +1558,5 @@ class MultitaskCorpus(MultiCorpus):
             "All corpora need to be assigned to a downstream task defined by the keyword 'task'."
 
         # check - corpus datatype provided to 'corpus' keyword
-        assert all(map(lambda corpus_config:isinstance(corpus_config["model"], torch.nn.Module), args)), \
+        assert all(map(lambda corpus_config:isinstance(corpus_config["model"], flair.nn.Model), args)), \
             "Multitask models need to torch.nn.Modules, coming from the multitask module."
