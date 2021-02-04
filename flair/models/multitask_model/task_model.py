@@ -79,7 +79,7 @@ class SequenceTaggerTask(flair.nn.Model):
 
         # ----- Initial loss weights parameters -----
         self.weight_dict = loss_weights
-        self.init_loss_weights(loss_weights) if loss_weights is not None else self.loss_weights = None
+        self.loss_weights = self.init_loss_weights(loss_weights) if loss_weights else None
 
         # ----- RNN specific parameters -----
         self.use_rnn = use_rnn
@@ -131,7 +131,7 @@ class SequenceTaggerTask(flair.nn.Model):
             self.linear2tag = torch.nn.Linear(hidden_output_dim, self.tagset_size)
             self.cross_entropy_loss = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
 
-    def init_loss_weights(self, loss_weights):
+    def init_loss_weights(self, loss_weights) -> torch.Tensor:
         """
         Initialize loss weights.
         """
@@ -140,7 +140,7 @@ class SequenceTaggerTask(flair.nn.Model):
         for i, tag in enumerate(self.label_dictionary.get_items()):
             if tag in loss_weights.keys():
                 weight_list[i] = loss_weights[tag]
-        self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
+        return torch.FloatTensor(weight_list).to(flair.device)
 
     @staticmethod
     def RNN(
@@ -513,7 +513,7 @@ class TextClassificationTask(flair.nn.Model):
 
         # ----- Initial loss weights parameters -----
         self.weight_dict = loss_weights
-        self.init_loss_weights(loss_weights) if loss_weights is not None else self.loss_weights = None
+        self.loss_weights = self.init_loss_weights(loss_weights) if loss_weights else None
 
         # ----- Model layers -----
         self.decoder = torch.nn.Linear(self.document_embeddings.embedding_length, len(self.label_dictionary))
@@ -524,7 +524,7 @@ class TextClassificationTask(flair.nn.Model):
         else:
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
 
-    def init_loss_weights(self, loss_weights):
+    def init_loss_weights(self, loss_weights) -> torch.Tensor:
         """
         Initialize loss weights.
         """
@@ -533,7 +533,7 @@ class TextClassificationTask(flair.nn.Model):
         for i, tag in enumerate(self.label_dictionary.get_items()):
             if tag in loss_weights.keys():
                 weight_list[i] = loss_weights[tag]
-        self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
+        return torch.FloatTensor(weight_list).to(flair.device)
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
         """
