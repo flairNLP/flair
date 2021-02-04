@@ -70,6 +70,7 @@ class MultitaskModel(flair.nn.Model):
         self,
         sentences: Union[List[Sentence], Dataset],
         embedding_storage_mode: str = "none",
+        out_path: Union[str, Path] = None,
         mini_batch_size: int = 32,
         num_workers: int = 8
     ) -> (Result, float):
@@ -95,7 +96,8 @@ class MultitaskModel(flair.nn.Model):
             # Evaluate each split on its respective model
             for task, split in batch_split.items():
                 loss = self.__getattr__(task).evaluate(sentences=[sentence_batch[i] for i in split],
-                                                       embedding_storage_mode=embedding_storage_mode)
+                                                       embedding_storage_mode=embedding_storage_mode,
+                                                       out_path=out_path)
 
                 eval_loss += loss
 
