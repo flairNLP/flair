@@ -9,7 +9,7 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_se
 import flair.nn
 from flair.data import Sentence, Dictionary, Label
 from flair.embeddings import TokenEmbeddings
-from flair.training_utils import Metric, Result, store_embeddings
+from flair.training_utils import Metric, Result, store_embeddings, convert_labels_to_one_hot
 from flair.models.sequence_tagger_model import START_TAG, STOP_TAG
 
 from .crf import CRF
@@ -575,6 +575,41 @@ class TextClassificationTask(flair.nn.Model):
             labels = self._labels_to_indices(sentences)
 
         return self.loss_function(scores, labels)
+
+    def _labels_to_one_hot(self, sentences: List[Sentence]) -> torch.Tensor:
+        """
+        convert sentences labels to one hot encoded tensors.
+        :param sentences: batch of sentences
+        :return: tensor with one-hot encoded labels
+        """
+        label_list = []
+        for sentence in sentences:
+            label_list.append([label.value for label in sentence.get_labels(self.label_type)])
+
+        one_hot = convert_labels_to_one_hot(label_list, self.label_dictionary)
+        one_hot = [torch.FloatTensor(l).unsqueeze(0) for l in one_hot]
+        one_hot = torch.cat(one_hot, 0).to(flair.device)
+        return one_hot
+
+    def _labels_to_indices(self, sentences: List[Sentence]) -> torch.Tensor:
+        """
+        convert sentences labels indices tensors (indices from tag dictionary).
+        :param sentences: batch of sentences
+        :return: tensor with indices encoded labels
+        """
+        indices = [
+            torch.LongTensor(
+                [
+                    self.label_dictionary.get_idx_for_item(label.value)
+                    for label in sentence.get_labels(self.label_type)
+                ]
+            )
+            for sentence in sentences
+        ]
+
+        vec = torch.cat(indices, 0).to(flair.device)
+
+        return vec
 
     def evaluate(
             self,
