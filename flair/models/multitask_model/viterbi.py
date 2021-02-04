@@ -4,7 +4,7 @@ from torch.nn.functional import softmax
 from torch.nn.utils.rnn import pack_padded_sequence
 
 import flair
-from flair.data import Dictionary, Label
+from flair.data import Dictionary, Label, List
 from flair.models.sequence_tagger_model import START_TAG, STOP_TAG
 
 from .utils import log_sum_exp
@@ -25,7 +25,7 @@ class ViterbiLoss(torch.nn.Module):
         self.start_tag = tag_dictionary.get_idx_for_item(START_TAG)
         self.stop_tag = tag_dictionary.get_idx_for_item(STOP_TAG)
 
-    def forward(self, features: torch.Tensor, targets: torch.Tensor, lengths: torch.Tensor):
+    def forward(self, features: torch.Tensor, targets: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
         """
         Forward propagation of Viterbi Loss
 
@@ -82,7 +82,7 @@ class ViterbiDecoder:
         self.start_tag = tag_dictionary.get_idx_for_item(START_TAG)
         self.stop_tag = tag_dictionary.get_idx_for_item(STOP_TAG)
 
-    def decode(self, features, lengths):
+    def decode(self, features: torch.Tensor, lengths: torch.Tensor) -> List:
         """
         Decoding function returning the most likely sequence of tags.
         :param features: CRF scores from CRF forward method in shape (batch size, seq len, tagset size, tagset size)
