@@ -71,6 +71,8 @@ class TARSSequenceTagger2(flair.nn.Model):
         self.transformer_word_embeddings_type: str = transformer_word_embeddings
         self.transformer_word_embeddings = TransformerWordEmbeddings(
             model=transformer_word_embeddings,
+            layers="-1",
+            subtoken_pooling="first",
             fine_tune=True,
         )
 
