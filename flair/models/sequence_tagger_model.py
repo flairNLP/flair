@@ -9,7 +9,6 @@ import numpy as np
 import torch
 import torch.nn
 import torch.nn.functional as F
-from torch.nn.utils.rnn import pad_sequence
 from tabulate import tabulate
 from torch.nn.parameter import Parameter
 from torch.utils.data.dataset import Dataset
