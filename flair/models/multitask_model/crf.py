@@ -1,12 +1,15 @@
+import flair
 import torch
 from torch import nn
 
 class CRF(nn.Module):
     """
-    Conditional Random Field
+    Conditional Random Field Implementation according to sgrvinod (https://github.com/sgrvinod)
+    Classifier which predicts single tag / class / label for given word based on not just the word,
+    but also on previous seen annotations.
     """
 
-    def __init__(self, hidden_dim, tagset_size):
+    def __init__(self, hidden_dim: int, tagset_size: int):
         """
         :param hidden_dim: hidden size of RNN output
         :param tagset_size: number of tag from tag dictionary
@@ -16,12 +19,13 @@ class CRF(nn.Module):
         self.emission = nn.Linear(hidden_dim, tagset_size)
         self.transitions = torch.nn.Parameter(torch.randn(tagset_size, tagset_size))
         self.transitions.data.zero_()
+        self.to(flair.device)
 
-    def forward(self, rnn_features):
+    def forward(self, rnn_features: torch.Tensor) -> torch.Tensor:
         """
-        Forward propagation.
-        :param rnn_features: output from RNN unit in shape (batch size, seq len, hidden size)
-        :return: CRF scores (emission scores for each token + transitions to every state) in
+        Forward propagation of Conditional Random Field.
+        :param rnn_features: output from RNN / Linear layer in shape (batch size, seq len, hidden size)
+        :return: CRF scores (emission scores for each token + transitions prob from previous state) in
         shape (batch_size, seq len, tagset size, tagset size)
         """
         batch_size = rnn_features.size(0)
