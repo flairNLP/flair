@@ -8,6 +8,18 @@ from torch.nn.utils.rnn import pad_sequence
 import flair
 from flair.models.sequence_tagger_model import START_TAG, STOP_TAG
 
+def log_sum_exp(tensor, dim):
+    """
+    Calculates the log-sum-exponent of a tensor's dimension in a numerically stable way.
+
+    :param tensor: tensor
+    :param dim: dimension to calculate log-sum-exp of
+    :return: log-sum-exp
+    """
+    m, _ = torch.max(tensor, dim)
+    m_expanded = m.unsqueeze(dim).expand_as(tensor)
+    return m + torch.log(torch.sum(torch.exp(tensor - m_expanded), dim))
+
 def get_tags_tensor(sentences, tag_dictionary, tag_type):
     # Transfrom each sentences into list of tokens
     # i.e. [[token_1, token_2], [token_1, token_2, token_3], ...]

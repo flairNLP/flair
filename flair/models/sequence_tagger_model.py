@@ -47,26 +47,11 @@ def argmax_batch(vecs):
     _, idx = torch.max(vecs, 1)
     return idx
 
-
-# TODO maybe replace with new func
 def log_sum_exp_batch(vecs):
     maxi = torch.max(vecs, 1)[0]
     maxi_bc = maxi[:, None].repeat(1, vecs.shape[1])
     recti_ = torch.log(torch.sum(torch.exp(vecs - maxi_bc), 1))
     return maxi + recti_
-
-# TODO cleanup
-def log_sum_exp_refactor(tensor, dim):
-    """
-    Calculates the log-sum-exponent of a tensor's dimension in a numerically stable way.
-
-    :param tensor: tensor
-    :param dim: dimension to calculate log-sum-exp of
-    :return: log-sum-exp
-    """
-    m, _ = torch.max(tensor, dim)
-    m_expanded = m.unsqueeze(dim).expand_as(tensor)
-    return m + torch.log(torch.sum(torch.exp(tensor - m_expanded), dim))
 
 def pad_tensors(tensor_list):
     ml = max([x.shape[0] for x in tensor_list])
