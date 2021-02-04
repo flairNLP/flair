@@ -267,7 +267,7 @@ class SequenceTaggerTask(flair.nn.Model):
                                 label_name='predicted',
                                 return_loss=True)
 
-            self.calculate_metric(sentences)
+            self.calculate_metric(sentences, out_path)
 
             self.store_result()
 
@@ -311,7 +311,7 @@ class SequenceTaggerTask(flair.nn.Model):
         if return_loss:
             return self.loss(features, sentences, lengths)
 
-    def calculate_metric(self, sentences: Union[List[Sentence], Sentence]):
+    def calculate_metric(self, sentences: Union[List[Sentence], Sentence], out_path: Union[str, Path] = None):
         """
         Calculates and stores a specific metric based on current predictions.
         :param sentences: batch of sentences with 'predicted' tags
@@ -319,9 +319,9 @@ class SequenceTaggerTask(flair.nn.Model):
         # Some tagging tasks need span evaluation, i.e. named entity recognition.
         # since we need to handle [B-PER, I-PER] as on tag which needs to be predicted together to be correct.
         if self._requires_span_F1_evaluation():
-            self._span_F1_evaluation(sentences)
+            self._span_F1_evaluation(sentences, out_path)
         else:
-            self._tag_F1_evaluation(sentences)
+            self._tag_F1_evaluation(sentences, out_path)
 
     def _requires_span_F1_evaluation(self) -> bool:
         """
@@ -334,12 +334,14 @@ class SequenceTaggerTask(flair.nn.Model):
                 span_F1 = True
         return span_F1
 
-    def _span_F1_evaluation(self, sentences: Union[List[Sentence], Sentence]):
+    def _span_F1_evaluation(self, sentences: Union[List[Sentence], Sentence], out_path: Union[str, Path] = None,):
         """
         Evaluates the predictions in each sentences of spans to token, i.e. for named
             entity recognition.
         :param sentences: batch of sentences
         """
+        log_lines = []
+
         for sentence in sentences:
 
             gold_spans = sentence.get_spans(self.tag_type)
@@ -358,11 +360,34 @@ class SequenceTaggerTask(flair.nn.Model):
                 if (tag, gold) not in predicted_tags:
                     self.metric.add_fn(tag)
 
-    def _tag_F1_evaluation(self, sentences: Union[List[Sentence], Sentence]):
+            if out_path:
+                for token in sentence:
+
+                    gold_tag = 'O'
+                    for span in gold_spans:
+                        if token in span:
+                            gold_tag = 'B-' + span.tag if token == span[0] else 'I-' + span.tag
+
+                    predicted_tag = 'O'
+                    for span in predicted_spans:
+                        if token in span:
+                            predicted_tag = 'B-' + span.tag if token == span[0] else 'I-' + span.tag
+
+                    log_lines.append(f'{token.text} {gold_tag} {predicted_tag}\n')
+
+            log_lines.append('\n')
+
+        if out_path:
+            with open(Path(out_path), "w", encoding="utf-8") as outfile:
+                outfile.write("".join(log_lines))
+
+    def _tag_F1_evaluation(self, sentences: Union[List[Sentence], Sentence], out_path: Union[str, Path] = None):
         """
         Evaluates the predictions in each sentences for single tags.
         :param sentences: batch of sentences
         """
+        log_lines = []
+
         for sentence in sentences:
 
             for token in sentence:
@@ -375,6 +400,14 @@ class SequenceTaggerTask(flair.nn.Model):
                 else:
                     self.metric.add_fp(predicted_tag)
                     self.metric.add_fn(gold_tag)
+
+                log_lines.append(f'{token.text} {gold_tag} {predicted_tag}\n')
+
+            log_lines.append('\n')
+
+        if out_path:
+            with open(Path(out_path), "w", encoding="utf-8") as outfile:
+                outfile.write("".join(log_lines))
 
     def store_result(self):
         """
@@ -633,7 +666,7 @@ class TextClassificationTask(flair.nn.Model):
                                 label_name='predicted',
                                 return_loss=True)
 
-            self.calculate_metric(sentences)
+            self.calculate_metric(sentences, out_path)
 
             self.store_result()
 
@@ -709,7 +742,7 @@ class TextClassificationTask(flair.nn.Model):
                 labels.append(Label(label, conf.item()))
         return labels
 
-    def calculate_metric(self, sentences: Union[List[Sentence], Sentence]):
+    def calculate_metric(self, sentences: Union[List[Sentence], Sentence], out_path: Union[str, Path] = None):
         """
         Calculates and stores a specific metric based on current predictions.
         :param sentences: batch of sentences with 'predicted' tags
@@ -731,6 +764,17 @@ class TextClassificationTask(flair.nn.Model):
             for gold_label in gold_labels:
                 if gold_label not in predicted_labels:
                     self.metric.add_fn(gold_label)
+
+        if out_path:
+
+            log_lines = []
+
+            for sentence, prediction, gold in zip(sentences, predicted_labels_batch, gold_labels_batch):
+                eval_line = "{}\t{}\t{}\n".format(sentence, gold, prediction)
+                log_lines.append(eval_line)
+
+            with open(out_path, "w", encoding="utf-8") as outfile:
+                outfile.write("".join(log_lines))
 
     def store_result(self):
         """
