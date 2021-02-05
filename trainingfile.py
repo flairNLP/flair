@@ -24,21 +24,21 @@ Example for training a multitask model in flair. Works similarly to the usual fl
 
 # ----- CORPORA -----
 conll03: Corpus = CONLL_03()
-trec6: Corpus = TREC_6()
-subj: Corpus = SENTEVAL_SUBJ()
+#trec6: Corpus = TREC_6()
+#subj: Corpus = SENTEVAL_SUBJ()
 
 # ----- TAG SPACES -----
 ner_dictionary = conll03.make_tag_dictionary('ner')
 pos_dictionary = conll03.make_tag_dictionary('pos')
-trec_dictionary = trec6.make_label_dictionary()
-subj_dictionary = subj.make_label_dictionary()
+#trec_dictionary = trec6.make_label_dictionary()
+#subj_dictionary = subj.make_label_dictionary()
 
 # ----- SHARED WORD EMBEDDING LAYER -----
 shared_word_embeddings = [WordEmbeddings('glove'), CharacterEmbeddings()]
 shared_word_embedding_layer: StackedEmbeddings = StackedEmbeddings(embeddings=shared_word_embeddings) # Stack if necessary
 
 # ----- SHARED RNN LAYERS -----
-shared_rnn_layer_classification: DocumentRNNEmbeddings = DocumentRNNEmbeddings(shared_word_embeddings)
+#shared_rnn_layer_classification: DocumentRNNEmbeddings = DocumentRNNEmbeddings(shared_word_embeddings)
 shared_rnn_layer_labeling: torch.nn.Module = torch.nn.LSTM(input_size=shared_word_embedding_layer.embedding_length,
                                                            hidden_size=256,
                                                            num_layers=2,
@@ -57,17 +57,17 @@ pos_tagger: SequenceTaggerTask = SequenceTaggerTask(embeddings=shared_word_embed
                                                     tag_type='pos',
                                                     rnn=shared_rnn_layer_labeling,
                                                     use_crf=True)
-
+"""
 trec_classifier: TextClassificationTask = TextClassificationTask(shared_rnn_layer_classification,
                                                                  label_dictionary=trec_dictionary)
 
 subj_classifier: TextClassificationTask = TextClassificationTask(shared_rnn_layer_classification,
                                                                  label_dictionary=subj_dictionary)
-
+"""
 # ----- MULTITASK CORPUS -----
 multi_corpus = MultitaskCorpus(
-    {"corpus": trec6, "model": trec_classifier},
-    {"corpus": subj, "model": subj_classifier},
+    #{"corpus": trec6, "model": trec_classifier},
+    #{"corpus": subj, "model": subj_classifier},
     {"corpus": conll03, "model": ner_tagger},
     {"corpus": conll03, "model": pos_tagger}
 )
