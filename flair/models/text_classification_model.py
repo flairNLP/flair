@@ -529,7 +529,7 @@ class BiCrossClassifier(TextClassifier):
         if self.mode == 'bi':
                     self.decoder = nn.Linear(
                         2*self.document_embeddings.embedding_length, len(self.label_dictionary)
-                        )
+                        ).to(flair.device)
                     
     def _get_state_dict(self):
         model_state = super()._get_state_dict()
@@ -543,7 +543,7 @@ class BiCrossClassifier(TextClassifier):
         label_type = None if "label_type" not in state.keys() else state["label_type"]
         mode = 'bi' if "mode" not in state.keys() else state["mode"]
 
-        model = TextClassifier(
+        model = BiCrossClassifier(
             document_embeddings=state["document_embeddings"],
             label_dictionary=state["label_dictionary"],
             label_type=label_type,

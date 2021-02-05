@@ -235,7 +235,7 @@ class TextualEntailmentCorpus(Corpus):
         # find train, dev and test files if not specified
         #hängt Dateinamen and Pfad data_folder
         dev_file, test_file, train_file = \
-            find_train_dev_test_files(data_folder, dev_file, test_file, train_file, autofind_splits)
+            find_train_dev_test_files(data_folder, dev_file, test_file, train_file, autofind_splits=autofind_splits)
             
 
         train: FlairDataset = TextualEntailmentDataset(
