@@ -130,8 +130,6 @@ class RelationTagger(flair.nn.Model):
             with open(Path(out_path), "w", encoding="utf-8") as outfile:
                 outfile.write("".join(lines))
 
-        print(y_true)
-        print(y_pred)
         eval_loss /= batch_no
 
         # use sklearn
