@@ -252,7 +252,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
 class DocumentPoolEmbeddings(DocumentEmbeddings):
     def __init__(
             self,
-            embeddings: List[TokenEmbeddings],
+            embeddings: Union[List[TokenEmbeddings], StackedEmbeddings],
             fine_tune_mode: str = "none",
             pooling: str = "mean",
     ):
@@ -264,7 +264,10 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
         """
         super().__init__()
 
-        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
+        if isinstance(embeddings, StackedEmbeddings):
+            self.embeddings = embeddings
+        else:
+            self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
         self.__embedding_length = self.embeddings.embedding_length
 
         # optional fine-tuning on top of embedding layer
@@ -381,7 +384,7 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
 class DocumentRNNEmbeddings(DocumentEmbeddings):
     def __init__(
             self,
-            embeddings: List[TokenEmbeddings],
+            embeddings: Union[List[TokenEmbeddings], StackedEmbeddings],
             hidden_size=128,
             rnn_layers=1,
             reproject_words: bool = True,
@@ -409,7 +412,10 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         """
         super().__init__()
 
-        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
+        if isinstance(embeddings, StackedEmbeddings):
+            self.embeddings = embeddings
+        else:
+            self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
 
         self.rnn_type = rnn_type
 
