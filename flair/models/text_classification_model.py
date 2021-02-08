@@ -260,7 +260,6 @@ class TextClassifier(flair.nn.Model):
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
         if not isinstance(sentences, Dataset):
             sentences = SentenceDataset(sentences)
-        
         data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
 
         # use scikit-learn to evaluate
@@ -274,7 +273,6 @@ class TextClassifier(flair.nn.Model):
             batch_count: int = 0
 
             for batch in data_loader:
-
                 batch_count += 1
 
                 # remove previously predicted labels
@@ -505,19 +503,38 @@ class TextClassifier(flair.nn.Model):
                
                
 class BiCrossClassifier(TextClassifier):
+    """
+    Bi-Cross Classification Model for DataPairs (e.g. Recognizing Textual Entailment), build upon TextClassifier.
+    The model takes document embeddings and puts resulting text representation(s) into a linear layer to get the 
+    actual class label. There class provides two ways to embedd the DataPairs: Either by embedding both DataPoints 
+    and concatenating the resulting vectors ("bi") or by concatenating the DataPoints and embedding the restulting 
+    vector ("cross").
+    """
     def __init__(
             self,
             document_embeddings: flair.embeddings.DocumentEmbeddings,
             label_dictionary: Dictionary,
-            mode: str = 'bi',#bool
+            bi_mode: bool = True,
             label_type: str = None,
             multi_label: bool = None,
             multi_label_threshold: float = 0.5,
             beta: float = 1.0,
             loss_weights: Dict[str, float] = None,
             ):
+        """
+        :param document_embeddings: embeddings used to embed the Datapairs
+        :param label_dictionary: dictionary of labels you want to predict
+        :param label_type: name of the label
+        :param bi_mode: If True, the model embeds both Datapoints seperately, else cross-embedding
+        :param multi_label: auto-detected by default, but you can set this to True to force multi-label prediction
+        or False to force single-label prediction
+        :param multi_label_threshold: If multi-label you can set the threshold to make predictions
+        :param beta: Parameter for F-beta score for evaluation and training annealing
+        :param loss_weights: Dictionary of weights for labels for the loss function
+        (if any label's weight is unspecified it will default to 1.0)
+        """
         
-        self.mode = mode
+        self.bi_mode = bi_mode
         #Initialize TextClassifier
         super(BiCrossClassifier, self).__init__(document_embeddings,
                                          label_dictionary,
@@ -526,14 +543,14 @@ class BiCrossClassifier(TextClassifier):
                                          multi_label_threshold=multi_label_threshold,
                                          beta=beta,
                                          loss_weights=loss_weights)
-        if self.mode == 'bi':
+        if self.bi_mode:
                     self.decoder = nn.Linear(
                         2*self.document_embeddings.embedding_length, len(self.label_dictionary)
                         ).to(flair.device)
                     
     def _get_state_dict(self):
         model_state = super()._get_state_dict()
-        model_state["mode"] = self.mode
+        model_state["bi_mode"] = self.bi_mode
         return model_state
     
     @staticmethod
@@ -541,7 +558,7 @@ class BiCrossClassifier(TextClassifier):
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
         label_type = None if "label_type" not in state.keys() else state["label_type"]
-        mode = 'bi' if "mode" not in state.keys() else state["mode"]
+        mode = True if "bi_mode" not in state.keys() else state["bi_mode"]
 
         model = BiCrossClassifier(
             document_embeddings=state["document_embeddings"],
@@ -550,7 +567,7 @@ class BiCrossClassifier(TextClassifier):
             multi_label=state["multi_label"],
             beta=beta,
             loss_weights=weights,
-            mode=mode
+            bi_mode=mode
         )
 
         model.load_state_dict(state["state_dict"])
@@ -563,18 +580,19 @@ class BiCrossClassifier(TextClassifier):
         if isinstance(datapairs, DataPair):
             datapairs = [datapairs]
     
-        if self.mode=='bi':#embed both sentences seperately, concatenate the resulting vectors
+        if self.bi_mode:#embed both sentences seperately, concatenate the resulting vectors
             premises = [pair.first for pair in datapairs]
             hypothesises = [pair.second for pair in datapairs]
             
             self.document_embeddings.embed(premises)
+
             self.document_embeddings.embed(hypothesises)
             
             text_embedding_list = [
                 torch.cat([a.get_embedding(embedding_names),b.get_embedding(embedding_names)],0).unsqueeze(0) 
                    for (a,b) in zip(premises,hypothesises)
                 ]
-        
+            
         else:#concatenate the sentences and embed together
         
             concatenated_sentences = [Sentence(pair.first.to_plain_string() + ' ' +  pair.second.to_plain_string()) for pair in datapairs]
@@ -585,15 +603,12 @@ class BiCrossClassifier(TextClassifier):
                 sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in concatenated_sentences
             ]           
             
-
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
         label_scores = self.decoder(text_embedding_tensor)
 
         return label_scores
     
-    
-
 
 class TARSClassifier(TextClassifier):
     """

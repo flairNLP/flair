@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import List, Union
 from flair.datasets.base import find_train_dev_test_files
 
-
 import flair
 from flair.data import (
     Sentence,
@@ -201,6 +200,7 @@ class ParallelTextDataset(FlairDataset):
                 self.source_lines[index], self.target_lines[index]
             )
         
+        
 class TextualEntailmentCorpus(Corpus):
     def __init__(
             self,
@@ -220,7 +220,11 @@ class TextualEntailmentCorpus(Corpus):
             encoding: str = 'utf-8'
     ):
         """
+        Corpus for Recognizing Textual Entailment Tasks. The data files are expected to be in column format with colmuns 
+        for the premises, the hypothesises and the labels, respectively. Labels could for example be "entailment" and "not_entailment".
+        
         :param data_folder: base folder with the task data
+        :param columns: Indicates the columns for premise (first entry in the list), hypothesis (second entry) and label (last entry).
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
@@ -228,6 +232,11 @@ class TextualEntailmentCorpus(Corpus):
         :param max_tokens_per_doc: If set, shortens sentences to this maximum number of tokens
         :param max_chars_per_doc: If set, shortens sentences to this maximum number of characters
         :param in_memory: If True, keeps dataset fully in memory
+        :param autofind_splits: If True, train/test/dev files will be automatically identified
+        :param sample_missing_splits: If True, a missing train/test/dev file will be sampled from the available data
+        :param skip_first_line: If True, first line of data files will be ignored
+        :param separator: Separator between columns in data files
+        :param encoding: Encoding of data files
         
         :return: a Corpus with annotated train, dev and test data
         """
@@ -237,7 +246,6 @@ class TextualEntailmentCorpus(Corpus):
         dev_file, test_file, train_file = \
             find_train_dev_test_files(data_folder, dev_file, test_file, train_file, autofind_splits=autofind_splits)
             
-
         train: FlairDataset = TextualEntailmentDataset(
             train_file,
             columns=columns,
@@ -274,7 +282,6 @@ class TextualEntailmentCorpus(Corpus):
             encoding=encoding
         ) if dev_file is not None else None
 
-
         super(TextualEntailmentCorpus, self).__init__(train, dev, test,
                                                       sample_missing_splits=sample_missing_splits,
                                                       name=str(data_folder))
@@ -296,18 +303,21 @@ class TextualEntailmentDataset(FlairDataset):
     ):
         """
         Creates a Dataset for Recognizing Textual Entailment (RTE). The file needs to be in a column format, 
-        where each line has a column for the premise, the hypothesis and the label (entailment/not entailment) 
+        where each line has a column for the premise, the hypothesis and the label (e.g. "entailment"/"not entailment") 
         seperated by e.g. '\t' (just like in the glue RTE-dataset https://gluebenchmark.com/tasks) .
+        Each premise-hypothesis pair is stored in a flair.data.DataPair object.
         
         :param path_to_data: path to the data file
         :param columns: list of integers that indicate the respective columns. The first entry is the column
         for the premise, the second for the hypothesis and the third for the label. Default [0,1,2]
-        :param use_tokenizer: Whether or not to use in-built tokenizer
         :param max_tokens_per_doc: If set, shortens sentences to this maximum number of tokens
         :param max_chars_per_doc: If set, shortens sentences to this maximum number of characters
+        :param use_tokenizer: Whether or not to use in-built tokenizer
         :param in_memory: If True, keeps dataset fully in memory
-        
-        :return: a Corpus with annotated train, dev and test data
+        :param skip_first_line: If True, first line of data file will be ignored
+        :param separator: Separator between columns in the data file
+        :param encoding: Encoding of the data file
+        :param label: If False, the dataset expects unlabeled data
         """
         
         if type(path_to_data) == str:
@@ -338,7 +348,6 @@ class TextualEntailmentDataset(FlairDataset):
             
             if skip_first_line:
                 source_line = source_file.readline()
-
 
             while source_line:
                 
@@ -416,6 +425,11 @@ class GLUE_RTE(TextualEntailmentCorpus):
             in_memory: bool = True,   
             sample_missing_splits: bool = True
             ):
+        """
+        Creates a Recognizing Textual Entailment Corpus for the Glue RTE data (https://gluebenchmark.com/tasks).
+        Additionaly to the TextualEntailmentCorpus we have a eval_dataset containing the test file of the Glue data. 
+        This file contains unlabeled test data to evaluate models on the Glue RTE task.
+        """
         
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -436,7 +450,6 @@ class GLUE_RTE(TextualEntailmentCorpus):
                     Path("datasets") / dataset_name
                 )
             
-            
             unpack_file(
                 zipped_data_path , 
                 data_folder,
@@ -445,7 +458,6 @@ class GLUE_RTE(TextualEntailmentCorpus):
                 )
             
             os.rename(str(data_folder / "RTE/test.tsv"), str(data_folder / "RTE/eval_dataset.tsv"))
-            
             
         super(GLUE_RTE, self).__init__(
             data_folder / "RTE",
@@ -482,6 +494,11 @@ class SUPERGLUE_RTE(TextualEntailmentCorpus):
             in_memory: bool = True,   
             sample_missing_splits: bool = True          
             ):
+        """
+        Creates a Recognizing Textual Entailment Corpus for the SuperGlue RTE data (https://super.gluebenchmark.com/tasks).
+        Additionaly to the TextualEntailmentCorpus we have a eval_dataset containing the test file of the SuperGlue data. 
+        This file contains unlabeled test data to evaluate models on the SuperGlue RTE task.
+        """
         
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -502,7 +519,6 @@ class SUPERGLUE_RTE(TextualEntailmentCorpus):
                     Path("datasets") / dataset_name
                 )
             
-            
             unpack_file(
                 zipped_data_path , 
                 data_folder,
@@ -518,8 +534,6 @@ class SUPERGLUE_RTE(TextualEntailmentCorpus):
             os.rename(str(data_folder / "RTE/val.tsv"), str(data_folder / "RTE/dev.tsv"))
             os.rename(str(data_folder / "RTE/test.tsv"), str(data_folder / "RTE/eval_dataset.tsv"))
 
-            
-        
         super(SUPERGLUE_RTE, self).__init__(
             data_folder / "RTE",
             columns=[0,1,2],
@@ -542,7 +556,7 @@ class SUPERGLUE_RTE(TextualEntailmentCorpus):
             label=False
         )
         
-        
+#Function to transform JSON file to tsv for Recognizing Textual Entailment Data
 def rte_jsonl_to_tsv(file_path: Union[str, Path], label: bool = True, remove: bool = False, encoding='utf-8'):
     
     import json
@@ -566,20 +580,7 @@ def rte_jsonl_to_tsv(file_path: Union[str, Path], label: bool = True, remove: bo
                 
                 line = jsonl_file.readline()
                 
-    
     #remove json file 
     if remove:
         os.remove(file_path)       
     
-
-            
-            
-
-
-
-
-
-
-
-
-
