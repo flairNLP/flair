@@ -1,3 +1,4 @@
+import flair
 from flair.data import Corpus, MultitaskCorpus
 from flair.datasets import CONLL_03, CONLL_2000, UD_ENGLISH
 from flair.embeddings import WordEmbeddings, StackedEmbeddings, CharacterEmbeddings
@@ -6,6 +7,8 @@ from flair.trainers import ModelTrainer
 from torch.optim.adam import Adam
 
 import torch.nn
+
+flair.device = "cuda:1"
 
 """
 Example for training a multitask model in flair. Works similarly to the usual flow of flair.
