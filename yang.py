@@ -41,7 +41,7 @@ shared_word_embeddings = [WordEmbeddings('en'), CharacterEmbeddings()]
 shared_word_embedding_layer: StackedEmbeddings = StackedEmbeddings(embeddings=shared_word_embeddings) # Stack if necessary
 
 # ----- SHARED RNN LAYERS -----
-shared_rnn_layer_labeling: torch.nn.Module = torch.nn.LSTM(input_size=shared_word_embedding_layer.embedding_length,
+shared_rnn_layer_labeling: torch.nn.Module = torch.nn.GRU(input_size=shared_word_embedding_layer.embedding_length,
                                                            hidden_size=256,
                                                            num_layers=2,
                                                            bidirectional=True,
@@ -81,4 +81,5 @@ trainer: ModelTrainer = ModelTrainer(multitask_model, multi_corpus, optimizer=Ad
 trainer.train('results/multitask-yang',
               learning_rate=0.01,
               mini_batch_size=64,
-              max_epochs=150)
+              max_epochs=150,
+              embeddings_storage_mode='gpu')
