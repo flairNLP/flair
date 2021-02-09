@@ -136,4 +136,3 @@ class MultitaskModel(flair.nn.Model):
 
         model = MultitaskModel(models = models)
         return model
-        pass
