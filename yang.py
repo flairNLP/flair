@@ -78,7 +78,7 @@ multitask_model: MultitaskModel = MultitaskModel(multi_corpus.models)
 
 # ----- TRAINING ON MODEL AND CORPUS -----
 trainer: ModelTrainer = ModelTrainer(multitask_model, multi_corpus, optimizer=Adam)
-trainer.train('results/multitask-ner-pos',
+trainer.train('results/multitask-yang',
               learning_rate=0.01,
               mini_batch_size=64,
               max_epochs=150)
