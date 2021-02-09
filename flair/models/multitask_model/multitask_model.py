@@ -116,3 +116,23 @@ class MultitaskModel(flair.nn.Model):
         result = MultitaskResult(results)
 
         return result, eval_loss
+
+    def _get_state_dict(self):
+
+        model_state = {}
+
+        for task in self.tasks:
+            model_state[task] = {"state_dict": self.__getattr__(task)._get_state_dict(),
+                                 "class": self.__getattr__(task).__class__}
+
+        return model_state
+
+    @staticmethod
+    def _init_model_with_state_dict(state):
+        models = {}
+
+        for task, task_state in state.items():
+            models[task] = task_state["class"]._init_model_with_state_dict(task_state["state_dict"])
+
+        model = MultitaskModel(models = models)
+        return model

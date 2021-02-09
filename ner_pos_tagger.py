@@ -1,10 +1,13 @@
+import flair
 from flair.data import Corpus, MultitaskCorpus
-from flair.datasets import CONLL_03, TREC_6, SENTEVAL_SUBJ
-from flair.embeddings import WordEmbeddings, StackedEmbeddings, DocumentRNNEmbeddings, CharacterEmbeddings
-from flair.models.multitask_model import MultitaskModel, SequenceTaggerTask, TextClassificationTask
+from flair.datasets import CONLL_03
+from flair.embeddings import WordEmbeddings, StackedEmbeddings, CharacterEmbeddings
+from flair.models.multitask_model import MultitaskModel, SequenceTaggerTask
 from flair.trainers import ModelTrainer
 
 import torch.nn
+
+flair.device = "cuda:0"
 
 """
 Example for training a multitask model in flair. Works similarly to the usual flow of flair.
@@ -23,26 +26,20 @@ Example for training a multitask model in flair. Works similarly to the usual fl
 """
 
 # ----- CORPORA -----
-conll03: Corpus = CONLL_03().downsample(0.2)
-trec6: Corpus = TREC_6()
-subj: Corpus = SENTEVAL_SUBJ()
+conll03: Corpus = CONLL_03()
 
 # ----- TAG SPACES -----
 ner_dictionary = conll03.make_tag_dictionary('ner')
 pos_dictionary = conll03.make_tag_dictionary('pos')
-trec_dictionary = trec6.make_label_dictionary()
-subj_dictionary = subj.make_label_dictionary()
 
 # ----- SHARED WORD EMBEDDING LAYER -----
 shared_word_embeddings = [WordEmbeddings('glove'), CharacterEmbeddings()]
 shared_word_embedding_layer: StackedEmbeddings = StackedEmbeddings(embeddings=shared_word_embeddings) # Stack if necessary
 
 # ----- SHARED RNN LAYERS -----
-shared_rnn_layer_classification: DocumentRNNEmbeddings = DocumentRNNEmbeddings(shared_word_embedding_layer)
-shared_rnn_layer_classification2: DocumentRNNEmbeddings = DocumentRNNEmbeddings(shared_word_embedding_layer)
 shared_rnn_layer_labeling: torch.nn.Module = torch.nn.LSTM(input_size=shared_word_embedding_layer.embedding_length,
                                                            hidden_size=256,
-                                                           num_layers=2,
+                                                           num_layers=1,
                                                            bidirectional=True,
                                                            batch_first=True)
 
@@ -59,16 +56,8 @@ pos_tagger: SequenceTaggerTask = SequenceTaggerTask(embeddings=shared_word_embed
                                                     use_rnn=True,
                                                     use_crf=True)
 
-trec_classifier: TextClassificationTask = TextClassificationTask(shared_rnn_layer_classification,
-                                                                 label_dictionary=trec_dictionary)
-
-subj_classifier: TextClassificationTask = TextClassificationTask(shared_rnn_layer_classification2,
-                                                                 label_dictionary=subj_dictionary)
-
 # ----- MULTITASK CORPUS -----
 multi_corpus = MultitaskCorpus(
-    {"corpus": trec6, "model": trec_classifier},
-    {"corpus": subj, "model": subj_classifier},
     {"corpus": conll03, "model": ner_tagger},
     {"corpus": conll03, "model": pos_tagger}
 )
@@ -78,7 +67,7 @@ multitask_model: MultitaskModel = MultitaskModel(multi_corpus.models)
 
 # ----- TRAINING ON MODEL AND CORPUS -----
 trainer: ModelTrainer = ModelTrainer(multitask_model, multi_corpus)
-trainer.train('results/multitask-1',
+trainer.train('results/multitask-ner-pos',
               learning_rate=0.1,
               mini_batch_size=64,
-              max_epochs=3)
+              max_epochs=150)
