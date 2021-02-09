@@ -497,8 +497,6 @@ class SequenceTaggerTask(flair.nn.Model):
         model.load_state_dict(state["state_dict"])
         return model
 
-
-
 class TextClassificationTask(flair.nn.Model):
 
     def __init__(
