@@ -31,14 +31,14 @@ ncbi_disease: Corpus = NCBI_DISEASE()
 bc2gm: Corpus = BC2GM()
 bc5cdr_chemicals: Corpus = BIOBERT_CHEMICAL_BC5CDR()
 bc5cdr_disease: Corpus = BIOBERT_DISEASE_BC5CDR()
-jnlpba: Corpus = JNLPBA()
+#jnlpba: Corpus = JNLPBA()
 
 # ----- TAG SPACES -----
 ncbi_dictionary = ncbi_disease.make_tag_dictionary('ner')
 bc2gm_dictionary = bc2gm.make_tag_dictionary('ner')
 bc5cdr_I_dictionary = bc5cdr_chemicals.make_tag_dictionary('ner')
 bc5cdr_II_dictionary = bc5cdr_disease.make_tag_dictionary('ner')
-jnlpba_dictionary = jnlpba.make_tag_dictionary('ner')
+#jnlpba_dictionary = jnlpba.make_tag_dictionary('ner')
 
 # ----- SHARED WORD EMBEDDING LAYER -----
 shared_word_embeddings = [WordEmbeddings('pubmed'), CharacterEmbeddings(hidden_size_char=30)]
@@ -75,13 +75,13 @@ bc5cdr_II_tagger: SequenceTaggerTask = SequenceTaggerTask(embeddings=shared_word
                                                     tag_type='ner',
                                                     rnn=shared_rnn_layer_labeling,
                                                     use_crf=True)
-
+"""
 jnlpba_tagger: SequenceTaggerTask = SequenceTaggerTask(embeddings=shared_word_embedding_layer,
                                                     tag_dictionary=jnlpba_dictionary,
                                                     tag_type='ner',
                                                     rnn=shared_rnn_layer_labeling,
                                                     use_crf=True)
-
+"""
 
 
 # ----- MULTITASK CORPUS -----
@@ -90,7 +90,7 @@ multi_corpus = MultitaskCorpus(
     {"corpus": bc2gm, "model": bc2gm_tagger},
     {"corpus": bc5cdr_chemicals, "model": bc5cdr_I_tagger},
     {"corpus": bc5cdr_disease, "model": bc5cdr_II_tagger},
-    {"corpus": jnlpba, "model": jnlpba_tagger}
+    #{"corpus": jnlpba, "model": jnlpba_tagger}
 )
 
 # ----- MULTITASK MODEL -----
