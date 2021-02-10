@@ -1543,20 +1543,23 @@ class TREC_6(ClassificationCorpus):
 
 class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
     """
-    GermEval 2018 Task 1 corpus for identification of offensive language.
-    Classifying German tweets into 2 coarse-grained categories OFFENSIVE or OTHER.
+    GermEval 2018 corpus for identification of offensive language.
+    Classifying German tweets into 2 coarse-grained categories OFFENSIVE and OTHER
+    or 4 fine-grained categories ABUSE, INSULT, PROFATINTY and OTHER.
     """
 
     def __init__(self,
                  base_path: Union[str, Path] = None,
+                 tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SegtokTokenizer(),
                  memory_mode: str = 'full',
-                 tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
+                 fine_grained_classes: bool = False,
                  **corpusargs):
         """
         Instantiates GermEval 2018 Offensive Language Classification Corpus.
         :param base_path: Provide this only if you store the Offensive Language corpus in a specific folder, otherwise use default.
-        :param tokenizer: Custom tokenizer to use (default is SpaceTokenizer)
+        :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
         :param memory_mode: Set to 'full' by default since this is a small corpus. Can also be 'partial' or 'none'.
+        :param fine_grained_classes: Set to True to load the dataset with 4 fine-grained classes
         :param corpusargs: Other args for ClassificationCorpus.
         """
 
@@ -1581,8 +1584,17 @@ class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
                 f"{offlang_path}{original_filename}",
                 Path("datasets") / dataset_name / "original",
             )
+        
+        task_setting = "coarse_grained"
+        if fine_grained_classes:
+            task_setting = "fine_grained"
 
-        data_file = data_folder / new_filenames[0]
+        task_folder = data_folder / task_setting
+        data_file = task_folder / new_filenames[0]
+
+        # create a separate directory for different tasks
+        if not os.path.exists(task_folder):
+            os.makedirs(task_folder)
 
         if not data_file.is_file():
             for original_filename, new_filename in zip(
@@ -1594,17 +1606,21 @@ class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
                         encoding="utf-8",
                 ) as open_fp:
                     with open(
-                            data_folder / new_filename, "wt", encoding="utf-8"
+                            data_folder / task_setting / new_filename, "wt", encoding="utf-8"
                     ) as write_fp:
                         for line in open_fp:
+                            line = line.rstrip()
                             fields = line.split('\t')
                             tweet = fields[0]
-                            old_label = fields[1]
+                            if task_setting == "fine_grained":
+                                old_label = fields[2]
+                            else: 
+                                old_label = fields[1]
                             new_label = '__label__' + old_label
                             write_fp.write(f"{new_label} {tweet}\n")
 
         super(GERMEVAL_2018_OFFENSIVE_LANGUAGE, self).__init__(
-            data_folder, tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs,
+            data_folder=task_folder, tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs,
         )
 
 
