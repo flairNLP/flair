@@ -80,6 +80,7 @@ from .document_classification import WASSA_FEAR
 from .document_classification import WASSA_JOY
 from .document_classification import WASSA_SADNESS
 from .document_classification import GO_EMOTIONS
+from .document_classification import GERMEVAL_2018_OFFENSIVE_LANGUAGE
 
 # Expose all treebanks
 from .treebanks import UniversalDependenciesCorpus
