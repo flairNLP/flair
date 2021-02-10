@@ -1541,6 +1541,73 @@ class TREC_6(ClassificationCorpus):
         )
 
 
+class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
+    """
+    GermEval 2018 Task 1 corpus for identification of offensive language.
+    Classifying German tweets into 2 coarse-grained categories OFFENSIVE or OTHER.
+    """
+
+    def __init__(self,
+                 base_path: Union[str, Path] = None,
+                 memory_mode: str = 'full',
+                 tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
+                 **corpusargs):
+        """
+        Instantiates GermEval 2018 Offensive Language Classification Corpus.
+        :param base_path: Provide this only if you store the Offensive Language corpus in a specific folder, otherwise use default.
+        :param tokenizer: Custom tokenizer to use (default is SpaceTokenizer)
+        :param memory_mode: Set to 'full' by default since this is a small corpus. Can also be 'partial' or 'none'.
+        :param corpusargs: Other args for ClassificationCorpus.
+        """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        offlang_path = "https://raw.githubusercontent.com/uds-lsv/GermEval-2018-Data/master/"
+
+        original_filenames = ["germeval2018.training.txt", "germeval2018.test.txt"]
+        new_filenames = ["train.txt", "test.txt"]
+        for original_filename in original_filenames:
+            cached_path(
+                f"{offlang_path}{original_filename}",
+                Path("datasets") / dataset_name / "original",
+            )
+
+        data_file = data_folder / new_filenames[0]
+
+        if not data_file.is_file():
+            for original_filename, new_filename in zip(
+                    original_filenames, new_filenames
+            ):
+                with open(
+                        data_folder / "original" / original_filename,
+                        "rt",
+                        encoding="utf-8",
+                ) as open_fp:
+                    with open(
+                            data_folder / new_filename, "wt", encoding="utf-8"
+                    ) as write_fp:
+                        for line in open_fp:
+                            fields = line.split('\t')
+                            tweet = fields[0]
+                            old_label = fields[1]
+                            new_label = '__label__' + old_label
+                            write_fp.write(f"{new_label} {tweet}\n")
+
+        super(GERMEVAL_2018_OFFENSIVE_LANGUAGE, self).__init__(
+            data_folder, tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs,
+        )
+
+
 class COMMUNICATIVE_FUNCTIONS(ClassificationCorpus):
     """
     The Communicative Functions Classification Corpus.
