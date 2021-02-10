@@ -189,10 +189,7 @@ class ColumnDataset(FlairDataset):
                 # pointer to previous
                 previous_sentence = None
                 while True:
-                    next = self._read_next_sentence(file)
-                    if len(next) == 1 and next[0].startswith(self.comment_symbol) and next is None:
-                        continue
-                    sentence = self._convert_lines_to_sentence(next)
+                    sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
                     if not sentence: break
                     sentence._previous_sentence = previous_sentence
                     sentence._next_sentence = None
