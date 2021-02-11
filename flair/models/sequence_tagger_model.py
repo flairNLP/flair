@@ -21,6 +21,8 @@ from flair.embeddings import TokenEmbeddings, StackedEmbeddings, Embeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.training_utils import Metric, Result, store_embeddings
 
+from nltk.corpus import wordnet
+
 log = logging.getLogger("flair")
 
 START_TAG: str = "<START>"
@@ -555,21 +557,31 @@ class SequenceTagger(flair.nn.Model):
                 for token in sentence:
                     # add gold tag
                     gold_tag = token.get_tag(self.tag_type).value
-                    y_true.append(labels.add_item(gold_tag))
 
                     # add predicted tag
-                    if wsd_evaluation:
-                        if gold_tag == 'O':
-                            predicted_tag = 'O'
-                        else:
-                            predicted_tag = token.get_tag('predicted').value
+                    if wsd_evaluation and gold_tag == 'O':
+                        predicted_tag = 'O'
                     else:
                         predicted_tag = token.get_tag('predicted').value
 
-                    y_pred.append(labels.add_item(predicted_tag))
+                    if wsd_evaluation and gold_tag != 'O' and predicted_tag == 'O':
+
+                        wn_lemmas = set(wordnet.all_lemma_names())
+
+                        if token.text in wn_lemmas:
+
+                            predicted_tag = 'B-' + wordnet.synsets(token.text)[0].lemmas()[0].key()
 
                     # for file output
                     lines.append(f'{token.text} {gold_tag} {predicted_tag}\n')
+
+                    if wsd_evaluation and gold_tag == 'O':
+                        continue
+
+                    y_true.append(labels.add_item(gold_tag))
+                    y_pred.append(labels.add_item(predicted_tag))
+
+
 
                 lines.append('\n')
 
