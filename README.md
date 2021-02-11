@@ -140,6 +140,7 @@ There are also good third-party articles and posts that illustrate how to use Fl
 * [Practical approach of State-of-the-Art Flair in Named Entity Recognition](https://medium.com/analytics-vidhya/practical-approach-of-state-of-the-art-flair-in-named-entity-recognition-46a837e25e6b)
 * [Benchmarking NER algorithms](https://towardsdatascience.com/benchmark-ner-algorithm-d4ab01b2d4c3)
 * [Training a Flair text classifier on Google Cloud Platform (GCP) and serving predictions on GCP](https://github.com/robinvanschaik/flair-on-gcp)
+* [Model Interpretability for transformer-based Flair models](https://github.com/robinvanschaik/interpret-flair)
 
 ## Citing Flair
 
