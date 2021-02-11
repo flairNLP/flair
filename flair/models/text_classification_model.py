@@ -548,6 +548,8 @@ class BiCrossClassifier(TextClassifier):
                         2*self.document_embeddings.embedding_length, len(self.label_dictionary)
                         ).to(flair.device)
                     
+                    nn.init.xavier_uniform_(self.decoder.weight)
+                    
     def _get_state_dict(self):
         model_state = super()._get_state_dict()
         model_state["bi_mode"] = self.bi_mode

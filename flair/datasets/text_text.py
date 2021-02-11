@@ -481,6 +481,22 @@ class GLUE_RTE(TextualEntailmentCorpus):
             skip_first_line=True,
             label=False
         )
+     
+    """    
+    Creates tsv file of the predictions of the eval_dataset (after calling classifier.predict(corpus.eval_dataset, label_name='textual_entailment')).
+    The resulting file is called RTE.tsv and is in the form required for submission to the Glue Benchmark.
+    """
+    def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
+        
+        if type(folder_path)==str:
+            folder_path=Path(folder_path)
+        folder_path = folder_path / 'RTE.tsv'
+        
+        with open(folder_path, mode='w') as tsv_file:
+            tsv_file.write("index\tprediction\n")
+            for index, datapoint in enumerate(self.eval_dataset):
+                tsv_file.write(str(index) + '\t' + datapoint.get_labels('textual_entailment')[0].value + '\n')
+            
 
         
         
@@ -555,6 +571,23 @@ class SUPERGLUE_RTE(TextualEntailmentCorpus):
             skip_first_line=False,
             label=False
         )
+        
+    """    
+    Creates JSONL file of the predictions of the eval_dataset (after calling classifier.predict(corpus.eval_dataset, label_name='textual_entailment')).
+    The resulting file is called RTE.jsonl and is in the form required for submission to the SuperGlue Benchmark.
+    """
+    def jsonl_from_eval_dataset(self, folder_path: Union[str, Path]):
+        
+        if type(folder_path)==str:
+            folder_path=Path(folder_path)
+        folder_path = folder_path / 'RTE.jsonl'
+        
+        with open(folder_path, mode='w') as jsonl_file:
+            
+            for index, datapoint in enumerate(self.eval_dataset):
+                entry = {"idx": index, "label": datapoint.get_labels('textual_entailment')[0].value}
+                jsonl_file.write(str(entry) + '\n')
+                
         
 #Function to transform JSON file to tsv for Recognizing Textual Entailment Data
 def rte_jsonl_to_tsv(file_path: Union[str, Path], label: bool = True, remove: bool = False, encoding='utf-8'):
