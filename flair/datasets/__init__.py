@@ -26,6 +26,7 @@ from .sequence_labeling import MIT_RESTAURANT_NER
 from .sequence_labeling import NER_BASQUE
 from .sequence_labeling import NER_FINNISH
 from .sequence_labeling import NER_SWEDISH
+from .sequence_labeling import STACKOVERFLOW_NER
 from .sequence_labeling import SEMEVAL2010
 from .sequence_labeling import SEMEVAL2017
 from .sequence_labeling import TURKU_NER
@@ -54,6 +55,7 @@ from .sequence_labeling import WNUT_17
 from .sequence_labeling import WSD_UFSAC
 from .sequence_labeling import WNUT_2020_NER
 from .sequence_labeling import XTREME
+from .sequence_labeling import BUSINESS_HUN
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
@@ -78,6 +80,7 @@ from .document_classification import WASSA_FEAR
 from .document_classification import WASSA_JOY
 from .document_classification import WASSA_SADNESS
 from .document_classification import GO_EMOTIONS
+from .document_classification import GERMEVAL_2018_OFFENSIVE_LANGUAGE
 
 # Expose all treebanks
 from .treebanks import UniversalDependenciesCorpus

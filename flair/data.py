@@ -418,6 +418,14 @@ class Span(DataPoint):
             pos += len(t.text)
 
         return str
+     
+    def to_plain_string(self):
+        plain = ""
+        for token in self.tokens:
+            plain += token.text
+            if token.whitespace_after:
+                plain += " "
+        return plain.rstrip()
 
     def to_dict(self):
         return {
@@ -602,7 +610,7 @@ class Sentence(DataPoint):
         token.text = token.text.replace('\ufeff', '')
 
         # data with zero-width characters cannot be handled
-        if token.text.strip() == '':
+        if token.text == '':
             return
 
         self.tokens.append(token)

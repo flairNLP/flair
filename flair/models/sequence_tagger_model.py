@@ -213,7 +213,7 @@ class SequenceTagger(flair.nn.Model):
             )
         else:
             self.linear = torch.nn.Linear(
-                self.embeddings.embedding_length, len(tag_dictionary)
+                rnn_input_dim, len(tag_dictionary)
             )
 
         if self.use_crf:
@@ -1045,7 +1045,7 @@ class SequenceTagger(flair.nn.Model):
             # French models
             "fr-ner": "/".join([hu_path, "fr-ner", "fr-ner-wikiner-0.4.pt"]),
             # Dutch models
-            "nl-ner": "/".join([hu_path, "nl-ner", "nl-ner-bert-conll02-v0.6.pt"]),
+            "nl-ner": "/".join([hu_path, "nl-ner", "nl-ner-bert-conll02-v0.8.pt"]),
             "nl-ner-rnn": "/".join([hu_path, "nl-ner-rnn", "nl-ner-conll02-v0.5.pt"]),
             # Malayalam models
             "ml-pos": "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt",
@@ -1134,10 +1134,12 @@ class SequenceTagger(flair.nn.Model):
                 model_name = model_name_splitted[0]
 
             # Lazy import
-            from transformers import file_utils
+            from huggingface_hub import hf_hub_url, cached_download
 
-            url = file_utils.hf_bucket_url(model_id=model_name, revision=revision, filename=hf_model_name)
-            model_name = file_utils.cached_path(url_or_filename=url, cache_dir=flair.cache_root)
+            url = hf_hub_url(model_id=model_name, revision=revision, filename=hf_model_name)
+            model_name = cached_download(url=url, library_name="flair",
+                                         library_version=flair.__version__,
+                                         cache_dir=flair.cache_root / 'models')
 
         return model_name
 

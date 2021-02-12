@@ -279,7 +279,7 @@ def test_transformer_document_embeddings():
 
     assert len(sentence.get_embedding()) == 0
 
-    embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased', layers='all', use_scalar_mix=True)
+    embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased', layers='all', layer_mean=True)
 
     embeddings.embed(sentence)
 

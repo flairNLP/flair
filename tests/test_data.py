@@ -47,7 +47,6 @@ def test_get_head():
 
 
 def test_create_sentence_on_empty_string():
-
     sentence: Sentence = Sentence("")
     assert 0 == len(sentence.tokens)
 
@@ -78,15 +77,26 @@ def test_create_sentence_with_tokenizer():
     assert "." == sentence.tokens[3].text
 
 
+def test_create_sentence_with_newline():
+    sentence: Sentence = Sentence(["I", "\t", "ich", "\n", "you", "\t", "du", "\n"])
+    assert 8 == len(sentence.tokens)
+    assert "\n" == sentence.tokens[3].text
+
+    sentence: Sentence = Sentence("I \t ich \n you \t du \n", use_tokenizer=False)
+    assert 8 == len(sentence.tokens)
+    assert 0 == sentence.tokens[0].start_pos
+    assert "\n" == sentence.tokens[3].text
+
+
 def test_create_sentence_with_custom_tokenizer():
-    sentence:Sentence = Sentence("I love Berlin.", use_tokenizer=TokenizerWrapper(no_op_tokenizer))
+    sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=TokenizerWrapper(no_op_tokenizer))
     assert 1 == len(sentence.tokens)
     assert 0 == sentence.tokens[0].start_pos
     assert "I love Berlin." == sentence.tokens[0].text
 
 
 def test_create_sentence_with_callable():
-    sentence:Sentence = Sentence("I love Berlin.", use_tokenizer=no_op_tokenizer)
+    sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=no_op_tokenizer)
     assert 1 == len(sentence.tokens)
     assert 0 == sentence.tokens[0].start_pos
     assert "I love Berlin." == sentence.tokens[0].text
@@ -94,7 +104,7 @@ def test_create_sentence_with_callable():
 
 @pytest.mark.skip(reason="SpacyTokenizer needs optional requirements, so we skip the test by default")
 def test_create_sentence_with_spacy_tokenizer():
-    sentence:Sentence = Sentence("I love Berlin.", use_tokenizer=SpacyTokenizer("en_core_sci_sm"))
+    sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=SpacyTokenizer("en_core_sci_sm"))
 
     assert 4 == len(sentence.tokens)
     assert 0 == sentence.tokens[0].start_pos
@@ -290,8 +300,8 @@ def test_problem_sentences():
     sentence = Sentence(text)
     assert len(sentence) == 9
 
-    text= "equivalently , accumulating the logs as :( 6 ) sl = 1N ∑ t = 1Nlogp ( Ll | xt ​ , θ ) where " \
-          "p ( Ll | xt ​ , θ ) represents the class probability output"
+    text = "equivalently , accumulating the logs as :( 6 ) sl = 1N ∑ t = 1Nlogp ( Ll | xt ​ , θ ) where " \
+           "p ( Ll | xt ​ , θ ) represents the class probability output"
     sentence = Sentence(text)
     assert len(sentence) == 37
 
@@ -305,7 +315,6 @@ def test_problem_sentences():
 
 
 def test_token_indices():
-
     text = ":    nation on"
     sentence = Sentence(text)
     assert text == sentence.to_original_text()
@@ -352,23 +361,23 @@ def test_sentence_to_real_string(tasks_base_path):
     sentence = corpus.train[0]
     sentence.infer_space_after()
     assert (
-        'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in einer Weise aufgetreten , die alles andere als überzeugend war " .'
-        == sentence.to_tokenized_string()
+            'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in einer Weise aufgetreten , die alles andere als überzeugend war " .'
+            == sentence.to_tokenized_string()
     )
     assert (
-        'Schartau sagte dem "Tagesspiegel" vom Freitag, Fischer sei "in einer Weise aufgetreten, die alles andere als überzeugend war".'
-        == sentence.to_plain_string()
+            'Schartau sagte dem "Tagesspiegel" vom Freitag, Fischer sei "in einer Weise aufgetreten, die alles andere als überzeugend war".'
+            == sentence.to_plain_string()
     )
 
     sentence = corpus.train[1]
     sentence.infer_space_after()
     assert (
-        "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf ."
-        == sentence.to_tokenized_string()
+            "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf ."
+            == sentence.to_tokenized_string()
     )
     assert (
-        "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als Möbelvertreter, als er einen fliegenden Händler aus dem Libanon traf."
-        == sentence.to_plain_string()
+            "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als Möbelvertreter, als er einen fliegenden Händler aus dem Libanon traf."
+            == sentence.to_plain_string()
     )
 
 
@@ -587,7 +596,6 @@ def test_tagged_corpus_make_label_dictionary():
 
 
 def test_tagged_corpus_statistics():
-
     train_sentence = Sentence("I love Berlin.", use_tokenizer=True).add_label('label', 'class_1')
 
     dev_sentence = Sentence("The sun is shining.", use_tokenizer=True).add_label('label', 'class_2')
@@ -614,7 +622,6 @@ def test_tagged_corpus_statistics():
 
 
 def test_tagged_corpus_statistics_multi_label():
-
     train_sentence = Sentence("I love Berlin.", use_tokenizer=True).add_label('label', 'class_1')
 
     dev_sentence = Sentence("The sun is shining.", use_tokenizer=True).add_label('label', 'class_2')
@@ -671,7 +678,6 @@ def test_tagged_corpus_get_tag_statistic():
 
 
 def test_tagged_corpus_downsample():
-
     sentence = Sentence("I love Berlin.", use_tokenizer=True).add_label('label', 'class_1')
 
     corpus: Corpus = Corpus(
@@ -841,8 +847,8 @@ def test_sentence_to_dict():
     dict = sentence.to_dict("ner")
 
     assert (
-        "Zalando Research is   located in Berlin, the capital of Germany."
-        == dict["text"]
+            "Zalando Research is   located in Berlin, the capital of Germany."
+            == dict["text"]
     )
     assert "Zalando Research" == dict["entities"][0]["text"]
     assert "Berlin" == dict["entities"][1]["text"]
