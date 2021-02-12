@@ -8,6 +8,8 @@ search_space = search_spaces.SequenceTaggerSearchSpace()
 search_space.add_tag_type("ner")
 
 search_space.add_budget(parameters.BudgetConstraint.RUNS, 100)
+search_space.add_optimization_value(parameters.OptimizationValue.DEV_SCORE)
+search_space.add_evaluation_metric(parameters.EvaluationMetric.MICRO_F1_SCORE)
 
 # Trainingsparameter
 search_space.add_parameter(parameters.ModelTrainer.LEARNING_RATE, options=[0.01, 0.05, 0.1])
@@ -15,7 +17,7 @@ search_space.add_parameter(parameters.ModelTrainer.MINI_BATCH_SIZE, options=[16,
 
 # Modellparameter
 search_space.add_parameter(parameters.SequenceTagger.HIDDEN_SIZE, options=[128, 256, 512])
-search_space.add_word_embeddings(options=[[WordEmbeddings('glove'), WordEmbeddings('en')], WordEmbeddings('en')])
+search_space.add_word_embeddings(options=[[WordEmbeddings('glove'), WordEmbeddings('en')], [WordEmbeddings('en')]])
 
 search_strategy = search_strategies.EvolutionarySearch(population_size=12,
                                                        cross_rate=0.5,
