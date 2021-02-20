@@ -4,7 +4,7 @@
 a bidirectional recurrent neural network to predict the next word in a text.
 We are using the implementation of [AllenNLP](https://allennlp.org/elmo). As this implementation comes with a lot of
 sub-dependencies, which we don't want to include in Flair, you need to first install the library via
-`pip install allennlp` before you can use it in Flair.
+`pip install allennlp==0.9.0` before you can use it in Flair.
 Using the embeddings is as simple as using any other embedding type:
 
 ```python
