@@ -1126,6 +1126,8 @@ class SequenceTagger(flair.nn.Model):
 
         cache_dir = Path("models")
 
+        get_from_model_hub = False
+
         # check if model name is a valid local file
         if Path(model_name).exists():
             model_path = model_name
@@ -1146,34 +1148,35 @@ class SequenceTagger(flair.nn.Model):
 
             # use mapped name instead
             model_name = hf_model_name
+            get_from_model_hub = True
 
         # if not, check if model key is remapped to direct download location. If so, download model
         elif model_name in hu_model_map:
             model_path = cached_path(hu_model_map[model_name], cache_dir=cache_dir)
 
         # special handling for the taggers by the @redewiegergabe project (TODO: move to model hub)
-        if model_name == "de-historic-indirect":
+        elif model_name == "de-historic-indirect":
             model_file = Path(flair.cache_root) / cache_dir / 'indirect' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/indirect.zip', cache_dir=cache_dir)
                 unzip_file(Path(flair.cache_root) / cache_dir / 'indirect.zip', Path(flair.cache_root) / cache_dir)
             model_path = str(Path(flair.cache_root) / cache_dir / 'indirect' / 'final-model.pt')
 
-        if model_name == "de-historic-direct":
+        elif model_name == "de-historic-direct":
             model_file = Path(flair.cache_root) / cache_dir / 'direct' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/direct.zip', cache_dir=cache_dir)
                 unzip_file(Path(flair.cache_root) / cache_dir / 'direct.zip', Path(flair.cache_root) / cache_dir)
             model_path = str(Path(flair.cache_root) / cache_dir / 'direct' / 'final-model.pt')
 
-        if model_name == "de-historic-reported":
+        elif model_name == "de-historic-reported":
             model_file = Path(flair.cache_root) / cache_dir / 'reported' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/reported.zip', cache_dir=cache_dir)
                 unzip_file(Path(flair.cache_root) / cache_dir / 'reported.zip', Path(flair.cache_root) / cache_dir)
             model_path = str(Path(flair.cache_root) / cache_dir / 'reported' / 'final-model.pt')
 
-        if model_name == "de-historic-free-indirect":
+        elif model_name == "de-historic-free-indirect":
             model_file = Path(flair.cache_root) / cache_dir / 'freeIndirect' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/freeIndirect.zip', cache_dir=cache_dir)
@@ -1182,6 +1185,10 @@ class SequenceTagger(flair.nn.Model):
 
         # for all other cases (not local file or special download location), use HF model hub
         else:
+            get_from_model_hub = True
+
+        # if not a local file, get from model hub
+        if get_from_model_hub:
             hf_model_name = "pytorch_model.bin"
             revision = "main"
 
@@ -1214,6 +1221,7 @@ class SequenceTagger(flair.nn.Model):
                 log.error(f" -> Please check https://huggingface.co/models?filter=flair for all available models.")
                 log.error(f" -> Alternatively, point to a model file on your local drive.")
                 log.error("-" * 80)
+                Path(flair.cache_root / 'models' / model_folder).rmdir() # remove folder again if not valid
 
         return model_path
 
