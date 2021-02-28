@@ -506,7 +506,7 @@ class BiCrossClassifier(TextClassifier):
     """
     Bi-Cross Classification Model for DataPairs (e.g. Recognizing Textual Entailment), build upon TextClassifier.
     The model takes document embeddings and puts resulting text representation(s) into a linear layer to get the 
-    actual class label. There class provides two ways to embedd the DataPairs: Either by embedding both DataPoints 
+    actual class label. We provide two ways to embedd the DataPairs: Either by embedding both DataPoints 
     and concatenating the resulting vectors ("bi") or by concatenating the DataPoints and embedding the restulting 
     vector ("cross").
     """
@@ -543,6 +543,9 @@ class BiCrossClassifier(TextClassifier):
                                          multi_label_threshold=multi_label_threshold,
                                          beta=beta,
                                          loss_weights=loss_weights)
+        
+        #if bi_mode == True the linear layer needs twice the length of the embeddings as input size
+        #since we concatenate the embeddings of the two DataPoints in the DataPairs 
         if self.bi_mode:
                     self.decoder = nn.Linear(
                         2*self.document_embeddings.embedding_length, len(self.label_dictionary)
@@ -583,21 +586,28 @@ class BiCrossClassifier(TextClassifier):
             datapairs = [datapairs]
     
         if self.bi_mode:#embed both sentences seperately, concatenate the resulting vectors
-            premises = [pair.first for pair in datapairs]
-            hypothesises = [pair.second for pair in datapairs]
+            first_elements = [pair.first for pair in datapairs]
+            second_elements = [pair.second for pair in datapairs]
             
-            self.document_embeddings.embed(premises)
+            self.document_embeddings.embed(first_elements)
 
-            self.document_embeddings.embed(hypothesises)
+            self.document_embeddings.embed(second_elements)
             
             text_embedding_list = [
                 torch.cat([a.get_embedding(embedding_names),b.get_embedding(embedding_names)],0).unsqueeze(0) 
-                   for (a,b) in zip(premises,hypothesises)
+                   for (a,b) in zip(first_elements,second_elements)
                 ]
             
         else:#concatenate the sentences and embed together
         
-            concatenated_sentences = [Sentence(pair.first.to_plain_string() + ' ' +  pair.second.to_plain_string()) for pair in datapairs]
+            #TODO: Transformers use special separator symbols in the beginning and between elements 
+            #      of datapair. Here should be a case dinstintion between the different transformers.
+            if isinstance(self.document_embeddings, flair.embeddings.document.TransformerDocumentEmbeddings):
+                sep = '[SEP]'
+            else:
+                sep = ' '
+        
+            concatenated_sentences = [Sentence(pair.first.to_plain_string() + sep +  pair.second.to_plain_string()) for pair in datapairs]
             
             self.document_embeddings.embed(concatenated_sentences)
             
@@ -607,6 +617,7 @@ class BiCrossClassifier(TextClassifier):
             
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
+        #linear layer
         label_scores = self.decoder(text_embedding_tensor)
 
         return label_scores

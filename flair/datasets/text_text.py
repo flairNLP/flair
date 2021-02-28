@@ -201,7 +201,7 @@ class ParallelTextDataset(FlairDataset):
             )
         
         
-class TextualEntailmentCorpus(Corpus):
+class DataPairCorpus(Corpus):
     def __init__(
             self,
             data_folder: Union[str, Path],
@@ -213,6 +213,7 @@ class TextualEntailmentCorpus(Corpus):
             max_tokens_per_doc=-1,
             max_chars_per_doc=-1,
             in_memory: bool = True,
+            label_type: str = None,
             autofind_splits=True,
             sample_missing_splits: bool = True,
             skip_first_line: bool = False,
@@ -220,19 +221,21 @@ class TextualEntailmentCorpus(Corpus):
             encoding: str = 'utf-8'
     ):
         """
-        Corpus for Recognizing Textual Entailment Tasks. The data files are expected to be in column format with colmuns 
-        for the premises, the hypothesises and the labels, respectively. Labels could for example be "entailment" and "not_entailment".
+        Corpus for tasks involving pairs of sentences or paragraphs. The data files are expected to be in column format where each line has a colmun 
+        for the first sentence/paragraph, the second sentence/paragraph and the labels, respectively. The columns must be separated by a given separator (default: '\t').
         
         :param data_folder: base folder with the task data
-        :param columns: Indicates the columns for premise (first entry in the list), hypothesis (second entry) and label (last entry).
+        :param columns: List that indicates the columns for the first sentence (first entry in the list), the second sentence (second entry) and label (last entry).
+                        default = [0,1,2]
         :param train_file: the name of the train file
-        :param test_file: the name of the test file
-        :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :param test_file: the name of the test file, if None, dev data is sampled from train (if sample_missing_splits is true)
+        :param dev_file: the name of the dev file, if None, dev data is sampled from train (if sample_missing_splits is true)
         :param use_tokenizer: Whether or not to use in-built tokenizer
         :param max_tokens_per_doc: If set, shortens sentences to this maximum number of tokens
         :param max_chars_per_doc: If set, shortens sentences to this maximum number of characters
-        :param in_memory: If True, keeps dataset fully in memory
-        :param autofind_splits: If True, train/test/dev files will be automatically identified
+        :param in_memory: If True, data will be saved in list of flair.data.DataPair objects, other wise we use lists with simple strings which needs less space
+        :param label_type: Name of the label of the data pairs
+        :param autofind_splits: If True, train/test/dev files will be automatically identified in the given data_folder
         :param sample_missing_splits: If True, a missing train/test/dev file will be sampled from the available data
         :param skip_first_line: If True, first line of data files will be ignored
         :param separator: Separator between columns in data files
@@ -242,52 +245,56 @@ class TextualEntailmentCorpus(Corpus):
         """
         
         # find train, dev and test files if not specified
-        #hängt Dateinamen and Pfad data_folder
         dev_file, test_file, train_file = \
             find_train_dev_test_files(data_folder, dev_file, test_file, train_file, autofind_splits=autofind_splits)
             
-        train: FlairDataset = TextualEntailmentDataset(
+        # create DataPairDataset for train, test and dev file, if they are given
+        
+        train: FlairDataset = DataPairDataset(
             train_file,
             columns=columns,
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
+            label_type=label_type,
             skip_first_line=skip_first_line,
             separator=separator,
             encoding=encoding
         ) if train_file is not None else None
         
-        test: FlairDataset = TextualEntailmentDataset(
+        test: FlairDataset = DataPairDataset(
             test_file,
             columns=columns,
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
+            label_type=label_type,
             skip_first_line=skip_first_line,
             separator=separator,
             encoding=encoding
         ) if test_file is not None else None
 
-        dev: FlairDataset = TextualEntailmentDataset(
+        dev: FlairDataset = DataPairDataset(
             dev_file,
             columns=columns,
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
+            label_type=label_type,
             skip_first_line=skip_first_line,
             separator=separator,
             encoding=encoding
         ) if dev_file is not None else None
 
-        super(TextualEntailmentCorpus, self).__init__(train, dev, test,
+        super(DataPairCorpus, self).__init__(train, dev, test,
                                                       sample_missing_splits=sample_missing_splits,
                                                       name=str(data_folder))
         
         
-class TextualEntailmentDataset(FlairDataset):
+class DataPairDataset(FlairDataset):
     def __init__(
             self,
             path_to_data: Union[str, Path],
@@ -296,24 +303,26 @@ class TextualEntailmentDataset(FlairDataset):
             max_chars_per_doc=-1,
             use_tokenizer=True,
             in_memory: bool = True,
+            label_type: str = None,
             skip_first_line: bool = False,
             separator: str = '\t',
             encoding: str = 'utf-8',
             label: bool = True
     ):
         """
-        Creates a Dataset for Recognizing Textual Entailment (RTE). The file needs to be in a column format, 
-        where each line has a column for the premise, the hypothesis and the label (e.g. "entailment"/"not entailment") 
+        Creates a Dataset for pairs of sentences/paragraphs. The file needs to be in a column format, 
+        where each line has a column for the first sentence/paragraph, the second sentence/paragraph and the label 
         seperated by e.g. '\t' (just like in the glue RTE-dataset https://gluebenchmark.com/tasks) .
-        Each premise-hypothesis pair is stored in a flair.data.DataPair object.
+        For each data pair we create a flair.data.DataPair object.
         
         :param path_to_data: path to the data file
         :param columns: list of integers that indicate the respective columns. The first entry is the column
-        for the premise, the second for the hypothesis and the third for the label. Default [0,1,2]
+        for the first sentence, the second for the second sentence and the third for the label. Default [0,1,2]
         :param max_tokens_per_doc: If set, shortens sentences to this maximum number of tokens
         :param max_chars_per_doc: If set, shortens sentences to this maximum number of characters
         :param use_tokenizer: Whether or not to use in-built tokenizer
-        :param in_memory: If True, keeps dataset fully in memory
+        :param in_memory: If True, data will be saved in list of flair.data.DataPair objects, other wise we use lists with simple strings which needs less space
+        :param label_type: Name of the label of the data pairs
         :param skip_first_line: If True, first line of data file will be ignored
         :param separator: Separator between columns in the data file
         :param encoding: Encoding of the data file
@@ -323,6 +332,7 @@ class TextualEntailmentDataset(FlairDataset):
         if type(path_to_data) == str:
             path_to_data: Path = Path(path_to_data)
 
+        # stop if file does not exist
         assert path_to_data.exists()
 
         self.in_memory = in_memory
@@ -332,68 +342,71 @@ class TextualEntailmentDataset(FlairDataset):
         self.max_tokens_per_doc = max_tokens_per_doc
         
         self.label = label
+        
+        self.label_type = label_type
 
         self.total_data_count: int = 0
 
         if self.in_memory:
-            self.bi_sentences: List[DataPair] = []
+            self.data_pairs: List[DataPair] = []
         else:
-            self.premises: List[str] = []
-            self.hypothesises: List[str] = []
+            self.first_elements: List[str] = []
+            self.second_elements: List[str] = []
             self.labels: List[str] = []
 
         with open(str(path_to_data), encoding=encoding) as source_file:
 
             source_line = source_file.readline()
             
-            if skip_first_line:
+            if skip_first_line: 
                 source_line = source_file.readline()
 
             while source_line:
                 
                 source_line_list = source_line.strip().split(separator)
 
-                premise = source_line_list[columns[0]]
-                hypothesis = source_line_list[columns[1]]
+                first_element = source_line_list[columns[0]]
+                second_element = source_line_list[columns[1]]
                 
                 if self.label:
-                    entailment_label = source_line_list[columns[2]]
+                    pair_label = source_line_list[columns[2]]
                 else:
-                    entailment_label=None
+                    pair_label = None
 
                 if max_chars_per_doc > 0:
-                    premise = premise[:max_chars_per_doc]
-                    hypothesis = hypothesis[:max_chars_per_doc]
+                    first_element = first_element[:max_chars_per_doc]
+                    second_element = second_element[:max_chars_per_doc]
 
                 if self.in_memory:
 
-                    bi_sentence = self._make_entailment_pair(premise, hypothesis, entailment_label)
-                    self.bi_sentences.append(bi_sentence)
+                    data_pair = self._make_data_pair(first_element, second_element, pair_label)
+                    self.data_pairs.append(data_pair)
                 else:
-                    self.premises.append(premise)
-                    self.hypothesises.append(hypothesis)
+                    self.first_elements.append(first_element)
+                    self.second_elements.append(second_element)
                     if self.label:
-                        self.labels.append(entailment_label)
+                        self.labels.append(pair_label)
                     
                 self.total_data_count += 1
                 
                 source_line = source_file.readline()
 
-    def _make_entailment_pair(self, premise: str, hypothesis: str, label: str):
+    # create a DataPair object from strings
+    def _make_data_pair(self, first_element: str, second_element: str, label: str = None):
 
-        premise_sentence = Sentence(premise, use_tokenizer=self.use_tokenizer)
-        hypothesis_sentence = Sentence(hypothesis, use_tokenizer=self.use_tokenizer)
+        first_sentence = Sentence(first_element, use_tokenizer=self.use_tokenizer)
+        second_sentence = Sentence(second_element, use_tokenizer=self.use_tokenizer)
 
         if self.max_tokens_per_doc > 0:
-            premise_sentence.tokens = premise_sentence.tokens[: self.max_tokens_per_doc]
-            hypothesis_sentence.tokens = hypothesis_sentence.tokens[: self.max_tokens_per_doc]
+            first_sentence.tokens = first_sentence.tokens[: self.max_tokens_per_doc]
+            second_sentence.tokens = second_sentence.tokens[: self.max_tokens_per_doc]
 
-        entailment_pair = DataPair(premise_sentence, hypothesis_sentence)
+        data_pair = DataPair(first_sentence, second_sentence)
         
         if label:        
-            entailment_pair.add_label(label_type="textual_entailment", value=label)
+            data_pair.add_label(label_type=self.label_type, value=label)
         
-        return entailment_pair
+        return data_pair
     
     def is_in_memory(self) -> bool:
         
@@ -402,20 +415,21 @@ class TextualEntailmentDataset(FlairDataset):
     def __len__(self):
         return self.total_data_count
 
+    # if in_memory is True we return a datapair, otherwise we create one from the lists of strings
     def __getitem__(self, index: int = 0) -> DataPair:
         if self.in_memory:
-            return self.bi_sentences[index]
+            return self.data_pairs[index]
         elif self.label:
-            return self._make_entailment_pair(
-                self.premises[index], self.hypothesises[index], self.labels[index]
+            return self._make_data_pair(
+                self.first_elements[index], self.second_elements[index], self.labels[index]
             )
         else:
-            return self._make_entailment_pair(
-                self.premises[index], self.hypothesises[index], None
+            return self._make_data_pair(
+                self.first_elements[index], self.second_elements[index]
             )
         
         
-class GLUE_RTE(TextualEntailmentCorpus):
+class GLUE_RTE(DataPairCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -426,8 +440,8 @@ class GLUE_RTE(TextualEntailmentCorpus):
             sample_missing_splits: bool = True
             ):
         """
-        Creates a Recognizing Textual Entailment Corpus for the Glue RTE data (https://gluebenchmark.com/tasks).
-        Additionaly to the TextualEntailmentCorpus we have a eval_dataset containing the test file of the Glue data. 
+        Creates a DataPairCorpus for the Glue Recognizing Textual Entailment (RTE) data (https://gluebenchmark.com/tasks).
+        Additionaly to the Corpus we have a eval_dataset containing the test file of the Glue data. 
         This file contains unlabeled test data to evaluate models on the Glue RTE task.
         """
         
@@ -436,12 +450,14 @@ class GLUE_RTE(TextualEntailmentCorpus):
             
         dataset_name = "glue"
 
+        #if no base_path provided take cache root
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name 
         
         data_file = data_folder / "RTE/train.tsv"
         
+        # if data is not downloaded yet, download it
         if not data_file.is_file():
         
             #get the zip file
@@ -457,6 +473,7 @@ class GLUE_RTE(TextualEntailmentCorpus):
                 keep= False 
                 )
             
+            #rename test file to eval_dataset, since it has no labels
             os.rename(str(data_folder / "RTE/test.tsv"), str(data_folder / "RTE/eval_dataset.tsv"))
             
         super(GLUE_RTE, self).__init__(
@@ -467,11 +484,12 @@ class GLUE_RTE(TextualEntailmentCorpus):
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
+            label_type='textual_entailment',
             sample_missing_splits=sample_missing_splits
 
         )
         
-        self.eval_dataset =  TextualEntailmentDataset(
+        self.eval_dataset =  DataPairDataset(
             data_folder / "RTE/eval_dataset.tsv",
             columns=[1,2,3],
             use_tokenizer=use_tokenizer,
@@ -483,8 +501,8 @@ class GLUE_RTE(TextualEntailmentCorpus):
         )
      
     """    
-    Creates tsv file of the predictions of the eval_dataset (after calling classifier.predict(corpus.eval_dataset, label_name='textual_entailment')).
-    The resulting file is called RTE.tsv and is in the form required for submission to the Glue Benchmark.
+    This function creates a tsv file of the predictions of the eval_dataset (after calling classifier.predict(corpus.eval_dataset, label_name='textual_entailment')).
+    The resulting file is called RTE.tsv and is in the format required for submission to the Glue Benchmark.
     """
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
         
@@ -500,7 +518,7 @@ class GLUE_RTE(TextualEntailmentCorpus):
 
         
         
-class SUPERGLUE_RTE(TextualEntailmentCorpus):
+class SUPERGLUE_RTE(DataPairCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -511,8 +529,8 @@ class SUPERGLUE_RTE(TextualEntailmentCorpus):
             sample_missing_splits: bool = True          
             ):
         """
-        Creates a Recognizing Textual Entailment Corpus for the SuperGlue RTE data (https://super.gluebenchmark.com/tasks).
-        Additionaly to the TextualEntailmentCorpus we have a eval_dataset containing the test file of the SuperGlue data. 
+        Creates a DataPairCorpus for the SuperGlue Recognizing Textual Entailment (RTE) data (https://super.gluebenchmark.com/tasks).
+        Additionaly to the Corpus we have a eval_dataset containing the test file of the SuperGlue data. 
         This file contains unlabeled test data to evaluate models on the SuperGlue RTE task.
         """
         
@@ -521,12 +539,14 @@ class SUPERGLUE_RTE(TextualEntailmentCorpus):
             
         dataset_name = "superglue"
 
+        #if no base_path provided take cache root
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name 
         
         data_file = data_folder / "RTE/train.tsv"
         
+        #if data not downloaded yet, download it
         if not data_file.is_file():
         
             #get the zip file
@@ -542,7 +562,7 @@ class SUPERGLUE_RTE(TextualEntailmentCorpus):
                 keep= False 
                 )
             
-            # transform to tsv and delete json files
+            # the downloaded files have json format, we transform them to tsv
             rte_jsonl_to_tsv(data_folder / "RTE/train.jsonl", remove = True)
             rte_jsonl_to_tsv(data_folder / "RTE/test.jsonl", remove = True, label=False)
             rte_jsonl_to_tsv(data_folder / "RTE/val.jsonl", remove = True)
@@ -557,11 +577,12 @@ class SUPERGLUE_RTE(TextualEntailmentCorpus):
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
+            label_type='textual_entailment',
             sample_missing_splits=sample_missing_splits
         )
         
         
-        self.eval_dataset =  TextualEntailmentDataset(
+        self.eval_dataset =  DataPairDataset(
             data_folder / "RTE/eval_dataset.tsv",
             columns=[0,1,2],
             use_tokenizer=use_tokenizer,
