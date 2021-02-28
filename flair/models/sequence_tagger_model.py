@@ -9,6 +9,7 @@ import numpy as np
 import torch
 import torch.nn
 import torch.nn.functional as F
+from requests import HTTPError
 from tabulate import tabulate
 from torch.nn.parameter import Parameter
 from torch.utils.data.dataset import Dataset
@@ -1003,9 +1004,44 @@ class SequenceTagger(flair.nn.Model):
     @staticmethod
     def _fetch_model(model_name) -> str:
 
+        # core Flair models on Huggingface ModelHub
+        huggingface_model_map = {
+            "ner": "flair/ner-english",
+            "ner-fast": "flair/ner-english-fast",
+            "ner-ontonotes": "flair/ner-english-ontonotes",
+            "ner-ontonotes-fast": "flair/ner-english-ontonotes-fast",
+            # Multilingual NER models
+            "ner-multi": "flair/ner-multi",
+            "multi-ner": "flair/ner-multi",
+            "ner-multi-fast": "flair/ner-multi-fast",
+            # English POS models
+            "upos": "flair/upos-english",
+            "upos-fast": "flair/upos-english-fast",
+            "pos": "flair/pos-english",
+            "pos-fast": "flair/pos-english-fast",
+            # Multilingual POS models
+            "pos-multi": "flair/upos-multi",
+            "multi-pos": "flair/upos-multi",
+            "pos-multi-fast": "flair/upos-multi-fast",
+            "multi-pos-fast": "flair/upos-multi-fast",
+            # English SRL models
+            "frame": "flair/frame-english",
+            "frame-fast": "flair/frame-english-fast",
+            # English chunking models
+            "chunk": "flair/chunk-english",
+            "chunk-fast": "flair/chunk-english-fast",
+            # Language-specific NER models
+            "da-ner": "flair/ner-danish",
+            "de-ner": "flair/ner-german",
+            "de-ler": "flair/ner-german-legal",
+            "de-ner-legal": "flair/ner-german-legal",
+            "fr-ner": "flair/ner-french",
+            "nl-ner": "flair/ner-dutch",
+        }
+
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
-        model_map = {
+        hu_model_map = {
             # English NER models
             "ner": "/".join([hu_path, "ner", "en-ner-conll03-v0.4.pt"]),
             "ner-pooled": "/".join([hu_path, "ner-pooled", "en-ner-conll03-pooled-v0.5.pt"]),
@@ -1089,59 +1125,105 @@ class SequenceTagger(flair.nn.Model):
             )}
 
         cache_dir = Path("models")
-        if model_name in model_map:
-            model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
 
-        # the historical German taggers by the @redewiegergabe project
-        if model_name == "de-historic-indirect":
+        get_from_model_hub = False
+
+        # check if model name is a valid local file
+        if Path(model_name).exists():
+            model_path = model_name
+
+        # check if model key is remapped to HF key - if so, print out information
+        elif model_name in huggingface_model_map:
+
+            # get mapped name
+            hf_model_name = huggingface_model_map[model_name]
+
+            # output information
+            log.info("-" * 80)
+            log.info(f"The model key '{model_name}' now maps to 'https://huggingface.co/{hf_model_name}' on the HuggingFace ModelHub")
+            log.info(f" - The most current version of the model is automatically downloaded from there.")
+            if model_name in hu_model_map:
+                log.info(f" - (you can alternatively manually download the original model at {hu_model_map[model_name]})")
+            log.info("-" * 80)
+
+            # use mapped name instead
+            model_name = hf_model_name
+            get_from_model_hub = True
+
+        # if not, check if model key is remapped to direct download location. If so, download model
+        elif model_name in hu_model_map:
+            model_path = cached_path(hu_model_map[model_name], cache_dir=cache_dir)
+
+        # special handling for the taggers by the @redewiegergabe project (TODO: move to model hub)
+        elif model_name == "de-historic-indirect":
             model_file = Path(flair.cache_root) / cache_dir / 'indirect' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/indirect.zip', cache_dir=cache_dir)
                 unzip_file(Path(flair.cache_root) / cache_dir / 'indirect.zip', Path(flair.cache_root) / cache_dir)
-            model_name = str(Path(flair.cache_root) / cache_dir / 'indirect' / 'final-model.pt')
+            model_path = str(Path(flair.cache_root) / cache_dir / 'indirect' / 'final-model.pt')
 
-        if model_name == "de-historic-direct":
+        elif model_name == "de-historic-direct":
             model_file = Path(flair.cache_root) / cache_dir / 'direct' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/direct.zip', cache_dir=cache_dir)
                 unzip_file(Path(flair.cache_root) / cache_dir / 'direct.zip', Path(flair.cache_root) / cache_dir)
-            model_name = str(Path(flair.cache_root) / cache_dir / 'direct' / 'final-model.pt')
+            model_path = str(Path(flair.cache_root) / cache_dir / 'direct' / 'final-model.pt')
 
-        if model_name == "de-historic-reported":
+        elif model_name == "de-historic-reported":
             model_file = Path(flair.cache_root) / cache_dir / 'reported' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/reported.zip', cache_dir=cache_dir)
                 unzip_file(Path(flair.cache_root) / cache_dir / 'reported.zip', Path(flair.cache_root) / cache_dir)
-            model_name = str(Path(flair.cache_root) / cache_dir / 'reported' / 'final-model.pt')
+            model_path = str(Path(flair.cache_root) / cache_dir / 'reported' / 'final-model.pt')
 
-        if model_name == "de-historic-free-indirect":
+        elif model_name == "de-historic-free-indirect":
             model_file = Path(flair.cache_root) / cache_dir / 'freeIndirect' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/freeIndirect.zip', cache_dir=cache_dir)
                 unzip_file(Path(flair.cache_root) / cache_dir / 'freeIndirect.zip', Path(flair.cache_root) / cache_dir)
-            model_name = str(Path(flair.cache_root) / cache_dir / 'freeIndirect' / 'final-model.pt')
+            model_path = str(Path(flair.cache_root) / cache_dir / 'freeIndirect' / 'final-model.pt')
 
-        # Fallback to Hugging Face model hub
-        if not Path(model_name).exists() and not model_name.startswith("http"):
-            # e.g. stefan-it/flair-ner-conll03 is a valid namespace
-            # and  stefan-it/flair-ner-conll03@main supports specifying a commit/branch name
+        # for all other cases (not local file or special download location), use HF model hub
+        else:
+            get_from_model_hub = True
+
+        # if not a local file, get from model hub
+        if get_from_model_hub:
             hf_model_name = "pytorch_model.bin"
             revision = "main"
 
             if "@" in model_name:
-                model_name_splitted = model_name.split("@")
-                revision = model_name_splitted[-1]
-                model_name = model_name_splitted[0]
+                model_name_split = model_name.split("@")
+                revision = model_name_split[-1]
+                model_name = model_name_split[0]
+
+            # use model name as subfolder
+            if "/" in model_name:
+                model_folder = model_name.split("/", maxsplit=1)[1]
+            else:
+                model_folder = model_name
 
             # Lazy import
             from huggingface_hub import hf_hub_url, cached_download
 
-            url = hf_hub_url(model_id=model_name, revision=revision, filename=hf_model_name)
-            model_name = cached_download(url=url, library_name="flair",
-                                         library_version=flair.__version__,
-                                         cache_dir=flair.cache_root / 'models')
+            url = hf_hub_url(model_name, revision=revision, filename=hf_model_name)
 
-        return model_name
+            try:
+                model_path = cached_download(url=url, library_name="flair",
+                                             library_version=flair.__version__,
+                                             cache_dir=flair.cache_root / 'models' / model_folder)
+            except HTTPError as e:
+                # output information
+                log.error("-" * 80)
+                log.error(
+                    f"ACHTUNG: The key '{model_name}' was neither found on the ModelHub nor is this a valid path to a file on your system!")
+                # log.error(f" - Error message: {e}")
+                log.error(f" -> Please check https://huggingface.co/models?filter=flair for all available models.")
+                log.error(f" -> Alternatively, point to a model file on your local drive.")
+                log.error("-" * 80)
+                Path(flair.cache_root / 'models' / model_folder).rmdir() # remove folder again if not valid
+
+        return model_path
 
     def get_transition_matrix(self):
         data = []
