@@ -500,32 +500,33 @@ class TextClassifier(flair.nn.Model):
                f'  (beta): {self.beta}\n' + \
                f'  (weights): {self.weight_dict}\n' + \
                f'  (weight_tensor) {self.loss_weights}\n)'
-               
-               
-class BiCrossClassifier(TextClassifier):
+
+
+class TextPairClassifier(TextClassifier):
     """
-    Bi-Cross Classification Model for DataPairs (e.g. Recognizing Textual Entailment), build upon TextClassifier.
+    Text Pair Classification Model for tasks such as Recognizing Textual Entailment, build upon TextClassifier.
     The model takes document embeddings and puts resulting text representation(s) into a linear layer to get the 
-    actual class label. We provide two ways to embedd the DataPairs: Either by embedding both DataPoints 
-    and concatenating the resulting vectors ("bi") or by concatenating the DataPoints and embedding the restulting 
-    vector ("cross").
+    actual class label. We provide two ways to embed the DataPairs: Either by embedding both DataPoints
+    and concatenating the resulting vectors ("embed_separately=True") or by concatenating the DataPoints and embedding
+    the resulting vector ("embed_separately=False").
     """
+
     def __init__(
             self,
             document_embeddings: flair.embeddings.DocumentEmbeddings,
             label_dictionary: Dictionary,
-            bi_mode: bool = True,
+            embed_separately: bool = False,
             label_type: str = None,
             multi_label: bool = None,
             multi_label_threshold: float = 0.5,
             beta: float = 1.0,
             loss_weights: Dict[str, float] = None,
-            ):
+    ):
         """
         :param document_embeddings: embeddings used to embed the Datapairs
         :param label_dictionary: dictionary of labels you want to predict
         :param label_type: name of the label
-        :param bi_mode: If True, the model embeds both Datapoints seperately, else cross-embedding
+        :param embed_separately: If True, the model embeds both data points separately, else cross-embedding
         :param multi_label: auto-detected by default, but you can set this to True to force multi-label prediction
         or False to force single-label prediction
         :param multi_label_threshold: If multi-label you can set the threshold to make predictions
@@ -533,31 +534,31 @@ class BiCrossClassifier(TextClassifier):
         :param loss_weights: Dictionary of weights for labels for the loss function
         (if any label's weight is unspecified it will default to 1.0)
         """
-        
-        self.bi_mode = bi_mode
-        #Initialize TextClassifier
-        super(BiCrossClassifier, self).__init__(document_embeddings,
-                                         label_dictionary,
-                                         label_type=label_type,
-                                         multi_label=multi_label,
-                                         multi_label_threshold=multi_label_threshold,
-                                         beta=beta,
-                                         loss_weights=loss_weights)
-        
-        #if bi_mode == True the linear layer needs twice the length of the embeddings as input size
-        #since we concatenate the embeddings of the two DataPoints in the DataPairs 
+
+        self.bi_mode = embed_separately
+        # Initialize TextClassifier
+        super(TextPairClassifier, self).__init__(document_embeddings,
+                                                 label_dictionary,
+                                                 label_type=label_type,
+                                                 multi_label=multi_label,
+                                                 multi_label_threshold=multi_label_threshold,
+                                                 beta=beta,
+                                                 loss_weights=loss_weights)
+
+        # if bi_mode == True the linear layer needs twice the length of the embeddings as input size
+        # since we concatenate the embeddings of the two DataPoints in the DataPairs
         if self.bi_mode:
-                    self.decoder = nn.Linear(
-                        2*self.document_embeddings.embedding_length, len(self.label_dictionary)
-                        ).to(flair.device)
-                    
-                    nn.init.xavier_uniform_(self.decoder.weight)
-                    
+            self.decoder = nn.Linear(
+                2 * self.document_embeddings.embedding_length, len(self.label_dictionary)
+            ).to(flair.device)
+
+            nn.init.xavier_uniform_(self.decoder.weight)
+
     def _get_state_dict(self):
         model_state = super()._get_state_dict()
         model_state["bi_mode"] = self.bi_mode
         return model_state
-    
+
     @staticmethod
     def _init_model_with_state_dict(state):
         beta = 1.0 if "beta" not in state.keys() else state["beta"]
@@ -565,63 +566,64 @@ class BiCrossClassifier(TextClassifier):
         label_type = None if "label_type" not in state.keys() else state["label_type"]
         mode = True if "bi_mode" not in state.keys() else state["bi_mode"]
 
-        model = BiCrossClassifier(
+        model = TextPairClassifier(
             document_embeddings=state["document_embeddings"],
             label_dictionary=state["label_dictionary"],
             label_type=label_type,
             multi_label=state["multi_label"],
             beta=beta,
             loss_weights=weights,
-            bi_mode=mode
+            embed_separately=mode
         )
 
         model.load_state_dict(state["state_dict"])
         return model
-    
+
     def forward(self, datapairs):
-    
+
         embedding_names = self.document_embeddings.get_names()
-        
+
         if isinstance(datapairs, DataPair):
             datapairs = [datapairs]
-    
-        if self.bi_mode:#embed both sentences seperately, concatenate the resulting vectors
+
+        if self.bi_mode:  # embed both sentences seperately, concatenate the resulting vectors
             first_elements = [pair.first for pair in datapairs]
             second_elements = [pair.second for pair in datapairs]
-            
+
             self.document_embeddings.embed(first_elements)
 
             self.document_embeddings.embed(second_elements)
-            
+
             text_embedding_list = [
-                torch.cat([a.get_embedding(embedding_names),b.get_embedding(embedding_names)],0).unsqueeze(0) 
-                   for (a,b) in zip(first_elements,second_elements)
-                ]
-            
-        else:#concatenate the sentences and embed together
-        
-            #TODO: Transformers use special separator symbols in the beginning and between elements 
+                torch.cat([a.get_embedding(embedding_names), b.get_embedding(embedding_names)], 0).unsqueeze(0)
+                for (a, b) in zip(first_elements, second_elements)
+            ]
+
+        else:  # concatenate the sentences and embed together
+
+            # TODO: Transformers use special separator symbols in the beginning and between elements
             #      of datapair. Here should be a case dinstintion between the different transformers.
             if isinstance(self.document_embeddings, flair.embeddings.document.TransformerDocumentEmbeddings):
                 sep = '[SEP]'
             else:
                 sep = ' '
-        
-            concatenated_sentences = [Sentence(pair.first.to_plain_string() + sep +  pair.second.to_plain_string()) for pair in datapairs]
-            
+
+            concatenated_sentences = [Sentence(pair.first.to_plain_string() + sep + pair.second.to_plain_string()) for
+                                      pair in datapairs]
+
             self.document_embeddings.embed(concatenated_sentences)
-            
+
             text_embedding_list = [
                 sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in concatenated_sentences
-            ]           
-            
+            ]
+
         text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
 
-        #linear layer
+        # linear layer
         label_scores = self.decoder(text_embedding_tensor)
 
         return label_scores
-    
+
 
 class TARSClassifier(TextClassifier):
     """
@@ -1035,7 +1037,7 @@ class TARSClassifier(TextClassifier):
             self._drop_task(TARSClassifier.static_adhoc_task_identifier)
 
         return
-      
+
     def predict_all_tasks(self, sentences: Union[List[Sentence], Sentence]):
 
         # remember current task
