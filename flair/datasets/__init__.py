@@ -131,6 +131,10 @@ from .treebanks import UD_WOLOF
 from .text_text import ParallelTextCorpus
 from .text_text import ParallelTextDataset
 from .text_text import OpusParallelCorpus
+from .text_text import DataPairDataset
+from .text_text import DataPairCorpus
+from .text_text import GLUE_RTE
+from .text_text import SUPERGLUE_RTE
 
 # Expose all text-image datasets
 from .text_image import FeideggerCorpus
