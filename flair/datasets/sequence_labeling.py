@@ -2507,7 +2507,7 @@ class WIKIANN(MultiCorpus):
                 url = google_drive_path + google_id
 
                 # download from google drive
-                gdown.download(url, str(language_folder / language) + '.tar.gz')
+                gdown.download(url, str(language_folder / language) + '.tar.gz', quiet=False)
 
                 # unzip
                 print("Extract data...")
