@@ -199,13 +199,13 @@ class ParallelTextDataset(FlairDataset):
             return self._make_bi_sentence(
                 self.source_lines[index], self.target_lines[index]
             )
-        
-        
+
+
 class DataPairCorpus(Corpus):
     def __init__(
             self,
             data_folder: Union[str, Path],
-            columns: List[int] = [0,1,2],
+            columns: List[int] = [0, 1, 2],
             train_file=None,
             test_file=None,
             dev_file=None,
@@ -243,13 +243,13 @@ class DataPairCorpus(Corpus):
         
         :return: a Corpus with annotated train, dev and test data
         """
-        
+
         # find train, dev and test files if not specified
         dev_file, test_file, train_file = \
             find_train_dev_test_files(data_folder, dev_file, test_file, train_file, autofind_splits=autofind_splits)
-            
+
         # create DataPairDataset for train, test and dev file, if they are given
-        
+
         train: FlairDataset = DataPairDataset(
             train_file,
             columns=columns,
@@ -262,7 +262,7 @@ class DataPairCorpus(Corpus):
             separator=separator,
             encoding=encoding
         ) if train_file is not None else None
-        
+
         test: FlairDataset = DataPairDataset(
             test_file,
             columns=columns,
@@ -290,15 +290,15 @@ class DataPairCorpus(Corpus):
         ) if dev_file is not None else None
 
         super(DataPairCorpus, self).__init__(train, dev, test,
-                                                      sample_missing_splits=sample_missing_splits,
-                                                      name=str(data_folder))
-        
-        
+                                             sample_missing_splits=sample_missing_splits,
+                                             name=str(data_folder))
+
+
 class DataPairDataset(FlairDataset):
     def __init__(
             self,
             path_to_data: Union[str, Path],
-            columns: List[int] = [0,1,2],
+            columns: List[int] = [0, 1, 2],
             max_tokens_per_doc=-1,
             max_chars_per_doc=-1,
             use_tokenizer=True,
@@ -328,7 +328,7 @@ class DataPairDataset(FlairDataset):
         :param encoding: Encoding of the data file
         :param label: If False, the dataset expects unlabeled data
         """
-        
+
         if type(path_to_data) == str:
             path_to_data: Path = Path(path_to_data)
 
@@ -338,11 +338,11 @@ class DataPairDataset(FlairDataset):
         self.in_memory = in_memory
 
         self.use_tokenizer = use_tokenizer
-        
+
         self.max_tokens_per_doc = max_tokens_per_doc
-        
+
         self.label = label
-        
+
         self.label_type = label_type
 
         self.total_data_count: int = 0
@@ -357,17 +357,17 @@ class DataPairDataset(FlairDataset):
         with open(str(path_to_data), encoding=encoding) as source_file:
 
             source_line = source_file.readline()
-            
-            if skip_first_line: 
+
+            if skip_first_line:
                 source_line = source_file.readline()
 
             while source_line:
-                
+
                 source_line_list = source_line.strip().split(separator)
 
                 first_element = source_line_list[columns[0]]
                 second_element = source_line_list[columns[1]]
-                
+
                 if self.label:
                     pair_label = source_line_list[columns[2]]
                 else:
@@ -386,9 +386,9 @@ class DataPairDataset(FlairDataset):
                     self.second_elements.append(second_element)
                     if self.label:
                         self.labels.append(pair_label)
-                    
+
                 self.total_data_count += 1
-                
+
                 source_line = source_file.readline()
 
     # create a DataPair object from strings
@@ -402,14 +402,14 @@ class DataPairDataset(FlairDataset):
             second_sentence.tokens = second_sentence.tokens[: self.max_tokens_per_doc]
 
         data_pair = DataPair(first_sentence, second_sentence)
-        
-        if label:        
+
+        if label:
             data_pair.add_label(label_type=self.label_type, value=label)
-        
+
         return data_pair
-    
+
     def is_in_memory(self) -> bool:
-        
+
         return self.in_memory
 
     def __len__(self):
@@ -427,8 +427,8 @@ class DataPairDataset(FlairDataset):
             return self._make_data_pair(
                 self.first_elements[index], self.second_elements[index]
             )
-        
-        
+
+
 class GLUE_RTE(DataPairCorpus):
     def __init__(
             self,
@@ -436,49 +436,48 @@ class GLUE_RTE(DataPairCorpus):
             max_tokens_per_doc=-1,
             max_chars_per_doc=-1,
             use_tokenizer=True,
-            in_memory: bool = True,   
+            in_memory: bool = True,
             sample_missing_splits: bool = True
-            ):
+    ):
         """
         Creates a DataPairCorpus for the Glue Recognizing Textual Entailment (RTE) data (https://gluebenchmark.com/tasks).
         Additionaly to the Corpus we have a eval_dataset containing the test file of the Glue data. 
         This file contains unlabeled test data to evaluate models on the Glue RTE task.
         """
-        
+
         if type(base_path) == str:
             base_path: Path = Path(base_path)
-            
+
         dataset_name = "glue"
 
-        #if no base_path provided take cache root
+        # if no base_path provided take cache root
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name 
-        
+        data_folder = base_path / dataset_name
+
         data_file = data_folder / "RTE/train.tsv"
-        
+
         # if data is not downloaded yet, download it
         if not data_file.is_file():
-        
-            #get the zip file
+            # get the zip file
             zipped_data_path = cached_path(
-                    'https://dl.fbaipublicfiles.com/glue/data/RTE.zip',
-                    Path("datasets") / dataset_name
-                )
-            
+                'https://dl.fbaipublicfiles.com/glue/data/RTE.zip',
+                Path("datasets") / dataset_name
+            )
+
             unpack_file(
-                zipped_data_path , 
+                zipped_data_path,
                 data_folder,
-                mode = "zip",
-                keep= False 
-                )
-            
-            #rename test file to eval_dataset, since it has no labels
+                mode="zip",
+                keep=False
+            )
+
+            # rename test file to eval_dataset, since it has no labels
             os.rename(str(data_folder / "RTE/test.tsv"), str(data_folder / "RTE/eval_dataset.tsv"))
-            
+
         super(GLUE_RTE, self).__init__(
             data_folder / "RTE",
-            columns=[1,2,3],
+            columns=[1, 2, 3],
             skip_first_line=True,
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
@@ -488,10 +487,10 @@ class GLUE_RTE(DataPairCorpus):
             sample_missing_splits=sample_missing_splits
 
         )
-        
-        self.eval_dataset =  DataPairDataset(
+
+        self.eval_dataset = DataPairDataset(
             data_folder / "RTE/eval_dataset.tsv",
-            columns=[1,2,3],
+            columns=[1, 2, 3],
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
@@ -499,25 +498,24 @@ class GLUE_RTE(DataPairCorpus):
             skip_first_line=True,
             label=False
         )
-     
+
     """    
     This function creates a tsv file of the predictions of the eval_dataset (after calling classifier.predict(corpus.eval_dataset, label_name='textual_entailment')).
     The resulting file is called RTE.tsv and is in the format required for submission to the Glue Benchmark.
     """
+
     def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
-        
-        if type(folder_path)==str:
-            folder_path=Path(folder_path)
+
+        if type(folder_path) == str:
+            folder_path = Path(folder_path)
         folder_path = folder_path / 'RTE.tsv'
-        
+
         with open(folder_path, mode='w') as tsv_file:
             tsv_file.write("index\tprediction\n")
             for index, datapoint in enumerate(self.eval_dataset):
                 tsv_file.write(str(index) + '\t' + datapoint.get_labels('textual_entailment')[0].value + '\n')
-            
 
-        
-        
+
 class SUPERGLUE_RTE(DataPairCorpus):
     def __init__(
             self,
@@ -525,54 +523,53 @@ class SUPERGLUE_RTE(DataPairCorpus):
             max_tokens_per_doc=-1,
             max_chars_per_doc=-1,
             use_tokenizer=True,
-            in_memory: bool = True,   
-            sample_missing_splits: bool = True          
-            ):
+            in_memory: bool = True,
+            sample_missing_splits: bool = True
+    ):
         """
         Creates a DataPairCorpus for the SuperGlue Recognizing Textual Entailment (RTE) data (https://super.gluebenchmark.com/tasks).
         Additionaly to the Corpus we have a eval_dataset containing the test file of the SuperGlue data. 
         This file contains unlabeled test data to evaluate models on the SuperGlue RTE task.
         """
-        
+
         if type(base_path) == str:
             base_path: Path = Path(base_path)
-            
+
         dataset_name = "superglue"
 
-        #if no base_path provided take cache root
+        # if no base_path provided take cache root
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name 
-        
+        data_folder = base_path / dataset_name
+
         data_file = data_folder / "RTE/train.tsv"
-        
-        #if data not downloaded yet, download it
+
+        # if data not downloaded yet, download it
         if not data_file.is_file():
-        
-            #get the zip file
+            # get the zip file
             zipped_data_path = cached_path(
-                    'https://dl.fbaipublicfiles.com/glue/superglue/data/v2/RTE.zip',
-                    Path("datasets") / dataset_name
-                )
-            
+                'https://dl.fbaipublicfiles.com/glue/superglue/data/v2/RTE.zip',
+                Path("datasets") / dataset_name
+            )
+
             unpack_file(
-                zipped_data_path , 
+                zipped_data_path,
                 data_folder,
-                mode = "zip",
-                keep= False 
-                )
-            
+                mode="zip",
+                keep=False
+            )
+
             # the downloaded files have json format, we transform them to tsv
-            rte_jsonl_to_tsv(data_folder / "RTE/train.jsonl", remove = True)
-            rte_jsonl_to_tsv(data_folder / "RTE/test.jsonl", remove = True, label=False)
-            rte_jsonl_to_tsv(data_folder / "RTE/val.jsonl", remove = True)
-            
+            rte_jsonl_to_tsv(data_folder / "RTE/train.jsonl", remove=True)
+            rte_jsonl_to_tsv(data_folder / "RTE/test.jsonl", remove=True, label=False)
+            rte_jsonl_to_tsv(data_folder / "RTE/val.jsonl", remove=True)
+
             os.rename(str(data_folder / "RTE/val.tsv"), str(data_folder / "RTE/dev.tsv"))
             os.rename(str(data_folder / "RTE/test.tsv"), str(data_folder / "RTE/eval_dataset.tsv"))
 
         super(SUPERGLUE_RTE, self).__init__(
             data_folder / "RTE",
-            columns=[0,1,2],
+            columns=[0, 1, 2],
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
@@ -580,11 +577,10 @@ class SUPERGLUE_RTE(DataPairCorpus):
             label_type='textual_entailment',
             sample_missing_splits=sample_missing_splits
         )
-        
-        
-        self.eval_dataset =  DataPairDataset(
+
+        self.eval_dataset = DataPairDataset(
             data_folder / "RTE/eval_dataset.tsv",
-            columns=[0,1,2],
+            columns=[0, 1, 2],
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
@@ -592,49 +588,48 @@ class SUPERGLUE_RTE(DataPairCorpus):
             skip_first_line=False,
             label=False
         )
-        
+
     """    
     Creates JSONL file of the predictions of the eval_dataset (after calling classifier.predict(corpus.eval_dataset, label_name='textual_entailment')).
     The resulting file is called RTE.jsonl and is in the form required for submission to the SuperGlue Benchmark.
     """
+
     def jsonl_from_eval_dataset(self, folder_path: Union[str, Path]):
-        
-        if type(folder_path)==str:
-            folder_path=Path(folder_path)
+
+        if type(folder_path) == str:
+            folder_path = Path(folder_path)
         folder_path = folder_path / 'RTE.jsonl'
-        
+
         with open(folder_path, mode='w') as jsonl_file:
-            
+
             for index, datapoint in enumerate(self.eval_dataset):
                 entry = {"idx": index, "label": datapoint.get_labels('textual_entailment')[0].value}
                 jsonl_file.write(str(entry) + '\n')
-                
-        
-#Function to transform JSON file to tsv for Recognizing Textual Entailment Data
+
+
+# Function to transform JSON file to tsv for Recognizing Textual Entailment Data
 def rte_jsonl_to_tsv(file_path: Union[str, Path], label: bool = True, remove: bool = False, encoding='utf-8'):
-    
     import json
-    
+
     tsv_file = os.path.splitext(file_path)[0] + '.tsv'
-        
-    with open(file_path,'r', encoding=encoding) as jsonl_file:
-        with open(tsv_file,'w', encoding=encoding) as tsv_file:
-            
+
+    with open(file_path, 'r', encoding=encoding) as jsonl_file:
+        with open(tsv_file, 'w', encoding=encoding) as tsv_file:
+
             line = jsonl_file.readline()
-            
+
             while line:
-                
+
                 obj = json.loads(line)
                 new_line = obj["premise"] + '\t' + obj["hypothesis"]
                 if label:
-                    new_line +=  '\t' + obj["label"]
+                    new_line += '\t' + obj["label"]
                 new_line += '\n'
-                
+
                 tsv_file.write(new_line)
-                
+
                 line = jsonl_file.readline()
-                
-    #remove json file 
+
+    # remove json file
     if remove:
-        os.remove(file_path)       
-    
+        os.remove(file_path)
