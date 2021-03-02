@@ -939,7 +939,7 @@ class TARSClassifier(TextClassifier):
         model_map = {}
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
-        model_map["tars-base"] = "/".join([hu_path, "tars-base", "tars-base-t4.pt"])
+        model_map["tars-base"] = "/".join([hu_path, "tars-base", "tars-base-v8.pt"])
 
         cache_dir = Path("models")
         if model_name in model_map:
