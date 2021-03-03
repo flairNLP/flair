@@ -104,9 +104,11 @@ are provided:
 | -------------    | ------------- |------------- |------------- | ------------- | ------------- |
 | 'ner' | NER (4-class) |  English | Conll-03  |  **93.03** (F1) |
 | 'ner-fast' | NER (4-class)  |  English  |  Conll-03  |  **92.75** (F1) | (fast model)
+| 'ner-large' | NER (4-class)  |  English  |  Conll-03  |  **94.09** (F1) | (large model)
 | 'ner-pooled' | NER (4-class)  |  English |  Conll-03  |  **93.24** (F1) | (memory inefficient)
 | 'ner-ontonotes' | NER (18-class) |  English | Ontonotes  |  **89.06** (F1) |
 | 'ner-ontonotes-fast' | NER (18-class) |  English | Ontonotes  |  **89.27** (F1) | (fast model)
+| 'ner-ontonotes-large' | NER (18-class) |  English | Ontonotes  |  **90.93** (F1) | (large model)
 | 'chunk' |  Chunking   |  English | Conll-2000     |  **96.47** (F1) |
 | 'chunk-fast' |   Chunking   |  English | Conll-2000     |  **96.22** (F1) |(fast model)
 | 'pos' |  POS-tagging |   English |  Ontonotes     |**98.19** (Accuracy) |
