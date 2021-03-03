@@ -10,6 +10,7 @@ from .sequence_labeling import ColumnDataset
 from .sequence_labeling import ANER_CORP
 from .sequence_labeling import BIOFID
 from .sequence_labeling import BIOSCOPE
+from .sequence_labeling import BUSINESS_HUN
 from .sequence_labeling import CONLL_03
 from .sequence_labeling import CONLL_03_GERMAN
 from .sequence_labeling import CONLL_03_DUTCH
@@ -55,7 +56,6 @@ from .sequence_labeling import WNUT_17
 from .sequence_labeling import WSD_UFSAC
 from .sequence_labeling import WNUT_2020_NER
 from .sequence_labeling import XTREME
-from .sequence_labeling import BUSINESS_HUN
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
@@ -63,6 +63,9 @@ from .document_classification import ClassificationDataset
 from .document_classification import CSVClassificationCorpus
 from .document_classification import CSVClassificationDataset
 from .document_classification import AMAZON_REVIEWS
+from .document_classification import COMMUNICATIVE_FUNCTIONS
+from .document_classification import GERMEVAL_2018_OFFENSIVE_LANGUAGE
+from .document_classification import GO_EMOTIONS
 from .document_classification import IMDB
 from .document_classification import NEWSGROUPS
 from .document_classification import SENTIMENT_140
@@ -74,13 +77,10 @@ from .document_classification import SENTEVAL_SST_BINARY
 from .document_classification import SENTEVAL_SST_GRANULAR
 from .document_classification import TREC_50
 from .document_classification import TREC_6
-from .document_classification import COMMUNICATIVE_FUNCTIONS
 from .document_classification import WASSA_ANGER
 from .document_classification import WASSA_FEAR
 from .document_classification import WASSA_JOY
 from .document_classification import WASSA_SADNESS
-from .document_classification import GO_EMOTIONS
-from .document_classification import GERMEVAL_2018_OFFENSIVE_LANGUAGE
 
 # Expose all treebanks
 from .treebanks import UniversalDependenciesCorpus
