@@ -100,32 +100,22 @@ are provided:
 
 #### English Models
 
-| ID | Task | Training Dataset | Accuracy |
-| -------------    | ------------- |------------- |------------- |
-| 'ner' | 4-class Named Entity Recognition |  Conll-03  |  **93.03** (F1) |
-| 'ner-pooled' | 4-class Named Entity Recognition (memory inefficient) |  Conll-03  |  **93.24** (F1) |
-| 'ner-ontonotes' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.06** (F1) |
-| 'chunk' |  Syntactic Chunking   |  Conll-2000     |  **96.47** (F1) |
-| 'pos' |  Part-of-Speech Tagging (fine-grained) |  Ontonotes     |  **98.19** (Accuracy) |
-| 'upos' |  Part-of-Speech Tagging (universal) |  Ontonotes     |  **98.6** (Accuracy) |
-| 'keyphrase' |  Methods and materials in science papers (BETA) |  Semeval2017   |  **47.3** (F1)  |
-| 'frame'  |   Semantic Frame Detection |  Propbank 3.0     |  **97.54** (F1) |
-| 'negation-speculation'  |  Negations and speculations in biomedical articles  |  Bioscope  |  **80.2** (F1) |
-
-
-#### Fast English Models
-
-In case you do not have a GPU available, we also distribute smaller models that run faster on CPU.
-
-
-| ID | Task | Training Dataset | Accuracy |
-| -------------    | ------------- |------------- |------------- |
-| 'ner-fast' | 4-class Named Entity Recognition |  Conll-03  |  **92.75** (F1) |
-| 'ner-ontonotes-fast' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.27** (F1) |
-| 'chunk-fast' |  Syntactic Chunking   |  Conll-2000     |  **96.22** (F1) |
-| 'pos-fast' |  Part-of-Speech Tagging (fine-grained) |  Ontonotes     |  **98.1** (Accuracy) |
-| 'upos-fast' |  Part-of-Speech Tagging (universal) |  Ontonotes     |  **98.47** (Accuracy) |
-| 'frame-fast'  |   Semantic Frame Detection | Propbank 3.0     |  **97.31** (F1) |
+| ID | Task | Language | Training Dataset | Accuracy | Contributor / Notes |
+| -------------    | ------------- |------------- |------------- | ------------- | ------------- |
+| 'ner' | NER (4-class) |  English | Conll-03  |  **93.03** (F1) |
+| 'ner-fast' | NER (4-class)  |  English  |  Conll-03  |  **92.75** (F1) | (fast model)
+| 'ner-pooled' | NER (4-class)  |  English |  Conll-03  |  **93.24** (F1) | (memory inefficient)
+| 'ner-ontonotes' | NER (18-class) |  English | Ontonotes  |  **89.06** (F1) |
+| 'ner-ontonotes-fast' | NER (18-class) |  English | Ontonotes  |  **89.27** (F1) | (fast model)
+| 'chunk' |  Chunking   |  English | Conll-2000     |  **96.47** (F1) |
+| 'chunk-fast' |   Chunking   |  English | Conll-2000     |  **96.22** (F1) |(fast model)
+| 'pos' |  POS-tagging |   English |  Ontonotes     |**98.19** (Accuracy) |
+| 'pos-fast' |  POS-tagging |   English |  Ontonotes     |  **98.1** (Accuracy) |(fast model)
+| 'upos' |  POS-tagging (universal) | English | Ontonotes     |  **98.6** (Accuracy) |
+| 'upos-fast' |  POS-tagging (universal) | English | Ontonotes     |  **98.47** (Accuracy) | (fast model)
+| 'frame'  |   Frame Detection |  English | Propbank 3.0     |  **97.54** (F1) |
+| 'frame-fast'  |  Frame Detection |  English | Propbank 3.0     |  **97.31** (F1) | (fast model)
+| 'negation-speculation'  | Negation / speculation |English |  Bioscope | **80.2** (F1) |
 
 
 #### Multilingual Models
