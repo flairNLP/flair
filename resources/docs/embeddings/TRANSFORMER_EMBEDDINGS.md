@@ -43,12 +43,12 @@ There are several options that you can set when you init the TransformerWordEmbe
 | Argument             | Default             | Description
 | -------------------- | ------------------- | ------------------------------------------------------------------------------
 | `model` | `bert-base-uncased` | The string identifier of the transformer model you want to use (see above)
-| `layers`             | `-1,-2,-3,-4`       | Defines the layers of the Transformer-based model that produce the embedding
-| `pooling_operation`  | `first`             | See [Pooling operation section](#Pooling-operation).
-| `use_scalar_mix`     | `False`             | See [Scalar mix section](#Scalar-mix).
+| `layers`             | `all`       | Defines the layers of the Transformer-based model that produce the embedding
+| `subtoken_pooling`  | `first`             | See [Pooling operation section](#Pooling-operation).
+| `layer_mean`     | `True`             | See [Layer mean section](#Layer-mean).
 | `batch_size`     | 1             | How many sentences to push through transformer simultaneously (high means faster but more memory usage)
 | `fine_tune`     | `False`             | Whether or not embeddings are fine-tuneable.
-| `allow_long_sentences`     | `False`             | Whether or not texts longer than maximal sequence length are supported.
+| `allow_long_sentences`     | `True`             | Whether or not texts longer than maximal sequence length are supported.
 
 
 ### Layers
@@ -109,12 +109,12 @@ You can choose which one to use by passing this in the constructor:
 
 ```python
 # use first and last subtoken for each word
-embeddings = TransformerWordEmbeddings('bert-base-uncased', pooling_operation='first_last')
+embeddings = TransformerWordEmbeddings('bert-base-uncased', subtoken_pooling='first_last')
 embeddings.embed(sentence)
 print(sentence[0].embedding.size())
 ```
 
-### Scalar mix
+### Layer mean
 
 The Transformer-based models have a certain number of layers. [Liu et. al (2019)](https://arxiv.org/abs/1903.08855)
 propose a technique called scalar mix, that computes a parameterised scalar mixture of user-defined layers.
@@ -122,7 +122,7 @@ propose a technique called scalar mix, that computes a parameterised scalar mixt
 This technique is very useful, because for some downstream tasks like NER or PoS tagging it can be unclear which
 layer(s) of a Transformer-based model perform well, and per-layer analysis can take a lot of time.
 
-To use scalar mix, all Transformer-based embeddings in Flair come with a `use_scalar_mix` argument. The following
+To use scalar mix, all Transformer-based embeddings in Flair come with a `layer_mean` argument. The following
 example shows how to use scalar mix for a base RoBERTa model on all layers:
 
 ```python
@@ -140,11 +140,12 @@ embedding.embed(sentence)
 
 ### Fine-tuneable or not
 
-In some setups, you may wish to fine-tune the transformer embeddings. In this case, set fine_tune=True in the init method: 
+In some setups, you may wish to fine-tune the transformer embeddings. In this case, set `fine_tune=True` in the init method.
+When fine-tuning, you should also only use the topmost layer, so best set `layers='-1'`.
 
 ```python
 # use first and last subtoken for each word
-embeddings = TransformerWordEmbeddings('bert-base-uncased', fine_tune=True)
+embeddings = TransformerWordEmbeddings('bert-base-uncased', fine_tune=True, layers='-1')
 embeddings.embed(sentence)
 print(sentence[0].embedding)
 ```
