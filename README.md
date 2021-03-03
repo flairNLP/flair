@@ -7,8 +7,6 @@
 
 A very simple framework for **state-of-the-art NLP**. Developed by [Humboldt University of Berlin](https://www.informatik.hu-berlin.de/en/forschung-en/gebiete/ml-en/) and friends.
 
-* __Now on HuggingFace model hub:__ *From 0.8, Flair models are hosted on the HuggingFace model hub!*
-
 ---
 
 Flair is:
@@ -30,19 +28,17 @@ Now at [version 0.8](https://github.com/flairNLP/flair/releases)!
 
 Flair ships with state-of-the-art models for a range of NLP tasks. For instance, check out our latest NER models: 
 
-| Language | Dataset | Flair | Best published | 
-|  ---  | ----------- | ---------------- | ------------- |
-| NER English | Conll-03 (4-class)   |  **94.09** (F1)  | *94.3 [(Yamada et al., 2018)](https://doi.org/10.18653/v1/2020.emnlp-main.523)* | 
-| NER English | Ontonotes (18-class)  |  **90.93** (F1)  | *91,3 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | 
-| NER German  | Conll-03 (4-class)   |  **92,31** (F1)  | *90.3 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | 
-| NER Dutch  | Conll-03  (4-class)  |  **95,25** (F1)  | *93.7 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | 
-| NER Spanish  | Conll-03 (4-class)   |  **90,54** (F1)  | *90.3 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | 
+| Language | Dataset | Flair | Best published | Model card & demo
+|  ---  | ----------- | ---------------- | ------------- | ------------- |
+| NER English | Conll-03 (4-class)   |  **94.09** (F1)  | *94.3 [(Yamada et al., 2018)](https://doi.org/10.18653/v1/2020.emnlp-main.523)* | [Flair English 4-class NER demo](https://huggingface.co/flair/ner-english-large)  |
+| NER English | Ontonotes (18-class)  |  **90.93** (F1)  | *91,3 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair English 18-class NER demo](https://huggingface.co/flair/ner-english-ontonotes-large) |
+| NER German  | Conll-03 (4-class)   |  **92,31** (F1)  | *90.3 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair German 4-class NER demo](https://huggingface.co/flair/ner-german-large)  |
+| NER Dutch  | Conll-03  (4-class)  |  **95,25** (F1)  | *93.7 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Dutch 4-class NER demo](https://huggingface.co/flair/ner-dutch-large)  |
+| NER Spanish  | Conll-03 (4-class)   |  **90,54** (F1)  | *90.3 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Spanish 18-class NER demo](https://huggingface.co/flair/ner-spanish-large)  |
 
 **New:** Most Flair sequence tagging models (named entity recognition, part-of-speech tagging etc.) are now hosted 
-on the 🤗 HuggingFace model hub! You can: 
-- Search for Flair models on the HF hub [like this](https://huggingface.co/models?filter=flair)! 
-- All models have a "model card" with information, and an online demo where you try each model! 
-  For instance, check out the [English 18-class NER demo](https://huggingface.co/flair/ner-english-ontonotes-large)!
+on the [__🤗 HuggingFace model hub__](https://huggingface.co/models?filter=flair)! You can browse models, check detailed information on how they were trained, and even try each model out online!
+
 
 ## Quick Start
 
