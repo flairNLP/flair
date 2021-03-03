@@ -1010,6 +1010,12 @@ class SequenceTagger(flair.nn.Model):
             "ner-fast": "flair/ner-english-fast",
             "ner-ontonotes": "flair/ner-english-ontonotes",
             "ner-ontonotes-fast": "flair/ner-english-ontonotes-fast",
+            # Large NER models,
+            "ner-large": "flair/ner-english-large",
+            "ner-ontonotes-large": "flair/ner-english-ontonotes-large",
+            "de-ner-large": "flair/ner-german-large",
+            "nl-ner-large": "flair/ner-dutch-large",
+            "es-ner-large": "flair/ner-spanish-large",
             # Multilingual NER models
             "ner-multi": "flair/ner-multi",
             "multi-ner": "flair/ner-multi",
