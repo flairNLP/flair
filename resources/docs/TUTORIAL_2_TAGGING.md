@@ -135,39 +135,27 @@ The NER models are trained over 4 languages (English, German, Dutch and Spanish)
 
 You can pass text in any of these languages to the model. In particular, the NER also kind of works for languages it was not trained on, such as French.
 
-The 'ner-multi-fast-learn' model is an experimental model that accumulates entity representations over time. 
+#### Models for Other Languages
 
-#### German Models
-
-We also distribute German models.
-
-| ID | Task | Training Dataset | Accuracy | Contributor |
-| -------------    | ------------- |------------- |------------- |------------- |
-| 'de-ner' | 4-class Named Entity Recognition |  Conll-03  |  **87.94** (F1) | |
-| 'de-ner-germeval' | 4+4-class Named Entity Recognition |  Germeval  |  **84.90** (F1) | |
-| 'de-ner-legal' | NER for German legal text |  [LER](https://github.com/elenanereiss/Legal-Entity-Recognition) dataset  |  **96.35** (F1) | |
-| 'de-pos' | Part-of-Speech Tagging |  UD German - HDT  |  **98.50** (Accuracy) | |
-| 'de-pos-tweets' | Part-of-Speech Tagging |  German Tweets  |  **93.06** (Accuracy) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/pos-twitter-german) |
-| 'de-historic-indirect' | historical German speech and thought (indirect) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
-| 'de-historic-direct' | historical German speech and thought (direct) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
-| 'de-historic-reported' | historical German speech and thought (reported) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
-| 'de-historic-free-indirect' | historical German speech and thought (de-historic-free-indirect) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
-
-
-#### Models for other Languages
-
-Thanks to our contributors we are also able to distribute a couple of models for other languages.
-
-| ID | Task | Training Dataset | Accuracy | Contributor |
-| -------------    | ------------- |------------- |------------- |------------- |
-| 'fr-ner' | Named Entity Recognition |  [WikiNER (aij-wikiner-fr-wp3)](https://github.com/dice-group/FOX/tree/master/input/Wikiner)  |  **95.57** (F1) | [mhham](https://github.com/mhham) |
-| 'nl-ner' | Named Entity Recognition |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **92.58** (F1) |  |
-| 'nl-ner-rnn' | Named Entity Recognition |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **90.79** (F1) | |
-| 'da-ner' | Named Entity Recognition |  [Danish NER dataset](https://github.com/alexandrainst/danlp)  |   | [AmaliePauli](https://github.com/AmaliePauli) |
-| 'da-pos' | Named Entity Recognition |  [Danish Dependency Treebank](https://github.com/UniversalDependencies/UD_Danish-DDT/blob/master/README.md)  |  | [AmaliePauli](https://github.com/AmaliePauli) |
-| 'ml-pos' | Part-of-Speech Tagging (fine-grained) |  30000 Malayalam sentences  | **83** | [sabiqueqb](https://github.com/sabiqueqb) |
-| 'ml-upos' | Part-of-Speech Tagging (universal)| 30000 Malayalam sentences | **87** | [sabiqueqb](https://github.com/sabiqueqb) |
-| 'pt-pos-clinical' | Part-of-Speech Tagging (fine-grained) for clinical texts | [PUCPR](https://github.com/HAILab-PUCPR/portuguese-clinical-pos-tagger) | **92.39** | [LucasFerroHAILab](https://github.com/LucasFerroHAILab) |
+| ID | Task | Language | Training Dataset | Accuracy | Contributor / Notes |
+| -------------    | ------------- |------------- |------------- |------------- | ------------ |
+| 'de-ner' | NER (4-class) |  German | Conll-03  |  **87.94** (F1) | |
+| 'de-ner-germeval' | NER (4-class) | German | Germeval  |  **84.90** (F1) | |
+| 'de-ner-legal' | NER (legal text) |  German | [LER](https://github.com/elenanereiss/Legal-Entity-Recognition) dataset  |  **96.35** (F1) | |
+| 'de-pos' | POS-tagging | German | UD German - HDT  |  **98.50** (Accuracy) | |
+| 'de-pos-tweets' | POS-tagging | German | German Tweets  |  **93.06** (Accuracy) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/pos-twitter-german) |
+| 'de-historic-indirect' | historical indirect speech | German | @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
+| 'de-historic-direct' | historical direct speech |  German | @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
+| 'de-historic-reported' | historical reported speech | German |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
+| 'de-historic-free-indirect' | historical free-indirect speech | German | @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
+| 'fr-ner' | NER (4-class) | French | [WikiNER (aij-wikiner-fr-wp3)](https://github.com/dice-group/FOX/tree/master/input/Wikiner)  |  **95.57** (F1) | [mhham](https://github.com/mhham) |
+| 'nl-ner' | NER (4-class) | Dutch |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **92.58** (F1) |  |
+| 'nl-ner-rnn' | NER (4-class) | Dutch | [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **90.79** (F1) | |
+| 'da-ner' | NER (4-class) | Danish |  [Danish NER dataset](https://github.com/alexandrainst/danlp)  |   | [AmaliePauli](https://github.com/AmaliePauli) |
+| 'da-pos' | POS-tagging | Danish | [Danish Dependency Treebank](https://github.com/UniversalDependencies/UD_Danish-DDT/blob/master/README.md)  |  | [AmaliePauli](https://github.com/AmaliePauli) |
+| 'ml-pos' | POS-tagging | Malayalam | 30000 Malayalam sentences  | **83** | [sabiqueqb](https://github.com/sabiqueqb) |
+| 'ml-upos' | POS-tagging | Malayalam | 30000 Malayalam sentences | **87** | [sabiqueqb](https://github.com/sabiqueqb) |
+| 'pt-pos-clinical' | POS-tagging | Portuguese | [PUCPR](https://github.com/HAILab-PUCPR/portuguese-clinical-pos-tagger) | **92.39** | [LucasFerroHAILab](https://github.com/LucasFerroHAILab) for clinical texts |
 
 
 ### Tagging a German sentence
