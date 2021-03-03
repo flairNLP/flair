@@ -102,21 +102,21 @@ are provided:
 
 | ID | Task | Language | Training Dataset | Accuracy | Contributor / Notes |
 | -------------    | ------------- |------------- |------------- | ------------- | ------------- |
-| 'ner' | NER (4-class) |  English | Conll-03  |  **93.03** (F1) |
-| 'ner-fast' | NER (4-class)  |  English  |  Conll-03  |  **92.75** (F1) | (fast model)
-| 'ner-large' | NER (4-class)  |  English  |  Conll-03  |  **94.09** (F1) | (large model)
+| '[ner](https://huggingface.co/flair/ner-english)' | NER (4-class) |  English | Conll-03  |  **93.03** (F1) |
+| '[ner-fast](https://huggingface.co/flair/ner-english-fast)' | NER (4-class)  |  English  |  Conll-03  |  **92.75** (F1) | (fast model)
+| '[ner-large](https://huggingface.co/flair/ner-english-large)' | NER (4-class)  |  English  |  Conll-03  |  **94.09** (F1) | (large model)
 | 'ner-pooled' | NER (4-class)  |  English |  Conll-03  |  **93.24** (F1) | (memory inefficient)
-| 'ner-ontonotes' | NER (18-class) |  English | Ontonotes  |  **89.06** (F1) |
-| 'ner-ontonotes-fast' | NER (18-class) |  English | Ontonotes  |  **89.27** (F1) | (fast model)
-| 'ner-ontonotes-large' | NER (18-class) |  English | Ontonotes  |  **90.93** (F1) | (large model)
-| 'chunk' |  Chunking   |  English | Conll-2000     |  **96.47** (F1) |
-| 'chunk-fast' |   Chunking   |  English | Conll-2000     |  **96.22** (F1) |(fast model)
-| 'pos' |  POS-tagging |   English |  Ontonotes     |**98.19** (Accuracy) |
-| 'pos-fast' |  POS-tagging |   English |  Ontonotes     |  **98.1** (Accuracy) |(fast model)
-| 'upos' |  POS-tagging (universal) | English | Ontonotes     |  **98.6** (Accuracy) |
-| 'upos-fast' |  POS-tagging (universal) | English | Ontonotes     |  **98.47** (Accuracy) | (fast model)
-| 'frame'  |   Frame Detection |  English | Propbank 3.0     |  **97.54** (F1) |
-| 'frame-fast'  |  Frame Detection |  English | Propbank 3.0     |  **97.31** (F1) | (fast model)
+| '[ner-ontonotes](https://huggingface.co/flair/ner-english-ontonotes)' | NER (18-class) |  English | Ontonotes  |  **89.06** (F1) |
+| '[ner-ontonotes-fast](https://huggingface.co/flair/ner-english-ontonotes-fast)' | NER (18-class) |  English | Ontonotes  |  **89.27** (F1) | (fast model)
+| '[ner-ontonotes-large](https://huggingface.co/flair/ner-english-ontonotes-large)' | NER (18-class) |  English | Ontonotes  |  **90.93** (F1) | (large model)
+| '[chunk](https://huggingface.co/flair/chunk-english)' |  Chunking   |  English | Conll-2000     |  **96.47** (F1) |
+| '[chunk-fast](https://huggingface.co/flair/chunk-english-fast)' |   Chunking   |  English | Conll-2000     |  **96.22** (F1) |(fast model)
+| '[pos](https://huggingface.co/flair/pos-english)' |  POS-tagging |   English |  Ontonotes     |**98.19** (Accuracy) |
+| '[pos-fast](https://huggingface.co/flair/pos-english-fast)' |  POS-tagging |   English |  Ontonotes     |  **98.1** (Accuracy) |(fast model)
+| '[upos](https://huggingface.co/flair/upos-english)' |  POS-tagging (universal) | English | Ontonotes     |  **98.6** (Accuracy) |
+| '[upos-fast](https://huggingface.co/flair/upos-english-fast)' |  POS-tagging (universal) | English | Ontonotes     |  **98.47** (Accuracy) | (fast model)
+| '[frame](https://huggingface.co/flair/frame-english)'  |   Frame Detection |  English | Propbank 3.0     |  **97.54** (F1) |
+| '[frame-fast](https://huggingface.co/flair/frame-english-fast)'  |  Frame Detection |  English | Propbank 3.0     |  **97.31** (F1) | (fast model)
 | 'negation-speculation'  | Negation / speculation |English |  Bioscope | **80.2** (F1) |
 
 
