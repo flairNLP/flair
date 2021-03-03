@@ -95,8 +95,11 @@ The sentence now has two types of annotation: POS and NER.
 ### List of Pre-Trained Sequence Tagger Models
 
 You choose which pre-trained model you load by passing the appropriate
-string to the `load()` method of the `SequenceTagger` class. Currently, the following pre-trained models
-are provided:
+string to the `load()` method of the `SequenceTagger` class. 
+
+A full list of our current and community-contributed models can be browsed on the [__model hub__](https://huggingface.co/models?filter=flair). 
+At least the following pre-trained models are provided (click on an ID link to get more info
+for the model and an online demo):
 
 #### English Models
 
@@ -128,10 +131,10 @@ The NER models are trained over 4 languages (English, German, Dutch and Spanish)
 
 | ID | Task | Language | Training Dataset | Accuracy | Contributor / Notes |
 | -------------    | ------------- |------------- |------------- | ------------- | ------------- |
-| 'ner-multi' | NER (4-class) | Multilingual | Conll-03   |  **89.27**  (average F1) | (4 languages)
-| 'ner-multi-fast' | NER (4-class)|  Multilingual |  Conll-03   |  **87.91**  (average F1) | (4 languages)
-| 'pos-multi' |  POS-tagging   |  Multilingual |  UD Treebanks  |  **96.41** (average acc.) |  (12 languages)
-| 'pos-multi-fast' |  POS-tagging |  Multilingual |  UD Treebanks  |  **92.88** (average acc.) | (12 languages) 
+| '[ner-multi](https://huggingface.co/flair/ner-multi)' | NER (4-class) | Multilingual | Conll-03   |  **89.27**  (average F1) | (4 languages)
+| '[ner-multi-fast](https://huggingface.co/flair/ner-multi-fast)' | NER (4-class)|  Multilingual |  Conll-03   |  **87.91**  (average F1) | (4 languages)
+| '[pos-multi](https://huggingface.co/flair/upos-multi)' |  POS-tagging   |  Multilingual |  UD Treebanks  |  **96.41** (average acc.) |  (12 languages)
+| '[pos-multi-fast](https://huggingface.co/flair/upos-multi-fast)' |  POS-tagging |  Multilingual |  UD Treebanks  |  **92.88** (average acc.) | (12 languages) 
 
 You can pass text in any of these languages to the model. In particular, the NER also kind of works for languages it was not trained on, such as French.
 
@@ -139,19 +142,22 @@ You can pass text in any of these languages to the model. In particular, the NER
 
 | ID | Task | Language | Training Dataset | Accuracy | Contributor / Notes |
 | -------------    | ------------- |------------- |------------- |------------- | ------------ |
-| 'de-ner' | NER (4-class) |  German | Conll-03  |  **87.94** (F1) | |
+| '[de-ner](https://huggingface.co/flair/ner-german)' | NER (4-class) |  German | Conll-03  |  **87.94** (F1) | |
+| '[de-ner-large](https://huggingface.co/flair/ner-german-large)' | NER (4-class) |  German | Conll-03  |  **92,31** (F1) | |
 | 'de-ner-germeval' | NER (4-class) | German | Germeval  |  **84.90** (F1) | |
-| 'de-ner-legal' | NER (legal text) |  German | [LER](https://github.com/elenanereiss/Legal-Entity-Recognition) dataset  |  **96.35** (F1) | |
+| '[de-ner-legal](https://huggingface.co/flair/ner-german-legal)' | NER (legal text) |  German | [LER](https://github.com/elenanereiss/Legal-Entity-Recognition) dataset  |  **96.35** (F1) | |
 | 'de-pos' | POS-tagging | German | UD German - HDT  |  **98.50** (Accuracy) | |
 | 'de-pos-tweets' | POS-tagging | German | German Tweets  |  **93.06** (Accuracy) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/pos-twitter-german) |
 | 'de-historic-indirect' | historical indirect speech | German | @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
 | 'de-historic-direct' | historical direct speech |  German | @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
 | 'de-historic-reported' | historical reported speech | German |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
 | 'de-historic-free-indirect' | historical free-indirect speech | German | @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
-| 'fr-ner' | NER (4-class) | French | [WikiNER (aij-wikiner-fr-wp3)](https://github.com/dice-group/FOX/tree/master/input/Wikiner)  |  **95.57** (F1) | [mhham](https://github.com/mhham) |
-| 'nl-ner' | NER (4-class) | Dutch |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **92.58** (F1) |  |
+| '[fr-ner](https://huggingface.co/flair/ner-french)' | NER (4-class) | French | [WikiNER (aij-wikiner-fr-wp3)](https://github.com/dice-group/FOX/tree/master/input/Wikiner)  |  **95.57** (F1) | [mhham](https://github.com/mhham) |
+| '[es-ner-large](https://huggingface.co/flair/ner-spanish-large)' | NER (4-class) | Spanish | [WikiNER (aij-wikiner-fr-wp3)](https://github.com/dice-group/FOX/tree/master/input/Wikiner)  |  **90,54** (F1) | [mhham](https://github.com/mhham) |
+| '[nl-ner](https://huggingface.co/flair/ner-dutch)' | NER (4-class) | Dutch |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **92.58** (F1) |  |
+| '[nl-ner-large](https://huggingface.co/flair/ner-dutch-large)' | NER (4-class) | Dutch | Conll-03 |  **95,25** (F1) |  |
 | 'nl-ner-rnn' | NER (4-class) | Dutch | [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **90.79** (F1) | |
-| 'da-ner' | NER (4-class) | Danish |  [Danish NER dataset](https://github.com/alexandrainst/danlp)  |   | [AmaliePauli](https://github.com/AmaliePauli) |
+| '[da-ner](https://huggingface.co/flair/ner-danish)' | NER (4-class) | Danish |  [Danish NER dataset](https://github.com/alexandrainst/danlp)  |   | [AmaliePauli](https://github.com/AmaliePauli) |
 | 'da-pos' | POS-tagging | Danish | [Danish Dependency Treebank](https://github.com/UniversalDependencies/UD_Danish-DDT/blob/master/README.md)  |  | [AmaliePauli](https://github.com/AmaliePauli) |
 | 'ml-pos' | POS-tagging | Malayalam | 30000 Malayalam sentences  | **83** | [sabiqueqb](https://github.com/sabiqueqb) |
 | 'ml-upos' | POS-tagging | Malayalam | 30000 Malayalam sentences | **87** | [sabiqueqb](https://github.com/sabiqueqb) |
