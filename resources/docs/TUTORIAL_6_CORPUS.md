@@ -98,8 +98,9 @@ Corpus: 12543 train + 2002 dev + 2077 test sentences
 Corpus: 1255 train + 201 dev + 208 test sentences
 ```
 
-For many learning tasks you need to create a target dictionary. Thus, the `Corpus` enables you to create your
-tag or label dictionary, depending on the task you want to learn. Simple execute the following code snippet to do so:
+For many learning tasks you need to create a "dictionary" that contains all the labels you want to predict.
+You can generate this dictionary directly out of the `Corpus` by calling the method `make_label_dictionary`. 
+If a corpus has multiple label types, you additionally need to specify for which label you want to produce the dictionary: 
 
 ```python
 # create tag dictionary for a PoS task
@@ -114,6 +115,8 @@ print(corpus.make_label_dictionary('ner'))
 corpus = flair.datasets.TREC_6()
 print(corpus.make_label_dictionary())
 ```
+
+This should print out different label dictionaries for different datasets and tasks.
 
 Another useful function is `obtain_statistics()` which returns you a python dictionary with useful statistics about your
 dataset. Using it, for example, on the IMDB dataset like this
