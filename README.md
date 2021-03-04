@@ -7,18 +7,14 @@
 
 A very simple framework for **state-of-the-art NLP**. Developed by [Humboldt University of Berlin](https://www.informatik.hu-berlin.de/en/forschung-en/gebiete/ml-en/) and friends.
 
-* __IMPORTANT: (30.08.2020)__ *We moved our models to a new server. Please update your Flair to the newest version!*
-
 ---
 
 Flair is:
 
 * **A powerful NLP library.** Flair allows you to apply our state-of-the-art natural language processing (NLP)
-models to your text, such as named entity recognition (NER), part-of-speech tagging (PoS),
+models to your text, such as named entity recognition (NER), part-of-speech tagging (PoS), 
+  special support for [biomedical data](/resources/docs/HUNFLAIR.md),
  sense disambiguation and classification, with support for a rapidly growing number of languages.
-
-* **A biomedical NER library.** Flair has special support for [biomedical data](/resources/docs/HUNFLAIR.md) with
-state-of-the-art models for biomedical NER and support for over 32 biomedical datasets.
 
 * **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and
 document embeddings, including our proposed **[Flair embeddings](https://www.aclweb.org/anthology/C18-1139/)**, BERT embeddings and ELMo embeddings.
@@ -26,43 +22,29 @@ document embeddings, including our proposed **[Flair embeddings](https://www.acl
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.7](https://github.com/flairNLP/flair/releases)!
+Now at [version 0.8](https://github.com/flairNLP/flair/releases)!
 
-## Comparison with State-of-the-Art
+## State-of-the-Art Models
 
-Flair outperforms the previous best methods on a range of NLP tasks:
+Flair ships with state-of-the-art models for a range of NLP tasks. For instance, check out our latest NER models: 
 
-| Task | Language | Dataset | Flair | Previous best |
-| -------------------------------  | ---  | ----------- | ---------------- | ------------- |
-| Named Entity Recognition |English | Conll-03    |  **93.18** (F1)  | *92.22 [(Peters et al., 2018)](https://arxiv.org/pdf/1802.05365.pdf)* |
-| Named Entity Recognition |English | Ontonotes   |  **89.3** (F1)  | *86.28 [(Chiu et al., 2016)](https://arxiv.org/pdf/1511.08308.pdf)* |
-| Emerging Entity Detection | English | WNUT-17      |  **49.49** (F1)  | *45.55 [(Aguilar et al., 2018)](http://aclweb.org/anthology/N18-1127.pdf)* |
-| Part-of-Speech tagging |English| WSJ  | **97.85**  | *97.64 [(Choi, 2016)](https://www.aclweb.org/anthology/N16-1031)*|
-| Chunking |English| Conll-2000  |  **96.72** (F1) | *96.36 [(Peters et al., 2017)](https://arxiv.org/pdf/1705.00108.pdf)*
-| Named Entity Recognition | German  | Conll-03    |  **88.27** (F1)  | *78.76 [(Lample et al., 2016)](https://arxiv.org/abs/1603.01360)* |
-| Named Entity Recognition |German  | Germeval    |  **84.65** (F1)  | *79.08 [(Hänig et al, 2014)](http://asv.informatik.uni-leipzig.de/publication/file/300/GermEval2014_ExB.pdf)*|
-| Named Entity Recognition | Dutch  | Conll-02    |  **92.38** (F1)  | *81.74 [(Lample et al., 2016)](https://arxiv.org/abs/1603.01360)* |
-| Named Entity Recognition |Polish  | PolEval-2018    |  **86.6** (F1) <br> [(Borchmann et al., 2018)](https://github.com/applicaai/poleval-2018) | *85.1 [(PolDeepNer)](https://github.com/CLARIN-PL/PolDeepNer/)*|
+| Language | Dataset | Flair | Best published | Model card & demo
+|  ---  | ----------- | ---------------- | ------------- | ------------- |
+| English | Conll-03 (4-class)   |  **94.09**  | *94.3 [(Yamada et al., 2018)](https://doi.org/10.18653/v1/2020.emnlp-main.523)* | [Flair English 4-class NER demo](https://huggingface.co/flair/ner-english-large)  |
+| English | Ontonotes (18-class)  |  **90.93**  | *91,3 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair English 18-class NER demo](https://huggingface.co/flair/ner-english-ontonotes-large) |
+| German  | Conll-03 (4-class)   |  **92,31**  | *90.3 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair German 4-class NER demo](https://huggingface.co/flair/ner-german-large)  |
+| Dutch  | Conll-03  (4-class)  |  **95,25**  | *93.7 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Dutch 4-class NER demo](https://huggingface.co/flair/ner-dutch-large)  |
+| Spanish  | Conll-03 (4-class)   |  **90,54** | *90.3 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Spanish 18-class NER demo](https://huggingface.co/flair/ner-spanish-large)  |
 
-Here's how to [reproduce these numbers](/resources/docs/EXPERIMENTS.md) using Flair. You can also find detailed evaluations and discussions in our papers:
+**New:** Most Flair sequence tagging models (named entity recognition, part-of-speech tagging etc.) are now hosted 
+on the [__🤗 HuggingFace model hub__](https://huggingface.co/models?filter=flair)! You can browse models, check detailed information on how they were trained, and even try each model out online!
 
-* *[Contextual String Embeddings for Sequence Labeling](https://www.aclweb.org/anthology/C18-1139/).
-Alan Akbik, Duncan Blythe and Roland Vollgraf.
-27th International Conference on Computational Linguistics, **COLING 2018**.*
-
-* *[Pooled Contextualized Embeddings for Named Entity Recognition](https://www.aclweb.org/anthology/papers/N/N19/N19-1078/).
-Alan Akbik, Tanja Bergmann and Roland Vollgraf.
-2019 Annual Conference of the North American Chapter of the Association for Computational Linguistics, **NAACL 2019**.*
-
-* *[FLAIR: An Easy-to-Use Framework for State-of-the-Art NLP](https://www.aclweb.org/anthology/papers/N/N19/N19-4010/).
-Alan Akbik, Tanja Bergmann, Duncan Blythe, Kashif Rasul, Stefan Schweter and Roland Vollgraf.
-2019 Annual Conference of the North American Chapter of the Association for Computational Linguistics (Demonstrations), **NAACL 2019**.*
 
 ## Quick Start
 
 ### Requirements and Installation
 
-The project is based on PyTorch 1.1+ and Python 3.6+, because method signatures and type hints are beautiful.
+The project is based on PyTorch 1.5+ and Python 3.6+, because method signatures and type hints are beautiful.
 If you do not have Python 3.6, install it first. [Here is how for Ubuntu 16.04](https://vsupalov.com/developing-with-python3-6-on-ubuntu-16-04/).
 Then, in your favorite virtual environment, simply do:
 
@@ -144,7 +126,7 @@ There are also good third-party articles and posts that illustrate how to use Fl
 
 ## Citing Flair
 
-Please cite the following paper when using Flair:
+Please cite [the following paper](https://www.aclweb.org/anthology/C18-1139/) when using Flair embeddings:
 
 ```
 @inproceedings{akbik2018coling,
@@ -156,7 +138,19 @@ Please cite the following paper when using Flair:
 }
 ```
 
-If you use the pooled version of the Flair embeddings (PooledFlairEmbeddings), please cite:
+If you use the Flair framework for your experiments, please cite [this paper](https://www.aclweb.org/anthology/papers/N/N19/N19-4010/):
+
+```
+@inproceedings{akbik2019flair,
+  title={FLAIR: An easy-to-use framework for state-of-the-art NLP},
+  author={Akbik, Alan and Bergmann, Tanja and Blythe, Duncan and Rasul, Kashif and Schweter, Stefan and Vollgraf, Roland},
+  booktitle={{NAACL} 2019, 2019 Annual Conference of the North American Chapter of the Association for Computational Linguistics (Demonstrations)},
+  pages={54--59},
+  year={2019}
+}
+```
+
+If you use the pooled version of the Flair embeddings (PooledFlairEmbeddings), please cite [this paper](https://www.aclweb.org/anthology/papers/N/N19/N19-1078/):
 
 ```
 @inproceedings{akbik2019naacl,
@@ -166,6 +160,18 @@ If you use the pooled version of the Flair embeddings (PooledFlairEmbeddings), p
   pages     = {724–728},
   year      = {2019}
 }
+```
+
+If you use our new "FLERT" models or approach, please cite [this paper](https://arxiv.org/abs/2011.06993):
+
+```
+@misc{schweter2020flert,
+    title={FLERT: Document-Level Features for Named Entity Recognition},
+    author={Stefan Schweter and Alan Akbik},
+    year={2020},
+    eprint={2011.06993},
+    archivePrefix={arXiv},
+    primaryClass={cs.CL}
 ```
 
 ## Contact
