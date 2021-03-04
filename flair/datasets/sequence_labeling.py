@@ -628,27 +628,37 @@ class ICELANDIC_NER(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        # download data if necessary
-        ZipFile.extractall(path=icelandic_ner, members="https://repository.clarin.is/repository/xmlui/handle/20.500.12537/42/allzip", pwd=None) 
-        entries = os.listdir('icelandic_ner')
+        # download zip 
+        icelandic_ner ="https://repository.clarin.is/repository/xmlui/handle/20.500.12537/42/allzip"
+	icelandic_ner_path = cached_path(icelandic_ner, Path("datasets") / dataset_name)
 
-        with open("icelandic_ner_path/train.txt", "w") as outfile:
+        #unpacking the zip
+	unpack_file(
+	      icelandic_ner_path,
+	      data_folder,
+	      mode="zip",
+	      keep=True
+	  )
+        #merge the files in one as the zip is containing multiples files
+        entries = os.listdir('data_folder')
+
+        with open("data_folder/icelandic_ner.txt", "w") as outfile:
             for filename in entries:
                 with open(filename) as infile:
                     contents = infile.read()
                     outfile.write(contents)
 
         # download files if not present locally
-        cached_path(f"{icelandic_ner_path}ned.testa", data_folder / 'raw')
-        cached_path(f"{icelandic_ner_path}ned.testb", data_folder / 'raw')
-        cached_path(f"{icelandic_ner_path}ned.train", data_folder / 'raw')
+      #  cached_path(f"{icelandic_ner_path}ned.testa", data_folder / 'raw')
+       # cached_path(f"{icelandic_ner_path}ned.testb", data_folder / 'raw')
+       # cached_path(f"{icelandic_ner_path}ned.train", data_folder / 'raw')
 
         # we need to slightly modify the original files by adding some new lines after document separators
-        train_data_file = data_folder / 'train.txt'
-        if not train_data_file.is_file():
-            self.__offset_docstarts(data_folder / 'raw' / "ned.train", data_folder / 'train.txt')
-            self.__offset_docstarts(data_folder / 'raw' / "ned.testa", data_folder / 'dev.txt')
-            self.__offset_docstarts(data_folder / 'raw' / "ned.testb", data_folder / 'test.txt')
+       # train_data_file = data_folder / 'train.txt'
+       # if not train_data_file.is_file():
+         #   self.__offset_docstarts(data_folder / 'raw' / "ned.train", data_folder / 'train.txt')
+        #    self.__offset_docstarts(data_folder / 'raw' / "ned.testa", data_folder / 'dev.txt')
+          #  self.__offset_docstarts(data_folder / 'raw' / "ned.testb", data_folder / 'test.txt')
 
         super(ICELANDIC_NER, self).__init__(
             data_folder,
