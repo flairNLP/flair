@@ -660,6 +660,7 @@ class ICELANDIC_NER(ColumnCorpus):
             data_folder,
             columns,
             train_file='icelandic_ner.txt',
+            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             **corpusargs,
         )
