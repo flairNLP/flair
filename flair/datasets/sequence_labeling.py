@@ -2,8 +2,10 @@ import logging
 import re
 import os
 import shutil
+import glob
 from pathlib import Path
 from typing import Union, Dict, List
+from os import  listdir
 import zipfile
 from zipfile import ZipFile
 
@@ -628,63 +630,39 @@ class ICELANDIC_NER(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        # download zip 
-        icelandic_ner ="https://repository.clarin.is/repository/xmlui/handle/20.500.12537/42/allzip"
-	icelandic_ner_path = cached_path(icelandic_ner, Path("datasets") / dataset_name)
+        if not os.path.isfile(data_folder / 'icelandic_ner.txt'):
+            # download zip
+            icelandic_ner ="https://repository.clarin.is/repository/xmlui/handle/20.500.12537/42/allzip"
+            icelandic_ner_path = cached_path(icelandic_ner, Path("datasets") / dataset_name)
 
-        #unpacking the zip
-	unpack_file(
-	      icelandic_ner_path,
-	      data_folder,
-	      mode="zip",
-	      keep=True
-	  )
+            #unpacking the zip
+            unpack_file(
+                  icelandic_ner_path,
+                  data_folder,
+                  mode="zip",
+                  keep=True
+              )
+        outputfile = os.path.abspath(data_folder)
+
         #merge the files in one as the zip is containing multiples files
-        entries = os.listdir('data_folder')
 
-        with open("data_folder/icelandic_ner.txt", "w") as outfile:
-            for filename in entries:
-                with open(filename) as infile:
-                    contents = infile.read()
-                    outfile.write(contents)
+        with open(outputfile/data_folder/"icelandic_ner.txt", "wb") as outfile:
+            for files in os.walk(outputfile/data_folder):
+                f = files[2]
+                for i in range(len(f)):
+                    if f[i].endswith('.txt'):
+                        with open(outputfile/data_folder/f[i], 'rb') as infile:
+                            contents = infile.read()
+                        outfile.write(contents)
 
-        # download files if not present locally
-      #  cached_path(f"{icelandic_ner_path}ned.testa", data_folder / 'raw')
-       # cached_path(f"{icelandic_ner_path}ned.testb", data_folder / 'raw')
-       # cached_path(f"{icelandic_ner_path}ned.train", data_folder / 'raw')
-
-        # we need to slightly modify the original files by adding some new lines after document separators
-       # train_data_file = data_folder / 'train.txt'
-       # if not train_data_file.is_file():
-         #   self.__offset_docstarts(data_folder / 'raw' / "ned.train", data_folder / 'train.txt')
-        #    self.__offset_docstarts(data_folder / 'raw' / "ned.testa", data_folder / 'dev.txt')
-          #  self.__offset_docstarts(data_folder / 'raw' / "ned.testb", data_folder / 'test.txt')
 
         super(ICELANDIC_NER, self).__init__(
             data_folder,
             columns,
-            train_file='train.txt',
-            dev_file='dev.txt',
-            test_file='test.txt',
-            tag_to_bioes=tag_to_bioes,
-            encoding="latin-1",
+            train_file='icelandic_ner.txt',
             in_memory=in_memory,
-            document_separator_token="-DOCSTART-",
             **corpusargs,
         )
-
-    @staticmethod
-    def __offset_docstarts(file_in: Union[str, Path], file_out: Union[str, Path]):
-        with open(file_in, 'r', encoding="latin-1") as f:
-            lines = f.readlines()
-        with open(file_out, 'w', encoding="latin-1") as f:
-            for line in lines:
-                f.write(line)
-                if line.startswith('-DOCSTART-'):
-                    f.write("\n")
-
-
-
 
 class STACKOVERFLOW_NER(ColumnCorpus):
     def __init__(
