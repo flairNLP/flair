@@ -128,6 +128,7 @@ class ModelTrainer:
         :param eval_on_train_shuffle: if True the train data fraction is determined on the start of training
         and kept fixed during training, otherwise it's sampled at beginning of each epoch
         :param save_model_at_each_epoch: If True, at each epoch the thus far trained model will be saved
+        :param main_score_type: Type of metric to use for best model tracking and learning rate scheduling (if dev data is available, otherwise loss will be used)
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
