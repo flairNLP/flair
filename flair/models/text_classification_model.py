@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Union, Dict, Optional, Set
+from typing import List, Union, Dict, Optional, Set, Tuple
 
 import torch
 import torch.nn as nn
@@ -255,6 +255,7 @@ class TextClassifier(flair.nn.Model):
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 32,
             num_workers: int = 8,
+            main_score_type: Tuple[str, str]=("micro avg", 'f1-score')
     ) -> (Result, float):
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
@@ -340,6 +341,8 @@ class TextClassifier(flair.nn.Model):
                 target_names.append(self.label_dictionary.get_item_for_index(i))
             classification_report = metrics.classification_report(y_true, y_pred, digits=4,
                                                                   target_names=target_names, zero_division=0)
+            classification_report_dict = metrics.classification_report(y_true, y_pred, digits=4,
+                                                                  target_names=target_names, zero_division=0, output_dict=True)
 
             # get scores
             micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0),
@@ -370,10 +373,11 @@ class TextClassifier(flair.nn.Model):
                            f"{accuracy_score}"
 
             result = Result(
-                main_score=micro_f_score,
+                main_score=classification_report_dict[main_score_type[0]][main_score_type[1]],
                 log_line=log_line,
                 log_header=log_header,
                 detailed_results=detailed_result,
+                classification_report=classification_report_dict
             )
 
             eval_loss /= batch_count
