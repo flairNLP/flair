@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Union, Dict, Optional, Set
+from typing import List, Union, Dict, Optional, Set, Tuple
 
 import torch
 import torch.nn as nn
@@ -255,8 +255,9 @@ class TextClassifier(flair.nn.Model):
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 32,
             num_workers: int = 8,
-    ) -> (Result, float):
-
+            return_predictions: bool = False
+    ) -> (Result, float, Optional[List[Tuple[str,int,int]]]):
+        all_predictions = []
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
         if not isinstance(sentences, Dataset):
             sentences = SentenceDataset(sentences)
@@ -304,6 +305,7 @@ class TextClassifier(flair.nn.Model):
                         sentence, true_value, prediction
                     )
                     lines.append(eval_line)
+                    all_predictions.append((sentence, true_value, prediction))
 
                 for predictions_for_sentence, true_values_for_sentence in zip(
                         predictions, true_values_for_batch
@@ -377,8 +379,10 @@ class TextClassifier(flair.nn.Model):
             )
 
             eval_loss /= batch_count
-
-            return result, eval_loss
+            if return_predictions:
+                return result, eval_loss, all_predictions
+            else:
+                return result, eval_loss
 
     @staticmethod
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
