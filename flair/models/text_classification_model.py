@@ -53,7 +53,7 @@ class TextClassifier(flair.nn.Model):
 
         super(TextClassifier, self).__init__()
 
-        self.document_embeddings: flair.embeddings.DocumentRNNEmbeddings = document_embeddings
+        self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
         self.label_dictionary: Dictionary = label_dictionary
         self.label_type = label_type
 
