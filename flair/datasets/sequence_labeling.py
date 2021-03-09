@@ -2,8 +2,13 @@ import logging
 import re
 import os
 import shutil
+import glob
 from pathlib import Path
 from typing import Union, Dict, List
+from os import  listdir
+import zipfile
+from zipfile import ZipFile
+
 
 import flair
 from flair.data import Corpus, MultiCorpus, FlairDataset, Sentence, Token
@@ -591,6 +596,74 @@ class CONLL_03_DUTCH(ColumnCorpus):
                 if line.startswith('-DOCSTART-'):
                     f.write("\n")
 
+
+
+class ICELANDIC_NER(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            **corpusargs,
+    ):
+        """
+        Initialize the ICELANDIC_NER corpus. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        if not os.path.isfile(data_folder / 'icelandic_ner.txt'):
+            # download zip
+            icelandic_ner ="https://repository.clarin.is/repository/xmlui/handle/20.500.12537/42/allzip"
+            icelandic_ner_path = cached_path(icelandic_ner, Path("datasets") / dataset_name)
+
+            #unpacking the zip
+            unpack_file(
+                  icelandic_ner_path,
+                  data_folder,
+                  mode="zip",
+                  keep=True
+              )
+        outputfile = os.path.abspath(data_folder)
+
+        #merge the files in one as the zip is containing multiples files
+
+        with open(outputfile/data_folder/"icelandic_ner.txt", "wb") as outfile:
+            for files in os.walk(outputfile/data_folder):
+                f = files[2]
+                for i in range(len(f)):
+                    if f[i].endswith('.txt'):
+                        with open(outputfile/data_folder/f[i], 'rb') as infile:
+                            contents = infile.read()
+                        outfile.write(contents)
+
+
+        super(ICELANDIC_NER, self).__init__(
+            data_folder,
+            columns,
+            train_file='icelandic_ner.txt',
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            **corpusargs,
+        )
 
 class STACKOVERFLOW_NER(ColumnCorpus):
     def __init__(
