@@ -93,6 +93,7 @@ class ModelTrainer:
         eval_on_train_fraction=0.0,
         eval_on_train_shuffle=False,
         save_model_at_each_epoch=False,
+        save_model_epoch_step: int = None,
         **kwargs,
     ) -> dict:
         """
@@ -127,6 +128,7 @@ class ModelTrainer:
         :param eval_on_train_shuffle: if True the train data fraction is determined on the start of training
         and kept fixed during training, otherwise it's sampled at beginning of each epoch
         :param save_model_at_each_epoch: If True, at each epoch the thus far trained model will be saved
+        :param save_model_epoch_step: Each save_model_epoch_step'th epoch the thus far trained model will be saved
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
@@ -277,6 +279,10 @@ class ModelTrainer:
             # set dataset to sample from
             sampler.set_dataset(train_data)
             shuffle = False
+
+        if not isinstance(save_model_epoch_step, int) or save_model_epoch_step < 1:
+            log.warning(f'save_model_epoch_step should be positive integer, not {save_model_epoch_step}. It will be set to None')
+            save_model_epoch_step = None
 
         dev_score_history = []
         dev_loss_history = []
@@ -599,7 +605,7 @@ class ModelTrainer:
                         self.model.save(base_path / "pre-best-model.pt")
                         self.model.load_state_dict(current_state_dict)
                         
-                if save_model_at_each_epoch:
+                if save_model_at_each_epoch or save_model_epoch_step is not None and not self.epoch % save_model_epoch_step:
                     print("saving model of current epoch")
                     model_name = "model_epoch_" + str(self.epoch) + ".pt"
                     self.model.save(base_path / model_name)
