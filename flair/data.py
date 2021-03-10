@@ -112,20 +112,17 @@ class Dictionary:
     @classmethod
     def load(cls, name: str):
         from flair.file_utils import cached_path
-
+        hu_path: str = "https://flair.informatik.hu-berlin.de/resources/characters"
         if name == "chars" or name == "common-chars":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters"
-            char_dict = cached_path(base_path, cache_dir="datasets")
+            char_dict = cached_path(f"{hu_path}/common_characters", cache_dir="datasets")
             return Dictionary.load_from_file(char_dict)
 
         if name == "chars-large" or name == "common-chars-large":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters_large"
-            char_dict = cached_path(base_path, cache_dir="datasets")
+            char_dict = cached_path(f"{hu_path}/common_characters_large", cache_dir="datasets")
             return Dictionary.load_from_file(char_dict)
 
         if name == "chars-xl" or name == "common-chars-xl":
-            base_path = "https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models/common_characters_xl"
-            char_dict = cached_path(base_path, cache_dir="datasets")
+            char_dict = cached_path(f"{hu_path}/common_characters_xl", cache_dir="datasets")
             return Dictionary.load_from_file(char_dict)
 
         return Dictionary.load_from_file(name)
@@ -217,6 +214,10 @@ class DataPoint:
         self.annotation_layers[label_type] = [Label(value, score)]
 
         return self
+
+    def remove_labels(self, label_type: str):
+        if label_type in self.annotation_layers.keys():
+            del self.annotation_layers[label_type]
 
     def get_labels(self, label_type: str = None):
         if label_type is None:
@@ -417,6 +418,14 @@ class Span(DataPoint):
             pos += len(t.text)
 
         return str
+     
+    def to_plain_string(self):
+        plain = ""
+        for token in self.tokens:
+            plain += token.text
+            if token.whitespace_after:
+                plain += " "
+        return plain.rstrip()
 
     def to_dict(self):
         return {
@@ -519,24 +528,26 @@ def build_japanese_tokenizer(tokenizer: str = "MeCab"):
 
 class Sentence(DataPoint):
     """
-       A Sentence is a list of Tokens and is used to represent a sentence or text fragment.
+       A Sentence is a list of tokens and is used to represent a sentence or text fragment.
     """
 
     def __init__(
-        self,
-        text: str = None,
-        use_tokenizer: Union[bool, Tokenizer] = False,
-        language_code: str = None,
+            self,
+            text: Union[str, List[str]] = None,
+            use_tokenizer: Union[bool, Tokenizer] = True,
+            language_code: str = None,
+            start_position: int = None
     ):
         """
         Class to hold all meta related to a text (tokens, predictions, language code, ...)
-        :param text: original string
-        :param use_tokenizer: a custom tokenizer (default is SpaceTokenizer)
-        more advanced options are SegTokTokenizer to use segtok or SpacyTokenizer to use Spacy library
-        if available). Check the implementations of abstract class Tokenizer or implement your own subclass (if you need it).
-        If instead of providing a Tokenizer, this parameter is just set to True, SegtokTokenizer will be used.
-        :param labels:
-        :param language_code:
+        :param text: original string (sentence), or a list of string tokens (words)
+        :param use_tokenizer: a custom tokenizer (default is :class:`SpaceTokenizer`)
+            more advanced options are :class:`SegTokTokenizer` to use segtok or :class:`SpacyTokenizer`
+            to use Spacy library if available). Check the implementations of abstract class Tokenizer or
+            implement your own subclass (if you need it). If instead of providing a Tokenizer, this parameter
+            is just set to True (deprecated), :class:`SegtokTokenizer` will be used.
+        :param language_code: Language of the sentence
+        :param start_position: Start char offset of the sentence in the superordinate document
         """
         super().__init__()
 
@@ -545,6 +556,11 @@ class Sentence(DataPoint):
         self._embeddings: Dict = {}
 
         self.language_code: str = language_code
+
+        self.start_pos = start_position
+        self.end_pos = (
+            start_position + len(text) if start_position is not None else None
+        )
 
         if isinstance(use_tokenizer, Tokenizer):
             tokenizer = use_tokenizer
@@ -558,11 +574,14 @@ class Sentence(DataPoint):
             raise AssertionError("Unexpected type of parameter 'use_tokenizer'. " +
                                  "Parameter should be bool, Callable[[str], List[Token]] (deprecated), Tokenizer")
 
-
         # if text is passed, instantiate sentence with tokens (words)
         if text is not None:
-            text = self._restore_windows_1252_characters(text)
-            [self.add_token(token) for token in tokenizer.tokenize(text)]
+            if isinstance(text, (list, tuple)):
+                [self.add_token(self._restore_windows_1252_characters(token))
+                 for token in text]
+            else:
+                text = self._restore_windows_1252_characters(text)
+                [self.add_token(token) for token in tokenizer.tokenize(text)]
 
         # log a warning if the dataset is empty
         if text == "":
@@ -571,6 +590,9 @@ class Sentence(DataPoint):
             )
 
         self.tokenized = None
+
+        # some sentences represent a document boundary (but most do not)
+        self.is_document_boundary: bool = False
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
@@ -588,7 +610,7 @@ class Sentence(DataPoint):
         token.text = token.text.replace('\ufeff', '')
 
         # data with zero-width characters cannot be handled
-        if token.text.strip() == '':
+        if token.text == '':
             return
 
         self.tokens.append(token)
@@ -604,9 +626,7 @@ class Sentence(DataPoint):
             label_names.append(label.value)
         return label_names
 
-    def get_spans(self, label_type: str, min_score=-1) -> List[Span]:
-
-        spans: List[Span] = []
+    def _add_spans_internal(self, spans: List[Span], label_type: str, min_score):
 
         current_span = []
 
@@ -619,7 +639,7 @@ class Sentence(DataPoint):
             tag_value = tag.value
 
             # non-set tags are OUT tags
-            if tag_value == "" or tag_value == "O":
+            if tag_value == "" or tag_value == "O" or tag_value == "_":
                 tag_value = "O-"
 
             # anything that is not a BIOES tag is a SINGLE tag
@@ -676,6 +696,24 @@ class Sentence(DataPoint):
                     score=span_score)
                 spans.append(span)
 
+        return spans
+
+    def get_spans(self, label_type: Optional[str] = None, min_score=-1) -> List[Span]:
+
+        spans: List[Span] = []
+
+        # if label type is explicitly specified, get spans for this label type
+        if label_type:
+            return self._add_spans_internal(spans, label_type, min_score)
+
+        # else determine all label types in sentence and get all spans
+        label_types = []
+        for token in self:
+            for annotation in token.annotation_layers.keys():
+                if annotation not in label_types: label_types.append(annotation)
+
+        for label_type in label_types:
+            self._add_spans_internal(spans, label_type, min_score)
         return spans
 
     @property
@@ -744,6 +782,8 @@ class Sentence(DataPoint):
                     continue
 
                 if token.get_labels(label_type)[0].value == "O":
+                    continue
+                if token.get_labels(label_type)[0].value == "_":
                     continue
 
                 tags.append(token.get_labels(label_type)[0].value)
@@ -911,6 +951,45 @@ class Sentence(DataPoint):
 
         return re.sub(r"[\u0080-\u0099]", to_windows_1252, text)
 
+    def next_sentence(self):
+        """
+        Get the next sentence in the document (works only if context is set through dataloader or elsewhere)
+        :return: next Sentence in document if set, otherwise None
+        """
+        if '_next_sentence' in self.__dict__.keys():
+            return self._next_sentence
+
+        if '_position_in_dataset' in self.__dict__.keys():
+            dataset = self._position_in_dataset[0]
+            index = self._position_in_dataset[1] + 1
+            if index < len(dataset):
+                return dataset[index]
+
+        return None
+
+    def previous_sentence(self):
+        """
+        Get the previous sentence in the document (works only if context is set through dataloader or elsewhere)
+        :return: previous Sentence in document if set, otherwise None
+        """
+        if '_previous_sentence' in self.__dict__.keys():
+            return self._previous_sentence
+
+        if '_position_in_dataset' in self.__dict__.keys():
+            dataset = self._position_in_dataset[0]
+            index = self._position_in_dataset[1] - 1
+            if index >= 0:
+                return dataset[index]
+
+        return None
+
+    def is_context_set(self) -> bool:
+        """
+        Return True or False depending on whether context is set (for instance in dataloader or elsewhere)
+        :return: True if context is set, else False
+        """
+        return '_previous_sentence' in self.__dict__.keys() or '_position_in_dataset' in self.__dict__.keys()
+
 
 class Image(DataPoint):
 
@@ -982,12 +1061,13 @@ class Corpus:
             dev: FlairDataset = None,
             test: FlairDataset = None,
             name: str = "corpus",
+            sample_missing_splits: bool = True,
     ):
         # set name
         self.name: str = name
 
         # sample test data if none is provided
-        if test is None:
+        if test is None and sample_missing_splits:
             train_length = len(train)
             test_size: int = round(train_length / 10)
             splits = randomly_split_into_two_datasets(train, test_size)
@@ -995,7 +1075,7 @@ class Corpus:
             train = splits[1]
 
         # sample dev data if none is provided
-        if dev is None:
+        if dev is None and sample_missing_splits:
             train_length = len(train)
             dev_size: int = round(train_length / 10)
             splits = randomly_split_into_two_datasets(train, dev_size)
@@ -1038,6 +1118,36 @@ class Corpus:
         self._test = Corpus._filter_empty_sentences(self._test)
         self._dev = Corpus._filter_empty_sentences(self._dev)
         log.info(self)
+
+    def filter_long_sentences(self, max_charlength: int):
+        log.info("Filtering long sentences")
+        self._train = Corpus._filter_long_sentences(self._train, max_charlength)
+        self._test = Corpus._filter_long_sentences(self._test, max_charlength)
+        self._dev = Corpus._filter_long_sentences(self._dev, max_charlength)
+        log.info(self)
+
+    @staticmethod
+    def _filter_long_sentences(dataset, max_charlength: int) -> Dataset:
+
+        # find out empty sentence indices
+        empty_sentence_indices = []
+        non_empty_sentence_indices = []
+        index = 0
+
+        from flair.datasets import DataLoader
+
+        for batch in DataLoader(dataset):
+            for sentence in batch:
+                if len(sentence.to_plain_string()) > max_charlength:
+                    empty_sentence_indices.append(index)
+                else:
+                    non_empty_sentence_indices.append(index)
+                index += 1
+
+        # create subset of non-empty sentence indices
+        subset = Subset(dataset, non_empty_sentence_indices)
+
+        return subset
 
     @staticmethod
     def _filter_empty_sentences(dataset) -> Dataset:
@@ -1178,9 +1288,9 @@ class Corpus:
 
     def __str__(self) -> str:
         return "Corpus: %d train + %d dev + %d test sentences" % (
-            len(self.train),
-            len(self.dev),
-            len(self.test),
+            len(self.train) if self.train else 0,
+            len(self.dev) if self.dev else 0,
+            len(self.test) if self.test else 0,
         )
 
     def make_label_dictionary(self, label_type: str = None) -> Dictionary:
@@ -1229,7 +1339,11 @@ class Corpus:
         return class_to_count
 
     def get_all_sentences(self) -> Dataset:
-        return ConcatDataset([self.train, self.dev, self.test])
+        parts = []
+        if self.train: parts.append(self.train)
+        if self.dev: parts.append(self.dev)
+        if self.test: parts.append(self.test)
+        return ConcatDataset(parts)
 
     def make_tag_dictionary(self, tag_type: str) -> Dictionary:
 
@@ -1245,18 +1359,32 @@ class Corpus:
 
 
 class MultiCorpus(Corpus):
-    def __init__(self, corpora: List[Corpus], name: str = "multicorpus"):
+    def __init__(self, corpora: List[Corpus], name: str = "multicorpus", **corpusargs):
         self.corpora: List[Corpus] = corpora
 
+        train_parts = []
+        dev_parts = []
+        test_parts = []
+        for corpus in self.corpora:
+            if corpus.train: train_parts.append(corpus.train)
+            if corpus.dev: dev_parts.append(corpus.dev)
+            if corpus.test: test_parts.append(corpus.test)
+
         super(MultiCorpus, self).__init__(
-            ConcatDataset([corpus.train for corpus in self.corpora]),
-            ConcatDataset([corpus.dev for corpus in self.corpora]),
-            ConcatDataset([corpus.test for corpus in self.corpora]),
+            ConcatDataset(train_parts) if len(train_parts) > 0 else None,
+            ConcatDataset(dev_parts) if len(dev_parts) > 0 else None,
+            ConcatDataset(test_parts) if len(test_parts) > 0 else None,
             name=name,
+            **corpusargs,
         )
 
     def __str__(self):
-        return "\n".join([str(corpus) for corpus in self.corpora])
+        output = f"MultiCorpus: " \
+                 f"{len(self.train) if self.train else 0} train + " \
+                 f"{len(self.dev) if self.dev else 0} dev + " \
+                 f"{len(self.test) if self.test else 0} test sentences\n - "
+        output += "\n - ".join([f'{type(corpus).__name__} {str(corpus)}' for corpus in self.corpora])
+        return output
 
 
 def iob2(tags):
@@ -1303,8 +1431,8 @@ def iob_iobes(tags):
             raise Exception("Invalid IOB format!")
     return new_tags
 
-def randomly_split_into_two_datasets(dataset, length_of_first):
 
+def randomly_split_into_two_datasets(dataset, length_of_first):
     import random
     indices = [i for i in range(len(dataset))]
     random.shuffle(indices)

@@ -66,6 +66,11 @@ A `Corpus` contains a bunch of useful helper functions.
 For instance, you can downsample the data by calling `downsample()` and passing a ratio. So, if you normally get a 
 corpus like this:
 
+```python
+import flair.datasets
+corpus = flair.datasets.UD_ENGLISH()
+```
+
 then you can downsample the corpus, simply like this:
 
 ```python
@@ -93,8 +98,9 @@ Corpus: 12543 train + 2002 dev + 2077 test sentences
 Corpus: 1255 train + 201 dev + 208 test sentences
 ```
 
-For many learning tasks you need to create a target dictionary. Thus, the `Corpus` enables you to create your
-tag or label dictionary, depending on the task you want to learn. Simple execute the following code snippet to do so:
+For many learning tasks you need to create a "dictionary" that contains all the labels you want to predict.
+You can generate this dictionary directly out of the `Corpus` by calling the method `make_label_dictionary`. 
+If a corpus has multiple label types, you additionally need to specify for which label you want to produce the dictionary: 
 
 ```python
 # create tag dictionary for a PoS task
@@ -109,6 +115,8 @@ print(corpus.make_label_dictionary('ner'))
 corpus = flair.datasets.TREC_6()
 print(corpus.make_label_dictionary())
 ```
+
+This should print out different label dictionaries for different datasets and tasks.
 
 Another useful function is `obtain_statistics()` which returns you a python dictionary with useful statistics about your
 dataset. Using it, for example, on the IMDB dataset like this
@@ -157,11 +165,27 @@ data the first time you call the corresponding constructor ID. The following dat
 
 | ID(s) | Languages | Description |
 | -------------    | ------------- |------------- 
+| 'ANER_CORP' | Arabic  |  [Arabic Named Entity Recognition Corpus](http://curtis.ml.cmu.edu/w/courses/index.php/ANERcorp) 4-class NER |
 | 'BIOFID' | German  |  [CoNLL-03](https://www.aclweb.org/anthology/K19-1081/) Biodiversity literature NER |
+| 'BIOSCOPE' | English  |  [BioScope](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-S11-S9/) biomedical texts annotated for uncertainty, negation and their scopes |
+| 'BUSINESS_HUN' | Hungarian | NER on Hungarian business news |
 | 'CONLL_03_DUTCH' | Dutch  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER |
 | 'CONLL_03_SPANISH' | Spanish  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER |
 | 'DANE' | Danish | [DaNE dataset](https://github.com/alexandrainst/danlp/blob/master/docs/datasets.md#danish-dependency-treebank) | 
-| 'WNUT_17' | English  |  [WNUT-17](https://noisy-text.github.io/2017/files/) emerging entity detection |
+| 'EUROPARL_NER_GERMAN' | German | [German Europarl dataset](https://nlpado.de/~sebastian/software/ner_german.shtml) NER in German EU parliament speeches | 
+| 'LER_GERMAN' | German | [Legal Entity Recognition](https://github.com/elenanereiss/Legal-Entity-Recognition) NER in German Legal Documents | 
+| 'MIT_MOVIE_NER_SIMPLE' | English  |  [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - simple NER |
+| 'MIT_MOVIE_NER_COMPLEX' | English  |  [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - complex NER |
+| 'MIT_RESTAURANT_NER' | English  |  [NER dataset for restaurant reviews](https://groups.csail.mit.edu/sls/downloads/restaurant/) |
+| 'NER_BASQUE' | Basque  |  [NER dataset for Basque](http://ixa2.si.ehu.eus/eiec/) |
+| 'NER_FINNISH' | Finnish | [Finer-data](https://github.com/mpsilfve/finer-data) | 
+| 'NER_SWEDISH' | Swedish | [Swedish Spraakbanken NER](https://github.com/klintan/swedish-ner-corpus/) 4-class NER |
+| 'STACKOVERFLOW_NER' | English  | NER on StackOverflow posts |
+| 'TURKU_NER' | Finnish | [TURKU_NER](https://github.com/TurkuNLP/turku-ner-corpus) NER corpus created by the Turku NLP Group, University of Turku, Finland |
+| 'TWITTER_NER' | English  |  [Twitter NER dataset](https://github.com/aritter/twitter_nlp/) |
+| 'WEIBO_NER' | Chinese  | [Weibo NER corpus](https://paperswithcode.com/sota/chinese-named-entity-recognition-on-weibo-ner/).  |
+| 'WIKIANN' | 282 languages  | Gigantic [corpus for cross-lingual NER derived from Wikipedia](https://elisa-ie.github.io/wikiann/).  |
+| 'WIKIGOLD_NER' | English  |  [Wikigold](https://github.com/juand-r/entity-recognition-datasets/tree/master/data/wikigold) a manually annotated collection of Wikipedia text |
 | 'WIKINER_ENGLISH' | English  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
 | 'WIKINER_GERMAN'  | German  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
 | 'WIKINER_FRENCH'  | French  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
@@ -170,10 +194,32 @@ data the first time you call the corresponding constructor ID. The following dat
 | 'WIKINER_PORTUGUESE' | Portuguese  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
 | 'WIKINER_POLISH' | Polish  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
 | 'WIKINER_RUSSIAN'  | Russian  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
-| 'NER_BASQUE' | Basque  |  [NER dataset for Basque](http://ixa2.si.ehu.eus/eiec/) |
-| 'NER_FINNISH' | Finnish | [Finer-data](https://github.com/mpsilfve/finer-data) | 
-| 'NER_SWEDISH' | Swedish | [Swedish Spraakbanken NER] (https://github.com/klintan/swedish-ner-corpus/) 4-class NER |
-| 'LER_GERMAN' | German | [Legal Entity Recognition](https://github.com/elenanereiss/Legal-Entity-Recognition) NER in German Legal Documents | 
+| 'WNUT_17' | English  |  [WNUT-17](https://noisy-text.github.io/2017/files/) emerging entity detection |
+| 'WNUT_2020_NER' | English  |  [WNUT-20](https://github.com/jeniyat/WNUT_2020_NER) named entity extraction |
+| 'XTREME' | 176 languages  |  [Xtreme](https://github.com/google-research/xtreme) corpus by Google Research for cross-lingual NER consisting of datasets of a total of 176 languages |
+
+
+#### Biomedical Named Entity Recognition
+
+We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
+
+
+#### Universal Proposition Banks 
+
+We now also support loading the [Universal Proposition Banks](https://github.com/System-T/UniversalPropositions)
+for the purpose of training multilingual frame detection systems. 
+
+| ID(s) | Languages | Description |
+| -------------    | ------------- |------------- |
+| 'UP_CHINESE' | Chinese  |  Universal Propositions for [Chinese](https://github.com/System-T/UniversalPropositions/tree/master/UP_Chinese) |
+| 'UP_ENGLISH'| English  |  Universal Propositions for [English](https://github.com/System-T/UniversalPropositions/tree/master/UP_English-EWT) |
+| 'UP_FINNISH'| Finnish  |  Universal Propositions for [Finnish](https://github.com/System-T/UniversalPropositions/tree/master/UP_Finnish)
+| 'UP_FRENCH'| French  |  Universal Propositions for [French](https://github.com/System-T/UniversalPropositions/tree/master/UP_French)
+| 'UP_GERMAN'| German  |  Universal Propositions for [German](https://github.com/System-T/UniversalPropositions/tree/master/UP_German) |
+| 'UP_ITALIAN', | Italian  |  Universal Propositions for [Italian](https://github.com/System-T/UniversalPropositions/tree/master/UP_Italian) |
+| 'UP_SPANISH' | Spanish  |  Universal Propositions for [Spanish](https://github.com/System-T/UniversalPropositions/tree/master/UP_Spanish) |
+| 'UP_SPANISH_ANCORA' | Spanish (Ancora Corpus)  |  Universal Propositions for [Spanish](https://github.com/System-T/UniversalPropositions/tree/master/UP_Spanish-AnCora) |
+
 
 #### Universal Dependency Treebanks
 
@@ -184,6 +230,7 @@ data the first time you call the corresponding constructor ID. The following dat
 | 'UD_BULGARIAN'| Bulgarian  |  Universal Dependency Treebank for [Bulgarian](https://github.com/UniversalDependencies/UD_Bulgarian-BTB)
 | 'UD_CATALAN', | Catalan  |  Universal Dependency Treebank for [Catalan](https://github.com/UniversalDependencies/UD_Catalan-AnCora) |
 | 'UD_CHINESE' | Chinese  |  Universal Dependency Treebank for [Chinese](https://github.com/UniversalDependencies/UD_Chinese-GSD) |
+| 'UD_CHINESE_KYOTO' | Classical Chinese  |  Universal Dependency Treebank for Classical [Chinese](https://github.com/UniversalDependencies/UD_Classical_Chinese-Kyoto/tree/dev) |
 | 'UD_CROATIAN' | Croatian  |  Universal Dependency Treebank for [Croatian](https://github.com/UniversalDependencies/UD_Croatian-SET) |
 | 'UD_CZECH' | Czech  |  Very large Universal Dependency Treebank for [Czech](https://github.com/UniversalDependencies/UD_Czech-PDT) |
 | 'UD_DANISH' | Danish  |  Universal Dependency Treebank for [Danish](https://github.com/UniversalDependencies/UD_Danish-DDT) |
@@ -223,6 +270,9 @@ data the first time you call the corresponding constructor ID. The following dat
 | ID(s) | Languages | Description |
 | -------------    | ------------- |------------- |
 | 'AMAZON_REVIEWS' | English |  [Amazon product reviews](https://nijianmo.github.io/amazon/index.html/) dataset with sentiment annotation |
+| 'COMMUNICATIVE_FUNCTIONS' | English |  [Communicative functions](https://github.com/Alab-NII/FECFevalDataset) of sentences in scholarly papers |
+| 'GERMEVAL_2018_OFFENSIVE_LANGUAGE' | German | Offensive language detection for German |
+| 'GO_EMOTIONS' | English | [GoEmotions dataset](https://github.com/google-research/google-research/tree/master/goemotions) Reddit comments labeled with 27 emotions |
 | 'IMDB' | English |  [IMDB](http://ai.stanford.edu/~amaas/data/sentiment/) dataset of movie reviews with sentiment annotation  |
 | 'NEWSGROUPS' | English | The popular [20 newsgroups](http://qwone.com/~jason/20Newsgroups/) classification dataset |
 | 'SENTIMENT_140' | English | [Tweets dataset](http://help.sentiment140.com/for-students/) with sentiment annotation |
@@ -242,6 +292,12 @@ data the first time you call the corresponding constructor ID. The following dat
 | 'WASSA_FEAR' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge (fear) |
 | 'WASSA_JOY' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge (joy) |
 | 'WASSA_SADNESS' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge (sadness) |
+
+#### Recognizing Textual Entailment
+| ID(s) | Languages | Description |
+| -------------    | ------------- |------------- |
+| 'GLUE_RTE' | English | The RTE task from the GLUE benchmark |
+| 'SUPERGLUE_RTE' | English | The RTE task from the SuperGLUE benchmark |
 
 
 #### Experimental: Similarity Learning

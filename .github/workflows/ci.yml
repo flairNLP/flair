@@ -1,0 +1,26 @@
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.6
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+      - name: Install Flair dependencies
+        run: |
+          pip install -r requirements.txt
+          python setup.py develop -q
+      - name: Install unittest dependencies
+        run: pip install pytest
+      - name: Run tests
+        run: |
+          cd tests
+          pip freeze
+          pytest --runintegration

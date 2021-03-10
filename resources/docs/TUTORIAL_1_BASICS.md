@@ -13,8 +13,8 @@ Let's start by making a `Sentence` object for an example sentence.
 # The sentence objects holds a sentence that we may want to embed or tag
 from flair.data import Sentence
 
-# Make a sentence object by passing a whitespace tokenized string
-sentence = Sentence('The grass is green .')
+# Make a sentence object by passing a string
+sentence = Sentence('The grass is green.')
 
 # Print the object to see what's in there
 print(sentence)
@@ -62,50 +62,74 @@ Token: 5 .
 
 ## Tokenization
 
-In some use cases, you might not have your text already tokenized. For this case, we added a simple tokenizer using the
+When you create a `Sentence` as above, the text is automatically tokenized using the
 lightweight [segtok library](https://pypi.org/project/segtok/). 
 
-If you want to use this tokenizer, simply set the `use_tokenizer` flag when instantiating your `Sentence` with an untokenized string:
+If you *do not* want to use this tokenizer, simply set the `use_tokenizer` flag to `False`
+when instantiating your `Sentence` with an untokenized string:
 
 ```python
 from flair.data import Sentence
 
 # Make a sentence object by passing an untokenized string and the 'use_tokenizer' flag
-sentence = Sentence('The grass is green.', use_tokenizer=True)
+untokenized_sentence = Sentence('The grass is green.', use_tokenizer=False)
 
 # Print the object to see what's in there
-print(sentence)
+print(untokenized_sentence)
 ```
 
+In this case, no tokenization is performed and the text is split on whitespaces, thus resulting in only 4 tokens here. 
 
-### Adding Custom Tokenizers
+### Using a different tokenizer
 
-You can also pass custom tokenizers to the initialization method. Instead of passing a boolean `True` value to the `use_tokenizer` parameter, you can pass an implementation of `Tokenizer` class, like this:
+You can also pass custom tokenizers to the initialization method. For instance, if you want to tokenize a Japanese
+sentence you can use the 'janome' tokenizer instead, like this: 
 
 ```python
 from flair.data import Sentence
-from flair.tokenization import SegtokTokenizer
+from flair.tokenization import JapaneseTokenizer
 
-# Make a sentence object by passing an untokenized string and a tokenizer
-sentence = Sentence('The grass is green.', use_tokenizer=SegtokTokenizer())
+# init japanese tokenizer
+tokenizer = JapaneseTokenizer("janome")
 
-# Print the object to see what's in there
+# make sentence (and tokenize)
+japanese_sentence = Sentence("私はベルリンが好き", use_tokenizer=tokenizer)
+
+# output tokenized sentence
+print(japanese_sentence)
+```
+
+This should print:
+
+```console
+Sentence: "私 は ベルリン が 好き"   [− Tokens: 5]
+```
+
+You can write your own tokenization routine. Check the code of `flair.data.Tokenizer` and its implementations
+ (e.g. `flair.tokenization.SegtokTokenizer` or `flair.tokenization.SpacyTokenizer`) to get an idea of how to add 
+ your own tokenization method.  
+
+### Using pretokenized sequences
+You can alternatively pass a pretokenized sequence as list of words, e.g.
+
+```python
+from flair.data import Sentence
+sentence = Sentence(['The', 'grass', 'is', 'green', '.'])
 print(sentence)
 ```
 
 This should print:
 
 ```console
-Sentence: "The grass is green ." - 5 Tokens
+Sentence: "The grass is green ."   [− Tokens: 5]
 ```
 
-The second way allows you to write your own tokenization routine. Check the code of `flair.data.Tokenizer` and it's implementations (e.g. `flair.tokenization.SegtokTokenizer` or `flair.tokenization.SpacyTokenizer`) to have an idea of how to add your own tokenization.  
 
 ## Adding Labels
 
 In Flair, any data point can be labeled. For instance, you can label a word or label a sentence:
 
-### Adding Labels to Tokens
+### Adding labels to tokens
 
 A `Token` has fields for linguistic annotation, such as lemmas, part-of-speech tags or named entity tags. You can
 add a tag by specifying the tag type and the tag value. In this example, we're adding an NER tag of type 'color' to
@@ -147,7 +171,7 @@ This should print:
 Our color tag has a score of 1.0 since we manually added it. If a tag is predicted by our
 sequence labeler, the score value will indicate classifier confidence.
 
-### Adding Labels to Sentences
+### Adding labels to sentences
 
 You can also add a `Label` to a whole `Sentence`.
 For instance, the example below shows how we add the label 'sports' to a sentence, thereby labeling it
@@ -175,7 +199,7 @@ Sentence: "France is the current world cup winner."   [− Tokens: 7  − Senten
 
 Indicating that this sentence belongs to the topic 'sports' with confidence 1.0.
 
-### Multiple Labels
+### Multiple labels
 
 Any data point can be labeled multiple times. A sentence for instance might belong to two topics. In this case, add two labels with the same label name:
 
@@ -210,7 +234,7 @@ Sentence: "France is the current world cup winner."   [− Tokens: 7  − Senten
 
 Indicating that this sentence has two "topic" labels and one "language" label. 
 
-### Accessing a Sentence's Labels
+### Accessing a sentence's labels
 
 You can access these labels like this: 
 
@@ -233,6 +257,7 @@ This should print:
 France is the current world cup winner.
  - classified as "sports" with score 1.0
  - classified as "soccer" with score 1.0
+ - classified as "English" with score 1.0
 ```
 
 If you are interested only in the labels of one layer of annotation, you can access them like this: 

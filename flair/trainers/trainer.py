@@ -1,7 +1,7 @@
 import copy
 import logging
 from pathlib import Path
-from typing import Union
+from typing import List, Union
 import time
 import datetime
 import sys
@@ -30,6 +30,7 @@ from flair.training_utils import (
     store_embeddings,
     AnnealOnPlateau,
 )
+from torch.optim.lr_scheduler import OneCycleLR
 from flair.models import SequenceTagger
 import random
 
@@ -67,11 +68,13 @@ class ModelTrainer:
         mini_batch_chunk_size: int = None,
         max_epochs: int = 100,
         scheduler = AnnealOnPlateau,
+        cycle_momentum: bool = False,
         anneal_factor: float = 0.5,
         patience: int = 3,
         initial_extra_patience = 0,
         min_learning_rate: float = 0.0001,
         train_with_dev: bool = False,
+        train_with_test: bool = False,
         monitor_train: bool = False,
         monitor_test: bool = False,
         embeddings_storage_mode: str = "cpu",
@@ -82,21 +85,25 @@ class ModelTrainer:
         batch_growth_annealing: bool = False,
         shuffle: bool = True,
         param_selection_mode: bool = False,
+        write_weights: bool = False,
         num_workers: int = 6,
         sampler=None,
         use_amp: bool = False,
         amp_opt_level: str = "O1",
         eval_on_train_fraction=0.0,
         eval_on_train_shuffle=False,
+        save_model_at_each_epoch=False,
         **kwargs,
     ) -> dict:
         """
         Trains any class that implements the flair.nn.Model interface.
         :param base_path: Main path to which all output during training is logged and models are saved
-        :param learning_rate: Initial learning rate
+        :param learning_rate: Initial learning rate (or max, if scheduler is OneCycleLR)
         :param mini_batch_size: Size of mini-batches during training
         :param mini_batch_chunk_size: If mini-batches are larger than this number, they get broken down into chunks of this size for processing purposes
         :param max_epochs: Maximum number of epochs to train. Terminates training if this number is surpassed.
+        :param scheduler: The learning rate scheduler to use
+        :param cycle_momentum: If scheduler is OneCycleLR, whether the scheduler should cycle also the momentum
         :param anneal_factor: The factor by which the learning rate is annealed
         :param patience: Patience is the number of epochs with no improvement the Trainer waits
          until annealing the learning rate
@@ -119,6 +126,7 @@ class ModelTrainer:
         if 'dev' the size is determined from dev set size
         :param eval_on_train_shuffle: if True the train data fraction is determined on the start of training
         and kept fixed during training, otherwise it's sampled at beginning of each epoch
+        :param save_model_at_each_epoch: If True, at each epoch the thus far trained model will be saved
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
@@ -190,7 +198,7 @@ class ModelTrainer:
             if (not param_selection_mode and self.corpus.test and monitor_test)
             else False
         )
-        log_dev = True if not train_with_dev else False
+        log_dev = False if train_with_dev or not self.corpus.dev else True
         log_train_part = (
             True
             if (eval_on_train_fraction == "dev" or eval_on_train_fraction > 0.0)
@@ -226,21 +234,40 @@ class ModelTrainer:
 
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev else "max"
-
-        lr_scheduler = scheduler(
-            optimizer,
-            factor=anneal_factor,
-            patience=patience,
-            initial_extra_patience=initial_extra_patience,
-            mode=anneal_mode,
-            verbose=True,
-        )
+        
+        if scheduler == OneCycleLR:
+            dataset_size = len(self.corpus.train)
+            if train_with_dev:
+                dataset_size += len(self.corpus.dev)
+            lr_scheduler = OneCycleLR(optimizer,
+                                   max_lr=learning_rate,
+                                   steps_per_epoch=dataset_size//mini_batch_size + 1,
+                                   epochs=max_epochs-self.epoch, # if we load a checkpoint, we have already trained for self.epoch
+                                   pct_start=0.0,
+                                   cycle_momentum=cycle_momentum)
+        else:
+            lr_scheduler = scheduler(
+                optimizer,
+                factor=anneal_factor,
+                patience=patience,
+                initial_extra_patience=initial_extra_patience,
+                mode=anneal_mode,
+                verbose=True,
+            )
+        
+        if (isinstance(lr_scheduler, OneCycleLR) and batch_growth_annealing):
+            raise ValueError("Batch growth with OneCycle policy is not implemented.")
 
         train_data = self.corpus.train
 
-        # if training also uses dev data, include in training set
-        if train_with_dev:
-            train_data = ConcatDataset([self.corpus.train, self.corpus.dev])
+        # if training also uses dev/train data, include in training set
+        if train_with_dev or train_with_test:
+
+            parts = [self.corpus.train]
+            if train_with_dev: parts.append(self.corpus.dev)
+            if train_with_test: parts.append(self.corpus.test)
+
+            train_data = ConcatDataset(parts)
 
         # initialize sampler if provided
         if sampler is not None:
@@ -260,6 +287,10 @@ class ModelTrainer:
         # At any point you can hit Ctrl + C to break out of training early.
         try:
             previous_learning_rate = learning_rate
+            momentum = 0
+            for group in optimizer.param_groups:
+                if "momentum" in group:
+                    momentum = group["momentum"]
 
             for self.epoch in range(self.epoch + 1, max_epochs + 1):
                 log_line(log)
@@ -302,7 +333,7 @@ class ModelTrainer:
                 previous_learning_rate = learning_rate
 
                 # stop training if learning rate becomes too small
-                if learning_rate < min_learning_rate:
+                if (not isinstance(lr_scheduler, OneCycleLR)) and learning_rate < min_learning_rate:
                     log_line(log)
                     log.info("learning rate too small - quitting training!")
                     log_line(log)
@@ -311,7 +342,7 @@ class ModelTrainer:
                 batch_loader = DataLoader(
                     train_data,
                     batch_size=mini_batch_size,
-                    shuffle=shuffle,
+                    shuffle=shuffle if self.epoch > 1 else False, # never shuffle the first epoch
                     num_workers=num_workers,
                     sampler=sampler,
                 )
@@ -328,6 +359,7 @@ class ModelTrainer:
                 # process mini-batches
                 batch_time = 0
                 for batch_no, batch in enumerate(batch_loader):
+
                     start_time = time.time()
 
                     # zero the gradients on the model and optimizer
@@ -358,6 +390,15 @@ class ModelTrainer:
                     # do the optimizer step
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
                     optimizer.step()
+                    
+                    # do the scheduler step if one-cycle
+                    if isinstance(lr_scheduler, OneCycleLR):
+                        lr_scheduler.step()
+                        # get new learning rate
+                        for group in optimizer.param_groups:
+                            learning_rate = group["lr"]
+                            if "momentum" in group:
+                                momentum = group["momentum"]                    
 
                     seen_batches += 1
                     train_loss += loss.item()
@@ -367,13 +408,15 @@ class ModelTrainer:
 
                     batch_time += time.time() - start_time
                     if seen_batches % modulo == 0:
+                        momentum_info = f' - momentum: {momentum:.4f}' if cycle_momentum else ''
                         log.info(
                             f"epoch {self.epoch} - iter {seen_batches}/{total_number_of_batches} - loss "
                             f"{train_loss / seen_batches:.8f} - samples/sec: {mini_batch_size * modulo / batch_time:.2f}"
+                            f" - lr: {learning_rate:.6f}{momentum_info}"
                         )
                         batch_time = 0
                         iteration = self.epoch * total_number_of_batches + batch_no
-                        if not param_selection_mode:
+                        if not param_selection_mode and write_weights:
                             weight_extractor.extract_weights(
                                 self.model.state_dict(), iteration
                             )
@@ -427,6 +470,7 @@ class ModelTrainer:
                         self.corpus.dev,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
+                        out_path=base_path / "dev.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
@@ -472,9 +516,9 @@ class ModelTrainer:
                         )
 
                 # determine learning rate annealing through scheduler. Use auxiliary metric for AnnealOnPlateau
-                if not train_with_dev and isinstance(lr_scheduler, AnnealOnPlateau):
+                if log_dev and isinstance(lr_scheduler, AnnealOnPlateau):
                     lr_scheduler.step(current_score, dev_loss)
-                else:
+                elif not isinstance(lr_scheduler, OneCycleLR):
                     lr_scheduler.step(current_score)
 
                 train_loss_history.append(train_loss)
@@ -542,6 +586,7 @@ class ModelTrainer:
                 if (
                     (not train_with_dev or anneal_with_restarts or anneal_with_prestarts)
                     and not param_selection_mode
+                    and not isinstance(lr_scheduler, OneCycleLR)
                     and current_score == lr_scheduler.best
                     and bad_epochs == 0
                 ):
@@ -553,6 +598,11 @@ class ModelTrainer:
                         self.model.load_state_dict(last_epoch_model_state_dict)
                         self.model.save(base_path / "pre-best-model.pt")
                         self.model.load_state_dict(current_state_dict)
+                        
+                if save_model_at_each_epoch:
+                    print("saving model of current epoch")
+                    model_name = "model_epoch_" + str(self.epoch) + ".pt"
+                    self.model.save(base_path / model_name)
 
             # if we do not use dev data for model selection, save final model
             if save_final_model and not param_selection_mode:
@@ -571,7 +621,7 @@ class ModelTrainer:
                 log.info("Done.")
 
         # test best model if test data is present
-        if self.corpus.test:
+        if self.corpus.test and not train_with_test:
             final_score = self.final_test(base_path, mini_batch_chunk_size, num_workers)
         else:
             final_score = 0
@@ -632,13 +682,16 @@ class ModelTrainer:
         if type(self.corpus) is MultiCorpus:
             for subcorpus in self.corpus.corpora:
                 log_line(log)
-                self.model.evaluate(
-                    subcorpus.test,
-                    mini_batch_size=eval_mini_batch_size,
-                    num_workers=num_workers,
-                    out_path=base_path / f"{subcorpus.name}-test.tsv",
-                    embedding_storage_mode="none",
-                )
+                if subcorpus.test:
+                    subcorpus_results, subcorpus_loss = self.model.evaluate(
+                        subcorpus.test,
+                        mini_batch_size=eval_mini_batch_size,
+                        num_workers=num_workers,
+                        out_path=base_path / f"{subcorpus.name}-test.tsv",
+                        embedding_storage_mode="none",
+                    )
+                    log.info(subcorpus.name)
+                    log.info(subcorpus_results.log_line)
 
         # get and return the final test score of best model
         final_score = test_results.main_score

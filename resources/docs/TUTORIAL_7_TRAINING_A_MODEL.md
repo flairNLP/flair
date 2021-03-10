@@ -246,11 +246,20 @@ This gives you a multilingual model. Try experimenting with more languages!
 ## Plotting Training Curves and Weights
 
 Flair includes a helper method to plot training curves and weights in the neural network.
-The `ModelTrainer` automatically generates a `loss.tsv` and a `weights.txt` file in the result folder.
+The `ModelTrainer` automatically generates a `loss.tsv` in the result folder. If you set
+`write_weights=True` during training, it will also generate a `weights.txt` file.
 
 After training, simple point the plotter to these files:
 
 ```python
+# set write_weights to True to write weights
+trainer.train('resources/taggers/example-universal-pos',
+               ...                
+               write_weights=True,
+               ...
+              )
+
+# visualize
 from flair.visual.training_curves import Plotter
 plotter = Plotter()
 plotter.plot_training_curves('loss.tsv')
@@ -355,4 +364,9 @@ However, if the dataset fits into CUDA memory, this option is the fastest one.
 
 ## Next
 
-You can now look into [training your own embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md).
+If you don't have training data (or only very little), our TARS approach might be best for you. 
+Check out the TARS tutorial on [few-shot and zero-shot classification](/resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)). 
+
+Alternatively, you can
+ look into [training your own embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md).
+

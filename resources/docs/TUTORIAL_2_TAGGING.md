@@ -69,37 +69,58 @@ This should print:
     ]}
 ```
 
+
+### Multi-Tagging 
+
+Sometimes you want to predict several types of annotation at once, for instance NER and part-of-speech (POS) tags. 
+For this, you can use our new `MultiTagger` object, like this: 
+
+```python
+from flair.models import MultiTagger
+
+# load tagger for POS and NER 
+tagger = MultiTagger.load(['pos', 'ner'])
+
+# make example sentence
+sentence = Sentence("George Washington went to Washington.")
+
+# predict with both models
+tagger.predict(sentence)
+
+print(sentence)
+``` 
+
+The sentence now has two types of annotation: POS and NER. 
+
 ### List of Pre-Trained Sequence Tagger Models
 
 You choose which pre-trained model you load by passing the appropriate
-string to the `load()` method of the `SequenceTagger` class. Currently, the following pre-trained models
-are provided:
+string to the `load()` method of the `SequenceTagger` class. 
+
+A full list of our current and community-contributed models can be browsed on the [__model hub__](https://huggingface.co/models?filter=flair). 
+At least the following pre-trained models are provided (click on an ID link to get more info
+for the model and an online demo):
 
 #### English Models
 
-| ID | Task | Training Dataset | Accuracy |
-| -------------    | ------------- |------------- |------------- |
-| 'ner' | 4-class Named Entity Recognition |  Conll-03  |  **93.03** (F1) |
-| 'ner-ontonotes' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.06** (F1) |
-| 'chunk' |  Syntactic Chunking   |  Conll-2000     |  **96.47** (F1) |
-| 'pos' |  Part-of-Speech Tagging (fine-grained) |  Ontonotes     |  **98.19** (Accuracy) |
-| 'upos' |  Part-of-Speech Tagging (universal) |  Ontonotes     |  **98.6** (Accuracy) |
-| 'frame'  |   Semantic Frame Detection |  Propbank 3.0     |  **97.54** (F1) |
-
-
-#### Fast English Models
-
-In case you do not have a GPU available, we also distribute smaller models that run faster on CPU.
-
-
-| ID | Task | Training Dataset | Accuracy |
-| -------------    | ------------- |------------- |------------- |
-| 'ner-fast' | 4-class Named Entity Recognition |  Conll-03  |  **92.75** (F1) |
-| 'ner-ontonotes-fast' | [18-class](https://spacy.io/api/annotation#named-entities) Named Entity Recognition |  Ontonotes  |  **89.27** (F1) |
-| 'chunk-fast' |  Syntactic Chunking   |  Conll-2000     |  **96.22** (F1) |
-| 'pos-fast' |  Part-of-Speech Tagging (fine-grained) |  Ontonotes     |  **98.1** (Accuracy) |
-| 'upos-fast' |  Part-of-Speech Tagging (universal) |  Ontonotes     |  **98.47** (Accuracy) |
-| 'frame-fast'  |   Semantic Frame Detection | Propbank 3.0     |  **97.31** (F1) |
+| ID | Task | Language | Training Dataset | Accuracy | Contributor / Notes |
+| -------------    | ------------- |------------- |------------- | ------------- | ------------- |
+| '[ner](https://huggingface.co/flair/ner-english)' | NER (4-class) |  English | Conll-03  |  **93.03** (F1) |
+| '[ner-fast](https://huggingface.co/flair/ner-english-fast)' | NER (4-class)  |  English  |  Conll-03  |  **92.75** (F1) | (fast model)
+| '[ner-large](https://huggingface.co/flair/ner-english-large)' | NER (4-class)  |  English  |  Conll-03  |  **94.09** (F1) | (large model)
+| 'ner-pooled' | NER (4-class)  |  English |  Conll-03  |  **93.24** (F1) | (memory inefficient)
+| '[ner-ontonotes](https://huggingface.co/flair/ner-english-ontonotes)' | NER (18-class) |  English | Ontonotes  |  **89.06** (F1) |
+| '[ner-ontonotes-fast](https://huggingface.co/flair/ner-english-ontonotes-fast)' | NER (18-class) |  English | Ontonotes  |  **89.27** (F1) | (fast model)
+| '[ner-ontonotes-large](https://huggingface.co/flair/ner-english-ontonotes-large)' | NER (18-class) |  English | Ontonotes  |  **90.93** (F1) | (large model)
+| '[chunk](https://huggingface.co/flair/chunk-english)' |  Chunking   |  English | Conll-2000     |  **96.47** (F1) |
+| '[chunk-fast](https://huggingface.co/flair/chunk-english-fast)' |   Chunking   |  English | Conll-2000     |  **96.22** (F1) |(fast model)
+| '[pos](https://huggingface.co/flair/pos-english)' |  POS-tagging |   English |  Ontonotes     |**98.19** (Accuracy) |
+| '[pos-fast](https://huggingface.co/flair/pos-english-fast)' |  POS-tagging |   English |  Ontonotes     |  **98.1** (Accuracy) |(fast model)
+| '[upos](https://huggingface.co/flair/upos-english)' |  POS-tagging (universal) | English | Ontonotes     |  **98.6** (Accuracy) |
+| '[upos-fast](https://huggingface.co/flair/upos-english-fast)' |  POS-tagging (universal) | English | Ontonotes     |  **98.47** (Accuracy) | (fast model)
+| '[frame](https://huggingface.co/flair/frame-english)'  |   Frame Detection |  English | Propbank 3.0     |  **97.54** (F1) |
+| '[frame-fast](https://huggingface.co/flair/frame-english-fast)'  |  Frame Detection |  English | Propbank 3.0     |  **97.31** (F1) | (fast model)
+| 'negation-speculation'  | Negation / speculation |English |  Bioscope | **80.2** (F1) |
 
 
 #### Multilingual Models
@@ -108,46 +129,39 @@ We distribute new models that are capable of handling text in multiple languages
 
 The NER models are trained over 4 languages (English, German, Dutch and Spanish) and the PoS models over 12 languages (English, German, French, Italian, Dutch, Polish, Spanish, Swedish, Danish, Norwegian, Finnish and Czech).
 
-| ID | Task | Training Dataset | Accuracy |
-| -------------    | ------------- |------------- |------------- |
-| 'ner-multi' | 4-class Named Entity Recognition |  Conll-03 (4 languages)  |  **89.27**  (average F1) |
-| 'ner-multi-fast' | 4-class Named Entity Recognition |  Conll-03 (4 languages)  |  **87.91**  (average F1) |
-| 'ner-multi-fast-learn' | 4-class Named Entity Recognition |  Conll-03 (4 languages)  |  **88.18**  (average F1) |
-| 'pos-multi' |  Part-of-Speech Tagging   |  Universal Dependency Treebank (12 languages)  |  **96.41** (average acc.) |
-| 'pos-multi-fast' |  Part-of-Speech Tagging |  Universal Dependency Treebank (12 languages)  |  **92.88** (average acc.) |
+| ID | Task | Language | Training Dataset | Accuracy | Contributor / Notes |
+| -------------    | ------------- |------------- |------------- | ------------- | ------------- |
+| '[ner-multi](https://huggingface.co/flair/ner-multi)' | NER (4-class) | Multilingual | Conll-03   |  **89.27**  (average F1) | (4 languages)
+| '[ner-multi-fast](https://huggingface.co/flair/ner-multi-fast)' | NER (4-class)|  Multilingual |  Conll-03   |  **87.91**  (average F1) | (4 languages)
+| '[pos-multi](https://huggingface.co/flair/upos-multi)' |  POS-tagging   |  Multilingual |  UD Treebanks  |  **96.41** (average acc.) |  (12 languages)
+| '[pos-multi-fast](https://huggingface.co/flair/upos-multi-fast)' |  POS-tagging |  Multilingual |  UD Treebanks  |  **92.88** (average acc.) | (12 languages) 
 
 You can pass text in any of these languages to the model. In particular, the NER also kind of works for languages it was not trained on, such as French.
 
-The 'ner-multi-fast-learn' model is an experimental model that accumulates entity representations over time. 
+#### Models for Other Languages
 
-#### German Models
-
-We also distribute German models.
-
-| ID | Task | Training Dataset | Accuracy | Contributor |
-| -------------    | ------------- |------------- |------------- |------------- |
-| 'de-ner' | 4-class Named Entity Recognition |  Conll-03  |  **87.94** (F1) | |
-| 'de-ner-germeval' | 4+4-class Named Entity Recognition |  Germeval  |  **84.90** (F1) | |
-| 'de-pos' | Part-of-Speech Tagging |  UD German - HDT  |  **98.50** (Accuracy) | |
-| 'de-pos-tweets' | Part-of-Speech Tagging |  German Tweets  |  **93.06** (Accuracy) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/pos-twitter-german) |
-| 'de-historic-indirect' | historical German speech and thought (indirect) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
-| 'de-historic-direct' | historical German speech and thought (direct) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
-| 'de-historic-reported' | historical German speech and thought (reported) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
-| 'de-historic-free-indirect' | historical German speech and thought (de-historic-free-indirect) |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
-
-
-#### Models for other Languages
-
-Thanks to our contributors we are also able to distribute a couple of models for other languages.
-
-| ID | Task | Training Dataset | Accuracy | Contributor |
-| -------------    | ------------- |------------- |------------- |------------- |
-| 'fr-ner' | Named Entity Recognition |  [WikiNER (aij-wikiner-fr-wp3)](https://github.com/dice-group/FOX/tree/master/input/Wikiner)  |  **95.57** (F1) | [mhham](https://github.com/mhham) |
-| 'nl-ner' | Named Entity Recognition |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **89.56** (F1) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/conll2002-ner-dutch) |
-| 'da-ner' | Named Entity Recognition |  [Danish NER dataset](https://github.com/alexandrainst/danlp)  |   | [AmaliePauli](https://github.com/AmaliePauli) |
-| 'da-pos' | Named Entity Recognition |  [Danish Dependency Treebank](https://github.com/UniversalDependencies/UD_Danish-DDT/blob/master/README.md)  |  | [AmaliePauli](https://github.com/AmaliePauli) |
-| 'ml-pos' | Part-of-Speech Tagging (fine-grained) |  30000 Malayalam sentences  | **83** | [sabiqueqb](https://github.com/sabiqueqb) |
-| 'ml-upos' | Part-of-Speech Tagging (universal)| 30000 Malayalam sentences | **87** | [sabiqueqb](https://github.com/sabiqueqb) |
+| ID | Task | Language | Training Dataset | Accuracy | Contributor / Notes |
+| -------------    | ------------- |------------- |------------- |------------- | ------------ |
+| '[de-ner](https://huggingface.co/flair/ner-german)' | NER (4-class) |  German | Conll-03  |  **87.94** (F1) | |
+| '[de-ner-large](https://huggingface.co/flair/ner-german-large)' | NER (4-class) |  German | Conll-03  |  **92,31** (F1) | |
+| 'de-ner-germeval' | NER (4-class) | German | Germeval  |  **84.90** (F1) | |
+| '[de-ner-legal](https://huggingface.co/flair/ner-german-legal)' | NER (legal text) |  German | [LER](https://github.com/elenanereiss/Legal-Entity-Recognition) dataset  |  **96.35** (F1) | |
+| 'de-pos' | POS-tagging | German | UD German - HDT  |  **98.50** (Accuracy) | |
+| 'de-pos-tweets' | POS-tagging | German | German Tweets  |  **93.06** (Accuracy) | [stefan-it](https://github.com/stefan-it/flair-experiments/tree/master/pos-twitter-german) |
+| 'de-historic-indirect' | historical indirect speech | German | @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
+| 'de-historic-direct' | historical direct speech |  German | @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
+| 'de-historic-reported' | historical reported speech | German |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
+| 'de-historic-free-indirect' | historical free-indirect speech | German | @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
+| '[fr-ner](https://huggingface.co/flair/ner-french)' | NER (4-class) | French | [WikiNER (aij-wikiner-fr-wp3)](https://github.com/dice-group/FOX/tree/master/input/Wikiner)  |  **95.57** (F1) | [mhham](https://github.com/mhham) |
+| '[es-ner-large](https://huggingface.co/flair/ner-spanish-large)' | NER (4-class) | Spanish | CoNLL-03  |  **90,54** (F1) | [mhham](https://github.com/mhham) |
+| '[nl-ner](https://huggingface.co/flair/ner-dutch)' | NER (4-class) | Dutch |  [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **92.58** (F1) |  |
+| '[nl-ner-large](https://huggingface.co/flair/ner-dutch-large)' | NER (4-class) | Dutch | Conll-03 |  **95,25** (F1) |  |
+| 'nl-ner-rnn' | NER (4-class) | Dutch | [CoNLL 2002](https://www.clips.uantwerpen.be/conll2002/ner/)  |  **90.79** (F1) | |
+| '[da-ner](https://huggingface.co/flair/ner-danish)' | NER (4-class) | Danish |  [Danish NER dataset](https://github.com/alexandrainst/danlp)  |   | [AmaliePauli](https://github.com/AmaliePauli) |
+| 'da-pos' | POS-tagging | Danish | [Danish Dependency Treebank](https://github.com/UniversalDependencies/UD_Danish-DDT/blob/master/README.md)  |  | [AmaliePauli](https://github.com/AmaliePauli) |
+| 'ml-pos' | POS-tagging | Malayalam | 30000 Malayalam sentences  | **83** | [sabiqueqb](https://github.com/sabiqueqb) |
+| 'ml-upos' | POS-tagging | Malayalam | 30000 Malayalam sentences | **87** | [sabiqueqb](https://github.com/sabiqueqb) |
+| 'pt-pos-clinical' | POS-tagging | Portuguese | [PUCPR](https://github.com/HAILab-PUCPR/portuguese-clinical-pos-tagger) | **92.39** | [LucasFerroHAILab](https://github.com/LucasFerroHAILab) for clinical texts |
 
 
 ### Tagging a German sentence
@@ -248,17 +262,20 @@ list of `Sentence` objects to the `.predict()` method.
 For instance, you can use the sentence splitter of segtok to split your text:
 
 ```python
+from flair.models import SequenceTagger
+from flair.tokenization import SegtokSentenceSplitter
 
-# your text of many sentences
+# example text with many sentences
 text = "This is a sentence. This is another sentence. I love Berlin."
 
-# use a library to split into sentences
-from segtok.segmenter import split_single
+# initialize sentence splitter
+splitter = SegtokSentenceSplitter()
 
-sentences = [Sentence(sent, use_tokenizer=True) for sent in split_single(text)]
+# use splitter to split text into list of sentences
+sentences = splitter.split(text)
 
-# predict tags for list of sentences
-tagger: SequenceTagger = SequenceTagger.load('ner')
+# predict tags for sentences
+tagger = SequenceTagger.load('ner')
 tagger.predict(sentences)
 
 # iterate through sentences and print predicted labels
@@ -273,7 +290,7 @@ tagger. Depending on your resources, you might want to play around with this par
 ## Tagging with Pre-Trained Text Classification Models
 
 Let's use a pre-trained model for detecting positive or negative comments.
-This model was trained over the [IMDB](http://ai.stanford.edu/~amaas/data/sentiment/) dataset and can recognize positive
+This model was trained over a mix of product and movie review datasets and can recognize positive
 and negative sentiment in English text.
 
 ```python
@@ -315,10 +332,17 @@ are provided:
 | ------------- | ---- | ------------- |------------- |------------- |
 | 'sentiment' | English | detecting positive and negative sentiment (transformer-based) | movie and product reviews |  **98.87** |
 | 'sentiment-fast' | English | detecting positive and negative sentiment (RNN-based) | movie and product reviews |  **96.83**|
+| 'communicative-functions' | English | detecting function of sentence in research paper (BETA) | scholarly papers |  |
 | 'de-offensive-language' | German | detecting offensive language | [GermEval 2018 Task 1](https://projects.fzai.h-da.de/iggsa/projekt/) |  **75.71** (Macro F1) |
 
+## Tagging new classes without training data
+
+In case you need to label classes that are not included you can also try
+our pre-trained zero-shot classifier TARS 
+(skip ahead to the [zero-shot tutorial](/resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)).
+TARS can perform text classification for arbitrary classes. 
 
 ## Next 
 
 Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) to embed your
-text.
+text. 
