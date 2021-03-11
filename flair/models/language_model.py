@@ -400,12 +400,10 @@ class LanguageModel(nn.Module):
         return perplexity
 
     def __getstate__(self):
-        # special handling for serializing transformer models
-        state_dict = self.state_dict()
 
-        # serialize the transformer models and the constructor arguments (but nothing else)
+        # serialize the language models and the constructor arguments (but nothing else)
         model_state = {
-            "state_dict": state_dict,
+            "state_dict": self.state_dict(),
 
             "dictionary": self.dictionary,
             "is_forward_lm": self.is_forward_lm,
@@ -421,7 +419,7 @@ class LanguageModel(nn.Module):
 
     def __setstate__(self, d):
 
-        # special handling for deserializing transformer models
+        # special handling for deserializing language models
         if "state_dict" in d:
 
             # re-initialize language model with constructor arguments
