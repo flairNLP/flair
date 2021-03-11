@@ -591,6 +591,7 @@ class FlairEmbeddings(TokenEmbeddings):
         if "chars_per_chunk" not in self.__dict__:
             self.chars_per_chunk = 512
 
+        # unless fine-tuning is set, do not set language model to train() in order to disallow language model dropout
         if not self.fine_tune:
             pass
         else:
