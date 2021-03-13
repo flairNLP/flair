@@ -3571,7 +3571,7 @@ class REDDIT_EL_GOLD(ColumnCorpus):
 
                     for row in posts: # Go through all the post titles
 
-                        txtout.writelines("-DOCSTART-\n") # Start each post with a -DOCSTART- token
+                        txtout.writelines("-DOCSTART-\n\n") # Start each post with a -DOCSTART- token
 
                         # Keep track of how many and which entity mentions does a given post title have
                         link_annots = [] # [start pos, end pos, wiki page title] of an entity mention
