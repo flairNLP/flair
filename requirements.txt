@@ -1,5 +1,5 @@
 python-dateutil>=2.6.1
-torch>=1.5.0,<=1.7.1
+torch>=1.5.0
 gensim>=3.4.0,<=3.8.3
 tqdm>=4.26.0
 segtok>=1.5.7
@@ -20,5 +20,4 @@ sentencepiece==0.1.95
 konoha<5.0.0,>=4.0.0
 janome
 gdown==3.12.2
-numpy<1.20.0
 huggingface-hub
