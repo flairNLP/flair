@@ -585,6 +585,59 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
             child_module._apply(fn)
 
+    def __getstate__(self):
+
+        # serialize the language models and the constructor arguments (but nothing else)
+        model_state = {
+            "state_dict": self.state_dict(),
+
+            "embeddings": self.embeddings.embeddings,
+            "hidden_size": self.rnn.hidden_size,
+            "rnn_layers": self.rnn.num_layers,
+            "reproject_words": self.reproject_words,
+            "reproject_words_dimension": self.embeddings_dimension,
+            "bidirectional": self.bidirectional,
+            "dropout": self.dropout.p if self.dropout is not None else 0.,
+            "word_dropout": self.word_dropout.p if self.word_dropout is not None else 0.,
+            "locked_dropout": self.locked_dropout.p if self.locked_dropout is not None else 0.,
+            "rnn_type": self.rnn_type,
+            "fine_tune": not self.static_embeddings,
+        }
+
+        return model_state
+
+    def __setstate__(self, d):
+
+        # special handling for deserializing language models
+        if "state_dict" in d:
+
+            # re-initialize language model with constructor arguments
+            language_model = DocumentRNNEmbeddings(
+                embeddings=d['embeddings'],
+                hidden_size=d['hidden_size'],
+                rnn_layers=d['rnn_layers'],
+                reproject_words=d['reproject_words'],
+                reproject_words_dimension=d['reproject_words_dimension'],
+                bidirectional=d['bidirectional'],
+                dropout=d['dropout'],
+                word_dropout=d['word_dropout'],
+                locked_dropout=d['locked_dropout'],
+                rnn_type=d['rnn_type'],
+                fine_tune=d['fine_tune'],
+            )
+
+            language_model.load_state_dict(d['state_dict'])
+
+            # copy over state dictionary to self
+            for key in language_model.__dict__.keys():
+                self.__dict__[key] = language_model.__dict__[key]
+
+            # set the language model to eval() by default (this is necessary since FlairEmbeddings "protect" the LM
+            # in their "self.train()" method)
+            self.eval()
+
+        else:
+            self.__dict__ = d
 
 class DocumentLMEmbeddings(DocumentEmbeddings):
     def __init__(self, flair_embeddings: List[FlairEmbeddings]):

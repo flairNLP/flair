@@ -481,7 +481,7 @@ class TextClassifier(flair.nn.Model):
             [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_4.pt"]
         )
         model_map["sentiment-fast"] = "/".join(
-            [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn.pt"]
+            [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn_v8.pt"]
         )
 
         # Communicative Functions Model
