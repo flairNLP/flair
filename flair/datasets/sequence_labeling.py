@@ -666,6 +666,84 @@ class ICELANDIC_NER(ColumnCorpus):
             **corpusargs,
         )
 
+class JAPANESE_NER(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            **corpusargs,
+    ):
+        """
+        Initialize the Hironsan/IOB2 corpus for Japanese. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: 'text', 1: 'ner'}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data from github if necessary (hironsan.txt, ja.wikipedia.conll)
+        IOB2_path = "https://raw.githubusercontent.com/Hironsan/IOB2Corpus/master/"
+
+        # download files if not present locally
+        cached_path(f"{IOB2_path}hironsan.txt", data_folder / 'raw')
+        cached_path(f"{IOB2_path}ja.wikipedia.conll", data_folder / 'raw')
+
+        # we need to modify the original files by adding new lines after after the end of each sentence
+        train_data_file = data_folder / 'train.txt'
+        if not train_data_file.is_file():
+            self.__prepare_jap_wikinews_corpus(data_folder / 'raw' / "hironsan.txt", data_folder / 'train.txt')
+            self.__prepare_jap_wikipedia_corpus(data_folder / 'raw' / "ja.wikipedia.conll", data_folder / 'train.txt')
+
+        super(JAPANESE_NER, self).__init__(
+            data_folder,
+            columns,
+            train_file='train.txt',
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            **corpusargs,
+        )
+
+    @staticmethod
+    def __prepare_jap_wikipedia_corpus(file_in: Union[str, Path], file_out: Union[str, Path]):
+        with open(file_in, 'r') as f:
+            lines = f.readlines()
+        with open(file_out, 'a') as f:
+            for line in lines:
+                if (line[0] == "。"):
+                    f.write(line)
+                    f.write("\n")
+                elif (line[0] == "\n"):
+                    continue
+                else:
+                    f.write(line)
+
+    @staticmethod
+    def __prepare_jap_wikinews_corpus(file_in: Union[str, Path], file_out: Union[str, Path]):
+        with open(file_in, 'r') as f:
+            lines = f.readlines()
+        with open(file_out, 'a') as f:
+            for line in lines:
+                sp_line = line.split("\t")
+                if (sp_line[0] == "\n"):
+                    f.write("\n")
+                else:
+                    f.write(sp_line[0] + "\t" + sp_line[len(sp_line) - 1])
+
 class STACKOVERFLOW_NER(ColumnCorpus):
     def __init__(
             self,
