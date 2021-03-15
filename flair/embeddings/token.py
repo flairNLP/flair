@@ -1275,7 +1275,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         if "config_state_dict" in d:
 
             # load transformer model
-            config_class = CONFIG_MAPPING[d["config_state_dict"]["model_type"]]
+            model_type = d["config_state_dict"]["model_type"] if "model_type" in d["config_state_dict"] else "bert"
+            config_class = CONFIG_MAPPING[model_type]
             loaded_config = config_class.from_dict(d["config_state_dict"])
 
             # constructor arguments
