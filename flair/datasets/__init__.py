@@ -14,12 +14,14 @@ from .sequence_labeling import BUSINESS_HUN
 from .sequence_labeling import CONLL_03
 from .sequence_labeling import CONLL_03_GERMAN
 from .sequence_labeling import CONLL_03_DUTCH
+from .sequence_labeling import ICELANDIC_NER
 from .sequence_labeling import CONLL_03_SPANISH
 from .sequence_labeling import CONLL_2000
 from .sequence_labeling import DANE
 from .sequence_labeling import EUROPARL_NER_GERMAN
 from .sequence_labeling import GERMEVAL_14
 from .sequence_labeling import INSPEC
+from .sequence_labeling import JAPANESE_NER
 from .sequence_labeling import LER_GERMAN
 from .sequence_labeling import MIT_MOVIE_NER_SIMPLE
 from .sequence_labeling import MIT_MOVIE_NER_COMPLEX
@@ -56,6 +58,7 @@ from .sequence_labeling import WNUT_17
 from .sequence_labeling import WSD_UFSAC
 from .sequence_labeling import WNUT_2020_NER
 from .sequence_labeling import XTREME
+from .sequence_labeling import REDDIT_EL_GOLD
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus

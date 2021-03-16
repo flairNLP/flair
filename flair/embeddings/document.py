@@ -217,7 +217,8 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         if "config_state_dict" in d:
 
             # load transformer model
-            config_class = CONFIG_MAPPING[d["config_state_dict"]["model_type"]]
+            model_type = d["config_state_dict"]["model_type"] if "model_type" in d["config_state_dict"] else "bert"
+            config_class = CONFIG_MAPPING[model_type]
             loaded_config = config_class.from_dict(d["config_state_dict"])
 
             # constructor arguments
@@ -585,6 +586,59 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
             child_module._apply(fn)
 
+    def __getstate__(self):
+
+        # serialize the language models and the constructor arguments (but nothing else)
+        model_state = {
+            "state_dict": self.state_dict(),
+
+            "embeddings": self.embeddings.embeddings,
+            "hidden_size": self.rnn.hidden_size,
+            "rnn_layers": self.rnn.num_layers,
+            "reproject_words": self.reproject_words,
+            "reproject_words_dimension": self.embeddings_dimension,
+            "bidirectional": self.bidirectional,
+            "dropout": self.dropout.p if self.dropout is not None else 0.,
+            "word_dropout": self.word_dropout.p if self.word_dropout is not None else 0.,
+            "locked_dropout": self.locked_dropout.p if self.locked_dropout is not None else 0.,
+            "rnn_type": self.rnn_type,
+            "fine_tune": not self.static_embeddings,
+        }
+
+        return model_state
+
+    def __setstate__(self, d):
+
+        # special handling for deserializing language models
+        if "state_dict" in d:
+
+            # re-initialize language model with constructor arguments
+            language_model = DocumentRNNEmbeddings(
+                embeddings=d['embeddings'],
+                hidden_size=d['hidden_size'],
+                rnn_layers=d['rnn_layers'],
+                reproject_words=d['reproject_words'],
+                reproject_words_dimension=d['reproject_words_dimension'],
+                bidirectional=d['bidirectional'],
+                dropout=d['dropout'],
+                word_dropout=d['word_dropout'],
+                locked_dropout=d['locked_dropout'],
+                rnn_type=d['rnn_type'],
+                fine_tune=d['fine_tune'],
+            )
+
+            language_model.load_state_dict(d['state_dict'])
+
+            # copy over state dictionary to self
+            for key in language_model.__dict__.keys():
+                self.__dict__[key] = language_model.__dict__[key]
+
+            # set the language model to eval() by default (this is necessary since FlairEmbeddings "protect" the LM
+            # in their "self.train()" method)
+            self.eval()
+
+        else:
+            self.__dict__ = d
 
 class DocumentLMEmbeddings(DocumentEmbeddings):
     def __init__(self, flair_embeddings: List[FlairEmbeddings]):
@@ -688,3 +742,162 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         """Returns the length of the embedding vector."""
         return self.model.get_sentence_embedding_dimension()
+
+
+class DocumentCNNEmbeddings(DocumentEmbeddings):
+    def __init__(
+            self,
+            embeddings: List[TokenEmbeddings],
+            kernels=((100, 3), (100, 4), (100, 5)),
+            reproject_words: bool = True,
+            reproject_words_dimension: int = None,
+            dropout: float = 0.5,
+            word_dropout: float = 0.0,
+            locked_dropout: float = 0.0,
+            fine_tune: bool = True,
+    ):
+        """The constructor takes a list of embeddings to be combined.
+        :param embeddings: a list of token embeddings
+        :param kernels: list of (number of kernels, kernel size)
+        :param reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear
+        layer before putting them into the rnn or not
+        :param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
+        dimension as before will be taken.
+        :param dropout: the dropout value to be used
+        :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
+        :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
+        """
+        super().__init__()
+
+        self.embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embeddings)
+        self.length_of_all_token_embeddings: int = self.embeddings.embedding_length
+
+        self.kernels = kernels
+        self.reproject_words = reproject_words
+
+        self.static_embeddings = False if fine_tune else True
+
+        self.embeddings_dimension: int = self.length_of_all_token_embeddings
+        if self.reproject_words and reproject_words_dimension is not None:
+            self.embeddings_dimension = reproject_words_dimension
+
+        self.word_reprojection_map = torch.nn.Linear(
+            self.length_of_all_token_embeddings, self.embeddings_dimension
+        )
+
+        # CNN
+        self.__embedding_length: int = sum([kernel_num for kernel_num, kernel_size in self.kernels])
+        self.convs = torch.nn.ModuleList(
+            [
+                torch.nn.Conv1d(self.embeddings_dimension, kernel_num, kernel_size) for kernel_num, kernel_size in self.kernels
+            ]
+        )
+        self.pool = torch.nn.AdaptiveMaxPool1d(1)
+
+        self.name = "document_cnn"
+
+        # dropouts
+        self.dropout = torch.nn.Dropout(dropout) if dropout > 0.0 else None
+        self.locked_dropout = (
+            LockedDropout(locked_dropout) if locked_dropout > 0.0 else None
+        )
+        self.word_dropout = WordDropout(word_dropout) if word_dropout > 0.0 else None
+
+        torch.nn.init.xavier_uniform_(self.word_reprojection_map.weight)
+
+        self.to(flair.device)
+
+        self.eval()
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: Union[List[Sentence], Sentence]):
+        """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
+         only if embeddings are non-static."""
+
+        # TODO: remove in future versions
+        if not hasattr(self, "locked_dropout"):
+            self.locked_dropout = None
+        if not hasattr(self, "word_dropout"):
+            self.word_dropout = None
+
+        if type(sentences) is Sentence:
+            sentences = [sentences]
+
+        self.zero_grad()  # is it necessary?
+
+        # embed words in the sentence
+        self.embeddings.embed(sentences)
+
+        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        longest_token_sequence_in_batch: int = max(lengths)
+
+        pre_allocated_zero_tensor = torch.zeros(
+            self.embeddings.embedding_length * longest_token_sequence_in_batch,
+            dtype=torch.float,
+            device=flair.device,
+        )
+
+        all_embs: List[torch.Tensor] = list()
+        for sentence in sentences:
+            all_embs += [
+                emb for token in sentence for emb in token.get_each_embedding()
+            ]
+            nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
+
+            if nb_padding_tokens > 0:
+                t = pre_allocated_zero_tensor[
+                    : self.embeddings.embedding_length * nb_padding_tokens
+                    ]
+                all_embs.append(t)
+
+        sentence_tensor = torch.cat(all_embs).view(
+            [
+                len(sentences),
+                longest_token_sequence_in_batch,
+                self.embeddings.embedding_length,
+            ]
+        )
+
+        # before-RNN dropout
+        if self.dropout:
+            sentence_tensor = self.dropout(sentence_tensor)
+        if self.locked_dropout:
+            sentence_tensor = self.locked_dropout(sentence_tensor)
+        if self.word_dropout:
+            sentence_tensor = self.word_dropout(sentence_tensor)
+
+        # reproject if set
+        if self.reproject_words:
+            sentence_tensor = self.word_reprojection_map(sentence_tensor)
+
+        # push CNN
+        x = sentence_tensor
+        x = x.permute(0, 2, 1)
+
+        rep = [self.pool(torch.nn.functional.relu(conv(x))) for conv in self.convs]
+        outputs = torch.cat(rep, 1)
+
+        outputs = outputs.reshape(outputs.size(0), -1)
+
+        # after-CNN dropout
+        if self.dropout:
+            outputs = self.dropout(outputs)
+        if self.locked_dropout:
+            outputs = self.locked_dropout(outputs)
+
+        # extract embeddings from CNN
+        for sentence_no, length in enumerate(lengths):
+            embedding = outputs[sentence_no]
+
+            if self.static_embeddings:
+                embedding = embedding.detach()
+
+            sentence = sentences[sentence_no]
+            sentence.set_embedding(self.name, embedding)
+
+    def _apply(self, fn):
+        for child_module in self.children():
+            child_module._apply(fn)

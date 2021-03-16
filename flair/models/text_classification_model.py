@@ -53,7 +53,7 @@ class TextClassifier(flair.nn.Model):
 
         super(TextClassifier, self).__init__()
 
-        self.document_embeddings: flair.embeddings.DocumentRNNEmbeddings = document_embeddings
+        self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
         self.label_dictionary: Dictionary = label_dictionary
         self.label_type = label_type
 
@@ -470,7 +470,7 @@ class TextClassifier(flair.nn.Model):
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
         model_map["de-offensive-language"] = "/".join(
-            [hu_path, "de-offensive-language", "germ-eval-2018-task-1-v0.5.pt"]
+            [hu_path, "de-offensive-language", "germ-eval-2018-task-1-v0.8.pt"]
         )
 
         # English sentiment models
@@ -481,7 +481,7 @@ class TextClassifier(flair.nn.Model):
             [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_4.pt"]
         )
         model_map["sentiment-fast"] = "/".join(
-            [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn.pt"]
+            [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn_v8.pt"]
         )
 
         # Communicative Functions Model
@@ -554,6 +554,15 @@ class TextPairClassifier(TextClassifier):
 
             nn.init.xavier_uniform_(self.decoder.weight)
 
+        # else, set separator to concatenate two sentences
+        else:
+            self.sep = ' '
+            if isinstance(self.document_embeddings, flair.embeddings.document.TransformerDocumentEmbeddings):
+                if self.document_embeddings.tokenizer.sep_token:
+                    self.sep = ' ' + str(self.document_embeddings.tokenizer.sep_token) + ' '
+                else:
+                    self.sep = ' [SEP] '
+
     def _get_state_dict(self):
         model_state = super()._get_state_dict()
         model_state["bi_mode"] = self.bi_mode
@@ -601,15 +610,12 @@ class TextPairClassifier(TextClassifier):
 
         else:  # concatenate the sentences and embed together
 
-            # TODO: Transformers use special separator symbols in the beginning and between elements
-            #      of datapair. Here should be a case dinstintion between the different transformers.
-            if isinstance(self.document_embeddings, flair.embeddings.document.TransformerDocumentEmbeddings):
-                sep = '[SEP]'
-            else:
-                sep = ' '
-
-            concatenated_sentences = [Sentence(pair.first.to_plain_string() + sep + pair.second.to_plain_string()) for
-                                      pair in datapairs]
+            concatenated_sentences = [
+                Sentence(
+                    pair.first.to_tokenized_string() + self.sep + pair.second.to_tokenized_string(),
+                    use_tokenizer=False
+                )
+                for pair in datapairs]
 
             self.document_embeddings.embed(concatenated_sentences)
 
@@ -896,11 +902,11 @@ class TARSClassifier(TextClassifier):
     def _init_model_with_state_dict(state):
         task_name = state["current_task"]
         print("init TARS")
-        
+
         # init new TARS classifier
         model = TARSClassifier(
             task_name,
-            label_dictionary = state["task_specific_attributes"][task_name]['label_dictionary'],
+            label_dictionary=state["task_specific_attributes"][task_name]['label_dictionary'],
             document_embeddings=state["tars_model"].document_embeddings,
             num_negative_labels_to_sample=state["num_negative_labels_to_sample"],
         )
