@@ -80,10 +80,12 @@ class ModelTrainer:
     def get_best_model_path(self, base_path, final_test=False):
         all_best_model_names = [filename for filename in os.listdir(base_path) if
                                      filename.startswith("best-model_epoch")]
+        # FB: It is not clear what final test means here, put a comment or change the name
         if self.epoch>1 or final_test:
             assert len(all_best_model_names)==1, "There should be exactly one best model saved at any epoch >1"
             return os.path.join(base_path, all_best_model_names[0])
         else:
+            # Also no strong assert here
             assert len(all_best_model_names) == 0, "There should be no best model saved at epoch 1"
             return ""
 
