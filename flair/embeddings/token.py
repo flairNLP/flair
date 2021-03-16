@@ -409,8 +409,8 @@ class FlairEmbeddings(TokenEmbeddings):
             "multi-backward": f"{hu_path}/lm-jw300-backward-v0.1.pt",
             "multi-v0-forward": f"{hu_path}/lm-multi-forward-v0.1.pt",
             "multi-v0-backward": f"{hu_path}/lm-multi-backward-v0.1.pt",
-            "multi-v0-forward-fast": f"{hu_path}/lm-multi-forward-fast-v0.1.pt",
-            "multi-v0-backward-fast": f"{hu_path}/lm-multi-backward-fast-v0.1.pt",
+            "multi-forward-fast": f"{hu_path}/lm-multi-forward-fast-v0.1.pt",
+            "multi-backward-fast": f"{hu_path}/lm-multi-backward-fast-v0.1.pt",
             # English models
             "en-forward": f"{hu_path}/news-forward-0.4.1.pt",
             "en-backward": f"{hu_path}/news-backward-0.4.1.pt",
@@ -591,6 +591,7 @@ class FlairEmbeddings(TokenEmbeddings):
         if "chars_per_chunk" not in self.__dict__:
             self.chars_per_chunk = 512
 
+        # unless fine-tuning is set, do not set language model to train() in order to disallow language model dropout
         if not self.fine_tune:
             pass
         else:
@@ -1274,7 +1275,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         if "config_state_dict" in d:
 
             # load transformer model
-            config_class = CONFIG_MAPPING[d["config_state_dict"]["model_type"]]
+            model_type = d["config_state_dict"]["model_type"] if "model_type" in d["config_state_dict"] else "bert"
+            config_class = CONFIG_MAPPING[model_type]
             loaded_config = config_class.from_dict(d["config_state_dict"])
 
             # constructor arguments

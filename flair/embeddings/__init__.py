@@ -26,6 +26,7 @@ from .document import DocumentPoolEmbeddings
 from .document import DocumentTFIDFEmbeddings
 from .document import DocumentRNNEmbeddings
 from .document import DocumentLMEmbeddings
+from .document import DocumentCNNEmbeddings
 from .document import SentenceTransformerDocumentEmbeddings
 
 # Expose image embedding classes
