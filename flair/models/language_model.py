@@ -399,6 +399,54 @@ class LanguageModel(nn.Module):
 
         return perplexity
 
+    def __getstate__(self):
+
+        # serialize the language models and the constructor arguments (but nothing else)
+        model_state = {
+            "state_dict": self.state_dict(),
+
+            "dictionary": self.dictionary,
+            "is_forward_lm": self.is_forward_lm,
+            "hidden_size": self.hidden_size,
+            "nlayers": self.nlayers,
+            "embedding_size": self.embedding_size,
+            "nout": self.nout,
+            "document_delimiter": self.document_delimiter,
+            "dropout": self.dropout,
+        }
+
+        return model_state
+
+    def __setstate__(self, d):
+
+        # special handling for deserializing language models
+        if "state_dict" in d:
+
+            # re-initialize language model with constructor arguments
+            language_model = LanguageModel(
+                dictionary=d['dictionary'],
+                is_forward_lm=d['is_forward_lm'],
+                hidden_size=d['hidden_size'],
+                nlayers=d['nlayers'],
+                embedding_size=d['embedding_size'],
+                nout=d['nout'],
+                document_delimiter=d['document_delimiter'],
+                dropout=d['dropout'],
+            )
+
+            language_model.load_state_dict(d['state_dict'])
+
+            # copy over state dictionary to self
+            for key in language_model.__dict__.keys():
+                self.__dict__[key] = language_model.__dict__[key]
+
+            # set the language model to eval() by default (this is necessary since FlairEmbeddings "protect" the LM
+            # in their "self.train()" method)
+            self.eval()
+
+        else:
+            self.__dict__ = d
+
     def _apply(self, fn):
 
         # models that were serialized using torch versions older than 1.4.0 lack the _flat_weights_names attribute
