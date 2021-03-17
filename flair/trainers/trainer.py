@@ -7,7 +7,7 @@ import datetime
 import sys
 import inspect
 import os
-
+import warnings
 import torch
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
@@ -77,15 +77,29 @@ class ModelTrainer:
             self.save_checkpoint(
                 base_path / f"best-checkpoint_epoch{self.epoch}.pt")
 
-    def get_best_model_path(self, base_path, final_test=False):
+    @staticmethod
+    def check_for_and_delete_previous_best_models(base_path, save_checkpoint):
+        all_best_model_names = [filename for filename in os.listdir(base_path) if
+                                filename.startswith("best-model_epoch")]
+        if len(all_best_model_names) != 0:
+            warnings.warn(
+                "There should be no best model saved at epoch 1 except there is a model from previous trainings in your training folder. All previous best models will be deleted.")
+        for single_model in all_best_model_names:
+            previous_best_path = os.path.join(base_path, single_model)
+            if os.path.exists(previous_best_path):
+                os.remove(previous_best_path)
+            if save_checkpoint:
+                best_checkpoint_path = previous_best_path.replace("model", "checkpoint")
+                if os.path.exists(best_checkpoint_path):
+                    os.remove(best_checkpoint_path)
+
+    def get_best_model_path(self, base_path, neglect_epoch=False):
         all_best_model_names = [filename for filename in os.listdir(base_path) if
                                      filename.startswith("best-model_epoch")]
-        # FB: It is not clear what final test means here, put a comment or change the name
-        if self.epoch>1 or final_test:
+        if self.epoch>1 or neglect_epoch:
             assert len(all_best_model_names)==1, "There should be exactly one best model saved at any epoch >1"
             return os.path.join(base_path, all_best_model_names[0])
         else:
-            # Also no strong assert here
             assert len(all_best_model_names) == 0, "There should be no best model saved at epoch 1"
             return ""
 
@@ -223,6 +237,9 @@ class ModelTrainer:
         if isinstance(self.model, SequenceTagger) and self.model.weight_dict and self.model.use_crf:
             log_line(log)
             log.warning(f'WARNING: Specified class weights will not take effect when using CRF')
+
+        # check for previously saved best models in the current training folder and delete them
+        self.check_for_and_delete_previous_best_models(base_path, save_best_checkpoints)
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False
@@ -695,9 +712,9 @@ class ModelTrainer:
 
         self.model.eval()
 
-        if (os.path.exists(self.get_best_model_path(base_path, final_test=True))):
+        if (os.path.exists(self.get_best_model_path(base_path, neglect_epoch=True))):
             log.info("Testing using best model ...")
-            self.model = self.model.load(self.get_best_model_path(base_path, final_test=True))
+            self.model = self.model.load(self.get_best_model_path(base_path, neglect_epoch=True))
         else:
             log.info("Testing using last state of model ...")
 
