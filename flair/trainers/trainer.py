@@ -61,6 +61,48 @@ class ModelTrainer:
         self.epoch: int = epoch
         self.use_tensorboard: bool = use_tensorboard
 
+    def initialize_best_dev_score(self,log_dev):
+        """
+        Initialize the best score the model has seen so far.
+        The score is the loss if we don't have dev data and main_score_type otherwise.
+        :param log_dev: whether dev data is available
+        """
+        if log_dev:
+            self.score_type_for_best_model_saving = self.main_score_type
+            self.score_mode_for_best_model_saving = "max"
+            if self.score_type_for_best_model_saving[1] in ["f1-score", "precision", "recall", "support"]:
+                self.best_dev_score_seen = 0
+            else: raise Exception("Unknown metric for calculation of best model on validation set.")
+        else:
+            self.score_type_for_best_model_saving = "loss"
+            self.score_mode_for_best_model_saving = "min"
+            self.best_dev_score_seen = 100000000000
+
+    def check_for_best_score(self,score_value_for_best_model_saving):
+        """
+        Check whether score_value_for_best_model_saving is better than the best score the trainer has seen so far.
+        The score is the loss if we don't have dev data and main_score_type otherwise.
+        :param score_value_for_best_model_saving: The current epoch score
+        :return: boolean indicating whether score_value_for_best_model_saving is better than the best score the trainer has seen so far
+        """
+
+        if self.score_mode_for_best_model_saving=="max":
+            if self.best_dev_score_seen<score_value_for_best_model_saving:
+                found_best_model = True
+                self.best_dev_score_seen=score_value_for_best_model_saving
+            else:
+                found_best_model = False
+        else:
+            if self.best_dev_score_seen>score_value_for_best_model_saving:
+                found_best_model = True
+                self.best_dev_score_seen=score_value_for_best_model_saving
+            else:
+                found_best_model = False
+        return found_best_model
+
+
+
+
     def save_best_model(self, base_path, save_checkpoint):
         # delete previous best model
         previous_best_path = self.get_best_model_path(base_path)
@@ -137,6 +179,7 @@ class ModelTrainer:
             eval_on_train_shuffle=False,
             save_model_each_k_epochs: int = 0,
             save_best_checkpoints=False,
+            main_score_type=("micro avg", 'f1-score'),
             **kwargs,
     ) -> dict:
         """
@@ -174,10 +217,12 @@ class ModelTrainer:
         be saved each 5 epochs. Default is 0 which means no model saving.
         :param save_model_epoch_step: Each save_model_epoch_step'th epoch the thus far trained model will be saved
         :param save_best_checkpoints: If True, in addition to saving the best model also the corresponding checkpoint is saved
+        :param main_score_type: Type of metric to use for best model tracking and learning rate scheduling (if dev data is available, otherwise loss will be used)
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
 
+        self.main_score_type=main_score_type
         if self.use_tensorboard:
             try:
                 from torch.utils.tensorboard import SummaryWriter
@@ -249,6 +294,7 @@ class ModelTrainer:
             else False
         )
         log_dev = False if train_with_dev or not self.corpus.dev else True
+        self.initialize_best_dev_score(log_dev)
         log_train_part = (
             True
             if (eval_on_train_fraction == "dev" or eval_on_train_fraction > 0.0)
@@ -496,6 +542,7 @@ class ModelTrainer:
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
+                        main_score_type=self.main_score_type
                     )
                     result_line += f"\t{train_eval_result.log_line}"
 
@@ -508,6 +555,7 @@ class ModelTrainer:
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
+                        main_score_type=self.main_score_type
                     )
                     result_line += (
                         f"\t{train_part_loss}\t{train_part_eval_result.log_line}"
@@ -523,6 +571,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / "dev.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
+                        main_score_type=self.main_score_type
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
                     log.info(
@@ -551,6 +600,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / "test.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
+                        main_score_type=self.main_score_type
                     )
                     result_line += f"\t{test_loss}\t{test_eval_result.log_line}"
                     log.info(
@@ -637,9 +687,7 @@ class ModelTrainer:
                 if (
                         (not train_with_dev or anneal_with_restarts or anneal_with_prestarts)
                         and not param_selection_mode
-                        and not isinstance(lr_scheduler, OneCycleLR)
-                        and current_score == lr_scheduler.best
-                        and bad_epochs == 0
+                        and self.check_for_best_score(current_score)
                 ):
                     print("saving best model")
                     self.save_best_model(base_path, save_checkpoint=save_best_checkpoints)
@@ -724,6 +772,7 @@ class ModelTrainer:
             num_workers=num_workers,
             out_path=base_path / "test.tsv",
             embedding_storage_mode="none",
+            main_score_type=self.main_score_type
         )
 
         test_results: Result = test_results
@@ -742,6 +791,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / f"{subcorpus.name}-test.tsv",
                         embedding_storage_mode="none",
+                        main_score_type=self.main_score_type
                     )
                     log.info(subcorpus.name)
                     log.info(subcorpus_results.log_line)
