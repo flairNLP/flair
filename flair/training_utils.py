@@ -18,7 +18,7 @@ from scipy.stats import pearsonr, spearmanr
 
 class Result(object):
     def __init__(
-        self, main_score: float, log_header: str, log_line: str, detailed_results: str, classification_report:dict
+        self, main_score: float, log_header: str, log_line: str, detailed_results: str, classification_report:dict = None
     ):
         self.main_score: float = main_score
         self.log_header: str = log_header
