@@ -133,14 +133,14 @@ class ModelTrainer:
         all_best_model_names = [filename for filename in os.listdir(base_path) if
                                      filename.startswith("best-model_epoch")]
         if check_model_existance:
-            if len(all_best_model_names)>0:
-                assert len(all_best_model_names)==1, "There should be at most one best model saved at any time."
+            if len(all_best_model_names) > 0:
+                assert len(all_best_model_names) == 1, "There should be at most one best model saved at any time."
                 return os.path.join(base_path, all_best_model_names[0])
             else:
                 return ""
         else:
-            if self.epoch>1:
-                assert len(all_best_model_names)==1, "There should be exactly one best model saved at any epoch >1"
+            if self.epoch > 1:
+                assert len(all_best_model_names) == 1, "There should be exactly one best model saved at any epoch > 1"
                 return os.path.join(base_path, all_best_model_names[0])
             else:
                 assert len(all_best_model_names) == 0, "There should be no best model saved at epoch 1"
@@ -180,6 +180,8 @@ class ModelTrainer:
             eval_on_train_shuffle=False,
             save_model_each_k_epochs: int = 0,
             save_best_checkpoints=False,
+            #FB : rename into classification_metrics (or something to indicate it is only for classifier)
+            #FB : it would be super to put macro f1 here again (it is very relevant to classification problems)
             main_score_type=("micro avg", 'f1-score'),
             **kwargs,
     ) -> dict:
@@ -226,12 +228,12 @@ class ModelTrainer:
             self.main_score_type=main_score_type
         else:
             if main_score_type is not None:
+                #FB: Too long warning: "Classification score only implemented for text classifier. Defaulting to main score.
                 warnings.warn("Choosing a main score type during training is currently only possible for text_classification_model. Will use default main score type instead of specified one.")
             self.main_score_type = None
         if self.use_tensorboard:
             try:
                 from torch.utils.tensorboard import SummaryWriter
-
                 writer = SummaryWriter()
             except:
                 log_line(log)
