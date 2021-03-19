@@ -104,6 +104,7 @@ class TextRegressor(flair.models.TextClassifier):
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 32,
             num_workers: int = 8,
+            **kwargs
     ) -> (Result, float):
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
