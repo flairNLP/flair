@@ -32,7 +32,7 @@ from flair.training_utils import (
     AnnealOnPlateau,
 )
 from torch.optim.lr_scheduler import OneCycleLR
-from flair.models import SequenceTagger
+from flair.models import SequenceTagger, TextClassifier
 import random
 
 log = logging.getLogger("flair")
@@ -217,12 +217,16 @@ class ModelTrainer:
         be saved each 5 epochs. Default is 0 which means no model saving.
         :param save_model_epoch_step: Each save_model_epoch_step'th epoch the thus far trained model will be saved
         :param save_best_checkpoints: If True, in addition to saving the best model also the corresponding checkpoint is saved
-        :param main_score_type: Type of metric to use for best model tracking and learning rate scheduling (if dev data is available, otherwise loss will be used)
+        :param main_score_type: Type of metric to use for best model tracking and learning rate scheduling (if dev data is available, otherwise loss will be used), currently only applicable for text_classification_model
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
-
-        self.main_score_type=main_score_type
+        if isinstance(self.model, TextClassifier):
+            self.main_score_type=main_score_type
+        else:
+            if main_score_type is not None:
+                warnings.warn("Choosing a main score type during training is currently only possible for text_classification_model. Will use default main score type instead of specified one.")
+            self.main_score_type = None
         if self.use_tensorboard:
             try:
                 from torch.utils.tensorboard import SummaryWriter
