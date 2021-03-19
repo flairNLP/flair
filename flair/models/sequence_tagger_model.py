@@ -518,8 +518,7 @@ class SequenceTagger(flair.nn.Model):
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 32,
             num_workers: int = 8,
-            wsd_evaluation: bool = False,
-            main_score_type: Tuple[str, str] = ("micro avg", 'f1-score')
+            wsd_evaluation: bool = False
     ) -> (Result, float):
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
@@ -605,9 +604,6 @@ class SequenceTagger(flair.nn.Model):
         classification_report = metrics.classification_report(y_true, y_pred, digits=4, target_names=target_names,
                                                               zero_division=1, labels=labels_to_report)
 
-        classification_report_dict = metrics.classification_report(y_true, y_pred, digits=4,
-                                                                   target_names=target_names, zero_division=0,
-                                                                   output_dict=True)
 
         # get scores
         micro_f_score = round(
@@ -629,11 +625,10 @@ class SequenceTagger(flair.nn.Model):
         log_line = f"\t{accuracy_score}"
 
         result = Result(
-            main_score=classification_report_dict[main_score_type[0]][main_score_type[1]],
+            main_score=micro_f_score,
             log_line=log_line,
             log_header=log_header,
-            detailed_results=detailed_result,
-            classification_report=classification_report_dict
+            detailed_results=detailed_result
         )
         return result, eval_loss
 
