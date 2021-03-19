@@ -745,7 +745,7 @@ class IMDB(ClassificationCorpus):
             base_path: Path = Path(base_path)
 
         # this dataset name
-        dataset_name = self.__class__.__name__.lower() + '_v2'
+        dataset_name = self.__class__.__name__.lower() + '_v3'
 
         if rebalance_corpus:
             dataset_name = dataset_name + '-rebalanced'
@@ -783,7 +783,7 @@ class IMDB(ClassificationCorpus):
                                 if f"{dataset}/{label}" in m.name
                             ],
                         )
-                        with open(f"{data_path}/train-all.txt", "at") as f_p:
+                        with open(f"{data_path}/train.txt", "at") as f_p:
                             current_path = data_path / "aclImdb" / dataset / label
                             for file_name in current_path.iterdir():
                                 if file_name.is_file() and file_name.name.endswith(
