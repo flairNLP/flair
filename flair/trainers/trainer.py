@@ -68,13 +68,10 @@ class ModelTrainer:
         :param log_dev: whether dev data is available
         """
         if log_dev:
-            self.score_type_for_best_model_saving = self.main_score_type
+            # assume that the score used on the dev set should be maximized and is >=0
             self.score_mode_for_best_model_saving = "max"
-            if self.score_type_for_best_model_saving[1] in ["f1-score", "precision", "recall", "support"]:
-                self.best_dev_score_seen = 0
-            else: raise Exception("Unknown metric for calculation of best model on validation set.")
+            self.best_dev_score_seen = 0
         else:
-            self.score_type_for_best_model_saving = "loss"
             self.score_mode_for_best_model_saving = "min"
             self.best_dev_score_seen = 100000000000
 
