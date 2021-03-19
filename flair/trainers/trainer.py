@@ -97,9 +97,6 @@ class ModelTrainer:
                 found_best_model = False
         return found_best_model
 
-
-
-
     def save_best_model(self, base_path, save_checkpoint):
         # delete previous best model
         previous_best_path = self.get_best_model_path(base_path)
@@ -132,15 +129,22 @@ class ModelTrainer:
                 if os.path.exists(best_checkpoint_path):
                     os.remove(best_checkpoint_path)
 
-    def get_best_model_path(self, base_path, neglect_epoch=False):
+    def get_best_model_path(self, base_path, check_model_existance=False):
         all_best_model_names = [filename for filename in os.listdir(base_path) if
                                      filename.startswith("best-model_epoch")]
-        if self.epoch>1 or neglect_epoch:
-            assert len(all_best_model_names)==1, "There should be exactly one best model saved at any epoch >1"
-            return os.path.join(base_path, all_best_model_names[0])
+        if check_model_existance:
+            if len(all_best_model_names)>0:
+                assert len(all_best_model_names)==1, "There should be at most one best model saved at any time."
+                return os.path.join(base_path, all_best_model_names[0])
+            else:
+                return ""
         else:
-            assert len(all_best_model_names) == 0, "There should be no best model saved at epoch 1"
-            return ""
+            if self.epoch>1:
+                assert len(all_best_model_names)==1, "There should be exactly one best model saved at any epoch >1"
+                return os.path.join(base_path, all_best_model_names[0])
+            else:
+                assert len(all_best_model_names) == 0, "There should be no best model saved at epoch 1"
+                return ""
 
     def train(
             self,
@@ -761,9 +765,9 @@ class ModelTrainer:
 
         self.model.eval()
 
-        if (os.path.exists(self.get_best_model_path(base_path, neglect_epoch=True))):
+        if (os.path.exists(self.get_best_model_path(base_path, check_model_existance=True))):
             log.info("Testing using best model ...")
-            self.model = self.model.load(self.get_best_model_path(base_path, neglect_epoch=True))
+            self.model = self.model.load(self.get_best_model_path(base_path, check_model_existance=True))
         else:
             log.info("Testing using last state of model ...")
 
