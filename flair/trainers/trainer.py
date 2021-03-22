@@ -60,6 +60,45 @@ class ModelTrainer:
         self.epoch: int = epoch
         self.use_tensorboard: bool = use_tensorboard
 
+    def initialize_best_dev_score(self,log_dev):
+        """
+        Initialize the best score the model has seen so far.
+        The score is the loss if we don't have dev data and main_score_type otherwise.
+        :param log_dev: whether dev data is available
+        """
+        if log_dev:
+            # assume that the score used on the dev set should be maximized and is >=0
+            self.score_mode_for_best_model_saving = "max"
+            self.best_dev_score_seen = 0
+        else:
+            self.score_mode_for_best_model_saving = "min"
+            self.best_dev_score_seen = 100000000000
+
+    def check_for_best_score(self,score_value_for_best_model_saving):
+        """
+        Check whether score_value_for_best_model_saving is better than the best score the trainer has seen so far.
+        The score is the loss if we don't have dev data and main_score_type otherwise.
+        :param score_value_for_best_model_saving: The current epoch score
+        :return: boolean indicating whether score_value_for_best_model_saving is better than the best score the trainer has seen so far
+        """
+
+        if self.score_mode_for_best_model_saving=="max":
+            if self.best_dev_score_seen<score_value_for_best_model_saving:
+                found_best_model = True
+                self.best_dev_score_seen=score_value_for_best_model_saving
+            else:
+                found_best_model = False
+        else:
+            if self.best_dev_score_seen>score_value_for_best_model_saving:
+                found_best_model = True
+                self.best_dev_score_seen=score_value_for_best_model_saving
+            else:
+                found_best_model = False
+        return found_best_model
+
+
+
+
     def train(
             self,
             base_path: Union[Path, str],
@@ -208,6 +247,7 @@ class ModelTrainer:
             else False
         )
         log_dev = False if train_with_dev or not self.corpus.dev else True
+        self.initialize_best_dev_score(log_dev)
         log_train_part = (
             True
             if (eval_on_train_fraction == "dev" or eval_on_train_fraction > 0.0)
@@ -600,9 +640,7 @@ class ModelTrainer:
                 if (
                         (not train_with_dev or anneal_with_restarts or anneal_with_prestarts)
                         and not param_selection_mode
-                        and not isinstance(lr_scheduler, OneCycleLR)
-                        and current_score == lr_scheduler.best
-                        and bad_epochs == 0
+                        and self.check_for_best_score(current_score)
                 ):
                     print("saving best model")
                     self.model.save(base_path / "best-model.pt")
