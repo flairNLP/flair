@@ -6,7 +6,7 @@ import time
 import datetime
 import sys
 import inspect
-
+import warnings
 import torch
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
@@ -31,7 +31,7 @@ from flair.training_utils import (
     AnnealOnPlateau,
 )
 from torch.optim.lr_scheduler import OneCycleLR
-from flair.models import SequenceTagger
+from flair.models import SequenceTagger, TextClassifier
 import random
 
 log = logging.getLogger("flair")
@@ -93,6 +93,7 @@ class ModelTrainer:
             eval_on_train_fraction=0.0,
             eval_on_train_shuffle=False,
             save_model_each_k_epochs: int = 0,
+            classification_main_metric=("micro avg", 'f1-score'),
             **kwargs,
     ) -> dict:
         """
@@ -129,10 +130,16 @@ class ModelTrainer:
         :param save_model_each_k_epochs: Each k epochs, a model state will be written out. If set to '5', a model will
         be saved each 5 epochs. Default is 0 which means no model saving.
         :param save_model_epoch_step: Each save_model_epoch_step'th epoch the thus far trained model will be saved
+        :param classification_main_metric: Type of metric to use for best model tracking and learning rate scheduling (if dev data is available, otherwise loss will be used), currently only applicable for text_classification_model
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
-
+        if isinstance(self.model, TextClassifier):
+            self.main_score_type=classification_main_metric
+        else:
+            if classification_main_metric is not None:
+                warnings.warn("Specification of main score type only implemented for text classifier. Defaulting to main score type of selected model.")
+            self.main_score_type = None
         if self.use_tensorboard:
             try:
                 from torch.utils.tensorboard import SummaryWriter
@@ -448,6 +455,7 @@ class ModelTrainer:
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
+                        main_score_type=self.main_score_type
                     )
                     result_line += f"\t{train_eval_result.log_line}"
 
@@ -460,6 +468,7 @@ class ModelTrainer:
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
+                        main_score_type=self.main_score_type
                     )
                     result_line += (
                         f"\t{train_part_loss}\t{train_part_eval_result.log_line}"
@@ -475,6 +484,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / "dev.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
+                        main_score_type=self.main_score_type
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
                     log.info(
@@ -503,6 +513,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / "test.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
+                        main_score_type=self.main_score_type
                     )
                     result_line += f"\t{test_loss}\t{test_eval_result.log_line}"
                     log.info(
@@ -674,6 +685,7 @@ class ModelTrainer:
             num_workers=num_workers,
             out_path=base_path / "test.tsv",
             embedding_storage_mode="none",
+            main_score_type=self.main_score_type
         )
 
         test_results: Result = test_results
@@ -692,6 +704,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / f"{subcorpus.name}-test.tsv",
                         embedding_storage_mode="none",
+                        main_score_type=self.main_score_type
                     )
                     log.info(subcorpus.name)
                     log.info(subcorpus_results.log_line)

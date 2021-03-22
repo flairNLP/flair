@@ -276,6 +276,7 @@ class SimilarityLearner(flair.nn.Model):
         embedding_storage_mode="none",
         mini_batch_size=32,
         num_workers=8,
+        **kwargs
     ) -> (Result, float):
         # assumes that for each data pair there's at least one embedding per modality
 
