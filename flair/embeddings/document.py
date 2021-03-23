@@ -363,9 +363,9 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
 
 class DocumentTFIDFEmbeddings(DocumentEmbeddings):
     def __init__(
-            self,
-            train_dataset,
-            **vectorizer_params,
+        self,
+        train_dataset,
+        **vectorizer_params,
     ):
         """The constructor for DocumentTFIDFEmbeddings.
         :param train_dataset: the train dataset which will be used to construct vectorizer
@@ -376,7 +376,7 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
         import numpy as np
         self.vectorizer = TfidfVectorizer(dtype=np.float32, **vectorizer_params)
         self.vectorizer.fit([s.to_original_text() for s in train_dataset])
-
+        
         self.__embedding_length: int = len(self.vectorizer.vocabulary_)
 
         self.to(flair.device)
@@ -396,10 +396,10 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
 
         raw_sentences = [s.to_original_text() for s in sentences]
         tfidf_vectors = torch.from_numpy(self.vectorizer.transform(raw_sentences).A)
-
+    
         for sentence_id, sentence in enumerate(sentences):
             sentence.set_embedding(self.name, tfidf_vectors[sentence_id])
-
+        
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
 
@@ -665,7 +665,6 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         else:
             self.__dict__ = d
 
-
 class DocumentLMEmbeddings(DocumentEmbeddings):
     def __init__(self, flair_embeddings: List[FlairEmbeddings]):
         super().__init__()
@@ -815,8 +814,7 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         self.__embedding_length: int = sum([kernel_num for kernel_num, kernel_size in self.kernels])
         self.convs = torch.nn.ModuleList(
             [
-                torch.nn.Conv1d(self.embeddings_dimension, kernel_num, kernel_size) for kernel_num, kernel_size in
-                self.kernels
+                torch.nn.Conv1d(self.embeddings_dimension, kernel_num, kernel_size) for kernel_num, kernel_size in self.kernels
             ]
         )
         self.pool = torch.nn.AdaptiveMaxPool1d(1)
