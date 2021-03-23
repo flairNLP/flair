@@ -255,7 +255,7 @@ class TextClassifier(flair.nn.Model):
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 32,
             num_workers: int = 8,
-            main_score_type: Tuple[str, str]=("micro avg", 'f1-score')
+            main_score_type: Tuple[str, str]=("micro avg", 'f1-score'),
             return_predictions: bool = False
     ) -> (Result, float, Optional[List[Tuple[str,int,int]]]):
         all_predictions = []
