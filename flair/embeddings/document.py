@@ -39,6 +39,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             batch_size: int = 1,
             layers: str = "-1",
             layer_mean: bool = False,
+            pooling: str = "cls",
             **kwargs
     ):
         """
@@ -50,8 +51,12 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         models tend to be huge.
         :param layers: string indicating which layers to take for embedding (-1 is topmost layer)
         :param layer_mean: If True, uses a scalar mix of layers as embedding
+        :param pooling: Pooling strategy for combining token level embeddings. options are 'cls', 'max', 'mean'.
         """
         super().__init__()
+
+        if pooling not in ['cls', 'max', 'mean']:
+            raise ValueError(f"Pooling operation `{poling}` is not defined for TransformerDocumentEmbeddings")
 
         # temporary fix to disable tokenizer parallelism warning
         # (see https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning)
@@ -86,6 +91,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         self.fine_tune = fine_tune
         self.static_embeddings = not self.fine_tune
         self.batch_size = batch_size
+        self.pooling = pooling
 
         # check whether CLS is at beginning or end
         self.initial_cls_token: bool = self._has_initial_cls_token(tokenizer=self.tokenizer)
@@ -159,20 +165,37 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             # iterate over all subtokenized sentences
             for sentence_idx, (sentence, subtokens) in enumerate(zip(sentences, subtokenized_sentences)):
 
-                index_of_CLS_token = 0 if self.initial_cls_token else len(subtokens) - 1
+                if self.pooling == "cls":
+                    index_of_CLS_token = 0 if self.initial_cls_token else len(subtokens) - 1
 
-                cls_embeddings_all_layers: List[torch.FloatTensor] = \
-                    [hidden_states[layer][sentence_idx][index_of_CLS_token] for layer in self.layer_indexes]
+                    cls_embeddings_all_layers: List[torch.FloatTensor] = \
+                        [hidden_states[layer][sentence_idx][index_of_CLS_token] for layer in self.layer_indexes]
+
+                    embeddings_all_layers = cls_embeddings_all_layers
+
+                elif self.pooling == "mean":
+                    mean_embeddings_all_layers: List[torch.FloatTensor] = \
+                        [torch.mean(hidden_states[layer][sentence_idx][mask[sentence_idx], :], dim=0) for layer in
+                         self.layer_indexes]
+
+                    embeddings_all_layers = mean_embeddings_all_layers
+
+                elif self.pooling == "max":
+                    max_embeddings_all_layers: List[torch.FloatTensor] = \
+                        [torch.max(hidden_states[layer][sentence_idx][mask[sentence_idx], :], dim=0)[0] for layer in
+                         self.layer_indexes]
+
+                    embeddings_all_layers = max_embeddings_all_layers
 
                 # use scalar mix of embeddings if so selected
                 if self.layer_mean:
-                    sm = ScalarMix(mixture_size=len(cls_embeddings_all_layers))
-                    sm_embeddings = sm(cls_embeddings_all_layers)
+                    sm = ScalarMix(mixture_size=len(embeddings_all_layers))
+                    sm_embeddings = sm(embeddings_all_layers)
 
-                    cls_embeddings_all_layers = [sm_embeddings]
+                    embeddings_all_layers = [embeddings_all_layers]
 
                 # set the extracted embedding for the token
-                sentence.set_embedding(self.name, torch.cat(cls_embeddings_all_layers))
+                sentence.set_embedding(self.name, torch.cat(embeddings_all_layers))
 
     @property
     @abstractmethod
@@ -202,6 +225,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             "batch_size": self.batch_size,
             "layer_indexes": self.layer_indexes,
             "layer_mean": self.layer_mean,
+            "pooling": self.pooling,
         }
 
         return model_state
@@ -234,6 +258,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
 
                 config=loaded_config,
                 state_dict=d["model_state_dict"],
+                pooling=self.__dict__['pooling'],
             )
 
             # I have no idea why this is necessary, but otherwise it doesn't work
@@ -338,9 +363,9 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
 
 class DocumentTFIDFEmbeddings(DocumentEmbeddings):
     def __init__(
-        self,
-        train_dataset,
-        **vectorizer_params,
+            self,
+            train_dataset,
+            **vectorizer_params,
     ):
         """The constructor for DocumentTFIDFEmbeddings.
         :param train_dataset: the train dataset which will be used to construct vectorizer
@@ -351,7 +376,7 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
         import numpy as np
         self.vectorizer = TfidfVectorizer(dtype=np.float32, **vectorizer_params)
         self.vectorizer.fit([s.to_original_text() for s in train_dataset])
-        
+
         self.__embedding_length: int = len(self.vectorizer.vocabulary_)
 
         self.to(flair.device)
@@ -371,10 +396,10 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
 
         raw_sentences = [s.to_original_text() for s in sentences]
         tfidf_vectors = torch.from_numpy(self.vectorizer.transform(raw_sentences).A)
-    
+
         for sentence_id, sentence in enumerate(sentences):
             sentence.set_embedding(self.name, tfidf_vectors[sentence_id])
-        
+
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
 
@@ -640,6 +665,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         else:
             self.__dict__ = d
 
+
 class DocumentLMEmbeddings(DocumentEmbeddings):
     def __init__(self, flair_embeddings: List[FlairEmbeddings]):
         super().__init__()
@@ -789,7 +815,8 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         self.__embedding_length: int = sum([kernel_num for kernel_num, kernel_size in self.kernels])
         self.convs = torch.nn.ModuleList(
             [
-                torch.nn.Conv1d(self.embeddings_dimension, kernel_num, kernel_size) for kernel_num, kernel_size in self.kernels
+                torch.nn.Conv1d(self.embeddings_dimension, kernel_num, kernel_size) for kernel_num, kernel_size in
+                self.kernels
             ]
         )
         self.pool = torch.nn.AdaptiveMaxPool1d(1)
