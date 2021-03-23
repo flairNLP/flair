@@ -2,7 +2,7 @@ import logging
 import sys
 
 from pathlib import Path
-from typing import List, Union, Optional, Dict
+from typing import List, Union, Optional, Dict, Tuple
 from warnings import warn
 
 import numpy as np
@@ -518,7 +518,8 @@ class SequenceTagger(flair.nn.Model):
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 32,
             num_workers: int = 8,
-            wsd_evaluation: bool = False
+            wsd_evaluation: bool = False,
+            **kwargs
     ) -> (Result, float):
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
@@ -604,6 +605,7 @@ class SequenceTagger(flair.nn.Model):
         classification_report = metrics.classification_report(y_true, y_pred, digits=4, target_names=target_names,
                                                               zero_division=1, labels=labels_to_report)
 
+
         # get scores
         micro_f_score = round(
             metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', labels=labels_to_report), 4)
@@ -627,7 +629,7 @@ class SequenceTagger(flair.nn.Model):
             main_score=micro_f_score,
             log_line=log_line,
             log_header=log_header,
-            detailed_results=detailed_result,
+            detailed_results=detailed_result
         )
         return result, eval_loss
 
