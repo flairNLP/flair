@@ -408,6 +408,10 @@ class SequenceTagger(flair.nn.Model):
         for item in self.tag_dictionary.get_items():
             if item.startswith('B-'):
                 span_F1 = True
+            if item == 'O':
+                span_F1 = True
+            if item == '':
+                span_F1 = True
         return span_F1
 
     def _evaluate_with_span_F1(self, data_loader, embedding_storage_mode, mini_batch_size, out_path):
@@ -511,25 +515,7 @@ class SequenceTagger(flair.nn.Model):
 
         return result, eval_loss
 
-    def evaluate(
-            self,
-            sentences: Union[List[Sentence], Dataset],
-            out_path: Union[str, Path] = None,
-            embedding_storage_mode: str = "none",
-            mini_batch_size: int = 32,
-            num_workers: int = 8,
-            wsd_evaluation: bool = False,
-            **kwargs
-    ) -> (Result, float):
-
-        # read Dataset into data loader (if list of sentences passed, make Dataset first)
-        if not isinstance(sentences, Dataset):
-            sentences = SentenceDataset(sentences)
-        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
-
-        # if span F1 needs to be used, use separate eval method
-        if self._requires_span_F1_evaluation() and not wsd_evaluation:
-            return self._evaluate_with_span_F1(data_loader, embedding_storage_mode, mini_batch_size, out_path)
+    def _evaluate_with_regular_F1(self, data_loader, embedding_storage_mode, mini_batch_size, out_path):
 
         # else, use scikit-learn to evaluate
         y_true = []
@@ -560,13 +546,7 @@ class SequenceTagger(flair.nn.Model):
                     y_true.append(labels.add_item(gold_tag))
 
                     # add predicted tag
-                    if wsd_evaluation:
-                        if gold_tag == 'O':
-                            predicted_tag = 'O'
-                        else:
-                            predicted_tag = token.get_tag('predicted').value
-                    else:
-                        predicted_tag = token.get_tag('predicted').value
+                    predicted_tag = token.get_tag('predicted').value
 
                     y_pred.append(labels.add_item(predicted_tag))
 
@@ -605,7 +585,6 @@ class SequenceTagger(flair.nn.Model):
         classification_report = metrics.classification_report(y_true, y_pred, digits=4, target_names=target_names,
                                                               zero_division=1, labels=labels_to_report)
 
-
         # get scores
         micro_f_score = round(
             metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', labels=labels_to_report), 4)
@@ -632,6 +611,28 @@ class SequenceTagger(flair.nn.Model):
             detailed_results=detailed_result
         )
         return result, eval_loss
+
+    def evaluate(
+            self,
+            sentences: Union[List[Sentence], Dataset],
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: int = 8,
+            wsd_evaluation: bool = False,
+            **kwargs
+    ) -> (Result, float):
+
+        # read Dataset into data loader (if list of sentences passed, make Dataset first)
+        if not isinstance(sentences, Dataset):
+            sentences = SentenceDataset(sentences)
+        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
+
+        # depending on whether span F1 needs to be used, use separate eval method
+        if self._requires_span_F1_evaluation():
+            return self._evaluate_with_span_F1(data_loader, embedding_storage_mode, mini_batch_size, out_path)
+        else:
+            return self._evaluate_with_regular_F1(data_loader, embedding_storage_mode, mini_batch_size, out_path)
 
     def forward_loss(
             self, data_points: Union[List[Sentence], Sentence], sort=True
@@ -1148,10 +1149,12 @@ class SequenceTagger(flair.nn.Model):
 
             # output information
             log.info("-" * 80)
-            log.info(f"The model key '{model_name}' now maps to 'https://huggingface.co/{hf_model_name}' on the HuggingFace ModelHub")
+            log.info(
+                f"The model key '{model_name}' now maps to 'https://huggingface.co/{hf_model_name}' on the HuggingFace ModelHub")
             log.info(f" - The most current version of the model is automatically downloaded from there.")
             if model_name in hu_model_map:
-                log.info(f" - (you can alternatively manually download the original model at {hu_model_map[model_name]})")
+                log.info(
+                    f" - (you can alternatively manually download the original model at {hu_model_map[model_name]})")
             log.info("-" * 80)
 
             # use mapped name instead
@@ -1229,7 +1232,7 @@ class SequenceTagger(flair.nn.Model):
                 log.error(f" -> Please check https://huggingface.co/models?filter=flair for all available models.")
                 log.error(f" -> Alternatively, point to a model file on your local drive.")
                 log.error("-" * 80)
-                Path(flair.cache_root / 'models' / model_folder).rmdir() # remove folder again if not valid
+                Path(flair.cache_root / 'models' / model_folder).rmdir()  # remove folder again if not valid
 
         return model_path
 
