@@ -258,7 +258,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
 
                 config=loaded_config,
                 state_dict=d["model_state_dict"],
-                pooling=self.__dict__['pooling'],
+                pooling=self.__dict__['pooling'] if 'pooling' in self.__dict__ else 'cls', # for backward compatibility with previous models
             )
 
             # I have no idea why this is necessary, but otherwise it doesn't work
