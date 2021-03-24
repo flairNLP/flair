@@ -56,7 +56,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         super().__init__()
 
         if pooling not in ['cls', 'max', 'mean']:
-            raise ValueError(f"Pooling operation `{poling}` is not defined for TransformerDocumentEmbeddings")
+            raise ValueError(f"Pooling operation `{pooling}` is not defined for TransformerDocumentEmbeddings")
 
         # temporary fix to disable tokenizer parallelism warning
         # (see https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning)
@@ -192,7 +192,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
                     sm = ScalarMix(mixture_size=len(embeddings_all_layers))
                     sm_embeddings = sm(embeddings_all_layers)
 
-                    embeddings_all_layers = [embeddings_all_layers]
+                    embeddings_all_layers = [sm_embeddings]
 
                 # set the extracted embedding for the token
                 sentence.set_embedding(self.name, torch.cat(embeddings_all_layers))
