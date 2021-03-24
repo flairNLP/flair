@@ -796,7 +796,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / f"{subcorpus.name}-test.tsv",
                         embedding_storage_mode="none",
-                        main_score_type=self.main_score_type
+                        main_score_type=main_score_type
                     )
                     log.info(subcorpus.name)
                     log.info(subcorpus_results.log_line)
