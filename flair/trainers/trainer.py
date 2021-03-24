@@ -61,7 +61,7 @@ class ModelTrainer:
         self.epoch: int = epoch
         self.use_tensorboard: bool = use_tensorboard
 
-    def initialize_best_dev_score(self,log_dev):
+    def initialize_best_dev_score(self, log_dev):
         """
         Initialize the best score the model has seen so far.
         The score is the loss if we don't have dev data and main_score_type otherwise.
@@ -75,7 +75,7 @@ class ModelTrainer:
             self.score_mode_for_best_model_saving = "min"
             self.best_dev_score_seen = 100000000000
 
-    def check_for_best_score(self,score_value_for_best_model_saving):
+    def check_for_best_score(self, score_value_for_best_model_saving):
         """
         Check whether score_value_for_best_model_saving is better than the best score the trainer has seen so far.
         The score is the loss if we don't have dev data and main_score_type otherwise.
@@ -83,16 +83,16 @@ class ModelTrainer:
         :return: boolean indicating whether score_value_for_best_model_saving is better than the best score the trainer has seen so far
         """
 
-        if self.score_mode_for_best_model_saving=="max":
-            if self.best_dev_score_seen<score_value_for_best_model_saving:
+        if self.score_mode_for_best_model_saving == "max":
+            if self.best_dev_score_seen < score_value_for_best_model_saving:
                 found_best_model = True
-                self.best_dev_score_seen=score_value_for_best_model_saving
+                self.best_dev_score_seen = score_value_for_best_model_saving
             else:
                 found_best_model = False
         else:
-            if self.best_dev_score_seen>score_value_for_best_model_saving:
+            if self.best_dev_score_seen > score_value_for_best_model_saving:
                 found_best_model = True
-                self.best_dev_score_seen=score_value_for_best_model_saving
+                self.best_dev_score_seen = score_value_for_best_model_saving
             else:
                 found_best_model = False
         return found_best_model
@@ -131,7 +131,7 @@ class ModelTrainer:
 
     def get_best_model_path(self, base_path, check_model_existance=False):
         all_best_model_names = [filename for filename in os.listdir(base_path) if
-                                     filename.startswith("best-model_epoch")]
+                                filename.startswith("best-model_epoch")]
         if check_model_existance:
             if len(all_best_model_names) > 0:
                 assert len(all_best_model_names) == 1, "There should be at most one best model saved at any time."
@@ -222,12 +222,9 @@ class ModelTrainer:
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
-        if isinstance(self.model, TextClassifier):
-            self.main_score_type=classification_main_metric
-        else:
-            if classification_main_metric is not None:
-                warnings.warn("Specification of main score type only implemented for text classifier. Defaulting to main score type of selected model.")
-            self.main_score_type = None
+
+        main_score_type = classification_main_metric if isinstance(self.model, TextClassifier) else None
+
         if self.use_tensorboard:
             try:
                 from torch.utils.tensorboard import SummaryWriter
@@ -546,7 +543,7 @@ class ModelTrainer:
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_score_type=self.main_score_type
+                        main_score_type=main_score_type
                     )
                     result_line += f"\t{train_eval_result.log_line}"
 
@@ -559,7 +556,7 @@ class ModelTrainer:
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_score_type=self.main_score_type
+                        main_score_type=main_score_type
                     )
                     result_line += (
                         f"\t{train_part_loss}\t{train_part_eval_result.log_line}"
@@ -575,7 +572,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / "dev.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_score_type=self.main_score_type
+                        main_score_type=main_score_type
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
                     log.info(
@@ -604,7 +601,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / "test.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_score_type=self.main_score_type
+                        main_score_type=main_score_type
                     )
                     result_line += f"\t{test_loss}\t{test_eval_result.log_line}"
                     log.info(
@@ -725,7 +722,7 @@ class ModelTrainer:
 
         # test best model if test data is present
         if self.corpus.test and not train_with_test:
-            final_score = self.final_test(base_path, mini_batch_chunk_size, num_workers)
+            final_score = self.final_test(base_path, mini_batch_chunk_size, num_workers, main_score_type)
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
@@ -755,7 +752,11 @@ class ModelTrainer:
         return model
 
     def final_test(
-            self, base_path: Union[Path, str], eval_mini_batch_size: int, num_workers: int = 8
+            self,
+            base_path: Union[Path, str],
+            eval_mini_batch_size: int,
+            num_workers: int = 8,
+            main_score_type: str = None,
     ):
         if type(base_path) is str:
             base_path = Path(base_path)
@@ -776,7 +777,7 @@ class ModelTrainer:
             num_workers=num_workers,
             out_path=base_path / "test.tsv",
             embedding_storage_mode="none",
-            main_score_type=self.main_score_type
+            main_score_type=main_score_type
         )
 
         test_results: Result = test_results
@@ -795,7 +796,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / f"{subcorpus.name}-test.tsv",
                         embedding_storage_mode="none",
-                        main_score_type=self.main_score_type
+                        main_score_type=main_score_type
                     )
                     log.info(subcorpus.name)
                     log.info(subcorpus_results.log_line)
