@@ -175,14 +175,14 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
 
                 elif self.pooling == "mean":
                     mean_embeddings_all_layers: List[torch.FloatTensor] = \
-                        [torch.mean(hidden_states[layer][sentence_idx][mask[sentence_idx], :], dim=0) for layer in
+                        [torch.mean(hidden_states[layer][sentence_idx][:len(subtokens), :], dim=0) for layer in
                          self.layer_indexes]
 
                     embeddings_all_layers = mean_embeddings_all_layers
 
                 elif self.pooling == "max":
                     max_embeddings_all_layers: List[torch.FloatTensor] = \
-                        [torch.max(hidden_states[layer][sentence_idx][mask[sentence_idx], :], dim=0)[0] for layer in
+                        [torch.max(hidden_states[layer][sentence_idx][:len(subtokens), :], dim=0)[0] for layer in
                          self.layer_indexes]
 
                     embeddings_all_layers = max_embeddings_all_layers
