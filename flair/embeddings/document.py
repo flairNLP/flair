@@ -39,6 +39,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             batch_size: int = 1,
             layers: str = "-1",
             layer_mean: bool = False,
+            pooling: str = "cls",
             **kwargs
     ):
         """
@@ -50,8 +51,12 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         models tend to be huge.
         :param layers: string indicating which layers to take for embedding (-1 is topmost layer)
         :param layer_mean: If True, uses a scalar mix of layers as embedding
+        :param pooling: Pooling strategy for combining token level embeddings. options are 'cls', 'max', 'mean'.
         """
         super().__init__()
+
+        if pooling not in ['cls', 'max', 'mean']:
+            raise ValueError(f"Pooling operation `{pooling}` is not defined for TransformerDocumentEmbeddings")
 
         # temporary fix to disable tokenizer parallelism warning
         # (see https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning)
@@ -86,6 +91,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         self.fine_tune = fine_tune
         self.static_embeddings = not self.fine_tune
         self.batch_size = batch_size
+        self.pooling = pooling
 
         # check whether CLS is at beginning or end
         self.initial_cls_token: bool = self._has_initial_cls_token(tokenizer=self.tokenizer)
@@ -159,20 +165,37 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             # iterate over all subtokenized sentences
             for sentence_idx, (sentence, subtokens) in enumerate(zip(sentences, subtokenized_sentences)):
 
-                index_of_CLS_token = 0 if self.initial_cls_token else len(subtokens) - 1
+                if self.pooling == "cls":
+                    index_of_CLS_token = 0 if self.initial_cls_token else len(subtokens) - 1
 
-                cls_embeddings_all_layers: List[torch.FloatTensor] = \
-                    [hidden_states[layer][sentence_idx][index_of_CLS_token] for layer in self.layer_indexes]
+                    cls_embeddings_all_layers: List[torch.FloatTensor] = \
+                        [hidden_states[layer][sentence_idx][index_of_CLS_token] for layer in self.layer_indexes]
+
+                    embeddings_all_layers = cls_embeddings_all_layers
+
+                elif self.pooling == "mean":
+                    mean_embeddings_all_layers: List[torch.FloatTensor] = \
+                        [torch.mean(hidden_states[layer][sentence_idx][:len(subtokens), :], dim=0) for layer in
+                         self.layer_indexes]
+
+                    embeddings_all_layers = mean_embeddings_all_layers
+
+                elif self.pooling == "max":
+                    max_embeddings_all_layers: List[torch.FloatTensor] = \
+                        [torch.max(hidden_states[layer][sentence_idx][:len(subtokens), :], dim=0)[0] for layer in
+                         self.layer_indexes]
+
+                    embeddings_all_layers = max_embeddings_all_layers
 
                 # use scalar mix of embeddings if so selected
                 if self.layer_mean:
-                    sm = ScalarMix(mixture_size=len(cls_embeddings_all_layers))
-                    sm_embeddings = sm(cls_embeddings_all_layers)
+                    sm = ScalarMix(mixture_size=len(embeddings_all_layers))
+                    sm_embeddings = sm(embeddings_all_layers)
 
-                    cls_embeddings_all_layers = [sm_embeddings]
+                    embeddings_all_layers = [sm_embeddings]
 
                 # set the extracted embedding for the token
-                sentence.set_embedding(self.name, torch.cat(cls_embeddings_all_layers))
+                sentence.set_embedding(self.name, torch.cat(embeddings_all_layers))
 
     @property
     @abstractmethod
@@ -202,6 +225,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             "batch_size": self.batch_size,
             "layer_indexes": self.layer_indexes,
             "layer_mean": self.layer_mean,
+            "pooling": self.pooling,
         }
 
         return model_state
@@ -234,6 +258,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
 
                 config=loaded_config,
                 state_dict=d["model_state_dict"],
+                pooling=self.__dict__['pooling'] if 'pooling' in self.__dict__ else 'cls', # for backward compatibility with previous models
             )
 
             # I have no idea why this is necessary, but otherwise it doesn't work
