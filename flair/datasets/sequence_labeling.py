@@ -325,8 +325,7 @@ class ANER_CORP(ColumnCorpus):
         The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
-        POS tags instead
+        :param tag_to_bioes: NER by default, need not be changed.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
@@ -358,6 +357,66 @@ class ANER_CORP(ColumnCorpus):
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             **corpusargs,
         )
+
+
+class AQMAR(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+            **corpusargs,
+    ):
+        """
+        Initialize a preprocessed  and modified version of the American and Qatari Modeling of Arabic (AQMAR) dataset available
+        from http://www.cs.cmu.edu/~ark/ArabicNER/AQMAR_Arabic_NER_corpus-1.0.zip.
+        via http://www.cs.cmu.edu/~ark/AQMAR/
+
+        - Modifications from original dataset: Miscellaneous tags (MIS0, MIS1, MIS2, MIS3) are merged to one tag "MISC" as these categories deviate across the original dataset
+        - The 28 original Wikipedia articles are merged into a single file containing the articles in alphabetical order
+
+        The first time you call this constructor it will automatically download the dataset.
+
+        This dataset is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License.
+        please cite: "Behrang Mohit, Nathan Schneider, Rishav Bhowmick, Kemal Oflazer, and Noah A. Smith (2012),
+        Recall-Oriented Learning of Named Entities in Arabic Wikipedia. Proceedings of EACL."
+
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        aqmar_path = "https://megantosh.s3.eu-central-1.amazonaws.com/AQMAR/"
+        # cached_path(f"{anercorp_path}test.txt", Path("datasets") / dataset_name)
+        cached_path(f"{aqmar_path}train.txt", Path("datasets") / dataset_name)
+
+        super(AQMAR, self).__init__(
+            data_folder,
+            columns,
+            # tag_to_bioes=tag_to_bioes,
+            encoding="utf-8",
+            in_memory=in_memory,
+            document_separator_token=None if not document_as_sequence else "-DOCSTART-",
+            **corpusargs,
+        )
+
 
 
 class BIOFID(ColumnCorpus):
