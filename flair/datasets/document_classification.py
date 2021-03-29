@@ -11,7 +11,7 @@ from flair.data import (
     Corpus,
     Token,
     FlairDataset,
-    Tokenizer
+    Tokenizer, DataPair
 )
 from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 from flair.datasets.base import find_train_dev_test_files
@@ -22,6 +22,7 @@ class ClassificationCorpus(Corpus):
     """
     A classification corpus from FastText-formatted text files.
     """
+
     def __init__(
             self,
             data_folder: Union[str, Path],
@@ -112,6 +113,7 @@ class ClassificationDataset(FlairDataset):
     """
     Dataset for classification instantiated from a single FastText-formatted file.
     """
+
     def __init__(
             self,
             path_to_file: Union[str, Path],
@@ -303,6 +305,7 @@ class CSVClassificationCorpus(Corpus):
     """
     Classification corpus instantiated from CSV data files.
     """
+
     def __init__(
             self,
             data_folder: Union[str, Path],
@@ -317,6 +320,7 @@ class CSVClassificationCorpus(Corpus):
             in_memory: bool = False,
             skip_header: bool = False,
             encoding: str = 'utf-8',
+            no_class_label=None,
             **fmtparams,
     ):
         """
@@ -352,6 +356,7 @@ class CSVClassificationCorpus(Corpus):
             in_memory=in_memory,
             skip_header=skip_header,
             encoding=encoding,
+            no_class_label=no_class_label,
             **fmtparams,
         )
 
@@ -365,6 +370,7 @@ class CSVClassificationCorpus(Corpus):
             in_memory=in_memory,
             skip_header=skip_header,
             encoding=encoding,
+            no_class_label=no_class_label,
             **fmtparams,
         ) if test_file is not None else None
 
@@ -378,6 +384,7 @@ class CSVClassificationCorpus(Corpus):
             in_memory=in_memory,
             skip_header=skip_header,
             encoding=encoding,
+            no_class_label=no_class_label,
             **fmtparams,
         ) if dev_file is not None else None
 
@@ -390,6 +397,7 @@ class CSVClassificationDataset(FlairDataset):
     """
     Dataset for text classification from CSV column formatted data.
     """
+
     def __init__(
             self,
             path_to_file: Union[str, Path],
@@ -401,6 +409,7 @@ class CSVClassificationDataset(FlairDataset):
             in_memory: bool = True,
             skip_header: bool = False,
             encoding: str = 'utf-8',
+            no_class_label=None,
             **fmtparams,
     ):
         """
@@ -431,6 +440,7 @@ class CSVClassificationDataset(FlairDataset):
         self.column_name_map = column_name_map
         self.max_tokens_per_doc = max_tokens_per_doc
         self.max_chars_per_doc = max_chars_per_doc
+        self.no_class_label = no_class_label
 
         self.label_type = label_type
 
@@ -444,9 +454,12 @@ class CSVClassificationDataset(FlairDataset):
 
         # most data sets have the token text in the first column, if not, pass 'text' as column
         self.text_columns: List[int] = []
+        self.pair_columns: List[int] = []
         for column in column_name_map:
             if column_name_map[column] == "text":
                 self.text_columns.append(column)
+            if column_name_map[column] == "pair":
+                self.pair_columns.append(column)
 
         with open(self.path_to_file, encoding=encoding) as csv_file:
 
@@ -478,30 +491,60 @@ class CSVClassificationDataset(FlairDataset):
 
                 if self.in_memory:
 
-                    text = " ".join(
-                        [row[text_column] for text_column in self.text_columns]
-                    )
+                    sentence = self._make_labeled_data_point(row)
 
-                    if self.max_chars_per_doc > 0:
-                        text = text[: self.max_chars_per_doc]
-
-                    sentence = Sentence(text, use_tokenizer=self.tokenizer)
-
-                    for column in self.column_name_map:
-                        if (
-                                self.column_name_map[column].startswith("label")
-                                and row[column]
-                        ):
-                            sentence.add_label(label_type, row[column])
-
-                    if 0 < self.max_tokens_per_doc < len(sentence):
-                        sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]
                     self.sentences.append(sentence)
 
                 else:
                     self.raw_data.append(row)
 
                 self.total_sentence_count += 1
+
+    def _make_labeled_data_point(self, row):
+
+        # make sentence from text (and filter for length)
+        text = " ".join(
+            [row[text_column] for text_column in self.text_columns]
+        )
+
+        if self.max_chars_per_doc > 0:
+            text = text[: self.max_chars_per_doc]
+
+        sentence = Sentence(text, use_tokenizer=self.tokenizer)
+
+        if 0 < self.max_tokens_per_doc < len(sentence):
+            sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]
+
+        # if a pair column is defined, make a sentence pair object
+        if len(self.pair_columns) > 0:
+
+            text = " ".join(
+                [row[pair_column] for pair_column in self.pair_columns]
+            )
+
+            if self.max_chars_per_doc > 0:
+                text = text[: self.max_chars_per_doc]
+
+            pair = Sentence(text, use_tokenizer=self.tokenizer)
+
+            if 0 < self.max_tokens_per_doc < len(sentence):
+                pair.tokens = pair.tokens[: self.max_tokens_per_doc]
+
+            data_point = DataPair(first=sentence, second=pair)
+
+        else:
+            data_point = sentence
+
+        for column in self.column_name_map:
+            column_value = row[column]
+            if (
+                    self.column_name_map[column].startswith("label")
+                    and column_value
+            ):
+                if column_value != self.no_class_label:
+                    data_point.add_label(self.label_type, column_value)
+
+        return data_point
 
     def is_in_memory(self) -> bool:
         return self.in_memory
@@ -515,18 +558,7 @@ class CSVClassificationDataset(FlairDataset):
         else:
             row = self.raw_data[index]
 
-            text = " ".join([row[text_column] for text_column in self.text_columns])
-
-            if self.max_chars_per_doc > 0:
-                text = text[: self.max_chars_per_doc]
-
-            sentence = Sentence(text, use_tokenizer=self.tokenizer)
-            for column in self.column_name_map:
-                if self.column_name_map[column].startswith("label") and row[column]:
-                    sentence.add_label(self.label_type, row[column])
-
-            if 0 < self.max_tokens_per_doc < len(sentence):
-                sentence.tokens = sentence.tokens[: self.max_tokens_per_doc]
+            sentence = self._make_labeled_data_point(row)
 
             return sentence
 
@@ -549,7 +581,7 @@ class AMAZON_REVIEWS(ClassificationCorpus):
                 '4.0': 'POSITIVE',
                 '5.0': 'POSITIVE',
             },
-            skip_labels = ['3.0', '4.0'],
+            skip_labels=['3.0', '4.0'],
             fraction_of_5_star_reviews: int = 10,
             tokenizer: Tokenizer = SegtokTokenizer(),
             memory_mode='partial',
@@ -577,38 +609,67 @@ class AMAZON_REVIEWS(ClassificationCorpus):
 
         # download data if necessary
         if not (data_folder / "train.txt").is_file():
-
             # download each of the 28 splits
-            self.download_and_prepare_amazon_product_file(data_folder, "AMAZON_FASHION_5.json.gz", split_max, fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "All_Beauty_5.json.gz", split_max, fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Appliances_5.json.gz", split_max, fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Arts_Crafts_and_Sewing_5.json.gz", split_max, fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Arts_Crafts_and_Sewing_5.json.gz", split_max, fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Automotive_5.json.gz", split_max, fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Books_5.json.gz", split_max, fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "CDs_and_Vinyl_5.json.gz", split_max, fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Cell_Phones_and_Accessories_5.json.gz", split_max, fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Clothing_Shoes_and_Jewelry_5.json.gz", split_max, fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Digital_Music_5.json.gz", split_max, fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Electronics_5.json.gz", split_max, fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Gift_Cards_5.json.gz", split_max, fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Grocery_and_Gourmet_Food_5.json.gz", split_max , fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Home_and_Kitchen_5.json.gz", split_max , fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Industrial_and_Scientific_5.json.gz", split_max , fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Kindle_Store_5.json.gz", split_max , fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Luxury_Beauty_5.json.gz", split_max , fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Magazine_Subscriptions_5.json.gz", split_max , fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Movies_and_TV_5.json.gz", split_max , fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Musical_Instruments_5.json.gz", split_max , fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Office_Products_5.json.gz", split_max , fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Patio_Lawn_and_Garden_5.json.gz", split_max , fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Pet_Supplies_5.json.gz", split_max , fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Prime_Pantry_5.json.gz", split_max , fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Software_5.json.gz", split_max , fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Sports_and_Outdoors_5.json.gz", split_max , fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Tools_and_Home_Improvement_5.json.gz", split_max , fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Toys_and_Games_5.json.gz", split_max , fraction_of_5_star_reviews)
-            self.download_and_prepare_amazon_product_file(data_folder, "Video_Games_5.json.gz", split_max , fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "AMAZON_FASHION_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "All_Beauty_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Appliances_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Arts_Crafts_and_Sewing_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Arts_Crafts_and_Sewing_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Automotive_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Books_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "CDs_and_Vinyl_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Cell_Phones_and_Accessories_5.json.gz",
+                                                          split_max, fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Clothing_Shoes_and_Jewelry_5.json.gz",
+                                                          split_max, fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Digital_Music_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Electronics_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Gift_Cards_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Grocery_and_Gourmet_Food_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Home_and_Kitchen_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Industrial_and_Scientific_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Kindle_Store_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Luxury_Beauty_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Magazine_Subscriptions_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Movies_and_TV_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Musical_Instruments_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Office_Products_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Patio_Lawn_and_Garden_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Pet_Supplies_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Prime_Pantry_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Software_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Sports_and_Outdoors_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Tools_and_Home_Improvement_5.json.gz",
+                                                          split_max, fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Toys_and_Games_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
+            self.download_and_prepare_amazon_product_file(data_folder, "Video_Games_5.json.gz", split_max,
+                                                          fraction_of_5_star_reviews)
 
         super(AMAZON_REVIEWS, self).__init__(
             data_folder,
@@ -620,7 +681,8 @@ class AMAZON_REVIEWS(ClassificationCorpus):
             **corpusargs
         )
 
-    def download_and_prepare_amazon_product_file(self, data_folder, part_name, max_data_points=None, fraction_of_5_star_reviews=None):
+    def download_and_prepare_amazon_product_file(self, data_folder, part_name, max_data_points=None,
+                                                 fraction_of_5_star_reviews=None):
         amazon__path = "http://deepyeti.ucsd.edu/jianmo/amazon/categoryFilesSmall"
         cached_path(f"{amazon__path}/{part_name}", Path("datasets") / 'Amazon_Product_Reviews')
         import gzip
@@ -660,6 +722,7 @@ class IMDB(ClassificationCorpus):
     Corpus of IMDB movie reviews labeled by sentiment (POSITIVE, NEGATIVE). Downloaded from and documented at
     http://ai.stanford.edu/~amaas/data/sentiment/.
     """
+
     def __init__(self,
                  base_path: Union[str, Path] = None,
                  rebalance_corpus: bool = True,
@@ -682,21 +745,25 @@ class IMDB(ClassificationCorpus):
             base_path: Path = Path(base_path)
 
         # this dataset name
-        dataset_name = self.__class__.__name__.lower() + '_v2'
-
-        if rebalance_corpus:
-            dataset_name = dataset_name + '-rebalanced'
+        dataset_name = self.__class__.__name__.lower() + '_v4'
 
         # default dataset folder is the cache root
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name
 
         # download data if necessary
         imdb_acl_path = "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
+
+        if rebalance_corpus:
+            dataset_name = dataset_name + '-rebalanced'
+        data_folder = base_path / dataset_name
         data_path = Path(flair.cache_root) / "datasets" / dataset_name
-        data_file = data_path / "train.txt"
-        if not data_file.is_file():
+        train_data_file = data_path / "train.txt"
+        test_data_file = data_path / "test.txt"
+
+        if train_data_file.is_file()==False or (rebalance_corpus==False and test_data_file.is_file()==False):
+            [os.remove(file_path) for file_path in [train_data_file, test_data_file] if file_path.is_file()]
+
             cached_path(imdb_acl_path, Path("datasets") / dataset_name)
             import tarfile
 
@@ -720,7 +787,11 @@ class IMDB(ClassificationCorpus):
                                 if f"{dataset}/{label}" in m.name
                             ],
                         )
-                        with open(f"{data_path}/train-all.txt", "at") as f_p:
+                        data_file = train_data_file
+                        if rebalance_corpus==False and dataset=="test":
+                            data_file = test_data_file
+
+                        with open(data_file, "at") as f_p:
                             current_path = data_path / "aclImdb" / dataset / label
                             for file_name in current_path.iterdir():
                                 if file_name.is_file() and file_name.name.endswith(
@@ -744,10 +815,11 @@ class NEWSGROUPS(ClassificationCorpus):
     20 newsgroups corpus available at "http://qwone.com/~jason/20Newsgroups", classifying
     news items into one of 20 categories. Each data point is a full news article so documents may be very long.
     """
+
     def __init__(self,
                  base_path: Union[str, Path] = None,
                  tokenizer: Tokenizer = SegtokTokenizer(),
-                 memory_mode: str= 'partial',
+                 memory_mode: str = 'partial',
                  **corpusargs
                  ):
         """
@@ -849,6 +921,7 @@ class SENTIMENT_140(ClassificationCorpus):
     Twitter sentiment corpus downloaded from and documented at http://help.sentiment140.com/for-students. Two sentiments
     in train data (POSITIVE, NEGATIVE) and three sentiments in test data (POSITIVE, NEGATIVE, NEUTRAL).
     """
+
     def __init__(
             self,
             label_name_map=None,
@@ -893,12 +966,11 @@ class SENTIMENT_140(ClassificationCorpus):
             # create train.txt file from CSV
             with open(data_folder / "train.txt", "w") as train_file:
 
-                with open(senteval_folder / "training.1600000.processed.noemoticon.csv", encoding='latin-1') as csv_train:
-
+                with open(senteval_folder / "training.1600000.processed.noemoticon.csv",
+                          encoding='latin-1') as csv_train:
                     csv_reader = csv.reader(csv_train)
 
                     for row in csv_reader:
-
                         label = row[0]
                         text = row[5]
                         train_file.write(f"__label__{label} {text}\n")
@@ -907,11 +979,9 @@ class SENTIMENT_140(ClassificationCorpus):
             with open(data_folder / "test.txt", "w") as train_file:
 
                 with open(senteval_folder / "testdata.manual.2009.06.14.csv", encoding='latin-1') as csv_train:
-
                     csv_reader = csv.reader(csv_train)
 
                     for row in csv_reader:
-
                         label = row[0]
                         text = row[5]
                         train_file.write(f"__label__{label} {text}\n")
@@ -927,6 +997,7 @@ class SENTEVAL_CR(ClassificationCorpus):
     The customer reviews dataset of SentEval, see https://github.com/facebookresearch/SentEval, classified into
     NEGATIVE or POSITIVE sentiment.
     """
+
     def __init__(
             self,
             tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
@@ -980,6 +1051,7 @@ class SENTEVAL_MR(ClassificationCorpus):
     The movie reviews dataset of SentEval, see https://github.com/facebookresearch/SentEval, classified into
     NEGATIVE or POSITIVE sentiment.
     """
+
     def __init__(
             self,
             tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
@@ -1033,6 +1105,7 @@ class SENTEVAL_SUBJ(ClassificationCorpus):
     The subjectivity dataset of SentEval, see https://github.com/facebookresearch/SentEval, classified into
     SUBJECTIVE or OBJECTIVE sentiment.
     """
+
     def __init__(
             self,
             tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SpaceTokenizer(),
@@ -1164,12 +1237,16 @@ class SENTEVAL_SST_BINARY(ClassificationCorpus):
         if not (data_folder / "train.txt").is_file():
 
             # download senteval datasets if necessary und unzip
-            cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-train', Path("datasets") / dataset_name / 'raw')
-            cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-test', Path("datasets") / dataset_name / 'raw')
-            cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-dev', Path("datasets") / dataset_name / 'raw')
+            cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-train',
+                        Path("datasets") / dataset_name / 'raw')
+            cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-test',
+                        Path("datasets") / dataset_name / 'raw')
+            cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-dev',
+                        Path("datasets") / dataset_name / 'raw')
 
             # create train.txt file by iterating over pos and neg file
-            with open(data_folder / "train.txt", "a") as out_file, open(data_folder / 'raw' / "sentiment-train") as in_file:
+            with open(data_folder / "train.txt", "a") as out_file, open(
+                    data_folder / 'raw' / "sentiment-train") as in_file:
                 for line in in_file:
                     fields = line.split('\t')
                     label = 'POSITIVE' if fields[1].rstrip() == '1' else 'NEGATIVE'
@@ -1212,9 +1289,15 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
         if not (data_folder / "train.txt").is_file():
 
             # download senteval datasets if necessary und unzip
-            cached_path('https://raw.githubusercontent.com/AcademiaSinicaNLPLab/sentiment_dataset/master/data/stsa.fine.train', Path("datasets") / dataset_name / 'raw')
-            cached_path('https://raw.githubusercontent.com/AcademiaSinicaNLPLab/sentiment_dataset/master/data/stsa.fine.test', Path("datasets") / dataset_name / 'raw')
-            cached_path('https://raw.githubusercontent.com/AcademiaSinicaNLPLab/sentiment_dataset/master/data/stsa.fine.dev', Path("datasets") / dataset_name / 'raw')
+            cached_path(
+                'https://raw.githubusercontent.com/AcademiaSinicaNLPLab/sentiment_dataset/master/data/stsa.fine.train',
+                Path("datasets") / dataset_name / 'raw')
+            cached_path(
+                'https://raw.githubusercontent.com/AcademiaSinicaNLPLab/sentiment_dataset/master/data/stsa.fine.test',
+                Path("datasets") / dataset_name / 'raw')
+            cached_path(
+                'https://raw.githubusercontent.com/AcademiaSinicaNLPLab/sentiment_dataset/master/data/stsa.fine.dev',
+                Path("datasets") / dataset_name / 'raw')
 
             # convert to FastText format
             for split in ['train', 'dev', 'test']:
@@ -1230,12 +1313,13 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
             memory_mode=memory_mode,
             **corpusargs,
         )
-        
+
 
 class GO_EMOTIONS(ClassificationCorpus):
     """
     GoEmotions dataset containing 58k Reddit comments labeled with 27 emotion categories, see. https://github.com/google-research/google-research/tree/master/goemotions
     """
+
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -1254,8 +1338,7 @@ class GO_EMOTIONS(ClassificationCorpus):
         **corpusargs : Other args for ClassificationCorpus.
 
         """
-        
-        
+
         label_name_map = {'0': 'ADMIRATION',
                           '1': 'AMUSEMENT',
                           '2': 'ANGER',
@@ -1267,7 +1350,7 @@ class GO_EMOTIONS(ClassificationCorpus):
                           '8': 'DESIRE',
                           '9': 'DISAPPOINTMENT',
                           '10': 'DISAPPROVAL',
-                          '11': 'DISGUST', 
+                          '11': 'DISGUST',
                           '12': 'EMBARRASSMENT',
                           '13': 'EXCITEMENT',
                           '14': 'FEAR',
@@ -1284,7 +1367,7 @@ class GO_EMOTIONS(ClassificationCorpus):
                           '25': 'SADNESS',
                           '26': 'SURPRISE',
                           '27': 'NEUTRAL'}
-        
+
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
@@ -1301,38 +1384,33 @@ class GO_EMOTIONS(ClassificationCorpus):
         # download data if necessary
         if not (data_folder / "train.txt").is_file():
 
-            # download datasets if necessary 
+            # download datasets if necessary
             goemotions_url = "https://raw.githubusercontent.com/google-research/google-research/master/goemotions/data/"
-            for name in ["train.tsv","test.tsv","dev.tsv"]:
-                cached_path(goemotions_url+name, Path("datasets") / dataset_name / 'raw')
-                
-            
+            for name in ["train.tsv", "test.tsv", "dev.tsv"]:
+                cached_path(goemotions_url + name, Path("datasets") / dataset_name / 'raw')
+
             # create dataset directory if necessary
             if not os.path.exists(data_folder):
                 os.makedirs(data_folder)
-            
 
             data_path = Path(flair.cache_root) / "datasets" / dataset_name / 'raw'
-            # create correctly formated txt files 
-            for name in ["train","test","dev"]:
-                with open(data_folder / (name +'.txt'), "w", encoding='utf-8') as txt_file:
-                    with open(data_path  / (name +".tsv"), "r",encoding = 'utf-8') as tsv_file:
-                        
+            # create correctly formated txt files
+            for name in ["train", "test", "dev"]:
+                with open(data_folder / (name + '.txt'), "w", encoding='utf-8') as txt_file:
+                    with open(data_path / (name + ".tsv"), "r", encoding='utf-8') as tsv_file:
+
                         lines = tsv_file.readlines()
                         for line in lines:
                             row = line.split('\t')
                             text = row[0]
-                            #multiple labels are possible
+                            # multiple labels are possible
                             labels = row[1].split(',')
                             label_string = ""
                             for label in labels:
-                                label_string +=  '__label__'
+                                label_string += '__label__'
                                 label_string += label
                                 label_string += ' '
                             txt_file.write(f"{label_string}{text}\n")
-
-
-            
 
         super(GO_EMOTIONS, self).__init__(
             data_folder, label_type='sentiment', tokenizer=tokenizer,
@@ -1489,10 +1567,93 @@ class TREC_6(ClassificationCorpus):
         )
 
 
+class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
+    """
+    GermEval 2018 corpus for identification of offensive language.
+    Classifying German tweets into 2 coarse-grained categories OFFENSIVE and OTHER
+    or 4 fine-grained categories ABUSE, INSULT, PROFATINTY and OTHER.
+    """
+
+    def __init__(self,
+                 base_path: Union[str, Path] = None,
+                 tokenizer: Union[bool, Callable[[str], List[Token]], Tokenizer] = SegtokTokenizer(),
+                 memory_mode: str = 'full',
+                 fine_grained_classes: bool = False,
+                 **corpusargs):
+        """
+        Instantiates GermEval 2018 Offensive Language Classification Corpus.
+        :param base_path: Provide this only if you store the Offensive Language corpus in a specific folder, otherwise use default.
+        :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
+        :param memory_mode: Set to 'full' by default since this is a small corpus. Can also be 'partial' or 'none'.
+        :param fine_grained_classes: Set to True to load the dataset with 4 fine-grained classes
+        :param corpusargs: Other args for ClassificationCorpus.
+        """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        offlang_path = "https://raw.githubusercontent.com/uds-lsv/GermEval-2018-Data/master/"
+
+        original_filenames = ["germeval2018.training.txt", "germeval2018.test.txt"]
+        new_filenames = ["train.txt", "test.txt"]
+        for original_filename in original_filenames:
+            cached_path(
+                f"{offlang_path}{original_filename}",
+                Path("datasets") / dataset_name / "original",
+            )
+        
+        task_setting = "coarse_grained"
+        if fine_grained_classes:
+            task_setting = "fine_grained"
+
+        task_folder = data_folder / task_setting
+        data_file = task_folder / new_filenames[0]
+
+        # create a separate directory for different tasks
+        if not os.path.exists(task_folder):
+            os.makedirs(task_folder)
+
+        if not data_file.is_file():
+            for original_filename, new_filename in zip(
+                    original_filenames, new_filenames
+            ):
+                with open(
+                        data_folder / "original" / original_filename,
+                        "rt",
+                        encoding="utf-8",
+                ) as open_fp:
+                    with open(
+                            data_folder / task_setting / new_filename, "wt", encoding="utf-8"
+                    ) as write_fp:
+                        for line in open_fp:
+                            line = line.rstrip()
+                            fields = line.split('\t')
+                            tweet = fields[0]
+                            if task_setting == "fine_grained":
+                                old_label = fields[2]
+                            else: 
+                                old_label = fields[1]
+                            new_label = '__label__' + old_label
+                            write_fp.write(f"{new_label} {tweet}\n")
+
+        super(GERMEVAL_2018_OFFENSIVE_LANGUAGE, self).__init__(
+            data_folder=task_folder, tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs,
+        )
+
+
 class COMMUNICATIVE_FUNCTIONS(ClassificationCorpus):
     """
-    The Communicative Functions Classification Corpus. 
-    Classifying sentences from scientific papers into 39 communicative functions. 
+    The Communicative Functions Classification Corpus.
+    Classifying sentences from scientific papers into 39 communicative functions.
     """
 
     def __init__(self,
@@ -1518,38 +1679,35 @@ class COMMUNICATIVE_FUNCTIONS(ClassificationCorpus):
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
-        
-        
+
         original_filenames = ["background.tsv", "discussion.tsv", "introduction.tsv", "method.tsv", "result.tsv"]
 
         # download data if necessary
         comm_path = "https://raw.githubusercontent.com/Alab-NII/FECFevalDataset/master/sentences/"
-        
+
         for original_filename in original_filenames:
             cached_path(f"{comm_path}{original_filename}", Path("datasets") / dataset_name / "original")
-        
+
         data_file = data_folder / "train.txt"
-        
-        
-        if not data_file.is_file(): #check if new file already exists
-            with open(data_folder / "train.txt" , 'a+', encoding = "utf-8") as write_fp:
+
+        if not data_file.is_file():  # check if new file already exists
+            with open(data_folder / "train.txt", 'a+', encoding="utf-8") as write_fp:
                 for original_filename in original_filenames[:4]:
-                    with open(data_folder / "original" / original_filename, 'rt', encoding = "utf-8") as open_fp:
+                    with open(data_folder / "original" / original_filename, 'rt', encoding="utf-8") as open_fp:
                         for line in open_fp:
                             liste = line.split('\t')
-                            write_fp.write('__label__' + liste[0].replace(' ', '_')+' '+liste[2] + '\n')
-                    with open(data_folder / "original" / "result.tsv", 'rt', encoding = "utf-8") as open_fp:
+                            write_fp.write('__label__' + liste[0].replace(' ', '_') + ' ' + liste[2] + '\n')
+                    with open(data_folder / "original" / "result.tsv", 'rt', encoding="utf-8") as open_fp:
                         for line in open_fp:
                             liste = line.split('\t')
                             if liste[0].split(' ')[-1] == "(again)":
-                                write_fp.write('__label__' + liste[0][:-8].replace(' ', '_')+' '+liste[2] + '\n')
+                                write_fp.write('__label__' + liste[0][:-8].replace(' ', '_') + ' ' + liste[2] + '\n')
                             else:
-                                write_fp.write('__label__' + liste[0].replace(' ', '_')+' '+liste[2] + '\n')
-            
+                                write_fp.write('__label__' + liste[0].replace(' ', '_') + ' ' + liste[2] + '\n')
 
-        
         super(COMMUNICATIVE_FUNCTIONS, self).__init__(
-            data_folder, label_type='communicative_function', tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs,
+            data_folder, label_type='communicative_function', tokenizer=tokenizer, memory_mode=memory_mode,
+            **corpusargs,
         )
 
 
@@ -1584,6 +1742,7 @@ class WASSA_ANGER(ClassificationCorpus):
     WASSA-2017 anger emotion-intensity dataset downloaded from and documented at
      https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html
     """
+
     def __init__(self,
                  base_path: Union[str, Path] = None,
                  tokenizer: Tokenizer = SegtokTokenizer(),
@@ -1619,6 +1778,7 @@ class WASSA_FEAR(ClassificationCorpus):
     WASSA-2017 fear emotion-intensity dataset downloaded from and documented at
      https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html
     """
+
     def __init__(self,
                  base_path: Union[str, Path] = None,
                  tokenizer: Tokenizer = SegtokTokenizer(),
@@ -1654,6 +1814,7 @@ class WASSA_JOY(ClassificationCorpus):
     WASSA-2017 joy emotion-intensity dataset downloaded from and documented at
      https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html
     """
+
     def __init__(self,
                  base_path: Union[str, Path] = None,
                  tokenizer: Tokenizer = SegtokTokenizer(),
@@ -1689,6 +1850,7 @@ class WASSA_SADNESS(ClassificationCorpus):
     WASSA-2017 sadness emotion-intensity dataset downloaded from and documented at
      https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html
     """
+
     def __init__(self,
                  base_path: Union[str, Path] = None,
                  tokenizer: Tokenizer = SegtokTokenizer(),

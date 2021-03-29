@@ -409,8 +409,8 @@ class FlairEmbeddings(TokenEmbeddings):
             "multi-backward": f"{hu_path}/lm-jw300-backward-v0.1.pt",
             "multi-v0-forward": f"{hu_path}/lm-multi-forward-v0.1.pt",
             "multi-v0-backward": f"{hu_path}/lm-multi-backward-v0.1.pt",
-            "multi-v0-forward-fast": f"{hu_path}/lm-multi-forward-fast-v0.1.pt",
-            "multi-v0-backward-fast": f"{hu_path}/lm-multi-backward-fast-v0.1.pt",
+            "multi-forward-fast": f"{hu_path}/lm-multi-forward-fast-v0.1.pt",
+            "multi-backward-fast": f"{hu_path}/lm-multi-backward-fast-v0.1.pt",
             # English models
             "en-forward": f"{hu_path}/news-forward-0.4.1.pt",
             "en-backward": f"{hu_path}/news-backward-0.4.1.pt",
@@ -591,6 +591,7 @@ class FlairEmbeddings(TokenEmbeddings):
         if "chars_per_chunk" not in self.__dict__:
             self.chars_per_chunk = 512
 
+        # unless fine-tuning is set, do not set language model to train() in order to disallow language model dropout
         if not self.fine_tune:
             pass
         else:
@@ -793,6 +794,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             use_context: Union[bool, int] = False,
             memory_effective_training: bool = True,
             respect_document_boundaries: bool = True,
+            context_dropout: float = 0.5,
             **kwargs
     ):
         """
@@ -837,11 +839,15 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         # whether to detach gradients on overlong sentences
         self.memory_effective_training = memory_effective_training
 
+
         # store whether to use context (and how much)
         if type(use_context) == bool:
             self.context_length: int = 64 if use_context else 0
         if type(use_context) == int:
             self.context_length: int = use_context
+
+        # dropout contexts
+        self.context_dropout = context_dropout
 
         # if using context, can we cross document boundaries?
         self.respect_document_boundaries = respect_document_boundaries
@@ -1086,41 +1092,50 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         # remember original sentence
         original_sentence = sentence
 
-        # get left context
+        import random
+        expand_context = False if self.training and random.randint(1, 100) <= (self.context_dropout * 100) else True
+
         left_context = ''
-        while True:
-            sentence = sentence.previous_sentence()
-            if sentence is None: break
-            if self.respect_document_boundaries and sentence.is_document_boundary: break
-
-            left_context = sentence.to_tokenized_string() + ' ' + left_context
-            left_context = left_context.strip()
-            if len(left_context.split(" ")) > self.context_length:
-                left_context = " ".join(left_context.split(" ")[-self.context_length:])
-                break
-        context_length = len(left_context.split(" "))
-        original_sentence.left_context = left_context
-
-        # get right context
-        sentence = original_sentence
         right_context = ''
-        while True:
-            sentence = sentence.next_sentence()
-            if sentence is None: break
-            if self.respect_document_boundaries and sentence.is_document_boundary: break
 
-            right_context += ' ' + sentence.to_tokenized_string()
-            right_context = right_context.strip()
-            if len(right_context.split(" ")) > self.context_length:
-                right_context = " ".join(right_context.split(" ")[:self.context_length])
-                break
-        original_sentence.right_context = right_context
+        if expand_context:
+
+            # get left context
+            while True:
+                sentence = sentence.previous_sentence()
+                if sentence is None: break
+
+                if self.respect_document_boundaries and sentence.is_document_boundary: break
+
+                left_context = sentence.to_tokenized_string() + ' ' + left_context
+                left_context = left_context.strip()
+                if len(left_context.split(" ")) > self.context_length:
+                    left_context = " ".join(left_context.split(" ")[-self.context_length:])
+                    break
+            original_sentence.left_context = left_context
+
+            sentence = original_sentence
+
+            # get right context
+            while True:
+                sentence = sentence.next_sentence()
+                if sentence is None: break
+                if self.respect_document_boundaries and sentence.is_document_boundary: break
+
+                right_context += ' ' + sentence.to_tokenized_string()
+                right_context = right_context.strip()
+                if len(right_context.split(" ")) > self.context_length:
+                    right_context = " ".join(right_context.split(" ")[:self.context_length])
+                    break
+            original_sentence.right_context = right_context
 
         # make expanded sentence
         expanded_sentence = Sentence()
         expanded_sentence.tokens = [Token(token) for token in left_context.split(" ") +
                                     original_sentence.to_tokenized_string().split(" ") +
                                     right_context.split(" ")]
+
+        context_length = len(left_context.split(" "))
         return expanded_sentence, context_length
 
     def reconstruct_tokens_from_subtokens(self, sentence, subtokens):
@@ -1186,14 +1201,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             log.error(f"subtokenized: '{subtokens}'")
         return token_subtoken_lengths
 
-    def train(self, mode=True):
-        # if fine-tuning is not enabled (i.e. a "feature-based approach" used), this
-        # module should never be in training mode
-        if not self.fine_tune:
-            pass
-        else:
-            super().train(mode)
-
     @property
     def embedding_length(self) -> int:
 
@@ -1235,6 +1242,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             "allow_long_sentences": self.allow_long_sentences,
             "memory_effective_training": self.memory_effective_training,
             "respect_document_boundaries": self.respect_document_boundaries,
+            "context_dropout": self.context_dropout,
         }
 
         return model_state
@@ -1254,6 +1262,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         if 'use_context' in self.__dict__.keys():
             self.__dict__['context_length'] = 64 if self.__dict__['use_context'] == True else 0
 
+        if not 'context_dropout' in self.__dict__.keys():
+            self.__dict__['context_dropout'] = 0.5
         if not 'respect_document_boundaries' in self.__dict__.keys():
             self.__dict__['respect_document_boundaries'] = True
         if not 'memory_effective_training' in self.__dict__.keys():
@@ -1265,7 +1275,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         if "config_state_dict" in d:
 
             # load transformer model
-            config_class = CONFIG_MAPPING[d["config_state_dict"]["model_type"]]
+            model_type = d["config_state_dict"]["model_type"] if "model_type" in d["config_state_dict"] else "bert"
+            config_class = CONFIG_MAPPING[model_type]
             loaded_config = config_class.from_dict(d["config_state_dict"])
 
             # constructor arguments
@@ -1282,6 +1293,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 allow_long_sentences=self.__dict__['allow_long_sentences'],
                 respect_document_boundaries=self.__dict__['respect_document_boundaries'],
                 memory_effective_training=self.__dict__['memory_effective_training'],
+                context_dropout=self.__dict__['context_dropout'],
 
                 config=loaded_config,
                 state_dict=d["model_state_dict"],

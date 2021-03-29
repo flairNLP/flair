@@ -65,7 +65,7 @@ The following embeddings are currently supported:
 | 'pl' | Polish | Polish FastText embeddings |
 | 'cz' | Czech | Czech FastText embeddings |
 | 'sk' | Slovak | Slovak FastText embeddings |
-| 'si' | Slovenian | Slovenian FastText embeddings |
+| 'sl' | Slovenian | Slovenian FastText embeddings |
 | 'sr' | Serbian | Serbian FastText embeddings |
 | 'hr' | Croatian | Croatian FastText embeddings |
 | 'bg' | Bulgarian | Bulgarian FastText embeddings |
