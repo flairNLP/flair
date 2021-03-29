@@ -7,7 +7,7 @@ from collections import Counter
 
 import torch
 from bpemb import BPEmb
-from transformers import AutoTokenizer, AutoConfig, AutoModel, CONFIG_MAPPING, PreTrainedTokenizer
+from transformers import AutoTokenizer, AutoConfig, AutoModel, CONFIG_MAPPING, PreTrainedTokenizer, XLNetModel, TransfoXLModel
 
 import flair
 import gensim
@@ -783,6 +783,9 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
 
 class TransformerWordEmbeddings(TokenEmbeddings):
+
+    NO_MAX_SEQ_LENGTH_MODELS=[XLNetModel, TransfoXLModel]
+
     def __init__(
             self,
             model: str = "bert-base-uncased",
@@ -825,12 +828,15 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         self.allow_long_sentences = allow_long_sentences
 
-        if allow_long_sentences:
+        if type(self.model) not in self.NO_MAX_SEQ_LENGTH_MODELS:
+            self.truncate = True
             self.max_subtokens_sequence_length = self.tokenizer.model_max_length
-            self.stride = self.tokenizer.model_max_length // 2
+            self.stride = self.tokenizer.model_max_length // 2 if allow_long_sentences else 0
         else:
-            self.max_subtokens_sequence_length = self.tokenizer.model_max_length
+            self.truncate = False
+            self.max_subtokens_sequence_length = None
             self.stride = 0
+
 
         # model name
         self.name = 'transformer-word-' + str(model)
@@ -981,7 +987,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                                                             max_length=self.max_subtokens_sequence_length,
                                                             stride=self.stride,
                                                             return_overflowing_tokens=self.allow_long_sentences,
-                                                            truncation=True,
+                                                            truncation=self.truncate,
                                                             )
 
                 sentence_splits.append(torch.tensor(encoded_inputs['input_ids'], dtype=torch.long))
@@ -997,7 +1003,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                                                         max_length=self.max_subtokens_sequence_length,
                                                         stride=self.stride,
                                                         return_overflowing_tokens=self.allow_long_sentences,
-                                                        truncation=True,
+                                                        truncation=self.truncate,
                                                         )
 
             # overlong sentences are handled as multiple splits
