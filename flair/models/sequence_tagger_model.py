@@ -782,7 +782,7 @@ class SequenceTagger(flair.nn.Model):
 
             score = forward_score - gold_score
 
-            return score.mean()
+            return score.mean(), token_count
 
         else:
             score = 0
