@@ -392,7 +392,7 @@ class TARSTagger(flair.nn.Model, Switchable):
         # Transform input data into TARS format
         sentences = self._get_tars_formatted_sentences(data_points)
 
-        loss = self.tars_model.forward_loss(sentences) * len(sentences)
+        loss = self.tars_model.forward_loss(sentences)
 
         return loss
 
