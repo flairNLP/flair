@@ -475,6 +475,7 @@ class ModelTrainer:
 
                 # process mini-batches
                 batch_time = 0
+                average_over = 0
                 for batch_no, batch in enumerate(batch_loader):
 
                     start_time = time.time()
@@ -492,7 +493,6 @@ class ModelTrainer:
                         ]
 
                     # forward and backward for batch
-                    average_over = 0
                     for batch_step in batch_steps:
 
                         # forward pass
@@ -514,8 +514,6 @@ class ModelTrainer:
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
                     optimizer.step()
 
-                    if average_over != 0:
-                        train_loss /= average_over
                     # print(train_loss / average_over)
                     # asd
 
@@ -536,9 +534,10 @@ class ModelTrainer:
                     batch_time += time.time() - start_time
                     if seen_batches % modulo == 0:
                         momentum_info = f' - momentum: {momentum:.4f}' if cycle_momentum else ''
+                        intermittent_loss = train_loss / average_over if average_over > 0 else train_loss / seen_batches
                         log.info(
                             f"epoch {self.epoch} - iter {seen_batches}/{total_number_of_batches} - loss "
-                            f"{train_loss / seen_batches:.8f} - samples/sec: {mini_batch_size * modulo / batch_time:.2f}"
+                            f"{intermittent_loss:.8f} - samples/sec: {mini_batch_size * modulo / batch_time:.2f}"
                             f" - lr: {learning_rate:.6f}{momentum_info}"
                         )
                         batch_time = 0
@@ -548,7 +547,8 @@ class ModelTrainer:
                                 self.model.state_dict(), iteration
                             )
 
-                train_loss /= seen_batches
+                if average_over != 0:
+                    train_loss /= average_over
 
                 self.model.eval()
 
