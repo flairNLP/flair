@@ -149,11 +149,12 @@ class ModelTrainer:
             else:
                 return ""
         else:
-            if self.epoch > 1:
-                return os.path.join(base_path, all_best_model_names[0])
-            else:
-                assert len(all_best_model_names) == 0, "There should be no best model saved at epoch 1"
-                return ""
+            if len(all_best_model_names) == 0: return ""
+            if self.epoch == 0:
+                log.warning( "There should be no best model saved at epoch 1")
+                log.warning("Found: " + all_best_model_names)
+            return os.path.join(base_path, all_best_model_names[0])
+
 
     def train(
             self,
