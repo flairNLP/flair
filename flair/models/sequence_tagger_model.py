@@ -379,7 +379,8 @@ class SequenceTagger(flair.nn.Model):
                 feature = self.forward(batch)
 
                 if return_loss:
-                    overall_loss += self._calculate_loss(feature, batch)
+                    loss_and_count = self._calculate_loss(feature, batch)
+                    overall_loss += loss_and_count[0] / loss_and_count[1]
 
                 tags, all_tags = self._obtain_labels(
                     feature=feature,
@@ -760,12 +761,14 @@ class SequenceTagger(flair.nn.Model):
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
 
         tag_list: List = []
+        token_count = 0
         for s_id, sentence in enumerate(sentences):
             # get the tags in this sentence
             tag_idx: List[int] = [
                 self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value)
                 for token in sentence
             ]
+            token_count += len(tag_idx)
             # add tags as tensor
             tag = torch.tensor(tag_idx, device=flair.device)
             tag_list.append(tag)
@@ -788,10 +791,11 @@ class SequenceTagger(flair.nn.Model):
             ):
                 sentence_feats = sentence_feats[:sentence_length]
                 score += torch.nn.functional.cross_entropy(
-                    sentence_feats, sentence_tags, weight=self.loss_weights
+                    sentence_feats, sentence_tags, weight=self.loss_weights, reduction='sum',
                 )
-            score /= len(features)
-            return score
+
+            # score /= token_count
+            return score, token_count
 
     def _obtain_labels(
             self,

@@ -497,6 +497,9 @@ class ModelTrainer:
 
                         # forward pass
                         loss = self.model.forward_loss(batch_step)
+                        if isinstance(loss, Tuple):
+                            average_over += loss[1]
+                            loss = loss[0]
 
                         # Backward
                         if use_amp:
@@ -504,10 +507,17 @@ class ModelTrainer:
                                 scaled_loss.backward()
                         else:
                             loss.backward()
+                        train_loss += loss.item()
+                        # print(train_loss)
 
                     # do the optimizer step
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
                     optimizer.step()
+
+                    if average_over != 0:
+                        train_loss /= average_over
+                    # print(train_loss / average_over)
+                    # asd
 
                     # do the scheduler step if one-cycle
                     if isinstance(lr_scheduler, OneCycleLR):
@@ -519,7 +529,6 @@ class ModelTrainer:
                                 momentum = group["momentum"]
 
                     seen_batches += 1
-                    train_loss += loss.item()
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(batch, embeddings_storage_mode)
