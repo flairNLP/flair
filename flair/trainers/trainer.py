@@ -1,7 +1,7 @@
 import copy
 import logging
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Tuple
 import time
 import datetime
 import sys
@@ -138,15 +138,18 @@ class ModelTrainer:
     def get_best_model_path(self, base_path, check_model_existance=False):
         all_best_model_names = [filename for filename in os.listdir(base_path) if
                                 filename.startswith("best-model_epoch")]
+
+        if len(all_best_model_names) > 1:
+            log.warning("There should be at most one best model saved at any time!")
+            log.warning("Found: " + all_best_model_names)
+
         if check_model_existance:
             if len(all_best_model_names) > 0:
-                assert len(all_best_model_names) == 1, "There should be at most one best model saved at any time."
                 return os.path.join(base_path, all_best_model_names[0])
             else:
                 return ""
         else:
             if self.epoch > 1:
-                assert len(all_best_model_names) == 1, "There should be exactly one best model saved at any epoch > 1"
                 return os.path.join(base_path, all_best_model_names[0])
             else:
                 assert len(all_best_model_names) == 0, "There should be no best model saved at epoch 1"
@@ -488,6 +491,7 @@ class ModelTrainer:
                         ]
 
                     # forward and backward for batch
+                    average_over = 0
                     for batch_step in batch_steps:
 
                         # forward pass
