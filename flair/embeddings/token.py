@@ -833,6 +833,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             self.max_subtokens_sequence_length = self.tokenizer.model_max_length
             self.stride = self.tokenizer.model_max_length // 2 if allow_long_sentences else 0
         else:
+            # in the end, these models don't need this configuration
+            self.allow_long_sentences = False
             self.truncate = False
             self.max_subtokens_sequence_length = None
             self.stride = 0
