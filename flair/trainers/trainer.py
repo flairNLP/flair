@@ -690,11 +690,12 @@ class ModelTrainer:
                 if checkpoint and not param_selection_mode:
                     self.save_checkpoint(base_path / "checkpoint.pt")
 
-                # if we use dev data, remember best model based on dev evaluation score
+                # Check whether to save best model
                 if (
                         (not train_with_dev or anneal_with_restarts or anneal_with_prestarts)
                         and not param_selection_mode
                         and current_epoch_has_best_model_so_far
+                        and not use_final_model_for_eval
                 ):
                     print("saving best model")
                     self.save_best_model(base_path, save_checkpoint=save_best_checkpoints)
