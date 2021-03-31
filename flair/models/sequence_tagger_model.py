@@ -756,7 +756,7 @@ class SequenceTagger(flair.nn.Model):
 
     def _calculate_loss(
             self, features: torch.tensor, sentences: List[Sentence]
-    ) -> float:
+    ) -> Tuple[float, int]:
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
 

@@ -46,8 +46,8 @@ class ModelTrainer:
             optimizer: torch.optim.Optimizer = SGD,
             epoch: int = 0,
             use_tensorboard: bool = False,
-            tensorboard_log_dir = None,
-            metrics_for_tensorboard = []
+            tensorboard_log_dir=None,
+            metrics_for_tensorboard=[]
     ):
         """
         Initialize a model trainer
@@ -151,10 +151,9 @@ class ModelTrainer:
         else:
             if len(all_best_model_names) == 0: return ""
             if self.epoch == 0:
-                log.warning( "There should be no best model saved at epoch 1")
+                log.warning("There should be no best model saved at epoch 1")
                 log.warning("Found: " + all_best_model_names)
             return os.path.join(base_path, all_best_model_names[0])
-
 
     def train(
             self,
@@ -192,6 +191,8 @@ class ModelTrainer:
             classification_main_metric=("micro avg", 'f1-score'),
             tensorboard_comment='',
             save_best_checkpoints=False,
+            use_swa: bool = False,
+            use_final_model_for_eval: bool = False,
             **kwargs,
     ) -> dict:
         """
@@ -240,7 +241,7 @@ class ModelTrainer:
         if self.use_tensorboard:
             try:
                 from torch.utils.tensorboard import SummaryWriter
-                
+
                 if self.tensorboard_log_dir is not None and not os.path.exists(self.tensorboard_log_dir):
                     os.mkdir(self.tensorboard_log_dir)
                 writer = SummaryWriter(log_dir=self.tensorboard_log_dir, comment=tensorboard_comment)
@@ -340,6 +341,10 @@ class ModelTrainer:
         optimizer: torch.optim.Optimizer = self.optimizer(
             self.model.parameters(), lr=learning_rate, **kwargs
         )
+
+        if use_swa:
+            import torchcontrib
+            optimizer = torchcontrib.optim.SWA(optimizer, swa_start=10, swa_freq=5, swa_lr=learning_rate)
 
         if use_amp:
             self.model, optimizer = amp.initialize(
@@ -596,9 +601,9 @@ class ModelTrainer:
                 if self.use_tensorboard:
                     for (metric_class_avg_type, metric_type) in self.metrics_for_tensorboard:
                         writer.add_scalar(
-                            f"train_{metric_class_avg_type}_{metric_type}", train_part_eval_result.classification_report[metric_class_avg_type][metric_type], self.epoch
+                            f"train_{metric_class_avg_type}_{metric_type}",
+                            train_part_eval_result.classification_report[metric_class_avg_type][metric_type], self.epoch
                         )
-
 
                 if log_dev:
                     dev_eval_result, dev_loss = self.model.evaluate(
@@ -734,6 +739,7 @@ class ModelTrainer:
                         (not train_with_dev or anneal_with_restarts or anneal_with_prestarts)
                         and not param_selection_mode
                         and self.check_for_best_score(current_score)
+                        #and not only_save_final_model
                 ):
                     print("saving best model")
                     self.save_best_model(base_path, save_checkpoint=save_best_checkpoints)
@@ -748,6 +754,9 @@ class ModelTrainer:
                     print("saving model of current epoch")
                     model_name = "model_epoch_" + str(self.epoch) + ".pt"
                     self.model.save(base_path / model_name)
+
+            if use_swa:
+                optimizer.swap_swa_sgd()
 
             # if we do not use dev data for model selection, save final model
             if save_final_model and not param_selection_mode:
@@ -767,7 +776,7 @@ class ModelTrainer:
 
         # test best model if test data is present
         if self.corpus.test and not train_with_test:
-            final_score = self.final_test(base_path, mini_batch_chunk_size, num_workers, main_score_type)
+            final_score = self.final_test(base_path, mini_batch_chunk_size, num_workers, main_score_type, use_final_model_for_eval)
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
@@ -804,6 +813,7 @@ class ModelTrainer:
             eval_mini_batch_size: int,
             num_workers: int = 8,
             main_score_type: str = None,
+            use_final_model_for_eval: bool = False,
     ):
         if type(base_path) is str:
             base_path = Path(base_path)
@@ -812,7 +822,7 @@ class ModelTrainer:
 
         self.model.eval()
 
-        if (os.path.exists(self.get_best_model_path(base_path, check_model_existance=True))):
+        if (os.path.exists(self.get_best_model_path(base_path, check_model_existance=True)) and not use_final_model_for_eval):
             log.info("Testing using best model ...")
             self.model = self.model.load(self.get_best_model_path(base_path, check_model_existance=True))
         else:
