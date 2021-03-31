@@ -454,7 +454,7 @@ class TARSTagger(flair.nn.Model, Switchable):
                                           mini_batch_size=mini_batch_size,
                                           label_name='predicted',
                                           return_loss=True)
-            print(loss_and_count)
+
             eval_loss += loss_and_count[0]
             eval_count += loss_and_count[1]
             batch_no += 1
@@ -532,9 +532,6 @@ class TARSTagger(flair.nn.Model, Switchable):
             log_header="PRECISION\tRECALL\tF1",
             detailed_results=detailed_result,
         )
-
-        print(eval_loss)
-        print(eval_count)
 
         return result, eval_loss / eval_count
 
