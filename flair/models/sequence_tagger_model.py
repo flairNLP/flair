@@ -363,6 +363,7 @@ class SequenceTagger(flair.nn.Model):
                 dataloader = tqdm(dataloader)
 
             overall_loss = 0
+            overall_count = 0
             batch_no = 0
             for batch in dataloader:
 
@@ -380,7 +381,8 @@ class SequenceTagger(flair.nn.Model):
 
                 if return_loss:
                     loss_and_count = self._calculate_loss(feature, batch)
-                    overall_loss += loss_and_count[0] / loss_and_count[1]
+                    overall_loss += loss_and_count[0]
+                    overall_count += loss_and_count[1]
 
                 tags, all_tags = self._obtain_labels(
                     feature=feature,
@@ -402,7 +404,7 @@ class SequenceTagger(flair.nn.Model):
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
             if return_loss:
-                return overall_loss / batch_no
+                return overall_loss, overall_count
 
     def _requires_span_F1_evaluation(self) -> bool:
         span_F1 = False
@@ -417,6 +419,7 @@ class SequenceTagger(flair.nn.Model):
 
     def _evaluate_with_span_F1(self, data_loader, embedding_storage_mode, mini_batch_size, out_path):
         eval_loss = 0
+        total_word_count = 0
 
         batch_no: int = 0
 
@@ -430,12 +433,13 @@ class SequenceTagger(flair.nn.Model):
         for batch in data_loader:
 
             # predict for batch
-            loss = self.predict(batch,
-                                embedding_storage_mode=embedding_storage_mode,
-                                mini_batch_size=mini_batch_size,
-                                label_name='predicted',
-                                return_loss=True)
-            eval_loss += loss
+            loss_and_count = self.predict(batch,
+                                          embedding_storage_mode=embedding_storage_mode,
+                                          mini_batch_size=mini_batch_size,
+                                          label_name='predicted',
+                                          return_loss=True)
+            eval_loss += loss_and_count[0]
+            total_word_count += loss_and_count[1]
             batch_no += 1
 
             for sentence in batch:
@@ -489,7 +493,7 @@ class SequenceTagger(flair.nn.Model):
             with open(Path(out_path), "w", encoding="utf-8") as outfile:
                 outfile.write("".join(lines))
 
-        eval_loss /= batch_no
+        eval_loss /= total_word_count
 
         detailed_result = (
             "\nResults:"
@@ -782,7 +786,7 @@ class SequenceTagger(flair.nn.Model):
 
             score = forward_score - gold_score
 
-            return score.mean(), token_count
+            return score.sum(), token_count
 
         else:
             score = 0
@@ -794,7 +798,6 @@ class SequenceTagger(flair.nn.Model):
                     sentence_feats, sentence_tags, weight=self.loss_weights, reduction='sum',
                 )
 
-            # score /= token_count
             return score, token_count
 
     def _obtain_labels(

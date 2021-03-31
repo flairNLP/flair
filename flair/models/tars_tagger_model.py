@@ -69,7 +69,7 @@ class Switchable():
                 else:
                     tag_dictionary.add_item(tag)
 
-            self._task_specific_attributes[task_name] = {'tag_dictionary' : tag_dictionary, 'tag_type': tag_type}
+            self._task_specific_attributes[task_name] = {'tag_dictionary': tag_dictionary, 'tag_type': tag_type}
 
         self.switch_to_task(task_name)
 
@@ -151,7 +151,6 @@ class TARSTagger(flair.nn.Model, Switchable):
                                                    layer_mean=False,
                                                    )
 
-
         # prepare TARS dictionary
         tars_dictionary = Dictionary(add_unk=False)
         tars_dictionary.add_item('O')
@@ -194,7 +193,7 @@ class TARSTagger(flair.nn.Model, Switchable):
         all_labels = [label.decode("utf-8") for label in self.get_current_tag_dictionary().idx2item]
         label_sentences = [Sentence(label) for label in all_labels]
 
-        self.tars_model.embeddings.eval() # TODO: check if this is necessary
+        self.tars_model.embeddings.eval()  # TODO: check if this is necessary
         self.tars_model.embeddings.embed(label_sentences)
         self.tars_model.embeddings.train()
 
@@ -436,6 +435,7 @@ class TARSTagger(flair.nn.Model, Switchable):
         data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
 
         eval_loss = 0
+        eval_count = 0
 
         batch_no: int = 0
 
@@ -449,12 +449,14 @@ class TARSTagger(flair.nn.Model, Switchable):
         for batch in data_loader:
 
             # predict for batch
-            loss = self.predict(batch,
-                                embedding_storage_mode=embedding_storage_mode,
-                                mini_batch_size=mini_batch_size,
-                                label_name='predicted',
-                                return_loss=True)
-            eval_loss += loss
+            loss_and_count = self.predict(batch,
+                                          embedding_storage_mode=embedding_storage_mode,
+                                          mini_batch_size=mini_batch_size,
+                                          label_name='predicted',
+                                          return_loss=True)
+            print(loss_and_count)
+            eval_loss += loss_and_count[0]
+            eval_count += loss_and_count[1]
             batch_no += 1
 
             for sentence in batch:
@@ -508,8 +510,6 @@ class TARSTagger(flair.nn.Model, Switchable):
             with open(Path(out_path), "w", encoding="utf-8") as outfile:
                 outfile.write("".join(lines))
 
-        eval_loss /= batch_no
-
         detailed_result = (
             "\nResults:"
             f"\n- F1-score (micro) {metric.micro_avg_f_score():.4f}"
@@ -533,7 +533,10 @@ class TARSTagger(flair.nn.Model, Switchable):
             detailed_results=detailed_result,
         )
 
-        return result, eval_loss
+        print(eval_loss)
+        print(eval_count)
+
+        return result, eval_loss / eval_count
 
     def predict(
             self,
@@ -595,7 +598,8 @@ class TARSTagger(flair.nn.Model, Switchable):
         if verbose:
             dataloader = tqdm(dataloader)
 
-        overall_loss = torch.tensor(0)
+        overall_loss = 0
+        overall_count = 0
         batch_no = 0
         with torch.no_grad():
             for batch in dataloader:
@@ -610,6 +614,7 @@ class TARSTagger(flair.nn.Model, Switchable):
                 if not batch:
                     continue
 
+                # go through each sentence in the batch
                 for sentence in batch:
 
                     # always remove tags first
@@ -621,16 +626,19 @@ class TARSTagger(flair.nn.Model, Switchable):
                     all_detected = {}
                     for label in all_labels:
                         tars_sentence = self._get_tars_formatted_sentence(label, sentence)
-                        # print(label)
-                        self.tars_model.predict(tars_sentence, label_name=label_name, all_tag_prob=True)
-                        # print(tars_sentence)
+
+                        loss_and_count = self.tars_model.predict(tars_sentence,
+                                                                 label_name=label_name,
+                                                                 all_tag_prob=True,
+                                                                 return_loss=True)
+                        overall_loss += loss_and_count[0].item()
+                        overall_count += loss_and_count[1]
 
                         for span in tars_sentence.get_spans(label_name):
                             span.set_label('tars_temp_label', label)
                             all_detected[span] = span.score
 
                         for span in tars_sentence.get_spans(label_name):
-                            # print(span)
                             for token in span:
                                 corresponding_token = sentence.get_token(token.idx)
                                 if corresponding_token is None: continue
@@ -652,31 +660,30 @@ class TARSTagger(flair.nn.Model, Switchable):
                     #
                     #     tag_this = True
                     #
-                        # for token in span:
-                        #     corresponding_token = sentence.get_token(token.idx)
-                        #     if corresponding_token is None:
-                        #         tag_this = False
-                        #         continue
-                        #     if corresponding_token.get_tag(label_name).value != '' and \
-                        #             corresponding_token.get_tag(label_name).score > token.get_tag(label_name).score:
-                        #         tag_this = False
-                        #         continue
-                        #
-                        # if tag_this:
-                        #     for token in span:
-                        #         corresponding_token = sentence.get_token(token.idx)
-                        #         corresponding_token.add_tag(
-                        #             label_name,
-                        #             token.get_tag(label_name).value + span.get_labels('tars_temp_label')[0].value,
-                        #             token.get_tag(label_name).score,
-                        #         )
+                    # for token in span:
+                    #     corresponding_token = sentence.get_token(token.idx)
+                    #     if corresponding_token is None:
+                    #         tag_this = False
+                    #         continue
+                    #     if corresponding_token.get_tag(label_name).value != '' and \
+                    #             corresponding_token.get_tag(label_name).score > token.get_tag(label_name).score:
+                    #         tag_this = False
+                    #         continue
+                    #
+                    # if tag_this:
+                    #     for token in span:
+                    #         corresponding_token = sentence.get_token(token.idx)
+                    #         corresponding_token.add_tag(
+                    #             label_name,
+                    #             token.get_tag(label_name).value + span.get_labels('tars_temp_label')[0].value,
+                    #             token.get_tag(label_name).score,
+                    #         )
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
         if return_loss:
-            return overall_loss / batch_no
-
+            return overall_loss, overall_count
 
     def predict_zero_shot(self,
                           sentences: Union[List[Sentence], Sentence],

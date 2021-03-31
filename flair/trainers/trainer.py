@@ -67,42 +67,6 @@ class ModelTrainer:
         self.tensorboard_log_dir = tensorboard_log_dir
         self.metrics_for_tensorboard = metrics_for_tensorboard
 
-    def initialize_best_dev_score(self, log_dev):
-        """
-        Initialize the best score the model has seen so far.
-        The score is the loss if we don't have dev data and main_score_type otherwise.
-        :param log_dev: whether dev data is available
-        """
-        if log_dev:
-            # assume that the score used on the dev set should be maximized and is >=0
-            self.score_mode_for_best_model_saving = "max"
-            self.best_dev_score_seen = 0
-        else:
-            self.score_mode_for_best_model_saving = "min"
-            self.best_dev_score_seen = 100000000000
-
-    def check_for_best_score(self, score_value_for_best_model_saving):
-        """
-        Check whether score_value_for_best_model_saving is better than the best score the trainer has seen so far.
-        The score is the loss if we don't have dev data and main_score_type otherwise.
-        :param score_value_for_best_model_saving: The current epoch score
-        :return: boolean indicating whether score_value_for_best_model_saving is better than the best score the trainer has seen so far
-        """
-
-        if self.score_mode_for_best_model_saving == "max":
-            if self.best_dev_score_seen < score_value_for_best_model_saving:
-                found_best_model = True
-                self.best_dev_score_seen = score_value_for_best_model_saving
-            else:
-                found_best_model = False
-        else:
-            if self.best_dev_score_seen > score_value_for_best_model_saving:
-                found_best_model = True
-                self.best_dev_score_seen = score_value_for_best_model_saving
-            else:
-                found_best_model = False
-        return found_best_model
-
     def save_best_model(self, base_path, save_checkpoint):
         # delete previous best model
         previous_best_path = self.get_best_model_path(base_path)
@@ -177,6 +141,7 @@ class ModelTrainer:
             save_final_model: bool = True,
             anneal_with_restarts: bool = False,
             anneal_with_prestarts: bool = False,
+            anneal_against_dev_loss: bool = False,
             batch_growth_annealing: bool = False,
             shuffle: bool = True,
             param_selection_mode: bool = False,
@@ -307,18 +272,9 @@ class ModelTrainer:
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False
-        log_test = (
-            True
-            if (not param_selection_mode and self.corpus.test and monitor_test)
-            else False
-        )
+        log_test = True if (not param_selection_mode and self.corpus.test and monitor_test) else False
         log_dev = False if train_with_dev or not self.corpus.dev else True
-        self.initialize_best_dev_score(log_dev)
-        log_train_part = (
-            True
-            if (eval_on_train_fraction == "dev" or eval_on_train_fraction > 0.0)
-            else False
-        )
+        log_train_part = True if (eval_on_train_fraction == "dev" or eval_on_train_fraction > 0.0) else False
 
         if log_train_part:
             train_part_size = (
@@ -338,9 +294,7 @@ class ModelTrainer:
 
         weight_extractor = WeightExtractor(base_path)
 
-        optimizer: torch.optim.Optimizer = self.optimizer(
-            self.model.parameters(), lr=learning_rate, **kwargs
-        )
+        optimizer: torch.optim.Optimizer = self.optimizer(self.model.parameters(), lr=learning_rate, **kwargs)
 
         if use_swa:
             import torchcontrib
@@ -352,7 +306,8 @@ class ModelTrainer:
             )
 
         # minimize training loss if training with dev data, else maximize dev score
-        anneal_mode = "min" if train_with_dev else "max"
+        anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
+        best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else 0.
 
         if scheduler == OneCycleLR:
             dataset_size = len(self.corpus.train)
@@ -513,14 +468,10 @@ class ModelTrainer:
                         else:
                             loss.backward()
                         train_loss += loss.item()
-                        # print(train_loss)
 
                     # do the optimizer step
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
                     optimizer.step()
-
-                    # print(train_loss / average_over)
-                    # asd
 
                     # do the scheduler step if one-cycle
                     if isinstance(lr_scheduler, OneCycleLR):
@@ -564,9 +515,6 @@ class ModelTrainer:
 
                 if self.use_tensorboard:
                     writer.add_scalar("train_loss", train_loss, self.epoch)
-
-                # anneal against train loss if training with dev, otherwise anneal against dev score
-                current_score = train_loss
 
                 # evaluate on train / dev / test split depending on training settings
                 result_line: str = ""
@@ -621,9 +569,9 @@ class ModelTrainer:
                     # calculate scores using dev data if available
                     # append dev score to score history
                     dev_score_history.append(dev_eval_result.main_score)
-                    dev_loss_history.append(dev_loss.item())
+                    dev_loss_history.append(dev_loss if type(dev_loss) == float else dev_loss.item())
 
-                    current_score = dev_eval_result.main_score
+                    dev_score = dev_eval_result.main_score
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(self.corpus.dev, embeddings_storage_mode)
@@ -667,11 +615,35 @@ class ModelTrainer:
                                 test_eval_result.classification_report[metric_class_avg_type][metric_type], self.epoch
                             )
 
-                # determine learning rate annealing through scheduler. Use auxiliary metric for AnnealOnPlateau
-                if log_dev and isinstance(lr_scheduler, AnnealOnPlateau):
-                    lr_scheduler.step(current_score, dev_loss)
-                elif not isinstance(lr_scheduler, OneCycleLR):
-                    lr_scheduler.step(current_score)
+
+                # determine if this is the best model or if we need to anneal
+                current_epoch_has_best_model_so_far = False
+                # default mode: anneal against dev score
+                if not train_with_dev and not anneal_against_dev_loss:
+                    if dev_score > best_validation_score:
+                        current_epoch_has_best_model_so_far = True
+                        best_validation_score = dev_score
+
+                    if isinstance(lr_scheduler, AnnealOnPlateau):
+                        lr_scheduler.step(dev_score, dev_loss)
+
+                # alternative: anneal against dev loss
+                if not train_with_dev and anneal_against_dev_loss:
+                    if dev_loss < best_validation_score:
+                        current_epoch_has_best_model_so_far = True
+                        best_validation_score = dev_loss
+
+                    if isinstance(lr_scheduler, AnnealOnPlateau):
+                        lr_scheduler.step(dev_loss)
+
+                # alternative: anneal against train loss
+                if train_with_dev:
+                    if train_loss < best_validation_score:
+                        current_epoch_has_best_model_so_far = True
+                        best_validation_score = train_loss
+
+                    if isinstance(lr_scheduler, AnnealOnPlateau):
+                        lr_scheduler.step(train_loss)
 
                 train_loss_history.append(train_loss)
 
@@ -694,36 +666,20 @@ class ModelTrainer:
 
                     # make headers on first epoch
                     if self.epoch == 1:
-                        f.write(
-                            f"EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS"
-                        )
+                        f.write(f"EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS")
 
                         if log_train:
-                            f.write(
-                                "\tTRAIN_"
-                                + "\tTRAIN_".join(
-                                    train_eval_result.log_header.split("\t")
-                                )
-                            )
+                            f.write("\tTRAIN_" + "\tTRAIN_".join(train_eval_result.log_header.split("\t")))
+
                         if log_train_part:
-                            f.write(
-                                "\tTRAIN_PART_LOSS\tTRAIN_PART_"
-                                + "\tTRAIN_PART_".join(
-                                    train_part_eval_result.log_header.split("\t")
-                                )
-                            )
+                            f.write("\tTRAIN_PART_LOSS\tTRAIN_PART_" + "\tTRAIN_PART_".join(
+                                    train_part_eval_result.log_header.split("\t")))
+
                         if log_dev:
-                            f.write(
-                                "\tDEV_LOSS\tDEV_"
-                                + "\tDEV_".join(dev_eval_result.log_header.split("\t"))
-                            )
+                            f.write("\tDEV_LOSS\tDEV_" + "\tDEV_".join(dev_eval_result.log_header.split("\t")))
+
                         if log_test:
-                            f.write(
-                                "\tTEST_LOSS\tTEST_"
-                                + "\tTEST_".join(
-                                    test_eval_result.log_header.split("\t")
-                                )
-                            )
+                            f.write("\tTEST_LOSS\tTEST_" + "\tTEST_".join(test_eval_result.log_header.split("\t")))
 
                     f.write(
                         f"\n{self.epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
@@ -738,8 +694,7 @@ class ModelTrainer:
                 if (
                         (not train_with_dev or anneal_with_restarts or anneal_with_prestarts)
                         and not param_selection_mode
-                        and self.check_for_best_score(current_score)
-                        #and not only_save_final_model
+                        and current_epoch_has_best_model_so_far
                 ):
                     print("saving best model")
                     self.save_best_model(base_path, save_checkpoint=save_best_checkpoints)
@@ -776,7 +731,8 @@ class ModelTrainer:
 
         # test best model if test data is present
         if self.corpus.test and not train_with_test:
-            final_score = self.final_test(base_path, mini_batch_chunk_size, num_workers, main_score_type, use_final_model_for_eval)
+            final_score = self.final_test(base_path, mini_batch_chunk_size, num_workers, main_score_type,
+                                          use_final_model_for_eval)
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
@@ -820,7 +776,8 @@ class ModelTrainer:
 
         self.model.eval()
 
-        if (os.path.exists(self.get_best_model_path(base_path, check_model_existance=True)) and not use_final_model_for_eval):
+        if (os.path.exists(
+                self.get_best_model_path(base_path, check_model_existance=True)) and not use_final_model_for_eval):
             log.info("Testing using best model ...")
             self.model = self.model.load(self.get_best_model_path(base_path, check_model_existance=True))
         else:
