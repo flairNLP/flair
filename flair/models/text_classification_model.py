@@ -257,8 +257,8 @@ class TextClassifier(flair.nn.Model):
             num_workers: int = 8,
             main_score_type: Tuple[str, str]=("micro avg", 'f1-score'),
             return_predictions: bool = False
-    ) -> (Result, float, Optional[List[Tuple[str,int,int]]]):
-        all_predictions = []
+    ) -> (Result, float):
+
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
         if not isinstance(sentences, Dataset):
@@ -307,7 +307,6 @@ class TextClassifier(flair.nn.Model):
                         sentence, true_value, prediction
                     )
                     lines.append(eval_line)
-                    all_predictions.append((sentence, true_value, prediction))
 
                 for predictions_for_sentence, true_values_for_sentence in zip(
                         predictions, true_values_for_batch
@@ -330,9 +329,17 @@ class TextClassifier(flair.nn.Model):
 
                 store_embeddings(batch, embedding_storage_mode)
 
-            # remove predicted labels
-            for sentence in sentences:
-                sentence.annotation_layers['predicted'] = []
+
+            # remove predicted labels if return_predictions is False
+            # Problem here: the predictions are only contained in sentences if it was chosen memory_mode="full" during
+            # creation of the ClassificationDataset in the ClassificationCorpus creation. If the ClassificationCorpus has
+            # memory mode "partial", then the predicted labels are not contained in sentences in any case so the following
+            # optional removal has no effect. Predictions won't be accessible outside the eval routine in this case regardless
+            # whether return_predictions is True or False. TODO: fix this
+
+            if not return_predictions:
+                for sentence in sentences:
+                    sentence.annotation_layers['predicted'] = []
 
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
@@ -384,10 +391,8 @@ class TextClassifier(flair.nn.Model):
             )
 
             eval_loss /= batch_count
-            if return_predictions:
-                return result, eval_loss, all_predictions
-            else:
-                return result, eval_loss
+
+            return result, eval_loss
 
     @staticmethod
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
