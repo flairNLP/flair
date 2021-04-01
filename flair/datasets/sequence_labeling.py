@@ -428,6 +428,7 @@ class CONLL_03(ColumnCorpus):
             self,
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
+            entity_linking:bool = False,
             in_memory: bool = True,
             **corpusargs,
     ):
@@ -436,6 +437,7 @@ class CONLL_03(ColumnCorpus):
         Obtain the corpus from https://www.clips.uantwerpen.be/conll2003/ner/ and put the eng.testa, .testb, .train
         files in a folder called 'conll_03'. Then set the base_path parameter in the constructor to the path to the
         parent directory where the conll_03 folder resides.
+        If using entity linking, the conll03 dateset is reduced by about 20 Documents, which are not part of the yago dataset.
         :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
         :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' or 'np' to predict
         POS tags or chunks respectively
@@ -446,15 +448,30 @@ class CONLL_03(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "pos", 2: "np", 3: "ner"}
+        if not entity_linking:
+            columns = {0: "text", 1: "pos", 2: "np", 3: "ner"}
+        else:
+            columns = {0: "text", 1: "pos", 2: "np", 3: "ner", 4: 'tmp',5:'entity' ,6:'normalised entity', 7: 'link', 8:'tmp_nr', 9:'tmpLink'}
 
         # this dataset name
-        dataset_name = self.__class__.__name__.lower()
+        if entity_linking:
+            dataset_name = self.__class__.__name__.lower()+"-yago-reduced"
+        else:
+            dataset_name = self.__class__.__name__.lower()
 
         # default dataset folder is the cache root
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
+
+        if entity_linking:
+            print('Test')
+            conll_yago_path = "https://nlp.informatik.hu-berlin.de/resources/datasets/conll_entity_linking/"
+            cached_path(f"{conll_yago_path}combinedENG.testa", Path("datasets") / dataset_name)
+            cached_path(f"{conll_yago_path}combinedENG.testb", Path("datasets") / dataset_name)
+            cached_path(f"{conll_yago_path}combinedENG.train", Path("datasets") / dataset_name)
+            
+
 
         # check if data there
         if not data_folder.exists():
@@ -465,14 +482,25 @@ class CONLL_03(ColumnCorpus):
             )
             log.warning("-" * 100)
 
-        super(CONLL_03, self).__init__(
-            data_folder,
-            columns,
-            tag_to_bioes=tag_to_bioes,
-            in_memory=in_memory,
-            document_separator_token="-DOCSTART-",
-            **corpusargs,
-        )
+        if entity_linking:
+            super(CONLL_03, self).__init__(
+                data_folder,
+                columns,
+                tag_to_bioes=tag_to_bioes,
+                column_delimiter='\t',
+                in_memory=in_memory,
+                document_separator_token="-DOCSTART-",
+                **corpusargs,
+            )
+        else:    
+            super(CONLL_03, self).__init__(
+                data_folder,
+                columns,
+                tag_to_bioes=tag_to_bioes,
+                in_memory=in_memory,
+                document_separator_token="-DOCSTART-",
+                **corpusargs,
+            )
 
 
 class CONLL_03_GERMAN(ColumnCorpus):
