@@ -780,7 +780,10 @@ class ModelTrainer:
         if (os.path.exists(
                 self.get_best_model_path(base_path, check_model_existance=True)) and not use_final_model_for_eval):
             log.info("Testing using best model ...")
-            self.model = self.model.load(self.get_best_model_path(base_path, check_model_existance=True))
+
+            self.model.load_state_dict(
+                self.model.load(self.get_best_model_path(base_path, check_model_existance=True)).state_dict())
+
         else:
             log.info("Testing using last state of model ...")
 

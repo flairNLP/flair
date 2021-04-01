@@ -839,7 +839,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         # whether to detach gradients on overlong sentences
         self.memory_effective_training = memory_effective_training
 
-
         # store whether to use context (and how much)
         if type(use_context) == bool:
             self.context_length: int = 64 if use_context else 0
