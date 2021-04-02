@@ -1001,7 +1001,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # else if current transformer is used, use default handling
         else:
-            print(tokenized_string)
             encoded_inputs = self.tokenizer.encode_plus(tokenized_string,
                                                         max_length=self.max_subtokens_sequence_length,
                                                         stride=self.stride,
@@ -1028,7 +1027,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             if propagate_gradients and self.memory_effective_training and split_number < len(sentence_splits) - 1:
                 propagate_gradients = False
 
-            print(input_ids)
             # put encoded batch through transformer model to get all hidden states of all encoder layers
             if propagate_gradients:
                 hidden_states = self.model(input_ids)[-1]  # make the tuple a tensor; makes working with it easier.
