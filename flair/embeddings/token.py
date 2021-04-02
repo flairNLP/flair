@@ -826,9 +826,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         else:
             self.model = AutoModel.from_pretrained(None, **kwargs)
 
-        self.allow_long_sentences = allow_long_sentences
-
+        
         if type(self.model) not in self.NO_MAX_SEQ_LENGTH_MODELS:
+            self.allow_long_sentences = allow_long_sentences
             self.truncate = True
             self.max_subtokens_sequence_length = self.tokenizer.model_max_length
             self.stride = self.tokenizer.model_max_length // 2 if allow_long_sentences else 0
@@ -1001,16 +1001,19 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # else if current transformer is used, use default handling
         else:
+            print(tokenized_string)
             encoded_inputs = self.tokenizer.encode_plus(tokenized_string,
                                                         max_length=self.max_subtokens_sequence_length,
                                                         stride=self.stride,
                                                         return_overflowing_tokens=self.allow_long_sentences,
                                                         truncation=self.truncate,
                                                         )
-
-            # overlong sentences are handled as multiple splits
-            for encoded_input in encoded_inputs['input_ids']:
-                sentence_splits.append(torch.tensor(encoded_input, dtype=torch.long))
+            if self.allow_long_sentences:
+                # overlong sentences are handled as multiple splits
+                for encoded_input in encoded_inputs['input_ids']:
+                    sentence_splits.append(torch.tensor(encoded_input, dtype=torch.long))
+            else:
+                sentence_splits.append(torch.tensor(encoded_inputs['input_ids'], dtype=torch.long))
 
         # embed each sentence split
         hidden_states_of_all_splits = []
@@ -1025,6 +1028,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             if propagate_gradients and self.memory_effective_training and split_number < len(sentence_splits) - 1:
                 propagate_gradients = False
 
+            print(input_ids)
             # put encoded batch through transformer model to get all hidden states of all encoder layers
             if propagate_gradients:
                 hidden_states = self.model(input_ids)[-1]  # make the tuple a tensor; makes working with it easier.
