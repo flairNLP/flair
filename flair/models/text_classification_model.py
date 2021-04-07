@@ -255,8 +255,10 @@ class TextClassifier(flair.nn.Model):
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 32,
             num_workers: int = 8,
-            main_score_type: Tuple[str, str]=("micro avg", 'f1-score')
+            main_score_type: Tuple[str, str]=("micro avg", 'f1-score'),
+            return_predictions: bool = False
     ) -> (Result, float):
+
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
         if not isinstance(sentences, Dataset):
@@ -327,9 +329,17 @@ class TextClassifier(flair.nn.Model):
 
                 store_embeddings(batch, embedding_storage_mode)
 
-            # remove predicted labels
-            for sentence in sentences:
-                sentence.annotation_layers['predicted'] = []
+
+            # remove predicted labels if return_predictions is False
+            # Problem here: the predictions are only contained in sentences if it was chosen memory_mode="full" during
+            # creation of the ClassificationDataset in the ClassificationCorpus creation. If the ClassificationCorpus has
+            # memory mode "partial", then the predicted labels are not contained in sentences in any case so the following
+            # optional removal has no effect. Predictions won't be accessible outside the eval routine in this case regardless
+            # whether return_predictions is True or False. TODO: fix this
+
+            if not return_predictions:
+                for sentence in sentences:
+                    sentence.annotation_layers['predicted'] = []
 
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
