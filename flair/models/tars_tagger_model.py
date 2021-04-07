@@ -120,6 +120,7 @@ class TARSTagger(flair.nn.Model, Switchable):
             tag_type: str,
             embeddings: str = 'bert-base-uncased',
             num_negative_labels_to_sample: int = 2,
+            prefix: bool = True,
             **tagger_args,
     ):
         """
@@ -175,9 +176,9 @@ class TARSTagger(flair.nn.Model, Switchable):
         if self.tars_model.embeddings.tokenizer._bos_token:
             self.separator += str(self.tars_model.embeddings.tokenizer.bos_token)
 
+        self.prefix = prefix
         self.num_negative_labels_to_sample = num_negative_labels_to_sample
         self.label_nearest_map = None
-        self.cleaned_up_labels = {}
 
         # Store task specific labels since TARS can handle multiple tasks
         self.add_and_switch_to_new_task(task_name, tag_dictionary, tag_type)
@@ -218,7 +219,6 @@ class TARSTagger(flair.nn.Model, Switchable):
                     negative_label_probabilities[label][other_label] = \
                         similarity_matrix[row_index][column_index]
         self.label_nearest_map = negative_label_probabilities
-        # print(self.label_nearest_map)
 
     def train(self, mode=True):
         """Populate label similarity map based on cosine similarity before running epoch
@@ -286,11 +286,10 @@ class TARSTagger(flair.nn.Model, Switchable):
 
         original_text = sentence.to_tokenized_string()
 
-        label_text_pair = " ".join([
-            original_text,
-            self.separator,
-            label, ],
-        )
+        label_text_pair = f"{label} {self.separator} {original_text}" if self.prefix \
+            else f"{original_text} {self.separator} {label}"
+
+        label_length = 0 if not self.prefix else len(label.split(" ")) + len(self.separator.split(" "))
 
         tars_sentence = Sentence(label_text_pair, use_tokenizer=False)
 
@@ -304,7 +303,7 @@ class TARSTagger(flair.nn.Model, Switchable):
             else:
                 tars_tag = "O"
 
-            tars_sentence.get_token(token.idx).add_tag(self.static_label_type, tars_tag)
+            tars_sentence.get_token(token.idx + label_length).add_tag(self.static_label_type, tars_tag)
 
         return tars_sentence
 
@@ -624,6 +623,8 @@ class TARSTagger(flair.nn.Model, Switchable):
                     for label in all_labels:
                         tars_sentence = self._get_tars_formatted_sentence(label, sentence)
 
+                        label_length = 0 if not self.prefix else len(label.split(" ")) + len(self.separator.split(" "))
+
                         loss_and_count = self.tars_model.predict(tars_sentence,
                                                                  label_name=label_name,
                                                                  all_tag_prob=True,
@@ -637,7 +638,7 @@ class TARSTagger(flair.nn.Model, Switchable):
 
                         for span in tars_sentence.get_spans(label_name):
                             for token in span:
-                                corresponding_token = sentence.get_token(token.idx)
+                                corresponding_token = sentence.get_token(token.idx + label_length)
                                 if corresponding_token is None: continue
                                 if corresponding_token.get_tag(label_name).value != '' and \
                                         corresponding_token.get_tag(label_name).score > token.get_tag(label_name).score:
