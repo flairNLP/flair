@@ -357,6 +357,7 @@ class TARSTagger(flair.nn.Model, Switchable):
             "tag_dictionary": self.get_current_tag_dictionary(),
             "tars_model": self.tars_model,
             "num_negative_labels_to_sample": self.num_negative_labels_to_sample,
+            "prefix": self.prefix,
 
             "task_specific_attributes": self._task_specific_attributes,
         }
@@ -373,6 +374,7 @@ class TARSTagger(flair.nn.Model, Switchable):
             tag_type=state["tag_type"],
             embeddings=state["tars_model"].embeddings,
             num_negative_labels_to_sample=state["num_negative_labels_to_sample"],
+            prefix=state["prefix"],
         )
         # set all task information
         model.task_specific_attributes = state["task_specific_attributes"]
