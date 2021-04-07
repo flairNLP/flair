@@ -8,6 +8,7 @@ from .base import MongoDataset
 from .sequence_labeling import ColumnCorpus
 from .sequence_labeling import ColumnDataset
 from .sequence_labeling import ANER_CORP
+from .sequence_labeling import AQMAR
 from .sequence_labeling import BIOFID
 from .sequence_labeling import BIOSCOPE
 from .sequence_labeling import BUSINESS_HUN
