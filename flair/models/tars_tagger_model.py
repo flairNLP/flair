@@ -638,7 +638,7 @@ class TARSTagger(flair.nn.Model, Switchable):
 
                         for span in tars_sentence.get_spans(label_name):
                             for token in span:
-                                corresponding_token = sentence.get_token(token.idx + label_length)
+                                corresponding_token = sentence.get_token(token.idx - label_length)
                                 if corresponding_token is None: continue
                                 if corresponding_token.get_tag(label_name).value != '' and \
                                         corresponding_token.get_tag(label_name).score > token.get_tag(label_name).score:
