@@ -46,9 +46,9 @@ There are several options that you can set when you init the TransformerWordEmbe
 | `layers`             | `all`       | Defines the layers of the Transformer-based model that produce the embedding
 | `subtoken_pooling`  | `first`             | See [Pooling operation section](#Pooling-operation).
 | `layer_mean`     | `True`             | See [Layer mean section](#Layer-mean).
-| `batch_size`     | 1             | How many sentences to push through transformer simultaneously (high means faster but more memory usage)
 | `fine_tune`     | `False`             | Whether or not embeddings are fine-tuneable.
 | `allow_long_sentences`     | `True`             | Whether or not texts longer than maximal sequence length are supported.
+| `use_context` | `False`             | Set to True to include context outside of sentences. This can greatly increase accuracy on some tasks, but slows down embedding generation
 
 
 ### Layers

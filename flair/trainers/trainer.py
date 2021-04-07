@@ -738,6 +738,8 @@ class ModelTrainer:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
 
+        log_handler.close()
+
         log.removeHandler(log_handler)
 
         if self.use_tensorboard:
