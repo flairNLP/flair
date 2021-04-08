@@ -57,30 +57,13 @@ class TextDataset(Dataset):
         return len(self.files)
 
     def __getitem__(self, index=0) -> torch.tensor:
-        return self.charsplit(
-            self.files[index],
-            self.expand_vocab,
-            self.forward,
-            self.split_on_char,
-            self.random_case_flip,
-        )
-
-    def charsplit(
-        self,
-        path: Union[str, Path],
-        expand_vocab=False,
-        forward=True,
-        split_on_char=True,
-        random_case_flip=True,
-    ) -> torch.tensor:
-
         """Tokenizes a text file on character basis."""
-        if type(path) is str:
-            path = Path(path)
-        assert path.exists()
+        if type(self.files[index]) is str:
+            self.files[index] = Path(self.files[index])
+        assert self.files[index].exists()
 
         lines = [doc + self.document_delimiter
-                 for doc in open(path, "r", encoding="utf-8").read().split(self.document_delimiter) if doc]
+                 for doc in open(self.files[index], "r", encoding="utf-8").read().split(self.document_delimiter) if doc]
 
         log.info(f"read text file with {len(lines)} lines")
         if self.shuffle:
@@ -90,7 +73,7 @@ class TextDataset(Dataset):
         tokens = 0
         for line in lines:
 
-            if split_on_char:
+            if self.split_on_char:
                 chars = list(line)
             else:
                 chars = line.split()
@@ -98,19 +81,19 @@ class TextDataset(Dataset):
             tokens += len(chars)
 
             # Add chars to the dictionary
-            if expand_vocab:
+            if self.expand_vocab:
                 for char in chars:
                     self.dictionary.add_item(char)
 
         ids = torch.zeros(tokens, dtype=torch.long)
-        if forward:
+        if self.forward:
             # charsplit file content
             token = 0
             for line in lines:
-                if random_case_flip:
+                if self.random_case_flip:
                     line = self.random_casechange(line)
 
-                if split_on_char:
+                if self.split_on_char:
                     chars = list(line)
                 else:
                     chars = line.split()
@@ -124,10 +107,10 @@ class TextDataset(Dataset):
             # charsplit file content
             token = tokens - 1
             for line in lines:
-                if random_case_flip:
+                if self.random_case_flip:
                     line = self.random_casechange(line)
 
-                if split_on_char:
+                if self.split_on_char:
                     chars = list(line)
                 else:
                     chars = line.split()
