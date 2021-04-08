@@ -62,8 +62,11 @@ class TextDataset(Dataset):
             self.files[index] = Path(self.files[index])
         assert self.files[index].exists()
 
-        lines = [doc + self.document_delimiter
-                 for doc in open(self.files[index], "r", encoding="utf-8").read().split(self.document_delimiter) if doc]
+        with self.files[index].open("r", encoding="utf-8") as fin:
+            lines = (doc + self.document_delimiter for doc in fin.read().split(self.document_delimiter) if doc)
+            if self.random_case_flip:
+                lines = map(self.random_casechange, lines)
+            lines = list(lines)
 
         log.info(f"read text file with {len(lines)} lines")
         if self.shuffle:
@@ -90,9 +93,6 @@ class TextDataset(Dataset):
             # charsplit file content
             token = 0
             for line in lines:
-                if self.random_case_flip:
-                    line = self.random_casechange(line)
-
                 if self.split_on_char:
                     chars = list(line)
                 else:
@@ -107,9 +107,6 @@ class TextDataset(Dataset):
             # charsplit file content
             token = tokens - 1
             for line in lines:
-                if self.random_case_flip:
-                    line = self.random_casechange(line)
-
                 if self.split_on_char:
                     chars = list(line)
                 else:
