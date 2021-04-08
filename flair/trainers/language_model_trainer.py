@@ -149,32 +149,6 @@ class TextDataset(Dataset):
             line = line.upper()
         return line
 
-    def tokenize(self, path: Union[str, Path]):
-        """Tokenizes a text file."""
-        if type(path) is str:
-            path = Path(path)
-        assert path.exists()
-        # Add words to the dictionary
-        with open(path, "r") as f:
-            tokens = 0
-            for line in f:
-                words = line.split() + ["<eos>"]
-                tokens += len(words)
-                for word in words:
-                    self.dictionary.add_word(word)
-
-        # Tokenize file content
-        with open(path, "r") as f:
-            ids = torch.zeros(tokens, dtype=torch.long, device=flair.device)
-            token = 0
-            for line in f:
-                words = line.split() + ["<eos>"]
-                for word in words:
-                    ids[token] = self.dictionary.word2idx[word]
-                    token += 1
-
-        return ids
-
 
 class TextCorpus(object):
     def __init__(
