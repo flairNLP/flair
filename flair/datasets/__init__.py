@@ -24,6 +24,7 @@ from .sequence_labeling import GERMEVAL_14
 from .sequence_labeling import INSPEC
 from .sequence_labeling import JAPANESE_NER
 from .sequence_labeling import LER_GERMAN
+from .sequence_labeling import LUO_NER
 from .sequence_labeling import MIT_MOVIE_NER_SIMPLE
 from .sequence_labeling import MIT_MOVIE_NER_COMPLEX
 from .sequence_labeling import MIT_RESTAURANT_NER
