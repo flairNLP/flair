@@ -94,6 +94,7 @@ from .treebanks import UD_ENGLISH
 from .treebanks import UD_GERMAN
 from .treebanks import UD_GERMAN_HDT
 from .treebanks import UD_DUTCH
+from .treebanks import UD_FAROESE
 from .treebanks import UD_FRENCH
 from .treebanks import UD_ITALIAN
 from .treebanks import UD_SPANISH
