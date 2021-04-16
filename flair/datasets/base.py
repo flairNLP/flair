@@ -1,8 +1,10 @@
 import logging
 from abc import abstractmethod
 from pathlib import Path
+import random
 from typing import List, Union, Callable
 
+import numpy as np
 import torch.utils.data.dataloader
 from torch.utils.data.dataset import Subset, ConcatDataset
 
@@ -48,6 +50,11 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
         elif isinstance(flair_dataset, FlairDataset) and flair_dataset.is_in_memory():
             num_workers = 0
 
+        # Set the random seed of dataloader workers to their id
+        # else each worker will return have the same numpy/python seed
+        if worker_init_fn is None:
+            worker_init_fn=self._worker_init_fn
+
         super(DataLoader, self).__init__(
             dataset,
             batch_size=batch_size,
@@ -60,6 +67,12 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
             timeout=timeout,
             worker_init_fn=worker_init_fn,
         )
+
+    @staticmethod
+    def _worker_init_fn(worker_id):
+        np.random.seed(np.random.get_state()[1][0] + worker_id)
+        random.seed(torch.initial_seed() + worker_id)
+
 
 
 class SentenceDataset(FlairDataset):
