@@ -51,7 +51,7 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
             num_workers = 0
 
         # Set the random seed of dataloader workers to their id
-        # else each worker will return have the same numpy/python seed
+        # else each worker will have the same numpy/python seed
         if worker_init_fn is None:
             worker_init_fn=self._worker_init_fn
 
