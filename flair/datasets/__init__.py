@@ -91,6 +91,7 @@ from .document_classification import YAHOO_ANSWERS
 from .treebanks import UniversalDependenciesCorpus
 from .treebanks import UniversalDependenciesDataset
 from .treebanks import UD_ENGLISH
+from .treebanks import UD_ESTONIAN
 from .treebanks import UD_GERMAN
 from .treebanks import UD_GERMAN_HDT
 from .treebanks import UD_DUTCH
