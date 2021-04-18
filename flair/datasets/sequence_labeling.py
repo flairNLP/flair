@@ -1582,11 +1582,11 @@ class NAIJA_PIDGIN_NER(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        model_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/pcm/"
+        corpus_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/pcm/"
 
-        cached_path(f"{model_path}test.txt", Path("datasets") / dataset_name)
-        cached_path(f"{model_path}train.txt", Path("datasets") / dataset_name)
-        cached_path(f"{model_path}dev.txt", Path("datasets") / dataset_name)
+        cached_path(f"{corpus_path}test.txt", Path("datasets") / dataset_name)
+        cached_path(f"{corpus_path}train.txt", Path("datasets") / dataset_name)
+        cached_path(f"{corpus_path}dev.txt", Path("datasets") / dataset_name)
 
         super(NAIJA_PIDGIN_NER, self).__init__(
             data_folder,
