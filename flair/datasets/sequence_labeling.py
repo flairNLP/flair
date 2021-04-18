@@ -883,14 +883,58 @@ class STACKOVERFLOW_NER(ColumnCorpus):
 
         # download data if necessary
         STACKOVERFLOW_NER_path = "https://raw.githubusercontent.com/jeniyat/StackOverflowNER/master/resources/annotated_ner_data/StackOverflow/"
-        cached_path(f"{STACKOVERFLOW_NER_path}train.txt", Path("datasets") / dataset_name)
-        cached_path(f"{STACKOVERFLOW_NER_path}test.txt", Path("datasets") / dataset_name)
-        cached_path(f"{STACKOVERFLOW_NER_path}dev.txt", Path("datasets") / dataset_name)
-        # cached_path(f"{STACKOVERFLOW_NER_path}train_merged_labels.txt", Path("datasets") / dataset_name) # TODO: what is this?
+
+        # data validation
+        disallowed_list = ["code omitted for annotation",
+                           "omitted for annotation",
+                           "CODE_BLOCK :",
+                           "OP_BLOCK :",
+                           "Question_URL :",
+                           "Question_ID :"
+                           ]
+
+        files = ["train", "test", "dev"]
+
+        for file in files:
+            questions = 0
+            answers = 0
+            sentences = 0
+            max_length = 0
+            words = []
+            lines_sentence = []
+
+            cached_path(f"{STACKOVERFLOW_NER_path}{file}.txt", Path("datasets") / dataset_name)
+            write_file = open(data_folder/ (file + "_clean.txt"), mode="w+")
+            for line in open(data_folder/ (file + ".txt"), mode="r", encoding="utf-8"):
+                if line.startswith("Question_ID"):
+                    questions += 1
+
+                if line.startswith("Answer_to_Question_ID"):
+                    answers += 1
+
+                line_values = line.strip().split()
+                if len(line_values) < 2:
+                    text = " ".join(w for w in words)
+                    allowed = all([d not in text for d in disallowed_list])
+                    if allowed and len(text) > 0:
+                        sentences += 1
+                        max_length = max(len(words), max_length)
+                        for l in lines_sentence:
+                            write_file.write(l)
+                    write_file.write("\n")
+                    words = []
+                    lines_sentence = []
+                    continue
+                words.append(line_values[0])
+                lines_sentence.append(line)
+
 
         super(STACKOVERFLOW_NER, self).__init__(
             data_folder,
             columns,
+            train_file="train_clean.txt",
+            test_file="test_clean.txt",
+            dev_file="dev_clean.txt",
             tag_to_bioes=tag_to_bioes,
             encoding="utf-8",
             in_memory=in_memory,
