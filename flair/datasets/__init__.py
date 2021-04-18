@@ -27,6 +27,7 @@ from .sequence_labeling import LER_GERMAN
 from .sequence_labeling import MIT_MOVIE_NER_SIMPLE
 from .sequence_labeling import MIT_MOVIE_NER_COMPLEX
 from .sequence_labeling import MIT_RESTAURANT_NER
+from .sequence_labeling import NAIJA_PIDGIN_NER
 from .sequence_labeling import NER_BASQUE
 from .sequence_labeling import NER_FINNISH
 from .sequence_labeling import NER_SWEDISH
