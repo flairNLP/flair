@@ -92,6 +92,7 @@ from .document_classification import YAHOO_ANSWERS
 # Expose all treebanks
 from .treebanks import UniversalDependenciesCorpus
 from .treebanks import UniversalDependenciesDataset
+from .treebanks import UD_ARMENIAN
 from .treebanks import UD_ENGLISH
 from .treebanks import UD_ESTONIAN
 from .treebanks import UD_GERMAN
