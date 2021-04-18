@@ -863,6 +863,16 @@ class STACKOVERFLOW_NER(ColumnCorpus):
         # column format
         columns = {0: "word", 1: "ner", 3: "markdown"}
 
+        # entity_mapping
+        entity_mapping = {"Library_Function": "Function",
+                          "Function_Name": "Function",
+                          "Class_Name": "Class",
+                          "Library_Class": "Class",
+                          "Organization": "Website",
+                          "Library_Variable": "Variable",
+                          "Variable_Name": "Variable"
+                          }
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -884,10 +894,8 @@ class STACKOVERFLOW_NER(ColumnCorpus):
             tag_to_bioes=tag_to_bioes,
             encoding="utf-8",
             in_memory=in_memory,
-            train_file="train.txt",
-            test_file="test.txt",
-            dev_file="dev.txt",
-            **corpusargs,
+            label_name_map=entity_mapping,
+            **corpusargs
         )
 
 
