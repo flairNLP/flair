@@ -927,6 +927,10 @@ class STACKOVERFLOW_NER(ColumnCorpus):
                     continue
                 words.append(line_values[0])
                 lines_sentence.append(line)
+            log.info(f"File {file} processed:")
+            log.info(f"The longest sentences has {max_length} words.")
+            log.info(f"Questions: {questions} and Answers: {answers}")
+            log.info(f"Processed sentences: {sentences}.")
 
 
         super(STACKOVERFLOW_NER, self).__init__(
