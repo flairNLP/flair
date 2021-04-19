@@ -1598,7 +1598,7 @@ class IGBO_NER(ColumnCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
-            #tag_to_bioes: str = "ner",
+            tag_to_bioes: str = "ner",
             in_memory: bool = True,
             **corpusargs,
     ):
@@ -1630,12 +1630,13 @@ class IGBO_NER(ColumnCorpus):
         igbo_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/ibo/"
         cached_path(f"{igbo_path}test.txt", Path("datasets") / dataset_name)
         cached_path(f"{igbo_path}train.txt", Path("datasets") / dataset_name)
+        cached_path(f"{igbo_path}dev.txt", Path("datasets") / dataset_name)
 
         super(IGBO_NER, self).__init__(
             data_folder,
             columns,
-            #tag_to_bioes=tag_to_bioes,
-            encoding="latin-1",
+            tag_to_bioes=tag_to_bioes,
+            #encoding="latin-1",
             in_memory=in_memory,
             **corpusargs,
         )
