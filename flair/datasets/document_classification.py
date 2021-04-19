@@ -37,6 +37,7 @@ class ClassificationCorpus(Corpus):
             memory_mode: str = "partial",
             label_name_map: Dict[str, str] = None,
             skip_labels: List[str] = None,
+            allow_examples_without_labels=False,
             encoding: str = 'utf-8',
     ):
         """
@@ -55,6 +56,7 @@ class ClassificationCorpus(Corpus):
         if full corpus and all embeddings fits into memory for speedups during training. Otherwise use 'partial' and if
         even this is too much for your memory, use 'disk'.
         :param label_name_map: Optionally map label names to different schema.
+        :param allow_examples_without_labels: set to True to allow Sentences without label in the corpus.
         :param encoding: Default is 'uft-8' but some datasets are in 'latin-1
         :return: a Corpus with annotated train, dev and test data
         """
@@ -73,6 +75,7 @@ class ClassificationCorpus(Corpus):
             memory_mode=memory_mode,
             label_name_map=label_name_map,
             skip_labels=skip_labels,
+            allow_examples_without_labels=allow_examples_without_labels,
             encoding=encoding,
         )
 
@@ -87,6 +90,7 @@ class ClassificationCorpus(Corpus):
             memory_mode=memory_mode,
             label_name_map=label_name_map,
             skip_labels=skip_labels,
+            allow_examples_without_labels=allow_examples_without_labels,
             encoding=encoding,
         ) if test_file is not None else None
 
@@ -101,6 +105,7 @@ class ClassificationCorpus(Corpus):
             memory_mode=memory_mode,
             label_name_map=label_name_map,
             skip_labels=skip_labels,
+            allow_examples_without_labels=allow_examples_without_labels,
             encoding=encoding,
         ) if dev_file is not None else None
 
@@ -125,6 +130,7 @@ class ClassificationDataset(FlairDataset):
             memory_mode: str = "partial",
             label_name_map: Dict[str, str] = None,
             skip_labels: List[str] = None,
+            allow_examples_without_labels=False,
             encoding: str = 'utf-8',
     ):
         """
@@ -143,6 +149,7 @@ class ClassificationDataset(FlairDataset):
         if full corpus and all embeddings fits into memory for speedups during training. Otherwise use 'partial' and if
         even this is too much for your memory, use 'disk'.
         :param label_name_map: Optionally map label names to different schema.
+        :param allow_examples_without_labels: set to True to allow Sentences without label in the Dataset.
         :param encoding: Default is 'uft-8' but some datasets are in 'latin-1
         :return: list of sentences
         """
@@ -169,6 +176,7 @@ class ClassificationDataset(FlairDataset):
         self.truncate_to_max_tokens = truncate_to_max_tokens
         self.filter_if_longer_than = filter_if_longer_than
         self.label_name_map = label_name_map
+        self.allow_examples_without_labels = allow_examples_without_labels
 
         self.path_to_file = path_to_file
 
@@ -176,7 +184,7 @@ class ClassificationDataset(FlairDataset):
             line = f.readline()
             position = 0
             while line:
-                if "__label__" not in line or (" " not in line and "\t" not in line):
+                if ("__label__" not in line and not allow_examples_without_labels) or (" " not in line and "\t" not in line):
                     position = f.tell()
                     line = f.readline()
                     continue
@@ -219,7 +227,7 @@ class ClassificationDataset(FlairDataset):
                     text = line[l_len:].strip()
 
                     # if so, add to indices
-                    if text and label:
+                    if text and (label or allow_examples_without_labels):
 
                         if self.memory_mode == 'partial':
                             self.lines.append(line)
@@ -257,7 +265,7 @@ class ClassificationDataset(FlairDataset):
         if self.truncate_to_max_chars > 0:
             text = text[: self.truncate_to_max_chars]
 
-        if text and labels:
+        if text and (labels or self.allow_examples_without_label):
             sentence = Sentence(text, use_tokenizer=tokenizer)
 
             for label in labels:
