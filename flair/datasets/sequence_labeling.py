@@ -5,9 +5,10 @@ import shutil
 import glob
 from pathlib import Path
 from typing import Union, Dict, List
-from os import  listdir
+from os import listdir
 import zipfile
 from zipfile import ZipFile
+import tarfile
 
 
 import flair
@@ -649,6 +650,7 @@ class ICELANDIC_NER(ColumnCorpus):
         with open(outputfile/data_folder/"icelandic_ner.txt", "wb") as outfile:
             for files in os.walk(outputfile/data_folder):
                 f = files[2]
+
                 for i in range(len(f)):
                     if f[i].endswith('.txt'):
                         with open(outputfile/data_folder/f[i], 'rb') as infile:
@@ -664,6 +666,54 @@ class ICELANDIC_NER(ColumnCorpus):
             in_memory=in_memory,
             **corpusargs,
         )
+
+
+
+class WEBPAGES_NER(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            **corpusargs,
+    ):
+        """
+               Initialize the Webpages corpus. This is only possible if you've manually downloaded it to your machine.
+               Obtain the corpus from https://cogcomp.seas.upenn.edu/Data/NERWebpagesColumns.tgz, merges them into one file and transform the format to an IOB format and put the webpage_ner IOB
+               files in a folder called 'webpage-ner'. Then set the base_path parameter in the constructor to the path to the
+               parent directory where the webpages folder resides.
+               :param base_path: Path to the webpages corpus (i.e. 'webpage-ner' folder) on your machine
+               :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' or 'np' to predict
+               POS tags or chunks respectively
+               :param in_memory: If True, keeps dataset in memory giving speedups in training.
+               :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+               """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        train_data_file = data_folder / 'webpage_ner'
+
+
+        super(WEBPAGES_NER, self).__init__(
+            train_data_file,
+            columns,
+            train_file='webpage_ner',
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            **corpusargs,
+        )
+
 
 class STACKOVERFLOW_NER(ColumnCorpus):
     def __init__(
