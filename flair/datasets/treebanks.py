@@ -1510,6 +1510,33 @@ class UD_WOLOF(UniversalDependenciesCorpus):
         super(UD_WOLOF, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
+class UD_BELARUSIAN(UniversalDependenciesCorpus):
+      def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Belarusian-HSE/master"
+        cached_path(f"{web_path}/be_hse-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(
+            f"{web_path}/be_hse-ud-test.conllu", Path("datasets") / dataset_name
+        )
+        cached_path(
+            f"{web_path}/be_hse-ud-train.conllu", Path("datasets") / dataset_name
+        )
+
+        super(UD_BELARUSIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
+
+        
 class UD_COPTIC(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
@@ -1535,4 +1562,3 @@ class UD_COPTIC(UniversalDependenciesCorpus):
         )
 
         super(UD_COPTIC, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
-
