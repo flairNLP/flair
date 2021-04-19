@@ -307,6 +307,52 @@ class ColumnDataset(FlairDataset):
 
         return sentence
 
+class AMHARIC_NER(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            **corpusargs,
+    ):
+        """
+        Initialize the Amharic corpus available on https://github.com/masakhane-io/masakhane-ner/tree/main/data/amh/.
+        The first time you call this constructor it will automatically download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ner_amharic_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/amh/"
+        cached_path(f"{ner_amharic_path}dev.txt", Path("datasets") / dataset_name)
+        cached_path(f"{ner_amharic_path}test.txt", Path("datasets") / dataset_name)
+        cached_path(f"{ner_amharic_path}train.txt", Path("datasets") / dataset_name)
+
+        super(AMHARIC_NER, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            encoding="utf-8",
+            in_memory=in_memory,
+            **corpusargs,
+        )
 
 class ANER_CORP(ColumnCorpus):
     def __init__(
@@ -863,6 +909,16 @@ class STACKOVERFLOW_NER(ColumnCorpus):
         # column format
         columns = {0: "word", 1: "ner", 3: "markdown"}
 
+        # entity_mapping
+        entity_mapping = {"Library_Function": "Function",
+                          "Function_Name": "Function",
+                          "Class_Name": "Class",
+                          "Library_Class": "Class",
+                          "Organization": "Website",
+                          "Library_Variable": "Variable",
+                          "Variable_Name": "Variable"
+                          }
+
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
@@ -873,21 +929,67 @@ class STACKOVERFLOW_NER(ColumnCorpus):
 
         # download data if necessary
         STACKOVERFLOW_NER_path = "https://raw.githubusercontent.com/jeniyat/StackOverflowNER/master/resources/annotated_ner_data/StackOverflow/"
-        cached_path(f"{STACKOVERFLOW_NER_path}train.txt", Path("datasets") / dataset_name)
-        cached_path(f"{STACKOVERFLOW_NER_path}test.txt", Path("datasets") / dataset_name)
-        cached_path(f"{STACKOVERFLOW_NER_path}dev.txt", Path("datasets") / dataset_name)
-        # cached_path(f"{STACKOVERFLOW_NER_path}train_merged_labels.txt", Path("datasets") / dataset_name) # TODO: what is this?
+
+        # data validation
+        disallowed_list = ["code omitted for annotation",
+                           "omitted for annotation",
+                           "CODE_BLOCK :",
+                           "OP_BLOCK :",
+                           "Question_URL :",
+                           "Question_ID :"
+                           ]
+
+        files = ["train", "test", "dev"]
+
+        for file in files:
+            questions = 0
+            answers = 0
+            sentences = 0
+            max_length = 0
+            words = []
+            lines_sentence = []
+
+            cached_path(f"{STACKOVERFLOW_NER_path}{file}.txt", Path("datasets") / dataset_name)
+            write_file = open(data_folder/ (file + "_clean.txt"), mode="w+")
+            for line in open(data_folder/ (file + ".txt"), mode="r", encoding="utf-8"):
+                if line.startswith("Question_ID"):
+                    questions += 1
+
+                if line.startswith("Answer_to_Question_ID"):
+                    answers += 1
+
+                line_values = line.strip().split()
+                if len(line_values) < 2:
+                    text = " ".join(w for w in words)
+                    allowed = all([d not in text for d in disallowed_list])
+                    if allowed and len(text) > 0:
+                        sentences += 1
+                        max_length = max(len(words), max_length)
+                        for l in lines_sentence:
+                            write_file.write(l)
+                    write_file.write("\n")
+                    words = []
+                    lines_sentence = []
+                    continue
+                words.append(line_values[0])
+                lines_sentence.append(line)
+            log.info(f"File {file} processed:")
+            log.info(f"The longest sentences has {max_length} words.")
+            log.info(f"Questions: {questions} and Answers: {answers}")
+            log.info(f"Processed sentences: {sentences}.")
+
 
         super(STACKOVERFLOW_NER, self).__init__(
             data_folder,
             columns,
+            train_file="train_clean.txt",
+            test_file="test_clean.txt",
+            dev_file="dev_clean.txt",
             tag_to_bioes=tag_to_bioes,
             encoding="utf-8",
             in_memory=in_memory,
-            train_file="train.txt",
-            test_file="test.txt",
-            dev_file="dev.txt",
-            **corpusargs,
+            label_name_map=entity_mapping,
+            **corpusargs
         )
 
 
@@ -1594,6 +1696,7 @@ class MIT_RESTAURANT_NER(ColumnCorpus):
             **corpusargs,
         )
 
+        
 class NER_YORUBA(ColumnCorpus):
     def __init__(
             self,
@@ -1651,7 +1754,6 @@ class KINYARWANDA_NER(ColumnCorpus):
             in_memory: bool = True,
             **corpusargs,
     ):
-
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
@@ -1674,6 +1776,54 @@ class KINYARWANDA_NER(ColumnCorpus):
 
 
         super(KINYARWANDA_NER, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            **corpusargs,
+        )
+        
+
+class NAIJA_PIDGIN_NER(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            **corpusargs,
+    ):
+        """
+        Initialize the Naija Pidgin corpus for NER available on:
+        https://github.com/masakhane-io/masakhane-ner/tree/main/data/pcm
+        The first time you call this constructor it will automatically download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+        
+        corpus_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/pcm/"
+
+        cached_path(f"{corpus_path}test.txt", Path("datasets") / dataset_name)
+        cached_path(f"{corpus_path}train.txt", Path("datasets") / dataset_name)
+        cached_path(f"{corpus_path}dev.txt", Path("datasets") / dataset_name)
+
+        super(NAIJA_PIDGIN_NER, self).__init__(
             data_folder,
             columns,
             tag_to_bioes=tag_to_bioes,
