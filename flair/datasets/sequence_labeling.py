@@ -1628,7 +1628,7 @@ class YORUBA_NER(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        yoruba_path = "https://github.com/masakhane-io/masakhane-ner/tree/main/data/yor"
+        yoruba_path = "https://github.com/masakhane-io/masakhane-ner/tree/main/data/yor/"
         cached_path(f"{yoruba_path}test.txt", Path("datasets") / dataset_name)
         cached_path(f"{yoruba_path}train.txt", Path("datasets") / dataset_name)
 
