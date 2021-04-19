@@ -704,6 +704,22 @@ def test_tagged_corpus_downsample():
     assert 3 == len(corpus.train)
 
 
+def test_classification_corpus_multi_labels_without_negative_examples(tasks_base_path):
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "multi_class_negative_examples",
+                                                 allow_examples_without_labels=False)
+    assert len(corpus.train) == 7
+    assert len(corpus.dev) == 4
+    assert len(corpus.test) == 5
+
+
+def test_classification_corpus_multi_labels_with_negative_examples(tasks_base_path):
+    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "multi_class_negative_examples",
+                                                 allow_examples_without_labels=True)
+    assert len(corpus.train) == 8
+    assert len(corpus.dev) == 5
+    assert len(corpus.test) == 6
+
+
 def test_spans():
     sentence = Sentence("Zalando Research is located in Berlin .")
 
