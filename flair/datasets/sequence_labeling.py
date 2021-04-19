@@ -1594,8 +1594,7 @@ class MIT_RESTAURANT_NER(ColumnCorpus):
             **corpusargs,
         )
 
-
-class YORUBA_NER(ColumnCorpus):
+class NER_YORUBA(ColumnCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -1604,7 +1603,8 @@ class YORUBA_NER(ColumnCorpus):
             **corpusargs,
     ):
         """
-        Initialize the experimental MIT Restaurant corpus available on https://github.com/masakhane-io/masakhane-ner/tree/main/data/yor.
+        Initialize the Yoruba corpus for NER available on:
+        https://github.com/masakhane-io/masakhane-ner/tree/main/data/yor
         The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -1628,15 +1628,16 @@ class YORUBA_NER(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        yoruba_path = "https://github.com/masakhane-io/masakhane-ner/tree/main/data/yor/"
-        cached_path(f"{yoruba_path}test.txt", Path("datasets") / dataset_name)
-        cached_path(f"{yoruba_path}train.txt", Path("datasets") / dataset_name)
+        model_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/yor/"
 
-        super(YORUBA_NER, self).__init__(
+        cached_path(f"{model_path}test.txt", Path("datasets") / dataset_name)
+        cached_path(f"{model_path}train.txt", Path("datasets") / dataset_name)
+        cached_path(f"{model_path}dev.txt", Path("datasets") / dataset_name)
+
+        super(NER_YORUBA, self).__init__(
             data_folder,
             columns,
             tag_to_bioes=tag_to_bioes,
-            encoding="latin-1",
             in_memory=in_memory,
             **corpusargs,
         )
