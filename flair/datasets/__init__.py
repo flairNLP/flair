@@ -23,7 +23,9 @@ from .sequence_labeling import EUROPARL_NER_GERMAN
 from .sequence_labeling import GERMEVAL_14
 from .sequence_labeling import INSPEC
 from .sequence_labeling import JAPANESE_NER
+from .sequence_labeling import KINYARWANDA_NER
 from .sequence_labeling import LER_GERMAN
+from .sequence_labeling import LUO_NER
 from .sequence_labeling import MIT_MOVIE_NER_SIMPLE
 from .sequence_labeling import MIT_MOVIE_NER_COMPLEX
 from .sequence_labeling import MIT_RESTAURANT_NER
@@ -91,10 +93,13 @@ from .document_classification import YAHOO_ANSWERS
 # Expose all treebanks
 from .treebanks import UniversalDependenciesCorpus
 from .treebanks import UniversalDependenciesDataset
+from .treebanks import UD_ARMENIAN
 from .treebanks import UD_ENGLISH
+from .treebanks import UD_ESTONIAN
 from .treebanks import UD_GERMAN
 from .treebanks import UD_GERMAN_HDT
 from .treebanks import UD_DUTCH
+from .treebanks import UD_FAROESE
 from .treebanks import UD_FRENCH
 from .treebanks import UD_ITALIAN
 from .treebanks import UD_SPANISH
@@ -132,6 +137,9 @@ from .treebanks import UD_AFRIKAANS
 from .treebanks import UD_OLD_FRENCH
 from .treebanks import UD_GOTHIC
 from .treebanks import UD_WOLOF
+from .treebanks import UD_BELARUSIAN
+from .treebanks import UD_OLD_CHURCH_SLAVONIC
+from .treebanks import UD_COPTIC
 
 # Expose all text-text datasets
 from .text_text import ParallelTextCorpus
