@@ -1652,7 +1652,20 @@ class NAIJA_PIDGIN_NER(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
 
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+        
         corpus_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/pcm/"
 
         cached_path(f"{corpus_path}test.txt", Path("datasets") / dataset_name)
