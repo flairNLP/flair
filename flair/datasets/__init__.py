@@ -7,6 +7,7 @@ from .base import MongoDataset
 # Expose all sequence labeling datasets
 from .sequence_labeling import ColumnCorpus
 from .sequence_labeling import ColumnDataset
+from .sequence_labeling import AMHARIC_NER
 from .sequence_labeling import ANER_CORP
 from .sequence_labeling import AQMAR
 from .sequence_labeling import BIOFID
