@@ -252,6 +252,33 @@ class UD_ENGLISH(UniversalDependenciesCorpus):
         super(UD_ENGLISH, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
+class UD_ESTONIAN(UniversalDependenciesCorpus):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Estonian-EDT/master"
+        cached_path(f"{web_path}/et_edt-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(
+            f"{web_path}/et_edt-ud-test.conllu", Path("datasets") / dataset_name
+        )
+        cached_path(
+            f"{web_path}/et_edt-ud-train.conllu", Path("datasets") / dataset_name
+        )
+
+        super(UD_ESTONIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
+
+
 class UD_GERMAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
@@ -350,6 +377,38 @@ class UD_DUTCH(UniversalDependenciesCorpus):
         )
 
         super(UD_DUTCH, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
+
+class UD_FAROESE(UniversalDependenciesCorpus):
+    """ This treebank includes the Faroese treebank dataset from the following link:
+    https://github.com/UniversalDependencies/UD_Faroese-FarPaHC/tree/master
+    
+    Faronese is a small Western Scandinavian language with 60.000-100.000, related to Icelandic and Old Norse"""
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Faroese-FarPaHC/master"
+        cached_path(
+            f"{web_path}/fo_farpahc-ud-dev.conllu", Path("datasets") / dataset_name
+        )
+        cached_path(
+            f"{web_path}/fo_farpahc-ud-test.conllu", Path("datasets") / dataset_name
+        )
+        cached_path(
+            f"{web_path}/fo_farpahc-ud-train.conllu", Path("datasets") / dataset_name
+        )
+
+        super(UD_FAROESE, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
 class UD_FRENCH(UniversalDependenciesCorpus):

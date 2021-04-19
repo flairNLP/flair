@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Union, Dict, Optional, Set
+from typing import List, Union, Dict, Optional, Set, Tuple
 
 import torch
 import torch.nn as nn
@@ -53,7 +53,7 @@ class TextClassifier(flair.nn.Model):
 
         super(TextClassifier, self).__init__()
 
-        self.document_embeddings: flair.embeddings.DocumentRNNEmbeddings = document_embeddings
+        self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
         self.label_dictionary: Dictionary = label_dictionary
         self.label_type = label_type
 
@@ -255,7 +255,10 @@ class TextClassifier(flair.nn.Model):
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 32,
             num_workers: int = 8,
+            main_score_type: Tuple[str, str]=("micro avg", 'f1-score'),
+            return_predictions: bool = False
     ) -> (Result, float):
+
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
         if not isinstance(sentences, Dataset):
@@ -326,9 +329,17 @@ class TextClassifier(flair.nn.Model):
 
                 store_embeddings(batch, embedding_storage_mode)
 
-            # remove predicted labels
-            for sentence in sentences:
-                sentence.annotation_layers['predicted'] = []
+
+            # remove predicted labels if return_predictions is False
+            # Problem here: the predictions are only contained in sentences if it was chosen memory_mode="full" during
+            # creation of the ClassificationDataset in the ClassificationCorpus creation. If the ClassificationCorpus has
+            # memory mode "partial", then the predicted labels are not contained in sentences in any case so the following
+            # optional removal has no effect. Predictions won't be accessible outside the eval routine in this case regardless
+            # whether return_predictions is True or False. TODO: fix this
+
+            if not return_predictions:
+                for sentence in sentences:
+                    sentence.annotation_layers['predicted'] = []
 
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
@@ -340,6 +351,8 @@ class TextClassifier(flair.nn.Model):
                 target_names.append(self.label_dictionary.get_item_for_index(i))
             classification_report = metrics.classification_report(y_true, y_pred, digits=4,
                                                                   target_names=target_names, zero_division=0)
+            classification_report_dict = metrics.classification_report(y_true, y_pred, digits=4,
+                                                                  target_names=target_names, zero_division=0, output_dict=True)
 
             # get scores
             micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0),
@@ -370,10 +383,11 @@ class TextClassifier(flair.nn.Model):
                            f"{accuracy_score}"
 
             result = Result(
-                main_score=micro_f_score,
+                main_score=classification_report_dict[main_score_type[0]][main_score_type[1]],
                 log_line=log_line,
                 log_header=log_header,
                 detailed_results=detailed_result,
+                classification_report=classification_report_dict
             )
 
             eval_loss /= batch_count
@@ -470,7 +484,7 @@ class TextClassifier(flair.nn.Model):
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
         model_map["de-offensive-language"] = "/".join(
-            [hu_path, "de-offensive-language", "germ-eval-2018-task-1-v0.5.pt"]
+            [hu_path, "de-offensive-language", "germ-eval-2018-task-1-v0.8.pt"]
         )
 
         # English sentiment models
@@ -481,7 +495,7 @@ class TextClassifier(flair.nn.Model):
             [hu_path, "sentiment-curated-distilbert", "sentiment-en-mix-distillbert_4.pt"]
         )
         model_map["sentiment-fast"] = "/".join(
-            [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn.pt"]
+            [hu_path, "sentiment-curated-fasttext-rnn", "sentiment-en-mix-ft-rnn_v8.pt"]
         )
 
         # Communicative Functions Model
@@ -554,6 +568,15 @@ class TextPairClassifier(TextClassifier):
 
             nn.init.xavier_uniform_(self.decoder.weight)
 
+        # else, set separator to concatenate two sentences
+        else:
+            self.sep = ' '
+            if isinstance(self.document_embeddings, flair.embeddings.document.TransformerDocumentEmbeddings):
+                if self.document_embeddings.tokenizer.sep_token:
+                    self.sep = ' ' + str(self.document_embeddings.tokenizer.sep_token) + ' '
+                else:
+                    self.sep = ' [SEP] '
+
     def _get_state_dict(self):
         model_state = super()._get_state_dict()
         model_state["bi_mode"] = self.bi_mode
@@ -601,15 +624,12 @@ class TextPairClassifier(TextClassifier):
 
         else:  # concatenate the sentences and embed together
 
-            # TODO: Transformers use special separator symbols in the beginning and between elements
-            #      of datapair. Here should be a case dinstintion between the different transformers.
-            if isinstance(self.document_embeddings, flair.embeddings.document.TransformerDocumentEmbeddings):
-                sep = '[SEP]'
-            else:
-                sep = ' '
-
-            concatenated_sentences = [Sentence(pair.first.to_plain_string() + sep + pair.second.to_plain_string()) for
-                                      pair in datapairs]
+            concatenated_sentences = [
+                Sentence(
+                    pair.first.to_tokenized_string() + self.sep + pair.second.to_tokenized_string(),
+                    use_tokenizer=False
+                )
+                for pair in datapairs]
 
             self.document_embeddings.embed(concatenated_sentences)
 
@@ -896,11 +916,11 @@ class TARSClassifier(TextClassifier):
     def _init_model_with_state_dict(state):
         task_name = state["current_task"]
         print("init TARS")
-        
+
         # init new TARS classifier
         model = TARSClassifier(
             task_name,
-            label_dictionary = state["task_specific_attributes"][task_name]['label_dictionary'],
+            label_dictionary=state["task_specific_attributes"][task_name]['label_dictionary'],
             document_embeddings=state["tars_model"].document_embeddings,
             num_negative_labels_to_sample=state["num_negative_labels_to_sample"],
         )

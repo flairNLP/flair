@@ -8,6 +8,7 @@ from .base import MongoDataset
 from .sequence_labeling import ColumnCorpus
 from .sequence_labeling import ColumnDataset
 from .sequence_labeling import ANER_CORP
+from .sequence_labeling import AQMAR
 from .sequence_labeling import BIOFID
 from .sequence_labeling import BIOSCOPE
 from .sequence_labeling import BUSINESS_HUN
@@ -21,7 +22,10 @@ from .sequence_labeling import DANE
 from .sequence_labeling import EUROPARL_NER_GERMAN
 from .sequence_labeling import GERMEVAL_14
 from .sequence_labeling import INSPEC
+from .sequence_labeling import JAPANESE_NER
+from .sequence_labeling import KINYARWANDA_NER
 from .sequence_labeling import LER_GERMAN
+from .sequence_labeling import LUO_NER
 from .sequence_labeling import MIT_MOVIE_NER_SIMPLE
 from .sequence_labeling import MIT_MOVIE_NER_COMPLEX
 from .sequence_labeling import MIT_RESTAURANT_NER
@@ -57,6 +61,7 @@ from .sequence_labeling import WNUT_17
 from .sequence_labeling import WSD_UFSAC
 from .sequence_labeling import WNUT_2020_NER
 from .sequence_labeling import XTREME
+from .sequence_labeling import REDDIT_EL_GOLD
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
@@ -82,14 +87,17 @@ from .document_classification import WASSA_ANGER
 from .document_classification import WASSA_FEAR
 from .document_classification import WASSA_JOY
 from .document_classification import WASSA_SADNESS
+from .document_classification import YAHOO_ANSWERS
 
 # Expose all treebanks
 from .treebanks import UniversalDependenciesCorpus
 from .treebanks import UniversalDependenciesDataset
 from .treebanks import UD_ENGLISH
+from .treebanks import UD_ESTONIAN
 from .treebanks import UD_GERMAN
 from .treebanks import UD_GERMAN_HDT
 from .treebanks import UD_DUTCH
+from .treebanks import UD_FAROESE
 from .treebanks import UD_FRENCH
 from .treebanks import UD_ITALIAN
 from .treebanks import UD_SPANISH
