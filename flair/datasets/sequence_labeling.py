@@ -1697,6 +1697,54 @@ class MIT_RESTAURANT_NER(ColumnCorpus):
         )
 
         
+class HAUSA_NER(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            **corpusargs,
+    ):
+        """
+        Initialize the Hausa corpus available on https://github.com/masakhane-io/masakhane-ner/tree/main/data/hau.
+        The first time you call this constructor it will automatically download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        ner_hausa_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/hau/"
+        cached_path(f"{ner_hausa_path}test.txt", Path("datasets") / dataset_name)
+        cached_path(f"{ner_hausa_path}train.txt", Path("datasets") / dataset_name)
+        cached_path(f"{ner_hausa_path}dev.txt", Path("datasets") / dataset_name)
+
+        super(HAUSA_NER, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            encoding="latin-1",
+            in_memory=in_memory,
+            **corpusargs,
+        )
+
+
 class NER_YORUBA(ColumnCorpus):
     def __init__(
             self,
