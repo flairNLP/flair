@@ -136,6 +136,7 @@ from .treebanks import UD_OLD_FRENCH
 from .treebanks import UD_GOTHIC
 from .treebanks import UD_WOLOF
 from .treebanks import UD_OLD_CHURCH_SLAVONIC
+from .treebanks import UD_COPTIC
 
 # Expose all text-text datasets
 from .text_text import ParallelTextCorpus
