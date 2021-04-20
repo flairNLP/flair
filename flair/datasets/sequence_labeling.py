@@ -1636,7 +1636,7 @@ class IGBO_NER(ColumnCorpus):
             data_folder,
             columns,
             tag_to_bioes=tag_to_bioes,
-            #encoding="latin-1",
+            encoding="utf-8",
             in_memory=in_memory,
             **corpusargs,
         )
