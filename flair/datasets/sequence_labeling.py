@@ -670,6 +670,7 @@ class ICELANDIC_NER(ColumnCorpus):
 
 
 class WEBPAGES_NER(ColumnCorpus):
+
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -678,21 +679,20 @@ class WEBPAGES_NER(ColumnCorpus):
             **corpusargs,
     ):
         """
-               Initialize the Webpages corpus. This is only possible if you've manually downloaded it to your machine.
-               Obtain the corpus from https://cogcomp.seas.upenn.edu/Data/NERWebpagesColumns.tgz, merges them into one file and transform the format to an IOB format and put the webpage_ner IOB
-               files in a folder called 'webpage-ner'. Then set the base_path parameter in the constructor to the path to the
-               parent directory where the webpages folder resides.
-               :param base_path: Path to the webpages corpus (i.e. 'webpage-ner' folder) on your machine
-               :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' or 'np' to predict
-               POS tags or chunks respectively
-               :param in_memory: If True, keeps dataset in memory giving speedups in training.
-               :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
-               """
+        Initialize the WEBPAGES_NER corpus. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {0: "text", 1: "ner"}
+        columns = {0: "ner", 5: "text"}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -702,13 +702,33 @@ class WEBPAGES_NER(ColumnCorpus):
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
 
-        train_data_file = data_folder / 'webpage_ner'
+        if not os.path.isfile(data_folder / 'webpages_ner.txt'):
+        #     # download zip
+            tar_file = "https://cogcomp.seas.upenn.edu/Data/NERWebpagesColumns.tgz"
+            webpages_ner_path = cached_path(tar_file, Path("datasets") / dataset_name)
+            tf = tarfile.open(webpages_ner_path)
+            tf.extractall(data_folder)
+            tf.close()
+        outputfile = os.path.abspath(data_folder)
+
+        #merge the files in one as the zip is containing multiples files
+
+        with open(outputfile/data_folder/"webpages_ner.txt", "w+") as outfile:
+            for files in os.walk(outputfile):
+                f = files[1]
+                ff = os.listdir(outputfile/data_folder/f[-1])
+                for i, file in enumerate(ff):
+                    if file.endswith('.gold'):
+                        with open(outputfile/data_folder/f[-1]/file, 'r+', errors='replace') as infile:
+                            content = infile.read()
+                        outfile.write(content)
+                break
 
 
         super(WEBPAGES_NER, self).__init__(
-            train_data_file,
+            data_folder,
             columns,
-            train_file='webpage_ner',
+            train_file='webpages_ner.txt',
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
             **corpusargs,
