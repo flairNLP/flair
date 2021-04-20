@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import torch, flair
 import logging
 import re
@@ -312,8 +313,7 @@ class Token(DataPoint):
     def get_head(self):
         return self.sentence.get_token(self.head_id)
 
-    def set_embedding(self, name: str, vector: torch.tensor):
-        device = flair.device
+    def set_embedding(self, name: str, vector: torch.tensor, device=flair.device):
         if (flair.embedding_storage_mode == "cpu") and len(self._embeddings.keys()) > 0:
             device = next(iter(self._embeddings.values())).device
         if device != vector.device:
@@ -720,8 +720,7 @@ class Sentence(DataPoint):
     def embedding(self):
         return self.get_embedding()
 
-    def set_embedding(self, name: str, vector: torch.tensor):
-        device = flair.device
+    def set_embedding(self, name: str, vector: torch.tensor, device=flair.device):
         if (flair.embedding_storage_mode == "cpu") and len(self._embeddings.keys()) > 0:
             device = next(iter(self._embeddings.values())).device
         if device != vector.device:
@@ -1021,8 +1020,7 @@ class Image(DataPoint):
 
         return torch.tensor([], device=flair.device)
 
-    def set_embedding(self, name: str, vector: torch.tensor):
-        device = flair.device
+    def set_embedding(self, name: str, vector: torch.tensor, device=flair.device):
         if (flair.embedding_storage_mode == "cpu") and len(self._embeddings.keys()) > 0:
             device = next(iter(self._embeddings.values())).device
         if device != vector.device:
