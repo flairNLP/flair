@@ -1723,7 +1723,7 @@ class UD_LATVIAN(UniversalDependenciesCorpus):
 
         super(UD_LATVIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
         
-class UD_Lithuanian(UniversalDependenciesCorpus):
+class UD_LITHUANIAN(UniversalDependenciesCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, split_multiwords: bool = True):
 
         if type(base_path) == str:
