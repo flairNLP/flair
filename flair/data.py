@@ -595,7 +595,7 @@ class Sentence(DataPoint):
         # some sentences represent a document boundary (but most do not)
         self.is_document_boundary: bool = False
 
-        self.relations: List[Relation] = self.build_relations()
+        self.relations: List[Relation] = list()
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
@@ -1407,7 +1407,7 @@ class Corpus:
                     if len(labels) > 1:
                         label_dictionary.multi_label = True
 
-        log.info(label_dictionary.idx2item)
+        log.info(f"Relations in dataset: {label_dictionary.idx2item}")
 
         return label_dictionary
 

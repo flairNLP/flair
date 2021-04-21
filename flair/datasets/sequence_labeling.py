@@ -249,6 +249,7 @@ class ColumnDataset(FlairDataset):
                         sentence.convert_tag_scheme(
                             tag_type=self.tag_to_bioes, target_scheme="iobes"
                         )
+                    sentence.relations = sentence.build_relations()
                     # check if this sentence is a document boundary
                     if sentence.to_original_text() == self.document_separator_token:
                         sentence.is_document_boundary = True
@@ -261,6 +262,8 @@ class ColumnDataset(FlairDataset):
 
         # check if this sentence is a document boundary
         if sentence.to_original_text() == self.document_separator_token: sentence.is_document_boundary = True
+
+        sentence.relations = sentence.build_relations()
 
         if self.tag_to_bioes is not None:
             sentence.convert_tag_scheme(
