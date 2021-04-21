@@ -1747,5 +1747,6 @@ class UD_LITHUANIAN(UniversalDependenciesCorpus):
             f"{web_path}/lt_alksnis-ud-train.conllu", Path("datasets") / dataset_name
         )
 
-        super(UD_Lithuanian, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
+        super(UD_LITHUANIAN, self).__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
+
         
