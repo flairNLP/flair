@@ -4,17 +4,14 @@ from typing import Optional
 
 import torch
 import torch.nn as nn
-from torch.utils.data import TensorDataset
 from torch.utils.data import DataLoader
 
 import pytorch_lightning as pl
 
-from flair.data import Corpus
+from flair.data import Corpus, Dictionary
 from flair.datasets import TREC_6
 from flair.embeddings import TransformerDocumentEmbeddings
-from flair.models import TextClassifier
 from flair.embeddings.base import Embeddings
-from flair.data import Dictionary
 
 
 class FlairData(pl.LightningDataModule):
@@ -30,7 +27,6 @@ class FlairData(pl.LightningDataModule):
         self.document_embeddings = document_embeddings
         self.label_dictionary = label_dictionary
         self.batch_size = batch_size
-
 
     def transfer_batch_to_device(self, batch, device):
         self.document_embeddings.embed(batch)
@@ -53,29 +49,34 @@ class FlairData(pl.LightningDataModule):
         return (torch.cat(text_embedding_list, 0), torch.cat(indices, 0).to(device))
 
     def train_dataloader(self):
-        return DataLoader(self.corpus.train.dataset,
-                          collate_fn=list,
-                          batch_size=self.batch_size,
-                          shuffle=True,
-                          num_workers=8,
-                          pin_memory=True,
-                         )
+        return DataLoader(
+            self.corpus.train.dataset,
+            collate_fn=list,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=8,
+            pin_memory=True,
+        )
 
     def val_dataloader(self):
-        return DataLoader(self.corpus.dev.dataset,
-                          collate_fn=list,
-                          batch_size=self.batch_size,
-                          shuffle=False,
-                          pin_memory=True,
-                          num_workers=8)
+        return DataLoader(
+            self.corpus.dev.dataset,
+            collate_fn=list,
+            batch_size=self.batch_size,
+            shuffle=False,
+            pin_memory=True,
+            num_workers=8,
+        )
 
     def test_dataloader(self):
-        return DataLoader(self.corpus.test.dataset,
-                          collate_fn=list,
-                          batch_size=self.batch_size,
-                          shuffle=False,
-                          pin_memory=True,
-                          num_workers=8)
+        return DataLoader(
+            self.corpus.test.dataset,
+            collate_fn=list,
+            batch_size=self.batch_size,
+            shuffle=False,
+            pin_memory=True,
+            num_workers=8,
+        )
 
 
 class FlairModel(pl.LightningModule):
@@ -103,7 +104,13 @@ class FlairModel(pl.LightningModule):
         embeddings, labels = batch
         scores = self(embeddings)
 
-        self.log('val_loss', self.loss_function(scores, labels), on_step=True, on_epoch=True, sync_dist=True)
+        self.log(
+            "val_loss",
+            self.loss_function(scores, labels),
+            on_step=True,
+            on_epoch=True,
+            sync_dist=True,
+        )
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
@@ -111,22 +118,28 @@ class FlairModel(pl.LightningModule):
 
 def cli_main():
     corpus = TREC_6()
-    document_embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased', fine_tune=True, batch_size=128)
+    document_embeddings = TransformerDocumentEmbeddings(
+        "distilbert-base-uncased", fine_tune=True, batch_size=128
+    )
     label_dictionary = corpus.make_label_dictionary()
 
     trainer = pl.Trainer(gpus=1, accelerator="horovod")
 
-    model = FlairModel(document_embeddings=document_embeddings,
-                   label_dictionary=label_dictionary, learning_rate=1e-3)
+    model = FlairModel(
+        document_embeddings=document_embeddings,
+        label_dictionary=label_dictionary,
+        learning_rate=1e-3,
+    )
 
-    dm = FlairData(corpus=corpus,
-               document_embeddings=model.document_embeddings,
-               label_dictionary=model.label_dictionary)
-
+    dm = FlairData(
+        corpus=corpus,
+        document_embeddings=model.document_embeddings,
+        label_dictionary=model.label_dictionary,
+        batch_size=128,
+    )
 
     trainer.fit(model, datamodule=dm)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli_main()
-
