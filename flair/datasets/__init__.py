@@ -146,6 +146,7 @@ from .treebanks import UD_BELARUSIAN
 from .treebanks import UD_OLD_CHURCH_SLAVONIC
 from .treebanks import UD_COPTIC
 from .treebanks import UD_IRISH
+from .treebanks import UD_LATVIAN
 
 # Expose all text-text datasets
 from .text_text import ParallelTextCorpus
