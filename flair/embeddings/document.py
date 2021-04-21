@@ -77,12 +77,12 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
 
         # when initializing, embeddings are in eval mode by default
         self.model.eval()
-        self.model.to(flair.device)
+        #self.model.to(flair.device)
 
         # embedding parameters
         if layers == 'all':
             # send mini-token through to check how many layers the model has
-            hidden_states = self.model(torch.tensor([1], device=flair.device).unsqueeze(0))[-1]
+            hidden_states = self.model(torch.tensor([1], device=self.model.device).unsqueeze(0))[-1]
             self.layer_indexes = [int(x) for x in range(len(hidden_states))]
         else:
             self.layer_indexes = [int(x) for x in layers.split(",")]
@@ -137,7 +137,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
                                                               )
 
                 subtokenized_sentences.append(
-                    torch.tensor(subtokenized_sentence, dtype=torch.long, device=flair.device))
+                    torch.tensor(subtokenized_sentence, dtype=torch.long, device=self.model.device))
 
             # find longest sentence in batch
             longest_sequence_in_batch: int = len(max(subtokenized_sentences, key=len))
@@ -146,12 +146,12 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             input_ids = torch.zeros(
                 [len(sentences), longest_sequence_in_batch],
                 dtype=torch.long,
-                device=flair.device,
+                device=self.model.device,
             )
             mask = torch.zeros(
                 [len(sentences), longest_sequence_in_batch],
                 dtype=torch.long,
-                device=flair.device,
+                device=self.model.device,
             )
             for s_id, sentence in enumerate(subtokenized_sentences):
                 sequence_length = len(sentence)
@@ -195,7 +195,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
                     embeddings_all_layers = [sm_embeddings]
 
                 # set the extracted embedding for the token
-                sentence.set_embedding(self.name, torch.cat(embeddings_all_layers))
+                sentence.set_embedding(self.name, torch.cat(embeddings_all_layers), device=self.model.device)
 
     @property
     @abstractmethod
