@@ -494,7 +494,7 @@ class HunerDataset(ColumnCorpus, ABC):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         self.sentence_splitter = self.get_corpus_sentence_splitter()
@@ -583,7 +583,7 @@ class BIO_INFER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         train_file = data_folder / "train.conll"
@@ -737,7 +737,7 @@ class JNLPBA(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         train_file = data_folder / "train.conll"
@@ -967,7 +967,7 @@ class CELL_FINDER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
@@ -1108,7 +1108,7 @@ class MIRNA(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         sentence_separator = " "
@@ -1487,7 +1487,7 @@ class CLL(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         train_file = data_folder / "train.conll"
@@ -1556,7 +1556,7 @@ class GELLUS(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         train_file = data_folder / "train.conll"
@@ -1645,7 +1645,7 @@ class LOCTEXT(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -1759,7 +1759,7 @@ class CHEMDNER(ColumnCorpus):
           https://jcheminf.biomedcentral.com/articles/10.1186/1758-2946-7-S1-S2
     """
 
-    default_dir = Path(flair.cache_root) / "datasets" / "CHEMDNER"
+    default_dir = flair.cache_root / "datasets" / "CHEMDNER"
 
     def __init__(
         self,
@@ -1907,7 +1907,7 @@ class IEPA(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if tokenizer is None:
@@ -1998,7 +1998,7 @@ class LINNEAUS(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if tokenizer is None:
@@ -2109,7 +2109,7 @@ class CDR(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -2254,7 +2254,7 @@ class VARIOME(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -2422,7 +2422,7 @@ class NCBI_DISEASE(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -2588,7 +2588,7 @@ class ScaiCorpus(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -2813,7 +2813,7 @@ class OSIRIS(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -2949,7 +2949,7 @@ class S800(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -3054,7 +3054,7 @@ class GPRO(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -3206,7 +3206,7 @@ class DECA(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -3317,7 +3317,7 @@ class FSU(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         sentence_splitter = TagSentenceSplitter(
@@ -3502,7 +3502,7 @@ class CRAFT(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -3600,7 +3600,7 @@ class BIOSEMANTICS(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -3744,7 +3744,7 @@ class BC2GM(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -3896,7 +3896,7 @@ class CEMP(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -4066,7 +4066,7 @@ class CHEBI(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -4249,7 +4249,7 @@ class BioNLPCorpus(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -4440,7 +4440,7 @@ class ANAT_EM(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if tokenizer is None:
@@ -4632,7 +4632,7 @@ class BIOBERT_CHEMICAL_BC4CHEMD(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
 
         data_folder = base_path / dataset_name
 
@@ -4670,7 +4670,7 @@ class BIOBERT_GENE_BC2GM(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
 
         data_folder = base_path / dataset_name
 
@@ -4707,7 +4707,7 @@ class BIOBERT_GENE_JNLPBA(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
 
         data_folder = base_path / dataset_name
 
@@ -4744,7 +4744,7 @@ class BIOBERT_CHEMICAL_BC5CDR(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
 
         data_folder = base_path / dataset_name
 
@@ -4781,7 +4781,7 @@ class BIOBERT_DISEASE_BC5CDR(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
 
         data_folder = base_path / dataset_name
 
@@ -4817,7 +4817,7 @@ class BIOBERT_DISEASE_NCBI(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
 
         data_folder = base_path / dataset_name
 
@@ -4854,7 +4854,7 @@ class BIOBERT_SPECIES_LINNAEUS(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
 
         data_folder = base_path / dataset_name
 
@@ -4891,7 +4891,7 @@ class BIOBERT_SPECIES_S800(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
 
         data_folder = base_path / dataset_name
 
@@ -4943,7 +4943,7 @@ class CRAFT_V4(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:
@@ -5263,7 +5263,7 @@ class AZDZ(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if tokenizer is None:
@@ -5380,7 +5380,7 @@ class PDR(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if sentence_splitter is None:

@@ -382,7 +382,7 @@ def test_sanity_not_too_many_entities(CorpusType: Type[ColumnCorpus]):
 @pytest.mark.skip(msg="We skip this test because it's only relevant for development purposes")
 def test_sanity_no_misaligned_entities(CorpusType: Type[HunerDataset]):
     dataset_name = CorpusType.__class__.__name__.lower()
-    base_path = Path(flair.cache_root) / "datasets"
+    base_path = flair.cache_root / "datasets"
     data_folder = base_path / dataset_name
 
     from flair.tokenization import SciSpacyTokenizer
