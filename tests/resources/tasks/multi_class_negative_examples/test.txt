@@ -1,0 +1,6 @@
+__label__guitar guitar
+__label__apple apple
+__label__tv tv
+__label__apple __label__tv apple tv
+__label__apple __label__guitar apple tv
+test example without labels

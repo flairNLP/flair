@@ -7,6 +7,7 @@ from .base import MongoDataset
 # Expose all sequence labeling datasets
 from .sequence_labeling import ColumnCorpus
 from .sequence_labeling import ColumnDataset
+from .sequence_labeling import AMHARIC_NER
 from .sequence_labeling import ANER_CORP
 from .sequence_labeling import AQMAR
 from .sequence_labeling import BIOFID
@@ -21,6 +22,7 @@ from .sequence_labeling import CONLL_2000
 from .sequence_labeling import DANE
 from .sequence_labeling import EUROPARL_NER_GERMAN
 from .sequence_labeling import GERMEVAL_14
+from .sequence_labeling import HAUSA_NER
 from .sequence_labeling import INSPEC
 from .sequence_labeling import JAPANESE_NER
 from .sequence_labeling import KINYARWANDA_NER
@@ -29,9 +31,11 @@ from .sequence_labeling import LUO_NER
 from .sequence_labeling import MIT_MOVIE_NER_SIMPLE
 from .sequence_labeling import MIT_MOVIE_NER_COMPLEX
 from .sequence_labeling import MIT_RESTAURANT_NER
+from .sequence_labeling import NAIJA_PIDGIN_NER
 from .sequence_labeling import NER_BASQUE
 from .sequence_labeling import NER_FINNISH
 from .sequence_labeling import NER_SWEDISH
+from .sequence_labeling import NER_YORUBA
 from .sequence_labeling import STACKOVERFLOW_NER
 from .sequence_labeling import SEMEVAL2010
 from .sequence_labeling import SEMEVAL2017
@@ -92,6 +96,7 @@ from .document_classification import YAHOO_ANSWERS
 # Expose all treebanks
 from .treebanks import UniversalDependenciesCorpus
 from .treebanks import UniversalDependenciesDataset
+from .treebanks import UD_ARMENIAN
 from .treebanks import UD_ENGLISH
 from .treebanks import UD_ESTONIAN
 from .treebanks import UD_GERMAN
@@ -135,6 +140,9 @@ from .treebanks import UD_AFRIKAANS
 from .treebanks import UD_OLD_FRENCH
 from .treebanks import UD_GOTHIC
 from .treebanks import UD_WOLOF
+from .treebanks import UD_BELARUSIAN
+from .treebanks import UD_OLD_CHURCH_SLAVONIC
+from .treebanks import UD_COPTIC
 
 # Expose all text-text datasets
 from .text_text import ParallelTextCorpus
