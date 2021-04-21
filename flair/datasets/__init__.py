@@ -149,6 +149,7 @@ from .treebanks import UD_COPTIC
 from .treebanks import UD_IRISH
 from .treebanks import UD_LATVIAN
 from .treebanks import UD_LITHUANIAN
+from .treebanks import UD_GALICIAN
 
 # Expose all text-text datasets
 from .text_text import ParallelTextCorpus
