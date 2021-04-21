@@ -98,6 +98,7 @@ from .treebanks import UniversalDependenciesCorpus
 from .treebanks import UniversalDependenciesDataset
 from .treebanks import UD_ARMENIAN
 from .treebanks import UD_ENGLISH
+from .treebanks import UD_ANCIENT_GREEK
 from .treebanks import UD_KAZAKH
 from .treebanks import UD_ESTONIAN
 from .treebanks import UD_GERMAN
