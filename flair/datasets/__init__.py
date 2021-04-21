@@ -27,6 +27,7 @@ from .sequence_labeling import INSPEC
 from .sequence_labeling import JAPANESE_NER
 from .sequence_labeling import KINYARWANDA_NER
 from .sequence_labeling import LER_GERMAN
+from .sequence_labeling import LUGANDA_NER
 from .sequence_labeling import LUO_NER
 from .sequence_labeling import MIT_MOVIE_NER_SIMPLE
 from .sequence_labeling import MIT_MOVIE_NER_COMPLEX
@@ -146,6 +147,7 @@ from .treebanks import UD_BELARUSIAN
 from .treebanks import UD_OLD_CHURCH_SLAVONIC
 from .treebanks import UD_COPTIC
 from .treebanks import UD_IRISH
+from .treebanks import UD_LATVIAN
 from .treebanks import UD_Lithuanian
 
 # Expose all text-text datasets
@@ -251,3 +253,4 @@ from .biomedical import BIOBERT_SPECIES_LINNAEUS
 from .biomedical import BIOBERT_SPECIES_S800
 from .biomedical import BIOBERT_GENE_BC2GM
 from .biomedical import BIOBERT_GENE_JNLPBA
+from.treebanks import UD_LATIN
