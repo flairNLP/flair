@@ -99,6 +99,7 @@ from .treebanks import UniversalDependenciesDataset
 from .treebanks import UD_ARMENIAN
 from .treebanks import UD_ENGLISH
 from .treebanks import UD_ANCIENT_GREEK
+from .treebanks import UD_KAZAKH
 from .treebanks import UD_ESTONIAN
 from .treebanks import UD_GERMAN
 from .treebanks import UD_GERMAN_HDT
@@ -144,6 +145,7 @@ from .treebanks import UD_WOLOF
 from .treebanks import UD_BELARUSIAN
 from .treebanks import UD_OLD_CHURCH_SLAVONIC
 from .treebanks import UD_COPTIC
+from .treebanks import UD_IRISH
 
 # Expose all text-text datasets
 from .text_text import ParallelTextCorpus
