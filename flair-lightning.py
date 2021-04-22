@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
 from typing import Optional
 
-
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -123,7 +122,7 @@ def cli_main():
     )
     label_dictionary = corpus.make_label_dictionary()
 
-    trainer = pl.Trainer(gpus=1, accelerator="horovod")
+    trainer = pl.Trainer(gpus=[0,1,2,3], accelerator="ddp")
 
     model = FlairModel(
         document_embeddings=document_embeddings,
