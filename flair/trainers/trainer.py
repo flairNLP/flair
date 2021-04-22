@@ -18,7 +18,7 @@ except ImportError:
     amp = None
 
 import flair
-import flair.nn
+import flair.nn 
 from flair.data import MultiCorpus, Corpus
 from flair.datasets import DataLoader
 from flair.optim import ExpAnnealLR
@@ -33,6 +33,7 @@ from flair.training_utils import (
 )
 from torch.optim.lr_scheduler import OneCycleLR
 from flair.models import SequenceTagger, TextClassifier
+from flair.wandb_logger import WandbLogger
 import random
 
 log = logging.getLogger("flair")
@@ -46,7 +47,8 @@ class ModelTrainer:
             optimizer: torch.optim.Optimizer = SGD,
             epoch: int = 0,
             use_tensorboard: bool = False,
-            tensorboard_log_dir = None,
+            project_name: str = "flair",
+            run_name: str = '',
             metrics_for_tensorboard = []
     ):
         """
@@ -56,7 +58,8 @@ class ModelTrainer:
         :param optimizer: The optimizer to use (typically SGD or Adam)
         :param epoch: The starting epoch (normally 0 but could be higher if you continue training model)
         :param use_tensorboard: If True, writes out tensorboard information
-        :param tensorboard_log_dir: Directory into which tensorboard log files will be written
+        :param project_name: Name of the project. This will be used to create log dirs
+        :param run_name: Name of the current experiment. Used to create log subfolder
         :param metrics_for_tensorboard: List of tuples that specify which metrics (in addition to the main_score) shall be plotted in tensorboard, could be [("macro avg", 'f1-score'), ("macro avg", 'precision')] for example
         """
         self.model: flair.nn.Model = model
@@ -64,8 +67,9 @@ class ModelTrainer:
         self.optimizer: torch.optim.Optimizer = optimizer
         self.epoch: int = epoch
         self.use_tensorboard: bool = use_tensorboard
-        self.tensorboard_log_dir = tensorboard_log_dir
+        self.tensorboard_log_dir = Path(project_name) / run_name
         self.metrics_for_tensorboard = metrics_for_tensorboard
+        self.wandb_logger = WandbLogger(project=project_name, name=run_name if len(run_name)>0 else None) # Don't forget to log config
 
     def initialize_best_dev_score(self, log_dev):
         """
@@ -188,6 +192,7 @@ class ModelTrainer:
             classification_main_metric=("micro avg", 'f1-score'),
             tensorboard_comment='',
             save_best_checkpoints=False,
+            log_model_each_k_epochs: int = 0,
             **kwargs,
     ) -> dict:
         """
@@ -227,6 +232,7 @@ class ModelTrainer:
         :param classification_main_metric: Type of metric to use for best model tracking and learning rate scheduling (if dev data is available, otherwise loss will be used), currently only applicable for text_classification_model
         :param tensorboard_comment: Comment to use for tensorboard logging
         :param save_best_checkpoints: If True, in addition to saving the best model also the corresponding checkpoint is saved
+        :param log_model_each_k_epochs: sets the epoch interval for logging models as W&B artifacts. If None, only logs the final model
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
@@ -296,7 +302,14 @@ class ModelTrainer:
         if isinstance(self.model, SequenceTagger) and self.model.weight_dict and self.model.use_crf:
             log_line(log)
             log.warning(f'WARNING: Specified class weights will not take effect when using CRF')
-
+                       
+        if self.wandb_logger.wandb_run:
+            self.wandb_logger.log_config({
+                'Model': self.model, 'corpus': self.corpus, 'learning_rate': learning_rate,
+                'mini_batch_size': mini_batch_size, 'patience': patience, 'anneal_factor': anneal_factor,
+                'max_epochs': max_epochs, 'shuffle': shuffle, 'train_with_dev': train_with_dev,
+                'batch_growth_annealing': batch_growth_annealing})
+   
         # check for previously saved best models in the current training folder and delete them
         self.check_for_and_delete_previous_best_models(base_path, save_best_checkpoints)
 
@@ -545,7 +558,8 @@ class ModelTrainer:
 
                 if self.use_tensorboard:
                     writer.add_scalar("train_loss", train_loss, self.epoch)
-
+                if self.wandb_logger.wandb_run:
+                    self.wandb_logger.log({"train_loss": train_loss, "learning_rate": learning_rate})
                 # anneal against train loss if training with dev, otherwise anneal against dev score
                 current_score = train_loss
 
@@ -579,12 +593,15 @@ class ModelTrainer:
                     log.info(
                         f"TRAIN_SPLIT : loss {train_part_loss} - score {round(train_part_eval_result.main_score, 4)}"
                     )
+            
+                    if self.wandb_logger.wandb_run:
+                        self.wandb_logger.log(train_part_eval_result.classification_report, 'train/')
+                        
                 if self.use_tensorboard:
                     for (metric_class_avg_type, metric_type) in self.metrics_for_tensorboard:
                         writer.add_scalar(
                             f"train_{metric_class_avg_type}_{metric_type}", train_part_eval_result.classification_report[metric_class_avg_type][metric_type], self.epoch
                         )
-
 
                 if log_dev:
                     dev_eval_result, dev_loss = self.model.evaluate(
@@ -620,6 +637,10 @@ class ModelTrainer:
                                 dev_eval_result.classification_report[metric_class_avg_type][metric_type], self.epoch
                             )
 
+                    if self.wandb_logger.wandb_run:
+                        self.wandb_logger.log({"dev_loss": dev_loss, "dev_score": dev_eval_result.main_score}, "dev/")
+                        self.wandb_logger.log(dev_eval_result.classification_report, "dev/")
+
                 if log_test:
                     test_eval_result, test_loss = self.model.evaluate(
                         self.corpus.test,
@@ -648,6 +669,10 @@ class ModelTrainer:
                                 test_eval_result.classification_report[metric_class_avg_type][metric_type], self.epoch
                             )
 
+                    if self.wandb_logger.wandb_run:
+                        self.wandb_logger.log({"test_loss": test_loss, "test_score": test_eval_result.main_score}, "test/")
+                        self.wandb_logger.log(test_eval_result.classification_report, "test/")
+
                 # determine learning rate annealing through scheduler. Use auxiliary metric for AnnealOnPlateau
                 if log_dev and isinstance(lr_scheduler, AnnealOnPlateau):
                     lr_scheduler.step(current_score, dev_loss)
@@ -666,6 +691,9 @@ class ModelTrainer:
                 if new_learning_rate != previous_learning_rate:
                     bad_epochs = patience + 1
                     if previous_learning_rate == initial_learning_rate: bad_epochs += initial_extra_patience
+                
+                if self.wandb_logger.wandb_run:
+                    self.wandb_logger.flush()
 
                 # log bad epochs
                 log.info(f"BAD EPOCHS (no improvement): {bad_epochs}")
@@ -734,10 +762,34 @@ class ModelTrainer:
                     print("saving model of current epoch")
                     model_name = "model_epoch_" + str(self.epoch) + ".pt"
                     self.model.save(base_path / model_name)
+                
+                if self.wandb_logger.wandb_run and log_model_each_k_epochs > 0 and not self.epoch % log_model_each_k_epochs:
+                    print("Logging model of current epoch")
+                    model_name = "model_epoch_" + str(self.epoch) + ".pt"
+                    if not Path(base_path / model_name).is_file():
+                        self.model.save(base_path / model_name)
+                self.wandb_logger.log_artifact(
+                    name=f"model_{self.wandb_logger.wandb_run.id}",
+                    type="model",
+                    file_or_dir=base_path / model_name,
+                    aliases=[
+                        "latest",
+                        "best" if self.check_for_best_score(current_score) else "",
+                        f"epoch-{self.epoch}",
+                    ],
+                )
 
             # if we do not use dev data for model selection, save final model
             if save_final_model and not param_selection_mode:
                 self.model.save(base_path / "final-model.pt")
+                if self.wandb_logger.wandb_run:
+                    self.wandb_logger.log_artifact(
+                        name=f"model_{self.wandb_logger.wandb_run.id}",
+                        type="model",
+                        file_or_dir=base_path / "final-model.pt",
+                        aliases=["latest", f"epoch-{self.epoch}"],
+                    )
+
 
         except KeyboardInterrupt:
             log_line(log)
@@ -764,6 +816,8 @@ class ModelTrainer:
 
         if self.use_tensorboard:
             writer.close()
+        if self.wandb_logger.wandb_run:
+            self.wandb_logger.finish()
 
         return {
             "test_score": final_score,
