@@ -59,48 +59,42 @@ def two_sentences_with_relations():
     return [sentence1, sentence2, sentence3]
 
 
-def test_forward(two_sentences_with_relations):
-    sentences = two_sentences_with_relations
-    corpus = flair.datasets.CONLL_04().downsample(0.3)
-    for sentence in corpus.train:
-        sentence.relations = sentence.build_relations()
-    for sentence in corpus.dev:
-        sentence.relations = sentence.build_relations()
-    for sentence in corpus.test:
-        sentence.relations = sentence.build_relations()
-
-    tag_dict = corpus.make_relation_label_dictionary()
-    label_dictionary: Dictionary = Dictionary(add_unk=False)
-    label_dictionary.multi_label = True
-    label_dictionary.add_item('N')
-    label_dictionary.add_item('Born_In')
-    label_dictionary.add_item('Works_For')
-    label_dictionary.add_item('Kill')
-
-    embs = TransformerWordEmbeddings()
-    rt = RelationTagger(embeddings=embs, tag_dictionary=label_dictionary)
-    rt = RelationTagger(embeddings=embs, tag_dictionary=tag_dict)
-    trainer = ModelTrainer(rt, corpus)
-    trainer.train(
-        base_path="resources/relation-tagger",
-        learning_rate=0.1,
-        mini_batch_size=4,
-        mini_batch_chunk_size=None,
-        max_epochs=1
-    )
-
-    # sentences = SentenceDataset(sentences)
-    # data_loader = DataLoader(sentences, batch_size=32, num_workers=8)
-    # for batch in data_loader:
-    # features = rt.forward(sentences)
-    # labels = rt._obtain_labels(features, sentences, True)
-    # print("labels", labels)
-    # loss = rt._calculate_loss(features, sentences)
-    # print("loss", loss)
-    # evaluate = rt.evaluate(sentences)
-    # # for sent in sentences:
-    # #     for rel in sent.relations:
-    # #         print(rel)
-    # print(evaluate[0].detailed_results)
-
-    assert False
+# def test_forward(two_sentences_with_relations):
+#     sentences = two_sentences_with_relations
+#     corpus = flair.datasets.CONLL_04().downsample(0.3)
+#
+#     tag_dict = corpus.make_relation_label_dictionary()
+#     # label_dictionary: Dictionary = Dictionary(add_unk=False)
+#     # label_dictionary.multi_label = True
+#     # label_dictionary.add_item('N')
+#     # label_dictionary.add_item('Born_In')
+#     # label_dictionary.add_item('Works_For')
+#     # label_dictionary.add_item('Kill')
+#
+#     embs = TransformerWordEmbeddings()
+#     # rt = RelationTagger(embeddings=embs, tag_dictionary=label_dictionary)
+#     rt = RelationTagger(embeddings=embs, tag_dictionary=tag_dict)
+#     trainer = ModelTrainer(rt, corpus)
+#     trainer.train(
+#         base_path="resources/relation-tagger",
+#         learning_rate=0.1,
+#         mini_batch_size=4,
+#         mini_batch_chunk_size=None,
+#         max_epochs=1
+#     )
+#
+#     # sentences = SentenceDataset(sentences)
+#     # data_loader = DataLoader(sentences, batch_size=32, num_workers=8)
+#     # for batch in data_loader:
+#     # features = rt.forward(sentences)
+#     # labels = rt._obtain_labels(features, sentences, True)
+#     # print("labels", labels)
+#     # loss = rt._calculate_loss(features, sentences)
+#     # print("loss", loss)
+#     # evaluate = rt.evaluate(sentences)
+#     # # for sent in sentences:
+#     # #     for rel in sent.relations:
+#     # #         print(rel)
+#     # print(evaluate[0].detailed_results)
+#
+#     assert False
