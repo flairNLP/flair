@@ -1019,11 +1019,17 @@ class Sentence(DataPoint):
             last_token_idx = span.tokens[-1].idx
 
             raw_relations = self.get_spans('relation')
+            if not raw_relations:
+                continue
+
             # raw_relations[last_token_idx - 1] possible if all negatives are explicitly tagged, otherwise:
             raw_relations = [i for i in raw_relations if i.tokens[0].idx == last_token_idx][0]
             relations = ast.literal_eval(raw_relations.labels[0].value)
 
             raw_relation_deps = self.get_spans('relation_dep')
+            if not raw_relation_deps:
+                continue
+
             raw_relation_deps = [i for i in raw_relation_deps if i.tokens[0].idx == last_token_idx][0]
             relation_deps = ast.literal_eval(raw_relation_deps.labels[0].value)
 
