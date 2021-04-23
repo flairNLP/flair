@@ -1357,6 +1357,19 @@ class Corpus:
         tag_dictionary.add_item("<STOP>")
         return tag_dictionary
 
+    def make_character_dictionary(self) -> Dictionary:
+        """
+        Creates a dictionary of all characters in the corpus.
+        :return: dictionary of characters
+        """
+        char_dictionary: Dictionary = Dictionary()
+
+        for sentence in self.get_all_sentences():
+            for ch in sentence.to_original_text():
+                char_dictionary.add_item(ch)
+
+        return  char_dictionary
+
 
 class MultiCorpus(Corpus):
     def __init__(self, corpora: List[Corpus], name: str = "multicorpus", **corpusargs):
