@@ -2419,7 +2419,7 @@ class CONLL_04(ColumnCorpus):
             **corpusargs,
         )
 
-class CONLL_04(ColumnCorpus):
+class SEMEVAL2010_RE(ColumnCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -2428,7 +2428,7 @@ class CONLL_04(ColumnCorpus):
             **corpusargs,
     ):
         """
-        Initialize the CoNLL_04. The first time you call this constructor it will automatically
+        Initialize the SEMEVAL2010_RE dataset. The first time you call this constructor it will automatically
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -2452,37 +2452,95 @@ class CONLL_04(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        conll_path = "https://raw.githubusercontent.com/bekou/multihead_joint_entity_relation_extraction/master/data/CoNLL04/"
-        dev_file = "dev.txt"
-        test_file = "test.txt"
-        train_file = "train.txt"
-        cached_path(f"{conll_path}/{dev_file}", Path("datasets") / dataset_name)
-        cached_path(f"{conll_path}/{test_file}", Path("datasets") / dataset_name)
-        cached_path(f"{conll_path}/{train_file}", Path("datasets") / dataset_name)
+        conll_path = "https://raw.githubusercontent.com/sahitya0000/Relation-Classification/master/corpus/SemEval2010_task8"
+        # dev_file = "dev.txt"
+        test_file = "_testing_keys/TEST_FILE_FULL.TXT"
+        train_file = "_training/TRAIN_FILE.TXT"
+        # cached_path(f"{conll_path}/{dev_file}", Path("datasets") / dataset_name)
+        cached_path(f"{conll_path}{test_file}", Path("datasets") / dataset_name)
+        cached_path(f"{conll_path}{train_file}", Path("datasets") / dataset_name)
 
         # add extra blank lines in-between sentences for document separation if necessary
-        for dataset_part in ["dev", "test", "train"]:
+        for dataset_part in ["TEST_FILE_FULL", "TRAIN_FILE"]:
             with open(Path(flair.cache_root) / "datasets" / dataset_name / f"{dataset_part}.txt", "r") as file:
                 lines = file.readlines()
 
-            if lines[0] == "\n":
+            if lines[0].startswith("#converted"):
                 continue
 
-            lines_with_separating_blank_lines = []
+            lines_in_required_format = []
+            sentence_lines = list()
+            rel_dep_idx = [None, None]
+            sent_no = 0
+            multi_token_entity = False
             for line in lines:
-                if line.startswith("#doc"):
-                    lines_with_separating_blank_lines.append("\n")
-                lines_with_separating_blank_lines.append(line)
+                if line == '\n':
+                    sentence_lines = list()
+                    continue
+
+                line = line.replace('\n', '').split('\t')
+                if line[0].isdigit():
+                    tokens = line[1]
+                    tokens = tokens.replace('\"', '').replace('.', ' .').replace(',', ' ,').replace(';', ' ;').replace('?', ' ?')
+                    tokens = tokens.split(' ')
+
+                    for i, tok in enumerate(tokens):
+                        entity = 'O'
+                        if tok.startswith('<e'):
+                            entity = "B-Ent"
+                            entity_idx = int(tok[2]) - 1
+                            rel_dep_idx[entity_idx] = i
+                            if '</' in tok:
+                                tok = tok[len('<ei>'):tok.rfind('<')]
+                            else:
+                                tok = tok[len('<ei>'):]
+                                multi_token_entity = True
+
+                        elif multi_token_entity:
+                            entity = "I-Ent"
+                            if '</' in tok:
+                                entity_idx = int(tok[tok.rfind('<') + 3]) - 1
+                                rel_dep_idx[entity_idx] = i
+                                tok = tok[:tok.rfind('<')]
+                                multi_token_entity = False
+
+                        sentence_lines.append([str(i), tok, entity, "['N']", f"[{i}]"])
+
+                elif line[0].startswith("Comment"):
+                    continue
+
+                else:
+                    relation = line[0].split('(')
+                    if line[0] != "Other":
+                        relation_from = int(relation[1][1]) - 1
+                        relation_from_idx = rel_dep_idx[relation_from]
+                        relation_to = int(relation[1][4]) - 1
+                        relation_to_idx = rel_dep_idx[relation_to]
+                    else:
+                        relation_from_idx = rel_dep_idx[0]
+                        relation_to_idx = rel_dep_idx[1]
+                    sentence_lines[relation_from_idx][3] = f"['{relation[0]}']"
+                    sentence_lines[relation_from_idx][4] = f"[{relation_to_idx}]"
+
+                    lines_in_required_format.append([f"#doc {sent_no}"])
+                    sent_no += 1
+                    lines_in_required_format += sentence_lines
 
             with open(Path(flair.cache_root) / "datasets" / dataset_name / f"{dataset_part}.txt", "w") as file:
-                file.writelines(lines_with_separating_blank_lines)
+                concat_lines = ["#converted"]
+                for line in lines_in_required_format:
+                    if line[0].startswith('#'):
+                        concat_lines.append(f"\n{line[0]}\n")
+                    else:
+                        concat_lines.append("\t".join(line) + '\n')
+                file.writelines(concat_lines)
 
-        super(CONLL_04, self).__init__(
+        super(SEMEVAL2010_RE, self).__init__(
             data_folder,
             columns,
-            dev_file=dev_file,
-            test_file=test_file,
-            train_file=train_file,
+            dev_file=None,
+            test_file="TEST_FILE_FULL.txt",
+            train_file="TRAIN_FILE.txt",
             column_delimiter="\t",
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
