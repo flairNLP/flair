@@ -15,25 +15,27 @@ from flair.embeddings import FlairEmbeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.training_utils import Metric, Result, store_embeddings
 
-SOS_token:str = '<SOS>'  # Start-of-sentence token
-EOS_token:str = '<EOS>'  # End-of-sentence token
+SOS_token: str = '<SOS>'  # Start-of-sentence token
+EOS_token: str = '<EOS>'  # End-of-sentence token
+
 
 class Lemma(flair.nn.Model):
     def __init__(
             self,
             hidden_size: int,
             pre_embeddings: FlairEmbeddings,
-            character_dictionary:Dictionary,
+            character_dictionary: Dictionary,
             n_layers: int,
             tag_list: list = [],
             tag_dictionary: Dictionary = Dictionary(),
+            # tag_embeddings: nn.Embedding = None,
             dropout: float = 0.1,
             rnn_type: str = "GRU",
     ):
 
         super(Lemma, self).__init__()
         self.hidden_size = hidden_size
-        self.pre_embeddings = pre_embeddings
+        self.pre_embeddings = pre_embeddings.to(flair.device)
         self.n_layers = n_layers
         self.dropout = dropout
         self.rnn_type = rnn_type
@@ -46,8 +48,10 @@ class Lemma(flair.nn.Model):
         self.embedding.weight.data.copy_(self.pre_embedding_weight)
         self.embedding.weight.requires_grad = False
         self.embedding_dropout = nn.Dropout(dropout)
-
-        if rnn_type is "GRU":
+        print(rnn_type)
+        print(1)
+        print(self.rnn_type)
+        if self.rnn_type is "GRU":
             self.encoder = nn.GRU(self.pre_embeddings.embedding_length,
                                   hidden_size,
                                   n_layers,
@@ -57,32 +61,37 @@ class Lemma(flair.nn.Model):
                                   hidden_size,
                                   n_layers,
                                   dropout=(0 if n_layers == 1 else dropout))
-        elif rnn_type is "LSTM":
+        elif self.rnn_type is "LSTM":
             self.encoder = nn.LSTM(self.pre_embeddings.embedding_length,
                                    hidden_size,
                                    n_layers,
                                    dropout=(0 if n_layers == 1 else dropout))
             self.decoder = nn.LSTM(self.pre_embeddings.embedding_length,
-                                  hidden_size,
-                                  n_layers,
-                                  dropout=(0 if n_layers == 1 else dropout))
+                                   hidden_size,
+                                   n_layers,
+                                   dropout=(0 if n_layers == 1 else dropout))
         else:
+            print(2)
+            print(self.rnn_type)
             print("Only LSTM and GRU are supported for now")
         # for decoder
+
         self.concat = nn.Linear(self.hidden_size * 2, self.hidden_size)
         self.out = nn.Linear(self.hidden_size, len(self.character_dictionary))
 
         # If tag_list is not empty, it is considered that the user needs to use tag.
+        # self.tag_embeddings = tag_embeddings
         if len(tag_list):
-            self.use_tag:bool = True
+            self.use_tag: bool = True
             self.tag_list = tag_list
             self.tag_dictionary = tag_dictionary
-            self.tag_embedding = nn.Embedding(len(self.tag_dictionary), self.pre_embeddings.embedding_length)
-            self.tag_embedding.weight.data.uniform_(-1, 1)
+            # if self.tag_embeddings is None:
+            self.tag_embeddings = nn.Embedding(len(self.tag_dictionary), self.pre_embeddings.embedding_length)
+            self.tag_embeddings.weight.data.uniform_(-1, 1)
         else:
-            self.use_tag:bool = False
+            self.use_tag: bool = False
 
-        self.max_length:int = 0
+        self.max_length: int = 0
 
         self.to(flair.device)
 
@@ -90,7 +99,8 @@ class Lemma(flair.nn.Model):
             self, data_points: Union[List[Sentence], Sentence], sort=True
     ) -> torch.tensor:
         loss = self.forward(data_points)
-        return  loss
+        return loss
+
     def forward(self, sentences: List[Sentence]):
 
         for sentence in sentences:
@@ -99,17 +109,18 @@ class Lemma(flair.nn.Model):
 
             encoder_out, encoder_hidden = self._encode(encoder_input, tag, input_lenghts)
 
-            decoder_input = torch.LongTensor([[self.character_dictionary.get_idx_for_item(SOS_token) for _ in range(len(input_lenghts))]])
-            decoder_input = decoder_input.to(flair.device)
-
             decoder_hidden = encoder_hidden[:self.n_layers]
+
+            decoder_input = torch.LongTensor(
+                [[self.character_dictionary.get_idx_for_item(SOS_token) for _ in range(len(input_lenghts))]])
+            decoder_input = decoder_input.to(flair.device)
 
             for t in range(max_lemma_lenght):
                 decoder_output, decoder_hidden = self._decode(
                     decoder_input, decoder_hidden, encoder_out
                 )
 
-                decoder_input = lemma[t].view(1, -1)
+                # decoder_input = lemma[t].view(1, -1)
                 mask_loss, nTotal = self._maskNLLLoss(decoder_output, lemma[t], mask[t])
                 loss += mask_loss
         return loss
@@ -129,15 +140,44 @@ class Lemma(flair.nn.Model):
             sentences = SentenceDataset(sentences)
         data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
 
-        for batch in data_loader:
-            for sentence in batch:
-                for token in sentence:
-                    decode_seq = self.predict(token)
-                    decode_word = [self.character_dictionary.get_item_for_index(ch.item())for ch in decode_seq]
-                    decode_word[:] = [x for x in decode_word if not (x == EOS_token or x == '<unk>')]
-                    output = ''.join(decode_word)
-                    print(output)
+        y_true = []
+        y_pred = []
 
+        metric = Metric("Evaluation")
+
+        eval_loss = 0
+        batch_no = 0
+        for batch in data_loader:
+            batch_no += 1
+            for sentence in tqdm(batch):
+                loss = self._eval_loss(sentence)
+                eval_loss += loss
+                for token in sentence:
+                    true = y_true.append(token.get_tag('lemma').value)
+                    pred = y_pred.append(self.predict(token))
+                    if true == pred:
+                        metric.add_tp(pred)
+                    elif '<unk>' in pred:
+                        metric.add_fn(pred)
+                    else:
+                        metric.add_tn(pred)
+
+        detailed_result = (
+            "\nResults:"
+            f"\n- Accuracy {metric.accuracy()}"
+            '\n\nBy class:\n'
+        )
+
+        result = Result(
+            main_score=metric.accuracy(),
+            log_line=f"{metric.precision():.4f}\t{metric.recall():.4f}\t{metric.micro_avg_f_score():.4f}",
+            log_header="PRECISION\tRECALL\tF1",
+            detailed_results=detailed_result,
+        )
+
+        eval_loss /= batch_no
+
+        return result, eval_loss
 
     def predict(self, input):
         if type(input) is Token:
@@ -149,22 +189,23 @@ class Lemma(flair.nn.Model):
                     tags.append(input.get_tag(tag).value)
             tags_seq = self._item2seq(self.tag_dictionary, tags)
             if len(tags_seq) > 1:
-                tags_seq = torch.LongTensor([tags_seq]).transpose(0, 1)
+                tags_seq = torch.LongTensor([tags_seq]).transpose(0, 1).to(flair.device)
             else:
-                tags_seq = torch.LongTensor([tags_seq])
-            tags_seq.to(flair.device)
-            input_lenghts = torch.tensor([len(input_seq)]).to(device = 'cpu')
-            encoder_input = torch.LongTensor([input_seq]).transpose(0, 1)
-            encoder_input.to(flair.device)
-        if type(input) is Sentence:
-            self._preprocessed_data(input)
-            encoder_input, tags_seq, lemma, _, input_lenghts, _ = self._preprocessed_data(input)
+                tags_seq = torch.LongTensor([tags_seq]).to(flair.device)
+
+            input_lenghts = torch.tensor([len(input_seq)]).to(device='cpu')
+            encoder_input = torch.LongTensor([input_seq]).transpose(0, 1).to(flair.device)
+
+        # if type(input) is Sentence:
+        #     encoder_input, tags_seq, lemma, _, input_lenghts, _ = self._preprocessed_data(input)
 
         encoder_outputs, encoder_hidden = self._encode(encoder_input, tags_seq, input_lenghts)
         decoder_hidden = encoder_hidden[:self.n_layers]
-        decoder_input = torch.ones(1, 1, device=flair.device, dtype=torch.long) * self.character_dictionary.get_idx_for_item(SOS_token)
+        decoder_input = torch.LongTensor(
+            [[self.character_dictionary.get_idx_for_item(SOS_token) for _ in range(len(input_lenghts))]]).to(
+            flair.device)
+
         all_chars = torch.zeros([0], device=flair.device, dtype=torch.long)
-        # all_scores = torch.zeros([0], device=flair.device)
 
         for _ in range(0, self.max_length):
             # Forward pass through decoder
@@ -177,14 +218,41 @@ class Lemma(flair.nn.Model):
             # Prepare current token to be next decoder input (add a dimension)
             decoder_input = torch.unsqueeze(decoder_input, 0)
 
-        return all_chars
+        all_chars = [self.character_dictionary.get_item_for_index(ch.item()) for ch in all_chars]
+        all_chars[:] = [x for x in all_chars if not (x == EOS_token or x == '<unk>')]
+        output = ''.join(all_chars)
 
+        return output
+
+    def _eval_loss(self, input):
+
+        loss = 0
+        if type(input) is Sentence:
+            encoder_input, tags_seq, lemma, mask, input_lenghts, max_lemma_lenght = self._preprocessed_data(input)
+
+        encoder_outputs, encoder_hidden = self._encode(encoder_input, tags_seq, input_lenghts)
+        decoder_hidden = encoder_hidden[:self.n_layers]
+        decoder_input = torch.LongTensor(
+            [[self.character_dictionary.get_idx_for_item(SOS_token) for _ in range(len(input_lenghts))]]).to(
+            flair.device)
+
+        for t in range(max_lemma_lenght):
+            decoder_output, decoder_hidden = self._decode(
+                decoder_input, decoder_hidden, encoder_outputs
+            )
+
+            _, topi = decoder_output.topk(1)
+            decoder_input = torch.LongTensor([[topi[i][0] for i in range(len(input_lenghts))]]).to(flair.device)
+            mask_loss, _ = self._maskNLLLoss(decoder_output, lemma[t], mask[t])
+            loss += mask_loss
+
+        return loss
 
     def _encode(self, encoder_input, tag, input_lengths):
         hidden = None
         encoder_input = self.embedding(encoder_input)
         if self.use_tag:
-            tag_emb = self.tag_embedding(tag)
+            tag_emb = self.tag_embeddings(tag)
             encoder_input = torch.cat((encoder_input, tag_emb), dim=0)
         packed = nn.utils.rnn.pack_padded_sequence(encoder_input, input_lengths)
         outputs, hidden = self.encoder(packed, hidden)
@@ -194,7 +262,7 @@ class Lemma(flair.nn.Model):
 
         return outputs, hidden
 
-    def _attn(self, hidden, encoder_outputs, method = 'dot'):
+    def _attn(self, hidden, encoder_outputs, method='dot'):
         # Implement the dot method first
         if method == 'dot':
             attn_energies = self._dot_score(hidden, encoder_outputs)
@@ -205,7 +273,7 @@ class Lemma(flair.nn.Model):
     def _dot_score(self, hidden, encoder_output):
         return torch.sum(hidden * encoder_output, dim=2)
 
-    def _decode(self,  input_step, last_hidden, encoder_outputs):
+    def _decode(self, input_step, last_hidden, encoder_outputs):
         embedded = self.embedding(input_step)
         embedded = self.embedding_dropout(embedded)
 
@@ -230,8 +298,7 @@ class Lemma(flair.nn.Model):
         return loss, nTotal.item()
 
     def _load_embedding_weight(self, dictionary, pre_embedding):
-        embeddings = torch.zeros((len(dictionary), pre_embedding.embedding_length))
-        embeddings.to(flair.device)
+        embeddings = torch.zeros((len(dictionary), pre_embedding.embedding_length)).to(flair.device)
         for i in range(0, len(dictionary)):
             sentence = Sentence(dictionary.get_item_for_index(i))
             if len(sentence) is not 0:
@@ -299,26 +366,27 @@ class Lemma(flair.nn.Model):
         # Zero padding
         word_seq_list = self._seq_zero_padding(word_seq_list, max_word_lenght)
         # Transpose input data
-        word_seq_list = torch.LongTensor(word_seq_list).transpose(0, 1)
+        word_seq_list = torch.LongTensor(word_seq_list).transpose(0, 1).to(flair.device)
 
-        tag_seq_list = torch.LongTensor(tag_seq_list).transpose(0, 1)
+        tag_seq_list = torch.LongTensor(tag_seq_list).transpose(0, 1).to(flair.device)
+        tag_seq_list
 
         lemma_seq_list = self._seq_zero_padding(lemma_seq_list, max_lemma_lenght)
         # lemma_seq_list = list(map(list, zip(*lemma_seq_list)))
-        lemma_seq_list = torch.LongTensor(lemma_seq_list).transpose(0, 1)
+        lemma_seq_list = torch.LongTensor(lemma_seq_list).transpose(0, 1).to(flair.device)
 
-        mask = torch.BoolTensor(self._binary_matrix(lemma_seq_list))
+        mask = torch.BoolTensor(self._binary_matrix(lemma_seq_list)).to(flair.device)
 
         self.max_length = max(self.max_length, max_word_lenght, max_lemma_lenght)
 
         return word_seq_list, tag_seq_list, lemma_seq_list, mask, word_seq_lenght, max_lemma_lenght
 
-    def _seq_zero_padding(self, seqs:list, target_length:int, fillvalue=0):
+    def _seq_zero_padding(self, seqs: list, target_length: int, fillvalue=0):
         for seq in seqs:
             seq.extend([fillvalue] * (target_length - len(seq)))
         return seqs
 
-    def _binary_matrix(self, seqs:list):
+    def _binary_matrix(self, seqs: list):
         matrix = []
         for i, seq in enumerate(seqs):
             matrix.append([])
@@ -328,23 +396,34 @@ class Lemma(flair.nn.Model):
                 else:
                     matrix[i].append(1)
         return matrix
-    # @staticmethod
-    # def _init_model_with_state_dict(state):
-    #     model = Lemma(
-    #         hidden_size=state["hidden_size"],
-    #         # embeddings=state["embeddings"],
-    #         # tag_dictionary=state["tag_dictionary"],
-    #         # tag_type=state["tag_type"],
-    #         # use_crf=state["use_crf"],
-    #         # rnn_layers=state["rnn_layers"],
-    #         # dropout=use_dropout,
-    #         # word_dropout=use_word_dropout,
-    #         # locked_dropout=use_locked_dropout,
-    #         # train_initial_hidden_state=train_initial_hidden_state,
-    #         # rnn_type=rnn_type,
-    #         # beta=beta,
-    #         # loss_weights=weights,
-    #         # reproject_embeddings=reproject_embeddings,
-    #     )
-    #     model.load_state_dict(state["state_dict"])
-    #     return model
+
+    def _get_state_dict(self):
+        model_state = {
+            "state_dict": self.state_dict(),
+            "hidden_size": self.hidden_size,
+            "pre_embeddings": self.pre_embeddings,
+            "character_dictionary": self.character_dictionary,
+            "n_layers": self.n_layers,
+            "tag_list": self.tag_list,
+            "tag_dictionary": self.tag_dictionary,
+            # "tag_embeddings": self.tag_embeddings,
+            "dropout": self.dropout,
+            "rnn_type": self.rnn_type,
+        }
+        return model_state
+
+    @staticmethod
+    def _init_model_with_state_dict(state):
+        model = Lemma(
+            hidden_size=state["hidden_size"],
+            pre_embeddings=state["pre_embeddings"],
+            character_dictionary=state["character_dictionary"],
+            n_layers=state["n_layers"],
+            tag_list=state["tag_list"],
+            tag_dictionary=state["tag_dictionary"],
+            # tag_embeddings = state["tag_embeddings"],
+            dropout=state["dropout"],
+            rnn_type=state["rnn_type"],
+        )
+        model.load_state_dict(state["state_dict"])
+        return model
