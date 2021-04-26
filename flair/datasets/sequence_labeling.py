@@ -269,12 +269,13 @@ class ColumnDataset(FlairDataset):
                         tagging_format_prefix = split_at_first_hyphen[0]
                         tag_without_tagging_format = split_at_first_hyphen[1]
                         if self.label_name_map and tag_without_tagging_format in self.label_name_map.keys():
-                            tag = tagging_format_prefix + "-" + self.label_name_map[tag_without_tagging_format].replace(
-                                "-", " ")  # for example, transforming 'B-OBJ' to 'B-part-of-speech-object'
+                            tag = tagging_format_prefix + "-" + self.label_name_map[tag_without_tagging_format]
+                            # for example, transforming 'B-OBJ' to 'B-part-of-speech-object'
+                            if self.label_name_map[tag_without_tagging_format] == 'O': tag = 'O'
                     else:  # tag without prefix, for example tag='PPER'
                         if self.label_name_map and tag in self.label_name_map.keys():
-                            tag = self.label_name_map[tag].replace("-",
-                                                                   " ")  # for example, transforming 'PPER' to 'person'
+                            tag = self.label_name_map[tag]  # for example, transforming 'PPER' to 'person'
+                            if self.label_name_map[tag] == 'O': tag = 'O'
                     token.add_label(task, tag)
                 if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == '-':
                     token.whitespace_after = False
