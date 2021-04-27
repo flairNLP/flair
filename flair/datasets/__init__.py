@@ -7,9 +7,12 @@ from .base import MongoDataset
 # Expose all sequence labeling datasets
 from .sequence_labeling import ColumnCorpus
 from .sequence_labeling import ColumnDataset
+from .sequence_labeling import AMHARIC_NER
 from .sequence_labeling import ANER_CORP
+from .sequence_labeling import AQMAR
 from .sequence_labeling import BIOFID
 from .sequence_labeling import BIOSCOPE
+from .sequence_labeling import BUSINESS_HUN
 from .sequence_labeling import CONLL_03
 from .sequence_labeling import CONLL_03_GERMAN
 from .sequence_labeling import CONLL_03_DUTCH
@@ -20,14 +23,21 @@ from .sequence_labeling import CONLL_2000
 from .sequence_labeling import DANE
 from .sequence_labeling import EUROPARL_NER_GERMAN
 from .sequence_labeling import GERMEVAL_14
+from .sequence_labeling import HAUSA_NER
 from .sequence_labeling import INSPEC
+from .sequence_labeling import JAPANESE_NER
+from .sequence_labeling import KINYARWANDA_NER
 from .sequence_labeling import LER_GERMAN
+from .sequence_labeling import LUGANDA_NER
+from .sequence_labeling import LUO_NER
 from .sequence_labeling import MIT_MOVIE_NER_SIMPLE
 from .sequence_labeling import MIT_MOVIE_NER_COMPLEX
 from .sequence_labeling import MIT_RESTAURANT_NER
+from .sequence_labeling import NAIJA_PIDGIN_NER
 from .sequence_labeling import NER_BASQUE
 from .sequence_labeling import NER_FINNISH
 from .sequence_labeling import NER_SWEDISH
+from .sequence_labeling import NER_YORUBA
 from .sequence_labeling import STACKOVERFLOW_NER
 from .sequence_labeling import SEMEVAL2010
 from .sequence_labeling import SEMEVAL2017
@@ -57,7 +67,7 @@ from .sequence_labeling import WNUT_17
 from .sequence_labeling import WSD_UFSAC
 from .sequence_labeling import WNUT_2020_NER
 from .sequence_labeling import XTREME
-from .sequence_labeling import BUSINESS_HUN
+from .sequence_labeling import REDDIT_EL_GOLD
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
@@ -65,6 +75,9 @@ from .document_classification import ClassificationDataset
 from .document_classification import CSVClassificationCorpus
 from .document_classification import CSVClassificationDataset
 from .document_classification import AMAZON_REVIEWS
+from .document_classification import COMMUNICATIVE_FUNCTIONS
+from .document_classification import GERMEVAL_2018_OFFENSIVE_LANGUAGE
+from .document_classification import GO_EMOTIONS
 from .document_classification import IMDB
 from .document_classification import NEWSGROUPS
 from .document_classification import SENTIMENT_140
@@ -76,21 +89,24 @@ from .document_classification import SENTEVAL_SST_BINARY
 from .document_classification import SENTEVAL_SST_GRANULAR
 from .document_classification import TREC_50
 from .document_classification import TREC_6
-from .document_classification import COMMUNICATIVE_FUNCTIONS
 from .document_classification import WASSA_ANGER
 from .document_classification import WASSA_FEAR
 from .document_classification import WASSA_JOY
 from .document_classification import WASSA_SADNESS
-from .document_classification import GO_EMOTIONS
-from .document_classification import GERMEVAL_2018_OFFENSIVE_LANGUAGE
+from .document_classification import YAHOO_ANSWERS
 
 # Expose all treebanks
 from .treebanks import UniversalDependenciesCorpus
 from .treebanks import UniversalDependenciesDataset
+from .treebanks import UD_ARMENIAN
 from .treebanks import UD_ENGLISH
+from .treebanks import UD_ANCIENT_GREEK
+from .treebanks import UD_KAZAKH
+from .treebanks import UD_ESTONIAN
 from .treebanks import UD_GERMAN
 from .treebanks import UD_GERMAN_HDT
 from .treebanks import UD_DUTCH
+from .treebanks import UD_FAROESE
 from .treebanks import UD_FRENCH
 from .treebanks import UD_ITALIAN
 from .treebanks import UD_SPANISH
@@ -128,11 +144,22 @@ from .treebanks import UD_AFRIKAANS
 from .treebanks import UD_OLD_FRENCH
 from .treebanks import UD_GOTHIC
 from .treebanks import UD_WOLOF
+from .treebanks import UD_BELARUSIAN
+from .treebanks import UD_OLD_CHURCH_SLAVONIC
+from .treebanks import UD_COPTIC
+from .treebanks import UD_IRISH
+from .treebanks import UD_LATVIAN
+from .treebanks import UD_LITHUANIAN
+from .treebanks import UD_GALICIAN
 
 # Expose all text-text datasets
 from .text_text import ParallelTextCorpus
 from .text_text import ParallelTextDataset
 from .text_text import OpusParallelCorpus
+from .text_text import DataPairDataset
+from .text_text import DataPairCorpus
+from .text_text import GLUE_RTE
+from .text_text import SUPERGLUE_RTE
 
 # Expose all text-image datasets
 from .text_image import FeideggerCorpus
@@ -228,3 +255,4 @@ from .biomedical import BIOBERT_SPECIES_LINNAEUS
 from .biomedical import BIOBERT_SPECIES_S800
 from .biomedical import BIOBERT_GENE_BC2GM
 from .biomedical import BIOBERT_GENE_JNLPBA
+from.treebanks import UD_LATIN
