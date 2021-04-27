@@ -5,9 +5,10 @@ import shutil
 import glob
 from pathlib import Path
 from typing import Union, Dict, List
-from os import  listdir
+from os import listdir
 import zipfile
 from zipfile import ZipFile
+import tarfile
 import csv
 
 
@@ -784,6 +785,7 @@ class ICELANDIC_NER(ColumnCorpus):
         with open(outputfile/data_folder/"icelandic_ner.txt", "wb") as outfile:
             for files in os.walk(outputfile/data_folder):
                 f = files[2]
+
                 for i in range(len(f)):
                     if f[i].endswith('.txt'):
                         with open(outputfile/data_folder/f[i], 'rb') as infile:
@@ -800,6 +802,71 @@ class ICELANDIC_NER(ColumnCorpus):
             **corpusargs,
         )
 
+        
+class WEBPAGES_NER(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            **corpusargs,
+    ):
+        """
+        Initialize the WEBPAGES_NER corpus. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "ner", 5: "text"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+        import tarfile
+        if not os.path.isfile(data_folder / 'webpages_ner.txt'):
+            #     # download zip
+            tar_file = "https://cogcomp.seas.upenn.edu/Data/NERWebpagesColumns.tgz"
+            webpages_ner_path = cached_path(tar_file, Path("datasets") / dataset_name)
+            tf = tarfile.open(webpages_ner_path)
+            tf.extractall(data_folder)
+            tf.close()
+        outputfile = os.path.abspath(data_folder)
+
+        # merge the files in one as the zip is containing multiples files
+
+        with open(outputfile / data_folder / "webpages_ner.txt", "w+") as outfile:
+            for files in os.walk(outputfile):
+                f = files[1]
+                ff = os.listdir(outputfile / data_folder / f[-1])
+                for i, file in enumerate(ff):
+                    if file.endswith('.gold'):
+                        with open(outputfile / data_folder / f[-1] / file, 'r+', errors='replace') as infile:
+                            content = infile.read()
+                        outfile.write(content)
+                break
+
+        super(WEBPAGES_NER, self).__init__(
+            data_folder,
+            columns,
+            train_file='webpages_ner.txt',
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            **corpusargs,
+        )
+        
+      
 class JAPANESE_NER(ColumnCorpus):
     def __init__(
             self,
@@ -829,6 +896,7 @@ class JAPANESE_NER(ColumnCorpus):
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
+
 
         # download data from github if necessary (hironsan.txt, ja.wikipedia.conll)
         IOB2_path = "https://raw.githubusercontent.com/Hironsan/IOB2Corpus/master/"
@@ -877,6 +945,7 @@ class JAPANESE_NER(ColumnCorpus):
                     f.write("\n")
                 else:
                     f.write(sp_line[0] + "\t" + sp_line[len(sp_line) - 1])
+                    
 
 class STACKOVERFLOW_NER(ColumnCorpus):
     def __init__(
