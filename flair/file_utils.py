@@ -82,7 +82,7 @@ def cached_path(url_or_filename: str, cache_dir: Union[str, Path]) -> Path:
     """
     if type(cache_dir) is str:
         cache_dir = Path(cache_dir)
-    dataset_cache = Path(flair.cache_root) / cache_dir
+    dataset_cache = flair.cache_root / cache_dir
 
     parsed = urlparse(url_or_filename)
 

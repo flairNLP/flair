@@ -106,7 +106,7 @@ class WordEmbeddingsStore:
         """
         get the filename of the store
         """
-        cache_dir = Path(flair.cache_root)
+        cache_dir = flair.cache_root
         embedding_filename = re.findall("/(embeddings/.*)", embedding.name)[0]
         store_path = cache_dir / (embedding_filename + "." + backend)
         return store_path
