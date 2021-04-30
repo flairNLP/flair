@@ -662,7 +662,7 @@ class ModelTrainer:
                         and not use_final_model_for_eval
                 ):
                     print("saving best model")
-                    self.save_best_model(base_path, save_checkpoint=save_best_checkpoints)
+                    self.model.save(base_path / "best-model.pt")
 
                     if anneal_with_prestarts:
                         current_state_dict = self.model.state_dict()
