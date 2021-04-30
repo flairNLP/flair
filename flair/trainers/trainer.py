@@ -67,26 +67,10 @@ class ModelTrainer:
         self.tensorboard_log_dir = tensorboard_log_dir
         self.metrics_for_tensorboard = metrics_for_tensorboard
 
-    def save_best_model(self, base_path, save_checkpoint):
-        # delete previous best model
-        previous_best_path = self.get_best_model_path(base_path)
-        if os.path.exists(previous_best_path):
-            os.remove(previous_best_path)
-        if save_checkpoint:
-            best_checkpoint_path = previous_best_path.replace("model", "checkpoint")
-            if os.path.exists(best_checkpoint_path):
-                os.remove(best_checkpoint_path)
-        # save current best model
-        self.model.save(
-            base_path / f"best-model_epoch{self.epoch}.pt")
-        if save_checkpoint:
-            self.save_checkpoint(
-                base_path / f"best-checkpoint_epoch{self.epoch}.pt")
-
     @staticmethod
     def check_for_and_delete_previous_best_models(base_path, save_checkpoint):
         all_best_model_names = [filename for filename in os.listdir(base_path) if
-                                filename.startswith("best-model_epoch")]
+                                filename.startswith("best-model")]
         if len(all_best_model_names) != 0:
             warnings.warn(
                 "There should be no best model saved at epoch 1 except there is a model from previous trainings in your training folder. All previous best models will be deleted.")
@@ -98,26 +82,6 @@ class ModelTrainer:
                 best_checkpoint_path = previous_best_path.replace("model", "checkpoint")
                 if os.path.exists(best_checkpoint_path):
                     os.remove(best_checkpoint_path)
-
-    def get_best_model_path(self, base_path, check_model_existance=False):
-        all_best_model_names = [filename for filename in os.listdir(base_path) if
-                                filename.startswith("best-model_epoch")]
-
-        if len(all_best_model_names) > 1:
-            log.warning("There should be at most one best model saved at any time!")
-            log.warning("Found: " + all_best_model_names)
-
-        if check_model_existance:
-            if len(all_best_model_names) > 0:
-                return os.path.join(base_path, all_best_model_names[0])
-            else:
-                return ""
-        else:
-            if len(all_best_model_names) == 0: return ""
-            if self.epoch == 0:
-                log.warning("There should be no best model saved at epoch 1")
-                log.warning("Found: " + all_best_model_names)
-            return os.path.join(base_path, all_best_model_names[0])
 
     def train(
             self,
@@ -732,8 +696,7 @@ class ModelTrainer:
 
         # test best model if test data is present
         if self.corpus.test and not train_with_test:
-            final_score = self.final_test(base_path, mini_batch_chunk_size, num_workers, main_score_type,
-                                          use_final_model_for_eval)
+            final_score = self.final_test(base_path, mini_batch_chunk_size, num_workers, main_score_type)
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
@@ -770,7 +733,6 @@ class ModelTrainer:
             eval_mini_batch_size: int,
             num_workers: int = 8,
             main_score_type: str = None,
-            use_final_model_for_eval: bool = False,
     ):
         if type(base_path) is str:
             base_path = Path(base_path)
@@ -779,13 +741,8 @@ class ModelTrainer:
 
         self.model.eval()
 
-        if (os.path.exists(
-                self.get_best_model_path(base_path, check_model_existance=True)) and not use_final_model_for_eval):
-            log.info("Testing using best model ...")
-
-            self.model.load_state_dict(
-                self.model.load(self.get_best_model_path(base_path, check_model_existance=True)).state_dict())
-
+        if (base_path / "best-model.pt").exists():
+            self.model.load_state_dict(self.model.load(base_path / "best-model.pt")).state_dict()
         else:
             log.info("Testing using last state of model ...")
 

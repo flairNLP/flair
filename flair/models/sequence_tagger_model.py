@@ -540,6 +540,10 @@ class SequenceTagger(flair.nn.Model):
                                 mini_batch_size=mini_batch_size,
                                 label_name='predicted',
                                 return_loss=True)
+
+            if isinstance(loss, Tuple):
+                loss = loss[0] / loss[1]
+
             eval_loss += loss
             batch_no += 1
 
