@@ -613,7 +613,7 @@ class AMAZON_REVIEWS(ClassificationCorpus):
         dataset_name = self.__class__.__name__.lower() + '_' + str(split_max) + '_' + str(fraction_of_5_star_reviews)
 
         # default dataset folder is the cache root
-        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
+        data_folder = flair.cache_root / "datasets" / dataset_name
 
         # download data if necessary
         if not (data_folder / "train.txt").is_file():
@@ -702,7 +702,7 @@ class AMAZON_REVIEWS(ClassificationCorpus):
             write_count = 0
             review_5_count = 0
             # download senteval datasets if necessary und unzip
-            with gzip.open(Path(flair.cache_root) / "datasets" / 'Amazon_Product_Reviews' / part_name, "rb", ) as f_in:
+            with gzip.open(flair.cache_root / "datasets" / 'Amazon_Product_Reviews' / part_name, "rb", ) as f_in:
                 for line in f_in:
                     parsed_json = json.loads(line)
                     if 'reviewText' not in parsed_json:
@@ -757,7 +757,7 @@ class IMDB(ClassificationCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
 
         # download data if necessary
         imdb_acl_path = "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
@@ -765,7 +765,7 @@ class IMDB(ClassificationCorpus):
         if rebalance_corpus:
             dataset_name = dataset_name + '-rebalanced'
         data_folder = base_path / dataset_name
-        data_path = Path(flair.cache_root) / "datasets" / dataset_name
+        data_path = flair.cache_root / "datasets" / dataset_name
         train_data_file = data_path / "train.txt"
         test_data_file = data_path / "test.txt"
 
@@ -776,7 +776,7 @@ class IMDB(ClassificationCorpus):
             import tarfile
 
             with tarfile.open(
-                    Path(flair.cache_root)
+                    flair.cache_root
                     / "datasets"
                     / dataset_name
                     / "aclImdb_v1.tar.gz",
@@ -847,14 +847,14 @@ class NEWSGROUPS(ClassificationCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
         twenty_newsgroups_path = (
             "http://qwone.com/~jason/20Newsgroups/20news-bydate.tar.gz"
         )
-        data_path = Path(flair.cache_root) / "datasets" / dataset_name
+        data_path = flair.cache_root / "datasets" / dataset_name
         data_file = data_path / "20news-bydate-train.txt"
         if not data_file.is_file():
             cached_path(
@@ -864,7 +864,7 @@ class NEWSGROUPS(ClassificationCorpus):
             import tarfile
 
             with tarfile.open(
-                    Path(flair.cache_root)
+                    flair.cache_root
                     / "datasets"
                     / dataset_name
                     / "original"
@@ -956,7 +956,7 @@ class SENTIMENT_140(ClassificationCorpus):
         dataset_name = self.__class__.__name__.lower()
 
         # default dataset folder is the cache root
-        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
+        data_folder = flair.cache_root / "datasets" / dataset_name
 
         # download data if necessary
         if True or not (data_folder / "train.txt").is_file():
@@ -964,7 +964,7 @@ class SENTIMENT_140(ClassificationCorpus):
             # download senteval datasets if necessary und unzip
             sentiment_url = "https://cs.stanford.edu/people/alecmgo/trainingandtestdata.zip"
             cached_path(sentiment_url, Path("datasets") / dataset_name / 'raw')
-            senteval_folder = Path(flair.cache_root) / "datasets" / dataset_name / 'raw'
+            senteval_folder = flair.cache_root / "datasets" / dataset_name / 'raw'
             unzip_file(senteval_folder / "trainingandtestdata.zip", senteval_folder)
 
             # create dataset directory if necessary
@@ -1023,7 +1023,7 @@ class SENTEVAL_CR(ClassificationCorpus):
         dataset_name = self.__class__.__name__.lower()
 
         # default dataset folder is the cache root
-        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
+        data_folder = flair.cache_root / "datasets" / dataset_name
 
         # download data if necessary
         if not (data_folder / "train.txt").is_file():
@@ -1031,7 +1031,7 @@ class SENTEVAL_CR(ClassificationCorpus):
             # download senteval datasets if necessary und unzip
             senteval_path = "https://dl.fbaipublicfiles.com/senteval/senteval_data/datasmall_NB_ACL12.zip"
             cached_path(senteval_path, Path("datasets") / "senteval")
-            senteval_folder = Path(flair.cache_root) / "datasets" / "senteval"
+            senteval_folder = flair.cache_root / "datasets" / "senteval"
             unzip_file(senteval_folder / "datasmall_NB_ACL12.zip", senteval_folder)
 
             # create dataset directory if necessary
@@ -1077,7 +1077,7 @@ class SENTEVAL_MR(ClassificationCorpus):
         dataset_name = self.__class__.__name__.lower()
 
         # default dataset folder is the cache root
-        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
+        data_folder = flair.cache_root / "datasets" / dataset_name
 
         # download data if necessary
         if not (data_folder / "train.txt").is_file():
@@ -1085,7 +1085,7 @@ class SENTEVAL_MR(ClassificationCorpus):
             # download senteval datasets if necessary und unzip
             senteval_path = "https://dl.fbaipublicfiles.com/senteval/senteval_data/datasmall_NB_ACL12.zip"
             cached_path(senteval_path, Path("datasets") / "senteval")
-            senteval_folder = Path(flair.cache_root) / "datasets" / "senteval"
+            senteval_folder = flair.cache_root / "datasets" / "senteval"
             unzip_file(senteval_folder / "datasmall_NB_ACL12.zip", senteval_folder)
 
             # create dataset directory if necessary
@@ -1131,7 +1131,7 @@ class SENTEVAL_SUBJ(ClassificationCorpus):
         dataset_name = self.__class__.__name__.lower()
 
         # default dataset folder is the cache root
-        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
+        data_folder = flair.cache_root / "datasets" / dataset_name
 
         # download data if necessary
         if not (data_folder / "train.txt").is_file():
@@ -1139,7 +1139,7 @@ class SENTEVAL_SUBJ(ClassificationCorpus):
             # download senteval datasets if necessary und unzip
             senteval_path = "https://dl.fbaipublicfiles.com/senteval/senteval_data/datasmall_NB_ACL12.zip"
             cached_path(senteval_path, Path("datasets") / "senteval")
-            senteval_folder = Path(flair.cache_root) / "datasets" / "senteval"
+            senteval_folder = flair.cache_root / "datasets" / "senteval"
             unzip_file(senteval_folder / "datasmall_NB_ACL12.zip", senteval_folder)
 
             # create dataset directory if necessary
@@ -1185,7 +1185,7 @@ class SENTEVAL_MPQA(ClassificationCorpus):
         dataset_name = self.__class__.__name__.lower()
 
         # default dataset folder is the cache root
-        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
+        data_folder = flair.cache_root / "datasets" / dataset_name
 
         # download data if necessary
         if not (data_folder / "train.txt").is_file():
@@ -1193,7 +1193,7 @@ class SENTEVAL_MPQA(ClassificationCorpus):
             # download senteval datasets if necessary und unzip
             senteval_path = "https://dl.fbaipublicfiles.com/senteval/senteval_data/datasmall_NB_ACL12.zip"
             cached_path(senteval_path, Path("datasets") / "senteval")
-            senteval_folder = Path(flair.cache_root) / "datasets" / "senteval"
+            senteval_folder = flair.cache_root / "datasets" / "senteval"
             unzip_file(senteval_folder / "datasmall_NB_ACL12.zip", senteval_folder)
 
             # create dataset directory if necessary
@@ -1239,7 +1239,7 @@ class SENTEVAL_SST_BINARY(ClassificationCorpus):
         dataset_name = self.__class__.__name__.lower() + '_v2'
 
         # default dataset folder is the cache root
-        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
+        data_folder = flair.cache_root / "datasets" / dataset_name
 
         # download data if necessary
         if not (data_folder / "train.txt").is_file():
@@ -1291,7 +1291,7 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
         dataset_name = self.__class__.__name__.lower()
 
         # default dataset folder is the cache root
-        data_folder = Path(flair.cache_root) / "datasets" / dataset_name
+        data_folder = flair.cache_root / "datasets" / dataset_name
 
         # download data if necessary
         if not (data_folder / "train.txt").is_file():
@@ -1381,7 +1381,7 @@ class GO_EMOTIONS(ClassificationCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -1401,7 +1401,7 @@ class GO_EMOTIONS(ClassificationCorpus):
             if not os.path.exists(data_folder):
                 os.makedirs(data_folder)
 
-            data_path = Path(flair.cache_root) / "datasets" / dataset_name / 'raw'
+            data_path = flair.cache_root / "datasets" / dataset_name / 'raw'
             # create correctly formated txt files
             for name in ["train", "test", "dev"]:
                 with open(data_folder / (name + '.txt'), "w", encoding='utf-8') as txt_file:
@@ -1453,7 +1453,7 @@ class TREC_50(ClassificationCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1528,7 +1528,7 @@ class TREC_6(ClassificationCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1602,7 +1602,7 @@ class YAHOO_ANSWERS(ClassificationCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1619,7 +1619,7 @@ class YAHOO_ANSWERS(ClassificationCorpus):
                      '9': 'Family_&_Relationships',
                      '10': 'Politics_&_Government'}
 
-        original = Path(flair.cache_root) / "datasets" / dataset_name / "original"
+        original = flair.cache_root / "datasets" / dataset_name / "original"
 
         if not (data_folder / "train.txt").is_file():
             cached_path(url, original)
@@ -1681,7 +1681,7 @@ class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1761,7 +1761,7 @@ class COMMUNICATIVE_FUNCTIONS(ClassificationCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         original_filenames = ["background.tsv", "discussion.tsv", "introduction.tsv", "method.tsv", "result.tsv"]
@@ -1846,7 +1846,7 @@ class WASSA_ANGER(ClassificationCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1882,7 +1882,7 @@ class WASSA_FEAR(ClassificationCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1918,7 +1918,7 @@ class WASSA_JOY(ClassificationCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1954,7 +1954,7 @@ class WASSA_SADNESS(ClassificationCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
