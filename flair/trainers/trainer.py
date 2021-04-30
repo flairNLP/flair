@@ -742,7 +742,7 @@ class ModelTrainer:
         self.model.eval()
 
         if (base_path / "best-model.pt").exists():
-            self.model.load_state_dict(self.model.load(base_path / "best-model.pt")).state_dict()
+            self.model.load_state_dict(self.model.load(base_path / "best-model.pt").state_dict())
         else:
             log.info("Testing using last state of model ...")
 
