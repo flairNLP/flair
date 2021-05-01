@@ -106,12 +106,11 @@ class LanguageModel(nn.Module):
         )
 
     def init_hidden(self, bsz):
-        return None
-        # weight = next(self.parameters()).detach()
-        # return (
-        #     weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
-        #     weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
-        # )
+        weight = next(self.parameters()).detach()
+        return (
+            weight.new(self.nlayers, bsz, self.proj_size if self.proj_size else self.hidden_size).zero_().clone().detach(),
+            weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
+        )
 
     def get_representation(
             self,
