@@ -1178,32 +1178,32 @@ class SequenceTagger(flair.nn.Model):
 
         # special handling for the taggers by the @redewiegergabe project (TODO: move to model hub)
         elif model_name == "de-historic-indirect":
-            model_file = Path(flair.cache_root) / cache_dir / 'indirect' / 'final-model.pt'
+            model_file = flair.cache_root / cache_dir / 'indirect' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/indirect.zip', cache_dir=cache_dir)
-                unzip_file(Path(flair.cache_root) / cache_dir / 'indirect.zip', Path(flair.cache_root) / cache_dir)
-            model_path = str(Path(flair.cache_root) / cache_dir / 'indirect' / 'final-model.pt')
+                unzip_file(flair.cache_root / cache_dir / 'indirect.zip', flair.cache_root / cache_dir)
+            model_path = str(flair.cache_root / cache_dir / 'indirect' / 'final-model.pt')
 
         elif model_name == "de-historic-direct":
-            model_file = Path(flair.cache_root) / cache_dir / 'direct' / 'final-model.pt'
+            model_file = flair.cache_root / cache_dir / 'direct' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/direct.zip', cache_dir=cache_dir)
-                unzip_file(Path(flair.cache_root) / cache_dir / 'direct.zip', Path(flair.cache_root) / cache_dir)
-            model_path = str(Path(flair.cache_root) / cache_dir / 'direct' / 'final-model.pt')
+                unzip_file(flair.cache_root / cache_dir / 'direct.zip', flair.cache_root / cache_dir)
+            model_path = str(flair.cache_root / cache_dir / 'direct' / 'final-model.pt')
 
         elif model_name == "de-historic-reported":
-            model_file = Path(flair.cache_root) / cache_dir / 'reported' / 'final-model.pt'
+            model_file = flair.cache_root / cache_dir / 'reported' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/reported.zip', cache_dir=cache_dir)
-                unzip_file(Path(flair.cache_root) / cache_dir / 'reported.zip', Path(flair.cache_root) / cache_dir)
-            model_path = str(Path(flair.cache_root) / cache_dir / 'reported' / 'final-model.pt')
+                unzip_file(flair.cache_root / cache_dir / 'reported.zip', flair.cache_root / cache_dir)
+            model_path = str(flair.cache_root / cache_dir / 'reported' / 'final-model.pt')
 
         elif model_name == "de-historic-free-indirect":
-            model_file = Path(flair.cache_root) / cache_dir / 'freeIndirect' / 'final-model.pt'
+            model_file = flair.cache_root / cache_dir / 'freeIndirect' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/freeIndirect.zip', cache_dir=cache_dir)
-                unzip_file(Path(flair.cache_root) / cache_dir / 'freeIndirect.zip', Path(flair.cache_root) / cache_dir)
-            model_path = str(Path(flair.cache_root) / cache_dir / 'freeIndirect' / 'final-model.pt')
+                unzip_file(flair.cache_root / cache_dir / 'freeIndirect.zip', flair.cache_root / cache_dir)
+            model_path = str(flair.cache_root / cache_dir / 'freeIndirect' / 'final-model.pt')
 
         # for all other cases (not local file or special download location), use HF model hub
         else:
