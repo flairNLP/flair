@@ -57,87 +57,34 @@ class TextDataset(Dataset):
         return len(self.files)
 
     def __getitem__(self, index=0) -> torch.tensor:
-        return self.charsplit(
-            self.files[index],
-            self.expand_vocab,
-            self.forward,
-            self.split_on_char,
-            self.random_case_flip,
-        )
-
-    def charsplit(
-        self,
-        path: Union[str, Path],
-        expand_vocab=False,
-        forward=True,
-        split_on_char=True,
-        random_case_flip=True,
-    ) -> torch.tensor:
-
         """Tokenizes a text file on character basis."""
-        if type(path) is str:
-            path = Path(path)
-        assert path.exists()
+        if type(self.files[index]) is str:
+            self.files[index] = Path(self.files[index])
+        assert self.files[index].exists()
 
-        lines = [doc + self.document_delimiter
-                 for doc in open(path, "r", encoding="utf-8").read().split(self.document_delimiter) if doc]
+        with self.files[index].open("r", encoding="utf-8") as fin:
+            lines = (doc + self.document_delimiter for doc in fin.read().split(self.document_delimiter) if doc)
+            if self.random_case_flip:
+                lines = map(self.random_casechange, lines)
+            lines = list(map(list if self.split_on_char else str.split, lines))
 
         log.info(f"read text file with {len(lines)} lines")
+
         if self.shuffle:
             random.shuffle(lines)
             log.info(f"shuffled")
 
-        tokens = 0
-        for line in lines:
-
-            if split_on_char:
-                chars = list(line)
-            else:
-                chars = line.split()
-
-            tokens += len(chars)
-
-            # Add chars to the dictionary
-            if expand_vocab:
+        if self.expand_vocab:
+            for chars in lines:
                 for char in chars:
                     self.dictionary.add_item(char)
 
-        ids = torch.zeros(tokens, dtype=torch.long)
-        if forward:
-            # charsplit file content
-            token = 0
-            for line in lines:
-                if random_case_flip:
-                    line = self.random_casechange(line)
-
-                if split_on_char:
-                    chars = list(line)
-                else:
-                    chars = line.split()
-
-                for char in chars:
-                    if token >= tokens:
-                        break
-                    ids[token] = self.dictionary.get_idx_for_item(char)
-                    token += 1
-        else:
-            # charsplit file content
-            token = tokens - 1
-            for line in lines:
-                if random_case_flip:
-                    line = self.random_casechange(line)
-
-                if split_on_char:
-                    chars = list(line)
-                else:
-                    chars = line.split()
-
-                for char in chars:
-                    if token >= tokens:
-                        break
-                    ids[token] = self.dictionary.get_idx_for_item(char)
-                    token -= 1
-
+        ids = torch.tensor(
+            [self.dictionary.get_idx_for_item(char) for chars in lines for char in chars], 
+            dtype=torch.long
+        )
+        if not self.forward:
+            ids = ids.flip(0)
         return ids
 
     @staticmethod
@@ -148,32 +95,6 @@ class TextDataset(Dataset):
         if no == 1:
             line = line.upper()
         return line
-
-    def tokenize(self, path: Union[str, Path]):
-        """Tokenizes a text file."""
-        if type(path) is str:
-            path = Path(path)
-        assert path.exists()
-        # Add words to the dictionary
-        with open(path, "r") as f:
-            tokens = 0
-            for line in f:
-                words = line.split() + ["<eos>"]
-                tokens += len(words)
-                for word in words:
-                    self.dictionary.add_word(word)
-
-        # Tokenize file content
-        with open(path, "r") as f:
-            ids = torch.zeros(tokens, dtype=torch.long, device=flair.device)
-            token = 0
-            for line in f:
-                words = line.split() + ["<eos>"]
-                for word in words:
-                    ids[token] = self.dictionary.word2idx[word]
-                    token += 1
-
-        return ids
 
 
 class TextCorpus(object):
