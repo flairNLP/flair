@@ -289,7 +289,7 @@ class LanguageModelTrainer:
                     self.model.train()
 
                     # reset variables
-                    hidden = self.model.init_hidden(mini_batch_size)
+                    hidden = None
 
                     # not really sure what this does
                     ntokens = len(self.corpus.dictionary)
@@ -439,7 +439,7 @@ class LanguageModelTrainer:
             total_loss = 0
             ntokens = len(self.corpus.dictionary)
 
-            hidden = self.model.init_hidden(eval_batch_size)
+            hidden = None
 
             for i in range(0, data_source.size(0) - 1, sequence_length):
                 data, targets = self._get_batch(data_source, i, sequence_length)

@@ -16,15 +16,16 @@ class LanguageModel(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
 
     def __init__(
-        self,
-        dictionary: Dictionary,
-        is_forward_lm: bool,
-        hidden_size: int,
-        nlayers: int,
-        embedding_size: int = 100,
-        nout=None,
-        document_delimiter: str = '\n',
-        dropout=0.1,
+            self,
+            dictionary: Dictionary,
+            is_forward_lm: bool,
+            hidden_size: int,
+            nlayers: int,
+            embedding_size: int = 100,
+            nout=None,
+            document_delimiter: str = '\n',
+            dropout=0.1,
+            proj_size=None,
     ):
 
         super(LanguageModel, self).__init__()
@@ -40,11 +41,24 @@ class LanguageModel(nn.Module):
 
         self.drop = nn.Dropout(dropout)
         self.encoder = nn.Embedding(len(dictionary), embedding_size)
+        self.proj_size = proj_size
 
-        if nlayers == 1:
-            self.rnn = nn.LSTM(embedding_size, hidden_size, nlayers)
+        if proj_size:
+            self.rnn = nn.LSTM(
+                input_size=embedding_size,
+                hidden_size=hidden_size,
+                num_layers=nlayers,
+                dropout=dropout if nlayers > 1 else 0,
+                proj_size=proj_size,
+            )
+
         else:
-            self.rnn = nn.LSTM(embedding_size, hidden_size, nlayers, dropout=dropout)
+            self.rnn = nn.LSTM(
+                input_size=embedding_size,
+                hidden_size=hidden_size,
+                num_layers=nlayers,
+                dropout=dropout if nlayers > 1 else 0,
+            )
 
         self.hidden = None
 
@@ -55,7 +69,7 @@ class LanguageModel(nn.Module):
             self.decoder = nn.Linear(nout, len(dictionary))
         else:
             self.proj = None
-            self.decoder = nn.Linear(hidden_size, len(dictionary))
+            self.decoder = nn.Linear(proj_size if proj_size else hidden_size, len(dictionary))
 
         self.init_weights()
 
@@ -68,10 +82,7 @@ class LanguageModel(nn.Module):
         self.decoder.bias.detach().fill_(0)
         self.decoder.weight.detach().uniform_(-initrange, initrange)
 
-    def set_hidden(self, hidden):
-        self.hidden = hidden
-
-    def forward(self, input, hidden, ordered_sequence_lengths=None):
+    def forward(self, input, hidden):
         encoded = self.encoder(input)
         emb = self.drop(encoded)
 
@@ -95,18 +106,19 @@ class LanguageModel(nn.Module):
         )
 
     def init_hidden(self, bsz):
-        weight = next(self.parameters()).detach()
-        return (
-            weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
-            weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
-        )
+        return None
+        # weight = next(self.parameters()).detach()
+        # return (
+        #     weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
+        #     weight.new(self.nlayers, bsz, self.hidden_size).zero_().clone().detach(),
+        # )
 
     def get_representation(
-        self,
-        strings: List[str],
-        start_marker: str,
-        end_marker: str,
-        chars_per_chunk: int = 512,
+            self,
+            strings: List[str],
+            start_marker: str,
+            end_marker: str,
+            chars_per_chunk: int = 512,
     ):
 
         len_longest_str: int = len(max(strings, key=len))
@@ -243,7 +255,7 @@ class LanguageModel(nn.Module):
         }
 
     def save_checkpoint(
-        self, file: Union[Path, str], optimizer: Optimizer, epoch: int, split: int, loss: float
+            self, file: Union[Path, str], optimizer: Optimizer, epoch: int, split: int, loss: float
     ):
         model_state = {
             "state_dict": self.state_dict(),
@@ -279,11 +291,11 @@ class LanguageModel(nn.Module):
         torch.save(model_state, str(file), pickle_protocol=4)
 
     def generate_text(
-        self,
-        prefix: str = "\n",
-        number_of_characters: int = 1000,
-        temperature: float = 1.0,
-        break_on_suffix=None,
+            self,
+            prefix: str = "\n",
+            number_of_characters: int = 1000,
+            temperature: float = 1.0,
+            break_on_suffix=None,
     ) -> Tuple[str, float]:
 
         if prefix == "":
@@ -303,8 +315,8 @@ class LanguageModel(nn.Module):
                 for character in prefix[:-1]:
                     char_tensors.append(
                         torch.tensor(self.dictionary.get_idx_for_item(character))
-                        .unsqueeze(0)
-                        .unsqueeze(0)
+                            .unsqueeze(0)
+                            .unsqueeze(0)
                     )
 
                 input = torch.cat(char_tensors).to(flair.device)
@@ -313,8 +325,8 @@ class LanguageModel(nn.Module):
 
             input = (
                 torch.tensor(self.dictionary.get_idx_for_item(prefix[-1]))
-                .unsqueeze(0)
-                .unsqueeze(0)
+                    .unsqueeze(0)
+                    .unsqueeze(0)
             )
 
             log_prob = 0.0
@@ -413,6 +425,7 @@ class LanguageModel(nn.Module):
             "nout": self.nout,
             "document_delimiter": self.document_delimiter,
             "dropout": self.dropout,
+            "proj_size": self.proj_size,
         }
 
         return model_state
@@ -432,6 +445,7 @@ class LanguageModel(nn.Module):
                 nout=d['nout'],
                 document_delimiter=d['document_delimiter'],
                 dropout=d['dropout'],
+                proj_size=d['proj_size'] if 'proj_size' in d else None
             )
 
             language_model.load_state_dict(d['state_dict'])
