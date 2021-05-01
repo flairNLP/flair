@@ -825,6 +825,8 @@ class ModelTrainer:
 
                 # forward pass
                 loss = self.model.forward_loss(batch)
+                if isinstance(loss, Tuple):
+                    loss = loss[0]
 
                 # update optimizer and scheduler
                 optimizer.zero_grad()
