@@ -36,6 +36,7 @@ class ColumnCorpus(Corpus):
             skip_first_line: bool = False,
             in_memory: bool = True,
             label_name_map: Dict[str, str] = None,
+            banned_sentences: List[str] = None,
             autofind_splits: bool = True,
             **corpusargs,
     ):
@@ -53,8 +54,9 @@ class ColumnCorpus(Corpus):
         :param document_separator_token: If provided, sentences that function as document boundaries are so marked
         :param skip_first_line: set to True if your dataset has a header line
         :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
-        :return: a Corpus with annotated train, dev and test data
         :param label_name_map: Optionally map tag names to different schema.
+        :param banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
+        :return: a Corpus with annotated train, dev and test data
         """
 
         # find train, dev and test files if not specified
@@ -69,6 +71,7 @@ class ColumnCorpus(Corpus):
             encoding=encoding,
             comment_symbol=comment_symbol,
             column_delimiter=column_delimiter,
+            banned_sentences=banned_sentences,
             in_memory=in_memory,
             document_separator_token=document_separator_token,
             skip_first_line=skip_first_line,
@@ -83,6 +86,7 @@ class ColumnCorpus(Corpus):
             encoding=encoding,
             comment_symbol=comment_symbol,
             column_delimiter=column_delimiter,
+            banned_sentences=banned_sentences,
             in_memory=in_memory,
             document_separator_token=document_separator_token,
             skip_first_line=skip_first_line,
@@ -96,6 +100,7 @@ class ColumnCorpus(Corpus):
             tag_to_bioes,
             encoding=encoding,
             comment_symbol=comment_symbol,
+            banned_sentences=banned_sentences,
             column_delimiter=column_delimiter,
             in_memory=in_memory,
             document_separator_token=document_separator_token,
@@ -117,6 +122,7 @@ class ColumnDataset(FlairDataset):
             tag_to_bioes: str = None,
             column_delimiter: str = r"\s+",
             comment_symbol: str = None,
+            banned_sentences: List[str] = None,
             in_memory: bool = True,
             document_separator_token: str = None,
             encoding: str = "utf-8",
@@ -135,6 +141,8 @@ class ColumnDataset(FlairDataset):
         :param document_separator_token: If provided, sentences that function as document boundaries are so marked
         :param skip_first_line: set to True if your dataset has a header line
         :param label_name_map: Optionally map tag names to different schema.
+        :param banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
+        :return: a dataset with annotated data
         """
         if type(path_to_column_file) is str:
             path_to_column_file = Path(path_to_column_file)
@@ -146,6 +154,7 @@ class ColumnDataset(FlairDataset):
         self.comment_symbol = comment_symbol
         self.document_separator_token = document_separator_token
         self.label_name_map = label_name_map
+        self.banned_sentences = banned_sentences
 
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
@@ -198,6 +207,9 @@ class ColumnDataset(FlairDataset):
                 while True:
                     sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
                     if not sentence: break
+                    if self.banned_sentences is not None and any(
+                        [d in sentence.to_plain_string() for d in self.banned_sentences]):
+                        continue
                     sentence._previous_sentence = previous_sentence
                     sentence._next_sentence = None
 
