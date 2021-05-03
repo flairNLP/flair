@@ -18,7 +18,7 @@ except ImportError:
     amp = None
 
 import flair
-import flair.nn 
+import flair.nn
 from flair.data import MultiCorpus, Corpus
 from flair.datasets import DataLoader
 from flair.optim import ExpAnnealLR
@@ -717,16 +717,16 @@ class ModelTrainer:
                     model_name = "model_epoch_" + str(self.epoch) + ".pt"
                     if not Path(base_path / model_name).is_file():
                         self.model.save(base_path / model_name)
-                self.wandb_logger.log_artifact(
-                    name=f"model_{self.wandb_logger.wandb_run.id}",
-                    type="model",
-                    file_or_dir=base_path / model_name,
-                    aliases=[
-                        "latest",
-                        "best" if current_epoch_has_best_model_so_far else "",
-                        f"epoch-{self.epoch}",
-                    ],
-                )
+                    self.wandb_logger.log_artifact(
+                        name=f"model_{self.wandb_logger.wandb_run.id}",
+                        type="model",
+                        file_or_dir=base_path / model_name,
+                        aliases=[
+                            "latest",
+                            "best" if current_epoch_has_best_model_so_far else "",
+                            f"epoch-{self.epoch}",
+                        ],
+                    )
 
             if use_swa:
                 optimizer.swap_swa_sgd()
