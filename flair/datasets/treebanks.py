@@ -236,7 +236,7 @@ class UD_ENGLISH(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -289,7 +289,7 @@ class UD_ANCIENT_GREEK(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -316,7 +316,7 @@ class UD_KAZAKH(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -342,7 +342,7 @@ class UD_OLD_CHURCH_SLAVONIC(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -369,7 +369,7 @@ class UD_ARMENIAN(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -395,7 +395,7 @@ class UD_ESTONIAN(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -422,7 +422,7 @@ class UD_GERMAN(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -447,7 +447,7 @@ class UD_GERMAN_HDT(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -469,7 +469,7 @@ class UD_GERMAN_HDT(UniversalDependenciesCorpus):
                 f"{ud_path}/{train_file}", Path("datasets") / dataset_name / "original"
             )
 
-        data_path = Path(flair.cache_root) / "datasets" / dataset_name
+        data_path = flair.cache_root / "datasets" / dataset_name
 
         new_train_file: Path = data_path / "de_hdt-ud-train-all.conllu"
 
@@ -493,7 +493,7 @@ class UD_DUTCH(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -525,7 +525,7 @@ class UD_FAROESE(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -554,7 +554,7 @@ class UD_FRENCH(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -578,7 +578,7 @@ class UD_ITALIAN(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -632,7 +632,7 @@ class UD_SPANISH(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -656,7 +656,7 @@ class UD_PORTUGUESE(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -684,7 +684,7 @@ class UD_ROMANIAN(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -708,7 +708,7 @@ class UD_CATALAN(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -736,7 +736,7 @@ class UD_POLISH(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -761,7 +761,7 @@ class UD_CZECH(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -784,7 +784,7 @@ class UD_CZECH(UniversalDependenciesCorpus):
             f"{ud_path}/cs_pdt-ud-train-v.conllu",
             Path("datasets") / dataset_name / "original",
         )
-        data_path = Path(flair.cache_root) / "datasets" / dataset_name
+        data_path = flair.cache_root / "datasets" / dataset_name
 
         train_filenames = [
             "cs_pdt-ud-train-c.conllu",
@@ -814,7 +814,7 @@ class UD_SLOVAK(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -839,7 +839,7 @@ class UD_SWEDISH(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -868,7 +868,7 @@ class UD_DANISH(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -893,7 +893,7 @@ class UD_NORWEGIAN(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -922,7 +922,7 @@ class UD_FINNISH(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -947,7 +947,7 @@ class UD_SLOVENIAN(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -972,7 +972,7 @@ class UD_CROATIAN(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -997,7 +997,7 @@ class UD_SERBIAN(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1022,7 +1022,7 @@ class UD_BULGARIAN(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1047,7 +1047,7 @@ class UD_ARABIC(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1073,7 +1073,7 @@ class UD_HEBREW(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1097,7 +1097,7 @@ class UD_TURKISH(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1124,7 +1124,7 @@ class UD_PERSIAN(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1153,7 +1153,7 @@ class UD_RUSSIAN(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1182,7 +1182,7 @@ class UD_HINDI(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1209,7 +1209,7 @@ class UD_INDONESIAN(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1234,7 +1234,7 @@ class UD_JAPANESE(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1259,7 +1259,7 @@ class UD_CHINESE(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1284,7 +1284,7 @@ class UD_KOREAN(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1313,7 +1313,7 @@ class UD_BASQUE(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1338,7 +1338,7 @@ class UD_CHINESE_KYOTO(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1365,7 +1365,7 @@ class UD_GREEK(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1392,7 +1392,7 @@ class UD_NAIJA(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1419,7 +1419,7 @@ class UD_LIVVI(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1441,7 +1441,7 @@ class UD_BURYAT(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1467,7 +1467,7 @@ class UD_NORTH_SAMI(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1493,7 +1493,7 @@ class UD_MARATHI(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1520,7 +1520,7 @@ class UD_MALTESE(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Maltese-MUDT/master"
         cached_path(
@@ -1547,7 +1547,7 @@ class UD_AFRIKAANS(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Afrikaans-AfriBooms/master"
         cached_path(
@@ -1574,7 +1574,7 @@ class UD_GOTHIC(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1601,7 +1601,7 @@ class UD_OLD_FRENCH(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1628,7 +1628,7 @@ class UD_WOLOF(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
         web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Wolof-WTB/master"
         cached_path(
@@ -1655,7 +1655,7 @@ class UD_BELARUSIAN(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1682,7 +1682,7 @@ class UD_COPTIC(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1708,7 +1708,7 @@ class UD_IRISH(UniversalDependenciesCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary

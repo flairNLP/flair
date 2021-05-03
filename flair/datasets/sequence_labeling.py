@@ -5,9 +5,10 @@ import shutil
 import glob
 from pathlib import Path
 from typing import Union, Dict, List
-from os import  listdir
+from os import listdir
 import zipfile
 from zipfile import ZipFile
+import tarfile
 import csv
 
 
@@ -269,12 +270,13 @@ class ColumnDataset(FlairDataset):
                         tagging_format_prefix = split_at_first_hyphen[0]
                         tag_without_tagging_format = split_at_first_hyphen[1]
                         if self.label_name_map and tag_without_tagging_format in self.label_name_map.keys():
-                            tag = tagging_format_prefix + "-" + self.label_name_map[tag_without_tagging_format].replace(
-                                "-", " ")  # for example, transforming 'B-OBJ' to 'B-part-of-speech-object'
+                            tag = tagging_format_prefix + "-" + self.label_name_map[tag_without_tagging_format]
+                            # for example, transforming 'B-OBJ' to 'B-part-of-speech-object'
+                            if self.label_name_map[tag_without_tagging_format] == 'O': tag = 'O'
                     else:  # tag without prefix, for example tag='PPER'
                         if self.label_name_map and tag in self.label_name_map.keys():
-                            tag = self.label_name_map[tag].replace("-",
-                                                                   " ")  # for example, transforming 'PPER' to 'person'
+                            tag = self.label_name_map[tag]  # for example, transforming 'PPER' to 'person'
+                            if self.label_name_map[tag] == 'O': tag = 'O'
                     token.add_label(task, tag)
                 if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == '-':
                     token.whitespace_after = False
@@ -336,7 +338,7 @@ class AMHARIC_NER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -386,7 +388,7 @@ class ANER_CORP(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -445,7 +447,7 @@ class AQMAR(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -484,7 +486,7 @@ class BIOFID(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -516,7 +518,7 @@ class BIOSCOPE(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -566,7 +568,7 @@ class CONLL_03(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if entity_linking:
@@ -638,7 +640,7 @@ class CONLL_03_GERMAN(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # check if data there
@@ -689,7 +691,7 @@ class CONLL_03_DUTCH(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -761,7 +763,7 @@ class ICELANDIC_NER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         if not os.path.isfile(data_folder / 'icelandic_ner.txt'):
@@ -783,6 +785,7 @@ class ICELANDIC_NER(ColumnCorpus):
         with open(outputfile/data_folder/"icelandic_ner.txt", "wb") as outfile:
             for files in os.walk(outputfile/data_folder):
                 f = files[2]
+
                 for i in range(len(f)):
                     if f[i].endswith('.txt'):
                         with open(outputfile/data_folder/f[i], 'rb') as infile:
@@ -799,6 +802,71 @@ class ICELANDIC_NER(ColumnCorpus):
             **corpusargs,
         )
 
+        
+class WEBPAGES_NER(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            **corpusargs,
+    ):
+        """
+        Initialize the WEBPAGES_NER corpus. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "ner", 5: "text"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+        import tarfile
+        if not os.path.isfile(data_folder / 'webpages_ner.txt'):
+            #     # download zip
+            tar_file = "https://cogcomp.seas.upenn.edu/Data/NERWebpagesColumns.tgz"
+            webpages_ner_path = cached_path(tar_file, Path("datasets") / dataset_name)
+            tf = tarfile.open(webpages_ner_path)
+            tf.extractall(data_folder)
+            tf.close()
+        outputfile = os.path.abspath(data_folder)
+
+        # merge the files in one as the zip is containing multiples files
+
+        with open(outputfile / data_folder / "webpages_ner.txt", "w+") as outfile:
+            for files in os.walk(outputfile):
+                f = files[1]
+                ff = os.listdir(outputfile / data_folder / f[-1])
+                for i, file in enumerate(ff):
+                    if file.endswith('.gold'):
+                        with open(outputfile / data_folder / f[-1] / file, 'r+', errors='replace') as infile:
+                            content = infile.read()
+                        outfile.write(content)
+                break
+
+        super(WEBPAGES_NER, self).__init__(
+            data_folder,
+            columns,
+            train_file='webpages_ner.txt',
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            **corpusargs,
+        )
+        
+      
 class JAPANESE_NER(ColumnCorpus):
     def __init__(
             self,
@@ -826,8 +894,9 @@ class JAPANESE_NER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
+
 
         # download data from github if necessary (hironsan.txt, ja.wikipedia.conll)
         IOB2_path = "https://raw.githubusercontent.com/Hironsan/IOB2Corpus/master/"
@@ -876,6 +945,7 @@ class JAPANESE_NER(ColumnCorpus):
                     f.write("\n")
                 else:
                     f.write(sp_line[0] + "\t" + sp_line[len(sp_line) - 1])
+                    
 
 class STACKOVERFLOW_NER(ColumnCorpus):
     def __init__(
@@ -924,7 +994,7 @@ class STACKOVERFLOW_NER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1023,7 +1093,7 @@ class BUSINESS_HUN(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # If the extracted corpus file is not yet present in dir
@@ -1185,7 +1255,7 @@ class CONLL_03_SPANISH(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1231,12 +1301,12 @@ class CONLL_2000(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
         conll_2000_path = "https://www.clips.uantwerpen.be/conll2000/chunking/"
-        data_file = Path(flair.cache_root) / "datasets" / dataset_name / "train.txt"
+        data_file = flair.cache_root / "datasets" / dataset_name / "train.txt"
         if not data_file.is_file():
             cached_path(
                 f"{conll_2000_path}train.txt.gz", Path("datasets") / dataset_name
@@ -1247,19 +1317,19 @@ class CONLL_2000(ColumnCorpus):
             import gzip, shutil
 
             with gzip.open(
-                    Path(flair.cache_root) / "datasets" / dataset_name / "train.txt.gz",
+                    flair.cache_root / "datasets" / dataset_name / "train.txt.gz",
                     "rb",
             ) as f_in:
                 with open(
-                        Path(flair.cache_root) / "datasets" / dataset_name / "train.txt",
+                        flair.cache_root / "datasets" / dataset_name / "train.txt",
                         "wb",
                 ) as f_out:
                     shutil.copyfileobj(f_in, f_out)
             with gzip.open(
-                    Path(flair.cache_root) / "datasets" / dataset_name / "test.txt.gz", "rb"
+                    flair.cache_root / "datasets" / dataset_name / "test.txt.gz", "rb"
             ) as f_in:
                 with open(
-                        Path(flair.cache_root) / "datasets" / dataset_name / "test.txt",
+                        flair.cache_root / "datasets" / dataset_name / "test.txt",
                         "wb",
                 ) as f_out:
                     shutil.copyfileobj(f_in, f_out)
@@ -1288,11 +1358,11 @@ class DANE(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        data_path = Path(flair.cache_root) / "datasets" / dataset_name
+        data_path = flair.cache_root / "datasets" / dataset_name
         train_data_file = data_path / "ddt.train.conllu"
         if not train_data_file.is_file():
             temp_file = cached_path(
@@ -1355,7 +1425,7 @@ class EUROPARL_NER_GERMAN(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1405,7 +1475,7 @@ class GERMEVAL_14(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # check if data there
@@ -1446,7 +1516,7 @@ class INSPEC(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         inspec_path = "https://raw.githubusercontent.com/midas-research/keyphrase-extraction-as-sequence-labeling-data/master/Inspec"
@@ -1490,7 +1560,7 @@ class LER_GERMAN(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1536,7 +1606,7 @@ class LUO_NER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1581,7 +1651,7 @@ class MIT_MOVIE_NER_SIMPLE(ColumnCorpus):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
         if not base_path:
-            base_path: Path = Path(flair.cache_root) / "datasets"
+            base_path: Path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1629,7 +1699,7 @@ class MIT_MOVIE_NER_COMPLEX(ColumnCorpus):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
         if not base_path:
-            base_path: Path = Path(flair.cache_root) / "datasets"
+            base_path: Path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1679,7 +1749,7 @@ class MIT_RESTAURANT_NER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1726,7 +1796,7 @@ class IGBO_NER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1774,7 +1844,7 @@ class HAUSA_NER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1823,7 +1893,7 @@ class NER_YORUBA(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1861,7 +1931,7 @@ class KINYARWANDA_NER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -1964,7 +2034,7 @@ class NAIJA_PIDGIN_NER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
         
         corpus_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/pcm/"
@@ -2050,12 +2120,12 @@ class NER_BASQUE(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
         ner_basque_path = "http://ixa2.si.ehu.eus/eiec/"
-        data_path = Path(flair.cache_root) / "datasets" / dataset_name
+        data_path = flair.cache_root / "datasets" / dataset_name
         data_file = data_path / "named_ent_eu.train"
         if not data_file.is_file():
             cached_path(
@@ -2064,7 +2134,7 @@ class NER_BASQUE(ColumnCorpus):
             import tarfile, shutil
 
             with tarfile.open(
-                    Path(flair.cache_root) / "datasets" / dataset_name / "eiec_v1.0.tgz",
+                    flair.cache_root / "datasets" / dataset_name / "eiec_v1.0.tgz",
                     "r:gz",
             ) as f_in:
                 corpus_files = (
@@ -2099,7 +2169,7 @@ class NER_FINNISH(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -2152,7 +2222,7 @@ class NER_SWEDISH(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -2193,7 +2263,7 @@ class SEC_FILLINGS(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -2234,7 +2304,7 @@ class SEMEVAL2017(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         semeval2017_path = "https://raw.githubusercontent.com/midas-research/keyphrase-extraction-as-sequence-labeling-data/master/SemEval-2017"
@@ -2267,7 +2337,7 @@ class SEMEVAL2010(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         semeval2010_path = "https://raw.githubusercontent.com/midas-research/keyphrase-extraction-as-sequence-labeling-data/master/processed_semeval-2010"
@@ -2308,7 +2378,7 @@ class TURKU_NER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -2366,7 +2436,7 @@ class TWITTER_NER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -2646,7 +2716,7 @@ class WSD_UFSAC(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # check if data there
@@ -2685,7 +2755,7 @@ def _download_wikiner(language_code: str, dataset_name: str):
     lc = language_code
 
     data_file = (
-            Path(flair.cache_root)
+            flair.cache_root
             / "datasets"
             / dataset_name
             / f"aij-wikiner-{lc}-wp3.train"
@@ -2724,7 +2794,7 @@ class UP_CHINESE(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -2775,7 +2845,7 @@ class UP_ENGLISH(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -2826,7 +2896,7 @@ class UP_FRENCH(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -2877,7 +2947,7 @@ class UP_FINNISH(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -2928,7 +2998,7 @@ class UP_GERMAN(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -2979,7 +3049,7 @@ class UP_ITALIAN(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3030,7 +3100,7 @@ class UP_SPANISH(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3081,7 +3151,7 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3134,7 +3204,7 @@ class WEIBO_NER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3198,7 +3268,7 @@ class WIKIANN(MultiCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # For each language in languages, the file is downloaded if not existent
@@ -3610,7 +3680,7 @@ class WIKIGOLD_NER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3648,7 +3718,7 @@ class WIKINER_ENGLISH(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3678,7 +3748,7 @@ class WIKINER_GERMAN(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3708,7 +3778,7 @@ class WIKINER_DUTCH(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3738,7 +3808,7 @@ class WIKINER_FRENCH(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3768,7 +3838,7 @@ class WIKINER_ITALIAN(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3798,7 +3868,7 @@ class WIKINER_SPANISH(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3828,7 +3898,7 @@ class WIKINER_PORTUGUESE(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3858,7 +3928,7 @@ class WIKINER_POLISH(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3888,7 +3958,7 @@ class WIKINER_RUSSIAN(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3918,7 +3988,7 @@ class WNUT_17(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -3963,7 +4033,7 @@ class WNUT_2020_NER(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download data if necessary
@@ -4013,7 +4083,7 @@ def _download_wikiner(language_code: str, dataset_name: str):
     lc = language_code
 
     data_file = (
-            Path(flair.cache_root)
+            flair.cache_root
             / "datasets"
             / dataset_name
             / f"aij-wikiner-{lc}-wp3.train"
@@ -4027,14 +4097,14 @@ def _download_wikiner(language_code: str, dataset_name: str):
 
         # unpack and write out in CoNLL column-like format
         bz_file = bz2.BZ2File(
-            Path(flair.cache_root)
+            flair.cache_root
             / "datasets"
             / dataset_name
             / f"aij-wikiner-{lc}-wp3.bz2",
             "rb",
         )
         with bz_file as f, open(
-                Path(flair.cache_root)
+                flair.cache_root
                 / "datasets"
                 / dataset_name
                 / f"aij-wikiner-{lc}-wp3.train",
@@ -4097,7 +4167,7 @@ class XTREME(MultiCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # For each language in languages, the file is downloaded if not existent
@@ -4195,7 +4265,7 @@ class REDDIT_EL_GOLD(ColumnCorpus):
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         # download and parse data if necessary
