@@ -363,6 +363,7 @@ class SequenceTagger(flair.nn.Model):
                 dataloader = tqdm(dataloader)
 
             overall_loss = 0
+            overall_count = 0
             batch_no = 0
             for batch in dataloader:
 
@@ -379,7 +380,9 @@ class SequenceTagger(flair.nn.Model):
                 feature = self.forward(batch)
 
                 if return_loss:
-                    overall_loss += self._calculate_loss(feature, batch)
+                    loss_and_count = self._calculate_loss(feature, batch)
+                    overall_loss += loss_and_count[0]
+                    overall_count += loss_and_count[1]
 
                 tags, all_tags = self._obtain_labels(
                     feature=feature,
@@ -401,7 +404,7 @@ class SequenceTagger(flair.nn.Model):
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
             if return_loss:
-                return overall_loss / batch_no
+                return overall_loss, overall_count
 
     def _requires_span_F1_evaluation(self) -> bool:
         span_F1 = False
@@ -416,6 +419,7 @@ class SequenceTagger(flair.nn.Model):
 
     def _evaluate_with_span_F1(self, data_loader, embedding_storage_mode, mini_batch_size, out_path):
         eval_loss = 0
+        total_word_count = 0
 
         batch_no: int = 0
 
@@ -429,12 +433,13 @@ class SequenceTagger(flair.nn.Model):
         for batch in data_loader:
 
             # predict for batch
-            loss = self.predict(batch,
-                                embedding_storage_mode=embedding_storage_mode,
-                                mini_batch_size=mini_batch_size,
-                                label_name='predicted',
-                                return_loss=True)
-            eval_loss += loss
+            loss_and_count = self.predict(batch,
+                                          embedding_storage_mode=embedding_storage_mode,
+                                          mini_batch_size=mini_batch_size,
+                                          label_name='predicted',
+                                          return_loss=True)
+            eval_loss += loss_and_count[0]
+            total_word_count += loss_and_count[1]
             batch_no += 1
 
             for sentence in batch:
@@ -488,7 +493,7 @@ class SequenceTagger(flair.nn.Model):
             with open(Path(out_path), "w", encoding="utf-8") as outfile:
                 outfile.write("".join(lines))
 
-        eval_loss /= batch_no
+        eval_loss /= total_word_count
 
         detailed_result = (
             "\nResults:"
@@ -535,6 +540,10 @@ class SequenceTagger(flair.nn.Model):
                                 mini_batch_size=mini_batch_size,
                                 label_name='predicted',
                                 return_loss=True)
+
+            if isinstance(loss, Tuple):
+                loss = loss[0] / loss[1]
+
             eval_loss += loss
             batch_no += 1
 
@@ -755,17 +764,19 @@ class SequenceTagger(flair.nn.Model):
 
     def _calculate_loss(
             self, features: torch.tensor, sentences: List[Sentence]
-    ) -> float:
+    ) -> Tuple[float, int]:
 
         lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
 
         tag_list: List = []
+        token_count = 0
         for s_id, sentence in enumerate(sentences):
             # get the tags in this sentence
             tag_idx: List[int] = [
                 self.tag_dictionary.get_idx_for_item(token.get_tag(self.tag_type).value)
                 for token in sentence
             ]
+            token_count += len(tag_idx)
             # add tags as tensor
             tag = torch.tensor(tag_idx, device=flair.device)
             tag_list.append(tag)
@@ -779,7 +790,7 @@ class SequenceTagger(flair.nn.Model):
 
             score = forward_score - gold_score
 
-            return score.mean()
+            return score.sum(), token_count
 
         else:
             score = 0
@@ -788,10 +799,10 @@ class SequenceTagger(flair.nn.Model):
             ):
                 sentence_feats = sentence_feats[:sentence_length]
                 score += torch.nn.functional.cross_entropy(
-                    sentence_feats, sentence_tags, weight=self.loss_weights
+                    sentence_feats, sentence_tags, weight=self.loss_weights, reduction='sum',
                 )
-            score /= len(features)
-            return score
+
+            return score, token_count
 
     def _obtain_labels(
             self,
@@ -1167,32 +1178,32 @@ class SequenceTagger(flair.nn.Model):
 
         # special handling for the taggers by the @redewiegergabe project (TODO: move to model hub)
         elif model_name == "de-historic-indirect":
-            model_file = Path(flair.cache_root) / cache_dir / 'indirect' / 'final-model.pt'
+            model_file = flair.cache_root / cache_dir / 'indirect' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/indirect.zip', cache_dir=cache_dir)
-                unzip_file(Path(flair.cache_root) / cache_dir / 'indirect.zip', Path(flair.cache_root) / cache_dir)
-            model_path = str(Path(flair.cache_root) / cache_dir / 'indirect' / 'final-model.pt')
+                unzip_file(flair.cache_root / cache_dir / 'indirect.zip', flair.cache_root / cache_dir)
+            model_path = str(flair.cache_root / cache_dir / 'indirect' / 'final-model.pt')
 
         elif model_name == "de-historic-direct":
-            model_file = Path(flair.cache_root) / cache_dir / 'direct' / 'final-model.pt'
+            model_file = flair.cache_root / cache_dir / 'direct' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/direct.zip', cache_dir=cache_dir)
-                unzip_file(Path(flair.cache_root) / cache_dir / 'direct.zip', Path(flair.cache_root) / cache_dir)
-            model_path = str(Path(flair.cache_root) / cache_dir / 'direct' / 'final-model.pt')
+                unzip_file(flair.cache_root / cache_dir / 'direct.zip', flair.cache_root / cache_dir)
+            model_path = str(flair.cache_root / cache_dir / 'direct' / 'final-model.pt')
 
         elif model_name == "de-historic-reported":
-            model_file = Path(flair.cache_root) / cache_dir / 'reported' / 'final-model.pt'
+            model_file = flair.cache_root / cache_dir / 'reported' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/reported.zip', cache_dir=cache_dir)
-                unzip_file(Path(flair.cache_root) / cache_dir / 'reported.zip', Path(flair.cache_root) / cache_dir)
-            model_path = str(Path(flair.cache_root) / cache_dir / 'reported' / 'final-model.pt')
+                unzip_file(flair.cache_root / cache_dir / 'reported.zip', flair.cache_root / cache_dir)
+            model_path = str(flair.cache_root / cache_dir / 'reported' / 'final-model.pt')
 
         elif model_name == "de-historic-free-indirect":
-            model_file = Path(flair.cache_root) / cache_dir / 'freeIndirect' / 'final-model.pt'
+            model_file = flair.cache_root / cache_dir / 'freeIndirect' / 'final-model.pt'
             if not model_file.exists():
                 cached_path('http://www.redewiedergabe.de/models/freeIndirect.zip', cache_dir=cache_dir)
-                unzip_file(Path(flair.cache_root) / cache_dir / 'freeIndirect.zip', Path(flair.cache_root) / cache_dir)
-            model_path = str(Path(flair.cache_root) / cache_dir / 'freeIndirect' / 'final-model.pt')
+                unzip_file(flair.cache_root / cache_dir / 'freeIndirect.zip', flair.cache_root / cache_dir)
+            model_path = str(flair.cache_root / cache_dir / 'freeIndirect' / 'final-model.pt')
 
         # for all other cases (not local file or special download location), use HF model hub
         else:
