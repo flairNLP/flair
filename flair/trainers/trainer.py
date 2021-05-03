@@ -723,7 +723,7 @@ class ModelTrainer:
                     file_or_dir=base_path / model_name,
                     aliases=[
                         "latest",
-                        "best" if self.check_for_best_score(current_score) else "",
+                        "best" if current_epoch_has_best_model_so_far else "",
                         f"epoch-{self.epoch}",
                     ],
                 )
