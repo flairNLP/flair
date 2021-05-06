@@ -1345,14 +1345,20 @@ class Corpus:
         if self.test: parts.append(self.test)
         return ConcatDataset(parts)
 
-    def make_tag_dictionary(self, tag_type: str) -> Dictionary:
+    def make_tag_dictionary(self, tag_type: Union[str, List[str]]) -> Dictionary:
 
         # Make the tag dictionary
         tag_dictionary: Dictionary = Dictionary()
         tag_dictionary.add_item("O")
-        for sentence in self.get_all_sentences():
-            for token in sentence.tokens:
-                tag_dictionary.add_item(token.get_tag(tag_type).value)
+        if tag_type == str:
+            for sentence in self.get_all_sentences():
+                for token in sentence.tokens:
+                    tag_dictionary.add_item(token.get_tag(tag_type).value)
+        else:
+            for sentence in self.get_all_sentences():
+                for token in sentence.tokens:
+                    for item in tag_type:
+                        tag_dictionary.add_item(token.get_tag(item).value)
         tag_dictionary.add_item("<START>")
         tag_dictionary.add_item("<STOP>")
         return tag_dictionary
