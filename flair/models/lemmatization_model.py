@@ -36,6 +36,19 @@ class Lemmatization(flair.nn.Model):
             longest_word_length: int = 50
 
     ):
+        """
+        :param hidden_size: number of hidden states in RNN
+        :param pre_embeddings: pre-trained embeddings
+        :param character_dictionary: dictionary containing all the characters in the corpus
+        :param n_layers: number of RNN layers
+        :param tag_list: list of tags planned to be used
+        :param tag_dictionary: dictionary of tags you want to predict
+        :param dropout: dictionary contains all the tag values in the tag list
+        :param teacher_forcing_ratio: the probability of using teacher_forcing. If it is greater than or equal to 1,
+        always use teacher forcing. If less than or equal to 0, never use.
+        :param longest_word_length: record the maximum length of words and lemma to use in prediction.
+        Based on experience, the default value is set at 50.
+        """
 
         super(Lemmatization, self).__init__()
         self.hidden_size = hidden_size
@@ -68,14 +81,21 @@ class Lemmatization(flair.nn.Model):
         self.out = nn.Linear(self.hidden_size, len(self.character_dictionary))
 
         # If tag_list is not empty, it is considered that the user needs to use tag.
-        if tag_list != None:
-            self.use_tag: bool = True
-            self.tag_list = tag_list
-            self.tag_dictionary = tag_dictionary
-            self.tag_embeddings = nn.Embedding(len(self.tag_dictionary), self.pre_embeddings.embedding_length)
-            self.tag_embeddings.weight.data.uniform_(-1, 1)
+        if tag_list != None and tag_dictionary != None:
+            if len(tag_list) > 0:
+                self.use_tag: bool = True
+                self.tag_list = tag_list
+                self.tag_dictionary = tag_dictionary
+                self.tag_embeddings = nn.Embedding(len(self.tag_dictionary), self.pre_embeddings.embedding_length)
+                self.tag_embeddings.weight.data.uniform_(-1, 1)
+            else:
+                self.use_tag: bool = False
+                log.info("tag_list is empty")
+        elif tag_list == None and tag_dictionary == None:
+            self.use_tag: bool = False
         else:
             self.use_tag: bool = False
+            log.info("If you wish to use tag when training the model, do not forget either of the tag_list and tag_dictionary parameters.")
 
         # Record the maximum length of words and lemma to use in prediction
         self.longest_word_length: int = longest_word_length
