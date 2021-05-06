@@ -29,26 +29,14 @@ class Lemmatization(flair.nn.Model):
             pre_embeddings: FlairEmbeddings,
             character_dictionary: Dictionary,
             n_layers: int,
-            tag_list: list = [],
-            tag_dictionary: Dictionary = Dictionary(),
+            tag_list: list = None,
+            tag_dictionary: Dictionary = None,
             dropout: float = 0.1,
             teacher_forcing_ratio: float = 0.5,
             longest_word_length: int = 50
 
     ):
-        """
-        :param hidden_size: number of hidden states in RNN
-        :param pre_embeddings: pre-trained embeddings
-        :param character_dictionary: dictionary containing all the characters in the corpus
-        :param n_layers: number of RNN layers
-        :param tag_list: list of tags planned to be used
-        :param tag_dictionary: dictionary of tags you want to predict
-        :param dropout: dictionary contains all the tag values in the tag list
-        :param teacher_forcing_ratio: the probability of using teacher_forcing. If it is greater than or equal to 1,
-        always use teacher forcing. If less than or equal to 0, never use.
-        :param longest_word_length: record the maximum length of words and lemma to use in prediction.
-        Based on experience, the default value is set at 50.
-        """
+
         super(Lemmatization, self).__init__()
         self.hidden_size = hidden_size
         self.pre_embeddings = pre_embeddings.to(flair.device)
@@ -80,7 +68,7 @@ class Lemmatization(flair.nn.Model):
         self.out = nn.Linear(self.hidden_size, len(self.character_dictionary))
 
         # If tag_list is not empty, it is considered that the user needs to use tag.
-        if len(tag_list):
+        if tag_list != None:
             self.use_tag: bool = True
             self.tag_list = tag_list
             self.tag_dictionary = tag_dictionary
@@ -89,7 +77,7 @@ class Lemmatization(flair.nn.Model):
         else:
             self.use_tag: bool = False
 
-
+        # Record the maximum length of words and lemma to use in prediction
         self.longest_word_length: int = longest_word_length
 
         self.to(flair.device)
@@ -377,12 +365,8 @@ class Lemmatization(flair.nn.Model):
 
         elif len(chars_seqs) == 1 :
             pre_lemma = ''
-            chars = [self.character_dictionary.get_item_for_index(ch.item()) for ch in chars_seqs[0]]
-            for ch in chars:
-                if ch == EOS_token:
-                    break
-                else:
-                    pre_lemma = pre_lemma + ch
+            char = [self.character_dictionary.get_item_for_index(ch.item()) for ch in chars_seqs[0]]
+            pre_lemma = pre_lemma + char[0]
 
             return pre_lemma
         else:
@@ -491,8 +475,8 @@ class Lemmatization(flair.nn.Model):
             "pre_embeddings": self.pre_embeddings,
             "character_dictionary": self.character_dictionary,
             "n_layers": self.n_layers,
-            "tag_list": self.tag_list,
-            "tag_dictionary": self.tag_dictionary,
+            "tag_list": self.tag_list if "tag_list" in self.__dict__.keys() else None,
+            "tag_dictionary": self.tag_dictionary if "tag_dictionary" in self.__dict__.keys() else None,
             "dropout": self.dropout,
             "teacher_forcing_ratio": self.teacher_forcing_ratio,
             "longest_word_length": self.longest_word_length,
