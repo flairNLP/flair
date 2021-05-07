@@ -2510,7 +2510,7 @@ class SEMEVAL2010_RE(ColumnCorpus):
 
         # add extra blank lines in-between sentences for document separation if necessary
         for dataset_part in ["TEST_FILE_FULL", "TRAIN_FILE"]:
-            with open(Path(flair.cache_root) / "datasets" / dataset_name / f"{dataset_part}.txt", "r") as file:
+            with open(Path(flair.cache_root) / "datasets" / dataset_name / f"{dataset_part}.TXT", "r") as file:
                 lines = file.readlines()
 
             if lines[0].startswith("#converted"):
