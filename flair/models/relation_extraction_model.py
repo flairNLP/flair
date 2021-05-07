@@ -113,6 +113,7 @@ class RelationTagger(flair.nn.Model):
             batch_no += 1
 
             for sentence in batch:
+                sentence.relations = sentence.add_virtual_negative_relations(label_name='predicted')
 
                 for relation in sentence.relations:
                     # add gold tag
@@ -126,6 +127,7 @@ class RelationTagger(flair.nn.Model):
                     # for file output
                     lines.append(f'{relation.print_span_text()} || Gold: {gold_tag} || Predicted: {predicted_tag}\n')
 
+                sentence.relations = sentence.remove_virtual_negative_relations()
                 lines.append('\n')
 
         if out_path:
@@ -277,6 +279,10 @@ class RelationTagger(flair.nn.Model):
                 if not batch:
                     continue
 
+                # fill with virtual negative relations
+                for sentence in batch:
+                    sentence.relations = sentence.add_virtual_negative_relations()
+
                 feature = self.forward(batch)
 
                 if return_loss:
@@ -296,6 +302,10 @@ class RelationTagger(flair.nn.Model):
                 for (sentence, sent_all_tags) in zip(batch, all_tags):
                     for (relation, relation_all_tags) in zip(sentence.relations, sent_all_tags):
                         relation.add_tags_proba_dist(label_name, relation_all_tags)
+
+                # fill with virtual negative relations
+                for sentence in batch:
+                    sentence.relations = sentence.remove_virtual_negative_relations()
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
