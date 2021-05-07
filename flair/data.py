@@ -1419,6 +1419,7 @@ class Corpus:
         """
         label_dictionary: Dictionary = Dictionary(add_unk=False)
         label_dictionary.multi_label = False
+        label_dictionary.add_item('N')
 
         from flair.datasets import DataLoader
 
