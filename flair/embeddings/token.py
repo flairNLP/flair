@@ -847,7 +847,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         # whether to detach gradients on overlong sentences
         self.memory_effective_training = memory_effective_training
 
-
         # store whether to use context (and how much)
         if type(use_context) == bool:
             self.context_length: int = 64 if use_context else 0
@@ -1683,7 +1682,7 @@ class BPEmbSerializable(BPEmb):
         self.__dict__ = state
 
         # write out the binary sentence piece model into the expected directory
-        self.cache_dir: Path = Path(flair.cache_root) / "embeddings"
+        self.cache_dir: Path = flair.cache_root / "embeddings"
         if "spm_model_binary" in self.__dict__:
             # if the model was saved as binary and it is not found on disk, write to appropriate path
             if not os.path.exists(self.cache_dir / state["lang"]):
@@ -1716,7 +1715,7 @@ class BytePairEmbeddings(TokenEmbeddings):
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 
         if not cache_dir:
-            cache_dir = Path(flair.cache_root) / "embeddings"
+            cache_dir = flair.cache_root / "embeddings"
         if language:
             self.name: str = f"bpe-{language}-{syllables}-{dim}"
         else:

@@ -31,6 +31,9 @@ class Model(torch.nn.Module):
     def evaluate(
         self,
         sentences: Union[List[DataPoint], Dataset],
+        mini_batch_size: int,
+        num_workers: int,
+        main_score_type: str,
         out_path: Path = None,
         embedding_storage_mode: str = "none",
     ) -> (Result, float):

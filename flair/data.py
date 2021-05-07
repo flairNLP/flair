@@ -1348,7 +1348,7 @@ class Corpus:
     def make_tag_dictionary(self, tag_type: Union[str, List[str]]) -> Dictionary:
 
         # Make the tag dictionary
-        tag_dictionary: Dictionary = Dictionary()
+        tag_dictionary: Dictionary = Dictionary(add_unk=False)
         tag_dictionary.add_item("O")
         if tag_type == str:
             for sentence in self.get_all_sentences():

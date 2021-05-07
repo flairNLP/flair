@@ -84,14 +84,14 @@ class OpusParallelCorpus(ParallelTextCorpus):
             link = f"https://object.pouta.csc.fi/OPUS-Tatoeba/v20190709/moses/{l1}-{l2}.txt.zip"
 
             l1_file = (
-                    Path(flair.cache_root)
+                    flair.cache_root
                     / "datasets"
                     / dataset
                     / f"{l1}-{l2}"
                     / f"Tatoeba.{l1}-{l2}.{l1}"
             )
             l2_file = (
-                    Path(flair.cache_root)
+                    flair.cache_root
                     / "datasets"
                     / dataset
                     / f"{l1}-{l2}"
@@ -102,7 +102,7 @@ class OpusParallelCorpus(ParallelTextCorpus):
         if not l1_file.exists():
             path = cached_path(link, Path("datasets") / dataset / f"{l1}-{l2}")
             unzip_file(
-                path, Path(flair.cache_root) / Path("datasets") / dataset / f"{l1}-{l2}"
+                path, flair.cache_root / Path("datasets") / dataset / f"{l1}-{l2}"
             )
 
         # instantiate corpus
@@ -452,7 +452,7 @@ class GLUE_RTE(DataPairCorpus):
 
         # if no base_path provided take cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         data_file = data_folder / "RTE/train.tsv"
@@ -539,7 +539,7 @@ class SUPERGLUE_RTE(DataPairCorpus):
 
         # if no base_path provided take cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
         data_file = data_folder / "RTE/train.tsv"

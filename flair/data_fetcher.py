@@ -145,7 +145,7 @@ class NLPTaskDataFetcher:
 
         # default dataset folder is the cache root
         if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
+            base_path = flair.cache_root / "datasets"
 
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -653,7 +653,7 @@ class NLPTaskDataFetcher:
         # conll 2000 chunking task
         if task == NLPTask.CONLL_2000:
             conll_2000_path = "https://www.clips.uantwerpen.be/conll2000/chunking/"
-            data_file = Path(flair.cache_root) / "datasets" / task.value / "train.txt"
+            data_file = flair.cache_root / "datasets" / task.value / "train.txt"
             if not data_file.is_file():
                 cached_path(
                     f"{conll_2000_path}train.txt.gz", Path("datasets") / task.value
@@ -664,27 +664,27 @@ class NLPTaskDataFetcher:
                 import gzip, shutil
 
                 with gzip.open(
-                    Path(flair.cache_root) / "datasets" / task.value / "train.txt.gz",
+                    flair.cache_root / "datasets" / task.value / "train.txt.gz",
                     "rb",
                 ) as f_in:
                     with open(
-                        Path(flair.cache_root) / "datasets" / task.value / "train.txt",
+                        flair.cache_root / "datasets" / task.value / "train.txt",
                         "wb",
                     ) as f_out:
                         shutil.copyfileobj(f_in, f_out)
                 with gzip.open(
-                    Path(flair.cache_root) / "datasets" / task.value / "test.txt.gz",
+                    flair.cache_root / "datasets" / task.value / "test.txt.gz",
                     "rb",
                 ) as f_in:
                     with open(
-                        Path(flair.cache_root) / "datasets" / task.value / "test.txt",
+                        flair.cache_root / "datasets" / task.value / "test.txt",
                         "wb",
                     ) as f_out:
                         shutil.copyfileobj(f_in, f_out)
 
         if task == NLPTask.NER_BASQUE:
             ner_basque_path = "http://ixa2.si.ehu.eus/eiec/"
-            data_path = Path(flair.cache_root) / "datasets" / task.value
+            data_path = flair.cache_root / "datasets" / task.value
             data_file = data_path / "named_ent_eu.train"
             if not data_file.is_file():
                 cached_path(
@@ -693,7 +693,7 @@ class NLPTaskDataFetcher:
                 import tarfile, shutil
 
                 with tarfile.open(
-                    Path(flair.cache_root) / "datasets" / task.value / "eiec_v1.0.tgz",
+                    flair.cache_root / "datasets" / task.value / "eiec_v1.0.tgz",
                     "r:gz",
                 ) as f_in:
                     corpus_files = (
@@ -708,14 +708,14 @@ class NLPTaskDataFetcher:
             imdb_acl_path = (
                 "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
             )
-            data_path = Path(flair.cache_root) / "datasets" / task.value
+            data_path = flair.cache_root / "datasets" / task.value
             data_file = data_path / "train.txt"
             if not data_file.is_file():
                 cached_path(imdb_acl_path, Path("datasets") / task.value)
                 import tarfile
 
                 with tarfile.open(
-                    Path(flair.cache_root)
+                    flair.cache_root
                     / "datasets"
                     / task.value
                     / "aclImdb_v1.tar.gz",
@@ -760,7 +760,7 @@ class NLPTaskDataFetcher:
                     Path("datasets") / task.value / "original",
                 )
 
-            data_path = Path(flair.cache_root) / "datasets" / task.value
+            data_path = flair.cache_root / "datasets" / task.value
             data_file = data_path / new_filenames[0]
 
             if not data_file.is_file():
@@ -827,7 +827,7 @@ class NLPTaskDataFetcher:
                 lc = "ru"
 
             data_file = (
-                Path(flair.cache_root)
+                flair.cache_root
                 / "datasets"
                 / task.value
                 / f"aij-wikiner-{lc}-wp3.train"
@@ -842,14 +842,14 @@ class NLPTaskDataFetcher:
 
                 # unpack and write out in CoNLL column-like format
                 bz_file = bz2.BZ2File(
-                    Path(flair.cache_root)
+                    flair.cache_root
                     / "datasets"
                     / task.value
                     / f"aij-wikiner-{lc}-wp3.bz2",
                     "rb",
                 )
                 with bz_file as f, open(
-                    Path(flair.cache_root)
+                    flair.cache_root
                     / "datasets"
                     / task.value
                     / f"aij-wikiner-{lc}-wp3.train",
@@ -1321,7 +1321,7 @@ class NLPTaskDataFetcher:
             for split in ["train", "dev", "test"]:
 
                 data_file = (
-                    Path(flair.cache_root)
+                    flair.cache_root
                     / "datasets"
                     / task.value
                     / f"{emotion}-{split}.txt"
@@ -1366,7 +1366,7 @@ class NLPTaskDataFetcher:
                 f"{ud_path}UD_German-HDT/dev/de_hdt-ud-train-b.conllu",
                 Path("datasets") / task.value / "original",
             )
-            data_path = Path(flair.cache_root) / "datasets" / task.value
+            data_path = flair.cache_root / "datasets" / task.value
 
             train_filenames = ["de_hdt-ud-train-a.conllu", "de_hdt-ud-train-b.conllu"]
 
