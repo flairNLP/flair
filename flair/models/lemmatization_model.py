@@ -95,7 +95,7 @@ class Lemmatization(flair.nn.Model):
             self.use_tag: bool = False
         else:
             self.use_tag: bool = False
-            log.info("If you wish to use tag when training the model, do not forget either of the tag_list and tag_dictionary parameters.")
+            log.info("If you want to use tag when training the model, do not forget either of the tag_list and tag_dictionary parameters.")
 
         # Record the maximum length of words and lemma to use in prediction
         self.longest_word_length: int = longest_word_length
@@ -141,14 +141,14 @@ class Lemmatization(flair.nn.Model):
                 for t in range(max_lemma_lenght):
                     decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_out)
                     decoder_input = lemma[t].view(1, -1)
-                    mask_loss = self._maskNLLLoss(decoder_output, lemma[t], mask[t])
+                    mask_loss = self._calculate_loss(decoder_output, lemma[t], mask[t])
                     loss += mask_loss
             else:
                 for t in range(max_lemma_lenght):
                     decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_out)
                     _, topi = decoder_output.topk(1)
                     decoder_input = torch.LongTensor([[topi[i][0] for i in range(len(input_lenghts))]]).to(flair.device)
-                    mask_loss = self._maskNLLLoss(decoder_output, lemma[t], mask[t])
+                    mask_loss = self._calculate_loss(decoder_output, lemma[t], mask[t])
                     loss += mask_loss
 
         return loss
@@ -194,10 +194,10 @@ class Lemmatization(flair.nn.Model):
 
         return output, hidden
 
-    def _maskNLLLoss(self, input, target, mask):
+    def _calculate_loss(self, input, target, mask):
 
-        crossEntropy = -torch.log(torch.gather(input, 1, target.view(-1, 1)).squeeze(1))
-        loss = crossEntropy.masked_select(mask).mean().to(flair.device)
+        cross_entropy = -torch.log(torch.gather(input, 1, target.view(-1, 1)).squeeze(1))
+        loss = cross_entropy.masked_select(mask).mean().to(flair.device)
 
         return loss
 
@@ -278,7 +278,7 @@ class Lemmatization(flair.nn.Model):
             _, topi = decoder_output.topk(1)
             decoder_input = torch.LongTensor([[topi[i][0] for i in range(len(input_lenghts))]]).to(flair.device)
 
-            mask_loss = self._maskNLLLoss(decoder_output, lemma[t], mask[t])
+            mask_loss = self._calculate_loss(decoder_output, lemma[t], mask[t])
             loss += mask_loss
 
         return loss
@@ -324,7 +324,7 @@ class Lemmatization(flair.nn.Model):
             return ''
 
     def _calculation_output(self, encoder_input, tags_seq, input_lenghts):
-        # Calculate the output of the model based on the input and use it in the prediction.
+        # Calculate the output of the model based on the input, use it in the prediction.
 
         encoder_outputs, encoder_hidden = self._encode(encoder_input, tags_seq, input_lenghts)
         decoder_hidden = encoder_hidden[:self.n_layers]
@@ -348,18 +348,18 @@ class Lemmatization(flair.nn.Model):
         # Prediction method for the input data of a Token.
         token_seq = self._item2seq(self.character_dictionary, token.text)
         token_seq.append(self.character_dictionary.get_idx_for_item(EOS_token))
+        encoder_input = torch.LongTensor([token_seq]).transpose(0, 1).to(flair.device)
+
         if self.use_tag:
             tags = []
             for tag in self.tag_list:
                 tags.append(token.get_tag(tag).value)
-        tags_seq = self._item2seq(self.tag_dictionary, tags)
-        if len(tags_seq) > 1:
-            tags_seq = torch.LongTensor([tags_seq]).transpose(0, 1).to(flair.device)
-        else:
+            tags_seq = self._item2seq(self.tag_dictionary, tags)
             tags_seq = torch.LongTensor([tags_seq]).to(flair.device)
+        else:
+            tags_seq = None
 
         input_lenghts = torch.tensor([len(token_seq)]).to(device='cpu')
-        encoder_input = torch.LongTensor([token_seq]).transpose(0, 1).to(flair.device)
 
         all_seqs = self._calculation_output(encoder_input, tags_seq, input_lenghts)
 
