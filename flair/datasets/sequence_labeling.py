@@ -2574,7 +2574,7 @@ class SEMEVAL2010_RE(ColumnCorpus):
                     sent_no += 1
                     lines_in_required_format += sentence_lines
 
-            with open(Path(flair.cache_root) / "datasets" / dataset_name / f"{dataset_part}.txt", "w") as file:
+            with open(Path(flair.cache_root) / "datasets" / dataset_name / f"{dataset_part}.TXT", "w") as file:
                 concat_lines = ["#converted"]
                 for line in lines_in_required_format:
                     if line[0].startswith('#'):
