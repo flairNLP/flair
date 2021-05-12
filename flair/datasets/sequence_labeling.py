@@ -122,6 +122,7 @@ class ColumnDataset(FlairDataset):
             encoding: str = "utf-8",
             skip_first_line: bool = False,
             label_name_map: Dict[str, str] = None,
+            is_srl : bool = False,
     ):
         """
         Instantiates a column dataset (typically used for sequence labeling or word-level prediction).
@@ -135,6 +136,7 @@ class ColumnDataset(FlairDataset):
         :param document_separator_token: If provided, sentences that function as document boundaries are so marked
         :param skip_first_line: set to True if your dataset has a header line
         :param label_name_map: Optionally map tag names to different schema.
+        :param is_srl: If set to True, the ColumnDataset inherits logic for semantic role labeling
         """
         if type(path_to_column_file) is str:
             path_to_column_file = Path(path_to_column_file)
@@ -146,6 +148,7 @@ class ColumnDataset(FlairDataset):
         self.comment_symbol = comment_symbol
         self.document_separator_token = document_separator_token
         self.label_name_map = label_name_map
+        self.is_srl = is_srl
 
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
@@ -225,6 +228,9 @@ class ColumnDataset(FlairDataset):
     def _convert_lines_to_sentence(self, lines):
 
         sentence: Sentence = Sentence()
+        # TODO in richtiges Frameobjekt abändern
+        frames = []
+        #print(sentence)
         for line in lines:
             # skip comments
             if self.comment_symbol is not None and line.startswith(self.comment_symbol):
@@ -244,11 +250,28 @@ class ColumnDataset(FlairDataset):
 
             # otherwise, this line is a token. parse and add to sentence
             else:
-                token = self._parse_token(line)
+                token = self._parse_token(line)#TODO ehemals Zeile 247
                 sentence.add_token(token)
+            
+                # checks if its a srl problem
+                if self.is_srl:
+                    for col_ind, name in self.column_name_map.items():
+                        if name == "frame":
+                            frame_column_index = col_ind
+                        if name == "text":
+                            text_index = col_ind
+                    all_cols = (line.strip().split("\t"))
+                    word = all_cols[text_index]
+                    frame_col, *semantic_roles = all_cols[col_ind:]
+
+                    # Check if line contains at least one semantic role
+                    if any(x != "_" for x in semantic_roles):
+                        tup = (word, frame_col, semantic_roles)
+                        print(tup)
 
         # check if this sentence is a document boundary
         if sentence.to_original_text() == self.document_separator_token: sentence.is_document_boundary = True
+        # TODO (ehemals Zeile 251)
 
         if self.tag_to_bioes is not None:
             sentence.convert_tag_scheme(
