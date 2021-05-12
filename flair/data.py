@@ -594,6 +594,8 @@ class Sentence(DataPoint):
         # some sentences represent a document boundary (but most do not)
         self.is_document_boundary: bool = False
 
+        self.frames : List[Frame] = list()
+
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
             if token.idx == token_id:
@@ -1443,3 +1445,16 @@ def randomly_split_into_two_datasets(dataset, length_of_first):
     second_dataset.sort()
 
     return [Subset(dataset, first_dataset), Subset(dataset, second_dataset)]
+
+class Frame(DataPoint):
+    def __init__(self, frame: Token, roles : List[Span]):
+        super().__init__()
+        self.frame = frame
+        self.roles = roles
+
+
+    def __len__(self):
+        return len(roles)
+
+    def __repr__(self):
+        return "Frame: "+str(self.frame)+"; Roles: "+str(self.roles)

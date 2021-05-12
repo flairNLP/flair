@@ -13,7 +13,7 @@ import csv
 
 
 import flair
-from flair.data import Corpus, MultiCorpus, FlairDataset, Sentence, Token
+from flair.data import Corpus, MultiCorpus, FlairDataset, Sentence, Token, Frame
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file, unzip_file
 
@@ -228,9 +228,11 @@ class ColumnDataset(FlairDataset):
     def _convert_lines_to_sentence(self, lines):
 
         sentence: Sentence = Sentence()
-        # TODO in richtiges Frameobjekt abändern
-        frames = []
-        #print(sentence)
+
+        if self.is_srl:
+            tup_list = []
+            verb_dict = {}
+            frames = []
         for line in lines:
             # skip comments
             if self.comment_symbol is not None and line.startswith(self.comment_symbol):
@@ -266,12 +268,35 @@ class ColumnDataset(FlairDataset):
 
                     # Check if line contains at least one semantic role
                     if any(x != "_" for x in semantic_roles):
-                        tup = (word, frame_col, semantic_roles)
-                        print(tup)
+                        # Found the verb (frame) itself
+                        if frame_col != "_":
+                            position = semantic_roles.index("V")
+                            verb_dict[position] = frame_col
 
+                        tup = (word, frame_col, semantic_roles)
+                        tup_list.append(tup)
+        
         # check if this sentence is a document boundary
         if sentence.to_original_text() == self.document_separator_token: sentence.is_document_boundary = True
-        # TODO (ehemals Zeile 251)
+        
+        if self.is_srl:
+            temp_frame_dict = {}
+            for tup_el in tup_list:
+                for idx, sem_rol in enumerate(tup_el[2]):
+                    if sem_rol != "_" and sem_rol != "V":
+                        if verb_dict[idx] in temp_frame_dict:
+                            # TODO Change Format to fit into Frame Object (see Span)
+                            temp_frame_dict[verb_dict[idx]].append((tup_el[0], sem_rol))
+                        else:
+                            temp_frame_dict[verb_dict[idx]] = [(tup_el[0], sem_rol)]
+
+            # Build frame object and append it to frame list for that sentence
+            for frame, roles in temp_frame_dict.items():
+                frame_temp = Frame(frame, roles)
+                frames.append(frame_temp)
+
+            # Add frame list to sentence
+            sentence.frames = frames
 
         if self.tag_to_bioes is not None:
             sentence.convert_tag_scheme(
