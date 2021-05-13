@@ -741,7 +741,7 @@ class PERSON_NER(ColumnCorpus):
             **corpusargs,
     ):
         """
-        Initialize the PERSON_NER corpus for Dutch. The first time you call this constructor it will automatically
+        Initialize the PERSON_NER corpus for person names. The first time you call this constructor it will automatically
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -765,26 +765,14 @@ class PERSON_NER(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        conll_02_path = "https://github.com/das-sudeshna/genid"
+        conll_path = "https://github.com/das-sudeshna/genid"
 
         # download files if not present locally
-        cached_path(f"{conll_02_path}ned.testa", data_folder / 'raw')
-        cached_path(f"{conll_02_path}ned.testb", data_folder / 'raw')
-        cached_path(f"{conll_02_path}ned.train", data_folder / 'raw')
-
-        # we need to slightly modify the original files by adding some new lines after document separators
-        train_data_file = data_folder / 'train.txt'
-        if not train_data_file.is_file():
-            self.__offset_docstarts(data_folder / 'raw' / "ned.train", data_folder / 'train.txt')
-            self.__offset_docstarts(data_folder / 'raw' / "ned.testa", data_folder / 'dev.txt')
-            self.__offset_docstarts(data_folder / 'raw' / "ned.testb", data_folder / 'test.txt')
+        cached_path(f"{conll_path}.conll", Path("datasets") / dataset_name)
 
         super(PERSON_NER, self).__init__(
             data_folder,
             columns,
-            train_file='train.txt',
-            dev_file='dev.txt',
-            test_file='test.txt',
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
