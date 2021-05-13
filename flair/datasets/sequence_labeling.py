@@ -732,6 +732,76 @@ class CONLL_03_DUTCH(ColumnCorpus):
                 if line.startswith('-DOCSTART-'):
                     f.write("\n")
 
+class PERSON_NER(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            **corpusargs,
+    ):
+        """
+        Initialize the PERSON_NER corpus for Dutch. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        conll_02_path = "https://github.com/das-sudeshna/genid"
+
+        # download files if not present locally
+        cached_path(f"{conll_02_path}ned.testa", data_folder / 'raw')
+        cached_path(f"{conll_02_path}ned.testb", data_folder / 'raw')
+        cached_path(f"{conll_02_path}ned.train", data_folder / 'raw')
+
+        # we need to slightly modify the original files by adding some new lines after document separators
+        train_data_file = data_folder / 'train.txt'
+        if not train_data_file.is_file():
+            self.__offset_docstarts(data_folder / 'raw' / "ned.train", data_folder / 'train.txt')
+            self.__offset_docstarts(data_folder / 'raw' / "ned.testa", data_folder / 'dev.txt')
+            self.__offset_docstarts(data_folder / 'raw' / "ned.testb", data_folder / 'test.txt')
+
+        super(PERSON_NER, self).__init__(
+            data_folder,
+            columns,
+            train_file='train.txt',
+            dev_file='dev.txt',
+            test_file='test.txt',
+            tag_to_bioes=tag_to_bioes,
+            encoding="latin-1",
+            in_memory=in_memory,
+            document_separator_token="-DOCSTART-",
+            **corpusargs,
+        )
+
+    @staticmethod
+    def __offset_docstarts(file_in: Union[str, Path], file_out: Union[str, Path]):
+        with open(file_in, 'r', encoding="latin-1") as f:
+            lines = f.readlines()
+        with open(file_out, 'w', encoding="latin-1") as f:
+            for line in lines:
+                f.write(line)
+                if line.startswith('-DOCSTART-'):
+                    f.write("\n")
+
 
 
 class ICELANDIC_NER(ColumnCorpus):
