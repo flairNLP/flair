@@ -12,6 +12,7 @@ class WandbLogger:
         self.wandb_run = None
         self.log_dict = {}
         if wandb:
+            config['repo'] = 'https://github.com/flairNLP/flair.git'
             self.wandb_run = (
                 wandb.init(project=project, name=name, config=config, entity=entity)
                 if not wandb.run

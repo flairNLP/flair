@@ -22,7 +22,7 @@ document_embeddings = DocumentRNNEmbeddings(word_embeddings, hidden_size=256)
 classifier = TextClassifier(document_embeddings, label_dictionary=label_dict)
 
 # 6. initialize the text classifier trainer
-trainer = ModelTrainer(classifier, corpus, project_name='Text_classifier', run_name='exp1')
+trainer = ModelTrainer(classifier, corpus, project_name='Text_classifier_new', run_name='exp1_log_epochs')
 
 # 7. start the training
 trainer.train('resources/taggers/trec',
@@ -30,6 +30,7 @@ trainer.train('resources/taggers/trec',
               mini_batch_size=32,
               anneal_factor=0.5,
               patience=5,
-              max_epochs=150,
-              log_model_each_k_epochs=1,
+              max_epochs=10,
+              #log_model_each_k_epochs=1,
+              log_final_model= True
               )

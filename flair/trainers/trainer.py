@@ -125,6 +125,7 @@ class ModelTrainer:
             tensorboard_comment='',
             save_best_checkpoints=False,
             log_model_each_k_epochs: int = 0,
+            log_final_model: bool = False,
             use_swa: bool = False,
             use_final_model_for_eval: bool = False,
             **kwargs,
@@ -734,6 +735,10 @@ class ModelTrainer:
             # if we do not use dev data for model selection, save final model
             if save_final_model and not param_selection_mode:
                 self.model.save(base_path / "final-model.pt")
+            
+            if log_final_model or (log_model_each_k_epochs > 0 and not self.epoch % log_model_each_k_epochs):
+                if not Path(base_path / "final-model.pt").is_file():
+                    self.model.save(base_path / model_name)               
                 if self.wandb_logger.wandb_run:
                     self.wandb_logger.log_artifact(
                         name=f"model_{self.wandb_logger.wandb_run.id}",
