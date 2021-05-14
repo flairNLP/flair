@@ -1002,13 +1002,40 @@ class Sentence(DataPoint):
                 if i == j:
                     continue
 
-                relation_exists = False
                 for relation in relations_from_tags:
                     if relation[0] == i and relation[1] == j:
                         result.append(Relation(span_i, span_j, Label(relation[2])))
-                        relation_exists = True
-                if not relation_exists:
-                    result.append(Relation(span_i, span_j, Label('N')))
+
+        return result
+
+    def add_virtual_negative_relations(self, label_name=None):
+        result: List[Relation] = []
+        spans = self.get_spans('ner')
+        for i, span_i in enumerate(spans):
+            for j, span_j in enumerate(spans):
+                if i == j:
+                    continue
+
+                existing_relation = list(filter(
+                    lambda k: str(k.first) == str(span_i) and str(k.second) == str(span_j), self.relations
+                ))
+                if existing_relation:
+                    result.append(existing_relation[0])
+                else:
+                    relation = Relation(span_i, span_j, Label('N'))
+                    if label_name:
+                        relation.add_label(label_name, 'N')
+                    result.append(relation)
+
+        return result
+
+    def remove_virtual_negative_relations(self):
+        result: List[Relation] = []
+        for relation in self.relations:
+            for label in relation.labels:
+                if label.value != 'N':
+                    result.append(relation)
+                    break
 
         return result
 
@@ -1392,6 +1419,7 @@ class Corpus:
         """
         label_dictionary: Dictionary = Dictionary(add_unk=False)
         label_dictionary.multi_label = False
+        label_dictionary.add_item('N')
 
         from flair.datasets import DataLoader
 
