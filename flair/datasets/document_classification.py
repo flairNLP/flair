@@ -265,7 +265,7 @@ class ClassificationDataset(FlairDataset):
         if self.truncate_to_max_chars > 0:
             text = text[: self.truncate_to_max_chars]
 
-        if text and (labels or self.allow_examples_without_label):
+        if text and (labels or self.allow_examples_without_labels):
             sentence = Sentence(text, use_tokenizer=tokenizer)
 
             for label in labels:
