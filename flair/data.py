@@ -1033,7 +1033,7 @@ class Sentence(DataPoint):
         result: List[Relation] = []
         for relation in self.relations:
             for label in relation.labels:
-                if str(label) != str(Label('N')):
+                if label.value != 'N':
                     result.append(relation)
                     break
 

@@ -105,6 +105,8 @@ class RelationTagger(flair.nn.Model):
         lines: List[str] = []
 
         for batch in data_loader:
+            # remove previously predicted labels
+            [sentence.remove_labels('predicted') for sentence in batch]
 
             # predict for batch
             loss = self.predict(batch,
@@ -115,20 +117,25 @@ class RelationTagger(flair.nn.Model):
             eval_loss += loss
             batch_no += 1
 
+            no_relationship_idx = self.tag_dictionary.get_idx_for_item('N')
+
             for sentence in batch:
                 sentence.relations = sentence.add_virtual_negative_relations(label_name='predicted')
 
                 for relation in sentence.relations:
-                    # add gold tag
+                    # get gold tag
                     gold_tag = relation.get_tag(self.tag_type).value
-                    y_true.append(labels.add_item(gold_tag))
 
-                    # add predicted tag
+                    # get predicted tag
                     predicted_tag = relation.get_tag('predicted').value
-                    y_pred.append(labels.add_item(predicted_tag))
 
                     # for file output
                     lines.append(f'{relation.print_span_text()} || Gold: {gold_tag} || Predicted: {predicted_tag}\n')
+
+                    # don't add when gold and predicted tag are 'N'
+                    if not (gold_tag == predicted_tag == no_relationship_idx):
+                        y_true.append(labels.add_item(gold_tag))
+                        y_pred.append(labels.add_item(predicted_tag))
 
                 sentence.relations = sentence.remove_virtual_negative_relations()
                 lines.append('\n')
