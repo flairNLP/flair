@@ -20,7 +20,6 @@ from .sequence_labeling import ICELANDIC_NER
 from .sequence_labeling import WEBPAGES_NER
 from .sequence_labeling import CONLL_03_SPANISH
 from .sequence_labeling import CONLL_2000
-from .sequence_labeling import CONLL_04
 from .sequence_labeling import DANE
 from .sequence_labeling import EUROPARL_NER_GERMAN
 from .sequence_labeling import GERMEVAL_14
@@ -42,7 +41,6 @@ from .sequence_labeling import NER_SWEDISH
 from .sequence_labeling import NER_YORUBA
 from .sequence_labeling import STACKOVERFLOW_NER
 from .sequence_labeling import SEMEVAL2010
-from .sequence_labeling import SEMEVAL2010_RE
 from .sequence_labeling import SEMEVAL2017
 from .sequence_labeling import TURKU_NER
 from .sequence_labeling import TWITTER_NER
@@ -258,4 +256,10 @@ from .biomedical import BIOBERT_SPECIES_LINNAEUS
 from .biomedical import BIOBERT_SPECIES_S800
 from .biomedical import BIOBERT_GENE_BC2GM
 from .biomedical import BIOBERT_GENE_JNLPBA
-from.treebanks import UD_LATIN
+from .treebanks import UD_LATIN
+
+# Expose all relation extraction datasets
+from .sequence_labeling import CONLL_04
+from .sequence_labeling import SEMEVAL2010_RE
+from .sequence_labeling import WEBRED21
+from .sequence_labeling import WEBRED5

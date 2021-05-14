@@ -2467,6 +2467,186 @@ class TURKU_NER(ColumnCorpus):
             **corpusargs,
         )
 
+<<<<<<< HEAD
+=======
+class CONLL_04(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            **corpusargs,
+    ):
+        """
+        Initialize the CoNLL_04. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {1: "text", 2: "ner", 3: "relation", 4: "relation_dep"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        conll_path = "https://raw.githubusercontent.com/bekou/multihead_joint_entity_relation_extraction/master/data/CoNLL04/"
+        dev_file = "dev.txt"
+        test_file = "test.txt"
+        train_file = "train.txt"
+        cached_path(f"{conll_path}/{dev_file}", Path("datasets") / dataset_name)
+        cached_path(f"{conll_path}/{test_file}", Path("datasets") / dataset_name)
+        cached_path(f"{conll_path}/{train_file}", Path("datasets") / dataset_name)
+
+        # add extra blank lines in-between sentences for document separation if necessary
+        for dataset_part in ["dev", "test", "train"]:
+            with open(Path(flair.cache_root) / "datasets" / dataset_name / f"{dataset_part}.txt", "r") as file:
+                lines = file.readlines()
+
+            if lines[0] == "\n":
+                continue
+
+            lines_with_separating_blank_lines = []
+            for line in lines:
+                if line.startswith("#doc"):
+                    lines_with_separating_blank_lines.append("\n")
+                lines_with_separating_blank_lines.append(line)
+
+            with open(Path(flair.cache_root) / "datasets" / dataset_name / f"{dataset_part}.txt", "w") as file:
+                file.writelines(lines_with_separating_blank_lines)
+
+        super(CONLL_04, self).__init__(
+            data_folder,
+            columns,
+            dev_file=dev_file,
+            test_file=test_file,
+            train_file=train_file,
+            column_delimiter="\t",
+            tag_to_bioes=tag_to_bioes,
+            encoding="latin-1",
+            in_memory=in_memory,
+            comment_symbol='#',
+            **corpusargs,
+        )
+
+
+class WEBRED21(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            **corpusargs,
+    ):
+        """
+        Initialize the SEMEVAL2010_RE dataset. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {1: "text", 2: "ner", 3: "relation", 4: "relation_dep"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        conll_path = "https://raw.githubusercontent.com/melvelet/webred-conversion-for-flair/main/"
+        train_file = "webred_21.TXT"
+        cached_path(f"{conll_path}{train_file}", Path("datasets") / dataset_name)
+
+        super(WEBRED21, self).__init__(
+            data_folder,
+            columns,
+            dev_file=None,
+            test_file=None,
+            train_file="webred_21.TXT",
+            column_delimiter="\t",
+            tag_to_bioes=tag_to_bioes,
+            encoding="utf-8",
+            in_memory=in_memory,
+            comment_symbol='#',
+            **corpusargs,
+        )
+
+
+class WEBRED5(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            **corpusargs,
+    ):
+        """
+        Initialize the SEMEVAL2010_RE dataset. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {1: "text", 2: "ner", 3: "relation", 4: "relation_dep"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = Path(flair.cache_root) / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        conll_path = "https://raw.githubusercontent.com/melvelet/webred-conversion-for-flair/main/"
+        train_file = "webred_5.TXT"
+        cached_path(f"{conll_path}{train_file}", Path("datasets") / dataset_name)
+
+        super(WEBRED5, self).__init__(
+            data_folder,
+            columns,
+            dev_file=None,
+            test_file=None,
+            train_file="webred_5.TXT",
+            column_delimiter="\t",
+            tag_to_bioes=tag_to_bioes,
+            encoding="utf-8",
+            in_memory=in_memory,
+            comment_symbol='#',
+            **corpusargs,
+        )
+
+
+>>>>>>> add WebRED datasets
 class SEMEVAL2010_RE(ColumnCorpus):
     def __init__(
             self,
@@ -2501,14 +2681,12 @@ class SEMEVAL2010_RE(ColumnCorpus):
 
         # download data if necessary
         conll_path = "https://raw.githubusercontent.com/sahitya0000/Relation-Classification/master/corpus/SemEval2010_task8"
-        # dev_file = "dev.txt"
         test_file = "_testing_keys/TEST_FILE_FULL.TXT"
         train_file = "_training/TRAIN_FILE.TXT"
-        # cached_path(f"{conll_path}/{dev_file}", Path("datasets") / dataset_name)
         cached_path(f"{conll_path}{test_file}", Path("datasets") / dataset_name)
         cached_path(f"{conll_path}{train_file}", Path("datasets") / dataset_name)
 
-        # add extra blank lines in-between sentences for document separation if necessary
+        # convert to correct format - see CONLL_04 dataset
         for dataset_part in ["TEST_FILE_FULL", "TRAIN_FILE"]:
             with open(Path(flair.cache_root) / "datasets" / dataset_name / f"{dataset_part}.TXT", "r") as file:
                 lines = file.readlines()
