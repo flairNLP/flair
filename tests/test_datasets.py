@@ -162,7 +162,7 @@ def test_download_load_data(tasks_base_path):
     corpus = flair.datasets.UD_ENGLISH()
 
     assert len(corpus.train) == 12543
-    assert len(corpus.dev) == 2002
+    assert len(corpus.dev) == 2001
     assert len(corpus.test) == 2077
 
     # clean up data directory
