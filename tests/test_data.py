@@ -937,10 +937,6 @@ def test_build_relations(sentence_with_relations):
 
     spans = sentence_with_relations.get_spans("ner")
     expected_result = [Relation(spans[0], spans[1], Label('Born_In')),
-                       Relation(spans[0], spans[2], Label('Works_For')),
-                       Relation(spans[1], spans[0], Label('N')),
-                       Relation(spans[1], spans[2], Label('N')),
-                       Relation(spans[2], spans[0], Label('N')),
-                       Relation(spans[2], spans[1], Label('N')),]
+                       Relation(spans[0], spans[2], Label('Works_For')),]
 
     assert [str(relation) for relation in result] == [str(relation) for relation in expected_result]
