@@ -31,6 +31,7 @@ class RelationTagger(flair.nn.Model):
     - Reprojection.
     As a result, only poor results can be expected.
     """
+
     def __init__(
             self,
             embeddings: TokenEmbeddings,
@@ -61,7 +62,7 @@ class RelationTagger(flair.nn.Model):
 
         # F-beta score
         self.beta = beta
-     
+
         # all parameters will be pushed internally to the specified device
         self.to(flair.device)
 
@@ -78,10 +79,12 @@ class RelationTagger(flair.nn.Model):
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 32,
             num_workers: int = 8,
-            main_score_type: Tuple[str, str] = ("micro avg", 'f1-score'),
+            main_score_type: Tuple[str, str] = ("accuracy", 'f1-score'),
             return_predictions: bool = False
     ) -> (Result, float):
 
+        if main_score_type == ("micro avg", 'f1-score'):
+            main_score_type = ("accuracy", 'f1-score')
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
         if not isinstance(sentences, Dataset):
             sentences = SentenceDataset(sentences)
@@ -146,7 +149,7 @@ class RelationTagger(flair.nn.Model):
             label = labels.get_item_for_index(i)
             all_labels.append(label)
             all_indices.append(i)
-            if label in ('_', '', 'N'): continue
+            if label in ('_', ''): continue
             target_names.append(label)
             labels_to_report.append(i)
 
@@ -181,7 +184,8 @@ class RelationTagger(flair.nn.Model):
         log_line = f"\t{accuracy_score}"
 
         result = Result(
-            main_score=classification_report_dict[main_score_type[0]][main_score_type[1]],
+            main_score=classification_report_dict[main_score_type[0]][main_score_type[1]]
+            if main_score_type[0] != 'accuracy' else classification_report_dict[main_score_type[0]],
             log_line=log_line,
             log_header=log_header,
             detailed_results=detailed_result,
