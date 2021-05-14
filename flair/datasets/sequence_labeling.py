@@ -2589,6 +2589,7 @@ class SEMEVAL2010_RE(ColumnCorpus):
             dev_file=None,
             test_file="TEST_FILE_FULL.TXT",
             train_file="TRAIN_FILE.TXT",
+<<<<<<< HEAD
             column_delimiter="\t",
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
@@ -2661,6 +2662,8 @@ class CONLL_04(ColumnCorpus):
             dev_file=dev_file,
             test_file=test_file,
             train_file=train_file,
+=======
+>>>>>>> make semeval file extensions uppercase
             column_delimiter="\t",
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
