@@ -1,5 +1,5 @@
 python-dateutil>=2.6.1
-torch>=1.5.0
+torch>=1.5.0,<1.8.0
 gensim>=3.4.0,<=3.8.3
 tqdm>=4.26.0
 segtok>=1.5.7
@@ -16,9 +16,8 @@ tabulate
 langdetect
 lxml
 ftfy
-sentencepiece<=0.1.91
+sentencepiece==0.1.95
 konoha<5.0.0,>=4.0.0
 janome
-gdown
-numpy<1.20.0
+gdown==3.12.2
 huggingface-hub

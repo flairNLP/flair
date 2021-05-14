@@ -9,6 +9,7 @@ from flair.embeddings import (
     FlairEmbeddings,
     DocumentRNNEmbeddings,
     DocumentLMEmbeddings, TransformerWordEmbeddings, TransformerDocumentEmbeddings,
+    DocumentCNNEmbeddings,
 )
 
 from flair.data import Sentence, Dictionary
@@ -287,4 +288,21 @@ def test_transformer_document_embeddings():
 
     sentence.clear_embeddings()
 
+    del embeddings
+    
+def test_document_cnn_embeddings():
+    sentence: Sentence = Sentence("I love Berlin. Berlin is a great place to live.")
+
+    embeddings: DocumentCNNEmbeddings = DocumentCNNEmbeddings(
+        [glove, flair_embedding], kernels=((50, 2), (50, 3))
+    )
+
+    embeddings.embed(sentence)
+
+    assert len(sentence.get_embedding()) == 100
+    assert len(sentence.get_embedding()) == embeddings.embedding_length
+
+    sentence.clear_embeddings()
+
+    assert len(sentence.get_embedding()) == 0
     del embeddings

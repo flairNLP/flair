@@ -5,7 +5,7 @@ with open("requirements.txt") as f:
 
 setup(
     name="flair",
-    version="0.7",
+    version="0.8.1",
     description="A very simple framework for state-of-the-art NLP",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",

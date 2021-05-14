@@ -271,11 +271,16 @@ class SimilarityLearner(flair.nn.Model):
 
     def evaluate(
         self,
-        data_loader: DataLoader,
+        data_pairs: DataPair,
         out_path: Path = None,
         embedding_storage_mode="none",
+        mini_batch_size=32,
+        num_workers=8,
+        **kwargs
     ) -> (Result, float):
         # assumes that for each data pair there's at least one embedding per modality
+
+        data_loader = DataLoader(data_pairs, batch_size=mini_batch_size, num_workers=num_workers)
 
         with torch.no_grad():
             # pre-compute embeddings for all targets in evaluation dataset
@@ -357,7 +362,7 @@ class SimilarityLearner(flair.nn.Model):
                 epoch_results_str,
                 detailed_results,
             ),
-            0,
+            torch.tensor(0),
         )
 
     def _get_state_dict(self):
