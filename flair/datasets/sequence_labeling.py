@@ -2462,7 +2462,7 @@ class SEMEVAL2010_RE(ColumnCorpus):
 
         # add extra blank lines in-between sentences for document separation if necessary
         for dataset_part in ["TEST_FILE_FULL", "TRAIN_FILE"]:
-            with open(Path(flair.cache_root) / "datasets" / dataset_name / f"{dataset_part}.txt", "r") as file:
+            with open(Path(flair.cache_root) / "datasets" / dataset_name / f"{dataset_part}.TXT", "r") as file:
                 lines = file.readlines()
 
             if lines[0].startswith("#converted"):
@@ -2526,7 +2526,7 @@ class SEMEVAL2010_RE(ColumnCorpus):
                     sent_no += 1
                     lines_in_required_format += sentence_lines
 
-            with open(Path(flair.cache_root) / "datasets" / dataset_name / f"{dataset_part}.txt", "w") as file:
+            with open(Path(flair.cache_root) / "datasets" / dataset_name / f"{dataset_part}.TXT", "w") as file:
                 concat_lines = ["#converted"]
                 for line in lines_in_required_format:
                     if line[0].startswith('#'):
@@ -2539,8 +2539,8 @@ class SEMEVAL2010_RE(ColumnCorpus):
             data_folder,
             columns,
             dev_file=None,
-            test_file="TEST_FILE_FULL.txt",
-            train_file="TRAIN_FILE.txt",
+            test_file="TEST_FILE_FULL.TXT",
+            train_file="TRAIN_FILE.TXT",
             column_delimiter="\t",
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
