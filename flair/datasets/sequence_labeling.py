@@ -738,7 +738,6 @@ class PERSON_NER(ColumnCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
-            **corpusargs,
     ):
         """
         Initialize the PERSON_NER corpus for person names. The first time you call this constructor it will automatically
@@ -750,6 +749,7 @@ class PERSON_NER(ColumnCorpus):
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
+
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
@@ -780,13 +780,14 @@ class PERSON_NER(ColumnCorpus):
             columns,
             tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
+            train_file='bigFile.conll"'
         )
 
     @staticmethod
     def __concatAllFiles(data_folder):
         arr = os.listdir( data_folder / 'raw')
         
-        with open(data_folder/'out', 'w') as outfile:
+        with open(data_folder/'bigFile.conll', 'w') as outfile:
             for fname in arr:
                 with open(data_folder / 'raw' / fname) as infile:
                     outfile.write(infile.read())
