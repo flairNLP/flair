@@ -765,32 +765,31 @@ class PERSON_NER(ColumnCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        conll_path = "https://github.com/das-sudeshna/genid"
+        conll_path = "https://raw.githubusercontent.com/das-sudeshna/genid/master/"
 
-        # download files if not present locally
-        cached_path(f"{conll_path}.conll", Path("datasets") / dataset_name)
+        # download files if not present locallys
+        cached_path(f"{conll_path}conll-g.conll", data_folder / 'raw')
+        cached_path(f"{conll_path}ieer-g.conll", data_folder / 'raw')
+        cached_path(f"{conll_path}textbook-g.conll", data_folder / 'raw')
+        cached_path(f"{conll_path}wiki-g.conll", data_folder / 'raw')
+
+        self.__concatAllFiles(data_folder)
 
         super(PERSON_NER, self).__init__(
             data_folder,
             columns,
             tag_to_bioes=tag_to_bioes,
-            encoding="latin-1",
             in_memory=in_memory,
-            document_separator_token="-DOCSTART-",
-            **corpusargs,
         )
 
     @staticmethod
-    def __offset_docstarts(file_in: Union[str, Path], file_out: Union[str, Path]):
-        with open(file_in, 'r', encoding="latin-1") as f:
-            lines = f.readlines()
-        with open(file_out, 'w', encoding="latin-1") as f:
-            for line in lines:
-                f.write(line)
-                if line.startswith('-DOCSTART-'):
-                    f.write("\n")
-
-
+    def __concatAllFiles(data_folder):
+        arr = os.listdir( data_folder / 'raw')
+        
+        with open(data_folder/'out', 'w') as outfile:
+            for fname in arr:
+                with open(data_folder / 'raw' / fname) as infile:
+                    outfile.write(infile.read())
 
 class ICELANDIC_NER(ColumnCorpus):
     def __init__(
