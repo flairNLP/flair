@@ -778,9 +778,8 @@ class PERSON_NER(ColumnCorpus):
         super(PERSON_NER, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=tag_to_bioes,
             in_memory=in_memory,
-            train_file='bigFile.conll"'
+            train_file='bigFile.conll'
         )
 
     @staticmethod
