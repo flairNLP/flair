@@ -156,7 +156,7 @@ class RelationTagger(flair.nn.Model):
             label = labels.get_item_for_index(i)
             all_labels.append(label)
             all_indices.append(i)
-            if label in ('_', '', 'N'): continue
+            if label in ('_', ''): continue
             target_names.append(label)
             labels_to_report.append(i)
 
@@ -165,8 +165,8 @@ class RelationTagger(flair.nn.Model):
             target_names = all_labels
             labels_to_report = all_indices
 
-        print("y_true", y_true)
-        print("y_pred", y_pred)
+        print(target_names)
+        print(labels_to_report)
 
         classification_report = metrics.classification_report(y_true, y_pred, digits=4, target_names=target_names,
                                                               zero_division=1, labels=labels_to_report)
