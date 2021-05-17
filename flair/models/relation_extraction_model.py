@@ -117,8 +117,6 @@ class RelationTagger(flair.nn.Model):
             eval_loss += loss
             batch_no += 1
 
-            no_relationship_idx = self.tag_dictionary.get_idx_for_item('N')
-
             for sentence in batch:
                 sentence.relations = sentence.add_virtual_negative_relations(label_name='predicted')
 
@@ -133,7 +131,7 @@ class RelationTagger(flair.nn.Model):
                     lines.append(f'{relation.print_span_text()} || Gold: {gold_tag} || Predicted: {predicted_tag}\n')
 
                     # don't add when gold and predicted tag are 'N'
-                    if not (gold_tag == predicted_tag == no_relationship_idx):
+                    if not (gold_tag == predicted_tag == 'N'):
                         y_true.append(labels.add_item(gold_tag))
                         y_pred.append(labels.add_item(predicted_tag))
 
@@ -166,6 +164,9 @@ class RelationTagger(flair.nn.Model):
         if not labels_to_report:
             target_names = all_labels
             labels_to_report = all_indices
+
+        print("y_true", y_true)
+        print("y_pred", y_pred)
 
         classification_report = metrics.classification_report(y_true, y_pred, digits=4, target_names=target_names,
                                                               zero_division=1, labels=labels_to_report)
