@@ -165,9 +165,6 @@ class RelationTagger(flair.nn.Model):
             target_names = all_labels
             labels_to_report = all_indices
 
-        print(target_names)
-        print(labels_to_report)
-
         classification_report = metrics.classification_report(y_true, y_pred, digits=4, target_names=target_names,
                                                               zero_division=1, labels=labels_to_report)
         classification_report_dict = metrics.classification_report(y_true, y_pred, digits=4,
@@ -286,7 +283,9 @@ class RelationTagger(flair.nn.Model):
                     dataloader.set_description(f"Inferencing on batch {batch_no}")
 
                 # batch = self._filter_empty_sentences(batch)
+                len('before', batch)
                 batch = self._filter_sentences_with_less_than_two_spans(batch)
+                len('after', batch)
                 # stop if all sentences are empty
                 if not batch:
                     continue
