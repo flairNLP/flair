@@ -1,11 +1,13 @@
 import logging
 import sys
+import os
 
 from pathlib import Path
 from typing import List, Union, Optional, Dict, Tuple
 from warnings import warn
 
 import numpy as np
+import tempfile
 import torch
 import torch.nn
 import torch.nn.functional as F
@@ -1246,6 +1248,43 @@ class SequenceTagger(flair.nn.Model):
                 Path(flair.cache_root / 'models' / model_folder).rmdir()  # remove folder again if not valid
 
         return model_path
+
+    def push_to_hub(self,
+        repo_name: str,
+        organization: Optional[str] = None,
+        private: bool = None,
+        commit_message: str = "Add new SequenceTagger model."):
+        """
+        Uploads the Sequence Tagger model to a HuggingFace Hub repository.
+        :param repo_name: Repository name for your model in the Hub.
+        :param organization:  Organization in which you want to push your model(you must be a member of this organization).
+        :param private: Whether the repository is private.
+        :param commit_message: Message to commit while pushing.
+        :return: The url of the commit of your model in the given repository.
+        """
+        # Lazy import
+        from huggingface_hub import HfApi, HfFolder, Repository
+
+        token = HfFolder.get_token()
+        if token is None:
+            raise ValueError(
+                "You must login to the Hugging Face hub on this computer by typing `huggingface-cli login`."
+            )
+
+        repo_url = HfApi(endpoint="https://huggingface.co").create_repo(
+                token,
+                repo_name,
+                organization=organization,
+                private=private,
+                repo_type=None,
+                exist_ok=True,
+            )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            # Create the repo (or clone its content if it's nonempty).
+            repo = Repository(tmp_dir, clone_from=repo_url)
+            self.save(os.path.join(tmp_dir, "pytorch_model.bin"))
+            return repo.push_to_hub(commit_message=commit_message)
 
     def get_transition_matrix(self):
         data = []
