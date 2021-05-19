@@ -1256,11 +1256,11 @@ class SequenceTagger(flair.nn.Model):
         commit_message: str = "Add new SequenceTagger model."):
         """
         Uploads the Sequence Tagger model to a HuggingFace Hub repository.
-        :param repo_name: Repository name for your model in the Hub.
-        :param organization:  Organization in which you want to push your model(you must be a member of this organization).
+        :param repo_name: Repository name for the model in the Hub.
+        :param organization:  Organization in which the model will be pushed (you must be a member of this organization).
         :param private: Whether the repository is private.
         :param commit_message: Message to commit while pushing.
-        :return: The url of the commit of your model in the given repository.
+        :return: The url of the commit of the model in the given repository.
         """
         # Lazy import
         from huggingface_hub import HfApi, HfFolder, Repository
