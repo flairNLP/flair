@@ -744,7 +744,64 @@ class CONLL_03_DUTCH(ColumnCorpus):
                 if line.startswith('-DOCSTART-'):
                     f.write("\n")
 
+class PERSON_NER(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+    ):
+        """
+        Initialize the PERSON_NER corpus for person names. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
 
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        conll_path = "https://raw.githubusercontent.com/das-sudeshna/genid/master/"
+
+        # download files if not present locallys
+        cached_path(f"{conll_path}conll-g.conll", data_folder / 'raw')
+        cached_path(f"{conll_path}ieer-g.conll", data_folder / 'raw')
+        cached_path(f"{conll_path}textbook-g.conll", data_folder / 'raw')
+        cached_path(f"{conll_path}wiki-g.conll", data_folder / 'raw')
+
+        self.__concatAllFiles(data_folder)
+
+        super(PERSON_NER, self).__init__(
+            data_folder,
+            columns,
+            in_memory=in_memory,
+            train_file='bigFile.conll'
+        )
+
+    @staticmethod
+    def __concatAllFiles(data_folder):
+        arr = os.listdir( data_folder / 'raw')
+        
+        with open(data_folder/'bigFile.conll', 'w') as outfile:
+            for fname in arr:
+                with open(data_folder / 'raw' / fname) as infile:
+                    outfile.write(infile.read())
 
 class ICELANDIC_NER(ColumnCorpus):
     def __init__(
