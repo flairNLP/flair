@@ -13,9 +13,9 @@ from flair.data import Dictionary, Sentence, Token
 from flair.datasets import SentenceDataset, DataLoader
 from flair.embeddings import FlairEmbeddings
 from flair.training_utils import Metric, Result
+from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
-
 
 start_token: str = '\t'  # Start-of-sentence token
 end_token: str = '\n'  # End-of-sentence token
@@ -633,3 +633,16 @@ class Lemmatization(flair.nn.Model):
         )
         model.load_state_dict(state["state_dict"])
         return model
+
+    @staticmethod
+    def _fetch_model(model_name) -> str:
+
+        model_map = {}
+
+        model_map["lemma-with-pos"] = "https://box.hu-berlin.de/seafhttp/files/41ce986d-8417-4199-b02f-ac153c17cd4b/en-lemma-with-pos.pt"
+        model_map["lemma"] = "https://box.hu-berlin.de/seafhttp/files/fa7c2935-bce4-4d6a-9f26-c92ce995660b/en-lemma-without-tag.pt"
+
+        if model_name in model_map:
+            model_name = cached_path(model_map[model_name], cache_dir=Path("models") / "lemma")
+
+        return model_name
