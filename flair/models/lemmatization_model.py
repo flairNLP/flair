@@ -9,7 +9,7 @@ from torch.utils.data.dataset import Dataset
 import torch.nn.functional as F
 
 import flair.nn
-from flair.data import Dictionary, Sentence, Token
+from flair.data import Dictionary, Sentence
 from flair.datasets import SentenceDataset, DataLoader
 from flair.embeddings import FlairEmbeddings
 from flair.training_utils import Metric, Result
@@ -113,7 +113,6 @@ class Lemmatization(flair.nn.Model):
 
         self.to(flair.device)
 
-
     def _load_embedding_weight(self, dictionary: Dictionary, pre_embedding: FlairEmbeddings):
         """
         According to character_dictionary, load weights from pre-trained Embedding.
@@ -132,47 +131,36 @@ class Lemmatization(flair.nn.Model):
             self, data_points: Union[List[Sentence], Sentence], sort=True
     ) -> torch.tensor:
         loss = self.forward(data_points)
+
         return loss
 
     def forward(self, sentences: List[Sentence]):
 
+        loss = 0
         for sentence in sentences:
-            loss = 0
             encoder_input, lemma, mask, effective_data_lenght, max_lemma_lenght = self._generate_input(sentence)
 
-            encoder_out, encoder_hidden = self._encode(encoder_input,  effective_data_lenght)
+            encoder_out, encoder_hidden = self._encode(encoder_input, effective_data_lenght)
 
             decoder_hidden = encoder_hidden[:self.n_layers]
 
-            #Using a contextualized word embedding model, it is necessary to generate a representation for the current moment
+            # Using a contextualized word embedding model, it is necessary to generate a representation for the current moment
             # based on the previously predicted results and context. The dictionary all_seqs is used to store the previous prediction results.
             if self.contextualized_embedding:
                 all_seqs = dict()
                 for i in range(len(effective_data_lenght)):
                     all_seqs[i] = ""
+            else:
+                all_seqs = None
 
-            #If you use teacher forcing, the next input uses the correct value, otherwise use the predicted value as input for the next moment.
+            # If you use teacher forcing, the next input uses the correct value, otherwise use the predicted value as input for the next moment.
             # The probability of using Teacher Forcing can be modified by adjusting the value of teacher_forcing_ratio.
             use_teacher_forcing = True if random.random() < self.teacher_forcing_ratio else False
 
             decoder_input = None
             if use_teacher_forcing:
                 for t in range(max_lemma_lenght):
-                    if self.contextualized_embedding:
-                            #The first input of the decoder uses the start symbol. Afterwards, the result of the previous
-                            # moment is used as the input value for the next moment.
-                            if decoder_input == None:
-                                decoder_input = self.start_representation.repeat(1, len(all_seqs), 1)
-                            else:
-                                decoder_input = self.embeddings.lm.get_representation(list(all_seqs.values()), "", "")[-1:].detach()
-                    else:
-                        if decoder_input == None:
-                            start_idx = self.character_dictionary.get_idx_for_item(start_token)
-                            decoder_input = torch.LongTensor([[start_idx for _ in range(len(effective_data_lenght))]]).to(flair.device)
-                            decoder_input = self.char_embedding(decoder_input)
-                        else:
-                            decoder_input = self.char_embedding(decoder_input)
-
+                    decoder_input = self._generate_decoder_input(decoder_input, all_seqs, effective_data_lenght)
                     decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_out)
                     mask_loss = self._calculate_loss(decoder_output, lemma[t], mask[t])
                     loss += mask_loss
@@ -186,19 +174,7 @@ class Lemmatization(flair.nn.Model):
 
             else:
                 for t in range(max_lemma_lenght):
-                    if self.contextualized_embedding:
-                        if decoder_input == None:
-                            decoder_input = self.start_representation.repeat(1, len(all_seqs), 1)
-                        else:
-                            decoder_input = self.embeddings.lm.get_representation(list(all_seqs.values()), "", "")[-1:].detach()
-                    else:
-                        if decoder_input == None:
-                            start_idx = self.character_dictionary.get_idx_for_item(start_token)
-                            decoder_input = torch.LongTensor([[start_idx for _ in range(len(effective_data_lenght))]]).to(flair.device)
-                            decoder_input = self.char_embedding(decoder_input)
-                        else:
-                            decoder_input = self.char_embedding(decoder_input)
-
+                    decoder_input = self._generate_decoder_input(decoder_input, all_seqs, effective_data_lenght)
                     decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_out)
                     mask_loss = self._calculate_loss(decoder_output, lemma[t], mask[t])
                     loss += mask_loss
@@ -213,7 +189,7 @@ class Lemmatization(flair.nn.Model):
                             all_seqs[i] += self.character_dictionary.get_item_for_index(decoder_input[0][i])
 
 
-        return loss
+        return loss, len(sentences)
 
     def _encode(self, encoder_input, effective_data_lenght):
         """
@@ -255,12 +231,29 @@ class Lemmatization(flair.nn.Model):
 
         return output, hidden
 
-    def _calculate_loss(self, input, target, mask):
+    def _calculate_loss(self, predict, target, mask):
 
-        cross_entropy = -torch.log(torch.gather(input, 1, target.view(-1, 1)).squeeze(1))
+        cross_entropy = -torch.log(torch.gather(predict, 1, target.view(-1, 1)).squeeze(1))
         loss = cross_entropy.masked_select(mask).mean().to(flair.device)
 
         return loss
+
+    def _generate_decoder_input(self, decoder_input, all_seqs, effective_data_lenght):
+        if self.contextualized_embedding:
+            if decoder_input is None:
+                decoder_input = self.start_representation.repeat(1, len(all_seqs), 1)
+            else:
+                decoder_input = self.embeddings.lm.get_representation(list(all_seqs.values()), "", "")[-1:].detach()
+        else:
+            if decoder_input is None:
+                start_idx = self.character_dictionary.get_idx_for_item(start_token)
+                decoder_input = torch.LongTensor([[start_idx for _ in range(len(effective_data_lenght))]]).to(
+                    flair.device)
+                decoder_input = self.char_embedding(decoder_input)
+            else:
+                decoder_input = self.char_embedding(decoder_input)
+
+        return decoder_input
 
     def evaluate(
             self,
@@ -328,30 +321,19 @@ class Lemmatization(flair.nn.Model):
 
         encoder_input, lemma, mask, effective_data_lenght, max_lemma_lenght = self._generate_input(sentence)
 
-        encoder_outputs, encoder_hidden = self._encode(encoder_input,  effective_data_lenght)
+        encoder_outputs, encoder_hidden = self._encode(encoder_input, effective_data_lenght)
         decoder_hidden = encoder_hidden[:self.n_layers]
 
         if self.contextualized_embedding:
             all_seqs = dict()
             for i in range(len(effective_data_lenght)):
                 all_seqs[i] = ""
-
+        else:
+            all_seqs = None
         decoder_input = None
 
         for t in range(max_lemma_lenght):
-            if self.contextualized_embedding:
-                if decoder_input == None:
-                    decoder_input = self.start_representation.repeat(1, len(all_seqs), 1)
-                else:
-                    decoder_input = self.embeddings.lm.get_representation(list(all_seqs.values()), "", "")[-1:].detach()
-            else:
-                if decoder_input == None:
-                    start_idx = self.character_dictionary.get_idx_for_item(start_token)
-                    decoder_input = torch.LongTensor([[start_idx for _ in range(len(effective_data_lenght))]]).to(flair.device)
-                    decoder_input = self.char_embedding(decoder_input)
-                else:
-                    decoder_input = self.char_embedding(decoder_input)
-
+            decoder_input = self._generate_decoder_input(decoder_input, all_seqs, effective_data_lenght)
             decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_outputs)
 
             # Take the predicted value with the highest probability as the input for the next moment
@@ -373,7 +355,7 @@ class Lemmatization(flair.nn.Model):
 
         pre_lemmas = self._calculation_output(encoder_input, effective_data_lenght)
 
-        return  pre_lemmas
+        return pre_lemmas
 
     def _calculation_output(self, encoder_input, effective_data_lenght):
 
@@ -391,19 +373,7 @@ class Lemmatization(flair.nn.Model):
         decoder_input = None
         for t in range(self.longest_word_length):
             all_seq_is_end = True
-            if self.contextualized_embedding:
-                if decoder_input == None:
-                    decoder_input = self.start_representation.repeat(1, len(all_seqs), 1)
-                else:
-                    decoder_input = self.embeddings.lm.get_representation(list(all_seqs.values()), "", "")[-1:].detach()
-            else:
-                if decoder_input == None:
-                    start_idx = self.character_dictionary.get_idx_for_item(start_token)
-                    decoder_input = torch.LongTensor([[start_idx for _ in range(len(effective_data_lenght))]]).to(flair.device)
-                    decoder_input = self.char_embedding(decoder_input)
-                else:
-                    decoder_input = self.char_embedding(decoder_input)
-
+            decoder_input = self._generate_decoder_input(decoder_input, all_seqs, effective_data_lenght)
             decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_outputs)
             decoder_scores, decoder_input = torch.max(decoder_output, dim=1)
 
@@ -412,7 +382,7 @@ class Lemmatization(flair.nn.Model):
             for i in range(len(effective_data_lenght)):
                 all_seqs[i] += self.character_dictionary.get_item_for_index(decoder_input[0][i])
                 # If there is a value that is not a end_token in the result, the prediction will continue
-                if  decoder_input[0][i] != end_idx:
+                if decoder_input[0][i] != end_idx:
                     all_seq_is_end = False
             # To improve efficiency, end the prediction early when all predictions result in a end_token.
             if all_seq_is_end:
@@ -425,7 +395,7 @@ class Lemmatization(flair.nn.Model):
 
     def _processing_output(self, pre_lemmas: dict):
 
-        #Process the predicted sequence by splitting the sequence from the first end_token.
+        # Process the predicted sequence by splitting the sequence from the first end_token.
         lemmas = list(pre_lemmas.values())
 
         for i in range(len(lemmas)):
@@ -433,12 +403,12 @@ class Lemmatization(flair.nn.Model):
 
         return lemmas
 
-    def predict(self, sentence: Sentence,  set_label: bool = False):
+    def predict(self, sentence: Sentence, set_label: bool = True):
 
         # Predict the lemma of each token in the sentence
-        if type(sentence) ==  Sentence:
+        if type(sentence) == Sentence:
 
-            pre_lemmas  = self._eval_predict(sentence)
+            pre_lemmas = self._eval_predict(sentence)
 
             # The order of the predicted results obtained by our prediction function is sorted, so we need to sort
             # the tokens in the sentence to match the predicted value
@@ -454,14 +424,13 @@ class Lemmatization(flair.nn.Model):
                 if set_label:
                     sentence[tokens[i].idx - 1].set_label("lemma", pre_lemmas[i])
 
-                lemmas[tokens[i].idx - 1] =  pre_lemmas[i]
+                lemmas[tokens[i].idx - 1] = pre_lemmas[i]
 
             return lemmas
         else:
             log.warning("The acceptable input type is Sentence.")
 
             return ''
-
 
     def _generate_input(self, sentence: Sentence):
         """
@@ -506,7 +475,7 @@ class Lemmatization(flair.nn.Model):
         lemma_seq_list = []
 
         if self.use_tag:
-            target_lenght = len(tokens[0].text) + len((self.tag_list))
+            target_lenght = len(tokens[0].text) + len(self.tag_list)
         else:
             target_lenght = len(tokens[0].text)
 
@@ -517,7 +486,7 @@ class Lemmatization(flair.nn.Model):
         # If use context-sensitive word vectors. Record the position of the character in the string to obtain the word embedding of the required character
         if self.contextualized_embedding:
             representation = self.embeddings.lm.get_representation([sentence.to_original_text()], '', '').detach()
-            if tokens[0].start_pos == None:
+            if tokens[0].start_pos is None:
                 token_pos = dict()
                 start = 0
                 for token in sentence:
@@ -525,10 +494,10 @@ class Lemmatization(flair.nn.Model):
                     token_pos[token.text] = [start, end]
                     start = end + 1
 
-        for token in  tokens:
+        for token in tokens:
             if self.contextualized_embedding:
                 # If the input sentecen is use_tokenizer, then use its own postion, otherwise use the location dictionary we generated.
-                if token.start_pos == None:
+                if token.start_pos is None:
                     pos = token_pos[token.text]
                     token_representation = representation[pos[0]:pos[1]]
                 else:
@@ -550,10 +519,11 @@ class Lemmatization(flair.nn.Model):
                 token_representation = torch.cat((token_representation, tag_emb), dim=0)
 
             effective_data_lenght.append(len(token_representation))
-            pad = torch.zeros(target_lenght - len(token_representation), 1, self.embeddings.embedding_length).to(flair.device)
+            pad = torch.zeros(target_lenght - len(token_representation), 1, self.embeddings.embedding_length).to(
+                flair.device)
 
             # The first token must be the longest, so there is no need to pad.
-            if embed_data == None:
+            if embed_data is None:
                 embed_data = token_representation
             else:
                 token_representation = torch.cat((token_representation, pad), 0)
@@ -565,8 +535,8 @@ class Lemmatization(flair.nn.Model):
             max_lemma_lenght = max(max_lemma_lenght, len(lemma_seq))
             lemma_seq_list.append(lemma_seq)
 
-
-        lemma_seq_list = self._seq_zero_padding(lemma_seq_list, max_lemma_lenght, self.character_dictionary.get_idx_for_item(end_token))
+        lemma_seq_list = self._seq_zero_padding(lemma_seq_list, max_lemma_lenght,
+                                                self.character_dictionary.get_idx_for_item(end_token))
         lemma_seq_list = torch.LongTensor(lemma_seq_list).transpose(0, 1).to(flair.device)
 
         # Generate mask, because when calculating loss, the part through zero padding should not be included in the calculation.
@@ -577,10 +547,10 @@ class Lemmatization(flair.nn.Model):
 
         return embed_data, lemma_seq_list, mask, effective_data_lenght, max_lemma_lenght
 
-    def _item2seq(self, dictionary: Dictionary, input):
+    def _item2seq(self, dictionary: Dictionary, data):
         # Convert item into a sequence.
         sequence = []
-        for item in input:
+        for item in data:
             sequence.append(dictionary.get_idx_for_item(item))
 
         return sequence
@@ -637,10 +607,9 @@ class Lemmatization(flair.nn.Model):
     @staticmethod
     def _fetch_model(model_name) -> str:
 
-        model_map = {}
-
-        model_map["lemma-with-pos"] = "https://box.hu-berlin.de/seafhttp/files/0c0fef0f-d6f5-491f-b6e0-236c05706a2e/en-lemma-with-pos.pt"
-        model_map["lemma"] = "https://box.hu-berlin.de/seafhttp/files/51a0db3a-1c42-4b76-a4f8-ec181294bd5a/en-lemma-without-tag.pt"
+        model_map = {
+            "lemma": "https://box.hu-berlin.de/seafhttp/files/dcc0676a-d55f-4f48-b555-5e92bc82668b/en-lemma-without-tag.pt",
+            "lemma-with-pos": "https://box.hu-berlin.de/seafhttp/files/ed33a77b-25cb-414e-b4fa-e237d9da3d89/en-lemma-with-pos.pt"}
 
         if model_name in model_map:
             model_name = cached_path(model_map[model_name], cache_dir=Path("models") / "lemma")
