@@ -26,7 +26,7 @@ class Lemmatization(flair.nn.Model):
     def __init__(
             self,
             hidden_size: int,
-            pre_embeddings: FlairEmbeddings,
+            embeddings: FlairEmbeddings,
             character_dictionary: Dictionary,
             n_layers: int,
             tag_list: list = None,
@@ -38,7 +38,7 @@ class Lemmatization(flair.nn.Model):
     ):
         """
         :param hidden_size: number of hidden states in RNN
-        :param pre_embeddings: pre-trained embeddings
+        :param embeddings: pre-trained embeddings
         :param character_dictionary: dictionary containing all the characters in the corpus
         :param n_layers: number of RNN layers
         :param tag_list: list of tags planned to be used. Using tag can improve the accuracy of the model,
@@ -55,7 +55,7 @@ class Lemmatization(flair.nn.Model):
 
         super(Lemmatization, self).__init__()
         self.hidden_size = hidden_size
-        self.pre_embeddings = pre_embeddings.to(flair.device)
+        self.embeddings = embeddings.to(flair.device)
         self.n_layers = n_layers
         self.teacher_forcing_ratio = teacher_forcing_ratio
         self.dropout = dropout
@@ -66,24 +66,24 @@ class Lemmatization(flair.nn.Model):
         self.contextualized_embedding = contextualized_embedding
         if not contextualized_embedding:
             # Classic word embedding. Loading weights from a pre-trained word embedding model.
-            self.pre_embedding_weight = self._load_embedding_weight(self.character_dictionary, self.pre_embeddings)
-            self.embedding = nn.Embedding(len(self.character_dictionary), self.pre_embeddings.embedding_length)
-            self.embedding.weight.data.copy_(self.pre_embedding_weight)
-            self.embedding.weight.requires_grad = False
+            self.pre_embedding_weight = self._load_embedding_weight(self.character_dictionary, self.embeddings)
+            self.char_embedding = nn.Embedding(len(self.character_dictionary), self.embeddings.embedding_length)
+            self.char_embedding.weight.data.copy_(self.pre_embedding_weight)
+            self.char_embedding.weight.requires_grad = False
         else:
             # Contextualized word embedding.
-            representation = self.pre_embeddings.lm.get_representation(" ", start_token, end_token)
-            # Get the expression of the start sign in the contextualized word embedding.
+            representation = self.embeddings.lm.get_representation(" ", start_token, end_token)
+            # Get the representation of the start sign in the contextualized word embedding.
             self.start_representation = representation[:len(start_token)].detach()
         self.embedding_dropout = nn.Dropout(dropout)
 
         # TODO: LSTM model implementation
-        self.encoder = nn.GRU(self.pre_embeddings.embedding_length,
+        self.encoder = nn.GRU(self.embeddings.embedding_length,
                               hidden_size,
                               n_layers,
                               dropout=(0 if n_layers == 1 else dropout),
                               bidirectional=True)
-        self.decoder = nn.GRU(self.pre_embeddings.embedding_length,
+        self.decoder = nn.GRU(self.embeddings.embedding_length,
                               hidden_size,
                               n_layers,
                               dropout=(0 if n_layers == 1 else dropout))
@@ -97,7 +97,7 @@ class Lemmatization(flair.nn.Model):
                 self.use_tag: bool = True
                 self.tag_list = tag_list
                 self.tag_dictionary = tag_dictionary
-                self.tag_embeddings = nn.Embedding(len(self.tag_dictionary), self.pre_embeddings.embedding_length)
+                self.tag_embeddings = nn.Embedding(len(self.tag_dictionary), self.embeddings.embedding_length)
                 self.tag_embeddings.weight.data.uniform_(-1, 1)
             else:
                 self.use_tag: bool = False
@@ -164,14 +164,14 @@ class Lemmatization(flair.nn.Model):
                             if decoder_input == None:
                                 decoder_input = self.start_representation.repeat(1, len(all_seqs), 1)
                             else:
-                                decoder_input = self.pre_embeddings.lm.get_representation(list(all_seqs.values()), "", "")[-1:].detach()
+                                decoder_input = self.embeddings.lm.get_representation(list(all_seqs.values()), "", "")[-1:].detach()
                     else:
                         if decoder_input == None:
                             start_idx = self.character_dictionary.get_idx_for_item(start_token)
                             decoder_input = torch.LongTensor([[start_idx for _ in range(len(effective_data_lenght))]]).to(flair.device)
-                            decoder_input = self.embedding(decoder_input)
+                            decoder_input = self.char_embedding(decoder_input)
                         else:
-                            decoder_input = self.embedding(decoder_input)
+                            decoder_input = self.char_embedding(decoder_input)
 
                     decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_out)
                     mask_loss = self._calculate_loss(decoder_output, lemma[t], mask[t])
@@ -190,14 +190,14 @@ class Lemmatization(flair.nn.Model):
                         if decoder_input == None:
                             decoder_input = self.start_representation.repeat(1, len(all_seqs), 1)
                         else:
-                            decoder_input = self.pre_embeddings.lm.get_representation(list(all_seqs.values()), "", "")[-1:].detach()
+                            decoder_input = self.embeddings.lm.get_representation(list(all_seqs.values()), "", "")[-1:].detach()
                     else:
                         if decoder_input == None:
                             start_idx = self.character_dictionary.get_idx_for_item(start_token)
                             decoder_input = torch.LongTensor([[start_idx for _ in range(len(effective_data_lenght))]]).to(flair.device)
-                            decoder_input = self.embedding(decoder_input)
+                            decoder_input = self.char_embedding(decoder_input)
                         else:
-                            decoder_input = self.embedding(decoder_input)
+                            decoder_input = self.char_embedding(decoder_input)
 
                     decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_out)
                     mask_loss = self._calculate_loss(decoder_output, lemma[t], mask[t])
@@ -343,14 +343,14 @@ class Lemmatization(flair.nn.Model):
                 if decoder_input == None:
                     decoder_input = self.start_representation.repeat(1, len(all_seqs), 1)
                 else:
-                    decoder_input = self.pre_embeddings.lm.get_representation(list(all_seqs.values()), "", "")[-1:].detach()
+                    decoder_input = self.embeddings.lm.get_representation(list(all_seqs.values()), "", "")[-1:].detach()
             else:
                 if decoder_input == None:
                     start_idx = self.character_dictionary.get_idx_for_item(start_token)
                     decoder_input = torch.LongTensor([[start_idx for _ in range(len(effective_data_lenght))]]).to(flair.device)
-                    decoder_input = self.embedding(decoder_input)
+                    decoder_input = self.char_embedding(decoder_input)
                 else:
-                    decoder_input = self.embedding(decoder_input)
+                    decoder_input = self.char_embedding(decoder_input)
 
             decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_outputs)
 
@@ -395,14 +395,14 @@ class Lemmatization(flair.nn.Model):
                 if decoder_input == None:
                     decoder_input = self.start_representation.repeat(1, len(all_seqs), 1)
                 else:
-                    decoder_input = self.pre_embeddings.lm.get_representation(list(all_seqs.values()), "", "")[-1:].detach()
+                    decoder_input = self.embeddings.lm.get_representation(list(all_seqs.values()), "", "")[-1:].detach()
             else:
                 if decoder_input == None:
                     start_idx = self.character_dictionary.get_idx_for_item(start_token)
                     decoder_input = torch.LongTensor([[start_idx for _ in range(len(effective_data_lenght))]]).to(flair.device)
-                    decoder_input = self.embedding(decoder_input)
+                    decoder_input = self.char_embedding(decoder_input)
                 else:
-                    decoder_input = self.embedding(decoder_input)
+                    decoder_input = self.char_embedding(decoder_input)
 
             decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_outputs)
             decoder_scores, decoder_input = torch.max(decoder_output, dim=1)
@@ -433,7 +433,7 @@ class Lemmatization(flair.nn.Model):
 
         return lemmas
 
-    def predict(self, sentence: Sentence,  set_label: bool = True):
+    def predict(self, sentence: Sentence,  set_label: bool = False):
 
         # Predict the lemma of each token in the sentence
         if type(sentence) ==  Sentence:
@@ -516,7 +516,7 @@ class Lemmatization(flair.nn.Model):
 
         # If use context-sensitive word vectors. Record the position of the character in the string to obtain the word embedding of the required character
         if self.contextualized_embedding:
-            representation = self.pre_embeddings.lm.get_representation([sentence.to_original_text()], '', '').detach()
+            representation = self.embeddings.lm.get_representation([sentence.to_original_text()], '', '').detach()
             if tokens[0].start_pos == None:
                 token_pos = dict()
                 start = 0
@@ -536,7 +536,7 @@ class Lemmatization(flair.nn.Model):
             else:
                 word_seq = self._item2seq(self.character_dictionary, token.text)
                 word_seq = torch.LongTensor([word_seq]).transpose(0, 1).to(flair.device)
-                token_representation = self.embedding(word_seq)
+                token_representation = self.char_embedding(word_seq)
 
             # If you use tag, add the representation of tag to token_representation
             if self.use_tag:
@@ -550,7 +550,7 @@ class Lemmatization(flair.nn.Model):
                 token_representation = torch.cat((token_representation, tag_emb), dim=0)
 
             effective_data_lenght.append(len(token_representation))
-            pad = torch.zeros(target_lenght - len(token_representation), 1, self.pre_embeddings.embedding_length).to(flair.device)
+            pad = torch.zeros(target_lenght - len(token_representation), 1, self.embeddings.embedding_length).to(flair.device)
 
             # The first token must be the longest, so there is no need to pad.
             if embed_data == None:
@@ -605,7 +605,7 @@ class Lemmatization(flair.nn.Model):
         model_state = {
             "state_dict": self.state_dict(),
             "hidden_size": self.hidden_size,
-            "pre_embeddings": self.pre_embeddings,
+            "embeddings": self.embeddings,
             "character_dictionary": self.character_dictionary,
             "n_layers": self.n_layers,
             "tag_list": self.tag_list if "tag_list" in self.__dict__.keys() else None,
@@ -621,7 +621,7 @@ class Lemmatization(flair.nn.Model):
     def _init_model_with_state_dict(state):
         model = Lemmatization(
             hidden_size=state["hidden_size"],
-            pre_embeddings=state["pre_embeddings"],
+            embeddings=state["embeddings"],
             character_dictionary=state["character_dictionary"],
             n_layers=state["n_layers"],
             tag_list=state["tag_list"],
@@ -639,8 +639,8 @@ class Lemmatization(flair.nn.Model):
 
         model_map = {}
 
-        model_map["lemma-with-pos"] = "https://box.hu-berlin.de/seafhttp/files/41ce986d-8417-4199-b02f-ac153c17cd4b/en-lemma-with-pos.pt"
-        model_map["lemma"] = "https://box.hu-berlin.de/seafhttp/files/fa7c2935-bce4-4d6a-9f26-c92ce995660b/en-lemma-without-tag.pt"
+        model_map["lemma-with-pos"] = "https://box.hu-berlin.de/seafhttp/files/0c0fef0f-d6f5-491f-b6e0-236c05706a2e/en-lemma-with-pos.pt"
+        model_map["lemma"] = "https://box.hu-berlin.de/seafhttp/files/51a0db3a-1c42-4b76-a4f8-ec181294bd5a/en-lemma-without-tag.pt"
 
         if model_name in model_map:
             model_name = cached_path(model_map[model_name], cache_dir=Path("models") / "lemma")
