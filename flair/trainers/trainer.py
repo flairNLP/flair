@@ -661,7 +661,7 @@ class ModelTrainer:
                         and current_epoch_has_best_model_so_far
                         and not use_final_model_for_eval
                 ):
-                    print("saving best model")
+                    log.info("saving best model")
                     self.model.save(base_path / "best-model.pt")
 
                     if anneal_with_prestarts:
