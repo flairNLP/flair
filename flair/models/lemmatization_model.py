@@ -55,7 +55,7 @@ class Lemmatization(flair.nn.Model):
 
         super(Lemmatization, self).__init__()
         self.hidden_size = hidden_size
-        self.embeddings = embeddings.to(flair.device)
+        self.embeddings = embeddings
         self.n_layers = n_layers
         self.teacher_forcing_ratio = teacher_forcing_ratio
         self.dropout = dropout
@@ -64,17 +64,7 @@ class Lemmatization(flair.nn.Model):
         self.character_dictionary.add_item(end_token)
 
         self.contextualized_embedding = contextualized_embedding
-        if not contextualized_embedding:
-            # Classic word embedding. Loading weights from a pre-trained word embedding model.
-            self.pre_embedding_weight = self._load_embedding_weight(self.character_dictionary, self.embeddings)
-            self.char_embedding = nn.Embedding(len(self.character_dictionary), self.embeddings.embedding_length)
-            self.char_embedding.weight.data.copy_(self.pre_embedding_weight)
-            self.char_embedding.weight.requires_grad = False
-        else:
-            # Contextualized word embedding.
-            representation = self.embeddings.lm.get_representation(" ", start_token, end_token)
-            # Get the representation of the start sign in the contextualized word embedding.
-            self.start_representation = representation[:len(start_token)].detach()
+
         self.embedding_dropout = nn.Dropout(dropout)
 
         # TODO: LSTM model implementation
@@ -113,19 +103,31 @@ class Lemmatization(flair.nn.Model):
 
         self.to(flair.device)
 
-    def _load_embedding_weight(self, dictionary: Dictionary, pre_embedding: FlairEmbeddings):
+        if not contextualized_embedding:
+            # Classic word embedding. Loading weights from a pre-trained word embedding model.
+            self.pre_embedding_weight = self._load_embedding_weight(self.character_dictionary, self.embeddings)
+            self.char_embedding = nn.Embedding(len(self.character_dictionary), self.embeddings.embedding_length)
+            self.char_embedding.weight.data.copy_(self.pre_embedding_weight)
+            self.char_embedding.weight.requires_grad = False
+        else:
+            # Contextualized word embedding.
+            representation = self.embeddings.lm.get_representation(" ", start_token, end_token)
+            # Get the representation of the start sign in the contextualized word embedding.
+            self.start_representation = representation[:len(start_token)].detach()
+
+    def _load_embedding_weight(self, dictionary: Dictionary, embeddings: FlairEmbeddings):
         """
         According to character_dictionary, load weights from pre-trained Embedding.
         When using classical word embedding, use this method to load the weights of the embedding layer.
         """
-        embeddings = torch.zeros((len(dictionary), pre_embedding.embedding_length)).to(flair.device)
+        loaded_embeddings = torch.zeros((len(dictionary), embeddings.embedding_length)).to(flair.device)
         for i in range(0, len(dictionary)):
             sentence = Sentence(dictionary.get_item_for_index(i))
             if len(sentence) is not 0:
-                pre_embedding.embed(sentence)
-                embeddings[i] = sentence[0].embedding
+                embeddings.embed(sentence)
+                loaded_embeddings[i] = sentence[0].embedding
 
-        return embeddings
+        return loaded_embeddings
 
     def forward_loss(
             self, data_points: Union[List[Sentence], Sentence], sort=True
