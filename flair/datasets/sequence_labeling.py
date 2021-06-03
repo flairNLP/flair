@@ -330,6 +330,30 @@ class ColumnDataset(FlairDataset):
                     token.whitespace_after = False
         return token
 
+    def dfs_tree(sub_root_id: int, verb_dict, tree_dict, ignore_other_frames = True) -> [int]:
+        """
+        Traverses a syntax tree from a given point sub_root_id to its leaves, stopping when frames are hit
+        Function is used for semantic role labeling
+        :param sub_root_id: ID of (sub)root-element (everything above ignored)
+        :param verb_dict: dictionary of frames (verbs) and its IDs
+        :param tree_dict: dictionary of IDs and the depending words
+        :param ignore_other_frames: set to true if algorithm should stop when hitting other frames
+        :return: list of IDs of words within a sentence which were traversed
+        """
+        list_of_word_ids = []
+
+        # Traversing all IDs of words dependent from the current one
+        for sub_id in tree_dict[sub_root_id]:
+            # It only continues if ID is not a frame itself or the frame-ignoring is deactivated
+            if sub_id not in verb_dict or not ignore_other_frames:
+                list_of_word_ids.append(sub_id)
+
+                # Continue recursion if there are more sub-ids
+                if sub_id in tree_dict:
+                    list_of_word_ids.extend(dfs_tree(sub_root_id=sub_id, verb_dict=verb_dict, tree_dict=tree_dict, ignore_other_frames=ignore_other_frames))
+
+        return list_of_word_ids
+    
     def __line_completes_sentence(self, line: str) -> bool:
         sentence_completed = line.isspace() or line == ''
         return sentence_completed
