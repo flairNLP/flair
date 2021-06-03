@@ -2835,7 +2835,7 @@ class UP_CHINESE(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {1: "text", 9: "frame"}
+        columns = {0: "id", 1: 'text', 6: "headid", 9: 'frame'}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -2886,7 +2886,7 @@ class UP_ENGLISH(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {1: "text", 10: "frame"}
+        columns = {0: "id", 1: 'text', 6: "headid", 10: 'frame'}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -2937,7 +2937,7 @@ class UP_FRENCH(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {1: "text", 9: "frame"}
+        columns = {0: "id", 1: 'text', 6: "headid", 9: 'frame'}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -2988,7 +2988,7 @@ class UP_FINNISH(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {1: "text", 9: "frame"}
+        columns = {0: "id", 1: 'text', 6: "headid", 9: 'frame'}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -3039,7 +3039,7 @@ class UP_GERMAN(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {1: "text", 9: "frame"}
+        columns = {0: "id", 1: 'text', 6: "headid", 9: 'frame'}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -3090,7 +3090,7 @@ class UP_ITALIAN(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {1: "text", 9: "frame"}
+        columns = {0: "id", 1: 'text', 6: "headid", 9: 'frame'}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -3141,7 +3141,7 @@ class UP_SPANISH(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {1: "text", 9: "frame"}
+        columns = {0: "id", 1: 'text', 6: "headid", 9: 'frame'}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -3192,7 +3192,7 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        columns = {1: "text", 9: "frame"}
+        columns = {0: "id", 1: 'text', 6: "headid", 9: 'frame'}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
