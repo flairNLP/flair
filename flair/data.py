@@ -1452,6 +1452,10 @@ class Frame(DataPoint):
         self.frame = frame
         self.roles = roles
 
+    def to(self, device: str, pin_memory: bool = False):
+        self.frame.to(device, pin_memory)
+        for role in self.roles:
+            role.to(device, pin_memory)
 
     def __len__(self):
         return len(roles)
