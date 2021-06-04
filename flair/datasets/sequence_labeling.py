@@ -225,14 +225,47 @@ class ColumnDataset(FlairDataset):
             line = file.readline()
         return lines
 
+    #def dfs_tree(self, sub_root_id: int, verb_dict, tree_dict, ignore_other_frames = True) -> [int]:
+        """
+        Traverses a syntax tree from a given point sub_root_id to its leaves, stopping when frames are hit
+        Function is used for semantic role labeling
+        :param sub_root_id: ID of (sub)root-element (everything above ignored)
+        :param verb_dict: dictionary of frames (verbs) and its IDs
+        :param tree_dict: dictionary of IDs and the depending words
+        :param ignore_other_frames: set to true if algorithm should stop when hitting other frames
+        :return: list of IDs of words within a sentence which were traversed
+        """
+        """list_of_word_ids = []
+
+        # Traversing all IDs of words dependent from the current one
+        for sub_id in tree_dict[sub_root_id]:
+            # It only continues if ID is not a frame itself or the frame-ignoring is deactivated
+            if sub_id not in verb_dict or not ignore_other_frames:
+                list_of_word_ids.append(sub_id)
+
+                # Continue recursion if there are more sub-ids
+                if sub_id in tree_dict:
+                    list_of_word_ids.extend(self.dfs_tree(sub_root_id=sub_id, verb_dict=verb_dict, tree_dict=tree_dict, ignore_other_frames=ignore_other_frames))
+
+        return list_of_word_ids"""
+
     def _convert_lines_to_sentence(self, lines):
 
         sentence: Sentence = Sentence()
 
-        if self.is_srl:
-            tup_list = []
-            verb_dict = {}
-            frames = []
+####################################################### BEGIN LUKAS ÄNDERUNGEN
+        # If it is a semantic role labeler
+        """if self.is_srl:
+            # A couple of temporary variables needed
+            frames = []     # Final frame objects
+            frame_dict = {} # {'read.01': [('I', 'ARG0'), ...], ...}
+            verb_list = []  # ['read.01', 'accuse.01', ...]
+            verb_dict = {}  # {2: "read.01", ...}
+            tree_dict = {}  # {2: [1, 4, 22], 3: ...}
+            id_text_dict = {}   # {1: "I", 2: "read", ...}
+            role_dict = {}  #   {1: ['ARG0', '_', 'V'], 2: ...}
+            column_name_map_inv = {v: k for k, v in self.column_name_map.items()}"""
+
         for line in lines:
             # skip comments
             if self.comment_symbol is not None and line.startswith(self.comment_symbol):
@@ -252,51 +285,106 @@ class ColumnDataset(FlairDataset):
 
             # otherwise, this line is a token. parse and add to sentence
             else:
-                token = self._parse_token(line)#TODO ehemals Zeile 247
+                token = self._parse_token(line)
                 sentence.add_token(token)
             
                 # checks if its a srl problem
-                if self.is_srl:
-                    for col_ind, name in self.column_name_map.items():
-                        if name == "frame":
-                            frame_column_index = col_ind
-                        if name == "text":
-                            text_index = col_ind
-                    all_cols = (line.strip().split("\t"))
-                    word = all_cols[text_index]
-                    frame_col, *semantic_roles = all_cols[col_ind:]
+                """if self.is_srl:
+                    # Split into small columns and parse the indices of the columns
+                    columns = line.strip().split("\t")
+                    column_frame = column_name_map_inv["frame"]
+                    column_id_txt = columns[column_name_map_inv["id"]]
+                    if column_id_txt.isnumeric():
+                        column_id = int(column_id_txt)
+                    else:
+                        continue
+                    column_tree_id = int(columns[column_name_map_inv["headid"]])
+                    column_text = columns[column_name_map_inv["text"]]
 
-                    # Check if line contains at least one semantic role
-                    if any(x != "_" for x in semantic_roles):
-                        # Found the verb (frame) itself
-                        if frame_col != "_":
-                            position = semantic_roles.index("V")
-                            verb_dict[position] = frame_col
 
-                        tup = (word, frame_col, semantic_roles)
-                        tup_list.append(tup)
+                    # Find frames if existing
+                    if len(columns) > column_frame:
+                        # Ignore empty roles and add existing ones
+                        if columns[column_frame] != "_":
+                            verb_list.append(columns[column_frame])
+                            verb_dict[column_id] = columns[column_frame]
+
+                        # Build dependency trees
+                        if column_tree_id in tree_dict:
+                            tree_dict[column_tree_id].append(column_id)
+                        else:
+                            tree_dict[column_tree_id] = [column_id]
+
+                        # Build id-text dictionary
+                        id_text_dict[column_id] = column_text
+
+                        # build id-roles dictionary
+                        role_dict[column_id] = columns[int(column_frame)+1 : ]"""
         
         # check if this sentence is a document boundary
         if sentence.to_original_text() == self.document_separator_token: sentence.is_document_boundary = True
         
-        if self.is_srl:
-            temp_frame_dict = {}
-            for tup_el in tup_list:
-                for idx, sem_rol in enumerate(tup_el[2]):
-                    if sem_rol != "_" and sem_rol != "V":
-                        if verb_dict[idx] in temp_frame_dict:
-                            # TODO Change Format to fit into Frame Object (see Span)
-                            temp_frame_dict[verb_dict[idx]].append((tup_el[0], sem_rol))
-                        else:
-                            temp_frame_dict[verb_dict[idx]] = [(tup_el[0], sem_rol)]
+        """if self.is_srl:
+            # Traverses all semantic roles
+            # k = id of word, v = list of semantic roles
+            for k, v in role_dict.items():
+                # ignore words not having roles
+                if any(x != "_" for x in v):
+                    for idx, sem_rol in enumerate(v):
+                        # Ignore empty roles and verbs themselves
+                        if sem_rol != "_" and sem_rol != "V":
+                            # sem_rol = string of a role
+                            # idx = index of a verb in the role list v
+                            word_id_list = []
+                            word_id_list.append(k)
+
+                            # routine which adds all subwords of a role
+                            # depending on the question if a different frame is directly the role of another frame
+                            # the param ignore_other_frames gets altered 
+                            if k in tree_dict:
+                                sub_ids = tree_dict[k]
+                                for sub_id in sub_ids:
+                                    if sub_id not in tree_dict:
+                                        word_id_list.append(sub_id)
+                                    else:
+                                        if k in verb_dict:
+                                            word_id_list.append(sub_id)
+                                            word_id_list.extend(self.dfs_tree(sub_id, verb_dict, tree_dict, ignore_other_frames=False))
+                                        elif sub_id not in verb_dict:
+                                            word_id_list.append(sub_id)
+                                            word_id_list.extend(self.dfs_tree(sub_id, verb_dict, tree_dict))
+
+                            word_id_list = list(set(word_id_list))
+                            word_id_list.sort()
+
+                            # Adds all words of a role together
+                            whole_string = ""
+                            for word_id in word_id_list:
+                                whole_string += (id_text_dict[word_id] + " ")
+                            whole_string = whole_string.rstrip()
+
+                            if verb_list[idx] in frame_dict:
+                                frame_dict[verb_list[idx]].append((whole_string, (sem_rol)))
+                            else:
+                                frame_dict[verb_list[idx]] = [(whole_string, sem_rol)]
+
+            print("Verb-dict:\t"+str(verb_dict)+"\n")
+            print("tree dict:\t"+str(tree_dict)+"\n")
+            print("id-text dict:\t"+str(id_text_dict)+"\n")
+            print("id-roles dict:\t"+str(role_dict)+"\n")
+            print("Frames:\t"+str(frame_dict)+"\n")"""
+
+            # TODO
 
             # Build frame object and append it to frame list for that sentence
-            for frame, roles in temp_frame_dict.items():
-                frame_temp = Frame(frame, roles)
-                frames.append(frame_temp)
+            #for frame, roles in temp_frame_dict.items():
+            #    frame_temp = Frame(frame, roles)
+            #    frames.append(frame_temp)
 
             # Add frame list to sentence
-            sentence.frames = frames
+            #sentence.frames = frames
+
+####################################################### END LUKAS ÄNDERUNGEN
 
         if self.tag_to_bioes is not None:
             sentence.convert_tag_scheme(
@@ -329,30 +417,6 @@ class ColumnDataset(FlairDataset):
                 if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == '-':
                     token.whitespace_after = False
         return token
-
-    def dfs_tree(sub_root_id: int, verb_dict, tree_dict, ignore_other_frames = True) -> [int]:
-        """
-        Traverses a syntax tree from a given point sub_root_id to its leaves, stopping when frames are hit
-        Function is used for semantic role labeling
-        :param sub_root_id: ID of (sub)root-element (everything above ignored)
-        :param verb_dict: dictionary of frames (verbs) and its IDs
-        :param tree_dict: dictionary of IDs and the depending words
-        :param ignore_other_frames: set to true if algorithm should stop when hitting other frames
-        :return: list of IDs of words within a sentence which were traversed
-        """
-        list_of_word_ids = []
-
-        # Traversing all IDs of words dependent from the current one
-        for sub_id in tree_dict[sub_root_id]:
-            # It only continues if ID is not a frame itself or the frame-ignoring is deactivated
-            if sub_id not in verb_dict or not ignore_other_frames:
-                list_of_word_ids.append(sub_id)
-
-                # Continue recursion if there are more sub-ids
-                if sub_id in tree_dict:
-                    list_of_word_ids.extend(dfs_tree(sub_root_id=sub_id, verb_dict=verb_dict, tree_dict=tree_dict, ignore_other_frames=ignore_other_frames))
-
-        return list_of_word_ids
     
     def __line_completes_sentence(self, line: str) -> bool:
         sentence_completed = line.isspace() or line == ''
