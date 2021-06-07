@@ -79,12 +79,10 @@ class RelationTagger(flair.nn.Model):
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 32,
             num_workers: int = 8,
-            main_score_type: Tuple[str, str] = ("accuracy", 'f1-score'),
+            main_score_type: Tuple[str, str] = ("micro avg", 'f1-score'),
             return_predictions: bool = False
     ) -> (Result, float):
 
-        if main_score_type == ("micro avg", 'f1-score'):
-            main_score_type = ("accuracy", 'f1-score')
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
         if not isinstance(sentences, Dataset):
             sentences = SentenceDataset(sentences)
@@ -131,9 +129,8 @@ class RelationTagger(flair.nn.Model):
                     lines.append(f'{relation.print_span_text()} || Gold: {gold_tag} || Predicted: {predicted_tag}\n')
 
                     # don't add when gold and predicted tag are 'N'
-                    if not (gold_tag == predicted_tag == 'N'):
-                        y_true.append(labels.add_item(gold_tag))
-                        y_pred.append(labels.add_item(predicted_tag))
+                    y_true.append(labels.add_item(gold_tag))
+                    y_pred.append(labels.add_item(predicted_tag))
 
                 sentence.relations = sentence.remove_virtual_negative_relations()
                 lines.append('\n')
@@ -156,7 +153,7 @@ class RelationTagger(flair.nn.Model):
             label = labels.get_item_for_index(i)
             all_labels.append(label)
             all_indices.append(i)
-            if label in ('_', ''): continue
+            if label in ('_', '', 'N'): continue
             target_names.append(label)
             labels_to_report.append(i)
 
@@ -169,7 +166,7 @@ class RelationTagger(flair.nn.Model):
                                                               zero_division=1, labels=labels_to_report)
         classification_report_dict = metrics.classification_report(y_true, y_pred, digits=4,
                                                                    target_names=target_names, zero_division=0,
-                                                                   output_dict=True)
+                                                                   output_dict=True, labels=labels_to_report)
 
         # get scores
         micro_f_score = round(
@@ -191,8 +188,7 @@ class RelationTagger(flair.nn.Model):
         log_line = f"\t{accuracy_score}"
 
         result = Result(
-            main_score=classification_report_dict[main_score_type[0]][main_score_type[1]]
-            if main_score_type[0] != 'accuracy' else classification_report_dict[main_score_type[0]],
+            main_score=classification_report_dict[main_score_type[0]][main_score_type[1]],
             log_line=log_line,
             log_header=log_header,
             detailed_results=detailed_result,
@@ -283,9 +279,7 @@ class RelationTagger(flair.nn.Model):
                     dataloader.set_description(f"Inferencing on batch {batch_no}")
 
                 # batch = self._filter_empty_sentences(batch)
-                len('before', batch)
                 batch = self._filter_sentences_with_less_than_two_spans(batch)
-                len('after', batch)
                 # stop if all sentences are empty
                 if not batch:
                     continue
