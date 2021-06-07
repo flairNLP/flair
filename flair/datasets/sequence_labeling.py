@@ -276,6 +276,7 @@ class ColumnDataset(FlairDataset):
             id_text_dict = {}   # {1: "I", 2: "read", ...}
             role_dict = {}  #   {1: ['ARG0', '_', 'V'], 2: ...}
             column_name_map_inv = {v: k for k, v in self.column_name_map.items()}
+            frame_distinguisher = "<SEP>"
 
         for line in lines:
             # skip comments
@@ -334,7 +335,6 @@ class ColumnDataset(FlairDataset):
         
         # check if this sentence is a document boundary
         if sentence.to_original_text() == self.document_separator_token: sentence.is_document_boundary = True
-        
         if self.is_srl:
             # Traverses all semantic roles
             # k = id of word, v = list of semantic roles
@@ -374,13 +374,22 @@ class ColumnDataset(FlairDataset):
                                 whole_string += (id_text_dict[word_id] + " ")
                             whole_string = whole_string.rstrip()
 
-                            if verb_list[idx] in frame_dict:
-                                frame_dict[verb_list[idx]].append((whole_string, (sem_rol)))
+                            # Two different ways depending if a frame appears two times
+                            if len(verb_list) == len(set(verb_list)):
+                                if verb_list[idx] in frame_dict:
+                                    frame_dict[verb_list[idx]].append((whole_string, (sem_rol)))
+                                else:
+                                    frame_dict[verb_list[idx]] = [(whole_string, sem_rol)]
                             else:
-                                frame_dict[verb_list[idx]] = [(whole_string, sem_rol)]
+                                if (verb_list[idx]+frame_distinguisher+str(idx)) in frame_dict:
+                                    frame_dict[verb_list[idx]+frame_distinguisher+str(idx)].append((whole_string, (sem_rol)))
+                                else:
+                                    frame_dict[verb_list[idx]+frame_distinguisher+str(idx)] = [(whole_string, sem_rol)]
 
             # Build frame object and append it to frame list for that sentence
             for frame, roles in frame_dict.items():
+                if len(verb_list) != len(set(verb_list)):
+                    frame = frame.split(frame_distinguisher)[0]
                 frame_temp = Frame(frame, roles)
                 frames.append(frame_temp)
 
