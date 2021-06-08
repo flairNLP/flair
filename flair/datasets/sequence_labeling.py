@@ -38,6 +38,7 @@ class ColumnCorpus(Corpus):
             label_name_map: Dict[str, str] = None,
             banned_sentences: List[str] = None,
             autofind_splits: bool = True,
+            is_srl : bool = False,
             **corpusargs,
     ):
         """
@@ -76,6 +77,7 @@ class ColumnCorpus(Corpus):
             document_separator_token=document_separator_token,
             skip_first_line=skip_first_line,
             label_name_map=label_name_map,
+            is_srl = is_srl,
         ) if train_file is not None else None
 
         # read in test file if exists
@@ -91,6 +93,7 @@ class ColumnCorpus(Corpus):
             document_separator_token=document_separator_token,
             skip_first_line=skip_first_line,
             label_name_map=label_name_map,
+            is_srl = is_srl,
         ) if test_file is not None else None
 
         # read in dev file if exists
@@ -106,6 +109,7 @@ class ColumnCorpus(Corpus):
             document_separator_token=document_separator_token,
             skip_first_line=skip_first_line,
             label_name_map=label_name_map,
+            is_srl = is_srl,
         ) if dev_file is not None else None
 
         super(ColumnCorpus, self).__init__(train, dev, test, name=str(data_folder), **corpusargs)
@@ -2956,6 +2960,7 @@ class UP_CHINESE(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            is_srl : bool = True,
             **corpusargs,
     ):
         """
@@ -2997,6 +3002,7 @@ class UP_CHINESE(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            is_srl = True,
             **corpusargs,
         )
 
@@ -3007,6 +3013,7 @@ class UP_ENGLISH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            is_srl : bool = True,
             **corpusargs,
     ):
         """
@@ -3048,6 +3055,7 @@ class UP_ENGLISH(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            is_srl = True,
             **corpusargs,
         )
 
@@ -3058,6 +3066,7 @@ class UP_FRENCH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            is_srl : bool = True,
             **corpusargs,
     ):
         """
@@ -3099,6 +3108,7 @@ class UP_FRENCH(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            is_srl = True,
             **corpusargs,
         )
 
@@ -3109,6 +3119,7 @@ class UP_FINNISH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            is_srl : bool = True,
             **corpusargs,
     ):
         """
@@ -3150,6 +3161,7 @@ class UP_FINNISH(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            is_srl = True,
             **corpusargs,
         )
 
@@ -3160,6 +3172,7 @@ class UP_GERMAN(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            is_srl : bool = True,
             **corpusargs,
     ):
         """
@@ -3201,6 +3214,7 @@ class UP_GERMAN(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            is_srl = True,
             **corpusargs,
         )
 
@@ -3211,6 +3225,7 @@ class UP_ITALIAN(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            is_srl : bool = True,
             **corpusargs,
     ):
         """
@@ -3252,6 +3267,7 @@ class UP_ITALIAN(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            is_srl = True,
             **corpusargs,
         )
 
@@ -3262,6 +3278,7 @@ class UP_SPANISH(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            is_srl : bool = True,
             **corpusargs,
     ):
         """
@@ -3303,6 +3320,7 @@ class UP_SPANISH(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            is_srl = True,
             **corpusargs,
         )
 
@@ -3313,6 +3331,7 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             document_as_sequence: bool = False,
+            is_srl : bool = True,
             **corpusargs,
     ):
         """
@@ -3354,6 +3373,7 @@ class UP_SPANISH_ANCORA(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            is_srl = True,
             **corpusargs,
         )
 
