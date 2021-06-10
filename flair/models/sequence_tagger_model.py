@@ -1249,7 +1249,8 @@ class SequenceTagger(flair.nn.Model):
 
         return model_path
 
-    def push_to_hub(self,
+    def push_to_hub(
+        self,
         repo_name: str,
         organization: Optional[str] = None,
         private: bool = None,
@@ -1295,7 +1296,8 @@ class SequenceTagger(flair.nn.Model):
                 token,
                 path_or_fileobj=local_path,
                 path_in_repo=hf_model_name,
-                repo_id=repo_id)
+                repo_id=repo_id
+            )
             return repo_url
 
     def get_transition_matrix(self):
