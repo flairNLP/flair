@@ -1260,10 +1260,10 @@ class SequenceTagger(flair.nn.Model):
         :param organization:  Organization in which the model will be pushed (you must be a member of this organization).
         :param private: Whether the repository is private.
         :param commit_message: Message to commit while pushing.
-        :return: The url of the commit of the model in the given repository.
+        :return: The url of the repository.
         """
         # Lazy import
-        from huggingface_hub import HfApi, HfFolder, Repository
+        from huggingface_hub import HfApi, HfFolder
 
         token = HfFolder.get_token()
         if token is None:
@@ -1271,7 +1271,8 @@ class SequenceTagger(flair.nn.Model):
                 "You must login to the Hugging Face hub on this computer by typing `huggingface-cli login`."
             )
 
-        repo_url = HfApi(endpoint="https://huggingface.co").create_repo(
+        api = HfApi(endpoint="https://huggingface.co")
+        repo_url = api.create_repo(
                 token,
                 repo_name,
                 organization=organization,
@@ -1281,10 +1282,21 @@ class SequenceTagger(flair.nn.Model):
             )
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-            # Create the repo (or clone its content if it's nonempty).
-            repo = Repository(tmp_dir, clone_from=repo_url)
-            self.save(os.path.join(tmp_dir, "pytorch_model.bin"))
-            return repo.push_to_hub(commit_message=commit_message)
+            # Get repo_id (e.g. org/repo_name or user/repo_name)
+            namespace = organization
+            if not namespace:
+                namespace, _ = api.whoami(token)
+            repo_id = namespace + "/" + repo_name
+
+            hf_model_name = "pytorch_model.bin"
+            local_path = os.path.join(tmp_dir, hf_model_name)
+            self.save(local_path)
+            api.upload_file(
+                token,
+                path_or_fileobj=local_path,
+                path_in_repo=hf_model_name,
+                repo_id=repo_id)
+            return repo_url
 
     def get_transition_matrix(self):
         data = []
