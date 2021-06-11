@@ -26,6 +26,7 @@ class ParallelTextCorpus(Corpus):
             max_tokens_per_doc=-1,
             max_chars_per_doc=-1,
             in_memory: bool = True,
+            **corpusargs,
     ):
         """
         Instantiates a Corpus for text classification from CSV column formatted data
@@ -36,7 +37,6 @@ class ParallelTextCorpus(Corpus):
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
         :return: a Corpus with annotated train, dev and test data
         """
-
         train: FlairDataset = ParallelTextDataset(
             source_file,
             target_file,
@@ -46,7 +46,12 @@ class ParallelTextCorpus(Corpus):
             in_memory=in_memory,
         )
 
-        super(ParallelTextCorpus, self).__init__(train, name=name)
+        self.in_memory = in_memory
+
+        super(ParallelTextCorpus, self).__init__(train, name=name, **corpusargs)
+
+    def is_in_memory(self) -> bool:
+        return self.in_memory
 
 
 class OpusParallelCorpus(ParallelTextCorpus):
@@ -59,6 +64,7 @@ class OpusParallelCorpus(ParallelTextCorpus):
             max_tokens_per_doc=-1,
             max_chars_per_doc=-1,
             in_memory: bool = True,
+            **corpusargs,
     ):
         """
         Instantiates a Parallel Corpus from OPUS (http://opus.nlpl.eu/)
@@ -114,6 +120,7 @@ class OpusParallelCorpus(ParallelTextCorpus):
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
+            **corpusargs,
         )
 
 
@@ -200,6 +207,8 @@ class ParallelTextDataset(FlairDataset):
                 self.source_lines[index], self.target_lines[index]
             )
 
+    def is_in_memory(self) -> bool:
+        return self.in_memory
 
 class DataPairCorpus(Corpus):
     def __init__(
