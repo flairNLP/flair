@@ -1,5 +1,4 @@
 import copy
-from flair.models.relation_classifier_model import RelationClassifier
 import logging
 from pathlib import Path
 from typing import List, Union, Tuple
@@ -33,7 +32,7 @@ from flair.training_utils import (
     AnnealOnPlateau,
 )
 from torch.optim.lr_scheduler import OneCycleLR
-from flair.models import SequenceTagger, TextClassifier, RelationTagger
+from flair.models import SequenceTagger, TextClassifier, RelationClassifier
 import random
 
 log = logging.getLogger("flair")
