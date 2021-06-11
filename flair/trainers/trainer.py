@@ -1,4 +1,5 @@
 import copy
+from flair.models.relation_classifier_model import RelationClassifier
 import logging
 from pathlib import Path
 from typing import List, Union, Tuple
@@ -166,7 +167,7 @@ class ModelTrainer:
         """
 
         main_score_type = classification_main_metric if isinstance(self.model, TextClassifier)\
-                                                        or isinstance(self.model, RelationTagger) else None
+                                                        or isinstance(self.model, RelationClassifier) else None
 
         if self.use_tensorboard:
             try:

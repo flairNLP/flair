@@ -439,7 +439,7 @@ class Span(DataPoint):
     def __str__(self) -> str:
         ids = ",".join([str(t.idx) for t in self.tokens])
         label_string = " ".join([str(label) for label in self.labels])
-        labels = f'   [− Labels: {label_string}]' if self.labels is not None else ""
+        labels = f'   [− Labels: {label_string}]' if self.labels else ""
         return (
             'Span [{}]: "{}"{}'.format(ids, self.text, labels)
         )
@@ -595,7 +595,7 @@ class Sentence(DataPoint):
         # some sentences represent a document boundary (but most do not)
         self.is_document_boundary: bool = False
 
-        self.relations: List[Relation] = list()
+        self.relations: List[Relation] = []
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
@@ -1428,15 +1428,17 @@ class Corpus:
 
         log.info("Computing relation label dictionary. Progress:")
         for batch in Tqdm.tqdm(iter(loader)):
+
             for sentence in batch:
-                labels = [relation.get_labels("relation_type")[0] for relation in sentence.relations]
+
+                labels = [relation.get_labels(label_type)[0] for relation in sentence.relations]
 
                 for label in labels:
                     label_dictionary.add_item(label.value)
 
-                if not label_dictionary.multi_label:
-                    if len(labels) > 1:
-                        label_dictionary.multi_label = True
+                # if not label_dictionary.multi_label:
+                #     if len(labels) > 1:
+                #         label_dictionary.multi_label = True
 
         log.info(f"Relations in dataset: {label_dictionary.idx2item}")
 
@@ -1557,46 +1559,35 @@ def randomly_split_into_two_datasets(dataset, length_of_first):
 
 
 class Relation(DataPoint):
-    def __init__(self, first: Span, second: Span, label: Label):
+    def __init__(self, head: Span, tail: Span):
         super().__init__()
-        self.first = first
-        self.second = second
-        self.add_label("relation_type", label.value, label.score)
-        self.tags_proba_dist: List[Label] = []
+        self.head = head
+        self.tail = tail
 
     def to(self, device: str, pin_memory: bool = False):
-        self.first.to(device, pin_memory)
-        self.second.to(device, pin_memory)
+        self.head.to(device, pin_memory)
+        self.tail.to(device, pin_memory)
 
     def clear_embeddings(self, embedding_names: List[str] = None):
-        self.first.clear_embeddings(embedding_names)
-        self.second.clear_embeddings(embedding_names)
+        self.head.clear_embeddings(embedding_names)
+        self.tail.clear_embeddings(embedding_names)
 
     @property
     def embedding(self):
-        return torch.cat([self.first.embedding, self.second.embedding])
+        return torch.cat([self.head.embedding, self.tail.embedding])
 
     def __repr__(self):
-        return f"Relation:\n − First {self.first}\n − Second {self.second}\n − Labels: {self.labels}"
+        return f"Relation:\n − Head {self.head}\n − Tail {self.tail}\n − Labels: {self.labels}\n"
 
     def to_plain_string(self):
-        return f"Relation: First {self.first}  ||  Second {self.second} || Labels: {self.labels}"
+        return f"Relation: Head {self.head}  ||  Tail {self.tail} || Labels: {self.labels}\n"
 
     def print_span_text(self):
-        return f"Relation: First {self.first}  ||  Second {self.second}"
+        return f"Relation: Head {self.head}  ||  Tail {self.tail}\n"
 
     def __len__(self):
-        return len(self.first) + len(self.second)
-
-    def add_tag_label(self, tag_type: str, tag: Label):
-        self.set_label(tag_type, tag.value, tag.score)
-
-    def get_tag(self, label_type: str = "relation_type"):
-        if len(self.get_labels(label_type)) == 0: return Label('')
-        return self.get_labels(label_type)[0]
-
-    def add_tags_proba_dist(self, tags: List[Label]):
-        self.tags_proba_dist = tags
-
-    def get_tags_proba_dist(self) -> List[Label]:
-        return self.tags_proba_dist
+        return len(self.head) + len(self.tail)
+    
+    @property
+    def span_indices(self):
+        return (self.head.tokens[0].idx, self.head.tokens[-1].idx, self.tail.tokens[0].idx, self.tail.tokens[-1].idx)

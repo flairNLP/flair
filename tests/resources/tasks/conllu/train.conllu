@@ -1,0 +1,46 @@
+# text = Larry Page and Sergey Brin founded Google.
+# relations = 7;8;1;3;founded_by|7;8;4;6;founded_by
+1	Larry	B-PER
+2	Page	I-PER
+3	and	O
+4	Sergey	B-PER
+5	Brin	I-PER
+6	founded	O
+7	Google	B-ORG
+8	.	O
+
+# text = Microsoft was founded by Bill Gates.
+# relations = 1;2;5;7;founded_by
+1	Microsoft	B-ORG
+2	was	O
+3	founded	O
+4	by	O
+5	Bill	B-PER
+6	Gates	I-PER
+7	.	O
+
+# text = Konrad Zuse was born in Berlin on 22 June 1910.
+# relations = 6;7;1;3;place_of_birth
+1	Konrad	B-PER
+2	Zuse	I-PER
+3	was	O
+4	born	O
+5	in	O
+6	Berlin	B-LOC
+7	on	O
+8	22	B-DATE
+9	June	I-DATE
+10	1910	I-DATE
+11	.	O
+
+# text = Joseph Weizenbaum was born in Berlin, Germany.
+# relations = 6;7;1;3;place_of_birth
+1	Joseph	B-PER
+2	Weizenbaum	I-PER
+3	was	O
+4	born	O
+5	in	O
+6	Berlin	B-LOC
+7	,	O
+8	Germany	B-LOC
+9	.	O

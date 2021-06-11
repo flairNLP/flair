@@ -4,6 +4,7 @@ from pathlib import Path
 import flair
 import flair.datasets
 from flair.data import MultiCorpus
+from flair.datasets.relation_extraction import CoNLLUDataset
 
 
 def test_load_imdb_data(tasks_base_path):
@@ -167,3 +168,14 @@ def test_download_load_data(tasks_base_path):
 
     # clean up data directory
     shutil.rmtree(flair.cache_root / "datasets" / "ud_english")
+
+
+def test_load_conllu_data(tasks_base_path):
+    dataset = CoNLLUDataset(tasks_base_path / "conllu" / "train.conllu")
+
+    sentence1 = dataset[0]
+    print(sentence1.tokens)
+    print(sentence1.get_spans("ner"))
+    print(sentence1.relations)
+
+    assert len(dataset) == 5
