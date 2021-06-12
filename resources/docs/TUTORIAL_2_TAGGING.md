@@ -19,7 +19,7 @@ All you need to do is use the `predict()` method of the tagger on a sentence. Th
 in the sentence. Lets use a sentence with two named entities:
 
 ```python
-sentence = Sentence('George Washington went to Washington .')
+sentence = Sentence('George Washington went to Washington.')
 
 # predict NER tags
 tagger.predict(sentence)
@@ -62,7 +62,7 @@ print(sentence.to_dict(tag_type='ner'))
 
 This should print:
 ```console
-{'text': 'George Washington went to Washington .',
+{'text': 'George Washington went to Washington.',
     'entities': [
         {'text': 'George Washington', 'start_pos': 0, 'end_pos': 17, 'type': 'PER', 'confidence': 0.999},
         {'text': 'Washington', 'start_pos': 26, 'end_pos': 36, 'type': 'LOC', 'confidence': 0.998}
@@ -174,7 +174,7 @@ As indicated in the list above, we also provide pre-trained models for languages
 tagger = SequenceTagger.load('de-ner')
 
 # make German sentence
-sentence = Sentence('George Washington ging nach Washington .')
+sentence = Sentence('George Washington ging nach Washington.')
 
 # predict NER tags
 tagger.predict(sentence)
@@ -198,7 +198,7 @@ If you have text in many languages (such as English and German), you can use our
 tagger = SequenceTagger.load('pos-multi')
 
 # text with English and German sentences
-sentence = Sentence('George Washington went to Washington . Dort kaufte er einen Hut .')
+sentence = Sentence('George Washington went to Washington. Dort kaufte er einen Hut.')
 
 # predict PoS tags
 tagger.predict(sentence)
@@ -229,8 +229,8 @@ Here's an example:
 tagger = SequenceTagger.load('frame')
 
 # make English sentence
-sentence_1 = Sentence('George returned to Berlin to return his hat .')
-sentence_2 = Sentence('He had a look at different hats .')
+sentence_1 = Sentence('George returned to Berlin to return his hat.')
+sentence_2 = Sentence('He had a look at different hats.')
 
 # predict NER tags
 tagger.predict(sentence_1)
@@ -308,7 +308,7 @@ the sentence. Lets use a sentence with positive sentiment:
 classifier = TextClassifier.load('sentiment')
 
 # predict for example sentence
-sentence = Sentence("enormously entertaining for moviegoers of any age .")
+sentence = Sentence("enormously entertaining for moviegoers of any age.")
 classifier.predict(sentence)
 
 # check prediction
@@ -317,7 +317,7 @@ print(sentence)
 
 This should print:
 ```console
-Sentence: "enormously entertaining for moviegoers of any age ."   [− Tokens: 8  − Sentence-Labels: {'class': [POSITIVE (0.9976)]}]
+Sentence: "enormously entertaining for moviegoers of any age."   [− Tokens: 8  − Sentence-Labels: {'class': [POSITIVE (0.9976)]}]
 ```
 
 The label POSITIVE is added to the sentence, indicating that this sentence has positive sentiment.
