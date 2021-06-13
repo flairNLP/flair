@@ -149,8 +149,9 @@ class Lemmatization(flair.nn.Model):
             # Using a contextualized word embedding model, it is necessary to generate a representation for the current moment
             # based on the previously predicted results and context. The dictionary all_seqs is used to store the previous prediction results.
             if self.contextualized_embedding:
+                batch_size = len(effective_data_lenght)
                 all_seqs = dict()
-                for i in range(len(effective_data_lenght)):
+                for i in range(batch_size):
                     all_seqs[i] = ""
             else:
                 all_seqs = None
@@ -162,7 +163,7 @@ class Lemmatization(flair.nn.Model):
             decoder_input = None
             if use_teacher_forcing:
                 for t in range(max_lemma_lenght):
-                    decoder_input = self._generate_decoder_input(decoder_input, all_seqs, effective_data_lenght)
+                    decoder_input = self._generate_decoder_input(decoder_input, all_seqs, batch_size)
                     decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_out)
                     mask_loss = self._calculate_loss(decoder_output, lemma[t], mask[t])
                     loss += mask_loss
@@ -171,12 +172,12 @@ class Lemmatization(flair.nn.Model):
 
                     # Using contextualized word embeddings requires recording the prediction results at each moment to generate word vectors.
                     if self.contextualized_embedding:
-                        for i in range(len(effective_data_lenght)):
+                        for i in range(batch_size):
                             all_seqs[i] += self.character_dictionary.get_item_for_index(decoder_input[0][i])
 
             else:
                 for t in range(max_lemma_lenght):
-                    decoder_input = self._generate_decoder_input(decoder_input, all_seqs, effective_data_lenght)
+                    decoder_input = self._generate_decoder_input(decoder_input, all_seqs, batch_size)
                     decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_out)
                     mask_loss = self._calculate_loss(decoder_output, lemma[t], mask[t])
                     loss += mask_loss
@@ -184,10 +185,10 @@ class Lemmatization(flair.nn.Model):
                     # Use the value with the highest probability as the predicted value, i.e. the input for the next moment.
                     _, topi = decoder_output.topk(1)
 
-                    decoder_input = torch.LongTensor([[topi[i][0] for i in range(len(effective_data_lenght))]]).to(flair.device)
+                    decoder_input = torch.LongTensor([[topi[i][0] for i in range(batch_size)]]).to(flair.device)
 
                     if self.contextualized_embedding:
-                        for i in range(len(effective_data_lenght)):
+                        for i in range(batch_size):
                             all_seqs[i] += self.character_dictionary.get_item_for_index(decoder_input[0][i])
 
 
@@ -240,7 +241,7 @@ class Lemmatization(flair.nn.Model):
 
         return loss
 
-    def _generate_decoder_input(self, decoder_input, all_seqs, effective_data_lenght):
+    def _generate_decoder_input(self, decoder_input, all_seqs, batch_size):
         if self.contextualized_embedding:
             if decoder_input is None:
                 decoder_input = self.start_representation.repeat(1, len(all_seqs), 1)
@@ -249,7 +250,7 @@ class Lemmatization(flair.nn.Model):
         else:
             if decoder_input is None:
                 start_idx = self.character_dictionary.get_idx_for_item(start_token)
-                decoder_input = torch.LongTensor([[start_idx for _ in range(len(effective_data_lenght))]]).to(
+                decoder_input = torch.LongTensor([[start_idx for _ in range(batch_size)]]).to(
                     flair.device)
                 decoder_input = self.char_embedding(decoder_input)
             else:
@@ -295,8 +296,6 @@ class Lemmatization(flair.nn.Model):
             for i in range(0, len(y_pred)):
                 if y_true[i] == y_pred[i]:
                     metric.add_tp(y_true[i])
-                elif '<unk>' in y_pred[i]:
-                    metric.add_fn(y_true[i])
                 else:
                     metric.add_fp(y_true[i])
 
@@ -308,8 +307,8 @@ class Lemmatization(flair.nn.Model):
 
             result = Result(
                 main_score=metric.accuracy(),
-                log_line=f"{metric.precision():.4f}\t{metric.recall():.4f}\t{metric.micro_avg_f_score():.4f}",
-                log_header="PRECISION\tRECALL\tF1",
+                log_line=f"{metric.accuracy():.4f}",
+                log_header="Accuracy",
                 detailed_results=detailed_result,
             )
 
@@ -327,15 +326,16 @@ class Lemmatization(flair.nn.Model):
         decoder_hidden = encoder_hidden[:self.n_layers]
 
         if self.contextualized_embedding:
+            batch_size = len(effective_data_lenght)
             all_seqs = dict()
-            for i in range(len(effective_data_lenght)):
+            for i in range(batch_size):
                 all_seqs[i] = ""
         else:
             all_seqs = None
         decoder_input = None
 
         for t in range(max_lemma_lenght):
-            decoder_input = self._generate_decoder_input(decoder_input, all_seqs, effective_data_lenght)
+            decoder_input = self._generate_decoder_input(decoder_input, all_seqs, batch_size)
             decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_outputs)
 
             # Take the predicted value with the highest probability as the input for the next moment
@@ -343,10 +343,10 @@ class Lemmatization(flair.nn.Model):
 
             mask_loss = self._calculate_loss(decoder_output, lemma[t], mask[t])
             loss += mask_loss
-            decoder_input = torch.LongTensor([[topi[i][0] for i in range(len(effective_data_lenght))]]).to(flair.device)
+            decoder_input = torch.LongTensor([[topi[i][0] for i in range(batch_size)]]).to(flair.device)
 
             if self.contextualized_embedding:
-                for i in range(len(effective_data_lenght)):
+                for i in range(batch_size):
                     all_seqs[i] += self.character_dictionary.get_item_for_index(decoder_input[0][i])
 
         return loss
@@ -365,23 +365,24 @@ class Lemmatization(flair.nn.Model):
         encoder_outputs, encoder_hidden = self._encode(encoder_input, effective_data_lenght)
         decoder_hidden = encoder_hidden[:self.n_layers]
 
+        batch_size = len(effective_data_lenght)
         end_idx = self.character_dictionary.get_idx_for_item(end_token)
 
         # Use all_seqs dictionary to save the results
         all_seqs = dict()
-        for i in range(len(effective_data_lenght)):
+        for i in range(batch_size):
             all_seqs[i] = ""
 
         decoder_input = None
         for t in range(self.longest_word_length):
             all_seq_is_end = True
-            decoder_input = self._generate_decoder_input(decoder_input, all_seqs, effective_data_lenght)
+            decoder_input = self._generate_decoder_input(decoder_input, all_seqs, batch_size)
             decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_outputs)
             decoder_scores, decoder_input = torch.max(decoder_output, dim=1)
 
             decoder_input = torch.unsqueeze(decoder_input, 0)
 
-            for i in range(len(effective_data_lenght)):
+            for i in range(batch_size):
                 all_seqs[i] += self.character_dictionary.get_item_for_index(decoder_input[0][i])
                 # If there is a value that is not a end_token in the result, the prediction will continue
                 if decoder_input[0][i] != end_idx:
@@ -409,24 +410,24 @@ class Lemmatization(flair.nn.Model):
 
         # Predict the lemma of each token in the sentence
         if type(sentence) == Sentence:
+            with torch.no_grad():
+                pre_lemmas = self._eval_predict(sentence)
 
-            pre_lemmas = self._eval_predict(sentence)
+                # The order of the predicted results obtained by our prediction function is sorted, so we need to sort
+                # the tokens in the sentence to match the predicted value
+                tokens = sentence.tokens[:]
+                tokens.sort(key=lambda x: len(x.text), reverse=True)
 
-            # The order of the predicted results obtained by our prediction function is sorted, so we need to sort
-            # the tokens in the sentence to match the predicted value
-            tokens = sentence.tokens[:]
-            tokens.sort(key=lambda x: len(x.text), reverse=True)
+                # The lemmas list stores lemmas in the order of the tokens in the original sentence
+                lemmas = []
+                for _ in range(len(sentence)):
+                    lemmas.append("")
+                # Use the idx of the token to match the order of the token in the original sentence
+                for i in range(len(tokens)):
+                    if set_label:
+                        sentence[tokens[i].idx - 1].set_label("lemma", pre_lemmas[i])
 
-            # The lemmas list stores lemmas in the order of the tokens in the original sentence
-            lemmas = []
-            for _ in range(len(sentence)):
-                lemmas.append("")
-            # Use the idx of the token to match the order of the token in the original sentence
-            for i in range(len(tokens)):
-                if set_label:
-                    sentence[tokens[i].idx - 1].set_label("lemma", pre_lemmas[i])
-
-                lemmas[tokens[i].idx - 1] = pre_lemmas[i]
+                    lemmas[tokens[i].idx - 1] = pre_lemmas[i]
 
             return lemmas
         else:
