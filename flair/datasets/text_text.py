@@ -26,6 +26,7 @@ class ParallelTextCorpus(Corpus):
             max_tokens_per_doc=-1,
             max_chars_per_doc=-1,
             in_memory: bool = True,
+            **corpusargs,
     ):
         """
         Instantiates a Corpus for text classification from CSV column formatted data
@@ -36,7 +37,6 @@ class ParallelTextCorpus(Corpus):
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
         :return: a Corpus with annotated train, dev and test data
         """
-
         train: FlairDataset = ParallelTextDataset(
             source_file,
             target_file,
@@ -46,7 +46,12 @@ class ParallelTextCorpus(Corpus):
             in_memory=in_memory,
         )
 
-        super(ParallelTextCorpus, self).__init__(train, name=name)
+        self.in_memory = in_memory
+
+        super(ParallelTextCorpus, self).__init__(train, name=name, **corpusargs)
+
+    def is_in_memory(self) -> bool:
+        return self.in_memory
 
 
 class OpusParallelCorpus(ParallelTextCorpus):
@@ -59,6 +64,7 @@ class OpusParallelCorpus(ParallelTextCorpus):
             max_tokens_per_doc=-1,
             max_chars_per_doc=-1,
             in_memory: bool = True,
+            **corpusargs,
     ):
         """
         Instantiates a Parallel Corpus from OPUS (http://opus.nlpl.eu/)
@@ -75,7 +81,7 @@ class OpusParallelCorpus(ParallelTextCorpus):
             l1, l2 = l2, l1
 
         # check if dataset is supported
-        supported_datasets = ["tatoeba"]
+        supported_datasets = ["tatoeba", "subtitles"]
         if dataset not in supported_datasets:
             log.error(f"Dataset must be one of: {supported_datasets}")
 
@@ -83,27 +89,20 @@ class OpusParallelCorpus(ParallelTextCorpus):
         if dataset == "tatoeba":
             link = f"https://object.pouta.csc.fi/OPUS-Tatoeba/v20190709/moses/{l1}-{l2}.txt.zip"
 
-            l1_file = (
-                    flair.cache_root
-                    / "datasets"
-                    / dataset
-                    / f"{l1}-{l2}"
-                    / f"Tatoeba.{l1}-{l2}.{l1}"
-            )
-            l2_file = (
-                    flair.cache_root
-                    / "datasets"
-                    / dataset
-                    / f"{l1}-{l2}"
-                    / f"Tatoeba.{l1}-{l2}.{l2}"
-            )
+            l1_file = (flair.cache_root / "datasets" / dataset / f"{l1}-{l2}" / f"Tatoeba.{l1}-{l2}.{l1}")
+            l2_file = (flair.cache_root / "datasets" / dataset / f"{l1}-{l2}" / f"Tatoeba.{l1}-{l2}.{l2}")
+
+        # set file names
+        if dataset == "subtitles":
+            link = f"https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2018/moses/{l1}-{l2}.txt.zip"
+
+            l1_file = (flair.cache_root / "datasets" / dataset / f"{l1}-{l2}" / f"OpenSubtitles.{l1}-{l2}.{l1}")
+            l2_file = (flair.cache_root / "datasets" / dataset / f"{l1}-{l2}" / f"OpenSubtitles.{l1}-{l2}.{l2}")
 
         # download and unzip in file structure if necessary
         if not l1_file.exists():
             path = cached_path(link, Path("datasets") / dataset / f"{l1}-{l2}")
-            unzip_file(
-                path, flair.cache_root / Path("datasets") / dataset / f"{l1}-{l2}"
-            )
+            unzip_file(path, flair.cache_root / Path("datasets") / dataset / f"{l1}-{l2}")
 
         # instantiate corpus
         super(OpusParallelCorpus, self).__init__(
@@ -114,6 +113,7 @@ class OpusParallelCorpus(ParallelTextCorpus):
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
+            **corpusargs,
         )
 
 
@@ -199,6 +199,9 @@ class ParallelTextDataset(FlairDataset):
             return self._make_bi_sentence(
                 self.source_lines[index], self.target_lines[index]
             )
+
+    def is_in_memory(self) -> bool:
+        return self.in_memory
 
 
 class DataPairCorpus(Corpus):
