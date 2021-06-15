@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 from typing import List, Union
 import random
+import gdown
 
 import torch
 import torch.nn as nn
@@ -14,6 +15,7 @@ from flair.datasets import SentenceDataset, DataLoader
 from flair.embeddings import FlairEmbeddings
 from flair.training_utils import Metric, Result
 from flair.file_utils import cached_path
+
 
 log = logging.getLogger("flair")
 
@@ -610,11 +612,19 @@ class Lemmatization(flair.nn.Model):
     @staticmethod
     def _fetch_model(model_name) -> str:
 
-        model_map = {
-            "lemma": "https://box.hu-berlin.de/seafhttp/files/dcc0676a-d55f-4f48-b555-5e92bc82668b/en-lemma-without-tag.pt",
-            "lemma-with-pos": "https://box.hu-berlin.de/seafhttp/files/ed33a77b-25cb-414e-b4fa-e237d9da3d89/en-lemma-with-pos.pt"}
+        google_drive_url = {
+            "multi": "https://drive.google.com/uc?id=1b1gHiOsqu2bovHlO0MZAeB8NWNNR88CJ",
+            "multi-with-pos": "https://drive.google.com/uc?id=1svkCI1HRGK-rD8AAWgNphGunNA62UEEv"}
 
-        if model_name in model_map:
-            model_name = cached_path(model_map[model_name], cache_dir=Path("models") / "lemma")
+        if model_name in google_drive_url:
+            output = str(flair.cache_root) + "/models/lemma/"
+            model_path = gdown.download(google_drive_url[model_name], output, quiet=False)
 
-        return model_name
+        # model_map = {
+        #     "lemma": "https://box.hu-berlin.de/seafhttp/files/dcc0676a-d55f-4f48-b555-5e92bc82668b/en-lemma-without-tag.pt",
+        #     "lemma-with-pos": "https://box.hu-berlin.de/seafhttp/files/ed33a77b-25cb-414e-b4fa-e237d9da3d89/en-lemma-with-pos.pt"}
+        #
+        # if model_name in model_map:
+        #     model_path = cached_path(model_map[model_name], cache_dir=Path("models") / "lemma")
+
+        return model_path
