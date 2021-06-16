@@ -1,3 +1,4 @@
+# global.columns = id form ner misc
 # text = Larry Page and Sergey Brin founded Google.
 # relations = 7;7;1;2;founded_by|7;7;4;5;founded_by
 1	Larry	B-PER	_

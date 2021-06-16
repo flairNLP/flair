@@ -13,9 +13,9 @@ from flair.datasets.relation_extraction import CoNLLUCorpus
 def test_train_load_use_classifier(results_base_path, tasks_base_path):
     corpus = CoNLLUCorpus(
         data_folder=tasks_base_path / "conllu",
-        train_file="train.conllu",
-        dev_file="train.conllu",
-        test_file="train.conllu",
+        train_file="train.conllup",
+        dev_file="train.conllup",
+        test_file="train.conllup",
     )
 
     relation_label_dict = corpus.make_relation_label_dictionary(label_type="label")

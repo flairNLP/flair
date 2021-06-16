@@ -23,15 +23,13 @@ log = logging.getLogger("flair")
 
 
 class MLP(nn.Module):
-    """ Very simple multi-layer perceptron (also called FFN)"""
+    """Very simple multi-layer perceptron (also called FFN)"""
 
     def __init__(self, input_dim, hidden_dim, output_dim, num_layers):
         super().__init__()
         self.num_layers = num_layers
         h = [hidden_dim] * (num_layers - 1)
-        self.layers = nn.ModuleList(
-            nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim])
-        )
+        self.layers = nn.ModuleList(nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim]))
 
     def forward(self, x):
         for i, layer in enumerate(self.layers):
@@ -48,16 +46,16 @@ class RelationClassifier(flair.nn.Model):
     """
 
     def __init__(
-            self,
-            hidden_size: int,
-            token_embeddings: flair.embeddings.TokenEmbeddings,
-            label_dictionary: Dictionary,
-            label_type: str = None,
-            span_label_type: str = None,
-            multi_label: bool = None,
-            multi_label_threshold: float = 0.5,
-            beta: float = 1.0,
-            loss_weights: Dict[str, float] = None,
+        self,
+        hidden_size: int,
+        token_embeddings: flair.embeddings.TokenEmbeddings,
+        label_dictionary: Dictionary,
+        label_type: str = None,
+        span_label_type: str = None,
+        multi_label: bool = None,
+        multi_label_threshold: float = 0.5,
+        beta: float = 1.0,
+        loss_weights: Dict[str, float] = None,
     ):
         """
         Initializes a RelationClassifier
@@ -92,7 +90,7 @@ class RelationClassifier(flair.nn.Model):
         # Initialize the weight tensor
         if loss_weights is not None:
             n_classes = len(self.label_dictionary)
-            weight_list = [1. for i in range(n_classes)]
+            weight_list = [1.0 for i in range(n_classes)]
             for i, tag in enumerate(self.label_dictionary.get_items()):
                 if tag in loss_weights.keys():
                     weight_list[i] = loss_weights[tag]
@@ -100,12 +98,20 @@ class RelationClassifier(flair.nn.Model):
         else:
             self.loss_weights = None
 
-        self.head_mlp = MLP(self.token_embeddings.embedding_length, hidden_dim=self.hidden_size, output_dim=self.hidden_size, num_layers=2)
-        self.tail_mlp = MLP(self.token_embeddings.embedding_length, hidden_dim=self.hidden_size, output_dim=self.hidden_size, num_layers=2)
-
-        self.decoder = nn.Linear(
-            2*self.hidden_size, len(self.label_dictionary)
+        self.head_mlp = MLP(
+            self.token_embeddings.embedding_length,
+            hidden_dim=self.hidden_size,
+            output_dim=self.hidden_size,
+            num_layers=2,
         )
+        self.tail_mlp = MLP(
+            self.token_embeddings.embedding_length,
+            hidden_dim=self.hidden_size,
+            output_dim=self.hidden_size,
+            num_layers=2,
+        )
+
+        self.decoder = nn.Linear(2 * self.hidden_size, len(self.label_dictionary))
 
         nn.init.xavier_uniform_(self.decoder.weight)
 
@@ -133,10 +139,16 @@ class RelationClassifier(flair.nn.Model):
             span_embeddings = torch.cat(span_embeddings, dim=0)  # [num_rels_i x emb_dim]
 
             num_rels = span_embeddings.shape[0]
-            head_embeddings = self.head_mlp(span_embeddings).unsqueeze(1).expand(num_rels, num_rels, self.hidden_size)  # [num_rels_i x num_rels_i x hidden_size]
-            tail_embeddings = self.tail_mlp(span_embeddings).unsqueeze(0).expand(num_rels, num_rels, self.hidden_size)  # [num_rels_i x num_rels_i x hidden_size]
+            head_embeddings = (
+                self.head_mlp(span_embeddings).unsqueeze(1).expand(num_rels, num_rels, self.hidden_size)
+            )  # [num_rels_i x num_rels_i x hidden_size]
+            tail_embeddings = (
+                self.tail_mlp(span_embeddings).unsqueeze(0).expand(num_rels, num_rels, self.hidden_size)
+            )  # [num_rels_i x num_rels_i x hidden_size]
 
-            head_tail_pairs = torch.cat([head_embeddings, tail_embeddings], dim=-1)  # [num_rels_i x num_rels_i x 2*hidden_size]
+            head_tail_pairs = torch.cat(
+                [head_embeddings, tail_embeddings], dim=-1
+            )  # [num_rels_i x num_rels_i x 2*hidden_size]
 
             sentence_relation_scores = self.decoder(head_tail_pairs)  # [num_rels_i x num_rels_i x num_labels]
 
@@ -179,24 +191,20 @@ class RelationClassifier(flair.nn.Model):
         model.load_state_dict(state["state_dict"])
         return model
 
-    def forward_loss(
-            self, data_points: Union[List[Sentence], Sentence]
-    ) -> torch.tensor:
+    def forward_loss(self, data_points: Union[List[Sentence], Sentence]) -> torch.tensor:
 
         scores = self.forward(data_points)
 
         return self._calculate_loss(scores, data_points)
 
     def _calculate_loss(self, scores, data_points):
-        labels = self._labels_to_one_hot(data_points) if self.multi_label \
-            else self._labels_to_indices(data_points)
+        labels = self._labels_to_one_hot(data_points) if self.multi_label else self._labels_to_indices(data_points)
 
         scores_flattened = torch.cat([s.view(-1, len(self.label_dictionary)) for s in scores], dim=0)
 
         return self.loss_function(scores_flattened, labels)
 
-    def _forward_scores_and_loss(
-            self, data_points: Union[List[Sentence], Sentence], return_loss=False):
+    def _forward_scores_and_loss(self, data_points: Union[List[Sentence], Sentence], return_loss=False):
         scores = self.forward(data_points)
 
         loss = None
@@ -206,14 +214,14 @@ class RelationClassifier(flair.nn.Model):
         return scores, loss
 
     def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            mini_batch_size: int = 32,
-            multi_class_prob: bool = False,
-            verbose: bool = False,
-            label_name: Optional[str] = None,
-            return_loss=False,
-            embedding_storage_mode="none",
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size: int = 32,
+        multi_class_prob: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=False,
+        embedding_storage_mode="none",
     ):
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
@@ -228,7 +236,7 @@ class RelationClassifier(flair.nn.Model):
         'gpu' to store embeddings in GPU memory.
         """
         if label_name is None:
-            label_name = self.label_type if self.label_type is not None else 'label'
+            label_name = self.label_type if self.label_type is not None else "label"
 
         with torch.no_grad():
             if not sentences:
@@ -244,17 +252,11 @@ class RelationClassifier(flair.nn.Model):
                 return sentences
 
             # reverse sort all sequences by their length
-            rev_order_len_index = sorted(
-                range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True
-            )
+            rev_order_len_index = sorted(range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True)
 
-            reordered_sentences: List[Union[DataPoint, str]] = [
-                sentences[index] for index in rev_order_len_index
-            ]
+            reordered_sentences: List[Union[DataPoint, str]] = [sentences[index] for index in rev_order_len_index]
 
-            dataloader = DataLoader(
-                dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size
-            )
+            dataloader = DataLoader(dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size)
             # progress bar for verbosity
             if verbose:
                 dataloader = tqdm(dataloader)
@@ -273,7 +275,12 @@ class RelationClassifier(flair.nn.Model):
                         for j in range(len(spans)):
                             head = spans[i]
                             tail = spans[j]
-                            span_indices = (head.tokens[0].idx, head.tokens[-1].idx, tail.tokens[0].idx, tail.tokens[-1].idx)
+                            span_indices = (
+                                head.tokens[0].idx,
+                                head.tokens[-1].idx,
+                                tail.tokens[0].idx,
+                                tail.tokens[-1].idx,
+                            )
 
                             if span_indices in relation_dict:
                                 relation = relation_dict[span_indices]
@@ -317,16 +324,15 @@ class RelationClassifier(flair.nn.Model):
                 return overall_loss / batch_no
 
     def evaluate(
-            self,
-            sentences: Union[List[DataPoint], Dataset],
-            out_path: Union[str, Path] = None,
-            embedding_storage_mode: str = "none",
-            mini_batch_size: int = 32,
-            num_workers: int = 8,
-            main_score_type: Tuple[str, str]=("micro avg", 'f1-score'),
-            return_predictions: bool = False
+        self,
+        sentences: Union[List[DataPoint], Dataset],
+        out_path: Union[str, Path] = None,
+        embedding_storage_mode: str = "none",
+        mini_batch_size: int = 32,
+        num_workers: int = 8,
+        main_score_type: Tuple[str, str] = ("micro avg", "f1-score"),
+        return_predictions: bool = False,
     ) -> (Result, float):
-
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
         if not isinstance(sentences, Dataset):
@@ -347,22 +353,28 @@ class RelationClassifier(flair.nn.Model):
                 batch_count += 1
 
                 # remove previously predicted labels
-                [relation.remove_labels('predicted') for sentence in batch for relation in sentence.relations]
+                [relation.remove_labels("predicted") for sentence in batch for relation in sentence.relations]
 
                 # predict for batch
-                loss = self.predict(batch,
-                                    embedding_storage_mode=embedding_storage_mode,
-                                    mini_batch_size=mini_batch_size,
-                                    label_name='predicted',
-                                    return_loss=True)
+                loss = self.predict(
+                    batch,
+                    embedding_storage_mode=embedding_storage_mode,
+                    mini_batch_size=mini_batch_size,
+                    label_name="predicted",
+                    return_loss=True,
+                )
 
                 eval_loss += loss
 
                 # get the gold labels
-                true_values_for_batch = [relation.get_labels(self.label_type) for sentence in batch for relation in sentence.relations]
+                true_values_for_batch = [
+                    relation.get_labels(self.label_type) for sentence in batch for relation in sentence.relations
+                ]
 
                 # get the predicted labels
-                predictions = [relation.get_labels('predicted') for sentence in batch for relation in sentence.relations]
+                predictions = [
+                    relation.get_labels("predicted") for sentence in batch for relation in sentence.relations
+                ]
 
                 # for sentence, prediction, true_value in zip(
                 #         sentences_for_batch,
@@ -374,10 +386,7 @@ class RelationClassifier(flair.nn.Model):
                 #     )
                 #     lines.append(eval_line)
 
-
-                for predictions_for_sentence, true_values_for_sentence in zip(
-                        predictions, true_values_for_batch
-                ):
+                for predictions_for_sentence, true_values_for_sentence in zip(predictions, true_values_for_batch):
 
                     true_values_for_sentence = [label.value for label in true_values_for_sentence]
                     predictions_for_sentence = [label.value for label in predictions_for_sentence]
@@ -406,7 +415,7 @@ class RelationClassifier(flair.nn.Model):
             if not return_predictions:
                 for sentence in sentences:
                     for relation in sentence.relations:
-                        relation.annotation_layers['predicted'] = []
+                        relation.annotation_layers["predicted"] = []
 
             if out_path is not None:
                 with open(out_path, "w", encoding="utf-8") as outfile:
@@ -417,26 +426,30 @@ class RelationClassifier(flair.nn.Model):
             for i in range(len(self.label_dictionary)):
                 target_names.append(self.label_dictionary.get_item_for_index(i))
 
-            classification_report = metrics.classification_report(y_true, y_pred, digits=4,
-                                                                  target_names=target_names, zero_division=0)
-            classification_report_dict = metrics.classification_report(y_true, y_pred, digits=4,
-                                                                       target_names=target_names, zero_division=0, output_dict=True)
+            classification_report = metrics.classification_report(
+                y_true, y_pred, digits=4, target_names=target_names, zero_division=0
+            )
+            classification_report_dict = metrics.classification_report(
+                y_true, y_pred, digits=4, target_names=target_names, zero_division=0, output_dict=True
+            )
 
             # get scores
-            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0),
-                                  4)
+            micro_f_score = round(
+                metrics.fbeta_score(y_true, y_pred, beta=self.beta, average="micro", zero_division=0), 4
+            )
             accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
-            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro', zero_division=0),
-                                  4)
-            precision_score = round(metrics.precision_score(y_true, y_pred, average='macro', zero_division=0), 4)
-            recall_score = round(metrics.recall_score(y_true, y_pred, average='macro', zero_division=0), 4)
+            macro_f_score = round(
+                metrics.fbeta_score(y_true, y_pred, beta=self.beta, average="macro", zero_division=0), 4
+            )
+            precision_score = round(metrics.precision_score(y_true, y_pred, average="macro", zero_division=0), 4)
+            recall_score = round(metrics.recall_score(y_true, y_pred, average="macro", zero_division=0), 4)
 
             detailed_result = (
-                    "\nResults:"
-                    f"\n- F-score (micro) {micro_f_score}"
-                    f"\n- F-score (macro) {macro_f_score}"
-                    f"\n- Accuracy {accuracy_score}"
-                    '\n\nBy class:\n' + classification_report
+                "\nResults:"
+                f"\n- F-score (micro) {micro_f_score}"
+                f"\n- F-score (macro) {macro_f_score}"
+                f"\n- Accuracy {accuracy_score}"
+                "\n\nBy class:\n" + classification_report
             )
 
             # line for log file
@@ -445,17 +458,14 @@ class RelationClassifier(flair.nn.Model):
                 log_line = f"\t{accuracy_score}"
             else:
                 log_header = "PRECISION\tRECALL\tF1\tACCURACY"
-                log_line = f"{precision_score}\t" \
-                           f"{recall_score}\t" \
-                           f"{macro_f_score}\t" \
-                           f"{accuracy_score}"
+                log_line = f"{precision_score}\t" f"{recall_score}\t" f"{macro_f_score}\t" f"{accuracy_score}"
 
             result = Result(
                 main_score=classification_report_dict[main_score_type[0]][main_score_type[1]],
                 log_line=log_line,
                 log_header=log_header,
                 detailed_results=detailed_result,
-                classification_report=classification_report_dict
+                classification_report=classification_report_dict,
             )
 
             eval_loss /= batch_count
@@ -466,16 +476,10 @@ class RelationClassifier(flair.nn.Model):
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
         filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
         if len(sentences) != len(filtered_sentences):
-            log.warning(
-                "Ignore {} sentence(s) with no tokens.".format(
-                    len(sentences) - len(filtered_sentences)
-                )
-            )
+            log.warning("Ignore {} sentence(s) with no tokens.".format(len(sentences) - len(filtered_sentences)))
         return filtered_sentences
 
-    def _obtain_labels(
-            self, scores: List[List[float]], predict_prob: bool = False
-    ) -> List[List[Label]]:
+    def _obtain_labels(self, scores: List[List[float]], predict_prob: bool = False) -> List[List[Label]]:
         """
         Predicts the labels of sentences.
         :param scores: the prediction scores from the model
@@ -504,7 +508,7 @@ class RelationClassifier(flair.nn.Model):
 
     def _get_single_label(self, label_scores) -> List[Label]:
         num_relations = label_scores.shape[0]
-        softmax = torch.nn.functional.softmax(label_scores.view(num_relations*num_relations, -1), dim=-1)
+        softmax = torch.nn.functional.softmax(label_scores.view(num_relations * num_relations, -1), dim=-1)
         conf, idx = torch.max(softmax, dim=-1)
 
         labels = []
@@ -569,7 +573,9 @@ class RelationClassifier(flair.nn.Model):
         return model_name
 
     def __str__(self):
-        return super(flair.nn.Model, self).__str__().rstrip(')') + \
-               f'  (beta): {self.beta}\n' + \
-               f'  (weights): {self.weight_dict}\n' + \
-               f'  (weight_tensor) {self.loss_weights}\n)'
+        return (
+            super(flair.nn.Model, self).__str__().rstrip(")")
+            + f"  (beta): {self.beta}\n"
+            + f"  (weights): {self.weight_dict}\n"
+            + f"  (weight_tensor) {self.loss_weights}\n)"
+        )

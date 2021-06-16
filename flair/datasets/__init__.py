@@ -259,9 +259,4 @@ from .biomedical import BIOBERT_GENE_JNLPBA
 from .treebanks import UD_LATIN
 
 # Expose all relation extraction datasets
-from .sequence_labeling import CONLL_04
-from .sequence_labeling import SEMEVAL2010_RE
-from .sequence_labeling import WEBRED21
-from .sequence_labeling import WEBRED5
-
 from .relation_extraction import SEMEVAL_2010_TASK_8
