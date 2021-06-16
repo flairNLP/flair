@@ -244,43 +244,30 @@ class ColumnDataset(FlairDataset):
 
             # if sentence ends, convert and return
             if self.__line_completes_sentence(line):
-                # if len(sentence) > 0:
-                #     if self.tag_to_bioes is not None:
-                #         sentence.convert_tag_scheme(
-                #             tag_type=self.tag_to_bioes, target_scheme="iobes"
-                #         )
-                #
-                #     sentence.relations = sentence.build_relations()
-                #     for token in sentence:
-                #         token.remove_labels("relation")
-                #         token.remove_labels("relation_dep")
-                #
-                #     # check if this sentence is a document boundary
-                #     if sentence.to_original_text() == self.document_separator_token:
-                #         sentence.is_document_boundary = True
-                #     return sentence
-                break
+                if len(sentence) > 0:
+                    if self.tag_to_bioes is not None:
+                        sentence.convert_tag_scheme(
+                            tag_type=self.tag_to_bioes, target_scheme="iobes"
+                        )
+                    # check if this sentence is a document boundary
+                    if sentence.to_original_text() == self.document_separator_token:
+                        sentence.is_document_boundary = True
+                    return sentence
 
             # otherwise, this line is a token. parse and add to sentence
-            # else:
-            token = self._parse_token(line)
-            sentence.add_token(token)
+            else:
+                token = self._parse_token(line)
+                sentence.add_token(token)
 
         # check if this sentence is a document boundary
         if sentence.to_original_text() == self.document_separator_token: sentence.is_document_boundary = True
-
-        sentence.relations = sentence.build_relations()
-        for token in sentence:
-            token.remove_labels("relation")
-            token.remove_labels("relation_dep")
 
         if self.tag_to_bioes is not None:
             sentence.convert_tag_scheme(
                 tag_type=self.tag_to_bioes, target_scheme="iobes"
             )
 
-        if len(sentence) > 0:
-            return sentence
+        if len(sentence) > 0: return sentence
 
     def _parse_token(self, line: str) -> Token:
         fields: List[str] = re.split(self.column_delimiter, line.rstrip())
@@ -602,7 +589,7 @@ class CONLL_03(ColumnCorpus):
             cached_path(f"{conll_yago_path}combinedENG.testa", Path("datasets") / dataset_name)
             cached_path(f"{conll_yago_path}combinedENG.testb", Path("datasets") / dataset_name)
             cached_path(f"{conll_yago_path}combinedENG.train", Path("datasets") / dataset_name)
-
+            
 
 
         # check if data there
@@ -624,7 +611,7 @@ class CONLL_03(ColumnCorpus):
                 document_separator_token="-DOCSTART-",
                 **corpusargs,
             )
-        else:
+        else:    
             super(CONLL_03, self).__init__(
                 data_folder,
                 columns,
@@ -1829,7 +1816,7 @@ class MIT_RESTAURANT_NER(ColumnCorpus):
             **corpusargs,
         )
 
-
+        
 class IGBO_NER(ColumnCorpus):
     def __init__(
             self,
@@ -1876,8 +1863,8 @@ class IGBO_NER(ColumnCorpus):
             in_memory=in_memory,
             **corpusargs,
         )
-
-
+        
+        
 class HAUSA_NER(ColumnCorpus):
     def __init__(
             self,
@@ -2099,7 +2086,7 @@ class NAIJA_PIDGIN_NER(ColumnCorpus):
         if not base_path:
             base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
-
+        
         corpus_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/pcm/"
 
         cached_path(f"{corpus_path}test.txt", Path("datasets") / dataset_name)
@@ -2467,6 +2454,7 @@ class TURKU_NER(ColumnCorpus):
             **corpusargs,
         )
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 class CONLL_04(ColumnCorpus):
@@ -2849,6 +2837,8 @@ class CONLL_04(ColumnCorpus):
             comment_symbol='#',
             **corpusargs,
         )
+=======
+>>>>>>> Reset sequence_labeling.py to master
 
 class TWITTER_NER(ColumnCorpus):
     def __init__(
@@ -4692,7 +4682,7 @@ class REDDIT_EL_GOLD(ColumnCorpus):
             **corpusargs,
     ):
         """
-        Initialize the Reddit Entity Linking corpus containing gold annotations only (https://arxiv.org/abs/2101.01228v2) in the NER-like column format.
+        Initialize the Reddit Entity Linking corpus containing gold annotations only (https://arxiv.org/abs/2101.01228v2) in the NER-like column format. 
         The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
@@ -4765,7 +4755,7 @@ class REDDIT_EL_GOLD(ColumnCorpus):
 
                         # Keep track of the current comment thread and its corresponding key, on which the annotations are matched.
                         # Each comment thread is handled as one 'document'.
-                        self.curr_comm = self.curr_row[4]
+                        self.curr_comm = self.curr_row[4] 
                         comm_key = self.curr_row[0]
 
                         # Python's csv package for some reason fails to correctly parse a handful of rows inside the comments.tsv file.
@@ -4788,13 +4778,13 @@ class REDDIT_EL_GOLD(ColumnCorpus):
                             self._text_to_cols(Sentence(self.curr_comm, use_tokenizer = True), link_annots, txtout)
                         else:
                             # In two of the comment thread a case of capital letter spacing occurs, which the SegtokTokenizer cannot properly handle.
-                            # The following if-elif condition handles these two cases and as result writes full capitalized words in each corresponding row,
+                            # The following if-elif condition handles these two cases and as result writes full capitalized words in each corresponding row, 
                             # and not just single letters into single rows.
                             if comm_key == "dv74ybb":
                                 self.curr_comm = " ".join([word.replace(" ", "") for word in self.curr_comm.split("  ")])
                             elif comm_key == "eci2lut":
-                                self.curr_comm = (self.curr_comm[:18] + self.curr_comm[18:27].replace(" ", "") + self.curr_comm[27:55] +
-                                self.curr_comm[55:68].replace(" ", "") + self.curr_comm[68:85] + self.curr_comm[85:92].replace(" ", "") +
+                                self.curr_comm = (self.curr_comm[:18] + self.curr_comm[18:27].replace(" ", "") + self.curr_comm[27:55] + 
+                                self.curr_comm[55:68].replace(" ", "") + self.curr_comm[68:85] + self.curr_comm[85:92].replace(" ", "") + 
                                 self.curr_comm[92:])
 
                             self._text_to_cols(Sentence(self.curr_comm, use_tokenizer = True), link_annots, txtout)
@@ -4844,10 +4834,10 @@ class REDDIT_EL_GOLD(ColumnCorpus):
             # incorrectly, in order to keep the desired format (empty line as a sentence separator).
             try:
                 if ((sentence[i].text in {".", "!", "?", "!*"}) and
-                    (sentence[i+1].text not in {'"', '“', "'", "''", "!", "?", ";)", "."}) and
+                    (sentence[i+1].text not in {'"', '“', "'", "''", "!", "?", ";)", "."}) and 
                     ("." not in sentence[i-1].text)):
                     outfile.writelines("\n")
-            except IndexError:
+            except IndexError: 
             # Thrown when the second check above happens, but the last token of a sentence is reached.
             # Indicates that the EOS punctuaion mark is present, therefore an empty line needs to be written below.
                 outfile.writelines("\n")
@@ -4891,7 +4881,7 @@ class REDDIT_EL_GOLD(ColumnCorpus):
             # Check if further annotations belong to the current sentence as well
             try:
                 next_row = next(self.comments) if not fix_flag else next(self.parsed_row)
-                if len(next_row) < 2:
+                if len(next_row) < 2: 
                     # 'else "  "' is needed to keep the proper token positions (for accordance with annotations)
                     self.curr_comm += next_row[0] if any(next_row) else "  "
                 else:
