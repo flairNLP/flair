@@ -21,3 +21,4 @@ konoha<5.0.0,>=4.0.0
 janome
 gdown==3.12.2
 huggingface-hub
+more-itertools~=8.8.0
