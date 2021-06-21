@@ -1,3 +1,4 @@
+from itertools import compress
 import logging
 from pathlib import Path
 from typing import List, Union, Dict, Optional, Set, Tuple
@@ -56,6 +57,7 @@ class RelationClassifier(flair.nn.Model):
         multi_label_threshold: float = 0.5,
         beta: float = 1.0,
         loss_weights: Dict[str, float] = None,
+        span_pooling: str = "first",
     ):
         """
         Initializes a RelationClassifier
@@ -120,6 +122,8 @@ class RelationClassifier(flair.nn.Model):
         else:
             self.loss_function = nn.CrossEntropyLoss(weight=self.loss_weights)
 
+        self.pooling_operation = span_pooling
+
         # auto-spawn on GPU if available
         self.to(flair.device)
 
@@ -132,9 +136,27 @@ class RelationClassifier(flair.nn.Model):
         for sentence in sentences:
             spans = sentence.get_spans(self.span_label_type)
 
+            if len(spans) <= 0:
+                continue
+
             span_embeddings = []
             for span in spans:
-                span_embeddings.append(span.tokens[0].get_embedding().unsqueeze(0))
+                if self.pooling_operation == "first":
+                    span_embedding = span.tokens[0].get_embedding().unsqueeze(0)
+                else:
+                    all_token_embeddings = torch.cat(
+                        [token.get_embedding().unsqueeze(0) for token in span.tokens], dim=0
+                    )
+                    if self.pooling_operation == "mean":
+                        span_embedding = torch.mean(all_token_embeddings, dim=0, keepdim=True)
+                    elif self.pooling_operation == "max":
+                        span_embedding, _ = torch.max(all_token_embeddings, dim=0, keepdim=True)
+                    elif self.pooling_operation == "sum":
+                        span_embedding = torch.sum(all_token_embeddings, dim=0, keepdim=True)
+                    else:
+                        raise Exception("This should never happen.")
+
+                span_embeddings.append(span_embedding)
 
             span_embeddings = torch.cat(span_embeddings, dim=0)  # [num_rels_i x emb_dim]
 
@@ -332,6 +354,8 @@ class RelationClassifier(flair.nn.Model):
         num_workers: int = 8,
         main_score_type: Tuple[str, str] = ("micro avg", "f1-score"),
         return_predictions: bool = False,
+        only_use_groundtruth: bool = False,
+        ignore_negative_relation: bool = False,
     ) -> (Result, float):
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
@@ -375,6 +399,15 @@ class RelationClassifier(flair.nn.Model):
                 predictions = [
                     relation.get_labels("predicted") for sentence in batch for relation in sentence.relations
                 ]
+
+                if only_use_groundtruth:
+                    keep_items = [
+                        [True if label.value != "N" else False for label in labels] for labels in true_values_for_batch
+                    ]
+                    true_values_for_batch = [
+                        compress(labels, keep_it) for labels, keep_it in zip(true_values_for_batch, keep_items)
+                    ]
+                    predictions = [compress(labels, keep_it) for labels, keep_it in zip(predictions, keep_items)]
 
                 # for sentence, prediction, true_value in zip(
                 #         sentences_for_batch,
@@ -421,16 +454,29 @@ class RelationClassifier(flair.nn.Model):
                 with open(out_path, "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
 
+            labels = []
+            for i in range(len(self.label_dictionary)):
+                label = self.label_dictionary.get_item_for_index(i)
+                if ignore_negative_relation and label == "N":
+                    continue
+                labels.append(i)
+
             # make "classification report"
             target_names = []
-            for i in range(len(self.label_dictionary)):
+            for i in labels:
                 target_names.append(self.label_dictionary.get_item_for_index(i))
+            # target_names = []
+            # for i in range(len(self.label_dictionary)):
+            #     target_names.append(self.label_dictionary.get_item_for_index(i))
+
+            print("labels: ", labels)
+            print("target_names: ", target_names)
 
             classification_report = metrics.classification_report(
-                y_true, y_pred, digits=4, target_names=target_names, zero_division=0
+                y_true, y_pred, digits=4, labels=labels, target_names=target_names, zero_division=0
             )
             classification_report_dict = metrics.classification_report(
-                y_true, y_pred, digits=4, target_names=target_names, zero_division=0, output_dict=True
+                y_true, y_pred, digits=4, labels=labels, target_names=target_names, zero_division=0, output_dict=True
             )
 
             # get scores

@@ -3,9 +3,10 @@ import re
 import io
 import os
 from pathlib import Path
-from typing import List, Union, Optional, Sequence, Dict
+from typing import List, Union, Optional, Sequence, Dict, Any, Tuple
 
 import flair
+import json
 import gdown
 import conllu
 from flair.data import Sentence, Corpus, Token, FlairDataset, Relation, Span
@@ -14,6 +15,18 @@ from flair.file_utils import cached_path
 from flair.datasets.conllu import CoNLLUCorpus
 
 log = logging.getLogger("flair")
+
+
+def convert_ptb_token(token: str) -> str:
+    """Convert PTB tokens to normal tokens"""
+    return {
+        "-lrb-": "(",
+        "-rrb-": ")",
+        "-lsb-": "[",
+        "-rsb-": "]",
+        "-lcb-": "{",
+        "-rcb-": "}",
+    }.get(token.lower(), token)
 
 
 class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
@@ -66,7 +79,7 @@ class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
 
                     target_file_path = Path(data_folder) / target_filename
                     with open(target_file_path, mode="w", encoding="utf-8") as target_file:
-                        # write CoNLL Plus header
+                        # write CoNLL-U Plus header
                         target_file.write("# global.columns = id form ner\n")
 
                         raw_lines = []
@@ -115,29 +128,29 @@ class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
         tokens = raw_text.split(" ")
 
         # Handle case where tail may occur before the head
-        head_start = tokens.index("<e1>")
-        tail_start = tokens.index("<e2>")
-        if head_start < tail_start:
-            tokens.pop(head_start)
-            head_end = tokens.index("</e1>")
-            tokens.pop(head_end)
-            tail_start = tokens.index("<e2>")
-            tokens.pop(tail_start)
-            tail_end = tokens.index("</e2>")
-            tokens.pop(tail_end)
+        subj_start = tokens.index("<e1>")
+        obj_start = tokens.index("<e2>")
+        if subj_start < obj_start:
+            tokens.pop(subj_start)
+            subj_end = tokens.index("</e1>")
+            tokens.pop(subj_end)
+            obj_start = tokens.index("<e2>")
+            tokens.pop(obj_start)
+            obj_end = tokens.index("</e2>")
+            tokens.pop(obj_end)
         else:
-            tokens.pop(tail_start)
-            tail_end = tokens.index("</e2>")
-            tokens.pop(tail_end)
-            head_start = tokens.index("<e1>")
-            tokens.pop(head_start)
-            head_end = tokens.index("</e1>")
-            tokens.pop(head_end)
+            tokens.pop(obj_start)
+            obj_end = tokens.index("</e2>")
+            tokens.pop(obj_end)
+            subj_start = tokens.index("<e1>")
+            tokens.pop(subj_start)
+            subj_end = tokens.index("</e1>")
+            tokens.pop(subj_end)
 
         metadata = {
             "text": " ".join(tokens),
             "sentence_id": str(id_),
-            "relations": ";".join([str(head_start + 1), str(head_end), str(tail_start + 1), str(tail_end), label]),
+            "relations": ";".join([str(subj_start + 1), str(subj_end), str(obj_start + 1), str(obj_end), label]),
         }
 
         token_dicts = []
@@ -145,11 +158,11 @@ class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
             tag = "O"
             prefix = ""
 
-            if head_start <= idx < head_end:
-                prefix = "B-" if idx == head_start else "I-"
+            if subj_start <= idx < subj_end:
+                prefix = "B-" if idx == subj_start else "I-"
                 tag = "E1"
-            elif tail_start <= idx < tail_end:
-                prefix = "B-" if idx == tail_start else "I-"
+            elif obj_start <= idx < obj_end:
+                prefix = "B-" if idx == obj_start else "I-"
                 tag = "E2"
 
             token_dicts.append(
@@ -159,5 +172,271 @@ class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
                     "ner": prefix + tag,
                 }
             )
+
+        return conllu.TokenList(tokens=token_dicts, metadata=metadata)
+
+
+class TACRED(CoNLLUCorpus):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+
+        data_file = data_folder / "tacred-train.conllu"
+
+        if not data_file.is_file():
+            source_data_folder = data_folder / "original"
+            source_data_file = source_data_folder / "TACRED_LDC.zip"
+            os.makedirs(source_data_folder, exist_ok=True)
+            self.extract_and_convert_to_conllu(
+                data_file=source_data_file,
+                data_folder=data_folder,
+            )
+
+        super(TACRED, self).__init__(
+            data_folder,
+            in_memory=in_memory,
+        )
+
+    def extract_and_convert_to_conllu(self, data_file, data_folder):
+        import zipfile
+
+        source_file_paths = [
+            "tacred/data/json/train.json",
+            "tacred/data/json/dev.json",
+            "tacred/data/json/test.json",
+        ]
+        target_filenames = ["tacred-train.conllu", "tacred-dev.conllu", "tacred-test.conllu"]
+
+        with zipfile.ZipFile(data_file) as zip_file:
+
+            for source_file_path, target_filename in zip(source_file_paths, target_filenames):
+                with zip_file.open(source_file_path, mode="r") as source_file:
+
+                    target_file_path = Path(data_folder) / target_filename
+                    with open(target_file_path, mode="w", encoding="utf-8") as target_file:
+                        # write CoNLL-U Plus header
+                        target_file.write("# global.columns = id form ner\n")
+
+                        for example in json.load(source_file):
+                            token_list = self._tacred_example_to_token_list(example)
+                            target_file.write(token_list.serialize())
+
+    def _tacred_example_to_token_list(self, example: Dict[str, Any]) -> conllu.TokenList:
+        id_ = example["id"]
+        tokens = example["token"]
+        ner = example["stanford_ner"]
+
+        subj_start = example["subj_start"]
+        subj_end = example["subj_end"]
+        obj_start = example["obj_start"]
+        obj_end = example["obj_end"]
+
+        subj_tag = example["subj_type"]
+        obj_tag = example["obj_type"]
+
+        label = example["relation"]
+
+        metadata = {
+            "text": " ".join(tokens),
+            "sentence_id": str(id_),
+            "relations": ";".join(
+                [str(subj_start + 1), str(subj_end + 1), str(obj_start + 1), str(obj_end + 1), label]
+            ),
+        }
+
+        prev_tag = None
+        token_dicts = []
+        for idx, (token, tag) in enumerate(zip(tokens, ner)):
+            if subj_start <= idx <= subj_end:
+                tag = subj_tag
+
+            if obj_start <= idx <= obj_end:
+                tag = obj_tag
+
+            prefix = ""
+            if tag != "O":
+                if tag != prev_tag:
+                    prefix = "B-"
+                else:
+                    prefix = "I-"
+
+            prev_tag = tag
+
+            token_dicts.append(
+                {
+                    "id": str(idx + 1),
+                    "form": convert_ptb_token(token),
+                    "ner": prefix + tag,
+                }
+            )
+
+        return conllu.TokenList(tokens=token_dicts, metadata=metadata)
+
+
+class CoNLL04(CoNLLUCorpus):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+
+        # TODO: change data source to original CoNLL04 -- this dataset has span formatting errors
+        # download data if necessary
+        conll04_url = (
+            "https://raw.githubusercontent.com/bekou/multihead_joint_entity_relation_extraction/master/data/CoNLL04/"
+        )
+        data_file = data_folder / "conll04-train.conllu"
+
+        if True or not data_file.is_file():
+            source_data_folder = data_folder / "original"
+            cached_path(f"{conll04_url}train.txt", source_data_folder)
+            cached_path(f"{conll04_url}dev.txt", source_data_folder)
+            cached_path(f"{conll04_url}test.txt", source_data_folder)
+
+            self.convert_to_conllu(
+                source_data_folder=source_data_folder,
+                data_folder=data_folder,
+            )
+
+        super(CoNLL04, self).__init__(
+            data_folder,
+            in_memory=in_memory,
+        )
+
+    def _parse_incr(self, source_file) -> Sequence[conllu.TokenList]:
+        fields = ["id", "form", "ner", "relations", "relation_heads"]
+        field_parsers = {
+            "relations": lambda line, i: json.loads(line[i].replace("'", '"')),
+            "relation_heads": lambda line, i: json.loads(line[i]),
+        }
+        metadata_parsers = {"__fallback__": lambda k, v: tuple(k.split())}
+
+        lines = []
+        for index, line in enumerate(source_file):
+            if index > 0 and line.startswith("#"):
+                source_str = "".join(lines)
+                src_token_list = conllu.parse(
+                    source_str, fields=fields, field_parsers=field_parsers, metadata_parsers=metadata_parsers
+                )
+                lines = []
+                yield src_token_list[0]
+
+            lines.append(line)
+
+        source_str = "".join(lines)
+        src_token_list = conllu.parse(
+            source_str, fields=fields, field_parsers=field_parsers, metadata_parsers=metadata_parsers
+        )
+        yield src_token_list[0]
+
+    def convert_to_conllu(self, source_data_folder, data_folder):
+        source_filenames = [
+            "train.txt",
+            "dev.txt",
+            "test.txt",
+        ]
+        target_filenames = ["conll04-train.conllu", "conll04-dev.conllu", "conll04-test.conllu"]
+
+        for source_filename, target_filename in zip(source_filenames, target_filenames):
+            with open(source_data_folder / source_filename, mode="r") as source_file:
+
+                with open(data_folder / target_filename, mode="w", encoding="utf-8") as target_file:
+                    # write CoNLL-U Plus header
+                    target_file.write("# global.columns = id form ner\n")
+
+                    for src_token_list in self._parse_incr(source_file):
+                        token_list = self._src_token_list_to_token_list(src_token_list)
+                        target_file.write(token_list.serialize())
+
+    def _bio_tags_to_spans(self, tags: List[str]) -> List[Tuple[int, int]]:
+        spans = []
+        span_start = 0
+        span_end = 0
+        active_conll_tag = None
+        for index, tag in enumerate(tags):
+            bio_tag = tag[0]
+            conll_tag = tag[2:]
+            if bio_tag == "O":
+                # The span has ended.
+                if active_conll_tag is not None:
+                    spans.append((span_start, span_end))
+                active_conll_tag = None
+                continue
+            elif bio_tag == "B" or (bio_tag == "I" and conll_tag != active_conll_tag):
+                # We are entering a new span; reset indices
+                # and active tag to new span.
+                if active_conll_tag is not None:
+                    spans.append((span_start, span_end))
+                active_conll_tag = conll_tag
+                span_start = index
+                span_end = index
+            elif bio_tag == "I" and conll_tag == active_conll_tag:
+                # We're inside a span.
+                span_end += 1
+            else:
+                raise Exception("That should never happen.")
+
+        # Last token might have been a part of a valid span.
+        if active_conll_tag is not None:
+            spans.append((span_start, span_end))
+
+        return spans
+
+    def _src_token_list_to_token_list(self, src_token_list):
+        tokens = []
+        token_dicts = []
+        ner_tags = []
+        for index, token in enumerate(src_token_list, start=1):
+            text = token["form"]
+            ner_tag = token["ner"]
+            tokens.append(text)
+            ner_tags.append(ner_tag)
+
+            token_dicts.append(
+                {
+                    "id": str(index),
+                    "form": text,
+                    "ner": ner_tag,
+                }
+            )
+
+        span_end_to_span = {end: (start, end) for start, end in self._bio_tags_to_spans(ner_tags)}
+
+        relations = []
+        for index, token in enumerate(src_token_list):
+            for relation, head in zip(token["relations"], token["relation_heads"]):
+                if relation == "N":
+                    continue
+
+                subj_start, subj_end = span_end_to_span[index]
+                obj_start, obj_end = span_end_to_span[head]
+                relations.append((subj_start, subj_end, obj_start, obj_end, relation))
+
+        doc_id = src_token_list.metadata["doc"]
+
+        metadata = {
+            "text": " ".join(tokens),
+            "sentence_id": doc_id,
+            "relations": "|".join(
+                [
+                    ";".join([str(subj_start + 1), str(subj_end + 1), str(obj_start + 1), str(obj_end + 1), relation])
+                    for subj_start, subj_end, obj_start, obj_end, relation in relations
+                ]
+            ),
+        }
 
         return conllu.TokenList(tokens=token_dicts, metadata=metadata)
