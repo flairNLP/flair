@@ -46,16 +46,16 @@ class RelationClassifier(flair.nn.Model):
     """
 
     def __init__(
-        self,
-        hidden_size: int,
-        token_embeddings: flair.embeddings.TokenEmbeddings,
-        label_dictionary: Dictionary,
-        label_type: str = None,
-        span_label_type: str = None,
-        multi_label: bool = None,
-        multi_label_threshold: float = 0.5,
-        beta: float = 1.0,
-        loss_weights: Dict[str, float] = None,
+            self,
+            hidden_size: int,
+            token_embeddings: flair.embeddings.TokenEmbeddings,
+            label_dictionary: Dictionary,
+            label_type: str = None,
+            span_label_type: str = None,
+            multi_label: bool = None,
+            multi_label_threshold: float = 0.5,
+            beta: float = 1.0,
+            loss_weights: Dict[str, float] = None,
     ):
         """
         Initializes a RelationClassifier
@@ -214,14 +214,14 @@ class RelationClassifier(flair.nn.Model):
         return scores, loss
 
     def predict(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        mini_batch_size: int = 32,
-        multi_class_prob: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss=False,
-        embedding_storage_mode="none",
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size: int = 32,
+            multi_class_prob: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
     ):
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
@@ -324,14 +324,14 @@ class RelationClassifier(flair.nn.Model):
                 return overall_loss / batch_no
 
     def evaluate(
-        self,
-        sentences: Union[List[DataPoint], Dataset],
-        out_path: Union[str, Path] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
-        num_workers: int = 8,
-        main_score_type: Tuple[str, str] = ("micro avg", "f1-score"),
-        return_predictions: bool = False,
+            self,
+            sentences: Union[List[DataPoint], Dataset],
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: int = 8,
+            main_score_type: Tuple[str, str] = ("micro avg", "f1-score"),
+            return_predictions: bool = False,
     ) -> (Result, float):
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
@@ -445,11 +445,11 @@ class RelationClassifier(flair.nn.Model):
             recall_score = round(metrics.recall_score(y_true, y_pred, average="macro", zero_division=0), 4)
 
             detailed_result = (
-                "\nResults:"
-                f"\n- F-score (micro) {micro_f_score}"
-                f"\n- F-score (macro) {macro_f_score}"
-                f"\n- Accuracy {accuracy_score}"
-                "\n\nBy class:\n" + classification_report
+                    "\nResults:"
+                    f"\n- F-score (micro) {micro_f_score}"
+                    f"\n- F-score (macro) {macro_f_score}"
+                    f"\n- Accuracy {accuracy_score}"
+                    "\n\nBy class:\n" + classification_report
             )
 
             # line for log file
@@ -574,8 +574,396 @@ class RelationClassifier(flair.nn.Model):
 
     def __str__(self):
         return (
-            super(flair.nn.Model, self).__str__().rstrip(")")
-            + f"  (beta): {self.beta}\n"
-            + f"  (weights): {self.weight_dict}\n"
-            + f"  (weight_tensor) {self.loss_weights}\n)"
+                super(flair.nn.Model, self).__str__().rstrip(")")
+                + f"  (beta): {self.beta}\n"
+                + f"  (weights): {self.weight_dict}\n"
+                + f"  (weight_tensor) {self.loss_weights}\n)"
         )
+
+
+class RelationClassifierLinear(flair.nn.Model):
+
+    def __init__(
+            self,
+            token_embeddings: flair.embeddings.TokenEmbeddings,
+            label_dictionary: Dictionary,
+            label_type: str = None,
+            span_label_type: str = None,
+            multi_label: bool = None,
+            multi_label_threshold: float = 0.5,
+            beta: float = 1.0,
+            loss_weights: Dict[str, float] = None,
+    ):
+        """
+        Initializes a RelationClassifier
+        :param document_embeddings: embeddings used to embed each data point
+        :param label_dictionary: dictionary of labels you want to predict
+        :param multi_label: auto-detected by default, but you can set this to True to force multi-label prediction
+        or False to force single-label prediction
+        :param multi_label_threshold: If multi-label you can set the threshold to make predictions
+        :param beta: Parameter for F-beta score for evaluation and training annealing
+        :param loss_weights: Dictionary of weights for labels for the loss function
+        (if any label's weight is unspecified it will default to 1.0)
+        """
+
+        super(RelationClassifierLinear, self).__init__()
+
+        self.token_embeddings: flair.embeddings.TokenEmbeddings = token_embeddings
+        self.label_dictionary: Dictionary = label_dictionary
+        self.label_type = label_type
+        self.span_label_type = span_label_type
+
+        if multi_label is not None:
+            self.multi_label = multi_label
+        else:
+            self.multi_label = self.label_dictionary.multi_label
+
+        self.multi_label_threshold = multi_label_threshold
+
+        self.beta = beta
+
+        self.weight_dict = loss_weights
+        # Initialize the weight tensor
+        if loss_weights is not None:
+            n_classes = len(self.label_dictionary)
+            weight_list = [1.0 for i in range(n_classes)]
+            for i, tag in enumerate(self.label_dictionary.get_items()):
+                if tag in loss_weights.keys():
+                    weight_list[i] = loss_weights[tag]
+            self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
+        else:
+            self.loss_weights = None
+
+        self.decoder = nn.Linear(2 * token_embeddings.embedding_length, len(self.label_dictionary))
+
+        nn.init.xavier_uniform_(self.decoder.weight)
+
+        if self.multi_label:
+            self.loss_function = nn.BCEWithLogitsLoss(weight=self.loss_weights)
+        else:
+            self.loss_function = nn.CrossEntropyLoss(weight=self.loss_weights)
+
+        # auto-spawn on GPU if available
+        self.to(flair.device)
+
+    def _internal_forward_scores_and_loss(self,
+                                          sentences: Union[List[DataPoint], DataPoint],
+                                          return_scores: bool =True,
+                                          return_loss: bool =True):
+
+        self.token_embeddings.embed(sentences)
+
+        entity_pairs = []
+        relation_embeddings = []
+        indices = []
+
+        for sentence in sentences:
+
+            # super lame: make dictionary to find relation annotations for a given entity pair
+            relation_dict = {}
+            for relation in sentence.relations:
+                relation_dict[(relation.head.position_string, relation.tail.position_string)] = relation
+
+            # get all entities
+            spans = sentence.get_spans(self.span_label_type)
+
+            # get embedding for each entity
+            span_embeddings = []
+            for span in spans:
+                span_embeddings.append(span.tokens[0].get_embedding())
+
+            # go through cross product of entities, for each pair concat embeddings
+            for span, embedding in zip(spans, span_embeddings):
+                for span_2, embedding_2 in zip(spans, span_embeddings):
+                    if span == span_2: continue
+
+                    label = 'N'
+                    if (span.position_string, span_2.position_string) in relation_dict:
+                        label = \
+                        relation_dict[(span.position_string, span_2.position_string)].get_labels(self.label_type)[
+                            0].value
+
+                    indices.append(self.label_dictionary.get_idx_for_item(label))
+
+                    relation_embeddings.append(torch.cat([embedding, embedding_2]))
+
+                    entity_pairs.append((span, span_2))
+
+        all_relations = torch.stack(relation_embeddings)
+
+        sentence_relation_scores = self.decoder(all_relations)
+
+        labels = torch.tensor(indices).to(flair.device)
+
+        loss = self.loss_function(sentence_relation_scores, labels)
+
+        if return_loss and not return_scores:
+            return loss, len(labels)
+
+        if return_scores and not return_loss:
+            return sentence_relation_scores, entity_pairs
+
+        if return_scores and return_loss:
+            return sentence_relation_scores, entity_pairs, loss,
+
+    def forward_loss(self, sentences: Union[List[DataPoint], DataPoint]) -> torch.tensor:
+        return self._internal_forward_scores_and_loss(sentences, return_scores=False, return_loss=True)
+
+    def predict(
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size: int = 32,
+            multi_class_prob: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
+    ):
+        """
+        Predicts the class labels for the given sentences. The labels are directly added to the sentences.
+        :param sentences: list of sentences
+        :param mini_batch_size: mini batch size to use
+        :param multi_class_prob : return probability for all class for multiclass
+        :param verbose: set to True to display a progress bar
+        :param return_loss: set to True to return loss
+        :param label_name: set this to change the name of the label type that is predicted
+        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
+        you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
+        'gpu' to store embeddings in GPU memory.
+        """
+        if label_name is None:
+            label_name = self.label_type if self.label_type is not None else "label"
+
+        with torch.no_grad():
+            if not sentences:
+                return sentences
+
+            if isinstance(sentences, DataPoint):
+                sentences = [sentences]
+
+            # filter empty sentences
+            if isinstance(sentences[0], DataPoint):
+                sentences = [sentence for sentence in sentences if len(sentence) > 0]
+            if len(sentences) == 0:
+                return sentences
+
+            # reverse sort all sequences by their length
+            rev_order_len_index = sorted(range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True)
+
+            reordered_sentences: List[Union[DataPoint, str]] = [sentences[index] for index in rev_order_len_index]
+
+            dataloader = DataLoader(dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size)
+            # progress bar for verbosity
+            if verbose:
+                dataloader = tqdm(dataloader)
+
+            overall_loss = 0
+            batch_no = 0
+            for batch in dataloader:
+                for sentence in batch:
+                    relation_dict = {}
+                    for relation in sentence.relations:
+                        relation_dict[relation.span_indices] = relation
+
+                batch_no += 1
+
+                if verbose:
+                    dataloader.set_description(f"Inferencing on batch {batch_no}")
+
+                # stop if all sentences are empty
+                if not batch:
+                    continue
+
+                scores, pairs, loss = self._internal_forward_scores_and_loss(batch,
+                                                                             return_scores=True,
+                                                                             return_loss=return_loss)
+
+                if return_loss:
+                    overall_loss += loss
+
+                predicted_labels = self._obtain_labels(scores, predict_prob=multi_class_prob)
+
+                for (pair, label) in zip(pairs, predicted_labels):
+
+                    sentence: Sentence = pair[0][0].sentence
+
+                    relation = Relation(pair[0], pair[1])
+                    relation.set_label(label_name, label.value, label.score)
+                    sentence.relations.append(relation)
+
+                # clearing token embeddings to save memory
+                store_embeddings(batch, storage_mode=embedding_storage_mode)
+
+            if return_loss:
+                return overall_loss / batch_no
+
+    def evaluate(
+            self,
+            sentences: Union[List[DataPoint], Dataset],
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: int = 8,
+            main_score_type: Tuple[str, str] = ("micro avg", "f1-score"),
+            return_predictions: bool = False,
+    ) -> (Result, float):
+
+        # read Dataset into data loader (if list of sentences passed, make Dataset first)
+        if not isinstance(sentences, Dataset):
+            sentences = SentenceDataset(sentences)
+        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
+
+        # use scikit-learn to evaluate
+        y_true = []
+        y_pred = []
+
+        with torch.no_grad():
+            eval_loss = 0
+
+            lines: List[str] = []
+            batch_count: int = 0
+
+            for batch in data_loader:
+                batch_count += 1
+
+                # remove previously predicted labels
+                # sentence.relations = [relation for sentence in batch for relation in sentence.relations ]
+                # [relation.remove_labels("predicted") for sentence in batch for relation in sentence.relations]
+
+                # predict for batch
+                loss = self.predict(
+                    batch,
+                    embedding_storage_mode=embedding_storage_mode,
+                    mini_batch_size=mini_batch_size,
+                    label_name="predicted",
+                    return_loss=True,
+                )
+
+                eval_loss += loss
+
+                # get the gold labels
+                true_values_for_batch = [
+                    relation.get_labels(self.label_type) for sentence in batch for relation in sentence.relations
+                ]
+
+                print(true_values_for_batch)
+
+                # get the predicted labels
+                predictions = [
+                    relation.get_labels("predicted") for sentence in batch for relation in sentence.relations
+                ]
+
+                print(predictions)
+
+                # for sentence, prediction, true_value in zip(
+                #         sentences_for_batch,
+                #         predictions,
+                #         true_values_for_batch,
+                # ):
+                #     eval_line = "{}\t{}\t{}\n".format(
+                #         sentence, true_value, prediction
+                #     )
+                #     lines.append(eval_line)
+
+                for predictions_for_sentence, true_values_for_sentence in zip(predictions, true_values_for_batch):
+
+                    true_values_for_sentence = [label.value for label in true_values_for_sentence]
+                    predictions_for_sentence = [label.value for label in predictions_for_sentence]
+
+                    y_true_instance = np.zeros(len(self.label_dictionary), dtype=int)
+                    for i in range(len(self.label_dictionary)):
+                        if self.label_dictionary.get_item_for_index(i) in true_values_for_sentence:
+                            y_true_instance[i] = 1
+                    y_true.append(y_true_instance.tolist())
+
+                    y_pred_instance = np.zeros(len(self.label_dictionary), dtype=int)
+                    for i in range(len(self.label_dictionary)):
+                        if self.label_dictionary.get_item_for_index(i) in predictions_for_sentence:
+                            y_pred_instance[i] = 1
+                    y_pred.append(y_pred_instance.tolist())
+
+                store_embeddings(batch, embedding_storage_mode)
+
+            # remove predicted labels if return_predictions is False
+            # Problem here: the predictions are only contained in sentences if it was chosen memory_mode="full" during
+            # creation of the ClassificationDataset in the ClassificationCorpus creation. If the ClassificationCorpus has
+            # memory mode "partial", then the predicted labels are not contained in sentences in any case so the following
+            # optional removal has no effect. Predictions won't be accessible outside the eval routine in this case regardless
+            # whether return_predictions is True or False. TODO: fix this
+
+            if not return_predictions:
+                for sentence in sentences:
+                    for relation in sentence.relations:
+                        relation.annotation_layers["predicted"] = []
+
+            if out_path is not None:
+                with open(out_path, "w", encoding="utf-8") as outfile:
+                    outfile.write("".join(lines))
+
+            # make "classification report"
+            target_names = []
+            for i in range(len(self.label_dictionary)):
+                target_names.append(self.label_dictionary.get_item_for_index(i))
+
+            classification_report = metrics.classification_report(
+                y_true, y_pred, digits=4, target_names=target_names, zero_division=0
+            )
+            classification_report_dict = metrics.classification_report(
+                y_true, y_pred, digits=4, target_names=target_names, zero_division=0, output_dict=True
+            )
+
+            # get scores
+            micro_f_score = round(
+                metrics.fbeta_score(y_true, y_pred, beta=self.beta, average="micro", zero_division=0), 4
+            )
+            accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
+            macro_f_score = round(
+                metrics.fbeta_score(y_true, y_pred, beta=self.beta, average="macro", zero_division=0), 4
+            )
+            precision_score = round(metrics.precision_score(y_true, y_pred, average="macro", zero_division=0), 4)
+            recall_score = round(metrics.recall_score(y_true, y_pred, average="macro", zero_division=0), 4)
+
+            detailed_result = (
+                    "\nResults:"
+                    f"\n- F-score (micro) {micro_f_score}"
+                    f"\n- F-score (macro) {macro_f_score}"
+                    f"\n- Accuracy {accuracy_score}"
+                    "\n\nBy class:\n" + classification_report
+            )
+
+            # line for log file
+            if not self.multi_label:
+                log_header = "ACCURACY"
+                log_line = f"\t{accuracy_score}"
+            else:
+                log_header = "PRECISION\tRECALL\tF1\tACCURACY"
+                log_line = f"{precision_score}\t" f"{recall_score}\t" f"{macro_f_score}\t" f"{accuracy_score}"
+
+            result = Result(
+                main_score=classification_report_dict[main_score_type[0]][main_score_type[1]],
+                log_line=log_line,
+                log_header=log_header,
+                detailed_results=detailed_result,
+                classification_report=classification_report_dict,
+            )
+
+            eval_loss /= batch_count
+
+            return result, eval_loss
+
+    def _obtain_labels(self, scores: List[List[float]], predict_prob: bool = False) -> List[List[Label]]:
+        """
+        Predicts the labels of sentences.
+        :param scores: the prediction scores from the model
+        :return: list of predicted labels
+        """
+        print(scores.size())
+        softmax = torch.nn.functional.softmax(scores, dim=-1)
+        conf, idx = torch.max(softmax, dim=-1)
+
+        labels = []
+        for c, i in zip(conf, idx):
+            label = self.label_dictionary.get_item_for_index(i.item())
+            labels.append(Label(label, c.item()))
+
+        return labels

@@ -448,7 +448,7 @@ class Span(DataPoint):
         ids = ",".join([str(t.idx) for t in self.tokens])
         return (
             '<{}-span ({}): "{}">'.format(self.tag, ids, self.text)
-            if self.tag is not None
+            if len(self.labels) > 0
             else '<span ({}): "{}">'.format(ids, self.text)
         )
 
@@ -468,6 +468,10 @@ class Span(DataPoint):
     @property
     def score(self):
         return self.labels[0].score
+
+    @property
+    def position_string(self):
+        return '-'.join([str(token.idx) for token in self])
 
 
 class Tokenizer(ABC):
