@@ -220,7 +220,7 @@ sentence = Sentence('France is the current world cup winner.')
 sentence.add_label('topic', 'sports')
 sentence.add_label('topic', 'soccer')
 
-# this sentence has a "language" labels
+# this sentence has a "language" label
 sentence.add_label('language', 'English')
 
 print(sentence)
