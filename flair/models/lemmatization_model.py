@@ -163,36 +163,22 @@ class Lemmatization(flair.nn.Model):
             use_teacher_forcing = True if random.random() < self.teacher_forcing_ratio else False
 
             decoder_input = None
-            if use_teacher_forcing:
-                for t in range(max_lemma_lenght):
-                    decoder_input = self._generate_decoder_input(decoder_input, all_seqs, batch_size)
-                    decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_out)
-                    mask_loss = self._calculate_loss(decoder_output, lemma[t], mask[t])
-                    loss += mask_loss
-                    # Use the correct value as input for the next moment
+
+            for t in range(max_lemma_lenght):
+                decoder_input = self._generate_decoder_input(decoder_input, all_seqs, batch_size)
+                decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_out)
+                mask_loss = self._calculate_loss(decoder_output, lemma[t], mask[t])
+                loss += mask_loss
+                # Use the correct value as input for the next moment
+                if use_teacher_forcing:
                     decoder_input = lemma[t].view(1, -1)
-
-                    # Using contextualized word embeddings requires recording the prediction results at each moment to generate word vectors.
-                    if self.contextualized_embedding:
-                        for i in range(batch_size):
-                            all_seqs[i] += self.character_dictionary.get_item_for_index(decoder_input[0][i])
-
-            else:
-                for t in range(max_lemma_lenght):
-                    decoder_input = self._generate_decoder_input(decoder_input, all_seqs, batch_size)
-                    decoder_output, decoder_hidden = self._decode(decoder_input, decoder_hidden, encoder_out)
-                    mask_loss = self._calculate_loss(decoder_output, lemma[t], mask[t])
-                    loss += mask_loss
-
-                    # Use the value with the highest probability as the predicted value, i.e. the input for the next moment.
+                else:
                     _, topi = decoder_output.topk(1)
 
-                    decoder_input = torch.LongTensor([[topi[i][0] for i in range(batch_size)]]).to(flair.device)
-
-                    if self.contextualized_embedding:
-                        for i in range(batch_size):
-                            all_seqs[i] += self.character_dictionary.get_item_for_index(decoder_input[0][i])
-
+                # Using contextualized word embeddings requires recording the prediction results at each moment to generate word vectors.
+                if self.contextualized_embedding:
+                    for i in range(batch_size):
+                        all_seqs[i] += self.character_dictionary.get_item_for_index(decoder_input[0][i])
 
         return loss, len(sentences)
 
@@ -612,19 +598,26 @@ class Lemmatization(flair.nn.Model):
     @staticmethod
     def _fetch_model(model_name) -> str:
 
-        google_drive_url = {
-            "multi": "https://drive.google.com/uc?id=1b1gHiOsqu2bovHlO0MZAeB8NWNNR88CJ",
-            "multi-with-pos": "https://drive.google.com/uc?id=1svkCI1HRGK-rD8AAWgNphGunNA62UEEv"}
+        if Path(model_name).exists():
+            model_path = model_name
+        else:
+            # model_map = {
+            #     "multi": "http://raw.githubusercontent.com/87302380/Lemmatization_model/main/multi-without-pos/multi-without-pos.pt",
+            #     "multi-with-pos": "http://raw.githubusercontent.com/87302380/Lemmatization_model/main/multi-with-pos/multi-with-pos.pt"}
+            # if model_name in model_map:
+            #     model_path = cached_path(model_map[model_name], cache_dir=Path("models") / "lemma")
 
-        if model_name in google_drive_url:
-            output = str(flair.cache_root) + "/models/lemma/"
-            model_path = gdown.download(google_drive_url[model_name], output, quiet=False)
+            google_drive_url = {
+                "multi": "https://drive.google.com/uc?id=1b1gHiOsqu2bovHlO0MZAeB8NWNNR88CJ",
+                "multi-with-pos": "https://drive.google.com/uc?id=1svkCI1HRGK-rD8AAWgNphGunNA62UEEv"}
 
-        # model_map = {
-        #     "lemma": "https://box.hu-berlin.de/seafhttp/files/dcc0676a-d55f-4f48-b555-5e92bc82668b/en-lemma-without-tag.pt",
-        #     "lemma-with-pos": "https://box.hu-berlin.de/seafhttp/files/ed33a77b-25cb-414e-b4fa-e237d9da3d89/en-lemma-with-pos.pt"}
-        #
-        # if model_name in model_map:
-        #     model_path = cached_path(model_map[model_name], cache_dir=Path("models") / "lemma")
+            if model_name in google_drive_url:
+                cache_path = flair.cache_root / 'models/lemma/'
+                model_path = cache_path/ (model_name + '.pt')
+                if model_path.exists():
+                    print('Find the model in the cache...')
+                else:
+                    model_path = gdown.download(google_drive_url[model_name], str(cache_path)+"/", quiet=False)
+                
 
         return model_path
