@@ -445,7 +445,7 @@ class LanguageModel(nn.Module):
             self.eval()
 
         else:
-            self.__dict__ = d
+            super().__setstate__(d)
 
     def _apply(self, fn):
 
