@@ -269,34 +269,6 @@ class ModelTrainer:
                 self.model, optimizer, opt_level=amp_opt_level
             )
 
-        # minimize training loss if training with dev data, else maximize dev score
-        anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
-        best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else 0.
-
-        if scheduler == OneCycleLR:
-            dataset_size = len(self.corpus.train)
-            if train_with_dev:
-                dataset_size += len(self.corpus.dev)
-            lr_scheduler = OneCycleLR(optimizer,
-                                      max_lr=learning_rate,
-                                      steps_per_epoch=dataset_size // mini_batch_size + 1,
-                                      epochs=max_epochs - self.epoch,
-                                      # if we load a checkpoint, we have already trained for self.epoch
-                                      pct_start=0.0,
-                                      cycle_momentum=cycle_momentum)
-        else:
-            lr_scheduler = scheduler(
-                optimizer,
-                factor=anneal_factor,
-                patience=patience,
-                initial_extra_patience=initial_extra_patience,
-                mode=anneal_mode,
-                verbose=True,
-            )
-
-        if (isinstance(lr_scheduler, OneCycleLR) and batch_growth_annealing):
-            raise ValueError("Batch growth with OneCycle policy is not implemented.")
-
         train_data = self.corpus.train
 
         # if training also uses dev/train data, include in training set
@@ -316,6 +288,41 @@ class ModelTrainer:
             # set dataset to sample from
             sampler.set_dataset(train_data)
             shuffle = False
+
+
+        # minimize training loss if training with dev data, else maximize dev score
+        anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
+        best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else 0.
+
+        if scheduler == OneCycleLR:
+            if sampler is None:
+                samples_per_epoch = len(self.corpus.train)
+                if train_with_dev:
+                    samples_per_epoch += len(self.corpus.dev)
+            else:
+                samples_per_epoch = len(sampler)
+
+            lr_scheduler = OneCycleLR(optimizer,
+                                      max_lr=learning_rate,
+                                      steps_per_epoch=samples_per_epoch // mini_batch_size + 1,
+                                      epochs=max_epochs - self.epoch,
+                                      # if we load a checkpoint, we have already trained for self.epoch
+                                      pct_start=0.0,
+                                      cycle_momentum=cycle_momentum)
+        else:
+            lr_scheduler = scheduler(
+                optimizer,
+                factor=anneal_factor,
+                patience=patience,
+                initial_extra_patience=initial_extra_patience,
+                mode=anneal_mode,
+                verbose=True,
+            )
+
+        if (isinstance(lr_scheduler, OneCycleLR) and batch_growth_annealing):
+            raise ValueError("Batch growth with OneCycle policy is not implemented.")
+
+
 
         dev_score_history = []
         dev_loss_history = []
