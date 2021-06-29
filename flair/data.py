@@ -178,6 +178,26 @@ class Label:
         return f"{self._value} ({round(self._score, 4)})"
 
 
+class RelationLabel(Label):
+    def __init__(self, head, tail, value: str, score: float = 1.0):
+        super().__init__(value, score)
+        self.head = head
+        self.tail = tail
+
+    def __str__(self):
+        return f"{self._value} [{self.head.id_text} -> {self.tail.id_text}] ({round(self._score, 4)})"
+
+    def __repr__(self):
+        return f"{self._value} from {self.head.id_text} -> {self.tail.id_text} ({round(self._score, 4)})"
+
+    def __len__(self):
+        return len(self.head) + len(self.tail)
+
+    # @property
+    # def span_indices(self):
+    #     return (self.head.tokens[0].idx, self.head.tokens[-1].idx, self.tail.tokens[0].idx, self.tail.tokens[-1].idx)
+
+
 class DataPoint:
     """
     This is the parent class of all data points in Flair (including Token, Sentence, Image, etc.). Each DataPoint
@@ -211,9 +231,17 @@ class DataPoint:
 
         return self
 
+    def add_complex_label(self, label_type: str, label: Label):
+
+        if label_type not in self.annotation_layers:
+            self.annotation_layers[label_type] = [label]
+        else:
+            self.annotation_layers[label_type].append(label)
+
+        return self
+
     def set_label(self, label_type: str, value: str, score: float = 1.):
         self.annotation_layers[label_type] = [Label(value, score)]
-
         return self
 
     def remove_labels(self, label_type: str):
@@ -443,6 +471,10 @@ class Span(DataPoint):
         return (
             'Span [{}]: "{}"{}'.format(ids, self.text, labels)
         )
+
+    @property
+    def id_text(self) -> str:
+        return f"{' '.join([t.text for t in self.tokens])} ({','.join([str(t.idx) for t in self.tokens])})"
 
     def __repr__(self) -> str:
         ids = ",".join([str(t.idx) for t in self.tokens])
@@ -1076,6 +1108,7 @@ class Sentence(DataPoint):
                 return span_idx
         return None
 
+
 class Image(DataPoint):
 
     def __init__(self, data=None, imageURL=None):
@@ -1591,7 +1624,7 @@ class Relation(DataPoint):
 
     def __len__(self):
         return len(self.head) + len(self.tail)
-    
+
     @property
     def span_indices(self):
         return (self.head.tokens[0].idx, self.head.tokens[-1].idx, self.tail.tokens[0].idx, self.tail.tokens[-1].idx)

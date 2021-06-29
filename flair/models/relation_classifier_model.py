@@ -1,3 +1,4 @@
+from itertools import compress
 import logging
 from pathlib import Path
 from typing import List, Union, Dict, Optional, Set, Tuple
@@ -14,7 +15,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import minmax_scale
 import flair.nn
 import flair.embeddings
-from flair.data import Dictionary, Sentence, Label, DataPoint, Relation
+from flair.data import Dictionary, Sentence, Label, DataPoint, Relation, RelationLabel, Span
 from flair.datasets import SentenceDataset, DataLoader
 from flair.file_utils import cached_path
 from flair.training_utils import convert_labels_to_one_hot, Result, store_embeddings
@@ -56,6 +57,7 @@ class RelationClassifier(flair.nn.Model):
             multi_label_threshold: float = 0.5,
             beta: float = 1.0,
             loss_weights: Dict[str, float] = None,
+            span_pooling: str = "first",
     ):
         """
         Initializes a RelationClassifier
@@ -120,6 +122,8 @@ class RelationClassifier(flair.nn.Model):
         else:
             self.loss_function = nn.CrossEntropyLoss(weight=self.loss_weights)
 
+        self.pooling_operation = span_pooling
+
         # auto-spawn on GPU if available
         self.to(flair.device)
 
@@ -132,9 +136,27 @@ class RelationClassifier(flair.nn.Model):
         for sentence in sentences:
             spans = sentence.get_spans(self.span_label_type)
 
+            if len(spans) <= 0:
+                continue
+
             span_embeddings = []
             for span in spans:
-                span_embeddings.append(span.tokens[0].get_embedding().unsqueeze(0))
+                if self.pooling_operation == "first":
+                    span_embedding = span.tokens[0].get_embedding().unsqueeze(0)
+                else:
+                    all_token_embeddings = torch.cat(
+                        [token.get_embedding().unsqueeze(0) for token in span.tokens], dim=0
+                    )
+                    if self.pooling_operation == "mean":
+                        span_embedding = torch.mean(all_token_embeddings, dim=0, keepdim=True)
+                    elif self.pooling_operation == "max":
+                        span_embedding, _ = torch.max(all_token_embeddings, dim=0, keepdim=True)
+                    elif self.pooling_operation == "sum":
+                        span_embedding = torch.sum(all_token_embeddings, dim=0, keepdim=True)
+                    else:
+                        raise Exception("This should never happen.")
+
+                span_embeddings.append(span_embedding)
 
             span_embeddings = torch.cat(span_embeddings, dim=0)  # [num_rels_i x emb_dim]
 
@@ -332,6 +354,8 @@ class RelationClassifier(flair.nn.Model):
             num_workers: int = 8,
             main_score_type: Tuple[str, str] = ("micro avg", "f1-score"),
             return_predictions: bool = False,
+            only_use_groundtruth: bool = False,
+            ignore_negative_relation: bool = False,
     ) -> (Result, float):
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
@@ -375,6 +399,15 @@ class RelationClassifier(flair.nn.Model):
                 predictions = [
                     relation.get_labels("predicted") for sentence in batch for relation in sentence.relations
                 ]
+
+                if only_use_groundtruth:
+                    keep_items = [
+                        [True if label.value != "N" else False for label in labels] for labels in true_values_for_batch
+                    ]
+                    true_values_for_batch = [
+                        compress(labels, keep_it) for labels, keep_it in zip(true_values_for_batch, keep_items)
+                    ]
+                    predictions = [compress(labels, keep_it) for labels, keep_it in zip(predictions, keep_items)]
 
                 # for sentence, prediction, true_value in zip(
                 #         sentences_for_batch,
@@ -421,16 +454,29 @@ class RelationClassifier(flair.nn.Model):
                 with open(out_path, "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
 
+            labels = []
+            for i in range(len(self.label_dictionary)):
+                label = self.label_dictionary.get_item_for_index(i)
+                if ignore_negative_relation and label == "N":
+                    continue
+                labels.append(i)
+
             # make "classification report"
             target_names = []
-            for i in range(len(self.label_dictionary)):
+            for i in labels:
                 target_names.append(self.label_dictionary.get_item_for_index(i))
+            # target_names = []
+            # for i in range(len(self.label_dictionary)):
+            #     target_names.append(self.label_dictionary.get_item_for_index(i))
+
+            print("labels: ", labels)
+            print("target_names: ", target_names)
 
             classification_report = metrics.classification_report(
-                y_true, y_pred, digits=4, target_names=target_names, zero_division=0
+                y_true, y_pred, digits=4, labels=labels, target_names=target_names, zero_division=0
             )
             classification_report_dict = metrics.classification_report(
-                y_true, y_pred, digits=4, target_names=target_names, zero_division=0, output_dict=True
+                y_true, y_pred, digits=4, labels=labels, target_names=target_names, zero_division=0, output_dict=True
             )
 
             # get scores
@@ -610,6 +656,7 @@ class RelationClassifierLinear(flair.nn.Model):
 
         self.token_embeddings: flair.embeddings.TokenEmbeddings = token_embeddings
         self.label_dictionary: Dictionary = label_dictionary
+        self.label_dictionary.add_item('O')
         self.label_type = label_type
         self.span_label_type = span_label_type
 
@@ -648,8 +695,8 @@ class RelationClassifierLinear(flair.nn.Model):
 
     def _internal_forward_scores_and_loss(self,
                                           sentences: Union[List[DataPoint], DataPoint],
-                                          return_scores: bool =True,
-                                          return_loss: bool =True):
+                                          return_scores: bool = True,
+                                          return_loss: bool = True):
 
         self.token_embeddings.embed(sentences)
 
@@ -661,8 +708,9 @@ class RelationClassifierLinear(flair.nn.Model):
 
             # super lame: make dictionary to find relation annotations for a given entity pair
             relation_dict = {}
-            for relation in sentence.relations:
-                relation_dict[(relation.head.position_string, relation.tail.position_string)] = relation
+            for relation_label in sentence.get_labels(self.label_type):
+                relation_label: RelationLabel = relation_label
+                relation_dict[create_position_string(relation_label.head, relation_label.tail)] = relation_label
 
             # get all entities
             spans = sentence.get_spans(self.span_label_type)
@@ -677,18 +725,20 @@ class RelationClassifierLinear(flair.nn.Model):
                 for span_2, embedding_2 in zip(spans, span_embeddings):
                     if span == span_2: continue
 
-                    label = 'N'
-                    if (span.position_string, span_2.position_string) in relation_dict:
-                        label = \
-                        relation_dict[(span.position_string, span_2.position_string)].get_labels(self.label_type)[
-                            0].value
+                    label = 'O'
+                    position_string = create_position_string(span, span_2)
+                    if position_string in relation_dict:
+                        relation_label: RelationLabel = relation_dict[position_string]
+                        label = relation_label.value
+                    else:
+                        continue
 
                     indices.append(self.label_dictionary.get_idx_for_item(label))
 
                     relation_embeddings.append(torch.cat([embedding, embedding_2]))
 
                     entity_pairs.append((span, span_2))
-
+        # asd
         all_relations = torch.stack(relation_embeddings)
 
         sentence_relation_scores = self.decoder(all_relations)
@@ -760,10 +810,10 @@ class RelationClassifierLinear(flair.nn.Model):
             overall_loss = 0
             batch_no = 0
             for batch in dataloader:
-                for sentence in batch:
-                    relation_dict = {}
-                    for relation in sentence.relations:
-                        relation_dict[relation.span_indices] = relation
+                # for sentence in batch:
+                #     relation_dict = {}
+                #     for relation in sentence.relations:
+                #         relation_dict[create_position_string(relation.head, relation.tail)] = relation
 
                 batch_no += 1
 
@@ -781,16 +831,25 @@ class RelationClassifierLinear(flair.nn.Model):
                 if return_loss:
                     overall_loss += loss
 
-                predicted_labels = self._obtain_labels(scores, predict_prob=multi_class_prob)
+                softmax = torch.nn.functional.softmax(scores, dim=-1)
+                conf, idx = torch.max(softmax, dim=-1)
+                # print(softmax)
+                # print(conf)
+                # print(idx)
 
-                for (pair, label) in zip(pairs, predicted_labels):
+                for pair, c, i in zip(pairs, conf, idx):
+                    label = self.label_dictionary.get_item_for_index(i.item())
 
                     sentence: Sentence = pair[0][0].sentence
 
-                    relation = Relation(pair[0], pair[1])
-                    relation.set_label(label_name, label.value, label.score)
-                    sentence.relations.append(relation)
+                    relation_label = RelationLabel(value=label, score=c.item(), head=pair[0], tail=pair[1])
+                    sentence.add_complex_label(label_name,
+                                               relation_label)
 
+                #     print(relation_label)
+                # print(sentence.get_labels(label_name))
+                # asd
+                # asd
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
@@ -827,8 +886,7 @@ class RelationClassifierLinear(flair.nn.Model):
                 batch_count += 1
 
                 # remove previously predicted labels
-                # sentence.relations = [relation for sentence in batch for relation in sentence.relations ]
-                # [relation.remove_labels("predicted") for sentence in batch for relation in sentence.relations]
+                [sentence.remove_labels('predicted') for sentence in batch]
 
                 # predict for batch
                 loss = self.predict(
@@ -842,54 +900,52 @@ class RelationClassifierLinear(flair.nn.Model):
                 eval_loss += loss
 
                 # get the gold labels
-                true_values_for_batch = [
-                    relation.get_labels(self.label_type) for sentence in batch for relation in sentence.relations
-                ]
-
-                print(true_values_for_batch)
+                all_spans: List[str] = []
+                true_values_for_batch = {}
+                for sentence in batch:
+                    for relation_label in sentence.get_labels(self.label_type):
+                        position_string = create_position_string(relation_label.head, relation_label.tail)
+                        true_values_for_batch[position_string] = relation_label
+                        if position_string not in all_spans:
+                            all_spans.append(position_string)
 
                 # get the predicted labels
-                predictions = [
-                    relation.get_labels("predicted") for sentence in batch for relation in sentence.relations
-                ]
+                predictions = {}
+                for sentence in batch:
+                    for relation_label in sentence.get_labels("predicted"):
 
-                print(predictions)
+                        position_string = create_position_string(relation_label.head, relation_label.tail)
+                        predictions[position_string] = relation_label
+                        if position_string not in all_spans:
+                            all_spans.append(position_string)
 
-                # for sentence, prediction, true_value in zip(
-                #         sentences_for_batch,
-                #         predictions,
-                #         true_values_for_batch,
-                # ):
-                #     eval_line = "{}\t{}\t{}\n".format(
-                #         sentence, true_value, prediction
-                #     )
-                #     lines.append(eval_line)
+                ordered_ground_truth = []
+                ordered_predictions = []
 
-                for predictions_for_sentence, true_values_for_sentence in zip(predictions, true_values_for_batch):
+                for span in all_spans:
 
-                    true_values_for_sentence = [label.value for label in true_values_for_sentence]
-                    predictions_for_sentence = [label.value for label in predictions_for_sentence]
+                    true_value = true_values_for_batch[span] if span in true_values_for_batch else 'O'
+                    prediction = predictions[span] if span in predictions else 'O'
 
+                    ordered_ground_truth.append(true_value)
+                    ordered_predictions.append(prediction)
+
+                    eval_line = f"{span}\t{true_value.value}\t{prediction.value}\n"
+                    lines.append(eval_line)
+
+                    true_idx = self.label_dictionary.get_idx_for_item(true_value.value)
                     y_true_instance = np.zeros(len(self.label_dictionary), dtype=int)
                     for i in range(len(self.label_dictionary)):
-                        if self.label_dictionary.get_item_for_index(i) in true_values_for_sentence:
-                            y_true_instance[i] = 1
+                        y_true_instance[true_idx] = 1
                     y_true.append(y_true_instance.tolist())
 
+                    pred_idx = self.label_dictionary.get_idx_for_item(prediction.value)
                     y_pred_instance = np.zeros(len(self.label_dictionary), dtype=int)
                     for i in range(len(self.label_dictionary)):
-                        if self.label_dictionary.get_item_for_index(i) in predictions_for_sentence:
-                            y_pred_instance[i] = 1
+                        y_pred_instance[pred_idx] = 1
                     y_pred.append(y_pred_instance.tolist())
 
                 store_embeddings(batch, embedding_storage_mode)
-
-            # remove predicted labels if return_predictions is False
-            # Problem here: the predictions are only contained in sentences if it was chosen memory_mode="full" during
-            # creation of the ClassificationDataset in the ClassificationCorpus creation. If the ClassificationCorpus has
-            # memory mode "partial", then the predicted labels are not contained in sentences in any case so the following
-            # optional removal has no effect. Predictions won't be accessible outside the eval routine in this case regardless
-            # whether return_predictions is True or False. TODO: fix this
 
             if not return_predictions:
                 for sentence in sentences:
@@ -902,14 +958,18 @@ class RelationClassifierLinear(flair.nn.Model):
 
             # make "classification report"
             target_names = []
+            labels = []
             for i in range(len(self.label_dictionary)):
-                target_names.append(self.label_dictionary.get_item_for_index(i))
+                label_name = self.label_dictionary.get_item_for_index(i)
+                target_names.append(label_name)
+                if label_name != 'O': labels.append(i)
 
             classification_report = metrics.classification_report(
-                y_true, y_pred, digits=4, target_names=target_names, zero_division=0
+                y_true, y_pred, digits=4, target_names=target_names, zero_division=0, labels=labels,
             )
+
             classification_report_dict = metrics.classification_report(
-                y_true, y_pred, digits=4, target_names=target_names, zero_division=0, output_dict=True
+                y_true, y_pred, digits=4, target_names=target_names, zero_division=0, output_dict=True, labels=labels,
             )
 
             # get scores
@@ -939,6 +999,7 @@ class RelationClassifierLinear(flair.nn.Model):
                 log_header = "PRECISION\tRECALL\tF1\tACCURACY"
                 log_line = f"{precision_score}\t" f"{recall_score}\t" f"{macro_f_score}\t" f"{accuracy_score}"
 
+            print(main_score_type)
             result = Result(
                 main_score=classification_report_dict[main_score_type[0]][main_score_type[1]],
                 log_line=log_line,
@@ -951,19 +1012,35 @@ class RelationClassifierLinear(flair.nn.Model):
 
             return result, eval_loss
 
-    def _obtain_labels(self, scores: List[List[float]], predict_prob: bool = False) -> List[List[Label]]:
-        """
-        Predicts the labels of sentences.
-        :param scores: the prediction scores from the model
-        :return: list of predicted labels
-        """
-        print(scores.size())
-        softmax = torch.nn.functional.softmax(scores, dim=-1)
-        conf, idx = torch.max(softmax, dim=-1)
+    def _get_state_dict(self):
+        model_state = {
+            "state_dict": self.state_dict(),
+            "token_embeddings": self.token_embeddings,
+            "label_dictionary": self.label_dictionary,
+            "label_type": self.label_type,
+            "span_label_type": self.span_label_type,
+            "multi_label": self.multi_label,
+            "beta": self.beta,
+            "loss_weights": self.loss_weights,
+        }
+        return model_state
 
-        labels = []
-        for c, i in zip(conf, idx):
-            label = self.label_dictionary.get_item_for_index(i.item())
-            labels.append(Label(label, c.item()))
+    @staticmethod
+    def _init_model_with_state_dict(state):
 
-        return labels
+        model = RelationClassifierLinear(
+            token_embeddings=state["token_embeddings"],
+            label_dictionary=state["label_dictionary"],
+            label_type=state["label_type"],
+            span_label_type=state["span_label_type"],
+            multi_label=state["multi_label"],
+            beta=state["beta"],
+            loss_weights=state["loss_weights"],
+        )
+
+        model.load_state_dict(state["state_dict"])
+        return model
+
+
+def create_position_string(head: Span, tail: Span) -> str:
+    return f"{head.id_text} -> {tail.id_text}"

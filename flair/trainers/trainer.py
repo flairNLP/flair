@@ -12,6 +12,8 @@ import torch
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
 
+from flair.models.relation_classifier_model import RelationClassifierLinear
+
 try:
     from apex import amp
 except ImportError:
@@ -166,7 +168,8 @@ class ModelTrainer:
         """
 
         main_score_type = classification_main_metric if isinstance(self.model, TextClassifier)\
-                                                        or isinstance(self.model, RelationClassifier) else None
+                                                        or isinstance(self.model, RelationClassifier) \
+                                                        or isinstance(self.model, RelationClassifierLinear)else None
 
         if self.use_tensorboard:
             try:

@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import List, Union, Optional, Sequence, Dict, Tuple
 
-from flair.data import Sentence, Corpus, Token, FlairDataset, Relation, Span
+from flair.data import Sentence, Corpus, Token, FlairDataset, Relation, Span, RelationLabel
 from flair.datasets.base import find_train_dev_test_files
 import conllu
 
@@ -215,15 +215,12 @@ class CoNLLUDataset(FlairDataset):
             token_idx += 1
 
         if "relations" in token_list.metadata:
-            relations: List[Relation] = []
+            # relations: List[Relation] = []
             for head_start, head_end, tail_start, tail_end, label in token_list.metadata["relations"]:
                 # head and tail span indices are 1-indexed and end index is inclusive
                 head = Span(sentence.tokens[head_start - 1 : head_end])
                 tail = Span(sentence.tokens[tail_start - 1 : tail_end])
-                relation = Relation(head, tail)
-                relation.set_label("label", label)
-                relations.append(relation)
 
-            sentence.relations = relations
+                sentence.add_complex_label("relation", RelationLabel(value=label, head=head, tail=tail))
 
         return sentence

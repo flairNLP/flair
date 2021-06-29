@@ -259,7 +259,6 @@ class TextClassifier(flair.nn.Model):
             return_predictions: bool = False
     ) -> (Result, float):
 
-
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
         if not isinstance(sentences, Dataset):
             sentences = SentenceDataset(sentences)
