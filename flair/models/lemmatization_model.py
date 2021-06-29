@@ -34,7 +34,7 @@ class Lemmatization(flair.nn.Model):
             tag_list: list = None,
             tag_dictionary: Dictionary = None,
             dropout: float = 0.1,
-            teacher_forcing_ratio: float = 1,
+            teacher_forcing_ratio: float = 0.5,
             longest_word_length: int = 50,
             contextualized_embedding: bool = False
     ):
@@ -174,6 +174,7 @@ class Lemmatization(flair.nn.Model):
                     decoder_input = lemma[t].view(1, -1)
                 else:
                     _, topi = decoder_output.topk(1)
+                    decoder_input = torch.LongTensor([[topi[i][0] for i in range(batch_size)]]).to(flair.device)
 
                 # Using contextualized word embeddings requires recording the prediction results at each moment to generate word vectors.
                 if self.contextualized_embedding:
@@ -618,6 +619,6 @@ class Lemmatization(flair.nn.Model):
                     print('Find the model in the cache...')
                 else:
                     model_path = gdown.download(google_drive_url[model_name], str(cache_path)+"/", quiet=False)
-                
+
 
         return model_path
