@@ -296,9 +296,7 @@ class ModelTrainer:
 
         if scheduler == OneCycleLR:
             if sampler is None:
-                samples_per_epoch = len(self.corpus.train)
-                if train_with_dev:
-                    samples_per_epoch += len(self.corpus.dev)
+                samples_per_epoch = len(train_data)
             else:
                 samples_per_epoch = len(sampler)
 
