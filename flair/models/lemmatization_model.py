@@ -36,7 +36,7 @@ class Lemmatization(flair.nn.Model):
             dropout: float = 0.1,
             teacher_forcing_ratio: float = 0.5,
             longest_word_length: int = 50,
-            contextualized_embedding: bool = False
+            contextualized_embedding: bool = True
     ):
         """
         :param hidden_size: number of hidden states in RNN
@@ -150,8 +150,8 @@ class Lemmatization(flair.nn.Model):
 
             # Using a contextualized word embedding model, it is necessary to generate a representation for the current moment
             # based on the previously predicted results and context. The dictionary all_seqs is used to store the previous prediction results.
+            batch_size = len(effective_data_lenght)
             if self.contextualized_embedding:
-                batch_size = len(effective_data_lenght)
                 all_seqs = dict()
                 for i in range(batch_size):
                     all_seqs[i] = ""
@@ -239,8 +239,7 @@ class Lemmatization(flair.nn.Model):
         else:
             if decoder_input is None:
                 start_idx = self.character_dictionary.get_idx_for_item(start_token)
-                decoder_input = torch.LongTensor([[start_idx for _ in range(batch_size)]]).to(
-                    flair.device)
+                decoder_input = torch.LongTensor([[start_idx for _ in range(batch_size)]]).to(flair.device)
                 decoder_input = self.char_embedding(decoder_input)
             else:
                 decoder_input = self.char_embedding(decoder_input)
@@ -314,8 +313,8 @@ class Lemmatization(flair.nn.Model):
         encoder_outputs, encoder_hidden = self._encode(encoder_input, effective_data_lenght)
         decoder_hidden = encoder_hidden[:self.n_layers]
 
+        batch_size = len(effective_data_lenght)
         if self.contextualized_embedding:
-            batch_size = len(effective_data_lenght)
             all_seqs = dict()
             for i in range(batch_size):
                 all_seqs[i] = ""
