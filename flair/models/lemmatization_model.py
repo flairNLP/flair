@@ -108,7 +108,7 @@ class Lemmatization(flair.nn.Model):
         if not contextualized_embedding:
             # Classic word embedding. Loading weights from a pre-trained word embedding model.
             self.pre_embedding_weight = self._load_embedding_weight(self.character_dictionary, self.embeddings)
-            self.char_embedding = nn.Embedding(len(self.character_dictionary), self.embeddings.embedding_length)
+            self.char_embedding = nn.Embedding(len(self.character_dictionary), self.embeddings.embedding_length).to(flair.device)
             self.char_embedding.weight.data.copy_(self.pre_embedding_weight)
             self.char_embedding.weight.requires_grad = False
         else:
