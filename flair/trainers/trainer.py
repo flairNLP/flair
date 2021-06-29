@@ -168,7 +168,6 @@ class ModelTrainer:
         """
 
         main_score_type = classification_main_metric if isinstance(self.model, TextClassifier)\
-                                                        or isinstance(self.model, RelationClassifier) \
                                                         or isinstance(self.model, RelationClassifierLinear)else None
 
         if self.use_tensorboard:
