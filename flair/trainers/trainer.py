@@ -34,7 +34,7 @@ from flair.training_utils import (
     AnnealOnPlateau,
 )
 from torch.optim.lr_scheduler import OneCycleLR
-from flair.models import SequenceTagger, TextClassifier, RelationClassifier
+from flair.models import SequenceTagger, TextClassifier
 import random
 
 log = logging.getLogger("flair")
