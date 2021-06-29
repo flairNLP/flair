@@ -43,6 +43,7 @@ Currently, the following contextual string embeddings are provided (note: replac
 | 'de-historic-rw-X'  | German (historical) | Added by [@redewiedergabe](https://github.com/redewiedergabe): Historical German trained over 100 million tokens |
 | 'es-X'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): Trained with Wikipedia |
 | 'es-X-fast'    | Spanish | Added by [@iamyihwa](https://github.com/zalandoresearch/flair/issues/80): Trained with Wikipediam CPU-friendly |
+| 'es-clinical-'    | Spanish (clinical) | Added by [@matirojasg](https://github.com/flairNLP/flair/issues/2292): Trained with Wikipedia |
 | 'eu-X'    | Basque | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
 | 'eu-v0-X'    | Basque | Added by [@stefan-it](https://github.com/stefan-it/flair-lms): LM embeddings (earlier version) |
 | 'fa-X'     | Persian | Added by [@stefan-it](https://github.com/zalandoresearch/flair/issues/614): Trained with Wikipedia/OPUS |
