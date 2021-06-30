@@ -407,121 +407,22 @@ class SequenceTagger(flair.nn.Model):
             if return_loss:
                 return overall_loss, overall_count
 
-    def _requires_span_F1_evaluation(self) -> bool:
-        span_F1 = False
-        for item in self.tag_dictionary.get_items():
-            if item.startswith('B-'):
-                span_F1 = True
-            if item == 'O':
-                span_F1 = True
-            if item == '':
-                span_F1 = True
-        return span_F1
+    def evaluate(
+            self,
+            sentences: Union[List[Sentence], Dataset],
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: int = 8,
+            wsd_evaluation: bool = False,
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+            **kwargs
+    ) -> (Result, float):
 
-    def _evaluate_with_span_F1_old(self, data_loader, embedding_storage_mode, mini_batch_size, out_path):
-        eval_loss = 0
-        total_word_count = 0
-
-        batch_no: int = 0
-
-        metric = Metric("Evaluation", beta=self.beta)
-
-        lines: List[str] = []
-
-        y_true = []
-        y_pred = []
-
-        for batch in data_loader:
-
-            # predict for batch
-            loss_and_count = self.predict(batch,
-                                          embedding_storage_mode=embedding_storage_mode,
-                                          mini_batch_size=mini_batch_size,
-                                          label_name='predicted',
-                                          return_loss=True)
-            eval_loss += loss_and_count[0]
-            total_word_count += loss_and_count[1]
-            batch_no += 1
-
-            for sentence in batch:
-
-                # make list of gold tags
-                gold_spans = sentence.get_spans(self.tag_type)
-                gold_tags = [(span.tag, repr(span)) for span in gold_spans]
-
-                # make list of predicted tags
-                predicted_spans = sentence.get_spans("predicted")
-                predicted_tags = [(span.tag, repr(span)) for span in predicted_spans]
-
-                # check for true positives, false positives and false negatives
-                for tag, prediction in predicted_tags:
-                    if (tag, prediction) in gold_tags:
-                        metric.add_tp(tag)
-                    else:
-                        metric.add_fp(tag)
-
-                for tag, gold in gold_tags:
-                    if (tag, gold) not in predicted_tags:
-                        metric.add_fn(tag)
-
-                tags_gold = []
-                tags_pred = []
-
-                # also write to file in BIO format to use old conlleval script
-                if out_path:
-                    for token in sentence:
-                        # check if in gold spans
-                        gold_tag = 'O'
-                        for span in gold_spans:
-                            if token in span:
-                                gold_tag = 'B-' + span.tag if token == span[0] else 'I-' + span.tag
-                        tags_gold.append(gold_tag)
-
-                        predicted_tag = 'O'
-                        # check if in predicted spans
-                        for span in predicted_spans:
-                            if token in span:
-                                predicted_tag = 'B-' + span.tag if token == span[0] else 'I-' + span.tag
-                        tags_pred.append(predicted_tag)
-
-                        lines.append(f'{token.text} {gold_tag} {predicted_tag}\n')
-                    lines.append('\n')
-
-                y_true.append(tags_gold)
-                y_pred.append(tags_pred)
-
-        if out_path:
-            with open(Path(out_path), "w", encoding="utf-8") as outfile:
-                outfile.write("".join(lines))
-
-        eval_loss /= total_word_count
-
-        detailed_result = (
-            "\nResults:"
-            f"\n- F1-score (micro) {metric.micro_avg_f_score():.4f}"
-            f"\n- F1-score (macro) {metric.macro_avg_f_score():.4f}"
-            '\n\nBy class:'
-        )
-
-        for class_name in metric.get_classes():
-            detailed_result += (
-                f"\n{class_name:<10} tp: {metric.get_tp(class_name)} - fp: {metric.get_fp(class_name)} - "
-                f"fn: {metric.get_fn(class_name)} - precision: "
-                f"{metric.precision(class_name):.4f} - recall: {metric.recall(class_name):.4f} - "
-                f"f1-score: "
-                f"{metric.f_score(class_name):.4f}"
-            )
-
-        result = Result(
-            main_score=metric.micro_avg_f_score(),
-            log_line=f"{metric.precision():.4f}\t{metric.recall():.4f}\t{metric.micro_avg_f_score():.4f}",
-            log_header="PRECISION\tRECALL\tF1",
-            detailed_results=detailed_result,
-        )
-
-        return result, eval_loss
-
-    def _evaluate_with_span_F1(self, data_loader, embedding_storage_mode, mini_batch_size, out_path):
+        # read Dataset into data loader (if list of sentences passed, make Dataset first)
+        if not isinstance(sentences, Dataset):
+            sentences = SentenceDataset(sentences)
+        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
         eval_loss = 0
         total_word_count = 0
 
@@ -532,6 +433,7 @@ class SequenceTagger(flair.nn.Model):
         y_true = []
         y_pred = []
 
+        # make the evaluation dictionary
         self.tag_dictionary_no_bio = Dictionary()
         for i in range(len(self.tag_dictionary)):
             label = self.tag_dictionary.get_item_for_index(i)
@@ -602,14 +504,11 @@ class SequenceTagger(flair.nn.Model):
 
                 store_embeddings(batch, embedding_storage_mode)
 
-        main_score_type: Tuple[str, str] = ("micro avg", "f1-score")
-
         target_names = []
         labels = []
-        print(self.tag_dictionary_no_bio)
+
         for i in range(len(self.tag_dictionary_no_bio)):
             label_name = self.tag_dictionary_no_bio.get_item_for_index(i)
-            print(label_name)
             if label_name == 'O': continue
             if label_name == '<START>': continue
             if label_name == '<STOP>': continue
@@ -641,7 +540,6 @@ class SequenceTagger(flair.nn.Model):
                                                     labels=labels), 4)
 
         accuracy_score = round(skmetrics.accuracy_score(y_true, y_pred), 4)
-
         precision_score = round(classification_report_dict["macro avg"]["precision"], 4)
         recall_score = round(classification_report_dict["macro avg"]["recall"], 4)
 
@@ -657,9 +555,8 @@ class SequenceTagger(flair.nn.Model):
         log_header = "PRECISION\tRECALL\tF1\tACCURACY"
         log_line = f"{precision_score}\t" f"{recall_score}\t" f"{macro_f_score}\t" f"{accuracy_score}"
 
-        print(main_score_type)
         result = Result(
-            main_score=classification_report_dict[main_score_type[0]][main_score_type[1]],
+            main_score=classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]],
             log_line=log_line,
             log_header=log_header,
             detailed_results=detailed_result,
@@ -669,129 +566,6 @@ class SequenceTagger(flair.nn.Model):
         # eval_loss /= batch_count
 
         return result, eval_loss
-
-    def _evaluate_with_regular_F1(self, data_loader, embedding_storage_mode, mini_batch_size, out_path):
-
-        # else, use scikit-learn to evaluate
-        y_true = []
-        y_pred = []
-        labels = Dictionary(add_unk=False)
-
-        eval_loss = 0
-        batch_no: int = 0
-
-        lines: List[str] = []
-
-        for batch in data_loader:
-
-            # predict for batch
-            loss = self.predict(batch,
-                                embedding_storage_mode=embedding_storage_mode,
-                                mini_batch_size=mini_batch_size,
-                                label_name='predicted',
-                                return_loss=True)
-
-            if isinstance(loss, Tuple):
-                loss = loss[0] / loss[1]
-
-            eval_loss += loss
-            batch_no += 1
-
-            for sentence in batch:
-
-                for token in sentence:
-                    # add gold tag
-                    gold_tag = token.get_tag(self.tag_type).value
-                    y_true.append(labels.add_item(gold_tag))
-
-                    # add predicted tag
-                    predicted_tag = token.get_tag('predicted').value
-
-                    y_pred.append(labels.add_item(predicted_tag))
-
-                    # for file output
-                    lines.append(f'{token.text} {gold_tag} {predicted_tag}\n')
-
-                lines.append('\n')
-
-        if out_path:
-            with open(Path(out_path), "w", encoding="utf-8") as outfile:
-                outfile.write("".join(lines))
-
-        eval_loss /= batch_no
-
-        # use sklearn
-        from sklearn import metrics
-
-        # make "classification report"
-        target_names = []
-        labels_to_report = []
-        all_labels = []
-        all_indices = []
-        for i in range(len(labels)):
-            label = labels.get_item_for_index(i)
-            all_labels.append(label)
-            all_indices.append(i)
-            if label == '_' or label == '': continue
-            target_names.append(label)
-            labels_to_report.append(i)
-
-        # report over all in case there are no labels
-        if not labels_to_report:
-            target_names = all_labels
-            labels_to_report = all_indices
-
-        classification_report = metrics.classification_report(y_true, y_pred, digits=4, target_names=target_names,
-                                                              zero_division=1, labels=labels_to_report)
-
-        # get scores
-        micro_f_score = round(
-            metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', labels=labels_to_report), 4)
-        macro_f_score = round(
-            metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro', labels=labels_to_report), 4)
-        accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
-
-        detailed_result = (
-                "\nResults:"
-                f"\n- F-score (micro): {micro_f_score}"
-                f"\n- F-score (macro): {macro_f_score}"
-                f"\n- Accuracy (incl. no class): {accuracy_score}"
-                '\n\nBy class:\n' + classification_report
-        )
-
-        # line for log file
-        log_header = "ACCURACY"
-        log_line = f"\t{accuracy_score}"
-
-        result = Result(
-            main_score=micro_f_score,
-            log_line=log_line,
-            log_header=log_header,
-            detailed_results=detailed_result
-        )
-        return result, eval_loss
-
-    def evaluate(
-            self,
-            sentences: Union[List[Sentence], Dataset],
-            out_path: Union[str, Path] = None,
-            embedding_storage_mode: str = "none",
-            mini_batch_size: int = 32,
-            num_workers: int = 8,
-            wsd_evaluation: bool = False,
-            **kwargs
-    ) -> (Result, float):
-
-        # read Dataset into data loader (if list of sentences passed, make Dataset first)
-        if not isinstance(sentences, Dataset):
-            sentences = SentenceDataset(sentences)
-        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
-
-        # depending on whether span F1 needs to be used, use separate eval method
-        if self._requires_span_F1_evaluation():
-            return self._evaluate_with_span_F1(data_loader, embedding_storage_mode, mini_batch_size, out_path)
-        else:
-            return self._evaluate_with_regular_F1(data_loader, embedding_storage_mode, mini_batch_size, out_path)
 
     def forward_loss(
             self, data_points: Union[List[Sentence], Sentence], sort=True

@@ -5,7 +5,7 @@ import torch.nn
 
 from abc import abstractmethod
 
-from typing import Union, List
+from typing import Union, List, Tuple
 
 from torch.utils.data.dataset import Dataset
 
@@ -22,20 +22,20 @@ class Model(torch.nn.Module):
 
     @abstractmethod
     def forward_loss(
-        self, data_points: Union[List[DataPoint], DataPoint]
+            self, data_points: Union[List[DataPoint], DataPoint]
     ) -> torch.tensor:
         """Performs a forward pass and returns a loss tensor for backpropagation. Implement this to enable training."""
         pass
 
     @abstractmethod
     def evaluate(
-        self,
-        sentences: Union[List[DataPoint], Dataset],
-        mini_batch_size: int,
-        num_workers: int,
-        main_score_type: str,
-        out_path: Path = None,
-        embedding_storage_mode: str = "none",
+            self,
+            sentences: Union[List[DataPoint], Dataset],
+            mini_batch_size: int,
+            num_workers: int,
+            out_path: Path = None,
+            embedding_storage_mode: str = "none",
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", 'f1-score'),
     ) -> (Result, float):
         """Evaluates the model. Returns a Result object containing evaluation
         results and a loss value. Implement this to enable evaluation.

@@ -255,7 +255,7 @@ class TextClassifier(flair.nn.Model):
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 32,
             num_workers: int = 8,
-            main_score_type: Tuple[str, str]=("micro avg", 'f1-score'),
+            main_evaluation_metric: Tuple[str, str]=("micro avg", 'f1-score'),
             return_predictions: bool = False
     ) -> (Result, float):
 
@@ -328,7 +328,6 @@ class TextClassifier(flair.nn.Model):
 
                 store_embeddings(batch, embedding_storage_mode)
 
-
             # remove predicted labels if return_predictions is False
             # Problem here: the predictions are only contained in sentences if it was chosen memory_mode="full" during
             # creation of the ClassificationDataset in the ClassificationCorpus creation. If the ClassificationCorpus has
@@ -382,7 +381,7 @@ class TextClassifier(flair.nn.Model):
                            f"{accuracy_score}"
 
             result = Result(
-                main_score=classification_report_dict[main_score_type[0]][main_score_type[1]],
+                main_score=classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]],
                 log_line=log_line,
                 log_header=log_header,
                 detailed_results=detailed_result,

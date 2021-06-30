@@ -236,7 +236,7 @@ class RelationClassifierLinear(flair.nn.Model):
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 32,
             num_workers: int = 8,
-            main_score_type: Tuple[str, str] = ("micro avg", "f1-score"),
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
             return_predictions: bool = False,
     ) -> (Result, float):
 
@@ -370,9 +370,8 @@ class RelationClassifierLinear(flair.nn.Model):
             log_header = "PRECISION\tRECALL\tF1\tACCURACY"
             log_line = f"{precision_score}\t" f"{recall_score}\t" f"{macro_f_score}\t" f"{accuracy_score}"
 
-            print(main_score_type)
             result = Result(
-                main_score=classification_report_dict[main_score_type[0]][main_score_type[1]],
+                main_score=classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]],
                 log_line=log_line,
                 log_header=log_header,
                 detailed_results=detailed_result,

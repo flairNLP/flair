@@ -119,7 +119,7 @@ class ModelTrainer:
             eval_on_train_fraction=0.0,
             eval_on_train_shuffle=False,
             save_model_each_k_epochs: int = 0,
-            classification_main_metric=("micro avg", 'f1-score'),
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", 'f1-score'),
             tensorboard_comment='',
             save_best_checkpoints=False,
             use_swa: bool = False,
@@ -166,9 +166,6 @@ class ModelTrainer:
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
-
-        main_score_type = classification_main_metric if isinstance(self.model, TextClassifier)\
-                                                        or isinstance(self.model, RelationClassifierLinear)else None
 
         if self.use_tensorboard:
             try:
@@ -492,7 +489,7 @@ class ModelTrainer:
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_score_type=main_score_type
+                        main_score_type=main_evaluation_metric
                     )
                     result_line += f"\t{train_eval_result.log_line}"
 
@@ -505,13 +502,13 @@ class ModelTrainer:
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_score_type=main_score_type
+                        main_score_type=main_evaluation_metric
                     )
                     result_line += (
                         f"\t{train_part_loss}\t{train_part_eval_result.log_line}"
                     )
                     log.info(
-                        f"TRAIN_SPLIT : loss {train_part_loss} - score {round(train_part_eval_result.main_score, 4)}"
+                        f"TRAIN_SPLIT : loss {train_part_loss} - {main_evaluation_metric[1]} ({main_evaluation_metric[0]}) {round(train_part_eval_result.main_score, 4)}"
                     )
                 if self.use_tensorboard:
                     for (metric_class_avg_type, metric_type) in self.metrics_for_tensorboard:
@@ -527,11 +524,11 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / "dev.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_score_type=main_score_type
+                        main_score_type=main_evaluation_metric
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
                     log.info(
-                        f"DEV : loss {dev_loss} - score {round(dev_eval_result.main_score, 4)}"
+                        f"DEV : loss {dev_loss} - {main_evaluation_metric[1]} ({main_evaluation_metric[0]})  {round(dev_eval_result.main_score, 4)}"
                     )
                     # calculate scores using dev data if available
                     # append dev score to score history
@@ -561,11 +558,11 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / "test.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_score_type=main_score_type
+                        main_score_type=main_evaluation_metric
                     )
                     result_line += f"\t{test_loss}\t{test_eval_result.log_line}"
                     log.info(
-                        f"TEST : loss {test_loss} - score {round(test_eval_result.main_score, 4)}"
+                        f"TEST : loss {test_loss} - {main_evaluation_metric[1]} ({main_evaluation_metric[0]})  {round(test_eval_result.main_score, 4)}"
                     )
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
@@ -581,7 +578,6 @@ class ModelTrainer:
                                 f"test_{metric_class_avg_type}_{metric_type}",
                                 test_eval_result.classification_report[metric_class_avg_type][metric_type], self.epoch
                             )
-
 
                 # determine if this is the best model or if we need to anneal
                 current_epoch_has_best_model_so_far = False
@@ -640,7 +636,7 @@ class ModelTrainer:
 
                         if log_train_part:
                             f.write("\tTRAIN_PART_LOSS\tTRAIN_PART_" + "\tTRAIN_PART_".join(
-                                    train_part_eval_result.log_header.split("\t")))
+                                train_part_eval_result.log_header.split("\t")))
 
                         if log_dev:
                             f.write("\tDEV_LOSS\tDEV_" + "\tDEV_".join(dev_eval_result.log_header.split("\t")))
@@ -699,7 +695,11 @@ class ModelTrainer:
 
         # test best model if test data is present
         if self.corpus.test and not train_with_test:
-            final_score = self.final_test(base_path, mini_batch_chunk_size, num_workers, main_score_type)
+            final_score = self.final_test(
+                base_path=base_path,
+                eval_mini_batch_size=mini_batch_chunk_size,
+                num_workers=num_workers,
+                main_evaluation_metric=main_evaluation_metric)
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
@@ -734,8 +734,8 @@ class ModelTrainer:
             self,
             base_path: Union[Path, str],
             eval_mini_batch_size: int,
+            main_evaluation_metric: Tuple[str, str],
             num_workers: int = 8,
-            main_score_type: str = None,
     ):
         if type(base_path) is str:
             base_path = Path(base_path)
@@ -755,7 +755,7 @@ class ModelTrainer:
             num_workers=num_workers,
             out_path=base_path / "test.tsv",
             embedding_storage_mode="none",
-            main_score_type=main_score_type
+            main_evaluation_metric=main_evaluation_metric
         )
 
         test_results: Result = test_results
@@ -774,7 +774,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / f"{subcorpus.name}-test.tsv",
                         embedding_storage_mode="none",
-                        main_score_type=main_score_type
+                        main_evaluation_metric=main_evaluation_metric
                     )
                     log.info(subcorpus.name)
                     log.info(subcorpus_results.log_line)
