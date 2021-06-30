@@ -36,7 +36,7 @@ class Model(torch.nn.Module):
             out_path: Path = None,
             embedding_storage_mode: str = "none",
             main_evaluation_metric: Tuple[str, str] = ("micro avg", 'f1-score'),
-    ) -> (Result, float):
+    ) -> Result:
         """Evaluates the model. Returns a Result object containing evaluation
         results and a loss value. Implement this to enable evaluation.
         :param data_loader: DataLoader that iterates over dataset to be evaluated

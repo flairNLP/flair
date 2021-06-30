@@ -255,7 +255,7 @@ class TextClassifier(flair.nn.Model):
             embedding_storage_mode: str = "none",
             mini_batch_size: int = 32,
             num_workers: int = 8,
-            main_evaluation_metric: Tuple[str, str]=("micro avg", 'f1-score'),
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", 'f1-score'),
             return_predictions: bool = False
     ) -> (Result, float):
 
@@ -350,7 +350,8 @@ class TextClassifier(flair.nn.Model):
             classification_report = metrics.classification_report(y_true, y_pred, digits=4,
                                                                   target_names=target_names, zero_division=0)
             classification_report_dict = metrics.classification_report(y_true, y_pred, digits=4,
-                                                                  target_names=target_names, zero_division=0, output_dict=True)
+                                                                       target_names=target_names, zero_division=0,
+                                                                       output_dict=True)
 
             # get scores
             micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0),
@@ -380,17 +381,16 @@ class TextClassifier(flair.nn.Model):
                            f"{macro_f_score}\t" \
                            f"{accuracy_score}"
 
-            result = Result(
+            eval_loss /= batch_count
+
+            return Result(
                 main_score=classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]],
                 log_line=log_line,
                 log_header=log_header,
                 detailed_results=detailed_result,
-                classification_report=classification_report_dict
+                classification_report=classification_report_dict,
+                loss=eval_loss,
             )
-
-            eval_loss /= batch_count
-
-            return result, eval_loss
 
     @staticmethod
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:

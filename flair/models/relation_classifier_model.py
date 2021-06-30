@@ -251,7 +251,7 @@ class RelationClassifierLinear(flair.nn.Model):
             num_workers: int = 8,
             main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
             return_predictions: bool = False,
-    ) -> (Result, float):
+    ) -> Result:
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
         if not isinstance(sentences, Dataset):
@@ -383,17 +383,16 @@ class RelationClassifierLinear(flair.nn.Model):
             log_header = "PRECISION\tRECALL\tF1\tACCURACY"
             log_line = f"{precision_score}\t" f"{recall_score}\t" f"{macro_f_score}\t" f"{accuracy_score}"
 
-            result = Result(
+            eval_loss /= batch_count
+
+            return Result(
                 main_score=classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]],
                 log_line=log_line,
                 log_header=log_header,
                 detailed_results=detailed_result,
                 classification_report=classification_report_dict,
+                loss=eval_loss,
             )
-
-            eval_loss /= batch_count
-
-            return result, eval_loss
 
     def _get_state_dict(self):
         model_state = {

@@ -518,7 +518,7 @@ class ModelTrainer:
                         )
 
                 if log_dev:
-                    dev_eval_result, dev_loss = self.model.evaluate(
+                    dev_eval_result = self.model.evaluate(
                         self.corpus.dev,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
@@ -526,14 +526,14 @@ class ModelTrainer:
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric
                     )
-                    result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
+                    result_line += f"\t{dev_eval_result.loss}\t{dev_eval_result.log_line}"
                     log.info(
-                        f"DEV : loss {dev_loss} - {main_evaluation_metric[1]} ({main_evaluation_metric[0]})  {round(dev_eval_result.main_score, 4)}"
+                        f"DEV : loss {dev_eval_result.loss} - {main_evaluation_metric[1]} ({main_evaluation_metric[0]})  {round(dev_eval_result.main_score, 4)}"
                     )
                     # calculate scores using dev data if available
                     # append dev score to score history
                     dev_score_history.append(dev_eval_result.main_score)
-                    dev_loss_history.append(dev_loss if type(dev_loss) == float else dev_loss.item())
+                    dev_loss_history.append(dev_eval_result.loss)
 
                     dev_score = dev_eval_result.main_score
 
@@ -541,7 +541,7 @@ class ModelTrainer:
                     store_embeddings(self.corpus.dev, embeddings_storage_mode)
 
                     if self.use_tensorboard:
-                        writer.add_scalar("dev_loss", dev_loss, self.epoch)
+                        writer.add_scalar("dev_loss", dev_eval_result.loss, self.epoch)
                         writer.add_scalar(
                             "dev_score", dev_eval_result.main_score, self.epoch
                         )
@@ -552,7 +552,7 @@ class ModelTrainer:
                             )
 
                 if log_test:
-                    test_eval_result, test_loss = self.model.evaluate(
+                    test_eval_result = self.model.evaluate(
                         self.corpus.test,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
@@ -560,16 +560,16 @@ class ModelTrainer:
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric
                     )
-                    result_line += f"\t{test_loss}\t{test_eval_result.log_line}"
+                    result_line += f"\t{test_eval_result.loss}\t{test_eval_result.log_line}"
                     log.info(
-                        f"TEST : loss {test_loss} - {main_evaluation_metric[1]} ({main_evaluation_metric[0]})  {round(test_eval_result.main_score, 4)}"
+                        f"TEST : loss {test_eval_result.loss} - {main_evaluation_metric[1]} ({main_evaluation_metric[0]})  {round(test_eval_result.main_score, 4)}"
                     )
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(self.corpus.test, embeddings_storage_mode)
 
                     if self.use_tensorboard:
-                        writer.add_scalar("test_loss", test_loss, self.epoch)
+                        writer.add_scalar("test_loss", test_eval_result.loss, self.epoch)
                         writer.add_scalar(
                             "test_score", test_eval_result.main_score, self.epoch
                         )
@@ -588,16 +588,16 @@ class ModelTrainer:
                         best_validation_score = dev_score
 
                     if isinstance(lr_scheduler, AnnealOnPlateau):
-                        lr_scheduler.step(dev_score, dev_loss)
+                        lr_scheduler.step(dev_score, dev_eval_result.loss)
 
                 # alternative: anneal against dev loss
                 if not train_with_dev and anneal_against_dev_loss:
-                    if dev_loss < best_validation_score:
+                    if dev_eval_result.loss < best_validation_score:
                         current_epoch_has_best_model_so_far = True
-                        best_validation_score = dev_loss
+                        best_validation_score = dev_eval_result.loss
 
                     if isinstance(lr_scheduler, AnnealOnPlateau):
-                        lr_scheduler.step(dev_loss)
+                        lr_scheduler.step(dev_eval_result.loss)
 
                 # alternative: anneal against train loss
                 if train_with_dev:
@@ -749,13 +749,13 @@ class ModelTrainer:
         else:
             log.info("Testing using last state of model ...")
 
-        test_results, test_loss = self.model.evaluate(
+        test_results = self.model.evaluate(
             self.corpus.test,
             mini_batch_size=eval_mini_batch_size,
             num_workers=num_workers,
             out_path=base_path / "test.tsv",
             embedding_storage_mode="none",
-            main_evaluation_metric=main_evaluation_metric
+            main_evaluation_metric=main_evaluation_metric,
         )
 
         test_results: Result = test_results
@@ -768,7 +768,7 @@ class ModelTrainer:
             for subcorpus in self.corpus.corpora:
                 log_line(log)
                 if subcorpus.test:
-                    subcorpus_results, subcorpus_loss = self.model.evaluate(
+                    subcorpus_results = self.model.evaluate(
                         subcorpus.test,
                         mini_batch_size=eval_mini_batch_size,
                         num_workers=num_workers,

@@ -22,7 +22,7 @@ from flair.data import Dictionary, Sentence, Label
 from flair.datasets import SentenceDataset, DataLoader
 from flair.embeddings import TokenEmbeddings, StackedEmbeddings, Embeddings
 from flair.file_utils import cached_path, unzip_file
-from flair.training_utils import Metric, Result, store_embeddings
+from flair.training_utils import Result, store_embeddings
 
 log = logging.getLogger("flair")
 
@@ -418,7 +418,7 @@ class SequenceTagger(flair.nn.Model):
             wsd_evaluation: bool = False,
             main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
             **kwargs
-    ) -> (Result, float):
+    ) -> Result:
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
         if not isinstance(sentences, Dataset):
@@ -477,19 +477,10 @@ class SequenceTagger(flair.nn.Model):
                         if representation not in all_spans:
                             all_spans.append(representation)
 
-                ordered_ground_truth = []
-                ordered_predictions = []
-
                 for span in all_spans:
 
                     true_value = true_values_for_batch[span] if span in true_values_for_batch else 'O'
                     prediction = predictions[span] if span in predictions else 'O'
-
-                    ordered_ground_truth.append(true_value)
-                    ordered_predictions.append(prediction)
-
-                    eval_line = f"{span}\t{true_value}\t{prediction}\n"
-                    lines.append(eval_line)
 
                     true_idx = self.tag_dictionary_no_bio.get_idx_for_item(true_value)
                     y_true_instance = np.zeros(len(self.tag_dictionary_no_bio), dtype=int)
@@ -505,6 +496,18 @@ class SequenceTagger(flair.nn.Model):
 
                 store_embeddings(batch, embedding_storage_mode)
 
+                for sentence in batch:
+                    for token in sentence:
+                        eval_line = f"{token.text} {token.get_tag(self.tag_type).value} {token.get_tag('predicted').value}\n"
+                        lines.append(eval_line)
+                    lines.append("\n")
+
+        # write predictions to out_file if set
+        if out_path:
+            with open(Path(out_path), "w", encoding="utf-8") as outfile:
+                outfile.write("".join(lines))
+
+        # now, calculate evaluation numbers
         target_names = []
         labels = []
 
@@ -544,17 +547,16 @@ class SequenceTagger(flair.nn.Model):
         log_header = "PRECISION\tRECALL\tF1\tACCURACY"
         log_line = f"{precision_score}\t" f"{recall_score}\t" f"{micro_f_score}\t" f"{accuracy_score}"
 
-        result = Result(
+        eval_loss /= total_word_count
+
+        return Result(
             main_score=classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]],
             log_line=log_line,
             log_header=log_header,
             detailed_results=detailed_result,
             classification_report=classification_report_dict,
+            loss=eval_loss
         )
-
-        eval_loss /= total_word_count
-
-        return result, eval_loss
 
     def forward_loss(
             self, data_points: Union[List[Sentence], Sentence], sort=True
