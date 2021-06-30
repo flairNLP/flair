@@ -54,6 +54,8 @@ class RelationClassifierLinear(flair.nn.Model):
         self.use_gold_spans = use_gold_spans
         self.pooling_operation = pooling_operation
 
+        self.dropout = torch.nn.Dropout(0.5)
+
         self.weight_dict = loss_weights
         # Initialize the weight tensor
         if loss_weights is not None:
@@ -133,6 +135,8 @@ class RelationClassifierLinear(flair.nn.Model):
                     entity_pairs.append((span, span_2))
 
         all_relations = torch.stack(relation_embeddings)
+
+        all_relations = self.dropout(all_relations)
 
         sentence_relation_scores = self.decoder(all_relations)
 
