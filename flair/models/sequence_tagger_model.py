@@ -438,17 +438,12 @@ class SequenceTagger(flair.nn.Model):
         self.tag_dictionary_no_bio = Dictionary()
         for i in range(len(self.tag_dictionary)):
             label = self.tag_dictionary.get_item_for_index(i)
-            # print(label)
-            # print(re.split('^[BIES]-', label)[-1])
             self.tag_dictionary_no_bio.add_item(re.split('^[BIES]-', label)[-1])
-        # print(self.tag_dictionary_no_bio.item2idx)
 
         for batch in data_loader:
             for sentence in batch:
                 for gold_span in sentence.get_spans(self.tag_type):
                     self.tag_dictionary_no_bio.add_item(re.split('^[BIES]-', gold_span.tag)[-1])
-        # print(self.tag_dictionary_no_bio.item2idx)
-        # asd
 
         with torch.no_grad():
             for batch in data_loader:
@@ -468,7 +463,7 @@ class SequenceTagger(flair.nn.Model):
                 true_values_for_batch = {}
                 for s_id, sentence in enumerate(batch):
                     for gold_span in sentence.get_spans(self.tag_type):
-                        representation = str(s_id) + ': ' + repr(gold_span)
+                        representation = str(s_id) + ': ' + gold_span.id_text
                         true_values_for_batch[representation] = gold_span.tag
                         if representation not in all_spans:
                             all_spans.append(representation)
@@ -477,7 +472,7 @@ class SequenceTagger(flair.nn.Model):
                 predictions = {}
                 for s_id, sentence in enumerate(batch):
                     for predicted_span in sentence.get_spans("predicted"):
-                        representation = str(s_id) + ': ' + repr(predicted_span)
+                        representation = str(s_id) + ': ' + predicted_span.id_text
                         predictions[representation] = predicted_span.tag
                         if representation not in all_spans:
                             all_spans.append(representation)
@@ -532,8 +527,8 @@ class SequenceTagger(flair.nn.Model):
 
         accuracy_score = round(skmetrics.accuracy_score(y_true, y_pred), 4)
 
-        precision_score = round(classification_report_dict["macro avg"]["precision"], 4)
-        recall_score = round(classification_report_dict["macro avg"]["recall"], 4)
+        precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
+        recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
         micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
         macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
 
