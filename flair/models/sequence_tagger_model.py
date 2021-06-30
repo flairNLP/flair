@@ -1,5 +1,6 @@
 import logging
 import sys
+import re
 
 from pathlib import Path
 from typing import List, Union, Optional, Dict, Tuple
@@ -437,12 +438,17 @@ class SequenceTagger(flair.nn.Model):
         self.tag_dictionary_no_bio = Dictionary()
         for i in range(len(self.tag_dictionary)):
             label = self.tag_dictionary.get_item_for_index(i)
-            self.tag_dictionary_no_bio.add_item(label.split("-")[-1])
+            # print(label)
+            # print(re.split('^[BIES]-', label)[-1])
+            self.tag_dictionary_no_bio.add_item(re.split('^[BIES]-', label)[-1])
+        # print(self.tag_dictionary_no_bio.item2idx)
 
         for batch in data_loader:
             for sentence in batch:
                 for gold_span in sentence.get_spans(self.tag_type):
-                    self.tag_dictionary_no_bio.add_item(gold_span.tag.split("-")[-1])
+                    self.tag_dictionary_no_bio.add_item(re.split('^[BIES]-', gold_span.tag)[-1])
+        # print(self.tag_dictionary_no_bio.item2idx)
+        # asd
 
         with torch.no_grad():
             for batch in data_loader:
@@ -524,24 +530,12 @@ class SequenceTagger(flair.nn.Model):
             y_true, y_pred, target_names=target_names, zero_division=0, output_dict=True, labels=labels,
         )
 
-        # get scores
-        micro_f_score = round(skmetrics.fbeta_score(y_true,
-                                                    y_pred,
-                                                    beta=self.beta,
-                                                    average="micro",
-                                                    zero_division=0,
-                                                    labels=labels), 4)
-
-        macro_f_score = round(skmetrics.fbeta_score(y_true,
-                                                    y_pred,
-                                                    beta=self.beta,
-                                                    average="macro",
-                                                    zero_division=0,
-                                                    labels=labels), 4)
-
         accuracy_score = round(skmetrics.accuracy_score(y_true, y_pred), 4)
+
         precision_score = round(classification_report_dict["macro avg"]["precision"], 4)
         recall_score = round(classification_report_dict["macro avg"]["recall"], 4)
+        micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
+        macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
 
         detailed_result = (
                 "\nResults:"
@@ -553,7 +547,7 @@ class SequenceTagger(flair.nn.Model):
 
         # line for log file
         log_header = "PRECISION\tRECALL\tF1\tACCURACY"
-        log_line = f"{precision_score}\t" f"{recall_score}\t" f"{macro_f_score}\t" f"{accuracy_score}"
+        log_line = f"{precision_score}\t" f"{recall_score}\t" f"{micro_f_score}\t" f"{accuracy_score}"
 
         result = Result(
             main_score=classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]],
@@ -563,7 +557,7 @@ class SequenceTagger(flair.nn.Model):
             classification_report=classification_report_dict,
         )
 
-        # eval_loss /= batch_count
+        eval_loss /= total_word_count
 
         return result, eval_loss
 

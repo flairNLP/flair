@@ -1439,6 +1439,7 @@ class Corpus:
                 if isinstance(sentence, Sentence):
                     for token in sentence.tokens:
                         for label in token.get_labels(label_type):
+                            # print(label)
                             label_dictionary.add_item(label.value)
 
                 if not label_dictionary.multi_label:
