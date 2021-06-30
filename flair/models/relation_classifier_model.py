@@ -367,12 +367,8 @@ class RelationClassifierLinear(flair.nn.Model):
             )
 
             # line for log file
-            if not self.multi_label:
-                log_header = "ACCURACY"
-                log_line = f"\t{accuracy_score}"
-            else:
-                log_header = "PRECISION\tRECALL\tF1\tACCURACY"
-                log_line = f"{precision_score}\t" f"{recall_score}\t" f"{macro_f_score}\t" f"{accuracy_score}"
+            log_header = "PRECISION\tRECALL\tF1\tACCURACY"
+            log_line = f"{precision_score}\t" f"{recall_score}\t" f"{macro_f_score}\t" f"{accuracy_score}"
 
             print(main_score_type)
             result = Result(
@@ -394,7 +390,6 @@ class RelationClassifierLinear(flair.nn.Model):
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
             "span_label_type": self.span_label_type,
-            "multi_label": self.multi_label,
             "beta": self.beta,
             "loss_weights": self.loss_weights,
         }
@@ -408,7 +403,6 @@ class RelationClassifierLinear(flair.nn.Model):
             label_dictionary=state["label_dictionary"],
             label_type=state["label_type"],
             span_label_type=state["span_label_type"],
-            multi_label=state["multi_label"],
             beta=state["beta"],
             loss_weights=state["loss_weights"],
         )
