@@ -31,6 +31,7 @@ class RelationClassifierLinear(flair.nn.Model):
             beta: float = 1.0,
             loss_weights: Dict[str, float] = None,
             use_gold_spans: bool = True,
+            pooling_operation: str = "first_last"
     ):
         """
         Initializes a RelationClassifier
@@ -51,6 +52,7 @@ class RelationClassifierLinear(flair.nn.Model):
 
         self.beta = beta
         self.use_gold_spans = use_gold_spans
+        self.pooling_operation = pooling_operation
 
         self.weight_dict = loss_weights
         # Initialize the weight tensor
@@ -64,7 +66,11 @@ class RelationClassifierLinear(flair.nn.Model):
         else:
             self.loss_weights = None
 
-        self.decoder = nn.Linear(2 * token_embeddings.embedding_length, len(self.label_dictionary))
+        relation_representation_length = 2 * token_embeddings.embedding_length
+        if self.pooling_operation == 'first_last':
+            relation_representation_length *= 2
+
+        self.decoder = nn.Linear(relation_representation_length, len(self.label_dictionary))
 
         nn.init.xavier_uniform_(self.decoder.weight)
 
@@ -98,7 +104,10 @@ class RelationClassifierLinear(flair.nn.Model):
             # get embedding for each entity
             span_embeddings = []
             for span in spans:
-                span_embeddings.append(span.tokens[0].get_embedding())
+                if self.pooling_operation == "first":
+                    span_embeddings.append(span.tokens[0].get_embedding())
+                if self.pooling_operation == "first_last":
+                    span_embeddings.append(torch.cat([span.tokens[0].get_embedding(), span.tokens[-1].get_embedding()]))
 
             # go through cross product of entities, for each pair concat embeddings
             for span, embedding in zip(spans, span_embeddings):
@@ -114,7 +123,7 @@ class RelationClassifierLinear(flair.nn.Model):
                     # if using gold spans only, skip all entity pairs that are not in gold data
                     elif self.use_gold_spans:
                         continue
-                    # if no gold label exists, and all spans are used, label defaults to 'O' (no relation)
+                        # if no gold label exists, and all spans are used, label defaults to 'O' (no relation)
                         label = 'O'
 
                     indices.append(self.label_dictionary.get_idx_for_item(label))
@@ -391,6 +400,7 @@ class RelationClassifierLinear(flair.nn.Model):
             "span_label_type": self.span_label_type,
             "beta": self.beta,
             "loss_weights": self.loss_weights,
+            "pooling_operation": self.pooling_operation,
         }
         return model_state
 
@@ -404,6 +414,7 @@ class RelationClassifierLinear(flair.nn.Model):
             span_label_type=state["span_label_type"],
             beta=state["beta"],
             loss_weights=state["loss_weights"],
+            pooling_operation=state["pooling_operation"],
         )
 
         model.load_state_dict(state["state_dict"])
