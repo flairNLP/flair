@@ -502,7 +502,7 @@ class ModelTrainer:
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_score_type=main_evaluation_metric
+                        main_evaluation_metric=main_evaluation_metric
                     )
                     result_line += (
                         f"\t{train_part_loss}\t{train_part_eval_result.log_line}"
@@ -524,7 +524,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / "dev.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_score_type=main_evaluation_metric
+                        main_evaluation_metric=main_evaluation_metric
                     )
                     result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
                     log.info(
@@ -558,7 +558,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / "test.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_score_type=main_evaluation_metric
+                        main_evaluation_metric=main_evaluation_metric
                     )
                     result_line += f"\t{test_loss}\t{test_eval_result.log_line}"
                     log.info(
