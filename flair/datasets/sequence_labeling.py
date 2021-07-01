@@ -11,7 +11,6 @@ from zipfile import ZipFile
 import tarfile
 import csv
 
-
 import flair
 from flair.data import Corpus, MultiCorpus, FlairDataset, Sentence, Token
 from flair.datasets.base import find_train_dev_test_files
@@ -208,7 +207,7 @@ class ColumnDataset(FlairDataset):
                     sentence = self._convert_lines_to_sentence(self._read_next_sentence(file))
                     if not sentence: break
                     if self.banned_sentences is not None and any(
-                        [d in sentence.to_plain_string() for d in self.banned_sentences]):
+                            [d in sentence.to_plain_string() for d in self.banned_sentences]):
                         continue
                     sentence._previous_sentence = previous_sentence
                     sentence._next_sentence = None
@@ -321,6 +320,7 @@ class ColumnDataset(FlairDataset):
 
         return sentence
 
+
 class AMHARIC_NER(ColumnCorpus):
     def __init__(
             self,
@@ -367,6 +367,7 @@ class AMHARIC_NER(ColumnCorpus):
             in_memory=in_memory,
             **corpusargs,
         )
+
 
 class ANER_CORP(ColumnCorpus):
     def __init__(
@@ -478,7 +479,6 @@ class AQMAR(ColumnCorpus):
         )
 
 
-
 class BIOFID(ColumnCorpus):
     def __init__(
             self,
@@ -547,7 +547,7 @@ class CONLL_03(ColumnCorpus):
             self,
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
-            entity_linking:bool = False,
+            entity_linking: bool = False,
             in_memory: bool = True,
             **corpusargs,
     ):
@@ -570,11 +570,12 @@ class CONLL_03(ColumnCorpus):
         if not entity_linking:
             columns = {0: "text", 1: "pos", 2: "np", 3: "ner"}
         else:
-            columns = {0: "text", 1: "pos", 2: "np", 3: "ner", 4: 'tmp',5:'entity' ,6:'normalised entity', 7: 'link', 8:'tmp_nr', 9:'tmpLink'}
+            columns = {0: "text", 1: "pos", 2: "np", 3: "ner", 4: 'tmp', 5: 'entity', 6: 'normalised entity', 7: 'link',
+                       8: 'tmp_nr', 9: 'tmpLink'}
 
         # this dataset name
         if entity_linking:
-            dataset_name = self.__class__.__name__.lower()+"-yago-reduced"
+            dataset_name = self.__class__.__name__.lower() + "-yago-reduced"
         else:
             dataset_name = self.__class__.__name__.lower()
 
@@ -589,8 +590,6 @@ class CONLL_03(ColumnCorpus):
             cached_path(f"{conll_yago_path}combinedENG.testa", Path("datasets") / dataset_name)
             cached_path(f"{conll_yago_path}combinedENG.testb", Path("datasets") / dataset_name)
             cached_path(f"{conll_yago_path}combinedENG.train", Path("datasets") / dataset_name)
-            
-
 
         # check if data there
         if not data_folder.exists():
@@ -611,7 +610,7 @@ class CONLL_03(ColumnCorpus):
                 document_separator_token="-DOCSTART-",
                 **corpusargs,
             )
-        else:    
+        else:
             super(CONLL_03, self).__init__(
                 data_folder,
                 columns,
@@ -744,6 +743,7 @@ class CONLL_03_DUTCH(ColumnCorpus):
                 if line.startswith('-DOCSTART-'):
                     f.write("\n")
 
+
 class PERSON_NER(ColumnCorpus):
     def __init__(
             self,
@@ -796,12 +796,13 @@ class PERSON_NER(ColumnCorpus):
 
     @staticmethod
     def __concatAllFiles(data_folder):
-        arr = os.listdir( data_folder / 'raw')
-        
-        with open(data_folder/'bigFile.conll', 'w') as outfile:
+        arr = os.listdir(data_folder / 'raw')
+
+        with open(data_folder / 'bigFile.conll', 'w') as outfile:
             for fname in arr:
                 with open(data_folder / 'raw' / fname) as infile:
                     outfile.write(infile.read())
+
 
 class ICELANDIC_NER(ColumnCorpus):
     def __init__(
@@ -837,30 +838,29 @@ class ICELANDIC_NER(ColumnCorpus):
 
         if not os.path.isfile(data_folder / 'icelandic_ner.txt'):
             # download zip
-            icelandic_ner ="https://repository.clarin.is/repository/xmlui/handle/20.500.12537/42/allzip"
+            icelandic_ner = "https://repository.clarin.is/repository/xmlui/handle/20.500.12537/42/allzip"
             icelandic_ner_path = cached_path(icelandic_ner, Path("datasets") / dataset_name)
 
-            #unpacking the zip
+            # unpacking the zip
             unpack_file(
-                  icelandic_ner_path,
-                  data_folder,
-                  mode="zip",
-                  keep=True
-              )
+                icelandic_ner_path,
+                data_folder,
+                mode="zip",
+                keep=True
+            )
         outputfile = os.path.abspath(data_folder)
 
-        #merge the files in one as the zip is containing multiples files
+        # merge the files in one as the zip is containing multiples files
 
-        with open(outputfile/data_folder/"icelandic_ner.txt", "wb") as outfile:
-            for files in os.walk(outputfile/data_folder):
+        with open(outputfile / data_folder / "icelandic_ner.txt", "wb") as outfile:
+            for files in os.walk(outputfile / data_folder):
                 f = files[2]
 
                 for i in range(len(f)):
                     if f[i].endswith('.txt'):
-                        with open(outputfile/data_folder/f[i], 'rb') as infile:
+                        with open(outputfile / data_folder / f[i], 'rb') as infile:
                             contents = infile.read()
                         outfile.write(contents)
-
 
         super(ICELANDIC_NER, self).__init__(
             data_folder,
@@ -871,7 +871,7 @@ class ICELANDIC_NER(ColumnCorpus):
             **corpusargs,
         )
 
-        
+
 class WEBPAGES_NER(ColumnCorpus):
     def __init__(
             self,
@@ -934,8 +934,8 @@ class WEBPAGES_NER(ColumnCorpus):
             in_memory=in_memory,
             **corpusargs,
         )
-        
-      
+
+
 class JAPANESE_NER(ColumnCorpus):
     def __init__(
             self,
@@ -965,7 +965,6 @@ class JAPANESE_NER(ColumnCorpus):
         if not base_path:
             base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
-
 
         # download data from github if necessary (hironsan.txt, ja.wikipedia.conll)
         IOB2_path = "https://raw.githubusercontent.com/Hironsan/IOB2Corpus/master/"
@@ -1014,7 +1013,7 @@ class JAPANESE_NER(ColumnCorpus):
                     f.write("\n")
                 else:
                     f.write(sp_line[0] + "\t" + sp_line[len(sp_line) - 1])
-                    
+
 
 class STACKOVERFLOW_NER(ColumnCorpus):
     def __init__(
@@ -1075,12 +1074,12 @@ class STACKOVERFLOW_NER(ColumnCorpus):
 
         # data validation
         banned_sentences = ["code omitted for annotation",
-                           "omitted for annotation",
-                           "CODE_BLOCK :",
-                           "OP_BLOCK :",
-                           "Question_URL :",
-                           "Question_ID :"
-                           ]
+                            "omitted for annotation",
+                            "CODE_BLOCK :",
+                            "OP_BLOCK :",
+                            "Question_URL :",
+                            "Question_ID :"
+                            ]
 
         files = ["train", "test", "dev"]
 
@@ -1089,14 +1088,13 @@ class STACKOVERFLOW_NER(ColumnCorpus):
             answers = 0
 
             cached_path(f"{STACKOVERFLOW_NER_path}{file}.txt", Path("datasets") / dataset_name)
-            for line in open(data_folder/ (file + ".txt"), mode="r", encoding="utf-8"):
+            for line in open(data_folder / (file + ".txt"), mode="r", encoding="utf-8"):
                 if line.startswith("Question_ID"):
                     questions += 1
 
                 if line.startswith("Answer_to_Question_ID"):
                     answers += 1
             log.info(f"File {file} has {questions} questions and {answers} answers.")
-
 
         super(STACKOVERFLOW_NER, self).__init__(
             data_folder,
@@ -1674,6 +1672,7 @@ class LUO_NER(ColumnCorpus):
             **corpusargs,
         )
 
+
 class MIT_MOVIE_NER_SIMPLE(ColumnCorpus):
     def __init__(
             self,
@@ -1816,7 +1815,7 @@ class MIT_RESTAURANT_NER(ColumnCorpus):
             **corpusargs,
         )
 
-        
+
 class IGBO_NER(ColumnCorpus):
     def __init__(
             self,
@@ -1863,8 +1862,8 @@ class IGBO_NER(ColumnCorpus):
             in_memory=in_memory,
             **corpusargs,
         )
-        
-        
+
+
 class HAUSA_NER(ColumnCorpus):
     def __init__(
             self,
@@ -1990,7 +1989,6 @@ class KINYARWANDA_NER(ColumnCorpus):
         cached_path(f"{ner_kinyarwanda_path}train.txt", Path("datasets") / dataset_name)
         cached_path(f"{ner_kinyarwanda_path}dev.txt", Path("datasets") / dataset_name)
 
-
         super(KINYARWANDA_NER, self).__init__(
             data_folder,
             columns,
@@ -1998,6 +1996,7 @@ class KINYARWANDA_NER(ColumnCorpus):
             in_memory=in_memory,
             **corpusargs,
         )
+
 
 class LUGANDA_NER(ColumnCorpus):
     def __init__(
@@ -2046,13 +2045,14 @@ class LUGANDA_NER(ColumnCorpus):
             dev_file=dev_file,
             test_file=test_file,
             train_file=train_file,
-            column_delimiter= " ",
+            column_delimiter=" ",
             tag_to_bioes=tag_to_bioes,
             encoding="latin-1",
             in_memory=in_memory,
             document_separator_token="-DOCSTART-",
             **corpusargs,
         )
+
 
 class NAIJA_PIDGIN_NER(ColumnCorpus):
     def __init__(
@@ -2086,7 +2086,7 @@ class NAIJA_PIDGIN_NER(ColumnCorpus):
         if not base_path:
             base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
-        
+
         corpus_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/pcm/"
 
         cached_path(f"{corpus_path}test.txt", Path("datasets") / dataset_name)
@@ -2100,6 +2100,7 @@ class NAIJA_PIDGIN_NER(ColumnCorpus):
             in_memory=in_memory,
             **corpusargs,
         )
+
 
 class SWAHILI_NER(ColumnCorpus):
     def __init__(
@@ -2150,6 +2151,7 @@ class SWAHILI_NER(ColumnCorpus):
             in_memory=in_memory,
             **corpusargs,
         )
+
 
 class NER_BASQUE(ColumnCorpus):
     def __init__(
@@ -4330,32 +4332,34 @@ class REDDIT_EL_GOLD(ColumnCorpus):
             with open(data_folder / corpus_file_name, "w") as txtout:
 
                 # First parse the post titles
-                with open(data_folder / "posts.tsv", "r") as tsvin1, open(data_folder / "gold_post_annotations.tsv", "r") as tsvin2:
+                with open(data_folder / "posts.tsv", "r") as tsvin1, open(data_folder / "gold_post_annotations.tsv",
+                                                                          "r") as tsvin2:
 
                     posts = csv.reader(tsvin1, delimiter="\t")
                     self.post_annotations = csv.reader(tsvin2, delimiter="\t")
                     self.curr_annot = next(self.post_annotations)
 
-                    for row in posts: # Go through all the post titles
+                    for row in posts:  # Go through all the post titles
 
-                        txtout.writelines("-DOCSTART-\n\n") # Start each post with a -DOCSTART- token
+                        txtout.writelines("-DOCSTART-\n\n")  # Start each post with a -DOCSTART- token
 
                         # Keep track of how many and which entity mentions does a given post title have
-                        link_annots = [] # [start pos, end pos, wiki page title] of an entity mention
+                        link_annots = []  # [start pos, end pos, wiki page title] of an entity mention
 
                         # Check if the current post title has an entity link and parse accordingly
                         if row[0] == self.curr_annot[0]:
 
                             link_annots.append((int(self.curr_annot[4]), int(self.curr_annot[5]), self.curr_annot[3]))
-                            link_annots = self._fill_annot_array(link_annots, row[0], post_flag = True)
+                            link_annots = self._fill_annot_array(link_annots, row[0], post_flag=True)
 
                             # Post titles with entity mentions (if any) are handled via this function
-                            self._text_to_cols(Sentence(row[2], use_tokenizer = True), link_annots, txtout)
+                            self._text_to_cols(Sentence(row[2], use_tokenizer=True), link_annots, txtout)
                         else:
-                            self._text_to_cols(Sentence(row[2], use_tokenizer = True), link_annots, txtout)
+                            self._text_to_cols(Sentence(row[2], use_tokenizer=True), link_annots, txtout)
 
                 # Then parse the comments
-                with open(data_folder / "comments.tsv", "r") as tsvin3, open(data_folder / "gold_comment_annotations.tsv", "r") as tsvin4:
+                with open(data_folder / "comments.tsv", "r") as tsvin3, open(
+                        data_folder / "gold_comment_annotations.tsv", "r") as tsvin4:
 
                     self.comments = csv.reader(tsvin3, delimiter="\t")
                     self.comment_annotations = csv.reader(tsvin4, delimiter="\t")
@@ -4366,11 +4370,11 @@ class REDDIT_EL_GOLD(ColumnCorpus):
                     # Iterate over the comments.tsv file, until the end is reached
                     while not self.stop_iter:
 
-                        txtout.writelines("-DOCSTART-\n") # Start each comment thread with a -DOCSTART- token
+                        txtout.writelines("-DOCSTART-\n")  # Start each comment thread with a -DOCSTART- token
 
                         # Keep track of the current comment thread and its corresponding key, on which the annotations are matched.
                         # Each comment thread is handled as one 'document'.
-                        self.curr_comm = self.curr_row[4] 
+                        self.curr_comm = self.curr_row[4]
                         comm_key = self.curr_row[0]
 
                         # Python's csv package for some reason fails to correctly parse a handful of rows inside the comments.tsv file.
@@ -4379,30 +4383,36 @@ class REDDIT_EL_GOLD(ColumnCorpus):
                             if comm_key == "en5rf4c":
                                 self.parsed_row = (r.split("\t") for r in self.curr_row[4].split("\n"))
                                 self.curr_comm = next(self.parsed_row)
-                            self._fill_curr_comment(fix_flag = True)
+                            self._fill_curr_comment(fix_flag=True)
                         # In case we are dealing with properly parsed rows, proceed with a regular parsing procedure
                         else:
-                            self._fill_curr_comment(fix_flag = False)
+                            self._fill_curr_comment(fix_flag=False)
 
-                        link_annots = [] # [start pos, end pos, wiki page title] of an entity mention
+                        link_annots = []  # [start pos, end pos, wiki page title] of an entity mention
 
                         # Check if the current comment thread has an entity link and parse accordingly, same as with post titles above
                         if comm_key == self.curr_annot[0]:
                             link_annots.append((int(self.curr_annot[4]), int(self.curr_annot[5]), self.curr_annot[3]))
-                            link_annots = self._fill_annot_array(link_annots, comm_key, post_flag = False)
-                            self._text_to_cols(Sentence(self.curr_comm, use_tokenizer = True), link_annots, txtout)
+                            link_annots = self._fill_annot_array(link_annots, comm_key, post_flag=False)
+                            self._text_to_cols(Sentence(self.curr_comm, use_tokenizer=True), link_annots, txtout)
                         else:
                             # In two of the comment thread a case of capital letter spacing occurs, which the SegtokTokenizer cannot properly handle.
                             # The following if-elif condition handles these two cases and as result writes full capitalized words in each corresponding row, 
                             # and not just single letters into single rows.
                             if comm_key == "dv74ybb":
-                                self.curr_comm = " ".join([word.replace(" ", "") for word in self.curr_comm.split("  ")])
+                                self.curr_comm = " ".join(
+                                    [word.replace(" ", "") for word in self.curr_comm.split("  ")])
                             elif comm_key == "eci2lut":
-                                self.curr_comm = (self.curr_comm[:18] + self.curr_comm[18:27].replace(" ", "") + self.curr_comm[27:55] + 
-                                self.curr_comm[55:68].replace(" ", "") + self.curr_comm[68:85] + self.curr_comm[85:92].replace(" ", "") + 
-                                self.curr_comm[92:])
+                                self.curr_comm = (self.curr_comm[:18] + self.curr_comm[18:27].replace(" ",
+                                                                                                      "") + self.curr_comm[
+                                                                                                            27:55] +
+                                                  self.curr_comm[55:68].replace(" ", "") + self.curr_comm[
+                                                                                           68:85] + self.curr_comm[
+                                                                                                    85:92].replace(" ",
+                                                                                                                   "") +
+                                                  self.curr_comm[92:])
 
-                            self._text_to_cols(Sentence(self.curr_comm, use_tokenizer = True), link_annots, txtout)
+                            self._text_to_cols(Sentence(self.curr_comm, use_tokenizer=True), link_annots, txtout)
 
         super(REDDIT_EL_GOLD, self).__init__(
             data_folder,
@@ -4426,14 +4436,17 @@ class REDDIT_EL_GOLD(ColumnCorpus):
             # If there are annotated entity mentions for given post title or a comment thread
             if links:
                 # Keep track which is the correct corresponding entity link, in cases where there is >1 link in a sentence
-                link_index = [j for j,v in enumerate(links) if (sentence[i].start_pos >= v[0] and sentence[i].end_pos <= v[1])]
+                link_index = [j for j, v in enumerate(links) if
+                              (sentence[i].start_pos >= v[0] and sentence[i].end_pos <= v[1])]
                 # Write the token with a corresponding tag to file
                 try:
-                    if any(sentence[i].start_pos == v[0] and sentence[i].end_pos == v[1] for j,v in enumerate(links)):
+                    if any(sentence[i].start_pos == v[0] and sentence[i].end_pos == v[1] for j, v in enumerate(links)):
                         outfile.writelines(sentence[i].text + "\tS-Link:" + links[link_index[0]][2] + "\n")
-                    elif any(sentence[i].start_pos == v[0] and sentence[i].end_pos != v[1] for j,v in enumerate(links)):
+                    elif any(
+                            sentence[i].start_pos == v[0] and sentence[i].end_pos != v[1] for j, v in enumerate(links)):
                         outfile.writelines(sentence[i].text + "\tB-Link:" + links[link_index[0]][2] + "\n")
-                    elif any(sentence[i].start_pos >= v[0] and sentence[i].end_pos <= v[1] for j,v in enumerate(links)):
+                    elif any(
+                            sentence[i].start_pos >= v[0] and sentence[i].end_pos <= v[1] for j, v in enumerate(links)):
                         outfile.writelines(sentence[i].text + "\tI-Link:" + links[link_index[0]][2] + "\n")
                     else:
                         outfile.writelines(sentence[i].text + "\tO\n")
@@ -4449,12 +4462,12 @@ class REDDIT_EL_GOLD(ColumnCorpus):
             # incorrectly, in order to keep the desired format (empty line as a sentence separator).
             try:
                 if ((sentence[i].text in {".", "!", "?", "!*"}) and
-                    (sentence[i+1].text not in {'"', '“', "'", "''", "!", "?", ";)", "."}) and 
-                    ("." not in sentence[i-1].text)):
+                        (sentence[i + 1].text not in {'"', '“', "'", "''", "!", "?", ";)", "."}) and
+                        ("." not in sentence[i - 1].text)):
                     outfile.writelines("\n")
-            except IndexError: 
-            # Thrown when the second check above happens, but the last token of a sentence is reached.
-            # Indicates that the EOS punctuaion mark is present, therefore an empty line needs to be written below.
+            except IndexError:
+                # Thrown when the second check above happens, but the last token of a sentence is reached.
+                # Indicates that the EOS punctuaion mark is present, therefore an empty line needs to be written below.
                 outfile.writelines("\n")
 
         # If there is no punctuation mark indicating EOS, an empty line is still needed after the EOS
@@ -4496,13 +4509,13 @@ class REDDIT_EL_GOLD(ColumnCorpus):
             # Check if further annotations belong to the current sentence as well
             try:
                 next_row = next(self.comments) if not fix_flag else next(self.parsed_row)
-                if len(next_row) < 2: 
+                if len(next_row) < 2:
                     # 'else "  "' is needed to keep the proper token positions (for accordance with annotations)
                     self.curr_comm += next_row[0] if any(next_row) else "  "
                 else:
                     self.curr_row = next_row
                     break
-            except StopIteration: # When the end of the comments.tsv file is reached
+            except StopIteration:  # When the end of the comments.tsv file is reached
                 self.curr_row = next_row
                 self.stop_iter = True if not fix_flag else False
                 break

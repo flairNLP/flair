@@ -30,7 +30,7 @@ def convert_ptb_token(token: str) -> str:
 
 
 class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, augment_train: bool = False):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
@@ -46,8 +46,10 @@ class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
         semeval_2010_task_8_url = (
             "https://drive.google.com/uc?id=0B_jQiLugGTAkMDQ5ZjZiMTUtMzQ1Yy00YWNmLWJlZDYtOWY1ZDMwY2U4YjFk"
         )
-        data_file = data_folder / "semeval2010-task8-train.conllu"
+        train_file_name = "semeval2010-task8-train-aug.conllu" if augment_train else "semeval2010-task8-train.conllu"
+        data_file = data_folder / train_file_name
 
+        # if True:
         if not data_file.is_file():
             source_data_folder = data_folder / "original"
             source_data_file = source_data_folder / "SemEval2010_task8_all_data.zip"
@@ -56,21 +58,25 @@ class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
             self.extract_and_convert_to_conllu(
                 data_file=source_data_file,
                 data_folder=data_folder,
+                augment_train=augment_train,
             )
 
         super(SEMEVAL_2010_TASK_8, self).__init__(
             data_folder,
+            train_file=train_file_name,
+            test_file="semeval2010-task8-test.conllu",
             in_memory=in_memory,
         )
 
-    def extract_and_convert_to_conllu(self, data_file, data_folder):
+    def extract_and_convert_to_conllu(self, data_file, data_folder, augment_train):
         import zipfile
 
         source_file_paths = [
             "SemEval2010_task8_all_data/SemEval2010_task8_training/TRAIN_FILE.TXT",
             "SemEval2010_task8_all_data/SemEval2010_task8_testing_keys/TEST_FILE_FULL.TXT",
         ]
-        target_filenames = ["semeval2010-task8-train.conllu", "semeval2010-task8-test.conllu"]
+        train_filename = "semeval2010-task8-train-aug.conllu" if augment_train else "semeval2010-task8-train.conllu"
+        target_filenames = [train_filename, "semeval2010-task8-test.conllu"]
 
         with zipfile.ZipFile(data_file) as zip_file:
 
@@ -87,7 +93,8 @@ class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
                             line = line.strip()
 
                             if not line:
-                                token_list = self._semeval_lines_to_token_list(raw_lines)
+                                token_list = self._semeval_lines_to_token_list(raw_lines,
+                                                                               augment_relations=augment_train if "train" in target_filename else False)
                                 target_file.write(token_list.serialize())
 
                                 raw_lines = []
@@ -95,7 +102,7 @@ class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
 
                             raw_lines.append(line)
 
-    def _semeval_lines_to_token_list(self, raw_lines):
+    def _semeval_lines_to_token_list(self, raw_lines, augment_relations):
         raw_id, raw_text = raw_lines[0].split("\t")
         label = raw_lines[1]
         id_ = int(raw_id)
@@ -147,10 +154,18 @@ class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
             subj_end = tokens.index("</e1>")
             tokens.pop(subj_end)
 
+        relation = ";".join([str(subj_start + 1), str(subj_end), str(obj_start + 1), str(obj_end), label])
+
+        if augment_relations:
+            label_inverted = label.replace("e1", "e3")
+            label_inverted = label_inverted.replace("e2", "e1")
+            label_inverted = label_inverted.replace("e3", "e2")
+            relation_inverted = ";".join([str(obj_start + 1), str(obj_end), str(subj_start + 1), str(subj_end), label_inverted])
+
         metadata = {
             "text": " ".join(tokens),
             "sentence_id": str(id_),
-            "relations": ";".join([str(subj_start + 1), str(subj_end), str(obj_start + 1), str(obj_end), label]),
+            "relations": relation + "|" + relation_inverted if augment_relations else relation,
         }
 
         token_dicts = []
