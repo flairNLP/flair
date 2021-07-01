@@ -523,6 +523,9 @@ class FlairEmbeddings(TokenEmbeddings):
             # Tamil
             "ta-forward": f"{hu_path}/lm-ta-opus-large-forward-v0.1.pt",
             "ta-backward": f"{hu_path}/lm-ta-opus-large-backward-v0.1.pt",
+            # Spanish clinical
+            "es-clinical-forward": f"{hu_path}/es-clinical-forward.pt",
+            "es-clinical-backward": f"{hu_path}/es-clinical-backward.pt",
             # CLEF HIPE Shared task
             "de-impresso-hipe-v1-forward": f"{clef_hipe_path}/de-hipe-flair-v1-forward/best-lm.pt",
             "de-impresso-hipe-v1-backward": f"{clef_hipe_path}/de-hipe-flair-v1-backward/best-lm.pt",
