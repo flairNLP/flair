@@ -17,7 +17,7 @@ data set implementations can be found in `flair.datasets.biomedical`.
 | BioInfer | `BIO_INFER` |  Gene/Protein | [Paper](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-8-50)   |
 | BioNLP'2013 Cancer Genetics (ST) | `BIONLP2013_CG` | Chemical, Disease, Gene/Protein, Species | [Paper](https://www.aclweb.org/anthology/W13-2008/)   |
 | BioNLP'2013 Pathway Curation (ST)| `BIONLP2013_PC` | Chemical, Gene/Proteins  | [Paper](http://diego.asu.edu/index.php)   |
-| BioSemantics<sup>*</sup> | `BIOSEMANTICS` | Chemical, Disease | [Paper](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0107477), [Website](https://biosemantics.erasmusmc.nl/index.php/resources/chemical-patent-corpus)|
+| BioSemantics| `BIOSEMANTICS` | Chemical, Disease | [Paper](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0107477), [Website](https://biosemantics.erasmusmc.nl/index.php/resources/chemical-patent-corpus)|
 | CellFinder | `CELL_FINDER` | Cell line, Gene, Species  | [Paper](https://pdfs.semanticscholar.org/38e3/75aeeeb1937d03c3c80128a70d8e7a74441f.pdf)   |
 | CEMP | `CEMP` | Chemical | [Website](https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/cemp-detailed-task-description/)   |
 | CHEBI | `CHEBI` | Chemical, Gene, Species  | [Paper](http://www.lrec-conf.org/proceedings/lrec2018/pdf/229.pdf)   |
@@ -46,11 +46,6 @@ data set implementations can be found in `flair.datasets.biomedical`.
 Note: The table just gives an overview about the entity types of the individual corpora. 
 Please refer to the original publications for annotation details. 
 </sub>
-<p>
-<sub>
-* The corpus is currently not available, but will be re-published online soon. 
-</sub>
-</p>
 
 ## HUNER Data Sets
 Next to the integration of the biomedical data sets, *HunFlair* provides the fixed splits used by 
