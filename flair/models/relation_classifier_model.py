@@ -15,6 +15,7 @@ import flair.nn
 import flair.embeddings
 from flair.data import Dictionary, Sentence, DataPoint, RelationLabel, Span
 from flair.datasets import SentenceDataset, DataLoader
+from flair.nn import LockedDropout
 from flair.training_utils import Result, store_embeddings
 
 log = logging.getLogger("flair")
@@ -33,6 +34,7 @@ class RelationClassifierLinear(flair.nn.Model):
             use_gold_spans: bool = True,
             pooling_operation: str = "first_last",
             dropout_value: float = 0.5,
+            locked_dropout_value: float = 0.0,
     ):
         """
         Initializes a RelationClassifier
@@ -56,8 +58,10 @@ class RelationClassifierLinear(flair.nn.Model):
         self.pooling_operation = pooling_operation
 
         self.dropout_value = dropout_value
+        self.locked_dropout_value = locked_dropout_value
 
         self.dropout = torch.nn.Dropout(dropout_value)
+        self.locked_dropout = LockedDropout(locked_dropout_value)
 
         self.weight_dict = loss_weights
         # Initialize the weight tensor
@@ -140,6 +144,7 @@ class RelationClassifierLinear(flair.nn.Model):
         all_relations = torch.stack(relation_embeddings)
 
         all_relations = self.dropout(all_relations)
+        all_relations = self.locked_dropout(all_relations)
 
         sentence_relation_scores = self.decoder(all_relations)
 
@@ -407,7 +412,8 @@ class RelationClassifierLinear(flair.nn.Model):
             "beta": self.beta,
             "loss_weights": self.loss_weights,
             "pooling_operation": self.pooling_operation,
-            "dropout_value":self.dropout_value,
+            "dropout_value": self.dropout_value,
+            "locked_dropout_value": self.locked_dropout_value,
         }
         return model_state
 
@@ -423,6 +429,7 @@ class RelationClassifierLinear(flair.nn.Model):
             loss_weights=state["loss_weights"],
             pooling_operation=state["pooling_operation"],
             dropout_value=state["dropout_value"],
+            locked_dropout_value=state["locked_dropout_value"],
         )
 
         model.load_state_dict(state["state_dict"])
