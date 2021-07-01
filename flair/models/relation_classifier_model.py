@@ -31,7 +31,8 @@ class RelationClassifierLinear(flair.nn.Model):
             beta: float = 1.0,
             loss_weights: Dict[str, float] = None,
             use_gold_spans: bool = True,
-            pooling_operation: str = "first_last"
+            pooling_operation: str = "first_last",
+            dropout_value: float = 0.5,
     ):
         """
         Initializes a RelationClassifier
@@ -54,7 +55,9 @@ class RelationClassifierLinear(flair.nn.Model):
         self.use_gold_spans = use_gold_spans
         self.pooling_operation = pooling_operation
 
-        self.dropout = torch.nn.Dropout(0.5)
+        self.dropout_value = dropout_value
+
+        self.dropout = torch.nn.Dropout(dropout_value)
 
         self.weight_dict = loss_weights
         # Initialize the weight tensor
@@ -404,6 +407,7 @@ class RelationClassifierLinear(flair.nn.Model):
             "beta": self.beta,
             "loss_weights": self.loss_weights,
             "pooling_operation": self.pooling_operation,
+            "dropout_value":self.dropout_value,
         }
         return model_state
 
@@ -418,6 +422,7 @@ class RelationClassifierLinear(flair.nn.Model):
             beta=state["beta"],
             loss_weights=state["loss_weights"],
             pooling_operation=state["pooling_operation"],
+            dropout_value=state["dropout_value"],
         )
 
         model.load_state_dict(state["state_dict"])
