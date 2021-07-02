@@ -10,12 +10,11 @@ from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 import numpy as np
 
-import sklearn.metrics as metrics
+import sklearn.metrics as skmetrics
 import flair.nn
 import flair.embeddings
 from flair.data import Dictionary, Sentence, DataPoint, RelationLabel, Span
 from flair.datasets import SentenceDataset, DataLoader
-from flair.nn import LockedDropout
 from flair.training_utils import Result, store_embeddings
 
 log = logging.getLogger("flair")
@@ -34,7 +33,6 @@ class RelationClassifierLinear(flair.nn.Model):
             use_gold_spans: bool = True,
             pooling_operation: str = "first_last",
             dropout_value: float = 0.5,
-            locked_dropout_value: float = 0.0,
     ):
         """
         Initializes a RelationClassifier
@@ -58,10 +56,8 @@ class RelationClassifierLinear(flair.nn.Model):
         self.pooling_operation = pooling_operation
 
         self.dropout_value = dropout_value
-        self.locked_dropout_value = locked_dropout_value
 
         self.dropout = torch.nn.Dropout(dropout_value)
-        self.locked_dropout = LockedDropout(locked_dropout_value)
 
         self.weight_dict = loss_weights
         # Initialize the weight tensor
@@ -132,6 +128,7 @@ class RelationClassifierLinear(flair.nn.Model):
                     # if using gold spans only, skip all entity pairs that are not in gold data
                     elif self.use_gold_spans:
                         continue
+                    else:
                         # if no gold label exists, and all spans are used, label defaults to 'O' (no relation)
                         label = 'O'
 
@@ -144,7 +141,6 @@ class RelationClassifierLinear(flair.nn.Model):
         all_relations = torch.stack(relation_embeddings)
 
         all_relations = self.dropout(all_relations)
-        all_relations = self.locked_dropout(all_relations)
 
         sentence_relation_scores = self.decoder(all_relations)
 
@@ -360,24 +356,21 @@ class RelationClassifierLinear(flair.nn.Model):
                 target_names.append(label_name)
                 labels.append(i)
 
-            classification_report = metrics.classification_report(
+            classification_report = skmetrics.classification_report(
                 y_true, y_pred, digits=4, target_names=target_names, zero_division=0, labels=labels,
             )
 
-            classification_report_dict = metrics.classification_report(
+            classification_report_dict = skmetrics.classification_report(
                 y_true, y_pred, digits=4, target_names=target_names, zero_division=0, output_dict=True, labels=labels,
             )
 
             # get scores
-            micro_f_score = round(
-                metrics.fbeta_score(y_true, y_pred, beta=self.beta, average="micro", zero_division=0), 4
-            )
-            accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
-            macro_f_score = round(
-                metrics.fbeta_score(y_true, y_pred, beta=self.beta, average="macro", zero_division=0), 4
-            )
-            precision_score = round(metrics.precision_score(y_true, y_pred, average="macro", zero_division=0), 4)
-            recall_score = round(metrics.recall_score(y_true, y_pred, average="macro", zero_division=0), 4)
+            accuracy_score = round(skmetrics.accuracy_score(y_true, y_pred), 4)
+
+            precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
+            recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
+            micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
+            macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
 
             detailed_result = (
                     "\nResults:"
@@ -413,7 +406,6 @@ class RelationClassifierLinear(flair.nn.Model):
             "loss_weights": self.loss_weights,
             "pooling_operation": self.pooling_operation,
             "dropout_value": self.dropout_value,
-            "locked_dropout_value": self.locked_dropout_value,
         }
         return model_state
 
@@ -429,7 +421,6 @@ class RelationClassifierLinear(flair.nn.Model):
             loss_weights=state["loss_weights"],
             pooling_operation=state["pooling_operation"],
             dropout_value=state["dropout_value"],
-            locked_dropout_value=state["locked_dropout_value"],
         )
 
         model.load_state_dict(state["state_dict"])
