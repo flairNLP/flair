@@ -255,6 +255,7 @@ class RelationClassifierLinear(flair.nn.Model):
             num_workers: int = 8,
             main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
             return_predictions: bool = False,
+            exclude_labels: List[str] = []
     ) -> Result:
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
@@ -353,6 +354,7 @@ class RelationClassifierLinear(flair.nn.Model):
             for i in range(len(self.label_dictionary)):
                 label_name = self.label_dictionary.get_item_for_index(i)
                 if label_name == 'O': continue
+                if label_name in exclude_labels: continue
                 target_names.append(label_name)
                 labels.append(i)
 

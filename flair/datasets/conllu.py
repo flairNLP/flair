@@ -214,6 +214,9 @@ class CoNLLUDataset(FlairDataset):
             sentence.add_token(token)
             token_idx += 1
 
+        if "sentence_id" in token_list.metadata:
+            sentence.add_label("sentence_id", token_list.metadata["sentence_id"])
+
         if "relations" in token_list.metadata:
             # relations: List[Relation] = []
             for head_start, head_end, tail_start, tail_end, label in token_list.metadata["relations"]:

@@ -32,6 +32,9 @@ class Result(object):
         self.classification_report: dict = classification_report
         self.loss: float = loss
 
+    def __str__(self):
+        return f"{str(self.detailed_results)}\nLoss: {self.loss}'"
+
 
 class MetricRegression(object):
     def __init__(self, name):
