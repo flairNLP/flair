@@ -287,7 +287,6 @@ class ColumnDataset(FlairDataset):
                     else:  # tag without prefix, for example tag='PPER'
                         if self.label_name_map and tag in self.label_name_map.keys():
                             tag = self.label_name_map[tag]  # for example, transforming 'PPER' to 'person'
-                            if self.label_name_map[tag] == 'O': tag = 'O'
                     token.add_label(task, tag)
                 if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == '-':
                     token.whitespace_after = False
@@ -2916,6 +2915,7 @@ class UP_ENGLISH(ColumnCorpus):
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
             comment_symbol="#",
+            label_name_map = {"_": "O"},
             **corpusargs,
         )
 
