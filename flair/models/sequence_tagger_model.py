@@ -436,9 +436,9 @@ class SequenceTagger(flair.nn.Model):
 
         # make the evaluation dictionary
         self.tag_dictionary_no_bio = Dictionary()
-        for i in range(len(self.tag_dictionary)):
-            label = self.tag_dictionary.get_item_for_index(i)
-            self.tag_dictionary_no_bio.add_item(re.split('^[BIES]-', label)[-1])
+        # for i in range(len(self.tag_dictionary)):
+        #     label = self.tag_dictionary.get_item_for_index(i)
+        #     self.tag_dictionary_no_bio.add_item(re.split('^[BIES]-', label)[-1])
 
         for batch in data_loader:
             for sentence in batch:
