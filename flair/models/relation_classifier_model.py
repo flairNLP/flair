@@ -32,7 +32,7 @@ class RelationClassifierLinear(flair.nn.Model):
             loss_weights: Dict[str, float] = None,
             use_gold_spans: bool = True,
             pooling_operation: str = "first_last",
-            dropout_value: float = 0.5,
+            dropout_value: float = 0.0,
     ):
         """
         Initializes a RelationClassifier
@@ -80,6 +80,8 @@ class RelationClassifierLinear(flair.nn.Model):
         nn.init.xavier_uniform_(self.decoder.weight)
 
         self.loss_function = nn.CrossEntropyLoss(weight=self.loss_weights)
+        # self.loss_function = flair.nn.FocalLoss(gamma=0.5, reduction='sum')
+        # self.loss_function = flair.nn.DiceLoss(reduction='sum', with_logits=True, ohem_ratio=0.1)
 
         # auto-spawn on GPU if available
         self.to(flair.device)
@@ -147,7 +149,11 @@ class RelationClassifierLinear(flair.nn.Model):
         labels = torch.tensor(indices).to(flair.device)
 
         if return_loss:
+            # print(sentence_relation_scores.size())
+            # print(labels.size())
+            # asd
             loss = self.loss_function(sentence_relation_scores, labels)
+            # print(loss)
 
         if return_loss and not return_scores:
             return loss, len(labels)
@@ -311,16 +317,10 @@ class RelationClassifierLinear(flair.nn.Model):
                         if position_string not in all_spans:
                             all_spans.append(position_string)
 
-                ordered_ground_truth = []
-                ordered_predictions = []
-
                 for span in all_spans:
 
                     true_value = true_values_for_batch[span] if span in true_values_for_batch else 'O'
                     prediction = predictions[span] if span in predictions else 'O'
-
-                    ordered_ground_truth.append(true_value)
-                    ordered_predictions.append(prediction)
 
                     eval_line = f"{span}\t{true_value.value}\t{prediction.value}\n"
                     lines.append(eval_line)

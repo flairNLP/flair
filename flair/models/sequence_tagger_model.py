@@ -431,21 +431,18 @@ class SequenceTagger(flair.nn.Model):
 
         lines: List[str] = []
 
-        y_true = []
-        y_pred = []
-
         # make the evaluation dictionary
         self.tag_dictionary_no_bio = Dictionary()
-        # for i in range(len(self.tag_dictionary)):
-        #     label = self.tag_dictionary.get_item_for_index(i)
-        #     self.tag_dictionary_no_bio.add_item(re.split('^[BIES]-', label)[-1])
-
         for batch in data_loader:
             for sentence in batch:
                 for gold_span in sentence.get_spans(self.tag_type):
                     self.tag_dictionary_no_bio.add_item(re.split('^[BIES]-', gold_span.tag)[-1])
 
         with torch.no_grad():
+
+            y_true = []
+            y_pred = []
+
             for batch in data_loader:
 
                 # predict for batch
@@ -454,6 +451,7 @@ class SequenceTagger(flair.nn.Model):
                                               mini_batch_size=mini_batch_size,
                                               label_name='predicted',
                                               return_loss=True)
+
                 eval_loss += loss_and_count[0]
                 total_word_count += loss_and_count[1]
                 batch_no += 1
@@ -549,7 +547,7 @@ class SequenceTagger(flair.nn.Model):
 
         eval_loss /= total_word_count
 
-        return Result(
+        result = Result(
             main_score=classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]],
             log_line=log_line,
             log_header=log_header,
@@ -557,6 +555,8 @@ class SequenceTagger(flair.nn.Model):
             classification_report=classification_report_dict,
             loss=eval_loss
         )
+
+        return result
 
     def forward_loss(
             self, data_points: Union[List[Sentence], Sentence], sort=True
