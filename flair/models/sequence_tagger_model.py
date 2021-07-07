@@ -68,7 +68,7 @@ def pad_tensors(tensor_list):
     return template, lens_
 
 
-class SequenceTagger(flair.nn.Model):
+class SequenceTagger(flair.nn.Classifier):
     def __init__(
             self,
             hidden_size: int,
@@ -424,12 +424,6 @@ class SequenceTagger(flair.nn.Model):
         if not isinstance(sentences, Dataset):
             sentences = SentenceDataset(sentences)
         data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
-        eval_loss = 0
-        total_word_count = 0
-
-        batch_no: int = 0
-
-        lines: List[str] = []
 
         # make the evaluation dictionary
         self.tag_dictionary_no_bio = Dictionary()
@@ -439,6 +433,11 @@ class SequenceTagger(flair.nn.Model):
                     self.tag_dictionary_no_bio.add_item(re.split('^[BIES]-', gold_span.tag)[-1])
 
         with torch.no_grad():
+
+            eval_loss = 0
+            total_word_count = 0
+
+            lines: List[str] = []
 
             y_true = []
             y_pred = []
@@ -454,7 +453,6 @@ class SequenceTagger(flair.nn.Model):
 
                 eval_loss += loss_and_count[0]
                 total_word_count += loss_and_count[1]
-                batch_no += 1
 
                 # get the gold labels
                 all_spans: List[str] = []

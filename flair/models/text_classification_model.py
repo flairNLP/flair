@@ -21,7 +21,7 @@ from flair.training_utils import convert_labels_to_one_hot, Result, store_embedd
 log = logging.getLogger("flair")
 
 
-class TextClassifier(flair.nn.Model):
+class TextClassifier(flair.nn.Classifier):
     """
     Text Classification Model
     The model takes word embeddings, puts them into an RNN to obtain a text representation, and puts the

@@ -20,7 +20,7 @@ from flair.training_utils import Result, store_embeddings
 log = logging.getLogger("flair")
 
 
-class RelationClassifierLinear(flair.nn.Model):
+class RelationClassifierLinear(flair.nn.Classifier):
 
     def __init__(
             self,
@@ -261,7 +261,7 @@ class RelationClassifierLinear(flair.nn.Model):
             num_workers: int = 8,
             main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
             return_predictions: bool = False,
-            exclude_labels: List[str] = []
+            exclude_labels: List[str] = [],
     ) -> Result:
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)

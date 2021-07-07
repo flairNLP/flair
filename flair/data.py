@@ -177,6 +177,29 @@ class Label:
     def __repr__(self):
         return f"{self._value} ({round(self._score, 4)})"
 
+    @property
+    def identifier(self):
+        return ""
+
+
+class SpanLabel(Label):
+    def __init__(self, span, value: str, score: float = 1.0):
+        super().__init__(value, score)
+        self.span = span
+
+    def __str__(self):
+        return f"{self._value} [{self.span.id_text}] ({round(self._score, 4)})"
+
+    def __repr__(self):
+        return f"{self._value} [{self.span.id_text}] ({round(self._score, 4)})"
+
+    def __len__(self):
+        return len(self.span)
+
+    @property
+    def identifier(self):
+        return f"{self.span.id_text}"
+
 
 class RelationLabel(Label):
     def __init__(self, head, tail, value: str, score: float = 1.0):
@@ -193,9 +216,9 @@ class RelationLabel(Label):
     def __len__(self):
         return len(self.head) + len(self.tail)
 
-    # @property
-    # def span_indices(self):
-    #     return (self.head.tokens[0].idx, self.head.tokens[-1].idx, self.tail.tokens[0].idx, self.tail.tokens[-1].idx)
+    @property
+    def identifier(self):
+        return f"{self.head.id_text} -> {self.tail.id_text}"
 
 
 class DataPoint:
@@ -1107,6 +1130,19 @@ class Sentence(DataPoint):
             if relation_idx + 1 in token_indices:
                 return span_idx
         return None
+
+    def get_labels(self, label_type: str = None):
+
+        # TODO: crude hack - replace with something better
+        if label_type:
+            spans = self.get_spans(label_type)
+            for span in spans:
+                self.add_complex_label(label_type, label=SpanLabel(span, span.tag, span.score))
+
+        if label_type is None:
+            return self.labels
+
+        return self.annotation_layers[label_type] if label_type in self.annotation_layers else []
 
 
 class Image(DataPoint):
