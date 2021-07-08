@@ -484,12 +484,13 @@ class ModelTrainer:
                 result_line: str = ""
 
                 if log_train:
-                    train_eval_result, train_loss = self.model.evaluate(
+                    train_eval_result = self.model.evaluate(
                         self.corpus.train,
+                        gold_label_type=self.model.label_name,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_score_type=main_evaluation_metric
+                        main_evaluation_metric=main_evaluation_metric
                     )
                     result_line += f"\t{train_eval_result.log_line}"
 
@@ -499,6 +500,7 @@ class ModelTrainer:
                 if log_train_part:
                     train_part_eval_result, train_part_loss = self.model.evaluate(
                         train_part,
+                        gold_label_type=self.model.label_name,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
@@ -520,6 +522,7 @@ class ModelTrainer:
                 if log_dev:
                     dev_eval_result = self.model.evaluate(
                         self.corpus.dev,
+                        gold_label_type=self.model.label_name,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         out_path=base_path / "dev.tsv",
@@ -554,6 +557,7 @@ class ModelTrainer:
                 if log_test:
                     test_eval_result = self.model.evaluate(
                         self.corpus.test,
+                        gold_label_type=self.model.label_name,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         out_path=base_path / "test.tsv",
@@ -749,8 +753,11 @@ class ModelTrainer:
         else:
             log.info("Testing using last state of model ...")
 
+        print(self.model.label_name)
+
         test_results = self.model.evaluate(
             self.corpus.test,
+            gold_label_type=self.model.label_name,
             mini_batch_size=eval_mini_batch_size,
             num_workers=num_workers,
             out_path=base_path / "test.tsv",

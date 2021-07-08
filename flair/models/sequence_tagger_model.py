@@ -84,7 +84,6 @@ class SequenceTagger(flair.nn.Classifier):
             reproject_embeddings: Union[bool, int] = True,
             train_initial_hidden_state: bool = False,
             rnn_type: str = "LSTM",
-            pickle_module: str = "pickle",
             beta: float = 1.0,
             loss_weights: Dict[str, float] = None,
     ):
@@ -108,8 +107,8 @@ class SequenceTagger(flair.nn.Classifier):
         (if any tag's weight is unspecified it will default to 1.0)
 
         """
-
         super(SequenceTagger, self).__init__()
+
         self.use_rnn = use_rnn
         self.hidden_size = hidden_size
         self.use_crf: bool = use_crf
@@ -151,8 +150,6 @@ class SequenceTagger(flair.nn.Classifier):
         self.use_dropout: float = dropout
         self.use_word_dropout: float = word_dropout
         self.use_locked_dropout: float = locked_dropout
-
-        self.pickle_module = pickle_module
 
         if dropout > 0.0:
             self.dropout = torch.nn.Dropout(dropout)
@@ -408,7 +405,7 @@ class SequenceTagger(flair.nn.Classifier):
             if return_loss:
                 return overall_loss, overall_count
 
-    def evaluate(
+    def evaluate_old(
             self,
             sentences: Union[List[Sentence], Dataset],
             out_path: Union[str, Path] = None,
@@ -1178,6 +1175,10 @@ class SequenceTagger(flair.nn.Classifier):
                f'  (beta): {self.beta}\n' + \
                f'  (weights): {self.weight_dict}\n' + \
                f'  (weight_tensor) {self.loss_weights}\n)'
+
+    @property
+    def label_name(self):
+        return self.tag_type
 
 
 class MultiTagger:

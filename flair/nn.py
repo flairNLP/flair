@@ -4,7 +4,7 @@ from pathlib import Path
 
 import torch.nn
 
-from abc import abstractmethod
+from abc import abstractmethod, abstractproperty
 
 from typing import Union, List, Tuple, Optional
 
@@ -22,6 +22,12 @@ class Model(torch.nn.Module):
     """Abstract base class for all downstream task models in Flair, such as SequenceTagger and TextClassifier.
     Every new type of model must implement these methods."""
 
+    @property
+    @abstractmethod
+    def label_name(self):
+        """Each model predicts labels of a certain type.""" #TODO: can we find a better name for this?
+        pass
+
     @abstractmethod
     def forward_loss(
             self, data_points: Union[List[DataPoint], DataPoint]
@@ -32,12 +38,14 @@ class Model(torch.nn.Module):
     @abstractmethod
     def evaluate(
             self,
-            sentences: Union[List[DataPoint], Dataset],
-            mini_batch_size: int,
-            num_workers: int,
-            out_path: Path = None,
+            sentences: Union[List[Sentence], Dataset],
+            gold_label_type: str,
+            out_path: Union[str, Path] = None,
             embedding_storage_mode: str = "none",
-            main_evaluation_metric: Tuple[str, str] = ("micro avg", 'f1-score'),
+            mini_batch_size: int = 32,
+            num_workers: int = 8,
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+            exclude_labels: List[str] = [],
     ) -> Result:
         """Evaluates the model. Returns a Result object containing evaluation
         results and a loss value. Implement this to enable evaluation.
@@ -102,7 +110,7 @@ class Model(torch.nn.Module):
 
 class Classifier(Model):
 
-    def evaluate_classification(
+    def evaluate(
             self,
             sentences: Union[List[Sentence], Dataset],
             gold_label_type: str,
