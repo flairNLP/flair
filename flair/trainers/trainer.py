@@ -486,7 +486,7 @@ class ModelTrainer:
                 if log_train:
                     train_eval_result = self.model.evaluate(
                         self.corpus.train,
-                        gold_label_type=self.model.label_name,
+                        gold_label_type=self.model.label_type,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
@@ -500,7 +500,7 @@ class ModelTrainer:
                 if log_train_part:
                     train_part_eval_result, train_part_loss = self.model.evaluate(
                         train_part,
-                        gold_label_type=self.model.label_name,
+                        gold_label_type=self.model.label_type,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
@@ -522,7 +522,7 @@ class ModelTrainer:
                 if log_dev:
                     dev_eval_result = self.model.evaluate(
                         self.corpus.dev,
-                        gold_label_type=self.model.label_name,
+                        gold_label_type=self.model.label_type,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         out_path=base_path / "dev.tsv",
@@ -557,7 +557,7 @@ class ModelTrainer:
                 if log_test:
                     test_eval_result = self.model.evaluate(
                         self.corpus.test,
-                        gold_label_type=self.model.label_name,
+                        gold_label_type=self.model.label_type,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         out_path=base_path / "test.tsv",
@@ -753,11 +753,11 @@ class ModelTrainer:
         else:
             log.info("Testing using last state of model ...")
 
-        print(self.model.label_name)
+        print(self.model.label_type)
 
         test_results = self.model.evaluate(
             self.corpus.test,
-            gold_label_type=self.model.label_name,
+            gold_label_type=self.model.label_type,
             mini_batch_size=eval_mini_batch_size,
             num_workers=num_workers,
             out_path=base_path / "test.tsv",

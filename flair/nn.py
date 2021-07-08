@@ -4,7 +4,7 @@ from pathlib import Path
 
 import torch.nn
 
-from abc import abstractmethod, abstractproperty
+from abc import abstractmethod
 
 from typing import Union, List, Tuple, Optional
 
@@ -24,16 +24,14 @@ class Model(torch.nn.Module):
 
     @property
     @abstractmethod
-    def label_name(self):
-        """Each model predicts labels of a certain type.""" #TODO: can we find a better name for this?
-        pass
+    def label_type(self):
+        """Each model predicts labels of a certain type. TODO: can we find a better name for this?"""
+        raise NotImplementedError
 
     @abstractmethod
-    def forward_loss(
-            self, data_points: Union[List[DataPoint], DataPoint]
-    ) -> torch.tensor:
+    def forward_loss(self, data_points: Union[List[DataPoint], DataPoint]) -> torch.tensor:
         """Performs a forward pass and returns a loss tensor for backpropagation. Implement this to enable training."""
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def evaluate(
@@ -55,23 +53,22 @@ class Model(torch.nn.Module):
         freshly recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU
         :return: Returns a Tuple consisting of a Result object and a loss float value
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def _get_state_dict(self):
         """Returns the state dictionary for this model. Implementing this enables the save() and save_checkpoint()
         functionality."""
-        pass
+        raise NotImplementedError
 
     @staticmethod
     @abstractmethod
     def _init_model_with_state_dict(state):
         """Initialize the model from a state dictionary. Implementing this enables the load() and load_checkpoint()
         functionality."""
-        pass
+        raise NotImplementedError
 
     @staticmethod
-    @abstractmethod
     def _fetch_model(model_name) -> str:
         return model_name
 

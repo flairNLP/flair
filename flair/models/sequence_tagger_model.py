@@ -1177,7 +1177,7 @@ class SequenceTagger(flair.nn.Classifier):
                f'  (weight_tensor) {self.loss_weights}\n)'
 
     @property
-    def label_name(self):
+    def label_type(self):
         return self.tag_type
 
 

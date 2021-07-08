@@ -27,12 +27,12 @@ class Embeddings(torch.nn.Module):
     @abstractmethod
     def embedding_length(self) -> int:
         """Returns the length of the embedding vector."""
-        pass
+        raise NotImplementedError
 
     @property
     @abstractmethod
     def embedding_type(self) -> str:
-        pass
+        raise NotImplementedError
 
     def embed(self, sentences: Union[Sentence, List[Sentence]]) -> List[Sentence]:
         """Add embeddings to all words in a list of sentences. If embeddings are already added, updates only if embeddings

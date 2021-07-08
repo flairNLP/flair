@@ -33,7 +33,7 @@ class TextClassifier(flair.nn.Classifier):
             self,
             document_embeddings: flair.embeddings.DocumentEmbeddings,
             label_dictionary: Dictionary,
-            label_type: str = None,
+            label_type: str,
             multi_label: bool = None,
             multi_label_threshold: float = 0.5,
             beta: float = 1.0,
@@ -55,7 +55,7 @@ class TextClassifier(flair.nn.Classifier):
 
         self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
         self.label_dictionary: Dictionary = label_dictionary
-        self.label_type = label_type
+        self._label_type = label_type
 
         if multi_label is not None:
             self.multi_label = multi_label
@@ -248,7 +248,7 @@ class TextClassifier(flair.nn.Classifier):
             if return_loss:
                 return overall_loss / batch_no
 
-    def evaluate(
+    def evaluate_old(
             self,
             sentences: Union[List[DataPoint], Dataset],
             out_path: Union[str, Path] = None,
@@ -512,6 +512,10 @@ class TextClassifier(flair.nn.Classifier):
                f'  (beta): {self.beta}\n' + \
                f'  (weights): {self.weight_dict}\n' + \
                f'  (weight_tensor) {self.loss_weights}\n)'
+
+    @property
+    def label_type(self):
+        return self._label_type
 
 
 class TextPairClassifier(TextClassifier):

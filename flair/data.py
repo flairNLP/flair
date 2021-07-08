@@ -245,37 +245,37 @@ class DataPoint:
     def clear_embeddings(self, embedding_names: List[str] = None):
         pass
 
-    def add_label(self, label_type: str, value: str, score: float = 1.):
+    def add_label(self, typename: str, value: str, score: float = 1.):
 
-        if label_type not in self.annotation_layers:
-            self.annotation_layers[label_type] = [Label(value, score)]
+        if typename not in self.annotation_layers:
+            self.annotation_layers[typename] = [Label(value, score)]
         else:
-            self.annotation_layers[label_type].append(Label(value, score))
+            self.annotation_layers[typename].append(Label(value, score))
 
         return self
 
-    def add_complex_label(self, label_type: str, label: Label):
+    def add_complex_label(self, typename: str, label: Label):
 
-        if label_type not in self.annotation_layers:
-            self.annotation_layers[label_type] = [label]
+        if typename not in self.annotation_layers:
+            self.annotation_layers[typename] = [label]
         else:
-            self.annotation_layers[label_type].append(label)
+            self.annotation_layers[typename].append(label)
 
         return self
 
-    def set_label(self, label_type: str, value: str, score: float = 1.):
-        self.annotation_layers[label_type] = [Label(value, score)]
+    def set_label(self, typename: str, value: str, score: float = 1.):
+        self.annotation_layers[typename] = [Label(value, score)]
         return self
 
-    def remove_labels(self, label_type: str):
-        if label_type in self.annotation_layers.keys():
-            del self.annotation_layers[label_type]
+    def remove_labels(self, typename: str):
+        if typename in self.annotation_layers.keys():
+            del self.annotation_layers[typename]
 
-    def get_labels(self, label_type: str = None):
-        if label_type is None:
+    def get_labels(self, typename: str = None):
+        if typename is None:
             return self.labels
 
-        return self.annotation_layers[label_type] if label_type in self.annotation_layers else []
+        return self.annotation_layers[typename] if typename in self.annotation_layers else []
 
     @property
     def labels(self) -> List[Label]:
@@ -731,7 +731,7 @@ class Sentence(DataPoint):
                 if span_score > min_score:
                     span = Span(current_span)
                     span.add_label(
-                        label_type=label_type,
+                        typename=label_type,
                         value=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
                         score=span_score)
                     spans.append(span)
@@ -753,7 +753,7 @@ class Sentence(DataPoint):
             if span_score > min_score:
                 span = Span(current_span)
                 span.add_label(
-                    label_type=label_type,
+                    typename=label_type,
                     value=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
                     score=span_score)
                 spans.append(span)
