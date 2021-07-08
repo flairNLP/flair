@@ -159,6 +159,8 @@ class Classifier(Model):
 
                 # get the gold labels
                 for sentence in batch:
+                    print(sentence)
+
                     for gold_label in sentence.get_labels(gold_label_type):
                         representation = str(sentence_id) + ': ' + gold_label.identifier
                         true_values[representation] = gold_label.value

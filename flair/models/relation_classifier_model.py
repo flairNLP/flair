@@ -222,12 +222,14 @@ class RelationClassifier(flair.nn.Classifier):
                 if not batch:
                     continue
 
-                scores, pairs, loss = self._internal_forward_scores_and_loss(batch,
-                                                                             return_scores=True,
-                                                                             return_loss=return_loss)
+                scores_pairs_loss = self._internal_forward_scores_and_loss(batch,
+                                                                           return_scores=True,
+                                                                           return_loss=return_loss)
+                scores = scores_pairs_loss[0]
+                pairs = scores_pairs_loss[1]
 
                 if return_loss:
-                    overall_loss += loss
+                    overall_loss += scores_pairs_loss[2]
 
                 softmax = torch.nn.functional.softmax(scores, dim=-1)
                 conf, idx = torch.max(softmax, dim=-1)

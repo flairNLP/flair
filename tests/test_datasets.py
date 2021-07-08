@@ -195,17 +195,17 @@ def _assert_conllu_dataset(dataset):
     spans1 = sent1.get_spans("ner")
     assert len(spans1) == 3
 
-    rels1 = sent1.relations
+    rels1 = sent1.get_labels("relation")
     assert len(rels1) == 2
 
     assert [token.idx for token in rels1[1].head] == [7]
     assert [token.idx for token in rels1[1].tail] == [4, 5]
 
     sent3 = dataset[2]
-    spans3 = sent3.get_spans("ner")
+    spans3 = sent3.get_labels("ner")
     assert len(spans3) == 3
 
-    rels3 = sent3.relations
+    rels3 = sent3.get_labels("relation")
     assert len(rels3) == 1
 
     assert [token.idx for token in rels3[0].head] == [6]

@@ -16,6 +16,7 @@ import flair.datasets
 glove_embedding: WordEmbeddings = WordEmbeddings("glove")
 
 
+@pytest.mark.skip
 def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
@@ -58,7 +59,7 @@ def test_sequence_tagger_param_selector(results_base_path, tasks_base_path):
     del optimizer, search_space
 
 
-@pytest.mark.integration
+@pytest.mark.skip
 def test_text_classifier_param_selector(results_base_path, tasks_base_path):
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb")
 

@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import List, Union, Optional, Sequence, Dict, Tuple
 
-from flair.data import Sentence, Corpus, Token, FlairDataset, Relation, Span, RelationLabel
+from flair.data import Sentence, Corpus, Token, FlairDataset, Span, RelationLabel
 from flair.datasets.base import find_train_dev_test_files
 import conllu
 

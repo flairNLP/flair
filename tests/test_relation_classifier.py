@@ -18,15 +18,14 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
         test_file="train.conllup",
     )
 
-    relation_label_dict = corpus.make_relation_label_dictionary(label_type="label")
+    relation_label_dict = corpus.make_label_dictionary(label_type="relation")
 
     embeddings = TransformerWordEmbeddings()
 
     model: RelationClassifier = RelationClassifier(
-        hidden_size=64,
         token_embeddings=embeddings,
         label_dictionary=relation_label_dict,
-        label_type="label",
+        label_type="relation",
         span_label_type="ner",
     )
 
@@ -46,19 +45,15 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     loaded_model: RelationClassifier = RelationClassifier.load(
         results_base_path / "final-model.pt"
     )
+    loaded_model.use_gold_spans = False
 
     sentence = Sentence(["Apple", "was", "founded", "by", "Steve", "Jobs", "."])
     for token, tag in zip(sentence.tokens, ["B-ORG", "O", "O", "O", "B-PER", "I-PER", "O"]):
         token.set_label("ner", tag)
 
-    # sentence = Sentence("I love Berlin")
-    # sentence_empty = Sentence("       ")
-
     loaded_model.predict(sentence)
 
-    print("relations: ", sentence.relations)
-
-    assert 1 == 0
+    assert "founded_by" == sentence.get_labels("relation")[0].value
 
     # loaded_model.predict([sentence, sentence_empty])
     # loaded_model.predict([sentence_empty])

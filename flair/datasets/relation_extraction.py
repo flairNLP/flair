@@ -9,8 +9,6 @@ import flair
 import json
 import gdown
 import conllu
-from flair.data import Sentence, Corpus, Token, FlairDataset, Relation, Span
-from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path
 from flair.datasets.conllu import CoNLLUCorpus
 

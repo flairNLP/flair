@@ -777,6 +777,7 @@ class ModelTrainer:
                 if subcorpus.test:
                     subcorpus_results = self.model.evaluate(
                         subcorpus.test,
+                        gold_label_type=self.model.label_type,
                         mini_batch_size=eval_mini_batch_size,
                         num_workers=num_workers,
                         out_path=base_path / f"{subcorpus.name}-test.tsv",

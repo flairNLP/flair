@@ -755,7 +755,7 @@ class TARSClassifier(TextClassifier):
             self.multi_label_threshold = \
                 self.task_specific_attributes[task_name]['multi_label_threshold']
             self.label_dictionary = self.task_specific_attributes[task_name]['label_dictionary']
-            self.label_type = self.task_specific_attributes[task_name]['label_type']
+            self.task_name = task_name
             self.beta = self.task_specific_attributes[task_name]['beta']
 
     def _get_state_dict(self):
@@ -945,3 +945,7 @@ class TARSClassifier(TextClassifier):
             model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
 
         return model_name
+
+    @property
+    def label_type(self):
+        return self.task_specific_attributes[self.task_name]['label_type']
