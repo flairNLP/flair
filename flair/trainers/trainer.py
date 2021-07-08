@@ -12,7 +12,7 @@ import torch
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
 
-from flair.models.relation_classifier_model import RelationClassifierLinear
+from flair.models.relation_classifier_model import RelationClassifier
 
 try:
     from apex import amp

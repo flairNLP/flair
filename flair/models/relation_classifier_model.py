@@ -1,26 +1,20 @@
-from itertools import compress
 import logging
-from pathlib import Path
-from typing import List, Union, Dict, Optional, Set, Tuple
+from typing import List, Union, Dict, Optional
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
-import numpy as np
-
-import sklearn.metrics as skmetrics
 import flair.nn
 import flair.embeddings
 from flair.data import Dictionary, Sentence, DataPoint, RelationLabel, Span
 from flair.datasets import SentenceDataset, DataLoader
-from flair.training_utils import Result, store_embeddings
+from flair.training_utils import store_embeddings
 
 log = logging.getLogger("flair")
 
 
-class RelationClassifierLinear(flair.nn.Classifier):
+class RelationClassifier(flair.nn.Classifier):
 
     def __init__(
             self,
@@ -43,12 +37,12 @@ class RelationClassifierLinear(flair.nn.Classifier):
         (if any label's weight is unspecified it will default to 1.0)
         """
 
-        super(RelationClassifierLinear, self).__init__()
+        super(RelationClassifier, self).__init__()
 
         self.token_embeddings: flair.embeddings.TokenEmbeddings = token_embeddings
         self.label_dictionary: Dictionary = label_dictionary
         self.label_dictionary.add_item('O')
-        self.label_type = label_type
+        self._label_type = label_type
         self.span_label_type = span_label_type
 
         self.beta = beta
@@ -252,151 +246,6 @@ class RelationClassifierLinear(flair.nn.Classifier):
             if return_loss:
                 return overall_loss / batch_no
 
-    def evaluate(
-            self,
-            sentences: Union[List[DataPoint], Dataset],
-            out_path: Union[str, Path] = None,
-            embedding_storage_mode: str = "none",
-            mini_batch_size: int = 32,
-            num_workers: int = 8,
-            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-            return_predictions: bool = False,
-            exclude_labels: List[str] = [],
-    ) -> Result:
-
-        # read Dataset into data loader (if list of sentences passed, make Dataset first)
-        if not isinstance(sentences, Dataset):
-            sentences = SentenceDataset(sentences)
-        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
-
-        # use scikit-learn to evaluate
-        y_true = []
-        y_pred = []
-
-        with torch.no_grad():
-            eval_loss = 0
-
-            lines: List[str] = []
-            batch_count: int = 0
-
-            for batch in data_loader:
-                batch_count += 1
-
-                # remove previously predicted labels
-                [sentence.remove_labels('predicted') for sentence in batch]
-
-                # predict for batch
-                loss = self.predict(
-                    batch,
-                    embedding_storage_mode=embedding_storage_mode,
-                    mini_batch_size=mini_batch_size,
-                    label_name="predicted",
-                    return_loss=True,
-                )
-
-                eval_loss += loss
-
-                # get the gold labels
-                all_spans: List[str] = []
-                true_values_for_batch = {}
-                for s_id, sentence in enumerate(batch):
-                    for relation_label in sentence.get_labels(self.label_type):
-                        position_string = str(s_id) + ': ' + create_position_string(relation_label.head,
-                                                                                    relation_label.tail)
-                        true_values_for_batch[position_string] = relation_label
-                        if position_string not in all_spans:
-                            all_spans.append(position_string)
-
-                # get the predicted labels
-                predictions = {}
-                for s_id, sentence in enumerate(batch):
-                    for relation_label in sentence.get_labels("predicted"):
-                        position_string = str(s_id) + ': ' + create_position_string(relation_label.head,
-                                                                                    relation_label.tail)
-                        predictions[position_string] = relation_label
-                        if position_string not in all_spans:
-                            all_spans.append(position_string)
-
-                for span in all_spans:
-
-                    true_value = true_values_for_batch[span] if span in true_values_for_batch else 'O'
-                    prediction = predictions[span] if span in predictions else 'O'
-
-                    eval_line = f"{span}\t{true_value.value}\t{prediction.value}\n"
-                    lines.append(eval_line)
-
-                    true_idx = self.label_dictionary.get_idx_for_item(true_value.value)
-                    y_true_instance = np.zeros(len(self.label_dictionary), dtype=int)
-                    for i in range(len(self.label_dictionary)):
-                        y_true_instance[true_idx] = 1
-                    y_true.append(y_true_instance.tolist())
-
-                    pred_idx = self.label_dictionary.get_idx_for_item(prediction.value)
-                    y_pred_instance = np.zeros(len(self.label_dictionary), dtype=int)
-                    for i in range(len(self.label_dictionary)):
-                        y_pred_instance[pred_idx] = 1
-                    y_pred.append(y_pred_instance.tolist())
-
-                store_embeddings(batch, embedding_storage_mode)
-
-            if not return_predictions:
-                for sentence in sentences:
-                    for relation in sentence.relations:
-                        relation.annotation_layers["predicted"] = []
-
-            if out_path is not None:
-                with open(out_path, "w", encoding="utf-8") as outfile:
-                    outfile.write("".join(lines))
-
-            # make "classification report"
-            target_names = []
-            labels = []
-            for i in range(len(self.label_dictionary)):
-                label_name = self.label_dictionary.get_item_for_index(i)
-                if label_name == 'O': continue
-                if label_name in exclude_labels: continue
-                target_names.append(label_name)
-                labels.append(i)
-
-            classification_report = skmetrics.classification_report(
-                y_true, y_pred, digits=4, target_names=target_names, zero_division=0, labels=labels,
-            )
-
-            classification_report_dict = skmetrics.classification_report(
-                y_true, y_pred, digits=4, target_names=target_names, zero_division=0, output_dict=True, labels=labels,
-            )
-
-            # get scores
-            accuracy_score = round(skmetrics.accuracy_score(y_true, y_pred), 4)
-
-            precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
-            recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
-            micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
-            macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
-
-            detailed_result = (
-                    "\nResults:"
-                    f"\n- F-score (micro) {micro_f_score}"
-                    f"\n- F-score (macro) {macro_f_score}"
-                    f"\n- Accuracy {accuracy_score}"
-                    "\n\nBy class:\n" + classification_report
-            )
-
-            # line for log file
-            log_header = "PRECISION\tRECALL\tF1\tACCURACY"
-            log_line = f"{precision_score}\t" f"{recall_score}\t" f"{macro_f_score}\t" f"{accuracy_score}"
-
-            eval_loss /= batch_count
-
-            return Result(
-                main_score=classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]],
-                log_line=log_line,
-                log_header=log_header,
-                detailed_results=detailed_result,
-                classification_report=classification_report_dict,
-                loss=eval_loss,
-            )
-
     def _get_state_dict(self):
         model_state = {
             "state_dict": self.state_dict(),
@@ -413,8 +262,7 @@ class RelationClassifierLinear(flair.nn.Classifier):
 
     @staticmethod
     def _init_model_with_state_dict(state):
-
-        model = RelationClassifierLinear(
+        model = RelationClassifier(
             token_embeddings=state["token_embeddings"],
             label_dictionary=state["label_dictionary"],
             label_type=state["label_type"],
@@ -427,6 +275,10 @@ class RelationClassifierLinear(flair.nn.Classifier):
 
         model.load_state_dict(state["state_dict"])
         return model
+
+    @property
+    def label_type(self):
+        return self._label_type
 
 
 def create_position_string(head: Span, tail: Span) -> str:

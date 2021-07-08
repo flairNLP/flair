@@ -1,20 +1,17 @@
 import logging
 import sys
-import re
 
 from pathlib import Path
 from typing import List, Union, Optional, Dict, Tuple
 from warnings import warn
 
 import numpy as np
-import sklearn.metrics as skmetrics
 import torch
 import torch.nn
 import torch.nn.functional as F
 from requests import HTTPError
 from tabulate import tabulate
 from torch.nn.parameter import Parameter
-from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair.nn
@@ -22,7 +19,7 @@ from flair.data import Dictionary, Sentence, Label
 from flair.datasets import SentenceDataset, DataLoader
 from flair.embeddings import TokenEmbeddings, StackedEmbeddings, Embeddings
 from flair.file_utils import cached_path, unzip_file
-from flair.training_utils import Result, store_embeddings
+from flair.training_utils import store_embeddings
 
 log = logging.getLogger("flair")
 
@@ -404,154 +401,6 @@ class SequenceTagger(flair.nn.Classifier):
 
             if return_loss:
                 return overall_loss, overall_count
-
-    def evaluate_old(
-            self,
-            sentences: Union[List[Sentence], Dataset],
-            out_path: Union[str, Path] = None,
-            embedding_storage_mode: str = "none",
-            mini_batch_size: int = 32,
-            num_workers: int = 8,
-            wsd_evaluation: bool = False,
-            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-            **kwargs
-    ) -> Result:
-
-        # read Dataset into data loader (if list of sentences passed, make Dataset first)
-        if not isinstance(sentences, Dataset):
-            sentences = SentenceDataset(sentences)
-        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
-
-        # make the evaluation dictionary
-        self.tag_dictionary_no_bio = Dictionary()
-        for batch in data_loader:
-            for sentence in batch:
-                for gold_span in sentence.get_spans(self.tag_type):
-                    self.tag_dictionary_no_bio.add_item(re.split('^[BIES]-', gold_span.tag)[-1])
-
-        with torch.no_grad():
-
-            eval_loss = 0
-            total_word_count = 0
-
-            lines: List[str] = []
-
-            y_true = []
-            y_pred = []
-
-            for batch in data_loader:
-
-                # predict for batch
-                loss_and_count = self.predict(batch,
-                                              embedding_storage_mode=embedding_storage_mode,
-                                              mini_batch_size=mini_batch_size,
-                                              label_name='predicted',
-                                              return_loss=True)
-
-                eval_loss += loss_and_count[0]
-                total_word_count += loss_and_count[1]
-
-                # get the gold labels
-                all_spans: List[str] = []
-                true_values_for_batch = {}
-                for s_id, sentence in enumerate(batch):
-                    for gold_span in sentence.get_spans(self.tag_type):
-                        representation = str(s_id) + ': ' + gold_span.id_text
-                        true_values_for_batch[representation] = gold_span.tag
-                        if representation not in all_spans:
-                            all_spans.append(representation)
-
-                # get the predicted labels
-                predictions = {}
-                for s_id, sentence in enumerate(batch):
-                    for predicted_span in sentence.get_spans("predicted"):
-                        representation = str(s_id) + ': ' + predicted_span.id_text
-                        predictions[representation] = predicted_span.tag
-                        if representation not in all_spans:
-                            all_spans.append(representation)
-
-                for span in all_spans:
-
-                    true_value = true_values_for_batch[span] if span in true_values_for_batch else 'O'
-                    prediction = predictions[span] if span in predictions else 'O'
-
-                    true_idx = self.tag_dictionary_no_bio.get_idx_for_item(true_value)
-                    y_true_instance = np.zeros(len(self.tag_dictionary_no_bio), dtype=int)
-                    for i in range(len(self.tag_dictionary_no_bio)):
-                        y_true_instance[true_idx] = 1
-                    y_true.append(y_true_instance.tolist())
-
-                    pred_idx = self.tag_dictionary_no_bio.get_idx_for_item(prediction)
-                    y_pred_instance = np.zeros(len(self.tag_dictionary_no_bio), dtype=int)
-                    for i in range(len(self.tag_dictionary_no_bio)):
-                        y_pred_instance[pred_idx] = 1
-                    y_pred.append(y_pred_instance.tolist())
-
-                store_embeddings(batch, embedding_storage_mode)
-
-                for sentence in batch:
-                    for token in sentence:
-                        eval_line = f"{token.text} {token.get_tag(self.tag_type).value} {token.get_tag('predicted').value}\n"
-                        lines.append(eval_line)
-                    lines.append("\n")
-
-        # write predictions to out_file if set
-        if out_path:
-            with open(Path(out_path), "w", encoding="utf-8") as outfile:
-                outfile.write("".join(lines))
-
-        # now, calculate evaluation numbers
-        target_names = []
-        labels = []
-
-        for i in range(len(self.tag_dictionary_no_bio)):
-            label_name = self.tag_dictionary_no_bio.get_item_for_index(i)
-            if label_name == 'O': continue
-            if label_name == '<START>': continue
-            if label_name == '<STOP>': continue
-            if label_name == '<unk>': continue
-            target_names.append(label_name)
-            labels.append(i)
-
-        classification_report = skmetrics.classification_report(
-            y_true, y_pred, digits=4, target_names=target_names, zero_division=0, labels=labels,
-        )
-
-        classification_report_dict = skmetrics.classification_report(
-            y_true, y_pred, target_names=target_names, zero_division=0, output_dict=True, labels=labels,
-        )
-
-        accuracy_score = round(skmetrics.accuracy_score(y_true, y_pred), 4)
-
-        precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
-        recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
-        micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
-        macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
-
-        detailed_result = (
-                "\nResults:"
-                f"\n- F-score (micro) {micro_f_score}"
-                f"\n- F-score (macro) {macro_f_score}"
-                f"\n- Accuracy {accuracy_score}"
-                "\n\nBy class:\n" + classification_report
-        )
-
-        # line for log file
-        log_header = "PRECISION\tRECALL\tF1\tACCURACY"
-        log_line = f"{precision_score}\t" f"{recall_score}\t" f"{micro_f_score}\t" f"{accuracy_score}"
-
-        eval_loss /= total_word_count
-
-        result = Result(
-            main_score=classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]],
-            log_line=log_line,
-            log_header=log_header,
-            detailed_results=detailed_result,
-            classification_report=classification_report_dict,
-            loss=eval_loss
-        )
-
-        return result
 
     def forward_loss(
             self, data_points: Union[List[Sentence], Sentence], sort=True
