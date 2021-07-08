@@ -17,6 +17,10 @@ from flair.data import DataPoint, Sentence, Dictionary
 from flair.datasets import DataLoader, SentenceDataset
 from flair.training_utils import Result, store_embeddings
 
+import logging
+
+log = logging.getLogger("flair")
+
 
 class Model(torch.nn.Module):
     """Abstract base class for all downstream task models in Flair, such as SequenceTagger and TextClassifier.
@@ -230,26 +234,32 @@ class Classifier(Model):
             target_names.append(label_name)
             labels.append(evaluation_label_dictionary.get_idx_for_item(label_name))
 
-        if len(target_names) == 0:
-            target_names = counter.keys()
-            for label_name in target_names:
-                labels.append(evaluation_label_dictionary.get_idx_for_item(label_name))
+        # there is at least one gold label or one prediction (default)
+        if len(true_values) + len(predictions) > 1:
+            classification_report = sklearn.metrics.classification_report(
+                y_true, y_pred, digits=4, target_names=target_names, zero_division=0, labels=labels,
+            )
 
+            classification_report_dict = sklearn.metrics.classification_report(
+                y_true, y_pred, target_names=target_names, zero_division=0, output_dict=True, labels=labels,
+            )
 
-        classification_report = sklearn.metrics.classification_report(
-            y_true, y_pred, digits=4, target_names=target_names, zero_division=0, labels=labels,
-        )
+            accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
 
-        classification_report_dict = sklearn.metrics.classification_report(
-            y_true, y_pred, target_names=target_names, zero_division=0, output_dict=True, labels=labels,
-        )
+            precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
+            recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
+            micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
+            macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
 
-        accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
+            main_score = classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]]
 
-        precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
-        recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
-        micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
-        macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
+        else:
+            # issue error and default all evaluation numbers to 0.
+            log.error("ACHTUNG! No gold labels and no predictions found! Could be an error in your corpus or how you "
+                      "initialize the trainer!")
+            accuracy_score = precision_score = recall_score = micro_f_score = macro_f_score = main_score = 0.
+            classification_report = ""
+            classification_report_dict = {}
 
         detailed_result = (
                 "\nResults:"
@@ -267,7 +277,7 @@ class Classifier(Model):
             eval_loss /= average_over
 
         result = Result(
-            main_score=classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]],
+            main_score=main_score,
             log_line=log_line,
             log_header=log_header,
             detailed_results=detailed_result,
