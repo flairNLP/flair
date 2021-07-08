@@ -287,8 +287,7 @@ class ColumnDataset(FlairDataset):
                     else:  # tag without prefix, for example tag='PPER'
                         if self.label_name_map and tag in self.label_name_map.keys():
                             tag = self.label_name_map[tag]  # for example, transforming 'PPER' to 'person'
-                    print(task)
-                    print(tag)
+
                     token.add_label(task, tag)
                 if self.column_name_map[column] == self.SPACE_AFTER_KEY and fields[column] == '-':
                     token.whitespace_after = False

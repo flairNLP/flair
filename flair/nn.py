@@ -159,7 +159,6 @@ class Classifier(Model):
 
                 # get the gold labels
                 for sentence in batch:
-                    print(sentence)
 
                     for gold_label in sentence.get_labels(gold_label_type):
                         representation = str(sentence_id) + ': ' + gold_label.identifier
@@ -230,6 +229,12 @@ class Classifier(Model):
             if label_name in exclude_labels: continue
             target_names.append(label_name)
             labels.append(evaluation_label_dictionary.get_idx_for_item(label_name))
+
+        if len(target_names) == 0:
+            target_names = counter.keys()
+            for label_name in target_names:
+                labels.append(evaluation_label_dictionary.get_idx_for_item(label_name))
+
 
         classification_report = sklearn.metrics.classification_report(
             y_true, y_pred, digits=4, target_names=target_names, zero_division=0, labels=labels,

@@ -915,27 +915,3 @@ def sentence_with_relations():
             sentence[i].add_tag("relation_dep", f"[{i}]")
 
     return sentence
-
-
-def test_get_ner_span_idx_from_relation_idx(sentence_with_relations):
-    result = [sentence_with_relations._get_span_idx_from_relation_idx(i) for i in range(len(sentence_with_relations))]
-    expected_result = [0, 0, None, None, None, 1, None, None, None, 2, 2, None]
-
-    assert result == expected_result
-
-
-def test_get_relations_from_tags(sentence_with_relations):
-    result = sentence_with_relations._get_relations_from_tags()
-    expected_result = [(0, 1, 'Born_In'), (0, 2, 'Works_For')]
-
-    assert result == expected_result
-
-
-# def test_build_relations(sentence_with_relations):
-#     result = sentence_with_relations.build_relations()
-#
-#     spans = sentence_with_relations.get_spans("ner")
-#     expected_result = [Relation(spans[0], spans[1], Label('Born_In')),
-#                        Relation(spans[0], spans[2], Label('Works_For')),]
-#
-#     assert [str(relation) for relation in result] == [str(relation) for relation in expected_result]
