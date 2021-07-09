@@ -4,7 +4,7 @@ from flair.data import Sentence
 from flair.embeddings import (
     TransformerWordEmbeddings
 )
-from flair.models import RelationClassifier
+from flair.models import RelationExtractor
 from flair.trainers import ModelTrainer
 from flair.datasets.relation_extraction import CoNLLUCorpus
 
@@ -22,7 +22,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
     embeddings = TransformerWordEmbeddings()
 
-    model: RelationClassifier = RelationClassifier(
+    model: RelationExtractor = RelationExtractor(
         token_embeddings=embeddings,
         label_dictionary=relation_label_dict,
         label_type="relation",
@@ -42,7 +42,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 
     del trainer, model, relation_label_dict, corpus
 
-    loaded_model: RelationClassifier = RelationClassifier.load(
+    loaded_model: RelationExtractor = RelationExtractor.load(
         results_base_path / "final-model.pt"
     )
     loaded_model.use_gold_spans = False

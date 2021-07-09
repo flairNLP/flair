@@ -14,7 +14,7 @@ from flair.training_utils import store_embeddings
 log = logging.getLogger("flair")
 
 
-class RelationClassifier(flair.nn.Classifier):
+class RelationExtractor(flair.nn.Classifier):
 
     def __init__(
             self,
@@ -24,7 +24,7 @@ class RelationClassifier(flair.nn.Classifier):
             span_label_type: str = None,
             beta: float = 1.0,
             loss_weights: Dict[str, float] = None,
-            use_gold_spans: bool = True,
+            use_gold_spans: bool = False,
             pooling_operation: str = "first_last",
             dropout_value: float = 0.0,
     ):
@@ -37,7 +37,7 @@ class RelationClassifier(flair.nn.Classifier):
         (if any label's weight is unspecified it will default to 1.0)
         """
 
-        super(RelationClassifier, self).__init__()
+        super(RelationExtractor, self).__init__()
 
         self.token_embeddings: flair.embeddings.TokenEmbeddings = token_embeddings
         self.label_dictionary: Dictionary = label_dictionary
@@ -264,7 +264,7 @@ class RelationClassifier(flair.nn.Classifier):
 
     @staticmethod
     def _init_model_with_state_dict(state):
-        model = RelationClassifier(
+        model = RelationExtractor(
             token_embeddings=state["token_embeddings"],
             label_dictionary=state["label_dictionary"],
             label_type=state["label_type"],
