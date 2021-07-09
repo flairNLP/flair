@@ -27,6 +27,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
         label_dictionary=relation_label_dict,
         label_type="relation",
         span_label_type="ner",
+        use_gold_spans=True,
     )
 
     # initialize trainer
