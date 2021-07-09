@@ -1,18 +1,17 @@
 import copy
-import logging
-from pathlib import Path
-from typing import List, Union, Tuple
-import time
 import datetime
-import sys
 import inspect
-import warnings
+import logging
 import os
+import sys
+import time
+import warnings
+from pathlib import Path
+from typing import Union, Tuple
+
 import torch
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
-
-from flair.models.relation_classifier_model import RelationExtractor
 
 try:
     from apex import amp
@@ -34,7 +33,7 @@ from flair.training_utils import (
     AnnealOnPlateau,
 )
 from torch.optim.lr_scheduler import OneCycleLR
-from flair.models import SequenceTagger, TextClassifier
+from flair.models import SequenceTagger
 import random
 
 log = logging.getLogger("flair")
