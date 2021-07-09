@@ -158,9 +158,11 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
     trainer.train(
         results_base_path,
         mini_batch_size=1,
-        max_epochs=500,
+        max_epochs=100,
         shuffle=False,
         checkpoint=False,
+        train_with_test=True,
+        train_with_dev=True,
     )
 
     sentence = Sentence("apple tv")
