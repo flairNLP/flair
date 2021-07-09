@@ -407,7 +407,7 @@ class DataPairDataset(FlairDataset):
         data_pair = DataPair(first_sentence, second_sentence)
 
         if label:
-            data_pair.add_label(label_type=self.label_type, value=label)
+            data_pair.add_label(typename=self.label_type, value=label)
 
         return data_pair
 

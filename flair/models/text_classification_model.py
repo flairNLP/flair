@@ -1,14 +1,12 @@
 import logging
 from pathlib import Path
-from typing import List, Union, Dict, Optional, Set, Tuple
+from typing import List, Union, Dict, Optional, Set
 
 import torch
 import torch.nn as nn
-from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 import numpy as np
 
-import sklearn.metrics as metrics
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import minmax_scale
 import flair.nn
@@ -16,12 +14,12 @@ import flair.embeddings
 from flair.data import Dictionary, Sentence, Label, DataPoint, DataPair
 from flair.datasets import SentenceDataset, DataLoader
 from flair.file_utils import cached_path
-from flair.training_utils import convert_labels_to_one_hot, Result, store_embeddings
+from flair.training_utils import convert_labels_to_one_hot, store_embeddings
 
 log = logging.getLogger("flair")
 
 
-class TextClassifier(flair.nn.Model):
+class TextClassifier(flair.nn.Classifier):
     """
     Text Classification Model
     The model takes word embeddings, puts them into an RNN to obtain a text representation, and puts the
@@ -33,7 +31,7 @@ class TextClassifier(flair.nn.Model):
             self,
             document_embeddings: flair.embeddings.DocumentEmbeddings,
             label_dictionary: Dictionary,
-            label_type: str = None,
+            label_type: str,
             multi_label: bool = None,
             multi_label_threshold: float = 0.5,
             beta: float = 1.0,
@@ -55,7 +53,7 @@ class TextClassifier(flair.nn.Model):
 
         self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
         self.label_dictionary: Dictionary = label_dictionary
-        self.label_type = label_type
+        self._label_type = label_type
 
         if multi_label is not None:
             self.multi_label = multi_label
@@ -248,152 +246,6 @@ class TextClassifier(flair.nn.Model):
             if return_loss:
                 return overall_loss / batch_no
 
-    def evaluate(
-            self,
-            sentences: Union[List[DataPoint], Dataset],
-            out_path: Union[str, Path] = None,
-            embedding_storage_mode: str = "none",
-            mini_batch_size: int = 32,
-            num_workers: int = 8,
-            main_score_type: Tuple[str, str]=("micro avg", 'f1-score'),
-            return_predictions: bool = False
-    ) -> (Result, float):
-
-
-        # read Dataset into data loader (if list of sentences passed, make Dataset first)
-        if not isinstance(sentences, Dataset):
-            sentences = SentenceDataset(sentences)
-        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
-
-        # use scikit-learn to evaluate
-        y_true = []
-        y_pred = []
-
-        with torch.no_grad():
-            eval_loss = 0
-
-            lines: List[str] = []
-            batch_count: int = 0
-
-            for batch in data_loader:
-                batch_count += 1
-
-                # remove previously predicted labels
-                [sentence.remove_labels('predicted') for sentence in batch]
-
-                # get the gold labels
-                true_values_for_batch = [sentence.get_labels(self.label_type) for sentence in batch]
-
-                # predict for batch
-                loss = self.predict(batch,
-                                    embedding_storage_mode=embedding_storage_mode,
-                                    mini_batch_size=mini_batch_size,
-                                    label_name='predicted',
-                                    return_loss=True)
-
-                eval_loss += loss
-
-                sentences_for_batch = [sent.to_plain_string() for sent in batch]
-
-                # get the predicted labels
-                predictions = [sentence.get_labels('predicted') for sentence in batch]
-
-                for sentence, prediction, true_value in zip(
-                        sentences_for_batch,
-                        predictions,
-                        true_values_for_batch,
-                ):
-                    eval_line = "{}\t{}\t{}\n".format(
-                        sentence, true_value, prediction
-                    )
-                    lines.append(eval_line)
-
-                for predictions_for_sentence, true_values_for_sentence in zip(
-                        predictions, true_values_for_batch
-                ):
-
-                    true_values_for_sentence = [label.value for label in true_values_for_sentence]
-                    predictions_for_sentence = [label.value for label in predictions_for_sentence]
-
-                    y_true_instance = np.zeros(len(self.label_dictionary), dtype=int)
-                    for i in range(len(self.label_dictionary)):
-                        if self.label_dictionary.get_item_for_index(i) in true_values_for_sentence:
-                            y_true_instance[i] = 1
-                    y_true.append(y_true_instance.tolist())
-
-                    y_pred_instance = np.zeros(len(self.label_dictionary), dtype=int)
-                    for i in range(len(self.label_dictionary)):
-                        if self.label_dictionary.get_item_for_index(i) in predictions_for_sentence:
-                            y_pred_instance[i] = 1
-                    y_pred.append(y_pred_instance.tolist())
-
-                store_embeddings(batch, embedding_storage_mode)
-
-
-            # remove predicted labels if return_predictions is False
-            # Problem here: the predictions are only contained in sentences if it was chosen memory_mode="full" during
-            # creation of the ClassificationDataset in the ClassificationCorpus creation. If the ClassificationCorpus has
-            # memory mode "partial", then the predicted labels are not contained in sentences in any case so the following
-            # optional removal has no effect. Predictions won't be accessible outside the eval routine in this case regardless
-            # whether return_predictions is True or False. TODO: fix this
-
-            if not return_predictions:
-                for sentence in sentences:
-                    sentence.annotation_layers['predicted'] = []
-
-            if out_path is not None:
-                with open(out_path, "w", encoding="utf-8") as outfile:
-                    outfile.write("".join(lines))
-
-            # make "classification report"
-            target_names = []
-            for i in range(len(self.label_dictionary)):
-                target_names.append(self.label_dictionary.get_item_for_index(i))
-            classification_report = metrics.classification_report(y_true, y_pred, digits=4,
-                                                                  target_names=target_names, zero_division=0)
-            classification_report_dict = metrics.classification_report(y_true, y_pred, digits=4,
-                                                                  target_names=target_names, zero_division=0, output_dict=True)
-
-            # get scores
-            micro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='micro', zero_division=0),
-                                  4)
-            accuracy_score = round(metrics.accuracy_score(y_true, y_pred), 4)
-            macro_f_score = round(metrics.fbeta_score(y_true, y_pred, beta=self.beta, average='macro', zero_division=0),
-                                  4)
-            precision_score = round(metrics.precision_score(y_true, y_pred, average='macro', zero_division=0), 4)
-            recall_score = round(metrics.recall_score(y_true, y_pred, average='macro', zero_division=0), 4)
-
-            detailed_result = (
-                    "\nResults:"
-                    f"\n- F-score (micro) {micro_f_score}"
-                    f"\n- F-score (macro) {macro_f_score}"
-                    f"\n- Accuracy {accuracy_score}"
-                    '\n\nBy class:\n' + classification_report
-            )
-
-            # line for log file
-            if not self.multi_label:
-                log_header = "ACCURACY"
-                log_line = f"\t{accuracy_score}"
-            else:
-                log_header = "PRECISION\tRECALL\tF1\tACCURACY"
-                log_line = f"{precision_score}\t" \
-                           f"{recall_score}\t" \
-                           f"{macro_f_score}\t" \
-                           f"{accuracy_score}"
-
-            result = Result(
-                main_score=classification_report_dict[main_score_type[0]][main_score_type[1]],
-                log_line=log_line,
-                log_header=log_header,
-                detailed_results=detailed_result,
-                classification_report=classification_report_dict
-            )
-
-            eval_loss /= batch_count
-
-            return result, eval_loss
-
     @staticmethod
     def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
         filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
@@ -514,6 +366,10 @@ class TextClassifier(flair.nn.Model):
                f'  (beta): {self.beta}\n' + \
                f'  (weights): {self.weight_dict}\n' + \
                f'  (weight_tensor) {self.loss_weights}\n)'
+
+    @property
+    def label_type(self):
+        return self._label_type
 
 
 class TextPairClassifier(TextClassifier):
@@ -899,7 +755,7 @@ class TARSClassifier(TextClassifier):
             self.multi_label_threshold = \
                 self.task_specific_attributes[task_name]['multi_label_threshold']
             self.label_dictionary = self.task_specific_attributes[task_name]['label_dictionary']
-            self.label_type = self.task_specific_attributes[task_name]['label_type']
+            self.task_name = task_name
             self.beta = self.task_specific_attributes[task_name]['beta']
 
     def _get_state_dict(self):
@@ -1089,3 +945,7 @@ class TARSClassifier(TextClassifier):
             model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
 
         return model_name
+
+    @property
+    def label_type(self):
+        return self.task_specific_attributes[self.task_name]['label_type']

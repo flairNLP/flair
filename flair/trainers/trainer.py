@@ -1,13 +1,14 @@
 import copy
-import logging
-from pathlib import Path
-from typing import List, Union, Tuple
-import time
 import datetime
-import sys
 import inspect
-import warnings
+import logging
 import os
+import sys
+import time
+import warnings
+from pathlib import Path
+from typing import Union, Tuple
+
 import torch
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
@@ -32,7 +33,7 @@ from flair.training_utils import (
     AnnealOnPlateau,
 )
 from torch.optim.lr_scheduler import OneCycleLR
-from flair.models import SequenceTagger, TextClassifier
+from flair.models import SequenceTagger
 import random
 
 log = logging.getLogger("flair")
@@ -117,7 +118,7 @@ class ModelTrainer:
             eval_on_train_fraction=0.0,
             eval_on_train_shuffle=False,
             save_model_each_k_epochs: int = 0,
-            classification_main_metric=("micro avg", 'f1-score'),
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", 'f1-score'),
             tensorboard_comment='',
             save_best_checkpoints=False,
             use_swa: bool = False,
@@ -164,8 +165,6 @@ class ModelTrainer:
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
-
-        main_score_type = classification_main_metric if isinstance(self.model, TextClassifier) else None
 
         if self.use_tensorboard:
             try:
@@ -484,12 +483,13 @@ class ModelTrainer:
                 result_line: str = ""
 
                 if log_train:
-                    train_eval_result, train_loss = self.model.evaluate(
+                    train_eval_result = self.model.evaluate(
                         self.corpus.train,
+                        gold_label_type=self.model.label_type,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_score_type=main_score_type
+                        main_evaluation_metric=main_evaluation_metric
                     )
                     result_line += f"\t{train_eval_result.log_line}"
 
@@ -499,16 +499,17 @@ class ModelTrainer:
                 if log_train_part:
                     train_part_eval_result, train_part_loss = self.model.evaluate(
                         train_part,
+                        gold_label_type=self.model.label_type,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_score_type=main_score_type
+                        main_evaluation_metric=main_evaluation_metric
                     )
                     result_line += (
                         f"\t{train_part_loss}\t{train_part_eval_result.log_line}"
                     )
                     log.info(
-                        f"TRAIN_SPLIT : loss {train_part_loss} - score {round(train_part_eval_result.main_score, 4)}"
+                        f"TRAIN_SPLIT : loss {train_part_loss} - {main_evaluation_metric[1]} ({main_evaluation_metric[0]}) {round(train_part_eval_result.main_score, 4)}"
                     )
                 if self.use_tensorboard:
                     for (metric_class_avg_type, metric_type) in self.metrics_for_tensorboard:
@@ -518,22 +519,23 @@ class ModelTrainer:
                         )
 
                 if log_dev:
-                    dev_eval_result, dev_loss = self.model.evaluate(
+                    dev_eval_result = self.model.evaluate(
                         self.corpus.dev,
+                        gold_label_type=self.model.label_type,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         out_path=base_path / "dev.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_score_type=main_score_type
+                        main_evaluation_metric=main_evaluation_metric
                     )
-                    result_line += f"\t{dev_loss}\t{dev_eval_result.log_line}"
+                    result_line += f"\t{dev_eval_result.loss}\t{dev_eval_result.log_line}"
                     log.info(
-                        f"DEV : loss {dev_loss} - score {round(dev_eval_result.main_score, 4)}"
+                        f"DEV : loss {dev_eval_result.loss} - {main_evaluation_metric[1]} ({main_evaluation_metric[0]})  {round(dev_eval_result.main_score, 4)}"
                     )
                     # calculate scores using dev data if available
                     # append dev score to score history
                     dev_score_history.append(dev_eval_result.main_score)
-                    dev_loss_history.append(dev_loss if type(dev_loss) == float else dev_loss.item())
+                    dev_loss_history.append(dev_eval_result.loss)
 
                     dev_score = dev_eval_result.main_score
 
@@ -541,7 +543,7 @@ class ModelTrainer:
                     store_embeddings(self.corpus.dev, embeddings_storage_mode)
 
                     if self.use_tensorboard:
-                        writer.add_scalar("dev_loss", dev_loss, self.epoch)
+                        writer.add_scalar("dev_loss", dev_eval_result.loss, self.epoch)
                         writer.add_scalar(
                             "dev_score", dev_eval_result.main_score, self.epoch
                         )
@@ -552,24 +554,25 @@ class ModelTrainer:
                             )
 
                 if log_test:
-                    test_eval_result, test_loss = self.model.evaluate(
+                    test_eval_result = self.model.evaluate(
                         self.corpus.test,
+                        gold_label_type=self.model.label_type,
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         out_path=base_path / "test.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_score_type=main_score_type
+                        main_evaluation_metric=main_evaluation_metric
                     )
-                    result_line += f"\t{test_loss}\t{test_eval_result.log_line}"
+                    result_line += f"\t{test_eval_result.loss}\t{test_eval_result.log_line}"
                     log.info(
-                        f"TEST : loss {test_loss} - score {round(test_eval_result.main_score, 4)}"
+                        f"TEST : loss {test_eval_result.loss} - {main_evaluation_metric[1]} ({main_evaluation_metric[0]})  {round(test_eval_result.main_score, 4)}"
                     )
 
                     # depending on memory mode, embeddings are moved to CPU, GPU or deleted
                     store_embeddings(self.corpus.test, embeddings_storage_mode)
 
                     if self.use_tensorboard:
-                        writer.add_scalar("test_loss", test_loss, self.epoch)
+                        writer.add_scalar("test_loss", test_eval_result.loss, self.epoch)
                         writer.add_scalar(
                             "test_score", test_eval_result.main_score, self.epoch
                         )
@@ -578,7 +581,6 @@ class ModelTrainer:
                                 f"test_{metric_class_avg_type}_{metric_type}",
                                 test_eval_result.classification_report[metric_class_avg_type][metric_type], self.epoch
                             )
-
 
                 # determine if this is the best model or if we need to anneal
                 current_epoch_has_best_model_so_far = False
@@ -589,16 +591,16 @@ class ModelTrainer:
                         best_validation_score = dev_score
 
                     if isinstance(lr_scheduler, AnnealOnPlateau):
-                        lr_scheduler.step(dev_score, dev_loss)
+                        lr_scheduler.step(dev_score, dev_eval_result.loss)
 
                 # alternative: anneal against dev loss
                 if not train_with_dev and anneal_against_dev_loss:
-                    if dev_loss < best_validation_score:
+                    if dev_eval_result.loss < best_validation_score:
                         current_epoch_has_best_model_so_far = True
-                        best_validation_score = dev_loss
+                        best_validation_score = dev_eval_result.loss
 
                     if isinstance(lr_scheduler, AnnealOnPlateau):
-                        lr_scheduler.step(dev_loss)
+                        lr_scheduler.step(dev_eval_result.loss)
 
                 # alternative: anneal against train loss
                 if train_with_dev:
@@ -637,7 +639,7 @@ class ModelTrainer:
 
                         if log_train_part:
                             f.write("\tTRAIN_PART_LOSS\tTRAIN_PART_" + "\tTRAIN_PART_".join(
-                                    train_part_eval_result.log_header.split("\t")))
+                                train_part_eval_result.log_header.split("\t")))
 
                         if log_dev:
                             f.write("\tDEV_LOSS\tDEV_" + "\tDEV_".join(dev_eval_result.log_header.split("\t")))
@@ -696,7 +698,11 @@ class ModelTrainer:
 
         # test best model if test data is present
         if self.corpus.test and not train_with_test:
-            final_score = self.final_test(base_path, mini_batch_chunk_size, num_workers, main_score_type)
+            final_score = self.final_test(
+                base_path=base_path,
+                eval_mini_batch_size=mini_batch_chunk_size,
+                num_workers=num_workers,
+                main_evaluation_metric=main_evaluation_metric)
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
@@ -731,8 +737,8 @@ class ModelTrainer:
             self,
             base_path: Union[Path, str],
             eval_mini_batch_size: int,
+            main_evaluation_metric: Tuple[str, str],
             num_workers: int = 8,
-            main_score_type: str = None,
     ):
         if type(base_path) is str:
             base_path = Path(base_path)
@@ -746,13 +752,16 @@ class ModelTrainer:
         else:
             log.info("Testing using last state of model ...")
 
-        test_results, test_loss = self.model.evaluate(
+        print(self.model.label_type)
+
+        test_results = self.model.evaluate(
             self.corpus.test,
+            gold_label_type=self.model.label_type,
             mini_batch_size=eval_mini_batch_size,
             num_workers=num_workers,
             out_path=base_path / "test.tsv",
             embedding_storage_mode="none",
-            main_score_type=main_score_type
+            main_evaluation_metric=main_evaluation_metric,
         )
 
         test_results: Result = test_results
@@ -765,13 +774,14 @@ class ModelTrainer:
             for subcorpus in self.corpus.corpora:
                 log_line(log)
                 if subcorpus.test:
-                    subcorpus_results, subcorpus_loss = self.model.evaluate(
+                    subcorpus_results = self.model.evaluate(
                         subcorpus.test,
+                        gold_label_type=self.model.label_type,
                         mini_batch_size=eval_mini_batch_size,
                         num_workers=num_workers,
                         out_path=base_path / f"{subcorpus.name}-test.tsv",
                         embedding_storage_mode="none",
-                        main_score_type=main_score_type
+                        main_evaluation_metric=main_evaluation_metric
                     )
                     log.info(subcorpus.name)
                     log.info(subcorpus_results.log_line)

@@ -17,6 +17,9 @@ from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unzip_file
 
+import logging
+log = logging.getLogger("flair")
+
 
 class ClassificationCorpus(Corpus):
     """
@@ -113,6 +116,8 @@ class ClassificationCorpus(Corpus):
             train, dev, test, name=str(data_folder)
         )
 
+        log.info(f"Initialized corpus {self.name} (label type name is '{label_type}')")
+
 
 class ClassificationDataset(FlairDataset):
     """
@@ -122,7 +127,7 @@ class ClassificationDataset(FlairDataset):
     def __init__(
             self,
             path_to_file: Union[str, Path],
-            label_type: str = 'class',
+            label_type: str,
             truncate_to_max_tokens=-1,
             truncate_to_max_chars=-1,
             filter_if_longer_than: int = -1,
@@ -318,7 +323,7 @@ class CSVClassificationCorpus(Corpus):
             self,
             data_folder: Union[str, Path],
             column_name_map: Dict[int, str],
-            label_type: str = 'class',
+            label_type: str,
             train_file=None,
             test_file=None,
             dev_file=None,
@@ -410,7 +415,7 @@ class CSVClassificationDataset(FlairDataset):
             self,
             path_to_file: Union[str, Path],
             column_name_map: Dict[int, str],
-            label_type: str = "class",
+            label_type: str,
             max_tokens_per_doc: int = -1,
             max_chars_per_doc: int = -1,
             tokenizer: Tokenizer = SegtokTokenizer(),
@@ -814,7 +819,7 @@ class IMDB(ClassificationCorpus):
                                     )
 
         super(IMDB, self).__init__(
-            data_folder, tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs
+            data_folder, label_type='sentiment', tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs
         )
 
 
@@ -1327,7 +1332,6 @@ class GO_EMOTIONS(ClassificationCorpus):
     """
     GoEmotions dataset containing 58k Reddit comments labeled with 27 emotion categories, see. https://github.com/google-research/google-research/tree/master/goemotions
     """
-
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -1571,7 +1575,7 @@ class TREC_6(ClassificationCorpus):
                             write_fp.write(f"{new_label} {question}\n")
 
         super(TREC_6, self).__init__(
-            data_folder, label_type='question_type', tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs,
+            data_folder, label_type='question_class', tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs,
         )
 
 

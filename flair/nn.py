@@ -1,42 +1,49 @@
+import logging
 import warnings
+from abc import abstractmethod
+from collections import Counter
 from pathlib import Path
+from typing import Union, List, Tuple
 
 import torch.nn
-
-from abc import abstractmethod
-
-from typing import Union, List
-
 from torch.utils.data.dataset import Dataset
 
 import flair
 from flair import file_utils
-from flair.data import DataPoint, Sentence
-from flair.datasets import DataLoader
-from flair.training_utils import Result
+from flair.data import DataPoint, Sentence, Dictionary, SpanLabel
+from flair.datasets import DataLoader, SentenceDataset
+from flair.training_utils import Result, store_embeddings
+
+log = logging.getLogger("flair")
 
 
 class Model(torch.nn.Module):
     """Abstract base class for all downstream task models in Flair, such as SequenceTagger and TextClassifier.
     Every new type of model must implement these methods."""
 
+    @property
     @abstractmethod
-    def forward_loss(
-        self, data_points: Union[List[DataPoint], DataPoint]
-    ) -> torch.tensor:
+    def label_type(self):
+        """Each model predicts labels of a certain type. TODO: can we find a better name for this?"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def forward_loss(self, data_points: Union[List[DataPoint], DataPoint]) -> torch.tensor:
         """Performs a forward pass and returns a loss tensor for backpropagation. Implement this to enable training."""
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def evaluate(
-        self,
-        sentences: Union[List[DataPoint], Dataset],
-        mini_batch_size: int,
-        num_workers: int,
-        main_score_type: str,
-        out_path: Path = None,
-        embedding_storage_mode: str = "none",
-    ) -> (Result, float):
+            self,
+            sentences: Union[List[Sentence], Dataset],
+            gold_label_type: str,
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: int = 8,
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+            exclude_labels: List[str] = [],
+    ) -> Result:
         """Evaluates the model. Returns a Result object containing evaluation
         results and a loss value. Implement this to enable evaluation.
         :param data_loader: DataLoader that iterates over dataset to be evaluated
@@ -45,23 +52,22 @@ class Model(torch.nn.Module):
         freshly recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU
         :return: Returns a Tuple consisting of a Result object and a loss float value
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def _get_state_dict(self):
         """Returns the state dictionary for this model. Implementing this enables the save() and save_checkpoint()
         functionality."""
-        pass
+        raise NotImplementedError
 
     @staticmethod
     @abstractmethod
     def _init_model_with_state_dict(state):
         """Initialize the model from a state dictionary. Implementing this enables the load() and load_checkpoint()
         functionality."""
-        pass
+        raise NotImplementedError
 
     @staticmethod
-    @abstractmethod
     def _fetch_model(model_name) -> str:
         return model_name
 
@@ -96,6 +102,208 @@ class Model(torch.nn.Module):
         model.to(flair.device)
 
         return model
+
+
+class Classifier(Model):
+
+    def evaluate(
+            self,
+            sentences: Union[List[Sentence], Dataset],
+            gold_label_type: str,
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: int = 8,
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+            exclude_labels: List[str] = [],
+    ) -> Result:
+        import numpy as np
+        import sklearn
+
+        # read Dataset into data loader (if list of sentences passed, make Dataset first)
+        if not isinstance(sentences, Dataset):
+            sentences = SentenceDataset(sentences)
+        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
+
+        with torch.no_grad():
+
+            # loss calculation
+            eval_loss = 0
+            average_over = 0
+
+            # variables for printing
+            lines: List[str] = []
+            is_word_level = False
+
+            # variables for computing scores
+            all_spans: List[str] = []
+            true_values = {}
+            predictions = {}
+
+            sentence_id = 0
+            for batch in data_loader:
+
+                # remove any previously predicted labels
+                for sentence in batch:
+                    sentence.remove_labels('predicted')
+
+                # predict for batch
+                loss_and_count = self.predict(batch,
+                                              embedding_storage_mode=embedding_storage_mode,
+                                              mini_batch_size=mini_batch_size,
+                                              label_name='predicted',
+                                              return_loss=True)
+
+                if isinstance(loss_and_count, Tuple):
+                    average_over += loss_and_count[1]
+                    eval_loss += loss_and_count[0]
+                else:
+                    eval_loss += loss_and_count
+
+                # get the gold labels
+                for sentence in batch:
+
+                    for gold_label in sentence.get_labels(gold_label_type):
+                        representation = str(sentence_id) + ': ' + gold_label.identifier
+                        true_values[representation] = gold_label.value
+                        if representation not in all_spans:
+                            all_spans.append(representation)
+
+                        if type(gold_label) == SpanLabel: is_word_level = True
+
+                    for predicted_span in sentence.get_labels("predicted"):
+                        representation = str(sentence_id) + ': ' + predicted_span.identifier
+                        predictions[representation] = predicted_span.value
+                        if representation not in all_spans:
+                            all_spans.append(representation)
+
+                    sentence_id += 1
+
+                store_embeddings(batch, embedding_storage_mode)
+
+                # make printout lines
+                if out_path:
+                    for sentence in batch:
+                        if is_word_level:
+                            for token in sentence:
+                                eval_line = f"{token.text} " \
+                                            f"{token.get_tag(gold_label_type).value} " \
+                                            f"{token.get_tag('predicted').value}\n"
+                                lines.append(eval_line)
+                            lines.append("\n")
+                        else:
+                            # check if there is a label mismatch
+                            g = [label.identifier + label.value for label in sentence.get_labels(gold_label_type)]
+                            p = [label.identifier + label.value for label in sentence.get_labels('predicted')]
+                            g.sort()
+                            p.sort()
+                            correct_string = " -> MISMATCH!\n" if g != p else ""
+                            # print info
+                            eval_line = f"{sentence.to_original_text()}\n" \
+                                        f" - Gold: {sentence.get_labels(gold_label_type)}\n" \
+                                        f" - Pred: {sentence.get_labels('predicted')}\n{correct_string}\n"
+                            lines.append(eval_line)
+
+            # write predictions to out_file if set
+            if out_path:
+                with open(Path(out_path), "w", encoding="utf-8") as outfile:
+                    outfile.write("".join(lines))
+
+            # make the evaluation dictionary
+            evaluation_label_dictionary = Dictionary(add_unk=False)
+            evaluation_label_dictionary.add_item("O")
+            for label in true_values.values():
+                evaluation_label_dictionary.add_item(label)
+            for label in predictions.values():
+                evaluation_label_dictionary.add_item(label)
+
+            # finally, compute numbers
+            y_true = []
+            y_pred = []
+
+            for span in all_spans:
+
+                true_value = true_values[span] if span in true_values else 'O'
+                prediction = predictions[span] if span in predictions else 'O'
+
+                true_idx = evaluation_label_dictionary.get_idx_for_item(true_value)
+                y_true_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
+                for i in range(len(evaluation_label_dictionary)):
+                    y_true_instance[true_idx] = 1
+                y_true.append(y_true_instance.tolist())
+
+                pred_idx = evaluation_label_dictionary.get_idx_for_item(prediction)
+                y_pred_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
+                for i in range(len(evaluation_label_dictionary)):
+                    y_pred_instance[pred_idx] = 1
+                y_pred.append(y_pred_instance.tolist())
+
+        # now, calculate evaluation numbers
+        target_names = []
+        labels = []
+
+        counter = Counter()
+        counter.update(true_values.values())
+        counter.update(predictions.values())
+
+        for label_name, count in counter.most_common():
+            if label_name == 'O': continue
+            if label_name in exclude_labels: continue
+            target_names.append(label_name)
+            labels.append(evaluation_label_dictionary.get_idx_for_item(label_name))
+
+        # there is at least one gold label or one prediction (default)
+        if len(true_values) + len(predictions) > 1:
+            classification_report = sklearn.metrics.classification_report(
+                y_true, y_pred, digits=4, target_names=target_names, zero_division=0, labels=labels,
+            )
+
+            classification_report_dict = sklearn.metrics.classification_report(
+                y_true, y_pred, target_names=target_names, zero_division=0, output_dict=True, labels=labels,
+            )
+
+            accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
+
+            precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
+            recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
+            micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
+            macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
+
+            main_score = classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]]
+
+        else:
+            # issue error and default all evaluation numbers to 0.
+            log.error("ACHTUNG! No gold labels and no predictions found! Could be an error in your corpus or how you "
+                      "initialize the trainer!")
+            accuracy_score = precision_score = recall_score = micro_f_score = macro_f_score = main_score = 0.
+            classification_report = ""
+            classification_report_dict = {}
+
+        detailed_result = (
+                "\nResults:"
+                f"\n- F-score (micro) {micro_f_score}"
+                f"\n- F-score (macro) {macro_f_score}"
+                f"\n- Accuracy {accuracy_score}"
+                "\n\nBy class:\n" + classification_report
+        )
+
+        # line for log file
+        log_header = "PRECISION\tRECALL\tF1\tACCURACY"
+        log_line = f"{precision_score}\t" f"{recall_score}\t" f"{micro_f_score}\t" f"{accuracy_score}"
+
+        if average_over > 0:
+            eval_loss /= average_over
+
+        result = Result(
+            main_score=main_score,
+            log_line=log_line,
+            log_header=log_header,
+            detailed_results=detailed_result,
+            classification_report=classification_report_dict,
+            loss=eval_loss
+        )
+
+        return result
 
 
 class LockedDropout(torch.nn.Module):

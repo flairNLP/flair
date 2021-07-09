@@ -1,6 +1,7 @@
 import torch, flair
 import logging
 import re
+import ast
 
 from abc import abstractmethod, ABC
 
@@ -176,6 +177,49 @@ class Label:
     def __repr__(self):
         return f"{self._value} ({round(self._score, 4)})"
 
+    @property
+    def identifier(self):
+        return ""
+
+
+class SpanLabel(Label):
+    def __init__(self, span, value: str, score: float = 1.0):
+        super().__init__(value, score)
+        self.span = span
+
+    def __str__(self):
+        return f"{self._value} [{self.span.id_text}] ({round(self._score, 4)})"
+
+    def __repr__(self):
+        return f"{self._value} [{self.span.id_text}] ({round(self._score, 4)})"
+
+    def __len__(self):
+        return len(self.span)
+
+    @property
+    def identifier(self):
+        return f"{self.span.id_text}"
+
+
+class RelationLabel(Label):
+    def __init__(self, head, tail, value: str, score: float = 1.0):
+        super().__init__(value, score)
+        self.head = head
+        self.tail = tail
+
+    def __str__(self):
+        return f"{self._value} [{self.head.id_text} -> {self.tail.id_text}] ({round(self._score, 4)})"
+
+    def __repr__(self):
+        return f"{self._value} from {self.head.id_text} -> {self.tail.id_text} ({round(self._score, 4)})"
+
+    def __len__(self):
+        return len(self.head) + len(self.tail)
+
+    @property
+    def identifier(self):
+        return f"{self.head.id_text} -> {self.tail.id_text}"
+
 
 class DataPoint:
     """
@@ -201,29 +245,37 @@ class DataPoint:
     def clear_embeddings(self, embedding_names: List[str] = None):
         pass
 
-    def add_label(self, label_type: str, value: str, score: float = 1.):
+    def add_label(self, typename: str, value: str, score: float = 1.):
 
-        if label_type not in self.annotation_layers:
-            self.annotation_layers[label_type] = [Label(value, score)]
+        if typename not in self.annotation_layers:
+            self.annotation_layers[typename] = [Label(value, score)]
         else:
-            self.annotation_layers[label_type].append(Label(value, score))
+            self.annotation_layers[typename].append(Label(value, score))
 
         return self
 
-    def set_label(self, label_type: str, value: str, score: float = 1.):
-        self.annotation_layers[label_type] = [Label(value, score)]
+    def add_complex_label(self, typename: str, label: Label):
+
+        if typename not in self.annotation_layers:
+            self.annotation_layers[typename] = [label]
+        else:
+            self.annotation_layers[typename].append(label)
 
         return self
 
-    def remove_labels(self, label_type: str):
-        if label_type in self.annotation_layers.keys():
-            del self.annotation_layers[label_type]
+    def set_label(self, typename: str, value: str, score: float = 1.):
+        self.annotation_layers[typename] = [Label(value, score)]
+        return self
 
-    def get_labels(self, label_type: str = None):
-        if label_type is None:
+    def remove_labels(self, typename: str):
+        if typename in self.annotation_layers.keys():
+            del self.annotation_layers[typename]
+
+    def get_labels(self, typename: str = None):
+        if typename is None:
             return self.labels
 
-        return self.annotation_layers[label_type] if label_type in self.annotation_layers else []
+        return self.annotation_layers[typename] if typename in self.annotation_layers else []
 
     @property
     def labels(self) -> List[Label]:
@@ -418,7 +470,7 @@ class Span(DataPoint):
             pos += len(t.text)
 
         return str
-     
+
     def to_plain_string(self):
         plain = ""
         for token in self.tokens:
@@ -438,16 +490,20 @@ class Span(DataPoint):
     def __str__(self) -> str:
         ids = ",".join([str(t.idx) for t in self.tokens])
         label_string = " ".join([str(label) for label in self.labels])
-        labels = f'   [− Labels: {label_string}]' if self.labels is not None else ""
+        labels = f'   [− Labels: {label_string}]' if self.labels else ""
         return (
             'Span [{}]: "{}"{}'.format(ids, self.text, labels)
         )
+
+    @property
+    def id_text(self) -> str:
+        return f"{' '.join([t.text for t in self.tokens])} ({','.join([str(t.idx) for t in self.tokens])})"
 
     def __repr__(self) -> str:
         ids = ",".join([str(t.idx) for t in self.tokens])
         return (
             '<{}-span ({}): "{}">'.format(self.tag, ids, self.text)
-            if self.tag is not None
+            if len(self.labels) > 0
             else '<span ({}): "{}">'.format(ids, self.text)
         )
 
@@ -467,6 +523,10 @@ class Span(DataPoint):
     @property
     def score(self):
         return self.labels[0].score
+
+    @property
+    def position_string(self):
+        return '-'.join([str(token.idx) for token in self])
 
 
 class Tokenizer(ABC):
@@ -594,6 +654,8 @@ class Sentence(DataPoint):
         # some sentences represent a document boundary (but most do not)
         self.is_document_boundary: bool = False
 
+        self.relations: List[Relation] = []
+
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
             if token.idx == token_id:
@@ -669,7 +731,7 @@ class Sentence(DataPoint):
                 if span_score > min_score:
                     span = Span(current_span)
                     span.add_label(
-                        label_type=label_type,
+                        typename=label_type,
                         value=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
                         score=span_score)
                     spans.append(span)
@@ -691,7 +753,7 @@ class Sentence(DataPoint):
             if span_score > min_score:
                 span = Span(current_span)
                 span.add_label(
-                    label_type=label_type,
+                    typename=label_type,
                     value=sorted(tags.items(), key=lambda k_v: k_v[1], reverse=True)[0][0],
                     score=span_score)
                 spans.append(span)
@@ -989,6 +1051,19 @@ class Sentence(DataPoint):
         :return: True if context is set, else False
         """
         return '_previous_sentence' in self.__dict__.keys() or '_position_in_dataset' in self.__dict__.keys()
+
+    def get_labels(self, label_type: str = None):
+
+        # TODO: crude hack - replace with something better
+        if label_type:
+            spans = self.get_spans(label_type)
+            for span in spans:
+                self.add_complex_label(label_type, label=SpanLabel(span, span.tag, span.score))
+
+        if label_type is None:
+            return self.labels
+
+        return self.annotation_layers[label_type] if label_type in self.annotation_layers else []
 
 
 class Image(DataPoint):
@@ -1321,6 +1396,7 @@ class Corpus:
                 if isinstance(sentence, Sentence):
                     for token in sentence.tokens:
                         for label in token.get_labels(label_type):
+                            # print(label)
                             label_dictionary.add_item(label.value)
 
                 if not label_dictionary.multi_label:
