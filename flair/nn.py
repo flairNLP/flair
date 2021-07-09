@@ -1,23 +1,18 @@
+import logging
 import warnings
+from abc import abstractmethod
 from collections import Counter
 from pathlib import Path
+from typing import Union, List, Tuple
 
 import torch.nn
-
-from abc import abstractmethod
-
-from typing import Union, List, Tuple, Optional
-
-from torch import Tensor
 from torch.utils.data.dataset import Dataset
 
 import flair
 from flair import file_utils
-from flair.data import DataPoint, Sentence, Dictionary
+from flair.data import DataPoint, Sentence, Dictionary, SpanLabel
 from flair.datasets import DataLoader, SentenceDataset
 from flair.training_utils import Result, store_embeddings
-
-import logging
 
 log = logging.getLogger("flair")
 
@@ -132,11 +127,15 @@ class Classifier(Model):
 
         with torch.no_grad():
 
+            # loss calculation
             eval_loss = 0
             average_over = 0
 
+            # variables for printing
             lines: List[str] = []
+            is_word_level = False
 
+            # variables for computing scores
             all_spans: List[str] = []
             true_values = {}
             predictions = {}
@@ -170,6 +169,8 @@ class Classifier(Model):
                         if representation not in all_spans:
                             all_spans.append(representation)
 
+                        if type(gold_label) == SpanLabel: is_word_level = True
+
                     for predicted_span in sentence.get_labels("predicted"):
                         representation = str(sentence_id) + ': ' + predicted_span.identifier
                         predictions[representation] = predicted_span.value
@@ -180,16 +181,33 @@ class Classifier(Model):
 
                 store_embeddings(batch, embedding_storage_mode)
 
-            #     for sentence in batch:
-            #         for token in sentence:
-            #             eval_line = f"{token.text} {token.get_tag(label_type).value} {token.get_tag('predicted').value}\n"
-            #             lines.append(eval_line)
-            #         lines.append("\n")
-            #
-            # # write predictions to out_file if set
-            # if out_path:
-            #     with open(Path(out_path), "w", encoding="utf-8") as outfile:
-            #         outfile.write("".join(lines))
+                # make printout lines
+                if out_path:
+                    for sentence in batch:
+                        if is_word_level:
+                            for token in sentence:
+                                eval_line = f"{token.text} " \
+                                            f"{token.get_tag(gold_label_type).value} " \
+                                            f"{token.get_tag('predicted').value}\n"
+                                lines.append(eval_line)
+                            lines.append("\n")
+                        else:
+                            # check if there is a label mismatch
+                            g = [label.identifier + label.value for label in sentence.get_labels(gold_label_type)]
+                            p = [label.identifier + label.value for label in sentence.get_labels('predicted')]
+                            g.sort()
+                            p.sort()
+                            correct_string = " -> MISMATCH!\n" if g != p else ""
+                            # print info
+                            eval_line = f"{sentence.to_original_text()}\n" \
+                                        f" - Gold: {sentence.get_labels(gold_label_type)}\n" \
+                                        f" - Pred: {sentence.get_labels('predicted')}\n{correct_string}\n"
+                            lines.append(eval_line)
+
+            # write predictions to out_file if set
+            if out_path:
+                with open(Path(out_path), "w", encoding="utf-8") as outfile:
+                    outfile.write("".join(lines))
 
             # make the evaluation dictionary
             evaluation_label_dictionary = Dictionary(add_unk=False)
