@@ -338,7 +338,7 @@ class SciSpacyTokenizer(Tokenizer):
         infix_re = spacy.util.compile_infix_regex(infixes)
 
         self.model = spacy.load(
-            "en_core_sci_sm", disable=["tagger", "ner", "parser", "textcat"]
+            "en_core_sci_sm", disable=["tagger", "ner", "parser", "textcat", "lemmatizer"]
         )
         self.model.tokenizer.prefix_search = prefix_re.search
         self.model.tokenizer.infix_finditer = infix_re.finditer

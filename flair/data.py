@@ -1378,7 +1378,12 @@ class Corpus:
 
         from flair.datasets import DataLoader
 
-        data = ConcatDataset([self.train, self.test])
+        datasets = [self.train]
+        if self.test is not None:
+            datasets.append(self.test)
+
+        data = ConcatDataset(datasets)
+
         loader = DataLoader(data, batch_size=1)
 
         log.info("Computing label dictionary. Progress:")
