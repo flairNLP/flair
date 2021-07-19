@@ -63,6 +63,7 @@ class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
             data_folder,
             train_file=train_file_name,
             test_file="semeval2010-task8-test.conllu",
+            token_annotation_fields=['ner'],
             in_memory=in_memory,
         )
 
@@ -215,6 +216,7 @@ class TACRED(CoNLLUCorpus):
 
         super(TACRED, self).__init__(
             data_folder,
+            token_annotation_fields=['ner'],
             in_memory=in_memory,
         )
 
@@ -327,6 +329,7 @@ class CoNLL04(CoNLLUCorpus):
 
         super(CoNLL04, self).__init__(
             data_folder,
+            token_annotation_fields=['ner'],
             in_memory=in_memory,
         )
 
