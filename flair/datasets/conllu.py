@@ -1,21 +1,18 @@
 import logging
+
 from pathlib import Path
 from typing import List, Union, Optional, Sequence, Dict, Tuple
 
+import conllu
+
 from flair.data import Sentence, Corpus, Token, FlairDataset, Span, RelationLabel
 from flair.datasets.base import find_train_dev_test_files
-import conllu
 
 log = logging.getLogger("flair")
 
-DEFAULT_FIELDS = ("id", "form", "lemma", "upos", "xpos", "feats", "head", "deprel", "deps", "misc")
+DEFAULT_FIELDS: Tuple[str, ...] = ("id", "form", "lemma", "upos", "xpos", "feats", "head", "deprel", "deps", "misc")
 
-DEFAULT_FIELD_PARSERS: Dict[str, conllu._FieldParserType] = dict(
-    conllu.parser.DEFAULT_FIELD_PARSERS,
-    **{
-        "ner": lambda line, i: conllu.parser.parse_nullable_value(line[i]),
-    },
-)
+DEFAULT_TOKEN_ANNOTATION_FIELDS: Tuple[str, ...] = ("lemma", "upos", "xpos")
 
 DEFAULT_METADATA_PARSERS: Dict[str, conllu._MetadataParserType] = dict(
     conllu.parser.DEFAULT_METADATA_PARSERS,
@@ -51,6 +48,7 @@ class CoNLLUCorpus(Corpus):
             dev_file=None,
             in_memory: bool = True,
             fields: Optional[Sequence[str]] = None,
+            token_annotation_fields: Optional[Sequence[str]] = None,
             field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
             metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None,
     ):
@@ -62,6 +60,7 @@ class CoNLLUCorpus(Corpus):
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
         :param in_memory: If set to True, keeps full dataset in memory, otherwise does disk reads
+        :param token_annotation_fields: A subset of the fields parameter for token level annotations
         :return: a Corpus with annotated train, dev and test data
         """
 
@@ -73,6 +72,7 @@ class CoNLLUCorpus(Corpus):
             train_file,
             in_memory=in_memory,
             fields=fields,
+            token_annotation_fields=token_annotation_fields,
             field_parsers=field_parsers,
             metadata_parsers=metadata_parsers,
         )
@@ -83,6 +83,7 @@ class CoNLLUCorpus(Corpus):
                 test_file,
                 in_memory=in_memory,
                 fields=fields,
+                token_annotation_fields=token_annotation_fields,
                 field_parsers=field_parsers,
                 metadata_parsers=metadata_parsers,
             )
@@ -96,6 +97,7 @@ class CoNLLUCorpus(Corpus):
                 dev_file,
                 in_memory=in_memory,
                 fields=fields,
+                token_annotation_fields=token_annotation_fields,
                 field_parsers=field_parsers,
                 metadata_parsers=metadata_parsers,
             )
@@ -112,6 +114,7 @@ class CoNLLUDataset(FlairDataset):
             path_to_conllu_file: Union[str, Path],
             in_memory: bool = True,
             fields: Optional[Sequence[str]] = None,
+            token_annotation_fields: Optional[Sequence[str]] = None,
             field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
             metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None,
     ):
@@ -120,6 +123,7 @@ class CoNLLUDataset(FlairDataset):
 
         :param path_to_conllu_file: Path to the CoNLL-U formatted file
         :param in_memory: If set to True, keeps full dataset in memory, otherwise does disk reads
+        :param token_annotation_fields: A subset of the fields parameter for token level annotations
         """
         if type(path_to_conllu_file) is str:
             path_to_conllu_file = Path(path_to_conllu_file)
@@ -134,7 +138,17 @@ class CoNLLUDataset(FlairDataset):
                 fields = conllu.parser.parse_conllu_plus_fields(file)
 
         self.fields = fields or DEFAULT_FIELDS
-        self.field_parsers = field_parsers or DEFAULT_FIELD_PARSERS
+        self.token_annotation_fields = token_annotation_fields or DEFAULT_TOKEN_ANNOTATION_FIELDS
+
+        augmented_default_field_parsers: Dict[str, conllu._FieldParserType] = dict(
+            conllu.parser.DEFAULT_FIELD_PARSERS,
+            **{
+                field: lambda line_, i: conllu.parser.parse_nullable_value(line_[i])
+                for field in self.token_annotation_fields
+            }
+        )
+
+        self.field_parsers = field_parsers or augmented_default_field_parsers
         self.metadata_parsers = metadata_parsers or DEFAULT_METADATA_PARSERS
 
         self.total_sentence_count: int = 0
@@ -200,11 +214,8 @@ class CoNLLUDataset(FlairDataset):
         for conllu_token in token_list:
             token = Token(conllu_token["form"])
 
-            if "ner" in conllu_token:
-                token.add_label("ner", conllu_token["ner"])
-
-            if "lemma" in conllu_token:
-                token.add_label("lemma", conllu_token["lemma"])
+            for field in self.token_annotation_fields:
+                token.add_label(typename=field, value=str(conllu_token[field]))
 
             if "misc" in conllu_token and conllu_token["misc"] is not None:
                 space_after = conllu_token["misc"].get("SpaceAfter")
