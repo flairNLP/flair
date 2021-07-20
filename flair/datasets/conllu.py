@@ -140,10 +140,10 @@ class CoNLLUDataset(FlairDataset):
         self.fields = fields or DEFAULT_FIELDS
         self.token_annotation_fields = token_annotation_fields or DEFAULT_TOKEN_ANNOTATION_FIELDS
 
-        # Validate field and token_annotation_fields
+        # Validate fields and token_annotation_fields
         if not set(self.token_annotation_fields).issubset(self.fields):
             raise ValueError(f"The token annotation fields {repr(self.token_annotation_fields)} "
-                             f"are not a subset of the parsed fields {self.fields}.")
+                             f"are not a subset of the parsed fields {repr(self.fields)}.")
 
         augmented_default_field_parsers: Dict[str, conllu._FieldParserType] = dict(
             conllu.parser.DEFAULT_FIELD_PARSERS,
