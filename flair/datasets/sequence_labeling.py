@@ -4520,3 +4520,125 @@ class REDDIT_EL_GOLD(ColumnCorpus):
                 self.curr_row = next_row
                 self.stop_iter = True if not fix_flag else False
                 break
+
+
+class NER_GERMAN_POLITICS(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            column_delimiter: str = r"\s+",
+            in_memory: bool = True,
+            document_as_sequence: bool = False,
+            **corpusargs,
+    ):
+        """
+        Initialize the NER_GERMAN_POLITICS corpus for german politics. The first time you call this constructor it will automatically
+        download the dataset.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
+        POS tags instead
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # column format
+        columns = {0: "text", 1: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download and parse data if necessary
+        german_politics_path = "https://www.thomas-zastrow.de/nlp/nemgp_trainingdata_01.txt.zip"
+        corpus_file_name = "nemgp_trainingdata_01.txt"
+        parsed_dataset = data_folder / "raw" / corpus_file_name
+        train_dataset = data_folder / "train.txt"
+
+        if not parsed_dataset.exists():
+            german_politics_zip = cached_path(f"{german_politics_path}", Path("datasets") / dataset_name / "raw")
+            unpack_file(german_politics_zip, data_folder / "raw", "zip", False)
+            convert_to_column_corpus(parsed_dataset)
+
+        # create train test dev if not exist
+        train_dataset = data_folder / "train.txt"
+        if not train_dataset.exists():
+            create_datasets(parsed_dataset, data_folder)
+
+        super(NER_GERMAN_POLITICS, self).__init__(
+            data_folder,
+            columns,
+            column_delimiter=column_delimiter,
+            train_file='train.txt',
+            dev_file='dev.txt',
+            test_file='test.txt',
+            tag_to_bioes=tag_to_bioes,
+            encoding="utf-8",
+            in_memory=in_memory,
+            **corpusargs,
+        )
+
+
+def convert_to_column_corpus(data_file: Union[str, Path]):
+    with open(data_file, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+    with open(data_file, 'w', encoding='utf-8') as f:
+        tag_bool = False
+        new_sentence = True
+        for line in lines:
+            line = re.sub('\s{2,}', ' ', line).strip().split(' ')
+            for substr in line:
+                if substr == '.':
+                    f.write("\n")
+                    new_sentence = True
+                elif "<START:" in substr:
+                    tag_bool = True
+                    tag = substr.strip('<START:').strip('>')
+                    if 'loc' in tag: tag_IOB = '-LOC'
+                    elif 'per' in tag: tag_IOB = '-PER'
+                    elif 'org' in tag: tag_IOB = '-ORG'
+                    elif 'misc' in tag: tag_IOB = '-MISC'
+                elif "<END>" in substr:
+                    tag_bool = False
+                    new_sentence = True
+                else:
+                    if tag_bool:
+                        if new_sentence is True:
+                            start = 'B'
+                            new_sentence = False
+                        else:
+                            start = 'I'
+                        f.write(substr.strip(' ') + " " + start + tag_IOB + "\n")
+                    else:
+                        f.write(substr.strip(' ') + " " + 'O' + "\n")
+
+
+def create_datasets(data_file: Union[str, Path], data_folder: Union[str, Path]):
+    with open(data_file, 'r') as file:
+        num_lines = len(file.readlines())
+        file.seek(0)
+
+        train_len = round(num_lines * 0.8)
+        test_len = round(num_lines * 0.1)
+        dev_len = num_lines - train_len - test_len
+
+        train = open( data_folder / "train.txt", "w")
+        test = open( data_folder / "test.txt", "w")
+        dev = open( data_folder / "dev.txt", "w")
+
+        k = 0
+        for line in file.readlines():
+            k += 1
+            if k <= train_len:
+                train.write(line)
+            elif k > train_len and k <= (train_len + test_len):
+                test.write(line)
+            elif k > (train_len + test_len) and k <= num_lines:
+                dev.write(line)
