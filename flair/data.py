@@ -477,7 +477,7 @@ class Span(DataPoint):
             plain += token.text
             if token.whitespace_after:
                 plain += " "
-        return plain.rstrip()
+        return plain
 
     def to_dict(self):
         return {
@@ -867,7 +867,7 @@ class Sentence(DataPoint):
             plain += token.text
             if token.whitespace_after:
                 plain += " "
-        return plain.rstrip()
+        return plain
 
     def convert_tag_scheme(self, tag_type: str = "ner", target_scheme: str = "iob"):
 
