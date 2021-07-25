@@ -40,7 +40,6 @@ class FewshotClassifier(flair.nn.Classifier):
         sentences = self._get_tars_formatted_sentences(data_points)
 
         loss = self.tars_model.forward_loss(sentences)
-
         return loss
 
     @property
@@ -58,6 +57,7 @@ class FewshotClassifier(flair.nn.Classifier):
             label_text_pairs_for_sentence = []
             if self.training and self.num_negative_labels_to_sample is not None:
 
+                # positive_labels = {label.value for label in sentence.get_labels(self.label_type)}
                 positive_labels = list(OrderedDict.fromkeys(
                     [label.value for label in sentence.get_labels(self.label_type)]))
 

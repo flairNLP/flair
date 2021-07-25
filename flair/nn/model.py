@@ -362,11 +362,12 @@ class DefaultClassifier(Classifier):
                                    for all_labels_for_point in labels], dtype=torch.float, device=flair.device)
 
         else:
+            zero_index = self.label_dictionary.get_idx_for_item('O')
             labels = torch.tensor([self.label_dictionary.get_idx_for_item(label[0]) if len(label) > 0
-                                   else self.label_dictionary.get_idx_for_item('O')
+                                   else zero_index
                                    for label in labels], dtype=torch.long, device=flair.device)
 
-        return self.loss_function(scores, labels)
+        return self.loss_function(scores, labels), len(labels)
 
     def predict(
             self,
@@ -437,7 +438,7 @@ class DefaultClassifier(Classifier):
                 scores, gold_labels, sentences, label_candidates = self.forward_pass(batch,
                                                                                      return_label_candidates=True)
                 if return_loss:
-                    overall_loss += self._calculate_loss(scores, gold_labels)
+                    overall_loss += self._calculate_loss(scores, gold_labels)[0]
                     label_count += len(label_candidates)
 
                 if self.multi_label:
