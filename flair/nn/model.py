@@ -1,6 +1,6 @@
+import copy
 import logging
 import warnings
-import copy
 from abc import abstractmethod
 from collections import Counter
 from pathlib import Path
@@ -107,6 +107,11 @@ class Model(torch.nn.Module):
 
 
 class Classifier(Model):
+    """Abstract base class for all Flair models that do classification, both single- and multi-label.
+    It inherits from flair.nn.Model and adds a unified evaluate() function so that all classification models
+    use the same evaluation routines and compute the same numbers.
+    Currently, the SequenceTagger implements this class directly, while all other classifiers in Flair
+    implement the DefaultClassifier base class which implements Classifier."""
 
     def evaluate(
             self,
@@ -309,11 +314,24 @@ class Classifier(Model):
 
 
 class DefaultClassifier(Classifier):
+    """Default base class for all Flair models that do classification, both single- and multi-label.
+    It inherits from flair.nn.Classifier and thus from flair.nn.Model. All features shared by all classifiers
+    are implemented here, including the loss calculation and the predict() method.
+    Currently, the TextClassifier, RelationExtractor, TextPairClassifier and SimpleSequenceTagger implement
+    this class. You only need to implement the forward_pass() method to implement this base class.
+    """
 
     def forward_pass(self,
                      sentences: Union[List[DataPoint], DataPoint],
                      return_label_candidates: bool = False,
                      ):
+        """This method does a forward pass through the model given a list of data points as input.
+        Returns the tuple (scores, labels) if return_label_candidates = False, where scores are a tensor of logits
+        produced by the decoder and labels are the string labels for each data point.
+        Returns the tuple (scores, labels, data_points, candidate_labels) if return_label_candidates = True,
+        where data_points are the data points to which labels are added (commonly either Sentence or Token objects)
+        and candidate_labels are empty Label objects for each prediction (depending on the task Label,
+        SpanLabel or RelationLabel)."""
         raise NotImplementedError
 
     def __init__(self,
