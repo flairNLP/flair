@@ -1,6 +1,6 @@
 from flair.data import Corpus
 from flair.datasets import ClassificationCorpus
-from flair.models.tars_tagger_model import TARSClassifier
+from flair.models import TARSClassifier
 
 
 def test_init_tars_and_switch(tasks_base_path):
