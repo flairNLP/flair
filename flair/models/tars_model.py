@@ -57,7 +57,6 @@ class FewshotClassifier(flair.nn.Classifier):
             label_text_pairs_for_sentence = []
             if self.training and self.num_negative_labels_to_sample is not None:
 
-                # positive_labels = {label.value for label in sentence.get_labels(self.label_type)}
                 positive_labels = list(OrderedDict.fromkeys(
                     [label.value for label in sentence.get_labels(self.label_type)]))
 
@@ -298,12 +297,9 @@ class FewshotClassifier(flair.nn.Classifier):
 
 class TARSTagger(FewshotClassifier):
     """
-    TARS Sequence Tagger Model
-    The model inherits TextClassifier class to provide usual interfaces such as evaluate,
-    predict etc. It can encapsulate multiple tasks inside it. The user has to mention
-    which task is intended to be used. In the backend, the model uses a BERT based binary
-    text classifier which given a <label, text> pair predicts the probability of two classes
-    "YES", and "NO". The input data is a usual Sentence object which is inflated
+    TARS model for sequence tagging. In the backend, the model uses a BERT based 5-class
+    sequence labeler which given a <label, text> pair predicts the probability for each word
+    to belong to one of the BIOES classes. The input data is a usual Sentence object which is inflated
     by the model internally before pushing it through the transformer stack of BERT.
     """
 
@@ -323,17 +319,12 @@ class TARSTagger(FewshotClassifier):
         Initializes a TextClassifier
         :param task_name: a string depicting the name of the task
         :param label_dictionary: dictionary of labels you want to predict
-        :param batch_size: batch size for forward pass while using BERT
-        :param document_embeddings: name of the pre-trained transformer model e.g.,
+        :param embeddings: name of the pre-trained transformer model e.g.,
         'bert-base-uncased' etc
-        :num_negative_labels_to_sample: number of negative labels to sample for each
+        :param num_negative_labels_to_sample: number of negative labels to sample for each
         positive labels against a sentence during training. Defaults to 2 negative
         labels for each positive label. The model would sample all the negative labels
         if None is passed. That slows down the training considerably.
-        :param multi_label: auto-detected by default, but you can set this to True
-        to force multi-label predictionor False to force single-label prediction
-        :param multi_label_threshold: If multi-label you can set the threshold to make predictions
-        :param beta: Parameter for F-beta score for evaluation and training annealing
         """
         super(TARSTagger, self).__init__()
 
@@ -593,12 +584,9 @@ class TARSTagger(FewshotClassifier):
 
 class TARSClassifier(FewshotClassifier):
     """
-    TARS Classifier Model
-    The model inherits TextClassifier class to provide usual interfaces such as evaluate,
-    predict etc. It can encapsulate multiple tasks inside it. The user has to mention
-    which task is intended to be used. In the backend, the model uses a BERT based binary
+    TARS model for text classification. In the backend, the model uses a BERT based binary
     text classifier which given a <label, text> pair predicts the probability of two classes
-    "YES", and "NO". The input data is a usual Sentence object which is inflated
+    "True", and "False". The input data is a usual Sentence object which is inflated
     by the model internally before pushing it through the transformer stack of BERT.
     """
 
@@ -618,10 +606,9 @@ class TARSClassifier(FewshotClassifier):
         Initializes a TextClassifier
         :param task_name: a string depicting the name of the task
         :param label_dictionary: dictionary of labels you want to predict
-        :param batch_size: batch size for forward pass while using BERT
-        :param document_embeddings: name of the pre-trained transformer model e.g.,
+        :param embeddings: name of the pre-trained transformer model e.g.,
         'bert-base-uncased' etc
-        :num_negative_labels_to_sample: number of negative labels to sample for each
+        :param num_negative_labels_to_sample: number of negative labels to sample for each
         positive labels against a sentence during training. Defaults to 2 negative
         labels for each positive label. The model would sample all the negative labels
         if None is passed. That slows down the training considerably.
