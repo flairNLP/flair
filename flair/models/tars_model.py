@@ -51,7 +51,7 @@ class FewshotClassifier(flair.nn.Classifier):
 
     def _get_tars_formatted_sentences(self, sentences: List[Sentence]):
         label_text_pairs = []
-        all_labels = [label.decode("utf-8") for label in self.get_current_tag_dictionary().idx2item]
+        all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
         # print(all_labels)
         for sentence in sentences:
             label_text_pairs_for_sentence = []
@@ -79,7 +79,7 @@ class FewshotClassifier(flair.nn.Classifier):
 
         # if there are no labels, return a random sample as negatives
         if len(labels) == 0:
-            tags = self.get_current_tag_dictionary().get_items()
+            tags = self.get_current_label_dictionary().get_items()
             import random
             sample = random.sample(tags, k=self.num_negative_labels_to_sample)
             # print(sample)
@@ -133,7 +133,7 @@ class FewshotClassifier(flair.nn.Classifier):
         """
 
         # get and embed all labels by making a Sentence object that contains only the label text
-        all_labels = [label.decode("utf-8") for label in self.get_current_tag_dictionary().idx2item]
+        all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
         label_sentences = [Sentence(label) for label in all_labels]
 
         self.tars_embeddings.eval()  # TODO: check if this is necessary
@@ -162,10 +162,10 @@ class FewshotClassifier(flair.nn.Classifier):
                         similarity_matrix[row_index][column_index]
         self.label_nearest_map = negative_label_probabilities
 
-    def get_current_tag_dictionary(self):
+    def get_current_label_dictionary(self):
         return self._task_specific_attributes[self._current_task]['tag_dictionary']
 
-    def get_current_tag_type(self):
+    def get_current_label_type(self):
         return self._task_specific_attributes[self._current_task]['tag_type']
 
     def add_and_switch_to_new_task(self,
@@ -243,7 +243,7 @@ class FewshotClassifier(flair.nn.Classifier):
 
     @property
     def label_type(self):
-        return self.get_current_tag_type()
+        return self.get_current_label_type()
 
     def predict_zero_shot(self,
                           sentences: Union[List[Sentence], Sentence],
@@ -388,7 +388,7 @@ class TARSTagger(FewshotClassifier):
         tars_sentence = Sentence(label_text_pair, use_tokenizer=False)
 
         for token in sentence:
-            tag = token.get_tag(self.get_current_tag_type()).value
+            tag = token.get_tag(self.get_current_label_type()).value
 
             if tag == "O":
                 tars_tag = "O"
@@ -408,8 +408,8 @@ class TARSTagger(FewshotClassifier):
             "state_dict": self.state_dict(),
 
             "current_task": self._current_task,
-            "tag_type": self.get_current_tag_type(),
-            "tag_dictionary": self.get_current_tag_dictionary(),
+            "tag_type": self.get_current_label_type(),
+            "tag_dictionary": self.get_current_label_dictionary(),
             "tars_model": self.tars_model,
             "num_negative_labels_to_sample": self.num_negative_labels_to_sample,
             "prefix": self.prefix,
@@ -466,7 +466,7 @@ class TARSTagger(FewshotClassifier):
         'gpu' to store embeddings in GPU memory.
         """
         if label_name == None:
-            label_name = self.get_current_tag_type()
+            label_name = self.get_current_label_type()
 
         # with torch.no_grad():
         if not sentences:
@@ -524,7 +524,7 @@ class TARSTagger(FewshotClassifier):
                     for token in sentence:
                         token.remove_labels(label_name)
 
-                    all_labels = [label.decode("utf-8") for label in self.get_current_tag_dictionary().idx2item]
+                    all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
 
                     all_detected = {}
                     for label in all_labels:
@@ -671,7 +671,7 @@ class TARSClassifier(FewshotClassifier):
         label_text_pair = f"{label} {self.separator} {original_text}" if self.prefix \
             else f"{original_text} {self.separator} {label}"
 
-        sentence_labels = [label.value for label in sentence.get_labels(self.get_current_tag_type())]
+        sentence_labels = [label.value for label in sentence.get_labels(self.get_current_label_type())]
 
         tars_label = "True" if label in sentence_labels else "False"
 
@@ -684,8 +684,8 @@ class TARSClassifier(FewshotClassifier):
             "state_dict": self.state_dict(),
 
             "current_task": self._current_task,
-            "label_type": self.get_current_tag_type(),
-            "label_dictionary": self.get_current_tag_dictionary(),
+            "label_type": self.get_current_label_type(),
+            "label_dictionary": self.get_current_label_dictionary(),
             "tars_model": self.tars_model,
             "num_negative_labels_to_sample": self.num_negative_labels_to_sample,
 
@@ -757,7 +757,7 @@ class TARSClassifier(FewshotClassifier):
         'gpu' to store embeddings in GPU memory.
         """
         if label_name == None:
-            label_name = self.get_current_tag_type()
+            label_name = self.get_current_label_type()
 
         # with torch.no_grad():
         if not sentences:
@@ -808,7 +808,7 @@ class TARSClassifier(FewshotClassifier):
                     # always remove tags first
                     sentence.remove_labels(label_name)
 
-                    all_labels = [label.decode("utf-8") for label in self.get_current_tag_dictionary().idx2item]
+                    all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
 
                     all_detected = {}
                     for label in all_labels:
