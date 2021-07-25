@@ -450,6 +450,7 @@ class DefaultClassifier(Classifier):
                                 label_value = self.label_dictionary.get_item_for_index(idx)
                                 label.set_value(value=label_value, score=sigmoided[s_idx, idx].item())
                                 sentence.add_complex_label(label_name, copy.deepcopy(label))
+                        s_idx += 1
 
                 else:
                     softmax = torch.nn.functional.softmax(scores, dim=-1)
