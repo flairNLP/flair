@@ -36,12 +36,12 @@ def test_labels_to_indices(tasks_base_path):
         assert expected == actual
 
 
-def test_trainer_evaluation(tasks_base_path):
-    corpus, model, trainer = init(tasks_base_path)
-
-    expected = model.evaluate(corpus.dev)
-
-    assert expected is not None
+# def test_trainer_evaluation(tasks_base_path):
+#     corpus, model, trainer = init(tasks_base_path)
+#
+#     expected = model.evaluate(corpus.dev)
+#
+#     assert expected is not None
 
 
 # def test_trainer_results(tasks_base_path):

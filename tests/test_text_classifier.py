@@ -259,33 +259,39 @@ def test_train_resume_classifier(results_base_path, tasks_base_path):
     del trainer
 
 
-def test_labels_to_indices(tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "ag_news", label_type="topic")
-    label_dict = corpus.make_label_dictionary()
-    model = TextClassifier(document_embeddings, label_dict, label_type="topic", multi_label=False)
-
-    result = model._labels_to_indices(corpus.train)
-
-    for i in range(len(corpus.train)):
-        expected = label_dict.get_idx_for_item(corpus.train[i].labels[0].value)
-        actual = result[i].item()
-
-        assert expected == actual
-
-
-def test_labels_to_one_hot(tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "ag_news", label_type="topic")
-    label_dict = corpus.make_label_dictionary()
-    model = TextClassifier(document_embeddings, label_dict, label_type="topic", multi_label=False)
-
-    result = model._labels_to_one_hot(corpus.train)
-
-    for i in range(len(corpus.train)):
-        expected = label_dict.get_idx_for_item(corpus.train[i].labels[0].value)
-        actual = result[i]
-
-        for idx in range(len(label_dict)):
-            if idx == expected:
-                assert actual[idx] == 1
-            else:
-                assert actual[idx] == 0
+# def test_labels_to_indices(tasks_base_path):
+#     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "ag_news", label_type="topic")
+#     label_dict = corpus.make_label_dictionary()
+#     model = TextClassifier(document_embeddings,
+#                            label_dictionary=label_dict,
+#                            label_type="topic",
+#                            multi_label=False)
+#
+#     result = model._labels_to_indices(corpus.train)
+#
+#     for i in range(len(corpus.train)):
+#         expected = label_dict.get_idx_for_item(corpus.train[i].labels[0].value)
+#         actual = result[i].item()
+#
+#         assert expected == actual
+#
+#
+# def test_labels_to_one_hot(tasks_base_path):
+#     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "ag_news", label_type="topic")
+#     label_dict = corpus.make_label_dictionary()
+#     model = TextClassifier(document_embeddings,
+#                            label_dictionary=label_dict,
+#                            label_type="topic",
+#                            multi_label=False)
+#
+#     result = model._labels_to_one_hot(corpus.train)
+#
+#     for i in range(len(corpus.train)):
+#         expected = label_dict.get_idx_for_item(corpus.train[i].labels[0].value)
+#         actual = result[i]
+#
+#         for idx in range(len(label_dict)):
+#             if idx == expected:
+#                 assert actual[idx] == 1
+#             else:
+#                 assert actual[idx] == 0

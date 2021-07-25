@@ -570,7 +570,7 @@ def test_tagged_corpus_make_vocab_dictionary():
 def test_label_set_confidence():
     label = Label("class_1", 3.2)
 
-    assert 1.0 == label.score
+    assert 3.2 == label.score
     assert "class_1" == label.value
 
     label.score = 0.2

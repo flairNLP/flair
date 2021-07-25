@@ -1,35 +1,166 @@
+import logging
+from collections import OrderedDict
 from pathlib import Path
-from typing import Union, Dict, List, Set, Optional, Tuple
+from typing import Union, List, Set, Optional
 
+import numpy as np
 import torch
-from torch.utils.data import Dataset
-
-import flair
-
-from flair.data import Dictionary, Sentence, Label
-from flair.datasets import SentenceDataset, DataLoader
-from flair.file_utils import cached_path
-from flair.models import SequenceTagger
-
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import minmax_scale
-import numpy as np
-
 from tqdm import tqdm
-import logging
 
-from flair.models.text_classification_model import TARSClassifier
-from flair.training_utils import Result, store_embeddings
+import flair
+from flair.data import Dictionary, Sentence
+from flair.datasets import SentenceDataset, DataLoader
+from flair.embeddings import TokenEmbeddings
+from flair.file_utils import cached_path
+from flair.models import SequenceTagger, TextClassifier
+from flair.training_utils import store_embeddings
 
 log = logging.getLogger("flair")
 
 
-class Switchable():
+class FewshotClassifier(flair.nn.Classifier):
 
     def __init__(self):
-        print('init Switchable')
         self._current_task = None
         self._task_specific_attributes = {}
+        self.label_nearest_map = None
+
+        super(FewshotClassifier, self).__init__()
+
+    def forward_loss(
+            self, data_points: Union[List[Sentence], Sentence]
+    ) -> torch.tensor:
+
+        if type(data_points) == Sentence:
+            data_points = [data_points]
+
+        # Transform input data into TARS format
+        sentences = self._get_tars_formatted_sentences(data_points)
+
+        loss = self.tars_model.forward_loss(sentences)
+
+        return loss
+
+    @property
+    def tars_embeddings(self):
+        raise NotImplementedError
+
+    def _get_tars_formatted_sentence(self, label, sentence):
+        raise NotImplementedError
+
+    def _get_tars_formatted_sentences(self, sentences: List[Sentence]):
+        label_text_pairs = []
+        all_labels = [label.decode("utf-8") for label in self.get_current_tag_dictionary().idx2item]
+        # print(all_labels)
+        for sentence in sentences:
+            label_text_pairs_for_sentence = []
+            if self.training and self.num_negative_labels_to_sample is not None:
+
+                positive_labels = list(OrderedDict.fromkeys(
+                    [label.value for label in sentence.get_labels(self.label_type)]))
+
+                sampled_negative_labels = self._get_nearest_labels_for(positive_labels)
+
+                for label in positive_labels:
+                    label_text_pairs_for_sentence.append(self._get_tars_formatted_sentence(label, sentence))
+                for label in sampled_negative_labels:
+                    label_text_pairs_for_sentence.append(self._get_tars_formatted_sentence(label, sentence))
+
+            else:
+                for label in all_labels:
+                    label_text_pairs_for_sentence.append(self._get_tars_formatted_sentence(label, sentence))
+            label_text_pairs.extend(label_text_pairs_for_sentence)
+
+        return label_text_pairs
+
+    def _get_nearest_labels_for(self, labels):
+
+        # if there are no labels, return a random sample as negatives
+        if len(labels) == 0:
+            tags = self.get_current_tag_dictionary().get_items()
+            import random
+            sample = random.sample(tags, k=self.num_negative_labels_to_sample)
+            # print(sample)
+            return sample
+
+        already_sampled_negative_labels = set()
+
+        # otherwise, go through all labels
+        for label in labels:
+
+            plausible_labels = []
+            plausible_label_probabilities = []
+            for plausible_label in self.label_nearest_map[label]:
+                if plausible_label in already_sampled_negative_labels or plausible_label in labels:
+                    continue
+                else:
+                    plausible_labels.append(plausible_label)
+                    plausible_label_probabilities.append(self.label_nearest_map[label][plausible_label])
+
+            # make sure the probabilities always sum up to 1
+            plausible_label_probabilities = np.array(plausible_label_probabilities, dtype='float64')
+            plausible_label_probabilities += 1e-08
+            plausible_label_probabilities /= np.sum(plausible_label_probabilities)
+
+            if len(plausible_labels) > 0:
+                num_samples = min(self.num_negative_labels_to_sample, len(plausible_labels))
+                sampled_negative_labels = np.random.choice(plausible_labels,
+                                                           num_samples,
+                                                           replace=False,
+                                                           p=plausible_label_probabilities)
+                already_sampled_negative_labels.update(sampled_negative_labels)
+
+        return already_sampled_negative_labels
+
+    def train(self, mode=True):
+        """Populate label similarity map based on cosine similarity before running epoch
+
+        If the `num_negative_labels_to_sample` is set to an integer value then before starting
+        each epoch the model would create a similarity measure between the label names based
+        on cosine distances between their BERT encoded embeddings.
+        """
+        if mode and self.num_negative_labels_to_sample is not None:
+            self._compute_label_similarity_for_current_epoch()
+            super().train(mode)
+
+        super().train(mode)
+
+    def _compute_label_similarity_for_current_epoch(self):
+        """
+        Compute the similarity between all labels for better sampling of negatives
+        """
+
+        # get and embed all labels by making a Sentence object that contains only the label text
+        all_labels = [label.decode("utf-8") for label in self.get_current_tag_dictionary().idx2item]
+        label_sentences = [Sentence(label) for label in all_labels]
+
+        self.tars_embeddings.eval()  # TODO: check if this is necessary
+        self.tars_embeddings.embed(label_sentences)
+        self.tars_embeddings.train()
+
+        # get each label embedding and scale between 0 and 1
+        if isinstance(self.tars_embeddings, TokenEmbeddings):
+            encodings_np = [sentence[0].get_embedding().cpu().detach().numpy() for sentence in label_sentences]
+        else:
+            encodings_np = [sentence.get_embedding().cpu().detach().numpy() for sentence in label_sentences]
+
+        normalized_encoding = minmax_scale(encodings_np)
+
+        # compute similarity matrix
+        similarity_matrix = cosine_similarity(normalized_encoding)
+
+        # the higher the similarity, the greater the chance that a label is
+        # sampled as negative example
+        negative_label_probabilities = {}
+        for row_index, label in enumerate(all_labels):
+            negative_label_probabilities[label] = {}
+            for column_index, other_label in enumerate(all_labels):
+                if label != other_label:
+                    negative_label_probabilities[label][other_label] = \
+                        similarity_matrix[row_index][column_index]
+        self.label_nearest_map = negative_label_probabilities
 
     def get_current_tag_dictionary(self):
         return self._task_specific_attributes[self._current_task]['tag_dictionary']
@@ -58,13 +189,15 @@ class Switchable():
             # make label dictionary if no Dictionary object is passed
             if isinstance(label_dictionary, Dictionary):
                 label_dictionary = label_dictionary.get_items()
+            if type(label_dictionary) == str:
+                label_dictionary = [label_dictionary]
 
             # prepare dictionary of tags (without B- I- prefixes)
             tag_dictionary = Dictionary(add_unk=False)
             for tag in label_dictionary:
                 if tag == 'O': continue
-                if "-" in tag:
-                    tag = tag.split("-")[1]
+                if tag[1] == "-":
+                    tag = tag[2:]
                     tag_dictionary.add_item(tag)
                 else:
                     tag_dictionary.add_item(tag)
@@ -99,8 +232,71 @@ class Switchable():
         else:
             log.warning("No task exists with the name `%s`.", task_name)
 
+    @staticmethod
+    def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
+        filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
+        if len(sentences) != len(filtered_sentences):
+            log.warning(
+                f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens."
+            )
+        return filtered_sentences
 
-class TARSTagger(flair.nn.Classifier, Switchable):
+    @property
+    def label_type(self):
+        return self.get_current_tag_type()
+
+    def predict_zero_shot(self,
+                          sentences: Union[List[Sentence], Sentence],
+                          candidate_label_set: Union[List[str], Set[str], str],
+                          multi_label: bool = True):
+        """
+        Method to make zero shot predictions from the TARS model
+        :param sentences: input sentence objects to classify
+        :param candidate_label_set: set of candidate labels
+        :param multi_label: indicates whether multi-label or single class prediction. Defaults to True.
+        """
+
+        # check if candidate_label_set is empty
+        if candidate_label_set is None or len(candidate_label_set) == 0:
+            log.warning("Provided candidate_label_set is empty")
+            return
+
+        label_dictionary = Dictionary(add_unk=False)
+        label_dictionary.multi_label = multi_label
+
+        # make list if only one candidate label is passed
+        if isinstance(candidate_label_set, str):
+            candidate_label_set = {candidate_label_set}
+
+        # if list is passed, convert to set
+        if not isinstance(candidate_label_set, set):
+            candidate_label_set = set(candidate_label_set)
+
+        for label in candidate_label_set:
+            label_dictionary.add_item(label)
+
+        # note current task
+        existing_current_task = self._current_task
+
+        # create a temporary task
+        self.add_and_switch_to_new_task("ZeroShot",
+                                        label_dictionary)
+
+        try:
+            # make zero shot predictions
+            self.predict(sentences)
+        except:
+            log.error("Something went wrong during prediction. Ensure you pass Sentence objects.")
+
+        finally:
+            # switch to the pre-existing task
+            self.switch_to_task(existing_current_task)
+            self._drop_task("ZeroShot")
+
+        return
+
+
+class TARSTagger(FewshotClassifier):
     """
     TARS Sequence Tagger Model
     The model inherits TextClassifier class to provide usual interfaces such as evaluate,
@@ -139,9 +335,7 @@ class TARSTagger(flair.nn.Classifier, Switchable):
         :param multi_label_threshold: If multi-label you can set the threshold to make predictions
         :param beta: Parameter for F-beta score for evaluation and training annealing
         """
-
-        flair.nn.Model.__init__(self)
-        Switchable.__init__(self)
+        super(TARSTagger, self).__init__()
 
         from flair.embeddings import TransformerWordEmbeddings
 
@@ -172,115 +366,15 @@ class TARSTagger(flair.nn.Classifier, Switchable):
                                          )
 
         # transformer separator
-        self.separator = str(self.tars_model.embeddings.tokenizer.sep_token)
-        if self.tars_model.embeddings.tokenizer._bos_token:
-            self.separator += str(self.tars_model.embeddings.tokenizer.bos_token)
+        self.separator = str(self.tars_embeddings.tokenizer.sep_token)
+        if self.tars_embeddings.tokenizer._bos_token:
+            self.separator += str(self.tars_embeddings.tokenizer.bos_token)
 
         self.prefix = prefix
         self.num_negative_labels_to_sample = num_negative_labels_to_sample
-        self.label_nearest_map = None
 
         # Store task specific labels since TARS can handle multiple tasks
         self.add_and_switch_to_new_task(task_name, tag_dictionary, tag_type)
-
-        self.beta = 1.
-
-    def _compute_label_similarity_for_current_epoch(self):
-        """
-        Compute the similarity between all labels for better sampling of negatives
-        """
-
-        # get and embed all labels by making a Sentence object that contains only the label text
-        all_labels = [label.decode("utf-8") for label in self.get_current_tag_dictionary().idx2item]
-        label_sentences = [Sentence(label) for label in all_labels]
-
-        self.tars_model.embeddings.eval()  # TODO: check if this is necessary
-        self.tars_model.embeddings.embed(label_sentences)
-        self.tars_model.embeddings.train()
-
-        # print(label_sentences[0])
-        # print(label_sentences[0][0])
-        # print(label_sentences[0][0].get_embedding()[:10])
-
-        # get each label embedding and scale between 0 and 1
-        encodings_np = [sentence[0].get_embedding().cpu().detach().numpy() for sentence in label_sentences]
-        normalized_encoding = minmax_scale(encodings_np)
-
-        # compute similarity matrix
-        similarity_matrix = cosine_similarity(normalized_encoding)
-
-        # the higher the similarity, the greater the chance that a label is
-        # sampled as negative example
-        negative_label_probabilities = {}
-        for row_index, label in enumerate(all_labels):
-            negative_label_probabilities[label] = {}
-            for column_index, other_label in enumerate(all_labels):
-                if label != other_label:
-                    negative_label_probabilities[label][other_label] = \
-                        similarity_matrix[row_index][column_index]
-        self.label_nearest_map = negative_label_probabilities
-
-    def train(self, mode=True):
-        """Populate label similarity map based on cosine similarity before running epoch
-
-        If the `num_negative_labels_to_sample` is set to an integer value then before starting
-        each epoch the model would create a similarity measure between the label names based
-        on cosine distances between their BERT encoded embeddings.
-        """
-        if mode and self.num_negative_labels_to_sample is not None:
-            self._compute_label_similarity_for_current_epoch()
-            super(TARSTagger, self).train(mode)
-
-        super(TARSTagger, self).train(mode)
-
-    def _get_nearest_labels_for(self, labels):
-
-        # print(labels)
-
-        # if there are no labels, return a random sample as negatives
-        if len(labels) == 0:
-            tags = self.get_current_tag_dictionary().get_items()
-            import random
-            sample = random.sample(tags, k=self.num_negative_labels_to_sample)
-            # print(sample)
-            return sample
-
-        already_sampled_negative_labels = set()
-
-        # otherwise, go through all labels
-
-        for label in labels:
-
-            plausible_labels = []
-            plausible_label_probabilities = []
-            for plausible_label in self.label_nearest_map[label]:
-                if plausible_label in already_sampled_negative_labels or plausible_label in labels:
-                    continue
-                else:
-                    plausible_labels.append(plausible_label)
-                    plausible_label_probabilities.append(self.label_nearest_map[label][plausible_label])
-
-            # make sure the probabilities always sum up to 1
-            plausible_label_probabilities = np.array(plausible_label_probabilities, dtype='float64')
-            plausible_label_probabilities += 1e-08
-            plausible_label_probabilities /= np.sum(plausible_label_probabilities)
-
-            # print(plausible_labels)
-            # print(plausible_label_probabilities)
-
-            if len(plausible_labels) > 0:
-                num_samples = min(self.num_negative_labels_to_sample, len(plausible_labels))
-                sampled_negative_labels = np.random.choice(plausible_labels,
-                                                           num_samples,
-                                                           replace=False,
-                                                           p=plausible_label_probabilities)
-                already_sampled_negative_labels.update(sampled_negative_labels)
-
-        # negatives = []
-        # negatives.extend(already_sampled_negative_labels)
-        # negatives.sort()
-
-        return already_sampled_negative_labels
 
     def _get_tars_formatted_sentence(self, label, sentence):
 
@@ -296,57 +390,18 @@ class TARSTagger(flair.nn.Classifier, Switchable):
         for token in sentence:
             tag = token.get_tag(self.get_current_tag_type()).value
 
-            if "-" in tag and tag.split('-')[1] == label:
-                tars_tag = tag.split('-')[0] + '-'
+            if tag == "O":
+                tars_tag = "O"
             elif tag == label:
                 tars_tag = "S-"
+            elif tag[1] == "-" and tag[2:] == label:
+                tars_tag = tag.split('-')[0] + '-'
             else:
                 tars_tag = "O"
 
             tars_sentence.get_token(token.idx + label_length).add_tag(self.static_label_type, tars_tag)
 
         return tars_sentence
-
-    def _get_labels(self, sentence: Sentence) -> List[str]:
-        labels = []
-        for token in sentence:
-            tag = token.get_tag(self.get_current_tag_type()).value
-            if "-" in tag:
-                tag = tag.split('-')[1]
-                if tag not in labels:
-                    labels.append(tag)
-        return labels
-
-    def _get_tars_formatted_sentences(self, sentences):
-        label_text_pairs = []
-        all_labels = [label.decode("utf-8") for label in self.get_current_tag_dictionary().idx2item]
-        # print(all_labels)
-        for sentence in sentences:
-            label_text_pairs_for_sentence = []
-            if self.training and self.num_negative_labels_to_sample is not None:
-                positive_labels = self._get_labels(sentence)
-                sampled_negative_labels = self._get_nearest_labels_for(positive_labels)
-
-                for label in positive_labels:
-                    label_text_pairs_for_sentence.append(self._get_tars_formatted_sentence(label, sentence))
-                for label in sampled_negative_labels:
-                    label_text_pairs_for_sentence.append(self._get_tars_formatted_sentence(label, sentence))
-
-                # if len(positive_labels) == 0:
-                #     for label in all_labels:
-                #         label_text_pairs_for_sentence.append(self._get_tars_formatted_sentence(label, sentence))
-
-            else:
-                for label in all_labels:
-                    label_text_pairs_for_sentence.append(self._get_tars_formatted_sentence(label, sentence))
-            label_text_pairs.extend(label_text_pairs_for_sentence)
-
-        # if len(label_text_pairs) == 0:
-        #     randomly_sampled = np.random.choice(all_labels, 2, replace=False)
-        #     for label in randomly_sampled:
-        #         label_text_pairs.append(self._get_tars_formatted_sentence(label, sentence))
-
-        return label_text_pairs
 
     def _get_state_dict(self):
         model_state = {
@@ -382,42 +437,9 @@ class TARSTagger(flair.nn.Classifier, Switchable):
         model.load_state_dict(state["state_dict"])
         return model
 
-    def forward_loss(
-            self, data_points: Union[List[Sentence], Sentence]
-    ) -> torch.tensor:
-
-        if type(data_points) == Sentence:
-            data_points = [data_points]
-
-        # Transform input data into TARS format
-        sentences = self._get_tars_formatted_sentences(data_points)
-
-        loss = self.tars_model.forward_loss(sentences)
-
-        return loss
-
-    @staticmethod
-    def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
-        filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
-        if len(sentences) != len(filtered_sentences):
-            log.warning(
-                f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens."
-            )
-        return filtered_sentences
-
-    @staticmethod
-    def _fetch_model(model_name) -> str:
-
-        model_map = {}
-        hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
-
-        model_map["tars-base"] = "/".join([hu_path, "tars-base", "tars-base-v8.pt"])
-
-        cache_dir = Path("models")
-        if model_name in model_map:
-            model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
-
-        return model_name
+    @property
+    def tars_embeddings(self):
+        return self.tars_model.embeddings
 
     def predict(
             self,
@@ -568,44 +590,243 @@ class TARSTagger(flair.nn.Classifier, Switchable):
         if return_loss:
             return overall_loss, overall_count
 
-    def predict_zero_shot(self,
-                          sentences: Union[List[Sentence], Sentence],
-                          candidate_label_set: Union[List[str], Set[str], str],
-                          multi_label: bool = True):
+
+class TARSClassifier(FewshotClassifier):
+    """
+    TARS Classifier Model
+    The model inherits TextClassifier class to provide usual interfaces such as evaluate,
+    predict etc. It can encapsulate multiple tasks inside it. The user has to mention
+    which task is intended to be used. In the backend, the model uses a BERT based binary
+    text classifier which given a <label, text> pair predicts the probability of two classes
+    "YES", and "NO". The input data is a usual Sentence object which is inflated
+    by the model internally before pushing it through the transformer stack of BERT.
+    """
+
+    static_label_type = "tars_label"
+
+    def __init__(
+            self,
+            task_name: str,
+            label_dictionary: Dictionary,
+            label_type: str,
+            embeddings: str = 'bert-base-uncased',
+            num_negative_labels_to_sample: int = 2,
+            prefix: bool = True,
+            **tagger_args,
+    ):
         """
-        Method to make zero shot predictions from the TARS model
-        :param sentences: input sentence objects to classify
-        :param candidate_label_set: set of candidate labels
-        :param multi_label: indicates whether multi-label or single class prediction. Defaults to True.
+        Initializes a TextClassifier
+        :param task_name: a string depicting the name of the task
+        :param label_dictionary: dictionary of labels you want to predict
+        :param batch_size: batch size for forward pass while using BERT
+        :param document_embeddings: name of the pre-trained transformer model e.g.,
+        'bert-base-uncased' etc
+        :num_negative_labels_to_sample: number of negative labels to sample for each
+        positive labels against a sentence during training. Defaults to 2 negative
+        labels for each positive label. The model would sample all the negative labels
+        if None is passed. That slows down the training considerably.
+        :param multi_label: auto-detected by default, but you can set this to True
+        to force multi-label predictionor False to force single-label prediction
+        :param multi_label_threshold: If multi-label you can set the threshold to make predictions
+        :param beta: Parameter for F-beta score for evaluation and training annealing
         """
+        super(TARSClassifier, self).__init__()
 
-        # check if candidate_label_set is empty
-        if candidate_label_set is None or len(candidate_label_set) == 0:
-            log.warning("Provided candidate_label_set is empty")
-            return
+        from flair.embeddings import TransformerDocumentEmbeddings
 
-        label_dictionary = TARSClassifier._make_ad_hoc_label_dictionary(candidate_label_set, multi_label)
+        if not isinstance(embeddings, TransformerDocumentEmbeddings):
+            embeddings = TransformerDocumentEmbeddings(model=embeddings,
+                                                       fine_tune=True,
+                                                       layers='-1',
+                                                       layer_mean=False,
+                                                       )
 
-        # note current task
-        existing_current_task = self.current_task
+        # prepare TARS dictionary
+        tars_dictionary = Dictionary(add_unk=False)
+        tars_dictionary.add_item('False')
+        tars_dictionary.add_item('True')
 
-        # create a temporary task
-        self.add_and_switch_to_new_task(TARSClassifier.static_adhoc_task_identifier,
-                                        label_dictionary)
+        # initialize a bare-bones sequence tagger
+        self.tars_model = TextClassifier(document_embeddings=embeddings,
+                                         label_dictionary=tars_dictionary,
+                                         label_type=self.static_label_type,
+                                         **tagger_args,
+                                         )
 
-        try:
-            # make zero shot predictions
-            self.predict(sentences)
-        except:
-            log.error("Something went wrong during prediction. Ensure you pass Sentence objects.")
+        # transformer separator
+        self.separator = str(self.tars_embeddings.tokenizer.sep_token)
+        if self.tars_embeddings.tokenizer._bos_token:
+            self.separator += str(self.tars_embeddings.tokenizer.bos_token)
 
-        finally:
-            # switch to the pre-existing task
-            self.switch_to_task(existing_current_task)
-            self._drop_task(TARSClassifier.static_adhoc_task_identifier)
+        self.prefix = prefix
+        self.num_negative_labels_to_sample = num_negative_labels_to_sample
 
-        return
+        # Store task specific labels since TARS can handle multiple tasks
+        self.add_and_switch_to_new_task(task_name, label_dictionary, label_type)
+
+    def _get_tars_formatted_sentence(self, label, sentence):
+
+        original_text = sentence.to_tokenized_string()
+
+        label_text_pair = f"{label} {self.separator} {original_text}" if self.prefix \
+            else f"{original_text} {self.separator} {label}"
+
+        sentence_labels = [label.value for label in sentence.get_labels(self.get_current_tag_type())]
+
+        tars_label = "True" if label in sentence_labels else "False"
+
+        tars_sentence = Sentence(label_text_pair, use_tokenizer=False).add_label(self.static_label_type, tars_label)
+
+        return tars_sentence
+
+    def _get_state_dict(self):
+        model_state = {
+            "state_dict": self.state_dict(),
+
+            "current_task": self._current_task,
+            "label_type": self.get_current_tag_type(),
+            "label_dictionary": self.get_current_tag_dictionary(),
+            "tars_model": self.tars_model,
+            "num_negative_labels_to_sample": self.num_negative_labels_to_sample,
+
+            "task_specific_attributes": self._task_specific_attributes,
+        }
+        return model_state
+
+    @staticmethod
+    def _init_model_with_state_dict(state):
+        print("init TARS")
+
+        # init new TARS classifier
+        label_dictionary = state["label_dictionary"]
+
+        model: TARSClassifier = TARSClassifier(
+            task_name=state["current_task"],
+            label_dictionary=label_dictionary,
+            label_type=state["label_type"],
+            embeddings=state["tars_model"].document_embeddings,
+            num_negative_labels_to_sample=state["num_negative_labels_to_sample"],
+        )
+
+        # set all task information
+        model.task_specific_attributes = state["task_specific_attributes"]
+        # linear layers of internal classifier
+        model.load_state_dict(state["state_dict"])
+        return model
+
+    @staticmethod
+    def _fetch_model(model_name) -> str:
+
+        model_map = {}
+        hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
+
+        model_map["tars-base"] = "/".join([hu_path, "tars-base", "tars-base-v8.pt"])
+
+        cache_dir = Path("models")
+        if model_name in model_map:
+            model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
+
+        return model_name
 
     @property
-    def label_type(self):
-        return self.get_current_tag_type()
+    def tars_embeddings(self):
+        return self.tars_model.document_embeddings
+
+    def predict(
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size=32,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
+    ):
+        # return
+        """
+        Predict sequence tags for Named Entity Recognition task
+        :param sentences: a Sentence or a List of Sentence
+        :param mini_batch_size: size of the minibatch, usually bigger is more rapid but consume more memory,
+        up to a point when it has no more effect.
+        :param all_tag_prob: True to compute the score for each tag on each token,
+        otherwise only the score of the best tag is returned
+        :param verbose: set to True to display a progress bar
+        :param return_loss: set to True to return loss
+        :param label_name: set this to change the name of the label type that is predicted
+        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
+        you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
+        'gpu' to store embeddings in GPU memory.
+        """
+        if label_name == None:
+            label_name = self.get_current_tag_type()
+
+        # with torch.no_grad():
+        if not sentences:
+            return sentences
+
+        if isinstance(sentences, Sentence):
+            sentences = [sentences]
+
+        # set context if not set already
+        previous_sentence = None
+        for sentence in sentences:
+            if sentence.is_context_set(): continue
+            sentence._previous_sentence = previous_sentence
+            sentence._next_sentence = None
+            if previous_sentence: previous_sentence._next_sentence = sentence
+            previous_sentence = sentence
+
+        # reverse sort all sequences by their length
+        rev_order_len_index = sorted(range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True)
+
+        reordered_sentences: List[Union[Sentence, str]] = [sentences[index] for index in rev_order_len_index]
+
+        dataloader = DataLoader(dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size)
+
+        # progress bar for verbosity
+        if verbose:
+            dataloader = tqdm(dataloader)
+
+        overall_loss = 0
+        overall_count = 0
+        batch_no = 0
+        with torch.no_grad():
+            for batch in dataloader:
+
+                batch_no += 1
+
+                if verbose:
+                    dataloader.set_description(f"Inferencing on batch {batch_no}")
+
+                batch = self._filter_empty_sentences(batch)
+                # stop if all sentences are empty
+                if not batch:
+                    continue
+
+                # go through each sentence in the batch
+                for sentence in batch:
+
+                    # always remove tags first
+                    sentence.remove_labels(label_name)
+
+                    all_labels = [label.decode("utf-8") for label in self.get_current_tag_dictionary().idx2item]
+
+                    all_detected = {}
+                    for label in all_labels:
+                        tars_sentence = self._get_tars_formatted_sentence(label, sentence)
+
+                        loss_and_count = self.tars_model.predict(tars_sentence,
+                                                                 label_name=label_name,
+                                                                 return_loss=True)
+
+                        overall_loss += loss_and_count[0].item()
+                        overall_count += loss_and_count[1]
+
+                        predicted_tars_label = tars_sentence.get_labels(label_name)[0]
+                        if predicted_tars_label.value == "True":
+                            sentence.add_label(label_name, label, predicted_tars_label.score)
+
+                # clearing token embeddings to save memory
+                store_embeddings(batch, storage_mode=embedding_storage_mode)
+
+        if return_loss:
+            return overall_loss, overall_count

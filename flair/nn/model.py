@@ -1,16 +1,18 @@
 import logging
 import warnings
+import copy
 from abc import abstractmethod
 from collections import Counter
 from pathlib import Path
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Dict, Optional
 
 import torch.nn
 from torch.utils.data.dataset import Dataset
+from tqdm import tqdm
 
 import flair
 from flair import file_utils
-from flair.data import DataPoint, Sentence, Dictionary, SpanLabel
+from flair.data import DataPoint, Sentence, Dictionary, SpanLabel, Label
 from flair.datasets import DataLoader, SentenceDataset
 from flair.training_utils import Result, store_embeddings
 
@@ -108,7 +110,7 @@ class Classifier(Model):
 
     def evaluate(
             self,
-            sentences: Union[List[Sentence], Dataset],
+            data_points: Union[List[DataPoint], Dataset],
             gold_label_type: str,
             out_path: Union[str, Path] = None,
             embedding_storage_mode: str = "none",
@@ -121,9 +123,9 @@ class Classifier(Model):
         import sklearn
 
         # read Dataset into data loader (if list of sentences passed, make Dataset first)
-        if not isinstance(sentences, Dataset):
-            sentences = SentenceDataset(sentences)
-        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
+        if not isinstance(data_points, Dataset):
+            data_points = SentenceDataset(data_points)
+        data_loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=num_workers)
 
         with torch.no_grad():
 
@@ -144,8 +146,8 @@ class Classifier(Model):
             for batch in data_loader:
 
                 # remove any previously predicted labels
-                for sentence in batch:
-                    sentence.remove_labels('predicted')
+                for datapoint in batch:
+                    datapoint.remove_labels('predicted')
 
                 # predict for batch
                 loss_and_count = self.predict(batch,
@@ -161,9 +163,9 @@ class Classifier(Model):
                     eval_loss += loss_and_count
 
                 # get the gold labels
-                for sentence in batch:
+                for datapoint in batch:
 
-                    for gold_label in sentence.get_labels(gold_label_type):
+                    for gold_label in datapoint.get_labels(gold_label_type):
                         representation = str(sentence_id) + ': ' + gold_label.identifier
                         true_values[representation] = gold_label.value
                         if representation not in all_spans:
@@ -171,7 +173,7 @@ class Classifier(Model):
 
                         if type(gold_label) == SpanLabel: is_word_level = True
 
-                    for predicted_span in sentence.get_labels("predicted"):
+                    for predicted_span in datapoint.get_labels("predicted"):
                         representation = str(sentence_id) + ': ' + predicted_span.identifier
                         predictions[representation] = predicted_span.value
                         if representation not in all_spans:
@@ -183,9 +185,9 @@ class Classifier(Model):
 
                 # make printout lines
                 if out_path:
-                    for sentence in batch:
+                    for datapoint in batch:
                         if is_word_level:
-                            for token in sentence:
+                            for token in datapoint:
                                 eval_line = f"{token.text} " \
                                             f"{token.get_tag(gold_label_type).value} " \
                                             f"{token.get_tag('predicted').value}\n"
@@ -193,15 +195,15 @@ class Classifier(Model):
                             lines.append("\n")
                         else:
                             # check if there is a label mismatch
-                            g = [label.identifier + label.value for label in sentence.get_labels(gold_label_type)]
-                            p = [label.identifier + label.value for label in sentence.get_labels('predicted')]
+                            g = [label.identifier + label.value for label in datapoint.get_labels(gold_label_type)]
+                            p = [label.identifier + label.value for label in datapoint.get_labels('predicted')]
                             g.sort()
                             p.sort()
                             correct_string = " -> MISMATCH!\n" if g != p else ""
                             # print info
-                            eval_line = f"{sentence.to_original_text()}\n" \
-                                        f" - Gold: {sentence.get_labels(gold_label_type)}\n" \
-                                        f" - Pred: {sentence.get_labels('predicted')}\n{correct_string}\n"
+                            eval_line = f"{datapoint.to_original_text()}\n" \
+                                        f" - Gold: {datapoint.get_labels(gold_label_type)}\n" \
+                                        f" - Pred: {datapoint.get_labels('predicted')}\n{correct_string}\n"
                             lines.append(eval_line)
 
             # write predictions to out_file if set
@@ -306,54 +308,208 @@ class Classifier(Model):
         return result
 
 
-class LockedDropout(torch.nn.Module):
-    """
-    Implementation of locked (or variational) dropout. Randomly drops out entire parameters in embedding space.
-    """
+class DefaultClassifier(Classifier):
 
-    def __init__(self, dropout_rate=0.5, batch_first=True, inplace=False):
-        super(LockedDropout, self).__init__()
-        self.dropout_rate = dropout_rate
-        self.batch_first = batch_first
-        self.inplace = inplace
+    def forward_pass(self,
+                     sentences: Union[List[DataPoint], DataPoint],
+                     return_label_candidates: bool = False,
+                     ):
+        raise NotImplementedError
 
-    def forward(self, x):
-        if not self.training or not self.dropout_rate:
-            return x
+    def __init__(self,
+                 label_dictionary: Dictionary,
+                 multi_label: bool = False,
+                 multi_label_threshold: float = 0.5,
+                 loss_weights: Dict[str, float] = None,
+                 ):
 
-        if not self.batch_first:
-            m = x.data.new(1, x.size(1), x.size(2)).bernoulli_(1 - self.dropout_rate)
+        super().__init__()
+
+        # initialize the label dictionary
+        self.label_dictionary: Dictionary = label_dictionary
+        # self.label_dictionary.add_item('O')
+
+        # set up multi-label logic
+        self.multi_label = multi_label
+        self.multi_label_threshold = multi_label_threshold
+
+        # loss weights and loss function
+        self.weight_dict = loss_weights
+        # Initialize the weight tensor
+        if loss_weights is not None:
+            n_classes = len(self.label_dictionary)
+            weight_list = [1.0 for i in range(n_classes)]
+            for i, tag in enumerate(self.label_dictionary.get_items()):
+                if tag in loss_weights.keys():
+                    weight_list[i] = loss_weights[tag]
+            self.loss_weights = torch.FloatTensor(weight_list).to(flair.device)
         else:
-            m = x.data.new(x.size(0), 1, x.size(2)).bernoulli_(1 - self.dropout_rate)
+            self.loss_weights = None
 
-        mask = torch.autograd.Variable(m, requires_grad=False) / (1 - self.dropout_rate)
-        mask = mask.expand_as(x)
-        return mask * x
+        if self.multi_label:
+            self.loss_function = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights)
+        else:
+            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
 
-    def extra_repr(self):
-        inplace_str = ", inplace" if self.inplace else ""
-        return "p={}{}".format(self.dropout_rate, inplace_str)
+    def forward_loss(self, sentences: Union[List[DataPoint], DataPoint]) -> torch.tensor:
+        scores, labels = self.forward_pass(sentences)
+        return self._calculate_loss(scores, labels)
 
+    def _calculate_loss(self, scores, labels):
 
-class WordDropout(torch.nn.Module):
-    """
-    Implementation of word dropout. Randomly drops out entire words (or characters) in embedding space.
-    """
+        if self.multi_label:
+            labels = torch.tensor([[1 if l in all_labels_for_point else 0 for l in self.label_dictionary.get_items()]
+                                   for all_labels_for_point in labels], dtype=torch.float, device=flair.device)
 
-    def __init__(self, dropout_rate=0.05, inplace=False):
-        super(WordDropout, self).__init__()
-        self.dropout_rate = dropout_rate
-        self.inplace = inplace
+        else:
+            labels = torch.tensor([self.label_dictionary.get_idx_for_item(label[0]) if len(label) > 0
+                                   else self.label_dictionary.get_idx_for_item('O')
+                                   for label in labels], dtype=torch.long, device=flair.device)
 
-    def forward(self, x):
-        if not self.training or not self.dropout_rate:
-            return x
+        return self.loss_function(scores, labels)
 
-        m = x.data.new(x.size(0), x.size(1), 1).bernoulli_(1 - self.dropout_rate)
+    def predict(
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size: int = 32,
+            multi_class_prob: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
+    ):
+        """
+        Predicts the class labels for the given sentences. The labels are directly added to the sentences.
+        :param sentences: list of sentences
+        :param mini_batch_size: mini batch size to use
+        :param multi_class_prob : return probability for all class for multiclass
+        :param verbose: set to True to display a progress bar
+        :param return_loss: set to True to return loss
+        :param label_name: set this to change the name of the label type that is predicted
+        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
+        you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
+        'gpu' to store embeddings in GPU memory.
+        """
+        if label_name is None:
+            label_name = self.label_type if self.label_type is not None else "label"
 
-        mask = torch.autograd.Variable(m, requires_grad=False)
-        return mask * x
+        with torch.no_grad():
+            if not sentences:
+                return sentences
 
-    def extra_repr(self):
-        inplace_str = ", inplace" if self.inplace else ""
-        return "p={}{}".format(self.dropout_rate, inplace_str)
+            if isinstance(sentences, DataPoint):
+                sentences = [sentences]
+
+            # filter empty sentences
+            if isinstance(sentences[0], DataPoint):
+                sentences = [sentence for sentence in sentences if len(sentence) > 0]
+            if len(sentences) == 0:
+                return sentences
+
+            # reverse sort all sequences by their length
+            rev_order_len_index = sorted(range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True)
+
+            reordered_sentences: List[Union[DataPoint, str]] = [sentences[index] for index in rev_order_len_index]
+
+            dataloader = DataLoader(dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size)
+            # progress bar for verbosity
+            if verbose:
+                dataloader = tqdm(dataloader)
+
+            overall_loss = 0
+            batch_no = 0
+            label_count = 0
+            for batch in dataloader:
+
+                batch_no += 1
+
+                if verbose:
+                    dataloader.set_description(f"Inferencing on batch {batch_no}")
+
+                # stop if all sentences are empty
+                if not batch:
+                    continue
+
+                # remove previously predicted labels of this type
+                for sentence in batch:
+                    sentence.remove_labels(label_name)
+
+                scores, gold_labels, sentences, label_candidates = self.forward_pass(batch,
+                                                                                     return_label_candidates=True)
+                if return_loss:
+                    overall_loss += self._calculate_loss(scores, gold_labels)
+                    label_count += len(label_candidates)
+
+                if self.multi_label:
+                    sigmoided = torch.sigmoid(scores)
+                    s_idx = 0
+                    for sentence, label in zip(sentences, label_candidates):
+                        for idx in range(sigmoided.size(1)):
+                            if sigmoided[s_idx, idx] > self.multi_label_threshold:
+                                label_value = self.label_dictionary.get_item_for_index(idx)
+                                label.set_value(value=label_value, score=sigmoided[s_idx, idx].item())
+                                sentence.add_complex_label(label_name, copy.deepcopy(label))
+
+                else:
+                    softmax = torch.nn.functional.softmax(scores, dim=-1)
+                    conf, idx = torch.max(softmax, dim=-1)
+
+                    for sentence, label, c, i in zip(sentences, label_candidates, conf, idx):
+                        label_value = self.label_dictionary.get_item_for_index(i.item())
+                        label.set_value(value=label_value, score=c.item())
+
+                        sentence.add_complex_label(label_name, label)
+
+                store_embeddings(batch, storage_mode=embedding_storage_mode)
+
+            if return_loss:
+                return overall_loss, label_count
+
+    def _obtain_labels(
+            self, scores: List[List[float]], predict_prob: bool = False
+    ) -> List[List[Label]]:
+        """
+        Predicts the labels of sentences.
+        :param scores: the prediction scores from the model
+        :return: list of predicted labels
+        """
+        if self.multi_label:
+            return [self._get_multi_label(s) for s in scores]
+
+        elif predict_prob:
+            return [self._predict_label_prob(s) for s in scores]
+
+        return [self._get_single_label(s) for s in scores]
+
+    def _get_multi_label(self, label_scores) -> List[Label]:
+        labels = []
+
+        sigmoid = torch.nn.Sigmoid()
+
+        results = list(map(lambda x: sigmoid(x), label_scores))
+        for idx, conf in enumerate(results):
+            if conf > self.multi_label_threshold:
+                label = self.label_dictionary.get_item_for_index(idx)
+                labels.append(Label(label, conf.item()))
+
+        return labels
+
+    def _get_single_label(self, label_scores) -> List[Label]:
+        softmax = torch.nn.functional.softmax(label_scores, dim=0)
+        conf, idx = torch.max(softmax, 0)
+        label = self.label_dictionary.get_item_for_index(idx.item())
+
+        return [Label(label, conf.item())]
+
+    def _predict_label_prob(self, label_scores) -> List[Label]:
+        softmax = torch.nn.functional.softmax(label_scores, dim=0)
+        label_probs = []
+        for idx, conf in enumerate(softmax):
+            label = self.label_dictionary.get_item_for_index(idx)
+            label_probs.append(Label(label, conf.item()))
+        return label_probs
+
+    def __str__(self):
+        return super(flair.nn.Model, self).__str__().rstrip(')') + \
+               f'  (weights): {self.weight_dict}\n' + \
+               f'  (weight_tensor) {self.loss_weights}\n)'
