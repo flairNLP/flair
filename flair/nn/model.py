@@ -459,12 +459,12 @@ class DefaultClassifier(Classifier):
                     overall_loss += self._calculate_loss(scores, gold_labels)[0]
                     label_count += len(label_candidates)
 
-                if self.multi_label:
+                if self.multi_label or multi_class_prob:
                     sigmoided = torch.sigmoid(scores)
                     s_idx = 0
                     for sentence, label in zip(sentences, label_candidates):
                         for idx in range(sigmoided.size(1)):
-                            if sigmoided[s_idx, idx] > self.multi_label_threshold:
+                            if sigmoided[s_idx, idx] > self.multi_label_threshold or multi_class_prob:
                                 label_value = self.label_dictionary.get_item_for_index(idx)
                                 label.set_value(value=label_value, score=sigmoided[s_idx, idx].item())
                                 sentence.add_complex_label(label_name, copy.deepcopy(label))
