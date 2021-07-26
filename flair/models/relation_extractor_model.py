@@ -1,5 +1,5 @@
 import logging
-from typing import List, Union
+from typing import List, Union, Dict, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -19,6 +19,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
             label_type: str = None,
             span_label_type: str = None,
             use_gold_spans: bool = False,
+            use_entity_pairs: List[Tuple[str, str]] = None,
             pooling_operation: str = "first_last",
             dropout_value: float = 0.0,
             **classifierargs,
@@ -42,6 +43,11 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
         self.dropout_value = dropout_value
         self.dropout = torch.nn.Dropout(dropout_value)
+
+        if use_entity_pairs is not None:
+            self.use_entity_pairs = set(use_entity_pairs)
+        else:
+            self.use_entity_pairs = None
 
         relation_representation_length = 2 * token_embeddings.embedding_length
         if self.pooling_operation == 'first_last':
@@ -74,21 +80,31 @@ class RelationExtractor(flair.nn.DefaultClassifier):
                 relation_label: RelationLabel = relation_label
                 relation_dict[create_position_string(relation_label.head, relation_label.tail)] = relation_label
 
-            # get all entities
-            spans = sentence.get_spans(self.span_label_type)
+            # get all entity spans
+            span_labels = sentence.get_labels(self.span_label_type)
 
             # get embedding for each entity
             span_embeddings = []
-            for span in spans:
+            for span_label in span_labels:
+                span: Span = span_label.span
                 if self.pooling_operation == "first":
                     span_embeddings.append(span.tokens[0].get_embedding())
                 if self.pooling_operation == "first_last":
                     span_embeddings.append(torch.cat([span.tokens[0].get_embedding(), span.tokens[-1].get_embedding()]))
 
             # go through cross product of entities, for each pair concat embeddings
-            for span, embedding in zip(spans, span_embeddings):
-                for span_2, embedding_2 in zip(spans, span_embeddings):
-                    if span == span_2: continue
+            for span_label, embedding in zip(span_labels, span_embeddings):
+                span = span_label.span
+
+                for span_label_2, embedding_2 in zip(span_labels, span_embeddings):
+                    span_2 = span_label_2.span
+
+                    if span == span_2:
+                        continue
+
+                    if (self.use_entity_pairs is not None
+                        and (span_label.value, span_label_2.value) not in self.use_entity_pairs):
+                        continue
 
                     position_string = create_position_string(span, span_2)
 
@@ -137,6 +153,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
             "loss_weights": self.loss_weights,
             "pooling_operation": self.pooling_operation,
             "dropout_value": self.dropout_value,
+            "use_entity_pairs": self.use_entity_pairs,
         }
         return model_state
 
@@ -150,6 +167,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
             loss_weights=state["loss_weights"],
             pooling_operation=state["pooling_operation"],
             dropout_value=state["dropout_value"],
+            use_entity_pairs=state["use_entity_pairs"],
         )
         model.load_state_dict(state["state_dict"])
         return model

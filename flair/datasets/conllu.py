@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import List, Union, Optional, Sequence, Dict, Tuple
 
-from flair.data import Sentence, Corpus, Token, FlairDataset, Span, RelationLabel
+from flair.data import Sentence, Corpus, Token, FlairDataset, Span, RelationLabel, SpanLabel
 from flair.datasets.base import find_train_dev_test_files
 import conllu
 
@@ -53,6 +53,7 @@ class CoNLLUCorpus(Corpus):
         fields: Optional[Sequence[str]] = None,
         field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
         metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None,
+        sample_missing_splits: bool = True,
     ):
         """
         Instantiates a Corpus from CoNLL-U (Plus) column-formatted task data
@@ -103,7 +104,8 @@ class CoNLLUCorpus(Corpus):
             else None
         )
 
-        super(CoNLLUCorpus, self).__init__(train, dev, test, name=str(data_folder))
+        super(CoNLLUCorpus, self).__init__(train, dev, test, name=str(data_folder),
+                                           sample_missing_splits=sample_missing_splits)
 
 
 class CoNLLUDataset(FlairDataset):
@@ -203,6 +205,9 @@ class CoNLLUDataset(FlairDataset):
             if "ner" in conllu_token:
                 token.add_label("ner", conllu_token["ner"])
 
+            if "ner-2" in conllu_token:
+                token.add_label("ner-2", conllu_token["ner-2"])
+
             if "lemma" in conllu_token:
                 token.add_label("lemma", conllu_token["lemma"])
 
@@ -225,5 +230,17 @@ class CoNLLUDataset(FlairDataset):
                 tail = Span(sentence.tokens[tail_start - 1 : tail_end])
 
                 sentence.add_complex_label("relation", RelationLabel(value=label, head=head, tail=tail))
+
+        # determine all NER label types in sentence and add all NER spans as sentence-level labels
+        ner_label_types = []
+        for token in sentence.tokens:
+            for annotation in token.annotation_layers.keys():
+                if annotation.startswith("ner") and annotation not in ner_label_types:
+                    ner_label_types.append(annotation)
+
+        for label_type in ner_label_types:
+            spans = sentence.get_spans(label_type)
+            for span in spans:
+                sentence.add_complex_label("entity", label=SpanLabel(span=span, value=span.tag, score=span.score))
 
         return sentence
