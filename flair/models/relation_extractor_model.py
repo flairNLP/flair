@@ -129,11 +129,16 @@ class RelationExtractor(flair.nn.DefaultClassifier):
                         empty_label_candidates.append(candidate_label)
                         sentences_to_label.append(span[0].sentence)
 
-        all_relations = torch.stack(relation_embeddings)
+        if len(labels) > 0:
 
-        all_relations = self.dropout(all_relations)
+            all_relations = torch.stack(relation_embeddings)
 
-        sentence_relation_scores = self.decoder(all_relations)
+            all_relations = self.dropout(all_relations)
+
+            sentence_relation_scores = self.decoder(all_relations)
+
+        else:
+            sentence_relation_scores = None
 
         # return either scores and gold labels (for loss calculation), or include label candidates for prediction
         result_tuple = (sentence_relation_scores, labels)

@@ -375,6 +375,8 @@ class DefaultClassifier(Classifier):
 
     def _calculate_loss(self, scores, labels):
 
+        if len(labels) == 0: return torch.tensor(0., requires_grad=True), 1
+
         if self.multi_label:
             labels = torch.tensor([[1 if l in all_labels_for_point else 0 for l in self.label_dictionary.get_items()]
                                    for all_labels_for_point in labels], dtype=torch.float, device=flair.device)
@@ -459,26 +461,29 @@ class DefaultClassifier(Classifier):
                     overall_loss += self._calculate_loss(scores, gold_labels)[0]
                     label_count += len(label_candidates)
 
-                if self.multi_label or multi_class_prob:
-                    sigmoided = torch.sigmoid(scores)
-                    s_idx = 0
-                    for sentence, label in zip(sentences, label_candidates):
-                        for idx in range(sigmoided.size(1)):
-                            if sigmoided[s_idx, idx] > self.multi_label_threshold or multi_class_prob:
-                                label_value = self.label_dictionary.get_item_for_index(idx)
-                                label.set_value(value=label_value, score=sigmoided[s_idx, idx].item())
-                                sentence.add_complex_label(label_name, copy.deepcopy(label))
-                        s_idx += 1
+                # if anything could possibly be predicted
+                if len(label_candidates) > 0:
 
-                else:
-                    softmax = torch.nn.functional.softmax(scores, dim=-1)
-                    conf, idx = torch.max(softmax, dim=-1)
+                    if self.multi_label or multi_class_prob:
+                        sigmoided = torch.sigmoid(scores)
+                        s_idx = 0
+                        for sentence, label in zip(sentences, label_candidates):
+                            for idx in range(sigmoided.size(1)):
+                                if sigmoided[s_idx, idx] > self.multi_label_threshold or multi_class_prob:
+                                    label_value = self.label_dictionary.get_item_for_index(idx)
+                                    label.set_value(value=label_value, score=sigmoided[s_idx, idx].item())
+                                    sentence.add_complex_label(label_name, copy.deepcopy(label))
+                            s_idx += 1
 
-                    for sentence, label, c, i in zip(sentences, label_candidates, conf, idx):
-                        label_value = self.label_dictionary.get_item_for_index(i.item())
-                        label.set_value(value=label_value, score=c.item())
+                    else:
+                        softmax = torch.nn.functional.softmax(scores, dim=-1)
+                        conf, idx = torch.max(softmax, dim=-1)
 
-                        sentence.add_complex_label(label_name, label)
+                        for sentence, label, c, i in zip(sentences, label_candidates, conf, idx):
+                            label_value = self.label_dictionary.get_item_for_index(i.item())
+                            label.set_value(value=label_value, score=c.item())
+
+                            sentence.add_complex_label(label_name, label)
 
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
