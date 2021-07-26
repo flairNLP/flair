@@ -163,9 +163,9 @@ class Classifier(Model):
 
                 if isinstance(loss_and_count, Tuple):
                     average_over += loss_and_count[1]
-                    eval_loss += loss_and_count[0]
+                    eval_loss += loss_and_count[0].item()
                 else:
-                    eval_loss += loss_and_count
+                    eval_loss += loss_and_count.item()
 
                 # get the gold labels
                 for datapoint in batch:
@@ -375,7 +375,7 @@ class DefaultClassifier(Classifier):
 
     def _calculate_loss(self, scores, labels):
 
-        if len(labels) == 0: return torch.tensor(0., requires_grad=True), 1
+        if len(labels) == 0: return torch.tensor(0., requires_grad=True, device=flair.device), 1
 
         if self.multi_label:
             labels = torch.tensor([[1 if l in all_labels_for_point else 0 for l in self.label_dictionary.get_items()]
