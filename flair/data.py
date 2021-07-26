@@ -56,11 +56,12 @@ class Dictionary:
         :param item: string for which ID is requested
         :return: ID of string, otherwise 0
         """
-        item = item.encode("utf-8")
-        if item in self.item2idx.keys():
-            return self.item2idx[item]
+        item_encoded = item.encode("utf-8")
+        if item_encoded in self.item2idx.keys():
+            return self.item2idx[item_encoded]
         else:
-            return 0
+            log.error(f"The string '{item}' is not in dictionary! Dictionary contains only: {self.get_items()}")
+            raise IndexError
 
     def get_idx_for_items(self, items: List[str]) -> List[int]:
         """

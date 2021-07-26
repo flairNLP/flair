@@ -53,6 +53,9 @@ class RelationExtractor(flair.nn.DefaultClassifier):
         if self.pooling_operation == 'first_last':
             relation_representation_length *= 2
 
+        # entity pairs could also be no relation at all, add default value for this case to dictionary
+        self.label_dictionary.add_item('O')
+
         self.decoder = nn.Linear(relation_representation_length, len(self.label_dictionary))
 
         nn.init.xavier_uniform_(self.decoder.weight)
