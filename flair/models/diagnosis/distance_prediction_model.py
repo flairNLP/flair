@@ -101,6 +101,9 @@ class DistancePredictor(flair.nn.Model):
         # auto-spawn on GPU if available
         self.to(flair.device)
 
+    def label_type(self):
+        return "distance"
+
     # all input should be tensors
     def weighted_mse_loss(self, predictions, target):
 

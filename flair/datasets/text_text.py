@@ -2,7 +2,6 @@ import logging
 import os
 from pathlib import Path
 from typing import List, Union
-from flair.datasets.base import find_train_dev_test_files
 
 import flair
 from flair.data import (
@@ -11,6 +10,7 @@ from flair.data import (
     FlairDataset,
     DataPair,
 )
+from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file, unzip_file
 
 log = logging.getLogger("flair")
@@ -435,6 +435,7 @@ class DataPairDataset(FlairDataset):
 class GLUE_RTE(DataPairCorpus):
     def __init__(
             self,
+            label_type="entailment",
             base_path: Union[str, Path] = None,
             max_tokens_per_doc=-1,
             max_chars_per_doc=-1,
@@ -480,13 +481,13 @@ class GLUE_RTE(DataPairCorpus):
 
         super(GLUE_RTE, self).__init__(
             data_folder / "RTE",
+            label_type=label_type,
             columns=[1, 2, 3],
             skip_first_line=True,
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
             max_chars_per_doc=max_chars_per_doc,
             in_memory=in_memory,
-            label_type='textual_entailment',
             sample_missing_splits=sample_missing_splits
 
         )

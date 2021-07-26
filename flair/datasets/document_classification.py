@@ -1425,7 +1425,7 @@ class GO_EMOTIONS(ClassificationCorpus):
                             txt_file.write(f"{label_string}{text}\n")
 
         super(GO_EMOTIONS, self).__init__(
-            data_folder, label_type='sentiment', tokenizer=tokenizer,
+            data_folder, label_type='emotion', tokenizer=tokenizer,
             memory_mode=memory_mode, label_name_map=label_name_map, **corpusargs,
         )
 
