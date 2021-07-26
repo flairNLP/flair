@@ -471,6 +471,7 @@ class DefaultClassifier(Classifier):
                             for idx in range(sigmoided.size(1)):
                                 if sigmoided[s_idx, idx] > self.multi_label_threshold or multi_class_prob:
                                     label_value = self.label_dictionary.get_item_for_index(idx)
+                                    if label_value == 'O': continue
                                     label.set_value(value=label_value, score=sigmoided[s_idx, idx].item())
                                     sentence.add_complex_label(label_name, copy.deepcopy(label))
                             s_idx += 1
@@ -481,6 +482,7 @@ class DefaultClassifier(Classifier):
 
                         for sentence, label, c, i in zip(sentences, label_candidates, conf, idx):
                             label_value = self.label_dictionary.get_item_for_index(i.item())
+                            if label_value == 'O': continue
                             label.set_value(value=label_value, score=c.item())
 
                             sentence.add_complex_label(label_name, label)
