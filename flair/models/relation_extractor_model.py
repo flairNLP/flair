@@ -53,6 +53,9 @@ class RelationExtractor(flair.nn.DefaultClassifier):
         if self.pooling_operation == 'first_last':
             relation_representation_length *= 2
 
+        # entity pairs could also be no relation at all, add default value for this case to dictionary
+        self.label_dictionary.add_item('O')
+
         self.decoder = nn.Linear(relation_representation_length, len(self.label_dictionary))
 
         nn.init.xavier_uniform_(self.decoder.weight)
@@ -129,11 +132,16 @@ class RelationExtractor(flair.nn.DefaultClassifier):
                         empty_label_candidates.append(candidate_label)
                         sentences_to_label.append(span[0].sentence)
 
-        all_relations = torch.stack(relation_embeddings)
+        if len(labels) > 0:
 
-        all_relations = self.dropout(all_relations)
+            all_relations = torch.stack(relation_embeddings)
 
-        sentence_relation_scores = self.decoder(all_relations)
+            all_relations = self.dropout(all_relations)
+
+            sentence_relation_scores = self.decoder(all_relations)
+
+        else:
+            sentence_relation_scores = None
 
         # return either scores and gold labels (for loss calculation), or include label candidates for prediction
         result_tuple = (sentence_relation_scores, labels)

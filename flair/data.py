@@ -1,21 +1,18 @@
-import torch, flair
 import logging
 import re
-import ast
-
 from abc import abstractmethod, ABC
-
 from collections import Counter
 from collections import defaultdict
-
-from deprecated import deprecated
-from flair.file_utils import Tqdm
 from operator import itemgetter
+from typing import List, Dict, Union, Callable, Optional
 
+import flair
+import torch
+from deprecated import deprecated
 from torch.utils.data import Dataset
 from torch.utils.data.dataset import ConcatDataset, Subset
 
-from typing import List, Dict, Union, Callable, Optional
+from flair.file_utils import Tqdm
 
 log = logging.getLogger("flair")
 
@@ -59,11 +56,12 @@ class Dictionary:
         :param item: string for which ID is requested
         :return: ID of string, otherwise 0
         """
-        item = item.encode("utf-8")
-        if item in self.item2idx.keys():
-            return self.item2idx[item]
+        item_encoded = item.encode("utf-8")
+        if item_encoded in self.item2idx.keys():
+            return self.item2idx[item_encoded]
         else:
-            return 0
+            log.error(f"The string '{item}' is not in dictionary! Dictionary contains only: {self.get_items()}")
+            raise IndexError
 
     def get_idx_for_items(self, items: List[str]) -> List[int]:
         """
@@ -1201,13 +1199,13 @@ class Corpus:
 
     def downsample(self, percentage: float = 0.1, downsample_train=True, downsample_dev=True, downsample_test=True):
 
-        if downsample_train:
+        if downsample_train and self._train:
             self._train = self._downsample_to_proportion(self.train, percentage)
 
-        if downsample_dev:
+        if downsample_dev and self._dev:
             self._dev = self._downsample_to_proportion(self.dev, percentage)
 
-        if downsample_test:
+        if downsample_test and self._test:
             self._test = self._downsample_to_proportion(self.test, percentage)
 
         return self
@@ -1443,7 +1441,8 @@ class Corpus:
 
             raise Exception
 
-        log.info(f"Corpus contains the labels: {', '.join([label[0] + f' (#{label[1]})' for label in all_label_types.most_common()])}")
+        log.info(
+            f"Corpus contains the labels: {', '.join([label[0] + f' (#{label[1]})' for label in all_label_types.most_common()])}")
         log.info(f"Dictionary for label '{label_type}' contains: {label_dictionary.idx2item}")
 
         return label_dictionary

@@ -15,7 +15,7 @@ from flair.file_utils import cached_path
 from flair.datasets.conllu import CoNLLUCorpus
 from flair.tokenization import (
     SentenceSplitter,
-    SciSpacySentenceSplitter,
+    SciSpacySentenceSplitter, SegtokSentenceSplitter,
 )
 from flair.data import Sentence
 
@@ -467,17 +467,15 @@ class DrugProt(CoNLLUCorpus):
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
     ):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
-        self.sentence_splitter = (
-            sentence_splitter if sentence_splitter else SciSpacySentenceSplitter()
-        )
+        self.sentence_splitter = sentence_splitter
 
         # this dataset name
-        dataset_name = self.__class__.__name__.lower()
+        dataset_name = self.__class__.__name__.lower() + "_" + type(self.sentence_splitter).__name__
 
         # default dataset folder is the cache root
         if not base_path:
@@ -631,6 +629,13 @@ class DrugProt(CoNLLUCorpus):
 
                 token_dicts = []
                 for i, (token, tag_1, tag_2) in enumerate(zip(sent, tags_1, tags_2)):
+
+                    # hardcoded mapping TODO: perhaps find nicer solution
+                    tag_1 = tag_1.replace("GENE-N", "GENE")
+                    tag_1 = tag_1.replace("GENE-Y", "GENE")
+                    tag_2 = tag_2.replace("GENE-N", "GENE")
+                    tag_2 = tag_2.replace("GENE-Y", "GENE")
+
                     token_dicts.append({
                         "id": str(i + 1),
                         "form": token.text,
