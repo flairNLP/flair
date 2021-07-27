@@ -382,9 +382,8 @@ class DefaultClassifier(Classifier):
                                    for all_labels_for_point in labels], dtype=torch.float, device=flair.device)
 
         else:
-            zero_index = self.label_dictionary.get_idx_for_item('O')
             labels = torch.tensor([self.label_dictionary.get_idx_for_item(label[0]) if len(label) > 0
-                                   else zero_index
+                                   else self.label_dictionary.get_idx_for_item('O')
                                    for label in labels], dtype=torch.long, device=flair.device)
 
         return self.loss_function(scores, labels), len(labels)
