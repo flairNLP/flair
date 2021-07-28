@@ -170,7 +170,7 @@ class FewshotClassifier(flair.nn.Classifier):
     def add_and_switch_to_new_task(self,
                                    task_name,
                                    label_dictionary: Union[List, Set, Dictionary, str],
-                                   tag_type: str = None,
+                                   tag_type: str,
                                    ):
         """
         Adds a new task to an existing TARS model. Sets necessary attributes and finally 'switches'
@@ -279,18 +279,16 @@ class FewshotClassifier(flair.nn.Classifier):
 
         # create a temporary task
         self.add_and_switch_to_new_task("ZeroShot",
-                                        label_dictionary)
+                                        label_dictionary,
+                                        '-'.join(label_dictionary.get_items()))
 
-        # try:
-        # make zero shot predictions
-        self.predict(sentences)
-        # except:
-        #     log.error("Something went wrong during prediction. Ensure you pass Sentence objects.")
-        #
-        # finally:
-        #     # switch to the pre-existing task
-        #     self.switch_to_task(existing_current_task)
-        #     self._drop_task("ZeroShot")
+        try:
+            # make zero shot predictions
+            self.predict(sentences)
+        finally:
+            # switch to the pre-existing task
+            self.switch_to_task(existing_current_task)
+            self._drop_task("ZeroShot")
 
         return
 
