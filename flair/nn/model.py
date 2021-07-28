@@ -164,9 +164,9 @@ class Classifier(Model):
 
                 if isinstance(loss_and_count, Tuple):
                     average_over += loss_and_count[1]
-                    eval_loss += loss_and_count[0].item()
+                    eval_loss += loss_and_count[0]
                 else:
-                    eval_loss += loss_and_count.item()
+                    eval_loss += loss_and_count
 
                 # get the gold labels
                 for datapoint in batch:
