@@ -281,16 +281,16 @@ class FewshotClassifier(flair.nn.Classifier):
         self.add_and_switch_to_new_task("ZeroShot",
                                         label_dictionary)
 
-        try:
-            # make zero shot predictions
-            self.predict(sentences)
-        except:
-            log.error("Something went wrong during prediction. Ensure you pass Sentence objects.")
-
-        finally:
-            # switch to the pre-existing task
-            self.switch_to_task(existing_current_task)
-            self._drop_task("ZeroShot")
+        # try:
+        # make zero shot predictions
+        self.predict(sentences)
+        # except:
+        #     log.error("Something went wrong during prediction. Ensure you pass Sentence objects.")
+        #
+        # finally:
+        #     # switch to the pre-existing task
+        #     self.switch_to_task(existing_current_task)
+        #     self._drop_task("ZeroShot")
 
         return
 

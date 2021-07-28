@@ -1,4 +1,5 @@
 import copy
+import itertools
 import logging
 import warnings
 from abc import abstractmethod
@@ -144,8 +145,8 @@ class Classifier(Model):
 
             # variables for computing scores
             all_spans: List[str] = []
-            true_values = {}
-            predictions = {}
+            all_true_values = {}
+            all_predicted_values = {}
 
             sentence_id = 0
             for batch in data_loader:
@@ -171,16 +172,28 @@ class Classifier(Model):
                 for datapoint in batch:
 
                     for gold_label in datapoint.get_labels(gold_label_type):
-                        representation = str(sentence_id) + ': ' + gold_label.identifier
-                        true_values[representation] = gold_label.value
+                        representation = str(datapoint.to_original_text()) + ': ' + gold_label.identifier
+
+                        # add to true values
+                        if representation not in all_true_values:
+                            all_true_values[representation] = [gold_label.value]
+                        else:
+                            all_true_values[representation].append(gold_label.value)
+
                         if representation not in all_spans:
                             all_spans.append(representation)
 
                         if type(gold_label) == SpanLabel: is_word_level = True
 
                     for predicted_span in datapoint.get_labels("predicted"):
-                        representation = str(sentence_id) + ': ' + predicted_span.identifier
-                        predictions[representation] = predicted_span.value
+                        representation = str(datapoint.to_original_text()) + ': ' + predicted_span.identifier
+
+                        # add to all_predicted_values
+                        if representation not in all_predicted_values:
+                            all_predicted_values[representation] = [predicted_span.value]
+                        else:
+                            all_predicted_values[representation].append(predicted_span.value)
+
                         if representation not in all_spans:
                             all_spans.append(representation)
 
@@ -211,7 +224,7 @@ class Classifier(Model):
                                         f" - Pred: {datapoint.get_labels('predicted')}\n{correct_string}\n"
                             lines.append(eval_line)
 
-            # write predictions to out_file if set
+            # write all_predicted_values to out_file if set
             if out_path:
                 with open(Path(out_path), "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
@@ -219,10 +232,12 @@ class Classifier(Model):
             # make the evaluation dictionary
             evaluation_label_dictionary = Dictionary(add_unk=False)
             evaluation_label_dictionary.add_item("O")
-            for label in true_values.values():
-                evaluation_label_dictionary.add_item(label)
-            for label in predictions.values():
-                evaluation_label_dictionary.add_item(label)
+            for true_values in all_true_values.values():
+                for label in true_values:
+                    evaluation_label_dictionary.add_item(label)
+            for predicted_values in all_predicted_values.values():
+                for label in predicted_values:
+                    evaluation_label_dictionary.add_item(label)
 
             # finally, compute numbers
             y_true = []
@@ -230,19 +245,17 @@ class Classifier(Model):
 
             for span in all_spans:
 
-                true_value = true_values[span] if span in true_values else 'O'
-                prediction = predictions[span] if span in predictions else 'O'
+                true_values = all_true_values[span] if span in all_true_values else ['O']
+                predicted_values = all_predicted_values[span] if span in all_predicted_values else ['O']
 
-                true_idx = evaluation_label_dictionary.get_idx_for_item(true_value)
                 y_true_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
-                for i in range(len(evaluation_label_dictionary)):
-                    y_true_instance[true_idx] = 1
+                for true_value in true_values:
+                    y_true_instance[evaluation_label_dictionary.get_idx_for_item(true_value)] = 1
                 y_true.append(y_true_instance.tolist())
 
-                pred_idx = evaluation_label_dictionary.get_idx_for_item(prediction)
                 y_pred_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
-                for i in range(len(evaluation_label_dictionary)):
-                    y_pred_instance[pred_idx] = 1
+                for predicted_value in predicted_values:
+                    y_pred_instance[evaluation_label_dictionary.get_idx_for_item(predicted_value)] = 1
                 y_pred.append(y_pred_instance.tolist())
 
         # now, calculate evaluation numbers
@@ -250,8 +263,8 @@ class Classifier(Model):
         labels = []
 
         counter = Counter()
-        counter.update(true_values.values())
-        counter.update(predictions.values())
+        counter.update(list(itertools.chain.from_iterable(all_true_values.values())))
+        counter.update(list(itertools.chain.from_iterable(all_predicted_values.values())))
 
         for label_name, count in counter.most_common():
             if label_name == 'O': continue
@@ -260,7 +273,7 @@ class Classifier(Model):
             labels.append(evaluation_label_dictionary.get_idx_for_item(label_name))
 
         # there is at least one gold label or one prediction (default)
-        if len(true_values) + len(predictions) > 1:
+        if len(all_true_values) + len(all_predicted_values) > 1:
             classification_report = sklearn.metrics.classification_report(
                 y_true, y_pred, digits=4, target_names=target_names, zero_division=0, labels=labels,
             )
@@ -280,7 +293,7 @@ class Classifier(Model):
 
         else:
             # issue error and default all evaluation numbers to 0.
-            log.error("ACHTUNG! No gold labels and no predictions found! Could be an error in your corpus or how you "
+            log.error("ACHTUNG! No gold labels and no all_predicted_values found! Could be an error in your corpus or how you "
                       "initialize the trainer!")
             accuracy_score = precision_score = recall_score = micro_f_score = macro_f_score = main_score = 0.
             classification_report = ""
@@ -375,13 +388,14 @@ class DefaultClassifier(Classifier):
 
     def _calculate_loss(self, scores, labels):
 
-        if len(labels) == 0: return torch.tensor(0., requires_grad=True, device=flair.device), 1
+        if not any(labels): return torch.tensor(0., requires_grad=True, device=flair.device), 1
 
         if self.multi_label:
             labels = torch.tensor([[1 if l in all_labels_for_point else 0 for l in self.label_dictionary.get_items()]
                                    for all_labels_for_point in labels], dtype=torch.float, device=flair.device)
 
         else:
+            print(labels)
             labels = torch.tensor([self.label_dictionary.get_idx_for_item(label[0]) if len(label) > 0
                                    else self.label_dictionary.get_idx_for_item('O')
                                    for label in labels], dtype=torch.long, device=flair.device)
