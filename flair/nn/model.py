@@ -172,9 +172,8 @@ class Classifier(Model):
                 for datapoint in batch:
 
                     for gold_label in datapoint.get_labels(gold_label_type):
-                        representation = str(datapoint.to_original_text()) + ': ' + gold_label.identifier
+                        representation = str(sentence_id) + ': ' + gold_label.identifier
 
-                        # add to true values
                         if representation not in all_true_values:
                             all_true_values[representation] = [gold_label.value]
                         else:
@@ -186,7 +185,7 @@ class Classifier(Model):
                         if type(gold_label) == SpanLabel: is_word_level = True
 
                     for predicted_span in datapoint.get_labels("predicted"):
-                        representation = str(datapoint.to_original_text()) + ': ' + predicted_span.identifier
+                        representation = str(sentence_id) + ': ' + predicted_span.identifier
 
                         # add to all_predicted_values
                         if representation not in all_predicted_values:
