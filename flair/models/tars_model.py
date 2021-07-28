@@ -374,8 +374,12 @@ class TARSTagger(FewshotClassifier):
 
         label_length = 0 if not self.prefix else len(label.split(" ")) + len(self.separator.split(" "))
 
+        # make a tars sentence where all labels are O by default
         tars_sentence = Sentence(label_text_pair, use_tokenizer=False)
+        for token in tars_sentence:
+            token.add_tag(self.static_label_type, "O")
 
+        # overwrite O labels with tags
         for token in sentence:
             tag = token.get_tag(self.get_current_label_type()).value
 
