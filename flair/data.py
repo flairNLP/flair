@@ -26,7 +26,7 @@ class Dictionary:
         # init dictionaries
         self.item2idx: Dict[str, int] = {}
         self.idx2item: List[str] = []
-
+        self.add_unk = add_unk
         # in order to deal with unknown tokens, add <unk>
         if add_unk:
             self.add_item("<unk>")
@@ -59,8 +59,11 @@ class Dictionary:
         item_encoded = item.encode("utf-8")
         if item_encoded in self.item2idx.keys():
             return self.item2idx[item_encoded]
+        elif self.add_unk:
+            return 0
         else:
             log.error(f"The string '{item}' is not in dictionary! Dictionary contains only: {self.get_items()}")
+            log.error("You can create a Dictionary that handles unknown items with an <unk>-key by setting add_unk = True in the construction.")
             raise IndexError
 
     def get_idx_for_items(self, items: List[str]) -> List[int]:
@@ -100,6 +103,12 @@ class Dictionary:
         with open(savefile, "wb") as f:
             mappings = {"idx2item": self.idx2item, "item2idx": self.item2idx}
             pickle.dump(mappings, f)
+            
+    def __setstate__(self, d):
+        self.__dict__ = d
+        if 'add_unk' not in self.__dict__.keys():
+            self.__dict__['add_unk'] = False
+        
 
     @classmethod
     def load_from_file(cls, filename: str):

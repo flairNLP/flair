@@ -5,3 +5,4 @@ from .pairwise_classification_model import TextPairClassifier
 from .relation_extractor_model import RelationExtractor
 from .tars_model import TARSClassifier
 from .tars_model import TARSTagger
+from .entity_linker_model import EntityLinker

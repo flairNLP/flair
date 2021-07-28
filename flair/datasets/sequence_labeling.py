@@ -10,11 +10,13 @@ import zipfile
 from zipfile import ZipFile
 import tarfile
 import csv
+import requests
 
 import flair
-from flair.data import Corpus, MultiCorpus, FlairDataset, Sentence, Token
+from flair.data import Corpus, MultiCorpus, FlairDataset, Sentence, Token, Dictionary
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file, unzip_file
+from flair.tokenization import SpacySentenceSplitter, SpacyTokenizer
 
 log = logging.getLogger("flair")
 
@@ -4431,7 +4433,6 @@ class EntityLinkingCorpus(ColumnCorpus):
         The class provides the function make_entity_dict
         """
         #TODO: Add a routine, that checks annotations for some widespread errors/inconsistencies??? (e.g. in AQUAINT corpus Iran-Iraq_War vs. Iran-Iraq_war)
-        #make_entity_dict() hier direkt aufrufen?? Dann braucht man einen threshold für die links schon bei der Initialisierung
         
         super(EntityLinkingCorpus, self).__init__(            
             data_folder,
@@ -4444,11 +4445,7 @@ class EntityLinkingCorpus(ColumnCorpus):
             )
         
         
-    def make_entity_dict(self, threshold: int = 1, span = True) -> Dictionary:
-        import time
-        import random
-
-        #TODO: parameter, annotation weg in den Daten für mentions unter threshold
+    def make_entity_dict(self, threshold: int = 1) -> Dictionary:
         """
         Create ID-dictionary for the wikipedia-page names.
         param threshold: Ignore links that occur less than threshold value
@@ -4459,125 +4456,27 @@ class EntityLinkingCorpus(ColumnCorpus):
         self.threshold = threshold
         self.entity_occurences = {}
         self.total_number_of_entity_mentions = 0
-        start = time.time()
-        l = 0
-        for sentences in [self.train, self.test, self.dev]:
-            for sent in sentences:
-                l+=1
-        end = time.time()      
-        print('Time spend using lists self.train, self.dev, selt.test: {}'.format(end-start))
-        print('Total number of sentences: {}'.format(l))
         
-        start = time.time()
-        t = 0
         for sentence in self.get_all_sentences():
-            t+=1
-        end = time.time()           
-        print('Time spend using self.get_all_sentences: {}'.format(end-start))
-        print('Total number of sentences: {}'.format(t))
-        
-        
-        #with span logic#######################################################################################################################
-        #if span:
-        print('span-logik')
-        random.seed(10)
-        start = time.time()
-        i = 0
-        for sentence in self.get_all_sentences():
-            i+=1
-            if i % 100000 == 0:
-                end = time.time()
-                print(end - start)
-                print(self.total_number_of_entity_mentions)
-                break
             if not sentence.is_document_boundary:#exclude "-DOCSTART-"-sentences
             
                 spans = sentence.get_spans('nel')
                 for span in spans:
                     annotation = span.tag
-                    #print(annotation)
                     self.total_number_of_entity_mentions+=1
                     if annotation in self.entity_occurences:
                         self.entity_occurences[annotation]+=1
                     else:
                         self.entity_occurences[annotation]=1
-        ######################################################################################################################################
-        
-        #ohne span logik######################################################################################################################
-        #else:
-        random.seed(10)
-        print('keine span-logik')
-        self.total_number_of_entity_mentions=0
-        start = time.time()
-        j=0
-        for sentence in self.get_all_sentences():
-            j+=1
-            if j % 100000 == 0:
-                end = time.time()
-                print(end-start)
-                print(self.total_number_of_entity_mentions)
-                break
-            if not sentence.is_document_boundary:#exclude "-DOCSTART-"-sentences
-                i = 0
-                while i < len(sentence):
-                    annotation = sentence[i].get_tag('nel').value
-                    if annotation == 'O':
-                        i+=1
-                        continue
-                    else:
-                        #print(annotation)
-                        #print(annotation)
-                        annotation = annotation[2:]
-                        self.total_number_of_entity_mentions+=1
-                        if annotation in self.entity_occurences:
-                            self.entity_occurences[annotation]+=1
-                        else:
-                            self.entity_occurences[annotation]=1
-                        i+=1
-                        #skip rest of annotation
-                        while i < len(sentence) and sentence[i].get_tag('nel').value[2:] == annotation:#alternatively: annotation in sentence[i+1].get_tag('nel').value
-                            i+=1
-        
-        print('blobblobblobblob')
-        
-        ######################################################################################################################################
-        
-        return
-                        
+
         self.number_of_entities = len(self.entity_occurences)
                         
-        # Make the annotation dictionary
+        # Create the annotation dictionary
         self.ent_dictionary: Dictionary = Dictionary(add_unk=True)
     
         for x in self.entity_occurences:
             if self.entity_occurences[x] >= threshold:
                 self.ent_dictionary.add_item(x)
-                
-        #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        #additional statistics for analysis
-        self.distinct_occurences = set(self.entity_occurences.values())
-        self.how_often_each_occurence = {x : 0 for x in self.distinct_occurences}
-        
-        for x in self.entity_occurences:
-            self.how_often_each_occurence[self.entity_occurences[x]] +=1
-            
-        from collections import OrderedDict
-        self.how_often_each_occurence = OrderedDict(sorted(self.how_often_each_occurence.items()))
-        
-        entities_thrown_away = 0
-        entity_mentions_thrown_away = 0
-        for occ, how_often in self.how_often_each_occurence.items():
-            if occ < threshold:
-                entities_thrown_away += how_often
-                entity_mentions_thrown_away += occ*how_often
-                
-        print('Chosen threshold: {}\n'.format(threshold))
-        print('Number of entities: {}, Number of entities that appear less than threshold {} ({})\n'.format(self.number_of_entities, entities_thrown_away
-                                                                                                         , entities_thrown_away/self.number_of_entities))
-        print('Total number of entity mentions: {}, Mentions belonging to entities that appear less than threshold: {} ({})'.format(self.total_number_of_entity_mentions,
-                                                                                                                                     entity_mentions_thrown_away,
-                                                                                                                                     entity_mentions_thrown_away/self.total_number_of_entity_mentions))
-        #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         
         return self.ent_dictionary
 
