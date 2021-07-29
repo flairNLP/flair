@@ -64,7 +64,7 @@ class EntityLinker(flair.nn.DefaultClassifier):
     def emb_mean(self, arg):
         return torch.mean(arg,0)
     
-    def forward_pass(self,#TODO: Does it work with one sentence???
+    def forward_pass(self,
                      sentences: Union[List[DataPoint], DataPoint],
                      return_label_candidates: bool = False,
                      ):
