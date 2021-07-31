@@ -24,7 +24,7 @@ from .sequence_tagger_utils.utils import init_stop_tag_embedding, get_tags_tenso
 log = logging.getLogger("flair")
 
 
-class SequenceTagger(flair.nn.Model):
+class SequenceTagger(flair.nn.Classifier):
 
     def __init__(
             self,
@@ -267,6 +267,7 @@ class SequenceTagger(flair.nn.Model):
     def predict(
             self,
             sentences: Union[List[Sentence], Sentence],
+            mini_batch_size: int,
             label_name: Optional[str] = None,
             return_loss: bool = False,
             embedding_storage_mode: str ="none",
@@ -274,6 +275,7 @@ class SequenceTagger(flair.nn.Model):
         """
         Predicting tag sequence for current batch of sentences.
         :param sentences: batch of sentences
+        :param mini_batch_size: if batch is to much for your GPU you can give a mini batch size as parameter
         :param label_name: which label should be predicted
         :param return_loss: If True, a loss float tensor is returned
         :param embedding_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and
