@@ -23,6 +23,9 @@ from sequence_tagger_utils.utils import init_stop_tag_embedding, get_tags_tensor
 
 log = logging.getLogger("flair")
 
+START_TAG: str = "<START>"
+STOP_TAG: str = "<STOP>"
+
 
 class SequenceTagger(flair.nn.Model):
 
@@ -96,10 +99,9 @@ class SequenceTagger(flair.nn.Model):
 
         # ----- Conditional Random Field parameters -----
         self.use_crf = use_crf
-        # TODO implement start / stop tags
-        #if use_crf:
-        #    self.tag_dictionary.add_item(START_TAG)
-        #    self.tag_dictionary.add_item(STOP_TAG)
+        if use_crf:
+            self.tag_dictionary.add_item(START_TAG)
+            self.tag_dictionary.add_item(STOP_TAG)
 
         # ----- Dropout parameters -----
         self.use_dropout = True if dropout > 0.0 else False
