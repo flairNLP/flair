@@ -270,12 +270,12 @@ class SequenceTagger(flair.nn.Classifier):
             mini_batch_size: int,
             label_name: Optional[str] = None,
             return_loss: bool = False,
-            embedding_storage_mode: str ="none",
+            embedding_storage_mode: str = "none",
     ) -> Optional[torch.Tensor]:
         """
         Predicting tag sequence for current batch of sentences.
         :param sentences: batch of sentences
-        :param mini_batch_size: if batch is to much for your GPU you can give a mini batch size as parameter
+        :param mini_batch_size: currently unused, but requird due to Classifier interface
         :param label_name: which label should be predicted
         :param return_loss: If True, a loss float tensor is returned
         :param embedding_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and
