@@ -256,13 +256,14 @@ class SequenceTagger(flair.nn.Classifier):
         """
         tags_tensor = get_tags_tensor(sentences, self.tag_dictionary, self.tag_type)
         tags_tensor = tags_tensor[lengths.indices]
+        token_count = lengths.values.sum() - lengths.values.__len__()
 
         if self.use_crf:
             loss = self.viterbi_loss(features, tags_tensor, lengths.values)
         else:
             loss = self.cross_entropy_loss(features.permute(0,2,1), tags_tensor)
 
-        return loss
+        return loss, token_count
 
     def predict(
             self,

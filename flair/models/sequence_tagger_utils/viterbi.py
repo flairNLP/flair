@@ -62,7 +62,6 @@ class ViterbiLoss(torch.nn.Module):
         all_paths_scores = scores_upto_t[:, self.stop_tag].sum()
 
         viterbi_loss = all_paths_scores - gold_score
-        viterbi_loss = viterbi_loss / batch_size
 
         return viterbi_loss
 
