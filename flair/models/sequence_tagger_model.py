@@ -17,14 +17,11 @@ from flair.training_utils import Result, store_embeddings
 from flair.file_utils import cached_path
 
 # Sequence tagger utils imports
-from sequence_tagger_utils.crf import CRF
-from sequence_tagger_utils.viterbi import ViterbiLoss, ViterbiDecoder
-from sequence_tagger_utils.utils import init_stop_tag_embedding, get_tags_tensor
+from .sequence_tagger_utils.crf import CRF
+from .sequence_tagger_utils.viterbi import ViterbiLoss, ViterbiDecoder
+from .sequence_tagger_utils.utils import init_stop_tag_embedding, get_tags_tensor, START_TAG, STOP_TAG
 
 log = logging.getLogger("flair")
-
-START_TAG: str = "<START>"
-STOP_TAG: str = "<STOP>"
 
 
 class SequenceTagger(flair.nn.Model):
@@ -152,6 +149,15 @@ class SequenceTagger(flair.nn.Model):
         return torch.FloatTensor(weight_list).to(flair.device)
 
     @staticmethod
+    def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
+        filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
+        if len(sentences) != len(filtered_sentences):
+            log.warning(
+                f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens."
+            )
+        return filtered_sentences
+
+    @staticmethod
     def RNN(
             rnn_type: str,
             rnn_layers: int,
@@ -254,37 +260,6 @@ class SequenceTagger(flair.nn.Model):
 
         return loss
 
-    def evaluate(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        out_path: Optional[Path] = None,
-        embedding_storage_mode: str = "none",
-        **kwargs
-    ) -> (Result, torch.Tensor):
-        """
-        flair.nn.Model interface implementation - evaluates the current model by predicting,
-            calculating the respective metric and store the results.
-        :param sentences: batch of sentences
-        :param out_path: (Optional) output path to store predictions
-        :param embedding_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and
-            freshly recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU
-        :return: Returns a loss float value (Tensor) and stores a Result object as instance variable
-        """
-        with torch.no_grad():
-
-            loss = self.predict(sentences,
-                                embedding_storage_mode=embedding_storage_mode,
-                                label_name='predicted',
-                                return_loss=True)
-
-            self.calculate_metric(sentences, out_path)
-
-            self.store_result()
-
-            res = []
-
-        return res, loss
-
     def predict(
             self,
             sentences: Union[List[Sentence], Sentence],
@@ -301,6 +276,8 @@ class SequenceTagger(flair.nn.Model):
             freshly recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU
         :return: Can return a loss float value (Tensor)
         """
+        sentences = self._filter_empty_sentences(sentences)
+
         if label_name == None:
             label_name = self.tag_type
 
@@ -322,142 +299,6 @@ class SequenceTagger(flair.nn.Model):
 
         if return_loss:
             return self.loss(features, sentences, lengths)
-
-    def calculate_metric(self, sentences: Union[List[Sentence], Sentence], out_path: Union[str, Path] = None):
-        """
-        Calculates and stores a specific metric based on current predictions.
-        :param sentences: batch of sentences with 'predicted' tags
-        """
-        # Some tagging tasks need span evaluation, i.e. named entity recognition.
-        # since we need to handle [B-PER, I-PER] as on tag which needs to be predicted together to be correct.
-        if self._requires_span_F1_evaluation():
-            self._span_F1_evaluation(sentences, out_path)
-        else:
-            self._tag_F1_evaluation(sentences, out_path)
-
-    def _requires_span_F1_evaluation(self) -> bool:
-        """
-        Check if we need to evaluate over spans of tags.
-        :return: True if evaluate of span of tags
-        """
-        span_F1 = False
-        for item in self.tag_dictionary.get_items():
-            if item.startswith('B-'):
-                span_F1 = True
-        return span_F1
-
-    def _span_F1_evaluation(self, sentences: Union[List[Sentence], Sentence], out_path: Union[str, Path] = None,):
-        """
-        Evaluates the predictions in each sentences of spans to token, i.e. for named
-            entity recognition.
-        :param sentences: batch of sentences
-        """
-        log_lines = []
-
-        for sentence in sentences:
-
-            gold_spans = sentence.get_spans(self.tag_type)
-            gold_tags = [(span.tag, repr(span)) for span in gold_spans]
-
-            predicted_spans = sentence.get_spans("predicted")
-            predicted_tags = [(span.tag, repr(span)) for span in predicted_spans]
-
-            for tag, prediction in predicted_tags:
-                if (tag, prediction) in gold_tags:
-                    self.metric.add_tp(tag)
-                else:
-                    self.metric.add_fp(tag)
-
-            for tag, gold in gold_tags:
-                if (tag, gold) not in predicted_tags:
-                    self.metric.add_fn(tag)
-
-            if out_path:
-                for token in sentence:
-
-                    gold_tag = 'O'
-                    for span in gold_spans:
-                        if token in span:
-                            gold_tag = 'B-' + span.tag if token == span[0] else 'I-' + span.tag
-
-                    predicted_tag = 'O'
-                    for span in predicted_spans:
-                        if token in span:
-                            predicted_tag = 'B-' + span.tag if token == span[0] else 'I-' + span.tag
-
-                    log_lines.append(f'{token.text} {gold_tag} {predicted_tag}\n')
-
-            log_lines.append('\n')
-
-        if out_path:
-            with open(Path(out_path), "w", encoding="utf-8") as outfile:
-                outfile.write("".join(log_lines))
-
-    def _tag_F1_evaluation(self, sentences: Union[List[Sentence], Sentence], out_path: Union[str, Path] = None):
-        """
-        Evaluates the predictions in each sentences for single tags.
-        :param sentences: batch of sentences
-        """
-        log_lines = []
-
-        for sentence in sentences:
-
-            for token in sentence:
-                # add gold tag
-                gold_tag = token.get_tag(self.tag_type).value
-                predicted_tag = token.get_tag('predicted').value
-
-                if gold_tag == predicted_tag:
-                    self.metric.add_tp(predicted_tag)
-                else:
-                    self.metric.add_fp(predicted_tag)
-                    self.metric.add_fn(gold_tag)
-
-                log_lines.append(f'{token.text} {gold_tag} {predicted_tag}\n')
-
-            log_lines.append('\n')
-
-        if out_path:
-            with open(Path(out_path), "w", encoding="utf-8") as outfile:
-                outfile.write("".join(log_lines))
-
-    def store_result(self):
-        """
-        Logging method which stores current results from metric
-        in self.result which can be later used for logging.
-        """
-        detailed_result = (
-            "\nResults:"
-            f"\n- F1-score (micro) {self.metric.micro_avg_f_score():.4f}"
-            f"\n- F1-score (macro) {self.metric.macro_avg_f_score():.4f}"
-            '\n\nBy class:'
-        )
-
-        for class_name in self.metric.get_classes():
-            detailed_result += (
-                f"\n{class_name:<10} tp: {self.metric.get_tp(class_name)} - fp: {self.metric.get_fp(class_name)} - "
-                f"fn: {self.metric.get_fn(class_name)} - precision: "
-                f"{self.metric.precision(class_name):.4f} - recall: {self.metric.recall(class_name):.4f} - "
-                f"f1-score: "
-                f"{self.metric.f_score(class_name):.4f}"
-            )
-
-        self.result = Result(
-            main_score=self.metric.micro_avg_f_score(),
-            log_line=f"{self.metric.precision():.4f}\t{self.metric.recall():.4f}\t{self.metric.micro_avg_f_score():.4f}",
-            log_header="PRECISION\tRECALL\tF1",
-            detailed_results=detailed_result
-        )
-
-    def _reset_eval_metrics(self):
-        """
-        Resets current metric and result, i.e. can be called after
-        each evaluation batch of multitask model.
-        """
-        # TODO swap out Metric
-        # TODO Probably delete entire method
-        #self.metric = Metric("Evaluation", beta=self.beta)
-        self.result = None
 
     def _get_state_dict(self):
         """Returns the state dictionary for this model."""

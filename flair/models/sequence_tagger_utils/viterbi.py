@@ -5,9 +5,8 @@ from torch.nn.utils.rnn import pack_padded_sequence
 
 import flair
 from flair.data import Dictionary, Label, List
-from flair.models.sequence_tagger_model import START_TAG, STOP_TAG
 
-from .utils import log_sum_exp
+from .utils import log_sum_exp, START_TAG, STOP_TAG
 
 class ViterbiLoss(torch.nn.Module):
     """

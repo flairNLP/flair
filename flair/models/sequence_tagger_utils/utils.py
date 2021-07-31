@@ -5,8 +5,9 @@ from torch import nn
 from torch.nn.utils.rnn import pad_sequence
 
 import flair
-from flair.models.sequence_tagger_model import START_TAG, STOP_TAG
 
+START_TAG: str = "<START>"
+STOP_TAG: str = "<STOP>"
 
 def log_sum_exp(tensor, dim):
     """
