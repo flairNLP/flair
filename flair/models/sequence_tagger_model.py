@@ -137,6 +137,10 @@ class SequenceTagger(flair.nn.Model):
             self.linear2tag = torch.nn.Linear(hidden_output_dim, self.tagset_size)
             self.cross_entropy_loss = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
 
+    @property
+    def label_type(self):
+        return self.tag_type
+
     def init_loss_weights(self, loss_weights) -> torch.Tensor:
         """
         Initialize loss weights.
