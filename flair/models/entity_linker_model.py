@@ -69,8 +69,17 @@ class EntityLinker(flair.nn.DefaultClassifier):
                      return_label_candidates: bool = False,
                      ):
         
+        if isinstance(sentences,DataPoint):
+            sentences = [sentences]
+            
+        #filter sentences with no annotation
+        filtered_sentences = []
+        for sentence in sentences:
+            if sentence.get_labels(self.label_type):
+                filtered_sentences.append(sentence)
+                
         #embedd all tokens
-        self.word_embeddings.embed(sentences)
+        self.word_embeddings.embed(filtered_sentences)
         
         embedding_names = self.word_embeddings.get_names()
         
@@ -79,7 +88,7 @@ class EntityLinker(flair.nn.DefaultClassifier):
         sentences_to_spans = []
         empty_label_candidates = []
         #get the embeddings of the entity mentions
-        for sentence in sentences:
+        for sentence in filtered_sentences:
             spans = sentence.get_spans(self.label_type)
             for span in spans:
                 mention_emb = torch.Tensor(0,self.word_embeddings.embedding_length).to(flair.device)
@@ -90,6 +99,7 @@ class EntityLinker(flair.nn.DefaultClassifier):
                 embedding_list.append(self.aggregated_embedding(mention_emb).unsqueeze(0))
                 
                 span_labels.append([label.value for label in span.get_labels(typename=self.label_type)])
+                #print(span_labels)
                 
                 if return_label_candidates:
                     sentences_to_spans.append(sentence)
@@ -111,6 +121,7 @@ class EntityLinker(flair.nn.DefaultClassifier):
             return_tuple += (sentences_to_spans, empty_label_candidates)
 
         return return_tuple
+    
             
     def _get_state_dict(self):
         model_state = {

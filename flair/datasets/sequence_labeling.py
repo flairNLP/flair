@@ -4800,10 +4800,15 @@ class AIDA_CONLL_EL(EntityLinkingCorpus):
         parsed_dataset = data_folder / corpus_file_name
         
         if not parsed_dataset.exists():
+            
+            
             testa_unprocessed_path=cached_path(f"{conll_yago_path}combinedENG.testa", Path("datasets") / dataset_name)
             testb_unprocessed_path=cached_path(f"{conll_yago_path}combinedENG.testb", Path("datasets") / dataset_name)
             train_unprocessed_path=cached_path(f"{conll_yago_path}combinedENG.train", Path("datasets") / dataset_name)
             
+            #we use the wikiids in the data instead of directly utilizing the wikipedia url because the urls have errors 
+            #and there seems to be some kind of encoding problem
+            wikiid_wikiname_dict = self._get_wikiid_wikiname_dict(data_folder)
             
             for name,path in zip(['train', 'testa', 'testb'], [train_unprocessed_path, testa_unprocessed_path, testb_unprocessed_path]):
                 with open(data_folder / name, 'w', encoding='utf-8') as write, open(path, 'r', encoding='utf-8') as read:
@@ -4826,8 +4831,12 @@ class AIDA_CONLL_EL(EntityLinkingCorpus):
                                 if row[6] == '--NME--\n': #"no matching entity", handle as no entity 
                                     write.write(row[0] + '\tO\n')
                                 else:
-                                    #print(row[7].split('/')[-1])
-                                    write.write(row[0] + '\t' + row[4] + '-' + row[7].split('/')[-1]+'\n')  
+                                    wikiname = wikiid_wikiname_dict[row[8].strip()]
+                                    if wikiname != 'O':
+                                        write.write(row[0] + '\t' + row[4] + '-' + wikiname+'\n')
+                                    else:
+                                        write.write(row[0] + '\tO\n')
+                                        
                             line=read.readline()
                 #delete unprocessed file
                 os.remove(path)
@@ -4841,6 +4850,54 @@ class AIDA_CONLL_EL(EntityLinkingCorpus):
             **corpusargs,
         )
         
+    def _get_wikiid_wikiname_dict(self, base_folder):
+        
+        #collect all wikiids
+        wikiid_set = set()
+        for data_file in ['combinedENG.testa', 'combinedENG.testb', 'combinedENG.train']:
+            with open(base_folder / data_file, mode='r') as read:
+                line = read.readline()
+                while line:
+                    row = line.split('\t')
+                    if len(row)  >= 8:#line has a wiki annotation
+                        wikiid_set.add(row[8].strip()) 
+                    line=read.readline()
+                
+        #create the dictionary
+        wikiid_wikiname_dict = {}
+        wikiid_list = list(wikiid_set)
+        ids = ''
+        length = len(wikiid_list)
+        for i in range(length):
+            if  (i + 1) % 50  == 0 or i == length-1:#there is a limit to the number of ids in one request in the wikimedia api
+        
+                ids += wikiid_list[i]
+                #print(ids)
+                #request
+                resp = requests.get(
+                    'https://en.wikipedia.org/w/api.php',
+                    params={
+                        'action':'query',
+                        'prop':'info',
+                        'pageids': ids,
+                        'format':'json'
+                        }
+                    ).json()
+                
+                for wikiid in resp['query']['pages']:
+                    try:
+                        wikiname = resp['query']['pages'][wikiid]['title'].replace(' ','_')      
+                    except KeyError:#wikiid does not exist
+                        wikiname = 'O'
+                    wikiid_wikiname_dict[wikiid] = wikiname
+                ids = ''
+        
+            else:
+                ids += wikiid_list[i]
+                ids+='|'
+        
+        return wikiid_wikiname_dict
+    
         
 class IITB_EL(EntityLinkingCorpus):
     def __init__(
