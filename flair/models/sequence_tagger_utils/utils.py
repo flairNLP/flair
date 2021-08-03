@@ -5,6 +5,7 @@ from torch import nn
 from torch.nn.utils.rnn import pad_sequence
 
 import flair
+from flair.data import Label
 
 START_TAG: str = "<START>"
 STOP_TAG: str = "<STOP>"
@@ -22,7 +23,7 @@ def log_sum_exp(tensor, dim):
     return m + torch.log(torch.sum(torch.exp(tensor - m_expanded), dim))
 
 
-def get_tags_tensor(sentences, tag_dictionary, tag_type):
+def get_tags_tensor(sentences, tag_dictionary, tag_type, using_crf):
     """
     Transforms a given batch of sentences into tag tensors.
     :return: torch.Tensor
@@ -47,11 +48,14 @@ def get_tags_tensor(sentences, tag_dictionary, tag_type):
     # then, considering our first tag, we're looking for transition from 10 to 1 + emission_score for 1
     # In our unrolled crf score matrix the equals ID = 121 due to
     # row_index (from tag 10) * length of tagset (12) + column index (to tag 1)
-    # Original tags can be recovered by tag_list % len(tag_dictionary)
+    # Original tags can be recovered by tag_list % len(tag_dictionary) - see if condition below
     tag_list = list(map(lambda sentence:
                         [tag_dictionary.get_idx_for_item(START_TAG) * len(tag_dictionary) + sentence[0]]
                         + [sentence[index - 1] * len(tag_dictionary) + sentence[index] for index in range(1, len(sentence))]
                         , tag_list))
+
+    if not using_crf:
+        tag_list = [list(map(lambda token: token % len(tag_dictionary), current_tag_list)) for current_tag_list in tag_list]
 
     # Transform list to a list of LongTensor
     tag_list_as_tensor = list(map(lambda tags: torch.LongTensor(tags).to(flair.device), tag_list))
@@ -68,3 +72,31 @@ def init_stop_tag_embedding(embedding_length):
     """
     bias = np.sqrt(3.0 / embedding_length)
     return nn.init.uniform_(torch.FloatTensor(embedding_length), -bias, bias).to(flair.device)
+
+
+def obtain_labels(features: torch.Tensor, lengths: torch.Tensor, tag_dictionary):
+    """
+    :param features: torch.Tensor
+    :param lengths: torch Length object
+    :param tag_dictionary: Dictionary containing mapping between IDs and Labels
+    :return tags: List containing all decoded labels
+    Obtain labels by applying softmax function. Alternative to CRF viterbi decoding.
+    """
+    softmax_batch = torch.nn.functional.softmax(features, dim=2).cpu()
+    scores_batch, prediction_batch = torch.max(softmax_batch, dim=2)
+    feature = zip(softmax_batch, scores_batch, prediction_batch)
+
+    tags = []
+    for feats, length in zip(feature, lengths.values.tolist()):
+        softmax, score, prediction = feats
+        confidences = score[:length].tolist()
+        tag_seq = prediction[:length].tolist()
+
+        tags.append(
+            [
+                Label(tag_dictionary.get_item_for_index(tag), conf)
+                for conf, tag in zip(confidences, tag_seq)
+            ]
+        )
+
+    return tags

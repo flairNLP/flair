@@ -2,6 +2,7 @@ import logging
 import sys
 from pathlib import Path
 from typing import Optional, Dict, Union, List
+from urllib.error import HTTPError
 
 # Torch Imports
 import torch
@@ -13,13 +14,13 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_se
 import flair.nn
 from flair.data import Sentence, Dictionary
 from flair.embeddings import TokenEmbeddings, StackedEmbeddings
-from flair.training_utils import Result, store_embeddings
-from flair.file_utils import cached_path
+from flair.training_utils import store_embeddings
+from flair.file_utils import cached_path, unzip_file
 
 # Sequence tagger utils imports
 from .sequence_tagger_utils.crf import CRF
 from .sequence_tagger_utils.viterbi import ViterbiLoss, ViterbiDecoder
-from .sequence_tagger_utils.utils import init_stop_tag_embedding, get_tags_tensor, START_TAG, STOP_TAG
+from .sequence_tagger_utils.utils import init_stop_tag_embedding, get_tags_tensor, obtain_labels, START_TAG, STOP_TAG
 
 log = logging.getLogger("flair")
 
@@ -42,7 +43,6 @@ class SequenceTagger(flair.nn.Classifier):
             dropout: float = 0.0,
             word_dropout: float = 0.0,
             locked_dropout: float = 0.5,
-            beta: float = 1.0,
             loss_weights: Dict[str, float] = None,
     ):
         """
@@ -77,11 +77,6 @@ class SequenceTagger(flair.nn.Classifier):
         self.tag_dictionary = tag_dictionary
         self.tagset_size = len(tag_dictionary)
         self.tag_type = tag_type
-
-        # ----- Evaluation metric parameters -----
-        # TODO change metrics evaluation
-        #self.metric = Metric("Evaluation", beta=beta)
-        self.beta = beta
 
         # ----- Initial loss weights parameters -----
         self.weight_dict = loss_weights
@@ -254,7 +249,7 @@ class SequenceTagger(flair.nn.Classifier):
         :param sentences: batch of sentences
         :param lengths: lenghts of sentences in batch to sort tag tensor accordingly
         """
-        tags_tensor = get_tags_tensor(sentences, self.tag_dictionary, self.tag_type)
+        tags_tensor = get_tags_tensor(sentences, self.tag_dictionary, self.tag_type, self.use_crf)
         tags_tensor = tags_tensor[lengths.indices]
         token_count = lengths.values.sum() - lengths.values.__len__()
 
@@ -291,7 +286,10 @@ class SequenceTagger(flair.nn.Classifier):
         features, lengths = self.forward(sentences)
 
         # features und lengths in der forward sortiert
-        tags = self.viterbi_decoder.decode(features, lengths)
+        if self.use_crf:
+            tags = self.viterbi_decoder.decode(features, lengths)
+        else:
+            tags = obtain_labels(features, lengths, self.tag_dictionary)
 
         # sorted sentences to match tags from decoder
         sentences = [sentences[i] for i in lengths.indices]
@@ -322,7 +320,6 @@ class SequenceTagger(flair.nn.Classifier):
             "use_word_dropout": self.use_word_dropout,
             "use_locked_dropout": self.use_locked_dropout,
             "rnn_type": self.rnn_type,
-            "beta": self.beta,
             "reproject_embeddings": self.reproject_embeddings,
             "weight_dict": self.weight_dict
         }
@@ -335,7 +332,6 @@ class SequenceTagger(flair.nn.Classifier):
         use_dropout = 0.0 if "use_dropout" not in state.keys() else state["use_dropout"]
         use_word_dropout = 0.0 if "use_word_dropout" not in state.keys() else state["use_word_dropout"]
         use_locked_dropout = 0.0 if "use_locked_dropout" not in state.keys() else state["use_locked_dropout"]
-        beta = 1.0 if "beta" not in state.keys() else state["beta"]
         reproject_embeddings = True if "reproject_embeddings" not in state.keys() else state["reproject_embeddings"]
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
 
@@ -351,12 +347,243 @@ class SequenceTagger(flair.nn.Classifier):
             word_dropout=use_word_dropout,
             locked_dropout=use_locked_dropout,
             rnn_type=rnn_type,
-            beta=beta,
             reproject_embeddings=reproject_embeddings,
             loss_weights=weights
         )
         model.load_state_dict(state["state_dict"])
         return model
+
+    @staticmethod
+    def _fetch_model(model_name) -> str:
+
+        # core Flair models on Huggingface ModelHub
+        huggingface_model_map = {
+            "ner": "flair/ner-english",
+            "ner-fast": "flair/ner-english-fast",
+            "ner-ontonotes": "flair/ner-english-ontonotes",
+            "ner-ontonotes-fast": "flair/ner-english-ontonotes-fast",
+            # Large NER models,
+            "ner-large": "flair/ner-english-large",
+            "ner-ontonotes-large": "flair/ner-english-ontonotes-large",
+            "de-ner-large": "flair/ner-german-large",
+            "nl-ner-large": "flair/ner-dutch-large",
+            "es-ner-large": "flair/ner-spanish-large",
+            # Multilingual NER models
+            "ner-multi": "flair/ner-multi",
+            "multi-ner": "flair/ner-multi",
+            "ner-multi-fast": "flair/ner-multi-fast",
+            # English POS models
+            "upos": "flair/upos-english",
+            "upos-fast": "flair/upos-english-fast",
+            "pos": "flair/pos-english",
+            "pos-fast": "flair/pos-english-fast",
+            # Multilingual POS models
+            "pos-multi": "flair/upos-multi",
+            "multi-pos": "flair/upos-multi",
+            "pos-multi-fast": "flair/upos-multi-fast",
+            "multi-pos-fast": "flair/upos-multi-fast",
+            # English SRL models
+            "frame": "flair/frame-english",
+            "frame-fast": "flair/frame-english-fast",
+            # English chunking models
+            "chunk": "flair/chunk-english",
+            "chunk-fast": "flair/chunk-english-fast",
+            # Language-specific NER models
+            "da-ner": "flair/ner-danish",
+            "de-ner": "flair/ner-german",
+            "de-ler": "flair/ner-german-legal",
+            "de-ner-legal": "flair/ner-german-legal",
+            "fr-ner": "flair/ner-french",
+            "nl-ner": "flair/ner-dutch",
+        }
+
+        hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
+
+        hu_model_map = {
+            # English NER models
+            "ner": "/".join([hu_path, "ner", "en-ner-conll03-v0.4.pt"]),
+            "ner-pooled": "/".join([hu_path, "ner-pooled", "en-ner-conll03-pooled-v0.5.pt"]),
+            "ner-fast": "/".join([hu_path, "ner-fast", "en-ner-fast-conll03-v0.4.pt"]),
+            "ner-ontonotes": "/".join([hu_path, "ner-ontonotes", "en-ner-ontonotes-v0.4.pt"]),
+            "ner-ontonotes-fast": "/".join([hu_path, "ner-ontonotes-fast", "en-ner-ontonotes-fast-v0.4.pt"]),
+            # Multilingual NER models
+            "ner-multi": "/".join([hu_path, "multi-ner", "quadner-large.pt"]),
+            "multi-ner": "/".join([hu_path, "multi-ner", "quadner-large.pt"]),
+            "ner-multi-fast": "/".join([hu_path, "multi-ner-fast", "ner-multi-fast.pt"]),
+            # English POS models
+            "upos": "/".join([hu_path, "upos", "en-pos-ontonotes-v0.4.pt"]),
+            "upos-fast": "/".join([hu_path, "upos-fast", "en-upos-ontonotes-fast-v0.4.pt"]),
+            "pos": "/".join([hu_path, "pos", "en-pos-ontonotes-v0.5.pt"]),
+            "pos-fast": "/".join([hu_path, "pos-fast", "en-pos-ontonotes-fast-v0.5.pt"]),
+            # Multilingual POS models
+            "pos-multi": "/".join([hu_path, "multi-pos", "pos-multi-v0.1.pt"]),
+            "multi-pos": "/".join([hu_path, "multi-pos", "pos-multi-v0.1.pt"]),
+            "pos-multi-fast": "/".join([hu_path, "multi-pos-fast", "pos-multi-fast.pt"]),
+            "multi-pos-fast": "/".join([hu_path, "multi-pos-fast", "pos-multi-fast.pt"]),
+            # English SRL models
+            "frame": "/".join([hu_path, "frame", "en-frame-ontonotes-v0.4.pt"]),
+            "frame-fast": "/".join([hu_path, "frame-fast", "en-frame-ontonotes-fast-v0.4.pt"]),
+            # English chunking models
+            "chunk": "/".join([hu_path, "chunk", "en-chunk-conll2000-v0.4.pt"]),
+            "chunk-fast": "/".join([hu_path, "chunk-fast", "en-chunk-conll2000-fast-v0.4.pt"]),
+            # Danish models
+            "da-pos": "/".join([hu_path, "da-pos", "da-pos-v0.1.pt"]),
+            "da-ner": "/".join([hu_path, "NER-danish", "da-ner-v0.1.pt"]),
+            # German models
+            "de-pos": "/".join([hu_path, "de-pos", "de-pos-ud-hdt-v0.5.pt"]),
+            "de-pos-tweets": "/".join([hu_path, "de-pos-tweets", "de-pos-twitter-v0.1.pt"]),
+            "de-ner": "/".join([hu_path, "de-ner", "de-ner-conll03-v0.4.pt"]),
+            "de-ner-germeval": "/".join([hu_path, "de-ner-germeval", "de-ner-germeval-0.4.1.pt"]),
+            "de-ler": "/".join([hu_path, "de-ner-legal", "de-ner-legal.pt"]),
+            "de-ner-legal": "/".join([hu_path, "de-ner-legal", "de-ner-legal.pt"]),
+            # French models
+            "fr-ner": "/".join([hu_path, "fr-ner", "fr-ner-wikiner-0.4.pt"]),
+            # Dutch models
+            "nl-ner": "/".join([hu_path, "nl-ner", "nl-ner-bert-conll02-v0.8.pt"]),
+            "nl-ner-rnn": "/".join([hu_path, "nl-ner-rnn", "nl-ner-conll02-v0.5.pt"]),
+            # Malayalam models
+            "ml-pos": "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt",
+            "ml-upos": "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-upos-model.pt",
+            # Portuguese models
+            "pt-pos-clinical": "/".join([hu_path, "pt-pos-clinical", "pucpr-flair-clinical-pos-tagging-best-model.pt"]),
+            # Keyphase models
+            "keyphrase": "/".join([hu_path, "keyphrase", "keyphrase-en-scibert.pt"]),
+            "negation-speculation": "/".join(
+                [hu_path, "negation-speculation", "negation-speculation-model.pt"]),
+            # Biomedical models
+            "hunflair-paper-cellline": "/".join(
+                [hu_path, "hunflair_smallish_models", "cellline", "hunflair-celline-v1.0.pt"]
+            ),
+            "hunflair-paper-chemical": "/".join(
+                [hu_path, "hunflair_smallish_models", "chemical", "hunflair-chemical-v1.0.pt"]
+            ),
+            "hunflair-paper-disease": "/".join(
+                [hu_path, "hunflair_smallish_models", "disease", "hunflair-disease-v1.0.pt"]
+            ),
+            "hunflair-paper-gene": "/".join(
+                [hu_path, "hunflair_smallish_models", "gene", "hunflair-gene-v1.0.pt"]
+            ),
+            "hunflair-paper-species": "/".join(
+                [hu_path, "hunflair_smallish_models", "species", "hunflair-species-v1.0.pt"]
+            ),
+            "hunflair-cellline": "/".join(
+                [hu_path, "hunflair_smallish_models", "cellline", "hunflair-celline-v1.0.pt"]
+            ),
+            "hunflair-chemical": "/".join(
+                [hu_path, "hunflair_allcorpus_models", "huner-chemical", "hunflair-chemical-full-v1.0.pt"]
+            ),
+            "hunflair-disease": "/".join(
+                [hu_path, "hunflair_allcorpus_models", "huner-disease", "hunflair-disease-full-v1.0.pt"]
+            ),
+            "hunflair-gene": "/".join(
+                [hu_path, "hunflair_allcorpus_models", "huner-gene", "hunflair-gene-full-v1.0.pt"]
+            ),
+            "hunflair-species": "/".join(
+                [hu_path, "hunflair_allcorpus_models", "huner-species", "hunflair-species-full-v1.1.pt"]
+            )}
+
+        cache_dir = Path("models")
+
+        get_from_model_hub = False
+
+        # check if model name is a valid local file
+        if Path(model_name).exists():
+            model_path = model_name
+
+        # check if model key is remapped to HF key - if so, print out information
+        elif model_name in huggingface_model_map:
+
+            # get mapped name
+            hf_model_name = huggingface_model_map[model_name]
+
+            # output information
+            log.info("-" * 80)
+            log.info(
+                f"The model key '{model_name}' now maps to 'https://huggingface.co/{hf_model_name}' on the HuggingFace ModelHub")
+            log.info(f" - The most current version of the model is automatically downloaded from there.")
+            if model_name in hu_model_map:
+                log.info(
+                    f" - (you can alternatively manually download the original model at {hu_model_map[model_name]})")
+            log.info("-" * 80)
+
+            # use mapped name instead
+            model_name = hf_model_name
+            get_from_model_hub = True
+
+        # if not, check if model key is remapped to direct download location. If so, download model
+        elif model_name in hu_model_map:
+            model_path = cached_path(hu_model_map[model_name], cache_dir=cache_dir)
+
+        # special handling for the taggers by the @redewiegergabe project (TODO: move to model hub)
+        elif model_name == "de-historic-indirect":
+            model_file = flair.cache_root / cache_dir / 'indirect' / 'final-model.pt'
+            if not model_file.exists():
+                cached_path('http://www.redewiedergabe.de/models/indirect.zip', cache_dir=cache_dir)
+                unzip_file(flair.cache_root / cache_dir / 'indirect.zip', flair.cache_root / cache_dir)
+            model_path = str(flair.cache_root / cache_dir / 'indirect' / 'final-model.pt')
+
+        elif model_name == "de-historic-direct":
+            model_file = flair.cache_root / cache_dir / 'direct' / 'final-model.pt'
+            if not model_file.exists():
+                cached_path('http://www.redewiedergabe.de/models/direct.zip', cache_dir=cache_dir)
+                unzip_file(flair.cache_root / cache_dir / 'direct.zip', flair.cache_root / cache_dir)
+            model_path = str(flair.cache_root / cache_dir / 'direct' / 'final-model.pt')
+
+        elif model_name == "de-historic-reported":
+            model_file = flair.cache_root / cache_dir / 'reported' / 'final-model.pt'
+            if not model_file.exists():
+                cached_path('http://www.redewiedergabe.de/models/reported.zip', cache_dir=cache_dir)
+                unzip_file(flair.cache_root / cache_dir / 'reported.zip', flair.cache_root / cache_dir)
+            model_path = str(flair.cache_root / cache_dir / 'reported' / 'final-model.pt')
+
+        elif model_name == "de-historic-free-indirect":
+            model_file = flair.cache_root / cache_dir / 'freeIndirect' / 'final-model.pt'
+            if not model_file.exists():
+                cached_path('http://www.redewiedergabe.de/models/freeIndirect.zip', cache_dir=cache_dir)
+                unzip_file(flair.cache_root / cache_dir / 'freeIndirect.zip', flair.cache_root / cache_dir)
+            model_path = str(flair.cache_root / cache_dir / 'freeIndirect' / 'final-model.pt')
+
+        # for all other cases (not local file or special download location), use HF model hub
+        else:
+            get_from_model_hub = True
+
+        # if not a local file, get from model hub
+        if get_from_model_hub:
+            hf_model_name = "pytorch_model.bin"
+            revision = "main"
+
+            if "@" in model_name:
+                model_name_split = model_name.split("@")
+                revision = model_name_split[-1]
+                model_name = model_name_split[0]
+
+            # use model name as subfolder
+            if "/" in model_name:
+                model_folder = model_name.split("/", maxsplit=1)[1]
+            else:
+                model_folder = model_name
+
+            # Lazy import
+            from huggingface_hub import hf_hub_url, cached_download
+
+            url = hf_hub_url(model_name, revision=revision, filename=hf_model_name)
+
+            try:
+                model_path = cached_download(url=url, library_name="flair",
+                                             library_version=flair.__version__,
+                                             cache_dir=flair.cache_root / 'models' / model_folder)
+            except HTTPError as e:
+                # output information
+                log.error("-" * 80)
+                log.error(
+                    f"ACHTUNG: The key '{model_name}' was neither found on the ModelHub nor is this a valid path to a file on your system!")
+                # log.error(f" - Error message: {e}")
+                log.error(f" -> Please check https://huggingface.co/models?filter=flair for all available models.")
+                log.error(f" -> Alternatively, point to a model file on your local drive.")
+                log.error("-" * 80)
+                Path(flair.cache_root / 'models' / model_folder).rmdir()  # remove folder again if not valid
+
+        return model_path
 
 
 class MultiTagger:
