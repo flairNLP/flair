@@ -1257,13 +1257,17 @@ class SENTEVAL_SST_BINARY(ClassificationCorpus):
             cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-dev',
                         Path("datasets") / dataset_name / 'raw')
 
-            # create train.txt file by iterating over pos and neg file
-            with open(data_folder / "train.txt", "a") as out_file, open(
-                    data_folder / 'raw' / "sentiment-train") as in_file:
-                for line in in_file:
-                    fields = line.split('\t')
-                    label = 'POSITIVE' if fields[1].rstrip() == '1' else 'NEGATIVE'
-                    out_file.write(f"__label__{label} {fields[0]}\n")
+            original_filenames = ["sentiment-train", "sentiment-dev", "sentiment-test"]
+            new_filenames = ["train.txt", "dev.txt", "test.txt"]
+
+            # create train dev and test files in fasttext format
+            for new_filename, original_filename in zip(new_filenames, original_filenames):
+                with open(data_folder / new_filename, "a") as out_file, open(
+                        data_folder / 'raw' / original_filename) as in_file:
+                    for line in in_file:
+                        fields = line.split('\t')
+                        label = 'POSITIVE' if fields[1].rstrip() == '1' else 'NEGATIVE'
+                        out_file.write(f"__label__{label} {fields[0]}\n")
 
         super(SENTEVAL_SST_BINARY, self).__init__(
             data_folder,
