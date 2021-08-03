@@ -302,9 +302,16 @@ for the purpose of training multilingual frame detection systems.
 #### Recognizing Textual Entailment
 | ID(s) | Languages | Description |
 | -------------    | ------------- |------------- |
+| 'GLUE_MNLI' | English | The Multi-Genre Natural Language Inference Corpus from the GLUE benchmark |
 | 'GLUE_RTE' | English | The RTE task from the GLUE benchmark |
+| 'GLUE_QNLI' | English | The Stanford Question Answering Dataset formated as NLI task from the GLUE benchmark |
+| 'GLUE_WNLI' | English | The Winograd Schema Challenge formated as NLI task from the GLUE benchmark |
 | 'SUPERGLUE_RTE' | English | The RTE task from the SuperGLUE benchmark |
 
+#### Paraphrase Identification
+| 'GLUE_MRPC' | English | The MRPC task from GLUE benchmark |
+| 'GLUE_QQP' | English | The Quora Question Pairs where the task is to tell whether a pair of questions are seman-
+tically equivalent |
 
 #### Experimental: Similarity Learning
 | ID(s) | Languages | Description |

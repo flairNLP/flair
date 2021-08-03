@@ -161,7 +161,12 @@ from .text_text import ParallelTextDataset
 from .text_text import OpusParallelCorpus
 from .text_text import DataPairDataset
 from .text_text import DataPairCorpus
+from .text_text import GLUE_MNLI
+from .text_text import GLUE_MRPC
 from .text_text import GLUE_RTE
+from .text_text import GLUE_QNLI
+from .text_text import GLUE_QQP
+from .text_text import GLUE_WNLI
 from .text_text import SUPERGLUE_RTE
 
 # Expose all text-image datasets
