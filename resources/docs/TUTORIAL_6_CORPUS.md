@@ -309,9 +309,10 @@ for the purpose of training multilingual frame detection systems.
 | 'SUPERGLUE_RTE' | English | The RTE task from the SuperGLUE benchmark |
 
 #### Paraphrase Identification
+| ID(s) | Languages | Description |
+| -------------    | ------------- |------------- |
 | 'GLUE_MRPC' | English | The MRPC task from GLUE benchmark |
-| 'GLUE_QQP' | English | The Quora Question Pairs where the task is to tell whether a pair of questions are seman-
-tically equivalent |
+| 'GLUE_QQP' | English | The Quora Question Pairs dataset where the task is to determine whether a pair of questions are semantically equivalent |
 
 #### Experimental: Similarity Learning
 | ID(s) | Languages | Description |
