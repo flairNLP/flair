@@ -79,6 +79,7 @@ from .document_classification import CSVClassificationDataset
 from .document_classification import AMAZON_REVIEWS
 from .document_classification import COMMUNICATIVE_FUNCTIONS
 from .document_classification import GERMEVAL_2018_OFFENSIVE_LANGUAGE
+from .document_classification import GLUE_COLA
 from .document_classification import GO_EMOTIONS
 from .document_classification import IMDB
 from .document_classification import NEWSGROUPS
