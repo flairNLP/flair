@@ -590,10 +590,10 @@ class GLUE_MNLI(DataPairCorpus):
                       str(data_folder / "MNLI/eval_dataset_mismatched.tsv"))
 
         matched_suffix = "matched" if evaluate_on_matched else "mismatched"
-        
-        dev_dataset = "MNLI/dev_" + matched_suffix + ".tsv"
-        eval_dataset = "MNLI/eval_dataset_" + matched_suffix + ".tsv"
-        
+
+        dev_dataset = "dev_" + matched_suffix + ".tsv"
+        eval_dataset = "eval_dataset_" + matched_suffix + ".tsv"
+
         self.evaluate_on_matched = evaluate_on_matched
 
         super(GLUE_MNLI, self).__init__(
@@ -611,7 +611,7 @@ class GLUE_MNLI(DataPairCorpus):
         )
 
         self.eval_dataset = DataPairDataset(
-            data_folder / eval_dataset,
+            data_folder / "MNLI" / eval_dataset,
             columns=[8, 9, 11],
             use_tokenizer=use_tokenizer,
             max_tokens_per_doc=max_tokens_per_doc,
