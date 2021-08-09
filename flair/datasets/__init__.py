@@ -69,6 +69,7 @@ from .sequence_labeling import WSD_UFSAC
 from .sequence_labeling import WNUT_2020_NER
 from .sequence_labeling import XTREME
 from .sequence_labeling import REDDIT_EL_GOLD
+from .sequence_labeling import NER_GERMAN_POLITICS
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
@@ -256,4 +257,10 @@ from .biomedical import BIOBERT_SPECIES_LINNAEUS
 from .biomedical import BIOBERT_SPECIES_S800
 from .biomedical import BIOBERT_GENE_BC2GM
 from .biomedical import BIOBERT_GENE_JNLPBA
-from.treebanks import UD_LATIN
+from .treebanks import UD_LATIN
+
+# Expose all relation extraction datasets
+from .relation_extraction import SEMEVAL_2010_TASK_8
+from .relation_extraction import TACRED
+from .relation_extraction import CoNLL04
+from .relation_extraction import DrugProt

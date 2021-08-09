@@ -3621,7 +3621,7 @@ class BIOSEMANTICS(ColumnCorpus):
 
     @staticmethod
     def download_dataset(data_dir: Path) -> Path:
-        data_url = "http://biosemantics.org/PatentCorpus/Patent_Corpus.rar"
+        data_url = "http://biosemantics.erasmusmc.nl/PatentCorpus/Patent_Corpus.rar"
         data_path = cached_path(data_url, data_dir)
         unpack_file(data_path, data_dir)
 

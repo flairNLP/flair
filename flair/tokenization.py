@@ -1,10 +1,12 @@
 import logging
 
 from abc import ABC, abstractmethod
-from typing import List, Callable, Tuple
+from typing import List, Callable, Optional
 
 from segtok.segmenter import split_single, split_multi
 from segtok.tokenizer import split_contractions, word_tokenizer
+
+from more_itertools import stagger
 
 from flair.data import Sentence, Tokenizer, Token
 
@@ -336,7 +338,7 @@ class SciSpacyTokenizer(Tokenizer):
         infix_re = spacy.util.compile_infix_regex(infixes)
 
         self.model = spacy.load(
-            "en_core_sci_sm", disable=["tagger", "ner", "parser", "textcat"]
+            "en_core_sci_sm", disable=["tagger", "ner", "parser", "textcat", "lemmatizer"]
         )
         self.model.tokenizer.prefix_search = prefix_re.search
         self.model.tokenizer.infix_finditer = infix_re.finditer
@@ -417,26 +419,31 @@ class SegtokSentenceSplitter(SentenceSplitter):
         self._tokenizer = tokenizer
 
     def split(self, text: str) -> List[Sentence]:
-        sentences = []
-        offset = 0
+        plain_sentences: List[str] = list(split_multi(text))
 
-        plain_sentences = split_multi(text)
-        for sentence in plain_sentences:
-            sentence_offset = text.find(sentence, offset)
+        try:
+            sentence_offset: Optional[int] = text.index(plain_sentences[0])
+        except ValueError as error:
+            raise AssertionError(f"Can't find the sentence offset for sentence {repr(plain_sentences[0])} "
+                                 f"from the text's starting position") from error
 
-            if sentence_offset == -1:
-                raise AssertionError(f"Can't find offset for sentences {plain_sentences} "
-                                     f"starting from {offset}")
+        sentences: List[Sentence] = []
+        for sentence, next_sentence in stagger(plain_sentences, offsets=(0, 1), longest=True):
 
-            sentences += [
+            sentences.append(
                 Sentence(
                     text=sentence,
                     use_tokenizer=self._tokenizer,
                     start_position=sentence_offset
                 )
-            ]
+            )
 
-            offset += len(sentence)
+            offset: int = sentence_offset + len(sentence)
+            try:
+                sentence_offset = text.index(next_sentence, offset) if next_sentence is not None else None
+            except ValueError as error:
+                raise AssertionError(f"Can't find the sentence offset for sentence {repr(sentence)} "
+                                     f"starting from position {repr(offset)}") from error
 
         return sentences
 

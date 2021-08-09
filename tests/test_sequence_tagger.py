@@ -100,6 +100,49 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
 
 
 @pytest.mark.integration
+def test_train_load_use_tagger_empty_tags(results_base_path, tasks_base_path):
+    corpus = flair.datasets.ColumnCorpus(
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+    )
+    tag_dictionary = corpus.make_tag_dictionary("ner")
+
+    tagger: SequenceTagger = SequenceTagger(
+        hidden_size=64,
+        embeddings=turian_embeddings,
+        tag_dictionary=tag_dictionary,
+        tag_type="ner",
+        use_crf=False,
+    )
+
+    # initialize trainer
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
+
+    trainer.train(
+        results_base_path,
+        learning_rate=0.1,
+        mini_batch_size=2,
+        max_epochs=2,
+        shuffle=False,
+    )
+
+    del trainer, tagger, tag_dictionary, corpus
+    loaded_model: SequenceTagger = SequenceTagger.load(
+        results_base_path / "final-model.pt"
+    )
+
+    sentence = Sentence("I love Berlin")
+    sentence_empty = Sentence("       ")
+
+    loaded_model.predict(sentence)
+    loaded_model.predict([sentence, sentence_empty])
+    loaded_model.predict([sentence_empty])
+
+    # clean up results directory
+    shutil.rmtree(results_base_path)
+    del loaded_model
+
+
+@pytest.mark.integration
 def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
     corpus = flair.datasets.UD_ENGLISH().downsample(0.05)
     tag_dictionary = corpus.make_tag_dictionary("pos")
@@ -143,7 +186,7 @@ def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_train_load_use_tagger_flair_embeddings(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(
-        data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
+        data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
     tag_dictionary = corpus.make_tag_dictionary("ner")
 

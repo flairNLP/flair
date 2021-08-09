@@ -24,6 +24,11 @@ train your own models and experiment with new approaches using Flair embeddings 
 
 Now at [version 0.8](https://github.com/flairNLP/flair/releases)!
 
+
+## Join Us: Open Positions at HU-Berlin!
+
+If you're interested in doing NLP/ML research to pursue a PhD and love open source, consider applying to [open positions](https://github.com/flairNLP/flair/issues/2342) for research associates and PhD candidates at Humboldt University Berlin! 
+
 ## State-of-the-Art Models
 
 Flair ships with state-of-the-art models for a range of NLP tasks. For instance, check out our latest NER models: 
