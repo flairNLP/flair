@@ -102,6 +102,7 @@ class TextClassifier(flair.nn.DefaultClassifier):
             label_dictionary=state["label_dictionary"],
             label_type=label_type,
             multi_label=state["multi_label"],
+            multi_label_threshold=0.5 if "multi_label_threshold" not in state.keys() else state["multi_label_threshold"],
             loss_weights=weights,
         )
         model.load_state_dict(state["state_dict"])
