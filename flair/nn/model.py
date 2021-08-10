@@ -361,7 +361,7 @@ class DefaultClassifier(Classifier):
 
         # set up multi-label logic
         self.multi_label = multi_label
-        self.multi_label_threshold = {'default': multi_label_threshold} if type(multi_label_threshold) is float else multi_label_threshold
+        self.multi_label_threshold = multi_label_threshold
 
         # loss weights and loss function
         self.weight_dict = loss_weights
@@ -399,6 +399,7 @@ class DefaultClassifier(Classifier):
                                    for label in labels], dtype=torch.long, device=flair.device)
 
         return self.loss_function(scores, labels), len(labels)
+
 
     def predict(
             self,
@@ -482,7 +483,7 @@ class DefaultClassifier(Classifier):
                             for l_idx in range(n_labels):
                                 label_value = self.label_dictionary.get_item_for_index(l_idx)
                                 if label_value == 'O': continue
-                                label_threshold = self.multi_label_threshold['default'] if label_value not in self.multi_label_threshold else self.multi_label_threshold[label_value]
+                                label_threshold = self._get_label_threshold(label_value)
                                 label_score = sigmoided[s_idx, l_idx].item()
                                 if label_score > label_threshold or multi_class_prob:
                                     label.set_value(value=label_value, score=label_score)
@@ -502,6 +503,14 @@ class DefaultClassifier(Classifier):
 
             if return_loss:
                 return overall_loss, label_count
+
+    def _get_label_threshold(self, label_value):
+        if type(self.multi_label_theshold) is not map:
+            label_threshold = self.multi_label_threshold
+        else:
+            label_threshold = self.multi_label_threshold['default'] if label_value not in self.multi_label_threshold else self.multi_label_threshold[label_value]
+
+        return label_threshold
 
     def _obtain_labels(
             self, scores: List[List[float]], predict_prob: bool = False
@@ -527,7 +536,7 @@ class DefaultClassifier(Classifier):
         results = list(map(lambda x: sigmoid(x), label_scores))
         for idx, conf in enumerate(results):
             label_value = self.label_dictionary.get_item_for_index(idx)
-            label_threshold = self.multi_label_threshold['default'] if label_value not in self.multi_label_threshold else self.multi_label_threshold[label_value]
+            label_threshold = self._get_label_threshold(label_value)
             label_score = conf.item()
             if label_score > label_threshold:
                 labels.append(Label(label_value, label_score))
