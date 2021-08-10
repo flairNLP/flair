@@ -132,6 +132,7 @@ class TextPairClassifier(flair.nn.DefaultClassifier):
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
             "multi_label": self.multi_label,
+            "multi_label_threshold": self.multi_label_threshold,
             "loss_weights": self.loss_weights,
             "embed_separately": self.embed_separately,
         }
