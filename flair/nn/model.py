@@ -385,7 +385,7 @@ class DefaultClassifier(Classifier):
     def multi_label_threshold(self):
         return self._multi_label_threshold
 
-    @setter.multi_label_threshold
+    @multi_label_threshold.setter
     def multi_label_threshold(self, x):
         if type(x) is dict:
             if 'default' in x:
