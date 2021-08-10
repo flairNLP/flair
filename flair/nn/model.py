@@ -361,7 +361,7 @@ class DefaultClassifier(Classifier):
 
         # set up multi-label logic
         self.multi_label = multi_label
-        self.multi_label_threshold = multi_label_threshold
+        self.multi_label_threshold = {'default': multi_label_threshold} if type(multi_label_threshold) is float else multi_label_threshold
 
         # loss weights and loss function
         self.weight_dict = loss_weights
@@ -476,17 +476,17 @@ class DefaultClassifier(Classifier):
                 if len(label_candidates) > 0:
 
                     if self.multi_label or multi_class_prob:
-                        sigmoided = torch.sigmoid(scores)
-                        s_idx = 0
-                        for sentence, label in zip(sentences, label_candidates):
-                            for idx in range(sigmoided.size(1)):
-                                if sigmoided[s_idx, idx] > self.multi_label_threshold or multi_class_prob:
-                                    label_value = self.label_dictionary.get_item_for_index(idx)
-                                    if label_value == 'O': continue
-                                    label.set_value(value=label_value, score=sigmoided[s_idx, idx].item())
+                        sigmoided = torch.sigmoid(scores)  # size: (n_sentences, n_classes)
+                        n_labels = sigmoided.size(1)
+                        for s_idx, (sentence, label) in enumerate(zip(sentences, label_candidates)):
+                            for l_idx in range(n_labels):
+                                label_value = self.label_dictionary.get_item_for_index(l_idx)
+                                if label_value == 'O': continue
+                                label_threshold = self.multi_label_threshold['default'] if label_value not in self.multi_label_threshold else self.multi_label_threshold[label_value]
+                                label_score = sigmoided[s_idx, l_idx].item()
+                                if label_score > label_threshold or multi_class_prob:
+                                    label.set_value(value=label_value, score=label_score)
                                     sentence.add_complex_label(label_name, copy.deepcopy(label))
-                            s_idx += 1
-
                     else:
                         softmax = torch.nn.functional.softmax(scores, dim=-1)
                         conf, idx = torch.max(softmax, dim=-1)
@@ -526,9 +526,11 @@ class DefaultClassifier(Classifier):
 
         results = list(map(lambda x: sigmoid(x), label_scores))
         for idx, conf in enumerate(results):
-            if conf > self.multi_label_threshold:
-                label = self.label_dictionary.get_item_for_index(idx)
-                labels.append(Label(label, conf.item()))
+            label_value = self.label_dictionary.get_item_for_index(idx)
+            label_threshold = self.multi_label_threshold['default'] if label_value not in self.multi_label_threshold else self.multi_label_threshold[label_value]
+            label_score = conf.item()
+            if label_score > label_threshold:
+                labels.append(Label(label_value, label_score))
 
         return labels
 
