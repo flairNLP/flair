@@ -381,6 +381,20 @@ class DefaultClassifier(Classifier):
         else:
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
 
+    @property
+    def multi_label_threshold(self):
+        return self._multi_label_threshold
+
+    @setter.multi_label_threshold
+    def multi_label_threshold(self, x):
+        if type(x) is dict:
+            if 'default' in x:
+                self._multi_label_threshold = x
+            else:
+                raise Exception('multi_label_threshold dict should have a "default" key')
+        else:
+            self._multi_label_threshold = {'default': x}
+        
     def forward_loss(self, sentences: Union[List[DataPoint], DataPoint]) -> torch.tensor:
         scores, labels = self.forward_pass(sentences)
         return self._calculate_loss(scores, labels)
@@ -505,10 +519,9 @@ class DefaultClassifier(Classifier):
                 return overall_loss, label_count
 
     def _get_label_threshold(self, label_value):
-        if type(self.multi_label_theshold) is not map:
-            label_threshold = self.multi_label_threshold
-        else:
-            label_threshold = self.multi_label_threshold['default'] if label_value not in self.multi_label_threshold else self.multi_label_threshold[label_value]
+        label_threshold = self.multi_label_threshold['default']
+        if label_value in self.multi_label_threshold:
+            label_threshold = self.multi_label_threshold[label_value]
 
         return label_threshold
 
