@@ -1,4 +1,5 @@
 import copy
+import itertools
 import logging
 import warnings
 from abc import abstractmethod
@@ -144,8 +145,8 @@ class Classifier(Model):
 
             # variables for computing scores
             all_spans: List[str] = []
-            true_values = {}
-            predictions = {}
+            all_true_values = {}
+            all_predicted_values = {}
 
             sentence_id = 0
             for batch in data_loader:
@@ -163,16 +164,21 @@ class Classifier(Model):
 
                 if isinstance(loss_and_count, Tuple):
                     average_over += loss_and_count[1]
-                    eval_loss += loss_and_count[0].item()
+                    eval_loss += loss_and_count[0]
                 else:
-                    eval_loss += loss_and_count.item()
+                    eval_loss += loss_and_count
 
                 # get the gold labels
                 for datapoint in batch:
 
                     for gold_label in datapoint.get_labels(gold_label_type):
                         representation = str(sentence_id) + ': ' + gold_label.identifier
-                        true_values[representation] = gold_label.value
+
+                        if representation not in all_true_values:
+                            all_true_values[representation] = [gold_label.value]
+                        else:
+                            all_true_values[representation].append(gold_label.value)
+
                         if representation not in all_spans:
                             all_spans.append(representation)
 
@@ -180,7 +186,13 @@ class Classifier(Model):
 
                     for predicted_span in datapoint.get_labels("predicted"):
                         representation = str(sentence_id) + ': ' + predicted_span.identifier
-                        predictions[representation] = predicted_span.value
+
+                        # add to all_predicted_values
+                        if representation not in all_predicted_values:
+                            all_predicted_values[representation] = [predicted_span.value]
+                        else:
+                            all_predicted_values[representation].append(predicted_span.value)
+
                         if representation not in all_spans:
                             all_spans.append(representation)
 
@@ -211,7 +223,7 @@ class Classifier(Model):
                                         f" - Pred: {datapoint.get_labels('predicted')}\n{correct_string}\n"
                             lines.append(eval_line)
 
-            # write predictions to out_file if set
+            # write all_predicted_values to out_file if set
             if out_path:
                 with open(Path(out_path), "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
@@ -219,10 +231,12 @@ class Classifier(Model):
             # make the evaluation dictionary
             evaluation_label_dictionary = Dictionary(add_unk=False)
             evaluation_label_dictionary.add_item("O")
-            for label in true_values.values():
-                evaluation_label_dictionary.add_item(label)
-            for label in predictions.values():
-                evaluation_label_dictionary.add_item(label)
+            for true_values in all_true_values.values():
+                for label in true_values:
+                    evaluation_label_dictionary.add_item(label)
+            for predicted_values in all_predicted_values.values():
+                for label in predicted_values:
+                    evaluation_label_dictionary.add_item(label)
 
             # finally, compute numbers
             y_true = []
@@ -230,19 +244,17 @@ class Classifier(Model):
 
             for span in all_spans:
 
-                true_value = true_values[span] if span in true_values else 'O'
-                prediction = predictions[span] if span in predictions else 'O'
+                true_values = all_true_values[span] if span in all_true_values else ['O']
+                predicted_values = all_predicted_values[span] if span in all_predicted_values else ['O']
 
-                true_idx = evaluation_label_dictionary.get_idx_for_item(true_value)
                 y_true_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
-                for i in range(len(evaluation_label_dictionary)):
-                    y_true_instance[true_idx] = 1
+                for true_value in true_values:
+                    y_true_instance[evaluation_label_dictionary.get_idx_for_item(true_value)] = 1
                 y_true.append(y_true_instance.tolist())
 
-                pred_idx = evaluation_label_dictionary.get_idx_for_item(prediction)
                 y_pred_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
-                for i in range(len(evaluation_label_dictionary)):
-                    y_pred_instance[pred_idx] = 1
+                for predicted_value in predicted_values:
+                    y_pred_instance[evaluation_label_dictionary.get_idx_for_item(predicted_value)] = 1
                 y_pred.append(y_pred_instance.tolist())
 
         # now, calculate evaluation numbers
@@ -250,8 +262,8 @@ class Classifier(Model):
         labels = []
 
         counter = Counter()
-        counter.update(true_values.values())
-        counter.update(predictions.values())
+        counter.update(list(itertools.chain.from_iterable(all_true_values.values())))
+        counter.update(list(itertools.chain.from_iterable(all_predicted_values.values())))
 
         for label_name, count in counter.most_common():
             if label_name == 'O': continue
@@ -260,7 +272,7 @@ class Classifier(Model):
             labels.append(evaluation_label_dictionary.get_idx_for_item(label_name))
 
         # there is at least one gold label or one prediction (default)
-        if len(true_values) + len(predictions) > 1:
+        if len(all_true_values) + len(all_predicted_values) > 1:
             classification_report = sklearn.metrics.classification_report(
                 y_true, y_pred, digits=4, target_names=target_names, zero_division=0, labels=labels,
             )
@@ -280,7 +292,7 @@ class Classifier(Model):
 
         else:
             # issue error and default all evaluation numbers to 0.
-            log.error("ACHTUNG! No gold labels and no predictions found! Could be an error in your corpus or how you "
+            log.error("ACHTUNG! No gold labels and no all_predicted_values found! Could be an error in your corpus or how you "
                       "initialize the trainer!")
             accuracy_score = precision_score = recall_score = micro_f_score = macro_f_score = main_score = 0.
             classification_report = ""
@@ -369,13 +381,27 @@ class DefaultClassifier(Classifier):
         else:
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
 
+    @property
+    def multi_label_threshold(self):
+        return self._multi_label_threshold
+
+    @multi_label_threshold.setter  
+    def multi_label_threshold(self, x):  # setter method
+        if type(x) is dict:
+            if 'default' in x:
+                self._multi_label_threshold = x
+            else:
+                raise Exception('multi_label_threshold dict should have a "default" key')
+        else:
+            self._multi_label_threshold = {'default': x}
+        
     def forward_loss(self, sentences: Union[List[DataPoint], DataPoint]) -> torch.tensor:
         scores, labels = self.forward_pass(sentences)
         return self._calculate_loss(scores, labels)
 
     def _calculate_loss(self, scores, labels):
 
-        if len(labels) == 0: return torch.tensor(0., requires_grad=True, device=flair.device), 1
+        if not any(labels): return torch.tensor(0., requires_grad=True, device=flair.device), 1
 
         if self.multi_label:
             labels = torch.tensor([[1 if l in all_labels_for_point else 0 for l in self.label_dictionary.get_items()]
@@ -387,6 +413,7 @@ class DefaultClassifier(Classifier):
                                    for label in labels], dtype=torch.long, device=flair.device)
 
         return self.loss_function(scores, labels), len(labels)
+
 
     def predict(
             self,
@@ -464,16 +491,17 @@ class DefaultClassifier(Classifier):
                 if len(label_candidates) > 0:
 
                     if self.multi_label or multi_class_prob:
-                        sigmoided = torch.sigmoid(scores)
-                        s_idx = 0
-                        for sentence, label in zip(sentences, label_candidates):
-                            for idx in range(sigmoided.size(1)):
-                                if sigmoided[s_idx, idx] > self.multi_label_threshold or multi_class_prob:
-                                    label_value = self.label_dictionary.get_item_for_index(idx)
-                                    if label_value == 'O': continue
-                                    label.set_value(value=label_value, score=sigmoided[s_idx, idx].item())
+                        sigmoided = torch.sigmoid(scores)  # size: (n_sentences, n_classes)
+                        n_labels = sigmoided.size(1)
+                        for s_idx, (sentence, label) in enumerate(zip(sentences, label_candidates)):
+                            for l_idx in range(n_labels):
+                                label_value = self.label_dictionary.get_item_for_index(l_idx)
+                                if label_value == 'O': continue
+                                label_threshold = self._get_label_threshold(label_value)
+                                label_score = sigmoided[s_idx, l_idx].item()
+                                if label_score > label_threshold or multi_class_prob:
+                                    label.set_value(value=label_value, score=label_score)
                                     sentence.add_complex_label(label_name, copy.deepcopy(label))
-                            s_idx += 1
 
                     else:
                         softmax = torch.nn.functional.softmax(scores, dim=-1)
@@ -490,6 +518,13 @@ class DefaultClassifier(Classifier):
 
             if return_loss:
                 return overall_loss, label_count
+
+    def _get_label_threshold(self, label_value):
+        label_threshold = self.multi_label_threshold['default']
+        if label_value in self.multi_label_threshold:
+            label_threshold = self.multi_label_threshold[label_value]
+
+        return label_threshold
 
     def _obtain_labels(
             self, scores: List[List[float]], predict_prob: bool = False
@@ -514,10 +549,11 @@ class DefaultClassifier(Classifier):
 
         results = list(map(lambda x: sigmoid(x), label_scores))
         for idx, conf in enumerate(results):
-            if conf > self.multi_label_threshold:
-                label = self.label_dictionary.get_item_for_index(idx)
-                labels.append(Label(label, conf.item()))
-
+            label_value = self.label_dictionary.get_item_for_index(idx)
+            label_threshold = self._get_label_threshold(label_value)
+            label_score = conf.item()
+            if label_score > label_threshold:
+                labels.append(Label(label_value, label_score))
         return labels
 
     def _get_single_label(self, label_scores) -> List[Label]:

@@ -520,6 +520,476 @@ class GLUE_RTE(DataPairCorpus):
                 tsv_file.write(str(index) + '\t' + datapoint.get_labels('textual_entailment')[0].value + '\n')
 
 
+class GLUE_MNLI(DataPairCorpus):
+    def __init__(
+            self,
+            label_type="entailment",
+            evaluate_on_matched: bool = True,
+            base_path: Union[str, Path] = None,
+            max_tokens_per_doc=-1,
+            max_chars_per_doc=-1,
+            use_tokenizer=True,
+            in_memory: bool = True,
+            sample_missing_splits: bool = True
+    ):
+        """
+        Creates a DataPairCorpus for the Multi-Genre Natural Language Inference Corpus (MNLI)
+        from GLUE benchmark (https://gluebenchmark.com/tasks). Entailment annotations are: 
+        entailment, contradiction, neutral. This corpus includes two dev sets mathced/mismatched 
+        and two unlabeled test sets: eval_dataset_matched, eval_dataset_mismatched.
+        """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        dataset_name = "glue"
+
+        # if no base_path provided take cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+
+        data_file = data_folder / "MNLI/train.tsv"
+
+        # if data is not downloaded yet, download it
+        if not data_file.is_file():
+            # get the zip file
+            zipped_data_path = cached_path(
+                "https://dl.fbaipublicfiles.com/glue/data/MNLI.zip",
+                Path("datasets") / dataset_name
+            )
+
+            unpack_file(
+                zipped_data_path,
+                data_folder,
+                mode="zip",
+                keep=False
+            )
+
+            # reorder dev datasets to have same columns as in train set: 8, 9, and 11
+            # dev sets include 5 different annotations but we will only keep the gold label
+            for dev_filename in ["dev_matched.tsv", "dev_mismatched.tsv"]:
+
+                temp_file = str("temp_" + dev_filename)
+                os.rename(str(data_folder / "MNLI" / dev_filename),
+                          str(data_folder / "MNLI" / temp_file))
+
+                with open(data_folder / "MNLI" / dev_filename, "a") as out_file, open(
+                    data_folder / "MNLI" / temp_file) as in_file:
+                    for line in in_file:
+                        fields = line.split('\t')
+                        reordered_columns = '\t'.join(fields[column_id] for column_id in range(11))
+                        reordered_columns += '\t' + fields[15]
+                        out_file.write(reordered_columns)
+                os.remove(str(data_folder / "MNLI" / temp_file))
+
+            # rename test file to eval_dataset, since it has no labels
+            os.rename(str(data_folder / "MNLI/test_matched.tsv"),
+                      str(data_folder / "MNLI/eval_dataset_matched.tsv"))
+            os.rename(str(data_folder / "MNLI/test_mismatched.tsv"),
+                      str(data_folder / "MNLI/eval_dataset_mismatched.tsv"))
+
+        matched_suffix = "matched" if evaluate_on_matched else "mismatched"
+
+        dev_dataset = "dev_" + matched_suffix + ".tsv"
+        eval_dataset = "eval_dataset_" + matched_suffix + ".tsv"
+
+        self.evaluate_on_matched = evaluate_on_matched
+
+        super(GLUE_MNLI, self).__init__(
+            data_folder / "MNLI",
+            train_file=data_file,
+            dev_file=dev_dataset,
+            label_type=label_type,
+            columns=[8, 9, 11],
+            skip_first_line=True,
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            sample_missing_splits=sample_missing_splits
+        )
+
+        self.eval_dataset = DataPairDataset(
+            data_folder / "MNLI" / eval_dataset,
+            columns=[8, 9, 11],
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            skip_first_line=True,
+            label=False
+        )
+
+    """
+    This function creates a tsv file of the predictions of the eval_dataset (after calling 
+    classifier.predict(corpus.eval_dataset, label_name='textual_entailment')). The resulting file 
+    is called MNLI-m.tsv or MNLI-mm.tsv and is in the format required for the Glue Benchmark.
+    """
+
+    def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
+
+        if type(folder_path) == str:
+            folder_path = Path(folder_path)
+        glue_eval_tsv = "MNLI-m.tsv" if self.evaluate_on_matched else "MNLI-mm.tsv"
+        folder_path = folder_path / glue_eval_tsv
+
+        with open(folder_path, mode='w') as tsv_file:
+            tsv_file.write("index\tprediction\n")
+            for index, datapoint in enumerate(self.eval_dataset):
+                label = datapoint.get_labels('textual_entailment')[0].value
+                tsv_file.write(str(index) + '\t' + label + '\n')
+
+
+class GLUE_MRPC(DataPairCorpus):
+    def __init__(
+            self,
+            label_type="paraphrase",
+            base_path: Union[str, Path] = None,
+            max_tokens_per_doc=-1,
+            max_chars_per_doc=-1,
+            use_tokenizer=True,
+            in_memory: bool = True,
+            sample_missing_splits: bool = True
+    ):
+        """
+        Creates a DataPairCorpus for the Microsoft Research Paraphrase Corpus (MRPC) 
+        from Glue benchmark (https://gluebenchmark.com/tasks). MRPC includes annotated 
+        train and test sets. Dev set is sampled each time when creating this corpus.
+        """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        dataset_name = "glue"
+
+        # if no base_path provided take cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+
+        data_file = data_folder / "MRPC/train.tsv"
+
+        mrpc_path = "https://dl.fbaipublicfiles.com/senteval/senteval_data/"
+
+        original_filenames = ["msr_paraphrase_train.txt", "msr_paraphrase_test.txt"]
+
+        # if data is not downloaded yet, download it
+        if not data_file.is_file():
+            for original_filename in original_filenames:
+                # get test and dev sets
+                cached_path(f"{mrpc_path}{original_filename}",
+                            Path("datasets") / dataset_name / "MRPC")
+
+            os.rename(str(data_folder / "MRPC/msr_paraphrase_train.txt"),
+                      str(data_folder / "MRPC/train.tsv"))
+            os.rename(str(data_folder / "MRPC/msr_paraphrase_test.txt"),
+                      str(data_folder / "MRPC/test.tsv"))
+
+        super(GLUE_MRPC, self).__init__(
+            data_folder / "MRPC",
+            label_type=label_type,
+            columns=[3, 4, 0],
+            skip_first_line=True,
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            sample_missing_splits=sample_missing_splits
+        )
+
+    """
+    This function creates a tsv file of the predictions of the eval_dataset (after calling
+    classifier.predict(corpus.test, label_name='paraphrase')). The dataset that is used
+    for evaluation is the same as the test set. The resulting file is called MRPC.tsv
+    and is in the format required for submission to the Glue Benchmark.
+    """
+
+    def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
+
+        if type(folder_path) == str:
+            folder_path = Path(folder_path)
+        folder_path = folder_path / 'MRPC.tsv'
+
+        with open(folder_path, mode='w') as tsv_file:
+            tsv_file.write("index\tprediction\n")
+            for index, datapoint in enumerate(self.test):
+                label = datapoint.get_labels('paraphrase')[0].value
+                tsv_file.write(str(index) + '\t' + label + '\n')
+
+
+class GLUE_QNLI(DataPairCorpus):
+    def __init__(
+            self,
+            label_type="entailment",
+            base_path: Union[str, Path] = None,
+            max_tokens_per_doc=-1,
+            max_chars_per_doc=-1,
+            use_tokenizer=True,
+            in_memory: bool = True,
+            sample_missing_splits: bool = True
+    ):
+        """
+        Creates a DataPairCorpus for the Question-answering Natural Language Inference dataset 
+        (QNLI) from GLUE benchmark (https://gluebenchmark.com/tasks).
+        Additionaly to the Corpus we have a eval_dataset containing the test file of the Glue data. 
+        This file contains unlabeled test data to evaluate models on the Glue QNLI task.
+        """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        dataset_name = "glue"
+
+        # if no base_path provided take cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+
+        data_file = data_folder / "QNLI/train.tsv"
+
+        # if data is not downloaded yet, download it
+        if not data_file.is_file():
+            # get the zip file
+            zipped_data_path = cached_path(
+                "https://dl.fbaipublicfiles.com/glue/data/QNLIv2.zip",
+                Path("datasets") / dataset_name
+            )
+
+            unpack_file(
+                zipped_data_path,
+                data_folder,
+                mode="zip",
+                keep=False
+            )
+
+            # rename test file to eval_dataset, since it has no labels
+            os.rename(str(data_folder / "QNLI/test.tsv"),
+                      str(data_folder / "QNLI/eval_dataset.tsv"))
+
+        super(GLUE_QNLI, self).__init__(
+            data_folder / "QNLI",
+            label_type=label_type,
+            columns=[1, 2, 3],
+            skip_first_line=True,
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            sample_missing_splits=sample_missing_splits
+        )
+
+        self.eval_dataset = DataPairDataset(
+            data_folder / "QNLI/eval_dataset.tsv",
+            columns=[1, 2, 3],
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            skip_first_line=True,
+            label=False
+        )
+
+    """    
+    This function creates a tsv file of the predictions of the eval_dataset (after calling
+    classifier.predict(corpus.eval_dataset, label_name='textual_entailment')). The resulting
+    file is called QNLI.tsv and is in the format required for submission to the Glue Benchmark.
+    """
+
+    def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
+
+        if type(folder_path) == str:
+            folder_path = Path(folder_path)
+        folder_path = folder_path / 'QNLI.tsv'
+
+        with open(folder_path, mode='w') as tsv_file:
+            tsv_file.write("index\tprediction\n")
+            for index, datapoint in enumerate(self.eval_dataset):
+                label = datapoint.get_labels('textual_entailment')[0].value
+                tsv_file.write(str(index) + '\t' + label + '\n')
+
+
+class GLUE_QQP(DataPairCorpus):
+    def __init__(
+            self,
+            label_type="paraphrase",
+            base_path: Union[str, Path] = None,
+            max_tokens_per_doc=-1,
+            max_chars_per_doc=-1,
+            use_tokenizer=True,
+            in_memory: bool = True,
+            sample_missing_splits: bool = True
+    ):
+        """
+        Creates a Quora Question Pairs (QQP) Corpus from the Glue benchmark (https://gluebenchmark.com/tasks).
+        The task is to determine whether a pair of questions are semantically equivalent.
+        Additionaly to the Corpus we have a eval_dataset containing the test file of the Glue data. 
+        This file contains unlabeled test data to evaluate models on the Glue QQP task.
+        """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        dataset_name = "glue"
+
+        # if no base_path provided take cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+
+        data_file = data_folder / "QQP/train.tsv"
+
+        # if data is not downloaded yet, download it
+        if not data_file.is_file():
+            # get the zip file
+            zipped_data_path = cached_path(
+                "https://dl.fbaipublicfiles.com/glue/data/QQP-clean.zip",
+                Path("datasets") / dataset_name
+            )
+
+            unpack_file(
+                zipped_data_path,
+                data_folder,
+                mode="zip",
+                keep=False
+            )
+
+            # rename test file to eval_dataset, since it has no labels
+            os.rename(str(data_folder / "QQP/test.tsv"),
+                      str(data_folder / "QQP/eval_dataset.tsv"))
+
+        super(GLUE_QQP, self).__init__(
+            data_folder / "QQP",
+            label_type=label_type,
+            columns=[3, 4, 5],
+            skip_first_line=True,
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            sample_missing_splits=sample_missing_splits
+        )
+
+        self.eval_dataset = DataPairDataset(
+            data_folder / "QQP/eval_dataset.tsv",
+            columns=[1, 2, 0],
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            skip_first_line=True,
+            label=False
+        )
+
+    """
+    This function creates a tsv file of the predictions of the eval_dataset (after calling 
+    classifier.predict(corpus.eval_dataset, label_name='paraphrase')). The resulting file
+    is called QQP.tsv and is in the format required for submission to the Glue Benchmark.
+    """
+
+    def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
+
+        if type(folder_path) == str:
+            folder_path = Path(folder_path)
+        folder_path = folder_path / 'QQP.tsv'
+
+        with open(folder_path, mode='w') as tsv_file:
+            tsv_file.write("index\tprediction\n")
+            for index, datapoint in enumerate(self.eval_dataset):
+                label = datapoint.get_labels('paraphrase')[0].value
+                tsv_file.write(str(index) + '\t' + label + '\n')
+
+
+class GLUE_WNLI(DataPairCorpus):
+    def __init__(
+            self,
+            label_type="entailment",
+            base_path: Union[str, Path] = None,
+            max_tokens_per_doc=-1,
+            max_chars_per_doc=-1,
+            use_tokenizer=True,
+            in_memory: bool = True,
+            sample_missing_splits: bool = True
+    ):
+        """
+        Creates a Winograd Schema Challenge Corpus formated as Natural Language Inference task (WNLI).
+        The task is to predict if the sentence with the pronoun substituted is entailed by the original sentence.
+        Additionaly to the Corpus we have a eval_dataset containing the test file of the Glue data.
+        This file contains unlabeled test data to evaluate models on the Glue WNLI task.
+        """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        dataset_name = "glue"
+
+        # if no base_path provided take cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+
+        data_file = data_folder / "WNLI/train.tsv"
+
+        # if data is not downloaded yet, download it
+        if not data_file.is_file():
+            # get the zip file
+            zipped_data_path = cached_path(
+                "https://dl.fbaipublicfiles.com/glue/data/WNLI.zip",
+                Path("datasets") / dataset_name
+            )
+
+            unpack_file(
+                zipped_data_path,
+                data_folder,
+                mode="zip",
+                keep=False
+            )
+
+            # rename test file to eval_dataset, since it has no labels
+            os.rename(str(data_folder / "WNLI/test.tsv"),
+                      str(data_folder / "WNLI/eval_dataset.tsv"))
+
+        super(GLUE_WNLI, self).__init__(
+            data_folder / "WNLI",
+            label_type=label_type,
+            columns=[1, 2, 3],
+            skip_first_line=True,
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            sample_missing_splits=sample_missing_splits
+        )
+
+        self.eval_dataset = DataPairDataset(
+            data_folder / "WNLI/eval_dataset.tsv",
+            columns=[1, 2, 3],
+            use_tokenizer=use_tokenizer,
+            max_tokens_per_doc=max_tokens_per_doc,
+            max_chars_per_doc=max_chars_per_doc,
+            in_memory=in_memory,
+            skip_first_line=True,
+            label=False
+        )
+
+    """
+    This function creates a tsv file of the predictions of the eval_dataset (after calling
+    classifier.predict(corpus.eval_dataset, label_name='textual_entailment')). The resulting file
+    is called WNLI.tsv and is in the format required for submission to the Glue Benchmark.
+    """
+
+    def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
+
+        if type(folder_path) == str:
+            folder_path = Path(folder_path)
+        folder_path = folder_path / 'WNLI.tsv'
+
+        with open(folder_path, mode='w') as tsv_file:
+            tsv_file.write("index\tprediction\n")
+            for index, datapoint in enumerate(self.eval_dataset):
+                tsv_file.write(str(index) + '\t' + datapoint.get_labels('entailment')[0].value + '\n')
+
+
 class SUPERGLUE_RTE(DataPairCorpus):
     def __init__(
             self,

@@ -170,7 +170,7 @@ class FewshotClassifier(flair.nn.Classifier):
     def add_and_switch_to_new_task(self,
                                    task_name,
                                    label_dictionary: Union[List, Set, Dictionary, str],
-                                   tag_type: str = None,
+                                   tag_type: str,
                                    ):
         """
         Adds a new task to an existing TARS model. Sets necessary attributes and finally 'switches'
@@ -279,14 +279,12 @@ class FewshotClassifier(flair.nn.Classifier):
 
         # create a temporary task
         self.add_and_switch_to_new_task("ZeroShot",
-                                        label_dictionary)
+                                        label_dictionary,
+                                        '-'.join(label_dictionary.get_items()))
 
         try:
             # make zero shot predictions
             self.predict(sentences)
-        except:
-            log.error("Something went wrong during prediction. Ensure you pass Sentence objects.")
-
         finally:
             # switch to the pre-existing task
             self.switch_to_task(existing_current_task)
@@ -376,8 +374,12 @@ class TARSTagger(FewshotClassifier):
 
         label_length = 0 if not self.prefix else len(label.split(" ")) + len(self.separator.split(" "))
 
+        # make a tars sentence where all labels are O by default
         tars_sentence = Sentence(label_text_pair, use_tokenizer=False)
+        for token in tars_sentence:
+            token.add_tag(self.static_label_type, "O")
 
+        # overwrite O labels with tags
         for token in sentence:
             tag = token.get_tag(self.get_current_label_type()).value
 
