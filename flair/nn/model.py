@@ -381,6 +381,20 @@ class DefaultClassifier(Classifier):
         else:
             self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
 
+    @property
+    def multi_label_threshold(self):
+        return self._multi_label_threshold
+
+    @multi_label_threshold.setter  
+    def multi_label_threshold(self, x):  # setter method
+        if type(x) is dict:
+            if 'default' in x:
+                self._multi_label_threshold = x
+            else:
+                raise Exception('multi_label_threshold dict should have a "default" key')
+        else:
+            self._multi_label_threshold = {'default': x}
+        
     def forward_loss(self, sentences: Union[List[DataPoint], DataPoint]) -> torch.tensor:
         scores, labels = self.forward_pass(sentences)
         return self._calculate_loss(scores, labels)
@@ -399,6 +413,7 @@ class DefaultClassifier(Classifier):
                                    for label in labels], dtype=torch.long, device=flair.device)
 
         return self.loss_function(scores, labels), len(labels)
+
 
     def predict(
             self,
@@ -476,14 +491,16 @@ class DefaultClassifier(Classifier):
                 if len(label_candidates) > 0:
 
                     if self.multi_label or multi_class_prob:
-                        sigmoided = torch.sigmoid(scores)
-                        s_idx = 0
-                        for sentence, label in zip(sentences, label_candidates):
-                            for idx in range(sigmoided.size(1)):
-                                if sigmoided[s_idx, idx] > self.multi_label_threshold or multi_class_prob:
-                                    label_value = self.label_dictionary.get_item_for_index(idx)
-                                    if label_value == 'O': continue
-                                    label.set_value(value=label_value, score=sigmoided[s_idx, idx].item())
+                        sigmoided = torch.sigmoid(scores)  # size: (n_sentences, n_classes)
+                        n_labels = sigmoided.size(1)
+                        for s_idx, (sentence, label) in enumerate(zip(sentences, label_candidates)):
+                            for l_idx in range(n_labels):
+                                label_value = self.label_dictionary.get_item_for_index(l_idx)
+                                if label_value == 'O': continue
+                                label_threshold = self._get_label_threshold(label_value)
+                                label_score = sigmoided[s_idx, l_idx].item()
+                                if label_score > label_threshold or multi_class_prob:
+                                    label.set_value(value=label_value, score=label_score)
                                     sentence.add_complex_label(label_name, copy.deepcopy(label))
                             s_idx += 1
 
@@ -502,6 +519,13 @@ class DefaultClassifier(Classifier):
 
             if return_loss:
                 return overall_loss, label_count
+
+    def _get_label_threshold(self, label_value):
+        label_threshold = self.multi_label_threshold['default']
+        if label_value in self.multi_label_threshold:
+            label_threshold = self.multi_label_threshold[label_value]
+
+        return label_threshold
 
     def _obtain_labels(
             self, scores: List[List[float]], predict_prob: bool = False
@@ -526,10 +550,11 @@ class DefaultClassifier(Classifier):
 
         results = list(map(lambda x: sigmoid(x), label_scores))
         for idx, conf in enumerate(results):
-            if conf > self.multi_label_threshold:
-                label = self.label_dictionary.get_item_for_index(idx)
-                labels.append(Label(label, conf.item()))
-
+            label_value = self.label_dictionary.get_item_for_index(idx)
+            label_threshold = self._get_label_threshold(label_value)
+            label_score = conf.item()
+            if label_score > label_threshold:
+                labels.append(Label(label_value, label_score))
         return labels
 
     def _get_single_label(self, label_scores) -> List[Label]:

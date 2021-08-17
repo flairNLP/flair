@@ -79,6 +79,7 @@ from .document_classification import CSVClassificationDataset
 from .document_classification import AMAZON_REVIEWS
 from .document_classification import COMMUNICATIVE_FUNCTIONS
 from .document_classification import GERMEVAL_2018_OFFENSIVE_LANGUAGE
+from .document_classification import GLUE_COLA
 from .document_classification import GO_EMOTIONS
 from .document_classification import IMDB
 from .document_classification import NEWSGROUPS
@@ -160,7 +161,12 @@ from .text_text import ParallelTextDataset
 from .text_text import OpusParallelCorpus
 from .text_text import DataPairDataset
 from .text_text import DataPairCorpus
+from .text_text import GLUE_MNLI
+from .text_text import GLUE_MRPC
 from .text_text import GLUE_RTE
+from .text_text import GLUE_QNLI
+from .text_text import GLUE_QQP
+from .text_text import GLUE_WNLI
 from .text_text import SUPERGLUE_RTE
 
 # Expose all text-image datasets

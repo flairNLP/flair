@@ -276,6 +276,7 @@ for the purpose of training multilingual frame detection systems.
 | 'AMAZON_REVIEWS' | English |  [Amazon product reviews](https://nijianmo.github.io/amazon/index.html/) dataset with sentiment annotation |
 | 'COMMUNICATIVE_FUNCTIONS' | English |  [Communicative functions](https://github.com/Alab-NII/FECFevalDataset) of sentences in scholarly papers |
 | 'GERMEVAL_2018_OFFENSIVE_LANGUAGE' | German | Offensive language detection for German |
+| 'GLUE_COLA' | English | The Corpus of Linguistic Acceptability from GLUE benchmark |
 | 'GO_EMOTIONS' | English | [GoEmotions dataset](https://github.com/google-research/google-research/tree/master/goemotions) Reddit comments labeled with 27 emotions |
 | 'IMDB' | English |  [IMDB](http://ai.stanford.edu/~amaas/data/sentiment/) dataset of movie reviews with sentiment annotation  |
 | 'NEWSGROUPS' | English | The popular [20 newsgroups](http://qwone.com/~jason/20Newsgroups/) classification dataset |
@@ -301,9 +302,17 @@ for the purpose of training multilingual frame detection systems.
 #### Recognizing Textual Entailment
 | ID(s) | Languages | Description |
 | -------------    | ------------- |------------- |
+| 'GLUE_MNLI' | English | The Multi-Genre Natural Language Inference Corpus from the GLUE benchmark |
 | 'GLUE_RTE' | English | The RTE task from the GLUE benchmark |
+| 'GLUE_QNLI' | English | The Stanford Question Answering Dataset formated as NLI task from the GLUE benchmark |
+| 'GLUE_WNLI' | English | The Winograd Schema Challenge formated as NLI task from the GLUE benchmark |
 | 'SUPERGLUE_RTE' | English | The RTE task from the SuperGLUE benchmark |
 
+#### Paraphrase Identification
+| ID(s) | Languages | Description |
+| -------------    | ------------- |------------- |
+| 'GLUE_MRPC' | English | The MRPC task from GLUE benchmark |
+| 'GLUE_QQP' | English | The Quora Question Pairs dataset where the task is to determine whether a pair of questions are semantically equivalent |
 
 #### Experimental: Similarity Learning
 | ID(s) | Languages | Description |
