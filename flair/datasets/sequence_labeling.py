@@ -4430,7 +4430,7 @@ class EntityLinkingCorpus(ColumnCorpus):
         """
         Super class for all entity linking corpora. Expects the data to be in column format with one column for words and another one for BIO-tags and wikipedia-page 
         name, e.g. B-Brad_Pitt.
-        The class provides the function make_entity_dict
+        The class provides the function make_entity_dict to create an entity dictionary suited for entity linking.
         """
         #TODO: Add a routine, that checks annotations for some widespread errors/inconsistencies??? (e.g. in AQUAINT corpus Iran-Iraq_War vs. Iran-Iraq_war)
         
@@ -4445,7 +4445,7 @@ class EntityLinkingCorpus(ColumnCorpus):
             )
         
         
-    def make_entity_dict(self, threshold: int = 1) -> Dictionary:
+    def make_entity_dict(self, threshold: int = 1, mode = False) -> Dictionary:
         """
         Create ID-dictionary for the wikipedia-page names.
         param threshold: Ignore links that occur less than threshold value
@@ -4479,8 +4479,23 @@ class EntityLinkingCorpus(ColumnCorpus):
                 self.ent_dictionary.add_item(x)
         
         return self.ent_dictionary
-
-
+    
+    #this fct removes every second unknown label
+    def remove_unknowns(self):
+        remove = True
+        for sentence in self.get_all_sentences():
+            if not sentence.is_document_boundary:#exclude "-DOCSTART-"-sentences
+            
+                spans = sentence.get_spans('nel')
+                for span in spans:
+                    annotation = span.tag
+                    if self.ent_dictionary.get_idx_for_item(annotation) == 0:#unknown label
+                        if remove:
+                            for token in span:
+                                token.remove_labels('nel')
+                            remove = False
+                        else:
+                            remove = True
 
 class AQUAINT_EL(EntityLinkingCorpus):
     def __init__(
@@ -4633,6 +4648,21 @@ class OLD_GERMAN_EL(EntityLinkingCorpus):
             wiki_language: str = 'dewiki',
             **corpusargs            
     ):
+        """
+        Initialize Old German Entity Linking corpus. Its the german part of the data introduced here https://zenodo.org/record/4573313#.YRvDm99CRPZ and in the corresponding
+        paper "A Multilingual Dataset for Named Entity Recognition, Entity Linking and Stance Detection in Historical Newspapers" from Hamdi et al. 
+        License: https://creativecommons.org/licenses/by/4.0/legalcode
+        If you call the constructor the first time the dataset gets automatically downloaded and transformed in tab-separated column format. 
+
+        Parameters
+        ----------
+        base_path : Union[str, Path], optional
+            Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+            to point to a different folder but typically this should not be necessary.
+        in_memory: If True, keeps dataset in memory giving speedups in training.
+        wiki_language : specfiy the language of the names of the wikipedia pages, i.e. which language version of wikipedia to use.
+        Since the text is in german the default language is german.
+        """
         self.wiki_language = wiki_language
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -4782,8 +4812,22 @@ class AIDA_CONLL_EL(EntityLinkingCorpus):
             self,
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
+            check_existence: bool = False,
             **corpusargs
     ):
+        """
+        Initialize AIDA CoNLL-YAGO Entity Linking corpus introduced here https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/ambiverse-nlu/aida/downloads. 
+        License: https://creativecommons.org/licenses/by-sa/3.0/deed.en_US
+        If you call the constructor the first time the dataset gets automatically downloaded and transformed in tab-separated column format. 
+
+        Parameters
+        ----------
+        base_path : Union[str, Path], optional
+            Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+            to point to a different folder but typically this should not be necessary.
+        in_memory: If True, keeps dataset in memory giving speedups in training.
+        check_existence: If True the existence of the given wikipedia ids/pagenames is checked and non existent ids/names will be igrnored.
+        """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
             
@@ -4801,43 +4845,50 @@ class AIDA_CONLL_EL(EntityLinkingCorpus):
         
         if not parsed_dataset.exists():
             
+            import wikipediaapi
             
-            testa_unprocessed_path=cached_path(f"{conll_yago_path}combinedENG.testa", Path("datasets") / dataset_name)
-            testb_unprocessed_path=cached_path(f"{conll_yago_path}combinedENG.testb", Path("datasets") / dataset_name)
-            train_unprocessed_path=cached_path(f"{conll_yago_path}combinedENG.train", Path("datasets") / dataset_name)
+            wiki_wiki = wikipediaapi.Wikipedia(language='en')
             
-            #we use the wikiids in the data instead of directly utilizing the wikipedia url because the urls have errors 
-            #and there seems to be some kind of encoding problem
+            testa_unprocessed_path=cached_path(f"{conll_yago_path}aida_conll_testa", Path("datasets") / dataset_name)
+            testb_unprocessed_path=cached_path(f"{conll_yago_path}aida_conll_testb", Path("datasets") / dataset_name)
+            train_unprocessed_path=cached_path(f"{conll_yago_path}aida_conll_train", Path("datasets") / dataset_name)
+            
+            #we use the wikiids in the data instead of directly utilizing the wikipedia urls.
+            #like this we can quickly check if the corresponding page exists
             wikiid_wikiname_dict = self._get_wikiid_wikiname_dict(data_folder)
             
             for name,path in zip(['train', 'testa', 'testb'], [train_unprocessed_path, testa_unprocessed_path, testb_unprocessed_path]):
                 with open(data_folder / name, 'w', encoding='utf-8') as write, open(path, 'r', encoding='utf-8') as read:
-                    line=read.readline()
-                    while line:
-                        if line == '\t\n': #empty line
-                            #write empty line
-                            write.write('\n')
-                            #check if next line is empty as well --> document ends
-                            line=read.readline()
-                            if line == '\t\n':
+
+                    for line in read:
+        
+                        line_list = line.split('\t')
+                        if len(line_list) <= 4:
+                            if line_list[0][:10] == '-DOCSTART-':#Docstart
                                 write.write('-DOCSTART-\n\n')
-                                line=read.readline()
-                        else: #text
-                            row = line.split('\t')
-                            #print(row)
-                            if row[3] == 'O': #no entity
-                                write.write(row[0] + '\tO\n')
-                            else:
-                                if row[6] == '--NME--\n': #"no matching entity", handle as no entity 
-                                    write.write(row[0] + '\tO\n')
+                            elif line_list[0] == '\n':#empty line
+                                write.write('\n')
+                            else:#text without annotation or marked '--NME--' (no matching entity)
+                                if len(line_list) == 1:
+                                    write.write(line_list[0][:-1] + '\tO\n')
                                 else:
-                                    wikiname = wikiid_wikiname_dict[row[8].strip()]
-                                    if wikiname != 'O':
-                                        write.write(row[0] + '\t' + row[4] + '-' + wikiname+'\n')
-                                    else:
-                                        write.write(row[0] + '\tO\n')
-                                        
-                            line=read.readline()
+                                    write.write(line_list[0] + '\tO\n')
+                        else:#line with annotation
+                            wikiname = wikiid_wikiname_dict[line_list[5].strip()]
+                            if wikiname != 'O':
+                                write.write(line_list[0] + '\t' + line_list[1] + '-' + wikiname+'\n')
+                            else:
+                                #if there is a bad wikiid we can check if the given url in the data exists using wikipediaapi
+                                wikiname = line_list[4].split('/')[-1]
+                                if check_existence:
+                                    page = wiki_wiki.page(wikiname)
+                                    if page.exists():
+                                        write.write(line_list[0] + '\t' + line_list[1] + '-' + wikiname+'\n')
+                                    else: #neither the wikiid nor the url exist
+                                        write.write(line_list[0] + '\tO\n')
+                                else:   
+                                    write.write(line_list[0] + '\t' + line_list[4] + '-' + wikiname+'\n')
+
                 #delete unprocessed file
                 os.remove(path)
         
@@ -4854,13 +4905,13 @@ class AIDA_CONLL_EL(EntityLinkingCorpus):
         
         #collect all wikiids
         wikiid_set = set()
-        for data_file in ['combinedENG.testa', 'combinedENG.testb', 'combinedENG.train']:
-            with open(base_folder / data_file, mode='r') as read:
+        for data_file in ['aida_conll_testa', 'aida_conll_testb', 'aida_conll_train']:
+            with open(base_folder / data_file, mode='r', encoding='utf-8') as read:
                 line = read.readline()
                 while line:
                     row = line.split('\t')
-                    if len(row)  >= 8:#line has a wiki annotation
-                        wikiid_set.add(row[8].strip()) 
+                    if len(row)  > 4:#line has a wiki annotation
+                        wikiid_set.add(row[5].strip()) 
                     line=read.readline()
                 
         #create the dictionary
@@ -4868,6 +4919,7 @@ class AIDA_CONLL_EL(EntityLinkingCorpus):
         wikiid_list = list(wikiid_set)
         ids = ''
         length = len(wikiid_list)
+        
         for i in range(length):
             if  (i + 1) % 50  == 0 or i == length-1:#there is a limit to the number of ids in one request in the wikimedia api
         
@@ -4887,7 +4939,7 @@ class AIDA_CONLL_EL(EntityLinkingCorpus):
                 for wikiid in resp['query']['pages']:
                     try:
                         wikiname = resp['query']['pages'][wikiid]['title'].replace(' ','_')      
-                    except KeyError:#wikiid does not exist
+                    except KeyError:#bad wikiid
                         wikiname = 'O'
                     wikiid_wikiname_dict[wikiid] = wikiname
                 ids = ''
@@ -4895,7 +4947,7 @@ class AIDA_CONLL_EL(EntityLinkingCorpus):
             else:
                 ids += wikiid_list[i]
                 ids+='|'
-        
+
         return wikiid_wikiname_dict
     
         
@@ -4904,13 +4956,24 @@ class IITB_EL(EntityLinkingCorpus):
             self,
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
-            ignore_disagreements: bool = False,#if set, annotations with annotator disagreement will be ignored
+            ignore_disagreements: bool = False,
             **corpusargs
     ):
+        """
+        Initialize ITTB Entity Linking corpus introduced in "Collective Annotation of Wikipedia Entities in Web Text" Sayali Kulkarni, Amit Singh, Ganesh Ramakrishnan, and Soumen Chakrabarti. 
+        If you call the constructor the first time the dataset gets automatically downloaded and transformed in tab-separated column format. 
+
+        Parameters
+        ----------
+        base_path : Union[str, Path], optional
+            Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+            to point to a different folder but typically this should not be necessary.
+        in_memory: If True, keeps dataset in memory giving speedups in training.
+        ignore_disagreements: If True annotations with annotator disagreement will be ignored.
+        """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
             
-
         # this dataset name 
         dataset_name = self.__class__.__name__.lower() 
 
@@ -5030,6 +5093,18 @@ class TWEEKI_EL(EntityLinkingCorpus):
             in_memory: bool = True,
             **corpusargs,
     ):
+        """
+        Initialize Tweeki Entity Linking corpus introduced in "Tweeki: Linking Named Entities on Twitter to a Knowledge Graph" Harandizadeh, Singh.
+        The data consits of tweets with manually annotated wikipedia links.
+        If you call the constructor the first time the dataset gets automatically downloaded and transformed in tab-separated column format. 
+
+        Parameters
+        ----------
+        base_path : Union[str, Path], optional
+            Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+            to point to a different folder but typically this should not be necessary.
+        in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
             

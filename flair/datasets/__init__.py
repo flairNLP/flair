@@ -77,7 +77,6 @@ from .sequence_labeling import AIDA_CONLL_EL
 from .sequence_labeling import IITB_EL
 from .sequence_labeling import TWEEKI_EL
 
-
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
 from .document_classification import ClassificationDataset

@@ -112,16 +112,6 @@ class Classifier(Model):
     use the same evaluation routines and compute the same numbers.
     Currently, the SequenceTagger implements this class directly, while all other classifiers in Flair
     implement the DefaultClassifier base class which implements Classifier."""
-    
-    def __init__(self,
-                 label_dictionary: Dictionary,
-                 ):
-
-        super().__init__()
-
-        # initialize the label dictionary
-        self.label_dictionary: Dictionary = label_dictionary
-
 
     def evaluate(
             self,
@@ -182,10 +172,7 @@ class Classifier(Model):
 
                     for gold_label in datapoint.get_labels(gold_label_type):
                         representation = str(sentence_id) + ': ' + gold_label.identifier
-                        if self.label_dictionary.get_idx_for_item(gold_label.value) != 0:
-                            true_values[representation] = gold_label.value
-                        else:
-                            true_values[representation] = '<unk>'
+                        true_values[representation] = gold_label.value
                         if representation not in all_spans:
                             all_spans.append(representation)
 
@@ -230,9 +217,8 @@ class Classifier(Model):
                     outfile.write("".join(lines))
 
             # make the evaluation dictionary
-            #evaluation_label_dictionary = Dictionary(add_unk=False)
-            evaluation_label_dictionary = Dictionary(add_unk=True)
-            #evaluation_label_dictionary.add_item("O")
+            evaluation_label_dictionary = Dictionary(add_unk=False)
+            evaluation_label_dictionary.add_item("O")
             for label in true_values.values():
                 evaluation_label_dictionary.add_item(label)
             for label in predictions.values():
@@ -355,7 +341,7 @@ class DefaultClassifier(Classifier):
                  loss_weights: Dict[str, float] = None,
                  ):
 
-        super().__init__(label_dictionary)
+        super().__init__()
 
         # initialize the label dictionary
         self.label_dictionary: Dictionary = label_dictionary

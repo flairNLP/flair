@@ -11,14 +11,29 @@ from flair.data import DataPoint, Dictionary, SpanLabel
 log = logging.getLogger("flair")
 
 class EntityLinker(flair.nn.DefaultClassifier):
+    """
+    Entity Linking Model
+    The model expects text/sentences with annotated entity mentions and predicts entities to these mentions.
+    To this end a word embedding is used to embed the sentences and the embedding of the entity mention goes through a linear layer to get the actual class label.
+    The model is able to predict '<unk>' for entity mentions that the model can not confidently match to any of the known labels.
+    """
     def __init__(
             self,
             word_embeddings: flair.embeddings.TokenEmbeddings,
             label_dictionary: Dictionary,
-            pooling_operation: str = 'average', #'first', 'last', 'first&tlast'
+            pooling_operation: str = 'average', 
             label_type: str = 'nel',
             **classifierargs,            
     ):
+        """
+        Initializes an EntityLinker
+        :param word_embeddings: embeddings used to embed the words/sentences
+        :param label_dictionary: dictionary that gives ids to all classes. Should contain <unk>
+        :param pooling_operation: either 'average', 'first', 'last' or 'first&last'. Specifies the way of how text representations of entity mentions (with more than one word) are handled. 
+        E.g. 'average' means that as text representation we take the average of the embeddings of the words in the mention. 'first&last' concatenates
+        the embedding of the first and the embedding of the last word. 
+        :param label_type: name of the label you use.
+        """
                
         super(EntityLinker, self).__init__(label_dictionary, **classifierargs)
         
@@ -79,7 +94,7 @@ class EntityLinker(flair.nn.DefaultClassifier):
                 filtered_sentences.append(sentence)
                 
         #embedd all tokens
-        self.word_embeddings.embed(filtered_sentences)
+        self.word_embeddings.embed(sentences)
         
         embedding_names = self.word_embeddings.get_names()
         
@@ -90,6 +105,7 @@ class EntityLinker(flair.nn.DefaultClassifier):
         #get the embeddings of the entity mentions
         for sentence in filtered_sentences:
             spans = sentence.get_spans(self.label_type)
+
             for span in spans:
                 mention_emb = torch.Tensor(0,self.word_embeddings.embedding_length).to(flair.device)
                 
@@ -99,7 +115,6 @@ class EntityLinker(flair.nn.DefaultClassifier):
                 embedding_list.append(self.aggregated_embedding(mention_emb).unsqueeze(0))
                 
                 span_labels.append([label.value for label in span.get_labels(typename=self.label_type)])
-                #print(span_labels)
                 
                 if return_label_candidates:
                     sentences_to_spans.append(sentence)
@@ -148,4 +163,3 @@ class EntityLinker(flair.nn.DefaultClassifier):
     @property
     def label_type(self):
         return self._label_type
-
