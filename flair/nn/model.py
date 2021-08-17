@@ -502,6 +502,7 @@ class DefaultClassifier(Classifier):
                                 if label_score > label_threshold or multi_class_prob:
                                     label.set_value(value=label_value, score=label_score)
                                     sentence.add_complex_label(label_name, copy.deepcopy(label))
+
                     else:
                         softmax = torch.nn.functional.softmax(scores, dim=-1)
                         conf, idx = torch.max(softmax, dim=-1)
@@ -553,7 +554,6 @@ class DefaultClassifier(Classifier):
             label_score = conf.item()
             if label_score > label_threshold:
                 labels.append(Label(label_value, label_score))
-
         return labels
 
     def _get_single_label(self, label_scores) -> List[Label]:
