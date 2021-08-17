@@ -47,10 +47,11 @@ class ViterbiLoss(torch.nn.Module):
         scores_at_targets = pack_padded_sequence(scores_at_targets, lengths, batch_first=True)[0]
         gold_score = scores_at_targets.sum()
 
-        scores_upto_t = torch.zeros(batch_size, self.tagset_size).to(flair.device)
+        scores_upto_t = torch.zeros(batch_size, self.tagset_size, device=flair.device)
 
         for t in range(max(lengths)):
             batch_size_t = sum([l > t for l in lengths])  # since batch is ordered, we can save computation time by reducing our effective batch_size
+
             if t == 0:
                 # Initially, get scores from <start> tag to all other tags
                 scores_upto_t[:batch_size_t] = features[:batch_size_t, t, self.start_tag, :]

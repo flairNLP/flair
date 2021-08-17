@@ -1,5 +1,7 @@
-import flair
 import torch
+
+import flair
+
 
 class CRF(torch.nn.Module):
     """
