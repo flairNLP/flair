@@ -526,51 +526,6 @@ class DefaultClassifier(Classifier):
 
         return label_threshold
 
-    def _obtain_labels(
-            self, scores: List[List[float]], predict_prob: bool = False
-    ) -> List[List[Label]]:
-        """
-        Predicts the labels of sentences.
-        :param scores: the prediction scores from the model
-        :return: list of predicted labels
-        """
-        if self.multi_label:
-            return [self._get_multi_label(s) for s in scores]
-
-        elif predict_prob:
-            return [self._predict_label_prob(s) for s in scores]
-
-        return [self._get_single_label(s) for s in scores]
-
-    def _get_multi_label(self, label_scores) -> List[Label]:
-        labels = []
-
-        sigmoid = torch.nn.Sigmoid()
-
-        results = list(map(lambda x: sigmoid(x), label_scores))
-        for idx, conf in enumerate(results):
-            label_value = self.label_dictionary.get_item_for_index(idx)
-            label_threshold = self._get_label_threshold(label_value)
-            label_score = conf.item()
-            if label_score > label_threshold:
-                labels.append(Label(label_value, label_score))
-        return labels
-
-    def _get_single_label(self, label_scores) -> List[Label]:
-        softmax = torch.nn.functional.softmax(label_scores, dim=0)
-        conf, idx = torch.max(softmax, 0)
-        label = self.label_dictionary.get_item_for_index(idx.item())
-
-        return [Label(label, conf.item())]
-
-    def _predict_label_prob(self, label_scores) -> List[Label]:
-        softmax = torch.nn.functional.softmax(label_scores, dim=0)
-        label_probs = []
-        for idx, conf in enumerate(softmax):
-            label = self.label_dictionary.get_item_for_index(idx)
-            label_probs.append(Label(label, conf.item()))
-        return label_probs
-
     def __str__(self):
         return super(flair.nn.Model, self).__str__().rstrip(')') + \
                f'  (weights): {self.weight_dict}\n' + \
