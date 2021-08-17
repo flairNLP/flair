@@ -502,7 +502,6 @@ class DefaultClassifier(Classifier):
                                 if label_score > label_threshold or multi_class_prob:
                                     label.set_value(value=label_value, score=label_score)
                                     sentence.add_complex_label(label_name, copy.deepcopy(label))
-                            s_idx += 1
 
                     else:
                         softmax = torch.nn.functional.softmax(scores, dim=-1)
