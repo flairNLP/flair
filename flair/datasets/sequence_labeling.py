@@ -4574,9 +4574,10 @@ class AQUAINT_EL(EntityLinkingCorpus):
                             # skip empty strings
                             if not string: continue
 
-                            # process the annotation format in the text and collect wiki-page names
+                            # process the annotation format in the text and collect triples (begin_mention, length_mention, wikiname)
+                            indices = []
+                            lengths = []
                             wikinames = []
-                            number_of_tokens = []  # number of tokens corresponding to one entity mention
 
                             current_entity = string.find('[[')  # each annotation starts with '[['
                             while current_entity != -1:
@@ -4605,37 +4606,59 @@ class AQUAINT_EL(EntityLinkingCorpus):
                                             current_entity = string.find('[[')
                                             continue
 
-                                # replace [[wikiname|surface_form|score]] by aaasurface_form and save wikiname and
-                                # (tokenized) length in list
+                                # replace [[wikiname|surface_form|score]] by surface_form and save index, length and wikiname of mention
+                                indices.append(current_entity)
+                                lengths.append(len(surface_form))
                                 wikinames.append(wikiname[0].upper() + wikiname.replace(' ', '_')[1:])
-                                number_of_tokens.append(len(sentence_splitter.tokenizer.tokenize(surface_form)))
-                                string = string[:current_entity] + 'aaa' + surface_form + string[
-                                                                                          j + 2:]  # TODO: Change to (begin, end, entity) logic
-
+                                
+                                string = string[:current_entity] + surface_form + string[j+2:]
+                                
                                 current_entity = string.find('[[')
-
-                            # write to out-file in column format
 
                             # sentence splitting and tokenization
                             sentences = sentence_splitter.split(string)
+                            sentence_offsets = [sentence.start_pos for sentence in sentences]
 
-                            entity_index = 0
-                            for sen in sentences:
-                                i = 0
-                                while i < len(sen):
-                                    if sen[i].text.startswith("aaa"):  # begin of entity mention
-
-                                        txt_out.write(sen[i].text[3:] + '\tB-' + wikinames[entity_index] + '\n')
-
-                                        for j in range(i + 1, i + number_of_tokens[entity_index]):
-                                            txt_out.write(sen[j].text + '\tI-' + wikinames[entity_index] + '\n')
-
-                                        i += number_of_tokens[entity_index]
-                                        entity_index += 1
+                             # iterate through all annotations and add to corresponding tokens
+                            for mention_start, mention_length, wikiname in zip(indices, lengths, wikinames):
+    
+                                # find sentence to which annotation belongs
+                                sentence_index = 0
+                                for i in range(1, len(sentences)):
+                                    if mention_start < sentence_offsets[i]:
+                                        break
                                     else:
-                                        txt_out.write(sen[i].text + '\tO\n')
-                                        i += 1
-                                txt_out.write('\n')  # empty line after sentence
+                                        sentence_index += 1
+
+                                # position within corresponding sentence
+                                mention_start -= sentence_offsets[sentence_index]
+                                mention_end = mention_start + mention_length
+
+                                # set annotation for tokens of entity mention
+                                first = True
+                                for token in sentences[sentence_index].tokens:
+                                    if token.start_pos >= mention_start and token.end_pos <= mention_end:  # token belongs to entity mention
+                                        if first:
+                                            token.set_label(typename='nel', value='B-' + wikiname)
+                                            first = False
+                                        else:
+                                            token.set_label(typename='nel', value='I-' + wikiname)
+                                        
+                            # write to out-file in column format                
+                            for sentence in sentences:
+
+                                for token in sentence.tokens:
+    
+                                    labels = token.get_labels('nel')
+    
+                                    if len(labels) == 0:  # no entity
+                                        txt_out.write(token.text + '\tO\n')
+    
+                                    else:  # annotation 
+                                        txt_out.write(token.text + '\t' + labels[0].value + '\n')
+      
+                                txt_out.write('\n') # empty line after each sentence
+
             except:
                 # in case something goes wrong, delete the dataset and raise error
                 os.remove(parsed_dataset)
