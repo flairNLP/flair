@@ -1,0 +1,12 @@
+__label__pizza this is pizza
+__label__Berlin this is Berlin
+__label__Berlin __label__pizza this is Berlin and pizza
+__label__pizza here is pizza
+__label__Berlin here is Berlin
+__label__Berlin __label__pizza here is Berlin and pizza
+__label__pizza I like pizza
+__label__Berlin I like Berlin
+__label__Berlin __label__pizza I like Berlin and pizza
+__label__pizza we like pizza
+__label__Berlin we like Berlin
+__label__Berlin __label__pizza we like Berlin and pizza
