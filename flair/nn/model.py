@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 import flair
 from flair import file_utils
-from flair.data import DataPoint, Sentence, Dictionary, SpanLabel, Label
+from flair.data import DataPoint, Sentence, Dictionary, SpanLabel
 from flair.datasets import DataLoader, SentenceDataset
 from flair.training_utils import Result, store_embeddings
 
@@ -317,8 +317,9 @@ class Classifier(Model):
 
         else:
             # issue error and default all evaluation numbers to 0.
-            log.error("ACHTUNG! No gold labels and no all_predicted_values found! Could be an error in your corpus or how you "
-                      "initialize the trainer!")
+            log.error(
+                "ACHTUNG! No gold labels and no all_predicted_values found! Could be an error in your corpus or how you "
+                "initialize the trainer!")
             accuracy_score = precision_score = recall_score = micro_f_score = macro_f_score = main_score = 0.
             classification_report = ""
             classification_report_dict = {}
@@ -410,7 +411,7 @@ class DefaultClassifier(Classifier):
     def multi_label_threshold(self):
         return self._multi_label_threshold
 
-    @multi_label_threshold.setter  
+    @multi_label_threshold.setter
     def multi_label_threshold(self, x):  # setter method
         if type(x) is dict:
             if 'default' in x:
@@ -419,7 +420,7 @@ class DefaultClassifier(Classifier):
                 raise Exception('multi_label_threshold dict should have a "default" key')
         else:
             self._multi_label_threshold = {'default': x}
-        
+
     def forward_loss(self, sentences: Union[List[DataPoint], DataPoint]) -> torch.tensor:
         scores, labels = self.forward_pass(sentences)
         return self._calculate_loss(scores, labels)
@@ -439,12 +440,11 @@ class DefaultClassifier(Classifier):
 
         return self.loss_function(scores, labels), len(labels)
 
-
     def predict(
             self,
             sentences: Union[List[Sentence], Sentence],
             mini_batch_size: int = 32,
-            multi_class_prob: bool = False,
+            return_probabilities_for_all_classes: bool = False,
             verbose: bool = False,
             label_name: Optional[str] = None,
             return_loss=False,
@@ -454,7 +454,7 @@ class DefaultClassifier(Classifier):
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
         :param sentences: list of sentences
         :param mini_batch_size: mini batch size to use
-        :param multi_class_prob : return probability for all class for multiclass
+        :param return_probabilities_for_all_classes : return probabilities for all classes instead of only best predicted
         :param verbose: set to True to display a progress bar
         :param return_loss: set to True to return loss
         :param label_name: set this to change the name of the label type that is predicted
@@ -514,8 +514,7 @@ class DefaultClassifier(Classifier):
 
                 # if anything could possibly be predicted
                 if len(label_candidates) > 0:
-
-                    if self.multi_label or multi_class_prob:
+                    if self.multi_label:
                         sigmoided = torch.sigmoid(scores)  # size: (n_sentences, n_classes)
                         n_labels = sigmoided.size(1)
                         for s_idx, (sentence, label) in enumerate(zip(sentences, label_candidates)):
@@ -524,20 +523,23 @@ class DefaultClassifier(Classifier):
                                 if label_value == 'O': continue
                                 label_threshold = self._get_label_threshold(label_value)
                                 label_score = sigmoided[s_idx, l_idx].item()
-                                if label_score > label_threshold or multi_class_prob:
+                                if label_score > label_threshold or return_probabilities_for_all_classes:
                                     label.set_value(value=label_value, score=label_score)
                                     sentence.add_complex_label(label_name, copy.deepcopy(label))
-
                     else:
                         softmax = torch.nn.functional.softmax(scores, dim=-1)
-                        conf, idx = torch.max(softmax, dim=-1)
-
-                        for sentence, label, c, i in zip(sentences, label_candidates, conf, idx):
-                            label_value = self.label_dictionary.get_item_for_index(i.item())
-                            if label_value == 'O': continue
-                            label.set_value(value=label_value, score=c.item())
-
-                            sentence.add_complex_label(label_name, label)
+                        n_labels = softmax.size(1)
+                        for s_idx, (sentence, label) in enumerate(zip(sentences, label_candidates)):
+                            idx = torch.argmax(softmax[s_idx])
+                            for l_idx in range(n_labels):
+                                if not return_probabilities_for_all_classes and l_idx != idx:
+                                    continue
+                                else:
+                                    label_value = self.label_dictionary.get_item_for_index(l_idx)
+                                    if label_value == 'O': continue
+                                    label_score = softmax[s_idx, l_idx].item()
+                                    label.set_value(value=label_value, score=label_score)
+                                    sentence.add_complex_label(label_name, copy.deepcopy(label))
 
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
