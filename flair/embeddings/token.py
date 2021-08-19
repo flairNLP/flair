@@ -1330,6 +1330,7 @@ class TransformerWordEmbeddings_Fast(TransformerWordEmbeddings):
         # if sentence is too long, will be split into multiple parts
         subtokenized_sentences = []
         all_token_subtoken_lengths = []
+        sentence_parts_lengths = []
 
         for sentence in sentences:
 
@@ -1359,12 +1360,18 @@ class TransformerWordEmbeddings_Fast(TransformerWordEmbeddings):
                                                         return_overflowing_tokens=self.allow_long_sentences,
                                                         truncation=self.truncate,
                                                         )
+
+            n_parts: int = 0
+
             if self.allow_long_sentences:
                 # overlong sentences are handled as multiple splits
                 for encoded_input in encoded_inputs['input_ids']:
                     subtokenized_sentences.append(torch.tensor(encoded_input, dtype=torch.long))
+                    n_parts += 1
             else:
                 subtokenized_sentences.append(torch.tensor(encoded_inputs['input_ids'], dtype=torch.long))
+                n_parts += 1
+            sentence_parts_lengths.append(n_parts)
 
         print(subtokenized_sentences)
 
@@ -1388,6 +1395,10 @@ class TransformerWordEmbeddings_Fast(TransformerWordEmbeddings):
             input_ids[s_id][:sequence_length] = sentence
             mask[s_id][:sequence_length] = torch.ones(sequence_length)
 
+        print(input_ids.size())
+        print(mask)
+        # asd
+
         # put encoded batch through transformer model to get all hidden states of all encoder layers
         hidden_states = self.model(input_ids, attention_mask=mask)[-1]
         # make the tuple a tensor; makes working with it easier.
@@ -1402,7 +1413,7 @@ class TransformerWordEmbeddings_Fast(TransformerWordEmbeddings):
 
             # iterate over all subtokenized sentences
             for sentence_idx, (sentence, subtoken_lengths, nr_sentence_parts) in enumerate(
-                    zip(sentences, subtokenized_sentences_token_lengths, sentence_parts_lengths)):
+                    zip(sentences, all_token_subtoken_lengths, sentence_parts_lengths)):
 
                 sentence_hidden_state = hidden_states[:, sentence_idx + sentence_idx_offset, ...]
 
@@ -1452,8 +1463,8 @@ class TransformerWordEmbeddings_Fast(TransformerWordEmbeddings):
 
                         subtoken_embeddings.append(final_embedding)
 
-                    # use scalar mix of embeddings if so selected
-                    if self.use_scalar_mix:
+                    # use layer mean of embeddings if so selected
+                    if self.layer_mean and len(self.layer_indexes) > 1:
                         sm_embeddings = torch.mean(torch.stack(subtoken_embeddings, dim=1), dim=1)
                         subtoken_embeddings = [sm_embeddings]
 
