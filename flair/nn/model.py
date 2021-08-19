@@ -514,8 +514,7 @@ class DefaultClassifier(Classifier):
 
                 # if anything could possibly be predicted
                 if len(label_candidates) > 0:
-
-                    if self.multi_label or multi_class_prob:
+                    if self.multi_label:
                         sigmoided = torch.sigmoid(scores)  # size: (n_sentences, n_classes)
                         n_labels = sigmoided.size(1)
                         for s_idx, (sentence, label) in enumerate(zip(sentences, label_candidates)):
@@ -524,20 +523,23 @@ class DefaultClassifier(Classifier):
                                 if label_value == 'O': continue
                                 label_threshold = self._get_label_threshold(label_value)
                                 label_score = sigmoided[s_idx, l_idx].item()
-                                if label_score > label_threshold or multi_class_prob:
+                                if label_score > label_threshold:
                                     label.set_value(value=label_value, score=label_score)
                                     sentence.add_complex_label(label_name, copy.deepcopy(label))
-
                     else:
                         softmax = torch.nn.functional.softmax(scores, dim=-1)
-                        conf, idx = torch.max(softmax, dim=-1)
-
-                        for sentence, label, c, i in zip(sentences, label_candidates, conf, idx):
-                            label_value = self.label_dictionary.get_item_for_index(i.item())
-                            if label_value == 'O': continue
-                            label.set_value(value=label_value, score=c.item())
-
-                            sentence.add_complex_label(label_name, label)
+                        n_labels = softmax.size(1)
+                        for s_idx, (sentence, label) in enumerate(zip(sentences, label_candidates)):
+                            idx = torch.argmax(softmax[s_idx])
+                            for l_idx in range(n_labels):
+                                if not multi_class_prob and l_idx != idx:
+                                    continue
+                                else:
+                                    label_value = self.label_dictionary.get_item_for_index(l_idx)
+                                    if label_value == 'O': continue
+                                    label_score = softmax[s_idx, l_idx].item()
+                                    label.set_value(value=label_value, score=label_score)
+                                    sentence.add_complex_label(label_name, copy.deepcopy(label))
 
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
