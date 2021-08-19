@@ -1346,12 +1346,12 @@ class TransformerWordEmbeddings_Fast(TransformerWordEmbeddings):
                     token.set_embedding(self.name, torch.zeros(self.embedding_length))
                 return
 
-            print(sentence)
-            print(subtokenized_sentence)
+            # print(sentence)
+            # print(subtokenized_sentence)
             # determine into how many subtokens each token is split
             token_subtoken_lengths = self.reconstruct_tokens_from_subtokens(sentence, subtokenized_sentence)
             all_token_subtoken_lengths.append(token_subtoken_lengths)
-            print(token_subtoken_lengths)
+            # print(token_subtoken_lengths)
 
             # encode inputs
             encoded_inputs = self.tokenizer.encode_plus(tokenized_string,
@@ -1373,7 +1373,7 @@ class TransformerWordEmbeddings_Fast(TransformerWordEmbeddings):
                 n_parts += 1
             sentence_parts_lengths.append(n_parts)
 
-        print(subtokenized_sentences)
+        # print(subtokenized_sentences)
 
         # find longest sentence in batch
         longest_sequence_in_batch: int = len(max(subtokenized_sentences, key=len))
@@ -1395,8 +1395,8 @@ class TransformerWordEmbeddings_Fast(TransformerWordEmbeddings):
             input_ids[s_id][:sequence_length] = sentence
             mask[s_id][:sequence_length] = torch.ones(sequence_length)
 
-        print(input_ids.size())
-        print(mask)
+        # print(input_ids.size())
+        # print(mask)
         # asd
 
         # put encoded batch through transformer model to get all hidden states of all encoder layers
