@@ -1068,7 +1068,7 @@ class MultiTagger:
             tagger.predict(
                 sentences=sentences,
                 mini_batch_size=mini_batch_size,
-                all_tag_prob=all_tag_prob,
+                # all_tag_prob=all_tag_prob,
                 verbose=verbose,
                 label_name=name,
                 return_loss=return_loss,
