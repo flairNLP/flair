@@ -130,7 +130,7 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
 
     sentence = Sentence("Berlin is a really nice city.")
 
-    model.predict(sentence, multi_class_prob=True)
+    model.predict(sentence, return_probabilities_for_all_classes=True)
 
     assert len(sentence.labels) > 1
 
