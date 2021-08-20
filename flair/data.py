@@ -161,6 +161,9 @@ class Label:
         self.value = value
         self.score = score
 
+    def spawn(self, value: str, score: float = 1.0):
+        return Label(value, score)
+
     @property
     def value(self):
         return self._value
@@ -204,6 +207,9 @@ class SpanLabel(Label):
         super().__init__(value, score)
         self.span = span
 
+    def spawn(self, value: str, score: float = 1.0):
+        return SpanLabel(self.span, value, score)
+
     def __str__(self):
         return f"{self._value} [{self.span.id_text}] ({round(self._score, 4)})"
 
@@ -226,6 +232,9 @@ class RelationLabel(Label):
         super().__init__(value, score)
         self.head = head
         self.tail = tail
+
+    def spawn(self, value: str, score: float = 1.0):
+        return RelationLabel(self.head, self.tail, value, score)
 
     def __str__(self):
         return f"{self._value} [{self.head.id_text} -> {self.tail.id_text}] ({round(self._score, 4)})"
@@ -685,8 +694,6 @@ class Sentence(DataPoint):
 
         # some sentences represent a document boundary (but most do not)
         self.is_document_boundary: bool = False
-
-        self.relations: List[Relation] = []
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
