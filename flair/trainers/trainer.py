@@ -123,6 +123,7 @@ class ModelTrainer:
             save_best_checkpoints=False,
             use_swa: bool = False,
             use_final_model_for_eval: bool = False,
+            use_label_dict_for_unknown_labels = False,
             **kwargs,
     ) -> dict:
         """
@@ -315,6 +316,11 @@ class ModelTrainer:
             # set dataset to sample from
             sampler.set_dataset(train_data)
             shuffle = False
+            
+        if use_label_dict_for_unknown_labels == True:
+            unknown_label_dict = self.corpus.ent_dictionary
+        else:
+            unknown_label_dict = None
 
         dev_score_history = []
         dev_loss_history = []
@@ -489,7 +495,8 @@ class ModelTrainer:
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_evaluation_metric=main_evaluation_metric
+                        main_evaluation_metric=main_evaluation_metric,
+                        dictionary_for_unknown_labels = unknown_label_dict
                     )
                     result_line += f"\t{train_eval_result.log_line}"
 
@@ -503,7 +510,8 @@ class ModelTrainer:
                         mini_batch_size=mini_batch_chunk_size,
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_evaluation_metric=main_evaluation_metric
+                        main_evaluation_metric=main_evaluation_metric,
+                        dictionary_for_unknown_labels = unknown_label_dict
                     )
                     result_line += (
                         f"\t{train_part_loss}\t{train_part_eval_result.log_line}"
@@ -526,7 +534,8 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / "dev.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_evaluation_metric=main_evaluation_metric
+                        main_evaluation_metric=main_evaluation_metric,
+                        dictionary_for_unknown_labels = unknown_label_dict
                     )
                     result_line += f"\t{dev_eval_result.loss}\t{dev_eval_result.log_line}"
                     log.info(
@@ -561,7 +570,8 @@ class ModelTrainer:
                         num_workers=num_workers,
                         out_path=base_path / "test.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
-                        main_evaluation_metric=main_evaluation_metric
+                        main_evaluation_metric=main_evaluation_metric,
+                        dictionary_for_unknown_labels = unknown_label_dict
                     )
                     result_line += f"\t{test_eval_result.loss}\t{test_eval_result.log_line}"
                     log.info(

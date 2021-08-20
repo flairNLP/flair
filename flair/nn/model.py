@@ -124,6 +124,7 @@ class Classifier(Model):
             num_workers: int = 8,
             main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
             exclude_labels: List[str] = [],
+            dictionary_for_unknown_labels = None
     ) -> Result:
         import numpy as np
         import sklearn
@@ -173,11 +174,15 @@ class Classifier(Model):
 
                     for gold_label in datapoint.get_labels(gold_label_type):
                         representation = str(sentence_id) + ': ' + gold_label.identifier
+                        
+                        value = gold_label.value
+                        if dictionary_for_unknown_labels and dictionary_for_unknown_labels.get_idx_for_item(value) == 0:
+                            value = '<unk>'
 
                         if representation not in all_true_values:
-                            all_true_values[representation] = [gold_label.value]
+                            all_true_values[representation] = [value]
                         else:
-                            all_true_values[representation].append(gold_label.value)
+                            all_true_values[representation].append(value)
 
                         if representation not in all_spans:
                             all_spans.append(representation)
