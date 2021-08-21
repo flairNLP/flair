@@ -926,6 +926,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
         batch_size = len(sentences)
+        print(sentences)
 
         # if we also use context, first expand sentence to include context
         if self.context_length > 0:
@@ -948,6 +949,10 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 sentence = expanded_sentence
 
             sentences = expanded_sentences
+
+        print(sentences)
+        print(original_sentences)
+        print(context_offsets)
 
         # if sentence is too long, will be split into multiple parts
         subtokenized_sentences = []
@@ -1086,6 +1091,19 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
                     subword_start_idx += number_of_subtokens
 
+        # move embeddings from context back to original sentence (if using context)
+        if self.context_length > 0:
+            for original_sentence, expanded_sentence, context_offset in zip(original_sentences,
+                                                                            sentences,
+                                                                            context_offsets):
+                print(original_sentence)
+                print(expanded_sentence)
+                print(context_offset)
+                for token_idx, token in enumerate(original_sentence):
+                    print(token_idx)
+                    token.set_embedding(self.name, expanded_sentence[token_idx + context_offset].get_embedding(self.name))
+                sentence = original_sentence
+
     def _expand_sentence_with_context(self, sentence):
 
         # remember original sentence
@@ -1128,13 +1146,18 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                     break
             original_sentence.right_context = right_context
 
+        left_context_split = left_context.split(" ")
+        right_context_split = right_context.split(" ")
+        # if left_context_split == [""]: left_context_split = []
+        # if right_context_split == [""]: right_context_split = []
+
         # make expanded sentence
         expanded_sentence = Sentence()
-        expanded_sentence.tokens = [Token(token) for token in left_context.split(" ") +
+        expanded_sentence.tokens = [Token(token) for token in left_context_split +
                                     original_sentence.to_tokenized_string().split(" ") +
-                                    right_context.split(" ")]
+                                    right_context_split]
 
-        context_length = len(left_context.split(" "))
+        context_length = len(left_context_split)
         return expanded_sentence, context_length
 
     def reconstruct_tokens_from_subtokens(self, sentence, subtokens):

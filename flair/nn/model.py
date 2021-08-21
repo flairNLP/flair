@@ -151,6 +151,8 @@ class Classifier(Model):
             sentence_id = 0
             for batch in data_loader:
 
+                print(batch)
+
                 # remove any previously predicted labels
                 for datapoint in batch:
                     datapoint.remove_labels('predicted')
