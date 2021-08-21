@@ -528,18 +528,23 @@ class DefaultClassifier(Classifier):
                                     sentence.add_complex_label(label_name, label)
                     else:
                         softmax = torch.nn.functional.softmax(scores, dim=-1)
-                        n_labels = softmax.size(1)
-                        for s_idx, (sentence, label_candidate) in enumerate(zip(sentences, label_candidates)):
-                            idx = torch.argmax(softmax[s_idx])
-                            for l_idx in range(n_labels):
-                                if not return_probabilities_for_all_classes and l_idx != idx:
-                                    continue
-                                else:
+
+                        if return_probabilities_for_all_classes:
+                            n_labels = softmax.size(1)
+                            for s_idx, (sentence, label_candidate) in enumerate(zip(sentences, label_candidates)):
+                                for l_idx in range(n_labels):
                                     label_value = self.label_dictionary.get_item_for_index(l_idx)
                                     if label_value == 'O': continue
                                     label_score = softmax[s_idx, l_idx].item()
                                     label = label_candidate.spawn(value=label_value, score=label_score)
                                     sentence.add_complex_label(label_name, label)
+                        else:
+                            conf, idx = torch.max(softmax, dim=-1)
+                            for sentence, label_candidate, c, i in zip(sentences, label_candidates, conf, idx):
+                                label_value = self.label_dictionary.get_item_for_index(i.item())
+                                if label_value == 'O': continue
+                                label = label_candidate.spawn(value=label_value, score=c.item())
+                                sentence.add_complex_label(label_name, label)
 
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
