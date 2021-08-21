@@ -130,7 +130,7 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
 
     sentence = Sentence("Berlin is a really nice city.")
 
-    model.predict(sentence, multi_class_prob=True)
+    model.predict(sentence, return_probabilities_for_all_classes=True)
 
     assert len(sentence.labels) > 1
 
@@ -145,9 +145,9 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
     sentence = Sentence("I love Berlin")
     sentence_empty = Sentence("       ")
 
-    loaded_model.predict(sentence, multi_class_prob=True)
-    loaded_model.predict([sentence, sentence_empty], multi_class_prob=True)
-    loaded_model.predict([sentence_empty], multi_class_prob=True)
+    loaded_model.predict(sentence, return_probabilities_for_all_classes=True)
+    loaded_model.predict([sentence, sentence_empty], return_probabilities_for_all_classes=True)
+    loaded_model.predict([sentence_empty], return_probabilities_for_all_classes=True)
 
     # clean up results directory
     shutil.rmtree(results_base_path)
