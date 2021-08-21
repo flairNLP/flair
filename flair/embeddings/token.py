@@ -1149,8 +1149,10 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         left_context_split = left_context.split(" ")
         right_context_split = right_context.split(" ")
-        # if left_context_split == [""]: left_context_split = []
-        # if right_context_split == [""]: right_context_split = []
+
+        # empty contexts should not introduce whitespace tokens
+        if left_context_split == [""]: left_context_split = []
+        if right_context_split == [""]: right_context_split = []
 
         # make expanded sentence
         expanded_sentence = Sentence()
