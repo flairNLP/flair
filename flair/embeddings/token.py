@@ -1100,9 +1100,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             for original_sentence, expanded_sentence, context_offset in zip(original_sentences,
                                                                             sentences,
                                                                             context_offsets):
-                print(original_sentence)
-                print(expanded_sentence)
-                print(context_offset)
                 for token_idx, token in enumerate(original_sentence):
                     print(token_idx)
                     token.set_embedding(self.name, expanded_sentence[token_idx + context_offset].get_embedding(self.name))
