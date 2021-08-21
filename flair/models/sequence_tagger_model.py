@@ -327,15 +327,6 @@ class SequenceTagger(flair.nn.Classifier):
             if isinstance(sentences, Sentence):
                 sentences = [sentences]
 
-            # set context if not set already
-            previous_sentence = None
-            for sentence in sentences:
-                if sentence.is_context_set(): continue
-                sentence._previous_sentence = previous_sentence
-                sentence._next_sentence = None
-                if previous_sentence: previous_sentence._next_sentence = sentence
-                previous_sentence = sentence
-
             # reverse sort all sequences by their length
             rev_order_len_index = sorted(
                 range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True

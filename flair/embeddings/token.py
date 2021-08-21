@@ -859,10 +859,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         # if using context, can we cross document boundaries?
         self.respect_document_boundaries = respect_document_boundaries
 
-        # when initializing, embeddings are in eval mode by default
-        self.model.eval()
-        self.model.to(flair.device)
-
         # embedding parameters
         if layers == 'all':
             # send mini-token through to check how many layers the model has
@@ -896,6 +892,10 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         # most models have an intial BOS token, except for XLNet, T5 and GPT2
         self.begin_offset = self._get_begin_offset_of_tokenizer(tokenizer=self.tokenizer)
 
+        # when initializing, embeddings are in eval mode by default
+        self.eval()
+        self.to(flair.device)
+
     @staticmethod
     def _get_begin_offset_of_tokenizer(tokenizer: PreTrainedTokenizer) -> int:
         test_string = 'a'
@@ -926,10 +926,18 @@ class TransformerWordEmbeddings(TokenEmbeddings):
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
         batch_size = len(sentences)
-        print(sentences)
 
         # if we also use context, first expand sentence to include context
         if self.context_length > 0:
+
+            # set context if not set already
+            previous_sentence = None
+            for sentence in sentences:
+                if sentence.is_context_set(): continue
+                sentence._previous_sentence = previous_sentence
+                sentence._next_sentence = None
+                if previous_sentence: previous_sentence._next_sentence = sentence
+                previous_sentence = sentence
 
             original_sentences = []
             expanded_sentences = []
@@ -949,10 +957,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 sentence = expanded_sentence
 
             sentences = expanded_sentences
-
-        print(sentences)
-        print(original_sentences)
-        print(context_offsets)
 
         # if sentence is too long, will be split into multiple parts
         subtokenized_sentences = []
@@ -1144,6 +1148,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 if len(right_context.split(" ")) > self.context_length:
                     right_context = " ".join(right_context.split(" ")[:self.context_length])
                     break
+
             original_sentence.right_context = right_context
 
         left_context_split = left_context.split(" ")
