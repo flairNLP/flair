@@ -859,6 +859,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         # if using context, can we cross document boundaries?
         self.respect_document_boundaries = respect_document_boundaries
 
+        # send self to flair-device
+        self.to(flair.device)
+
         # embedding parameters
         if layers == 'all':
             # send mini-token through to check how many layers the model has
@@ -894,7 +897,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # when initializing, embeddings are in eval mode by default
         self.eval()
-        self.to(flair.device)
 
     @staticmethod
     def _get_begin_offset_of_tokenizer(tokenizer: PreTrainedTokenizer) -> int:
