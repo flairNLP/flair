@@ -2,7 +2,8 @@ import shutil
 
 import torch.optim.optimizer
 
-import flair, pytest
+import flair
+import pytest
 from flair.data import Sentence, Corpus
 from flair.datasets import ColumnCorpus, ClassificationCorpus
 from flair.embeddings import WordEmbeddings, FlairEmbeddings, StackedEmbeddings, DocumentPoolEmbeddings, \
@@ -338,7 +339,6 @@ def test_text_classifier_transformer_finetune(results_base_path, tasks_base_path
 
 @pytest.mark.integration
 def test_text_classifier_multi(results_base_path, tasks_base_path):
-
     flair.set_seed(123)
 
     corpus = ClassificationCorpus(tasks_base_path / "trivial" / "trivial_text_classification_multi",

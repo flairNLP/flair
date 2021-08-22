@@ -859,6 +859,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         # if using context, can we cross document boundaries?
         self.respect_document_boundaries = respect_document_boundaries
 
+        # send self to flair-device
+        self.to(flair.device)
+
         # embedding parameters
         if layers == 'all':
             # send mini-token through to check how many layers the model has
@@ -894,7 +897,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # when initializing, embeddings are in eval mode by default
         self.eval()
-        self.to(flair.device)
 
     @staticmethod
     def _get_begin_offset_of_tokenizer(tokenizer: PreTrainedTokenizer) -> int:
@@ -925,7 +927,11 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
-        batch_size = len(sentences)
+        # we require encoded subtokenized sentences, the mapping to original tokens and the number of
+        # parts that each sentence produces
+        subtokenized_sentences = []
+        all_token_subtoken_lengths = []
+        sentence_parts_lengths = []
 
         # if we also use context, first expand sentence to include context
         if self.context_length > 0:
@@ -958,11 +964,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
             sentences = expanded_sentences
 
-        # if sentence is too long, will be split into multiple parts
-        subtokenized_sentences = []
-        all_token_subtoken_lengths = []
-        sentence_parts_lengths = []
-
         for sentence in sentences:
 
             # subtokenize the sentence
@@ -991,14 +992,17 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
             n_parts: int = 0
 
+            subtokenized_sentence_splits = []
             if self.allow_long_sentences:
                 # overlong sentences are handled as multiple splits
                 for encoded_input in encoded_inputs['input_ids']:
-                    subtokenized_sentences.append(torch.tensor(encoded_input, dtype=torch.long))
+                    subtokenized_sentence_splits.append(torch.tensor(encoded_input, dtype=torch.long))
                     n_parts += 1
             else:
-                subtokenized_sentences.append(torch.tensor(encoded_inputs['input_ids'], dtype=torch.long))
+                subtokenized_sentence_splits.append(torch.tensor(encoded_inputs['input_ids'], dtype=torch.long))
                 n_parts += 1
+
+            subtokenized_sentences.extend(subtokenized_sentence_splits)
             sentence_parts_lengths.append(n_parts)
 
         # find longest sentence in batch
@@ -1101,7 +1105,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                                                                             sentences,
                                                                             context_offsets):
                 for token_idx, token in enumerate(original_sentence):
-                    token.set_embedding(self.name, expanded_sentence[token_idx + context_offset].get_embedding(self.name))
+                    token.set_embedding(self.name,
+                                        expanded_sentence[token_idx + context_offset].get_embedding(self.name))
                 sentence = original_sentence
 
     def _expand_sentence_with_context(self, sentence):
