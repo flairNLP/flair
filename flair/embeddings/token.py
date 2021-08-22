@@ -927,103 +927,83 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
-        batch_size = len(sentences)
-
         # we require encoded subtokenized sentences, the mapping to original tokens and the number of
         # parts that each sentence produces
         subtokenized_sentences = []
         all_token_subtoken_lengths = []
         sentence_parts_lengths = []
 
-        need_to_encode = False
-        for sentence in sentences:
-            if hasattr(sentence, 'subtokenized_sentence'):
-                subtokenized_sentences.extend(sentence.subtokenized_sentence)
-                all_token_subtoken_lengths.append(sentence.all_token_subtoken_length)
-                sentence_parts_lengths.append(sentence.sentence_parts_length)
-            else:
-                need_to_encode = True
+        # if we also use context, first expand sentence to include context
+        if self.context_length > 0:
 
-        if need_to_encode:
-            subtokenized_sentences = []
-            all_token_subtoken_lengths = []
-            sentence_parts_lengths = []
+            # set context if not set already
+            previous_sentence = None
+            for sentence in sentences:
+                if sentence.is_context_set(): continue
+                sentence._previous_sentence = previous_sentence
+                sentence._next_sentence = None
+                if previous_sentence: previous_sentence._next_sentence = sentence
+                previous_sentence = sentence
 
-            # if we also use context, first expand sentence to include context
-            if self.context_length > 0:
-
-                # set context if not set already
-                previous_sentence = None
-                for sentence in sentences:
-                    if sentence.is_context_set(): continue
-                    sentence._previous_sentence = previous_sentence
-                    sentence._next_sentence = None
-                    if previous_sentence: previous_sentence._next_sentence = sentence
-                    previous_sentence = sentence
-
-                original_sentences = []
-                expanded_sentences = []
-                context_offsets = []
-
-                for sentence in sentences:
-                    # in case of contextualization, we must remember non-expanded sentence
-                    original_sentence = sentence
-                    original_sentences.append(original_sentence)
-
-                    # create expanded sentence and remember context offsets
-                    expanded_sentence, context_offset = self._expand_sentence_with_context(sentence)
-                    expanded_sentences.append(expanded_sentence)
-                    context_offsets.append(context_offset)
-
-                    # overwrite sentence with expanded sentence
-                    sentence = expanded_sentence
-
-                sentences = expanded_sentences
+            original_sentences = []
+            expanded_sentences = []
+            context_offsets = []
 
             for sentence in sentences:
+                # in case of contextualization, we must remember non-expanded sentence
+                original_sentence = sentence
+                original_sentences.append(original_sentence)
 
-                # subtokenize the sentence
-                tokenized_string = sentence.to_tokenized_string()
+                # create expanded sentence and remember context offsets
+                expanded_sentence, context_offset = self._expand_sentence_with_context(sentence)
+                expanded_sentences.append(expanded_sentence)
+                context_offsets.append(context_offset)
 
-                # transformer specific tokenization
-                subtokenized_sentence = self.tokenizer.tokenize(tokenized_string)
+                # overwrite sentence with expanded sentence
+                sentence = expanded_sentence
 
-                # set zero embeddings for empty sentences and return
-                if len(subtokenized_sentence) == 0:
-                    for token in sentence:
-                        token.set_embedding(self.name, torch.zeros(self.embedding_length))
-                    return
+            sentences = expanded_sentences
 
-                # determine into how many subtokens each token is split
-                token_subtoken_lengths = self.reconstruct_tokens_from_subtokens(sentence, subtokenized_sentence)
-                all_token_subtoken_lengths.append(token_subtoken_lengths)
+        for sentence in sentences:
 
-                # encode inputs
-                encoded_inputs = self.tokenizer.encode_plus(tokenized_string,
-                                                            max_length=self.max_subtokens_sequence_length,
-                                                            stride=self.stride,
-                                                            return_overflowing_tokens=self.allow_long_sentences,
-                                                            truncation=self.truncate,
-                                                            )
+            # subtokenize the sentence
+            tokenized_string = sentence.to_tokenized_string()
 
-                n_parts: int = 0
+            # transformer specific tokenization
+            subtokenized_sentence = self.tokenizer.tokenize(tokenized_string)
 
-                subtokenized_sentence_splits = []
-                if self.allow_long_sentences:
-                    # overlong sentences are handled as multiple splits
-                    for encoded_input in encoded_inputs['input_ids']:
-                        subtokenized_sentence_splits.append(torch.tensor(encoded_input, dtype=torch.long))
-                        n_parts += 1
-                else:
-                    subtokenized_sentence_splits.append(torch.tensor(encoded_inputs['input_ids'], dtype=torch.long))
+            # set zero embeddings for empty sentences and return
+            if len(subtokenized_sentence) == 0:
+                for token in sentence:
+                    token.set_embedding(self.name, torch.zeros(self.embedding_length))
+                return
+
+            # determine into how many subtokens each token is split
+            token_subtoken_lengths = self.reconstruct_tokens_from_subtokens(sentence, subtokenized_sentence)
+            all_token_subtoken_lengths.append(token_subtoken_lengths)
+
+            # encode inputs
+            encoded_inputs = self.tokenizer.encode_plus(tokenized_string,
+                                                        max_length=self.max_subtokens_sequence_length,
+                                                        stride=self.stride,
+                                                        return_overflowing_tokens=self.allow_long_sentences,
+                                                        truncation=self.truncate,
+                                                        )
+
+            n_parts: int = 0
+
+            subtokenized_sentence_splits = []
+            if self.allow_long_sentences:
+                # overlong sentences are handled as multiple splits
+                for encoded_input in encoded_inputs['input_ids']:
+                    subtokenized_sentence_splits.append(torch.tensor(encoded_input, dtype=torch.long))
                     n_parts += 1
+            else:
+                subtokenized_sentence_splits.append(torch.tensor(encoded_inputs['input_ids'], dtype=torch.long))
+                n_parts += 1
 
-                subtokenized_sentences.extend(subtokenized_sentence_splits)
-                sentence_parts_lengths.append(n_parts)
-
-                sentence.subtokenized_sentence = subtokenized_sentence_splits
-                sentence.sentence_parts_length = n_parts
-                sentence.all_token_subtoken_length = token_subtoken_lengths
+            subtokenized_sentences.extend(subtokenized_sentence_splits)
+            sentence_parts_lengths.append(n_parts)
 
         # find longest sentence in batch
         longest_sequence_in_batch: int = len(max(subtokenized_sentences, key=len))
@@ -1125,7 +1105,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                                                                             sentences,
                                                                             context_offsets):
                 for token_idx, token in enumerate(original_sentence):
-                    token.set_embedding(self.name, expanded_sentence[token_idx + context_offset].get_embedding(self.name))
+                    token.set_embedding(self.name,
+                                        expanded_sentence[token_idx + context_offset].get_embedding(self.name))
                 sentence = original_sentence
 
     def _expand_sentence_with_context(self, sentence):

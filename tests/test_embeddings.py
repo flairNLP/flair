@@ -1,6 +1,7 @@
 import pytest
 import torch
 
+from flair.data import Sentence, Dictionary
 from flair.embeddings import (
     WordEmbeddings,
     TokenEmbeddings,
@@ -11,8 +12,6 @@ from flair.embeddings import (
     DocumentLMEmbeddings, TransformerWordEmbeddings, TransformerDocumentEmbeddings,
     DocumentCNNEmbeddings,
 )
-
-from flair.data import Sentence, Dictionary
 from flair.models import LanguageModel
 
 glove: TokenEmbeddings = WordEmbeddings("turian")
@@ -33,7 +32,6 @@ def test_load_non_existing_flair_embedding():
 
 
 def test_keep_batch_order():
-
     embeddings = DocumentRNNEmbeddings([glove])
     sentences_1 = [Sentence("First sentence"), Sentence("This is second sentence")]
     sentences_2 = [Sentence("This is second sentence"), Sentence("First sentence")]
@@ -50,7 +48,6 @@ def test_keep_batch_order():
 
 
 def test_stacked_embeddings():
-
     embeddings: StackedEmbeddings = StackedEmbeddings([glove, flair_embedding])
 
     sentence: Sentence = Sentence("I love Berlin. Berlin is a great place to live.")
@@ -66,7 +63,6 @@ def test_stacked_embeddings():
 
 
 def test_transformer_word_embeddings():
-
     embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='-1,-2,-3,-4', layer_mean=False)
 
     sentence: Sentence = Sentence("I love Berlin")
@@ -105,7 +101,6 @@ def test_transformer_word_embeddings():
 
 
 def test_transformer_weird_sentences():
-
     embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', layer_mean=True)
 
     sentence = Sentence("Hybrid mesons , qq ̄ states with an admixture")
@@ -145,6 +140,7 @@ def test_transformer_weird_sentences():
         assert len(token.get_embedding()) == 768
     for token in sentence_2:
         assert len(token.get_embedding()) == 768
+
 
 def test_fine_tunable_flair_embedding():
     language_model_forward = LanguageModel(
@@ -258,7 +254,6 @@ def test_document_pool_embeddings_nonlinear():
 
 
 def test_transformer_document_embeddings():
-
     embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased')
 
     sentence: Sentence = Sentence("I love Berlin")
@@ -289,7 +284,8 @@ def test_transformer_document_embeddings():
     sentence.clear_embeddings()
 
     del embeddings
-    
+
+
 def test_document_cnn_embeddings():
     sentence: Sentence = Sentence("I love Berlin. Berlin is a great place to live.")
 
