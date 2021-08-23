@@ -7,7 +7,7 @@ import sys
 import time
 import warnings
 from pathlib import Path
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 
 import torch
 from torch.optim.sgd import SGD
@@ -20,7 +20,7 @@ except ImportError:
 
 import flair
 import flair.nn
-from flair.data import MultiCorpus, Corpus
+from flair.data import MultiCorpus, Corpus, Dictionary
 from flair.datasets import DataLoader
 from flair.optim import ExpAnnealLR
 from flair.training_utils import (
@@ -95,7 +95,7 @@ class ModelTrainer:
             cycle_momentum: bool = False,
             anneal_factor: float = 0.5,
             patience: int = 3,
-            initial_extra_patience=0,
+            initial_extra_patience: int = 0,
             min_learning_rate: float = 0.0001,
             train_with_dev: bool = False,
             train_with_test: bool = False,
@@ -115,15 +115,15 @@ class ModelTrainer:
             sampler=None,
             use_amp: bool = False,
             amp_opt_level: str = "O1",
-            eval_on_train_fraction=0.0,
-            eval_on_train_shuffle=False,
+            eval_on_train_fraction: float = 0.0,
+            eval_on_train_shuffle: bool = False,
             save_model_each_k_epochs: int = 0,
             main_evaluation_metric: Tuple[str, str] = ("micro avg", 'f1-score'),
-            tensorboard_comment='',
-            save_best_checkpoints=False,
+            tensorboard_comment: str = '',
+            save_best_checkpoints: bool = False,
             use_swa: bool = False,
             use_final_model_for_eval: bool = False,
-            use_label_dict_for_unknown_labels = False,
+            gold_label_dictionary_for_eval: Optional[Dictionary] = None,
             **kwargs,
     ) -> dict:
         """
@@ -316,11 +316,6 @@ class ModelTrainer:
             # set dataset to sample from
             sampler.set_dataset(train_data)
             shuffle = False
-            
-        if use_label_dict_for_unknown_labels == True:
-            unknown_label_dict = self.corpus.ent_dictionary
-        else:
-            unknown_label_dict = None
 
         dev_score_history = []
         dev_loss_history = []
@@ -496,7 +491,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric,
-                        dictionary_for_unknown_labels = unknown_label_dict
+                        gold_label_dictionary=gold_label_dictionary_for_eval,
                     )
                     result_line += f"\t{train_eval_result.log_line}"
 
@@ -511,7 +506,7 @@ class ModelTrainer:
                         num_workers=num_workers,
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric,
-                        dictionary_for_unknown_labels = unknown_label_dict
+                        gold_label_dictionary=gold_label_dictionary_for_eval,
                     )
                     result_line += (
                         f"\t{train_part_loss}\t{train_part_eval_result.log_line}"
@@ -535,7 +530,7 @@ class ModelTrainer:
                         out_path=base_path / "dev.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric,
-                        dictionary_for_unknown_labels = unknown_label_dict
+                        gold_label_dictionary=gold_label_dictionary_for_eval,
                     )
                     result_line += f"\t{dev_eval_result.loss}\t{dev_eval_result.log_line}"
                     log.info(
@@ -571,7 +566,7 @@ class ModelTrainer:
                         out_path=base_path / "test.tsv",
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric,
-                        dictionary_for_unknown_labels = unknown_label_dict
+                        gold_label_dictionary=gold_label_dictionary_for_eval,
                     )
                     result_line += f"\t{test_eval_result.loss}\t{test_eval_result.log_line}"
                     log.info(
@@ -712,7 +707,9 @@ class ModelTrainer:
                 base_path=base_path,
                 eval_mini_batch_size=mini_batch_chunk_size,
                 num_workers=num_workers,
-                main_evaluation_metric=main_evaluation_metric)
+                main_evaluation_metric=main_evaluation_metric,
+                gold_label_dictionary=gold_label_dictionary_for_eval,
+            )
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
@@ -749,6 +746,7 @@ class ModelTrainer:
             eval_mini_batch_size: int,
             main_evaluation_metric: Tuple[str, str],
             num_workers: int = 8,
+            gold_label_dictionary_for_eval: Optional[Dictionary] = None
     ):
         if type(base_path) is str:
             base_path = Path(base_path)
@@ -772,6 +770,7 @@ class ModelTrainer:
             out_path=base_path / "test.tsv",
             embedding_storage_mode="none",
             main_evaluation_metric=main_evaluation_metric,
+            gold_label_dictionary=gold_label_dictionary_for_eval,
         )
 
         test_results: Result = test_results

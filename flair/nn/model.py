@@ -46,6 +46,7 @@ class Model(torch.nn.Module):
             num_workers: int = 8,
             main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
             exclude_labels: List[str] = [],
+            gold_label_dictionary: Optional[Dictionary] = None,
     ) -> Result:
         """Evaluates the model. Returns a Result object containing evaluation
         results and a loss value. Implement this to enable evaluation.
@@ -124,7 +125,7 @@ class Classifier(Model):
             num_workers: int = 8,
             main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
             exclude_labels: List[str] = [],
-            dictionary_for_unknown_labels = None
+            gold_label_dictionary: Optional[Dictionary] = None,
     ) -> Result:
         import numpy as np
         import sklearn
@@ -176,7 +177,7 @@ class Classifier(Model):
                         representation = str(sentence_id) + ': ' + gold_label.identifier
                         
                         value = gold_label.value
-                        if dictionary_for_unknown_labels and dictionary_for_unknown_labels.get_idx_for_item(value) == 0:
+                        if gold_label_dictionary and gold_label_dictionary.get_idx_for_item(value) == 0:
                             value = '<unk>'
 
                         if representation not in all_true_values:
