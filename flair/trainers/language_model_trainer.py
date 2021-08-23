@@ -477,7 +477,7 @@ class LanguageModelTrainer:
         return tuple(v.clone().detach() for v in h)
 
     @staticmethod
-    def load_from_checkpoint(
+    def load_checkpoint(
         checkpoint_file: Union[str, Path], corpus: TextCorpus, optimizer: Optimizer = SGD
     ):
         if type(checkpoint_file) is str:

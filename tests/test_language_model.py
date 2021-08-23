@@ -81,7 +81,7 @@ def test_train_resume_language_model(
     )
     del trainer, language_model
 
-    trainer = LanguageModelTrainer.load_from_checkpoint(
+    trainer = LanguageModelTrainer.load_checkpoint(
         results_base_path / "checkpoint.pt", corpus
     )
     trainer.train(
