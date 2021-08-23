@@ -737,7 +737,7 @@ class NER_ARABIC_ANER(ColumnCorpus):
         super(NER_ARABIC_ANER, self).__init__(
             data_folder,
             columns,
-            # tag_to_bioes=tag_to_bioes,
+            tag_to_bioes=tag_to_bioes,
             encoding="utf-8",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
@@ -755,7 +755,7 @@ class NER_ARABIC_AQMAR(ColumnCorpus):
             **corpusargs,
     ):
         """
-        Initialize a preprocessed  and modified version of the American and Qatari Modeling of Arabic (AQMAR) dataset available
+        Initialize a preprocessed and modified version of the American and Qatari Modeling of Arabic (AQMAR) dataset available
         from http://www.cs.cmu.edu/~ark/ArabicNER/AQMAR_Arabic_NER_corpus-1.0.zip.
         via http://www.cs.cmu.edu/~ark/AQMAR/
 
@@ -769,8 +769,7 @@ class NER_ARABIC_AQMAR(ColumnCorpus):
         Recall-Oriented Learning of Named Entities in Arabic Wikipedia. Proceedings of EACL."
 
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
-        POS tags instead
+        :param tag_to_bioes: NER by default
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
@@ -796,7 +795,7 @@ class NER_ARABIC_AQMAR(ColumnCorpus):
         super(NER_ARABIC_AQMAR, self).__init__(
             data_folder,
             columns,
-            # tag_to_bioes=tag_to_bioes,
+            tag_to_bioes=tag_to_bioes,
             encoding="utf-8",
             in_memory=in_memory,
             document_separator_token=None if not document_as_sequence else "-DOCSTART-",
@@ -1296,7 +1295,6 @@ class NER_ENGLISH_PERSON(ColumnCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
-            tag_to_bioes: str = "ner",
             in_memory: bool = True,
     ):
         """
@@ -1304,8 +1302,6 @@ class NER_ENGLISH_PERSON(ColumnCorpus):
         download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
-        POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
@@ -1616,7 +1612,7 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
             self,
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
-            in_memory: bool = False,
+            in_memory: bool = True,
             **corpusargs,
     ):
         """
@@ -1727,7 +1723,7 @@ class NER_GERMAN_LEGAL(ColumnCorpus):
             self,
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
-            in_memory: bool = False,
+            in_memory: bool = True,
             **corpusargs,
     ):
         """
@@ -1828,7 +1824,6 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
             tag_to_bioes: str = "ner",
             column_delimiter: str = r"\s+",
             in_memory: bool = True,
-            document_as_sequence: bool = False,
             **corpusargs,
     ):
         """
@@ -1859,7 +1854,6 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
         german_politics_path = "https://www.thomas-zastrow.de/nlp/nemgp_trainingdata_01.txt.zip"
         corpus_file_name = "nemgp_trainingdata_01.txt"
         parsed_dataset = data_folder / "raw" / corpus_file_name
-        train_dataset = data_folder / "train.txt"
 
         if not parsed_dataset.exists():
             german_politics_zip = cached_path(f"{german_politics_path}", Path("datasets") / dataset_name / "raw")
@@ -2592,6 +2586,7 @@ class NER_MULTI_WIKIANN(MultiCorpus):
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = False,
+            **corpusargs,
     ):
         """
         WkiAnn corpus for cross-lingual NER consisting of datasets from 282 languages that exist
@@ -2682,6 +2677,7 @@ class NER_MULTI_WIKIANN(MultiCorpus):
                                 train_file=file_name + '_new',
                                 tag_to_bioes=tag_to_bioes,
                                 in_memory=in_memory,
+                                **corpusargs,
                                 )
             corpora.append(corp)
             print("...done.")
@@ -3107,6 +3103,7 @@ class NER_MULTI_XTREME(MultiCorpus):
                                 column_format=columns,
                                 tag_to_bioes=tag_to_bioes,
                                 in_memory=in_memory,
+                                **corpusargs,
                                 )
             corpora.append(corp)
             print("...done.")
@@ -3168,6 +3165,7 @@ class NER_MULTI_WIKINER(MultiCorpus):
                                 column_format=columns,
                                 tag_to_bioes=tag_to_bioes,
                                 in_memory=in_memory,
+                                **corpusargs,
                                 )
             corpora.append(corp)
             print("...done.")

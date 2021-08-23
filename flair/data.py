@@ -1547,8 +1547,8 @@ def iob_iobes(tags):
     """
     new_tags = []
     for i, tag in enumerate(tags):
-        if tag.value == "O":
-            new_tags.append(tag.value)
+        if tag.value == "O" or tag.value == "":
+            new_tags.append("O")
         elif tag.value.split("-")[0] == "B":
             if i + 1 != len(tags) and tags[i + 1].value.split("-")[0] == "I":
                 new_tags.append(tag.value)
