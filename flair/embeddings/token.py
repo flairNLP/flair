@@ -379,6 +379,7 @@ class FlairEmbeddings(TokenEmbeddings):
                  chars_per_chunk: int = 512,
                  with_whitespace: bool = True,
                  tokenized_lm: bool = True,
+                 is_lower: bool = False,
                  ):
         """
         initializes contextual string embeddings using a character-level language model.
@@ -402,6 +403,8 @@ class FlairEmbeddings(TokenEmbeddings):
 
         hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/flair"
         clef_hipe_path: str = "https://files.ifi.uzh.ch/cl/siclemat/impresso/clef-hipe-2020/flair"
+
+        self.is_lower: bool = is_lower
 
         self.PRETRAINED_MODEL_ARCHIVE_MAP = {
             # multilingual models
@@ -544,6 +547,8 @@ class FlairEmbeddings(TokenEmbeddings):
                 # Fix for CLEF HIPE models (avoid overwriting best-lm.pt in cache_dir)
                 if "impresso-hipe" in model.lower():
                     cache_dir = cache_dir / model.lower()
+                    # CLEF HIPE models are lowercased
+                    self.is_lower = True
                 model = cached_path(base_path, cache_dir=cache_dir)
 
             elif replace_with_language_code(model) in self.PRETRAINED_MODEL_ARCHIVE_MAP:
@@ -611,6 +616,8 @@ class FlairEmbeddings(TokenEmbeddings):
             self.with_whitespace = True
         if "tokenized_lm" not in self.__dict__:
             self.tokenized_lm = True
+        if "is_lower" not in self.__dict__:
+            self.is_lower = False
 
         # gradients are enable if fine-tuning is enabled
         gradient_context = torch.enable_grad() if self.fine_tune else torch.no_grad()
@@ -620,6 +627,9 @@ class FlairEmbeddings(TokenEmbeddings):
             # if this is not possible, use LM to generate embedding. First, get text sentences
             text_sentences = [sentence.to_tokenized_string() for sentence in sentences] if self.tokenized_lm \
                 else [sentence.to_plain_string() for sentence in sentences]
+
+            if self.is_lower:
+                text_sentences = [sentence.lower() for sentence in text_sentences]
 
             start_marker = self.lm.document_delimiter if "document_delimiter" in self.lm.__dict__ else '\n'
             end_marker = " "
