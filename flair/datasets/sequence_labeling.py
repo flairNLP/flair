@@ -4926,7 +4926,7 @@ class AIDA_CONLL_EL(EntityLinkingCorpus):
                                     else:  # neither the wikiid nor the url exist
                                         write.write(line_list[0] + '\tO\n')
                                 else:
-                                    write.write(line_list[0] + '\t' + line_list[4] + '-' + wikiname + '\n')
+                                    write.write(line_list[0] + '\t' + line_list[1] + '-' + wikiname + '\n')
 
                 # delete unprocessed file
                 os.remove(path)
