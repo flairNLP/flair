@@ -708,7 +708,7 @@ class ModelTrainer:
                 eval_mini_batch_size=mini_batch_chunk_size,
                 num_workers=num_workers,
                 main_evaluation_metric=main_evaluation_metric,
-                gold_label_dictionary=gold_label_dictionary_for_eval,
+                gold_label_dictionary_for_eval=gold_label_dictionary_for_eval,
             )
         else:
             final_score = 0
