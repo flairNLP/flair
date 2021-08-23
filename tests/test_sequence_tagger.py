@@ -274,7 +274,7 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
     corpus_1 = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
-    corpus_2 = flair.datasets.GERMEVAL_14(base_path=tasks_base_path)
+    corpus_2 = flair.datasets.NER_GERMAN_GERMEVAL(base_path=tasks_base_path)
 
     corpus = MultiCorpus([corpus_1, corpus_2])
     tag_dictionary = corpus.make_tag_dictionary("ner")
@@ -320,7 +320,7 @@ def test_train_resume_tagger(results_base_path, tasks_base_path):
     corpus_1 = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
-    corpus_2 = flair.datasets.GERMEVAL_14(base_path=tasks_base_path)
+    corpus_2 = flair.datasets.NER_GERMAN_GERMEVAL(base_path=tasks_base_path)
 
     corpus = MultiCorpus([corpus_1, corpus_2])
     tag_dictionary = corpus.make_tag_dictionary("ner")

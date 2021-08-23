@@ -7,7 +7,7 @@ import sys
 import time
 import warnings
 from pathlib import Path
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 
 import torch
 from torch.optim.sgd import SGD
@@ -89,7 +89,7 @@ class ModelTrainer:
             base_path: Union[Path, str],
             learning_rate: float = 0.1,
             mini_batch_size: int = 32,
-            mini_batch_chunk_size: int = None,
+            mini_batch_chunk_size: Optional[int] = None,
             max_epochs: int = 100,
             scheduler=AnnealOnPlateau,
             cycle_momentum: bool = False,
