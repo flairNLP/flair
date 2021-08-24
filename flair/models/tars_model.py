@@ -39,8 +39,6 @@ class FewshotClassifier(flair.nn.Classifier):
         # Transform input data into TARS format
         sentences = self._get_tars_formatted_sentences(data_points)
 
-        print(sentences)
-
         loss = self.tars_model.forward_loss(sentences)
         return loss
 
@@ -385,7 +383,7 @@ class TARSTagger(FewshotClassifier):
         for token in sentence:
             tag = token.get_tag(self.get_current_label_type()).value
 
-            if tag == "O":
+            if tag == "O" or tag == "":
                 tars_tag = "O"
             elif tag == label:
                 tars_tag = "S-"
@@ -638,6 +636,8 @@ class TARSClassifier(FewshotClassifier):
         tars_dictionary = Dictionary(add_unk=False)
         tars_dictionary.add_item(self.LABEL_NO_MATCH)
         tars_dictionary.add_item(self.LABEL_MATCH)
+
+        print(embeddings)
 
         # initialize a bare-bones sequence tagger
         self.tars_model = TextClassifier(document_embeddings=embeddings,
