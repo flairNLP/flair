@@ -1515,7 +1515,7 @@ class MultiCorpus(Corpus):
                  f"{len(self.train) if self.train else 0} train + " \
                  f"{len(self.dev) if self.dev else 0} dev + " \
                  f"{len(self.test) if self.test else 0} test sentences\n - "
-        output += "\n - ".join([f'{type(corpus).__name__} {str(corpus)}' for corpus in self.corpora])
+        output += "\n - ".join([f'{type(corpus).__name__} {str(corpus)} - {corpus.name}' for corpus in self.corpora])
         return output
 
 

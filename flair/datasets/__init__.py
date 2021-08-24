@@ -7,7 +7,6 @@ from .base import MongoDataset
 # Expose all sequence labeling datasets
 from .sequence_labeling import ColumnCorpus
 from .sequence_labeling import ColumnDataset
-from .sequence_labeling import NER_MASAKHANE_AMHARIC
 from .sequence_labeling import NER_ARABIC_ANER
 from .sequence_labeling import NER_ARABIC_AQMAR
 from .sequence_labeling import NER_GERMAN_BIOFID
@@ -23,22 +22,16 @@ from .sequence_labeling import CONLL_2000
 from .sequence_labeling import NER_DANISH_DANE
 from .sequence_labeling import NER_GERMAN_EUROPARL
 from .sequence_labeling import NER_GERMAN_GERMEVAL
-from .sequence_labeling import NER_MASAKHANE_HAUSA
 from .sequence_labeling import KEYPHRASE_INSPEC
 from .sequence_labeling import NER_JAPANESE
-from .sequence_labeling import NER_MASAKHANE_KINYARWANDA
 from .sequence_labeling import NER_GERMAN_LEGAL
-from .sequence_labeling import NER_MASAKHANE_LUGANDA
-from .sequence_labeling import NER_MASAKHANE_LUO
 from .sequence_labeling import NER_ENGLISH_MOVIE_SIMPLE
 from .sequence_labeling import NER_ENGLISH_MOVIE_COMPLEX
 from .sequence_labeling import NER_ENGLISH_RESTAURANT
 from .sequence_labeling import NER_ENGLISH_PERSON
-from .sequence_labeling import NER_MASAKHANE_NAIJA_PIDGIN
 from .sequence_labeling import NER_BASQUE
 from .sequence_labeling import NER_FINNISH
 from .sequence_labeling import NER_SWEDISH
-from .sequence_labeling import NER_MASAKHANE_YORUBA
 from .sequence_labeling import NER_ENGLISH_STACKOVERFLOW
 from .sequence_labeling import KEYPHRASE_SEMEVAL2010
 from .sequence_labeling import KEYPHRASE_SEMEVAL2017

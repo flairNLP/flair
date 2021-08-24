@@ -3,7 +3,7 @@ import os
 import re
 import shutil
 from pathlib import Path
-from typing import Union, Dict, List
+from typing import Union, Dict, List, Optional
 
 import flair
 from flair.data import Corpus, MultiCorpus, FlairDataset, Sentence, Token
@@ -31,6 +31,7 @@ class ColumnCorpus(Corpus):
             label_name_map: Dict[str, str] = None,
             banned_sentences: List[str] = None,
             autofind_splits: bool = True,
+            name: Optional[str] = None,
             **corpusargs,
     ):
         """
@@ -101,7 +102,8 @@ class ColumnCorpus(Corpus):
             label_name_map=label_name_map,
         ) if dev_file is not None else None
 
-        super(ColumnCorpus, self).__init__(train, dev, test, name=str(data_folder), **corpusargs)
+        corpus_name = str(data_folder) if not name else name
+        super(ColumnCorpus, self).__init__(train, dev, test, name=corpus_name, **corpusargs)
 
 
 class ColumnDataset(FlairDataset):
@@ -2146,26 +2148,31 @@ class NER_JAPANESE(ColumnCorpus):
                     f.write(sp_line[0] + "\t" + sp_line[len(sp_line) - 1])
 
 
-class NER_MASAKHANE_AMHARIC(ColumnCorpus):
+class NER_MASAKHANE(MultiCorpus):
     def __init__(
             self,
+            languages: Union[str, List[str]] = "luo",
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
             in_memory: bool = True,
             **corpusargs,
     ):
         """
-        Initialize the Amharic corpus available on https://github.com/masakhane-io/masakhane-ner/tree/main/data/amh/.
-        The first time you call this constructor it will automatically download the dataset.
+        Initialize the Masakhane corpus available on https://github.com/masakhane-io/masakhane-ner/tree/main/data.
+        It consists of ten African languages. Pass a language code or a list of language codes to initialize the corpus
+        with the languages you require. If you pass "all", all languages will be initialized.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
         POS tags instead
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
+
+        # if only one language is given
+        if type(languages) == str:
+            languages = [languages]
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -2178,404 +2185,57 @@ class NER_MASAKHANE_AMHARIC(ColumnCorpus):
             base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
 
-        # download data if necessary
-        ner_amharic_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/amh/"
-        cached_path(f"{ner_amharic_path}dev.txt", Path("datasets") / dataset_name)
-        cached_path(f"{ner_amharic_path}test.txt", Path("datasets") / dataset_name)
-        cached_path(f"{ner_amharic_path}train.txt", Path("datasets") / dataset_name)
+        language_to_code = {"amharic": "amh",
+                            "hausa": "hau",
+                            "igbo": "ibo",
+                            "kinyarwanda": "kin",
+                            "luganda": "lug",
+                            "luo": "luo",
+                            "naija": "pcm",
+                            "swahili": "swa",
+                            "yoruba": "yor",
+                            "wolof": "wol",
+                            }
 
-        super(NER_MASAKHANE_AMHARIC, self).__init__(
-            data_folder,
-            columns,
-            tag_to_bioes=tag_to_bioes,
-            encoding="utf-8",
-            in_memory=in_memory,
-            **corpusargs,
-        )
+        # use all languages if explicitly set to "all"
+        if languages == ["all"]: languages = language_to_code.values()
 
+        corpora = []
+        for language in languages:
 
-class NER_MASAKHANE_IGBO(ColumnCorpus):
-    def __init__(
-            self,
-            base_path: Union[str, Path] = None,
-            tag_to_bioes: str = "ner",
-            in_memory: bool = True,
-            **corpusargs,
-    ):
-        """
-        Initialize the igbo corpus available on https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/ibo/.
-        The first time you call this constructor it will automatically download the dataset.
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
-        POS tags instead
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
-        """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
+            if language in language_to_code.keys():
+                language = language_to_code[language]
 
-        # column format
-        columns = {0: "text", 1: "ner"}
+            if language not in language_to_code.values():
+                log.error(f"Language '{language}' is not in list of supported languages!")
+                log.error(f"Supported are '{language_to_code.values()}'!")
+                log.error(f"Instantiate this Corpus for instance like so 'corpus = NER_MASAKHANE(languages='luo')'")
+                raise Exception()
 
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
+            language_folder = data_folder / language
 
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        data_folder = base_path / dataset_name
+            # download data if necessary
+            data_path = f"https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/{language}/"
+            cached_path(f"{data_path}dev.txt", language_folder)
+            cached_path(f"{data_path}test.txt", language_folder)
+            cached_path(f"{data_path}train.txt", language_folder)
 
-        # download data if necessary
-        igbo_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/ibo/"
-        cached_path(f"{igbo_path}test.txt", Path("datasets") / dataset_name)
-        cached_path(f"{igbo_path}train.txt", Path("datasets") / dataset_name)
-        cached_path(f"{igbo_path}dev.txt", Path("datasets") / dataset_name)
+            # initialize comlumncorpus and add it to list
+            print("Read data into corpus...")
+            corp = ColumnCorpus(data_folder=language_folder,
+                                column_format=columns,
+                                tag_to_bioes=tag_to_bioes,
+                                encoding="utf-8",
+                                in_memory=in_memory,
+                                name=language,
+                                **corpusargs,
+                                )
+            corpora.append(corp)
+            print("...done.")
 
-        super(NER_MASAKHANE_IGBO, self).__init__(
-            data_folder,
-            columns,
-            tag_to_bioes=tag_to_bioes,
-            encoding="utf-8",
-            in_memory=in_memory,
-            **corpusargs,
-        )
-
-
-class NER_MASAKHANE_HAUSA(ColumnCorpus):
-    def __init__(
-            self,
-            base_path: Union[str, Path] = None,
-            tag_to_bioes: str = "ner",
-            in_memory: bool = True,
-            **corpusargs,
-    ):
-        """
-        Initialize the Hausa corpus available on https://github.com/masakhane-io/masakhane-ner/tree/main/data/hau.
-        The first time you call this constructor it will automatically download the dataset.
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
-        POS tags instead
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
-        """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
-
-        # column format
-        columns = {0: "text", 1: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        ner_hausa_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/hau/"
-        cached_path(f"{ner_hausa_path}test.txt", Path("datasets") / dataset_name)
-        cached_path(f"{ner_hausa_path}train.txt", Path("datasets") / dataset_name)
-        cached_path(f"{ner_hausa_path}dev.txt", Path("datasets") / dataset_name)
-
-        super(NER_MASAKHANE_HAUSA, self).__init__(
-            data_folder,
-            columns,
-            tag_to_bioes=tag_to_bioes,
-            encoding="latin-1",
-            in_memory=in_memory,
-            **corpusargs,
-        )
-
-
-class NER_MASAKHANE_YORUBA(ColumnCorpus):
-    def __init__(
-            self,
-            base_path: Union[str, Path] = None,
-            tag_to_bioes: str = "ner",
-            in_memory: bool = True,
-            **corpusargs,
-    ):
-        """
-        Initialize the Yoruba corpus for NER available on:
-        https://github.com/masakhane-io/masakhane-ner/tree/main/data/yor
-        The first time you call this constructor it will automatically download the dataset.
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
-        POS tags instead
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
-        """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
-
-        # column format
-        columns = {0: "text", 1: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        model_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/yor/"
-
-        cached_path(f"{model_path}test.txt", Path("datasets") / dataset_name)
-        cached_path(f"{model_path}train.txt", Path("datasets") / dataset_name)
-        cached_path(f"{model_path}dev.txt", Path("datasets") / dataset_name)
-
-        super(NER_MASAKHANE_YORUBA, self).__init__(
-            data_folder,
-            columns,
-            tag_to_bioes=tag_to_bioes,
-            in_memory=in_memory,
-            **corpusargs,
-        )
-
-
-class NER_MASAKHANE_KINYARWANDA(ColumnCorpus):
-    def __init__(
-            self,
-            base_path: Union[str, Path] = None,
-            tag_to_bioes: str = "ner",
-            in_memory: bool = True,
-            **corpusargs,
-    ):
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
-
-        # column format
-        columns = {0: "text", 1: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        ner_kinyarwanda_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/kin/"
-        cached_path(f"{ner_kinyarwanda_path}test.txt", Path("datasets") / dataset_name)
-        cached_path(f"{ner_kinyarwanda_path}train.txt", Path("datasets") / dataset_name)
-        cached_path(f"{ner_kinyarwanda_path}dev.txt", Path("datasets") / dataset_name)
-
-        super(NER_MASAKHANE_KINYARWANDA, self).__init__(
-            data_folder,
-            columns,
-            tag_to_bioes=tag_to_bioes,
-            in_memory=in_memory,
-            **corpusargs,
-        )
-
-
-class NER_MASAKHANE_LUGANDA(ColumnCorpus):
-    def __init__(
-            self,
-            base_path: Union[str, Path] = None,
-            tag_to_bioes: str = "ner",
-            in_memory: bool = True,
-            **corpusargs,
-    ):
-        """
-        Initialize the LugandaNER corpus. The first time you call this constructor it will automatically
-        download the dataset.
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
-        POS tags instead
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
-        """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
-
-        # column format
-        columns = {0: "text", 1: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        luganda_ner_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/lug/"
-        dev_file = "dev.txt"
-        test_file = "test.txt"
-        train_file = "train.txt"
-        cached_path(f"{luganda_ner_path}/{dev_file}", Path("datasets") / dataset_name)
-        cached_path(f"{luganda_ner_path}/{test_file}", Path("datasets") / dataset_name)
-        cached_path(f"{luganda_ner_path}/{train_file}", Path("datasets") / dataset_name)
-
-        super(NER_MASAKHANE_LUGANDA, self).__init__(
-            data_folder,
-            columns,
-            dev_file=dev_file,
-            test_file=test_file,
-            train_file=train_file,
-            column_delimiter=" ",
-            tag_to_bioes=tag_to_bioes,
-            encoding="latin-1",
-            in_memory=in_memory,
-            document_separator_token="-DOCSTART-",
-            **corpusargs,
-        )
-
-
-class NER_MASAKHANE_NAIJA_PIDGIN(ColumnCorpus):
-    def __init__(
-            self,
-            base_path: Union[str, Path] = None,
-            tag_to_bioes: str = "ner",
-            in_memory: bool = True,
-            **corpusargs,
-    ):
-        """
-        Initialize the Naija Pidgin corpus for NER available on:
-        https://github.com/masakhane-io/masakhane-ner/tree/main/data/pcm
-        The first time you call this constructor it will automatically download the dataset.
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
-        POS tags instead
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
-        """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
-
-        # column format
-        columns = {0: "text", 1: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        data_folder = base_path / dataset_name
-
-        corpus_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/pcm/"
-
-        cached_path(f"{corpus_path}test.txt", Path("datasets") / dataset_name)
-        cached_path(f"{corpus_path}train.txt", Path("datasets") / dataset_name)
-        cached_path(f"{corpus_path}dev.txt", Path("datasets") / dataset_name)
-
-        super(NER_MASAKHANE_NAIJA_PIDGIN, self).__init__(
-            data_folder,
-            columns,
-            tag_to_bioes=tag_to_bioes,
-            in_memory=in_memory,
-            **corpusargs,
-        )
-
-
-class NER_MASAKHANE_LUO(ColumnCorpus):
-    def __init__(
-            self,
-            base_path: Union[str, Path] = None,
-            tag_to_bioes: str = "ner",
-            in_memory: bool = True,
-            **corpusargs,
-    ):
-        """
-        Initialize the NER Luo language corpus available on https://github.com/masakhane-io/masakhane-ner/tree/main/data/luo.
-        The first time you call this constructor it will automatically download the dataset.
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
-        POS tags instead
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
-        """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
-
-        # column format
-        columns = {0: "text", 1: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        ner_luo_path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/luo/"
-        cached_path(f"{ner_luo_path}dev.txt", Path("datasets") / dataset_name)
-        cached_path(f"{ner_luo_path}test.txt", Path("datasets") / dataset_name)
-        cached_path(f"{ner_luo_path}train.txt", Path("datasets") / dataset_name)
-
-        super(NER_MASAKHANE_LUO, self).__init__(
-            data_folder,
-            columns,
-            tag_to_bioes=tag_to_bioes,
-            encoding="latin-1",
-            in_memory=in_memory,
-            **corpusargs,
-        )
-
-
-class NER_MASAKHANE_SWAHILI(ColumnCorpus):
-    def __init__(
-            self,
-            base_path: Union[str, Path] = None,
-            tag_to_bioes: str = "ner",
-            in_memory: bool = True,
-            **corpusargs,
-    ):
-        """
-        Initialize the Swahili corpus available on:
-        https://github.com/masakhane-io/masakhane-ner/tree/main/data/swa.
-        The first time you call this constructor it will automatically download the dataset.
-        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
-        to point to a different folder but typically this should not be necessary.
-        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
-        POS tags instead
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
-        """
-
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
-
-        # column format
-        columns = {0: "text", 1: "ner"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = Path(flair.cache_root) / "datasets"
-        data_folder = base_path / dataset_name
-
-        # download data if necessary
-        path = "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/swa/"
-
-        cached_path(f"{path}test.txt", Path("datasets") / dataset_name)
-        cached_path(f"{path}train.txt", Path("datasets") / dataset_name)
-        cached_path(f"{path}dev.txt", Path("datasets") / dataset_name)
-
-        super(NER_MASAKHANE_SWAHILI, self).__init__(
-            data_folder,
-            columns,
-            tag_to_bioes=tag_to_bioes,
-            encoding="utf-8",
-            in_memory=in_memory,
-            **corpusargs,
+        super(NER_MASAKHANE, self).__init__(
+            corpora,
+            name='masakhane-' + '-'.join(languages),
         )
 
 
@@ -3153,7 +2813,6 @@ class NER_MULTI_WIKINER(MultiCorpus):
 
         corpora = []
         for language in languages:
-
             language_folder = data_folder / language
 
             # download data if necessary
