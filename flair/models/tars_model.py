@@ -170,7 +170,7 @@ class FewshotClassifier(flair.nn.Classifier):
     def add_and_switch_to_new_task(self,
                                    task_name,
                                    label_dictionary: Union[List, Set, Dictionary, str],
-                                   tag_type: str,
+                                   label_type: str,
                                    ):
         """
         Adds a new task to an existing TARS model. Sets necessary attributes and finally 'switches'
@@ -201,7 +201,7 @@ class FewshotClassifier(flair.nn.Classifier):
                 else:
                     tag_dictionary.add_item(tag)
 
-            self._task_specific_attributes[task_name] = {'tag_dictionary': tag_dictionary, 'tag_type': tag_type}
+            self._task_specific_attributes[task_name] = {'tag_dictionary': tag_dictionary, 'tag_type': label_type}
 
         self.switch_to_task(task_name)
 
