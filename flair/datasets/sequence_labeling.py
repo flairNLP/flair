@@ -3619,7 +3619,7 @@ class UP_GERMAN(ColumnCorpus):
         cached_path(f"{up_de_path}de-up-train.conllu", Path("datasets") / dataset_name)
         cached_path(f"{up_de_path}de-up-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{up_de_path}de-up-test.conllu", Path("datasets") / dataset_name)
-
+        
         super(UP_GERMAN, self).__init__(
             data_folder,
             columns,
