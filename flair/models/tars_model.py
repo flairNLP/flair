@@ -39,6 +39,8 @@ class FewshotClassifier(flair.nn.Classifier):
         # Transform input data into TARS format
         sentences = self._get_tars_formatted_sentences(data_points)
 
+        print(sentences)
+
         loss = self.tars_model.forward_loss(sentences)
         return loss
 
@@ -800,7 +802,6 @@ class TARSClassifier(FewshotClassifier):
 
                     all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
 
-                    all_detected = {}
                     for label in all_labels:
                         tars_sentence = self._get_tars_formatted_sentence(label, sentence)
 
