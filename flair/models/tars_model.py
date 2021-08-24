@@ -593,8 +593,8 @@ class TARSClassifier(FewshotClassifier):
     """
 
     static_label_type = "tars_label"
-    LABEL_MATCH = "True"
-    LABEL_NO_MATCH = "False"
+    LABEL_MATCH = "YES"
+    LABEL_NO_MATCH = "NO"
 
     def __init__(
             self,
@@ -732,7 +732,6 @@ class TARSClassifier(FewshotClassifier):
             return_loss=False,
             embedding_storage_mode="none",
     ):
-        # return
         """
         Predict sequence tags for Named Entity Recognition task
         :param sentences: a Sentence or a List of Sentence
