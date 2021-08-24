@@ -322,7 +322,6 @@ class CONLL_03(ColumnCorpus):
             self,
             base_path: Union[str, Path] = None,
             tag_to_bioes: str = "ner",
-            entity_linking: bool = False,
             in_memory: bool = True,
             **corpusargs,
     ):
@@ -342,29 +341,15 @@ class CONLL_03(ColumnCorpus):
             base_path: Path = Path(base_path)
 
         # column format
-        if not entity_linking:
-            columns = {0: "text", 1: "pos", 2: "np", 3: "ner"}
-        else:
-            columns = {0: "text", 1: "pos", 2: "np", 3: "ner", 4: 'tmp', 5: 'entity', 6: 'normalised entity', 7: 'link',
-                       8: 'tmp_nr', 9: 'tmpLink'}
+        columns = {0: "text", 1: "pos", 2: "np", 3: "ner"}
 
         # this dataset name
-        if entity_linking:
-            dataset_name = self.__class__.__name__.lower() + "-yago-reduced"
-        else:
-            dataset_name = self.__class__.__name__.lower()
+        dataset_name = self.__class__.__name__.lower()
 
         # default dataset folder is the cache root
         if not base_path:
             base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
-
-        if entity_linking:
-            print('Test')
-            conll_yago_path = "https://nlp.informatik.hu-berlin.de/resources/datasets/conll_entity_linking/"
-            cached_path(f"{conll_yago_path}combinedENG.testa", Path("datasets") / dataset_name)
-            cached_path(f"{conll_yago_path}combinedENG.testb", Path("datasets") / dataset_name)
-            cached_path(f"{conll_yago_path}combinedENG.train", Path("datasets") / dataset_name)
 
         # check if data there
         if not data_folder.exists():
@@ -375,25 +360,14 @@ class CONLL_03(ColumnCorpus):
             )
             log.warning("-" * 100)
 
-        if entity_linking:
-            super(CONLL_03, self).__init__(
-                data_folder,
-                columns,
-                tag_to_bioes=tag_to_bioes,
-                column_delimiter='\t',
-                in_memory=in_memory,
-                document_separator_token="-DOCSTART-",
-                **corpusargs,
-            )
-        else:
-            super(CONLL_03, self).__init__(
-                data_folder,
-                columns,
-                tag_to_bioes=tag_to_bioes,
-                in_memory=in_memory,
-                document_separator_token="-DOCSTART-",
-                **corpusargs,
-            )
+        super(CONLL_03, self).__init__(
+            data_folder,
+            columns,
+            tag_to_bioes=tag_to_bioes,
+            in_memory=in_memory,
+            document_separator_token="-DOCSTART-",
+            **corpusargs,
+        )
 
 
 class CONLL_03_GERMAN(ColumnCorpus):
@@ -2221,7 +2195,7 @@ class NER_MASAKHANE(MultiCorpus):
             cached_path(f"{data_path}train.txt", language_folder)
 
             # initialize comlumncorpus and add it to list
-            print("Read data into corpus...")
+            log.info(f"Reading data for language {language}")
             corp = ColumnCorpus(data_folder=language_folder,
                                 column_format=columns,
                                 tag_to_bioes=tag_to_bioes,
@@ -2231,7 +2205,6 @@ class NER_MASAKHANE(MultiCorpus):
                                 **corpusargs,
                                 )
             corpora.append(corp)
-            print("...done.")
 
         super(NER_MASAKHANE, self).__init__(
             corpora,
@@ -2315,23 +2288,23 @@ class NER_MULTI_WIKIANN(MultiCorpus):
                 gdown.download(url, str(language_folder / language) + '.tar.gz')
 
                 # unzip
-                print("Extract data...")
+                log.info("Extracting data...")
                 tar = tarfile.open(str(language_folder / language) + '.tar.gz', "r:gz")
                 # tar.extractall(language_folder,members=[tar.getmember(file_name)])
                 tar.extract(file_name, str(language_folder))
                 tar.close()
-                print('...done.')
+                log.info('...done.')
 
                 # transform data into required format
                 # the processed dataset has the additional ending "_new"
-                print("Process dataset...")
+                log.info("Processing dataset...")
                 self._silver_standard_to_simple_ner_annotation(str(language_folder / file_name))
                 # remove the unprocessed dataset
                 os.remove(str(language_folder / file_name))
-                print('...done.')
+                log.info('...done.')
 
             # initialize comlumncorpus and add it to list
-            print("Read data into corpus...")
+            log.info(f"Reading data for language {language}")
             corp = ColumnCorpus(data_folder=language_folder,
                                 column_format=columns,
                                 train_file=file_name + '_new',
@@ -2340,7 +2313,7 @@ class NER_MULTI_WIKIANN(MultiCorpus):
                                 **corpusargs,
                                 )
             corpora.append(corp)
-            print("...done.")
+            log.info("...done.")
 
         super(NER_MULTI_WIKIANN, self).__init__(
             corpora, name='wikiann',
@@ -2743,22 +2716,22 @@ class NER_MULTI_XTREME(MultiCorpus):
                 )
 
                 # unzip
-                print("Extract data...")
+                log.info("Extracting data...")
                 import tarfile
                 tar = tarfile.open(str(temp_file), "r:gz")
                 for part in ["train", "test", "dev"]:
                     tar.extract(part, str(language_folder))
                 tar.close()
-                print('...done.')
+                log.info('...done.')
 
                 # transform data into required format
-                print("Process dataset...")
+                log.info("Processing dataset...")
                 for part in ["train", "test", "dev"]:
                     self._xtreme_to_simple_ner_annotation(str(language_folder / part))
-                print('...done.')
+                log.info('...done.')
 
             # initialize comlumncorpus and add it to list
-            print("Read data into corpus...")
+            log.info(f"Reading data for language {language}")
             corp = ColumnCorpus(data_folder=language_folder,
                                 column_format=columns,
                                 tag_to_bioes=tag_to_bioes,
@@ -2766,7 +2739,6 @@ class NER_MULTI_XTREME(MultiCorpus):
                                 **corpusargs,
                                 )
             corpora.append(corp)
-            print("...done.")
 
         super(NER_MULTI_XTREME, self).__init__(
             corpora, name='xtreme',
@@ -2819,7 +2791,7 @@ class NER_MULTI_WIKINER(MultiCorpus):
             self._download_wikiner(language, language_folder)
 
             # initialize comlumncorpus and add it to list
-            print("Read data into corpus...")
+            log.info(f"Read data for language {language}")
             corp = ColumnCorpus(data_folder=language_folder,
                                 column_format=columns,
                                 tag_to_bioes=tag_to_bioes,
@@ -2827,7 +2799,6 @@ class NER_MULTI_WIKINER(MultiCorpus):
                                 **corpusargs,
                                 )
             corpora.append(corp)
-            print("...done.")
 
         super(NER_MULTI_WIKINER, self).__init__(
             corpora, name='wikiner',
