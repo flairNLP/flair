@@ -593,6 +593,8 @@ class TARSClassifier(FewshotClassifier):
     """
 
     static_label_type = "tars_label"
+    LABEL_MATCH = "True"
+    LABEL_NO_MATCH = "False"
 
     def __init__(
             self,
@@ -632,8 +634,8 @@ class TARSClassifier(FewshotClassifier):
 
         # prepare TARS dictionary
         tars_dictionary = Dictionary(add_unk=False)
-        tars_dictionary.add_item('False')
-        tars_dictionary.add_item('True')
+        tars_dictionary.add_item(self.LABEL_NO_MATCH)
+        tars_dictionary.add_item(self.LABEL_MATCH)
 
         # initialize a bare-bones sequence tagger
         self.tars_model = TextClassifier(document_embeddings=embeddings,
@@ -662,7 +664,7 @@ class TARSClassifier(FewshotClassifier):
 
         sentence_labels = [label.value for label in sentence.get_labels(self.get_current_label_type())]
 
-        tars_label = "True" if label in sentence_labels else "False"
+        tars_label = self.LABEL_MATCH if label in sentence_labels else self.LABEL_NO_MATCH
 
         tars_sentence = Sentence(label_text_pair, use_tokenizer=False).add_label(self.static_label_type, tars_label)
 
@@ -811,7 +813,7 @@ class TARSClassifier(FewshotClassifier):
                         overall_count += loss_and_count[1]
 
                         predicted_tars_label = tars_sentence.get_labels(label_name)[0]
-                        if predicted_tars_label.value == "True":
+                        if predicted_tars_label.value == self.LABEL_MATCH:
                             sentence.add_label(label_name, label, predicted_tars_label.score)
 
                 # clearing token embeddings to save memory
