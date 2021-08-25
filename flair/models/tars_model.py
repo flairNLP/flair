@@ -170,7 +170,7 @@ class FewshotClassifier(flair.nn.Classifier):
     def add_and_switch_to_new_task(self,
                                    task_name,
                                    label_dictionary: Union[List, Set, Dictionary, str],
-                                   tag_type: str,
+                                   label_type: str,
                                    ):
         """
         Adds a new task to an existing TARS model. Sets necessary attributes and finally 'switches'
@@ -201,7 +201,7 @@ class FewshotClassifier(flair.nn.Classifier):
                 else:
                     tag_dictionary.add_item(tag)
 
-            self._task_specific_attributes[task_name] = {'tag_dictionary': tag_dictionary, 'tag_type': tag_type}
+            self._task_specific_attributes[task_name] = {'tag_dictionary': tag_dictionary, 'tag_type': label_type}
 
         self.switch_to_task(task_name)
 
@@ -383,7 +383,7 @@ class TARSTagger(FewshotClassifier):
         for token in sentence:
             tag = token.get_tag(self.get_current_label_type()).value
 
-            if tag == "O":
+            if tag == "O" or tag == "":
                 tars_tag = "O"
             elif tag == label:
                 tars_tag = "S-"
@@ -593,6 +593,8 @@ class TARSClassifier(FewshotClassifier):
     """
 
     static_label_type = "tars_label"
+    LABEL_MATCH = "YES"
+    LABEL_NO_MATCH = "NO"
 
     def __init__(
             self,
@@ -632,8 +634,10 @@ class TARSClassifier(FewshotClassifier):
 
         # prepare TARS dictionary
         tars_dictionary = Dictionary(add_unk=False)
-        tars_dictionary.add_item('False')
-        tars_dictionary.add_item('True')
+        tars_dictionary.add_item(self.LABEL_NO_MATCH)
+        tars_dictionary.add_item(self.LABEL_MATCH)
+
+        print(embeddings)
 
         # initialize a bare-bones sequence tagger
         self.tars_model = TextClassifier(document_embeddings=embeddings,
@@ -662,7 +666,7 @@ class TARSClassifier(FewshotClassifier):
 
         sentence_labels = [label.value for label in sentence.get_labels(self.get_current_label_type())]
 
-        tars_label = "True" if label in sentence_labels else "False"
+        tars_label = self.LABEL_MATCH if label in sentence_labels else self.LABEL_NO_MATCH
 
         tars_sentence = Sentence(label_text_pair, use_tokenizer=False).add_label(self.static_label_type, tars_label)
 
@@ -730,7 +734,6 @@ class TARSClassifier(FewshotClassifier):
             return_loss=False,
             embedding_storage_mode="none",
     ):
-        # return
         """
         Predict sequence tags for Named Entity Recognition task
         :param sentences: a Sentence or a List of Sentence
@@ -799,7 +802,6 @@ class TARSClassifier(FewshotClassifier):
 
                     all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
 
-                    all_detected = {}
                     for label in all_labels:
                         tars_sentence = self._get_tars_formatted_sentence(label, sentence)
 
@@ -811,7 +813,7 @@ class TARSClassifier(FewshotClassifier):
                         overall_count += loss_and_count[1]
 
                         predicted_tars_label = tars_sentence.get_labels(label_name)[0]
-                        if predicted_tars_label.value == "True":
+                        if predicted_tars_label.value == self.LABEL_MATCH:
                             sentence.add_label(label_name, label, predicted_tars_label.score)
 
                 # clearing token embeddings to save memory
