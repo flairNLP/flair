@@ -802,6 +802,7 @@ class SequenceTagger(flair.nn.Classifier):
             "chunk-fast": "flair/chunk-english-fast",
             # Language-specific NER models
             "ar-ner": "megantosh/flair-arabic-multi-ner",
+            "ar-pos": "megantosh/flair-arabic-dialects-codeswitch-egy-lev",
             "da-ner": "flair/ner-danish",
             "de-ner": "flair/ner-german",
             "de-ler": "flair/ner-german-legal",
