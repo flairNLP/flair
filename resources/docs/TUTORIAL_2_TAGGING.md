@@ -142,7 +142,8 @@ You can pass text in any of these languages to the model. In particular, the NER
 
 | ID | Task | Language | Training Dataset | Accuracy | Contributor / Notes |
 | -------------    | ------------- |------------- |------------- |------------- | ------------ |
-| '[ar-ner](https://huggingface.co/megantosh/flair-arabic-multi-ner)' | NER (4-class) | AQMAR & ANERcorp (curated) |  **86.66** (F1) | |
+| '[ar-ner](https://huggingface.co/megantosh/flair-arabic-multi-ner)' | NER (4-class) | Arabic | AQMAR & ANERcorp (curated) |  **86.66** (F1) | |
+| '[ar-pos](https://huggingface.co/megantosh/flair-arabic-dialects-codeswitch-egy-lev)' | NER (4-class) | Arabic (+dialects)| combination of corpora |  | |
 | '[de-ner](https://huggingface.co/flair/ner-german)' | NER (4-class) |  German | Conll-03  |  **87.94** (F1) | |
 | '[de-ner-large](https://huggingface.co/flair/ner-german-large)' | NER (4-class) |  German | Conll-03  |  **92,31** (F1) | |
 | 'de-ner-germeval' | NER (4-class) | German | Germeval  |  **84.90** (F1) | |
