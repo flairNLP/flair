@@ -305,9 +305,9 @@ class TARSTagger(FewshotClassifier):
 
     def __init__(
             self,
-            task_name: str,
-            tag_dictionary: Dictionary,
-            tag_type: str,
+            task_name: Optional[str] = None,
+            tag_dictionary: Optional[Dictionary] = None,
+            tag_type: Optional[str] = None,
             embeddings: str = 'bert-base-uncased',
             num_negative_labels_to_sample: int = 2,
             prefix: bool = True,
@@ -362,8 +362,12 @@ class TARSTagger(FewshotClassifier):
         self.prefix = prefix
         self.num_negative_labels_to_sample = num_negative_labels_to_sample
 
-        # Store task specific labels since TARS can handle multiple tasks
-        self.add_and_switch_to_new_task(task_name, tag_dictionary, tag_type)
+        if task_name and tars_dictionary and tag_type:
+            # Store task specific labels since TARS can handle multiple tasks
+            self.add_and_switch_to_new_task(task_name, tag_dictionary, tag_type)
+        else:
+            log.info("TARS initialized without a task. You need to call .add_and_switch_to_new_task()"
+                     "before training this model")
 
     def _get_tars_formatted_sentence(self, label, sentence):
 
