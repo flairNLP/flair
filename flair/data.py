@@ -1418,8 +1418,6 @@ class Corpus:
         from flair.datasets import DataLoader
 
         datasets = [self.train]
-        if self.test is not None:
-            datasets.append(self.test)
 
         data = ConcatDataset(datasets)
 

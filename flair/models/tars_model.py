@@ -171,6 +171,7 @@ class FewshotClassifier(flair.nn.Classifier):
                                    task_name,
                                    label_dictionary: Union[List, Set, Dictionary, str],
                                    label_type: str,
+                                   force_switch: bool = False,
                                    ):
         """
         Adds a new task to an existing TARS model. Sets necessary attributes and finally 'switches'
@@ -181,7 +182,7 @@ class FewshotClassifier(flair.nn.Classifier):
         :param multi_label: auto-detect if a corpus label dictionary is provided. Defaults to True otherwise
         :param multi_label_threshold: If multi-label you can set the threshold to make predictions
         """
-        if task_name in self._task_specific_attributes:
+        if task_name in self._task_specific_attributes and not force_switch:
             log.warning("Task `%s` already exists in TARS model. Switching to it.", task_name)
         else:
 
