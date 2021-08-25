@@ -116,14 +116,9 @@ print(sentence[0].embedding.size())
 
 ### Layer mean
 
-The Transformer-based models have a certain number of layers. [Liu et. al (2019)](https://arxiv.org/abs/1903.08855)
-propose a technique called scalar mix, that computes a parameterised scalar mixture of user-defined layers.
-
-This technique is very useful, because for some downstream tasks like NER or PoS tagging it can be unclear which
-layer(s) of a Transformer-based model perform well, and per-layer analysis can take a lot of time.
-
-To use scalar mix, all Transformer-based embeddings in Flair come with a `layer_mean` argument. The following
-example shows how to use scalar mix for a base RoBERTa model on all layers:
+The Transformer-based models have a certain number of layers. By default, all layers you select are 
+concatenated as explained above. Alternatively, you can set layer_mean=True to do a mean over all
+selected layers. The resulting vector will then always have the same dimensionality as a single layer:
 
 ```python
 from flair.embeddings import TransformerWordEmbeddings
