@@ -1,4 +1,5 @@
 import csv
+import logging
 import os
 from pathlib import Path
 from typing import Union
@@ -10,6 +11,8 @@ from flair.data import Dictionary, Sentence
 from flair.datasets import ColumnCorpus
 from flair.file_utils import cached_path, unpack_file
 from flair.tokenization import SentenceSplitter, SegtokSentenceSplitter
+
+log = logging.getLogger("flair")
 
 
 class EntityLinkingCorpus(ColumnCorpus):
@@ -268,7 +271,7 @@ class NEL_AQUAINT(EntityLinkingCorpus):
         )
 
 
-class NEL_OLD_GERMAN(EntityLinkingCorpus):
+class NEL_GERMAN_HIPE(EntityLinkingCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -277,10 +280,11 @@ class NEL_OLD_GERMAN(EntityLinkingCorpus):
             **corpusargs
     ):
         """
-        Initialize Old German Entity Linking corpus. Its the german part of the data introduced here https://zenodo.org/record/4573313#.YRvDm99CRPZ and in the corresponding
-        paper "A Multilingual Dataset for Named Entity Recognition, Entity Linking and Stance Detection in Historical Newspapers" from Hamdi et al.
-        License: https://creativecommons.org/licenses/by/4.0/legalcode
-        If you call the constructor the first time the dataset gets automatically downloaded and transformed in tab-separated column format.
+        Initialize a sentence-segmented version of the HIPE entity linking corpus for historical German (see description
+        of HIPE at https://impresso.github.io/CLEF-HIPE-2020/). This version was segmented by @stefan-it and is hosted
+        at https://github.com/stefan-it/clef-hipe.
+        If you call the constructor the first time the dataset gets automatically downloaded and transformed in
+        tab-separated column format.
 
         Parameters
         ----------
@@ -288,8 +292,8 @@ class NEL_OLD_GERMAN(EntityLinkingCorpus):
             Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
             to point to a different folder but typically this should not be necessary.
         in_memory: If True, keeps dataset in memory giving speedups in training.
-        wiki_language : specfiy the language of the names of the wikipedia pages, i.e. which language version of wikipedia to use.
-        Since the text is in german the default language is german.
+        wiki_language : specify the language of the names of the wikipedia pages, i.e. which language version of
+        Wikipedia URLs to use. Since the text is in german the default language is German.
         """
         self.wiki_language = wiki_language
         if type(base_path) == str:
@@ -319,11 +323,11 @@ class NEL_OLD_GERMAN(EntityLinkingCorpus):
             original_dev_path = cached_path(f"{dev_raw_url}", Path("datasets") / dataset_name)
 
             # generate qid wikiname dictionaries
-            print('Get wikinames from wikidata...')
+            log.info('Get wikinames from wikidata...')
             train_dict = self._get_qid_wikiname_dict(path=original_train_path)
             test_dict = self._get_qid_wikiname_dict(original_test_path)
             dev_dict = self._get_qid_wikiname_dict(original_dev_path)
-            print('...done!')
+            log.info('...done!')
 
             # merge dictionaries
             qid_wikiname_dict = {**train_dict, **test_dict, **dev_dict}
@@ -339,7 +343,6 @@ class NEL_OLD_GERMAN(EntityLinkingCorpus):
                     last_eos = True
 
                     while line:
-                        # print(line)
                         # commented and empty lines
                         if line[0] == '#' or line == '\n':
                             if line[2:13] == 'document_id':  # beginning of new document
@@ -352,7 +355,6 @@ class NEL_OLD_GERMAN(EntityLinkingCorpus):
 
                         else:
                             line_list = line.split('\t')
-                            # print(line_list)
                             if not line_list[7] in ['_', 'NIL']:  # line has wikidata link
 
                                 wikiname = qid_wikiname_dict[line_list[7]]
@@ -376,7 +378,7 @@ class NEL_OLD_GERMAN(EntityLinkingCorpus):
 
                         line = read.readline()
 
-        super(NEL_OLD_GERMAN, self).__init__(
+        super(NEL_GERMAN_HIPE, self).__init__(
             data_folder,
             train_file=train_file_name,
             dev_file=wiki_language + '_dev.tsv',
@@ -399,7 +401,6 @@ class NEL_OLD_GERMAN(EntityLinkingCorpus):
 
                 if not (line[0] == '#' or line == '\n'):  # commented or empty lines
                     line_list = line.split('\t')
-                    # print(line_list)
                     if not line_list[7] in ['_', 'NIL']:  # line has wikidata link
 
                         qid_set.add(line_list[7])
@@ -559,7 +560,6 @@ class NEL_AIDA_CONLL(EntityLinkingCorpus):
                     i + 1) % 50 == 0 or i == length - 1:  # there is a limit to the number of ids in one request in the wikimedia api
 
                 ids += wikiid_list[i]
-                # print(ids)
                 # request
                 resp = requests.get(
                     'https://en.wikipedia.org/w/api.php',
