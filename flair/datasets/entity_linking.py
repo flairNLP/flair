@@ -96,7 +96,7 @@ class EntityLinkingCorpus(ColumnCorpus):
                             remove = True
 
 
-class NEL_AQUAINT(EntityLinkingCorpus):
+class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -263,7 +263,7 @@ class NEL_AQUAINT(EntityLinkingCorpus):
                 os.remove(parsed_dataset)
                 raise
 
-        super(NEL_AQUAINT, self).__init__(
+        super(NEL_ENGLISH_AQUAINT, self).__init__(
             data_folder,
             train_file=corpus_file_name,
             in_memory=in_memory,
@@ -440,7 +440,7 @@ class NEL_GERMAN_HIPE(EntityLinkingCorpus):
         return qid_wikiname_dict
 
 
-class NEL_AIDA_CONLL(EntityLinkingCorpus):
+class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -527,7 +527,7 @@ class NEL_AIDA_CONLL(EntityLinkingCorpus):
                 # delete unprocessed file
                 os.remove(path)
 
-        super(NEL_AIDA_CONLL, self).__init__(
+        super(NEL_ENGLISH_AIDA, self).__init__(
             data_folder,
             train_file=corpus_file_name,
             dev_file='testa',
@@ -586,7 +586,7 @@ class NEL_AIDA_CONLL(EntityLinkingCorpus):
         return wikiid_wikiname_dict
 
 
-class NEL_IITB(EntityLinkingCorpus):
+class NEL_ENGLISH_IITB(EntityLinkingCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -713,7 +713,7 @@ class NEL_IITB(EntityLinkingCorpus):
 
                             write.write('\n')  # empty line after each sentence
 
-        super(NEL_IITB, self).__init__(
+        super(NEL_ENGLISH_IITB, self).__init__(
             data_folder,
             train_file=corpus_file_name,
             in_memory=in_memory,
@@ -721,7 +721,7 @@ class NEL_IITB(EntityLinkingCorpus):
         )
 
 
-class NEL_TWEEKI(EntityLinkingCorpus):
+class NEL_ENGLISH_TWEEKI(EntityLinkingCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -780,7 +780,7 @@ class NEL_TWEEKI(EntityLinkingCorpus):
 
             os.rename(original_file_path, str(original_file_path) + '_original')
 
-        super(NEL_TWEEKI, self).__init__(
+        super(NEL_ENGLISH_TWEEKI, self).__init__(
             data_folder,
             train_file=corpus_file_name,
             in_memory=in_memory,
@@ -788,7 +788,7 @@ class NEL_TWEEKI(EntityLinkingCorpus):
         )
 
 
-class NEL_REDDIT_EL(EntityLinkingCorpus):
+class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -908,7 +908,7 @@ class NEL_REDDIT_EL(EntityLinkingCorpus):
 
                             self._text_to_cols(Sentence(self.curr_comm, use_tokenizer=True), link_annots, txtout)
 
-        super(NEL_REDDIT_EL, self).__init__(
+        super(NEL_ENGLISH_REDDIT, self).__init__(
             data_folder,
             train_file=corpus_file_name,
             in_memory=in_memory,
