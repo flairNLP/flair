@@ -64,12 +64,12 @@ from .sequence_labeling import UP_SPANISH_ANCORA
 
 # Expose all entity linking datasets
 from .entity_linking import EntityLinkingCorpus
-from .entity_linking import NEL_ENGLISH_REDDIT
-from .entity_linking import NEL_ENGLISH_AQUAINT
-from .entity_linking import NEL_OLD_GERMAN
 from .entity_linking import NEL_ENGLISH_AIDA
+from .entity_linking import NEL_ENGLISH_AQUAINT
 from .entity_linking import NEL_ENGLISH_IITB
+from .entity_linking import NEL_ENGLISH_REDDIT
 from .entity_linking import NEL_ENGLISH_TWEEKI
+from .entity_linking import NEL_GERMAN_HIPE
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
