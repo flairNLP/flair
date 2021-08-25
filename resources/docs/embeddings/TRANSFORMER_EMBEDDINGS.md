@@ -1,9 +1,9 @@
 # TransformerWordEmbeddings
 
 Thanks to the brilliant [`transformers`](https://github.com/huggingface/transformers) library from [HuggingFace](https://github.com/huggingface), 
-Flair is able to support various Transformer-based architectures like BERT or XLNet. 
+Flair is able to support various Transformer-based architectures like BERT or XLNet with a single class for transformer-based word embeddings.
 
-As of version 0.5 of Flair, there is a single class for all transformer embeddings that you instantiate with different identifiers get different transformers. For instance, to load a standard BERT transformer model, do:  
+For instance, to load a standard BERT transformer model, do:  
 
 ```python
 from flair.embeddings import TransformerWordEmbeddings
