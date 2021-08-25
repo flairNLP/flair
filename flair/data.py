@@ -4,11 +4,10 @@ from abc import abstractmethod, ABC
 from collections import Counter
 from collections import defaultdict
 from operator import itemgetter
-from typing import List, Dict, Union, Callable, Optional
+from typing import List, Dict, Union, Optional
 
 import flair
 import torch
-from deprecated import deprecated
 from torch.utils.data import Dataset
 from torch.utils.data.dataset import ConcatDataset, Subset
 
@@ -587,44 +586,6 @@ class Tokenizer(ABC):
     @property
     def name(self) -> str:
         return self.__class__.__name__
-
-
-@deprecated(version="0.5", reason="Use 'flair.tokenization.SpaceTokenizer' instead.")
-def space_tokenizer(text: str) -> List[Token]:
-    # We don't want to create a SpaceTokenizer object each time this function is called,
-    # so delegate the call directly to the static run_tokenize method
-    from flair.tokenization import SpaceTokenizer
-    return SpaceTokenizer.run_tokenize(text)
-
-
-@deprecated(version="0.5", reason="Use 'flair.tokenization.SegtokTokenizer' instead.")
-def segtok_tokenizer(text: str) -> List[Token]:
-    # We don't want to create a SegtokTokenizer object each time this function is called,
-    # so delegate the call directly to the static run_tokenize method
-    from flair.tokenization import SegtokTokenizer
-    return SegtokTokenizer.run_tokenize(text)
-
-
-@deprecated(version="0.5", reason="Use 'flair.tokenization.SpacyTokenizer' instead.")
-def build_spacy_tokenizer(model) -> Callable[[str], List[Token]]:
-    from flair.tokenization import SpacyTokenizer
-    spacy_tokenizer = SpacyTokenizer(model)
-
-    def tokenizer(text: str) -> List[Token]:
-        return spacy_tokenizer.tokenize(text)
-
-    return tokenizer
-
-
-@deprecated(version="0.5", reason="Use 'flair.tokenization.JapaneseTokenizer' instead.")
-def build_japanese_tokenizer(tokenizer: str = "MeCab"):
-    from flair.tokenization import JapaneseTokenizer
-    japanese_tokenizer = JapaneseTokenizer(tokenizer)
-
-    def tokenizer(text: str) -> List[Token]:
-        return japanese_tokenizer.tokenize(text)
-
-    return tokenizer
 
 
 class Sentence(DataPoint):

@@ -1,14 +1,12 @@
 import logging
-
 from abc import ABC, abstractmethod
 from typing import List, Callable, Optional
 
+from more_itertools import stagger
 from segtok.segmenter import split_single, split_multi
 from segtok.tokenizer import split_contractions, word_tokenizer
 
-from more_itertools import stagger
-
-from flair.data import Sentence, Tokenizer, Token
+from flair.data import Sentence, Token, Tokenizer
 
 log = logging.getLogger("flair")
 
@@ -58,7 +56,7 @@ class SpacyTokenizer(Tokenizer):
             tokens.append(token)
 
             if (previous_token is not None) and (
-                token.start_pos == previous_token.start_pos + len(previous_token.text)
+                    token.start_pos == previous_token.start_pos + len(previous_token.text)
             ):
                 previous_token.whitespace_after = False
 
@@ -69,11 +67,11 @@ class SpacyTokenizer(Tokenizer):
     @property
     def name(self) -> str:
         return (
-            self.__class__.__name__
-            + "_"
-            + self.model.meta["name"]
-            + "_"
-            + self.model.meta["version"]
+                self.__class__.__name__
+                + "_"
+                + self.model.meta["name"]
+                + "_"
+                + self.model.meta["version"]
         )
 
 
@@ -83,6 +81,7 @@ class SegtokTokenizer(Tokenizer):
 
         For further details see: https://github.com/fnl/segtok
     """
+
     def __init__(self):
         super(SegtokTokenizer, self).__init__()
 
@@ -136,6 +135,7 @@ class SpaceTokenizer(Tokenizer):
     """
         Tokenizer based on space character only.
     """
+
     def __init__(self):
         super(SpaceTokenizer, self).__init__()
 
@@ -180,7 +180,7 @@ class JapaneseTokenizer(Tokenizer):
             https://github.com/himkt/konoha
     """
 
-    def __init__(self, tokenizer: str, sudachi_mode: str="A"):
+    def __init__(self, tokenizer: str, sudachi_mode: str = "A"):
         super(JapaneseTokenizer, self).__init__()
 
         available_tokenizers = ["mecab", "janome", "sudachi"]
@@ -248,9 +248,9 @@ class JapaneseTokenizer(Tokenizer):
     @property
     def name(self) -> str:
         return (
-            self.__class__.__name__
-            + "_"
-            + self.tokenizer
+                self.__class__.__name__
+                + "_"
+                + self.tokenizer
         )
 
 
@@ -258,6 +258,7 @@ class TokenizerWrapper(Tokenizer):
     """
         Helper class to wrap tokenizer functions to the class-based tokenizer interface.
     """
+
     def __init__(self, tokenizer_func: Callable[[str], List[Token]]):
         super(TokenizerWrapper, self).__init__()
         self.tokenizer_func = tokenizer_func
@@ -358,7 +359,7 @@ class SciSpacyTokenizer(Tokenizer):
             tokens.append(token)
 
             if (previous_token is not None) and (
-                token.start_pos == previous_token.start_pos + len(previous_token.text)
+                    token.start_pos == previous_token.start_pos + len(previous_token.text)
             ) and (not word.text[0].isspace()):
                 previous_token.whitespace_after = False
 
@@ -369,11 +370,11 @@ class SciSpacyTokenizer(Tokenizer):
     @property
     def name(self) -> str:
         return (
-            self.__class__.__name__
-            + "_"
-            + self.model.meta["name"]
-            + "_"
-            + self.model.meta["version"]
+                self.__class__.__name__
+                + "_"
+                + self.model.meta["name"]
+                + "_"
+                + self.model.meta["version"]
         )
 
 
@@ -516,13 +517,13 @@ class SpacySentenceSplitter(SentenceSplitter):
     @property
     def name(self) -> str:
         return (
-            self.__class__.__name__
-            + "_"
-            + self.model.meta["name"]
-            + "_"
-            + self.model.meta["version"]
-            + "_"
-            + self._tokenizer.name
+                self.__class__.__name__
+                + "_"
+                + self.model.meta["name"]
+                + "_"
+                + self.model.meta["version"]
+                + "_"
+                + self._tokenizer.name
         )
 
 
@@ -580,11 +581,11 @@ class TagSentenceSplitter(SentenceSplitter):
     @property
     def name(self) -> str:
         return (
-            self.__class__.__name__
-            + "_"
-            + self.tag
-            + "_"
-            + self._tokenizer.name
+                self.__class__.__name__
+                + "_"
+                + self.tag
+                + "_"
+                + self._tokenizer.name
         )
 
 
@@ -600,9 +601,9 @@ class NewlineSentenceSplitter(TagSentenceSplitter):
     @property
     def name(self) -> str:
         return (
-            self.__class__.__name__
-            + "_"
-            + self._tokenizer.name
+                self.__class__.__name__
+                + "_"
+                + self._tokenizer.name
         )
 
 
@@ -635,7 +636,7 @@ class NoSentenceSplitter(SentenceSplitter):
     @property
     def name(self) -> str:
         return (
-            self.__class__.__name__
-            + "_"
-            + self._tokenizer.name
+                self.__class__.__name__
+                + "_"
+                + self._tokenizer.name
         )
