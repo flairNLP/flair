@@ -274,4 +274,6 @@ Giving you only the "topic" labels.
 
 ## Next
 
+So far, we've seen how to create sentences and label them manually.
+
 Now, let us look at how to use [pre-trained models](/resources/docs/TUTORIAL_2_TAGGING.md) to tag your text.
