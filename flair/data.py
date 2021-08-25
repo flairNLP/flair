@@ -1428,6 +1428,8 @@ class Corpus:
         log.info("Computing label dictionary. Progress:")
 
         all_label_types = Counter()
+        all_sentence_labels = []
+        token_labels_exist = False
         for batch in Tqdm.tqdm(iter(loader)):
 
             for sentence in batch:
@@ -1437,7 +1439,11 @@ class Corpus:
                 all_label_types.update(sentence.annotation_layers.keys())
 
                 for label in labels:
-                    label_dictionary.add_item(label.value)
+                    if label.value not in all_sentence_labels: all_sentence_labels.append(label.value)
+
+                if not label_dictionary.multi_label:
+                    if len(labels) > 1:
+                        label_dictionary.multi_label = True
 
                 # check for labels of words
                 if isinstance(sentence, Sentence):
@@ -1445,10 +1451,12 @@ class Corpus:
                         all_label_types.update(token.annotation_layers.keys())
                         for label in token.get_labels(label_type):
                             label_dictionary.add_item(label.value)
+                            token_labels_exist = True
 
-                if not label_dictionary.multi_label:
-                    if len(labels) > 1:
-                        label_dictionary.multi_label = True
+        # if this is not a token-level prediction problem, add sentence-level labels to dictionary
+        if not token_labels_exist:
+            for label in all_sentence_labels:
+                label_dictionary.add_item(label)
 
         if len(label_dictionary.idx2item) == 0:
             log.error(
