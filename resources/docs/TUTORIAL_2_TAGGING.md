@@ -97,7 +97,7 @@ The sentence now has two types of annotation: POS and NER.
 You choose which pre-trained model you load by passing the appropriate
 string to the `load()` method of the `SequenceTagger` class. 
 
-A full list of our current and community-contributed models can be browsed on the [__model hub__](https://huggingface.co/models?filter=flair). 
+A full list of our current and community-contributed models can be browsed on the [__model hub__](https://huggingface.co/models?library=flair&sort=downloads). 
 At least the following pre-trained models are provided (click on an ID link to get more info
 for the model and an online demo):
 
