@@ -331,11 +331,10 @@ All you need to do is use the `predict()` method of the classifier on a sentence
 the sentence. Lets use a sentence with positive sentiment:
 
 ```python
-# load tagger
-classifier = TextClassifier.load('sentiment')
-
-# predict for example sentence
+# make example sentence
 sentence = Sentence("enormously entertaining for moviegoers of any age.")
+
+# call predict
 classifier.predict(sentence)
 
 # check prediction
