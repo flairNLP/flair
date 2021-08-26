@@ -367,7 +367,7 @@ class TARSTagger(FewshotClassifier):
             # Store task specific labels since TARS can handle multiple tasks
             self.add_and_switch_to_new_task(task_name, tag_dictionary, tag_type)
         else:
-            log.info("TARS initialized without a task. You need to call .add_and_switch_to_new_task()"
+            log.info("TARS initialized without a task. You need to call .add_and_switch_to_new_task() "
                      "before training this model")
 
     def _get_tars_formatted_sentence(self, label, sentence):

@@ -86,7 +86,9 @@ If the model works well, it will correctly tag 'love' as a verb in this example.
 ## Training a Named Entity Recognition (NER) Model with Flair Embeddings
 
 To train a sequence labeling model for NER, just minor modifications to the above script are necessary. Load an NER
-corpus like CONLL_03 (requires manual download of data - or use a [different NER corpus](/resources/docs/TUTORIAL_6_CORPUS.md#datasets-included-in-flair)), change the `label_type` to 'ner' and and use a `StackedEmbedding` consisting of GloVe and Flair:
+corpus like CONLL_03 (requires manual download of data - or use
+a [different NER corpus](/resources/docs/TUTORIAL_6_CORPUS.md#datasets-included-in-flair)), change the `label_type` to '
+ner' and and use a `StackedEmbedding` consisting of GloVe and Flair:
 
 ```python
 from flair.datasets import CONLL_03
@@ -130,17 +132,18 @@ trainer.train('resources/taggers/sota-ner-flair',
               mini_batch_size=32,
               max_epochs=150)
 ```
-This will give you state-of-the-art numbers similar to the ones reported in [Akbik et al. (2018)](https://aclanthology.org/C18-1139.pdf).
 
+This will give you state-of-the-art numbers similar to the ones reported
+in [Akbik et al. (2018)](https://aclanthology.org/C18-1139.pdf).
 
 ## Training a Named Entity Recognition (NER) Model with Transformers
 
-You can get **even better numbers** if you use transformers as embeddings, fine-tune them and use full document context 
-(see our [FLERT](https://arxiv.org/abs/2011.06993) paper for details). It's state-of-the-art but much slower than 
-the above model.
+You can get **even better numbers** if you use transformers as embeddings, fine-tune them and use full document context
+(see our [FLERT](https://arxiv.org/abs/2011.06993) paper for details). It's state-of-the-art but much slower than the
+above model.
 
-Change the script to use transformer embeddings
-and change the training routine to fine-tune with AdamW optimizer and a tiny learning rate instead of SGD:
+Change the script to use transformer embeddings and change the training routine to fine-tune with AdamW optimizer and a
+tiny learning rate instead of SGD:
 
 ```python
 from flair.datasets import CONLL_03
@@ -188,25 +191,29 @@ trainer = ModelTrainer(tagger, corpus, optimizer=torch.optim.AdamW)
 trainer.train('resources/taggers/sota-ner-flert',
               learning_rate=5.0e-6,
               mini_batch_size=4,
-              mini_batch_chunk_size=1, # remove this parameter to speed up computation if you have a big GPU
-              max_epochs=20, # 10 is also good
+              mini_batch_chunk_size=1,  # remove this parameter to speed up computation if you have a big GPU
+              max_epochs=20,  # 10 is also good
               scheduler=OneCycleLR,
               embeddings_storage_mode='none',
               weight_decay=0.,
               )
 ```
 
-This will give you state-of-the-art numbers similar to the ones reported in [Schweter and Akbik (2021)](https://arxiv.org/abs/2011.06993).
-
+This will give you state-of-the-art numbers similar to the ones reported
+in [Schweter and Akbik (2021)](https://arxiv.org/abs/2011.06993).
 
 ## Training a Text Classification Model
 
-Training other types of models is very similar to the scripts for training sequence labelers above. For text classification, use an appropriate corpus
-and use document-level embeddings instead of word-level embeddings (see tutorials on both for difference). The rest is exactly the same as before!
+Training other types of models is very similar to the scripts for training sequence labelers above. For text
+classification, use an appropriate corpus and use document-level embeddings instead of word-level embeddings (see
+tutorials on both for difference). The rest is exactly the same as before!
 
-The best results in text classification use fine-tuned transformers with `TransformerDocumentEmbeddings` as shown in the code below:
+The best results in text classification use fine-tuned transformers with `TransformerDocumentEmbeddings` as shown in the
+code below:
 
-(If you don't have a big GPU to fine-tune transformers, try `DocumentPoolEmbeddings` or `DocumentRNNEmbeddings` instead - sometimes they work just as well!)
+(If you don't have a big GPU to fine-tune transformers, try `DocumentPoolEmbeddings` or `DocumentRNNEmbeddings` instead
+
+- sometimes they work just as well!)
 
 ```python
 import torch
@@ -277,7 +284,7 @@ from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
 
 # 1. get the corpora - English and German UD
-corpus: MultiCorpus = MultiCorpus([UD_ENGLISH(), UD_GERMAN()]).downsample(0.1)
+corpus = MultiCorpus([UD_ENGLISH(), UD_GERMAN()]).downsample(0.1)
 
 # 2. what label do we want to predict?
 label_type = 'upos'
@@ -294,17 +301,17 @@ embedding_types = [
     FlairEmbeddings('multi-backward'),
 ]
 
-embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
+embeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # 5. initialize sequence tagger
-tagger: SequenceTagger = SequenceTagger(hidden_size=256,
-                                        embeddings=embeddings,
-                                        tag_dictionary=label_dict,
-                                        tag_type=label_type,
-                                        use_crf=True)
+tagger = SequenceTagger(hidden_size=256,
+                        embeddings=embeddings,
+                        tag_dictionary=label_dict,
+                        tag_type=label_type,
+                        use_crf=True)
 
 # 6. initialize trainer
-trainer: ModelTrainer = ModelTrainer(tagger, corpus)
+trainer = ModelTrainer(tagger, corpus)
 
 # 7. start training
 trainer.train('resources/taggers/example-universal-pos',
@@ -366,7 +373,7 @@ corpus: Corpus = WNUT_17().downsample(0.1)
 label_type = 'ner'
 
 # 3. make the label dictionary from the corpus
-label_dict = corpus.make_tag_dictionary(label_type=label_type)
+label_dict = corpus.make_label_dictionary(label_type=label_type)
 
 # 4. initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
@@ -389,14 +396,12 @@ trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 trainer.train('resources/taggers/example-ner',
               learning_rate=0.1,
               mini_batch_size=32,
-              max_epochs=150,
+              max_epochs=10,
               checkpoint=True)
 
 # 8. stop training at any point
 
 # 9. continue trainer at later point
-from pathlib import Path
-
 checkpoint = 'resources/taggers/example-ner/checkpoint.pt'
 trainer = ModelTrainer.load_checkpoint(checkpoint, corpus)
 trainer.train('resources/taggers/example-ner',
