@@ -208,8 +208,10 @@ This will give you state-of-the-art numbers similar to the ones reported in [Sch
 
 ## Training a Text Classification Model
 
-Here is example code for training a text classifier over the TREC-6 corpus, using a combination of simple GloVe
-embeddings and Flair embeddings.
+Training other types of models is very similar to the scripts for training sequence labelers above. For text classification, use an appropriate corpus
+and use document-level embeddings instead of word-level embeddings (see tutorials on both for difference). The rest is exactly the same as before!
+
+Here a simple example script that trains an RNN classifier for question classification with a combination of GloVe and Flair embeddings:
 
 ```python
 from flair.data import Corpus
@@ -222,7 +224,7 @@ from flair.trainers import ModelTrainer
 corpus: Corpus = TREC_6()
 
 # 2. create the label dictionary
-label_dict = corpus.make_label_dictionary()
+label_dict = corpus.make_label_dictionary(label_type='question_class')
 
 # 3. make a list of word embeddings
 word_embeddings = [WordEmbeddings('glove')]
