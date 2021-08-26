@@ -229,16 +229,16 @@ label_dict = corpus.make_label_dictionary(label_type=label_type)
 document_embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased', fine_tune=True)
 
 # 5. create the text classifier
-classifier = TextClassifier(document_embeddings, label_dictionary=label_dict)
+classifier = TextClassifier(document_embeddings, label_dictionary=label_dict, label_type=label_type)
 
 # 6. initialize trainer with AdamW optimizer
-trainer = ModelTrainer(tagger, corpus, optimizer=torch.optim.AdamW)
+trainer = ModelTrainer(classifier, corpus, optimizer=torch.optim.AdamW)
 
 # 7. run training with fine-tuning
 trainer.train('resources/taggers/question-classification-with-transformer',
               learning_rate=5.0e-5,
               mini_batch_size=4,
-              max_epochs=10, 
+              max_epochs=10,
               scheduler=OneCycleLR,
               embeddings_storage_mode='none',
               weight_decay=0.,
