@@ -179,17 +179,6 @@ Flair supports a growing list of prepared datasets out of the box. That is, it a
 data the first time you call the corresponding constructor ID. The following datasets are supported: 
 
 
-#### Other Sequence Labeling
-
-| ID(s) | Languages | Description |
-| -------------    | ------------- |------------- |
-| 'CONLL_2000' | English  | Syntactic chunking with [CoNLL-2000]((https://www.clips.uantwerpen.be/conll2000/chunking/))  |
-| 'BIOSCOPE' | English  | Negation and speculation scoping wih [BioScope](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-S11-S9/) biomedical texts annotated for uncertainty, negation and their scopes |
-| 'KEYPHRASE_INSPEC' | English | Keyphrase dectection with [INSPEC](https://www.aclweb.org/anthology/W03-1028) original corpus (2000 docs) from INSPEC database, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
-| 'KEYPHRASE_SEMEVAL2017' | English | Keyphrase dectection with [SEMEVAL2017](https://arxiv.org/abs/1704.02853) dataset (500 docs) from ScienceDirect, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
-| 'KEYPHRASE_SEMEVAL2010' | English | Keyphrase dectection with [SEMEVAL2010](https://www.aclweb.org/anthology/S10-1004/) dataset (~250 docs) from ACM Digital Library, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
-
-
 #### Named Entity Recognition
 
 | Object | Languages | Description |
@@ -235,6 +224,22 @@ data the first time you call the corresponding constructor ID. The following dat
 We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
 
 
+#### Relation Extraction
+| 'CONLL_04' | English  |  [CoNLL-04](https://github.com/bekou/multihead_joint_entity_relation_extraction/tree/master/data/CoNLL04) Relation Extraction |
+
+
+#### GLUE Benchmark
+| ID(s) | Languages | Description |
+| -------------    | ------------- |------------- |
+| 'GLUE_COLA' | English | The Corpus of Linguistic Acceptability from GLUE benchmark |
+| 'GLUE_MNLI' | English | The Multi-Genre Natural Language Inference Corpus from the GLUE benchmark |
+| 'GLUE_RTE' | English | The RTE task from the GLUE benchmark |
+| 'GLUE_QNLI' | English | The Stanford Question Answering Dataset formated as NLI task from the GLUE benchmark |
+| 'GLUE_WNLI' | English | The Winograd Schema Challenge formated as NLI task from the GLUE benchmark |
+| 'GLUE_MRPC' | English | The MRPC task from GLUE benchmark |
+| 'GLUE_QQP' | English | The Quora Question Pairs dataset where the task is to determine whether a pair of questions are semantically equivalent |
+| 'SUPERGLUE_RTE' | English | The RTE task from the SuperGLUE benchmark |
+
 #### Universal Proposition Banks 
 
 We also support loading the [Universal Proposition Banks](https://github.com/System-T/UniversalPropositions)
@@ -250,7 +255,6 @@ for the purpose of training multilingual frame detection systems.
 | 'UP_ITALIAN', | Italian  |  Universal Propositions for [Italian](https://github.com/System-T/UniversalPropositions/tree/master/UP_Italian) |
 | 'UP_SPANISH' | Spanish  |  Universal Propositions for [Spanish](https://github.com/System-T/UniversalPropositions/tree/master/UP_Spanish) |
 | 'UP_SPANISH_ANCORA' | Spanish (Ancora Corpus)  |  Universal Propositions for [Spanish](https://github.com/System-T/UniversalPropositions/tree/master/UP_Spanish-AnCora) |
-
 
 #### Universal Dependency Treebanks
 
@@ -290,9 +294,6 @@ for the purpose of training multilingual frame detection systems.
 |  'UD_SWEDISH' | Swedish  |  Universal Dependency Treebank for [Swedish](https://github.com/UniversalDependencies/UD_Swedish-Talbanken) |
 |  'UD_TURKISH' | Turkish  |  Universal Dependency Treebank for [Tturkish](https://github.com/UniversalDependencies/UD_Turkish-IMST) |
 
-#### Relation Extraction
-| 'CONLL_04' | English  |  [CoNLL-04](https://github.com/bekou/multihead_joint_entity_relation_extraction/tree/master/data/CoNLL04) Relation Extraction |
-
 #### Text Classification
 | ID(s) | Languages | Description |
 | -------------    | ------------- |------------- |
@@ -312,7 +313,6 @@ for the purpose of training multilingual frame detection systems.
 | 'SENTEVAL_SST_GRANULAR' | English | Stanford sentiment treebank dataset of of [SentEval](https://github.com/facebookresearch/SentEval) with fine-grained sentiment annotation |
 | 'TREC_6', 'TREC_50' | English | The [TREC](http://cogcomp.org/Data/QA/QC/) question classification dataset |
 
-
 #### Text Regression
 | ID(s) | Languages | Description |
 | -------------    | ------------- |------------- |
@@ -321,17 +321,16 @@ for the purpose of training multilingual frame detection systems.
 | 'WASSA_JOY' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge (joy) |
 | 'WASSA_SADNESS' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge (sadness) |
 
-#### GLUE Benchmark
+
+#### Other Sequence Labeling
+
 | ID(s) | Languages | Description |
 | -------------    | ------------- |------------- |
-| 'GLUE_COLA' | English | The Corpus of Linguistic Acceptability from GLUE benchmark |
-| 'GLUE_MNLI' | English | The Multi-Genre Natural Language Inference Corpus from the GLUE benchmark |
-| 'GLUE_RTE' | English | The RTE task from the GLUE benchmark |
-| 'GLUE_QNLI' | English | The Stanford Question Answering Dataset formated as NLI task from the GLUE benchmark |
-| 'GLUE_WNLI' | English | The Winograd Schema Challenge formated as NLI task from the GLUE benchmark |
-| 'GLUE_MRPC' | English | The MRPC task from GLUE benchmark |
-| 'GLUE_QQP' | English | The Quora Question Pairs dataset where the task is to determine whether a pair of questions are semantically equivalent |
-| 'SUPERGLUE_RTE' | English | The RTE task from the SuperGLUE benchmark |
+| 'CONLL_2000' | English  | Syntactic chunking with [CoNLL-2000]((https://www.clips.uantwerpen.be/conll2000/chunking/))  |
+| 'BIOSCOPE' | English  | Negation and speculation scoping wih [BioScope](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-S11-S9/) biomedical texts annotated for uncertainty, negation and their scopes |
+| 'KEYPHRASE_INSPEC' | English | Keyphrase dectection with [INSPEC](https://www.aclweb.org/anthology/W03-1028) original corpus (2000 docs) from INSPEC database, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
+| 'KEYPHRASE_SEMEVAL2017' | English | Keyphrase dectection with [SEMEVAL2017](https://arxiv.org/abs/1704.02853) dataset (500 docs) from ScienceDirect, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
+| 'KEYPHRASE_SEMEVAL2010' | English | Keyphrase dectection with [SEMEVAL2010](https://www.aclweb.org/anthology/S10-1004/) dataset (~250 docs) from ACM Digital Library, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
 
 #### Experimental: Similarity Learning
 | ID(s) | Languages | Description |
