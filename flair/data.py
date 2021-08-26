@@ -1430,7 +1430,7 @@ class Corpus:
 
         log.info(
             f"Corpus contains the labels: {', '.join([label[0] + f' (#{label[1]})' for label in all_label_types.most_common()])}")
-        log.info(f"Dictionary for label '{label_type}' contains: {label_dictionary.idx2item}")
+        log.info(f"Created (for label '{label_type}') {label_dictionary}")
 
         return label_dictionary
 
