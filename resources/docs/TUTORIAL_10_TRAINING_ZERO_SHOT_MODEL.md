@@ -18,7 +18,7 @@ For instance, say you want to predict whether text is "happy" or "sad" but you h
 Just use TARS with this snippet:
 
 ```python
-from flair.models.text_classification_model import TARSClassifier
+from flair.models import TARSClassifier
 from flair.data import Sentence
 
 # 1. Load our pre-trained TARS model for English
@@ -36,7 +36,9 @@ tars.predict_zero_shot(sentence, classes)
 # Print sentence with predicted labels
 print(sentence)
 ```
+
 The output should look like:
+
 ```console
 Sentence: "I am so glad you liked it !"   [− Tokens: 8  − Sentence-Labels: {'label': [happy (0.9312)]}]
 ```
