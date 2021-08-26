@@ -414,15 +414,18 @@ trainer.train('resources/taggers/example-ner',
 ## Scalability: Training with Large Datasets
 
 Many embeddings in Flair are somewhat costly to produce in terms of runtime and may have large vectors. Examples of this
-are `FlairEmbeddings`, `BertEmbeddings` and the other transformer-based embeddings. Depending on your setup, you can set
+are `FlairEmbeddings` and transformer-based embeddings. Depending on your setup, you can set
 options to optimize training time.
 
-The main parameter you need to set is the `embeddings_storage_mode` in the `train()` method of the `ModelTrainer`. It
+The most important is `mini_batch_size`: Set this to higher values if your GPU can handle it. Set `mini_batch_chunk_size`
+only if your GPU cannot handle the desired mini-batch size as this parameter causes batches to be further split into chunks.
+
+Another main parameter you need to set is the `embeddings_storage_mode` in the `train()` method of the `ModelTrainer`. It
 can have one of three values:
 
 1. **'none'**: If you set `embeddings_storage_mode='none'`, embeddings do not get stored in memory. Instead they are
    generated on-the-fly in each training mini-batch (during *training*). The main advantage is that this keeps your
-   memory requirements low.
+   memory requirements low. Always set this if fine-tuning transformers.
 
 2. **'cpu'**: If you set `embeddings_storage_mode='cpu'`, embeddings will get stored in regular memory.
 
