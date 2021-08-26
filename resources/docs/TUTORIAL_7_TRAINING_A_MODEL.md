@@ -206,7 +206,7 @@ and use document-level embeddings instead of word-level embeddings (see tutorial
 
 The best results in text classification use fine-tuned transformers with `TransformerDocumentEmbeddings` as shown in the code below:
 
-(If you don't have the hardware to fine-tune transformers, try `DocumentPoolEmbeddings` or `DocumentRNNEmbeddings` instead - sometimes they work just as well!)
+(If you don't have a big GPU to fine-tune transformers, try `DocumentPoolEmbeddings` or `DocumentRNNEmbeddings` instead - sometimes they work just as well!)
 
 ```python
 import torch
