@@ -414,8 +414,7 @@ trainer.train('resources/taggers/example-ner',
 ## Scalability: Training with Large Datasets
 
 Many embeddings in Flair are somewhat costly to produce in terms of runtime and may have large vectors. Examples of this
-are `FlairEmbeddings` and transformer-based embeddings. Depending on your setup, you can set
-options to optimize training time.
+are Flair- and Transformer-based embeddings. Depending on your setup, you can set options to optimize training time.
 
 The most important is `mini_batch_size`: Set this to higher values if your GPU can handle it. Set `mini_batch_chunk_size`
 only if your GPU cannot handle the desired mini-batch size as this parameter causes batches to be further split into chunks.
