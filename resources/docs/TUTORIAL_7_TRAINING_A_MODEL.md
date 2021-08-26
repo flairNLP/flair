@@ -88,7 +88,7 @@ If the model works well, it will correctly tag 'love' as a verb in this example.
 ## Training a Named Entity Recognition (NER) Model with Flair Embeddings
 
 To train a sequence labeling model for NER, just minor modifications to the above script are necessary. Load an NER
-corpus like CONLL_03 (requires manual download of data - or use a [different NER corpus](/resources/docs/TUTORIAL_6_CORPUS.md#named-entity-recognition)), change the `label_type` to 'ner' and and use a `StackedEmbedding` consisting of GloVe and Flair:
+corpus like CONLL_03 (requires manual download of data - or use a [different NER corpus](/resources/docs/TUTORIAL_6_CORPUS.md#datasets-included-in-flair)), change the `label_type` to 'ner' and and use a `StackedEmbedding` consisting of GloVe and Flair:
 
 ```python
 from flair.datasets import CONLL_03
