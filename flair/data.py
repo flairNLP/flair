@@ -1386,23 +1386,27 @@ class Corpus:
 
         log.info("Computing label dictionary. Progress:")
 
+        # if there are token labels of provided type, use these. Otherwise use sentence labels
+        token_labels_exist = False
+
         all_label_types = Counter()
         all_sentence_labels = []
-        token_labels_exist = False
         for batch in Tqdm.tqdm(iter(loader)):
 
             for sentence in batch:
 
-                # check if sentence itself has labels
-                labels = sentence.get_labels(label_type)
-                all_label_types.update(sentence.annotation_layers.keys())
+                # if we are looking for sentence-level labels
+                if not token_labels_exist:
+                    # check if sentence itself has labels
+                    labels = sentence.get_labels(label_type)
+                    all_label_types.update(sentence.annotation_layers.keys())
 
-                for label in labels:
-                    if label.value not in all_sentence_labels: all_sentence_labels.append(label.value)
+                    for label in labels:
+                        if label.value not in all_sentence_labels: all_sentence_labels.append(label.value)
 
-                if not label_dictionary.multi_label:
-                    if len(labels) > 1:
-                        label_dictionary.multi_label = True
+                    if not label_dictionary.multi_label:
+                        if len(labels) > 1:
+                            label_dictionary.multi_label = True
 
                 # check for labels of words
                 if isinstance(sentence, Sentence):
