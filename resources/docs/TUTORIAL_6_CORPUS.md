@@ -551,7 +551,9 @@ data_folder = '/path/to/data/folder'
 corpus: Corpus = ClassificationCorpus(data_folder,
                                       test_file='test.txt',
                                       dev_file='dev.txt',
-                                      train_file='train.txt')
+                                      train_file='train.txt',                                       
+                                      label_type='topic',
+                                      )
 ```
 
 Note again that our corpus initializers have methods to automatically look for train, dev and test splits in a folder. So in 
@@ -562,8 +564,13 @@ most cases you don't need to specify the file names yourself. Often, this is eno
 data_folder = '/path/to/data/folder'
 
 # load corpus by pointing to folder. Train, dev and test gets identified automatically. 
-corpus: Corpus = ClassificationCorpus(data_folder)
+corpus: Corpus = ClassificationCorpus(data_folder,                                                                            
+                                      label_type='topic',
+                                      )
 ```
+
+Since the FastText format does not have columns, you must manually define a name for the annotations. In this
+example we chose `label_type='topic'` to denote that we are loading a corpus with topic labels. 
 
 ## Next
 
