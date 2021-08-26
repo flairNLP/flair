@@ -25,7 +25,7 @@ corpus = UD_ENGLISH().downsample(0.1)
 print(corpus)
 
 # 2. what label do we want to predict?
-label_type = 'pos'
+label_type = 'upos'
 
 # 3. make the label dictionary from the corpus
 label_dict = corpus.make_label_dictionary(label_type=label_type)
@@ -57,7 +57,7 @@ tagger = SequenceTagger(hidden_size=256,
 trainer = ModelTrainer(tagger, corpus)
 
 # 7. start training
-trainer.train('resources/taggers/example-pos',
+trainer.train('resources/taggers/example-upos',
               learning_rate=0.1,
               mini_batch_size=32,
               max_epochs=10)
