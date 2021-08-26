@@ -66,8 +66,7 @@ trainer.train('resources/taggers/example-pos',
 ```
 
 Alternatively, try using a stacked embedding with FlairEmbeddings and GloVe, over the full data, for 150 epochs. This
-will give you the state-of-the-art accuracy we report in the paper. To see the full code to reproduce experiments,
-check [here](/resources/docs/EXPERIMENTS.md).
+will give you the state-of-the-art accuracy reported in [Akbik et al. (2018)](https://aclanthology.org/C18-1139.pdf).
 
 Once the model is trained you can use it to predict tags for new sentences. Just call the `predict` method of the model.
 
