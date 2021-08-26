@@ -98,6 +98,8 @@ Corpus: 12543 train + 2002 dev + 2077 test sentences
 Corpus: 1255 train + 201 dev + 208 test sentences
 ```
 
+### Creating label dictionaries
+
 For many learning tasks you need to create a "dictionary" that contains all the labels you want to predict.
 You can generate this dictionary directly out of the `Corpus` by calling the method `make_label_dictionary` 
 and passing the desired `label_type`. 
