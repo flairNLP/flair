@@ -475,7 +475,7 @@ class CoNLL04(CoNLLUCorpus):
         return conllu.TokenList(tokens=token_dicts, metadata=metadata)
 
 
-class DRUG_PROD(CoNLLUCorpus):
+class DRUG_PROT(CoNLLUCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
@@ -512,7 +512,7 @@ class DRUG_PROD(CoNLLUCorpus):
                 data_folder=data_folder,
             )
 
-        super(DRUG_PROD, self).__init__(
+        super(DRUG_PROT, self).__init__(
             data_folder,
             in_memory=in_memory,
             sample_missing_splits=False,

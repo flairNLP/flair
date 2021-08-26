@@ -260,7 +260,7 @@ We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
 | 'CONLL_04' | English  |  [CoNLL-04](https://github.com/bekou/multihead_joint_entity_relation_extraction/tree/master/data/CoNLL04) Relation Extraction |
 | 'SEMEVAL_2010_TASK_8' | English  |  [SemEval-2010 Task 8](https://aclanthology.org/S10-1006.pdf) on Multi-Way Classification of Semantic Relations Between Pairs of Nominals |
 | 'TACRED' | English  |  [TAC Relation Extraction Dataset](https://nlp.stanford.edu/projects/tacred/) with 41 relations (download required) |
-| 'DRUG_PROD' | English  |  [DrugProt corpus: Biocreative VII Track 1](https://zenodo.org/record/5119892#.YSdSaVuxU5k/) - drug and chemical-protein interactions |
+| 'DRUG_PROT' | English  |  [DrugProt corpus: Biocreative VII Track 1](https://zenodo.org/record/5119892#.YSdSaVuxU5k/) - drug and chemical-protein interactions |
 
 </details>
 
