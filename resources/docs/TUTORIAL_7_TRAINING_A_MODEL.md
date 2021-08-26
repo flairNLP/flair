@@ -24,10 +24,10 @@ corpus: Corpus = UD_ENGLISH().downsample(0.1)
 print(corpus)
 
 # 2. what tag do we want to predict?
-tag_type = 'pos'
+label_type = 'pos'
 
 # 3. make the tag dictionary from the corpus
-tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+tag_dictionary = corpus.make_label_dictionary(label_type=label_type)
 print(tag_dictionary)
 
 # 4. initialize embeddings
@@ -51,7 +51,7 @@ from flair.models import SequenceTagger
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
                                         tag_dictionary=tag_dictionary,
-                                        tag_type=tag_type,
+                                        tag_type=label_type,
                                         use_crf=True)
 
 # 6. initialize trainer
