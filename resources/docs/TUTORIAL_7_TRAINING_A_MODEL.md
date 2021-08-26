@@ -26,8 +26,8 @@ print(corpus)
 label_type = 'pos'
 
 # 3. make the tag dictionary from the corpus
-tag_dictionary = corpus.make_label_dictionary(label_type=label_type)
-print(tag_dictionary)
+label_dict = corpus.make_label_dictionary(label_type=label_type)
+print(label_dict)
 
 # 4. initialize embeddings
 embedding_types = [
@@ -49,7 +49,7 @@ from flair.models import SequenceTagger
 
 tagger = SequenceTagger(hidden_size=256,
                         embeddings=embeddings,
-                        tag_dictionary=tag_dictionary,
+                        tag_dictionary=label_dict,
                         tag_type=label_type,
                         use_crf=True)
 
@@ -102,8 +102,8 @@ print(corpus)
 label_type = 'ner'
 
 # 3. make the tag dictionary from the corpus
-tag_dictionary = corpus.make_label_dictionary(label_type=label_type)
-print(tag_dictionary)
+label_dict = corpus.make_label_dictionary(label_type=label_type)
+print(label_dict)
 
 # 4. initialize embedding stack with Flair and GloVe
 embedding_types = [
@@ -119,7 +119,7 @@ from flair.models import SequenceTagger
 
 tagger = SequenceTagger(hidden_size=256,
                         embeddings=embeddings,
-                        tag_dictionary=tag_dictionary,
+                        tag_dictionary=label_dict,
                         tag_type=label_type,
                         use_crf=True)
 
@@ -158,8 +158,8 @@ print(corpus)
 label_type = 'ner'
 
 # 3. make the tag dictionary from the corpus
-tag_dictionary = corpus.make_label_dictionary(label_type=label_type)
-print(tag_dictionary)
+label_dict = corpus.make_label_dictionary(label_type=label_type)
+print(label_dict)
 
 # 4. initialize fine-tuneable transformer embeddings WITH document context
 embeddings = TransformerWordEmbeddings(
@@ -176,7 +176,7 @@ from flair.models import SequenceTagger
 tagger = SequenceTagger(
     hidden_size=256,
     embeddings=embeddings,
-    tag_dictionary=tag_dictionary,
+    tag_dictionary=label_dict,
     tag_type='ner',
     use_crf=False,
     use_rnn=False,
@@ -211,8 +211,7 @@ This will give you state-of-the-art numbers similar to the ones reported in [Sch
 Training other types of models is very similar to the scripts for training sequence labelers above. For text classification, use an appropriate corpus
 and use document-level embeddings instead of word-level embeddings (see tutorials on both for difference). The rest is exactly the same as before!
 
-The best results in text classification use fine-tuned transformers. Use `TransformerDocumentEmbeddings` for this and
-set `fine_tune=True`. Then, use the following code:
+The best results in text classification use fine-tuned transformers. Use `TransformerDocumentEmbeddings` with the following code:
 
 ```python
 from torch.optim.adam import Adam
@@ -290,11 +289,11 @@ from flair.training_utils import EvaluationMetric
 corpus: MultiCorpus = MultiCorpus([UD_ENGLISH(), UD_GERMAN()]).downsample(0.1)
 
 # 2. what tag do we want to predict?
-tag_type = 'upos'
+label_type = 'upos'
 
 # 3. make the tag dictionary from the corpus
-tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
-print(tag_dictionary)
+label_dict = corpus.make_label_dictionary(label_type=label_type)
+print(label_dict)
 
 # 4. initialize embeddings
 embedding_types: List[TokenEmbeddings] = [
@@ -311,8 +310,8 @@ from flair.models import SequenceTagger
 
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
-                                        tag_dictionary=tag_dictionary,
-                                        tag_type=tag_type,
+                                        tag_dictionary=label_dict,
+                                        tag_type=label_type,
                                         use_crf=True)
 
 # 6. initialize trainer
