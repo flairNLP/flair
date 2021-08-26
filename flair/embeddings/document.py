@@ -61,6 +61,10 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         import os
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+        # do not print transformer warnings as these are confusing in this case
+        from transformers import logging
+        logging.set_verbosity_error()
+
         # load tokenizer and transformer model
         self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
         if not 'config' in kwargs:
@@ -68,6 +72,8 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             self.model = AutoModel.from_pretrained(model, config=config, **kwargs)
         else:
             self.model = AutoModel.from_pretrained(None, **kwargs)
+
+        logging.set_verbosity_warning()
 
         # model name
         self.name = 'transformer-document-' + str(model)
