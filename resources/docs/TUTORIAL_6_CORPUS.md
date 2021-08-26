@@ -192,12 +192,10 @@ data the first time you call the corresponding constructor ID. The following dat
 
 | Object | Languages | Description |
 | -------------    | ------------- |-------------  |
-
 | 'CONLL_03' | English  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER (requires manual download) |
 | 'CONLL_03_GERMAN' | German  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER (requires manual download) |
 | 'CONLL_03_DUTCH' | Dutch  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER |
 | 'CONLL_03_SPANISH' | Spanish  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER |
-
 | 'NER_ARABIC_ANER' | Arabic  |  [Arabic Named Entity Recognition Corpus](http://curtis.ml.cmu.edu/w/courses/index.php/ANERcorp) 4-class NER |
 | 'NER_ARABIC_AQMAR' | Arabic  |  [American and Qatari Modeling of Arabic](http://www.cs.cmu.edu/~ark/AQMAR/) 4-class NER (modified) |
 | 'NER_BASQUE' | Basque  |  [NER dataset for Basque](http://ixa2.si.ehu.eus/eiec/) |
