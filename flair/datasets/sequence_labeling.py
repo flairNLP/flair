@@ -3096,30 +3096,136 @@ class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
         )
 
 
-class WSD_UFSAC(ColumnCorpus):
+def from_ufsac_to_tsv(xml_file: Union[str, Path], conll_file: Union[str, Path], encoding: str = "utf8",
+                        cut_multisense: bool = True):
+    """
+    Function that converts the UFSAC format into tab separated column format in a new file. 
+    Parameters
+    ----------
+    xml_file : Union[str, Path]
+        Path to the xml file.
+    conll_file : Union[str, Path]
+        Path for the new conll file.
+    encoding : str, optional
+        Encoding used in open function. The default is "utf8".
+    cut_multisense : bool, optional
+        Boolean that determines whether or not the wn30_key tag should be cut if it contains multiple possible senses.
+        If True only the first listed sense will be used. Otherwise the whole list of senses will be detected
+        as one new sense. The default is True.
+
+    """
+
+    def make_line(word, begin_or_inside, attributes):
+        """
+        Function that extracts a tag from a string and writes it correctly in the new file.
+        Parameters
+        ----------
+        string : str
+            String that contains a tag to extract.
+        """
+        line = word
+        if cut_multisense == True:
+            attributes[-1] = attributes[-1].split(';')[0] # take only first sense
+            
+        for attrib in attributes:
+            if attrib != 'O':
+                line = line + '\t' + begin_or_inside + attrib 
+            else:
+                line = line + '\tO'
+        line += '\n'
+        
+        return line
+     
+    txt_out = open(file=conll_file, mode='w', encoding=encoding)
+    import xml.etree.ElementTree as ET
+    tree = ET.parse(xml_file)
+    corpus = tree.getroot()
+    
+    number_of_docs = len(corpus.findall('document'))
+    
+    fields = ['surface_form', 'lemma', 'pos', 'wn30_key']
+    for document in corpus: 
+        # Docstart
+        if number_of_docs > 1:
+            txt_out.write('-DOCSTART-\n\n') # TODO: What about paragraphs as documents? Are they only paragraphs of one doc or docs themself
+
+        for paragraph in document:
+
+            for sentence in paragraph:
+
+                for word in sentence:
+
+                    dictionary = word.attrib
+                    fields_of_word = [word.attrib[field] if (field in dictionary) else 'O' for field in fields]
+                    
+                    chunks = fields_of_word[0].split('_') # TODO: not all words containing '_' should be splitted e.g. links, .txt-filenames, ... --> refine!!
+                                                          # TODO: Moreover do all files handle composed words with '_' ???? 
+                                                          # or are there also just consecutive lines with same annotation??
+                    txt_out.write(make_line(chunks[0], 'B-', fields_of_word[1:]))
+                    
+                    # if there is more than one word in the chunk we write each in a separate line
+                    for chunk in chunks[1:]:
+                        #print(chunks)
+                        txt_out.write(make_line(chunks[0], 'I-', fields_of_word[1:]))
+                        
+                #empty line after each sentence
+                txt_out.write('\n')
+            
+    txt_out.close()
+
+def determine_conll_file(filename: str, data_folder: str, cut_multisense: bool = True):
+    """
+    Checks if the converted .conll file already exists and if not, creates it
+    ----------
+    string : str
+        String that contains the name of the file.
+    data_folder : str
+        String that contains the name of the folder in which the CoNLL file should reside.
+    cut_multisense : bool, optional
+        Boolean that determines whether or not the wn30_key tag should be cut if it contains multiple possible senses.
+        If True only the first listed sense will be used. Otherwise the whole list of senses will be detected
+        as one new sense. The default is True.
+    """
+
+    if cut_multisense is True: # TODO: What to do with corpora that do not have multisense (e.g. wngt, trainomatic)
+
+        conll_file_name = filename + '_cut.tsv'
+
+    else:
+
+        conll_file_name = filename + '.tsv'
+
+    path_to_conll_file = data_folder / conll_file_name
+
+    if not path_to_conll_file.exists():
+        # convert the file to CoNLL
+
+        from_ufsac_to_tsv(xml_file=Path(data_folder / 'original_data' / (filename + '.xml')),
+                            conll_file=Path(data_folder / conll_file_name),
+                            cut_multisense=cut_multisense)
+    
+    return conll_file_name
+
+class WSD_UFSAC(MultiCorpus):
     def __init__(
             self,
+            filenames: Union[str, List[str]] = [],
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
-            train_file: str = None,
-            dev_file: str = None,
-            test_file: str = None,
             cut_multisense: bool = True,
-            **corpusargs,
+            columns = {0: "text", 3: "wn30_key"}, # {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
+            tag_to_bioes=None,
+            banned_sentences: List[str] = None,
+            sample_missing_splits_in_multicorpus: bool = True,
+            sample_missing_splits_in_each_corpus: bool = True,
+            name: str = 'multicorpus'
     ):
         """
-        Initialize a custom corpus with any two WSD datasets in the UFSAC format. This is only possible if you've
-        manually downloaded the WSD datasets in UFSAC format to your machine.
-        Obtain the most recent datasets from https://drive.google.com/file/d/1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO and copy
-        up to three of the datasets in a folder called 'wsd_ufsac'.Then set the base_path parameter in the constructor
-        to the path to the parent directory where the 'wsd_ufsac' folder resides and respectively set the train_file,
-        dev_file and test_file parameter in the constructor according to the file names.
+        Initialize a custom corpus with any Word Sense Disambiguation (WSD) datasets in the UFSAC format from https://github.com/getalp/UFSAC.
+        If the constructor is called for the first time the data is automatically downloaded and transformed from xml to a tab separated column format.
         :param base_path: Path to the custom WSD corpus ('wsd_ufsac' folder) on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
-        :param train_file: Name of the training dataset (e.g. 'semcor.xml')
-        :param dev_file: Name of the development dataset
-        :param test_file: Name of the testing dataset
         :param cut_multisense: Boolean that determines whether or not the wn30_key tag should be cut if it contains
                                multiple possible senses. If True only the first listed sense will be used and the
                                suffix '_cut' will be added to the name of the CoNLL file. Otherwise the whole list of
@@ -3127,19 +3233,13 @@ class WSD_UFSAC(ColumnCorpus):
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
-
+            
         # column format
         #
         # since only the WordNet 3.0 version for senses is consistently available for all provided datasets we will
         # only consider this version
         #
         # also we ignore the id annotation used in datasets that were originally created for evaluation tasks
-        #
-        # if the other annotations should be needed simply add the columns in correct order according
-        # to the chosen datasets here and respectively change the values of the blacklist array and
-        # the range value of the else case in the token for loop in the from_ufsac_to_conll function
-
-        columns = {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -3148,205 +3248,434 @@ class WSD_UFSAC(ColumnCorpus):
         if not base_path:
             base_path = flair.cache_root / "datasets"
         data_folder = base_path / dataset_name
+        original_data_folder = data_folder / 'original_data'
 
-        # check if data there
-        if not data_folder.exists():
-            log.warning("-" * 100)
-            log.warning(f'WARNING: UFSAC corpus not found at "{data_folder}".')
-            log.warning(
-                'Necessary data can be found here: "https://drive.google.com/file/d/1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO"'
-            )
-            log.warning("-" * 100)
+        # check if data there, if not, download the data
+        if not original_data_folder.exists():
+            #create folder
+            data_folder.mkdir(parents=True)
+            
+            #download data
+            import gdown
 
-        # determine correct CoNLL files
+            url = 'https://drive.google.com/uc?id=1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO'
+        
+            output = data_folder / (dataset_name + '.tar')
+        
+            gdown.download(url, str(output), quiet=False)
+            
+            output = data_folder / (dataset_name + '.tar')  
+            unpack_file(file = output,
+                        unpack_to = data_folder, 
+                        mode = 'tar', keep = False)
+            
+            os.rename(data_folder / 'ufsac-public-2.1', original_data_folder)
+            
+        # transform data into column format if necessary
+        
+        # if no filenames are specified we use all the data 
+        if not filenames:
+            filenames = [name[:-4] for name in os.listdir(original_data_folder) if not 'raganato' in name]
+            
+        if type(filenames) == str:
+            filenames = [filenames]
+        
+        corpora = []
+        print('Transforming data into column format and creating corpora...')
+        for filename in filenames:
+            # make column file and save to data_folder
 
-        train_file = self._determine_conll_file(file=train_file, data_folder=data_folder, cut_multisense=cut_multisense)
-        dev_file = self._determine_conll_file(file=dev_file, data_folder=data_folder, cut_multisense=cut_multisense)
-        test_file = self._determine_conll_file(file=test_file, data_folder=data_folder, cut_multisense=cut_multisense)
+            new_filename = determine_conll_file(filename=filename, data_folder=data_folder, cut_multisense=cut_multisense)
 
+            corpus = ColumnCorpus(data_folder=data_folder,
+                                column_format=columns,
+                                train_file=new_filename,
+                                in_memory=in_memory,
+                                tag_to_bioes=tag_to_bioes,
+                                column_delimiter='\t',
+                                document_separator_token='-DOCSTART-',
+                                banned_sentences=banned_sentences,
+                                autofind_splits=False,
+                                sample_missing_splits=sample_missing_splits_in_each_corpus,
+                                )
+            corpora.append(corpus)
+        print('...done!')
+        
         super(WSD_UFSAC, self).__init__(
+            corpora, 
+            sample_missing_splits=sample_missing_splits_in_multicorpus,
+            name=name
+        )
+        
+class WSD_RAGANATO_ALL(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            columns = {0: "text", 3: "wn30_key"}, # {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
+            tag_to_bioes=None,
+            label_name_map: Dict[str, str] = None,
+            banned_sentences: List[str] = None,
+            sample_missing_splits: bool = True,
+            cut_multisense: bool = True
+            ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        # this dataset name
+        dataset_name = 'wsd_ufsac'
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+        original_data_folder = data_folder / 'original_data'
+
+        # We check if the the UFSAC data has already been downloaded. If not, we download it.
+        # Note that this downloads more datasets than just SemCor. But the size of the download is only around 190 Mb (around 4.5 Gb unpacked) 
+        if not original_data_folder.exists():
+            #create folder
+            data_folder.mkdir(parents=True)
+            
+            #download data
+            import gdown
+
+            url = 'https://drive.google.com/uc?id=1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO'
+        
+            output = data_folder / (dataset_name + '.tar')
+        
+            gdown.download(url, str(output), quiet=False)
+            
+            output = data_folder / (dataset_name + '.tar')  
+            unpack_file(file = output,
+                        unpack_to = data_folder, 
+                        mode = 'tar', keep = False)
+            
+            os.rename(data_folder / 'ufsac-public-2.1', original_data_folder)   
+            
+        train_file = determine_conll_file(filename='raganato_ALL', data_folder=data_folder, cut_multisense=cut_multisense) 
+            
+        super(WSD_RAGANATO_ALL, self).__init__(
             data_folder,
             columns,
-            tag_to_bioes=None,
-            encoding="latin-1",
-            in_memory=in_memory,
             train_file=train_file,
-            dev_file=dev_file,
-            test_file=test_file,
-            **corpusargs,
+            in_memory=in_memory,
+            document_separator_token='-DOCSTART-',
+            column_delimiter='\t',
+            autofind_splits=False,
+            tag_to_bioes=tag_to_bioes,
+            label_name_map=label_name_map,
+            banned_sentences=banned_sentences,
+            sample_missing_splits=sample_missing_splits,
         )
+        
+class WSD_SEMCOR(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            columns = {0: "text", 3: "wn30_key"}, # {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
+            tag_to_bioes=None,
+            label_name_map: Dict[str, str] = None,
+            banned_sentences: List[str] = None,
+            sample_missing_splits: bool = True,
+            cut_multisense: bool = True
+            ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
 
-    def _from_ufsac_to_conll(self, xml_file: Union[str, Path], conll_file: Union[str, Path], encoding: str = "utf8",
-                             cut_multisense: bool = True):
-        """
-        Function that converts the UFSAC format into the needed CoNLL format in a new file. The IOB2 format will be used if
-        chunks reside within the data.
-        Parameters
-        ----------
-        xml_file : Union[str, Path]
-            Path to the xml file.
-        conll_file : Union[str, Path]
-            Path for the new conll file.
-        encoding : str, optional
-            Encoding used in open function. The default is "utf8".
-        cut_multisense : bool, optional
-            Boolean that determines whether or not the wn30_key tag should be cut if it contains multiple possible senses.
-            If True only the first listed sense will be used. Otherwise the whole list of senses will be detected
-            as one new sense. The default is True.
+        # this dataset name
+        dataset_name = 'wsd_ufsac'
 
-        """
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+        original_data_folder = data_folder / 'original_data'
 
-        def add_tag(string: str):
-            """
-            Function that extracts a tag from a string and writes it correctly in the new file.
-            Parameters
-            ----------
-            string : str
-                String that contains a tag to extract.
-            """
-            tag_start = string.find('"') + 1
+        # We check if the the UFSAC data has already been downloaded. If not, we download it.
+        # Note that this downloads more datasets than just SemCor. But the size of the download is only around 190 Mb (around 4.5 Gb unpacked) 
+        if not original_data_folder.exists():
+            #create folder
+            data_folder.mkdir(parents=True)
+            
+            #download data
+            import gdown
 
-            if string.count('%') > 1 and cut_multisense is True:  # check for multisense
-                tag_end = string.find(';', tag_start)
-            else:
-                tag_end = string.find('"', tag_start)
+            url = 'https://drive.google.com/uc?id=1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO'
+        
+            output = data_folder / (dataset_name + '.tar')
+        
+            gdown.download(url, str(output), quiet=False)
+            
+            output = data_folder / (dataset_name + '.tar')  
+            unpack_file(file = output,
+                        unpack_to = data_folder, 
+                        mode = 'tar', keep = False)
+            
+            os.rename(data_folder / 'ufsac-public-2.1', original_data_folder)   
+            
+        train_file = determine_conll_file(filename='semcor', data_folder=data_folder, cut_multisense=cut_multisense) 
+            
+        super(WSD_SEMCOR, self).__init__(
+            data_folder,
+            columns,
+            train_file=train_file,
+            in_memory=in_memory,
+            document_separator_token='-DOCSTART-',
+            column_delimiter='\t',
+            autofind_splits=False,
+            tag_to_bioes=tag_to_bioes,
+            label_name_map=label_name_map,
+            banned_sentences=banned_sentences,
+            sample_missing_splits=sample_missing_splits,
+        )
+        
+class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            columns = {0: "text", 3: "wn30_key"}, # {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
+            tag_to_bioes=None,
+            label_name_map: Dict[str, str] = None,
+            banned_sentences: List[str] = None,
+            sample_missing_splits: bool = True,
+            ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
 
-            tag = string[tag_start:tag_end]
-            temp.append(tag)
-            f.write(' B-' + tag)
+        # this dataset name
+        dataset_name = 'wsd_ufsac'
 
-        with open(file=xml_file, mode='r', encoding=encoding) as f:  # get file lines
-            lines = f.readlines()
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+        original_data_folder = data_folder / 'original_data'
 
-        with open(file=conll_file, mode='w', encoding=encoding) as f:  # alter file to CoNLL format
-            for line in lines:
-                line_list = line.split()
+        # We check if the the UFSAC data has already been downloaded. If not, we download it.
+        # Note that this downloads more datasets than just WordNet Gloss Tagged. But the size of the download is only around 190 Mb (around 4.5 Gb unpacked) 
+        if not original_data_folder.exists():
+            #create folder
+            data_folder.mkdir(parents=True)
+            
+            #download data
+            import gdown
 
-                if len(line_list) > 3:  # sentence parts have at least 4 tokens
+            url = 'https://drive.google.com/uc?id=1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO'
+        
+            output = data_folder / (dataset_name + '.tar')
+        
+            gdown.download(url, str(output), quiet=False)
+            
+            output = data_folder / (dataset_name + '.tar')  
+            unpack_file(file = output,
+                        unpack_to = data_folder, 
+                        mode = 'tar', keep = False)
+            
+            os.rename(data_folder / 'ufsac-public-2.1', original_data_folder)   
+            
+        train_file = determine_conll_file(filename='wngt', data_folder=data_folder, cut_multisense=False)  # does not have multisense!
+            
+        super(WSD_WORDNET_GLOSS_TAGGED, self).__init__(
+            data_folder,
+            columns,
+            train_file=train_file,
+            in_memory=in_memory,
+            document_separator_token='-DOCSTART-',
+            column_delimiter='\t',
+            autofind_splits=False,
+            tag_to_bioes=tag_to_bioes,
+            label_name_map=label_name_map,
+            banned_sentences=banned_sentences,
+            sample_missing_splits=sample_missing_splits,
+        )
+        
+class WSD_MASC(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            columns = {0: "text", 3: "wn30_key"}, # {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
+            tag_to_bioes=None,
+            label_name_map: Dict[str, str] = None,
+            banned_sentences: List[str] = None,
+            sample_missing_splits: bool = True,
+            cut_multisense: bool = True
+            ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
 
-                    # tokens to ignore (edit here for variation)
-                    blacklist = ['<word', 'wn1', 'wn2', 'id=']
+        # this dataset name
+        dataset_name = 'wsd_ufsac'
 
-                    # counter to keep track how many tags have been found in line
-                    ctr = 0
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+        original_data_folder = data_folder / 'original_data'
 
-                    # variable to count of how many words a chunk consists
-                    words = 1
+        # We check if the the UFSAC data has already been downloaded. If not, we download it.
+        # Note that this downloads more datasets than just MASC. But the size of the download is only around 190 Mb (around 4.5 Gb unpacked) 
+        if not original_data_folder.exists():
+            #create folder
+            data_folder.mkdir(parents=True)
+            
+            #download data
+            import gdown
 
-                    # indicates if surface form is chunk or not
-                    is_chunk = False
+            url = 'https://drive.google.com/uc?id=1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO'
+        
+            output = data_folder / (dataset_name + '.tar')
+        
+            gdown.download(url, str(output), quiet=False)
+            
+            output = data_folder / (dataset_name + '.tar')  
+            unpack_file(file = output,
+                        unpack_to = data_folder, 
+                        mode = 'tar', keep = False)
+            
+            os.rename(data_folder / 'ufsac-public-2.1', original_data_folder)   
+            
+        train_file = determine_conll_file(filename='masc', data_folder=data_folder, cut_multisense=cut_multisense)  
+            
+        super(WSD_MASC, self).__init__(
+            data_folder,
+            columns,
+            train_file=train_file,
+            in_memory=in_memory,
+            document_separator_token='-DOCSTART-',
+            column_delimiter='\t',
+            autofind_splits=False,
+            tag_to_bioes=tag_to_bioes,
+            label_name_map=label_name_map,
+            banned_sentences=banned_sentences,
+            sample_missing_splits=sample_missing_splits,
+        )
+        
+class WSD_OMSTI(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            columns = {0: "text", 3: "wn30_key"}, # {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
+            tag_to_bioes=None,
+            label_name_map: Dict[str, str] = None,
+            banned_sentences: List[str] = None,
+            sample_missing_splits: bool = True,
+            cut_multisense: bool = True
+            ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
 
-                    # array to save tags temporarily for handling chunks
-                    temp = []
+        # this dataset name
+        dataset_name = 'wsd_ufsac'
 
-                    for token in line_list:
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+        original_data_folder = data_folder / 'original_data'
 
-                        if any(substring in token for substring in blacklist):
-                            continue
+        # We check if the the UFSAC data has already been downloaded. If not, we download it.
+        # Note that this downloads more datasets than just OMSTI. But the size of the download is only around 190 Mb (around 4.5 Gb unpacked) 
+        if not original_data_folder.exists():
+            #create folder
+            data_folder.mkdir(parents=True)
+            
+            #download data
+            import gdown
 
-                        if 'surface_form=' in token:
+            url = 'https://drive.google.com/uc?id=1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO'
+        
+            output = data_folder / (dataset_name + '.tar')
+        
+            gdown.download(url, str(output), quiet=False)
+            
+            output = data_folder / (dataset_name + '.tar')  
+            unpack_file(file = output,
+                        unpack_to = data_folder, 
+                        mode = 'tar', keep = False)
+            
+            os.rename(data_folder / 'ufsac-public-2.1', original_data_folder)   
+            
+        train_file = determine_conll_file(filename='omsti', data_folder=data_folder, cut_multisense=cut_multisense)
+            
+        super(WSD_OMSTI, self).__init__(
+            data_folder,
+            columns,
+            train_file=train_file,
+            in_memory=in_memory,
+            document_separator_token='-DOCSTART-',
+            column_delimiter='\t',
+            autofind_splits=False,
+            tag_to_bioes=tag_to_bioes,
+            label_name_map=label_name_map,
+            banned_sentences=banned_sentences,
+            sample_missing_splits=sample_missing_splits,
+        )
+        
+class WSD_TRAINOMATIC(ColumnCorpus):
+    def __init__(
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            columns = {0: "text", 3: "wn30_key"}, # {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
+            tag_to_bioes=None,
+            label_name_map: Dict[str, str] = None,
+            banned_sentences: List[str] = None,
+            sample_missing_splits: bool = True,
+            ):
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
 
-                            # cut token to get chunk
-                            chunk_start = token.find('"') + 1
-                            chunk_end = token.find('"', chunk_start)
-                            chunk = token[chunk_start:chunk_end]
+        # this dataset name
+        dataset_name = 'wsd_ufsac'
 
-                            for character in chunk:
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+        original_data_folder = data_folder / 'original_data'
 
-                                if '_' in character:
-                                    words += 1
+        # We check if the the UFSAC data has already been downloaded. If not, we download it.
+        # Note that this downloads more datasets than just Train-O-Matic. But the size of the download is only around 190 Mb (around 4.5 Gb unpacked) 
+        if not original_data_folder.exists():
+            #create folder
+            data_folder.mkdir(parents=True)
+            
+            #download data
+            import gdown
 
-                            if words > 1:  # gather single words of chunk
-                                is_chunk = True
-
-                                # save single words of chunk
-                                chunk_parts = []
-
-                                # handle first word of chunk
-                                word_start = 0
-                                word_end = chunk.find('_', word_start)
-                                f.write(chunk[word_start:word_end])
-                                word_start = word_end + 1
-
-                                for _ in range(words - 1):
-                                    word_end = chunk.find('_', word_start)
-                                    if word_end == -1:
-                                        chunk_parts.append(chunk[word_start:])
-                                    else:
-                                        chunk_parts.append(chunk[word_start:word_end])
-                                    word_start = word_end + 1
-                            else:
-                                f.write(chunk)
-                            ctr += 1
-                            continue
-
-                        elif 'pos=' in token:
-                            if ctr != 2:
-                                temp.append(' O')
-                                f.write(' O')
-                            add_tag(token)
-                            ctr = 3
-                            continue
-                        elif '"' in token:
-                            add_tag(token)
-                            ctr += 1
-                            continue
-                        else:
-                            # edit here for variation
-                            for _ in range(4 - ctr):
-                                temp.append(' O')
-                                f.write(' O')
-                            f.write('\n')
-
-                    if is_chunk:  # handle chunks
-                        for word in chunk_parts:
-                            f.write(word)
-                            for elem in temp:
-                                if ' O' in elem:
-                                    f.write(elem)
-                                else:
-                                    f.write(' I-' + elem)
-                            f.write('\n')
-
-                elif line_list[0] == '</sentence>':  # handle end of sentence
-                    f.write('\n')
-
-    def _determine_conll_file(self, file: str, data_folder: str, cut_multisense: bool = True):
-        """
-        Function that returns the given file in the CoNLL format.
-        ----------
-        string : str
-            String that contains the name of the file.
-        data_folder : str
-            String that contains the name of the folder in which the CoNLL file should reside.
-        cut_multisense : bool, optional
-            Boolean that determines whether or not the wn30_key tag should be cut if it contains multiple possible senses.
-            If True only the first listed sense will be used. Otherwise the whole list of senses will be detected
-            as one new sense. The default is True.
-        """
-
-        # check if converted file exists
-
-        if file is not None and not '.conll' in file:
-            if cut_multisense is True:
-                conll_file = file[:-4] + '_cut.conll'
-            else:
-                conll_file = file[:-3] + 'conll'
-
-            path_to_conll_file = data_folder / conll_file
-
-            if not path_to_conll_file.exists():
-                # convert the file to CoNLL
-                self._from_ufsac_to_conll(xml_file=Path(data_folder / file),
-                                          conll_file=Path(data_folder / conll_file),
-                                          encoding="latin-1",
-                                          cut_multisense=cut_multisense)
-
-            return conll_file
-
-        else:
-
-            return file
+            url = 'https://drive.google.com/uc?id=1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO'
+        
+            output = data_folder / (dataset_name + '.tar')
+        
+            gdown.download(url, str(output), quiet=False)
+            
+            output = data_folder / (dataset_name + '.tar')  
+            unpack_file(file = output,
+                        unpack_to = data_folder, 
+                        mode = 'tar', keep = False)
+            
+            os.rename(data_folder / 'ufsac-public-2.1', original_data_folder)   
+            
+        train_file = determine_conll_file(filename='trainomatic', data_folder=data_folder, cut_multisense=False) # no multisenses
+            
+        super(WSD_TRAINOMATIC, self).__init__(
+            data_folder,
+            columns,
+            train_file=train_file,
+            in_memory=in_memory,
+            document_separator_token='-DOCSTART-',
+            column_delimiter='\t',
+            autofind_splits=False,
+            tag_to_bioes=tag_to_bioes,
+            label_name_map=label_name_map,
+            banned_sentences=banned_sentences,
+            sample_missing_splits=sample_missing_splits,
+        )
 
 
 class UP_CHINESE(ColumnCorpus):

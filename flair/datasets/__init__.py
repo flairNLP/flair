@@ -52,6 +52,12 @@ from .sequence_labeling import KEYPHRASE_SEMEVAL2010
 from .sequence_labeling import KEYPHRASE_SEMEVAL2017
 # word sense disambiugation
 from .sequence_labeling import WSD_UFSAC
+from .sequence_labeling import WSD_RAGANATO_ALL
+from .sequence_labeling import WSD_SEMCOR
+from .sequence_labeling import WSD_WORDNET_GLOSS_TAGGED
+from .sequence_labeling import WSD_MASC
+from .sequence_labeling import WSD_OMSTI
+from .sequence_labeling import WSD_TRAINOMATIC
 # universal proposition banks
 from .sequence_labeling import UP_CHINESE
 from .sequence_labeling import UP_ENGLISH
