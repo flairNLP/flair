@@ -223,6 +223,17 @@ data the first time you call the corresponding constructor ID. The following dat
 
 We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
 
+#### Entity Linking
+| Object | Languages | Description |
+| -------------    | ------------- |-------------  |
+| 'NEL_ENGLISH_AIDA' | English  |  [AIDA CoNLL-YAGO Entity Linking corpus](https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/ambiverse-nlu/aida/downloads) on the CoNLL-03 corpus |
+| 'NEL_ENGLISH_AQUAINT' | English  | Aquaint Entity Linking corpus introduced in [Milne and Witten (2008)](https://www.cms.waikato.ac.nz/~ihw/papers/08-DNM-IHW-LearningToLinkWithWikipedia.pdf) |
+| 'NEL_ENGLISH_IITB' | English  | ITTB Entity Linking corpus introduced in [Sayali et al. (2009)](https://dl.acm.org/doi/10.1145/1557019.1557073) |
+| 'NEL_ENGLISH_REDDIT' | English  | Reddit Entity Linking corpus introduced in [Botzer et al. (2021)](https://arxiv.org/abs/2101.01228v2) (only gold annotations)|
+| 'NEL_ENGLISH_TWEEKI' | English  | ITTB Entity Linking corpus introduced in [Harandizadeh and Singh (2020)](https://aclanthology.org/2020.wnut-1.29.pdf) |
+| 'NEL_GERMAN_HIPE' | German  | [HIPE](https://impresso.github.io/CLEF-HIPE-2020/) Entity Linking corpus for historical German as a [sentence-segmented version](https://github.com/stefan-it/clef-hipe) |
+
+
 
 #### Relation Extraction
 | Object | Languages | Description |
