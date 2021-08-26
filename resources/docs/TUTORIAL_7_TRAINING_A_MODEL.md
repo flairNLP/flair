@@ -214,7 +214,10 @@ and use document-level embeddings instead of word-level embeddings (see tutorial
 The best results in text classification use fine-tuned transformers. Use `TransformerDocumentEmbeddings` with the following code:
 
 ```python
-from torch.optim.adam import Adam
+# torch and flair imports for this script
+import torch
+from torch.optim.adam import AdamW
+from torch.optim.lr_scheduler import OneCycleLR
 
 from flair.data import Corpus
 from flair.datasets import TREC_6
@@ -238,14 +241,9 @@ document_embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased', f
 classifier = TextClassifier(document_embeddings, label_dictionary=label_dict)
 
 # 6. initialize trainer with AdamW optimizer
-from flair.trainers import ModelTrainer
-import torch
-
 trainer = ModelTrainer(tagger, corpus, optimizer=torch.optim.AdamW)
 
 # 7. run training with fine-tuning
-from torch.optim.lr_scheduler import OneCycleLR
-
 trainer.train('resources/taggers/question-classification-with-transformer',
               learning_rate=5.0e-5,
               mini_batch_size=4,
