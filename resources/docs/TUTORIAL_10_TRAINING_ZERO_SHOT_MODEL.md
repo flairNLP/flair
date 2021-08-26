@@ -86,11 +86,11 @@ label_type = 'question_class'
 # 4. make a label dictionary
 label_dict = corpus.make_label_dictionary(label_type=label_type)
 
-# 5. create a new TARS classifier
-tars = TARSClassifier(embeddings="bert-base-uncased")
+# 5. start from our existing TARS base model for English
+tars = TARSClassifier.load("tars-base")
 
-# 5a: alternatively, comment out previous line and comment in next line to start from tars-base instead
-# tars = TARSClassifier.load("tars-base")
+# 5a: alternatively, comment out previous line and comment in next line to train a new TARS model from scratch instead
+# tars = TARSClassifier(embeddings="bert-base-uncased")
 
 # 6. switch to a new task (TARS can do multiple tasks so you must define one)
 tars.add_and_switch_to_new_task(task_name="question classification",
@@ -106,12 +106,12 @@ trainer.train(base_path='resources/taggers/trec',  # path to store the model art
               learning_rate=0.02,  # use very small learning rate
               mini_batch_size=16,
               mini_batch_chunk_size=4,  # optionally set this if transformer is too much for your machine
-              max_epochs=10,  # terminate after 10 epochs
+              max_epochs=1,  # terminate after 10 epochs
               )
 ```
 
-Done! This trains a classifier for one task that you can now either use as a normal classifier, or as basis for 
-few-shot and zero-shot prediction. 
+This script starts from the TARS-base model, so a few epochs should be enough. But if you train a new TARS model from scratch instead 
+(see step 5a in the code snippet above) you will want to train for 10 or 20 epochs.
 
 
 ### How to train with multiple datasets
@@ -119,11 +119,13 @@ few-shot and zero-shot prediction.
 TARS gets better at few-shot and zero-shot prediction if it learns from more than one classification task. 
 
 For instance, lets continue training the model we trained for TREC_6 with the GO_EMOTIONS dataset. The code
-again looks very similar, with the difference that we now call `add_and_switch_to_new_task` to make the model
-aware that it should train GO_EMOTIONS now instead of TREC_6:
+again looks very similar. Just before you train on the new dataset, be sure to call `add_and_switch_to_new_task`.
+This lets the model know that it should train GO_EMOTIONS now instead of TREC_6:
 
 ```python
 from flair.datasets import GO_EMOTIONS
+from flair.models import TARSClassifier
+from flair.trainers import ModelTrainer
 
 # 1. Load the trained model
 tars = TARSClassifier.load('resources/taggers/trec/best-model.pt')
@@ -131,14 +133,21 @@ tars = TARSClassifier.load('resources/taggers/trec/best-model.pt')
 # 2. load a new flair corpus e.g., GO_EMOTIONS, SENTIMENT_140 etc
 new_corpus = GO_EMOTIONS()
 
-# 3. make the model aware of the desired set of labels from the new corpus
-tars.add_and_switch_to_new_task( "GO_EMOTIONS",
-                                     label_dictionary=new_corpus.make_label_dictionary())
+# 3. define label type
+label_type = "emotion"
 
-# 4. initialize the text classifier trainer
+# 4. make a label dictionary
+label_dict = new_corpus.make_label_dictionary(label_type=label_type)
+
+# 5. IMPORTANT: switch to new task
+tars.add_and_switch_to_new_task("GO_EMOTIONS",
+                                label_dictionary=label_dict,
+                                label_type=label_type)
+
+# 6. initialize the text classifier trainer
 trainer = ModelTrainer(tars, new_corpus)
 
-# 5. start the training
+# 6. start the training
 trainer.train(base_path='resources/taggers/go_emotions', # path to store the model artifacts
               learning_rate=0.02, # use very small learning rate
               mini_batch_size=16,
