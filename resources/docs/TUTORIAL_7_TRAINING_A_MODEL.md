@@ -214,7 +214,6 @@ and use document-level embeddings instead of word-level embeddings (see tutorial
 The best results in text classification use fine-tuned transformers. Use `TransformerDocumentEmbeddings` with the following code:
 
 ```python
-# torch and flair imports for this script
 import torch
 from torch.optim.adam import AdamW
 from torch.optim.lr_scheduler import OneCycleLR
