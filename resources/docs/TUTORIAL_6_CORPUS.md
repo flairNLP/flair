@@ -219,8 +219,8 @@ data the first time you call the corresponding constructor ID. The following dat
 | 'NER_GERMAN_POLITICS' | German | [NEMGP](https://www.thomas-zastrow.de/nlp/) corpus |
 | 'NER_HUNGARIAN' | Hungarian | NER on Hungarian business news |
 | 'NER_ICELANDIC' | Icelandic | NER on Icelandic |
-| 'NER_JAPANESE' | Japanese | [https://github.com/Hironsan/IOB2Corpus] Japanese NER dataset automatically generated from Wikipedia |
-| 'NER_MASAKHANE' | 10 languages | [LUGANDA_NER](https://github.com/masakhane-io/masakhane-ner/tree/main/data/lug) |
+| 'NER_JAPANESE' | Japanese | [Japanese NER](https://github.com/Hironsan/IOB2Corpus) dataset automatically generated from Wikipedia |
+| 'NER_MASAKHANE' | 10 languages | [MasakhaNER: Named Entity Recognition for African Languages](https://github.com/masakhane-io/masakhane-ner) corpora |
 | 'NER_SWEDISH' | Swedish | [Swedish Spraakbanken NER](https://github.com/klintan/swedish-ner-corpus/) 4-class NER |
 | 'NER_TURKU' | Finnish | [TURKU_NER](https://github.com/TurkuNLP/turku-ner-corpus) NER corpus created by the Turku NLP Group, University of Turku, Finland |
 | 'NER_MULTI_WIKIANN' | 282 languages  | Gigantic [corpus for cross-lingual NER derived from Wikipedia](https://elisa-ie.github.io/wikiann/).  |
