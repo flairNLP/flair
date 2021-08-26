@@ -307,8 +307,8 @@ class TARSTagger(FewshotClassifier):
     def __init__(
             self,
             task_name: Optional[str] = None,
-            tag_dictionary: Optional[Dictionary] = None,
-            tag_type: Optional[str] = None,
+            label_dictionary: Optional[Dictionary] = None,
+            label_type: Optional[str] = None,
             embeddings: str = 'bert-base-uncased',
             num_negative_labels_to_sample: int = 2,
             prefix: bool = True,
@@ -363,9 +363,9 @@ class TARSTagger(FewshotClassifier):
         self.prefix = prefix
         self.num_negative_labels_to_sample = num_negative_labels_to_sample
 
-        if task_name and tars_dictionary and tag_type:
+        if task_name and label_dictionary and label_type:
             # Store task specific labels since TARS can handle multiple tasks
-            self.add_and_switch_to_new_task(task_name, tag_dictionary, tag_type)
+            self.add_and_switch_to_new_task(task_name, label_dictionary, label_type)
         else:
             log.info("TARS initialized without a task. You need to call .add_and_switch_to_new_task() "
                      "before training this model")
@@ -423,8 +423,8 @@ class TARSTagger(FewshotClassifier):
         # init new TARS classifier
         model = TARSTagger(
             task_name=state["current_task"],
-            tag_dictionary=state["tag_dictionary"],
-            tag_type=state["tag_type"],
+            label_dictionary=state["tag_dictionary"],
+            label_type=state["tag_type"],
             embeddings=state["tars_model"].embeddings,
             num_negative_labels_to_sample=state["num_negative_labels_to_sample"],
             prefix=state["prefix"],
@@ -603,9 +603,9 @@ class TARSClassifier(FewshotClassifier):
 
     def __init__(
             self,
-            task_name: str,
-            label_dictionary: Dictionary,
-            label_type: str,
+            task_name: Optional[str] = None,
+            label_dictionary:  Optional[Dictionary] = None,
+            label_type:  Optional[str] = None,
             embeddings: str = 'bert-base-uncased',
             num_negative_labels_to_sample: int = 2,
             prefix: bool = True,
@@ -657,8 +657,13 @@ class TARSClassifier(FewshotClassifier):
         self.prefix = prefix
         self.num_negative_labels_to_sample = num_negative_labels_to_sample
 
-        # Store task specific labels since TARS can handle multiple tasks
-        self.add_and_switch_to_new_task(task_name, label_dictionary, label_type)
+        if task_name and label_dictionary and label_type:
+            # Store task specific labels since TARS can handle multiple tasks
+            self.add_and_switch_to_new_task(task_name, label_dictionary, label_type)
+        else:
+            log.info("TARS initialized without a task. You need to call .add_and_switch_to_new_task() "
+                     "before training this model")
+
 
     def _get_tars_formatted_sentence(self, label, sentence):
 
