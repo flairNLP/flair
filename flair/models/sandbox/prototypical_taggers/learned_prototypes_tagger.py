@@ -5,7 +5,9 @@ from pathlib import Path
 from tqdm import tqdm
 
 import torch
+
 from torch.nn import Module
+from torch.nn.parameter import Parameter
 
 import flair
 from flair.data import DataPoint, Sentence, Dictionary, Dataset, Label
@@ -14,14 +16,14 @@ from flair.nn import Classifier
 from flair.training_utils import Result, store_embeddings
 from flair.embeddings import TokenEmbeddings
 
-from .distance import HyperbolicMean, HyperbolicDistance, EuclideanMean, EuclideanDistance
+from .distance import HyperbolicDistance, EuclideanDistance
 
 
-class PrototypicalSequenceTagger(Classifier):
+
+class LearnedPrototypesTagger(Classifier):
     def __init__(self,
-                 sorted_samples,
                  embeddings : TokenEmbeddings,
-                 tag_type : str, support_size : int,
+                 tag_dictionary: Dictionary, tag_type : str,
                  hyperbolic : Optional[bool] = True,
                  embedding_to_metric_space : Optional[Module] = None,
                  require_double_eval : Optional[bool] = False,
@@ -46,17 +48,23 @@ class PrototypicalSequenceTagger(Classifier):
 
         super().__init__()
         self.embeddings = embeddings
-        self.support_size = support_size
+
         self.tag_type = tag_type
-        self.prototype_vectors = None
-        self.prototype_labels = None
 
-        self.sorted_samples = sorted_samples
+        # initialize the label dictionary
+        self.prototype_labels: Dictionary = tag_dictionary
 
-        self.require_double_eval = require_double_eval
+        if embedding_to_metric_space:
+            x = torch.zeros((1, embeddings.embedding_length))
+            metric_space_dim = embedding_to_metric_space(x).size
+        else:
+            metric_space_dim = embeddings.embedding_length
+
+        self.prototype_vectors = Parameter(torch.normal(torch.zeros(
+            len(self.prototype_labels), metric_space_dim
+        )))
 
         self._hyperbolic = hyperbolic
-
 
         self.embedding_to_metric_space = embedding_to_metric_space
 
@@ -64,23 +72,20 @@ class PrototypicalSequenceTagger(Classifier):
 
         if hyperbolic:
             self.distance = HyperbolicDistance()
-            self.mean = HyperbolicMean()
         else:
             self.distance = EuclideanDistance()
-            self.mean = EuclideanMean()
 
         # all parameters will be pushed internally to the specified device
         self.to(flair.device)
 
-    def encode_tokens(self, tokens):
+    def encode_sentences(self, sentences):
         names = self.embeddings.get_names()
 
-        self.embeddings.embed([
-            token.sentence for token in tokens])
+        self.embeddings.embed(sentences )
 
         embedded = torch.stack([
             torch.cat(token.get_each_embedding(names))
-            for token in tokens
+            for sentence in sentences for token in sentence
         ], dim=0)
 
         if self.embedding_to_metric_space is not None:
@@ -88,81 +93,23 @@ class PrototypicalSequenceTagger(Classifier):
         else:
             return embedded
 
-    def compute_prototypes(self, support_set, sorted=False):
-        # list for prototypes
-        labels, vectors = list(), list()
+    def forward_loss(self, sentences):
+        return self._calculate_loss(self.forward(sentences), sentences)
 
-        if not sorted:
-            classes = dict()
-
-            for token in support_set:
-                cls = token.get_tag(self.tag_type).value
-                classes.setdefault(cls, list()).append(token)
-
-            for cls, tokens in classes.items():
-                labels.append(cls)
-                vectors.append(
-                    self.mean(self.encode_tokens(tokens))
-                )
-        else:
-            for bucket in support_set:
-                current_class = None
-                current_tokens = list()
-
-                for token in bucket:
-                    cls = token.get_tag(self.tag_type).value
-
-                    if current_class is None:
-                        current_class = cls
-                    else:
-                        assert cls == current_class
-
-                    current_tokens.append(token)
-
-                labels.append(current_class)
-                vectors.append(
-                    self.mean(self.encode_tokens(current_tokens))
-                )
-
-        self.prototype_labels = labels
-        self.prototype_vectors = torch.stack(vectors, dim=0)
-
-    def forward_loss(self, data):
-        feature = self.forward(data)
-        query_set = data[self.support_size:]
-        return self._calculate_loss(feature, query_set)
-
-    def _get_label_index(self, label):
-        try:
-            return self.prototype_labels.index(label)
-        except ValueError:
-            return 0
-
-    def _calculate_loss(self, feature, tokens):
-        true_class = torch.tensor([
-            self._get_label_index(
+    def _calculate_loss(self, feature, sentences):
+        true_class = torch.tensor(
+            self.prototype_labels.get_idx_for_items([
                 token.get_tag(self.tag_type).value
-            )
-            for token in tokens
-        ]).to(flair.device)
+                for sentence in sentences for token in sentence
+            ])).to(flair.device)
 
         return self.loss(feature, true_class)
 
-    def forward(self, data):
-        if self.training:
-            support_set = data[:self.support_size]
-            query_set = data[self.support_size:]
-            self.compute_prototypes(support_set)
-
-        else:
-            query_set = data
-
+    def forward(self, sentences):
         assert self.prototype_vectors is not None
 
-        query_set = self.encode_tokens(query_set)
-
-        return -self.distance(query_set, self.prototype_vectors)
-
+        encoded = self.encode_sentences(sentences)
+        return -self.distance(encoded, self.prototype_vectors)
 
     def predict(
             self,
@@ -215,21 +162,21 @@ class PrototypicalSequenceTagger(Classifier):
                 if verbose:
                     dataloader.set_description(f"Inferencing on batch {batch_no}")
 
-                tokens = [
-                    token
-                    for sentence in sentences
-                    for token in sentence
-                ]
-
-                feature = self.forward(tokens)
+                feature = self.forward(sentences)
 
                 if return_loss:
-                    overall_loss += self._calculate_loss(feature, tokens)
+                    overall_loss += self._calculate_loss(feature, sentences)
 
                 tags, all_tags = self._obtain_labels(
                     feature=feature,
                     get_all_tags=all_tag_prob,
                 )
+
+                tokens = [
+                    token
+                    for sentence in sentences
+                    for token in sentence
+                ]
 
                 for (token, tag) in zip(tokens, tags):
                     token.add_tag_label(label_name, tag)
@@ -267,13 +214,13 @@ class PrototypicalSequenceTagger(Classifier):
 
         for all_probs, prob, pred in zip(softmax_batch, probs_batch, prediction_batch):
             tags.append(
-                Label(self.prototype_labels[pred], prob)
+                Label(self.prototype_labels.get_item_for_index(pred), prob)
             )
 
             if get_all_tags:
                 all_tags.append([
                     Label(
-                        self.prototype_labels[idx], idx_prob
+                        self.prototype_labels.get_item_for_index(idx), idx_prob
                     )
                     for idx, idx_prob in enumerate(all_probs)
                 ])
@@ -285,10 +232,9 @@ class PrototypicalSequenceTagger(Classifier):
             "state_dict": self.state_dict(),
             "embeddings": self.embeddings,
             "tag_type": self.tag_type,
-            "support_size": self.support_size,
             "hyperbolic": self._hyperbolic,
             "prototype_labels": self.prototype_labels,
-            "prototype_vectors": self.prototype_vectors
+            "prototype_vectors": self.prototype_vectors,
         }
         return model_state
 
@@ -297,24 +243,12 @@ class PrototypicalSequenceTagger(Classifier):
         model = PrototypicalTagger(
             embeddings=state["embeddings"],
             tag_type=state["tag_type"],
-            support_size=state["support_size"],
             hyperbolic=state["hyperbolic"],
         )
         model.load_state_dict(state["state_dict"])
         model.prototype_labels = state["prototype_labels"]
         model.prototype_vectors = state["prototype_vectors"]
         return model
-
-    def train(self, mode=True):
-        _last_mode = self.training
-
-        super().train(mode)
-
-
-        if not self.require_double_eval or (not mode and not _last_mode):
-            with torch.no_grad():
-                # compute prototypes for evaluation
-                self.compute_prototypes(self.sorted_samples(), sorted=True)
 
     @property
     def label_type(self):
