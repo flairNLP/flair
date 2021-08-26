@@ -642,8 +642,6 @@ class TARSClassifier(FewshotClassifier):
         tars_dictionary.add_item(self.LABEL_NO_MATCH)
         tars_dictionary.add_item(self.LABEL_MATCH)
 
-        print(embeddings)
-
         # initialize a bare-bones sequence tagger
         self.tars_model = TextClassifier(document_embeddings=embeddings,
                                          label_dictionary=tars_dictionary,
