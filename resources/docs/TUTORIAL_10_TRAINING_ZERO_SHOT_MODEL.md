@@ -48,111 +48,14 @@ So the label "happy" was chosen for this sentence.
 Try it out with some other labels! Zero-shot prediction will sometimes (*but not always*) work remarkably well. 
 
 
-## Use Case #2: Classify Text With Very Little Training Data (Few-Shot)
- 
-While TARS can predict new classes even without training data, it's always better to provide some training examples.
-TARS can learn remarkably well from as few as 1 - 10 training examples. 
+## Use Case #2: Train a TARS model 
 
-For instance, assume you want to predict whether a text talks about "food" or "drink". Let's try zero-shot first: 
-
-```python
-# 1. Load our pre-trained TARS model for English
-tars = TARSClassifier.load('tars-base')
-
-# 2. Prepare a test sentence
-sentence = Sentence("I am so glad you like burritos!")
-
-# 3. Predict zero-shot for classes "food" and "drink", and print results 
-tars.predict_zero_shot(sentence, ["food", "drink"])
-print(sentence)
-```
-
-In this case, zero-shot prediction falsely predicts "drink" for the sentence "I am so glad you like burritos!". 
-
-To improve this, let's first create a small corpus of 4 training and 2 testing examples: 
-
-```python
-from flair.data import Corpus
-from flair.datasets import SentenceDataset
-
-# training dataset consisting of four sentences (2 labeled as "food" and 2 labeled as "drink")
-train = SentenceDataset(
-    [
-        Sentence('I eat pizza').add_label('food_or_drink', 'food'),
-        Sentence('Hamburgers are great').add_label('food_or_drink', 'food'),
-        Sentence('I love drinking tea').add_label('food_or_drink', 'drink'),
-        Sentence('Beer is great').add_label('food_or_drink', 'drink')
-    ])
-
-# test dataset consisting of two sentences (1 labeled as "food" and 1 labeled as "drink")
-test = SentenceDataset(
-    [
-        Sentence('I ordered pasta').add_label('food_or_drink', 'food'),
-        Sentence('There was fresh juice').add_label('food_or_drink', 'drink')
-    ])
-
-# make a corpus with train and test split
-corpus = Corpus(train=train, test=test)
-```
-
-Here, we've named the label class "food_or_drink" with values "food" or "drink". So we want to learn to predict
-whether a sentence mentions food or drink. 
-
-Now, let's take the Corpus we created and do few-shot learning with our pre-trained TARS: 
-
-```python
-from flair.trainers import ModelTrainer
-
-# 1. load base TARS
-tars = TARSClassifier.load('tars-base')
-
-# 2. make the model aware of the desired set of labels from the new corpus
-tars.add_and_switch_to_new_task("FOOD_DRINK", label_dictionary=corpus.make_label_dictionary())
-
-# 3. initialize the text classifier trainer with your corpus
-trainer = ModelTrainer(tars, corpus)
-
-# 4. train model
-trainer.train(base_path='resources/taggers/food_drink', # path to store the model artifacts
-              learning_rate=0.02, # use very small learning rate
-              mini_batch_size=1, # small mini-batch size since corpus is tiny
-              max_epochs=10, # terminate after 10 epochs
-              train_with_dev=True,
-              )
-```
-
-Done! Let's load the newly trained model and see if it does better: 
-
-```python
-# 1. Load few-shot TARS model
-tars = TARSClassifier.load('resources/taggers/food_drink/final-model.pt')
-
-# 2. Prepare a test sentence
-sentence = Sentence("I am so glad you like burritos")
-
-# 3. Predict for food and drink
-tars.predict(sentence)
-print(sentence)
-```
-
-The model should work much better now! Note that now we just used `predict` instead of `predict_zero_shot`. This 
-is because TARS remembers the last task it was trained to do and will do this by default.
-
-Of course, more than 4 training examples works even better. Try it out! 
-
-
-## Use Case #3: Train Your Own Base TARS Model
-
-Our base TARS model was trained for English using the bert-base-uncased model with 9 text classification
-datasets. But for many reasons you might
- want to train your own base TARS model: you may wish to train using more (or different) text classification
-datasets, train models for other languages or domains, etc. 
-
-Here's how to do this: 
+You can also train your own TARS model, either from scratch or by using the provided TARS model as a starting
+point. If you chose the latter, you might need only few training data to train a new task.
 
 ### How to train with one dataset
 
-Training with one dataset is almost exactly like training a normal text classifier in Flair. The only 
+Training with one dataset is almost exactly like training any other model in Flair. The only 
 difference is that it sometimes makes sense to rephrase label names into natural language descriptions. 
 For instance, the TREC dataset defines labels like "ENTY" that we rephrase to "question about entity".
 Better descriptions help TARS learn.
@@ -162,34 +65,48 @@ The full training code is then as follows:
 ```python
 from flair.data import Corpus
 from flair.datasets import TREC_6
-from flair.models.text_classification_model import TARSClassifier
+from flair.models import TARSClassifier
 from flair.trainers import ModelTrainer
 
-
 # 1. define label names in natural language since some datasets come with cryptic set of labels
-label_name_map = {'ENTY':'question about entity',
-                  'DESC':'question about description',
-                  'ABBR':'question about abbreviation',
-                  'HUM':'question about person',
-                  'NUM':'question about number',
-                  'LOC':'question about location'
+label_name_map = {'ENTY': 'question about entity',
+                  'DESC': 'question about description',
+                  'ABBR': 'question about abbreviation',
+                  'HUM': 'question about person',
+                  'NUM': 'question about number',
+                  'LOC': 'question about location'
                   }
 
-# 2. get the corpus                  
+# 2. get the corpus
 corpus: Corpus = TREC_6(label_name_map=label_name_map)
 
-# 3. create a TARS classifier
-tars = TARSClassifier(task_name='TREC_6', label_dictionary=corpus.make_label_dictionary())
+# 3. what label do you want to predict?
+label_type = 'question_class'
 
-# 4. initialize the text classifier trainer
+# 4. make a label dictionary
+label_dict = corpus.make_label_dictionary(label_type=label_type)
+
+# 5. create a new TARS classifier
+tars = TARSClassifier(embeddings="bert-base-uncased")
+
+# 5a: alternatively, comment out previous line and comment in next line to start from tars-base instead
+# tars = TARSClassifier.load("tars-base")
+
+# 6. switch to a new task (TARS can do multiple tasks so you must define one)
+tars.add_and_switch_to_new_task(task_name="question classification",
+                                label_dictionary=label_dict,
+                                label_type=label_type,
+                                )
+
+# 7. initialize the text classifier trainer
 trainer = ModelTrainer(tars, corpus)
 
-# 5. start the training
-trainer.train(base_path='resources/taggers/trec', # path to store the model artifacts
-              learning_rate=0.02, # use very small learning rate
+# 8. start the training
+trainer.train(base_path='resources/taggers/trec',  # path to store the model artifacts
+              learning_rate=0.02,  # use very small learning rate
               mini_batch_size=16,
-              mini_batch_chunk_size=4, # optionally set this if transformer is too much for your machine
-              max_epochs=10, # terminate after 10 epochs
+              mini_batch_chunk_size=4,  # optionally set this if transformer is too much for your machine
+              max_epochs=10,  # terminate after 10 epochs
               )
 ```
 
