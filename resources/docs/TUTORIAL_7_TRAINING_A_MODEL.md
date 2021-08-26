@@ -204,7 +204,9 @@ This will give you state-of-the-art numbers similar to the ones reported in [Sch
 Training other types of models is very similar to the scripts for training sequence labelers above. For text classification, use an appropriate corpus
 and use document-level embeddings instead of word-level embeddings (see tutorials on both for difference). The rest is exactly the same as before!
 
-The best results in text classification use fine-tuned transformers. Use `TransformerDocumentEmbeddings` with the following code:
+The best results in text classification use fine-tuned transformers with `TransformerDocumentEmbeddings` as shown in the code below:
+
+(If you don't have the hardware to fine-tune transformers, try `DocumentPoolEmbeddings` or `DocumentRNNEmbeddings` instead - sometimes they work just as well!)
 
 ```python
 import torch
