@@ -225,11 +225,12 @@ We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
 
 
 #### Relation Extraction
+| Object | Languages | Description |
 | 'CONLL_04' | English  |  [CoNLL-04](https://github.com/bekou/multihead_joint_entity_relation_extraction/tree/master/data/CoNLL04) Relation Extraction |
 
 
 #### GLUE Benchmark
-| ID(s) | Languages | Description |
+| Object | Languages | Description |
 | -------------    | ------------- |------------- |
 | 'GLUE_COLA' | English | The Corpus of Linguistic Acceptability from GLUE benchmark |
 | 'GLUE_MNLI' | English | The Multi-Genre Natural Language Inference Corpus from the GLUE benchmark |
@@ -245,7 +246,7 @@ We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
 We also support loading the [Universal Proposition Banks](https://github.com/System-T/UniversalPropositions)
 for the purpose of training multilingual frame detection systems. 
 
-| ID(s) | Languages | Description |
+| Object | Languages | Description |
 | -------------    | ------------- |------------- |
 | 'UP_CHINESE' | Chinese  |  Universal Propositions for [Chinese](https://github.com/System-T/UniversalPropositions/tree/master/UP_Chinese) |
 | 'UP_ENGLISH'| English  |  Universal Propositions for [English](https://github.com/System-T/UniversalPropositions/tree/master/UP_English-EWT) |
@@ -258,7 +259,7 @@ for the purpose of training multilingual frame detection systems.
 
 #### Universal Dependency Treebanks
 
-| ID(s) | Languages | Description |
+| Object | Languages | Description |
 | -------------    | ------------- |------------- |
 | 'UD_ARABIC'| Arabic  |  Universal Dependency Treebank for [Arabic](https://github.com/UniversalDependencies/UD_Arabic-PADT) |
 | 'UD_BASQUE'| Basque  |  Universal Dependency Treebank for [Basque](https://github.com/UniversalDependencies/UD_Basque-BDT) |
@@ -295,7 +296,7 @@ for the purpose of training multilingual frame detection systems.
 |  'UD_TURKISH' | Turkish  |  Universal Dependency Treebank for [Tturkish](https://github.com/UniversalDependencies/UD_Turkish-IMST) |
 
 #### Text Classification
-| ID(s) | Languages | Description |
+| Object | Languages | Description |
 | -------------    | ------------- |------------- |
 | 'AMAZON_REVIEWS' | English |  [Amazon product reviews](https://nijianmo.github.io/amazon/index.html/) dataset with sentiment annotation |
 | 'COMMUNICATIVE_FUNCTIONS' | English |  [Communicative functions](https://github.com/Alab-NII/FECFevalDataset) of sentences in scholarly papers |
@@ -314,7 +315,7 @@ for the purpose of training multilingual frame detection systems.
 | 'TREC_6', 'TREC_50' | English | The [TREC](http://cogcomp.org/Data/QA/QC/) question classification dataset |
 
 #### Text Regression
-| ID(s) | Languages | Description |
+| Object | Languages | Description |
 | -------------    | ------------- |------------- |
 | 'WASSA_ANGER' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge (anger) |
 | 'WASSA_FEAR' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge (fear) |
@@ -324,7 +325,7 @@ for the purpose of training multilingual frame detection systems.
 
 #### Other Sequence Labeling
 
-| ID(s) | Languages | Description |
+| Object | Languages | Description |
 | -------------    | ------------- |------------- |
 | 'CONLL_2000' | English  | Syntactic chunking with [CoNLL-2000]((https://www.clips.uantwerpen.be/conll2000/chunking/))  |
 | 'BIOSCOPE' | English  | Negation and speculation scoping wih [BioScope](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-S11-S9/) biomedical texts annotated for uncertainty, negation and their scopes |
@@ -333,7 +334,7 @@ for the purpose of training multilingual frame detection systems.
 | 'KEYPHRASE_SEMEVAL2010' | English | Keyphrase dectection with [SEMEVAL2010](https://www.aclweb.org/anthology/S10-1004/) dataset (~250 docs) from ACM Digital Library, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
 
 #### Experimental: Similarity Learning
-| ID(s) | Languages | Description |
+| Object | Languages | Description |
 | -------------    | ------------- |------------- |
 | 'FeideggerCorpus' | German |  [Feidegger](https://github.com/zalandoresearch/feidegger/) dataset fashion images and German-language descriptions  |
 | 'OpusParallelCorpus' | Any language pair | Parallel corpora of the [OPUS](http://opus.nlpl.eu/) project, currently supports only Tatoeba corpus |
