@@ -139,7 +139,7 @@ This will give you state-of-the-art numbers similar to the ones reported in [Akb
 
 ## Training a Named Entity Recognition (NER) Model with Transformers
 
-You can get even better numbers if you use transformers as embeddings, fine-tune them and use full document context 
+You can get **even better numbers** if you use transformers as embeddings, fine-tune them and use full document context 
 (see our [FLERT](https://arxiv.org/abs/2011.06993) paper for details). It's state-of-the-art but much slower than 
 the above model.
 
