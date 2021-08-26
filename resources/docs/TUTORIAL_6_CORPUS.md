@@ -226,6 +226,7 @@ We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
 
 #### Relation Extraction
 | Object | Languages | Description |
+| -------------    | ------------- |------------- |
 | 'CONLL_04' | English  |  [CoNLL-04](https://github.com/bekou/multihead_joint_entity_relation_extraction/tree/master/data/CoNLL04) Relation Extraction |
 
 
