@@ -1342,8 +1342,9 @@ class NER_ENGLISH_WEBPAGES(ColumnCorpus):
             **corpusargs,
     ):
         """
-        Initialize the WEBPAGES_NER corpus. The first time you call this constructor it will automatically
-        download the dataset.
+        Initialize the WEBPAGES_NER corpus introduced in the paper "Design Challenges and Misconceptions in Named Entity
+        Recognition" by Ratinov and Roth (2009): https://aclanthology.org/W09-1119/.
+        The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
