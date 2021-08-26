@@ -3096,7 +3096,7 @@ class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
         )
 
 
-def from_ufsac_to_tsv(xml_file: Union[str, Path], conll_file: Union[str, Path], encoding: str = "utf8",
+def from_ufsac_to_tsv(xml_file: Union[str, Path], conll_file: Union[str, Path], datasetname: str, encoding: str = "utf8",
                         cut_multisense: bool = True):
     """
     Function that converts the UFSAC format into tab separated column format in a new file. 
@@ -3106,6 +3106,8 @@ def from_ufsac_to_tsv(xml_file: Union[str, Path], conll_file: Union[str, Path], 
         Path to the xml file.
     conll_file : Union[str, Path]
         Path for the new conll file.
+    datasetname: str
+        Name of the dataset from UFSAC, needed because of different handling of multi-word-spans in the datasets
     encoding : str, optional
         Encoding used in open function. The default is "utf8".
     cut_multisense : bool, optional
@@ -3117,11 +3119,15 @@ def from_ufsac_to_tsv(xml_file: Union[str, Path], conll_file: Union[str, Path], 
 
     def make_line(word, begin_or_inside, attributes):
         """
-        Function that extracts a tag from a string and writes it correctly in the new file.
+        Function that creates an output line from a word.
         Parameters
         ----------
-        string : str
-            String that contains a tag to extract.
+        word : 
+            String of the actual word.
+        begin_or_inside:
+            Either 'B-' or 'I-'
+        attributes: 
+            List of attributes of the word (pos, lemma, wn30_key)
         """
         line = word
         if cut_multisense == True:
@@ -3135,6 +3141,30 @@ def from_ufsac_to_tsv(xml_file: Union[str, Path], conll_file: Union[str, Path], 
         line += '\n'
         
         return line
+    
+    def split_span(word_fields: List[str], datasetname: str()):
+        """
+        Function that splits a word if necessary, i.e. if it is a multiple-word-span.
+        Parameters
+        ----------
+        word_fields : 
+            list ['surface_form', 'lemma', 'pos', 'wn30_key'] of a word
+        datasetname:
+            name of corresponding dataset
+        """
+        
+        span = word_fields[0]
+        
+        if datasetname in ['trainomatic', 'masc']: # splitting not sensible for these datasets
+            return [span]
+        elif datasetname == 'omsti':
+            if word_fields[3] != 'O' and not span == '_' and not '__' in span: # has annotation and does not consist only of '_' (still not 100% clean)
+                return span.split('_')
+            else: 
+                return [span]
+        else: # for all other datasets splitting at '_' is always sensible
+            return span.split('_')
+        
      
     txt_out = open(file=conll_file, mode='w', encoding=encoding)
     import xml.etree.ElementTree as ET
@@ -3158,8 +3188,8 @@ def from_ufsac_to_tsv(xml_file: Union[str, Path], conll_file: Union[str, Path], 
                     dictionary = word.attrib
                     fields_of_word = [word.attrib[field] if (field in dictionary) else 'O' for field in fields]
                     
-                    chunks = fields_of_word[0].split('_') # TODO: not all words containing '_' should be splitted e.g. links, .txt-filenames, ... --> refine!!
-                                                          # TODO: Moreover do all files handle composed words with '_' ???? 
+                    chunks = split_span(fields_of_word, datasetname)
+                                                          # TODO: Do all files handle composed words with '_' ???? 
                                                           # or are there also just consecutive lines with same annotation??
                     txt_out.write(make_line(chunks[0], 'B-', fields_of_word[1:]))
                     
@@ -3173,9 +3203,9 @@ def from_ufsac_to_tsv(xml_file: Union[str, Path], conll_file: Union[str, Path], 
             
     txt_out.close()
 
-def determine_conll_file(filename: str, data_folder: str, cut_multisense: bool = True):
+def determine_tsv_file(filename: str, data_folder: str, cut_multisense: bool = True):
     """
-    Checks if the converted .conll file already exists and if not, creates it
+    Checks if the converted .tsv file already exists and if not, creates it
     ----------
     string : str
         String that contains the name of the file.
@@ -3187,7 +3217,7 @@ def determine_conll_file(filename: str, data_folder: str, cut_multisense: bool =
         as one new sense. The default is True.
     """
 
-    if cut_multisense is True: # TODO: What to do with corpora that do not have multisense (e.g. wngt, trainomatic)
+    if cut_multisense is True and filename not in ['semeval2007task17', 'trainomatic', 'wngt']: # these three datasets do not have multiple senses
 
         conll_file_name = filename + '_cut.tsv'
 
@@ -3202,6 +3232,7 @@ def determine_conll_file(filename: str, data_folder: str, cut_multisense: bool =
 
         from_ufsac_to_tsv(xml_file=Path(data_folder / 'original_data' / (filename + '.xml')),
                             conll_file=Path(data_folder / conll_file_name),
+                            datasetname=filename,
                             cut_multisense=cut_multisense)
     
     return conll_file_name
@@ -3213,7 +3244,7 @@ class WSD_UFSAC(MultiCorpus):
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             cut_multisense: bool = True,
-            columns = {0: "text", 3: "wn30_key"}, # {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
+            columns = {0: "text", 3: "wn30_key"}, 
             tag_to_bioes=None,
             banned_sentences: List[str] = None,
             sample_missing_splits_in_multicorpus: bool = True,
@@ -3223,23 +3254,31 @@ class WSD_UFSAC(MultiCorpus):
         """
         Initialize a custom corpus with any Word Sense Disambiguation (WSD) datasets in the UFSAC format from https://github.com/getalp/UFSAC.
         If the constructor is called for the first time the data is automatically downloaded and transformed from xml to a tab separated column format.
-        :param base_path: Path to the custom WSD corpus ('wsd_ufsac' folder) on your machine
+        Since only the WordNet 3.0 version for senses is consistently available for all provided datasets we will only consider this version. 
+        Also we ignore the id annotation used in datasets that were originally created for evaluation tasks
+        :param filenames: Here you can pass a single datasetname or a list of ddatasetnames. The available names are:
+            'masc', 'omsti', 'raganato_ALL', 'raganato_semeval2007', 'raganato_semeval2013', 'raganato_semeval2015', 'raganato_senseval2', 'raganato_senseval3', 
+            'semcor', 'semeval2007task17', 'semeval2007task7', 'semeval2013task12', 'semeval2015task13', 'senseval2', 'senseval2_lexical_sample_test', 
+            'senseval2_lexical_sample_train', 'senseval3task1', 'senseval3task6_test', 'senseval3task6_train', 'trainomatic', 'wngt'. 
+            So you can pass for example filenames = ['masc', 'omsti']. If nothing is given (filenames = []) then all datasets will be loaded (excluding the raganato sets).
+        :param base_path: You can override this to point to a specific folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
         :param cut_multisense: Boolean that determines whether or not the wn30_key tag should be cut if it contains
                                multiple possible senses. If True only the first listed sense will be used and the
                                suffix '_cut' will be added to the name of the CoNLL file. Otherwise the whole list of
                                senses will be detected as one new sense. The default is True.
+        :param columns: Columns to consider when loading the dataset. You can add 1: "lemma" or 2: "pos" to the default dict {0: "text", 3: "wn30_key"}
+            if you want to use additional pos and/or lemma for the words.
+        :param tag_to_bioes: whether to convert to BIOES tagging scheme
+        :param banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
+        :param sample_missing_splits_in_multicorpus: Whether to sample missing splits when loading the multicorpus (this is redundant if 
+                                                                                                                    ample_missing_splits_in_each_corpus is True)
+        :param sample_missing_splits_in_each_corpus: Whether to sample missing splits when loading each single corpus given in filenames.
+        :param name: Name of your (costum) corpus 
         """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
-            
-        # column format
-        #
-        # since only the WordNet 3.0 version for senses is consistently available for all provided datasets we will
-        # only consider this version
-        #
-        # also we ignore the id annotation used in datasets that were originally created for evaluation tasks
 
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
@@ -3281,11 +3320,12 @@ class WSD_UFSAC(MultiCorpus):
             filenames = [filenames]
         
         corpora = []
+        
         print('Transforming data into column format and creating corpora...')
         for filename in filenames:
             # make column file and save to data_folder
 
-            new_filename = determine_conll_file(filename=filename, data_folder=data_folder, cut_multisense=cut_multisense)
+            new_filename = determine_tsv_file(filename=filename, data_folder=data_folder, cut_multisense=cut_multisense)
 
             corpus = ColumnCorpus(data_folder=data_folder,
                                 column_format=columns,
@@ -3312,17 +3352,20 @@ class WSD_RAGANATO_ALL(ColumnCorpus):
             self,
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
-            columns = {0: "text", 3: "wn30_key"}, # {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
+            columns = {0: "text", 3: "wn30_key"}, 
             tag_to_bioes=None,
             label_name_map: Dict[str, str] = None,
             banned_sentences: List[str] = None,
             sample_missing_splits: bool = True,
             cut_multisense: bool = True
             ):
+        """
+        Initialize ragnato_ALL (concatenation of all SensEval and SemEval all-words tasks) provided in UFSAC https://github.com/getalp/UFSAC
+        When first initializing the corpus the whole UFSAC data is downloaded.
+        """  
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
-        # this dataset name
         dataset_name = 'wsd_ufsac'
 
         # default dataset folder is the cache root
@@ -3353,7 +3396,7 @@ class WSD_RAGANATO_ALL(ColumnCorpus):
             
             os.rename(data_folder / 'ufsac-public-2.1', original_data_folder)   
             
-        train_file = determine_conll_file(filename='raganato_ALL', data_folder=data_folder, cut_multisense=cut_multisense) 
+        train_file = determine_tsv_file(filename='raganato_ALL', data_folder=data_folder, cut_multisense=cut_multisense) 
             
         super(WSD_RAGANATO_ALL, self).__init__(
             data_folder,
@@ -3374,17 +3417,20 @@ class WSD_SEMCOR(ColumnCorpus):
             self,
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
-            columns = {0: "text", 3: "wn30_key"}, # {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
+            columns = {0: "text", 3: "wn30_key"}, 
             tag_to_bioes=None,
             label_name_map: Dict[str, str] = None,
             banned_sentences: List[str] = None,
             sample_missing_splits: bool = True,
             cut_multisense: bool = True
             ):
+        """
+        Initialize SemCor provided in UFSAC https://github.com/getalp/UFSAC
+        When first initializing the corpus the whole UFSAC data is downloaded.
+        """  
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
-        # this dataset name
         dataset_name = 'wsd_ufsac'
 
         # default dataset folder is the cache root
@@ -3415,7 +3461,7 @@ class WSD_SEMCOR(ColumnCorpus):
             
             os.rename(data_folder / 'ufsac-public-2.1', original_data_folder)   
             
-        train_file = determine_conll_file(filename='semcor', data_folder=data_folder, cut_multisense=cut_multisense) 
+        train_file = determine_tsv_file(filename='semcor', data_folder=data_folder, cut_multisense=cut_multisense) 
             
         super(WSD_SEMCOR, self).__init__(
             data_folder,
@@ -3436,16 +3482,19 @@ class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
             self,
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
-            columns = {0: "text", 3: "wn30_key"}, # {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
+            columns = {0: "text", 3: "wn30_key"}, 
             tag_to_bioes=None,
             label_name_map: Dict[str, str] = None,
             banned_sentences: List[str] = None,
             sample_missing_splits: bool = True,
             ):
+        """
+        Initialize Princeton WordNet Gloss Corpus provided in UFSAC https://github.com/getalp/UFSAC
+        When first initializing the corpus the whole UFSAC data is downloaded.
+        """    
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
-        # this dataset name
         dataset_name = 'wsd_ufsac'
 
         # default dataset folder is the cache root
@@ -3476,7 +3525,7 @@ class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
             
             os.rename(data_folder / 'ufsac-public-2.1', original_data_folder)   
             
-        train_file = determine_conll_file(filename='wngt', data_folder=data_folder, cut_multisense=False)  # does not have multisense!
+        train_file = determine_tsv_file(filename='wngt', data_folder=data_folder, cut_multisense=False)  # does not have multisense!
             
         super(WSD_WORDNET_GLOSS_TAGGED, self).__init__(
             data_folder,
@@ -3497,17 +3546,20 @@ class WSD_MASC(ColumnCorpus):
             self,
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
-            columns = {0: "text", 3: "wn30_key"}, # {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
+            columns = {0: "text", 3: "wn30_key"}, 
             tag_to_bioes=None,
             label_name_map: Dict[str, str] = None,
             banned_sentences: List[str] = None,
             sample_missing_splits: bool = True,
             cut_multisense: bool = True
             ):
+        """
+        Initialize MASC (Manually Annotated Sub-Corpus) provided in UFSAC https://github.com/getalp/UFSAC
+        When first initializing the corpus the whole UFSAC data is downloaded.
+        """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
-        # this dataset name
         dataset_name = 'wsd_ufsac'
 
         # default dataset folder is the cache root
@@ -3538,7 +3590,7 @@ class WSD_MASC(ColumnCorpus):
             
             os.rename(data_folder / 'ufsac-public-2.1', original_data_folder)   
             
-        train_file = determine_conll_file(filename='masc', data_folder=data_folder, cut_multisense=cut_multisense)  
+        train_file = determine_tsv_file(filename='masc', data_folder=data_folder, cut_multisense=cut_multisense)  
             
         super(WSD_MASC, self).__init__(
             data_folder,
@@ -3559,17 +3611,20 @@ class WSD_OMSTI(ColumnCorpus):
             self,
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
-            columns = {0: "text", 3: "wn30_key"}, # {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
+            columns = {0: "text", 3: "wn30_key"}, 
             tag_to_bioes=None,
             label_name_map: Dict[str, str] = None,
             banned_sentences: List[str] = None,
             sample_missing_splits: bool = True,
             cut_multisense: bool = True
             ):
+        """
+        Initialize OMSTI (One Million Sense-Tagged Instances) provided in UFSAC https://github.com/getalp/UFSAC
+        When first initializing the corpus the whole UFSAC data is downloaded.
+        """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
-        # this dataset name
         dataset_name = 'wsd_ufsac'
 
         # default dataset folder is the cache root
@@ -3600,7 +3655,7 @@ class WSD_OMSTI(ColumnCorpus):
             
             os.rename(data_folder / 'ufsac-public-2.1', original_data_folder)   
             
-        train_file = determine_conll_file(filename='omsti', data_folder=data_folder, cut_multisense=cut_multisense)
+        train_file = determine_tsv_file(filename='omsti', data_folder=data_folder, cut_multisense=cut_multisense)
             
         super(WSD_OMSTI, self).__init__(
             data_folder,
@@ -3621,16 +3676,19 @@ class WSD_TRAINOMATIC(ColumnCorpus):
             self,
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
-            columns = {0: "text", 3: "wn30_key"}, # {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
+            columns = {0: "text", 3: "wn30_key"}, 
             tag_to_bioes=None,
             label_name_map: Dict[str, str] = None,
             banned_sentences: List[str] = None,
             sample_missing_splits: bool = True,
             ):
+        """
+        Initialize Train-O-Matic provided in UFSAC https://github.com/getalp/UFSAC
+        When first initializing the corpus the whole UFSAC data is downloaded.
+        """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
-        # this dataset name
         dataset_name = 'wsd_ufsac'
 
         # default dataset folder is the cache root
@@ -3661,7 +3719,7 @@ class WSD_TRAINOMATIC(ColumnCorpus):
             
             os.rename(data_folder / 'ufsac-public-2.1', original_data_folder)   
             
-        train_file = determine_conll_file(filename='trainomatic', data_folder=data_folder, cut_multisense=False) # no multisenses
+        train_file = determine_tsv_file(filename='trainomatic', data_folder=data_folder, cut_multisense=False) # no multisenses
             
         super(WSD_TRAINOMATIC, self).__init__(
             data_folder,
