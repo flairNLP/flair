@@ -191,7 +191,7 @@ data the first time you call the corresponding constructor ID. The following dat
 #### Named Entity Recognition
 
 | Object | Languages | Description |
-| -------------    | ------------- |------------- 
+| -------------    | ------------- |-------------  |
 
 | 'CONLL_03' | English  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER (requires manual download) |
 | 'CONLL_03_GERMAN' | German  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER (requires manual download) |
