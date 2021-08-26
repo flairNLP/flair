@@ -269,4 +269,4 @@ from .treebanks import UD_LATIN
 from .relation_extraction import SEMEVAL_2010_TASK_8
 from .relation_extraction import TACRED
 from .relation_extraction import CoNLL04
-from .relation_extraction import DrugProt
+from .relation_extraction import DRUG_PROD

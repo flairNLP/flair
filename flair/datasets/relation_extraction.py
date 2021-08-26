@@ -36,6 +36,13 @@ def convert_ptb_token(token: str) -> str:
 
 class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, augment_train: bool = False):
+        """
+        SemEval-2010 Task 8 on Multi-Way Classification of Semantic Relations Between Pairs of
+        Nominals: https://aclanthology.org/S10-1006.pdf
+        :param base_path:
+        :param in_memory:
+        :param augment_train:
+        """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
@@ -198,6 +205,12 @@ class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
 
 class TACRED(CoNLLUCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+        """
+        TAC Relation Extraction Dataset with 41 relations from https://nlp.stanford.edu/projects/tacred/.
+        Manual download is required for this dataset.
+        :param base_path:
+        :param in_memory:
+        """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
@@ -462,13 +475,17 @@ class CoNLL04(CoNLLUCorpus):
         return conllu.TokenList(tokens=token_dicts, metadata=metadata)
 
 
-class DrugProt(CoNLLUCorpus):
+class DRUG_PROD(CoNLLUCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
         in_memory: bool = True,
         sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
     ):
+        """
+        DrugProt corpus: Biocreative VII Track 1 from https://zenodo.org/record/5119892#.YSdSaVuxU5k/ on
+        drug and chemical-protein interactions.
+        """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
@@ -495,7 +512,7 @@ class DrugProt(CoNLLUCorpus):
                 data_folder=data_folder,
             )
 
-        super(DrugProt, self).__init__(
+        super(DRUG_PROD, self).__init__(
             data_folder,
             in_memory=in_memory,
             sample_missing_splits=False,
