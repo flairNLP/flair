@@ -162,10 +162,10 @@ class FewshotClassifier(flair.nn.Classifier):
         self.label_nearest_map = negative_label_probabilities
 
     def get_current_label_dictionary(self):
-        return self._task_specific_attributes[self._current_task]['tag_dictionary']
+        return self._task_specific_attributes[self._current_task]['label_dictionary']
 
     def get_current_label_type(self):
-        return self._task_specific_attributes[self._current_task]['tag_type']
+        return self._task_specific_attributes[self._current_task]['label_type']
 
     def add_and_switch_to_new_task(self,
                                    task_name,
@@ -202,7 +202,7 @@ class FewshotClassifier(flair.nn.Classifier):
                 else:
                     tag_dictionary.add_item(tag)
 
-            self._task_specific_attributes[task_name] = {'tag_dictionary': tag_dictionary, 'tag_type': label_type}
+            self._task_specific_attributes[task_name] = {'label_dictionary': tag_dictionary, 'label_type': label_type}
 
         self.switch_to_task(task_name)
 
@@ -418,7 +418,6 @@ class TARSTagger(FewshotClassifier):
 
     @staticmethod
     def _init_model_with_state_dict(state):
-        print("init TARS")
 
         # init new TARS classifier
         model = TARSTagger(
@@ -430,7 +429,8 @@ class TARSTagger(FewshotClassifier):
             prefix=state["prefix"],
         )
         # set all task information
-        model.task_specific_attributes = state["task_specific_attributes"]
+        model._task_specific_attributes = state["task_specific_attributes"]
+
         # linear layers of internal classifier
         model.load_state_dict(state["state_dict"])
         return model
@@ -696,21 +696,24 @@ class TARSClassifier(FewshotClassifier):
 
     @staticmethod
     def _init_model_with_state_dict(state):
-        print("init TARS")
 
         # init new TARS classifier
         label_dictionary = state["label_dictionary"]
+        label_type = "default_label" if not state["label_type"] else state["label_type"]
 
         model: TARSClassifier = TARSClassifier(
             task_name=state["current_task"],
             label_dictionary=label_dictionary,
-            label_type=state["label_type"],
+            label_type=label_type,
             embeddings=state["tars_model"].document_embeddings,
             num_negative_labels_to_sample=state["num_negative_labels_to_sample"],
         )
 
         # set all task information
-        model.task_specific_attributes = state["task_specific_attributes"]
+        model._task_specific_attributes = state["task_specific_attributes"]
+
+        print(model._task_specific_attributes)
+
         # linear layers of internal classifier
         model.load_state_dict(state["state_dict"])
         return model
