@@ -32,11 +32,11 @@ from .sequence_labeling import NER_ENGLISH_WIKIGOLD
 from .sequence_labeling import NER_ENGLISH_WNUT_2020
 from .sequence_labeling import NER_ENGLISH_WEBPAGES
 from .sequence_labeling import NER_FINNISH
-from .sequence_labeling import NER_GERMAN_POLITICS
 from .sequence_labeling import NER_GERMAN_BIOFID
 from .sequence_labeling import NER_GERMAN_EUROPARL
-from .sequence_labeling import NER_GERMAN_LEGAL
 from .sequence_labeling import NER_GERMAN_GERMEVAL
+from .sequence_labeling import NER_GERMAN_LEGAL
+from .sequence_labeling import NER_GERMAN_POLITICS
 from .sequence_labeling import NER_HUNGARIAN
 from .sequence_labeling import NER_ICELANDIC
 from .sequence_labeling import NER_JAPANESE
