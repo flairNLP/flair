@@ -99,35 +99,58 @@ Corpus: 1255 train + 201 dev + 208 test sentences
 ```
 
 For many learning tasks you need to create a "dictionary" that contains all the labels you want to predict.
-You can generate this dictionary directly out of the `Corpus` by calling the method `make_label_dictionary`. 
-If a corpus has multiple label types, you additionally need to specify for which label you want to produce the dictionary: 
+You can generate this dictionary directly out of the `Corpus` by calling the method `make_label_dictionary` 
+and passing the desired `label_type`. 
+
+For instance, the UD_ENGLISH corpus instantiated above has multiple layers of annotation like regular 
+POS tags ('pos'), universal POS tags ('upos'), morphological tags ('tense', 'number'..) and so on. 
+Create label dictionaries for universal POS tags by passing `label_type='upos'` like this:
 
 ```python
-# create tag dictionary for a PoS task
-corpus = flair.datasets.UD_ENGLISH()
-print(corpus.make_label_dictionary('upos'))
+# create label dictionary for a Universal Part-of-Speech tagging task
+upos_dictionary = corpus.make_label_dictionary(label_type='upos')
 
-# create tag dictionary for an NER task
-corpus = flair.datasets.CONLL_03_DUTCH()
-print(corpus.make_label_dictionary('ner'))
+# print dictionary
+print(upos_dictionary)
+```
 
+This will print out the created dictionary:
+
+```console
+Dictionary with 17 tags: PROPN, PUNCT, ADJ, NOUN, VERB, DET, ADP, AUX, PRON, PART, SCONJ, NUM, ADV, CCONJ, X, INTJ, SYM
+```
+
+#### Dictionaries for other label types
+
+When calling `make_label_dictionary` in the example above, statistics on all label types in the same corpus are printed:
+
+```console
+Corpus contains the labels: upos (#204585), lemma (#204584), pos (#204584), dependency (#204584), number (#68023), verbform (#35412), prontype (#33584), person (#21187), tense (#20238), mood (#16547), degree (#13649), definite (#13300), case (#12091), numtype (#4266), gender (#4038), poss (#3039), voice (#1205), typo (#332), abbr (#126), reflex (#100), style (#33), foreign (#18)
+```
+
+This means that you can create dictionaries for any of these label types for the UD_ENGLISH corpus. Let's create dictionaries for regular part of speech tags
+and a morphological number tagging task: 
+
+```python
+# create label dictionary for a regular POS tagging task
+pos_dictionary = corpus.make_label_dictionary(label_type='pos')
+
+# create label dictionary for a morphological number tagging task
+tense_dictionary = corpus.make_label_dictionary(label_type='number')
+```
+
+If you print these dictionaries, you will find that the POS dictionary contains 50 tags and the number dictionary only 2 for this corpus (singular and plural). 
+
+
+#### Dictionaries for other corpora types
+
+The method `make_label_dictionary` can be used for any corpus, including text classification corpora:
+
+```python
 # create label dictionary for a text classification task
 corpus = flair.datasets.TREC_6()
-print(corpus.make_label_dictionary())
+print(corpus.make_label_dictionary('question_class'))
 ```
-
-This should print out different label dictionaries for different datasets and tasks.
-
-Another useful function is `obtain_statistics()` which returns you a python dictionary with useful statistics about your
-dataset. Using it, for example, on the IMDB dataset like this
-
-```python
-import flair.datasets 
-corpus = flair.datasets.TREC_6()
-stats = corpus.obtain_statistics()
-print(stats)
-```
-outputs detailed information on the dataset, each split, and the distribution of class labels.
 
 ### The MultiCorpus Object
 
