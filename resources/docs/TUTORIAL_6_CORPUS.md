@@ -179,54 +179,56 @@ Flair supports a growing list of prepared datasets out of the box. That is, it a
 data the first time you call the corresponding constructor ID. The following datasets are supported: 
 
 
-#### Chunking
+#### Other Sequence Labeling
 
 | ID(s) | Languages | Description |
 | -------------    | ------------- |------------- |
 | 'CONLL_2000' | English  |  [CoNLL-2000]((https://www.clips.uantwerpen.be/conll2000/chunking/)) syntactic chunking |
+| 'BIOSCOPE' | English  |  [BioScope](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-S11-S9/) biomedical texts annotated for uncertainty, negation and their scopes |
+| 'CONLL_04' | English  |  [CoNLL-04](https://github.com/bekou/multihead_joint_entity_relation_extraction/tree/master/data/CoNLL04) Relation Extraction |
 
 
 #### Named Entity Recognition
 
-| ID(s) | Languages | Description |
+| Object | Languages | Description |
 | -------------    | ------------- |------------- 
-| 'ANER_CORP' | Arabic  |  [Arabic Named Entity Recognition Corpus](http://curtis.ml.cmu.edu/w/courses/index.php/ANERcorp) 4-class NER |
-| 'BIOFID' | German  |  [CoNLL-03](https://www.aclweb.org/anthology/K19-1081/) Biodiversity literature NER |
-| 'BIOSCOPE' | English  |  [BioScope](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-S11-S9/) biomedical texts annotated for uncertainty, negation and their scopes |
-| 'BUSINESS_HUN' | Hungarian | NER on Hungarian business news |
+
+| 'CONLL_03' | English  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER (requires manual download) |
+| 'CONLL_03_GERMAN' | German  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER (requires manual download) |
 | 'CONLL_03_DUTCH' | Dutch  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER |
 | 'CONLL_03_SPANISH' | Spanish  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER |
-| 'CONLL_04' | English  |  [CoNLL-04](https://github.com/bekou/multihead_joint_entity_relation_extraction/tree/master/data/CoNLL04) Relation Extraction |
-| 'DANE' | Danish | [DaNE dataset](https://github.com/alexandrainst/danlp/blob/master/docs/datasets.md#danish-dependency-treebank) | 
-| 'EUROPARL_NER_GERMAN' | German | [German Europarl dataset](https://nlpado.de/~sebastian/software/ner_german.shtml) NER in German EU parliament speeches | 
-| 'JAPANESE_NER' | Japanese | [https://github.com/Hironsan/IOB2Corpus] Japanese NER dataset automatically generated from Wikipedia |
-| 'LER_GERMAN' | German | [Legal Entity Recognition](https://github.com/elenanereiss/Legal-Entity-Recognition) NER in German Legal Documents |
-| 'LUGANDA_NER' | Luganda | [LUGANDA_NER](https://github.com/masakhane-io/masakhane-ner/tree/main/data/lug) |
-| 'MIT_MOVIE_NER_SIMPLE' | English  |  [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - simple NER |
-| 'MIT_MOVIE_NER_COMPLEX' | English  |  [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - complex NER |
-| 'MIT_RESTAURANT_NER' | English  |  [NER dataset for restaurant reviews](https://groups.csail.mit.edu/sls/downloads/restaurant/) |
-| 'NER_BASQUE' | Basque  |  [NER dataset for Basque](http://ixa2.si.ehu.eus/eiec/) |
-| 'NER_FINNISH' | Finnish | [Finer-data](https://github.com/mpsilfve/finer-data) | 
-| 'NER_SWEDISH' | Swedish | [Swedish Spraakbanken NER](https://github.com/klintan/swedish-ner-corpus/) 4-class NER |
-| 'STACKOVERFLOW_NER' | English  | NER on StackOverflow posts |
-| 'TURKU_NER' | Finnish | [TURKU_NER](https://github.com/TurkuNLP/turku-ner-corpus) NER corpus created by the Turku NLP Group, University of Turku, Finland |
-| 'PERSON_NER' | English | [PERSON_NER](https://github.com/das-sudeshna/genid) NER with person names | 
-| 'TWITTER_NER' | English  |  [Twitter NER dataset](https://github.com/aritter/twitter_nlp/) |
-| 'WEIBO_NER' | Chinese  | [Weibo NER corpus](https://paperswithcode.com/sota/chinese-named-entity-recognition-on-weibo-ner/).  |
-| 'WIKIANN' | 282 languages  | Gigantic [corpus for cross-lingual NER derived from Wikipedia](https://elisa-ie.github.io/wikiann/).  |
-| 'WIKIGOLD_NER' | English  |  [Wikigold](https://github.com/juand-r/entity-recognition-datasets/tree/master/data/wikigold) a manually annotated collection of Wikipedia text |
-| 'WIKINER_ENGLISH' | English  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
-| 'WIKINER_GERMAN'  | German  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
-| 'WIKINER_FRENCH'  | French  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
-| 'WIKINER_ITALIAN'  | Italian  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
-| 'WIKINER_SPANISH' | Spanish  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
-| 'WIKINER_PORTUGUESE' | Portuguese  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
-| 'WIKINER_POLISH' | Polish  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
-| 'WIKINER_RUSSIAN'  | Russian  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
-| 'WNUT_17' | English  |  [WNUT-17](https://noisy-text.github.io/2017/files/) emerging entity detection |
-| 'WNUT_2020_NER' | English  |  [WNUT-20](https://github.com/jeniyat/WNUT_2020_NER) named entity extraction |
-| 'XTREME' | 176 languages  |  [Xtreme](https://github.com/google-research/xtreme) corpus by Google Research for cross-lingual NER consisting of datasets of a total of 176 languages |
 
+| 'NER_ARABIC_ANER' | Arabic  |  [Arabic Named Entity Recognition Corpus](http://curtis.ml.cmu.edu/w/courses/index.php/ANERcorp) 4-class NER |
+| 'NER_ARABIC_AQMAR' | Arabic  |  [American and Qatari Modeling of Arabic](http://www.cs.cmu.edu/~ark/AQMAR/) 4-class NER (modified) |
+| 'NER_BASQUE' | Basque  |  [NER dataset for Basque](http://ixa2.si.ehu.eus/eiec/) |
+| 'NER_CHINESE_WEIBO' | Chinese  | [Weibo NER corpus](https://paperswithcode.com/sota/chinese-named-entity-recognition-on-weibo-ner/).  |
+| 'NER_DANISH_DANE' | Danish | [DaNE dataset](https://github.com/alexandrainst/danlp/blob/master/docs/datasets.md#danish-dependency-treebank) | 
+| 'NER_ENGLISH_MOVIE_SIMPLE' | English  |  [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - simple NER |
+| 'NER_ENGLISH_MOVIE_COMPLEX' | English  |  [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - complex NER |
+| 'NER_ENGLISH_PERSON' | English | [PERSON_NER](https://github.com/das-sudeshna/genid) NER with person names | 
+| 'NER_ENGLISH_RESTAURANT' | English  |  [NER dataset for restaurant reviews](https://groups.csail.mit.edu/sls/downloads/restaurant/) |
+| 'NER_ENGLISH_SEC_FILLINGS' | English | [SEC-fillings](https://github.com/juand-r/entity-recognition-datasets) with 4-class NER labels from (Alvarado et al, 2015)[https://aclanthology.org/U15-1010/] here | 
+| 'NER_ENGLISH_STACKOVERFLOW' | English  | NER on StackOverflow posts |
+| 'NER_ENGLISH_TWITTER' | English  |  [Twitter NER dataset](https://github.com/aritter/twitter_nlp/) |
+| 'NER_ENGLISH_WIKIGOLD' | English  |  [Wikigold](https://github.com/juand-r/entity-recognition-datasets/tree/master/data/wikigold) a manually annotated collection of Wikipedia text |
+| 'NER_ENGLISH_WNUT_2020' | English  |  [WNUT-20](https://github.com/jeniyat/WNUT_2020_NER) named entity extraction |
+| 'NER_ENGLISH_WEBPAGES' | English  | 4-class NER on web pages from [Ratinov and Roth (2009)](https://aclanthology.org/W09-1119/) |
+| 'NER_FINNISH' | Finnish | [Finer-data](https://github.com/mpsilfve/finer-data) | 
+| 'NER_GERMAN_BIOFID' | German  |  [CoNLL-03](https://www.aclweb.org/anthology/K19-1081/) Biodiversity literature NER |
+| 'NER_GERMAN_EUROPARL' | German | [German Europarl dataset](https://nlpado.de/~sebastian/software/ner_german.shtml) NER in German EU parliament speeches | 
+| 'NER_GERMAN_GERMEVAL' | German  |  [GermEval 14 NER](https://sites.google.com/site/germeval2014ner/data/) corpus |
+| 'NER_GERMAN_LEGAL' | German | [Legal Entity Recognition](https://github.com/elenanereiss/Legal-Entity-Recognition) NER in German Legal Documents |
+| 'NER_GERMAN_POLITICS' | German | [NEMGP](https://www.thomas-zastrow.de/nlp/) corpus |
+| 'NER_HUNGARIAN' | Hungarian | NER on Hungarian business news |
+| 'NER_ICELANDIC' | Icelandic | NER on Icelandic |
+| 'NER_JAPANESE' | Japanese | [https://github.com/Hironsan/IOB2Corpus] Japanese NER dataset automatically generated from Wikipedia |
+| 'NER_MASAKHANE' | 10 languages | [LUGANDA_NER](https://github.com/masakhane-io/masakhane-ner/tree/main/data/lug) |
+| 'NER_SWEDISH' | Swedish | [Swedish Spraakbanken NER](https://github.com/klintan/swedish-ner-corpus/) 4-class NER |
+| 'NER_TURKU' | Finnish | [TURKU_NER](https://github.com/TurkuNLP/turku-ner-corpus) NER corpus created by the Turku NLP Group, University of Turku, Finland |
+| 'NER_MULTI_WIKIANN' | 282 languages  | Gigantic [corpus for cross-lingual NER derived from Wikipedia](https://elisa-ie.github.io/wikiann/).  |
+| 'NER_MULTI_WIKINER' | 8 languages | [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia (English, German, French, Italian, Spanish, Portuguese, Polish, Russian) |
+| 'NER_MULTI_XTREME' | 176 languages  |  [Xtreme](https://github.com/google-research/xtreme) corpus by Google Research for cross-lingual NER consisting of datasets of a total of 176 languages |
+| 'WNUT_17' | English  |  [WNUT-17](https://noisy-text.github.io/2017/files/) emerging entity detection |
 
 #### Biomedical Named Entity Recognition
 
