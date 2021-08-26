@@ -17,6 +17,8 @@ make it run faster, but normally you should train over the full dataset:
 ```python
 from flair.datasets import UD_ENGLISH
 from flair.embeddings import WordEmbeddings, StackedEmbeddings
+from flair.models import SequenceTagger
+from flair.trainers import ModelTrainer
 
 # 1. get the corpus
 corpus = UD_ENGLISH().downsample(0.1)
@@ -45,8 +47,6 @@ embedding_types = [
 embeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # 5. initialize sequence tagger
-from flair.models import SequenceTagger
-
 tagger = SequenceTagger(hidden_size=256,
                         embeddings=embeddings,
                         tag_dictionary=label_dict,
@@ -54,8 +54,6 @@ tagger = SequenceTagger(hidden_size=256,
                         use_crf=True)
 
 # 6. initialize trainer
-from flair.trainers import ModelTrainer
-
 trainer = ModelTrainer(tagger, corpus)
 
 # 7. start training
@@ -93,6 +91,8 @@ corpus like CONLL_03 (requires manual download of data - or use a [different NER
 ```python
 from flair.datasets import CONLL_03
 from flair.embeddings import WordEmbeddings, FlairEmbeddings, StackedEmbeddings
+from flair.models import SequenceTagger
+from flair.trainers import ModelTrainer
 
 # 1. get the corpus
 corpus = CONLL_03()
@@ -115,8 +115,6 @@ embedding_types = [
 embeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # 5. initialize sequence tagger
-from flair.models import SequenceTagger
-
 tagger = SequenceTagger(hidden_size=256,
                         embeddings=embeddings,
                         tag_dictionary=label_dict,
@@ -124,8 +122,6 @@ tagger = SequenceTagger(hidden_size=256,
                         use_crf=True)
 
 # 6. initialize trainer
-from flair.trainers import ModelTrainer
-
 trainer = ModelTrainer(tagger, corpus)
 
 # 7. start training
@@ -149,6 +145,10 @@ and change the training routine to fine-tune with AdamW optimizer and a tiny lea
 ```python
 from flair.datasets import CONLL_03
 from flair.embeddings import TransformerWordEmbeddings
+from flair.models import SequenceTagger
+from flair.trainers import ModelTrainer
+import torch
+from torch.optim.lr_scheduler import OneCycleLR
 
 # 1. get the corpus
 corpus = CONLL_03()
@@ -171,8 +171,6 @@ embeddings = TransformerWordEmbeddings(
 )
 
 # 5. initialize bare-bones sequence tagger (no CRF, no RNN, no reprojection)
-from flair.models import SequenceTagger
-
 tagger = SequenceTagger(
     hidden_size=256,
     embeddings=embeddings,
@@ -184,14 +182,9 @@ tagger = SequenceTagger(
 )
 
 # 6. initialize trainer with AdamW optimizer
-from flair.trainers import ModelTrainer
-import torch
-
 trainer = ModelTrainer(tagger, corpus, optimizer=torch.optim.AdamW)
 
 # 7. run training with XLM parameters (20 epochs, small LR, one-cycle learning rate scheduling)
-from torch.optim.lr_scheduler import OneCycleLR
-
 trainer.train('resources/taggers/sota-ner-flert',
               learning_rate=5.0e-6,
               mini_batch_size=4,
@@ -215,7 +208,6 @@ The best results in text classification use fine-tuned transformers. Use `Transf
 
 ```python
 import torch
-from torch.optim.adam import AdamW
 from torch.optim.lr_scheduler import OneCycleLR
 
 from flair.data import Corpus
@@ -276,11 +268,11 @@ and German UD corpora and create a MultiCorpus object. We also use the new multi
 All the rest is same as before, e.g.:
 
 ```python
-from typing import List
 from flair.data import MultiCorpus
 from flair.datasets import UD_ENGLISH, UD_GERMAN
-from flair.embeddings import FlairEmbeddings, TokenEmbeddings, StackedEmbeddings
-from flair.training_utils import EvaluationMetric
+from flair.embeddings import FlairEmbeddings, StackedEmbeddings
+from flair.models import SequenceTagger
+from flair.trainers import ModelTrainer
 
 # 1. get the corpora - English and German UD
 corpus: MultiCorpus = MultiCorpus([UD_ENGLISH(), UD_GERMAN()]).downsample(0.1)
@@ -293,7 +285,7 @@ label_dict = corpus.make_label_dictionary(label_type=label_type)
 print(label_dict)
 
 # 4. initialize embeddings
-embedding_types: List[TokenEmbeddings] = [
+embedding_types = [
 
     # we use multilingual Flair embeddings in this task
     FlairEmbeddings('multi-forward'),
@@ -303,8 +295,6 @@ embedding_types: List[TokenEmbeddings] = [
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # 5. initialize sequence tagger
-from flair.models import SequenceTagger
-
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
                                         tag_dictionary=label_dict,
@@ -312,8 +302,6 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         use_crf=True)
 
 # 6. initialize trainer
-from flair.trainers import ModelTrainer
-
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 # 7. start training
@@ -366,6 +354,8 @@ from flair.data import Corpus
 from flair.datasets import WNUT_17
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
 from typing import List
+from flair.models import SequenceTagger
+from flair.trainers import ModelTrainer
 
 # 1. get the corpus
 corpus: Corpus = WNUT_17().downsample(0.1)
@@ -384,8 +374,6 @@ embedding_types: List[TokenEmbeddings] = [
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # 5. initialize sequence tagger
-from flair.models import SequenceTagger
-
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
                                         tag_dictionary=label_dict,
@@ -393,9 +381,6 @@ tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         use_crf=True)
 
 # 6. initialize trainer
-from flair.trainers import ModelTrainer
-from flair.training_utils import EvaluationMetric
-
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
 # 7. start training
