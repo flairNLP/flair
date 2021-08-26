@@ -211,60 +211,6 @@ This will give you state-of-the-art numbers similar to the ones reported in [Sch
 Training other types of models is very similar to the scripts for training sequence labelers above. For text classification, use an appropriate corpus
 and use document-level embeddings instead of word-level embeddings (see tutorials on both for difference). The rest is exactly the same as before!
 
-Here a simple example script that trains an RNN classifier for question classification with a combination of GloVe and Flair embeddings:
-
-```python
-from flair.data import Corpus
-from flair.datasets import TREC_6
-from flair.embeddings import WordEmbeddings, FlairEmbeddings, DocumentRNNEmbeddings
-from flair.models import TextClassifier
-from flair.trainers import ModelTrainer
-
-# 1. get the corpus
-corpus: Corpus = TREC_6()
-
-# 2. create the label dictionary
-label_dict = corpus.make_label_dictionary(label_type='question_class')
-
-# 3. make a list of word embeddings
-word_embeddings = [WordEmbeddings('glove')]
-
-# 4. initialize document embedding by passing list of word embeddings
-# Can choose between many RNN types (GRU by default, to change use rnn_type parameter)
-document_embeddings = DocumentRNNEmbeddings(word_embeddings, hidden_size=256)
-
-# 5. create the text classifier
-classifier = TextClassifier(document_embeddings, label_dictionary=label_dict)
-
-# 6. initialize the text classifier trainer
-trainer = ModelTrainer(classifier, corpus)
-
-# 7. start the training
-trainer.train('resources/taggers/trec',
-              learning_rate=0.1,
-              mini_batch_size=32,
-              anneal_factor=0.5,
-              patience=5,
-              max_epochs=150)
-```
-
-Once the model is trained you can load it to predict the class of new sentences. Just call the `predict` method of the
-model.
-
-```python
-classifier = TextClassifier.load('resources/taggers/trec/final-model.pt')
-
-# create example sentence
-sentence = Sentence('Who built the Eiffel Tower ?')
-
-# predict class and print
-classifier.predict(sentence)
-
-print(sentence.labels)
-```
-
-## Training a Text Classification Model with Transformer
-
 The best results in text classification use fine-tuned transformers. Use `TransformerDocumentEmbeddings` for this and
 set `fine_tune=True`. Then, use the following code:
 
@@ -280,25 +226,50 @@ from flair.trainers import ModelTrainer
 # 1. get the corpus
 corpus: Corpus = TREC_6()
 
-# 2. create the label dictionary
-label_dict = corpus.make_label_dictionary()
+# 2. what tag do we want to predict?
+label_type = 'question_class'
 
-# 3. initialize transformer document embeddings (many models are available)
+# 3. create the label dictionary
+label_dict = corpus.make_label_dictionary(label_type=label_type)
+
+# 4. initialize transformer document embeddings (many models are available)
 document_embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased', fine_tune=True)
 
-# 4. create the text classifier
+# 5. create the text classifier
 classifier = TextClassifier(document_embeddings, label_dictionary=label_dict)
 
-# 5. initialize the text classifier trainer with Adam optimizer
-trainer = ModelTrainer(classifier, corpus, optimizer=Adam)
+# 6. initialize trainer with AdamW optimizer
+from flair.trainers import ModelTrainer
+import torch
 
-# 6. start the training
-trainer.train('resources/taggers/trec',
-              learning_rate=3e-5,  # use very small learning rate
-              mini_batch_size=16,
-              mini_batch_chunk_size=4,  # optionally set this if transformer is too much for your machine
-              max_epochs=5,  # terminate after 5 epochs
+trainer = ModelTrainer(tagger, corpus, optimizer=torch.optim.AdamW)
+
+# 7. run training with fine-tuning
+from torch.optim.lr_scheduler import OneCycleLR
+
+trainer.train('resources/taggers/question-classification-with-transformer',
+              learning_rate=5.0e-5,
+              mini_batch_size=4,
+              max_epochs=10, 
+              scheduler=OneCycleLR,
+              embeddings_storage_mode='none',
+              weight_decay=0.,
               )
+```
+
+Once the model is trained you can load it to predict the class of new sentences. Just call the `predict` method of the
+model.
+
+```python
+classifier = TextClassifier.load('resources/taggers/question-classification-with-transformer/final-model.pt')
+
+# create example sentence
+sentence = Sentence('Who built the Eiffel Tower ?')
+
+# predict class and print
+classifier.predict(sentence)
+
+print(sentence.labels)
 ```
 
 ## Multi-Dataset Training
