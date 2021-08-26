@@ -1,0 +1,1 @@
+from .prototypical_sequence_tagger import PrototypicalSequenceTagger
