@@ -3177,7 +3177,7 @@ def from_ufsac_to_tsv(xml_file: Union[str, Path], conll_file: Union[str, Path], 
     for document in corpus: 
         # Docstart
         if number_of_docs > 1:
-            txt_out.write('-DOCSTART-\n\n') # TODO: What about paragraphs as documents? Are they only paragraphs of one doc or docs themself
+            txt_out.write('-DOCSTART-\n\n') 
 
         for paragraph in document:
 
@@ -3189,14 +3189,13 @@ def from_ufsac_to_tsv(xml_file: Union[str, Path], conll_file: Union[str, Path], 
                     fields_of_word = [word.attrib[field] if (field in dictionary) else 'O' for field in fields]
                     
                     chunks = split_span(fields_of_word, datasetname)
-                                                          # TODO: Do all files handle composed words with '_' ???? 
-                                                          # or are there also just consecutive lines with same annotation??
+                                                        
                     txt_out.write(make_line(chunks[0], 'B-', fields_of_word[1:]))
                     
                     # if there is more than one word in the chunk we write each in a separate line
                     for chunk in chunks[1:]:
                         #print(chunks)
-                        txt_out.write(make_line(chunks[0], 'I-', fields_of_word[1:]))
+                        txt_out.write(make_line(chunk, 'I-', fields_of_word[1:]))
                         
                 #empty line after each sentence
                 txt_out.write('\n')
@@ -3347,6 +3346,7 @@ class WSD_UFSAC(MultiCorpus):
             name=name
         )
         
+        
 class WSD_RAGANATO_ALL(ColumnCorpus):
     def __init__(
             self,
@@ -3411,6 +3411,7 @@ class WSD_RAGANATO_ALL(ColumnCorpus):
             banned_sentences=banned_sentences,
             sample_missing_splits=sample_missing_splits,
         )
+        
         
 class WSD_SEMCOR(ColumnCorpus):
     def __init__(
@@ -3477,6 +3478,7 @@ class WSD_SEMCOR(ColumnCorpus):
             sample_missing_splits=sample_missing_splits,
         )
         
+        
 class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
     def __init__(
             self,
@@ -3540,6 +3542,7 @@ class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
             banned_sentences=banned_sentences,
             sample_missing_splits=sample_missing_splits,
         )
+        
         
 class WSD_MASC(ColumnCorpus):
     def __init__(
@@ -3606,6 +3609,7 @@ class WSD_MASC(ColumnCorpus):
             sample_missing_splits=sample_missing_splits,
         )
         
+        
 class WSD_OMSTI(ColumnCorpus):
     def __init__(
             self,
@@ -3670,6 +3674,7 @@ class WSD_OMSTI(ColumnCorpus):
             banned_sentences=banned_sentences,
             sample_missing_splits=sample_missing_splits,
         )
+        
         
 class WSD_TRAINOMATIC(ColumnCorpus):
     def __init__(
