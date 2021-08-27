@@ -266,7 +266,7 @@ from .biomedical import BIOBERT_GENE_JNLPBA
 from .treebanks import UD_LATIN
 
 # Expose all relation extraction datasets
-from .relation_extraction import SEMEVAL_2010_TASK_8
-from .relation_extraction import TACRED
-from .relation_extraction import CoNLL04
-from .relation_extraction import DRUG_PROT
+from .relation_extraction import RE_ENGLISH_SEMEVAL2010
+from .relation_extraction import RE_ENGLISH_TACRED
+from .relation_extraction import RE_ENGLISH_CONLL04
+from .relation_extraction import RE_ENGLISH_DRUGPROT

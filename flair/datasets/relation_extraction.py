@@ -34,7 +34,7 @@ def convert_ptb_token(token: str) -> str:
     }.get(token.lower(), token)
 
 
-class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
+class RE_ENGLISH_SEMEVAL2010(CoNLLUCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, augment_train: bool = False):
         """
         SemEval-2010 Task 8 on Multi-Way Classification of Semantic Relations Between Pairs of
@@ -73,7 +73,7 @@ class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
                 augment_train=augment_train,
             )
 
-        super(SEMEVAL_2010_TASK_8, self).__init__(
+        super(RE_ENGLISH_SEMEVAL2010, self).__init__(
             data_folder,
             train_file=train_file_name,
             test_file="semeval2010-task8-test.conllu",
@@ -203,7 +203,7 @@ class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
         return conllu.TokenList(tokens=token_dicts, metadata=metadata)
 
 
-class TACRED(CoNLLUCorpus):
+class RE_ENGLISH_TACRED(CoNLLUCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         """
         TAC Relation Extraction Dataset with 41 relations from https://nlp.stanford.edu/projects/tacred/.
@@ -233,7 +233,7 @@ class TACRED(CoNLLUCorpus):
                 data_folder=data_folder,
             )
 
-        super(TACRED, self).__init__(
+        super(RE_ENGLISH_TACRED, self).__init__(
             data_folder,
             in_memory=in_memory,
         )
@@ -314,7 +314,7 @@ class TACRED(CoNLLUCorpus):
         return conllu.TokenList(tokens=token_dicts, metadata=metadata)
 
 
-class CoNLL04(CoNLLUCorpus):
+class RE_ENGLISH_CONLL04(CoNLLUCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -345,7 +345,7 @@ class CoNLL04(CoNLLUCorpus):
                 data_folder=data_folder,
             )
 
-        super(CoNLL04, self).__init__(
+        super(RE_ENGLISH_CONLL04, self).__init__(
             data_folder,
             in_memory=in_memory,
         )
@@ -475,7 +475,7 @@ class CoNLL04(CoNLLUCorpus):
         return conllu.TokenList(tokens=token_dicts, metadata=metadata)
 
 
-class DRUG_PROT(CoNLLUCorpus):
+class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
     def __init__(
         self,
         base_path: Union[str, Path] = None,
@@ -512,7 +512,7 @@ class DRUG_PROT(CoNLLUCorpus):
                 data_folder=data_folder,
             )
 
-        super(DRUG_PROT, self).__init__(
+        super(RE_ENGLISH_DRUGPROT, self).__init__(
             data_folder,
             in_memory=in_memory,
             sample_missing_splits=False,
