@@ -10,7 +10,7 @@ Mandatory parameters, that must be defined:
 | Parameter            | Description
 | -------------------- | ---------------------------------------------------------------------------------------------------------------
 | `model_name_or_path` | Model name (valid model name on the Hugging Face [model hub](https://huggingface.co/)) or local path to a model
-| `dataset_name`       | Valid Flair datasets name, as described [here](../../resource/docs/TUTORIAL_6_CORPUS.md)
+| `dataset_name`       | Valid Flair datasets name, as described [here](../../resources/docs/TUTORIAL_6_CORPUS.md)
 
 The (optional) argument `dataset_arguments` can be used to pass special options to a Flair dataset, such as defining a special language
 for a dataset, that consists of multiple corpora.
