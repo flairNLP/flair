@@ -175,6 +175,9 @@ def main():
         weight_decay=training_args.weight_decay,
     )
 
+    torch.save(model_args, os.path.join(data_args.output_dir, "model_args.bin"))
+    torch.save(training_args, os.path.join(data_args.output_dir, "training_args.bin"))
+
 
 if __name__ == "__main__":
     main()
