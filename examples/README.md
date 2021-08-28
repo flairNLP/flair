@@ -6,4 +6,4 @@ This folder contains actively maintained examples of use of Flair, organized alo
 
 | Task                          | Documentation
 | ----------------------------- | -------------
-| Named Entity Recogntion (NER) | [Here](ner/)
+| Named Entity Recognition (NER) | [Here](ner/)
