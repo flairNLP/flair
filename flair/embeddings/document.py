@@ -69,7 +69,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
         if not 'config' in kwargs:
             config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
-            self.model = AutoModel.from_pretrained(model, config=config, **kwargs)
+            self.model = AutoModel.from_pretrained(model, config=config)
         else:
             self.model = AutoModel.from_pretrained(None, **kwargs)
 
