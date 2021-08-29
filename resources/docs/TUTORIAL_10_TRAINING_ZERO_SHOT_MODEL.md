@@ -88,8 +88,8 @@ I flew with an Airbus <B-Vehicle> A380 <E-Vehicle> to Peru <S-City> to pick up m
 Game <B-TV Show> of <I-TV Show> Thrones <E-TV Show> is my favorite series
 ```
 
-So in these examples, we are finding entity classes such as "TV show" (Game of Thrones), "vehicle" (Airbus A380 and Porsche Cayenne), "soccer team" (Bayern Munich and Real Madrid) and "river" (Spree), even though the model was never explicitly trained for this. Note that this is ongoing research and the examples are a bit cherry-picked. We expect the zero-shot model to improve quite a bit until the next release.
 
+So in these examples, we are finding entity classes such as "TV show" (_Game of Thrones_), "vehicle" (_Airbus A380_ and _Porsche Cayenne_), "soccer team" (_Bayern Munich_ and _Real Madrid_) and "river" (_Spree_), even though the model was never explicitly trained for this. Note that this is ongoing research and the examples are a bit cherry-picked. We expect the zero-shot model to improve quite a bit until the next release.
 ## Use Case #3: Train a TARS model 
 
 You can also train your own TARS model, either from scratch or by using the provided TARS model as a starting
