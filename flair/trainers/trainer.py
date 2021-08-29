@@ -760,8 +760,6 @@ class ModelTrainer:
         else:
             log.info("Testing using last state of model ...")
 
-        print(self.model.label_type)
-
         test_results = self.model.evaluate(
             self.corpus.test,
             gold_label_type=self.model.label_type,

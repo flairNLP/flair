@@ -4,11 +4,10 @@ from abc import abstractmethod, ABC
 from collections import Counter
 from collections import defaultdict
 from operator import itemgetter
-from typing import List, Dict, Union, Callable, Optional
+from typing import List, Dict, Union, Optional
 
 import flair
 import torch
-from deprecated import deprecated
 from torch.utils.data import Dataset
 from torch.utils.data.dataset import ConcatDataset, Subset
 
@@ -587,44 +586,6 @@ class Tokenizer(ABC):
     @property
     def name(self) -> str:
         return self.__class__.__name__
-
-
-@deprecated(version="0.5", reason="Use 'flair.tokenization.SpaceTokenizer' instead.")
-def space_tokenizer(text: str) -> List[Token]:
-    # We don't want to create a SpaceTokenizer object each time this function is called,
-    # so delegate the call directly to the static run_tokenize method
-    from flair.tokenization import SpaceTokenizer
-    return SpaceTokenizer.run_tokenize(text)
-
-
-@deprecated(version="0.5", reason="Use 'flair.tokenization.SegtokTokenizer' instead.")
-def segtok_tokenizer(text: str) -> List[Token]:
-    # We don't want to create a SegtokTokenizer object each time this function is called,
-    # so delegate the call directly to the static run_tokenize method
-    from flair.tokenization import SegtokTokenizer
-    return SegtokTokenizer.run_tokenize(text)
-
-
-@deprecated(version="0.5", reason="Use 'flair.tokenization.SpacyTokenizer' instead.")
-def build_spacy_tokenizer(model) -> Callable[[str], List[Token]]:
-    from flair.tokenization import SpacyTokenizer
-    spacy_tokenizer = SpacyTokenizer(model)
-
-    def tokenizer(text: str) -> List[Token]:
-        return spacy_tokenizer.tokenize(text)
-
-    return tokenizer
-
-
-@deprecated(version="0.5", reason="Use 'flair.tokenization.JapaneseTokenizer' instead.")
-def build_japanese_tokenizer(tokenizer: str = "MeCab"):
-    from flair.tokenization import JapaneseTokenizer
-    japanese_tokenizer = JapaneseTokenizer(tokenizer)
-
-    def tokenizer(text: str) -> List[Token]:
-        return japanese_tokenizer.tokenize(text)
-
-    return tokenizer
 
 
 class Sentence(DataPoint):
@@ -1418,8 +1379,6 @@ class Corpus:
         from flair.datasets import DataLoader
 
         datasets = [self.train]
-        if self.test is not None:
-            datasets.append(self.test)
 
         data = ConcatDataset(datasets)
 
@@ -1427,23 +1386,27 @@ class Corpus:
 
         log.info("Computing label dictionary. Progress:")
 
+        # if there are token labels of provided type, use these. Otherwise use sentence labels
+        token_labels_exist = False
+
         all_label_types = Counter()
         all_sentence_labels = []
-        token_labels_exist = False
         for batch in Tqdm.tqdm(iter(loader)):
 
             for sentence in batch:
 
-                # check if sentence itself has labels
-                labels = sentence.get_labels(label_type)
-                all_label_types.update(sentence.annotation_layers.keys())
+                # if we are looking for sentence-level labels
+                if not token_labels_exist:
+                    # check if sentence itself has labels
+                    labels = sentence.get_labels(label_type)
+                    all_label_types.update(sentence.annotation_layers.keys())
 
-                for label in labels:
-                    if label.value not in all_sentence_labels: all_sentence_labels.append(label.value)
+                    for label in labels:
+                        if label.value not in all_sentence_labels: all_sentence_labels.append(label.value)
 
-                if not label_dictionary.multi_label:
-                    if len(labels) > 1:
-                        label_dictionary.multi_label = True
+                    if not label_dictionary.multi_label:
+                        if len(labels) > 1:
+                            label_dictionary.multi_label = True
 
                 # check for labels of words
                 if isinstance(sentence, Sentence):
@@ -1467,7 +1430,7 @@ class Corpus:
 
         log.info(
             f"Corpus contains the labels: {', '.join([label[0] + f' (#{label[1]})' for label in all_label_types.most_common()])}")
-        log.info(f"Dictionary for label '{label_type}' contains: {label_dictionary.idx2item}")
+        log.info(f"Created (for label '{label_type}') {label_dictionary}")
 
         return label_dictionary
 

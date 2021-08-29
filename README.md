@@ -42,7 +42,7 @@ Flair ships with state-of-the-art models for a range of NLP tasks. For instance,
 | Spanish  | Conll-03 (4-class)   |  **90.54** | *90.3 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Spanish 18-class NER demo](https://huggingface.co/flair/ner-spanish-large)  |
 
 **New:** Most Flair sequence tagging models (named entity recognition, part-of-speech tagging etc.) are now hosted 
-on the [__🤗 HuggingFace model hub__](https://huggingface.co/models?filter=flair)! You can browse models, check detailed information on how they were trained, and even try each model out online!
+on the [__🤗 HuggingFace model hub__](https://huggingface.co/models?library=flair&sort=downloads)! You can browse models, check detailed information on how they were trained, and even try each model out online!
 
 
 ## Quick Start

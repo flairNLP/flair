@@ -1,9 +1,9 @@
 # TransformerWordEmbeddings
 
 Thanks to the brilliant [`transformers`](https://github.com/huggingface/transformers) library from [HuggingFace](https://github.com/huggingface), 
-Flair is able to support various Transformer-based architectures like BERT or XLNet. 
+Flair is able to support various Transformer-based architectures like BERT or XLNet with a single class for transformer-based word embeddings.
 
-As of version 0.5 of Flair, there is a single class for all transformer embeddings that you instantiate with different identifiers get different transformers. For instance, to load a standard BERT transformer model, do:  
+For instance, to load a standard BERT transformer model, do:  
 
 ```python
 from flair.embeddings import TransformerWordEmbeddings
@@ -64,21 +64,21 @@ from flair.embeddings import TransformerWordEmbeddings
 sentence = Sentence('The grass is green.')
 
 # use only last layers
-embeddings = TransformerWordEmbeddings('bert-base-uncased', layers='-1')
+embeddings = TransformerWordEmbeddings('bert-base-uncased', layers='-1', layer_mean=False)
 embeddings.embed(sentence)
 print(sentence[0].embedding.size())
 
 sentence.clear_embeddings()
 
 # use last two layers
-embeddings = TransformerWordEmbeddings('bert-base-uncased', layers='-1,-2')
+embeddings = TransformerWordEmbeddings('bert-base-uncased', layers='-1,-2', layer_mean=False)
 embeddings.embed(sentence)
 print(sentence[0].embedding.size())
 
 sentence.clear_embeddings()
 
 # use ALL layers
-embeddings = TransformerWordEmbeddings('bert-base-uncased', layers='all')
+embeddings = TransformerWordEmbeddings('bert-base-uncased', layers='all', layer_mean=False)
 embeddings.embed(sentence)
 print(sentence[0].embedding.size())
 ```
@@ -90,7 +90,7 @@ torch.Size([1536])
 torch.Size([9984])
 ```
 
-I.e. the size of the embedding increases the mode layers we use.
+I.e. the size of the embedding increases the mode layers we use (but ONLY if layer_mean is set to False, otherwise the length is always the same).
 
 
 ### Pooling operation
@@ -116,14 +116,9 @@ print(sentence[0].embedding.size())
 
 ### Layer mean
 
-The Transformer-based models have a certain number of layers. [Liu et. al (2019)](https://arxiv.org/abs/1903.08855)
-propose a technique called scalar mix, that computes a parameterised scalar mixture of user-defined layers.
-
-This technique is very useful, because for some downstream tasks like NER or PoS tagging it can be unclear which
-layer(s) of a Transformer-based model perform well, and per-layer analysis can take a lot of time.
-
-To use scalar mix, all Transformer-based embeddings in Flair come with a `layer_mean` argument. The following
-example shows how to use scalar mix for a base RoBERTa model on all layers:
+The Transformer-based models have a certain number of layers. By default, all layers you select are 
+concatenated as explained above. Alternatively, you can set layer_mean=True to do a mean over all
+selected layers. The resulting vector will then always have the same dimensionality as a single layer:
 
 ```python
 from flair.embeddings import TransformerWordEmbeddings
