@@ -154,6 +154,7 @@ from .treebanks import UD_IRISH
 from .treebanks import UD_LATVIAN
 from .treebanks import UD_LITHUANIAN
 from .treebanks import UD_GALICIAN
+from .treebanks import UD_LATIN
 
 # Expose all text-text datasets
 from .text_text import ParallelTextCorpus
@@ -263,7 +264,6 @@ from .biomedical import BIOBERT_SPECIES_LINNAEUS
 from .biomedical import BIOBERT_SPECIES_S800
 from .biomedical import BIOBERT_GENE_BC2GM
 from .biomedical import BIOBERT_GENE_JNLPBA
-from .treebanks import UD_LATIN
 
 # Expose all relation extraction datasets
 from .relation_extraction import RE_ENGLISH_SEMEVAL2010
