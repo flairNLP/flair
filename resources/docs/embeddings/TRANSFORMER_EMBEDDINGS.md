@@ -64,21 +64,21 @@ from flair.embeddings import TransformerWordEmbeddings
 sentence = Sentence('The grass is green.')
 
 # use only last layers
-embeddings = TransformerWordEmbeddings('bert-base-uncased', layers='-1')
+embeddings = TransformerWordEmbeddings('bert-base-uncased', layers='-1', layer_mean=False)
 embeddings.embed(sentence)
 print(sentence[0].embedding.size())
 
 sentence.clear_embeddings()
 
 # use last two layers
-embeddings = TransformerWordEmbeddings('bert-base-uncased', layers='-1,-2')
+embeddings = TransformerWordEmbeddings('bert-base-uncased', layers='-1,-2', layer_mean=False)
 embeddings.embed(sentence)
 print(sentence[0].embedding.size())
 
 sentence.clear_embeddings()
 
 # use ALL layers
-embeddings = TransformerWordEmbeddings('bert-base-uncased', layers='all')
+embeddings = TransformerWordEmbeddings('bert-base-uncased', layers='all', layer_mean=False)
 embeddings.embed(sentence)
 print(sentence[0].embedding.size())
 ```
@@ -90,7 +90,7 @@ torch.Size([1536])
 torch.Size([9984])
 ```
 
-I.e. the size of the embedding increases the mode layers we use.
+I.e. the size of the embedding increases the mode layers we use (but ONLY if layer_mean is set to False, otherwise the length is always the same).
 
 
 ### Pooling operation
