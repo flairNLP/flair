@@ -22,7 +22,7 @@ document embeddings, including our proposed **[Flair embeddings](https://www.acl
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.8](https://github.com/flairNLP/flair/releases)!
+Now at [version 0.9](https://github.com/flairNLP/flair/releases)!
 
 
 ## Join Us: Open Positions at HU-Berlin!
