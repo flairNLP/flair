@@ -49,8 +49,6 @@ Try it out with some other labels! Zero-shot prediction will sometimes (*but not
 
 ## Use Case #2: Zero-shot Named Entity Recognition (NER) with TARS
 
-## Zero-Shot Sequence Labeling with TARS (#2260) 
-
 We extend the TARS zero-shot learning approach to sequence labeling and ship a pre-trained model for English NER. Try defining some classes and see if the model can find them: 
 
 ```python
@@ -92,7 +90,7 @@ Game <B-TV Show> of <I-TV Show> Thrones <E-TV Show> is my favorite series
 
 So in these examples, we are finding entity classes such as "TV show" (Game of Thrones), "vehicle" (Airbus A380 and Porsche Cayenne), "soccer team" (Bayern Munich and Real Madrid) and "river" (Spree), even though the model was never explicitly trained for this. Note that this is ongoing research and the examples are a bit cherry-picked. We expect the zero-shot model to improve quite a bit until the next release.
 
-## Use Case #2: Train a TARS model 
+## Use Case #3: Train a TARS model 
 
 You can also train your own TARS model, either from scratch or by using the provided TARS model as a starting
 point. If you chose the latter, you might need only few training data to train a new task.
