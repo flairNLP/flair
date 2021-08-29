@@ -47,6 +47,50 @@ So the label "happy" was chosen for this sentence.
 
 Try it out with some other labels! Zero-shot prediction will sometimes (*but not always*) work remarkably well. 
 
+## Use Case #2: Zero-shot Named Entity Recognition (NER) with TARS
+
+## Zero-Shot Sequence Labeling with TARS (#2260) 
+
+We extend the TARS zero-shot learning approach to sequence labeling and ship a pre-trained model for English NER. Try defining some classes and see if the model can find them: 
+
+```python
+from flair.models import TARSTagger
+from flair.data import Sentence
+
+# 1. Load zero-shot NER tagger
+tars = TARSTagger.load('tars-ner')
+
+# 2. Prepare some test sentences
+sentences = [
+    Sentence("The Humboldt University of Berlin is situated near the Spree in Berlin, Germany"),
+    Sentence("Bayern Munich played against Real Madrid"),
+    Sentence("I flew with an Airbus A380 to Peru to pick up my Porsche Cayenne"),
+    Sentence("Game of Thrones is my favorite series"),
+]
+
+# 3. Define some classes of named entities such as "soccer teams", "TV shows" and "rivers"
+labels = ["Soccer Team", "University", "Vehicle", "River", "City", "Country", "Person", "Movie", "TV Show"]
+tars.add_and_switch_to_new_task('task 1', labels, label_type='ner')
+
+# 4. Predict for these classes and print results
+for sentence in sentences:
+    tars.predict(sentence)
+    print(sentence.to_tagged_string("ner"))
+```
+
+This should print: 
+
+```console
+The Humboldt <B-University> University <I-University> of <I-University> Berlin <E-University> is situated near the Spree <S-River> in Berlin <S-City> , Germany <S-Country>
+
+Bayern <B-Soccer Team> Munich <E-Soccer Team> played against Real <B-Soccer Team> Madrid <E-Soccer Team>
+
+I flew with an Airbus <B-Vehicle> A380 <E-Vehicle> to Peru <S-City> to pick up my Porsche <B-Vehicle> Cayenne <E-Vehicle>
+
+Game <B-TV Show> of <I-TV Show> Thrones <E-TV Show> is my favorite series
+```
+
+So in these examples, we are finding entity classes such as "TV show" (Game of Thrones), "vehicle" (Airbus A380 and Porsche Cayenne), "soccer team" (Bayern Munich and Real Madrid) and "river" (Spree), even though the model was never explicitly trained for this. Note that this is ongoing research and the examples are a bit cherry-picked. We expect the zero-shot model to improve quite a bit until the next release.
 
 ## Use Case #2: Train a TARS model 
 

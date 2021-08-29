@@ -417,6 +417,16 @@ class TARSTagger(FewshotClassifier):
         return model_state
 
     @staticmethod
+    def _fetch_model(model_name) -> str:
+
+        if model_name == "tars-ner":
+            cache_dir = Path("models")
+            model_name = cached_path("https://nlp.informatik.hu-berlin.de/resources/models/tars-ner/tars-ner.pt",
+                                     cache_dir=cache_dir)
+
+        return model_name
+
+    @staticmethod
     def _init_model_with_state_dict(state):
 
         # init new TARS classifier
@@ -474,27 +484,12 @@ class TARSTagger(FewshotClassifier):
         if isinstance(sentences, Sentence):
             sentences = [sentences]
 
-        # set context if not set already
-        previous_sentence = None
-        for sentence in sentences:
-            if sentence.is_context_set(): continue
-            sentence._previous_sentence = previous_sentence
-            sentence._next_sentence = None
-            if previous_sentence: previous_sentence._next_sentence = sentence
-            previous_sentence = sentence
-
         # reverse sort all sequences by their length
-        rev_order_len_index = sorted(
-            range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True
-        )
+        rev_order_len_index = sorted(range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True)
 
-        reordered_sentences: List[Union[Sentence, str]] = [
-            sentences[index] for index in rev_order_len_index
-        ]
+        reordered_sentences: List[Union[Sentence, str]] = [sentences[index] for index in rev_order_len_index]
 
-        dataloader = DataLoader(
-            dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size
-        )
+        dataloader = DataLoader(dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size)
 
         # progress bar for verbosity
         if verbose:
