@@ -199,7 +199,7 @@ Flair also works for languages that write from right to left. To tag an Arabic s
 # load model
 tagger = SequenceTagger.load('ar-ner')
 
-# make German sentence
+# make Arabic sentence
 sentence = Sentence("احب برلين")
 
 # predict NER tags
