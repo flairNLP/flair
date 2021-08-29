@@ -447,6 +447,7 @@ class TARSTagger(FewshotClassifier):
             label_name: Optional[str] = None,
             return_loss=False,
             embedding_storage_mode="none",
+            most_probable_first: bool = True
     ):
         # return
         """
@@ -541,46 +542,53 @@ class TARSTagger(FewshotClassifier):
                             span.set_label('tars_temp_label', label)
                             all_detected[span] = span.score
 
-                        for span in tars_sentence.get_spans(label_name):
+                        if not most_probable_first:
+                            for span in tars_sentence.get_spans(label_name):
+                                for token in span:
+                                    corresponding_token = sentence.get_token(token.idx - label_length)
+                                    if corresponding_token is None: continue
+                                    if corresponding_token.get_tag(label_name).value != '' and \
+                                            corresponding_token.get_tag(label_name).score > token.get_tag(
+                                        label_name).score:
+                                        continue
+                                    corresponding_token.add_tag(
+                                        label_name,
+                                        token.get_tag(label_name).value + label,
+                                        token.get_tag(label_name).score,
+                                    )
+
+                    if most_probable_first:
+                        import operator
+                        sorted_x = sorted(all_detected.items(), key=operator.itemgetter(1))
+                        sorted_x.reverse()
+                        for tuple in sorted_x:
+                            # get the span and its label
+                            span = tuple[0]
+                            label = span.get_labels('tars_temp_label')[0].value
+                            label_length = 0 if not self.prefix else len(label.split(" ")) + len(
+                                self.separator.split(" "))
+
+                            # determine whether tokens in this span already have a label
+                            tag_this = True
                             for token in span:
                                 corresponding_token = sentence.get_token(token.idx - label_length)
-                                if corresponding_token is None: continue
+                                if corresponding_token is None:
+                                    tag_this = False
+                                    continue
                                 if corresponding_token.get_tag(label_name).value != '' and \
                                         corresponding_token.get_tag(label_name).score > token.get_tag(label_name).score:
+                                    tag_this = False
                                     continue
-                                corresponding_token.add_tag(
-                                    label_name,
-                                    token.get_tag(label_name).value + label,
-                                    token.get_tag(label_name).score,
-                                )
 
-                    # import operator
-                    # sorted_x = sorted(all_detected.items(), key=operator.itemgetter(1))
-                    # sorted_x.reverse()
-                    # print(sorted_x)
-                    # for tuple in sorted_x:
-                    #     span = tuple[0]
-                    #
-                    #     tag_this = True
-                    #
-                    # for token in span:
-                    #     corresponding_token = sentence.get_token(token.idx)
-                    #     if corresponding_token is None:
-                    #         tag_this = False
-                    #         continue
-                    #     if corresponding_token.get_tag(label_name).value != '' and \
-                    #             corresponding_token.get_tag(label_name).score > token.get_tag(label_name).score:
-                    #         tag_this = False
-                    #         continue
-                    #
-                    # if tag_this:
-                    #     for token in span:
-                    #         corresponding_token = sentence.get_token(token.idx)
-                    #         corresponding_token.add_tag(
-                    #             label_name,
-                    #             token.get_tag(label_name).value + span.get_labels('tars_temp_label')[0].value,
-                    #             token.get_tag(label_name).score,
-                    #         )
+                            # only add if all tokens have no label
+                            if tag_this:
+                                for token in span:
+                                    corresponding_token = sentence.get_token(token.idx - label_length)
+                                    corresponding_token.add_tag(
+                                        label_name,
+                                        token.get_tag(label_name).value + label,
+                                        token.get_tag(label_name).score,
+                                    )
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
@@ -604,8 +612,8 @@ class TARSClassifier(FewshotClassifier):
     def __init__(
             self,
             task_name: Optional[str] = None,
-            label_dictionary:  Optional[Dictionary] = None,
-            label_type:  Optional[str] = None,
+            label_dictionary: Optional[Dictionary] = None,
+            label_type: Optional[str] = None,
             embeddings: str = 'bert-base-uncased',
             num_negative_labels_to_sample: int = 2,
             prefix: bool = True,
@@ -663,7 +671,6 @@ class TARSClassifier(FewshotClassifier):
         else:
             log.info("TARS initialized without a task. You need to call .add_and_switch_to_new_task() "
                      "before training this model")
-
 
     def _get_tars_formatted_sentence(self, label, sentence):
 
