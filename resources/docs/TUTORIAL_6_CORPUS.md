@@ -178,8 +178,7 @@ The `MultiCorpus` inherits from `Corpus`, so you can use it like any other corpu
 Flair supports many datasets out of the box. It automatically downloads and sets up the 
 data the first time you call the corresponding constructor ID. 
 
-The following datasets are supported (click category to 
-expand): 
+The following datasets are supported (**click category to expand**): 
 
 <details>
   <summary>Named Entity Recognition (NER) datasets</summary>

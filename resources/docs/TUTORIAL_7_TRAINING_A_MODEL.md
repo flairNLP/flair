@@ -211,9 +211,7 @@ tutorials on both for difference). The rest is exactly the same as before!
 The best results in text classification use fine-tuned transformers with `TransformerDocumentEmbeddings` as shown in the
 code below:
 
-(If you don't have a big GPU to fine-tune transformers, try `DocumentPoolEmbeddings` or `DocumentRNNEmbeddings` instead
-
-- sometimes they work just as well!)
+(If you don't have a big GPU to fine-tune transformers, try `DocumentPoolEmbeddings` or `DocumentRNNEmbeddings` instead; sometimes they work just as well!)
 
 ```python
 import torch
