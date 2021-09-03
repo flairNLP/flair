@@ -1171,7 +1171,7 @@ class FlairDataset(Dataset):
 class Corpus:
     def __init__(
             self,
-            train: FlairDataset,
+            train: FlairDataset = None,
             dev: FlairDataset = None,
             test: FlairDataset = None,
             name: str = "corpus",
@@ -1179,9 +1179,13 @@ class Corpus:
     ):
         # set name
         self.name: str = name
+        
+        # abort if no data is provided
+        if not train and not dev and not test:
+            raise RuntimeError('No data provided when initializing corpus object.')
 
         # sample test data if none is provided
-        if test is None and sample_missing_splits:
+        if test is None and sample_missing_splits and train:
             train_length = len(train)
             test_size: int = round(train_length / 10)
             splits = randomly_split_into_two_datasets(train, test_size)
@@ -1189,7 +1193,7 @@ class Corpus:
             train = splits[1]
 
         # sample dev data if none is provided
-        if dev is None and sample_missing_splits:
+        if dev is None and sample_missing_splits and train:
             train_length = len(train)
             dev_size: int = round(train_length / 10)
             splits = randomly_split_into_two_datasets(train, dev_size)

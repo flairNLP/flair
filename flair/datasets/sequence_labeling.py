@@ -3248,6 +3248,7 @@ class WSD_UFSAC(MultiCorpus):
             banned_sentences: List[str] = None,
             sample_missing_splits_in_multicorpus: bool = True,
             sample_missing_splits_in_each_corpus: bool = True,
+            use_raganato_ALL_as_test_data: bool = False,
             name: str = 'multicorpus'
     ):
         """
@@ -3272,8 +3273,10 @@ class WSD_UFSAC(MultiCorpus):
         :param tag_to_bioes: whether to convert to BIOES tagging scheme
         :param banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
         :param sample_missing_splits_in_multicorpus: Whether to sample missing splits when loading the multicorpus (this is redundant if 
-                                                                                                                    ample_missing_splits_in_each_corpus is True)
+                                                                                                                    sample_missing_splits_in_each_corpus is True)
         :param sample_missing_splits_in_each_corpus: Whether to sample missing splits when loading each single corpus given in filenames.
+        :param use_raganato_ALL_as_test_data: If True, the raganato_ALL dataset (Raganato et al. "Word Sense Disambiguation: A unified evaluation framework and empirical compariso")
+            will be used as test data. Note that both sample_missing_splits parameters are set to False in this case.
         :param name: Name of your (costum) corpus 
         """
         if type(base_path) == str:
@@ -3321,6 +3324,26 @@ class WSD_UFSAC(MultiCorpus):
         corpora = []
         
         print('Transforming data into column format and creating corpora...')
+        
+        if use_raganato_ALL_as_test_data:
+            sample_missing_splits_in_each_corpus = False
+            sample_missing_splits_in_multicorpus = False
+            
+            test_file = determine_tsv_file(filename='raganato_ALL', data_folder=data_folder, cut_multisense=cut_multisense)
+            
+            corpus = ColumnCorpus(data_folder=data_folder,
+                                column_format=columns,
+                                test_file=test_file,
+                                in_memory=in_memory,# TODO TODO TODO: AUch das dev set wird nun nicht gesampled!!!! 
+                                tag_to_bioes=tag_to_bioes,
+                                column_delimiter='\t',
+                                document_separator_token='-DOCSTART-',
+                                banned_sentences=banned_sentences,
+                                autofind_splits=False,
+                                sample_missing_splits=sample_missing_splits_in_each_corpus,
+                                )
+            corpora.append(corpus)
+        
         for filename in filenames:
             # make column file and save to data_folder
 
