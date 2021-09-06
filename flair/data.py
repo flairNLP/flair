@@ -1175,7 +1175,7 @@ class Corpus:
             dev: FlairDataset = None,
             test: FlairDataset = None,
             name: str = "corpus",
-            sample_missing_splits: bool = True,
+            sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
@@ -1184,16 +1184,16 @@ class Corpus:
         if not train and not dev and not test:
             raise RuntimeError('No data provided when initializing corpus object.')
 
-        # sample test data if none is provided
-        if test is None and sample_missing_splits and train:
+        # sample test data from train if none is provided
+        if test is None and sample_missing_splits and train and not sample_missing_splits == 'only_dev':
             train_length = len(train)
             test_size: int = round(train_length / 10)
             splits = randomly_split_into_two_datasets(train, test_size)
             test = splits[0]
             train = splits[1]
 
-        # sample dev data if none is provided
-        if dev is None and sample_missing_splits and train:
+        # sample dev data from train if none is provided
+        if dev is None and sample_missing_splits and train and not sample_missing_splits == 'only_test':
             train_length = len(train)
             dev_size: int = round(train_length / 10)
             splits = randomly_split_into_two_datasets(train, dev_size)
