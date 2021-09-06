@@ -1035,6 +1035,15 @@ class NER_ENGLISH_MOVIE_COMPLEX(ColumnCorpus):
 
 
 class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
+    """
+    Initialize corpus of SEC-fillings annotated with English NER tags. See paper "Domain Adaption of Named Entity
+    Recognition to Support Credit Risk Assessment" by Alvarado et al, 2015: https://aclanthology.org/U15-1010/
+    :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
+    :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' or 'np' to predict
+    POS tags or chunks respectively
+    :param in_memory: If True, keeps dataset in memory giving speedups in training.
+    :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+    """
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -1333,8 +1342,9 @@ class NER_ENGLISH_WEBPAGES(ColumnCorpus):
             **corpusargs,
     ):
         """
-        Initialize the WEBPAGES_NER corpus. The first time you call this constructor it will automatically
-        download the dataset.
+        Initialize the WEBPAGES_NER corpus introduced in the paper "Design Challenges and Misconceptions in Named Entity
+        Recognition" by Ratinov and Roth (2009): https://aclanthology.org/W09-1119/.
+        The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
@@ -1803,8 +1813,9 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
             **corpusargs,
     ):
         """
-        Initialize the NER_GERMAN_POLITICS corpus for german politics. The first time you call this constructor it will automatically
-        download the dataset.
+        Initialize corpus with Named Entity Model for German, Politics (NEMGP) data from
+        https://www.thomas-zastrow.de/nlp/. The first time you call this constructor it will automatically download the
+        dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict

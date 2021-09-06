@@ -21,22 +21,22 @@ from .sequence_labeling import NER_ARABIC_AQMAR
 from .sequence_labeling import NER_BASQUE
 from .sequence_labeling import NER_CHINESE_WEIBO
 from .sequence_labeling import NER_DANISH_DANE
-from .sequence_labeling import NER_ENGLISH_SEC_FILLINGS
-from .sequence_labeling import NER_ENGLISH_WIKIGOLD
-from .sequence_labeling import NER_ENGLISH_WNUT_2020
 from .sequence_labeling import NER_ENGLISH_MOVIE_SIMPLE
 from .sequence_labeling import NER_ENGLISH_MOVIE_COMPLEX
+from .sequence_labeling import NER_ENGLISH_PERSON
 from .sequence_labeling import NER_ENGLISH_RESTAURANT
+from .sequence_labeling import NER_ENGLISH_SEC_FILLINGS
 from .sequence_labeling import NER_ENGLISH_STACKOVERFLOW
 from .sequence_labeling import NER_ENGLISH_TWITTER
-from .sequence_labeling import NER_ENGLISH_PERSON
+from .sequence_labeling import NER_ENGLISH_WIKIGOLD
+from .sequence_labeling import NER_ENGLISH_WNUT_2020
 from .sequence_labeling import NER_ENGLISH_WEBPAGES
 from .sequence_labeling import NER_FINNISH
-from .sequence_labeling import NER_GERMAN_POLITICS
 from .sequence_labeling import NER_GERMAN_BIOFID
 from .sequence_labeling import NER_GERMAN_EUROPARL
-from .sequence_labeling import NER_GERMAN_LEGAL
 from .sequence_labeling import NER_GERMAN_GERMEVAL
+from .sequence_labeling import NER_GERMAN_LEGAL
+from .sequence_labeling import NER_GERMAN_POLITICS
 from .sequence_labeling import NER_HUNGARIAN
 from .sequence_labeling import NER_ICELANDIC
 from .sequence_labeling import NER_JAPANESE
@@ -160,6 +160,7 @@ from .treebanks import UD_IRISH
 from .treebanks import UD_LATVIAN
 from .treebanks import UD_LITHUANIAN
 from .treebanks import UD_GALICIAN
+from .treebanks import UD_LATIN
 
 # Expose all text-text datasets
 from .text_text import ParallelTextCorpus
@@ -269,10 +270,9 @@ from .biomedical import BIOBERT_SPECIES_LINNAEUS
 from .biomedical import BIOBERT_SPECIES_S800
 from .biomedical import BIOBERT_GENE_BC2GM
 from .biomedical import BIOBERT_GENE_JNLPBA
-from .treebanks import UD_LATIN
 
 # Expose all relation extraction datasets
-from .relation_extraction import SEMEVAL_2010_TASK_8
-from .relation_extraction import TACRED
-from .relation_extraction import CoNLL04
-from .relation_extraction import DrugProt
+from .relation_extraction import RE_ENGLISH_SEMEVAL2010
+from .relation_extraction import RE_ENGLISH_TACRED
+from .relation_extraction import RE_ENGLISH_CONLL04
+from .relation_extraction import RE_ENGLISH_DRUGPROT
