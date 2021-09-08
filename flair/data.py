@@ -102,24 +102,25 @@ class Dictionary:
         with open(savefile, "wb") as f:
             mappings = {"idx2item": self.idx2item, "item2idx": self.item2idx}
             pickle.dump(mappings, f)
-            
-    def __setstate__(self, d):
-        self.__dict__ = d
-        if 'add_unk' not in self.__dict__.keys():
-            self.__dict__['add_unk'] = False
-        
 
     @classmethod
     def load_from_file(cls, filename: str):
         import pickle
 
-        dictionary: Dictionary = Dictionary()
-        with open(filename, "rb") as f:
-            mappings = pickle.load(f, encoding="latin1")
-            idx2item = mappings["idx2item"]
-            item2idx = mappings["item2idx"]
-            dictionary.item2idx = item2idx
-            dictionary.idx2item = idx2item
+        f = open(filename, "rb")
+        mappings = pickle.load(f, encoding="latin1")
+        idx2item = mappings["idx2item"]
+        item2idx = mappings["item2idx"]
+        f.close()
+        
+        if b'<unk>' in idx2item:
+            add_unk = True
+        else:
+            add_unk = False
+                    
+        dictionary: Dictionary = Dictionary(add_unk=add_unk)
+        dictionary.item2idx = item2idx
+        dictionary.idx2item = idx2item
         return dictionary
 
     @classmethod
