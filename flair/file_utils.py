@@ -181,7 +181,7 @@ def download_file(url: str, cache_dir: Union[str, Path]):
     req = requests.get(url, stream=True)
     content_length = req.headers.get("Content-Length")
     total = int(content_length) if content_length is not None else None
-    progress = Tqdm.tqdm(unit="B", total=total)
+    progress = Tqdm.tqdm(unit="B", unit_scale=True, total=total)
     with open(temp_filename, "wb") as temp_file:
         for chunk in req.iter_content(chunk_size=1024):
             if chunk:  # filter out keep-alive new chunks
