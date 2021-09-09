@@ -43,7 +43,7 @@ class EntityLinkingCorpus(ColumnCorpus):
             **corpusargs,
         )
 
-    def make_entity_dict(self, label_type='nel', threshold: int = 1, mode=False) -> Dictionary:
+    def make_entity_dict(self, label_type='nel', threshold: int = 1) -> Dictionary:
         """
         Create ID-dictionary for the wikipedia-page names.
         param threshold: Ignore links that occur less than threshold value
@@ -1159,7 +1159,7 @@ def determine_tsv_file(filename: str, data_folder: str, cut_multisense: bool = T
 class WSD_UFSAC(MultiCorpus):
     def __init__(
             self,
-            filenames: Union[str, List[str]] = [],
+            filenames: Union[str, List[str]] = ['masc', 'semcor'],
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             cut_multisense: bool = True,
@@ -1180,7 +1180,7 @@ class WSD_UFSAC(MultiCorpus):
             'masc', 'omsti', 'raganato_ALL', 'raganato_semeval2007', 'raganato_semeval2013', 'raganato_semeval2015', 'raganato_senseval2', 'raganato_senseval3',
             'semcor', 'semeval2007task17', 'semeval2007task7', 'semeval2013task12', 'semeval2015task13', 'senseval2', 'senseval2_lexical_sample_test',
             'senseval2_lexical_sample_train', 'senseval3task1', 'senseval3task6_test', 'senseval3task6_train', 'trainomatic', 'wngt'.
-            So you can pass for example filenames = ['masc', 'omsti']. If nothing is given (filenames = []) then all datasets will be loaded (excluding the raganato sets).
+            So you can pass for example filenames = ['masc', 'omsti', 'wngt']. Default two mid-sized datasets 'masc' and 'semcor' are loaded.
         :param base_path: You can override this to point to a specific folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
@@ -1251,6 +1251,9 @@ class WSD_UFSAC(MultiCorpus):
                 sample_missing_splits_in_each_corpus = 'only_dev'
             if sample_missing_splits_in_multicorpus:
                 sample_missing_splits_in_multicorpus = 'only_dev'
+                
+            # also we remove 'raganato_ALL' from filenames in case its in the list
+            filenames.remove('raganato_ALL')
 
             # generate the test file
             test_file = determine_tsv_file(filename='raganato_ALL', data_folder=data_folder,
