@@ -1033,20 +1033,21 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             dtype=torch.long,
             device=flair.device,
         )
-        model_kwargs = {}
-        if self.use_lang_emb:
-            lang_id = self.tokenizer.lang2id.get(sentence.get_language_code())
-            if lang_id is not None:
-                model_kwargs["langs"] = torch.zeros_like(input_ids, dtype=input_ids.dtype) + lang_id
         mask = torch.zeros(
             [total_sentence_parts, longest_sequence_in_batch],
             dtype=torch.long,
             device=flair.device,
         )
+        model_kwargs = {}
+        if self.use_lang_emb:
+            model_kwargs["langs"] = torch.zeros_like(input_ids, dtype=input_ids.dtype)
         for s_id, sentence in enumerate(subtokenized_sentences):
             sequence_length = len(sentence)
             input_ids[s_id][:sequence_length] = sentence
             mask[s_id][:sequence_length] = torch.ones(sequence_length)
+            if self.use_lang_emb:
+                lang_id = self.tokenizer.lang2id.get(sentences[s_id].get_language_code(), 0)
+                model_kwargs["langs"][s_id][:sequence_length] = lang_id
 
         # put encoded batch through transformer model to get all hidden states of all encoder layers
         hidden_states = self.model(input_ids, attention_mask=mask, **model_kwargs)[-1]
