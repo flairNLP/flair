@@ -124,6 +124,8 @@ class ModelTrainer:
             use_swa: bool = False,
             use_final_model_for_eval: bool = False,
             gold_label_dictionary_for_eval: Optional[Dictionary] = None,
+            create_file_logs: bool = True,
+            create_loss_file: bool = True,
             **kwargs,
     ) -> dict:
         """
@@ -163,6 +165,8 @@ class ModelTrainer:
         :param classification_main_metric: Type of metric to use for best model tracking and learning rate scheduling (if dev data is available, otherwise loss will be used), currently only applicable for text_classification_model
         :param tensorboard_comment: Comment to use for tensorboard logging
         :param save_best_checkpoints: If True, in addition to saving the best model also the corresponding checkpoint is saved
+        :param create_file_logs: If True, the logs will also be stored in a file 'training.log' in the model folder
+        :param create_loss_file: If True, the loss will be writen to a file 'loss.tsv' in the model folder
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
@@ -205,7 +209,10 @@ class ModelTrainer:
         if type(base_path) is str:
             base_path = Path(base_path)
 
-        log_handler = add_file_handler(log, base_path / "training.log")
+        if create_file_logs:
+            log_handler = add_file_handler(log, base_path / "training.log")
+        else:
+            log_handler = None
 
         log_line(log)
         log.info(f'Model: "{self.model}"')
@@ -253,8 +260,11 @@ class ModelTrainer:
                     self.corpus.train, train_part_indices
                 )
 
-        # prepare loss logging file and set up header
-        loss_txt = init_output_file(base_path, "loss.tsv")
+        if create_loss_file:
+            # prepare loss logging file and set up header
+            loss_txt = init_output_file(base_path, "loss.tsv")
+        else:
+            loss_txt = None
 
         weight_extractor = WeightExtractor(base_path)
 
@@ -294,7 +304,7 @@ class ModelTrainer:
                 verbose=True,
             )
 
-        if (isinstance(lr_scheduler, OneCycleLR) and batch_growth_annealing):
+        if isinstance(lr_scheduler, OneCycleLR) and batch_growth_annealing:
             raise ValueError("Batch growth with OneCycle policy is not implemented.")
 
         train_data = self.corpus.train
@@ -445,6 +455,8 @@ class ModelTrainer:
                             learning_rate = group["lr"]
                             if "momentum" in group:
                                 momentum = group["momentum"]
+                            if "betas" in group:
+                                momentum, _ = group["betas"]
 
                     seen_batches += 1
 
@@ -632,30 +644,31 @@ class ModelTrainer:
                 # log bad epochs
                 log.info(f"BAD EPOCHS (no improvement): {bad_epochs}")
 
-                # output log file
-                with open(loss_txt, "a") as f:
+                if create_loss_file:
+                    # output log file
+                    with open(loss_txt, "a") as f:
 
-                    # make headers on first epoch
-                    if self.epoch == 1:
-                        f.write(f"EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS")
+                        # make headers on first epoch
+                        if self.epoch == 1:
+                            f.write(f"EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS")
 
-                        if log_train:
-                            f.write("\tTRAIN_" + "\tTRAIN_".join(train_eval_result.log_header.split("\t")))
+                            if log_train:
+                                f.write("\tTRAIN_" + "\tTRAIN_".join(train_eval_result.log_header.split("\t")))
 
-                        if log_train_part:
-                            f.write("\tTRAIN_PART_LOSS\tTRAIN_PART_" + "\tTRAIN_PART_".join(
-                                train_part_eval_result.log_header.split("\t")))
+                            if log_train_part:
+                                f.write("\tTRAIN_PART_LOSS\tTRAIN_PART_" + "\tTRAIN_PART_".join(
+                                    train_part_eval_result.log_header.split("\t")))
 
-                        if log_dev:
-                            f.write("\tDEV_LOSS\tDEV_" + "\tDEV_".join(dev_eval_result.log_header.split("\t")))
+                            if log_dev:
+                                f.write("\tDEV_LOSS\tDEV_" + "\tDEV_".join(dev_eval_result.log_header.split("\t")))
 
-                        if log_test:
-                            f.write("\tTEST_LOSS\tTEST_" + "\tTEST_".join(test_eval_result.log_header.split("\t")))
+                            if log_test:
+                                f.write("\tTEST_LOSS\tTEST_" + "\tTEST_".join(test_eval_result.log_header.split("\t")))
 
-                    f.write(
-                        f"\n{self.epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
-                    )
-                    f.write(result_line)
+                        f.write(
+                            f"\n{self.epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
+                        )
+                        f.write(result_line)
 
                 # if checkpoint is enabled, save model at each epoch
                 if checkpoint and not param_selection_mode:
@@ -678,7 +691,7 @@ class ModelTrainer:
                         self.model.load_state_dict(current_state_dict)
 
                 if save_model_each_k_epochs > 0 and not self.epoch % save_model_each_k_epochs:
-                    print("saving model of current epoch")
+                    log.info("saving model of current epoch")
                     model_name = "model_epoch_" + str(self.epoch) + ".pt"
                     self.model.save(base_path / model_name)
 
@@ -714,9 +727,9 @@ class ModelTrainer:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
 
-        log_handler.close()
-
-        log.removeHandler(log_handler)
+        if create_file_logs:
+            log_handler.close()
+            log.removeHandler(log_handler)
 
         if self.use_tensorboard:
             writer.close()
@@ -852,7 +865,6 @@ class ModelTrainer:
                 optimizer.step()
                 scheduler.step(step)
 
-                print(scheduler.get_lr())
                 learning_rate = scheduler.get_lr()[0]
 
                 loss_item = loss.item()
@@ -869,6 +881,7 @@ class ModelTrainer:
                         )
                     if loss_item < best_loss:
                         best_loss = loss
+                log.info(f"lr: {learning_rate}, loss: {loss_item}, best_loss: {best_loss}")
 
                 if step > iterations:
                     break
