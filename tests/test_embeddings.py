@@ -100,6 +100,22 @@ def test_transformer_word_embeddings():
     del embeddings
 
 
+def test_transformer_word_embeddings_forward_language_ids():
+    cos = torch.nn.CosineSimilarity(dim=0, eps=1e-10)
+
+    sent_en = Sentence(["This", "is", "a", "sentence"], language_code="en")
+    sent_de = Sentence(["Das", "ist", "ein", "Satz"], language_code="de")
+
+    embeddings = TransformerWordEmbeddings("xlm-mlm-ende-1024", allow_long_sentences=False)
+
+    embeddings.embed([sent_de, sent_en])
+    expected_similarities = [0.7102344036102295, 0.7598986625671387, 0.7437312602996826, 0.5584433674812317]
+
+    for (token_de, token_en, exp_sim) in zip(sent_de, sent_en, expected_similarities):
+        sim = cos(token_de.embedding, token_en.embedding).item()
+        assert abs(exp_sim - sim) < 1e-5
+
+
 def test_transformer_weird_sentences():
     embeddings = TransformerWordEmbeddings('distilbert-base-uncased', layers='all', layer_mean=True)
 
