@@ -50,8 +50,6 @@ from .sequence_labeling import NER_TURKU
 from .sequence_labeling import KEYPHRASE_INSPEC
 from .sequence_labeling import KEYPHRASE_SEMEVAL2010
 from .sequence_labeling import KEYPHRASE_SEMEVAL2017
-# word sense disambiugation
-from .sequence_labeling import WSD_UFSAC
 # universal proposition banks
 from .sequence_labeling import UP_CHINESE
 from .sequence_labeling import UP_ENGLISH
@@ -70,6 +68,15 @@ from .entity_linking import NEL_ENGLISH_IITB
 from .entity_linking import NEL_ENGLISH_REDDIT
 from .entity_linking import NEL_ENGLISH_TWEEKI
 from .entity_linking import NEL_GERMAN_HIPE
+
+# word sense disambiguation
+from .entity_linking import WSD_UFSAC
+from .entity_linking import WSD_RAGANATO_ALL
+from .entity_linking import WSD_SEMCOR
+from .entity_linking import WSD_WORDNET_GLOSS_TAGGED
+from .entity_linking import WSD_MASC
+from .entity_linking import WSD_OMSTI
+from .entity_linking import WSD_TRAINOMATIC
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
