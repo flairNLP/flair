@@ -1,34 +1,62 @@
+import logging
 from pathlib import Path
+from typing import List, Union, Optional
 
+import torch
+import torch.nn as nn
 from torch.utils.data.dataset import Dataset
 
 import flair
 import flair.embeddings
-import torch
-import torch.nn as nn
-from typing import List, Union, Optional
-
+from flair.data import Sentence, Label, DataPoint
 from flair.datasets import DataLoader, SentenceDataset
 from flair.training_utils import MetricRegression, Result, store_embeddings
-from flair.data import Sentence, Label, DataPoint
-import logging
 
 log = logging.getLogger("flair")
 
 
-class TextRegressor(flair.models.TextClassifier):
+class TextRegressor(flair.nn.Model):
+
     def __init__(self, document_embeddings: flair.embeddings.DocumentEmbeddings, label_name: str = 'label'):
 
-        super(TextRegressor, self).__init__(
-            document_embeddings=document_embeddings,
-            label_dictionary=flair.data.Dictionary(),
-            multi_label=False,
-            label_type=label_name,
-        )
-
+        super().__init__()
         log.info("Using REGRESSION - experimental")
 
+        self.document_embeddings: flair.embeddings.DocumentEmbeddings = document_embeddings
+        self.label_name = label_name
+
+        self.decoder = nn.Linear(self.document_embeddings.embedding_length, 1)
+
+        nn.init.xavier_uniform_(self.decoder.weight)
+
         self.loss_function = nn.MSELoss()
+
+        # auto-spawn on GPU if available
+        self.to(flair.device)
+
+    def label_type(self):
+        return self.label_name
+
+    def forward(self, sentences):
+
+        self.document_embeddings.embed(sentences)
+
+        embedding_names = self.document_embeddings.get_names()
+
+        text_embedding_list = [sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in sentences]
+        text_embedding_tensor = torch.cat(text_embedding_list, 0).to(flair.device)
+
+        label_scores = self.decoder(text_embedding_tensor)
+
+        return label_scores
+
+    def forward_loss(
+            self, data_points: Union[List[Sentence], Sentence]
+    ) -> torch.tensor:
+
+        scores = self.forward(data_points)
+
+        return self._calculate_loss(scores, data_points)
 
     def _labels_to_indices(self, sentences: List[Sentence]):
         indices = [
@@ -176,7 +204,7 @@ class TextRegressor(flair.models.TextClassifier):
                                     log_header=log_header,
                                     log_line=log_line,
                                     detailed_results=detailed_result,
-            )
+                                    )
 
             return result
 
@@ -197,3 +225,14 @@ class TextRegressor(flair.models.TextClassifier):
 
         model.load_state_dict(state["state_dict"])
         return model
+
+    @staticmethod
+    def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
+        filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
+        if len(sentences) != len(filtered_sentences):
+            log.warning(
+                "Ignore {} sentence(s) with no tokens.".format(
+                    len(sentences) - len(filtered_sentences)
+                )
+            )
+        return filtered_sentences
