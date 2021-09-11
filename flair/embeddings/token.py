@@ -1021,12 +1021,11 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             else torch.unique(batch_encoding['overflow_to_sample_mapping'], return_counts=True, sorted=True)[1].tolist()
 
         model_kwargs = {}
+        # set language IDs for XLM-style transformers
         if self.use_lang_emb:
             model_kwargs["langs"] = torch.zeros_like(input_ids, dtype=input_ids.dtype)
 
-        # set language IDs for XLM-style transformers
-        if self.use_lang_emb:
-            for s_id, sentence in enumerate(subtokenized_sentences):
+            for s_id, sentence in enumerate(tokenized_sentences):
                 sequence_length = len(sentence)
                 lang_id = self.tokenizer.lang2id.get(sentences[s_id].get_language_code(), 0)
                 model_kwargs["langs"][s_id][:sequence_length] = lang_id
