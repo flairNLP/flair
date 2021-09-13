@@ -279,9 +279,7 @@ class CharacterEmbeddings(TokenEmbeddings):
         if path_to_char_dict is None:
             self.char_dictionary: Dictionary = Dictionary.load("common-chars")
         else:
-            self.char_dictionary: Dictionary = Dictionary.load_from_file(
-                path_to_char_dict
-            )
+            self.char_dictionary: Dictionary = Dictionary.load_from_file(path_to_char_dict)
 
         self.char_embedding_dim: int = char_embedding_dim
         self.hidden_size_char: int = hidden_size_char

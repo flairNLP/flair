@@ -6,11 +6,11 @@ from collections import defaultdict
 from operator import itemgetter
 from typing import List, Dict, Union, Optional
 
-import flair
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data.dataset import ConcatDataset, Subset
 
+import flair
 from flair.file_utils import Tqdm
 
 log = logging.getLogger("flair")
@@ -62,7 +62,8 @@ class Dictionary:
             return 0
         else:
             log.error(f"The string '{item}' is not in dictionary! Dictionary contains only: {self.get_items()}")
-            log.error("You can create a Dictionary that handles unknown items with an <unk>-key by setting add_unk = True in the construction.")
+            log.error(
+                "You can create a Dictionary that handles unknown items with an <unk>-key by setting add_unk = True in the construction.")
             raise IndexError
 
     def get_idx_for_items(self, items: List[str]) -> List[int]:
@@ -103,6 +104,12 @@ class Dictionary:
             mappings = {"idx2item": self.idx2item, "item2idx": self.item2idx}
             pickle.dump(mappings, f)
 
+    def __setstate__(self, d):
+        self.__dict__ = d
+        # set 'add_unk' if the dictionary was created with a version of Flair older than 0.9
+        if 'add_unk' not in self.__dict__.keys():
+            self.__dict__['add_unk'] = True if b'<unk>' in self.__dict__['idx2item'] else False
+
     @classmethod
     def load_from_file(cls, filename: str):
         import pickle
@@ -112,12 +119,10 @@ class Dictionary:
         idx2item = mappings["idx2item"]
         item2idx = mappings["item2idx"]
         f.close()
-        
-        if b'<unk>' in idx2item:
-            add_unk = True
-        else:
-            add_unk = False
-                    
+
+        # set 'add_unk' depending on whether <unk> is a key
+        add_unk = True if b'<unk>' in idx2item else False
+
         dictionary: Dictionary = Dictionary(add_unk=add_unk)
         dictionary.item2idx = item2idx
         dictionary.idx2item = idx2item
