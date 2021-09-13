@@ -834,22 +834,25 @@ class TARSClassifier(FewshotClassifier):
                         overall_loss += loss_and_count[0].item()
                         overall_count += loss_and_count[1]
 
+                        # add all labels that according to TARS match the text and are above threshold
                         for predicted_tars_label in tars_sentence.get_labels(label_name):
-                            if predicted_tars_label.value == self.LABEL_MATCH and \
-                                    predicted_tars_label.score > label_threshold:
+                            if predicted_tars_label.value == self.LABEL_MATCH \
+                                    and predicted_tars_label.score > label_threshold:
+                                # do not add labels below confidence threshold
                                 sentence.add_label(label_name, label, predicted_tars_label.score)
 
-                        # only use label with highest confidence if enforcing single-label predictions
-                        if not multi_label:
-                            highest_score = 0.
-                            best_label = None
-                            for label in sentence.get_labels(label_name):
-                                if label.score > highest_score:
-                                    highest_score = label.score
-                                    best_label = label
-                            if best_label:
-                                sentence.remove_labels(label_name)
-                                sentence.add_label(typename=label_name, value=best_label.value, score=best_label.score)
+                    # only use label with highest confidence if enforcing single-label predictions
+                    if not multi_label:
+                        if len(sentence.get_labels()) > 0:
+
+                            # get all label scores and do an argmax to get the best label
+                            label_scores = torch.tensor([label.score for label in sentence.get_labels(label_name)],
+                                                        dtype=torch.float)
+                            best_label = sentence.get_labels(label_name)[torch.argmax(label_scores)]
+
+                            # remove previously added labels and only add the best label
+                            sentence.remove_labels(label_name)
+                            sentence.add_label(typename=label_name, value=best_label.value, score=best_label.score)
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
