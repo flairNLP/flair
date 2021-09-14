@@ -196,7 +196,7 @@ class FewshotClassifier(flair.nn.Classifier):
             if type(label_dictionary) == str:
                 label_dictionary = [label_dictionary]
 
-            # prepare dictionary of tags (without B- I- prefixes)
+            # prepare dictionary of tags (without B- I- prefixes and without UNK)
             tag_dictionary = Dictionary(add_unk=False)
             for tag in label_dictionary:
                 if tag == 'O': continue

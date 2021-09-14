@@ -6,6 +6,7 @@ from collections import defaultdict
 from operator import itemgetter
 from typing import List, Dict, Union, Optional
 
+from deprecated import deprecated
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data.dataset import ConcatDataset, Subset
@@ -147,7 +148,7 @@ class Dictionary:
         return Dictionary.load_from_file(name)
 
     def __str__(self):
-        tags = ', '.join(self.get_item_for_index(i) for i in range(min(len(self), 30)))
+        tags = ', '.join(self.get_item_for_index(i) for i in range(min(len(self), 50)))
         return f"Dictionary with {len(self)} tags: {tags}"
 
 
@@ -1383,7 +1384,7 @@ class Corpus:
         Creates a dictionary of all labels assigned to the sentences in the corpus.
         :return: dictionary of labels
         """
-        label_dictionary: Dictionary = Dictionary(add_unk=False)
+        label_dictionary: Dictionary = Dictionary(add_unk=True)
         label_dictionary.multi_label = False
 
         from flair.datasets import DataLoader
@@ -1458,6 +1459,7 @@ class Corpus:
         if self.test: parts.append(self.test)
         return ConcatDataset(parts)
 
+    @deprecated(version="0.8", reason="Use 'make_label_dictionary' instead.")
     def make_tag_dictionary(self, tag_type: str) -> Dictionary:
 
         # Make the tag dictionary

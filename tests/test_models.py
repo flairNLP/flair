@@ -24,7 +24,7 @@ def test_sequence_tagger_no_crf(results_base_path, tasks_base_path):
     corpus: Corpus = ColumnCorpus(
         data_folder=tasks_base_path / "trivial" / "trivial_bioes", column_format={0: "text", 1: "ner"}
     )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     # tagger without CRF
     tagger: SequenceTagger = SequenceTagger(
@@ -77,7 +77,7 @@ def test_sequence_tagger_with_crf(results_base_path, tasks_base_path):
     corpus: Corpus = ColumnCorpus(
         data_folder=tasks_base_path / "trivial" / "trivial_bioes", column_format={0: "text", 1: "ner"}
     )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     # tagger without CRF
     tagger: SequenceTagger = SequenceTagger(
@@ -130,7 +130,7 @@ def test_sequence_tagger_stacked(results_base_path, tasks_base_path):
     corpus: Corpus = ColumnCorpus(
         data_folder=tasks_base_path / "trivial" / "trivial_bioes", column_format={0: "text", 1: "ner"}
     )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     # tagger without CRF
     tagger: SequenceTagger = SequenceTagger(
@@ -183,7 +183,7 @@ def test_sequence_tagger_transformer_finetune(results_base_path, tasks_base_path
     corpus: Corpus = ColumnCorpus(
         data_folder=tasks_base_path / "trivial" / "trivial_bioes", column_format={0: "text", 1: "ner"}
     )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     # tagger without CRF
     tagger: SequenceTagger = SequenceTagger(
