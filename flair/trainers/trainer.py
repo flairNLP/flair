@@ -22,7 +22,7 @@ import flair
 import flair.nn
 from flair.data import MultiCorpus, Corpus, Dictionary
 from flair.datasets import DataLoader
-from flair.optim import ExpAnnealLR
+from flair.optim import ExpAnnealLR, LinearSchedulerWithWarmup
 from flair.training_utils import (
     init_output_file,
     WeightExtractor,
@@ -97,6 +97,7 @@ class ModelTrainer:
             patience: int = 3,
             initial_extra_patience: int = 0,
             min_learning_rate: float = 0.0001,
+            warmup_fraction: float = 0.1,
             train_with_dev: bool = False,
             train_with_test: bool = False,
             monitor_train: bool = False,
@@ -139,6 +140,7 @@ class ModelTrainer:
         :param patience: Patience is the number of epochs with no improvement the Trainer waits
          until annealing the learning rate
         :param min_learning_rate: If the learning rate falls below this threshold, training terminates
+        :param warmup_fraction: Fraction of warmup steps if the scheduler is LinearSchedulerWithWarmup
         :param train_with_dev: If True, training is performed using both train+dev data
         :param monitor_train: If True, training data is evaluated at end of each epoch
         :param monitor_test: If True, test data is evaluated at end of each epoch
@@ -273,10 +275,11 @@ class ModelTrainer:
         anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
         best_validation_score = 100000000000 if train_with_dev or anneal_against_dev_loss else 0.
 
+        dataset_size = len(self.corpus.train)
+        if train_with_dev:
+            dataset_size += len(self.corpus.dev)
+
         if scheduler == OneCycleLR:
-            dataset_size = len(self.corpus.train)
-            if train_with_dev:
-                dataset_size += len(self.corpus.dev)
             lr_scheduler = OneCycleLR(optimizer,
                                       max_lr=learning_rate,
                                       steps_per_epoch=dataset_size // mini_batch_size + 1,
@@ -284,6 +287,14 @@ class ModelTrainer:
                                       # if we load a checkpoint, we have already trained for self.epoch
                                       pct_start=0.0,
                                       cycle_momentum=cycle_momentum)
+        elif scheduler == LinearSchedulerWithWarmup:
+            steps_per_epoch = (dataset_size + mini_batch_size - 1) / mini_batch_size
+            num_train_steps = int(steps_per_epoch * max_epochs)
+            num_warmup_steps = int(num_train_steps * warmup_fraction)
+
+            lr_scheduler = LinearSchedulerWithWarmup(optimizer,
+                                                     num_train_steps=num_train_steps,
+                                                     num_warmup_steps=num_warmup_steps)
         else:
             lr_scheduler = scheduler(
                 optimizer,
@@ -374,7 +385,8 @@ class ModelTrainer:
                     writer.add_scalar("learning_rate", learning_rate, self.epoch)
 
                 # stop training if learning rate becomes too small
-                if (not isinstance(lr_scheduler, OneCycleLR)) and learning_rate < min_learning_rate:
+                if ((not isinstance(lr_scheduler, (OneCycleLR, LinearSchedulerWithWarmup)) and
+                        learning_rate < min_learning_rate)):
                     log_line(log)
                     log.info("learning rate too small - quitting training!")
                     log_line(log)
@@ -437,8 +449,8 @@ class ModelTrainer:
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 5.0)
                     optimizer.step()
 
-                    # do the scheduler step if one-cycle
-                    if isinstance(lr_scheduler, OneCycleLR):
+                    # do the scheduler step if one-cycle or linear decay
+                    if isinstance(lr_scheduler, (OneCycleLR, LinearSchedulerWithWarmup)):
                         lr_scheduler.step()
                         # get new learning rate
                         for group in optimizer.param_groups:
