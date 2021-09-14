@@ -469,7 +469,10 @@ class DefaultClassifier(Classifier):
         'gpu' to store embeddings in GPU memory.
         """
         if label_name is None:
-            label_name = self.label_type if self.label_type is not None else "label"
+            if self.prediction_label_name:
+                label_name = self.prediction_label_name
+            else:
+                label_name = self.label_type if self.label_type is not None else "label"
 
         with torch.no_grad():
             if not sentences:

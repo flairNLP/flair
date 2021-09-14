@@ -25,6 +25,7 @@ class EntityLinker(flair.nn.DefaultClassifier):
             label_dictionary: Dictionary,
             pooling_operation: str = 'average',
             label_type: str = 'nel',
+            prediction_label_name: str = 'linking', 
             **classifierargs,
     ):
         """
@@ -42,6 +43,7 @@ class EntityLinker(flair.nn.DefaultClassifier):
         self.word_embeddings = word_embeddings
         self.pooling_operation = pooling_operation
         self._label_type = label_type
+        self.prediction_label_name = prediction_label_name
 
         # if we concatenate the embeddings we need double input size in our linear layer
         if self.pooling_operation == 'first&last':
@@ -80,6 +82,12 @@ class EntityLinker(flair.nn.DefaultClassifier):
 
     def emb_mean(self, arg):
         return torch.mean(arg, 0)
+    
+    def activate_prediction_mode(self, span_label_name: str):
+        self._label_type = span_label_name
+        
+    def activate_training_mode(self, label_name: str = 'nel'):
+        self._label_type = label_name
 
     def forward_pass(self,
                      sentences: Union[List[DataPoint], DataPoint],
