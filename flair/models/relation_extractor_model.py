@@ -6,7 +6,7 @@ import torch.nn as nn
 
 import flair.embeddings
 import flair.nn
-from flair.data import DataPoint, RelationLabel, Span
+from flair.data import DataPoint, RelationLabel, Span, Sentence
 
 log = logging.getLogger("flair")
 
@@ -18,6 +18,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
             token_embeddings: flair.embeddings.TokenEmbeddings,
             label_type: str = None,
             span_label_type: str = None,
+            use_entity_markers: bool = False,
             use_gold_spans: bool = False,
             use_entity_pairs: List[Tuple[str, str]] = None,
             pooling_operation: str = "first_last",
@@ -40,6 +41,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
         self.use_gold_spans = use_gold_spans
         self.pooling_operation = pooling_operation
+        self.use_entity_markers = use_entity_markers
 
         self.dropout_value = dropout_value
         self.dropout = torch.nn.Dropout(dropout_value)
@@ -62,18 +64,10 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
         self.to(flair.device)
 
-    def forward_pass(self,
+    def forward_pass_markup(self,
                      sentences: Union[List[DataPoint], DataPoint],
                      return_label_candidates: bool = False,
                      ):
-
-        self.token_embeddings.embed(sentences)
-
-        # entity_pairs = []
-        empty_label_candidates = []
-        relation_embeddings = []
-        labels = []
-        sentences_to_label = []
 
         for sentence in sentences:
 
@@ -86,30 +80,54 @@ class RelationExtractor(flair.nn.DefaultClassifier):
             # get all entity spans
             span_labels = sentence.get_labels(self.span_label_type)
 
-            # get embedding for each entity
-            span_embeddings = []
-            for span_label in span_labels:
-                span: Span = span_label.span
-                if self.pooling_operation == "first":
-                    span_embeddings.append(span.tokens[0].get_embedding())
-                if self.pooling_operation == "first_last":
-                    span_embeddings.append(torch.cat([span.tokens[0].get_embedding(), span.tokens[-1].get_embedding()]))
-
             # go through cross product of entities, for each pair concat embeddings
-            for span_label, embedding in zip(span_labels, span_embeddings):
-                span = span_label.span
+            for span_label in span_labels:
+                span_1 = span_label.span
 
-                for span_label_2, embedding_2 in zip(span_labels, span_embeddings):
+                for span_label_2 in span_labels:
                     span_2 = span_label_2.span
 
-                    if span == span_2:
+                    if span_1 == span_2:
                         continue
 
                     if (self.use_entity_pairs is not None
-                        and (span_label.value, span_label_2.value) not in self.use_entity_pairs):
+                            and (span_label.value, span_label_2.value) not in self.use_entity_pairs):
                         continue
 
-                    position_string = create_position_string(span, span_2)
+                    text = ""
+
+                    entity_one_is_first = None
+                    for token in sentence:
+                        if token == span_1[0]:
+                            text += " <e1>"
+                            if entity_one_is_first is None: entity_one_is_first = True
+                        if token == span_2[0]:
+                            if entity_one_is_first is None: entity_one_is_first = False
+                            text += " <e2>"
+
+                        text += " " + token.text
+
+                        if token == span_1[-1]:
+                            text += " </e1>"
+                        if token == span_2[-1]:
+                            text += " </e2>"
+
+                    expanded_sentence = Sentence(text, use_tokenizer=False)
+                    expanded_sentence.original = sentence
+
+                    for token in span_1:
+                        offset = 0 if entity_one_is_first else 2
+                        expanded_sentence[token.idx + offset]\
+                            .set_label(self.span_label_type, token.get_tag(self.span_label_type).value)
+
+                    for token in span_2:
+                        offset = 2 if entity_one_is_first else 0
+                        expanded_sentence[token.idx + offset]\
+                            .set_label(self.span_label_type, token.get_tag(self.span_label_type).value)
+
+                    spans = expanded_sentence.get_spans(self.span_label_type)
+
+                    position_string = create_position_string(span_1, span_2)
 
                     # get gold label for this relation (if one exists)
                     if position_string in relation_dict:
@@ -122,15 +140,122 @@ class RelationExtractor(flair.nn.DefaultClassifier):
                         # if no gold label exists, and all spans are used, label defaults to 'O' (no relation)
                         label = 'O'
 
-                    labels.append([label])
+                    expanded_sentence.add_complex_label(self.label_type,
+                                                        RelationLabel(head=spans[0], tail=spans[1], value=label))
 
-                    relation_embeddings.append(torch.cat([embedding, embedding_2]))
+                    print(expanded_sentence)
+
+    def add_entity_markers(self, sentence, span_1, span_2):
+        text = ""
+
+        entity_one_is_first = None
+        for token in sentence:
+            if token == span_1[0]:
+                text += " <e1>"
+                if entity_one_is_first is None: entity_one_is_first = True
+            if token == span_2[0]:
+                if entity_one_is_first is None: entity_one_is_first = False
+                text += " <e2>"
+
+            text += " " + token.text
+
+            if token == span_1[-1]:
+                text += " </e1>"
+            if token == span_2[-1]:
+                text += " </e2>"
+
+        expanded_sentence = Sentence(text, use_tokenizer=False)
+        expanded_sentence.original = sentence
+
+        for token in span_1:
+            offset = 0 if entity_one_is_first else 2
+            expanded_sentence[token.idx + offset] \
+                .set_label(self.span_label_type, token.get_tag(self.span_label_type).value)
+
+        for token in span_2:
+            offset = 2 if entity_one_is_first else 0
+            expanded_sentence[token.idx + offset] \
+                .set_label(self.span_label_type, token.get_tag(self.span_label_type).value)
+
+        spans = expanded_sentence.get_spans(self.span_label_type)
+
+        return expanded_sentence, (spans[0], spans[1]) if entity_one_is_first else (spans[1], spans[0])
+
+    def forward_pass(self,
+                     sentences: Union[List[DataPoint], DataPoint],
+                     return_label_candidates: bool = False,
+                     ):
+
+        empty_label_candidates = []
+        entity_pairs = []
+        labels = []
+        sentences_to_label = []
+
+        sentences_to_embed = []
+
+        for sentence in sentences:
+
+            # super lame: make dictionary to find relation annotations for a given entity pair
+            relation_dict = {}
+            for relation_label in sentence.get_labels(self.label_type):
+                relation_label: RelationLabel = relation_label
+                relation_dict[create_position_string(relation_label.head, relation_label.tail)] = relation_label
+
+            # get all entity spans
+            span_labels = sentence.get_labels(self.span_label_type)
+
+            # go through cross product of entities, for each pair concat embeddings
+            for span_label in span_labels:
+                span_1 = span_label.span
+
+                for span_label_2 in span_labels:
+                    span_2 = span_label_2.span
+
+                    if span_1 == span_2:
+                        continue
+
+                    if (self.use_entity_pairs is not None
+                        and (span_label.value, span_label_2.value) not in self.use_entity_pairs):
+                        continue
+
+                    position_string = create_position_string(span_1, span_2)
+
+                    # get gold label for this relation (if one exists)
+                    if position_string in relation_dict:
+                        relation_label: RelationLabel = relation_dict[position_string]
+                        label = relation_label.value
+                    # if using gold spans only, skip all entity pairs that are not in gold data
+                    elif self.use_gold_spans:
+                        continue
+                    else:
+                        # if no gold label exists, and all spans are used, label defaults to 'O' (no relation)
+                        label = 'O'
+
+                    if self.use_entity_markers:
+                        expanded_sentence, expanded_entities = self.add_entity_markers(sentence, span_1, span_2)
+                        sentences_to_embed.append(expanded_sentence)
+                        entity_pairs.append(expanded_entities)
+                    else:
+                        sentences_to_embed.append(sentence)
+                        entity_pairs.append((span_1, span_2))
+
+                    labels.append([label])
 
                     # if predicting, also remember sentences and label candidates
                     if return_label_candidates:
-                        candidate_label = RelationLabel(head=span, tail=span_2, value=None, score=None)
+                        candidate_label = RelationLabel(head=span_1, tail=span_2, value=None, score=None)
                         empty_label_candidates.append(candidate_label)
-                        sentences_to_label.append(span[0].sentence)
+                        sentences_to_label.append(span_1[0].sentence)
+
+        # embed all sentences
+        self.token_embeddings.embed(sentences_to_embed)
+
+        relation_embeddings = []
+        for entity_pair in entity_pairs:
+            span_1 = entity_pair[0]
+            span_2 = entity_pair[1]
+            embedding = torch.cat([span_1.tokens[0].get_embedding(), span_2.tokens[0].get_embedding()])
+            relation_embeddings.append(embedding)
 
         if len(labels) > 0:
 
