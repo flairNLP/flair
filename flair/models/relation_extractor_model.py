@@ -23,6 +23,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
             use_entity_pairs: List[Tuple[str, str]] = None,
             pooling_operation: str = "first_last",
             dropout_value: float = 0.0,
+            non_linear_decoder: bool = False,
             **classifierargs,
     ):
         """
@@ -58,9 +59,16 @@ class RelationExtractor(flair.nn.DefaultClassifier):
         # entity pairs could also be no relation at all, add default value for this case to dictionary
         self.label_dictionary.add_item('O')
 
-        self.decoder = nn.Linear(relation_representation_length, len(self.label_dictionary))
-
-        nn.init.xavier_uniform_(self.decoder.weight)
+        self.non_linear_decoder = non_linear_decoder
+        if self.non_linear_decoder:
+            self.decoder_1 = nn.Linear(relation_representation_length, 1024)
+            self.nonlinearity = torch.nn.ReLU()
+            self.decoder_2 = nn.Linear(1024, len(self.label_dictionary))
+            nn.init.xavier_uniform_(self.decoder_1.weight)
+            nn.init.xavier_uniform_(self.decoder_2.weight)
+        else:
+            self.decoder = nn.Linear(relation_representation_length, len(self.label_dictionary))
+            nn.init.xavier_uniform_(self.decoder.weight)
 
         self.to(flair.device)
 
@@ -290,7 +298,11 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
             all_relations = self.dropout(all_relations)
 
-            sentence_relation_scores = self.decoder(all_relations)
+            if self.non_linear_decoder:
+                sentence_relation_scores = self.decoder_2(self.nonlinearity(self.decoder_1(all_relations)))
+
+            else:
+                sentence_relation_scores = self.decoder(all_relations)
 
         else:
             sentence_relation_scores = None
