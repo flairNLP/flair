@@ -191,7 +191,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
         labels = []
         sentences_to_label = []
 
-        sentences_to_embed = []
+        sentences_to_embed = [] if self.use_entity_markers else sentences
 
         for sentence in sentences:
 
@@ -236,7 +236,6 @@ class RelationExtractor(flair.nn.DefaultClassifier):
                         sentences_to_embed.append(expanded_sentence)
                         entity_pairs.append(expanded_entities)
                     else:
-                        sentences_to_embed.append(sentence)
                         entity_pairs.append((span_1, span_2))
 
                     labels.append([label])
