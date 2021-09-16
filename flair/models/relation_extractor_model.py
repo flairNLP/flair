@@ -1,5 +1,5 @@
 import logging
-from typing import List, Union, Dict, Optional, Tuple
+from typing import List, Union, Tuple
 
 import torch
 import torch.nn as nn
@@ -65,9 +65,9 @@ class RelationExtractor(flair.nn.DefaultClassifier):
         self.to(flair.device)
 
     def forward_pass_markup(self,
-                     sentences: Union[List[DataPoint], DataPoint],
-                     return_label_candidates: bool = False,
-                     ):
+                            sentences: Union[List[DataPoint], DataPoint],
+                            return_label_candidates: bool = False,
+                            ):
 
         for sentence in sentences:
 
@@ -117,12 +117,12 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
                     for token in span_1:
                         offset = 0 if entity_one_is_first else 2
-                        expanded_sentence[token.idx + offset]\
+                        expanded_sentence[token.idx + offset] \
                             .set_label(self.span_label_type, token.get_tag(self.span_label_type).value)
 
                     for token in span_2:
                         offset = 2 if entity_one_is_first else 0
-                        expanded_sentence[token.idx + offset]\
+                        expanded_sentence[token.idx + offset] \
                             .set_label(self.span_label_type, token.get_tag(self.span_label_type).value)
 
                     spans = expanded_sentence.get_spans(self.span_label_type)
@@ -146,40 +146,55 @@ class RelationExtractor(flair.nn.DefaultClassifier):
                     print(expanded_sentence)
 
     def add_entity_markers(self, sentence, span_1, span_2):
+        # print()
+        # print()
+        # print(sentence)
         text = ""
 
         entity_one_is_first = None
+        offset = 0
         for token in sentence:
-            if token == span_1[0]:
-                text += " <e1>"
-                if entity_one_is_first is None: entity_one_is_first = True
             if token == span_2[0]:
                 if entity_one_is_first is None: entity_one_is_first = False
+                offset += 1
                 text += " <e2>"
+                span_2_startid = offset
+            if token == span_1[0]:
+                offset += 1
+                text += " <e1>"
+                if entity_one_is_first is None: entity_one_is_first = True
+                span_1_startid = offset
 
             text += " " + token.text
 
             if token == span_1[-1]:
+                offset += 1
                 text += " </e1>"
+                span_1_stopid = offset
             if token == span_2[-1]:
+                offset += 1
                 text += " </e2>"
+                span_2_stopid = offset
+
+            offset += 1
 
         expanded_sentence = Sentence(text, use_tokenizer=False)
-        expanded_sentence.original = sentence
+        # print(entity_one_is_first)
 
-        for token in span_1:
-            offset = 0 if entity_one_is_first else 2
-            expanded_sentence[token.idx + offset] \
-                .set_label(self.span_label_type, token.get_tag(self.span_label_type).value)
+        expanded_span_1 = Span([expanded_sentence[span_1_startid - 1]])
+        expanded_span_2 = Span([expanded_sentence[span_2_startid - 1]])
 
-        for token in span_2:
-            offset = 2 if entity_one_is_first else 0
-            expanded_sentence[token.idx + offset] \
-                .set_label(self.span_label_type, token.get_tag(self.span_label_type).value)
+        # print(span_1)
+        # print(span_2)
+        # print(expanded_sentence)
+        # print(expanded_span_1)
+        # print(expanded_span_2)
 
-        spans = expanded_sentence.get_spans(self.span_label_type)
+        if expanded_span_1.text != '<e1>': asd
+        if expanded_span_2.text != '<e2>': asd
 
-        return expanded_sentence, (spans[0], spans[1]) if entity_one_is_first else (spans[1], spans[0])
+        return expanded_sentence, (expanded_span_1, expanded_span_2) \
+            if entity_one_is_first else (expanded_span_2, expanded_span_1)
 
     def forward_pass(self,
                      sentences: Union[List[DataPoint], DataPoint],
@@ -215,7 +230,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
                         continue
 
                     if (self.use_entity_pairs is not None
-                        and (span_label.value, span_label_2.value) not in self.use_entity_pairs):
+                            and (span_label.value, span_label_2.value) not in self.use_entity_pairs):
                         continue
 
                     position_string = create_position_string(span_1, span_2)
