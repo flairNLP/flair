@@ -910,8 +910,6 @@ class ModelTrainer:
                 if stop_early and (moving_avg_loss > 4 * best_loss or torch.isnan(loss)):
                     log_line(log)
                     log.info("loss diverged - stopping early!")
-                    print(moving_avg_loss)
-                    print(best_loss)
                     step = iterations
                     break
 
