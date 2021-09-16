@@ -256,6 +256,14 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
         if len(labels) > 0:
 
+            max_relations_in_batch = len(sentences) * 4
+            if len(sentences_to_embed) > max_relations_in_batch:
+                sentences_to_embed = sentences_to_embed[:max_relations_in_batch]
+                entity_pairs = entity_pairs[:max_relations_in_batch]
+                labels = labels[:max_relations_in_batch]
+                sentences_to_label = sentences_to_label[:max_relations_in_batch]
+                empty_label_candidates = empty_label_candidates[:max_relations_in_batch]
+
             # embed all sentences
             self.token_embeddings.embed(sentences_to_embed)
 
