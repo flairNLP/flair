@@ -179,16 +179,9 @@ class RelationExtractor(flair.nn.DefaultClassifier):
             offset += 1
 
         expanded_sentence = Sentence(text, use_tokenizer=False)
-        # print(entity_one_is_first)
 
         expanded_span_1 = Span([expanded_sentence[span_1_startid - 1]])
         expanded_span_2 = Span([expanded_sentence[span_2_startid - 1]])
-
-        # print(span_1)
-        # print(span_2)
-        # print(expanded_sentence)
-        # print(expanded_span_1)
-        # print(expanded_span_2)
 
         if expanded_span_1.text != '<e1>': asd
         if expanded_span_2.text != '<e2>': asd
@@ -261,17 +254,17 @@ class RelationExtractor(flair.nn.DefaultClassifier):
                         empty_label_candidates.append(candidate_label)
                         sentences_to_label.append(span_1[0].sentence)
 
-        # embed all sentences
-        self.token_embeddings.embed(sentences_to_embed)
-
-        relation_embeddings = []
-        for entity_pair in entity_pairs:
-            span_1 = entity_pair[0]
-            span_2 = entity_pair[1]
-            embedding = torch.cat([span_1.tokens[0].get_embedding(), span_2.tokens[0].get_embedding()])
-            relation_embeddings.append(embedding)
-
         if len(labels) > 0:
+
+            # embed all sentences
+            self.token_embeddings.embed(sentences_to_embed)
+
+            relation_embeddings = []
+            for entity_pair in entity_pairs:
+                span_1 = entity_pair[0]
+                span_2 = entity_pair[1]
+                embedding = torch.cat([span_1.tokens[0].get_embedding(), span_2.tokens[0].get_embedding()])
+                relation_embeddings.append(embedding)
 
             all_relations = torch.stack(relation_embeddings)
 
