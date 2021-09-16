@@ -256,23 +256,35 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
         if len(labels) > 0:
 
-            max_relations_in_batch = len(sentences) * 4
+            max_relations_in_batch = len(sentences) * 2
             if len(sentences_to_embed) > max_relations_in_batch:
-                sentences_to_embed = sentences_to_embed[:max_relations_in_batch]
-                entity_pairs = entity_pairs[:max_relations_in_batch]
-                labels = labels[:max_relations_in_batch]
-                sentences_to_label = sentences_to_label[:max_relations_in_batch]
-                empty_label_candidates = empty_label_candidates[:max_relations_in_batch]
-
-            # embed all sentences
-            self.token_embeddings.embed(sentences_to_embed)
+                sentence_embed_steps = [sentences_to_embed[x: x + max_relations_in_batch]
+                                        for x in range(0, len(sentences_to_embed), max_relations_in_batch)]
+                entity_pairs_steps = [entity_pairs[x: x + max_relations_in_batch]
+                                        for x in range(0, len(entity_pairs), max_relations_in_batch)]
+            else:
+                sentence_embed_steps = [sentences_to_embed]
+                entity_pairs_steps = [entity_pairs]
 
             relation_embeddings = []
-            for entity_pair in entity_pairs:
-                span_1 = entity_pair[0]
-                span_2 = entity_pair[1]
-                embedding = torch.cat([span_1.tokens[0].get_embedding(), span_2.tokens[0].get_embedding()])
-                relation_embeddings.append(embedding)
+            detach = False
+            for sentences_to_embed, entity_pairs in zip(sentence_embed_steps, entity_pairs_steps):
+
+                # embed sentences
+                self.token_embeddings.embed(sentences_to_embed)
+
+                # get embeddings
+                for entity_pair in entity_pairs:
+                    span_1 = entity_pair[0]
+                    span_2 = entity_pair[1]
+                    embedding = torch.cat([span_1.tokens[0].get_embedding(), span_2.tokens[0].get_embedding()])
+                    if detach:
+                        embedding = embedding.detach()
+                    #     print("detach")
+                    # print(embedding)
+                    relation_embeddings.append(embedding)
+
+                detach = True
 
             all_relations = torch.stack(relation_embeddings)
 
