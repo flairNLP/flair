@@ -494,7 +494,7 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
         self.sentence_splitter = sentence_splitter
 
         # this dataset name
-        dataset_name = self.__class__.__name__.lower() + "_" + type(self.sentence_splitter).__name__
+        dataset_name = self.__class__.__name__.lower() + "_" + type(self.sentence_splitter).__name__ + "_v2"
 
         # default dataset folder is the cache root
         if not base_path:
