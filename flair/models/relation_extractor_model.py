@@ -256,7 +256,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
         if len(labels) > 0:
 
-            max_relations_in_batch = len(sentences) * 2
+            max_relations_in_batch = len(sentences) * 1
             if len(sentences_to_embed) > max_relations_in_batch:
                 sentence_embed_steps = [sentences_to_embed[x: x + max_relations_in_batch]
                                         for x in range(0, len(sentences_to_embed), max_relations_in_batch)]
@@ -268,23 +268,22 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
             relation_embeddings = []
             detach = False
-            for sentences_to_embed, entity_pairs in zip(sentence_embed_steps, entity_pairs_steps):
+            for sentences_to_embed_step, entity_pairs_step in zip(sentence_embed_steps, entity_pairs_steps):
 
                 # embed sentences
-                self.token_embeddings.embed(sentences_to_embed)
+                if detach: self.token_embeddings.eval()
+                self.token_embeddings.embed(sentences_to_embed_step)
 
                 # get embeddings
-                for entity_pair in entity_pairs:
+                for entity_pair in entity_pairs_step:
                     span_1 = entity_pair[0]
                     span_2 = entity_pair[1]
                     embedding = torch.cat([span_1.tokens[0].get_embedding(), span_2.tokens[0].get_embedding()])
-                    if detach:
-                        embedding = embedding.detach()
-                    #     print("detach")
-                    # print(embedding)
                     relation_embeddings.append(embedding)
 
                 detach = True
+
+            self.token_embeddings.train()
 
             all_relations = torch.stack(relation_embeddings)
 
