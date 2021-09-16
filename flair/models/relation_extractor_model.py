@@ -283,7 +283,8 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
                 detach = True
 
-            self.token_embeddings.train()
+            if self.training:
+                self.token_embeddings.train()
 
             all_relations = torch.stack(relation_embeddings)
 
