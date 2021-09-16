@@ -269,7 +269,7 @@ def test_train_load_use_tagger_adam(results_base_path, tasks_base_path):
     )
 
     # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=Adam)
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
     trainer.train(
         results_base_path,
@@ -277,6 +277,7 @@ def test_train_load_use_tagger_adam(results_base_path, tasks_base_path):
         mini_batch_size=2,
         max_epochs=2,
         shuffle=False,
+        optimizer=Adam
     )
 
     del trainer, tagger, tag_dictionary, corpus
@@ -389,11 +390,10 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
     )
 
     # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=SGD)
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-    trainer.find_learning_rate(results_base_path, iterations=5)
+    trainer.find_learning_rate(results_base_path, optimizer=SGD, iterations=5)
 
     # clean up results directory
     shutil.rmtree(results_base_path)
     del trainer, tagger, tag_dictionary, corpus
-

@@ -1,9 +1,8 @@
 import shutil
 
-import torch.optim.optimizer
+import pytest
 
 import flair
-import pytest
 from flair.data import Sentence, Corpus
 from flair.datasets import ColumnCorpus, ClassificationCorpus
 from flair.embeddings import WordEmbeddings, FlairEmbeddings, StackedEmbeddings, DocumentPoolEmbeddings, \
@@ -197,12 +196,13 @@ def test_sequence_tagger_transformer_finetune(results_base_path, tasks_base_path
     )
 
     # train
-    trainer = ModelTrainer(tagger, corpus, optimizer=torch.optim.AdamW)
-    trainer.train(results_base_path,
-                  mini_batch_size=2,
-                  max_epochs=10,
-                  shuffle=True,
-                  learning_rate=0.5e-4)
+    trainer = ModelTrainer(tagger, corpus)
+    trainer.fine_tune(results_base_path,
+                      mini_batch_size=2,
+                      max_epochs=10,
+                      shuffle=True,
+                      learning_rate=0.5e-4,
+                      )
 
     loaded_model: SequenceTagger = SequenceTagger.load(
         results_base_path / "final-model.pt"
@@ -295,12 +295,13 @@ def test_text_classifier_transformer_finetune(results_base_path, tasks_base_path
                                            label_type="city",
                                            multi_label=False)
 
-    trainer = ModelTrainer(model, corpus, optimizer=torch.optim.AdamW)
-    trainer.train(results_base_path,
-                  mini_batch_size=2,
-                  max_epochs=10,
-                  shuffle=True,
-                  learning_rate=0.5e-5)
+    trainer = ModelTrainer(model, corpus)
+    trainer.fine_tune(results_base_path,
+                      mini_batch_size=2,
+                      max_epochs=10,
+                      shuffle=True,
+                      learning_rate=0.5e-5,
+                      )
 
     # check if model can predict
     sentence = Sentence("this is Berlin")
