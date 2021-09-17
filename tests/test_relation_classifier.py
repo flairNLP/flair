@@ -23,7 +23,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     embeddings = TransformerWordEmbeddings()
 
     model: RelationExtractor = RelationExtractor(
-        token_embeddings=embeddings,
+        embeddings=embeddings,
         label_dictionary=relation_label_dict,
         label_type="relation",
         span_label_type="ner",

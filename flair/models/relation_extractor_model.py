@@ -15,7 +15,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
     def __init__(
             self,
-            token_embeddings: flair.embeddings.TokenEmbeddings,
+            embeddings: Union[flair.embeddings.TokenEmbeddings, flair.embeddings.TransformerDocumentEmbeddings],
             label_type: str = None,
             span_label_type: str = None,
             use_entity_markers: bool = False,
@@ -36,7 +36,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
         """
         super(RelationExtractor, self).__init__(**classifierargs)
 
-        self.token_embeddings: flair.embeddings.TokenEmbeddings = token_embeddings
+        self.embeddings: flair.embeddings.TokenEmbeddings = embeddings
         self._label_type = label_type
         self.span_label_type = span_label_type
 
@@ -52,9 +52,11 @@ class RelationExtractor(flair.nn.DefaultClassifier):
         else:
             self.use_entity_pairs = None
 
-        relation_representation_length = 2 * token_embeddings.embedding_length
+        relation_representation_length = 2 * embeddings.embedding_length
         if self.pooling_operation == 'first_last':
             relation_representation_length *= 2
+        if type(self.embeddings) == flair.embeddings.TransformerDocumentEmbeddings:
+            relation_representation_length = embeddings.embedding_length
 
         # entity pairs could also be no relation at all, add default value for this case to dictionary
         self.label_dictionary.add_item('O')
@@ -73,9 +75,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
         self.to(flair.device)
 
     def add_entity_markers(self, sentence, span_1, span_2):
-        # print()
-        # print()
-        # print(sentence)
+
         text = ""
 
         entity_one_is_first = None
@@ -195,23 +195,44 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
             relation_embeddings = []
             detach = False
-            for sentences_to_embed_step, entity_pairs_step in zip(sentence_embed_steps, entity_pairs_steps):
 
-                # embed sentences
-                if detach: self.token_embeddings.eval()
-                self.token_embeddings.embed(sentences_to_embed_step)
+            if type(self.embeddings) == flair.embeddings.TransformerDocumentEmbeddings:
 
-                # get embeddings
-                for entity_pair in entity_pairs_step:
-                    span_1 = entity_pair[0]
-                    span_2 = entity_pair[1]
-                    embedding = torch.cat([span_1.tokens[0].get_embedding(), span_2.tokens[0].get_embedding()])
-                    relation_embeddings.append(embedding)
+                for sentences_to_embed_step in sentence_embed_steps:
 
-                detach = True
+                    if detach: self.embeddings.eval()
+                    self.embeddings.embed(sentences_to_embed_step)
+                    # get embeddings
+                    for entity_pair_sentence in sentences_to_embed_step:
+                        relation_embeddings.append(entity_pair_sentence.embedding)
+                    detach = True
+
+            else:
+                for sentences_to_embed_step, entity_pairs_step in zip(sentence_embed_steps, entity_pairs_steps):
+
+                    # embed sentences
+                    if detach: self.embeddings.eval()
+                    self.embeddings.embed(sentences_to_embed_step)
+
+                    # get embeddings
+                    for entity_pair in entity_pairs_step:
+                        span_1 = entity_pair[0]
+                        span_2 = entity_pair[1]
+                        embedding = torch.cat([span_1.tokens[0].get_embedding(), span_2.tokens[0].get_embedding()])
+                        relation_embeddings.append(embedding)
+
+                    detach = True
 
             if self.training:
-                self.token_embeddings.train()
+                self.embeddings.train()
+
+            # print()
+            # print(len(sentences_to_embed))
+            # print(sentences_to_embed)
+            # print(len(relation_embeddings))
+            # for sent, relation_embedding in zip(sentences_to_embed, relation_embeddings):
+            #     print(sent)
+            #     print(relation_embedding[:5])
 
             all_relations = torch.stack(relation_embeddings)
 
@@ -237,7 +258,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
     def _get_state_dict(self):
         model_state = {
             "state_dict": self.state_dict(),
-            "token_embeddings": self.token_embeddings,
+            "token_embeddings": self.embeddings,
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
             "span_label_type": self.span_label_type,
@@ -251,7 +272,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
     @staticmethod
     def _init_model_with_state_dict(state):
         model = RelationExtractor(
-            token_embeddings=state["token_embeddings"],
+            embeddings=state["token_embeddings"],
             label_dictionary=state["label_dictionary"],
             label_type=state["label_type"],
             span_label_type=state["span_label_type"],
