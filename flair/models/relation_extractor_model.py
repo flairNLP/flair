@@ -72,87 +72,6 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
         self.to(flair.device)
 
-    def forward_pass_markup(self,
-                            sentences: Union[List[DataPoint], DataPoint],
-                            return_label_candidates: bool = False,
-                            ):
-
-        for sentence in sentences:
-
-            # super lame: make dictionary to find relation annotations for a given entity pair
-            relation_dict = {}
-            for relation_label in sentence.get_labels(self.label_type):
-                relation_label: RelationLabel = relation_label
-                relation_dict[create_position_string(relation_label.head, relation_label.tail)] = relation_label
-
-            # get all entity spans
-            span_labels = sentence.get_labels(self.span_label_type)
-
-            # go through cross product of entities, for each pair concat embeddings
-            for span_label in span_labels:
-                span_1 = span_label.span
-
-                for span_label_2 in span_labels:
-                    span_2 = span_label_2.span
-
-                    if span_1 == span_2:
-                        continue
-
-                    if (self.use_entity_pairs is not None
-                            and (span_label.value, span_label_2.value) not in self.use_entity_pairs):
-                        continue
-
-                    text = ""
-
-                    entity_one_is_first = None
-                    for token in sentence:
-                        if token == span_1[0]:
-                            text += " <e1>"
-                            if entity_one_is_first is None: entity_one_is_first = True
-                        if token == span_2[0]:
-                            if entity_one_is_first is None: entity_one_is_first = False
-                            text += " <e2>"
-
-                        text += " " + token.text
-
-                        if token == span_1[-1]:
-                            text += " </e1>"
-                        if token == span_2[-1]:
-                            text += " </e2>"
-
-                    expanded_sentence = Sentence(text, use_tokenizer=False)
-                    expanded_sentence.original = sentence
-
-                    for token in span_1:
-                        offset = 0 if entity_one_is_first else 2
-                        expanded_sentence[token.idx + offset] \
-                            .set_label(self.span_label_type, token.get_tag(self.span_label_type).value)
-
-                    for token in span_2:
-                        offset = 2 if entity_one_is_first else 0
-                        expanded_sentence[token.idx + offset] \
-                            .set_label(self.span_label_type, token.get_tag(self.span_label_type).value)
-
-                    spans = expanded_sentence.get_spans(self.span_label_type)
-
-                    position_string = create_position_string(span_1, span_2)
-
-                    # get gold label for this relation (if one exists)
-                    if position_string in relation_dict:
-                        relation_label: RelationLabel = relation_dict[position_string]
-                        label = relation_label.value
-                    # if using gold spans only, skip all entity pairs that are not in gold data
-                    elif self.use_gold_spans:
-                        continue
-                    else:
-                        # if no gold label exists, and all spans are used, label defaults to 'O' (no relation)
-                        label = 'O'
-
-                    expanded_sentence.add_complex_label(self.label_type,
-                                                        RelationLabel(head=spans[0], tail=spans[1], value=label))
-
-                    print(expanded_sentence)
-
     def add_entity_markers(self, sentence, span_1, span_2):
         # print()
         # print()
@@ -264,7 +183,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
         if len(labels) > 0:
 
-            max_relations_in_batch = len(sentences) * 1
+            max_relations_in_batch = len(sentences) * 4
             if len(sentences_to_embed) > max_relations_in_batch:
                 sentence_embed_steps = [sentences_to_embed[x: x + max_relations_in_batch]
                                         for x in range(0, len(sentences_to_embed), max_relations_in_batch)]
