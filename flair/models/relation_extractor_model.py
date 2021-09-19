@@ -266,6 +266,8 @@ class RelationExtractor(flair.nn.DefaultClassifier):
             "pooling_operation": self.pooling_operation,
             "dropout_value": self.dropout_value,
             "use_entity_pairs": self.use_entity_pairs,
+            "use_entity_markers": self.use_entity_markers,
+            "non_linear_decoder": self.non_linear_decoder,
         }
         return model_state
 
@@ -280,6 +282,8 @@ class RelationExtractor(flair.nn.DefaultClassifier):
             pooling_operation=state["pooling_operation"],
             dropout_value=state["dropout_value"],
             use_entity_pairs=state["use_entity_pairs"],
+            use_entity_markers=state["use_entity_markers"],
+            non_linear_decoder=state["non_linear_decoder"],
         )
         model.load_state_dict(state["state_dict"])
         return model
