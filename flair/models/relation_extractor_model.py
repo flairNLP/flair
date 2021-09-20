@@ -188,7 +188,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
                 sentence_embed_steps = [sentences_to_embed[x: x + max_relations_in_batch]
                                         for x in range(0, len(sentences_to_embed), max_relations_in_batch)]
                 entity_pairs_steps = [entity_pairs[x: x + max_relations_in_batch]
-                                        for x in range(0, len(entity_pairs), max_relations_in_batch)]
+                                      for x in range(0, len(entity_pairs), max_relations_in_batch)]
             else:
                 sentence_embed_steps = [sentences_to_embed]
                 entity_pairs_steps = [entity_pairs]
@@ -218,7 +218,14 @@ class RelationExtractor(flair.nn.DefaultClassifier):
                     for entity_pair in entity_pairs_step:
                         span_1 = entity_pair[0]
                         span_2 = entity_pair[1]
-                        embedding = torch.cat([span_1.tokens[0].get_embedding(), span_2.tokens[0].get_embedding()])
+
+                        if self.pooling_operation == "first_last" and not self.use_entity_markers:
+                            embedding = torch.cat([span_1.tokens[0].get_embedding(),
+                                                   span_1.tokens[-1].get_embedding(),
+                                                   span_2.tokens[0].get_embedding(),
+                                                   span_2.tokens[-1].get_embedding()])
+                        else:
+                            embedding = torch.cat([span_1.tokens[0].get_embedding(), span_2.tokens[0].get_embedding()])
                         relation_embeddings.append(embedding)
 
                     detach = True
