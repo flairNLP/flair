@@ -532,7 +532,7 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
                 pmid_to_relations = defaultdict(set)
 
                 with zip_file.open(
-                        f"drugprot-training-development-test-background/{split}/drugprot_{split}_entities.tsv") as entites_file:
+                        f"drugprot-gs-training-development/{split}/drugprot_{split}_entities.tsv") as entites_file:
                     for line in io.TextIOWrapper(entites_file, encoding="utf-8"):
                         fields = line.strip().split("\t")
                         pmid, ent_id, ent_type, start, end, mention = fields
@@ -540,7 +540,7 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
                             ent_type, int(start), int(end), mention)
 
                 with zip_file.open(
-                        f"drugprot-training-development-test-background/{split}/drugprot_{split}_relations.tsv") as relations_file:
+                        f"drugprot-gs-training-development/{split}/drugprot_{split}_relations.tsv") as relations_file:
                     for line in io.TextIOWrapper(relations_file, encoding="utf-8"):
                         fields = line.strip().split("\t")
                         pmid, rel_type, arg1, arg2 = fields
@@ -550,7 +550,7 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
 
                 tokenlists: List[conllu.TokenList] = []
                 with zip_file.open(
-                        f"drugprot-training-development-test-background/{split}/drugprot_{split}_abstracs.tsv") as abstracts_file:
+                        f"drugprot-gs-training-development/{split}/drugprot_{split}_abstracs.tsv") as abstracts_file:
                     for line in io.TextIOWrapper(abstracts_file, encoding="utf-8"):
                         fields = line.strip().split("\t")
                         pmid, title, abstract = fields
