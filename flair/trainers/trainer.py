@@ -303,8 +303,8 @@ class ModelTrainer:
             lr_scheduler = OneCycleLR(optimizer,
                                       max_lr=learning_rate,
                                       steps_per_epoch=dataset_size // mini_batch_size + 1,
-                                      epochs=max_epochs - self.epoch,
-                                      # if we load a checkpoint, we have already trained for self.epoch
+                                      epochs=max_epochs - epoch,
+                                      # if we load a checkpoint, we have already trained for epoch
                                       pct_start=0.0,
                                       cycle_momentum=cycle_momentum)
         elif scheduler == LinearSchedulerWithWarmup:
@@ -550,7 +550,7 @@ class ModelTrainer:
                     for (metric_class_avg_type, metric_type) in metrics_for_tensorboard:
                         writer.add_scalar(
                             f"train_{metric_class_avg_type}_{metric_type}",
-                            train_part_eval_result.classification_report[metric_class_avg_type][metric_type], self.epoch
+                            train_part_eval_result.classification_report[metric_class_avg_type][metric_type], epoch
                         )
 
                 if log_dev:
@@ -586,7 +586,7 @@ class ModelTrainer:
                         for (metric_class_avg_type, metric_type) in metrics_for_tensorboard:
                             writer.add_scalar(
                                 f"dev_{metric_class_avg_type}_{metric_type}",
-                                dev_eval_result.classification_report[metric_class_avg_type][metric_type], self.epoch
+                                dev_eval_result.classification_report[metric_class_avg_type][metric_type], epoch
                             )
 
                 if log_test:
