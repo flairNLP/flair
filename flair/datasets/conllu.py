@@ -170,6 +170,17 @@ class CoNLLUDataset(FlairDataset):
                         metadata_parsers=self.metadata_parsers,
                     )
                 ]
+
+                # pointer to previous
+                previous_sentence = None
+
+                for sentence in self.sentences:
+
+                    sentence._previous_sentence = previous_sentence
+                    sentence._next_sentence = None
+                    if previous_sentence: previous_sentence._next_sentence = sentence
+                    previous_sentence = sentence
+
                 self.total_sentence_count = len(self.sentences)
 
     def is_in_memory(self) -> bool:
