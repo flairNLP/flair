@@ -397,12 +397,12 @@ class ModelTrainer:
                 if (
                         (anneal_with_restarts or anneal_with_prestarts)
                         and learning_rate != previous_learning_rate
-                        and os.path.exists(self.get_best_model_path(base_path))
+                        and os.path.exists(base_path / "best-model.pt")
                 ):
                     if anneal_with_restarts:
                         log.info("resetting to best model")
                         self.model.load_state_dict(
-                            self.model.load(self.get_best_model_path(base_path)).state_dict()
+                            self.model.load(base_path / "best-model.pt").state_dict()
                         )
                     if anneal_with_prestarts:
                         log.info("resetting to pre-best model")
