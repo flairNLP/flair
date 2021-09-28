@@ -589,8 +589,8 @@ def test_tagged_corpus_make_label_dictionary():
 
     label_dict = corpus.make_label_dictionary('label')
 
-    assert 2 == len(label_dict)
-    assert "<unk>" not in label_dict.get_items()
+    assert 3 == len(label_dict)
+    assert "<unk>" in label_dict.get_items()
     assert "class_1" in label_dict.get_items()
     assert "class_2" in label_dict.get_items()
 

@@ -6,11 +6,12 @@ from collections import defaultdict
 from operator import itemgetter
 from typing import List, Dict, Union, Optional
 
-import flair
+from deprecated import deprecated
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data.dataset import ConcatDataset, Subset
 
+import flair
 from flair.file_utils import Tqdm
 
 log = logging.getLogger("flair")
@@ -62,7 +63,8 @@ class Dictionary:
             return 0
         else:
             log.error(f"The string '{item}' is not in dictionary! Dictionary contains only: {self.get_items()}")
-            log.error("You can create a Dictionary that handles unknown items with an <unk>-key by setting add_unk = True in the construction.")
+            log.error(
+                "You can create a Dictionary that handles unknown items with an <unk>-key by setting add_unk = True in the construction.")
             raise IndexError
 
     def get_idx_for_items(self, items: List[str]) -> List[int]:
@@ -102,24 +104,29 @@ class Dictionary:
         with open(savefile, "wb") as f:
             mappings = {"idx2item": self.idx2item, "item2idx": self.item2idx}
             pickle.dump(mappings, f)
-            
+
     def __setstate__(self, d):
         self.__dict__ = d
+        # set 'add_unk' if the dictionary was created with a version of Flair older than 0.9
         if 'add_unk' not in self.__dict__.keys():
-            self.__dict__['add_unk'] = False
-        
+            self.__dict__['add_unk'] = True if b'<unk>' in self.__dict__['idx2item'] else False
 
     @classmethod
     def load_from_file(cls, filename: str):
         import pickle
 
-        dictionary: Dictionary = Dictionary()
-        with open(filename, "rb") as f:
-            mappings = pickle.load(f, encoding="latin1")
-            idx2item = mappings["idx2item"]
-            item2idx = mappings["item2idx"]
-            dictionary.item2idx = item2idx
-            dictionary.idx2item = idx2item
+        f = open(filename, "rb")
+        mappings = pickle.load(f, encoding="latin1")
+        idx2item = mappings["idx2item"]
+        item2idx = mappings["item2idx"]
+        f.close()
+
+        # set 'add_unk' depending on whether <unk> is a key
+        add_unk = True if b'<unk>' in idx2item else False
+
+        dictionary: Dictionary = Dictionary(add_unk=add_unk)
+        dictionary.item2idx = item2idx
+        dictionary.idx2item = idx2item
         return dictionary
 
     @classmethod
@@ -141,7 +148,7 @@ class Dictionary:
         return Dictionary.load_from_file(name)
 
     def __str__(self):
-        tags = ', '.join(self.get_item_for_index(i) for i in range(min(len(self), 30)))
+        tags = ', '.join(self.get_item_for_index(i) for i in range(min(len(self), 50)))
         return f"Dictionary with {len(self)} tags: {tags}"
 
 
@@ -1132,25 +1139,29 @@ class FlairDataset(Dataset):
 class Corpus:
     def __init__(
             self,
-            train: FlairDataset,
+            train: FlairDataset = None,
             dev: FlairDataset = None,
             test: FlairDataset = None,
             name: str = "corpus",
-            sample_missing_splits: bool = True,
+            sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
+        
+        # abort if no data is provided
+        if not train and not dev and not test:
+            raise RuntimeError('No data provided when initializing corpus object.')
 
-        # sample test data if none is provided
-        if test is None and sample_missing_splits:
+        # sample test data from train if none is provided
+        if test is None and sample_missing_splits and train and not sample_missing_splits == 'only_dev':
             train_length = len(train)
             test_size: int = round(train_length / 10)
             splits = randomly_split_into_two_datasets(train, test_size)
             test = splits[0]
             train = splits[1]
 
-        # sample dev data if none is provided
-        if dev is None and sample_missing_splits:
+        # sample dev data from train if none is provided
+        if dev is None and sample_missing_splits and train and not sample_missing_splits == 'only_test':
             train_length = len(train)
             dev_size: int = round(train_length / 10)
             splits = randomly_split_into_two_datasets(train, dev_size)
@@ -1373,7 +1384,7 @@ class Corpus:
         Creates a dictionary of all labels assigned to the sentences in the corpus.
         :return: dictionary of labels
         """
-        label_dictionary: Dictionary = Dictionary(add_unk=False)
+        label_dictionary: Dictionary = Dictionary(add_unk=True)
         label_dictionary.multi_label = False
 
         from flair.datasets import DataLoader
@@ -1448,6 +1459,7 @@ class Corpus:
         if self.test: parts.append(self.test)
         return ConcatDataset(parts)
 
+    @deprecated(version="0.8", reason="Use 'make_label_dictionary' instead.")
     def make_tag_dictionary(self, tag_type: str) -> Dictionary:
 
         # Make the tag dictionary
