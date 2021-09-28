@@ -229,6 +229,7 @@ class ModelTrainer:
         # cast string to Path
         if type(base_path) is str:
             base_path = Path(base_path)
+        base_path.mkdir(exist_ok=True, parents=True)
 
         if create_file_logs:
             log_handler = add_file_handler(log, base_path / "training.log")
@@ -794,6 +795,7 @@ class ModelTrainer:
     ):
         if type(base_path) is str:
             base_path = Path(base_path)
+        base_path.mkdir(exist_ok=True, parents=True)
 
         log_line(log)
 
@@ -859,6 +861,7 @@ class ModelTrainer:
         # cast string to Path
         if type(base_path) is str:
             base_path = Path(base_path)
+        base_path.mkdir(exist_ok=True, parents=True)
         learning_rate_tsv = init_output_file(base_path, file_name)
 
         with open(learning_rate_tsv, "a") as f:
