@@ -134,6 +134,8 @@ class ModelTrainer:
             use_swa: bool = False,
             use_final_model_for_eval: bool = False,
             gold_label_dictionary_for_eval: Optional[Dictionary] = None,
+            create_file_logs: bool = True,
+            create_loss_file: bool = True,
             optimizer: torch.optim.Optimizer = SGD,
             epoch: int = 0,
             use_tensorboard: bool = False,
@@ -179,12 +181,13 @@ class ModelTrainer:
         :param classification_main_metric: Type of metric to use for best model tracking and learning rate scheduling (if dev data is available, otherwise loss will be used), currently only applicable for text_classification_model
         :param tensorboard_comment: Comment to use for tensorboard logging
         :param save_best_checkpoints: If True, in addition to saving the best model also the corresponding checkpoint is saved
+        :param create_file_logs: If True, the logs will also be stored in a file 'training.log' in the model folder
+        :param create_loss_file: If True, the loss will be writen to a file 'loss.tsv' in the model folder
         :param optimizer: The optimizer to use (typically SGD or Adam)
         :param epoch: The starting epoch (normally 0 but could be higher if you continue training model)
         :param use_tensorboard: If True, writes out tensorboard information
         :param tensorboard_log_dir: Directory into which tensorboard log files will be written
         :param metrics_for_tensorboard: List of tuples that specify which metrics (in addition to the main_score) shall be plotted in tensorboard, could be [("macro avg", 'f1-score'), ("macro avg", 'precision')] for example
-
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
@@ -226,8 +229,12 @@ class ModelTrainer:
         # cast string to Path
         if type(base_path) is str:
             base_path = Path(base_path)
+        base_path.mkdir(exist_ok=True, parents=True)
 
-        log_handler = add_file_handler(log, base_path / "training.log")
+        if create_file_logs:
+            log_handler = add_file_handler(log, base_path / "training.log")
+        else:
+            log_handler = None
 
         log_line(log)
         log.info(f'Model: "{self.model}"')
@@ -275,8 +282,11 @@ class ModelTrainer:
                     self.corpus.train, train_part_indices
                 )
 
-        # prepare loss logging file and set up header
-        loss_txt = init_output_file(base_path, "loss.tsv")
+        if create_loss_file:
+            # prepare loss logging file and set up header
+            loss_txt = init_output_file(base_path, "loss.tsv")
+        else:
+            loss_txt = None
 
         weight_extractor = WeightExtractor(base_path)
 
@@ -325,7 +335,7 @@ class ModelTrainer:
                 verbose=True,
             )
 
-        if (isinstance(lr_scheduler, OneCycleLR) and batch_growth_annealing):
+        if isinstance(lr_scheduler, OneCycleLR) and batch_growth_annealing:
             raise ValueError("Batch growth with OneCycle policy is not implemented.")
 
         train_data = self.corpus.train
@@ -387,12 +397,12 @@ class ModelTrainer:
                 if (
                         (anneal_with_restarts or anneal_with_prestarts)
                         and learning_rate != previous_learning_rate
-                        and os.path.exists(self.get_best_model_path(base_path))
+                        and os.path.exists(base_path / "best-model.pt")
                 ):
                     if anneal_with_restarts:
                         log.info("resetting to best model")
                         self.model.load_state_dict(
-                            self.model.load(self.get_best_model_path(base_path)).state_dict()
+                            self.model.load(base_path / "best-model.pt").state_dict()
                         )
                     if anneal_with_prestarts:
                         log.info("resetting to pre-best model")
@@ -477,6 +487,8 @@ class ModelTrainer:
                             learning_rate = group["lr"]
                             if "momentum" in group:
                                 momentum = group["momentum"]
+                            if "betas" in group:
+                                momentum, _ = group["betas"]
 
                     seen_batches += 1
 
@@ -664,30 +676,31 @@ class ModelTrainer:
                 # log bad epochs
                 log.info(f"BAD EPOCHS (no improvement): {bad_epochs}")
 
-                # output log file
-                with open(loss_txt, "a") as f:
+                if create_loss_file:
+                    # output log file
+                    with open(loss_txt, "a") as f:
 
-                    # make headers on first epoch
-                    if epoch == 1:
-                        f.write(f"EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS")
+                        # make headers on first epoch
+                        if epoch == 1:
+                            f.write(f"EPOCH\tTIMESTAMP\tBAD_EPOCHS\tLEARNING_RATE\tTRAIN_LOSS")
 
-                        if log_train:
-                            f.write("\tTRAIN_" + "\tTRAIN_".join(train_eval_result.log_header.split("\t")))
+                            if log_train:
+                                f.write("\tTRAIN_" + "\tTRAIN_".join(train_eval_result.log_header.split("\t")))
 
-                        if log_train_part:
-                            f.write("\tTRAIN_PART_LOSS\tTRAIN_PART_" + "\tTRAIN_PART_".join(
-                                train_part_eval_result.log_header.split("\t")))
+                            if log_train_part:
+                                f.write("\tTRAIN_PART_LOSS\tTRAIN_PART_" + "\tTRAIN_PART_".join(
+                                    train_part_eval_result.log_header.split("\t")))
 
-                        if log_dev:
-                            f.write("\tDEV_LOSS\tDEV_" + "\tDEV_".join(dev_eval_result.log_header.split("\t")))
+                            if log_dev:
+                                f.write("\tDEV_LOSS\tDEV_" + "\tDEV_".join(dev_eval_result.log_header.split("\t")))
 
-                        if log_test:
-                            f.write("\tTEST_LOSS\tTEST_" + "\tTEST_".join(test_eval_result.log_header.split("\t")))
+                            if log_test:
+                                f.write("\tTEST_LOSS\tTEST_" + "\tTEST_".join(test_eval_result.log_header.split("\t")))
 
-                    f.write(
-                        f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
-                    )
-                    f.write(result_line)
+                        f.write(
+                            f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
+                        )
+                        f.write(result_line)
 
                 # if checkpoint is enabled, save model at each epoch
                 if checkpoint and not param_selection_mode:
@@ -746,9 +759,9 @@ class ModelTrainer:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
 
-        log_handler.close()
-
-        log.removeHandler(log_handler)
+        if create_file_logs:
+            log_handler.close()
+            log.removeHandler(log_handler)
 
         if use_tensorboard:
             writer.close()
@@ -782,6 +795,7 @@ class ModelTrainer:
     ):
         if type(base_path) is str:
             base_path = Path(base_path)
+        base_path.mkdir(exist_ok=True, parents=True)
 
         log_line(log)
 
@@ -847,6 +861,7 @@ class ModelTrainer:
         # cast string to Path
         if type(base_path) is str:
             base_path = Path(base_path)
+        base_path.mkdir(exist_ok=True, parents=True)
         learning_rate_tsv = init_output_file(base_path, file_name)
 
         with open(learning_rate_tsv, "a") as f:
@@ -885,7 +900,6 @@ class ModelTrainer:
                 optimizer.step()
                 scheduler.step()
 
-                print(scheduler.get_lr())
                 learning_rate = scheduler.get_lr()[0]
 
                 # append current loss to list of losses for all iterations
