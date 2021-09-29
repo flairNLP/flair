@@ -1,7 +1,7 @@
 import logging
 
 from pathlib import Path
-from typing import List, Union, Optional, Sequence, Dict, Tuple
+from typing import List, Union, Optional, Sequence, Dict, Tuple, Any
 
 import conllu
 
@@ -12,7 +12,7 @@ log = logging.getLogger("flair")
 
 DEFAULT_FIELDS: Tuple[str, ...] = ("id", "form", "lemma", "upos", "xpos", "feats", "head", "deprel", "deps", "misc")
 
-DEFAULT_TOKEN_ANNOTATION_FIELDS: Tuple[str, ...] = ("lemma", "upos", "xpos")
+DEFAULT_TOKEN_ANNOTATION_FIELDS: Tuple[str, ...] = ("lemma", "upos", "xpos", "feats", "head", "deprel")
 
 DEFAULT_METADATA_PARSERS: Dict[str, conllu._MetadataParserType] = dict(
     conllu.parser.DEFAULT_METADATA_PARSERS,
@@ -143,13 +143,14 @@ class CoNLLUDataset(FlairDataset):
             raise ValueError(f"The token annotation fields {repr(self.token_annotation_fields)} "
                              f"are not a subset of the parsed fields {repr(self.fields)}.")
 
-        augmented_default_field_parsers: Dict[str, conllu._FieldParserType] = dict(
-            conllu.parser.DEFAULT_FIELD_PARSERS,
+        # noinspection PyProtectedMember
+        augmented_default_field_parsers: Dict[str, conllu._FieldParserType] = {
             **{
                 field: lambda line_, i: conllu.parser.parse_nullable_value(line_[i])
                 for field in self.token_annotation_fields
-            }
-        )
+            },
+            **conllu.parser.DEFAULT_FIELD_PARSERS
+        }
 
         self.field_parsers = field_parsers or augmented_default_field_parsers
         self.metadata_parsers = metadata_parsers or DEFAULT_METADATA_PARSERS
@@ -218,10 +219,17 @@ class CoNLLUDataset(FlairDataset):
             token = Token(conllu_token["form"])
 
             for field in self.token_annotation_fields:
-                token.add_label(typename=field, value=str(conllu_token[field]))
+                field_value: Any = conllu_token[field]
+                if isinstance(field_value, dict):
+                    # For fields that contain key-value annotations,
+                    # we add the key as label type-name and the value as the label value.
+                    for key, value in field_value.items():
+                        token.add_label(typename=key, value=str(value))
+                else:
+                    token.add_label(typename=field, value=str(field_value))
 
             if "misc" in conllu_token and conllu_token["misc"] is not None:
-                space_after = conllu_token["misc"].get("SpaceAfter")
+                space_after: Optional[str] = conllu_token["misc"].get("SpaceAfter")
                 if space_after == "No":
                     token.whitespace_after = False
 
