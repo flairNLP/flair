@@ -73,7 +73,7 @@ class ModelTrainer:
 
         self.model = model
 
-        self.train(**self.model.training_parameters)
+        self.train(**self.model.model_card)
 
     def fine_tune(self,
                   base_path: Union[Path, str],
@@ -197,12 +197,25 @@ class ModelTrainer:
         :return:
         """
 
-        # remember training parameters
-        training_parameters = {}
+        # create a model card for this model with Flair and PyTorch version
+        model_card = {'flair_version': flair.__version__, 'pytorch_version': torch.__version__}
+
+        # also record Transformers version if library is loaded
+        try:
+            import transformers
+            model_card['transformers_version'] = transformers.__version__
+        except:
+            pass
+
+        # remember all parameters used in train() call
         local_variables = locals()
+        training_parameters = {}
         for parameter in signature(self.train).parameters:
             training_parameters[parameter] = local_variables[parameter]
-        self.model.training_parameters = training_parameters
+        model_card['training_parameters'] = training_parameters
+
+        # add model card to model
+        self.model.model_card = model_card
 
         if use_tensorboard:
             try:
@@ -390,7 +403,7 @@ class ModelTrainer:
                 log_line(log)
 
                 # update training parameter
-                self.model.training_parameters['epoch'] = epoch
+                self.model.model_card['training_parameters']['epoch'] = epoch
 
                 if anneal_with_prestarts:
                     last_epoch_model_state_dict = copy.deepcopy(self.model.state_dict())
@@ -724,7 +737,7 @@ class ModelTrainer:
                         and not use_final_model_for_eval
                 ):
                     log.info("saving best model")
-                    self.model.save(base_path / "best-model.pt", training_parameters=training_parameters)
+                    self.model.save(base_path / "best-model.pt")
 
                     if anneal_with_prestarts:
                         current_state_dict = self.model.state_dict()
@@ -735,14 +748,14 @@ class ModelTrainer:
                 if save_model_each_k_epochs > 0 and not epoch % save_model_each_k_epochs:
                     print("saving model of current epoch")
                     model_name = "model_epoch_" + str(epoch) + ".pt"
-                    self.model.save(base_path / model_name, training_parameters=training_parameters)
+                    self.model.save(base_path / model_name)
 
             if use_swa:
                 optimizer.swap_swa_sgd()
 
             # if we do not use dev data for model selection, save final model
             if save_final_model and not param_selection_mode:
-                self.model.save(base_path / "final-model.pt", training_parameters=training_parameters)
+                self.model.save(base_path / "final-model.pt")
 
         except KeyboardInterrupt:
             log_line(log)
@@ -753,7 +766,7 @@ class ModelTrainer:
 
             if not param_selection_mode:
                 log.info("Saving model ...")
-                self.model.save(base_path / "final-model.pt", training_parameters=training_parameters)
+                self.model.save(base_path / "final-model.pt")
                 log.info("Done.")
 
         # test best model if test data is present

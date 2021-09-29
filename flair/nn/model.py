@@ -74,15 +74,15 @@ class Model(torch.nn.Module):
     def _fetch_model(model_name) -> str:
         return model_name
 
-    def save(self, model_file: Union[str, Path], training_parameters: Optional[dict] = None):
+    def save(self, model_file: Union[str, Path]):
         """
         Saves the current model to the provided file.
         :param model_file: the model file
         """
         model_state = self._get_state_dict()
 
-        if training_parameters:
-            model_state['training_parameters'] = training_parameters
+        if hasattr(self, 'model_card'):
+            model_state['model_card'] = self.model_card
 
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
@@ -104,8 +104,8 @@ class Model(torch.nn.Module):
 
         model = cls._init_model_with_state_dict(state)
 
-        if 'training_parameters' in state:
-            model.training_parameters = state['training_parameters']
+        if 'model_card' in state:
+            model.model_card = state['model_card']
 
         model.eval()
         model.to(flair.device)
@@ -113,13 +113,27 @@ class Model(torch.nn.Module):
         return model
 
     def print_training_parameters(self):
-        if hasattr(self, 'training_parameters'):
-            param_out = "Training Parameters:\n"
-            for param in self.training_parameters:
-                param_out += f'{param} = {self.training_parameters[param]}\n'
+        if hasattr(self, 'model_card'):
+            param_out = "\n------------------------------------\n"
+            param_out += "--------- Flair Model Card ---------\n"
+            param_out += "------------------------------------\n"
+            param_out += "- this Flair model was trained with:\n"
+            param_out += f"-- Flair version {self.model_card['flair_version']}\n"
+            param_out += f"-- PyTorch version {self.model_card['pytorch_version']}\n"
+            if 'transformers_version' in self.model_card:
+                param_out += f"-- Transformers version {self.model_card['transformers_version']}\n"
+            param_out += "------------------------------------\n"
+
+            param_out += "------- Training Parameters: -------\n"
+            param_out += "------------------------------------\n"
+            training_params = '\n'.join(f'-- {param} = {self.model_card["training_parameters"][param]}'
+                                       for param in self.model_card['training_parameters'] )
+            param_out += training_params + "\n"
+            param_out += "------------------------------------\n"
+
             log.info(param_out)
         else:
-            log.info("Training Parameters not stored for this model")
+            log.info("This model has no model card (likely because it was trained with Flair version < 0.9.1)")
 
 
 class Classifier(Model):
