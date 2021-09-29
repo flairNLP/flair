@@ -1,21 +1,18 @@
-import torch, flair
 import logging
 import re
-import ast
-
 from abc import abstractmethod, ABC
-
 from collections import Counter
 from collections import defaultdict
+from operator import itemgetter
+from typing import List, Dict, Union, Optional
 
 from deprecated import deprecated
-from flair.file_utils import Tqdm
-from operator import itemgetter
-
+import torch
 from torch.utils.data import Dataset
 from torch.utils.data.dataset import ConcatDataset, Subset
 
-from typing import List, Dict, Union, Callable, Optional
+import flair
+from flair.file_utils import Tqdm
 
 log = logging.getLogger("flair")
 
@@ -29,11 +26,17 @@ class Dictionary:
         # init dictionaries
         self.item2idx: Dict[str, int] = {}
         self.idx2item: List[str] = []
-        self.multi_label: bool = False
-
+        self.add_unk = add_unk
         # in order to deal with unknown tokens, add <unk>
         if add_unk:
             self.add_item("<unk>")
+
+    def remove_item(self, item: str):
+
+        item = item.encode("utf-8")
+        if item in self.item2idx:
+            self.idx2item.remove(item)
+            del self.item2idx[item]
 
     def add_item(self, item: str) -> int:
         """
@@ -53,11 +56,16 @@ class Dictionary:
         :param item: string for which ID is requested
         :return: ID of string, otherwise 0
         """
-        item = item.encode("utf-8")
-        if item in self.item2idx.keys():
-            return self.item2idx[item]
-        else:
+        item_encoded = item.encode("utf-8")
+        if item_encoded in self.item2idx.keys():
+            return self.item2idx[item_encoded]
+        elif self.add_unk:
             return 0
+        else:
+            log.error(f"The string '{item}' is not in dictionary! Dictionary contains only: {self.get_items()}")
+            log.error(
+                "You can create a Dictionary that handles unknown items with an <unk>-key by setting add_unk = True in the construction.")
+            raise IndexError
 
     def get_idx_for_items(self, items: List[str]) -> List[int]:
         """
@@ -97,17 +105,28 @@ class Dictionary:
             mappings = {"idx2item": self.idx2item, "item2idx": self.item2idx}
             pickle.dump(mappings, f)
 
+    def __setstate__(self, d):
+        self.__dict__ = d
+        # set 'add_unk' if the dictionary was created with a version of Flair older than 0.9
+        if 'add_unk' not in self.__dict__.keys():
+            self.__dict__['add_unk'] = True if b'<unk>' in self.__dict__['idx2item'] else False
+
     @classmethod
     def load_from_file(cls, filename: str):
         import pickle
 
-        dictionary: Dictionary = Dictionary()
-        with open(filename, "rb") as f:
-            mappings = pickle.load(f, encoding="latin1")
-            idx2item = mappings["idx2item"]
-            item2idx = mappings["item2idx"]
-            dictionary.item2idx = item2idx
-            dictionary.idx2item = idx2item
+        f = open(filename, "rb")
+        mappings = pickle.load(f, encoding="latin1")
+        idx2item = mappings["idx2item"]
+        item2idx = mappings["item2idx"]
+        f.close()
+
+        # set 'add_unk' depending on whether <unk> is a key
+        add_unk = True if b'<unk>' in idx2item else False
+
+        dictionary: Dictionary = Dictionary(add_unk=add_unk)
+        dictionary.item2idx = item2idx
+        dictionary.idx2item = idx2item
         return dictionary
 
     @classmethod
@@ -129,7 +148,7 @@ class Dictionary:
         return Dictionary.load_from_file(name)
 
     def __str__(self):
-        tags = ', '.join(self.get_item_for_index(i) for i in range(min(len(self), 30)))
+        tags = ', '.join(self.get_item_for_index(i) for i in range(min(len(self), 50)))
         return f"Dictionary with {len(self)} tags: {tags}"
 
 
@@ -140,9 +159,16 @@ class Label:
     """
 
     def __init__(self, value: str, score: float = 1.0):
+        self._value = value
+        self._score = score
+        super().__init__()
+
+    def set_value(self, value: str, score: float = 1.0):
         self.value = value
         self.score = score
-        super().__init__()
+
+    def spawn(self, value: str, score: float = 1.0):
+        return Label(value, score)
 
     @property
     def value(self):
@@ -163,10 +189,7 @@ class Label:
 
     @score.setter
     def score(self, score):
-        if 0.0 <= score <= 1.0:
-            self._score = score
-        else:
-            self._score = 1.0
+        self._score = score
 
     def to_dict(self):
         return {"value": self.value, "confidence": self.score}
@@ -176,6 +199,9 @@ class Label:
 
     def __repr__(self):
         return f"{self._value} ({round(self._score, 4)})"
+
+    def __eq__(self, other):
+        return self.value == other.value and self.score == other.score
 
     @property
     def identifier(self):
@@ -187,6 +213,9 @@ class SpanLabel(Label):
         super().__init__(value, score)
         self.span = span
 
+    def spawn(self, value: str, score: float = 1.0):
+        return SpanLabel(self.span, value, score)
+
     def __str__(self):
         return f"{self._value} [{self.span.id_text}] ({round(self._score, 4)})"
 
@@ -195,6 +224,9 @@ class SpanLabel(Label):
 
     def __len__(self):
         return len(self.span)
+
+    def __eq__(self, other):
+        return self.value == other.value and self.score == other.score and self.span.id_text == other.span.id_text
 
     @property
     def identifier(self):
@@ -207,6 +239,9 @@ class RelationLabel(Label):
         self.head = head
         self.tail = tail
 
+    def spawn(self, value: str, score: float = 1.0):
+        return RelationLabel(self.head, self.tail, value, score)
+
     def __str__(self):
         return f"{self._value} [{self.head.id_text} -> {self.tail.id_text}] ({round(self._score, 4)})"
 
@@ -215,6 +250,12 @@ class RelationLabel(Label):
 
     def __len__(self):
         return len(self.head) + len(self.tail)
+
+    def __eq__(self, other):
+        return self.value == other.value \
+               and self.score == other.score \
+               and self.head.id_text == other.head.id_text \
+               and self.tail.id_text == other.tail.id_text
 
     @property
     def identifier(self):
@@ -255,6 +296,9 @@ class DataPoint:
         return self
 
     def add_complex_label(self, typename: str, label: Label):
+
+        if typename in self.annotation_layers and label in self.annotation_layers[typename]:
+            return self
 
         if typename not in self.annotation_layers:
             self.annotation_layers[typename] = [label]
@@ -308,6 +352,9 @@ class DataPair(DataPoint):
 
     def to_plain_string(self):
         return f"DataPair: First {self.first}  ||  Second {self.second}"
+
+    def to_original_text(self):
+        return f"{self.first.to_original_text()} || {self.second.to_original_text()}"
 
     def __len__(self):
         return len(self.first) + len(self.second)
@@ -548,44 +595,6 @@ class Tokenizer(ABC):
         return self.__class__.__name__
 
 
-@deprecated(version="0.5", reason="Use 'flair.tokenization.SpaceTokenizer' instead.")
-def space_tokenizer(text: str) -> List[Token]:
-    # We don't want to create a SpaceTokenizer object each time this function is called,
-    # so delegate the call directly to the static run_tokenize method
-    from flair.tokenization import SpaceTokenizer
-    return SpaceTokenizer.run_tokenize(text)
-
-
-@deprecated(version="0.5", reason="Use 'flair.tokenization.SegtokTokenizer' instead.")
-def segtok_tokenizer(text: str) -> List[Token]:
-    # We don't want to create a SegtokTokenizer object each time this function is called,
-    # so delegate the call directly to the static run_tokenize method
-    from flair.tokenization import SegtokTokenizer
-    return SegtokTokenizer.run_tokenize(text)
-
-
-@deprecated(version="0.5", reason="Use 'flair.tokenization.SpacyTokenizer' instead.")
-def build_spacy_tokenizer(model) -> Callable[[str], List[Token]]:
-    from flair.tokenization import SpacyTokenizer
-    spacy_tokenizer = SpacyTokenizer(model)
-
-    def tokenizer(text: str) -> List[Token]:
-        return spacy_tokenizer.tokenize(text)
-
-    return tokenizer
-
-
-@deprecated(version="0.5", reason="Use 'flair.tokenization.JapaneseTokenizer' instead.")
-def build_japanese_tokenizer(tokenizer: str = "MeCab"):
-    from flair.tokenization import JapaneseTokenizer
-    japanese_tokenizer = JapaneseTokenizer(tokenizer)
-
-    def tokenizer(text: str) -> List[Token]:
-        return japanese_tokenizer.tokenize(text)
-
-    return tokenizer
-
-
 class Sentence(DataPoint):
     """
        A Sentence is a list of tokens and is used to represent a sentence or text fragment.
@@ -653,8 +662,6 @@ class Sentence(DataPoint):
 
         # some sentences represent a document boundary (but most do not)
         self.is_document_boundary: bool = False
-
-        self.relations: List[Relation] = []
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
@@ -1132,25 +1139,29 @@ class FlairDataset(Dataset):
 class Corpus:
     def __init__(
             self,
-            train: FlairDataset,
+            train: FlairDataset = None,
             dev: FlairDataset = None,
             test: FlairDataset = None,
             name: str = "corpus",
-            sample_missing_splits: bool = True,
+            sample_missing_splits: Union[bool, str] = True,
     ):
         # set name
         self.name: str = name
+        
+        # abort if no data is provided
+        if not train and not dev and not test:
+            raise RuntimeError('No data provided when initializing corpus object.')
 
-        # sample test data if none is provided
-        if test is None and sample_missing_splits:
+        # sample test data from train if none is provided
+        if test is None and sample_missing_splits and train and not sample_missing_splits == 'only_dev':
             train_length = len(train)
             test_size: int = round(train_length / 10)
             splits = randomly_split_into_two_datasets(train, test_size)
             test = splits[0]
             train = splits[1]
 
-        # sample dev data if none is provided
-        if dev is None and sample_missing_splits:
+        # sample dev data from train if none is provided
+        if dev is None and sample_missing_splits and train and not sample_missing_splits == 'only_test':
             train_length = len(train)
             dev_size: int = round(train_length / 10)
             splits = randomly_split_into_two_datasets(train, dev_size)
@@ -1176,13 +1187,13 @@ class Corpus:
 
     def downsample(self, percentage: float = 0.1, downsample_train=True, downsample_dev=True, downsample_test=True):
 
-        if downsample_train:
+        if downsample_train and self._train:
             self._train = self._downsample_to_proportion(self.train, percentage)
 
-        if downsample_dev:
+        if downsample_dev and self._dev:
             self._dev = self._downsample_to_proportion(self.dev, percentage)
 
-        if downsample_test:
+        if downsample_test and self._test:
             self._test = self._downsample_to_proportion(self.test, percentage)
 
         return self
@@ -1368,42 +1379,69 @@ class Corpus:
             len(self.test) if self.test else 0,
         )
 
-    def make_label_dictionary(self, label_type: str = None) -> Dictionary:
+    def make_label_dictionary(self, label_type: str) -> Dictionary:
         """
         Creates a dictionary of all labels assigned to the sentences in the corpus.
         :return: dictionary of labels
         """
-        label_dictionary: Dictionary = Dictionary(add_unk=False)
+        label_dictionary: Dictionary = Dictionary(add_unk=True)
         label_dictionary.multi_label = False
 
         from flair.datasets import DataLoader
 
-        data = ConcatDataset([self.train, self.test])
+        datasets = [self.train]
+
+        data = ConcatDataset(datasets)
+
         loader = DataLoader(data, batch_size=1)
 
         log.info("Computing label dictionary. Progress:")
+
+        # if there are token labels of provided type, use these. Otherwise use sentence labels
+        token_labels_exist = False
+
+        all_label_types = Counter()
+        all_sentence_labels = []
         for batch in Tqdm.tqdm(iter(loader)):
 
             for sentence in batch:
 
-                # check if sentence itself has labels
-                labels = sentence.get_labels(label_type) if label_type is not None else sentence.labels
-
-                for label in labels:
-                    label_dictionary.add_item(label.value)
-
                 # check for labels of words
                 if isinstance(sentence, Sentence):
                     for token in sentence.tokens:
+                        all_label_types.update(token.annotation_layers.keys())
                         for label in token.get_labels(label_type):
-                            # print(label)
                             label_dictionary.add_item(label.value)
+                            token_labels_exist = True
 
-                if not label_dictionary.multi_label:
-                    if len(labels) > 1:
-                        label_dictionary.multi_label = True
+                # if we are looking for sentence-level labels
+                if not token_labels_exist:
+                    # check if sentence itself has labels
+                    labels = sentence.get_labels(label_type)
+                    all_label_types.update(sentence.annotation_layers.keys())
 
-        log.info(label_dictionary.idx2item)
+                    for label in labels:
+                        if label.value not in all_sentence_labels: all_sentence_labels.append(label.value)
+
+                    if not label_dictionary.multi_label:
+                        if len(labels) > 1:
+                            label_dictionary.multi_label = True
+
+        # if this is not a token-level prediction problem, add sentence-level labels to dictionary
+        if not token_labels_exist:
+            for label in all_sentence_labels:
+                label_dictionary.add_item(label)
+
+        if len(label_dictionary.idx2item) == 0:
+            log.error(
+                f"Corpus contains only the labels: {', '.join([f'{label[0]} (#{label[1]})' for label in all_label_types.most_common()])}")
+            log.error(f"You specified as label_type='{label_type}' which is not in this dataset!")
+
+            raise Exception
+
+        log.info(
+            f"Corpus contains the labels: {', '.join([label[0] + f' (#{label[1]})' for label in all_label_types.most_common()])}")
+        log.info(f"Created (for label '{label_type}') {label_dictionary}")
 
         return label_dictionary
 
@@ -1421,6 +1459,7 @@ class Corpus:
         if self.test: parts.append(self.test)
         return ConcatDataset(parts)
 
+    @deprecated(version="0.8", reason="Use 'make_label_dictionary' instead.")
     def make_tag_dictionary(self, tag_type: str) -> Dictionary:
 
         # Make the tag dictionary
@@ -1459,7 +1498,7 @@ class MultiCorpus(Corpus):
                  f"{len(self.train) if self.train else 0} train + " \
                  f"{len(self.dev) if self.dev else 0} dev + " \
                  f"{len(self.test) if self.test else 0} test sentences\n - "
-        output += "\n - ".join([f'{type(corpus).__name__} {str(corpus)}' for corpus in self.corpora])
+        output += "\n - ".join([f'{type(corpus).__name__} {str(corpus)} - {corpus.name}' for corpus in self.corpora])
         return output
 
 
@@ -1491,8 +1530,8 @@ def iob_iobes(tags):
     """
     new_tags = []
     for i, tag in enumerate(tags):
-        if tag.value == "O":
-            new_tags.append(tag.value)
+        if tag.value == "O" or tag.value == "":
+            new_tags.append("O")
         elif tag.value.split("-")[0] == "B":
             if i + 1 != len(tags) and tags[i + 1].value.split("-")[0] == "I":
                 new_tags.append(tag.value)

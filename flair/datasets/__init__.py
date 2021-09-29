@@ -7,43 +7,50 @@ from .base import MongoDataset
 # Expose all sequence labeling datasets
 from .sequence_labeling import ColumnCorpus
 from .sequence_labeling import ColumnDataset
-from .sequence_labeling import AMHARIC_NER
-from .sequence_labeling import ANER_CORP
-from .sequence_labeling import AQMAR
-from .sequence_labeling import BIOFID
-from .sequence_labeling import BIOSCOPE
-from .sequence_labeling import BUSINESS_HUN
+# standard NER datasets
 from .sequence_labeling import CONLL_03
 from .sequence_labeling import CONLL_03_GERMAN
 from .sequence_labeling import CONLL_03_DUTCH
-from .sequence_labeling import ICELANDIC_NER
-from .sequence_labeling import WEBPAGES_NER
 from .sequence_labeling import CONLL_03_SPANISH
 from .sequence_labeling import CONLL_2000
-from .sequence_labeling import DANE
-from .sequence_labeling import EUROPARL_NER_GERMAN
-from .sequence_labeling import GERMEVAL_14
-from .sequence_labeling import HAUSA_NER
-from .sequence_labeling import INSPEC
-from .sequence_labeling import JAPANESE_NER
-from .sequence_labeling import KINYARWANDA_NER
-from .sequence_labeling import LER_GERMAN
-from .sequence_labeling import LUGANDA_NER
-from .sequence_labeling import LUO_NER
-from .sequence_labeling import MIT_MOVIE_NER_SIMPLE
-from .sequence_labeling import MIT_MOVIE_NER_COMPLEX
-from .sequence_labeling import MIT_RESTAURANT_NER
-from .sequence_labeling import PERSON_NER
-from .sequence_labeling import NAIJA_PIDGIN_NER
+from .sequence_labeling import BIOSCOPE
+from .sequence_labeling import WNUT_17
+# other NER datasets
+from .sequence_labeling import NER_ARABIC_ANER
+from .sequence_labeling import NER_ARABIC_AQMAR
 from .sequence_labeling import NER_BASQUE
+from .sequence_labeling import NER_CHINESE_WEIBO
+from .sequence_labeling import NER_DANISH_DANE
+from .sequence_labeling import NER_ENGLISH_MOVIE_SIMPLE
+from .sequence_labeling import NER_ENGLISH_MOVIE_COMPLEX
+from .sequence_labeling import NER_ENGLISH_PERSON
+from .sequence_labeling import NER_ENGLISH_RESTAURANT
+from .sequence_labeling import NER_ENGLISH_SEC_FILLINGS
+from .sequence_labeling import NER_ENGLISH_STACKOVERFLOW
+from .sequence_labeling import NER_ENGLISH_TWITTER
+from .sequence_labeling import NER_ENGLISH_WIKIGOLD
+from .sequence_labeling import NER_ENGLISH_WNUT_2020
+from .sequence_labeling import NER_ENGLISH_WEBPAGES
 from .sequence_labeling import NER_FINNISH
+from .sequence_labeling import NER_GERMAN_BIOFID
+from .sequence_labeling import NER_GERMAN_EUROPARL
+from .sequence_labeling import NER_GERMAN_GERMEVAL
+from .sequence_labeling import NER_GERMAN_LEGAL
+from .sequence_labeling import NER_GERMAN_POLITICS
+from .sequence_labeling import NER_HUNGARIAN
+from .sequence_labeling import NER_ICELANDIC
+from .sequence_labeling import NER_JAPANESE
+from .sequence_labeling import NER_MASAKHANE
+from .sequence_labeling import NER_MULTI_WIKINER
+from .sequence_labeling import NER_MULTI_WIKIANN
+from .sequence_labeling import NER_MULTI_XTREME
 from .sequence_labeling import NER_SWEDISH
-from .sequence_labeling import NER_YORUBA
-from .sequence_labeling import STACKOVERFLOW_NER
-from .sequence_labeling import SEMEVAL2010
-from .sequence_labeling import SEMEVAL2017
-from .sequence_labeling import TURKU_NER
-from .sequence_labeling import TWITTER_NER
+from .sequence_labeling import NER_TURKU
+# keyphrase detection datasets
+from .sequence_labeling import KEYPHRASE_INSPEC
+from .sequence_labeling import KEYPHRASE_SEMEVAL2010
+from .sequence_labeling import KEYPHRASE_SEMEVAL2017
+# universal proposition banks
 from .sequence_labeling import UP_CHINESE
 from .sequence_labeling import UP_ENGLISH
 from .sequence_labeling import UP_FINNISH
@@ -52,23 +59,24 @@ from .sequence_labeling import UP_GERMAN
 from .sequence_labeling import UP_ITALIAN
 from .sequence_labeling import UP_SPANISH
 from .sequence_labeling import UP_SPANISH_ANCORA
-from .sequence_labeling import WEIBO_NER
-from .sequence_labeling import WIKIANN
-from .sequence_labeling import WIKIGOLD_NER
-from .sequence_labeling import WIKINER_ENGLISH
-from .sequence_labeling import WIKINER_GERMAN
-from .sequence_labeling import WIKINER_DUTCH
-from .sequence_labeling import WIKINER_FRENCH
-from .sequence_labeling import WIKINER_ITALIAN
-from .sequence_labeling import WIKINER_SPANISH
-from .sequence_labeling import WIKINER_PORTUGUESE
-from .sequence_labeling import WIKINER_POLISH
-from .sequence_labeling import WIKINER_RUSSIAN
-from .sequence_labeling import WNUT_17
-from .sequence_labeling import WSD_UFSAC
-from .sequence_labeling import WNUT_2020_NER
-from .sequence_labeling import XTREME
-from .sequence_labeling import REDDIT_EL_GOLD
+
+# Expose all entity linking datasets
+from .entity_linking import EntityLinkingCorpus
+from .entity_linking import NEL_ENGLISH_AIDA
+from .entity_linking import NEL_ENGLISH_AQUAINT
+from .entity_linking import NEL_ENGLISH_IITB
+from .entity_linking import NEL_ENGLISH_REDDIT
+from .entity_linking import NEL_ENGLISH_TWEEKI
+from .entity_linking import NEL_GERMAN_HIPE
+
+# word sense disambiguation
+from .entity_linking import WSD_UFSAC
+from .entity_linking import WSD_RAGANATO_ALL
+from .entity_linking import WSD_SEMCOR
+from .entity_linking import WSD_WORDNET_GLOSS_TAGGED
+from .entity_linking import WSD_MASC
+from .entity_linking import WSD_OMSTI
+from .entity_linking import WSD_TRAINOMATIC
 
 # Expose all document classification datasets
 from .document_classification import ClassificationCorpus
@@ -78,6 +86,7 @@ from .document_classification import CSVClassificationDataset
 from .document_classification import AMAZON_REVIEWS
 from .document_classification import COMMUNICATIVE_FUNCTIONS
 from .document_classification import GERMEVAL_2018_OFFENSIVE_LANGUAGE
+from .document_classification import GLUE_COLA
 from .document_classification import GO_EMOTIONS
 from .document_classification import IMDB
 from .document_classification import NEWSGROUPS
@@ -152,6 +161,7 @@ from .treebanks import UD_IRISH
 from .treebanks import UD_LATVIAN
 from .treebanks import UD_LITHUANIAN
 from .treebanks import UD_GALICIAN
+from .treebanks import UD_LATIN
 
 # Expose all text-text datasets
 from .text_text import ParallelTextCorpus
@@ -159,7 +169,12 @@ from .text_text import ParallelTextDataset
 from .text_text import OpusParallelCorpus
 from .text_text import DataPairDataset
 from .text_text import DataPairCorpus
+from .text_text import GLUE_MNLI
+from .text_text import GLUE_MRPC
 from .text_text import GLUE_RTE
+from .text_text import GLUE_QNLI
+from .text_text import GLUE_QQP
+from .text_text import GLUE_WNLI
 from .text_text import SUPERGLUE_RTE
 
 # Expose all text-image datasets
@@ -256,7 +271,9 @@ from .biomedical import BIOBERT_SPECIES_LINNAEUS
 from .biomedical import BIOBERT_SPECIES_S800
 from .biomedical import BIOBERT_GENE_BC2GM
 from .biomedical import BIOBERT_GENE_JNLPBA
-from .treebanks import UD_LATIN
 
 # Expose all relation extraction datasets
-from .relation_extraction import SEMEVAL_2010_TASK_8
+from .relation_extraction import RE_ENGLISH_SEMEVAL2010
+from .relation_extraction import RE_ENGLISH_TACRED
+from .relation_extraction import RE_ENGLISH_CONLL04
+from .relation_extraction import RE_ENGLISH_DRUGPROT

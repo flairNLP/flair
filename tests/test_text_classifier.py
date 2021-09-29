@@ -40,9 +40,12 @@ def test_load_use_classifier():
 @pytest.mark.integration
 def test_train_load_use_classifier(results_base_path, tasks_base_path):
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type="topic")
-    label_dict = corpus.make_label_dictionary()
+    label_dict = corpus.make_label_dictionary(label_type="topic")
 
-    model: TextClassifier = TextClassifier(document_embeddings, label_dict, label_type="topic", multi_label=False)
+    model: TextClassifier = TextClassifier(document_embeddings=document_embeddings,
+                                           label_dictionary=label_dict,
+                                           label_type="topic",
+                                           multi_label=False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False)
@@ -74,9 +77,12 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_train_load_use_classifier_with_sampler(results_base_path, tasks_base_path):
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type="topic")
-    label_dict = corpus.make_label_dictionary()
+    label_dict = corpus.make_label_dictionary(label_type="topic")
 
-    model: TextClassifier = TextClassifier(document_embeddings, label_dict, label_type="topic", multi_label=False)
+    model: TextClassifier = TextClassifier(document_embeddings=document_embeddings,
+                                           label_dictionary=label_dict,
+                                           label_type="topic",
+                                           multi_label=False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(
@@ -112,16 +118,19 @@ def test_train_load_use_classifier_with_sampler(results_base_path, tasks_base_pa
 @pytest.mark.integration
 def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path):
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type="topic")
-    label_dict = corpus.make_label_dictionary()
+    label_dict = corpus.make_label_dictionary(label_type="topic")
 
-    model: TextClassifier = TextClassifier(document_embeddings, label_dict, label_type="topic", multi_label=False)
+    model: TextClassifier = TextClassifier(document_embeddings=document_embeddings,
+                                           label_dictionary=label_dict,
+                                           label_type="topic",
+                                           multi_label=False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False)
 
     sentence = Sentence("Berlin is a really nice city.")
 
-    model.predict(sentence, multi_class_prob=True)
+    model.predict(sentence, return_probabilities_for_all_classes=True)
 
     assert len(sentence.labels) > 1
 
@@ -136,9 +145,9 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
     sentence = Sentence("I love Berlin")
     sentence_empty = Sentence("       ")
 
-    loaded_model.predict(sentence, multi_class_prob=True)
-    loaded_model.predict([sentence, sentence_empty], multi_class_prob=True)
-    loaded_model.predict([sentence_empty], multi_class_prob=True)
+    loaded_model.predict(sentence, return_probabilities_for_all_classes=True)
+    loaded_model.predict([sentence, sentence_empty], return_probabilities_for_all_classes=True)
+    loaded_model.predict([sentence_empty], return_probabilities_for_all_classes=True)
 
     # clean up results directory
     shutil.rmtree(results_base_path)
@@ -148,11 +157,12 @@ def test_train_load_use_classifier_with_prob(results_base_path, tasks_base_path)
 @pytest.mark.integration
 def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_path):
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "multi_class", label_type="topic")
-    label_dict = corpus.make_label_dictionary()
+    label_dict = corpus.make_label_dictionary(label_type="topic")
 
-    model: TextClassifier = TextClassifier(
-        document_embeddings, label_dict, label_type="topic", multi_label=True
-    )
+    model: TextClassifier = TextClassifier(document_embeddings=document_embeddings,
+                                           label_dictionary=label_dict,
+                                           label_type="topic",
+                                           multi_label=True)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(
@@ -205,13 +215,16 @@ def test_train_load_use_classifier_multi_label(results_base_path, tasks_base_pat
 @pytest.mark.integration
 def test_train_load_use_classifier_flair(results_base_path, tasks_base_path):
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type="topic")
-    label_dict = corpus.make_label_dictionary()
+    label_dict = corpus.make_label_dictionary(label_type="topic")
 
     flair_document_embeddings: DocumentRNNEmbeddings = DocumentRNNEmbeddings(
         [flair_embeddings], 128, 1, False, 64, False, False
     )
 
-    model: TextClassifier = TextClassifier(flair_document_embeddings, label_dict, label_type="topic", multi_label=False)
+    model: TextClassifier = TextClassifier(document_embeddings=flair_document_embeddings,
+                                           label_dictionary=label_dict,
+                                           label_type="topic",
+                                           multi_label=False)
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False)
@@ -243,9 +256,12 @@ def test_train_load_use_classifier_flair(results_base_path, tasks_base_path):
 @pytest.mark.integration
 def test_train_resume_classifier(results_base_path, tasks_base_path):
     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "imdb", label_type="topic")
-    label_dict = corpus.make_label_dictionary()
+    label_dict = corpus.make_label_dictionary(label_type="topic")
 
-    model = TextClassifier(document_embeddings, label_dict, multi_label=False, label_type="topic")
+    model = TextClassifier(document_embeddings=document_embeddings,
+                           label_dictionary=label_dict,
+                           multi_label=False,
+                           label_type="topic")
 
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
@@ -259,33 +275,39 @@ def test_train_resume_classifier(results_base_path, tasks_base_path):
     del trainer
 
 
-def test_labels_to_indices(tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "ag_news", label_type="topic")
-    label_dict = corpus.make_label_dictionary()
-    model = TextClassifier(document_embeddings, label_dict, label_type="topic", multi_label=False)
-
-    result = model._labels_to_indices(corpus.train)
-
-    for i in range(len(corpus.train)):
-        expected = label_dict.get_idx_for_item(corpus.train[i].labels[0].value)
-        actual = result[i].item()
-
-        assert expected == actual
-
-
-def test_labels_to_one_hot(tasks_base_path):
-    corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "ag_news", label_type="topic")
-    label_dict = corpus.make_label_dictionary()
-    model = TextClassifier(document_embeddings, label_dict, label_type="topic", multi_label=False)
-
-    result = model._labels_to_one_hot(corpus.train)
-
-    for i in range(len(corpus.train)):
-        expected = label_dict.get_idx_for_item(corpus.train[i].labels[0].value)
-        actual = result[i]
-
-        for idx in range(len(label_dict)):
-            if idx == expected:
-                assert actual[idx] == 1
-            else:
-                assert actual[idx] == 0
+# def test_labels_to_indices(tasks_base_path):
+#     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "ag_news", label_type="topic")
+#     label_dict = corpus.make_label_dictionary()
+#     model = TextClassifier(document_embeddings,
+#                            label_dictionary=label_dict,
+#                            label_type="topic",
+#                            multi_label=False)
+#
+#     result = model._labels_to_indices(corpus.train)
+#
+#     for i in range(len(corpus.train)):
+#         expected = label_dict.get_idx_for_item(corpus.train[i].labels[0].value)
+#         actual = result[i].item()
+#
+#         assert expected == actual
+#
+#
+# def test_labels_to_one_hot(tasks_base_path):
+#     corpus = flair.datasets.ClassificationCorpus(tasks_base_path / "ag_news", label_type="topic")
+#     label_dict = corpus.make_label_dictionary()
+#     model = TextClassifier(document_embeddings,
+#                            label_dictionary=label_dict,
+#                            label_type="topic",
+#                            multi_label=False)
+#
+#     result = model._labels_to_one_hot(corpus.train)
+#
+#     for i in range(len(corpus.train)):
+#         expected = label_dict.get_idx_for_item(corpus.train[i].labels[0].value)
+#         actual = result[i]
+#
+#         for idx in range(len(label_dict)):
+#             if idx == expected:
+#                 assert actual[idx] == 1
+#             else:
+#                 assert actual[idx] == 0

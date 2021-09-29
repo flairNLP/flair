@@ -327,15 +327,6 @@ class SequenceTagger(flair.nn.Classifier):
             if isinstance(sentences, Sentence):
                 sentences = [sentences]
 
-            # set context if not set already
-            previous_sentence = None
-            for sentence in sentences:
-                if sentence.is_context_set(): continue
-                sentence._previous_sentence = previous_sentence
-                sentence._next_sentence = None
-                if previous_sentence: previous_sentence._next_sentence = sentence
-                previous_sentence = sentence
-
             # reverse sort all sequences by their length
             rev_order_len_index = sorted(
                 range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True
@@ -810,6 +801,8 @@ class SequenceTagger(flair.nn.Classifier):
             "chunk": "flair/chunk-english",
             "chunk-fast": "flair/chunk-english-fast",
             # Language-specific NER models
+            "ar-ner": "megantosh/flair-arabic-multi-ner",
+            "ar-pos": "megantosh/flair-arabic-dialects-codeswitch-egy-lev",
             "da-ner": "flair/ner-danish",
             "de-ner": "flair/ner-german",
             "de-ler": "flair/ner-german-legal",
@@ -1068,7 +1061,7 @@ class MultiTagger:
             tagger.predict(
                 sentences=sentences,
                 mini_batch_size=mini_batch_size,
-                all_tag_prob=all_tag_prob,
+                # all_tag_prob=all_tag_prob,
                 verbose=verbose,
                 label_name=name,
                 return_loss=return_loss,

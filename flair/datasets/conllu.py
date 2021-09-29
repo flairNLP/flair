@@ -5,7 +5,7 @@ from typing import List, Union, Optional, Sequence, Dict, Tuple
 
 import conllu
 
-from flair.data import Sentence, Corpus, Token, FlairDataset, Span, RelationLabel
+from flair.data import Sentence, Corpus, Token, FlairDataset, Span, RelationLabel, SpanLabel
 from flair.datasets.base import find_train_dev_test_files
 
 log = logging.getLogger("flair")
@@ -40,18 +40,17 @@ def parse_relation_tuple_list(
 
 
 class CoNLLUCorpus(Corpus):
-    def __init__(
-            self,
-            data_folder: Union[str, Path],
-            train_file=None,
-            test_file=None,
-            dev_file=None,
-            in_memory: bool = True,
-            fields: Optional[Sequence[str]] = None,
-            token_annotation_fields: Optional[Sequence[str]] = None,
-            field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
-            metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None,
-    ):
+    def __init__(self,
+                 data_folder: Union[str, Path],
+                 train_file=None,
+                 test_file=None,
+                 dev_file=None,
+                 in_memory: bool = True,
+                 fields: Optional[Sequence[str]] = None,
+                 token_annotation_fields: Optional[Sequence[str]] = None,
+                 field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
+                 metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None,
+                 sample_missing_splits: bool = True):
         """
         Instantiates a Corpus from CoNLL-U (Plus) column-formatted task data
 
@@ -105,19 +104,18 @@ class CoNLLUCorpus(Corpus):
             else None
         )
 
-        super(CoNLLUCorpus, self).__init__(train, dev, test, name=str(data_folder))
+        super(CoNLLUCorpus, self).__init__(train, dev, test, name=str(data_folder),
+                                           sample_missing_splits=sample_missing_splits)
 
 
 class CoNLLUDataset(FlairDataset):
-    def __init__(
-            self,
-            path_to_conllu_file: Union[str, Path],
-            in_memory: bool = True,
-            fields: Optional[Sequence[str]] = None,
-            token_annotation_fields: Optional[Sequence[str]] = None,
-            field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
-            metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None,
-    ):
+    def __init__(self,
+                 path_to_conllu_file: Union[str, Path],
+                 in_memory: bool = True,
+                 fields: Optional[Sequence[str]] = None,
+                 token_annotation_fields: Optional[Sequence[str]] = None,
+                 field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
+                 metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None):
         """
         Instantiates a column dataset in CoNLL-U (Plus) format.
 
@@ -241,5 +239,17 @@ class CoNLLUDataset(FlairDataset):
                 tail = Span(sentence.tokens[tail_start - 1: tail_end])
 
                 sentence.add_complex_label("relation", RelationLabel(value=label, head=head, tail=tail))
+
+        # determine all NER label types in sentence and add all NER spans as sentence-level labels
+        ner_label_types = []
+        for token in sentence.tokens:
+            for annotation in token.annotation_layers.keys():
+                if annotation.startswith("ner") and annotation not in ner_label_types:
+                    ner_label_types.append(annotation)
+
+        for label_type in ner_label_types:
+            spans = sentence.get_spans(label_type)
+            for span in spans:
+                sentence.add_complex_label("entity", label=SpanLabel(span=span, value=span.tag, score=span.score))
 
         return sentence

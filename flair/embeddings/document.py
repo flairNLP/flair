@@ -1,8 +1,9 @@
-from abc import abstractmethod
 import logging
+from abc import abstractmethod
 from typing import List, Union
 
 import torch
+from sklearn.feature_extraction.text import TfidfVectorizer
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from transformers import AutoTokenizer, AutoConfig, AutoModel, CONFIG_MAPPING, PreTrainedTokenizer
 
@@ -11,8 +12,6 @@ from flair.data import Sentence
 from flair.embeddings.base import Embeddings, ScalarMix
 from flair.embeddings.token import TokenEmbeddings, StackedEmbeddings, FlairEmbeddings
 from flair.nn import LockedDropout, WordDropout
-
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 log = logging.getLogger("flair")
 
@@ -36,7 +35,6 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             self,
             model: str = "bert-base-uncased",
             fine_tune: bool = True,
-            batch_size: int = 1,
             layers: str = "-1",
             layer_mean: bool = False,
             pooling: str = "cls",
@@ -63,13 +61,19 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         import os
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+        # do not print transformer warnings as these are confusing in this case
+        from transformers import logging
+        logging.set_verbosity_error()
+
         # load tokenizer and transformer model
         self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
         if not 'config' in kwargs:
             config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
-            self.model = AutoModel.from_pretrained(model, config=config, **kwargs)
+            self.model = AutoModel.from_pretrained(model, config=config)
         else:
             self.model = AutoModel.from_pretrained(None, **kwargs)
+
+        logging.set_verbosity_warning()
 
         # model name
         self.name = 'transformer-document-' + str(model)
@@ -90,7 +94,6 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         self.layer_mean = layer_mean
         self.fine_tune = fine_tune
         self.static_embeddings = not self.fine_tune
-        self.batch_size = batch_size
         self.pooling = pooling
 
         # check whether CLS is at beginning or end
@@ -106,18 +109,6 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
         """Add embeddings to all words in a list of sentences."""
-
-        # using list comprehension
-        sentence_batches = [sentences[i * self.batch_size:(i + 1) * self.batch_size]
-                            for i in range((len(sentences) + self.batch_size - 1) // self.batch_size)]
-
-        for batch in sentence_batches:
-            self._add_embeddings_to_sentences(batch)
-
-        return sentences
-
-    def _add_embeddings_to_sentences(self, sentences: List[Sentence]):
-        """Extract sentence embedding from CLS token or similar and add to Sentence object."""
 
         # gradients are enabled if fine-tuning is enabled
         gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
@@ -197,6 +188,8 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
                 # set the extracted embedding for the token
                 sentence.set_embedding(self.name, torch.cat(embeddings_all_layers))
 
+        return sentences
+
     @property
     @abstractmethod
     def embedding_length(self) -> int:
@@ -222,7 +215,6 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
 
             "base_model_name": self.base_model_name,
             "fine_tune": self.fine_tune,
-            "batch_size": self.batch_size,
             "layer_indexes": self.layer_indexes,
             "layer_mean": self.layer_mean,
             "pooling": self.pooling,
@@ -252,13 +244,13 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
             embedding = TransformerDocumentEmbeddings(
                 model=self.__dict__['base_model_name'],
                 fine_tune=self.__dict__['fine_tune'],
-                batch_size=self.__dict__['batch_size'],
                 layers=layers,
                 layer_mean=self.__dict__['layer_mean'],
 
                 config=loaded_config,
                 state_dict=d["model_state_dict"],
-                pooling=self.__dict__['pooling'] if 'pooling' in self.__dict__ else 'cls', # for backward compatibility with previous models
+                pooling=self.__dict__['pooling'] if 'pooling' in self.__dict__ else 'cls',
+                # for backward compatibility with previous models
             )
 
             # I have no idea why this is necessary, but otherwise it doesn't work
@@ -363,9 +355,9 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
 
 class DocumentTFIDFEmbeddings(DocumentEmbeddings):
     def __init__(
-        self,
-        train_dataset,
-        **vectorizer_params,
+            self,
+            train_dataset,
+            **vectorizer_params,
     ):
         """The constructor for DocumentTFIDFEmbeddings.
         :param train_dataset: the train dataset which will be used to construct vectorizer
@@ -376,7 +368,7 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
         import numpy as np
         self.vectorizer = TfidfVectorizer(dtype=np.float32, **vectorizer_params)
         self.vectorizer.fit([s.to_original_text() for s in train_dataset])
-        
+
         self.__embedding_length: int = len(self.vectorizer.vocabulary_)
 
         self.to(flair.device)
@@ -396,10 +388,10 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
 
         raw_sentences = [s.to_original_text() for s in sentences]
         tfidf_vectors = torch.from_numpy(self.vectorizer.transform(raw_sentences).A)
-    
+
         for sentence_id, sentence in enumerate(sentences):
             sentence.set_embedding(self.name, tfidf_vectors[sentence_id])
-        
+
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
 
@@ -665,6 +657,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         else:
             self.__dict__ = d
 
+
 class DocumentLMEmbeddings(DocumentEmbeddings):
     def __init__(self, flair_embeddings: List[FlairEmbeddings]):
         super().__init__()
@@ -814,7 +807,8 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         self.__embedding_length: int = sum([kernel_num for kernel_num, kernel_size in self.kernels])
         self.convs = torch.nn.ModuleList(
             [
-                torch.nn.Conv1d(self.embeddings_dimension, kernel_num, kernel_size) for kernel_num, kernel_size in self.kernels
+                torch.nn.Conv1d(self.embeddings_dimension, kernel_num, kernel_size) for kernel_num, kernel_size in
+                self.kernels
             ]
         )
         self.pool = torch.nn.AdaptiveMaxPool1d(1)

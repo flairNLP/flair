@@ -1,23 +1,23 @@
 import hashlib
 import inspect
-from abc import abstractmethod
-from pathlib import Path
-from typing import List, Union, Dict, Tuple
-from collections import Counter
-
-import torch
-from bpemb import BPEmb
-from transformers import AutoTokenizer, AutoConfig, AutoModel, CONFIG_MAPPING, PreTrainedTokenizer, XLNetModel, TransfoXLModel
-
-import flair
-import gensim
+import logging
 import os
 import re
-import logging
-import numpy as np
+from abc import abstractmethod
+from collections import Counter
+from pathlib import Path
+from typing import List, Union, Dict
 
+import gensim
+import numpy as np
+import torch
+from bpemb import BPEmb
+from transformers import AutoTokenizer, AutoConfig, AutoModel, CONFIG_MAPPING, PreTrainedTokenizer, XLNetModel, \
+    TransfoXLModel
+
+import flair
 from flair.data import Sentence, Token, Corpus, Dictionary
-from flair.embeddings.base import Embeddings, ScalarMix
+from flair.embeddings.base import Embeddings
 from flair.file_utils import cached_path, open_inside_zip, instance_lru_cache
 
 log = logging.getLogger("flair")
@@ -279,9 +279,7 @@ class CharacterEmbeddings(TokenEmbeddings):
         if path_to_char_dict is None:
             self.char_dictionary: Dictionary = Dictionary.load("common-chars")
         else:
-            self.char_dictionary: Dictionary = Dictionary.load_from_file(
-                path_to_char_dict
-            )
+            self.char_dictionary: Dictionary = Dictionary.load_from_file(path_to_char_dict)
 
         self.char_embedding_dim: int = char_embedding_dim
         self.hidden_size_char: int = hidden_size_char
@@ -379,6 +377,7 @@ class FlairEmbeddings(TokenEmbeddings):
                  chars_per_chunk: int = 512,
                  with_whitespace: bool = True,
                  tokenized_lm: bool = True,
+                 is_lower: bool = False,
                  ):
         """
         initializes contextual string embeddings using a character-level language model.
@@ -402,6 +401,8 @@ class FlairEmbeddings(TokenEmbeddings):
 
         hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/flair"
         clef_hipe_path: str = "https://files.ifi.uzh.ch/cl/siclemat/impresso/clef-hipe-2020/flair"
+
+        self.is_lower: bool = is_lower
 
         self.PRETRAINED_MODEL_ARCHIVE_MAP = {
             # multilingual models
@@ -544,6 +545,8 @@ class FlairEmbeddings(TokenEmbeddings):
                 # Fix for CLEF HIPE models (avoid overwriting best-lm.pt in cache_dir)
                 if "impresso-hipe" in model.lower():
                     cache_dir = cache_dir / model.lower()
+                    # CLEF HIPE models are lowercased
+                    self.is_lower = True
                 model = cached_path(base_path, cache_dir=cache_dir)
 
             elif replace_with_language_code(model) in self.PRETRAINED_MODEL_ARCHIVE_MAP:
@@ -611,6 +614,8 @@ class FlairEmbeddings(TokenEmbeddings):
             self.with_whitespace = True
         if "tokenized_lm" not in self.__dict__:
             self.tokenized_lm = True
+        if "is_lower" not in self.__dict__:
+            self.is_lower = False
 
         # gradients are enable if fine-tuning is enabled
         gradient_context = torch.enable_grad() if self.fine_tune else torch.no_grad()
@@ -620,6 +625,9 @@ class FlairEmbeddings(TokenEmbeddings):
             # if this is not possible, use LM to generate embedding. First, get text sentences
             text_sentences = [sentence.to_tokenized_string() for sentence in sentences] if self.tokenized_lm \
                 else [sentence.to_plain_string() for sentence in sentences]
+
+            if self.is_lower:
+                text_sentences = [sentence.lower() for sentence in text_sentences]
 
             start_marker = self.lm.document_delimiter if "document_delimiter" in self.lm.__dict__ else '\n'
             end_marker = " "
@@ -786,8 +794,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
 
 class TransformerWordEmbeddings(TokenEmbeddings):
-
-    NO_MAX_SEQ_LENGTH_MODELS=[XLNetModel, TransfoXLModel]
+    NO_MAX_SEQ_LENGTH_MODELS = [XLNetModel, TransfoXLModel]
 
     def __init__(
             self,
@@ -821,15 +828,20 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         import os
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+        # do not print transformer warnings as these are confusing in this case
+        from transformers import logging
+        logging.set_verbosity_error()
+
         # load tokenizer and transformer model
         self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
         if not 'config' in kwargs:
             config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
-            self.model = AutoModel.from_pretrained(model, config=config, **kwargs)
+            self.model = AutoModel.from_pretrained(model, config=config)
         else:
             self.model = AutoModel.from_pretrained(None, **kwargs)
 
-        
+        logging.set_verbosity_warning()
+
         if type(self.model) not in self.NO_MAX_SEQ_LENGTH_MODELS:
             self.allow_long_sentences = allow_long_sentences
             self.truncate = True
@@ -842,6 +854,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
             self.max_subtokens_sequence_length = None
             self.stride = 0
 
+        self.use_lang_emb = hasattr(self.model, "use_lang_emb") and self.model.use_lang_emb
 
         # model name
         self.name = 'transformer-word-' + str(model)
@@ -862,9 +875,8 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         # if using context, can we cross document boundaries?
         self.respect_document_boundaries = respect_document_boundaries
 
-        # when initializing, embeddings are in eval mode by default
-        self.model.eval()
-        self.model.to(flair.device)
+        # send self to flair-device
+        self.to(flair.device)
 
         # embedding parameters
         if layers == 'all':
@@ -899,6 +911,9 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         # most models have an intial BOS token, except for XLNet, T5 and GPT2
         self.begin_offset = self._get_begin_offset_of_tokenizer(tokenizer=self.tokenizer)
 
+        # when initializing, embeddings are in eval mode by default
+        self.eval()
+
     @staticmethod
     def _get_begin_offset_of_tokenizer(tokenizer: PreTrainedTokenizer) -> int:
         test_string = 'a'
@@ -927,177 +942,175 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         return token_text
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        """Add embeddings to all words in a list of sentences."""
 
-        # embed each sentence separately
-        for sentence in sentences:
-            self._add_embeddings_to_sentence(sentence)
-
-        return sentences
-
-    def _add_embeddings_to_sentence(self, sentence: Sentence):
-        """Match subtokenization to Flair tokenization and extract embeddings from transformers for each token."""
-
-        # TODO: keep for backwards compatibility, but remove in future
-        # some pretrained models do not have this property, applying default settings now.
-        # can be set manually after loading the model.
-        if not hasattr(self, 'max_subtokens_sequence_length'):
-            self.max_subtokens_sequence_length = None
-            self.allow_long_sentences = False
-            self.stride = 0
+        # we require encoded subtokenized sentences, the mapping to original tokens and the number of
+        # parts that each sentence produces
+        subtokenized_sentences = []
+        all_token_subtoken_lengths = []
 
         # if we also use context, first expand sentence to include context
         if self.context_length > 0:
-            # in case of contextualization, we must remember non-expanded sentence
-            original_sentence = sentence
 
-            # create expanded sentence and remember context offsets
-            expanded_sentence, context_offset = self._expand_sentence_with_context(sentence)
+            # set context if not set already
+            previous_sentence = None
+            for sentence in sentences:
+                if sentence.is_context_set(): continue
+                sentence._previous_sentence = previous_sentence
+                sentence._next_sentence = None
+                if previous_sentence: previous_sentence._next_sentence = sentence
+                previous_sentence = sentence
 
-            # overwrite sentence with expanded sentence
-            sentence = expanded_sentence
+            original_sentences = []
+            expanded_sentences = []
+            context_offsets = []
 
-        # subtokenize the sentence
-        tokenized_string = sentence.to_tokenized_string()
+            for sentence in sentences:
+                # in case of contextualization, we must remember non-expanded sentence
+                original_sentence = sentence
+                original_sentences.append(original_sentence)
 
-        # method 1: subtokenize sentence
-        # subtokenized_sentence = self.tokenizer.encode(tokenized_string, add_special_tokens=True)
+                # create expanded sentence and remember context offsets
+                expanded_sentence, context_offset = self._expand_sentence_with_context(sentence)
+                expanded_sentences.append(expanded_sentence)
+                context_offsets.append(context_offset)
 
-        # method 2:
-        # transformer specific tokenization
-        subtokenized_sentence = self.tokenizer.tokenize(tokenized_string)
+                # overwrite sentence with expanded sentence
+                sentence = expanded_sentence
 
-        # set zero embeddings for empty sentences and return
-        if len(subtokenized_sentence) == 0:
-            for token in sentence:
-                token.set_embedding(self.name, torch.zeros(self.embedding_length))
-            return
+            sentences = expanded_sentences
 
-        # determine into how many subtokens each token is split
-        token_subtoken_lengths = self.reconstruct_tokens_from_subtokens(sentence, subtokenized_sentence)
+        tokenized_sentences = []
+        for sentence in sentences:
 
-        # if sentence is too long, will be split into multiple parts
-        sentence_splits = []
+            # subtokenize the sentence
+            tokenized_string = sentence.to_tokenized_string()
 
-        # check if transformer version 3 is used - in this case use old handling
-        import transformers
-        if transformers.__version__.startswith('3'):
+            # transformer specific tokenization
+            subtokenized_sentence = self.tokenizer.tokenize(tokenized_string)
 
-            # get sentence as list of subtoken ids
-            subtoken_ids_sentence = self.tokenizer.convert_tokens_to_ids(subtokenized_sentence)
-
-            while subtoken_ids_sentence:
-                encoded_inputs = self.tokenizer.encode_plus(subtoken_ids_sentence,
-                                                            max_length=self.max_subtokens_sequence_length,
-                                                            stride=self.stride,
-                                                            return_overflowing_tokens=self.allow_long_sentences,
-                                                            truncation=self.truncate,
-                                                            )
-
-                sentence_splits.append(torch.tensor(encoded_inputs['input_ids'], dtype=torch.long))
-
-                if 'overflowing_tokens' in encoded_inputs:
-                    subtoken_ids_sentence = encoded_inputs['overflowing_tokens']
-                else:
-                    subtoken_ids_sentence = None
-
-        # else if current transformer is used, use default handling
-        else:
-            encoded_inputs = self.tokenizer.encode_plus(tokenized_string,
-                                                        max_length=self.max_subtokens_sequence_length,
-                                                        stride=self.stride,
-                                                        return_overflowing_tokens=self.allow_long_sentences,
-                                                        truncation=self.truncate,
-                                                        )
-            if self.allow_long_sentences:
-                # overlong sentences are handled as multiple splits
-                for encoded_input in encoded_inputs['input_ids']:
-                    sentence_splits.append(torch.tensor(encoded_input, dtype=torch.long))
-            else:
-                sentence_splits.append(torch.tensor(encoded_inputs['input_ids'], dtype=torch.long))
-
-        # embed each sentence split
-        hidden_states_of_all_splits = []
-        for split_number, sentence_split in enumerate(sentence_splits):
-
-            # initialize batch tensors and mask
-            input_ids = sentence_split.unsqueeze(0).to(flair.device)
-
-            # propagate gradients if fine-tuning and only during training
-            propagate_gradients = self.fine_tune and self.training
-            # increase memory effectiveness by skipping all but last sentence split
-            if propagate_gradients and self.memory_effective_training and split_number < len(sentence_splits) - 1:
-                propagate_gradients = False
-
-            # put encoded batch through transformer model to get all hidden states of all encoder layers
-            if propagate_gradients:
-                hidden_states = self.model(input_ids)[-1]  # make the tuple a tensor; makes working with it easier.
-            else:
-                with torch.no_grad():  # deactivate gradients if not necessary
-                    hidden_states = self.model(input_ids)[-1]
-
-            # get hidden states as single tensor
-            split_hidden_state = torch.stack(hidden_states)[:, 0, ...]
-            hidden_states_of_all_splits.append(split_hidden_state)
-
-        # put splits back together into one tensor using overlapping strides
-        hidden_states = hidden_states_of_all_splits[0]
-        for i in range(1, len(hidden_states_of_all_splits)):
-            hidden_states = hidden_states[:, :-1 - self.stride // 2, :]
-            next_split = hidden_states_of_all_splits[i]
-            next_split = next_split[:, 1 + self.stride // 2:, :]
-            hidden_states = torch.cat([hidden_states, next_split], 1)
-
-        subword_start_idx = self.begin_offset
-
-        # for each token, get embedding
-        for token_idx, (token, number_of_subtokens) in enumerate(zip(sentence, token_subtoken_lengths)):
-
-            # some tokens have no subtokens at all (if omitted by BERT tokenizer) so return zero vector
-            if number_of_subtokens == 0:
-                token.set_embedding(self.name, torch.zeros(self.embedding_length))
+            # set zero embeddings for empty sentences and exclude
+            if len(subtokenized_sentence) == 0:
+                for token in sentence:
+                    token.set_embedding(self.name, torch.zeros(self.embedding_length))
                 continue
 
-            subword_end_idx = subword_start_idx + number_of_subtokens
+            # determine into how many subtokens each token is split
+            token_subtoken_lengths = self.reconstruct_tokens_from_subtokens(sentence, subtokenized_sentence)
 
-            subtoken_embeddings: List[torch.FloatTensor] = []
+            # remember tokenized sentences and their subtokenization
+            tokenized_sentences.append(tokenized_string)
+            all_token_subtoken_lengths.append(token_subtoken_lengths)
 
-            # get states from all selected layers, aggregate with pooling operation
-            for layer in self.layer_indexes:
-                current_embeddings = hidden_states[layer][subword_start_idx:subword_end_idx]
+        # encode inputs
+        batch_encoding = self.tokenizer(tokenized_sentences,
+                                        max_length=self.max_subtokens_sequence_length,
+                                        stride=self.stride,
+                                        return_overflowing_tokens=self.allow_long_sentences,
+                                        truncation=self.truncate,
+                                        padding=True,
+                                        return_tensors='pt',
+                                        )
 
-                if self.pooling_operation == "first":
-                    final_embedding: torch.FloatTensor = current_embeddings[0]
+        input_ids = batch_encoding['input_ids'].to(flair.device)
+        attention_mask = batch_encoding['attention_mask'].to(flair.device)
 
-                if self.pooling_operation == "last":
-                    final_embedding: torch.FloatTensor = current_embeddings[-1]
+        # determine which sentence was split into how many parts
+        sentence_parts_lengths = torch.ones(len(tokenized_sentences), dtype=torch.int) if not self.allow_long_sentences \
+            else torch.unique(batch_encoding['overflow_to_sample_mapping'], return_counts=True, sorted=True)[1].tolist()
 
-                if self.pooling_operation == "first_last":
-                    final_embedding: torch.Tensor = torch.cat([current_embeddings[0], current_embeddings[-1]])
+        model_kwargs = {}
+        # set language IDs for XLM-style transformers
+        if self.use_lang_emb:
+            model_kwargs["langs"] = torch.zeros_like(input_ids, dtype=input_ids.dtype)
 
-                if self.pooling_operation == "mean":
-                    all_embeddings: List[torch.FloatTensor] = [
-                        embedding.unsqueeze(0) for embedding in current_embeddings
-                    ]
-                    final_embedding: torch.Tensor = torch.mean(torch.cat(all_embeddings, dim=0), dim=0)
+            for s_id, sentence in enumerate(tokenized_sentences):
+                sequence_length = len(sentence)
+                lang_id = self.tokenizer.lang2id.get(sentences[s_id].get_language_code(), 0)
+                model_kwargs["langs"][s_id][:sequence_length] = lang_id
 
-                subtoken_embeddings.append(final_embedding)
+        # put encoded batch through transformer model to get all hidden states of all encoder layers
+        hidden_states = self.model(input_ids, attention_mask=attention_mask, **model_kwargs)[-1]
+        # make the tuple a tensor; makes working with it easier.
+        hidden_states = torch.stack(hidden_states)
 
-            # use layer mean of embeddings if so selected
-            if self.layer_mean and len(self.layer_indexes) > 1:
-                sm_embeddings = torch.mean(torch.stack(subtoken_embeddings, dim=1), dim=1)
-                subtoken_embeddings = [sm_embeddings]
+        sentence_idx_offset = 0
 
-            # set the extracted embedding for the token
-            token.set_embedding(self.name, torch.cat(subtoken_embeddings))
+        # gradients are enabled if fine-tuning is enabled
+        gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
 
-            subword_start_idx += number_of_subtokens
+        with gradient_context:
+
+            # iterate over all subtokenized sentences
+            for sentence_idx, (sentence, subtoken_lengths, nr_sentence_parts) in enumerate(
+                    zip(sentences, all_token_subtoken_lengths, sentence_parts_lengths)):
+
+                sentence_hidden_state = hidden_states[:, sentence_idx + sentence_idx_offset, ...]
+
+                for i in range(1, nr_sentence_parts):
+                    sentence_idx_offset += 1
+                    remainder_sentence_hidden_state = hidden_states[:, sentence_idx + sentence_idx_offset, ...]
+                    # remove stride_size//2 at end of sentence_hidden_state, and half at beginning of remainder,
+                    # in order to get some context into the embeddings of these words.
+                    # also don't include the embedding of the extra [CLS] and [SEP] tokens.
+                    sentence_hidden_state = torch.cat((sentence_hidden_state[:, :-1 - self.stride // 2, :],
+                                                       remainder_sentence_hidden_state[:, 1 + self.stride // 2:,
+                                                       :]), 1)
+
+                subword_start_idx = self.begin_offset
+
+                # for each token, get embedding
+                for token_idx, (token, number_of_subtokens) in enumerate(zip(sentence, subtoken_lengths)):
+
+                    # some tokens have no subtokens at all (if omitted by BERT tokenizer) so return zero vector
+                    if number_of_subtokens == 0:
+                        token.set_embedding(self.name, torch.zeros(self.embedding_length))
+                        continue
+
+                    subword_end_idx = subword_start_idx + number_of_subtokens
+
+                    subtoken_embeddings: List[torch.FloatTensor] = []
+
+                    # get states from all selected layers, aggregate with pooling operation
+                    for layer in self.layer_indexes:
+                        current_embeddings = sentence_hidden_state[layer][subword_start_idx:subword_end_idx]
+
+                        if self.pooling_operation == "first":
+                            final_embedding: torch.FloatTensor = current_embeddings[0]
+
+                        if self.pooling_operation == "last":
+                            final_embedding: torch.FloatTensor = current_embeddings[-1]
+
+                        if self.pooling_operation == "first_last":
+                            final_embedding: torch.Tensor = torch.cat(
+                                [current_embeddings[0], current_embeddings[-1]])
+
+                        if self.pooling_operation == "mean":
+                            all_embeddings: List[torch.FloatTensor] = [
+                                embedding.unsqueeze(0) for embedding in current_embeddings
+                            ]
+                            final_embedding: torch.Tensor = torch.mean(torch.cat(all_embeddings, dim=0), dim=0)
+
+                        subtoken_embeddings.append(final_embedding)
+
+                    # use layer mean of embeddings if so selected
+                    if self.layer_mean and len(self.layer_indexes) > 1:
+                        sm_embeddings = torch.mean(torch.stack(subtoken_embeddings, dim=1), dim=1)
+                        subtoken_embeddings = [sm_embeddings]
+
+                    # set the extracted embedding for the token
+                    token.set_embedding(self.name, torch.cat(subtoken_embeddings))
+
+                    subword_start_idx += number_of_subtokens
 
         # move embeddings from context back to original sentence (if using context)
         if self.context_length > 0:
-            for token_idx, token in enumerate(original_sentence):
-                token.set_embedding(self.name, sentence[token_idx + context_offset].get_embedding(self.name))
-            sentence = original_sentence
+            for original_sentence, expanded_sentence, context_offset in zip(original_sentences,
+                                                                            sentences,
+                                                                            context_offsets):
+                for token_idx, token in enumerate(original_sentence):
+                    token.set_embedding(self.name,
+                                        expanded_sentence[token_idx + context_offset].get_embedding(self.name))
+                sentence = original_sentence
 
     def _expand_sentence_with_context(self, sentence):
 
@@ -1139,15 +1152,23 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 if len(right_context.split(" ")) > self.context_length:
                     right_context = " ".join(right_context.split(" ")[:self.context_length])
                     break
+
             original_sentence.right_context = right_context
+
+        left_context_split = left_context.split(" ")
+        right_context_split = right_context.split(" ")
+
+        # empty contexts should not introduce whitespace tokens
+        if left_context_split == [""]: left_context_split = []
+        if right_context_split == [""]: right_context_split = []
 
         # make expanded sentence
         expanded_sentence = Sentence()
-        expanded_sentence.tokens = [Token(token) for token in left_context.split(" ") +
+        expanded_sentence.tokens = [Token(token) for token in left_context_split +
                                     original_sentence.to_tokenized_string().split(" ") +
-                                    right_context.split(" ")]
+                                    right_context_split]
 
-        context_length = len(left_context.split(" "))
+        context_length = len(left_context_split)
         return expanded_sentence, context_length
 
     def reconstruct_tokens_from_subtokens(self, sentence, subtokens):
