@@ -297,3 +297,4 @@ def test_load_conllu_corpus_plus_in_memory(tasks_base_path):
     assert len(corpus.test) == 4
 
     _assert_conllu_dataset(corpus.train)
+

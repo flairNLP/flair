@@ -227,7 +227,7 @@ class CoNLLUDataset(FlairDataset):
                 else:
                     token.add_label(typename=field, value=str(field_value))
 
-            if "misc" in conllu_token and conllu_token["misc"] is not None:
+            if conllu_token.get("misc") is not None:
                 space_after: Optional[str] = conllu_token["misc"].get("SpaceAfter")
                 if space_after == "No":
                     token.whitespace_after = False
