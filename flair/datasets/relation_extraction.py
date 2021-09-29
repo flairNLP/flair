@@ -518,6 +518,7 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
         super(RE_ENGLISH_DRUGPROT, self).__init__(
             data_folder,
             in_memory=in_memory,
+            token_annotation_fields=["ner", "ner-2"],
             sample_missing_splits=False,
         )
 
