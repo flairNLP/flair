@@ -1406,6 +1406,14 @@ class Corpus:
 
             for sentence in batch:
 
+                # check for labels of words
+                if isinstance(sentence, Sentence):
+                    for token in sentence.tokens:
+                        all_label_types.update(token.annotation_layers.keys())
+                        for label in token.get_labels(label_type):
+                            label_dictionary.add_item(label.value)
+                            token_labels_exist = True
+
                 # if we are looking for sentence-level labels
                 if not token_labels_exist:
                     # check if sentence itself has labels
@@ -1418,14 +1426,6 @@ class Corpus:
                     if not label_dictionary.multi_label:
                         if len(labels) > 1:
                             label_dictionary.multi_label = True
-
-                # check for labels of words
-                if isinstance(sentence, Sentence):
-                    for token in sentence.tokens:
-                        all_label_types.update(token.annotation_layers.keys())
-                        for label in token.get_labels(label_type):
-                            label_dictionary.add_item(label.value)
-                            token_labels_exist = True
 
         # if this is not a token-level prediction problem, add sentence-level labels to dictionary
         if not token_labels_exist:
