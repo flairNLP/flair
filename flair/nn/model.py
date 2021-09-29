@@ -1,4 +1,3 @@
-import copy
 import itertools
 import logging
 import warnings
@@ -75,12 +74,15 @@ class Model(torch.nn.Module):
     def _fetch_model(model_name) -> str:
         return model_name
 
-    def save(self, model_file: Union[str, Path]):
+    def save(self, model_file: Union[str, Path], training_parameters: Optional[dict] = None):
         """
         Saves the current model to the provided file.
         :param model_file: the model file
         """
         model_state = self._get_state_dict()
+
+        if training_parameters:
+            model_state['training_parameters'] = training_parameters
 
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
@@ -102,10 +104,22 @@ class Model(torch.nn.Module):
 
         model = cls._init_model_with_state_dict(state)
 
+        if 'training_parameters' in state:
+            model.training_parameters = state['training_parameters']
+
         model.eval()
         model.to(flair.device)
 
         return model
+
+    def print_training_parameters(self):
+        if hasattr(self, 'training_parameters'):
+            param_out = "Training Parameters:\n"
+            for param in self.training_parameters:
+                param_out += f'{param} = {self.training_parameters[param]}\n'
+            log.info(param_out)
+        else:
+            log.info("Training Parameters not stored for this model")
 
 
 class Classifier(Model):
@@ -175,7 +189,7 @@ class Classifier(Model):
 
                     for gold_label in datapoint.get_labels(gold_label_type):
                         representation = str(sentence_id) + ': ' + gold_label.identifier
-                        
+
                         value = gold_label.value
                         if gold_label_dictionary and gold_label_dictionary.get_idx_for_item(value) == 0:
                             value = '<unk>'

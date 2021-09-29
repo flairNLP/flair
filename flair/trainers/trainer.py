@@ -6,6 +6,7 @@ import os
 import sys
 import time
 import warnings
+from inspect import signature
 from pathlib import Path
 from typing import Union, Tuple, Optional
 
@@ -54,7 +55,7 @@ class ModelTrainer:
         self.corpus: Corpus = corpus
 
     @staticmethod
-    def check_for_and_delete_previous_best_models(base_path, save_checkpoint):
+    def check_for_and_delete_previous_best_models(base_path):
         all_best_model_names = [filename for filename in os.listdir(base_path) if
                                 filename.startswith("best-model")]
         if len(all_best_model_names) != 0:
@@ -64,10 +65,15 @@ class ModelTrainer:
             previous_best_path = os.path.join(base_path, single_model)
             if os.path.exists(previous_best_path):
                 os.remove(previous_best_path)
-            if save_checkpoint:
-                best_checkpoint_path = previous_best_path.replace("model", "checkpoint")
-                if os.path.exists(best_checkpoint_path):
-                    os.remove(best_checkpoint_path)
+
+    def resume(self,
+               model,
+               **trainer_args,
+               ):
+
+        self.model = model
+
+        self.train(**self.model.training_parameters)
 
     def fine_tune(self,
                   base_path: Union[Path, str],
@@ -93,54 +99,52 @@ class ModelTrainer:
             **trainer_args,
         )
 
-    def train(
-            self,
-            base_path: Union[Path, str],
-            learning_rate: float = 0.1,
-            mini_batch_size: int = 32,
-            mini_batch_chunk_size: Optional[int] = None,
-            max_epochs: int = 100,
-            scheduler=AnnealOnPlateau,
-            cycle_momentum: bool = False,
-            anneal_factor: float = 0.5,
-            patience: int = 3,
-            initial_extra_patience: int = 0,
-            min_learning_rate: float = 0.0001,
-            warmup_fraction: float = 0.1,
-            train_with_dev: bool = False,
-            train_with_test: bool = False,
-            monitor_train: bool = False,
-            monitor_test: bool = False,
-            embeddings_storage_mode: str = "cpu",
-            checkpoint: bool = False,
-            save_final_model: bool = True,
-            anneal_with_restarts: bool = False,
-            anneal_with_prestarts: bool = False,
-            anneal_against_dev_loss: bool = False,
-            batch_growth_annealing: bool = False,
-            shuffle: bool = True,
-            param_selection_mode: bool = False,
-            write_weights: bool = False,
-            num_workers: int = 6,
-            sampler=None,
-            use_amp: bool = False,
-            amp_opt_level: str = "O1",
-            eval_on_train_fraction: float = 0.0,
-            eval_on_train_shuffle: bool = False,
-            save_model_each_k_epochs: int = 0,
-            main_evaluation_metric: Tuple[str, str] = ("micro avg", 'f1-score'),
-            tensorboard_comment: str = '',
-            save_best_checkpoints: bool = False,
-            use_swa: bool = False,
-            use_final_model_for_eval: bool = False,
-            gold_label_dictionary_for_eval: Optional[Dictionary] = None,
-            optimizer: torch.optim.Optimizer = SGD,
-            epoch: int = 0,
-            use_tensorboard: bool = False,
-            tensorboard_log_dir=None,
-            metrics_for_tensorboard=[],
-            **kwargs,
-    ) -> dict:
+    def train(self,
+              base_path: Union[Path, str],
+              learning_rate: float = 0.1,
+              mini_batch_size: int = 32,
+              mini_batch_chunk_size: Optional[int] = None,
+              max_epochs: int = 100,
+              train_with_dev: bool = False,
+              train_with_test: bool = False,
+              monitor_train: bool = False,
+              monitor_test: bool = False,
+              embeddings_storage_mode: str = "cpu",
+              scheduler=AnnealOnPlateau,
+              optimizer: torch.optim.Optimizer = SGD,
+              cycle_momentum: bool = False,
+              anneal_factor: float = 0.5,
+              patience: int = 3,
+              initial_extra_patience: int = 0,
+              min_learning_rate: float = 0.0001,
+              warmup_fraction: float = 0.1,
+              save_final_model: bool = True,
+              anneal_with_restarts: bool = False,
+              anneal_with_prestarts: bool = False,
+              anneal_against_dev_loss: bool = False,
+              batch_growth_annealing: bool = False,
+              shuffle: bool = True,
+              param_selection_mode: bool = False,
+              write_weights: bool = False,
+              num_workers: int = 6,
+              sampler=None,
+              use_amp: bool = False,
+              amp_opt_level: str = "O1",
+              eval_on_train_fraction: float = 0.0,
+              eval_on_train_shuffle: bool = False,
+              save_model_each_k_epochs: int = 0,
+              main_evaluation_metric: Tuple[str, str] = ("micro avg", 'f1-score'),
+              tensorboard_comment: str = '',
+              checkpoint: bool = False,
+              use_swa: bool = False,
+              use_final_model_for_eval: bool = False,
+              gold_label_dictionary_for_eval: Optional[Dictionary] = None,
+              epoch: int = 0,
+              use_tensorboard: bool = False,
+              tensorboard_log_dir=None,
+              metrics_for_tensorboard=[],
+              **kwargs,
+              ) -> dict:
         """
         Trains any class that implements the flair.nn.Model interface.
         :param base_path: Main path to which all output during training is logged and models are saved
@@ -160,7 +164,6 @@ class ModelTrainer:
         :param monitor_test: If True, test data is evaluated at end of each epoch
         :param embeddings_storage_mode: One of 'none' (all embeddings are deleted and freshly recomputed),
         'cpu' (embeddings are stored on CPU) or 'gpu' (embeddings are stored on GPU)
-        :param checkpoint: If True, a full checkpoint is saved at end of each epoch
         :param save_final_model: If True, final model is saved
         :param anneal_with_restarts: If True, the last best model is restored when annealing the learning rate
         :param shuffle: If True, data is shuffled during training
@@ -178,7 +181,6 @@ class ModelTrainer:
         :param save_model_epoch_step: Each save_model_epoch_step'th epoch the thus far trained model will be saved
         :param classification_main_metric: Type of metric to use for best model tracking and learning rate scheduling (if dev data is available, otherwise loss will be used), currently only applicable for text_classification_model
         :param tensorboard_comment: Comment to use for tensorboard logging
-        :param save_best_checkpoints: If True, in addition to saving the best model also the corresponding checkpoint is saved
         :param optimizer: The optimizer to use (typically SGD or Adam)
         :param epoch: The starting epoch (normally 0 but could be higher if you continue training model)
         :param use_tensorboard: If True, writes out tensorboard information
@@ -188,6 +190,13 @@ class ModelTrainer:
         :param kwargs: Other arguments for the Optimizer
         :return:
         """
+
+        # remember training parameters
+        training_parameters = {}
+        local_variables = locals()
+        for parameter in signature(self.train).parameters:
+            training_parameters[parameter] = local_variables[parameter]
+        self.model.training_parameters = training_parameters
 
         if use_tensorboard:
             try:
@@ -200,9 +209,7 @@ class ModelTrainer:
 
             except:
                 log_line(log)
-                log.warning(
-                    "ATTENTION! PyTorch >= 1.1.0 and pillow are required for TensorBoard support!"
-                )
+                log.warning("ATTENTION! PyTorch >= 1.1.0 and pillow are required for TensorBoard support!")
                 log_line(log)
                 use_tensorboard = False
                 pass
@@ -254,7 +261,7 @@ class ModelTrainer:
             log.warning(f'WARNING: Specified class weights will not take effect when using CRF')
 
         # check for previously saved best models in the current training folder and delete them
-        self.check_for_and_delete_previous_best_models(base_path, save_best_checkpoints)
+        self.check_for_and_delete_previous_best_models(base_path)
 
         # determine what splits (train, dev, test) to evaluate and log
         log_train = True if monitor_train else False
@@ -280,7 +287,9 @@ class ModelTrainer:
 
         weight_extractor = WeightExtractor(base_path)
 
-        optimizer: torch.optim.Optimizer = optimizer(self.model.parameters(), lr=learning_rate, **kwargs)
+        # if optimizer class is passed, instantiate:
+        if inspect.isclass(optimizer):
+            optimizer: torch.optim.Optimizer = optimizer(self.model.parameters(), lr=learning_rate, **kwargs)
 
         if use_swa:
             import torchcontrib
@@ -299,33 +308,35 @@ class ModelTrainer:
         if train_with_dev:
             dataset_size += len(self.corpus.dev)
 
-        if scheduler == OneCycleLR:
-            lr_scheduler = OneCycleLR(optimizer,
-                                      max_lr=learning_rate,
-                                      steps_per_epoch=dataset_size // mini_batch_size + 1,
-                                      epochs=max_epochs - epoch,
-                                      # if we load a checkpoint, we have already trained for epoch
-                                      pct_start=0.0,
-                                      cycle_momentum=cycle_momentum)
-        elif scheduler == LinearSchedulerWithWarmup:
-            steps_per_epoch = (dataset_size + mini_batch_size - 1) / mini_batch_size
-            num_train_steps = int(steps_per_epoch * max_epochs)
-            num_warmup_steps = int(num_train_steps * warmup_fraction)
+        # if scheduler is passed as a class, instantiate
+        if inspect.isclass(scheduler):
+            if scheduler == OneCycleLR:
+                scheduler = OneCycleLR(optimizer,
+                                       max_lr=learning_rate,
+                                       steps_per_epoch=dataset_size // mini_batch_size + 1,
+                                       epochs=max_epochs - epoch,
+                                       # if we load a checkpoint, we have already trained for epoch
+                                       pct_start=0.0,
+                                       cycle_momentum=cycle_momentum)
+            elif scheduler == LinearSchedulerWithWarmup:
+                steps_per_epoch = (dataset_size + mini_batch_size - 1) / mini_batch_size
+                num_train_steps = int(steps_per_epoch * max_epochs)
+                num_warmup_steps = int(num_train_steps * warmup_fraction)
 
-            lr_scheduler = LinearSchedulerWithWarmup(optimizer,
-                                                     num_train_steps=num_train_steps,
-                                                     num_warmup_steps=num_warmup_steps)
-        else:
-            lr_scheduler = scheduler(
-                optimizer,
-                factor=anneal_factor,
-                patience=patience,
-                initial_extra_patience=initial_extra_patience,
-                mode=anneal_mode,
-                verbose=True,
-            )
+                scheduler = LinearSchedulerWithWarmup(optimizer,
+                                                      num_train_steps=num_train_steps,
+                                                      num_warmup_steps=num_warmup_steps)
+            else:
+                scheduler = scheduler(
+                    optimizer,
+                    factor=anneal_factor,
+                    patience=patience,
+                    initial_extra_patience=initial_extra_patience,
+                    mode=anneal_mode,
+                    verbose=True,
+                )
 
-        if (isinstance(lr_scheduler, OneCycleLR) and batch_growth_annealing):
+        if isinstance(scheduler, OneCycleLR) and batch_growth_annealing:
             raise ValueError("Batch growth with OneCycle policy is not implemented.")
 
         train_data = self.corpus.train
@@ -364,6 +375,9 @@ class ModelTrainer:
 
             for epoch in range(epoch + 1, max_epochs + 1):
                 log_line(log)
+
+                # update training parameter
+                self.model.training_parameters['epoch'] = epoch
 
                 if anneal_with_prestarts:
                     last_epoch_model_state_dict = copy.deepcopy(self.model.state_dict())
@@ -405,7 +419,7 @@ class ModelTrainer:
                     writer.add_scalar("learning_rate", learning_rate, epoch)
 
                 # stop training if learning rate becomes too small
-                if ((not isinstance(lr_scheduler, (OneCycleLR, LinearSchedulerWithWarmup)) and
+                if ((not isinstance(scheduler, (OneCycleLR, LinearSchedulerWithWarmup)) and
                      learning_rate < min_learning_rate)):
                     log_line(log)
                     log.info("learning rate too small - quitting training!")
@@ -470,8 +484,8 @@ class ModelTrainer:
                     optimizer.step()
 
                     # do the scheduler step if one-cycle or linear decay
-                    if isinstance(lr_scheduler, (OneCycleLR, LinearSchedulerWithWarmup)):
-                        lr_scheduler.step()
+                    if isinstance(scheduler, (OneCycleLR, LinearSchedulerWithWarmup)):
+                        scheduler.step()
                         # get new learning rate
                         for group in optimizer.param_groups:
                             learning_rate = group["lr"]
@@ -505,9 +519,7 @@ class ModelTrainer:
                 self.model.eval()
 
                 log_line(log)
-                log.info(
-                    f"EPOCH {epoch} done: loss {train_loss:.4f} - lr {learning_rate:.7f}"
-                )
+                log.info(f"EPOCH {epoch} done: loss {train_loss:.4f} - lr {learning_rate:.7f}")
 
                 if use_tensorboard:
                     writer.add_scalar("train_loss", train_loss, epoch)
@@ -540,9 +552,8 @@ class ModelTrainer:
                         main_evaluation_metric=main_evaluation_metric,
                         gold_label_dictionary=gold_label_dictionary_for_eval,
                     )
-                    result_line += (
-                        f"\t{train_part_loss}\t{train_part_eval_result.log_line}"
-                    )
+                    result_line += f"\t{train_part_loss}\t{train_part_eval_result.log_line}"
+
                     log.info(
                         f"TRAIN_SPLIT : loss {train_part_loss} - {main_evaluation_metric[1]} ({main_evaluation_metric[0]}) {round(train_part_eval_result.main_score, 4)}"
                     )
@@ -580,9 +591,7 @@ class ModelTrainer:
 
                     if use_tensorboard:
                         writer.add_scalar("dev_loss", dev_eval_result.loss, epoch)
-                        writer.add_scalar(
-                            "dev_score", dev_eval_result.main_score, epoch
-                        )
+                        writer.add_scalar("dev_score", dev_eval_result.main_score, epoch)
                         for (metric_class_avg_type, metric_type) in metrics_for_tensorboard:
                             writer.add_scalar(
                                 f"dev_{metric_class_avg_type}_{metric_type}",
@@ -610,9 +619,7 @@ class ModelTrainer:
 
                     if use_tensorboard:
                         writer.add_scalar("test_loss", test_eval_result.loss, epoch)
-                        writer.add_scalar(
-                            "test_score", test_eval_result.main_score, epoch
-                        )
+                        writer.add_scalar("test_score", test_eval_result.main_score, epoch)
                         for (metric_class_avg_type, metric_type) in metrics_for_tensorboard:
                             writer.add_scalar(
                                 f"test_{metric_class_avg_type}_{metric_type}",
@@ -627,8 +634,8 @@ class ModelTrainer:
                         current_epoch_has_best_model_so_far = True
                         best_validation_score = dev_score
 
-                    if isinstance(lr_scheduler, AnnealOnPlateau):
-                        lr_scheduler.step(dev_score, dev_eval_result.loss)
+                    if isinstance(scheduler, AnnealOnPlateau):
+                        scheduler.step(dev_score, dev_eval_result.loss)
 
                 # alternative: anneal against dev loss
                 if not train_with_dev and anneal_against_dev_loss:
@@ -636,8 +643,8 @@ class ModelTrainer:
                         current_epoch_has_best_model_so_far = True
                         best_validation_score = dev_eval_result.loss
 
-                    if isinstance(lr_scheduler, AnnealOnPlateau):
-                        lr_scheduler.step(dev_eval_result.loss)
+                    if isinstance(scheduler, AnnealOnPlateau):
+                        scheduler.step(dev_eval_result.loss)
 
                 # alternative: anneal against train loss
                 if train_with_dev:
@@ -645,14 +652,14 @@ class ModelTrainer:
                         current_epoch_has_best_model_so_far = True
                         best_validation_score = train_loss
 
-                    if isinstance(lr_scheduler, AnnealOnPlateau):
-                        lr_scheduler.step(train_loss)
+                    if isinstance(scheduler, AnnealOnPlateau):
+                        scheduler.step(train_loss)
 
                 train_loss_history.append(train_loss)
 
                 # determine bad epoch number
                 try:
-                    bad_epochs = lr_scheduler.num_bad_epochs
+                    bad_epochs = scheduler.num_bad_epochs
                 except:
                     bad_epochs = 0
                 for group in optimizer.param_groups:
@@ -691,7 +698,7 @@ class ModelTrainer:
 
                 # if checkpoint is enabled, save model at each epoch
                 if checkpoint and not param_selection_mode:
-                    self.save_checkpoint(base_path / "checkpoint.pt")
+                    self.model.save(base_path / "checkpoint.pt")
 
                 # Check whether to save best model
                 if (
@@ -701,7 +708,7 @@ class ModelTrainer:
                         and not use_final_model_for_eval
                 ):
                     log.info("saving best model")
-                    self.model.save(base_path / "best-model.pt")
+                    self.model.save(base_path / "best-model.pt", training_parameters=training_parameters)
 
                     if anneal_with_prestarts:
                         current_state_dict = self.model.state_dict()
@@ -712,14 +719,14 @@ class ModelTrainer:
                 if save_model_each_k_epochs > 0 and not epoch % save_model_each_k_epochs:
                     print("saving model of current epoch")
                     model_name = "model_epoch_" + str(epoch) + ".pt"
-                    self.model.save(base_path / model_name)
+                    self.model.save(base_path / model_name, training_parameters=training_parameters)
 
             if use_swa:
                 optimizer.swap_swa_sgd()
 
             # if we do not use dev data for model selection, save final model
             if save_final_model and not param_selection_mode:
-                self.model.save(base_path / "final-model.pt")
+                self.model.save(base_path / "final-model.pt", training_parameters=training_parameters)
 
         except KeyboardInterrupt:
             log_line(log)
@@ -730,7 +737,7 @@ class ModelTrainer:
 
             if not param_selection_mode:
                 log.info("Saving model ...")
-                self.model.save(base_path / "final-model.pt")
+                self.model.save(base_path / "final-model.pt", training_parameters=training_parameters)
                 log.info("Done.")
 
         # test best model if test data is present
@@ -759,18 +766,6 @@ class ModelTrainer:
             "train_loss_history": train_loss_history,
             "dev_loss_history": dev_loss_history,
         }
-
-    def save_checkpoint(self, model_file: Union[str, Path]):
-        corpus = self.corpus
-        self.corpus = None
-        torch.save(self, str(model_file), pickle_protocol=4)
-        self.corpus = corpus
-
-    @classmethod
-    def load_checkpoint(cls, checkpoint: Union[Path, str], corpus: Corpus):
-        model: ModelTrainer = torch.load(checkpoint, map_location=flair.device)
-        model.corpus = corpus
-        return model
 
     def final_test(
             self,
