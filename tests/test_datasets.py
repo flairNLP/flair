@@ -305,12 +305,12 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
         True,
         True,
         True,
-        True,
-        False
+        False,
+        True
     ]
 
     assert len(sent1.get_spans("Number")) == 4
-    assert sent1[1].get_labels("Case")[0].value == "Nom"
+    assert sent1[1].get_labels("Number")[0].value == "Plur"
     assert sent1[1].get_labels("Person")[0].value == "3"
     assert sent1[1].get_labels("Tense")[0].value == "Pres"
 
@@ -333,7 +333,7 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
     ]
 
     assert [(label.head.text, label.tail.text, label.value) for label in sent1.get_labels("deprel")] == [
-        ("buy", "they", "nsubj"),
+        ("buy", "They", "nsubj"),
         ("sell", "and", "cc"),
         ("buy", "sell", "conj"),
         ("buy", "books", "obj"),
@@ -341,8 +341,8 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
     ]
 
     assert [(label.head.text, label.tail.text, label.value) for label in sent1.get_labels("deps")] == [
-        ("buy", "they", "nsubj"),
-        ("sell", "they", "nsubj"),
+        ("buy", "They", "nsubj"),
+        ("sell", "They", "nsubj"),
         ("sell", "and", "cc"),
         ("buy", "sell", "conj"),
         ("buy", "books", "obj"),
@@ -350,8 +350,7 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
         ("buy", ".", "punct")
     ]
 
-    sent2: Sentence = dataset[0]
-
+    sent2: Sentence = dataset[1]
     assert len(sent2.get_labels("deps")) == 0
 
 
@@ -367,3 +366,5 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
     assert len(corpus.train) == 2
     assert len(corpus.dev) == 2
     assert len(corpus.test) == 2
+
+    _assert_universal_dependencies_conllu_dataset(corpus.train)
