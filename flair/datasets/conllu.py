@@ -14,24 +14,21 @@ DEFAULT_FIELDS: Tuple[str, ...] = ("id", "form", "lemma", "upos", "xpos", "feats
 
 DEFAULT_TOKEN_ANNOTATION_FIELDS: Tuple[str, ...] = ("lemma", "upos", "xpos", "feats", "head", "deprel")
 
-DEFAULT_METADATA_PARSERS: Dict[str, conllu._MetadataParserType] = dict(
-    conllu.parser.DEFAULT_METADATA_PARSERS,
-    **{
-        "relations": lambda key, value: parse_relation_tuple_list(key, value, list_sep="|", value_sep=";"),
-    },
-)
+# noinspection PyProtectedMember
+DEFAULT_METADATA_PARSERS: Dict[str, conllu._MetadataParserType] = {
+    **conllu.parser.DEFAULT_METADATA_PARSERS,
+    **{"relations": lambda key, value: parse_relation_tuple_list(key, value, list_sep="|", value_sep=";")}
+}
 
 
-def parse_relation_tuple_list(
-        key: str,
-        value: Optional[str] = None,
-        list_sep: str = "|",
-        value_sep: str = ";",
-) -> Optional[List[Tuple[int, int, int, int, str]]]:
+def parse_relation_tuple_list(key: str,
+                              value: Optional[str] = None,
+                              list_sep: str = "|",
+                              value_sep: str = ";") -> Optional[Tuple[str, List[Tuple[int, int, int, int, str]]]]:
     if value is None:
         return value
 
-    relation_tuples: List[int, int, int, int, str] = []
+    relation_tuples: List[Tuple[int, int, int, int, str]] = []
     for relation in value.split(list_sep):
         head_start, head_end, tail_start, tail_end, label = relation.split(value_sep)
         relation_tuples.append((int(head_start), int(head_end), int(tail_start), int(tail_end), label))
@@ -40,6 +37,8 @@ def parse_relation_tuple_list(
 
 
 class CoNLLUCorpus(Corpus):
+
+    # noinspection PyProtectedMember
     def __init__(self,
                  data_folder: Union[str, Path],
                  train_file=None,
@@ -109,6 +108,8 @@ class CoNLLUCorpus(Corpus):
 
 
 class CoNLLUDataset(FlairDataset):
+
+    # noinspection PyProtectedMember
     def __init__(self,
                  path_to_conllu_file: Union[str, Path],
                  in_memory: bool = True,
@@ -251,7 +252,6 @@ class CoNLLUDataset(FlairDataset):
             sentence.add_label("sentence_id", token_list.metadata["sentence_id"])
 
         if "relations" in token_list.metadata:
-            # relations: List[Relation] = []
             for head_start, head_end, tail_start, tail_end, label in token_list.metadata["relations"]:
                 # head and tail span indices are 1-indexed and end index is inclusive
                 head = Span(sentence.tokens[head_start - 1: head_end])
