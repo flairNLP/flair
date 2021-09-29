@@ -212,9 +212,7 @@ class CoNLLUDataset(FlairDataset):
     def token_list_to_sentence(self, token_list: conllu.TokenList) -> Sentence:
         sentence: Sentence = Sentence()
 
-        # current token ID
-        token_idx = 0
-
+        # Build the sentence tokens and add the annotations.
         for conllu_token in token_list:
             token = Token(conllu_token["form"])
 
@@ -234,7 +232,20 @@ class CoNLLUDataset(FlairDataset):
                     token.whitespace_after = False
 
             sentence.add_token(token)
-            token_idx += 1
+
+        # Add universal dependencies relations as sentence label annotation. We exclude the root relation.
+        for token, conllu_token in zip(sentence, token_list):
+            if "deprel" in conllu_token and "head" in conllu_token and conllu_token["head"] != 0:
+                sentence.add_complex_label(typename="deprel",
+                                           label=RelationLabel(value=conllu_token["deprel"],
+                                                               head=Span([sentence[conllu_token["head"] - 1]]),
+                                                               tail=Span([token])))
+            if "deps" in conllu_token:
+                for relation, head in filter(lambda x: x[1] != 0, conllu_token["deps"]):
+                    sentence.add_complex_label(typename="deps",
+                                               label=RelationLabel(value=relation,
+                                                                   head=Span([sentence[head - 1]]),
+                                                                   tail=Span([token])))
 
         if "sentence_id" in token_list.metadata:
             sentence.add_label("sentence_id", token_list.metadata["sentence_id"])
