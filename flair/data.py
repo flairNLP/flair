@@ -1062,7 +1062,7 @@ class Sentence(DataPoint):
     def get_labels(self, label_type: str = None):
 
         # TODO: crude hack - replace with something better
-        if label_type:
+        if label_type and label_type != "deprel":
             spans = self.get_spans(label_type)
             for span in spans:
                 self.add_complex_label(label_type, label=SpanLabel(span, span.tag, span.score))
