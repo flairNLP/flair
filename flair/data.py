@@ -145,6 +145,10 @@ class Dictionary:
             char_dict = cached_path(f"{hu_path}/common_characters_xl", cache_dir="datasets")
             return Dictionary.load_from_file(char_dict)
 
+        if name == "chars-lemmatizer" or name == "common-chars-lemmatizer":
+            char_dict = cached_path(f"{hu_path}/common_characters_lemmatizer", cache_dir="datasets")
+            return Dictionary.load_from_file(char_dict)
+
         return Dictionary.load_from_file(name)
 
     def __str__(self):
