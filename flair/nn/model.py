@@ -93,19 +93,19 @@ class Model(torch.nn.Module):
 
                 if 'optimizer' in training_parameters:
                     optimizer = training_parameters['optimizer']
-                    self.model_card['optimizer_class'] = optimizer.__class__
                     training_parameters['optimizer_state_dict'] = optimizer.state_dict()
+                    training_parameters['optimizer'] = optimizer.__class__
 
                 if 'scheduler' in training_parameters:
                     scheduler = training_parameters['scheduler']
-                    self.model_card['scheduler_class'] = scheduler.__class__
                     training_parameters['scheduler_state_dict'] = scheduler.state_dict()
+                    training_parameters['scheduler'] = scheduler.__class__
 
             model_state['model_card'] = self.model_card
 
-            # delete optimizer and scheduler instance since this may cause serialization errors
-            del model_state['model_card']['training_parameters']['optimizer']
-            del model_state['model_card']['training_parameters']['scheduler']
+            # # delete optimizer and scheduler instance since this may cause serialization errors
+            # del model_state['model_card']['training_parameters']['optimizer']
+            # del model_state['model_card']['training_parameters']['scheduler']
 
         # save model
         torch.save(model_state, str(model_file), pickle_protocol=4)

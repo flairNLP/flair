@@ -776,10 +776,6 @@ class ModelTrainer:
         # recover all arguments that were used to train this model
         args_used_to_train_model = self.model.model_card['training_parameters']
 
-        # only pass the class of the optimizer, not the instance
-        args_used_to_train_model['optimizer'] = self.model.model_card['optimizer_class']
-        args_used_to_train_model['scheduler'] = self.model.model_card['scheduler_class']
-
         # you can overwrite params with your own
         for param in trainer_args:
             args_used_to_train_model[param] = trainer_args[param]
