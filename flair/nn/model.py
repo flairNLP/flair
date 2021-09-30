@@ -103,10 +103,6 @@ class Model(torch.nn.Module):
 
             model_state['model_card'] = self.model_card
 
-            # # delete optimizer and scheduler instance since this may cause serialization errors
-            # del model_state['model_card']['training_parameters']['optimizer']
-            # del model_state['model_card']['training_parameters']['scheduler']
-
         # save model
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
