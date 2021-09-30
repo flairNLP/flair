@@ -14,6 +14,8 @@ import torch
 from torch.optim.sgd import SGD
 from torch.utils.data.dataset import ConcatDataset
 
+from flair.nn import Model
+
 try:
     from apex import amp
 except ImportError:
@@ -60,44 +62,12 @@ class ModelTrainer:
                                 filename.startswith("best-model")]
         if len(all_best_model_names) != 0:
             warnings.warn(
-                "There should be no best model saved at epoch 1 except there is a model from previous trainings in your training folder. All previous best models will be deleted.")
+                "There should be no best model saved at epoch 1 except there is a model from previous trainings"
+                " in your training folder. All previous best models will be deleted.")
         for single_model in all_best_model_names:
             previous_best_path = os.path.join(base_path, single_model)
             if os.path.exists(previous_best_path):
                 os.remove(previous_best_path)
-
-    def resume(self,
-               model,
-               **trainer_args,
-               ):
-
-        self.model = model
-
-        self.train(**self.model.model_card)
-
-    def fine_tune(self,
-                  base_path: Union[Path, str],
-                  learning_rate: float = 5e-5,
-                  max_epochs: int = 10,
-                  optimizer=torch.optim.AdamW,
-                  scheduler=LinearSchedulerWithWarmup,
-                  warmup_fraction: float = 0.1,
-                  mini_batch_size: int = 4,
-                  embeddings_storage_mode: str = 'none',
-                  **trainer_args,
-                  ):
-
-        return self.train(
-            base_path=base_path,
-            learning_rate=learning_rate,
-            max_epochs=max_epochs,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            warmup_fraction=warmup_fraction,
-            mini_batch_size=mini_batch_size,
-            embeddings_storage_mode=embeddings_storage_mode,
-            **trainer_args,
-        )
 
     def train(
             self,
@@ -147,6 +117,8 @@ class ModelTrainer:
             use_tensorboard: bool = False,
             tensorboard_log_dir=None,
             metrics_for_tensorboard=[],
+            optimizer_state_dict: Optional = None,
+            scheduler_state_dict: Optional = None,
             **kwargs,
     ) -> dict:
         """
@@ -293,23 +265,16 @@ class ModelTrainer:
         log_train_part = True if (eval_on_train_fraction == "dev" or eval_on_train_fraction > 0.0) else False
 
         if log_train_part:
-            train_part_size = (
-                len(self.corpus.dev)
-                if eval_on_train_fraction == "dev"
+            train_part_size = len(self.corpus.dev) if eval_on_train_fraction == "dev" \
                 else int(len(self.corpus.train) * eval_on_train_fraction)
-            )
+
             assert train_part_size > 0
             if not eval_on_train_shuffle:
                 train_part_indices = list(range(train_part_size))
-                train_part = torch.utils.data.dataset.Subset(
-                    self.corpus.train, train_part_indices
-                )
+                train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
 
-        if create_loss_file:
-            # prepare loss logging file and set up header
-            loss_txt = init_output_file(base_path, "loss.tsv")
-        else:
-            loss_txt = None
+        # prepare loss logging file and set up header
+        loss_txt = init_output_file(base_path, "loss.tsv") if create_loss_file else None
 
         weight_extractor = WeightExtractor(base_path)
 
@@ -325,6 +290,10 @@ class ModelTrainer:
             self.model, optimizer = amp.initialize(
                 self.model, optimizer, opt_level=amp_opt_level
             )
+
+        # load existing optimizer state dictionary if it exists
+        if optimizer_state_dict:
+            optimizer.load_state_dict(optimizer_state_dict)
 
         # minimize training loss if training with dev data, else maximize dev score
         anneal_mode = "min" if train_with_dev or anneal_against_dev_loss else "max"
@@ -361,6 +330,14 @@ class ModelTrainer:
                     mode=anneal_mode,
                     verbose=True,
                 )
+
+        # load existing scheduler state dictionary if it exists
+        if scheduler_state_dict:
+            scheduler.load_state_dict(scheduler_state_dict)
+
+        # update optimizer and scheduler in model card
+        model_card['training_parameters']['optimizer'] = optimizer
+        model_card['training_parameters']['scheduler'] = scheduler
 
         if isinstance(scheduler, OneCycleLR) and batch_growth_annealing:
             raise ValueError("Batch growth with OneCycle policy is not implemented.")
@@ -402,7 +379,7 @@ class ModelTrainer:
             for epoch in range(epoch + 1, max_epochs + 1):
                 log_line(log)
 
-                # update training parameter
+                # update epoch in model card
                 self.model.model_card['training_parameters']['epoch'] = epoch
 
                 if anneal_with_prestarts:
@@ -483,16 +460,14 @@ class ModelTrainer:
                     # if necessary, make batch_steps
                     batch_steps = [batch]
                     if len(batch) > micro_batch_size:
-                        batch_steps = [
-                            batch[x: x + micro_batch_size]
-                            for x in range(0, len(batch), micro_batch_size)
-                        ]
+                        batch_steps = [batch[x: x + micro_batch_size] for x in range(0, len(batch), micro_batch_size)]
 
                     # forward and backward for batch
                     for batch_step in batch_steps:
 
                         # forward pass
                         loss = self.model.forward_loss(batch_step)
+
                         if isinstance(loss, Tuple):
                             average_over += loss[1]
                             loss = loss[0]
@@ -537,9 +512,7 @@ class ModelTrainer:
                         batch_time = 0
                         iteration = epoch * total_number_of_batches + batch_no
                         if not param_selection_mode and write_weights:
-                            weight_extractor.extract_weights(
-                                self.model.state_dict(), iteration
-                            )
+                            weight_extractor.extract_weights(self.model.state_dict(), iteration)
 
                 if average_over != 0:
                     train_loss /= average_over
@@ -795,6 +768,59 @@ class ModelTrainer:
             "train_loss_history": train_loss_history,
             "dev_loss_history": dev_loss_history,
         }
+
+    def resume(self,
+               model: Optional[Model],
+               **trainer_args,
+               ):
+
+        self.model = model
+
+        # recover all arguments that were used to train this model
+        args_used_to_train_model = self.model.model_card['training_parameters']
+
+        # only pass the class of the optimizer, not the instance
+        args_used_to_train_model['optimizer'] = self.model.model_card['optimizer_class']
+        args_used_to_train_model['scheduler'] = self.model.model_card['scheduler_class']
+
+        # you can overwrite params with your own
+        for param in trainer_args:
+            args_used_to_train_model[param] = trainer_args[param]
+            if param == 'optimizer' and 'optimizer_state_dict' in args_used_to_train_model:
+                del args_used_to_train_model['optimizer_state_dict']
+            if param == 'scheduler' and 'scheduler_state_dict' in args_used_to_train_model:
+                del args_used_to_train_model['scheduler_state_dict']
+
+        # surface nested arguments
+        kwargs = args_used_to_train_model['kwargs']
+        del args_used_to_train_model['kwargs']
+
+        # resume training with these parameters
+        self.train(**args_used_to_train_model, **kwargs)
+
+    def fine_tune(self,
+                  base_path: Union[Path, str],
+                  learning_rate: float = 5e-5,
+                  max_epochs: int = 10,
+                  optimizer=torch.optim.AdamW,
+                  scheduler=LinearSchedulerWithWarmup,
+                  warmup_fraction: float = 0.1,
+                  mini_batch_size: int = 4,
+                  embeddings_storage_mode: str = 'none',
+                  **trainer_args,
+                  ):
+
+        return self.train(
+            base_path=base_path,
+            learning_rate=learning_rate,
+            max_epochs=max_epochs,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            warmup_fraction=warmup_fraction,
+            mini_batch_size=mini_batch_size,
+            embeddings_storage_mode=embeddings_storage_mode,
+            **trainer_args,
+        )
 
     def final_test(
             self,

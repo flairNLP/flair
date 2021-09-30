@@ -81,10 +81,40 @@ class Model(torch.nn.Module):
         """
         model_state = self._get_state_dict()
 
+        # in Flair <0.9.1, optimizer and scheduler used to train model are not saved
+        optimizer = scheduler = None
+
+        # write out a "model card" if one is set
         if hasattr(self, 'model_card'):
+
+            # special handling for optimizer: remember optimizer class and state dictionary
+            if 'training_parameters' in self.model_card:
+                training_parameters = self.model_card['training_parameters']
+
+                if 'optimizer' in training_parameters:
+                    optimizer = training_parameters['optimizer']
+                    self.model_card['optimizer_class'] = optimizer.__class__
+                    training_parameters['optimizer_state_dict'] = optimizer.state_dict()
+
+                if 'scheduler' in training_parameters:
+                    scheduler = training_parameters['scheduler']
+                    self.model_card['scheduler_class'] = scheduler.__class__
+                    training_parameters['scheduler_state_dict'] = scheduler.state_dict()
+
             model_state['model_card'] = self.model_card
 
+            # delete optimizer and scheduler instance since this may cause serialization errors
+            del model_state['model_card']['training_parameters']['optimizer']
+            del model_state['model_card']['training_parameters']['scheduler']
+
+        # save model
         torch.save(model_state, str(model_file), pickle_protocol=4)
+
+        # restore optimizer and scheduler to model card if set
+        if optimizer:
+            self.model_card['training_parameters']['optimizer'] = optimizer
+        if scheduler:
+            self.model_card['training_parameters']['scheduler'] = scheduler
 
     @classmethod
     def load(cls, model: Union[str, Path]):
@@ -127,13 +157,14 @@ class Model(torch.nn.Module):
             param_out += "------- Training Parameters: -------\n"
             param_out += "------------------------------------\n"
             training_params = '\n'.join(f'-- {param} = {self.model_card["training_parameters"][param]}'
-                                       for param in self.model_card['training_parameters'] )
+                                        for param in self.model_card['training_parameters'])
             param_out += training_params + "\n"
             param_out += "------------------------------------\n"
 
             log.info(param_out)
         else:
-            log.info("This model has no model card (likely because it was trained with Flair version < 0.9.1)")
+            log.info(
+                "This model has no model card (likely because it is not yet trained or was trained with Flair version < 0.9.1)")
 
 
 class Classifier(Model):
