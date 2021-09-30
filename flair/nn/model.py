@@ -142,7 +142,7 @@ class Model(torch.nn.Module):
 
         return model
 
-    def print_training_parameters(self):
+    def print_model_card(self):
         if hasattr(self, 'model_card'):
             param_out = "\n------------------------------------\n"
             param_out += "--------- Flair Model Card ---------\n"
