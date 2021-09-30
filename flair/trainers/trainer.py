@@ -76,17 +76,19 @@ class ModelTrainer:
             mini_batch_size: int = 32,
             mini_batch_chunk_size: Optional[int] = None,
             max_epochs: int = 100,
-            scheduler=AnnealOnPlateau,
-            cycle_momentum: bool = False,
-            anneal_factor: float = 0.5,
-            patience: int = 3,
-            initial_extra_patience: int = 0,
-            min_learning_rate: float = 0.0001,
-            warmup_fraction: float = 0.1,
             train_with_dev: bool = False,
             train_with_test: bool = False,
             monitor_train: bool = False,
             monitor_test: bool = False,
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", 'f1-score'),
+            scheduler=AnnealOnPlateau,
+            anneal_factor: float = 0.5,
+            patience: int = 3,
+            min_learning_rate: float = 0.0001,
+            initial_extra_patience: int = 0,
+            optimizer: torch.optim.Optimizer = SGD,
+            cycle_momentum: bool = False,
+            warmup_fraction: float = 0.1,
             embeddings_storage_mode: str = "cpu",
             checkpoint: bool = False,
             save_final_model: bool = True,
@@ -104,15 +106,12 @@ class ModelTrainer:
             eval_on_train_fraction: float = 0.0,
             eval_on_train_shuffle: bool = False,
             save_model_each_k_epochs: int = 0,
-            main_evaluation_metric: Tuple[str, str] = ("micro avg", 'f1-score'),
             tensorboard_comment: str = '',
-            save_best_checkpoints: bool = False,
             use_swa: bool = False,
             use_final_model_for_eval: bool = False,
             gold_label_dictionary_for_eval: Optional[Dictionary] = None,
             create_file_logs: bool = True,
             create_loss_file: bool = True,
-            optimizer: torch.optim.Optimizer = SGD,
             epoch: int = 0,
             use_tensorboard: bool = False,
             tensorboard_log_dir=None,
@@ -129,13 +128,15 @@ class ModelTrainer:
         :param mini_batch_chunk_size: If mini-batches are larger than this number, they get broken down into chunks of this size for processing purposes
         :param max_epochs: Maximum number of epochs to train. Terminates training if this number is surpassed.
         :param scheduler: The learning rate scheduler to use
+        :param checkpoint: If True, a full checkpoint is saved at end of each epoch
         :param cycle_momentum: If scheduler is OneCycleLR, whether the scheduler should cycle also the momentum
         :param anneal_factor: The factor by which the learning rate is annealed
         :param patience: Patience is the number of epochs with no improvement the Trainer waits
          until annealing the learning rate
         :param min_learning_rate: If the learning rate falls below this threshold, training terminates
         :param warmup_fraction: Fraction of warmup steps if the scheduler is LinearSchedulerWithWarmup
-        :param train_with_dev: If True, training is performed using both train+dev data
+        :param train_with_dev:  If True, the data from dev split is added to the training data
+        :param train_with_test: If True, the data from test split is added to the training data
         :param monitor_train: If True, training data is evaluated at end of each epoch
         :param monitor_test: If True, test data is evaluated at end of each epoch
         :param embeddings_storage_mode: One of 'none' (all embeddings are deleted and freshly recomputed),
@@ -154,10 +155,8 @@ class ModelTrainer:
         and kept fixed during training, otherwise it's sampled at beginning of each epoch
         :param save_model_each_k_epochs: Each k epochs, a model state will be written out. If set to '5', a model will
         be saved each 5 epochs. Default is 0 which means no model saving.
-        :param save_model_epoch_step: Each save_model_epoch_step'th epoch the thus far trained model will be saved
-        :param classification_main_metric: Type of metric to use for best model tracking and learning rate scheduling (if dev data is available, otherwise loss will be used), currently only applicable for text_classification_model
+        :param main_evaluation_metric: Type of metric to use for best model tracking and learning rate scheduling (if dev data is available, otherwise loss will be used), currently only applicable for text_classification_model
         :param tensorboard_comment: Comment to use for tensorboard logging
-        :param save_best_checkpoints: If True, in addition to saving the best model also the corresponding checkpoint is saved
         :param create_file_logs: If True, the logs will also be stored in a file 'training.log' in the model folder
         :param create_loss_file: If True, the loss will be writen to a file 'loss.tsv' in the model folder
         :param optimizer: The optimizer to use (typically SGD or Adam)
@@ -389,9 +388,7 @@ class ModelTrainer:
                     train_part_indices = list(range(self.corpus.train))
                     random.shuffle(train_part_indices)
                     train_part_indices = train_part_indices[:train_part_size]
-                    train_part = torch.utils.data.dataset.Subset(
-                        self.corpus.train, train_part_indices
-                    )
+                    train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
 
                 # get new learning rate
                 for group in optimizer.param_groups:
