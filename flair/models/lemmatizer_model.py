@@ -209,7 +209,7 @@ class Lemmatizer(flair.nn.Model):
                     torch.stack(self.num_layers * [torch.stack([token.get_embedding() for token in tokens_in_batch])]))
 
                 # input (batch_size, 1, input_size), first letter is special character <S>
-                input_indices = torch.ones(len(tokens_in_batch), dtype=torch.int).to(flair.device)
+                input_indices = torch.ones(len(tokens_in_batch), dtype=torch.long).to(flair.device)
 
                 input_tensor = self.character_embedding(input_indices).unsqueeze(1)
 
