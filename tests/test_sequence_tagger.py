@@ -345,6 +345,7 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_resume_tagger(results_base_path, tasks_base_path):
+
     corpus_1 = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
@@ -361,13 +362,16 @@ def test_train_resume_tagger(results_base_path, tasks_base_path):
         use_crf=False,
     )
 
+    # train model for 2 epochs
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
 
-    del trainer, model
-    trainer = ModelTrainer.load_checkpoint(results_base_path / "checkpoint.pt", corpus)
+    del model
 
-    trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
+    # load the checkpoint model and train until epoch 4
+    checkpoint_model = SequenceTagger.load(results_base_path / "checkpoint.pt")
+    trainer.resume(model=checkpoint_model,
+                   max_epochs=4)
 
     # clean up results directory
     shutil.rmtree(results_base_path)
