@@ -142,7 +142,7 @@ def main():
     logger.info(corpus)
 
     tag_type: str = "ner"
-    tag_dictionary = corpus.make_label_dictionary(tag_type=tag_type)
+    tag_dictionary = corpus.make_label_dictionary(tag_type)
     logger.info(tag_dictionary)
 
     embeddings = TransformerWordEmbeddings(
@@ -177,6 +177,9 @@ def main():
 
     torch.save(model_args, os.path.join(data_args.output_dir, "model_args.bin"))
     torch.save(training_args, os.path.join(data_args.output_dir, "training_args.bin"))
+
+    # finally, print model card for information
+    tagger.print_model_card()
 
 
 if __name__ == "__main__":
