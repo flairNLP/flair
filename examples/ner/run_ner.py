@@ -142,7 +142,7 @@ def main():
     logger.info(corpus)
 
     tag_type: str = "ner"
-    tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
+    tag_dictionary = corpus.make_label_dictionary(tag_type=tag_type)
     logger.info(tag_dictionary)
 
     embeddings = TransformerWordEmbeddings(
