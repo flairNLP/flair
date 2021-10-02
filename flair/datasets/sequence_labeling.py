@@ -1035,6 +1035,16 @@ class NER_ENGLISH_MOVIE_COMPLEX(ColumnCorpus):
 
 
 class NER_ENGLISH_SEC_FILLINGS(ColumnCorpus):
+    """
+    Initialize corpus of SEC-fillings annotated with English NER tags. See paper "Domain Adaption of Named Entity
+    Recognition to Support Credit Risk Assessment" by Alvarado et al, 2015: https://aclanthology.org/U15-1010/
+    :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
+    :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' or 'np' to predict
+    POS tags or chunks respectively
+    :param in_memory: If True, keeps dataset in memory giving speedups in training.
+    :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
+    """
+
     def __init__(
             self,
             base_path: Union[str, Path] = None,
@@ -1333,8 +1343,9 @@ class NER_ENGLISH_WEBPAGES(ColumnCorpus):
             **corpusargs,
     ):
         """
-        Initialize the WEBPAGES_NER corpus. The first time you call this constructor it will automatically
-        download the dataset.
+        Initialize the WEBPAGES_NER corpus introduced in the paper "Design Challenges and Misconceptions in Named Entity
+        Recognition" by Ratinov and Roth (2009): https://aclanthology.org/W09-1119/.
+        The first time you call this constructor it will automatically download the dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
@@ -1803,8 +1814,9 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
             **corpusargs,
     ):
         """
-        Initialize the NER_GERMAN_POLITICS corpus for german politics. The first time you call this constructor it will automatically
-        download the dataset.
+        Initialize corpus with Named Entity Model for German, Politics (NEMGP) data from
+        https://www.thomas-zastrow.de/nlp/. The first time you call this constructor it will automatically download the
+        dataset.
         :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
         to point to a different folder but typically this should not be necessary.
         :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' to predict
@@ -3096,259 +3108,6 @@ class KEYPHRASE_SEMEVAL2010(ColumnCorpus):
         )
 
 
-class WSD_UFSAC(ColumnCorpus):
-    def __init__(
-            self,
-            base_path: Union[str, Path] = None,
-            in_memory: bool = True,
-            train_file: str = None,
-            dev_file: str = None,
-            test_file: str = None,
-            cut_multisense: bool = True,
-            **corpusargs,
-    ):
-        """
-        Initialize a custom corpus with any two WSD datasets in the UFSAC format. This is only possible if you've
-        manually downloaded the WSD datasets in UFSAC format to your machine.
-        Obtain the most recent datasets from https://drive.google.com/file/d/1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO and copy
-        up to three of the datasets in a folder called 'wsd_ufsac'.Then set the base_path parameter in the constructor
-        to the path to the parent directory where the 'wsd_ufsac' folder resides and respectively set the train_file,
-        dev_file and test_file parameter in the constructor according to the file names.
-        :param base_path: Path to the custom WSD corpus ('wsd_ufsac' folder) on your machine
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
-        :param train_file: Name of the training dataset (e.g. 'semcor.xml')
-        :param dev_file: Name of the development dataset
-        :param test_file: Name of the testing dataset
-        :param cut_multisense: Boolean that determines whether or not the wn30_key tag should be cut if it contains
-                               multiple possible senses. If True only the first listed sense will be used and the
-                               suffix '_cut' will be added to the name of the CoNLL file. Otherwise the whole list of
-                               senses will be detected as one new sense. The default is True.
-        """
-        if type(base_path) == str:
-            base_path: Path = Path(base_path)
-
-        # column format
-        #
-        # since only the WordNet 3.0 version for senses is consistently available for all provided datasets we will
-        # only consider this version
-        #
-        # also we ignore the id annotation used in datasets that were originally created for evaluation tasks
-        #
-        # if the other annotations should be needed simply add the columns in correct order according
-        # to the chosen datasets here and respectively change the values of the blacklist array and
-        # the range value of the else case in the token for loop in the from_ufsac_to_conll function
-
-        columns = {0: "text", 1: "lemma", 2: "pos", 3: "wn30_key"}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        # default dataset folder is the cache root
-        if not base_path:
-            base_path = flair.cache_root / "datasets"
-        data_folder = base_path / dataset_name
-
-        # check if data there
-        if not data_folder.exists():
-            log.warning("-" * 100)
-            log.warning(f'WARNING: UFSAC corpus not found at "{data_folder}".')
-            log.warning(
-                'Necessary data can be found here: "https://drive.google.com/file/d/1Oigo3kzRosz2VjyA44vpJZ58tDFyLRMO"'
-            )
-            log.warning("-" * 100)
-
-        # determine correct CoNLL files
-
-        train_file = self._determine_conll_file(file=train_file, data_folder=data_folder, cut_multisense=cut_multisense)
-        dev_file = self._determine_conll_file(file=dev_file, data_folder=data_folder, cut_multisense=cut_multisense)
-        test_file = self._determine_conll_file(file=test_file, data_folder=data_folder, cut_multisense=cut_multisense)
-
-        super(WSD_UFSAC, self).__init__(
-            data_folder,
-            columns,
-            tag_to_bioes=None,
-            encoding="latin-1",
-            in_memory=in_memory,
-            train_file=train_file,
-            dev_file=dev_file,
-            test_file=test_file,
-            **corpusargs,
-        )
-
-    def _from_ufsac_to_conll(self, xml_file: Union[str, Path], conll_file: Union[str, Path], encoding: str = "utf8",
-                             cut_multisense: bool = True):
-        """
-        Function that converts the UFSAC format into the needed CoNLL format in a new file. The IOB2 format will be used if
-        chunks reside within the data.
-        Parameters
-        ----------
-        xml_file : Union[str, Path]
-            Path to the xml file.
-        conll_file : Union[str, Path]
-            Path for the new conll file.
-        encoding : str, optional
-            Encoding used in open function. The default is "utf8".
-        cut_multisense : bool, optional
-            Boolean that determines whether or not the wn30_key tag should be cut if it contains multiple possible senses.
-            If True only the first listed sense will be used. Otherwise the whole list of senses will be detected
-            as one new sense. The default is True.
-
-        """
-
-        def add_tag(string: str):
-            """
-            Function that extracts a tag from a string and writes it correctly in the new file.
-            Parameters
-            ----------
-            string : str
-                String that contains a tag to extract.
-            """
-            tag_start = string.find('"') + 1
-
-            if string.count('%') > 1 and cut_multisense is True:  # check for multisense
-                tag_end = string.find(';', tag_start)
-            else:
-                tag_end = string.find('"', tag_start)
-
-            tag = string[tag_start:tag_end]
-            temp.append(tag)
-            f.write(' B-' + tag)
-
-        with open(file=xml_file, mode='r', encoding=encoding) as f:  # get file lines
-            lines = f.readlines()
-
-        with open(file=conll_file, mode='w', encoding=encoding) as f:  # alter file to CoNLL format
-            for line in lines:
-                line_list = line.split()
-
-                if len(line_list) > 3:  # sentence parts have at least 4 tokens
-
-                    # tokens to ignore (edit here for variation)
-                    blacklist = ['<word', 'wn1', 'wn2', 'id=']
-
-                    # counter to keep track how many tags have been found in line
-                    ctr = 0
-
-                    # variable to count of how many words a chunk consists
-                    words = 1
-
-                    # indicates if surface form is chunk or not
-                    is_chunk = False
-
-                    # array to save tags temporarily for handling chunks
-                    temp = []
-
-                    for token in line_list:
-
-                        if any(substring in token for substring in blacklist):
-                            continue
-
-                        if 'surface_form=' in token:
-
-                            # cut token to get chunk
-                            chunk_start = token.find('"') + 1
-                            chunk_end = token.find('"', chunk_start)
-                            chunk = token[chunk_start:chunk_end]
-
-                            for character in chunk:
-
-                                if '_' in character:
-                                    words += 1
-
-                            if words > 1:  # gather single words of chunk
-                                is_chunk = True
-
-                                # save single words of chunk
-                                chunk_parts = []
-
-                                # handle first word of chunk
-                                word_start = 0
-                                word_end = chunk.find('_', word_start)
-                                f.write(chunk[word_start:word_end])
-                                word_start = word_end + 1
-
-                                for _ in range(words - 1):
-                                    word_end = chunk.find('_', word_start)
-                                    if word_end == -1:
-                                        chunk_parts.append(chunk[word_start:])
-                                    else:
-                                        chunk_parts.append(chunk[word_start:word_end])
-                                    word_start = word_end + 1
-                            else:
-                                f.write(chunk)
-                            ctr += 1
-                            continue
-
-                        elif 'pos=' in token:
-                            if ctr != 2:
-                                temp.append(' O')
-                                f.write(' O')
-                            add_tag(token)
-                            ctr = 3
-                            continue
-                        elif '"' in token:
-                            add_tag(token)
-                            ctr += 1
-                            continue
-                        else:
-                            # edit here for variation
-                            for _ in range(4 - ctr):
-                                temp.append(' O')
-                                f.write(' O')
-                            f.write('\n')
-
-                    if is_chunk:  # handle chunks
-                        for word in chunk_parts:
-                            f.write(word)
-                            for elem in temp:
-                                if ' O' in elem:
-                                    f.write(elem)
-                                else:
-                                    f.write(' I-' + elem)
-                            f.write('\n')
-
-                elif line_list[0] == '</sentence>':  # handle end of sentence
-                    f.write('\n')
-
-    def _determine_conll_file(self, file: str, data_folder: str, cut_multisense: bool = True):
-        """
-        Function that returns the given file in the CoNLL format.
-        ----------
-        string : str
-            String that contains the name of the file.
-        data_folder : str
-            String that contains the name of the folder in which the CoNLL file should reside.
-        cut_multisense : bool, optional
-            Boolean that determines whether or not the wn30_key tag should be cut if it contains multiple possible senses.
-            If True only the first listed sense will be used. Otherwise the whole list of senses will be detected
-            as one new sense. The default is True.
-        """
-
-        # check if converted file exists
-
-        if file is not None and not '.conll' in file:
-            if cut_multisense is True:
-                conll_file = file[:-4] + '_cut.conll'
-            else:
-                conll_file = file[:-3] + 'conll'
-
-            path_to_conll_file = data_folder / conll_file
-
-            if not path_to_conll_file.exists():
-                # convert the file to CoNLL
-                self._from_ufsac_to_conll(xml_file=Path(data_folder / file),
-                                          conll_file=Path(data_folder / conll_file),
-                                          encoding="latin-1",
-                                          cut_multisense=cut_multisense)
-
-            return conll_file
-
-        else:
-
-            return file
-
-
 class UP_CHINESE(ColumnCorpus):
     def __init__(
             self,
@@ -3590,7 +3349,7 @@ class UP_GERMAN(ColumnCorpus):
         cached_path(f"{up_de_path}de-up-train.conllu", Path("datasets") / dataset_name)
         cached_path(f"{up_de_path}de-up-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{up_de_path}de-up-test.conllu", Path("datasets") / dataset_name)
-        
+
         super(UP_GERMAN, self).__init__(
             data_folder,
             columns,

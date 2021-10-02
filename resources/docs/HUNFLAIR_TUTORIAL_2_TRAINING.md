@@ -19,7 +19,7 @@ corpus = NCBI_DISEASE()
 print(corpus)
 
 # 2. make the tag dictionary from the corpus
-tag_dictionary = corpus.make_tag_dictionary(tag_type="ner")
+tag_dictionary = corpus.make_label_dictionary(label_type="ner")
 
 # 3. initialize embeddings
 from flair.embeddings import WordEmbeddings, FlairEmbeddings, StackedEmbeddings
@@ -134,7 +134,7 @@ embedding_types = [
 embeddings = StackedEmbeddings(embeddings=embedding_types)
 
 # 3. initialize sequence tagger
-tag_dictionary = corpus.make_tag_dictionary(tag_type="ner")
+tag_dictionary = corpus.make_label_dictionary(label_type="ner")
 
 tagger = SequenceTagger(
     hidden_size=256,

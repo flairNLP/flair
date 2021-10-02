@@ -254,14 +254,9 @@ class SequenceTagger(flair.nn.Classifier):
 
         rnn_type = "LSTM" if "rnn_type" not in state.keys() else state["rnn_type"]
         use_dropout = 0.0 if "use_dropout" not in state.keys() else state["use_dropout"]
-        use_word_dropout = (
-            0.0 if "use_word_dropout" not in state.keys() else state["use_word_dropout"]
-        )
-        use_locked_dropout = (
-            0.0
-            if "use_locked_dropout" not in state.keys()
-            else state["use_locked_dropout"]
-        )
+        use_word_dropout = 0.0 if "use_word_dropout" not in state.keys() else state["use_word_dropout"]
+        use_locked_dropout = 0.0 if "use_locked_dropout" not in state.keys() else state["use_locked_dropout"]
+
         train_initial_hidden_state = (
             False
             if "train_initial_hidden_state" not in state.keys()
@@ -801,6 +796,8 @@ class SequenceTagger(flair.nn.Classifier):
             "chunk": "flair/chunk-english",
             "chunk-fast": "flair/chunk-english-fast",
             # Language-specific NER models
+            "ar-ner": "megantosh/flair-arabic-multi-ner",
+            "ar-pos": "megantosh/flair-arabic-dialects-codeswitch-egy-lev",
             "da-ner": "flair/ner-danish",
             "de-ner": "flair/ner-german",
             "de-ler": "flair/ner-german-legal",
