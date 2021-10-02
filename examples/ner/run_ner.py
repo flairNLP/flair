@@ -1,19 +1,18 @@
-import flair
 import inspect
 import json
 import logging
 import os
-import torch
 import sys
 
+import torch
 from dataclasses import dataclass, field
+from transformers import HfArgumentParser
+
+import flair
 from flair import set_seed
 from flair.embeddings import TransformerWordEmbeddings
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
-from transformers import HfArgumentParser
-from torch.optim.lr_scheduler import OneCycleLR
-from typing import Union
 
 logger = logging.getLogger("flair")
 logger.setLevel(level="INFO")
@@ -43,10 +42,13 @@ class TrainingArguments:
         default=10, metadata={"help": "The number of training epochs."}
     )
     batch_size: int = field(
-        default=16, metadata={"help": "Batch size used for training."}
+        default=8, metadata={"help": "Batch size used for training."}
+    )
+    mini_batch_chunk_size: int = field(
+        default=1, metadata={"help": "If smaller than batch size, batches will be chunked."}
     )
     learning_rate: float = field(
-        default=5e-05, metadata={"help": "Learning rate OneCycleLR scheduler"}
+        default=5e-05, metadata={"help": "Learning rate"}
     )
     seed: int = field(
         default=42, metadata={"help": "Seed used for reproducible fine-tuning results."}
@@ -91,9 +93,9 @@ def get_flair_corpus(data_args):
     for name, obj in inspect.getmembers(flair.datasets.sequence_labeling):
         if inspect.isclass(obj):
             if (
-                name.startswith("NER")
-                or name.startswith("CONLL")
-                or name.startswith("WNUT")
+                    name.startswith("NER")
+                    or name.startswith("CONLL")
+                    or name.startswith("WNUT")
             ):
                 ner_task_mapping[name] = obj
 
@@ -162,18 +164,16 @@ def main():
         reproject_embeddings=False,
     )
 
-    trainer = ModelTrainer(tagger, corpus, optimizer=torch.optim.AdamW)
+    trainer = ModelTrainer(tagger, corpus)
 
-    trainer.train(
-        data_args.output_dir,
-        learning_rate=training_args.learning_rate,
-        mini_batch_size=training_args.batch_size,
-        mini_batch_chunk_size=1,
-        max_epochs=training_args.num_epochs,
-        scheduler=OneCycleLR,
-        embeddings_storage_mode=training_args.embeddings_storage_mode,
-        weight_decay=training_args.weight_decay,
-    )
+    trainer.fine_tune(data_args.output_dir,
+                      learning_rate=training_args.learning_rate,
+                      mini_batch_size=training_args.batch_size,
+                      mini_batch_chunk_size=training_args.mini_batch_chunk_size,
+                      max_epochs=training_args.num_epochs,
+                      embeddings_storage_mode=training_args.embeddings_storage_mode,
+                      weight_decay=training_args.weight_decay,
+                      )
 
     torch.save(model_args, os.path.join(data_args.output_dir, "model_args.bin"))
     torch.save(training_args, os.path.join(data_args.output_dir, "training_args.bin"))
