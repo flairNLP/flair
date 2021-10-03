@@ -118,6 +118,7 @@ class ModelTrainer:
             metrics_for_tensorboard=[],
             optimizer_state_dict: Optional = None,
             scheduler_state_dict: Optional = None,
+            save_optimizer_state: bool = False,
             **kwargs,
     ) -> dict:
         """
@@ -697,7 +698,7 @@ class ModelTrainer:
 
                 # if checkpoint is enabled, save model at each epoch
                 if checkpoint and not param_selection_mode:
-                    self.model.save(base_path / "checkpoint.pt")
+                    self.model.save(base_path / "checkpoint.pt", checkpoint=True)
 
                 # Check whether to save best model
                 if (
@@ -707,7 +708,7 @@ class ModelTrainer:
                         and not use_final_model_for_eval
                 ):
                     log.info("saving best model")
-                    self.model.save(base_path / "best-model.pt")
+                    self.model.save(base_path / "best-model.pt", checkpoint=save_optimizer_state)
 
                     if anneal_with_prestarts:
                         current_state_dict = self.model.state_dict()
@@ -718,14 +719,14 @@ class ModelTrainer:
                 if save_model_each_k_epochs > 0 and not epoch % save_model_each_k_epochs:
                     print("saving model of current epoch")
                     model_name = "model_epoch_" + str(epoch) + ".pt"
-                    self.model.save(base_path / model_name)
+                    self.model.save(base_path / model_name, checkpoint=save_optimizer_state)
 
             if use_swa:
                 optimizer.swap_swa_sgd()
 
             # if we do not use dev data for model selection, save final model
             if save_final_model and not param_selection_mode:
-                self.model.save(base_path / "final-model.pt")
+                self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
 
         except KeyboardInterrupt:
             log_line(log)
@@ -736,7 +737,7 @@ class ModelTrainer:
 
             if not param_selection_mode:
                 log.info("Saving model ...")
-                self.model.save(base_path / "final-model.pt")
+                self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
                 log.info("Done.")
 
         # test best model if test data is present

@@ -74,7 +74,7 @@ class Model(torch.nn.Module):
     def _fetch_model(model_name) -> str:
         return model_name
 
-    def save(self, model_file: Union[str, Path]):
+    def save(self, model_file: Union[str, Path], checkpoint: bool = False):
         """
         Saves the current model to the provided file.
         :param model_file: the model file
@@ -93,12 +93,16 @@ class Model(torch.nn.Module):
 
                 if 'optimizer' in training_parameters:
                     optimizer = training_parameters['optimizer']
-                    training_parameters['optimizer_state_dict'] = optimizer.state_dict()
+                    if checkpoint:
+                        training_parameters['optimizer_state_dict'] = optimizer.state_dict()
                     training_parameters['optimizer'] = optimizer.__class__
 
                 if 'scheduler' in training_parameters:
                     scheduler = training_parameters['scheduler']
-                    training_parameters['scheduler_state_dict'] = scheduler.state_dict()
+                    if checkpoint:
+                        with warnings.catch_warnings():
+                            warnings.simplefilter("ignore")
+                            training_parameters['scheduler_state_dict'] = scheduler.state_dict()
                     training_parameters['scheduler'] = scheduler.__class__
 
             model_state['model_card'] = self.model_card
