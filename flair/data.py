@@ -509,7 +509,7 @@ class Span(DataPoint):
             return " ".join([t.text for t in self.tokens])
         str = ""
         for t in self.tokens:
-            while t.start_pos != pos:
+            while t.start_pos > pos:
                 str += " "
                 pos += 1
 
