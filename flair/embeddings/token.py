@@ -6,7 +6,7 @@ import re
 from abc import abstractmethod
 from collections import Counter
 from pathlib import Path
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Optional
 
 import gensim
 import numpy as np
@@ -119,11 +119,14 @@ class StackedEmbeddings(TokenEmbeddings):
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
-    def __init__(self, embeddings: str, field: str = None):
+    def __init__(self, embeddings: str, field: str = None, quantize: bool = False, alpha: Optional[float] = None):
         """
         Initializes classic word embeddings. Constructor downloads required files if not there.
         :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or custom
         If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
+        quantize can be used to reduce the memory size
+        alpha defines how the quantization happens: None refers to float16 quantization, any other number refers to
+        symmetric quantization with 8bits. The embeddings will be calculated as (alpha * QuantValue)
         """
         self.embeddings = embeddings
 
@@ -204,6 +207,12 @@ class WordEmbeddings(TokenEmbeddings):
         self.vectors = np.row_stack(
             (precomputed_word_embeddings.vectors, np.zeros(self.__embedding_length, dtype="float"))
         )
+        self.alpha = alpha
+        if quantize:
+            if alpha:
+                self.vectors = np.round(self.vectors / alpha).astype("int8")
+            else:
+                self.vectors = self.vectors.astype("float16")
         self.vocab = {
             k: v.index
             for k, v in precomputed_word_embeddings.vocab.items()
@@ -236,6 +245,8 @@ class WordEmbeddings(TokenEmbeddings):
 
     def get_vec(self, word: str) -> torch.Tensor:
         word_embedding = self.vectors[self.get_cached_token_index(word)]
+        if self.alpha:
+            word_embedding *= self.alpha
 
         word_embedding = torch.tensor(
             word_embedding.tolist(), device=flair.device, dtype=torch.float
