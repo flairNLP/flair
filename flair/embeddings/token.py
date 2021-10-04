@@ -192,17 +192,25 @@ class WordEmbeddings(TokenEmbeddings):
         self.static_embeddings = True
 
         if str(embeddings).endswith(".bin"):
-            self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
+            precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
                 str(embeddings), binary=True
             )
         else:
-            self.precomputed_word_embeddings = gensim.models.KeyedVectors.load(
+            precomputed_word_embeddings = gensim.models.KeyedVectors.load(
                 str(embeddings)
             )
 
+        self.__embedding_length: int = precomputed_word_embeddings.vector_size
+        self.vectors = np.row_stack(
+            (precomputed_word_embeddings.vectors, np.zeros(self.__embedding_length, dtype="float"))
+        )
+        self.vocab = {
+            k: v.index
+            for k, v in precomputed_word_embeddings.vocab.items()
+        }
+
         self.field = field
 
-        self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
         super().__init__()
 
     @property
@@ -210,21 +218,24 @@ class WordEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     @instance_lru_cache(maxsize=10000, typed=False)
-    def get_cached_vec(self, word: str) -> torch.Tensor:
-        if word in self.precomputed_word_embeddings:
-            word_embedding = self.precomputed_word_embeddings[word]
-        elif word.lower() in self.precomputed_word_embeddings:
-            word_embedding = self.precomputed_word_embeddings[word.lower()]
-        elif re.sub(r"\d", "#", word.lower()) in self.precomputed_word_embeddings:
-            word_embedding = self.precomputed_word_embeddings[
+    def get_cached_token_index(self, word: str) -> int:
+        if word in self.vocab:
+            return self.vocab[word]
+        elif word.lower() in self.vocab:
+            return self.vocab[word.lower()]
+        elif re.sub(r"\d", "#", word.lower()) in self.vocab:
+            return self.vocab[
                 re.sub(r"\d", "#", word.lower())
             ]
-        elif re.sub(r"\d", "0", word.lower()) in self.precomputed_word_embeddings:
-            word_embedding = self.precomputed_word_embeddings[
+        elif re.sub(r"\d", "0", word.lower()) in self.vocab:
+            return self.vocab[
                 re.sub(r"\d", "0", word.lower())
             ]
         else:
-            word_embedding = np.zeros(self.embedding_length, dtype="float")
+            return -1
+
+    def get_vec(self, word: str) -> torch.Tensor:
+        word_embedding = self.vectors[self.get_cached_token_index(word)]
 
         word_embedding = torch.tensor(
             word_embedding.tolist(), device=flair.device, dtype=torch.float
@@ -242,7 +253,7 @@ class WordEmbeddings(TokenEmbeddings):
                 else:
                     word = token.get_tag(self.field).value
 
-                word_embedding = self.get_cached_vec(word=word)
+                word_embedding = self.get_vec(word=word)
 
                 token.set_embedding(self.name, word_embedding)
 
