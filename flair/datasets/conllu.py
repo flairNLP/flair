@@ -53,6 +53,10 @@ class CoNLLUCorpus(Corpus):
         """
         Instantiates a Corpus from CoNLL-U (Plus) column-formatted task data
 
+        Universal dependencies corpora that contain multi-word tokens are not supported yet.
+        The annotation of flair sentences with the "deps" column is not yet supported as well.
+        Please consider using the "UniversalDependenciesCorpus" instead.
+
         :param data_folder: base folder with the task data
         :param train_file: the name of the train file
         :param test_file: the name of the test file
@@ -119,6 +123,10 @@ class CoNLLUDataset(FlairDataset):
                  metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None):
         """
         Instantiates a column dataset in CoNLL-U (Plus) format.
+
+        Universal dependencies datasets that contain multi-word tokens are not supported yet.
+        The annotation of flair sentences with the "deps" column is not yet supported as well.
+        Please consider using the "UniversalDependenciesDataset" instead.
 
         :param path_to_conllu_file: Path to the CoNLL-U formatted file
         :param in_memory: If set to True, keeps full dataset in memory, otherwise does disk reads
