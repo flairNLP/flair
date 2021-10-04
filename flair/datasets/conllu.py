@@ -234,24 +234,6 @@ class CoNLLUDataset(FlairDataset):
 
             sentence.add_token(token)
 
-        # Add universal dependencies relations as sentence label annotation. We exclude the root relation.
-        for token, conllu_token in zip(sentence, token_list):
-
-            if (conllu_token.get("deprel") is not None and
-                    conllu_token.get("head") is not None and
-                    conllu_token["head"] != 0):
-                sentence.add_complex_label(typename="deprel",
-                                           label=RelationLabel(value=conllu_token["deprel"],
-                                                               head=Span([sentence[conllu_token["head"] - 1]]),
-                                                               tail=Span([token])))
-
-            if conllu_token.get("deps") is not None:
-                for relation, head in filter(lambda x: x[1] != 0, conllu_token["deps"]):
-                    sentence.add_complex_label(typename="deps",
-                                               label=RelationLabel(value=relation,
-                                                                   head=Span([sentence[head - 1]]),
-                                                                   tail=Span([token])))
-
         if "sentence_id" in token_list.metadata:
             sentence.add_label("sentence_id", token_list.metadata["sentence_id"])
 
