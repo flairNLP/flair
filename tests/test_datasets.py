@@ -332,29 +332,13 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
         "punct"
     ]
 
-    assert [(label.head.text, label.tail.text, label.value) for label in sent1.get_labels("deprel")] == [
-        ("buy", "They", "nsubj"),
-        ("sell", "and", "cc"),
-        ("buy", "sell", "conj"),
-        ("buy", "books", "obj"),
-        ("buy", ".", "punct")
-    ]
-
-    assert [(label.head.text, label.tail.text, label.value) for label in sent1.get_labels("deps")] == [
-        ("buy", "They", "nsubj"),
-        ("sell", "They", "nsubj"),
-        ("sell", "and", "cc"),
-        ("buy", "sell", "conj"),
-        ("buy", "books", "obj"),
-        ("sell", "books", "obj"),
-        ("buy", ".", "punct")
-    ]
-
-    sent2: Sentence = dataset[1]
-    assert len(sent2.get_labels("deps")) == 0
-
 
 def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
+    """
+    This test only covers basic universal dependencies datasets.
+    For example, multi-word tokens or the "deps" column sentence annotations are not supported yet.
+    """
+
     # Here, we use the default token annotation fields.
     corpus = CoNLLUCorpus(
         tasks_base_path / "conllu",
@@ -363,8 +347,8 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
         test_file="universal_dependencies.conllu"
     )
 
-    assert len(corpus.train) == 2
-    assert len(corpus.dev) == 2
-    assert len(corpus.test) == 2
+    assert len(corpus.train) == 1
+    assert len(corpus.dev) == 1
+    assert len(corpus.test) == 1
 
     _assert_universal_dependencies_conllu_dataset(corpus.train)
