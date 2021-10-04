@@ -244,9 +244,8 @@ class WordEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
-        for i, sentence in enumerate(sentences):
-
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+        for sentence in sentences:
+            for token in sentence.tokens:
 
                 if "field" not in self.__dict__ or self.field is None:
                     word = token.text
