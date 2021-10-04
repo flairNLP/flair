@@ -442,13 +442,15 @@ class DefaultClassifier(Classifier):
                  multi_label: bool = False,
                  multi_label_threshold: float = 0.5,
                  loss_weights: Dict[str, float] = None,
+                 only_loss_for_incorrect: bool = False
                  ):
 
         super().__init__()
 
         # initialize the label dictionary
         self.label_dictionary: Dictionary = label_dictionary
-        # self.label_dictionary.add_item('O')
+
+        self.only_loss_for_incorrect = only_loss_for_incorrect
 
         # set up multi-label logic
         self.multi_label = multi_label
@@ -502,6 +504,28 @@ class DefaultClassifier(Classifier):
             labels = torch.tensor([self.label_dictionary.get_idx_for_item(label[0]) if len(label) > 0
                                    else self.label_dictionary.get_idx_for_item('O')
                                    for label in labels], dtype=torch.long, device=flair.device)
+
+        if self.only_loss_for_incorrect:
+            filtered_scores = []
+            filtered_labels = []
+            softmax = torch.nn.functional.softmax(scores, dim=-1)
+            conf, predicted_label_indices = torch.max(softmax, dim=-1)
+
+            data_point_idx = 0
+            for label_index, predicted_label_index in zip(labels, predicted_label_indices):
+                if label_index == predicted_label_index:
+                    pass
+                else:
+                    filtered_scores.append(scores[data_point_idx])
+                    filtered_labels.append(label_index)
+                data_point_idx += 1
+
+            if not any(filtered_labels): return torch.tensor(0., requires_grad=True, device=flair.device), 1
+
+            filtered_scores = torch.stack(filtered_scores)
+            filtered_labels = torch.stack(filtered_labels)
+
+            return self.loss_function(filtered_scores, filtered_labels), len(labels)
 
         return self.loss_function(scores, labels), len(labels)
 
