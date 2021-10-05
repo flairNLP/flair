@@ -62,8 +62,10 @@ Token: 5 .
 
 ## Tokenization
 
-When you create a `Sentence` as above, the text is automatically tokenized using the
+When you create a `Sentence` as above, the text is **automatically tokenized** using the
 lightweight [segtok library](https://pypi.org/project/segtok/). 
+
+### Using no tokenizer
 
 If you *do not* want to use this tokenizer, simply set the `use_tokenizer` flag to `False`
 when instantiating your `Sentence` with an untokenized string:
@@ -271,5 +273,7 @@ Giving you only the "topic" labels.
 
 
 ## Next
+
+So far, we've seen how to create sentences and label them manually.
 
 Now, let us look at how to use [pre-trained models](/resources/docs/TUTORIAL_2_TAGGING.md) to tag your text.

@@ -4,11 +4,10 @@ from abc import abstractmethod, ABC
 from collections import Counter
 from collections import defaultdict
 from operator import itemgetter
-from typing import List, Dict, Union, Callable, Optional
+from typing import List, Dict, Union, Optional
 
 import flair
 import torch
-from deprecated import deprecated
 from torch.utils.data import Dataset
 from torch.utils.data.dataset import ConcatDataset, Subset
 
@@ -26,7 +25,7 @@ class Dictionary:
         # init dictionaries
         self.item2idx: Dict[str, int] = {}
         self.idx2item: List[str] = []
-
+        self.add_unk = add_unk
         # in order to deal with unknown tokens, add <unk>
         if add_unk:
             self.add_item("<unk>")
@@ -59,8 +58,11 @@ class Dictionary:
         item_encoded = item.encode("utf-8")
         if item_encoded in self.item2idx.keys():
             return self.item2idx[item_encoded]
+        elif self.add_unk:
+            return 0
         else:
             log.error(f"The string '{item}' is not in dictionary! Dictionary contains only: {self.get_items()}")
+            log.error("You can create a Dictionary that handles unknown items with an <unk>-key by setting add_unk = True in the construction.")
             raise IndexError
 
     def get_idx_for_items(self, items: List[str]) -> List[int]:
@@ -100,6 +102,12 @@ class Dictionary:
         with open(savefile, "wb") as f:
             mappings = {"idx2item": self.idx2item, "item2idx": self.item2idx}
             pickle.dump(mappings, f)
+            
+    def __setstate__(self, d):
+        self.__dict__ = d
+        if 'add_unk' not in self.__dict__.keys():
+            self.__dict__['add_unk'] = False
+        
 
     @classmethod
     def load_from_file(cls, filename: str):
@@ -152,6 +160,9 @@ class Label:
         self.value = value
         self.score = score
 
+    def spawn(self, value: str, score: float = 1.0):
+        return Label(value, score)
+
     @property
     def value(self):
         return self._value
@@ -195,6 +206,9 @@ class SpanLabel(Label):
         super().__init__(value, score)
         self.span = span
 
+    def spawn(self, value: str, score: float = 1.0):
+        return SpanLabel(self.span, value, score)
+
     def __str__(self):
         return f"{self._value} [{self.span.id_text}] ({round(self._score, 4)})"
 
@@ -217,6 +231,9 @@ class RelationLabel(Label):
         super().__init__(value, score)
         self.head = head
         self.tail = tail
+
+    def spawn(self, value: str, score: float = 1.0):
+        return RelationLabel(self.head, self.tail, value, score)
 
     def __str__(self):
         return f"{self._value} [{self.head.id_text} -> {self.tail.id_text}] ({round(self._score, 4)})"
@@ -571,44 +588,6 @@ class Tokenizer(ABC):
         return self.__class__.__name__
 
 
-@deprecated(version="0.5", reason="Use 'flair.tokenization.SpaceTokenizer' instead.")
-def space_tokenizer(text: str) -> List[Token]:
-    # We don't want to create a SpaceTokenizer object each time this function is called,
-    # so delegate the call directly to the static run_tokenize method
-    from flair.tokenization import SpaceTokenizer
-    return SpaceTokenizer.run_tokenize(text)
-
-
-@deprecated(version="0.5", reason="Use 'flair.tokenization.SegtokTokenizer' instead.")
-def segtok_tokenizer(text: str) -> List[Token]:
-    # We don't want to create a SegtokTokenizer object each time this function is called,
-    # so delegate the call directly to the static run_tokenize method
-    from flair.tokenization import SegtokTokenizer
-    return SegtokTokenizer.run_tokenize(text)
-
-
-@deprecated(version="0.5", reason="Use 'flair.tokenization.SpacyTokenizer' instead.")
-def build_spacy_tokenizer(model) -> Callable[[str], List[Token]]:
-    from flair.tokenization import SpacyTokenizer
-    spacy_tokenizer = SpacyTokenizer(model)
-
-    def tokenizer(text: str) -> List[Token]:
-        return spacy_tokenizer.tokenize(text)
-
-    return tokenizer
-
-
-@deprecated(version="0.5", reason="Use 'flair.tokenization.JapaneseTokenizer' instead.")
-def build_japanese_tokenizer(tokenizer: str = "MeCab"):
-    from flair.tokenization import JapaneseTokenizer
-    japanese_tokenizer = JapaneseTokenizer(tokenizer)
-
-    def tokenizer(text: str) -> List[Token]:
-        return japanese_tokenizer.tokenize(text)
-
-    return tokenizer
-
-
 class Sentence(DataPoint):
     """
        A Sentence is a list of tokens and is used to represent a sentence or text fragment.
@@ -676,8 +655,6 @@ class Sentence(DataPoint):
 
         # some sentences represent a document boundary (but most do not)
         self.is_document_boundary: bool = False
-
-        self.relations: List[Relation] = []
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
@@ -1402,8 +1379,6 @@ class Corpus:
         from flair.datasets import DataLoader
 
         datasets = [self.train]
-        if self.test is not None:
-            datasets.append(self.test)
 
         data = ConcatDataset(datasets)
 
@@ -1411,17 +1386,27 @@ class Corpus:
 
         log.info("Computing label dictionary. Progress:")
 
+        # if there are token labels of provided type, use these. Otherwise use sentence labels
+        token_labels_exist = False
+
         all_label_types = Counter()
+        all_sentence_labels = []
         for batch in Tqdm.tqdm(iter(loader)):
 
             for sentence in batch:
 
-                # check if sentence itself has labels
-                labels = sentence.get_labels(label_type)
-                all_label_types.update(sentence.annotation_layers.keys())
+                # if we are looking for sentence-level labels
+                if not token_labels_exist:
+                    # check if sentence itself has labels
+                    labels = sentence.get_labels(label_type)
+                    all_label_types.update(sentence.annotation_layers.keys())
 
-                for label in labels:
-                    label_dictionary.add_item(label.value)
+                    for label in labels:
+                        if label.value not in all_sentence_labels: all_sentence_labels.append(label.value)
+
+                    if not label_dictionary.multi_label:
+                        if len(labels) > 1:
+                            label_dictionary.multi_label = True
 
                 # check for labels of words
                 if isinstance(sentence, Sentence):
@@ -1429,10 +1414,12 @@ class Corpus:
                         all_label_types.update(token.annotation_layers.keys())
                         for label in token.get_labels(label_type):
                             label_dictionary.add_item(label.value)
+                            token_labels_exist = True
 
-                if not label_dictionary.multi_label:
-                    if len(labels) > 1:
-                        label_dictionary.multi_label = True
+        # if this is not a token-level prediction problem, add sentence-level labels to dictionary
+        if not token_labels_exist:
+            for label in all_sentence_labels:
+                label_dictionary.add_item(label)
 
         if len(label_dictionary.idx2item) == 0:
             log.error(
@@ -1443,7 +1430,7 @@ class Corpus:
 
         log.info(
             f"Corpus contains the labels: {', '.join([label[0] + f' (#{label[1]})' for label in all_label_types.most_common()])}")
-        log.info(f"Dictionary for label '{label_type}' contains: {label_dictionary.idx2item}")
+        log.info(f"Created (for label '{label_type}') {label_dictionary}")
 
         return label_dictionary
 
@@ -1499,7 +1486,7 @@ class MultiCorpus(Corpus):
                  f"{len(self.train) if self.train else 0} train + " \
                  f"{len(self.dev) if self.dev else 0} dev + " \
                  f"{len(self.test) if self.test else 0} test sentences\n - "
-        output += "\n - ".join([f'{type(corpus).__name__} {str(corpus)}' for corpus in self.corpora])
+        output += "\n - ".join([f'{type(corpus).__name__} {str(corpus)} - {corpus.name}' for corpus in self.corpora])
         return output
 
 
@@ -1531,8 +1518,8 @@ def iob_iobes(tags):
     """
     new_tags = []
     for i, tag in enumerate(tags):
-        if tag.value == "O":
-            new_tags.append(tag.value)
+        if tag.value == "O" or tag.value == "":
+            new_tags.append("O")
         elif tag.value.split("-")[0] == "B":
             if i + 1 != len(tags) and tags[i + 1].value.split("-")[0] == "I":
                 new_tags.append(tag.value)

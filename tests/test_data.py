@@ -356,7 +356,7 @@ def test_sentence_to_real_string(tasks_base_path):
     sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=SegtokTokenizer())
     assert "I love Berlin." == sentence.to_plain_string()
 
-    corpus = flair.datasets.GERMEVAL_14(base_path=tasks_base_path)
+    corpus = flair.datasets.NER_GERMAN_GERMEVAL(base_path=tasks_base_path)
 
     sentence = corpus.train[0]
     sentence.infer_space_after()

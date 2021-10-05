@@ -97,7 +97,7 @@ The sentence now has two types of annotation: POS and NER.
 You choose which pre-trained model you load by passing the appropriate
 string to the `load()` method of the `SequenceTagger` class. 
 
-A full list of our current and community-contributed models can be browsed on the [__model hub__](https://huggingface.co/models?filter=flair). 
+A full list of our current and community-contributed models can be browsed on the [__model hub__](https://huggingface.co/models?library=flair&sort=downloads). 
 At least the following pre-trained models are provided (click on an ID link to get more info
 for the model and an online demo):
 
@@ -142,6 +142,8 @@ You can pass text in any of these languages to the model. In particular, the NER
 
 | ID | Task | Language | Training Dataset | Accuracy | Contributor / Notes |
 | -------------    | ------------- |------------- |------------- |------------- | ------------ |
+| '[ar-ner](https://huggingface.co/megantosh/flair-arabic-multi-ner)' | NER (4-class) | Arabic | AQMAR & ANERcorp (curated) |  **86.66** (F1) | |
+| '[ar-pos](https://huggingface.co/megantosh/flair-arabic-dialects-codeswitch-egy-lev)' | NER (4-class) | Arabic (+dialects)| combination of corpora |  | |
 | '[de-ner](https://huggingface.co/flair/ner-german)' | NER (4-class) |  German | Conll-03  |  **87.94** (F1) | |
 | '[de-ner-large](https://huggingface.co/flair/ner-german-large)' | NER (4-class) |  German | Conll-03  |  **92,31** (F1) | |
 | 'de-ner-germeval' | NER (4-class) | German | Germeval  |  **84.90** (F1) | |
@@ -186,6 +188,31 @@ print(sentence.to_tagged_string())
 This should print: 
 ```console
 George <B-PER> Washington <E-PER> ging nach Washington <S-LOC> .
+```
+
+### Tagging an Arabic sentence
+
+Flair also works for languages that write from right to left. To tag an Arabic sentence, just load the appropriate model:
+
+```python
+
+# load model
+tagger = SequenceTagger.load('ar-ner')
+
+# make Arabic sentence
+sentence = Sentence("احب برلين")
+
+# predict NER tags
+tagger.predict(sentence)
+
+# print sentence with predicted tags
+for entity in sentence.get_labels('ner'):
+    print(entity)
+```
+
+This should print: 
+```console
+LOC [برلين (2)] (0.9803) 
 ```
 
 ### Tagging Multilingual Text
@@ -304,11 +331,10 @@ All you need to do is use the `predict()` method of the classifier on a sentence
 the sentence. Lets use a sentence with positive sentiment:
 
 ```python
-# load tagger
-classifier = TextClassifier.load('sentiment')
-
-# predict for example sentence
+# make example sentence
 sentence = Sentence("enormously entertaining for moviegoers of any age.")
+
+# call predict
 classifier.predict(sentence)
 
 # check prediction

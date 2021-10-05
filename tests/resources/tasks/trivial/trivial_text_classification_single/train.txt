@@ -1,0 +1,16 @@
+__label__New_York this is New York
+__label__Berlin this is Berlin
+__label__New_York here is New York
+__label__Berlin here is Berlin
+__label__New_York I like New York
+__label__Berlin I like Berlin
+__label__New_York we like New York
+__label__Berlin we like Berlin
+__label__New_York this is New York
+__label__Berlin this is Berlin
+__label__New_York here is New York
+__label__Berlin here is Berlin
+__label__New_York I like New York
+__label__Berlin I like Berlin
+__label__New_York we like New York
+__label__Berlin we like Berlin

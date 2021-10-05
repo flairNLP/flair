@@ -98,36 +98,61 @@ Corpus: 12543 train + 2002 dev + 2077 test sentences
 Corpus: 1255 train + 201 dev + 208 test sentences
 ```
 
+### Creating label dictionaries
+
 For many learning tasks you need to create a "dictionary" that contains all the labels you want to predict.
-You can generate this dictionary directly out of the `Corpus` by calling the method `make_label_dictionary`. 
-If a corpus has multiple label types, you additionally need to specify for which label you want to produce the dictionary: 
+You can generate this dictionary directly out of the `Corpus` by calling the method `make_label_dictionary` 
+and passing the desired `label_type`. 
+
+For instance, the UD_ENGLISH corpus instantiated above has multiple layers of annotation like regular 
+POS tags ('pos'), universal POS tags ('upos'), morphological tags ('tense', 'number'..) and so on. 
+Create label dictionaries for universal POS tags by passing `label_type='upos'` like this:
 
 ```python
-# create tag dictionary for a PoS task
-corpus = flair.datasets.UD_ENGLISH()
-print(corpus.make_label_dictionary('upos'))
+# create label dictionary for a Universal Part-of-Speech tagging task
+upos_dictionary = corpus.make_label_dictionary(label_type='upos')
 
-# create tag dictionary for an NER task
-corpus = flair.datasets.CONLL_03_DUTCH()
-print(corpus.make_label_dictionary('ner'))
+# print dictionary
+print(upos_dictionary)
+```
 
+This will print out the created dictionary:
+
+```console
+Dictionary with 17 tags: PROPN, PUNCT, ADJ, NOUN, VERB, DET, ADP, AUX, PRON, PART, SCONJ, NUM, ADV, CCONJ, X, INTJ, SYM
+```
+
+#### Dictionaries for other label types
+
+When calling `make_label_dictionary` in the example above, statistics on all label types in the same corpus are printed:
+
+```console
+Corpus contains the labels: upos (#204585), lemma (#204584), pos (#204584), dependency (#204584), number (#68023), verbform (#35412), prontype (#33584), person (#21187), tense (#20238), mood (#16547), degree (#13649), definite (#13300), case (#12091), numtype (#4266), gender (#4038), poss (#3039), voice (#1205), typo (#332), abbr (#126), reflex (#100), style (#33), foreign (#18)
+```
+
+This means that you can create dictionaries for any of these label types for the UD_ENGLISH corpus. Let's create dictionaries for regular part of speech tags
+and a morphological number tagging task: 
+
+```python
+# create label dictionary for a regular POS tagging task
+pos_dictionary = corpus.make_label_dictionary(label_type='pos')
+
+# create label dictionary for a morphological number tagging task
+tense_dictionary = corpus.make_label_dictionary(label_type='number')
+```
+
+If you print these dictionaries, you will find that the POS dictionary contains 50 tags and the number dictionary only 2 for this corpus (singular and plural). 
+
+
+#### Dictionaries for other corpora types
+
+The method `make_label_dictionary` can be used for any corpus, including text classification corpora:
+
+```python
 # create label dictionary for a text classification task
 corpus = flair.datasets.TREC_6()
-print(corpus.make_label_dictionary())
+print(corpus.make_label_dictionary('question_class'))
 ```
-
-This should print out different label dictionaries for different datasets and tasks.
-
-Another useful function is `obtain_statistics()` which returns you a python dictionary with useful statistics about your
-dataset. Using it, for example, on the IMDB dataset like this
-
-```python
-import flair.datasets 
-corpus = flair.datasets.TREC_6()
-stats = corpus.obtain_statistics()
-print(stats)
-```
-outputs detailed information on the dataset, each split, and the distribution of class labels.
 
 ### The MultiCorpus Object
 
@@ -148,72 +173,122 @@ multi_corpus = MultiCorpus([english_corpus, german_corpus, dutch_corpus])
 
 The `MultiCorpus` inherits from `Corpus`, so you can use it like any other corpus to train your models. 
 
-## Prepared Datasets
+## Datasets included in Flair
 
-Flair supports a growing list of prepared datasets out of the box. That is, it automatically downloads and sets up the 
-data the first time you call the corresponding constructor ID. The following datasets are supported: 
+Flair supports many datasets out of the box. It automatically downloads and sets up the 
+data the first time you call the corresponding constructor ID. 
 
+The following datasets are supported (**click category to expand**): 
 
-#### Chunking
-
-| ID(s) | Languages | Description |
-| -------------    | ------------- |------------- |
-| 'CONLL_2000' | English  |  [CoNLL-2000]((https://www.clips.uantwerpen.be/conll2000/chunking/)) syntactic chunking |
-
+<details>
+  <summary>Named Entity Recognition (NER) datasets</summary>
 
 #### Named Entity Recognition
 
-| ID(s) | Languages | Description |
-| -------------    | ------------- |------------- 
-| 'ANER_CORP' | Arabic  |  [Arabic Named Entity Recognition Corpus](http://curtis.ml.cmu.edu/w/courses/index.php/ANERcorp) 4-class NER |
-| 'BIOFID' | German  |  [CoNLL-03](https://www.aclweb.org/anthology/K19-1081/) Biodiversity literature NER |
-| 'BIOSCOPE' | English  |  [BioScope](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-S11-S9/) biomedical texts annotated for uncertainty, negation and their scopes |
-| 'BUSINESS_HUN' | Hungarian | NER on Hungarian business news |
+| Object | Languages | Description |
+| -------------    | ------------- |-------------  |
+| 'CONLL_03' | English  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER (requires manual download) |
+| 'CONLL_03_GERMAN' | German  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER (requires manual download) |
 | 'CONLL_03_DUTCH' | Dutch  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER |
 | 'CONLL_03_SPANISH' | Spanish  |  [CoNLL-03](https://www.clips.uantwerpen.be/conll2002/ner/) 4-class NER |
-| 'CONLL_04' | English  |  [CoNLL-04](https://github.com/bekou/multihead_joint_entity_relation_extraction/tree/master/data/CoNLL04) Relation Extraction |
-| 'DANE' | Danish | [DaNE dataset](https://github.com/alexandrainst/danlp/blob/master/docs/datasets.md#danish-dependency-treebank) | 
-| 'EUROPARL_NER_GERMAN' | German | [German Europarl dataset](https://nlpado.de/~sebastian/software/ner_german.shtml) NER in German EU parliament speeches | 
-| 'JAPANESE_NER' | Japanese | [https://github.com/Hironsan/IOB2Corpus] Japanese NER dataset automatically generated from Wikipedia |
-| 'LER_GERMAN' | German | [Legal Entity Recognition](https://github.com/elenanereiss/Legal-Entity-Recognition) NER in German Legal Documents |
-| 'LUGANDA_NER' | Luganda | [LUGANDA_NER](https://github.com/masakhane-io/masakhane-ner/tree/main/data/lug) |
-| 'MIT_MOVIE_NER_SIMPLE' | English  |  [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - simple NER |
-| 'MIT_MOVIE_NER_COMPLEX' | English  |  [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - complex NER |
-| 'MIT_RESTAURANT_NER' | English  |  [NER dataset for restaurant reviews](https://groups.csail.mit.edu/sls/downloads/restaurant/) |
+| 'NER_ARABIC_ANER' | Arabic  |  [Arabic Named Entity Recognition Corpus](http://curtis.ml.cmu.edu/w/courses/index.php/ANERcorp) 4-class NER |
+| 'NER_ARABIC_AQMAR' | Arabic  |  [American and Qatari Modeling of Arabic](http://www.cs.cmu.edu/~ark/AQMAR/) 4-class NER (modified) |
 | 'NER_BASQUE' | Basque  |  [NER dataset for Basque](http://ixa2.si.ehu.eus/eiec/) |
+| 'NER_CHINESE_WEIBO' | Chinese  | [Weibo NER corpus](https://paperswithcode.com/sota/chinese-named-entity-recognition-on-weibo-ner/).  |
+| 'NER_DANISH_DANE' | Danish | [DaNE dataset](https://github.com/alexandrainst/danlp/blob/master/docs/datasets.md#danish-dependency-treebank) | 
+| 'NER_ENGLISH_MOVIE_SIMPLE' | English  |  [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - simple NER |
+| 'NER_ENGLISH_MOVIE_COMPLEX' | English  |  [NER dataset for movie reviews](https://groups.csail.mit.edu/sls/downloads/movie/) - complex NER |
+| 'NER_ENGLISH_PERSON' | English | [PERSON_NER](https://github.com/das-sudeshna/genid) NER with person names | 
+| 'NER_ENGLISH_RESTAURANT' | English  |  [NER dataset for restaurant reviews](https://groups.csail.mit.edu/sls/downloads/restaurant/) |
+| 'NER_ENGLISH_SEC_FILLINGS' | English | [SEC-fillings](https://github.com/juand-r/entity-recognition-datasets) with 4-class NER labels from (Alvarado et al, 2015)[https://aclanthology.org/U15-1010/] here | 
+| 'NER_ENGLISH_STACKOVERFLOW' | English  | NER on StackOverflow posts |
+| 'NER_ENGLISH_TWITTER' | English  |  [Twitter NER dataset](https://github.com/aritter/twitter_nlp/) |
+| 'NER_ENGLISH_WIKIGOLD' | English  |  [Wikigold](https://github.com/juand-r/entity-recognition-datasets/tree/master/data/wikigold) a manually annotated collection of Wikipedia text |
+| 'NER_ENGLISH_WNUT_2020' | English  |  [WNUT-20](https://github.com/jeniyat/WNUT_2020_NER) named entity extraction |
+| 'NER_ENGLISH_WEBPAGES' | English  | 4-class NER on web pages from [Ratinov and Roth (2009)](https://aclanthology.org/W09-1119/) |
 | 'NER_FINNISH' | Finnish | [Finer-data](https://github.com/mpsilfve/finer-data) | 
+| 'NER_GERMAN_BIOFID' | German  |  [CoNLL-03](https://www.aclweb.org/anthology/K19-1081/) Biodiversity literature NER |
+| 'NER_GERMAN_EUROPARL' | German | [German Europarl dataset](https://nlpado.de/~sebastian/software/ner_german.shtml) NER in German EU parliament speeches | 
+| 'NER_GERMAN_GERMEVAL' | German  |  [GermEval 14 NER](https://sites.google.com/site/germeval2014ner/data/) corpus |
+| 'NER_GERMAN_LEGAL' | German | [Legal Entity Recognition](https://github.com/elenanereiss/Legal-Entity-Recognition) NER in German Legal Documents |
+| 'NER_GERMAN_POLITICS' | German | [NEMGP](https://www.thomas-zastrow.de/nlp/) corpus |
+| 'NER_HUNGARIAN' | Hungarian | NER on Hungarian business news |
+| 'NER_ICELANDIC' | Icelandic | NER on Icelandic |
+| 'NER_JAPANESE' | Japanese | [Japanese NER](https://github.com/Hironsan/IOB2Corpus) dataset automatically generated from Wikipedia |
+| 'NER_MASAKHANE' | 10 languages | [MasakhaNER: Named Entity Recognition for African Languages](https://github.com/masakhane-io/masakhane-ner) corpora |
 | 'NER_SWEDISH' | Swedish | [Swedish Spraakbanken NER](https://github.com/klintan/swedish-ner-corpus/) 4-class NER |
-| 'STACKOVERFLOW_NER' | English  | NER on StackOverflow posts |
-| 'TURKU_NER' | Finnish | [TURKU_NER](https://github.com/TurkuNLP/turku-ner-corpus) NER corpus created by the Turku NLP Group, University of Turku, Finland |
-| 'PERSON_NER' | English | [PERSON_NER](https://github.com/das-sudeshna/genid) NER with person names | 
-| 'TWITTER_NER' | English  |  [Twitter NER dataset](https://github.com/aritter/twitter_nlp/) |
-| 'WEIBO_NER' | Chinese  | [Weibo NER corpus](https://paperswithcode.com/sota/chinese-named-entity-recognition-on-weibo-ner/).  |
-| 'WIKIANN' | 282 languages  | Gigantic [corpus for cross-lingual NER derived from Wikipedia](https://elisa-ie.github.io/wikiann/).  |
-| 'WIKIGOLD_NER' | English  |  [Wikigold](https://github.com/juand-r/entity-recognition-datasets/tree/master/data/wikigold) a manually annotated collection of Wikipedia text |
-| 'WIKINER_ENGLISH' | English  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
-| 'WIKINER_GERMAN'  | German  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
-| 'WIKINER_FRENCH'  | French  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
-| 'WIKINER_ITALIAN'  | Italian  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
-| 'WIKINER_SPANISH' | Spanish  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
-| 'WIKINER_PORTUGUESE' | Portuguese  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
-| 'WIKINER_POLISH' | Polish  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
-| 'WIKINER_RUSSIAN'  | Russian  |  [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia |
+| 'NER_TURKU' | Finnish | [TURKU_NER](https://github.com/TurkuNLP/turku-ner-corpus) NER corpus created by the Turku NLP Group, University of Turku, Finland |
+| 'NER_MULTI_WIKIANN' | 282 languages  | Gigantic [corpus for cross-lingual NER derived from Wikipedia](https://elisa-ie.github.io/wikiann/).  |
+| 'NER_MULTI_WIKINER' | 8 languages | [WikiNER](https://github.com/dice-group/FOX/tree/master/input/Wikiner) NER dataset automatically generated from Wikipedia (English, German, French, Italian, Spanish, Portuguese, Polish, Russian) |
+| 'NER_MULTI_XTREME' | 176 languages  |  [Xtreme](https://github.com/google-research/xtreme) corpus by Google Research for cross-lingual NER consisting of datasets of a total of 176 languages |
 | 'WNUT_17' | English  |  [WNUT-17](https://noisy-text.github.io/2017/files/) emerging entity detection |
-| 'WNUT_2020_NER' | English  |  [WNUT-20](https://github.com/jeniyat/WNUT_2020_NER) named entity extraction |
-| 'XTREME' | 176 languages  |  [Xtreme](https://github.com/google-research/xtreme) corpus by Google Research for cross-lingual NER consisting of datasets of a total of 176 languages |
 
+</details>
+
+<details>
+  <summary>Biomedical Named Entity Recognition (BioNER) datasets</summary>
 
 #### Biomedical Named Entity Recognition
 
 We support 31 biomedical NER datasets, listed [here](HUNFLAIR_CORPORA.md).
 
+</details>
+
+<details>
+  <summary>Entity Linking (NEL) datasets</summary>
+
+#### Entity Linking
+| Object | Languages | Description |
+| -------------    | ------------- |-------------  |
+| 'NEL_ENGLISH_AIDA' | English  |  [AIDA CoNLL-YAGO Entity Linking corpus](https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/ambiverse-nlu/aida/downloads) on the CoNLL-03 corpus |
+| 'NEL_ENGLISH_AQUAINT' | English  | Aquaint Entity Linking corpus introduced in [Milne and Witten (2008)](https://www.cms.waikato.ac.nz/~ihw/papers/08-DNM-IHW-LearningToLinkWithWikipedia.pdf) |
+| 'NEL_ENGLISH_IITB' | English  | ITTB Entity Linking corpus introduced in [Sayali et al. (2009)](https://dl.acm.org/doi/10.1145/1557019.1557073) |
+| 'NEL_ENGLISH_REDDIT' | English  | Reddit Entity Linking corpus introduced in [Botzer et al. (2021)](https://arxiv.org/abs/2101.01228v2) (only gold annotations)|
+| 'NEL_ENGLISH_TWEEKI' | English  | ITTB Entity Linking corpus introduced in [Harandizadeh and Singh (2020)](https://aclanthology.org/2020.wnut-1.29.pdf) |
+| 'NEL_GERMAN_HIPE' | German  | [HIPE](https://impresso.github.io/CLEF-HIPE-2020/) Entity Linking corpus for historical German as a [sentence-segmented version](https://github.com/stefan-it/clef-hipe) |
+
+</details>
+
+
+<details>
+  <summary>Relation Extraction (RE) datasets</summary>
+
+#### Relation Extraction
+| Object | Languages | Description |
+| -------------    | ------------- |------------- |
+| 'RE_ENGLISH_CONLL04' | English  |  [CoNLL-04](https://github.com/bekou/multihead_joint_entity_relation_extraction/tree/master/data/CoNLL04) Relation Extraction |
+| 'RE_ENGLISH_SEMEVAL2010' | English  |  [SemEval-2010 Task 8](https://aclanthology.org/S10-1006.pdf) on Multi-Way Classification of Semantic Relations Between Pairs of Nominals |
+| 'RE_ENGLISH_TACRED' | English  |  [TAC Relation Extraction Dataset](https://nlp.stanford.edu/projects/tacred/) with 41 relations (download required) |
+| 'RE_ENGLISH_DRUGPROT' | English  |  [DrugProt corpus: Biocreative VII Track 1](https://zenodo.org/record/5119892#.YSdSaVuxU5k/) - drug and chemical-protein interactions |
+
+</details>
+
+<details>
+  <summary>GLUE Benchmark datasets</summary>
+
+#### GLUE Benchmark
+| Object | Languages | Description |
+| -------------    | ------------- |------------- |
+| 'GLUE_COLA' | English | The Corpus of Linguistic Acceptability from GLUE benchmark |
+| 'GLUE_MNLI' | English | The Multi-Genre Natural Language Inference Corpus from the GLUE benchmark |
+| 'GLUE_RTE' | English | The RTE task from the GLUE benchmark |
+| 'GLUE_QNLI' | English | The Stanford Question Answering Dataset formated as NLI task from the GLUE benchmark |
+| 'GLUE_WNLI' | English | The Winograd Schema Challenge formated as NLI task from the GLUE benchmark |
+| 'GLUE_MRPC' | English | The MRPC task from GLUE benchmark |
+| 'GLUE_QQP' | English | The Quora Question Pairs dataset where the task is to determine whether a pair of questions are semantically equivalent |
+| 'SUPERGLUE_RTE' | English | The RTE task from the SuperGLUE benchmark |
+
+</details>
+
+<details>
+  <summary>Universal Proposition Banks (UP) datasets</summary>
 
 #### Universal Proposition Banks 
 
-We now also support loading the [Universal Proposition Banks](https://github.com/System-T/UniversalPropositions)
+We also support loading the [Universal Proposition Banks](https://github.com/System-T/UniversalPropositions)
 for the purpose of training multilingual frame detection systems. 
 
-| ID(s) | Languages | Description |
+| Object | Languages | Description |
 | -------------    | ------------- |------------- |
 | 'UP_CHINESE' | Chinese  |  Universal Propositions for [Chinese](https://github.com/System-T/UniversalPropositions/tree/master/UP_Chinese) |
 | 'UP_ENGLISH'| English  |  Universal Propositions for [English](https://github.com/System-T/UniversalPropositions/tree/master/UP_English-EWT) |
@@ -224,10 +299,14 @@ for the purpose of training multilingual frame detection systems.
 | 'UP_SPANISH' | Spanish  |  Universal Propositions for [Spanish](https://github.com/System-T/UniversalPropositions/tree/master/UP_Spanish) |
 | 'UP_SPANISH_ANCORA' | Spanish (Ancora Corpus)  |  Universal Propositions for [Spanish](https://github.com/System-T/UniversalPropositions/tree/master/UP_Spanish-AnCora) |
 
+</details>
+
+<details>
+  <summary>Universal Dependency Treebanks (UD) datasets</summary>
 
 #### Universal Dependency Treebanks
 
-| ID(s) | Languages | Description |
+| Object | Languages | Description |
 | -------------    | ------------- |------------- |
 | 'UD_ARABIC'| Arabic  |  Universal Dependency Treebank for [Arabic](https://github.com/UniversalDependencies/UD_Arabic-PADT) |
 | 'UD_BASQUE'| Basque  |  Universal Dependency Treebank for [Basque](https://github.com/UniversalDependencies/UD_Basque-BDT) |
@@ -263,15 +342,13 @@ for the purpose of training multilingual frame detection systems.
 |  'UD_SWEDISH' | Swedish  |  Universal Dependency Treebank for [Swedish](https://github.com/UniversalDependencies/UD_Swedish-Talbanken) |
 |  'UD_TURKISH' | Turkish  |  Universal Dependency Treebank for [Tturkish](https://github.com/UniversalDependencies/UD_Turkish-IMST) |
 
-#### Keyword / Keyphrase Extraction
-| ID(s) | Languages | Description |
-| -------------    | ------------- |------------- |
-| 'INSPEC' | English |  [INSPEC](https://www.aclweb.org/anthology/W03-1028) original corpus (2000 docs) from INSPEC database, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
-| 'SEMEVAL2017' | English | The original [SEMEVAL2017](https://arxiv.org/abs/1704.02853) dataset (500 docs) from ScienceDirect, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
-| 'SEMEVAL2010' | English | The original [SEMEVAL2010](https://www.aclweb.org/anthology/S10-1004/) dataset (~250 docs) from ACM Digital Library, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
+</details>
+
+<details>
+  <summary>Text Classification datasets</summary>
 
 #### Text Classification
-| ID(s) | Languages | Description |
+| Object | Languages | Description |
 | -------------    | ------------- |------------- |
 | 'AMAZON_REVIEWS' | English |  [Amazon product reviews](https://nijianmo.github.io/amazon/index.html/) dataset with sentiment annotation |
 | 'COMMUNICATIVE_FUNCTIONS' | English |  [Communicative functions](https://github.com/Alab-NII/FECFevalDataset) of sentences in scholarly papers |
@@ -289,28 +366,46 @@ for the purpose of training multilingual frame detection systems.
 | 'SENTEVAL_SST_GRANULAR' | English | Stanford sentiment treebank dataset of of [SentEval](https://github.com/facebookresearch/SentEval) with fine-grained sentiment annotation |
 | 'TREC_6', 'TREC_50' | English | The [TREC](http://cogcomp.org/Data/QA/QC/) question classification dataset |
 
+</details>
+
+<details>
+  <summary>Text Regression datasets</summary>
 
 #### Text Regression
-| ID(s) | Languages | Description |
+| Object | Languages | Description |
 | -------------    | ------------- |------------- |
 | 'WASSA_ANGER' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge (anger) |
 | 'WASSA_FEAR' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge (fear) |
 | 'WASSA_JOY' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge (joy) |
 | 'WASSA_SADNESS' | English | The [WASSA](https://competitions.codalab.org/competitions/16380#learn_the_details) emotion-intensity detection challenge (sadness) |
 
-#### Recognizing Textual Entailment
-| ID(s) | Languages | Description |
-| -------------    | ------------- |------------- |
-| 'GLUE_RTE' | English | The RTE task from the GLUE benchmark |
-| 'SUPERGLUE_RTE' | English | The RTE task from the SuperGLUE benchmark |
+</details>
 
+<details>
+  <summary>Other Sequence Labeling datasets</summary>
+
+#### Other Sequence Labeling
+
+| Object | Languages | Description |
+| -------------    | ------------- |------------- |
+| 'CONLL_2000' | English  | Syntactic chunking with [CoNLL-2000]((https://www.clips.uantwerpen.be/conll2000/chunking/))  |
+| 'BIOSCOPE' | English  | Negation and speculation scoping wih [BioScope](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-S11-S9/) biomedical texts annotated for uncertainty, negation and their scopes |
+| 'KEYPHRASE_INSPEC' | English | Keyphrase dectection with [INSPEC](https://www.aclweb.org/anthology/W03-1028) original corpus (2000 docs) from INSPEC database, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
+| 'KEYPHRASE_SEMEVAL2017' | English | Keyphrase dectection with [SEMEVAL2017](https://arxiv.org/abs/1704.02853) dataset (500 docs) from ScienceDirect, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
+| 'KEYPHRASE_SEMEVAL2010' | English | Keyphrase dectection with [SEMEVAL2010](https://www.aclweb.org/anthology/S10-1004/) dataset (~250 docs) from ACM Digital Library, adapted by [midas-research](https://arxiv.org/abs/1910.08840) |
+
+</details>
+
+<details>
+  <summary>Similarity Learning datasets</summary>
 
 #### Experimental: Similarity Learning
-| ID(s) | Languages | Description |
+| Object | Languages | Description |
 | -------------    | ------------- |------------- |
 | 'FeideggerCorpus' | German |  [Feidegger](https://github.com/zalandoresearch/feidegger/) dataset fashion images and German-language descriptions  |
 | 'OpusParallelCorpus' | Any language pair | Parallel corpora of the [OPUS](http://opus.nlpl.eu/) project, currently supports only Tatoeba corpus |
 
+</details>
 
 So to load the IMDB corpus for sentiment text classification, simply do:
 
@@ -455,7 +550,9 @@ data_folder = '/path/to/data/folder'
 corpus: Corpus = ClassificationCorpus(data_folder,
                                       test_file='test.txt',
                                       dev_file='dev.txt',
-                                      train_file='train.txt')
+                                      train_file='train.txt',                                       
+                                      label_type='topic',
+                                      )
 ```
 
 Note again that our corpus initializers have methods to automatically look for train, dev and test splits in a folder. So in 
@@ -466,8 +563,13 @@ most cases you don't need to specify the file names yourself. Often, this is eno
 data_folder = '/path/to/data/folder'
 
 # load corpus by pointing to folder. Train, dev and test gets identified automatically. 
-corpus: Corpus = ClassificationCorpus(data_folder)
+corpus: Corpus = ClassificationCorpus(data_folder,                                                                            
+                                      label_type='topic',
+                                      )
 ```
+
+Since the FastText format does not have columns, you must manually define a name for the annotations. In this
+example we chose `label_type='topic'` to denote that we are loading a corpus with topic labels. 
 
 ## Next
 
