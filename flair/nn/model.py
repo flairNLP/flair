@@ -472,7 +472,7 @@ class DefaultClassifier(Classifier):
         if self.multi_label:
             self.loss_function = torch.nn.BCEWithLogitsLoss(weight=self.loss_weights)
         else:
-            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
+            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction='sum')
 
     @property
     def multi_label_threshold(self):
