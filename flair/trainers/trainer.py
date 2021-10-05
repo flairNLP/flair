@@ -801,6 +801,7 @@ class ModelTrainer:
                   warmup_fraction: float = 0.1,
                   mini_batch_size: int = 4,
                   embeddings_storage_mode: str = 'none',
+                  use_final_model_for_eval: bool = True,
                   **trainer_args,
                   ):
 
@@ -813,6 +814,7 @@ class ModelTrainer:
             warmup_fraction=warmup_fraction,
             mini_batch_size=mini_batch_size,
             embeddings_storage_mode=embeddings_storage_mode,
+            use_final_model_for_eval=use_final_model_for_eval,
             **trainer_args,
         )
 
