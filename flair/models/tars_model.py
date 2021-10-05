@@ -843,7 +843,7 @@ class TARSClassifier(FewshotClassifier):
 
                     # only use label with highest confidence if enforcing single-label predictions
                     if not multi_label:
-                        if len(sentence.get_labels()) > 0:
+                        if len(sentence.get_labels(label_name)) > 0:
 
                             # get all label scores and do an argmax to get the best label
                             label_scores = torch.tensor([label.score for label in sentence.get_labels(label_name)],
