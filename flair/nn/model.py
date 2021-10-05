@@ -531,7 +531,7 @@ class DefaultClassifier(Classifier):
 
     def predict(
             self,
-            sentences: Union[List[Sentence], Sentence],
+            data_points: Union[List[Sentence], Sentence],
             mini_batch_size: int = 32,
             return_probabilities_for_all_classes: bool = False,
             verbose: bool = False,
@@ -541,7 +541,7 @@ class DefaultClassifier(Classifier):
     ):
         """
         Predicts the class labels for the given sentences. The labels are directly added to the sentences.
-        :param sentences: list of sentences
+        :param data_points: list of sentences
         :param mini_batch_size: mini batch size to use
         :param return_probabilities_for_all_classes : return probabilities for all classes instead of only best predicted
         :param verbose: set to True to display a progress bar
@@ -555,22 +555,22 @@ class DefaultClassifier(Classifier):
             label_name = self.label_type if self.label_type is not None else "label"
 
         with torch.no_grad():
-            if not sentences:
-                return sentences
+            if not data_points:
+                return data_points
 
-            if isinstance(sentences, DataPoint):
-                sentences = [sentences]
+            if isinstance(data_points, DataPoint):
+                data_points = [data_points]
 
             # filter empty sentences
-            if isinstance(sentences[0], DataPoint):
-                sentences = [sentence for sentence in sentences if len(sentence) > 0]
-            if len(sentences) == 0:
-                return sentences
+            if isinstance(data_points[0], DataPoint):
+                data_points = [sentence for sentence in data_points if len(sentence) > 0]
+            if len(data_points) == 0:
+                return data_points
 
             # reverse sort all sequences by their length
-            rev_order_len_index = sorted(range(len(sentences)), key=lambda k: len(sentences[k]), reverse=True)
+            rev_order_len_index = sorted(range(len(data_points)), key=lambda k: len(data_points[k]), reverse=True)
 
-            reordered_sentences: List[Union[DataPoint, str]] = [sentences[index] for index in rev_order_len_index]
+            reordered_sentences: List[Union[DataPoint, str]] = [data_points[index] for index in rev_order_len_index]
 
             dataloader = DataLoader(dataset=SentenceDataset(reordered_sentences), batch_size=mini_batch_size)
             # progress bar for verbosity
@@ -591,12 +591,12 @@ class DefaultClassifier(Classifier):
                 if not batch:
                     continue
 
+                scores, gold_labels, data_points, label_candidates = self.forward_pass(batch,
+                                                                                       return_label_candidates=True)
                 # remove previously predicted labels of this type
-                for sentence in batch:
+                for sentence in data_points:
                     sentence.remove_labels(label_name)
 
-                scores, gold_labels, sentences, label_candidates = self.forward_pass(batch,
-                                                                                     return_label_candidates=True)
                 if return_loss:
                     overall_loss += self._calculate_loss(scores, gold_labels)[0]
                     label_count += len(label_candidates)
@@ -606,7 +606,7 @@ class DefaultClassifier(Classifier):
                     if self.multi_label:
                         sigmoided = torch.sigmoid(scores)  # size: (n_sentences, n_classes)
                         n_labels = sigmoided.size(1)
-                        for s_idx, (sentence, label_candidate) in enumerate(zip(sentences, label_candidates)):
+                        for s_idx, (data_point, label_candidate) in enumerate(zip(data_points, label_candidates)):
                             for l_idx in range(n_labels):
                                 label_value = self.label_dictionary.get_item_for_index(l_idx)
                                 if label_value == 'O': continue
@@ -614,26 +614,26 @@ class DefaultClassifier(Classifier):
                                 label_score = sigmoided[s_idx, l_idx].item()
                                 if label_score > label_threshold or return_probabilities_for_all_classes:
                                     label = label_candidate.spawn(value=label_value, score=label_score)
-                                    sentence.add_complex_label(label_name, label)
+                                    data_point.add_complex_label(label_name, label)
                     else:
                         softmax = torch.nn.functional.softmax(scores, dim=-1)
 
                         if return_probabilities_for_all_classes:
                             n_labels = softmax.size(1)
-                            for s_idx, (sentence, label_candidate) in enumerate(zip(sentences, label_candidates)):
+                            for s_idx, (data_point, label_candidate) in enumerate(zip(data_points, label_candidates)):
                                 for l_idx in range(n_labels):
                                     label_value = self.label_dictionary.get_item_for_index(l_idx)
                                     if label_value == 'O': continue
                                     label_score = softmax[s_idx, l_idx].item()
                                     label = label_candidate.spawn(value=label_value, score=label_score)
-                                    sentence.add_complex_label(label_name, label)
+                                    data_point.add_complex_label(label_name, label)
                         else:
                             conf, idx = torch.max(softmax, dim=-1)
-                            for sentence, label_candidate, c, i in zip(sentences, label_candidates, conf, idx):
+                            for data_point, label_candidate, c, i in zip(data_points, label_candidates, conf, idx):
                                 label_value = self.label_dictionary.get_item_for_index(i.item())
                                 if label_value == 'O': continue
                                 label = label_candidate.spawn(value=label_value, score=c.item())
-                                sentence.add_complex_label(label_name, label)
+                                data_point.add_complex_label(label_name, label)
 
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
