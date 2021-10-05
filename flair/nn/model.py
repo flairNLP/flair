@@ -448,7 +448,6 @@ class DefaultClassifier(Classifier):
 
         # initialize the label dictionary
         self.label_dictionary: Dictionary = label_dictionary
-        # self.label_dictionary.add_item('O')
 
         # set up multi-label logic
         self.multi_label = multi_label
@@ -567,12 +566,12 @@ class DefaultClassifier(Classifier):
                 if not batch:
                     continue
 
+                scores, gold_labels, data_points, label_candidates = self.forward_pass(batch,
+                                                                                       return_label_candidates=True)
                 # remove previously predicted labels of this type
-                for sentence in batch:
+                for sentence in data_points:
                     sentence.remove_labels(label_name)
 
-                scores, gold_labels, sentences, label_candidates = self.forward_pass(batch,
-                                                                                     return_label_candidates=True)
                 if return_loss:
                     overall_loss += self._calculate_loss(scores, gold_labels)[0]
                     label_count += len(label_candidates)
@@ -582,7 +581,7 @@ class DefaultClassifier(Classifier):
                     if self.multi_label:
                         sigmoided = torch.sigmoid(scores)  # size: (n_sentences, n_classes)
                         n_labels = sigmoided.size(1)
-                        for s_idx, (sentence, label_candidate) in enumerate(zip(sentences, label_candidates)):
+                        for s_idx, (data_point, label_candidate) in enumerate(zip(data_points, label_candidates)):
                             for l_idx in range(n_labels):
                                 label_value = self.label_dictionary.get_item_for_index(l_idx)
                                 if label_value == 'O': continue
@@ -590,26 +589,26 @@ class DefaultClassifier(Classifier):
                                 label_score = sigmoided[s_idx, l_idx].item()
                                 if label_score > label_threshold or return_probabilities_for_all_classes:
                                     label = label_candidate.spawn(value=label_value, score=label_score)
-                                    sentence.add_complex_label(label_name, label)
+                                    data_point.add_complex_label(label_name, label)
                     else:
                         softmax = torch.nn.functional.softmax(scores, dim=-1)
 
                         if return_probabilities_for_all_classes:
                             n_labels = softmax.size(1)
-                            for s_idx, (sentence, label_candidate) in enumerate(zip(sentences, label_candidates)):
+                            for s_idx, (data_point, label_candidate) in enumerate(zip(data_points, label_candidates)):
                                 for l_idx in range(n_labels):
                                     label_value = self.label_dictionary.get_item_for_index(l_idx)
                                     if label_value == 'O': continue
                                     label_score = softmax[s_idx, l_idx].item()
                                     label = label_candidate.spawn(value=label_value, score=label_score)
-                                    sentence.add_complex_label(label_name, label)
+                                    data_point.add_complex_label(label_name, label)
                         else:
                             conf, idx = torch.max(softmax, dim=-1)
-                            for sentence, label_candidate, c, i in zip(sentences, label_candidates, conf, idx):
+                            for data_point, label_candidate, c, i in zip(data_points, label_candidates, conf, idx):
                                 label_value = self.label_dictionary.get_item_for_index(i.item())
                                 if label_value == 'O': continue
                                 label = label_candidate.spawn(value=label_value, score=c.item())
-                                sentence.add_complex_label(label_name, label)
+                                data_point.add_complex_label(label_name, label)
 
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
