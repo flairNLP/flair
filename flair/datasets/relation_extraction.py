@@ -77,6 +77,7 @@ class RE_ENGLISH_SEMEVAL2010(CoNLLUCorpus):
             data_folder,
             train_file=train_file_name,
             test_file="semeval2010-task8-test.conllu",
+            token_annotation_fields=['ner'],
             in_memory=in_memory,
         )
 
@@ -235,6 +236,7 @@ class RE_ENGLISH_TACRED(CoNLLUCorpus):
 
         super(RE_ENGLISH_TACRED, self).__init__(
             data_folder,
+            token_annotation_fields=['ner'],
             in_memory=in_memory,
         )
 
@@ -347,6 +349,7 @@ class RE_ENGLISH_CONLL04(CoNLLUCorpus):
 
         super(RE_ENGLISH_CONLL04, self).__init__(
             data_folder,
+            token_annotation_fields=['ner'],
             in_memory=in_memory,
         )
 
@@ -515,6 +518,7 @@ class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
         super(RE_ENGLISH_DRUGPROT, self).__init__(
             data_folder,
             in_memory=in_memory,
+            token_annotation_fields=["ner", "ner-2"],
             sample_missing_splits=False,
         )
 
