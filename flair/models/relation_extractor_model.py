@@ -16,8 +16,8 @@ class RelationExtractor(flair.nn.DefaultClassifier):
     def __init__(
             self,
             embeddings: Union[flair.embeddings.TokenEmbeddings],
-            label_type: str = None,
-            entity_label_type: str = None,
+            label_type: str,
+            entity_label_type: str,
             train_on_gold_pairs_only: bool = False,
             entity_pair_filters: List[Tuple[str, str]] = None,
             pooling_operation: str = "first_last",
