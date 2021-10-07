@@ -230,7 +230,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
     def _get_state_dict(self):
         model_state = {
             "state_dict": self.state_dict(),
-            "token_embeddings": self.embeddings,
+            "embeddings": self.embeddings,
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
             "entity_label_type": self.entity_label_type,
@@ -247,7 +247,7 @@ class RelationExtractor(flair.nn.DefaultClassifier):
     @staticmethod
     def _init_model_with_state_dict(state):
         model = RelationExtractor(
-            embeddings=state["token_embeddings"],
+            embeddings=state["embeddings"],
             label_dictionary=state["label_dictionary"],
             label_type=state["label_type"],
             entity_label_type=state["entity_label_type"],
