@@ -26,6 +26,7 @@ class FewshotClassifier(flair.nn.Classifier):
         self._current_task = None
         self._task_specific_attributes = {}
         self.label_nearest_map = None
+        self.clean_up_labels: bool = True
 
         super(FewshotClassifier, self).__init__()
 
@@ -162,7 +163,15 @@ class FewshotClassifier(flair.nn.Classifier):
         self.label_nearest_map = negative_label_probabilities
 
     def get_current_label_dictionary(self):
-        return self._task_specific_attributes[self._current_task]['label_dictionary']
+        label_dictionary = self._task_specific_attributes[self._current_task]['label_dictionary']
+        if self.clean_up_labels:
+            # default: make new dictionary with modified labels (no underscores)
+            dictionary = Dictionary(add_unk=False)
+            for label in label_dictionary.get_items():
+                dictionary.add_item(label.replace("_", " "))
+            return dictionary
+        else:
+            return label_dictionary
 
     def get_current_label_type(self):
         return self._task_specific_attributes[self._current_task]['label_type']
@@ -843,7 +852,7 @@ class TARSClassifier(FewshotClassifier):
 
                     # only use label with highest confidence if enforcing single-label predictions
                     if not multi_label:
-                        if len(sentence.get_labels(label_name)) > 0:
+                        if len(sentence.get_labels()) > 0:
 
                             # get all label scores and do an argmax to get the best label
                             label_scores = torch.tensor([label.score for label in sentence.get_labels(label_name)],
