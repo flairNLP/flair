@@ -1,0 +1,18 @@
+name: deploy-docs
+
+on:
+  push:
+    branches:
+      - master
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      - run: pip install mkdocs-material
+      - run: bash resources/build_docs.sh && mkdocs gh-deploy --force
+

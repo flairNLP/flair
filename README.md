@@ -13,7 +13,7 @@ Flair is:
 
 * **A powerful NLP library.** Flair allows you to apply our state-of-the-art natural language processing (NLP)
 models to your text, such as named entity recognition (NER), part-of-speech tagging (PoS), 
-  special support for [biomedical data](/resources/docs/HUNFLAIR.md),
+  special support for [biomedical data](resources/docs/HUNFLAIR.md),
  sense disambiguation and classification, with support for a rapidly growing number of languages.
 
 * **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and
@@ -101,21 +101,21 @@ Span [3]: "Berlin"   [− Labels: LOC (0.9992)]
 
 We provide a set of quick tutorials to get you started with the library:
 
-* [Tutorial 1: Basics](/resources/docs/TUTORIAL_1_BASICS.md)
-* [Tutorial 2: Tagging your Text](/resources/docs/TUTORIAL_2_TAGGING.md)
-* [Tutorial 3: Embedding Words](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)
-* [Tutorial 4: List of All Word Embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md)
-* [Tutorial 5: Embedding Documents](/resources/docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md)
-* [Tutorial 6: Loading a Dataset](/resources/docs/TUTORIAL_6_CORPUS.md)
-* [Tutorial 7: Training a Model](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
-* [Tutorial 8: Training your own Flair Embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
-* [Tutorial 9: Training a Zero Shot Text Classifier (TARS)](/resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)
+* [Tutorial 1: Basics](resources/docs/TUTORIAL_1_BASICS.md)
+* [Tutorial 2: Tagging your Text](resources/docs/TUTORIAL_2_TAGGING.md)
+* [Tutorial 3: Embedding Words](resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)
+* [Tutorial 4: List of All Word Embeddings](resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md)
+* [Tutorial 5: Embedding Documents](resources/docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md)
+* [Tutorial 6: Loading a Dataset](resources/docs/TUTORIAL_6_CORPUS.md)
+* [Tutorial 7: Training a Model](resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
+* [Tutorial 8: Training your own Flair Embeddings](resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
+* [Tutorial 9: Training a Zero Shot Text Classifier (TARS)](resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)
 
 The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
 text, how you can embed your text with different word or document embeddings, and how you can train your own
 language models, sequence labeling models, and text classification models. Let us know if anything is unclear.
 
-There is also a dedicated landing page for our **[biomedical NER and datasets](/resources/docs/HUNFLAIR.md)** with
+There is also a dedicated landing page for our **[biomedical NER and datasets](resources/docs/HUNFLAIR.md)** with
 installation instructions and tutorials.
 
 There are also good third-party articles and posts that illustrate how to use Flair:
