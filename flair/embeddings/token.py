@@ -12,6 +12,7 @@ import gensim
 import numpy as np
 import torch
 from bpemb import BPEmb
+from torch import nn
 from transformers import AutoTokenizer, AutoConfig, AutoModel, CONFIG_MAPPING, PreTrainedTokenizer, XLNetModel, \
     TransfoXLModel
 
@@ -119,18 +120,20 @@ class StackedEmbeddings(TokenEmbeddings):
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
-    def __init__(self, embeddings: str, field: str = None, quantize: bool = False, alpha: Optional[float] = None):
+    def __init__(self, embeddings: str, field: str = None, fine_tune: bool = False, stay_cpu: bool = True,
+                 stable: bool = False):
         """
         Initializes classic word embeddings. Constructor downloads required files if not there.
         :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or custom
         If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
-        quantize can be used to reduce the memory size
-        alpha defines how the quantization happens: None refers to float16 quantization, any other number refers to
-        symmetric quantization with 8bits. The embeddings will be calculated as (alpha * QuantValue)
+        set stable=True to use the stable embeddings as described in https://arxiv.org/abs/2110.02861
         """
         self.embeddings = embeddings
 
         self.instance_parameters = self.get_instance_parameters(locals=locals())
+
+        if fine_tune and stay_cpu and flair.device.type != "cpu":
+            raise Exception("Cannot train WordEmbeddings on cpu if the model is trained on gpu")
 
         hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/token"
 
@@ -192,7 +195,12 @@ class WordEmbeddings(TokenEmbeddings):
             )
 
         self.name: str = str(embeddings)
-        self.static_embeddings = True
+        self.static_embeddings = not fine_tune
+        self.fine_tune = fine_tune
+        self.stay_cpu = stay_cpu
+        self.field = field
+        self.stable = stable
+        super().__init__()
 
         if str(embeddings).endswith(".bin"):
             precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
@@ -204,29 +212,29 @@ class WordEmbeddings(TokenEmbeddings):
             )
 
         self.__embedding_length: int = precomputed_word_embeddings.vector_size
-        self.vectors = np.row_stack(
+        vectors = np.row_stack(
             (precomputed_word_embeddings.vectors, np.zeros(self.__embedding_length, dtype="float"))
         )
-        self.alpha = alpha
-        if quantize:
-            if alpha:
-                self.vectors = np.round(self.vectors / alpha).astype("int8")
-            else:
-                self.vectors = self.vectors.astype("float16")
+        self.embedding = nn.Embedding.from_pretrained(torch.FloatTensor(vectors), freeze=not fine_tune)
+
+        if stable:
+            self.layer_norm = nn.LayerNorm(self.__embedding_length, elementwise_affine=fine_tune)
+        else:
+            self.layer_norm = None
+
         self.vocab = {
             k: v.index
             for k, v in precomputed_word_embeddings.vocab.items()
         }
 
-        self.field = field
-
-        super().__init__()
+        self.device = None
+        self.to(flair.device)
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    @instance_lru_cache(maxsize=10000, typed=False)
+    @instance_lru_cache(maxsize=100000, typed=False)
     def get_cached_token_index(self, word: str) -> int:
         if word in self.vocab:
             return self.vocab[word]
@@ -241,12 +249,10 @@ class WordEmbeddings(TokenEmbeddings):
                 re.sub(r"\d", "0", word.lower())
             ]
         else:
-            return -1
+            return len(self.vocab) # <unk> token
 
     def get_vec(self, word: str) -> torch.Tensor:
         word_embedding = self.vectors[self.get_cached_token_index(word)]
-        if self.alpha:
-            word_embedding *= self.alpha
 
         word_embedding = torch.tensor(
             word_embedding.tolist(), device=flair.device, dtype=torch.float
@@ -255,17 +261,28 @@ class WordEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
-        for sentence in sentences:
-            for token in sentence.tokens:
+        tokens = [token for sentence in sentences for token in sentence.tokens]
 
-                if "field" not in self.__dict__ or self.field is None:
-                    word = token.text
-                else:
-                    word = token.get_tag(self.field).value
+        word_indices: List[int] = []
 
-                word_embedding = self.get_vec(word=word)
+        for token in tokens:
+            if "field" not in self.__dict__ or self.field is None:
+                word = token.text
+            else:
+                word = token.get_tag(self.field).value
+            word_indices.append(self.get_cached_token_index(word))
 
-                token.set_embedding(self.name, word_embedding)
+        if -1 in word_indices:
+            print(word_indices)
+        embeddings = self.embedding(torch.tensor(word_indices, dtype=torch.int, device=self.device))
+        if self.stable:
+            embeddings = self.layer_norm(embeddings)
+
+        if self.stay_cpu:
+            embeddings = embeddings.to(flair.device)
+
+        for emb, token in zip(embeddings, tokens):
+            token.set_embedding(self.name, emb)
 
         return sentences
 
@@ -278,6 +295,23 @@ class WordEmbeddings(TokenEmbeddings):
             self.embeddings = self.name
 
         return f"'{self.embeddings}'"
+
+    def train(self, mode=True):
+        if not self.fine_tune:
+            pass
+        else:
+            super(WordEmbeddings, self).train(mode)
+
+    def to(self, device):
+        if self.stay_cpu:
+            device = torch.device("cpu")
+        self.device = device
+        super(WordEmbeddings, self).to(device)
+
+    def _apply(self, fn):
+        if fn.__name__ == "convert":
+            return
+        super(WordEmbeddings, self)._apply(fn)
 
 
 class CharacterEmbeddings(TokenEmbeddings):
