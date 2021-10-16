@@ -1,16 +1,15 @@
 from typing import Optional, Union, List
 
-import flair
 import torch
+from torch.nn.parameter import Parameter
+from tqdm import tqdm
+
+import flair
 from flair.data import Sentence, Dictionary, Dataset, Label
 from flair.datasets import SentenceDataset, DataLoader
 from flair.embeddings import TokenEmbeddings
 from flair.nn import Classifier
 from flair.training_utils import store_embeddings
-from torch.nn import Module
-from torch.nn.parameter import Parameter
-from tqdm import tqdm
-
 from .distance import EuclideanDistance, HyperbolicDistance
 
 
@@ -50,14 +49,12 @@ class LearnedPrototypesTagger(Classifier):
         self.unlabeled_idx = tag_dictionary.get_idx_for_item('O')
         self.unlabeled_distance = unlabeled_distance
 
-
         if self.prototype_size or self.prototype_size == embeddings.embedding_length:
             self.prototype_size = embeddings.embedding_length
             self.metric_space_decoder = None
         else:
             # map embeddings to prototype space
             self.metric_space_decoder = torch.nn.Linear(embeddings.embedding_length, self.prototype_size)
-
 
         # create initial prototypes for all classes
         self.prototype_vectors = Parameter(torch.normal(torch.zeros(len(self.prototype_labels), self.prototype_size)))
@@ -278,7 +275,7 @@ class LearnedPrototypesTagger(Classifier):
         model.prototype_vectors = state["prototype_vectors"]
 
         if 'metric_space_decoder' in state:
-            self.metric_space_decoder = state['metric_space_decoder']
+            model.metric_space_decoder = state['metric_space_decoder']
         return model
 
     @property
