@@ -49,7 +49,7 @@ class LearnedPrototypesTagger(Classifier):
         self.unlabeled_idx = tag_dictionary.get_idx_for_item('O')
         self.unlabeled_distance = unlabeled_distance
 
-        if self.prototype_size or self.prototype_size == embeddings.embedding_length:
+        if not self.prototype_size:
             self.prototype_size = embeddings.embedding_length
             self.metric_space_decoder = None
         else:
