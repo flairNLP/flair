@@ -228,7 +228,7 @@ class LearnedPrototypesTagger(Classifier):
 
         for all_probs, prob, pred in zip(softmax_batch, probs_batch, prediction_batch):
             tags.append(
-                Label(self.prototype_labels.get_item_for_index(pred), prob)
+                Label(self.prototype_labels.get_item_for_index(pred), prob.item())
             )
 
             if get_all_tags:
