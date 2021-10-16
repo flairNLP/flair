@@ -193,12 +193,15 @@ class LearnedPrototypesTagger(Classifier):
                     for token in sentence
                 ]
 
-                for (token, tag) in zip(tokens, tags):
-                    token.add_tag_label(label_name, tag)
+                if all_tag_prob:
+                    for (token, token_all_tags) in zip(tokens, all_tags):
+                        for tag in token_all_tags:
+                            if tag.score > 0.01:
+                                token.add_label(label_name, tag.value, tag.score)
 
-                # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
-                for (token, token_all_tags) in zip(batch, all_tags):
-                    token.add_tags_proba_dist(label_name, token_all_tags)
+                else:
+                    for (token, tag) in zip(tokens, tags):
+                        token.add_tag_label(label_name, tag)
 
                 # clearing token embeddings to save memory
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
@@ -234,7 +237,7 @@ class LearnedPrototypesTagger(Classifier):
             if get_all_tags:
                 all_tags.append([
                     Label(
-                        self.prototype_labels.get_item_for_index(idx), idx_prob
+                        self.prototype_labels.get_item_for_index(idx), idx_prob.item()
                     )
                     for idx, idx_prob in enumerate(all_probs)
                 ])
