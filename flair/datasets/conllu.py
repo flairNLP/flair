@@ -1,40 +1,34 @@
 import logging
+
 from pathlib import Path
-from typing import List, Union, Optional, Sequence, Dict, Tuple
+from typing import List, Union, Optional, Sequence, Dict, Tuple, Any
+
+import conllu
 
 from flair.data import Sentence, Corpus, Token, FlairDataset, Span, RelationLabel, SpanLabel
 from flair.datasets.base import find_train_dev_test_files
-import conllu
 
 log = logging.getLogger("flair")
 
-DEFAULT_FIELDS = ("id", "form", "lemma", "upos", "xpos", "feats", "head", "deprel", "deps", "misc")
+DEFAULT_FIELDS: Tuple[str, ...] = ("id", "form", "lemma", "upos", "xpos", "feats", "head", "deprel", "deps", "misc")
 
-DEFAULT_FIELD_PARSERS: Dict[str, conllu._FieldParserType] = dict(
-    conllu.parser.DEFAULT_FIELD_PARSERS,
-    **{
-        "ner": lambda line, i: conllu.parser.parse_nullable_value(line[i]),
-    },
-)
+DEFAULT_TOKEN_ANNOTATION_FIELDS: Tuple[str, ...] = ("lemma", "upos", "xpos", "feats", "head", "deprel")
 
-DEFAULT_METADATA_PARSERS: Dict[str, conllu._MetadataParserType] = dict(
-    conllu.parser.DEFAULT_METADATA_PARSERS,
-    **{
-        "relations": lambda key, value: parse_relation_tuple_list(key, value, list_sep="|", value_sep=";"),
-    },
-)
+# noinspection PyProtectedMember
+DEFAULT_METADATA_PARSERS: Dict[str, conllu._MetadataParserType] = {
+    **conllu.parser.DEFAULT_METADATA_PARSERS,
+    **{"relations": lambda key, value: parse_relation_tuple_list(key, value, list_sep="|", value_sep=";")}
+}
 
 
-def parse_relation_tuple_list(
-    key: str,
-    value: Optional[str] = None,
-    list_sep: str = "|",
-    value_sep: str = ";",
-) -> Optional[List[Tuple[int, int, int, int, str]]]:
+def parse_relation_tuple_list(key: str,
+                              value: Optional[str] = None,
+                              list_sep: str = "|",
+                              value_sep: str = ";") -> Optional[Tuple[str, List[Tuple[int, int, int, int, str]]]]:
     if value is None:
         return value
 
-    relation_tuples: List[int, int, int, int, str] = []
+    relation_tuples: List[Tuple[int, int, int, int, str]] = []
     for relation in value.split(list_sep):
         head_start, head_end, tail_start, tail_end, label = relation.split(value_sep)
         relation_tuples.append((int(head_start), int(head_end), int(tail_start), int(tail_end), label))
@@ -43,26 +37,32 @@ def parse_relation_tuple_list(
 
 
 class CoNLLUCorpus(Corpus):
-    def __init__(
-        self,
-        data_folder: Union[str, Path],
-        train_file=None,
-        test_file=None,
-        dev_file=None,
-        in_memory: bool = True,
-        fields: Optional[Sequence[str]] = None,
-        field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
-        metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None,
-        sample_missing_splits: bool = True,
-    ):
+
+    # noinspection PyProtectedMember
+    def __init__(self,
+                 data_folder: Union[str, Path],
+                 train_file=None,
+                 test_file=None,
+                 dev_file=None,
+                 in_memory: bool = True,
+                 fields: Optional[Sequence[str]] = None,
+                 token_annotation_fields: Optional[Sequence[str]] = None,
+                 field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
+                 metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None,
+                 sample_missing_splits: bool = True):
         """
         Instantiates a Corpus from CoNLL-U (Plus) column-formatted task data
+
+        Universal dependencies corpora that contain multi-word tokens are not supported yet.
+        The annotation of flair sentences with the "deps" column is not yet supported as well.
+        Please consider using the "UniversalDependenciesCorpus" instead.
 
         :param data_folder: base folder with the task data
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
         :param in_memory: If set to True, keeps full dataset in memory, otherwise does disk reads
+        :param token_annotation_fields: A subset of the fields parameter for token level annotations
         :return: a Corpus with annotated train, dev and test data
         """
 
@@ -74,6 +74,7 @@ class CoNLLUCorpus(Corpus):
             train_file,
             in_memory=in_memory,
             fields=fields,
+            token_annotation_fields=token_annotation_fields,
             field_parsers=field_parsers,
             metadata_parsers=metadata_parsers,
         )
@@ -84,6 +85,7 @@ class CoNLLUCorpus(Corpus):
                 test_file,
                 in_memory=in_memory,
                 fields=fields,
+                token_annotation_fields=token_annotation_fields,
                 field_parsers=field_parsers,
                 metadata_parsers=metadata_parsers,
             )
@@ -97,6 +99,7 @@ class CoNLLUCorpus(Corpus):
                 dev_file,
                 in_memory=in_memory,
                 fields=fields,
+                token_annotation_fields=token_annotation_fields,
                 field_parsers=field_parsers,
                 metadata_parsers=metadata_parsers,
             )
@@ -109,19 +112,25 @@ class CoNLLUCorpus(Corpus):
 
 
 class CoNLLUDataset(FlairDataset):
-    def __init__(
-        self,
-        path_to_conllu_file: Union[str, Path],
-        in_memory: bool = True,
-        fields: Optional[Sequence[str]] = None,
-        field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
-        metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None,
-    ):
+
+    # noinspection PyProtectedMember
+    def __init__(self,
+                 path_to_conllu_file: Union[str, Path],
+                 in_memory: bool = True,
+                 fields: Optional[Sequence[str]] = None,
+                 token_annotation_fields: Optional[Sequence[str]] = None,
+                 field_parsers: Optional[Dict[str, conllu._FieldParserType]] = None,
+                 metadata_parsers: Optional[Dict[str, conllu._MetadataParserType]] = None):
         """
         Instantiates a column dataset in CoNLL-U (Plus) format.
 
+        Universal dependencies datasets that contain multi-word tokens are not supported yet.
+        The annotation of flair sentences with the "deps" column is not yet supported as well.
+        Please consider using the "UniversalDependenciesDataset" instead.
+
         :param path_to_conllu_file: Path to the CoNLL-U formatted file
         :param in_memory: If set to True, keeps full dataset in memory, otherwise does disk reads
+        :param token_annotation_fields: A subset of the fields parameter for token level annotations
         """
         if type(path_to_conllu_file) is str:
             path_to_conllu_file = Path(path_to_conllu_file)
@@ -136,7 +145,23 @@ class CoNLLUDataset(FlairDataset):
                 fields = conllu.parser.parse_conllu_plus_fields(file)
 
         self.fields = fields or DEFAULT_FIELDS
-        self.field_parsers = field_parsers or DEFAULT_FIELD_PARSERS
+        self.token_annotation_fields = token_annotation_fields or DEFAULT_TOKEN_ANNOTATION_FIELDS
+
+        # Validate fields and token_annotation_fields
+        if not set(self.token_annotation_fields).issubset(self.fields):
+            raise ValueError(f"The token annotation fields {repr(self.token_annotation_fields)} "
+                             f"are not a subset of the parsed fields {repr(self.fields)}.")
+
+        # noinspection PyProtectedMember
+        augmented_default_field_parsers: Dict[str, conllu._FieldParserType] = {
+            **{
+                field: lambda line_, i: conllu.parser.parse_nullable_value(line_[i])
+                for field in self.token_annotation_fields
+            },
+            **conllu.parser.DEFAULT_FIELD_PARSERS
+        }
+
+        self.field_parsers = field_parsers or augmented_default_field_parsers
         self.metadata_parsers = metadata_parsers or DEFAULT_METADATA_PARSERS
 
         self.total_sentence_count: int = 0
@@ -170,6 +195,17 @@ class CoNLLUDataset(FlairDataset):
                         metadata_parsers=self.metadata_parsers,
                     )
                 ]
+
+                # pointer to previous
+                previous_sentence = None
+
+                for sentence in self.sentences:
+
+                    sentence._previous_sentence = previous_sentence
+                    sentence._next_sentence = None
+                    if previous_sentence: previous_sentence._next_sentence = sentence
+                    previous_sentence = sentence
+
                 self.total_sentence_count = len(self.sentences)
 
     def is_in_memory(self) -> bool:
@@ -196,38 +232,35 @@ class CoNLLUDataset(FlairDataset):
     def token_list_to_sentence(self, token_list: conllu.TokenList) -> Sentence:
         sentence: Sentence = Sentence()
 
-        # current token ID
-        token_idx = 0
-
+        # Build the sentence tokens and add the annotations.
         for conllu_token in token_list:
             token = Token(conllu_token["form"])
 
-            if "ner" in conllu_token:
-                token.add_label("ner", conllu_token["ner"])
+            for field in self.token_annotation_fields:
+                field_value: Any = conllu_token[field]
+                if isinstance(field_value, dict):
+                    # For fields that contain key-value annotations,
+                    # we add the key as label type-name and the value as the label value.
+                    for key, value in field_value.items():
+                        token.add_label(typename=key, value=str(value))
+                else:
+                    token.add_label(typename=field, value=str(field_value))
 
-            if "ner-2" in conllu_token:
-                token.add_label("ner-2", conllu_token["ner-2"])
-
-            if "lemma" in conllu_token:
-                token.add_label("lemma", conllu_token["lemma"])
-
-            if "misc" in conllu_token and conllu_token["misc"] is not None:
-                space_after = conllu_token["misc"].get("SpaceAfter")
+            if conllu_token.get("misc") is not None:
+                space_after: Optional[str] = conllu_token["misc"].get("SpaceAfter")
                 if space_after == "No":
                     token.whitespace_after = False
 
             sentence.add_token(token)
-            token_idx += 1
 
         if "sentence_id" in token_list.metadata:
             sentence.add_label("sentence_id", token_list.metadata["sentence_id"])
 
         if "relations" in token_list.metadata:
-            # relations: List[Relation] = []
             for head_start, head_end, tail_start, tail_end, label in token_list.metadata["relations"]:
                 # head and tail span indices are 1-indexed and end index is inclusive
-                head = Span(sentence.tokens[head_start - 1 : head_end])
-                tail = Span(sentence.tokens[tail_start - 1 : tail_end])
+                head = Span(sentence.tokens[head_start - 1: head_end])
+                tail = Span(sentence.tokens[tail_start - 1: tail_end])
 
                 sentence.add_complex_label("relation", RelationLabel(value=label, head=head, tail=tail))
 

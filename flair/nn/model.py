@@ -1,4 +1,3 @@
-import copy
 import itertools
 import logging
 import warnings
@@ -75,14 +74,47 @@ class Model(torch.nn.Module):
     def _fetch_model(model_name) -> str:
         return model_name
 
-    def save(self, model_file: Union[str, Path]):
+    def save(self, model_file: Union[str, Path], checkpoint: bool = False):
         """
         Saves the current model to the provided file.
         :param model_file: the model file
         """
         model_state = self._get_state_dict()
 
+        # in Flair <0.9.1, optimizer and scheduler used to train model are not saved
+        optimizer = scheduler = None
+
+        # write out a "model card" if one is set
+        if hasattr(self, 'model_card'):
+
+            # special handling for optimizer: remember optimizer class and state dictionary
+            if 'training_parameters' in self.model_card:
+                training_parameters = self.model_card['training_parameters']
+
+                if 'optimizer' in training_parameters:
+                    optimizer = training_parameters['optimizer']
+                    if checkpoint:
+                        training_parameters['optimizer_state_dict'] = optimizer.state_dict()
+                    training_parameters['optimizer'] = optimizer.__class__
+
+                if 'scheduler' in training_parameters:
+                    scheduler = training_parameters['scheduler']
+                    if checkpoint:
+                        with warnings.catch_warnings():
+                            warnings.simplefilter("ignore")
+                            training_parameters['scheduler_state_dict'] = scheduler.state_dict()
+                    training_parameters['scheduler'] = scheduler.__class__
+
+            model_state['model_card'] = self.model_card
+
+        # save model
         torch.save(model_state, str(model_file), pickle_protocol=4)
+
+        # restore optimizer and scheduler to model card if set
+        if optimizer:
+            self.model_card['training_parameters']['optimizer'] = optimizer
+        if scheduler:
+            self.model_card['training_parameters']['scheduler'] = scheduler
 
     @classmethod
     def load(cls, model: Union[str, Path]):
@@ -102,10 +134,37 @@ class Model(torch.nn.Module):
 
         model = cls._init_model_with_state_dict(state)
 
+        if 'model_card' in state:
+            model.model_card = state['model_card']
+
         model.eval()
         model.to(flair.device)
 
         return model
+
+    def print_model_card(self):
+        if hasattr(self, 'model_card'):
+            param_out = "\n------------------------------------\n"
+            param_out += "--------- Flair Model Card ---------\n"
+            param_out += "------------------------------------\n"
+            param_out += "- this Flair model was trained with:\n"
+            param_out += f"-- Flair version {self.model_card['flair_version']}\n"
+            param_out += f"-- PyTorch version {self.model_card['pytorch_version']}\n"
+            if 'transformers_version' in self.model_card:
+                param_out += f"-- Transformers version {self.model_card['transformers_version']}\n"
+            param_out += "------------------------------------\n"
+
+            param_out += "------- Training Parameters: -------\n"
+            param_out += "------------------------------------\n"
+            training_params = '\n'.join(f'-- {param} = {self.model_card["training_parameters"][param]}'
+                                        for param in self.model_card['training_parameters'])
+            param_out += training_params + "\n"
+            param_out += "------------------------------------\n"
+
+            log.info(param_out)
+        else:
+            log.info(
+                "This model has no model card (likely because it is not yet trained or was trained with Flair version < 0.9.1)")
 
 
 class Classifier(Model):
@@ -175,7 +234,7 @@ class Classifier(Model):
 
                     for gold_label in datapoint.get_labels(gold_label_type):
                         representation = str(sentence_id) + ': ' + gold_label.identifier
-                        
+
                         value = gold_label.value
                         if gold_label_dictionary and gold_label_dictionary.get_idx_for_item(value) == 0:
                             value = '<unk>'
@@ -389,7 +448,6 @@ class DefaultClassifier(Classifier):
 
         # initialize the label dictionary
         self.label_dictionary: Dictionary = label_dictionary
-        # self.label_dictionary.add_item('O')
 
         # set up multi-label logic
         self.multi_label = multi_label
@@ -508,12 +566,12 @@ class DefaultClassifier(Classifier):
                 if not batch:
                     continue
 
+                scores, gold_labels, data_points, label_candidates = self.forward_pass(batch,
+                                                                                       return_label_candidates=True)
                 # remove previously predicted labels of this type
-                for sentence in batch:
+                for sentence in data_points:
                     sentence.remove_labels(label_name)
 
-                scores, gold_labels, sentences, label_candidates = self.forward_pass(batch,
-                                                                                     return_label_candidates=True)
                 if return_loss:
                     overall_loss += self._calculate_loss(scores, gold_labels)[0]
                     label_count += len(label_candidates)
@@ -523,7 +581,7 @@ class DefaultClassifier(Classifier):
                     if self.multi_label:
                         sigmoided = torch.sigmoid(scores)  # size: (n_sentences, n_classes)
                         n_labels = sigmoided.size(1)
-                        for s_idx, (sentence, label_candidate) in enumerate(zip(sentences, label_candidates)):
+                        for s_idx, (data_point, label_candidate) in enumerate(zip(data_points, label_candidates)):
                             for l_idx in range(n_labels):
                                 label_value = self.label_dictionary.get_item_for_index(l_idx)
                                 if label_value == 'O': continue
@@ -531,26 +589,26 @@ class DefaultClassifier(Classifier):
                                 label_score = sigmoided[s_idx, l_idx].item()
                                 if label_score > label_threshold or return_probabilities_for_all_classes:
                                     label = label_candidate.spawn(value=label_value, score=label_score)
-                                    sentence.add_complex_label(label_name, label)
+                                    data_point.add_complex_label(label_name, label)
                     else:
                         softmax = torch.nn.functional.softmax(scores, dim=-1)
 
                         if return_probabilities_for_all_classes:
                             n_labels = softmax.size(1)
-                            for s_idx, (sentence, label_candidate) in enumerate(zip(sentences, label_candidates)):
+                            for s_idx, (data_point, label_candidate) in enumerate(zip(data_points, label_candidates)):
                                 for l_idx in range(n_labels):
                                     label_value = self.label_dictionary.get_item_for_index(l_idx)
                                     if label_value == 'O': continue
                                     label_score = softmax[s_idx, l_idx].item()
                                     label = label_candidate.spawn(value=label_value, score=label_score)
-                                    sentence.add_complex_label(label_name, label)
+                                    data_point.add_complex_label(label_name, label)
                         else:
                             conf, idx = torch.max(softmax, dim=-1)
-                            for sentence, label_candidate, c, i in zip(sentences, label_candidates, conf, idx):
+                            for data_point, label_candidate, c, i in zip(data_points, label_candidates, conf, idx):
                                 label_value = self.label_dictionary.get_item_for_index(i.item())
                                 if label_value == 'O': continue
                                 label = label_candidate.spawn(value=label_value, score=c.item())
-                                sentence.add_complex_label(label_name, label)
+                                data_point.add_complex_label(label_name, label)
 
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 

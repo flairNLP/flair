@@ -1,47 +1,47 @@
-# global.columns = id form ner misc
+# global.columns = id form upos ner misc
 # text = Larry Page and Sergey Brin founded Google.
 # relations = 7;7;1;2;founded_by|7;7;4;5;founded_by
-1	Larry	B-PER	_
-2	Page	I-PER	_
-3	and	O	_
-4	Sergey	B-PER	_
-5	Brin	I-PER	_
-6	founded	O	_
-7	Google	B-ORG	_
-8	.	O	SpaceAfter=No
+1	Larry	PROPN	B-PER	_
+2	Page	PROPN	I-PER	_
+3	and	CCONJ	O	_
+4	Sergey	PROPN	B-PER	_
+5	Brin	PROPN	I-PER	_
+6	founded	VERB	O	_
+7	Google	PROPN	B-ORG	_
+8	.	PUNCT	O	SpaceAfter=No
 
 # text = Microsoft was founded by Bill Gates.
 # relations = 1;1;5;6;founded_by
-1	Microsoft	B-ORG	_
-2	was	O	_
-3	founded	O	_
-4	by	O	_
-5	Bill	B-PER	_
-6	Gates	I-PER	_
-7	.	O	SpaceAfter=No
+1	Microsoft	PROPN	B-ORG	_
+2	was	AUX	O	_
+3	founded	VERB	O	_
+4	by	ADP	O	_
+5	Bill	PROPN	B-PER	_
+6	Gates	PROPN	I-PER	_
+7	.	PUNCT	O	SpaceAfter=No
 
 # text = Konrad Zuse was born in Berlin on 22 June 1910.
 # relations = 6;6;1;2;place_of_birth
-1	Konrad	B-PER	_
-2	Zuse	I-PER	_
-3	was	O	_
-4	born	O	_
-5	in	O	_
-6	Berlin	B-LOC	_
-7	on	O	_
-8	22	B-DATE	_
-9	June	I-DATE	_
-10	1910	I-DATE	_
-11	.	O	SpaceAfter=No
+1	Konrad	PROPN	B-PER	_
+2	Zuse	PROPN	I-PER	_
+3	was	AUX	O	_
+4	born	VERB	O	_
+5	in	ADP	O	_
+6	Berlin	PROPN	B-LOC	_
+7	on	ADP	O	_
+8	22	NUM	B-DATE	_
+9	June	PROPN	I-DATE	_
+10	1910	NUM	I-DATE	_
+11	.	PUNCT	O	SpaceAfter=No
 
 # text = Joseph Weizenbaum was born in Berlin, Germany.
 # relations = 6;6;1;2;place_of_birth
-1	Joseph	B-PER	_
-2	Weizenbaum	I-PER	_
-3	was	O	_
-4	born	O	_
-5	in	O	_
-6	Berlin	B-LOC	_
-7	,	O	_
-8	Germany	B-LOC	_
-9	.	O	SpaceAfter=No
+1	Joseph	PROPN	B-PER	_
+2	Weizenbaum	PROPN	I-PER	_
+3	was	AUX	O	_
+4	born	VERB	O	_
+5	in	ADP	O	_
+6	Berlin	PROPN	B-LOC	_
+7	,	PUNCT	O	_
+8	Germany	PROPN	B-LOC	_
+9	.	PUNCT	O	SpaceAfter=No

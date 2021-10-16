@@ -315,7 +315,7 @@ class AnnealOnPlateau(object):
 
     def load_state_dict(self, state_dict):
         self.__dict__.update(state_dict)
-        self._init_is_better(mode=self.mode, threshold=self.threshold, threshold_mode=self.threshold_mode)
+        self._init_is_better(mode=self.mode)
 
 
 def init_output_file(base_path: Union[str, Path], file_name: str) -> Path:

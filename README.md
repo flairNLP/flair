@@ -27,7 +27,7 @@ Now at [version 0.9](https://github.com/flairNLP/flair/releases)!
 
 ## Join Us: Open Positions at HU-Berlin!
 
-If you're interested in doing NLP/ML research to pursue a PhD and love open source, consider applying to [open positions](https://github.com/flairNLP/flair/issues/2342) for research associates and PhD candidates at Humboldt University Berlin! 
+If you're interested in doing NLP/ML research to pursue a PhD and love open source, consider applying to [open positions](https://github.com/flairNLP/flair/issues/2446) for research associates and PhD candidates at Humboldt University Berlin! We currently have **three open positions** with application deadlines soon!
 
 ## State-of-the-Art Models
 
