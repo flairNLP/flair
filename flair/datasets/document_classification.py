@@ -61,7 +61,7 @@ class ClassificationCorpus(Corpus):
         even this is too much for your memory, use 'disk'.
         :param label_name_map: Optionally map label names to different schema.
         :param allow_examples_without_labels: set to True to allow Sentences without label in the corpus.
-        :param encoding: Default is 'uft-8' but some datasets are in 'latin-1
+        :param encoding: Default is 'utf-8' but some datasets are in 'latin-1
         :return: a Corpus with annotated train, dev and test data
         """
 
@@ -156,7 +156,7 @@ class ClassificationDataset(FlairDataset):
         even this is too much for your memory, use 'disk'.
         :param label_name_map: Optionally map label names to different schema.
         :param allow_examples_without_labels: set to True to allow Sentences without label in the Dataset.
-        :param encoding: Default is 'uft-8' but some datasets are in 'latin-1
+        :param encoding: Default is 'utf-8' but some datasets are in 'latin-1
         :return: list of sentences
         """
         if type(path_to_file) == str:
@@ -351,7 +351,7 @@ class CSVClassificationCorpus(Corpus):
         :param tokenizer: Tokenizer for dataset, default is SegtokTokenizer
         :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
         :param skip_header: If True, skips first line because it is header
-        :param encoding: Default is 'uft-8' but some datasets are in 'latin-1
+        :param encoding: Default is 'utf-8' but some datasets are in 'latin-1
         :param fmtparams: additional parameters for the CSV file reader
         :return: a Corpus with annotated train, dev and test data
         """
