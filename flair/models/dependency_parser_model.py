@@ -330,3 +330,33 @@ class DependencyParser(flair.nn.Model):
                                 for rel_tag_idx in batch] for batch in relation_prediction]
 
         return arc_prediction, relation_prediction
+    
+    def _get_state_dict(self):
+        model_state = {
+            "state_dict": self.state_dict(),
+            "token_embeddings": self.token_embeddings,
+            "lstm_hidden_size": self.lstm_hidden_size,
+            "relations_dictionary": self.relations_dictionary,
+            "mlp_arc_units": self.mlp_arc_units,
+            "mlp_rel_units": self.mlp_rel_units,
+            "lstm_layers": self.lstm_layers,
+            "lstm_dropout": self.lstm_dropout,
+            "mlp_dropout": self.mlp_dropout,
+        }
+        return model_state
+
+    @staticmethod
+    def _init_model_with_state_dict(state):
+
+        model = DependencyParser(
+            token_embeddings=state["token_embeddings"],
+            relations_dictionary=state["relations_dictionary"],
+            lstm_hidden_size=state["lstm_hidden_size"],
+            mlp_arc_units=state["mlp_arc_units"],
+            mlp_rel_units=state["mlp_rel_units"],
+            lstm_layers=state["lstm_layers"],
+            mlp_dropout=state["mlp_dropout"],
+            lstm_dropout=state["lstm_dropout"],
+        )
+        model.load_state_dict(state["state_dict"])
+        return model
