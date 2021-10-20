@@ -24,3 +24,4 @@ huggingface-hub
 conllu>=4.0
 more-itertools~=8.8.0
 wikipedia-api
+pptree
