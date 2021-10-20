@@ -573,3 +573,32 @@ class MLP(torch.nn.Module):
         x = self.dropout(x)
 
         return x
+
+
+class ParsingMetric:
+
+    def __init__(self, epsilon=1e-6):
+        
+        self.eps = epsilon
+        self.total = 0.0
+        self.correct_arcs = 0.0
+        self.correct_rels = 0.0
+
+    def __call__(self,
+                 arc_prediction: List[List[int]],
+                 relation_prediction: List[List[str]],
+                 sentences: List[Sentence]):
+
+        for batch_indx, batch in enumerate(sentences):
+            self.total += len(batch.tokens)
+            for token_indx, token in enumerate(batch.tokens):
+                if arc_prediction[batch_indx][token_indx] == token.head_id:
+                    self.correct_arcs += 1
+                if relation_prediction[batch_indx][token_indx] == token.get_tag('dependency').value:
+                    self.correct_rels += 1
+
+    def get_las(self) -> float:
+        return self.correct_rels / (self.total + self.eps)
+
+    def get_uas(self) -> float:
+        return self.correct_arcs / (self.total + self.eps)
