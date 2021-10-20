@@ -93,3 +93,57 @@ class DependencyParser(flair.nn.Model):
 
         self.loss_function = torch.nn.CrossEntropyLoss()
         self.to(flair.device)
+
+    def forward(self, sentences: List[Sentence]):
+        self.token_embeddings.embed(sentences)
+        batch_size = len(sentences)
+
+        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        seq_len: int = max(lengths)
+
+        pre_allocated_zero_tensor = torch.zeros(
+            self.token_embeddings.embedding_length * seq_len,
+            dtype=torch.float,
+            device=flair.device,
+        )
+
+        # embed sentences
+        all_embs = list()
+        for sentence in sentences:
+            all_embs += [
+                emb for token in sentence for emb in token.get_each_embedding()
+            ]
+            nb_padding_tokens = seq_len - len(sentence)
+
+            if nb_padding_tokens > 0:
+                t = pre_allocated_zero_tensor[
+                    : self.token_embeddings.embedding_length * nb_padding_tokens
+                ]
+                all_embs.append(t)
+
+        sentence_tensor = torch.cat(all_embs).view(
+            [
+                batch_size,
+                seq_len,
+                self.token_embeddings.embedding_length,
+            ]
+        )
+
+        x = pack_padded_sequence(sentence_tensor, lengths, True, False)
+
+        x, _ = self.lstm(x)
+        x, _ = pad_packed_sequence(x, True, total_length=seq_len)
+
+        # apply MLPs for arc and relations to the BiLSTM output states
+        arc_h = self.mlp_arc_h(x)
+        arc_d = self.mlp_arc_d(x)
+        rel_h = self.mlp_rel_h(x)
+        rel_d = self.mlp_rel_d(x)
+
+        # get scores from the biaffine attentions
+        # [batch_size, seq_len, seq_len]
+        score_arc = self.arc_attn(arc_d, arc_h)
+        # [batch_size, seq_len, seq_len, n_rels]
+        score_rel = self.rel_attn(rel_d, rel_h).permute(0, 2, 3, 1)
+
+        return score_arc, score_rel
