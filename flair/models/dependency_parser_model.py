@@ -183,3 +183,42 @@ class DependencyParser(flair.nn.Model):
             rel_loss += self.loss_function(score_relation, rel_labels)
 
         return arc_loss, rel_loss
+    
+    def predict(self,
+                sentences: Union[List[Sentence], Sentence],
+                mini_batch_size: int = 32,
+                num_workers: int = 8,
+                print_tree: bool = False,
+                embedding_storage_mode="none",
+                ) -> None:
+        """
+        Predict arcs and tags for Dependency Parser task
+        :param sentences: a Sentence or a List of Sentence
+        :param mini_batch_size: mini batch size to use
+        :param print_tree: set to True to print dependency parser of sentence as tree shape
+        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
+        you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
+        'gpu' to store embeddings in GPU memory.
+        """
+
+        if not sentences:
+            return sentences
+        sentences = SentenceDataset(sentences)
+        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
+
+        for batch in data_loader:
+            with torch.no_grad():
+                score_arc, score_rel = self.forward(batch)
+                arc_prediction, relation_prediction = self._obtain_labels_(
+                    score_arc, score_rel)
+
+            for sentnce_index, (sentence, sent_tags, sent_arcs) in enumerate(zip(batch, relation_prediction, arc_prediction)):
+                for token_index, (token, tag, head_id) in enumerate(zip(sentence.tokens, sent_tags, sent_arcs)):
+                    token.add_tag(self.tag_type, tag,
+                                  score_rel[sentnce_index][token_index])
+                    token.head_id = int(head_id)
+
+                if print_tree:
+                    tree_printer(sentence, self.tag_type)
+                    print("-" * 50)
+            store_embeddings(batch, storage_mode=embedding_storage_mode)
