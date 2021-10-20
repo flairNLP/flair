@@ -147,3 +147,39 @@ class DependencyParser(flair.nn.Model):
         score_rel = self.rel_attn(rel_d, rel_h).permute(0, 2, 3, 1)
 
         return score_arc, score_rel
+    
+
+    def forward_loss(self, data_points: List[Sentence]) -> torch.tensor:
+        
+        score_arc, score_rel = self.forward(data_points)
+        loss_arc, loss_rel = self._calculate_loss(
+            score_arc, score_rel, data_points)
+        main_loss = loss_arc + loss_rel
+
+        return main_loss
+
+
+    def _calculate_loss(self, score_arc: torch.tensor,
+                        score_relation: torch.tensor,
+                        data_points: List[Sentence]) -> Tuple[float, float]:
+
+        arc_loss = 0.0
+        rel_loss = 0.0
+
+        for sen_id, sen in enumerate(data_points):
+
+            arc_labels = [token.head_id - 1 if token.head_id !=
+                          0 else token.idx - 1 for token in sen.tokens]
+            arc_labels = torch.tensor(
+                arc_labels, dtype=torch.int64, device=flair.device)
+            arc_loss += self.loss_function(score_arc[sen_id], arc_labels)
+
+            rel_labels = [self.relations_dictionary.get_idx_for_item(token.get_tag('dependency').value)
+                          for token in sen.tokens]
+            rel_labels = torch.tensor(
+                rel_labels, dtype=torch.int64, device=flair.device)
+            score_relation = score_relation[sen_id][torch.arange(
+                len(arc_labels)), arc_labels]
+            rel_loss += self.loss_function(score_relation, rel_labels)
+
+        return arc_loss, rel_loss
