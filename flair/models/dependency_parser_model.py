@@ -138,7 +138,8 @@ class DependencyParser(flair.nn.Model):
         return score_arc, score_rel
     
 
-    def forward_loss(self, data_points: List[Sentence]) -> torch.tensor:
+    def forward_loss(self,
+                     data_points: List[Sentence]) -> torch.tensor:
         
         score_arc, score_rel = self.forward(data_points)
         loss_arc, loss_rel = self._calculate_loss(score_arc, score_rel, data_points)
@@ -318,8 +319,11 @@ class DependencyParser(flair.nn.Model):
         )
         return result, eval_loss_rel
 
-    def _obtain_labels_(self, score_arc: torch.tensor, score_rel: torch.tensor) -> Tuple[List[List[int]],
-                                                                                         List[List[str]]]:
+    def _obtain_labels_(self,
+                        score_arc: torch.tensor,
+                        score_rel: torch.tensor) -> Tuple[List[List[int]],
+                                                          List[List[str]]]:
+                            
         arc_prediction: torch.tensor = score_arc.argmax(-1)
         relation_prediction: torch.tensor = score_rel.argmax(-1)
         relation_prediction = relation_prediction.gather(-1, arc_prediction.unsqueeze(-1)).squeeze(-1)
@@ -373,8 +377,7 @@ class BiLSTM(torch.nn.Module):
         ):
         """
         Initializes a VariationalBiLSTM
-        The model is based on biaffine dependency parser :cite: "Dozat T. & Manning C. Deep biaffine attention for neural dependency parsing."
-        
+               
         :param input_size: number of expected size in the input
         :param hidden_size: hidden state size 
         :param num_layers: number of LSTM layers 
@@ -400,11 +403,11 @@ class BiLSTM(torch.nn.Module):
         self.reset_parameters()
 
     def __repr__(self):
-        str = "input:{} , hidden_size:{}, num_of_layers:{}, dropout_rate:{}".format(self.input_size,
+        st = "input:{} , hidden_size:{}, num_of_layers:{}, dropout_rate:{}".format(self.input_size,
                                                                                     self.hidden_size,
                                                                                     self.num_layers,
                                                                                     self.dropout)
-        return f"{self.__class__.__name__}({str})"
+        return f"{self.__class__.__name__}({st})"
 
     def reset_parameters(self):
         for param in self.parameters():
@@ -421,7 +424,12 @@ class BiLSTM(torch.nn.Module):
 
         return h, c
 
-    def layer_forward(self, x, hx, cell, batch_sizes, reverse=False):
+    def layer_forward(self,
+                      x,
+                      hx,
+                      cell,
+                      batch_sizes,
+                      reverse=False):
         hx_0 = hx_i = hx
         hx_n, output = [], []
         steps = reversed(range(len(x))) if reverse else range(len(x))
@@ -490,3 +498,78 @@ class BiLSTM(torch.nn.Module):
         hx = self.permute_hidden(hx, sequence.unsorted_indices)
 
         return x, hx
+
+
+class Biaffine(torch.nn.Module):
+
+    def __init__(
+        self,
+        n_in,
+        n_out=1,
+        bias_x=True,
+        bias_y=True):
+        """
+        :param n_in: size of input
+        :param n_out: number of channels
+        :param bias_x: set bias for x
+        :param bias_x: set bias for y
+        
+        """
+        super(Biaffine, self).__init__()
+
+        self.n_in = n_in
+        self.n_out = n_out
+        self.bias_x = bias_x
+        self.bias_y = bias_y
+        self.weight = torch.nn.Parameter(torch.Tensor(n_out,
+                                                      n_in + bias_x,
+                                                      n_in + bias_y))
+        self.reset_parameters()
+
+    def extra_repr(self):
+        st = "n_in:{}, n_out:{}, bias_x:{}, bias_x:{}".format(self.n_in,
+                                                               self.n_out,
+                                                               self.bias_x,
+                                                               self.bias_y)
+        return st
+
+    def reset_parameters(self):
+        torch.nn.init.zeros_(self.weight)
+
+    def forward(self, x, y):
+        if self.bias_x:
+            x = torch.cat((x, torch.ones_like(x[..., :1])), -1)
+        if self.bias_y:
+            y = torch.cat((y, torch.ones_like(y[..., :1])), -1)
+        s = torch.einsum('bxi,oij,byj->boxy', x, self.weight, y)
+        s = s.squeeze(1)
+
+        return s
+
+
+class MLP(torch.nn.Module):
+
+    def __init__(
+        self,
+        n_in,
+        n_hidden,
+        dropout=0
+        ):
+        super(MLP, self).__init__()
+
+        self.linear = torch.nn.Linear(n_in, n_hidden)
+        self.activation = torch.nn.LeakyReLU(negative_slope=0.1)
+        self.dropout = LockedDropout(dropout_rate=dropout)
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        torch.nn.init.orthogonal_(self.linear.weight)
+        torch.nn.init.zeros_(self.linear.bias)
+
+    def forward(self, x):
+        x = self.linear(x)
+        x = self.activation(x)
+        x = self.dropout(x)
+
+        return x
