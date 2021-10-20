@@ -23,7 +23,7 @@ from flair.visual.tree_printer import tree_printer
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 
-class DependecyParser(flair.nn.Model):
+class DependencyParser(flair.nn.Model):
     def __init__(
             self,
             token_embeddings: TokenEmbeddings,
@@ -34,13 +34,24 @@ class DependecyParser(flair.nn.Model):
             lstm_layers: int = 3,
             mlp_dropout: float = 0.1,
             lstm_dropout: float = 0.2,
-            relearn_embeddings: bool = True,
     ):
-
-        super(DependecyParser, self).__init__()
+        """
+        Initializes a DependecyParser
+        The model is based on biaffine dependency parser :cite: "Dozat T. & Manning C. Deep biaffine attention for neural dependency parsing."
+        
+        :param token_embeddings: word embeddings used in model
+        :param relations_dictionary: dictionary of relations tags
+        :param lstm_hidden_size: size of LSTM hidden state
+        :param mlp_arc_units: size of MLP for arc 
+        :param mlp_rel_units: size of MLP for dependency relations
+        :param lstm_layers: number of LSTM layers
+        :param mlp_dropout: The dropout probability of MLP layers
+        :param lstm_dropout: dropout probability in LSTM 
+        """
+        
+        super(DependencyParser, self).__init__()
         self.token_embeddings = token_embeddings
         self.relations_dictionary: Dictionary = relations_dictionary
-        self.relearn_embeddings = relearn_embeddings
         self.lstm_hidden_size = lstm_hidden_size
         self.mlp_arc_units = mlp_arc_units
         self.mlp_rel_units = mlp_rel_units
