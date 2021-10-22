@@ -558,7 +558,7 @@ class Lemmatizer(flair.nn.Model):
             main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
             exclude_labels: List[str] = [],
             gold_label_dictionary: Optional[Dictionary] = None,
-            batching_in_prediction: bool = True
+            batching_in_rnn: bool = True
     ) -> Result:
         """
         This function evaluates a lemmatizer on a given set of sentences
@@ -567,11 +567,11 @@ class Lemmatizer(flair.nn.Model):
         :param out_path: path to the output file in which the predictions of the lemmatizer will be stored
         :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
             you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
-        :param mini_batch_size: batch size, also used in prediction (if batching_in_prediction is True)
+        :param mini_batch_size: batch size, also used in prediction
         :param main_evaluation_metric:
         :param exclude_labels:
         :param gold_label_dictionary:
-        :param batching_in_prediction:
+        :param batching_in_rnn:
         """
 
         if not isinstance(sentences, Dataset):
@@ -602,7 +602,7 @@ class Lemmatizer(flair.nn.Model):
                                               mini_batch_size=mini_batch_size,
                                               label_name='predicted',
                                               return_loss=True,
-                                              batching=batching_in_prediction)
+                                              batching_in_rnn=batching_in_prediction)
 
                 average_over += loss_and_count[1]
                 eval_loss += loss_and_count[0]
