@@ -307,12 +307,17 @@ class WordEmbeddings(TokenEmbeddings):
 
     def _apply(self, fn):
         if fn.__name__ == "convert" and self.force_cpu:
+            # this is required to force the module on the cpu,
+            # if a parent module is put to gpu, the _apply is called to each sub_module
+            # self.to(..) actually sets the device properly
             if not hasattr(self, "device"):
                 self.to(flair.device)
             return
         super(WordEmbeddings, self)._apply(fn)
 
     def __getattribute__(self, item):
+        # this ignores the get_cached_vec method when loading older versions
+        # it is needed for compatibility reasons
         if "get_cached_vec" == item:
             return None
         return super().__getattribute__(item)
