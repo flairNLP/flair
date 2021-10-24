@@ -1449,6 +1449,7 @@ class OneHotEmbeddings(TokenEmbeddings):
         self.field = field
         self.instance_parameters = self.get_instance_parameters(locals=locals())
         self.__embedding_length = embedding_length
+        self.vocab_dictionary = vocab_dictionary
 
         print(self.vocab_dictionary.idx2item)
         print(f"vocabulary size of {len(self.vocab_dictionary)}")
