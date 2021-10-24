@@ -1431,24 +1431,88 @@ class OneHotEmbeddings(TokenEmbeddings):
 
     def __init__(
             self,
-            corpus: Corpus,
+            vocab_dictionary: Dictionary,
             field: str = "text",
             embedding_length: int = 300,
-            min_freq: int = 3,
+            stable: bool = False,
     ):
         """
         Initializes one-hot encoded word embeddings and a trainable embedding layer
-        :param corpus: you need to pass a Corpus in order to construct the vocabulary
+        :param vocab_dictionary: the vocabulary that will be encoded
         :param field: by default, the 'text' of tokens is embedded, but you can also embed tags such as 'pos'
         :param embedding_length: dimensionality of the trainable embedding layer
-        :param min_freq: minimum frequency of a word to become part of the vocabulary
+        :param stable: set stable=True to use the stable embeddings as described in https://arxiv.org/abs/2110.02861
         """
         super().__init__()
-        self.name = "one-hot"
+        self.name = f"one-hot-{field}"
         self.static_embeddings = False
-        self.min_freq = min_freq
         self.field = field
         self.instance_parameters = self.get_instance_parameters(locals=locals())
+        self.__embedding_length = embedding_length
+
+        print(self.vocab_dictionary.idx2item)
+        print(f"vocabulary size of {len(self.vocab_dictionary)}")
+
+        # model architecture
+        self.embedding_layer = torch.nn.Embedding(
+            len(self.vocab_dictionary), self.__embedding_length
+        )
+        torch.nn.init.xavier_uniform_(self.embedding_layer.weight)
+        if stable:
+            self.layer_norm = torch.nn.LayerNorm(embedding_length)
+        else:
+            self.layer_norm = None
+
+        self.to(flair.device)
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        tokens = [
+            t
+            for sentence in sentences
+            for t in sentence.tokens
+        ]
+
+        if self.field == "text":
+            one_hot_sentences = [
+                self.vocab_dictionary.get_idx_for_item(t.text)
+                for t in tokens
+            ]
+        else:
+            one_hot_sentences = [
+                self.vocab_dictionary.get_idx_for_item(t.get_tag(self.field).value)
+                for t in tokens
+            ]
+
+        one_hot_sentences = torch.tensor(one_hot_sentences, dtype=torch.long).to(
+            flair.device
+        )
+
+        embedded = self.embedding_layer.forward(one_hot_sentences)
+        if self.layer_norm:
+            embedded = self.layer_norm(embedded)
+
+        for emb, token in zip(embedded, tokens):
+            token.set_embedding(self.name, emb)
+
+        return sentences
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def from_corpus(
+            cls,
+            corpus: Corpus,
+            field: str = "text",
+            min_freq: int = 3,
+            **kwargs
+    ):
+        vocab_dictionary = Dictionary()
 
         tokens = list(map((lambda s: s.tokens), corpus.train))
         tokens = [token for sublist in tokens for token in sublist]
@@ -1466,66 +1530,10 @@ class OneHotEmbeddings(TokenEmbeddings):
                 break
             tokens.append(token)
 
-        self.vocab_dictionary: Dictionary = Dictionary()
         for token in tokens:
-            self.vocab_dictionary.add_item(token)
+            vocab_dictionary.add_item(token)
 
-        # max_tokens = 500
-        self.__embedding_length = embedding_length
-
-        print(self.vocab_dictionary.idx2item)
-        print(f"vocabulary size of {len(self.vocab_dictionary)}")
-
-        # model architecture
-        self.embedding_layer = torch.nn.Embedding(
-            len(self.vocab_dictionary), self.__embedding_length
-        )
-        torch.nn.init.xavier_uniform_(self.embedding_layer.weight)
-
-        self.to(flair.device)
-
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
-        one_hot_sentences = []
-        for i, sentence in enumerate(sentences):
-
-            if self.field == "text":
-                context_idxs = [
-                    self.vocab_dictionary.get_idx_for_item(t.text)
-                    for t in sentence.tokens
-                ]
-            else:
-                context_idxs = [
-                    self.vocab_dictionary.get_idx_for_item(t.get_tag(self.field).value)
-                    for t in sentence.tokens
-                ]
-
-            one_hot_sentences.extend(context_idxs)
-
-        one_hot_sentences = torch.tensor(one_hot_sentences, dtype=torch.long).to(
-            flair.device
-        )
-
-        embedded = self.embedding_layer.forward(one_hot_sentences)
-
-        index = 0
-        for sentence in sentences:
-            for token in sentence:
-                embedding = embedded[index]
-                token.set_embedding(self.name, embedding)
-                index += 1
-
-        return sentences
-
-    def __str__(self):
-        return self.name
-
-    def extra_repr(self):
-        return "min_freq={}".format(self.min_freq)
+        return cls(vocab_dictionary, field=field, **kwargs)
 
 
 class HashEmbeddings(TokenEmbeddings):
