@@ -602,7 +602,7 @@ class Lemmatizer(flair.nn.Model):
                                               mini_batch_size=mini_batch_size,
                                               label_name='predicted',
                                               return_loss=True,
-                                              batching_in_rnn=batching_in_prediction)
+                                              batching_in_rnn=batching_in_rnn)
 
                 average_over += loss_and_count[1]
                 eval_loss += loss_and_count[0]
