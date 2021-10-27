@@ -274,7 +274,6 @@ class Lemmatizer(flair.nn.Model):
                     out_probs = self.softmax(output_vectors).squeeze(1)
                     # make sure no dummy symbol <> or start symbol <S> is predicted
                     out_probs[:,0:2] = -1
-
                     # pick top beam size many outputs with highest probabilities
                     probabilities, leading_indices = out_probs.topk(self.beam_size, 1)  # max prob along dimension 1
                     # leading_indices and probabilities have size (batch_size, beam_size)
@@ -288,7 +287,8 @@ class Lemmatizer(flair.nn.Model):
                         # target vector represents the labels with vectors of indices for characters
                         target = self.labels_to_char_indices(labels, for_input=False, seq_length=max_length)
                         if target == None:  # unknown characeter in sentence/batch
-                            continue
+                            number_tokens_in_total -= number_tokens
+                            continue # next batch
 
                         losses = self.unreduced_loss(output_vectors.squeeze(1), target[:,0])
                         losses = torch.stack(self.beam_size*[losses], dim=1).view(-1,1)
@@ -319,8 +319,7 @@ class Lemmatizer(flair.nn.Model):
                         out_probs = self.softmax(output_vectors)
                         # out_probs have size (beam_size*batch_size, 1, alphabet_size)
                         # make sure no dummy symbol <> or start symbol <S> is predicted
-                        out_probs[:, 0:2] = -1
-
+                        out_probs[:,0, 0:2] = -1
                         # choose beam_size many indices with highest probabilities
                         probabilities, index_candidates = out_probs.topk(self.beam_size, 2)
                         probabilities.squeeze_(1)
@@ -398,12 +397,12 @@ class Lemmatizer(flair.nn.Model):
                     # get characters from index sequences and add predicted label to token
                     for i, seq in enumerate(output_sequences):
                         overall_loss +=seq[2]
-                        word = ''
+                        predicted_lemma = ''
                         for idx in seq[0]:
-                            word += self.char_dictionary.get_item_for_index(idx)
-                        line_to_print+=word
+                            predicted_lemma += self.char_dictionary.get_item_for_index(idx)
+                        line_to_print+=predicted_lemma
                         line_to_print+=' '
-                        tokens_in_batch[i].add_tag(tag_type=label_name, tag_value=word)
+                        tokens_in_batch[i].add_tag(tag_type=label_name, tag_value=predicted_lemma)
 
                     store_embeddings(batch, storage_mode=embedding_storage_mode)
 
@@ -449,6 +448,10 @@ class Lemmatizer(flair.nn.Model):
 
                                 target = self.labels_to_char_indices([label], for_input=False, seq_length=max_length)
 
+                                if target == None: # unknown character
+                                    number_tokens_in_total -= 1
+                                    token.add_tag(tag_type=label_name, tag_value='unknown_character')
+                                    continue # next token
                                 loss = self.loss(output_vectors.squeeze(0), target[:,0])
 
                             # the list sequences will contain beam_size many hypothesis at each point of the prediction
@@ -532,12 +535,12 @@ class Lemmatizer(flair.nn.Model):
                             overall_loss+=best_sequence[2]
 
                             # get lemma from indices and add label to token
-                            word = ''
+                            predicted_lemma = ''
                             for idx in best_sequence[0]:
-                                word += self.char_dictionary.get_item_for_index(idx)
-                            line_to_print+=word
+                                predicted_lemma += self.char_dictionary.get_item_for_index(idx)
+                            line_to_print+=predicted_lemma
                             line_to_print+=' '
-                            token.add_tag(tag_type=label_name, tag_value=word)
+                            token.add_tag(tag_type=label_name, tag_value=predicted_lemma)
 
                         store_embeddings(sentence, storage_mode=embedding_storage_mode)
 
