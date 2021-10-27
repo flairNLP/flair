@@ -1,11 +1,11 @@
+from collections import Counter
 from typing import Optional, Union, List
 
 import torch
-from torch.nn.parameter import Parameter
 from tqdm import tqdm
 
 import flair
-from flair.data import Sentence, Dictionary, Dataset, Label
+from flair.data import Sentence, Dictionary, Dataset, Label, FlairDataset
 from flair.datasets import SentenceDataset, DataLoader
 from flair.embeddings import TokenEmbeddings
 from flair.nn import Classifier
@@ -17,10 +17,12 @@ class LearnedPrototypesTagger(Classifier):
     def __init__(self,
                  embeddings: TokenEmbeddings,
                  tag_dictionary: Dictionary, tag_type: str,
-                 prototype_size: int = 100,
+                 prototype_size: int = 8,
                  unlabeled_distance: Optional[int] = None,
                  hyperbolic: Optional[bool] = False,
-                 learning_mode=0,
+                 learning_mode='joint',
+                 expectation_maximization_data=None,
+                 normal_distributed_initial_prototypes: bool = False,
                  ):
         """
         Prototypical model to tag tokens in a sentence using an embedding and
@@ -31,16 +33,14 @@ class LearnedPrototypesTagger(Classifier):
         The embedding should contain information about the sentence
         (otherwise token tagging done this way becomes pointless).
         :param tag_type: The tag to predict.
-        :param support_size: The size of the support set (over all classes).
-        This number can be retrieved from the episodic sampler.
         :param hyperbolic: Whether to use euclidean or hyperbolic distance.
-        :param embedding_to_metric_space: Funktion to apply after the embedding.
         """
         super().__init__()
         self.embeddings = embeddings
 
         self.tag_type = tag_type
         self.prototype_size = prototype_size
+        self.expectation_maximization_data = expectation_maximization_data
 
         # initialize the label dictionary
         self.prototype_labels: Dictionary = tag_dictionary
@@ -55,9 +55,16 @@ class LearnedPrototypesTagger(Classifier):
         else:
             # map embeddings to prototype space
             self.metric_space_decoder = torch.nn.Linear(embeddings.embedding_length, self.prototype_size)
+            torch.nn.init.xavier_uniform_(self.metric_space_decoder.weight)
 
-        # create initial prototypes for all classes
-        self.prototype_vectors = Parameter(torch.normal(torch.zeros(len(self.prototype_labels), self.prototype_size)))
+        # create initial prototypes for all classes (all initial prototypes are a vector of all 1s)
+        self.prototype_vectors = torch.nn.Parameter(torch.ones(len(self.prototype_labels), self.prototype_size),
+                                                    requires_grad=True)
+
+        # if set, create initial prototypes from normal distribution
+        if normal_distributed_initial_prototypes:
+            self.prototype_vectors = torch.nn.Parameter(
+                torch.normal(torch.zeros(len(self.prototype_labels), self.prototype_size)))
 
         self._hyperbolic = hyperbolic
 
@@ -72,6 +79,52 @@ class LearnedPrototypesTagger(Classifier):
 
         # all parameters will be pushed internally to the specified device
         self.to(flair.device)
+
+    def calculate_prototypes(self, dataset: FlairDataset, mini_batch_size=32):
+        """
+        Function that calclues a prototype for each class based on the average embedding over the whole dataset
+        :param dataset: dataset for which to calculate prototypes
+        :param mini_batch_size: number of sentences to embed at same time
+        :return:
+        """
+
+        # read Dataset into data loader (if list of sentences passed, make Dataset first)
+        if not isinstance(dataset, Dataset):
+            dataset = SentenceDataset(dataset)
+
+        counter = Counter()
+        for sentence in dataset:
+            counter.update([token.get_tag(self.tag_type).value for token in sentence])
+
+        dataloader = DataLoader(dataset, batch_size=mini_batch_size)
+
+        # reset prototypes for all classes
+        self.new_prototypes = torch.zeros(len(self.prototype_labels), self.prototype_size,
+                                          device='cpu')
+
+        for batch in tqdm(dataloader):
+
+            calculated_prototypes = self.forward(batch, return_prototypes=True).detach().to('cpu')
+
+            idx = 0
+            for sentence in batch:
+                for token in sentence:
+                    tag = token.get_tag(self.tag_type).value
+
+                    # add up prototypes
+                    self.new_prototypes[self.prototype_labels.get_idx_for_item(tag)] \
+                        += calculated_prototypes[idx]
+
+                    idx += 1
+
+        for label, count in counter.most_common():
+            average_prototype = self.new_prototypes[self.prototype_labels.get_idx_for_item(label)] / count
+            self.new_prototypes[self.prototype_labels.get_idx_for_item(label)] = average_prototype
+
+        self.new_prototypes[self.prototype_labels.get_idx_for_item('O')] \
+            = self.prototype_vectors[self.prototype_labels.get_idx_for_item('O')]
+
+        self.prototype_vectors.data = self.new_prototypes.detach().to(flair.device)
 
     def embed_sentences(self, sentences):
         names = self.embeddings.get_names()
@@ -97,11 +150,14 @@ class LearnedPrototypesTagger(Classifier):
 
         return self.loss(feature, true_class)
 
-    def forward(self, sentences):
+    def forward(self, sentences, return_prototypes: bool = False):
         assert self.prototype_vectors is not None
 
         # get embeddings for data points
         embedded = self.embed_sentences(sentences)
+
+        if self.learning_mode == 'learn_only_map_and_prototypes':
+            embedded = embedded.detach()
 
         # decode embeddings into prototype space
         if self.metric_space_decoder is not None:
@@ -111,13 +167,14 @@ class LearnedPrototypesTagger(Classifier):
 
         prot = self.prototype_vectors
 
-        # used in alternating training only
-        if self.learning_mode == 1:
-            self.learning_mode = -1
+        if self.learning_mode == 'learn_only_prototypes':
             encoded = encoded.detach()
-        elif self.learning_mode == -1:
-            self.learning_mode = 1
+
+        if self.learning_mode == 'learn_only_embeddings_and_map':
             prot = prot.detach()
+
+        if return_prototypes:
+            return encoded
 
         distance = self.distance(encoded, prot)
 
@@ -280,6 +337,14 @@ class LearnedPrototypesTagger(Classifier):
         if 'metric_space_decoder' in state:
             model.metric_space_decoder = state['metric_space_decoder']
         return model
+
+    def train(self, mode: bool = True):
+        super().train(mode=mode)
+        if mode:
+            if self.expectation_maximization_data:
+                print("recalculating prototypes")
+                with torch.no_grad():
+                    self.calculate_prototypes(self.expectation_maximization_data, mini_batch_size=8)
 
     @property
     def label_type(self):
