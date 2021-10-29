@@ -271,7 +271,7 @@ class WordEmbeddings(TokenEmbeddings):
                 word = token.get_tag(self.field).value
             word_indices.append(self.get_cached_token_index(word))
 
-        embeddings = self.embedding(torch.tensor(word_indices, dtype=torch.int, device=self.device))
+        embeddings = self.embedding(torch.tensor(word_indices, dtype=torch.long, device=self.device))
         if self.stable:
             embeddings = self.layer_norm(embeddings)
 
