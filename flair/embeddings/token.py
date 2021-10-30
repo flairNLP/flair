@@ -133,7 +133,7 @@ class WordEmbeddings(TokenEmbeddings):
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 
         if fine_tune and force_cpu and flair.device.type != "cpu":
-            raise Exception("Cannot train WordEmbeddings on cpu if the model is trained on gpu")
+            raise ValueError("Cannot train WordEmbeddings on cpu if the model is trained on gpu, set force_cpu=False")
 
         hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/token"
 
