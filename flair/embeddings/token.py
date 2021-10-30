@@ -6,12 +6,13 @@ import re
 from abc import abstractmethod
 from collections import Counter
 from pathlib import Path
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Optional
 
 import gensim
 import numpy as np
 import torch
 from bpemb import BPEmb
+from torch import nn
 from transformers import AutoTokenizer, AutoConfig, AutoModel, CONFIG_MAPPING, PreTrainedTokenizer, XLNetModel, \
     TransfoXLModel
 
@@ -119,15 +120,20 @@ class StackedEmbeddings(TokenEmbeddings):
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
-    def __init__(self, embeddings: str, field: str = None):
+    def __init__(self, embeddings: str, field: str = None, fine_tune: bool = False, force_cpu: bool = True,
+                 stable: bool = False):
         """
         Initializes classic word embeddings. Constructor downloads required files if not there.
         :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or custom
         If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
+        set stable=True to use the stable embeddings as described in https://arxiv.org/abs/2110.02861
         """
         self.embeddings = embeddings
 
         self.instance_parameters = self.get_instance_parameters(locals=locals())
+
+        if fine_tune and force_cpu and flair.device.type != "cpu":
+            raise ValueError("Cannot train WordEmbeddings on cpu if the model is trained on gpu, set force_cpu=False")
 
         hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/token"
 
@@ -189,42 +195,64 @@ class WordEmbeddings(TokenEmbeddings):
             )
 
         self.name: str = str(embeddings)
-        self.static_embeddings = True
+        self.static_embeddings = not fine_tune
+        self.fine_tune = fine_tune
+        self.force_cpu = force_cpu
+        self.field = field
+        self.stable = stable
+        super().__init__()
 
         if str(embeddings).endswith(".bin"):
-            self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
+            precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
                 str(embeddings), binary=True
             )
         else:
-            self.precomputed_word_embeddings = gensim.models.KeyedVectors.load(
+            precomputed_word_embeddings = gensim.models.KeyedVectors.load(
                 str(embeddings)
             )
 
-        self.field = field
+        self.__embedding_length: int = precomputed_word_embeddings.vector_size
 
-        self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
-        super().__init__()
+        vectors = np.row_stack(
+            (precomputed_word_embeddings.vectors, np.zeros(self.__embedding_length, dtype="float"))
+        )
+        self.embedding = nn.Embedding.from_pretrained(torch.FloatTensor(vectors), freeze=not fine_tune)
+        self.vocab = {
+            k: v.index
+            for k, v in precomputed_word_embeddings.vocab.items()
+        }
+
+        if stable:
+            self.layer_norm = nn.LayerNorm(self.__embedding_length, elementwise_affine=fine_tune)
+        else:
+            self.layer_norm = None
+
+        self.device = None
+        self.to(flair.device)
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    @instance_lru_cache(maxsize=10000, typed=False)
-    def get_cached_vec(self, word: str) -> torch.Tensor:
-        if word in self.precomputed_word_embeddings:
-            word_embedding = self.precomputed_word_embeddings[word]
-        elif word.lower() in self.precomputed_word_embeddings:
-            word_embedding = self.precomputed_word_embeddings[word.lower()]
-        elif re.sub(r"\d", "#", word.lower()) in self.precomputed_word_embeddings:
-            word_embedding = self.precomputed_word_embeddings[
+    @instance_lru_cache(maxsize=100000, typed=False)
+    def get_cached_token_index(self, word: str) -> int:
+        if word in self.vocab:
+            return self.vocab[word]
+        elif word.lower() in self.vocab:
+            return self.vocab[word.lower()]
+        elif re.sub(r"\d", "#", word.lower()) in self.vocab:
+            return self.vocab[
                 re.sub(r"\d", "#", word.lower())
             ]
-        elif re.sub(r"\d", "0", word.lower()) in self.precomputed_word_embeddings:
-            word_embedding = self.precomputed_word_embeddings[
+        elif re.sub(r"\d", "0", word.lower()) in self.vocab:
+            return self.vocab[
                 re.sub(r"\d", "0", word.lower())
             ]
         else:
-            word_embedding = np.zeros(self.embedding_length, dtype="float")
+            return len(self.vocab)  # <unk> token
+
+    def get_vec(self, word: str) -> torch.Tensor:
+        word_embedding = self.vectors[self.get_cached_token_index(word)]
 
         word_embedding = torch.tensor(
             word_embedding.tolist(), device=flair.device, dtype=torch.float
@@ -233,18 +261,25 @@ class WordEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
-        for i, sentence in enumerate(sentences):
+        tokens = [token for sentence in sentences for token in sentence.tokens]
 
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+        word_indices: List[int] = []
+        for token in tokens:
+            if "field" not in self.__dict__ or self.field is None:
+                word = token.text
+            else:
+                word = token.get_tag(self.field).value
+            word_indices.append(self.get_cached_token_index(word))
 
-                if "field" not in self.__dict__ or self.field is None:
-                    word = token.text
-                else:
-                    word = token.get_tag(self.field).value
+        embeddings = self.embedding(torch.tensor(word_indices, dtype=torch.long, device=self.device))
+        if self.stable:
+            embeddings = self.layer_norm(embeddings)
 
-                word_embedding = self.get_cached_vec(word=word)
+        if self.force_cpu:
+            embeddings = embeddings.to(flair.device)
 
-                token.set_embedding(self.name, word_embedding)
+        for emb, token in zip(embeddings, tokens):
+            token.set_embedding(self.name, emb)
 
         return sentences
 
@@ -257,6 +292,60 @@ class WordEmbeddings(TokenEmbeddings):
             self.embeddings = self.name
 
         return f"'{self.embeddings}'"
+
+    def train(self, mode=True):
+        if not self.fine_tune:
+            pass
+        else:
+            super(WordEmbeddings, self).train(mode)
+
+    def to(self, device):
+        if self.force_cpu:
+            device = torch.device("cpu")
+        self.device = device
+        super(WordEmbeddings, self).to(device)
+
+    def _apply(self, fn):
+        if fn.__name__ == "convert" and self.force_cpu:
+            # this is required to force the module on the cpu,
+            # if a parent module is put to gpu, the _apply is called to each sub_module
+            # self.to(..) actually sets the device properly
+            if not hasattr(self, "device"):
+                self.to(flair.device)
+            return
+        super(WordEmbeddings, self)._apply(fn)
+
+    def __getattribute__(self, item):
+        # this ignores the get_cached_vec method when loading older versions
+        # it is needed for compatibility reasons
+        if "get_cached_vec" == item:
+            return None
+        return super().__getattribute__(item)
+
+    def __setstate__(self, state):
+        if "get_cached_vec" in state:
+            del state["get_cached_vec"]
+        if "force_cpu" not in state:
+            state["force_cpu"] = True
+        if "fine_tune" not in state:
+            state["fine_tune"] = False
+        if "precomputed_word_embeddings" in state:
+            precomputed_word_embeddings = state.pop("precomputed_word_embeddings")
+            vectors = np.row_stack(
+                (precomputed_word_embeddings.vectors, np.zeros(precomputed_word_embeddings.vector_size, dtype="float"))
+            )
+            embedding = nn.Embedding.from_pretrained(torch.FloatTensor(vectors), freeze=not state["fine_tune"])
+            vocab = {
+                k: v.index
+                for k, v in precomputed_word_embeddings.vocab.items()
+            }
+            state["embedding"] = embedding
+            state["vocab"] = vocab
+        if "stable" not in state:
+            state["stable"] = False
+            state["layer_norm"] = None
+
+        super().__setstate__(state)
 
 
 class CharacterEmbeddings(TokenEmbeddings):
