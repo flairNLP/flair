@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import List, Union, Tuple, Optional
 
 import torch
@@ -7,6 +8,7 @@ import torch.nn as nn
 import flair.embeddings
 import flair.nn
 from flair.data import DataPoint, RelationLabel, Span, Sentence
+from flair.file_utils import cached_path
 
 log = logging.getLogger("flair")
 
@@ -22,9 +24,9 @@ class RelationExtractor(flair.nn.DefaultClassifier):
             entity_pair_filters: List[Tuple[str, str]] = None,
             pooling_operation: str = "first_last",
             dropout_value: float = 0.0,
-            locked_dropout_value: float = 0.0,
+            locked_dropout_value: float = 0.1,
             word_dropout_value: float = 0.0,
-            non_linear_decoder: Optional[int] = None,
+            non_linear_decoder: Optional[int] = 2048,
             **classifierargs,
     ):
         """
@@ -203,12 +205,14 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
                 relation_embeddings.append(embedding)
 
-            # stack and drop out
-            all_relations = torch.stack(relation_embeddings)
+            # stack and drop out (squeeze and unsqueeze)
+            all_relations = torch.stack(relation_embeddings).unsqueeze(1)
 
             all_relations = self.dropout(all_relations)
             all_relations = self.locked_dropout(all_relations)
             all_relations = self.word_dropout(all_relations)
+
+            all_relations = all_relations.squeeze(1)
 
             # send through decoder
             if self.non_linear_decoder:
@@ -265,6 +269,22 @@ class RelationExtractor(flair.nn.DefaultClassifier):
     @property
     def label_type(self):
         return self._label_type
+
+    @staticmethod
+    def _fetch_model(model_name) -> str:
+
+        model_map = {}
+
+        hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
+
+        model_map["relations-fast"] = "/".join([hu_path, "relations-fast", "relations-fast.pt"])
+        model_map["relations"] = "/".join([hu_path, "relations", "relations.pt"])
+
+        cache_dir = Path("models")
+        if model_name in model_map:
+            model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
+
+        return model_name
 
 
 def create_position_string(head: Span, tail: Span) -> str:
