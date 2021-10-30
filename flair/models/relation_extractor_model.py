@@ -205,12 +205,14 @@ class RelationExtractor(flair.nn.DefaultClassifier):
 
                 relation_embeddings.append(embedding)
 
-            # stack and drop out
-            all_relations = torch.stack(relation_embeddings)
+            # stack and drop out (squeeze and unsqueeze)
+            all_relations = torch.stack(relation_embeddings).unsqueeze(1)
 
             all_relations = self.dropout(all_relations)
             all_relations = self.locked_dropout(all_relations)
             all_relations = self.word_dropout(all_relations)
+
+            all_relations = all_relations.squeeze(1)
 
             # send through decoder
             if self.non_linear_decoder:
