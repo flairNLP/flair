@@ -69,6 +69,7 @@ Currently, the following contextual string embeddings are provided (note: replac
 | 'de-impresso-hipe-v1-X' | German (historical)  | In-domain data (Swiss and Luxembourgish newspapers) for [CLEF HIPE Shared task](https://impresso.github.io/CLEF-HIPE-2020). More information on the shared task can be found in [this paper](https://zenodo.org/record/3752679#.XqgzxXUzZzU) |
 | 'en-impresso-hipe-v1-X' | English (historical) | In-domain data (Chronicling America material) for [CLEF HIPE Shared task](https://impresso.github.io/CLEF-HIPE-2020). More information on the shared task can be found in [this paper](https://zenodo.org/record/3752679#.XqgzxXUzZzU) |
 | 'fr-impresso-hipe-v1-X' | French (historical)  | In-domain data (Swiss and Luxembourgish newspapers) for [CLEF HIPE Shared task](https://impresso.github.io/CLEF-HIPE-2020). More information on the shared task can be found in [this paper](https://zenodo.org/record/3752679#.XqgzxXUzZzU) |
+| 'am-X' | Amharic  | Based on 6.5m Amharic text corpus crawled from different sources. See [this paper](https://www.mdpi.com/1999-5903/13/11/275) and the official [GitHub Repository](https://github.com/uhh-lt/amharicmodels) for more information. |
 
 So, if you want to load embeddings from the German forward LM model, instantiate the method as follows:
 
