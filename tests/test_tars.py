@@ -46,7 +46,7 @@ def test_train_tars(tasks_base_path):
     corpus = ClassificationCorpus(tasks_base_path / "imdb_underscore")
 
     # create a TARS classifier
-    tars = TARSClassifier(embeddings="distilbert-base-uncased")
+    tars = TARSClassifier(embeddings="sshleifer/tiny-distilroberta-base")
 
     # switch to a new task (TARS can do multiple tasks so you must define one)
     tars.add_and_switch_to_new_task(task_name="question 2_CLASS",
@@ -60,7 +60,7 @@ def test_train_tars(tasks_base_path):
     # start the training
     trainer.train(base_path='resources/taggers/trec',  # path to store the model artifacts
                   learning_rate=0.02,  # use very small learning rate
-                  mini_batch_size=8,
+                  mini_batch_size=1,
                   # mini_batch_chunk_size=4,  # optionally set this if transformer is too much for your machine
                   max_epochs=1,  # terminate after 10 epochs
                   )
