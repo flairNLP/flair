@@ -402,6 +402,7 @@ class FlairEmbeddings(TokenEmbeddings):
 
         hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/flair"
         clef_hipe_path: str = "https://files.ifi.uzh.ch/cl/siclemat/impresso/clef-hipe-2020/flair"
+        am_path : str = "http://ltdata1.informatik.uni-hamburg.de/amharic/models/flair/"
 
         self.PRETRAINED_MODEL_ARCHIVE_MAP = {
             # multilingual models
@@ -533,6 +534,8 @@ class FlairEmbeddings(TokenEmbeddings):
             "en-impresso-hipe-v1-backward": f"{clef_hipe_path}/en-flair-v1-backward/best-lm.pt",
             "fr-impresso-hipe-v1-forward": f"{clef_hipe_path}/fr-hipe-flair-v1-forward/best-lm.pt",
             "fr-impresso-hipe-v1-backward": f"{clef_hipe_path}/fr-hipe-flair-v1-backward/best-lm.pt",
+             # Amharic 
+             "am-forward": f"{am_path}/best-lm.pt",
         }
 
         if type(model) == str:
