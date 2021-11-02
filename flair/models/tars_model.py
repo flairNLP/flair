@@ -26,7 +26,6 @@ class FewshotClassifier(flair.nn.Classifier):
         self._current_task = None
         self._task_specific_attributes = {}
         self.label_nearest_map = None
-        self.clean_up_labels: bool = True
 
         super(FewshotClassifier, self).__init__()
 
@@ -164,14 +163,7 @@ class FewshotClassifier(flair.nn.Classifier):
 
     def get_current_label_dictionary(self):
         label_dictionary = self._task_specific_attributes[self._current_task]['label_dictionary']
-        if self.clean_up_labels:
-            # default: make new dictionary with modified labels (no underscores)
-            dictionary = Dictionary(add_unk=False)
-            for label in label_dictionary.get_items():
-                dictionary.add_item(label.replace("_", " "))
-            return dictionary
-        else:
-            return label_dictionary
+        return label_dictionary
 
     def get_current_label_type(self):
         return self._task_specific_attributes[self._current_task]['label_type']
@@ -678,14 +670,24 @@ class TARSClassifier(FewshotClassifier):
             log.info("TARS initialized without a task. You need to call .add_and_switch_to_new_task() "
                      "before training this model")
 
+        self.clean_up_labels = True
+
+    def _clean(self, label_value: str) -> str:
+        if self.clean_up_labels:
+            return label_value.replace("_", " ")
+        else:
+            return label_value
+
     def _get_tars_formatted_sentence(self, label, sentence):
+
+        label = self._clean(label)
 
         original_text = sentence.to_tokenized_string()
 
         label_text_pair = f"{label} {self.separator} {original_text}" if self.prefix \
             else f"{original_text} {self.separator} {label}"
 
-        sentence_labels = [label.value for label in sentence.get_labels(self.get_current_label_type())]
+        sentence_labels = [self._clean(label.value) for label in sentence.get_labels(self.get_current_label_type())]
 
         tars_label = self.LABEL_MATCH if label in sentence_labels else self.LABEL_NO_MATCH
 
@@ -853,7 +855,6 @@ class TARSClassifier(FewshotClassifier):
                     # only use label with highest confidence if enforcing single-label predictions
                     if not multi_label:
                         if len(sentence.get_labels(label_name)) > 0:
-
                             # get all label scores and do an argmax to get the best label
                             label_scores = torch.tensor([label.score for label in sentence.get_labels(label_name)],
                                                         dtype=torch.float)
