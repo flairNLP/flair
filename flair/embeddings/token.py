@@ -12,6 +12,7 @@ import gensim
 import numpy as np
 import torch
 from bpemb import BPEmb
+from gensim.models import KeyedVectors
 from torch import nn
 from transformers import AutoTokenizer, AutoConfig, AutoModel, CONFIG_MAPPING, PreTrainedTokenizer, XLNetModel, \
     TransfoXLModel
@@ -333,17 +334,18 @@ class WordEmbeddings(TokenEmbeddings):
         if "fine_tune" not in state:
             state["fine_tune"] = False
         if "precomputed_word_embeddings" in state:
-            precomputed_word_embeddings = state.pop("precomputed_word_embeddings")
+            precomputed_word_embeddings: KeyedVectors = state.pop("precomputed_word_embeddings")
             vectors = np.row_stack(
                 (precomputed_word_embeddings.vectors, np.zeros(precomputed_word_embeddings.vector_size, dtype="float"))
             )
             embedding = nn.Embedding.from_pretrained(torch.FloatTensor(vectors), freeze=not state["fine_tune"])
+
             try:
                 # gensim version 4
                 vocab = precomputed_word_embeddings.key_to_index
             except:
                 # gensim version 3
-                vocab = {k: v.index for k, v in precomputed_word_embeddings.vocab.items()}
+                vocab = {k: v.index for k, v in precomputed_word_embeddings.__dict__["vocab"].items()}
             state["embedding"] = embedding
             state["vocab"] = vocab
         if "stable" not in state:
