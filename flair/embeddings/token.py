@@ -338,10 +338,12 @@ class WordEmbeddings(TokenEmbeddings):
                 (precomputed_word_embeddings.vectors, np.zeros(precomputed_word_embeddings.vector_size, dtype="float"))
             )
             embedding = nn.Embedding.from_pretrained(torch.FloatTensor(vectors), freeze=not state["fine_tune"])
-            vocab = {
-                k: v.index
-                for k, v in precomputed_word_embeddings.vocab.items()
-            }
+            try:
+                # gensim version 4
+                vocab = precomputed_word_embeddings.key_to_index
+            except:
+                # gensim version 3
+                vocab = {k: v.index for k, v in precomputed_word_embeddings.vocab.items()}
             state["embedding"] = embedding
             state["vocab"] = vocab
         if "stable" not in state:
