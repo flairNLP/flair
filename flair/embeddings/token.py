@@ -12,6 +12,7 @@ import gensim
 import numpy as np
 import torch
 from bpemb import BPEmb
+from gensim.models import KeyedVectors
 from torch import nn
 from transformers import AutoTokenizer, AutoConfig, AutoModel, CONFIG_MAPPING, PreTrainedTokenizer, XLNetModel, \
     TransfoXLModel
@@ -217,10 +218,13 @@ class WordEmbeddings(TokenEmbeddings):
             (precomputed_word_embeddings.vectors, np.zeros(self.__embedding_length, dtype="float"))
         )
         self.embedding = nn.Embedding.from_pretrained(torch.FloatTensor(vectors), freeze=not fine_tune)
-        self.vocab = {
-            k: v.index
-            for k, v in precomputed_word_embeddings.vocab.items()
-        }
+
+        try:
+            # gensim version 4
+            self.vocab = precomputed_word_embeddings.key_to_index
+        except:
+            # gensim version 3
+            self.vocab = {k: v.index for k, v in precomputed_word_embeddings.vocab.items()}
 
         if stable:
             self.layer_norm = nn.LayerNorm(self.__embedding_length, elementwise_affine=fine_tune)
@@ -330,15 +334,18 @@ class WordEmbeddings(TokenEmbeddings):
         if "fine_tune" not in state:
             state["fine_tune"] = False
         if "precomputed_word_embeddings" in state:
-            precomputed_word_embeddings = state.pop("precomputed_word_embeddings")
+            precomputed_word_embeddings: KeyedVectors = state.pop("precomputed_word_embeddings")
             vectors = np.row_stack(
                 (precomputed_word_embeddings.vectors, np.zeros(precomputed_word_embeddings.vector_size, dtype="float"))
             )
             embedding = nn.Embedding.from_pretrained(torch.FloatTensor(vectors), freeze=not state["fine_tune"])
-            vocab = {
-                k: v.index
-                for k, v in precomputed_word_embeddings.vocab.items()
-            }
+
+            try:
+                # gensim version 4
+                vocab = precomputed_word_embeddings.key_to_index
+            except:
+                # gensim version 3
+                vocab = {k: v.index for k, v in precomputed_word_embeddings.__dict__["vocab"].items()}
             state["embedding"] = embedding
             state["vocab"] = vocab
         if "stable" not in state:
@@ -1472,9 +1479,10 @@ class FastTextEmbeddings(TokenEmbeddings):
 
         self.static_embeddings = True
 
-        self.precomputed_word_embeddings = gensim.models.FastText.load_fasttext_format(
+        self.precomputed_word_embeddings: gensim.models.FastText = gensim.models.FastText.load_fasttext_format(
             str(embeddings)
         )
+        print(self.precomputed_word_embeddings)
 
         self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
 
@@ -1488,7 +1496,7 @@ class FastTextEmbeddings(TokenEmbeddings):
     @instance_lru_cache(maxsize=10000, typed=False)
     def get_cached_vec(self, word: str) -> torch.Tensor:
         try:
-            word_embedding = self.precomputed_word_embeddings[word]
+            word_embedding = self.precomputed_word_embeddings.wv[word]
         except:
             word_embedding = np.zeros(self.embedding_length, dtype="float")
 
@@ -1744,7 +1752,7 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
                 "it",
                 "mk",
                 "no",
-                "pl",
+                # "pl",
                 "pt",
                 "ro",
                 "ru",
