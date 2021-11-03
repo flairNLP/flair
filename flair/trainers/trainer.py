@@ -542,7 +542,7 @@ class ModelTrainer:
                     store_embeddings(self.corpus.train, embeddings_storage_mode)
 
                 if log_train_part:
-                    train_part_eval_result, train_part_loss = self.model.evaluate(
+                    train_part_eval_result = self.model.evaluate(
                         train_part,
                         gold_label_type=self.model.label_type,
                         mini_batch_size=mini_batch_chunk_size,
@@ -550,11 +550,12 @@ class ModelTrainer:
                         embedding_storage_mode=embeddings_storage_mode,
                         main_evaluation_metric=main_evaluation_metric,
                         gold_label_dictionary=gold_label_dictionary_for_eval,
+                        out_path=base_path / "train_part.tsv",
                     )
-                    result_line += f"\t{train_part_loss}\t{train_part_eval_result.log_line}"
+                    result_line += f"\t{train_part_eval_result.loss}\t{train_part_eval_result.log_line}"
 
                     log.info(
-                        f"TRAIN_SPLIT : loss {train_part_loss} - {main_evaluation_metric[1]} ({main_evaluation_metric[0]}) {round(train_part_eval_result.main_score, 4)}"
+                        f"TRAIN_SPLIT : loss {train_part_eval_result.loss} - {main_evaluation_metric[1]} ({main_evaluation_metric[0]}) {round(train_part_eval_result.main_score, 4)}"
                     )
                 if use_tensorboard:
                     for (metric_class_avg_type, metric_type) in metrics_for_tensorboard:
