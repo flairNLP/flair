@@ -933,6 +933,10 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # load tokenizer and transformer model
         self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
+        if self.tokenizer.model_max_length > 1000000000:
+            self.tokenizer.model_max_length = 512
+            log.info("No model_max_length in Tokenizer's config.json - setting it to 512. "
+                     "Specify desired model_max_length by passing it as attribute to embedding instance.")
         if not 'config' in kwargs:
             config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
             self.model = AutoModel.from_pretrained(model, config=config)
