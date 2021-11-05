@@ -321,6 +321,20 @@ class DataPoint:
 
         return self.annotation_layers[typename] if typename in self.annotation_layers else []
 
+    def add_multitask_id(self, task_id: str):
+
+        if self.multitask_annotations is None:
+            self.__setattr__("multitask_annotations", {})
+
+        key = "multitask_assignments"
+
+        if key not in self.multitask_annotations:
+            self.multitask_annotations[key] = [Task(task_id)]
+        else:
+            self.multitask_annotations[key].append(Task(task_id))
+
+        return self
+
     @property
     def labels(self) -> List[Label]:
         all_labels = []
@@ -1465,7 +1479,7 @@ class Corpus:
         :param task_id: key to identify model in multitask forward method
         """
         for sentence in self.get_all_sentences():
-            sentence._add_task(task_id)
+            sentence.add_multitask_id(task_id)
 
     @deprecated(version="0.8", reason="Use 'make_label_dictionary' instead.")
     def make_tag_dictionary(self, tag_type: str) -> Dictionary:
