@@ -272,6 +272,7 @@ class DataPoint:
 
     def __init__(self):
         self.annotation_layers = {}
+        self.multitask_annotations = None
 
     @property
     @abstractmethod
