@@ -330,9 +330,9 @@ class DataPoint:
         key = "multitask_assignments"
 
         if key not in self.multitask_annotations:
-            self.multitask_annotations[key] = [Task(task_id)]
+            self.multitask_annotations[key] = [MultitaskAssignment(task_id)]
         else:
-            self.multitask_annotations[key].append(Task(task_id))
+            self.multitask_annotations[key].append(MultitaskAssignment(task_id))
 
         return self
 
@@ -1575,6 +1575,39 @@ class MultitaskCorpus(MultiCorpus):
         # check - corpus datatype provided to 'corpus' keyword
         assert all(map(lambda corpus_config:isinstance(corpus_config["model"], flair.nn.Model), args)), \
             "Multitask models need to torch.nn.Modules, coming from the multitask module."
+
+
+class MultitaskAssignment:
+    """
+    This class represents a task assignment (necessary for multitask models) in order
+    to determine which path to go in multitask models forward method
+    """
+
+    def __init__(self, task_id: str):
+        """
+        :param task_id
+        """
+        self.task_id = task_id
+        super().__init__()
+
+    @property
+    def task_id(self):
+        return self._task_id
+
+    @task_id.setter
+    def task_id(self, task_id):
+        if not task_id and task_id != "":
+            raise ValueError(
+                "Incorrect task provided."
+            )
+        else:
+            self._task_id = task_id
+
+    def __str__(self):
+        return f"This sentence belongs to multitask model ID: ({self._task_id})"
+
+    def __repr__(self):
+        return f"({self._task_id})"
 
 
 def iob2(tags):
