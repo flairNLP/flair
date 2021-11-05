@@ -1459,6 +1459,14 @@ class Corpus:
         if self.test: parts.append(self.test)
         return ConcatDataset(parts)
 
+    def set_multitask_id(self, task_id: str):
+        """
+        Sets multitask id to all sentences in corpus
+        :param task_id: key to identify model in multitask forward method
+        """
+        for sentence in self.get_all_sentences():
+            sentence._add_task(task_id)
+
     @deprecated(version="0.8", reason="Use 'make_label_dictionary' instead.")
     def make_tag_dictionary(self, tag_type: str) -> Dictionary:
 
