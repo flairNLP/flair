@@ -1502,6 +1502,58 @@ class MultiCorpus(Corpus):
         return output
 
 
+class MultitaskCorpus(MultiCorpus):
+    """
+    MultitaskCorpus takes different tasks as parameters and is used for Multitask Model Training
+    Assigns to each corpus its respective task id
+    """
+
+    def __init__(self, *args):
+
+        self._assert_inputs(args)
+        self.models = {}
+
+        corpora = []
+
+        for id, corpus_config in enumerate(args):
+
+            task_id = f"task_{id}"
+            corpus = corpus_config.get("corpus")
+
+            corpus.set_multitask_id(task_id)
+            if not corpus in corpora: corpora.append(corpus)
+
+            corpus_config.get("model").name += f" - Corpus: {corpus.__class__.__name__}"
+            self.models[task_id] = corpus_config.get("model")
+
+        super(MultitaskCorpus, self).__init__(corpora)
+
+    @staticmethod
+    def _assert_inputs(args):
+        assert len(args) != 0, \
+            "Please provide corpus information."
+
+        # check - all args are dictionaries
+        assert all(map(lambda corpus_config: isinstance(corpus_config, dict), args)), \
+            "MultitaskCorpus takes an arbitrary number of dictionaries as input"
+
+        # check - corpus keyword in each dict
+        assert all(map(lambda corpus_config: "corpus" in corpus_config, args)), \
+            "All inputs need a corpus, defined by the keyword 'corpus'."
+
+        # check - corpus datatype provided to 'corpus' keyword
+        assert all(map(lambda corpus_config: isinstance(corpus_config["corpus"], Corpus), args)), \
+            "Provide only Corpus datatype to the keyword 'corpus'."
+
+        # check - task keyword in each dict
+        assert all(map(lambda corpus_config: "model" in corpus_config, args)), \
+            "All corpora need to be assigned to a downstream task defined by the keyword 'task'."
+
+        # check - corpus datatype provided to 'corpus' keyword
+        assert all(map(lambda corpus_config:isinstance(corpus_config["model"], flair.nn.Model), args)), \
+            "Multitask models need to torch.nn.Modules, coming from the multitask module."
+
+
 def iob2(tags):
     """
     Check that tags have a valid IOB format.
