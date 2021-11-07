@@ -66,7 +66,7 @@ class MultiFileColumnCorpus(Corpus):
                 skip_first_line=skip_first_line,
                 label_name_map=label_name_map,
             ) for train_file in train_files
-        ]) if train_files else None
+        ]) if train_files and train_files[0] else None
 
         # read in test file if exists
         test = ConcatDataset([
@@ -83,7 +83,7 @@ class MultiFileColumnCorpus(Corpus):
                 skip_first_line=skip_first_line,
                 label_name_map=label_name_map,
             ) for test_file in test_files
-        ]) if test_files else None
+        ]) if test_files and test_files[0] else None
 
         # read in dev file if exists
         dev = ConcatDataset([
@@ -100,7 +100,7 @@ class MultiFileColumnCorpus(Corpus):
                 skip_first_line=skip_first_line,
                 label_name_map=label_name_map,
             ) for dev_file in dev_files
-        ]) if dev_files else None
+        ]) if dev_files and dev_files[0] else None
 
         super(MultiFileColumnCorpus, self).__init__(train, dev, test, **corpusargs)
 
@@ -141,9 +141,9 @@ class ColumnCorpus(MultiFileColumnCorpus):
             find_train_dev_test_files(data_folder, dev_file, test_file, train_file, autofind_splits)
         super(ColumnCorpus, self).__init__(
             column_format,
-            dev_files=[dev_file],
-            train_files=[train_file],
-            test_files=[test_file],
+            dev_files=[dev_file] if dev_file else [],
+            train_files=[train_file] if train_file else [],
+            test_files=[test_file] if test_file else [],
             name=name if data_folder is None else str(data_folder),
             **corpusargs
         )
