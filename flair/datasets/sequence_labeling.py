@@ -5,6 +5,8 @@ import shutil
 from pathlib import Path
 from typing import Union, Dict, List, Optional
 
+from torch.utils.data import ConcatDataset
+
 import flair
 from flair.data import Corpus, MultiCorpus, FlairDataset, Sentence, Token
 from flair.datasets.base import find_train_dev_test_files
@@ -13,14 +15,13 @@ from flair.file_utils import cached_path, unpack_file
 log = logging.getLogger("flair")
 
 
-class ColumnCorpus(Corpus):
+class MultiFileColumnCorpus(Corpus):
     def __init__(
             self,
-            data_folder: Union[str, Path],
             column_format: Dict[int, str],
-            train_file=None,
-            test_file=None,
-            dev_file=None,
+            train_files=None,
+            test_files=None,
+            dev_files=None,
             tag_to_bioes=None,
             column_delimiter: str = r"\s+",
             comment_symbol: str = None,
@@ -30,6 +31,88 @@ class ColumnCorpus(Corpus):
             in_memory: bool = True,
             label_name_map: Dict[str, str] = None,
             banned_sentences: List[str] = None,
+            **corpusargs,
+    ):
+        """
+            Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
+            :param data_folder: base folder with the task data
+            :param column_format: a map specifying the column format
+            :param train_files: the name of the train files
+            :param test_files: the name of the test files
+            :param dev_files: the name of the dev files, if empty, dev data is sampled from train
+            :param tag_to_bioes: whether to convert to BIOES tagging scheme
+            :param column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t"
+            to split only on tabs
+            :param comment_symbol: if set, lines that begin with this symbol are treated as comments
+            :param document_separator_token: If provided, sentences that function as document boundaries are so marked
+            :param skip_first_line: set to True if your dataset has a header line
+            :param in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
+            :param label_name_map: Optionally map tag names to different schema.
+            :param banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
+            :return: a Corpus with annotated train, dev and test data
+        """
+        # get train data
+        train = ConcatDataset([
+            ColumnDataset(
+                train_file,
+                column_format,
+                tag_to_bioes,
+                encoding=encoding,
+                comment_symbol=comment_symbol,
+                column_delimiter=column_delimiter,
+                banned_sentences=banned_sentences,
+                in_memory=in_memory,
+                document_separator_token=document_separator_token,
+                skip_first_line=skip_first_line,
+                label_name_map=label_name_map,
+            ) for train_file in train_files
+        ]) if train_files else None
+
+        # read in test file if exists
+        test = ConcatDataset([
+            ColumnDataset(
+                test_file,
+                column_format,
+                tag_to_bioes,
+                encoding=encoding,
+                comment_symbol=comment_symbol,
+                column_delimiter=column_delimiter,
+                banned_sentences=banned_sentences,
+                in_memory=in_memory,
+                document_separator_token=document_separator_token,
+                skip_first_line=skip_first_line,
+                label_name_map=label_name_map,
+            ) for test_file in test_files
+        ]) if test_files else None
+
+        # read in dev file if exists
+        dev = ConcatDataset([
+            ColumnDataset(
+                dev_file,
+                column_format,
+                tag_to_bioes,
+                encoding=encoding,
+                comment_symbol=comment_symbol,
+                column_delimiter=column_delimiter,
+                banned_sentences=banned_sentences,
+                in_memory=in_memory,
+                document_separator_token=document_separator_token,
+                skip_first_line=skip_first_line,
+                label_name_map=label_name_map,
+            ) for dev_file in dev_files
+        ]) if dev_files else None
+
+        super(MultiFileColumnCorpus, self).__init__(train, dev, test, **corpusargs)
+
+
+class ColumnCorpus(MultiFileColumnCorpus):
+    def __init__(
+            self,
+            data_folder: Union[str, Path],
+            column_format: Dict[int, str],
+            train_file=None,
+            test_file=None,
+            dev_file=None,
             autofind_splits: bool = True,
             name: Optional[str] = None,
             **corpusargs,
@@ -56,54 +139,14 @@ class ColumnCorpus(Corpus):
         # find train, dev and test files if not specified
         dev_file, test_file, train_file = \
             find_train_dev_test_files(data_folder, dev_file, test_file, train_file, autofind_splits)
-
-        # get train data
-        train = ColumnDataset(
-            train_file,
+        super(ColumnCorpus, self).__init__(
             column_format,
-            tag_to_bioes,
-            encoding=encoding,
-            comment_symbol=comment_symbol,
-            column_delimiter=column_delimiter,
-            banned_sentences=banned_sentences,
-            in_memory=in_memory,
-            document_separator_token=document_separator_token,
-            skip_first_line=skip_first_line,
-            label_name_map=label_name_map,
-        ) if train_file is not None else None
-
-        # read in test file if exists
-        test = ColumnDataset(
-            test_file,
-            column_format,
-            tag_to_bioes,
-            encoding=encoding,
-            comment_symbol=comment_symbol,
-            column_delimiter=column_delimiter,
-            banned_sentences=banned_sentences,
-            in_memory=in_memory,
-            document_separator_token=document_separator_token,
-            skip_first_line=skip_first_line,
-            label_name_map=label_name_map,
-        ) if test_file is not None else None
-
-        # read in dev file if exists
-        dev = ColumnDataset(
-            dev_file,
-            column_format,
-            tag_to_bioes,
-            encoding=encoding,
-            comment_symbol=comment_symbol,
-            banned_sentences=banned_sentences,
-            column_delimiter=column_delimiter,
-            in_memory=in_memory,
-            document_separator_token=document_separator_token,
-            skip_first_line=skip_first_line,
-            label_name_map=label_name_map,
-        ) if dev_file is not None else None
-
-        corpus_name = str(data_folder) if not name else name
-        super(ColumnCorpus, self).__init__(train, dev, test, name=corpus_name, **corpusargs)
+            dev_files=[dev_file],
+            train_files=[train_file],
+            test_files=[test_file],
+            name=name if data_folder is None else str(data_folder),
+            **corpusargs
+        )
 
 
 class ColumnDataset(FlairDataset):
@@ -315,6 +358,99 @@ class ColumnDataset(FlairDataset):
             sentence._position_in_dataset = (self, index)
 
         return sentence
+
+
+class MultiCoNer(MultiFileColumnCorpus):
+    def __init__(
+            self,
+            task: str = "multi",
+            base_path: Union[str, Path] = None,
+            tag_to_bioes: str = "ner",
+            in_memory: bool = True,
+            use_dev_as_test: bool = True,
+            **corpusargs,
+    ):
+        """
+        Initialize the MultiCoNer corpus. This is only possible if you've applied and downloaded it to your machine.
+        Apply for the corpus from here https://multiconer.github.io/dataset and unpack the .zip file's content into
+        a folder called 'multiconer'. Then set the base_path parameter in the constructor to the path to the
+        parent directory where the multiconer folder resides. You can also create the multiconer in
+        the {FLAIR_CACHE_ROOT}/datasets folder to leave the path empty.
+        :param base_path: Path to the CoNLL-03 corpus (i.e. 'conll_03' folder) on your machine
+        :param tag_to_bioes: NER by default, need not be changed, but you could also select 'pos' or 'np' to predict
+        POS tags or chunks respectively
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        :param use_dev_as_test: If True, it uses the dev set as test set and samples random training data for a dev split.
+        :param task: either 'multi', 'code-switch', or the language code for one of the mono tasks.
+        """
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        folders = {
+            "bn": "BN-Bangla",
+            "de": "DE-German",
+            "en": "EN-English",
+            "es": "ES-Espanish",
+            "fa": "FA-Farsi",
+            "hi": "HI-Hindi",
+            "ko": "KO-Korean",
+            "nl": "NL-Dutch",
+            "ru": "RU-Russian",
+            "tr": "TR-Turkish",
+            "zh": "ZH-Chinese",
+        }
+
+        possible_tasks = ["multi", "code-switch"] + list(folders.keys())
+        task = task.lower()
+
+        if task not in possible_tasks:
+            raise ValueError(f"task has to be one of {possible_tasks}, but is '{task}'")
+
+        # column format
+        columns = {0: "text", 3: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+
+        # check if data there
+        if not data_folder.exists():
+            log.warning("-" * 100)
+            log.warning(f'WARNING: MultiCoNer dataset not found at "{data_folder}".')
+            log.warning(
+                'Instructions for obtaining the data can be found here: https://multiconer.github.io/dataset"'
+            )
+            log.warning("-" * 100)
+
+        if task in ["multi", "code-switch"]:
+            # code-switch uses the same training data than multi but provides a different test set.
+            # as the test set is not published, those two tasks are the same.
+            train_files = list(data_folder.rglob("*_train.conll"))
+            dev_files = list(data_folder.rglob("*_dev.conll"))
+        else:
+            train_files = [data_folder / folders[task] / f"{task}_train.conll"]
+            dev_files = [data_folder / folders[task] / f"{task}_dev.conll"]
+
+        if use_dev_as_test:
+            test_files = dev_files
+            dev_files = []
+        else:
+            test_files = []
+
+        super(MultiCoNer, self).__init__(
+            train_files=train_files,
+            dev_files=dev_files,
+            test_files=test_files,
+            column_format=columns,
+            tag_to_bioes=tag_to_bioes,
+            comment_symbol="# id ",
+            in_memory=in_memory,
+            **corpusargs,
+        )
 
 
 class CONLL_03(ColumnCorpus):
