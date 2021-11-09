@@ -96,8 +96,9 @@ class MultitaskModel(flair.nn.Model):
         batch_split = self.split_batch_to_task_ids(data_points)
 
         # Evaluate each split on its respective model
+        results = []
         for task, split in batch_split.items():
-            result = self.__getattr__(task).evaluate(data_points=[data_points[i] for i in split],
+            task_result = self.__getattr__(task).evaluate(data_points=[data_points[i] for i in split],
                                                    gold_label_type=gold_label_type[task],
                                                    out_path=out_path,
                                                    embedding_storage_mode=embedding_storage_mode,
@@ -106,17 +107,15 @@ class MultitaskModel(flair.nn.Model):
                                                    main_evaluation_metric=main_evaluation_metric,
                                                    exclude_labels=exclude_labels,
                                                    gold_label_dictionary=gold_label_dictionary)
+            results.append(task_result)
+            results.append(self.__getattr__(task).result)
+            # Since our Task Model's do not keep track when evaluate is over (they just get a batch of sentences)
+            # we need to reset the evaluation metrics after each batch.
+            self.__getattr__(task)._reset_eval_metrics()
 
-        #results = []
-        #for task in self.tasks:
-        #    results.append(self.__getattr__(task).result)
-        #    # Since our Task Model's do not keep track when evaluate is over (they just get a batch of sentences)
-        #    # we need to reset the evaluation metrics after each batch.
-        #    self.__getattr__(task)._reset_eval_metrics()
+        result = MultitaskResult(results)
 
-        #result = MultitaskResult(results)
-
-        return 0
+        return result
 
     def _get_state_dict(self):
         """
