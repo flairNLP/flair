@@ -1,13 +1,13 @@
 import logging
 from pathlib import Path
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Tuple, Optional
 import random
 
 import torch.nn
 from torch.utils.data.dataset import Dataset
 
 import flair.nn
-from flair.data import Sentence
+from flair.data import Sentence, Dictionary
 from flair.datasets import SentenceDataset, DataLoader
 from flair.training_utils import Result
 
@@ -31,9 +31,12 @@ class MultitaskModel(flair.nn.Model):
         super(MultitaskModel, self).__init__()
 
         self.tasks = list()
+        label_types = dict()
         for task_id, model in models.items():
             self.__setattr__(task_id, model)
             self.tasks.append(task_id)
+            label_types[task_id] = model.label_type
+        self._label_type = label_types
         self.to(flair.device)
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.Tensor:
@@ -46,7 +49,8 @@ class MultitaskModel(flair.nn.Model):
         batch_split = self.split_batch_to_task_ids(sentences)
         loss = 0
         for model, split in batch_split.items():
-            loss += self.__getattr__(model).forward_loss(sentences=[sentences[i] for i in split])
+            task_loss, task_count = self.__getattr__(model).forward_loss([sentences[i] for i in split])
+            loss += task_loss / task_count
 
         return loss
 
@@ -69,13 +73,17 @@ class MultitaskModel(flair.nn.Model):
         return sent_idx_to_model
 
     def evaluate(
-        self,
-        sentences: Union[List[Sentence], Dataset],
-        embedding_storage_mode: str = "none",
-        out_path: Union[str, Path] = None,
-        mini_batch_size: int = 32,
-        num_workers: int = 8
-    ) -> (Result, float):
+            self,
+            data_points: Union[List[Sentence], Dataset],
+            gold_label_type: str,
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: int = 8,
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+            exclude_labels: List[str] = [],
+            gold_label_dictionary: Optional[Dictionary] = None,
+    ) -> Result:
         """
         :param sentences: batch of sentences
         :param embeddings_storage_mode: One of 'none' (all embeddings are deleted and freshly recomputed),
@@ -84,39 +92,31 @@ class MultitaskModel(flair.nn.Model):
         :param num_workers: number of workers for DataLoader class
         :return: Tuple of Result object and loss value (float)
         """
-        if not isinstance(sentences, Dataset):
-            sentences = SentenceDataset(sentences)
-        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
 
-        eval_loss = 0
-        batch_no = 0
+        batch_split = self.split_batch_to_task_ids(data_points)
 
-        for sentence_batch in data_loader:
+        # Evaluate each split on its respective model
+        for task, split in batch_split.items():
+            result = self.__getattr__(task).evaluate(data_points=[data_points[i] for i in split],
+                                                   gold_label_type=gold_label_type[task],
+                                                   out_path=out_path,
+                                                   embedding_storage_mode=embedding_storage_mode,
+                                                   mini_batch_size=mini_batch_size,
+                                                   num_workers=num_workers,
+                                                   main_evaluation_metric=main_evaluation_metric,
+                                                   exclude_labels=exclude_labels,
+                                                   gold_label_dictionary=gold_label_dictionary)
 
-            batch_split = self.split_batch_to_task_ids(sentence_batch)
+        #results = []
+        #for task in self.tasks:
+        #    results.append(self.__getattr__(task).result)
+        #    # Since our Task Model's do not keep track when evaluate is over (they just get a batch of sentences)
+        #    # we need to reset the evaluation metrics after each batch.
+        #    self.__getattr__(task)._reset_eval_metrics()
 
-            # Evaluate each split on its respective model
-            for task, split in batch_split.items():
-                loss = self.__getattr__(task).evaluate(sentences=[sentence_batch[i] for i in split],
-                                                       embedding_storage_mode=embedding_storage_mode,
-                                                       out_path=out_path)
+        #result = MultitaskResult(results)
 
-                eval_loss += loss
-
-            batch_no += 1
-
-        eval_loss /= batch_no
-
-        results = []
-        for task in self.tasks:
-            results.append(self.__getattr__(task).result)
-            # Since our Task Model's do not keep track when evaluate is over (they just get a batch of sentences)
-            # we need to reset the evaluation metrics after each batch.
-            self.__getattr__(task)._reset_eval_metrics()
-
-        result = MultitaskResult(results)
-
-        return result, eval_loss
+        return 0
 
     def _get_state_dict(self):
         """
@@ -143,3 +143,7 @@ class MultitaskModel(flair.nn.Model):
 
         model = MultitaskModel(models=models)
         return model
+
+    @property
+    def label_type(self):
+        return self._label_type
