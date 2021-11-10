@@ -897,7 +897,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
     def __init__(
             self,
-            model: str = "bert-base-uncased",
+            model: Union[str, dict] = "bert-base-uncased",
             layers: str = "all",
             subtoken_pooling: str = "first",
             layer_mean: bool = True,
@@ -932,12 +932,16 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         logging.set_verbosity_error()
 
         # load tokenizer and transformer model
-        self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
-        if not 'config' in kwargs:
-            config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
-            self.model = AutoModel.from_pretrained(model, config=config)
-        else:
-            self.model = AutoModel.from_pretrained(None, **kwargs)
+        if type(model) == str:
+            self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
+            if not 'config' in kwargs:
+                config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
+                self.model = AutoModel.from_pretrained(model, config=config)
+            else:
+                self.model = AutoModel.from_pretrained(None, **kwargs)
+        elif type(model) == dict:
+            self.tokenizer = model["tokenizer"]
+            self.model = model["model"]
 
         logging.set_verbosity_warning()
 
