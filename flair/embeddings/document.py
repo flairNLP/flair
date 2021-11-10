@@ -81,10 +81,10 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
 
         # model name
         if type(model) == str:
-            self.name = 'transformer-word-' + str(model)
+            self.name = 'transformer-document-' + str(model)
             self.base_model = str(model)
         elif type(model) == dict:
-            self.name = 'transformer-word-' + str(model["model"].name_or_path)
+            self.name = 'transformer-document-' + str(model["model"].name_or_path)
             self.base_model = str(model["model"].name_or_path)
 
         # when initializing, embeddings are in eval mode by default

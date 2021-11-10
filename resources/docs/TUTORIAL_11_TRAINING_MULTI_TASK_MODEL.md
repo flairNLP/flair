@@ -1,4 +1,4 @@
-# Tutorial 11: Multitask Learning
+# BETA - Tutorial 11: Multitask Learning
 
 Transfer learning refers to the situation where one wants to exploit
 knowledge obtained in one setting to improve generalization in another
