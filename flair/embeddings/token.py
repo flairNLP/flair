@@ -960,8 +960,12 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         self.use_lang_emb = hasattr(self.model, "use_lang_emb") and self.model.use_lang_emb
 
         # model name
-        self.name = 'transformer-word-' + str(model)
-        self.base_model = str(model)
+        if type(model) == str:
+            self.name = 'transformer-word-' + str(model)
+            self.base_model = str(model)
+        elif type(model) == dict:
+            self.name = 'transformer-word-' + str(model["model"].name_or_path)
+            self.base_model = str(model["model"].name_or_path)
 
         # whether to detach gradients on overlong sentences
         self.memory_effective_training = memory_effective_training
