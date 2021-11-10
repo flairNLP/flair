@@ -10,7 +10,7 @@ from flair.datasets import SentenceDataset, DataLoader
 from flair.embeddings import TokenEmbeddings
 from flair.nn import Classifier
 from flair.training_utils import store_embeddings
-from .distance import EuclideanDistance, HyperbolicDistance
+from .distance import EuclideanDistance, HyperbolicDistance, CosineDistance
 
 
 class LearnedPrototypesTagger(Classifier):
@@ -19,7 +19,7 @@ class LearnedPrototypesTagger(Classifier):
                  tag_dictionary: Dictionary, tag_type: str,
                  prototype_size: int = 8,
                  unlabeled_distance: Optional[int] = None,
-                 hyperbolic: Optional[bool] = False,
+                 distance_function: Optional[str] = 'euclidean',
                  learning_mode='joint',
                  expectation_maximization_data=None,
                  normal_distributed_initial_prototypes: bool = False,
@@ -33,7 +33,7 @@ class LearnedPrototypesTagger(Classifier):
         The embedding should contain information about the sentence
         (otherwise token tagging done this way becomes pointless).
         :param tag_type: The tag to predict.
-        :param hyperbolic: Whether to use euclidean or hyperbolic distance.
+        :param distance_function: Which distance function to use.
         """
         super().__init__()
         self.embeddings = embeddings
@@ -66,14 +66,18 @@ class LearnedPrototypesTagger(Classifier):
             self.prototype_vectors = torch.nn.Parameter(
                 torch.normal(torch.zeros(len(self.prototype_labels), self.prototype_size)))
 
-        self._hyperbolic = hyperbolic
+        self._distance_function = distance_function
 
         self.loss = torch.nn.CrossEntropyLoss()
 
-        if hyperbolic:
+        if distance_function.lower() == 'hyperbolic':
             self.distance = HyperbolicDistance()
-        else:
+        elif distance_function.lower() == 'cosine':
+            self.distance = CosineDistance()
+        elif distance_function.lower() == 'euclidean':
             self.distance = EuclideanDistance()
+        else:
+            raise KeyError(f'Distance function {distance_function} not found.')
 
         self.learning_mode = learning_mode
 
@@ -306,7 +310,7 @@ class LearnedPrototypesTagger(Classifier):
             "state_dict": self.state_dict(),
             "embeddings": self.embeddings,
             "tag_type": self.tag_type,
-            "hyperbolic": self._hyperbolic,
+            "distance_function": self._distance_function,
             "prototype_labels": self.prototype_labels,
             "prototype_vectors": self.prototype_vectors,
             "unlabeled_distance": self.unlabeled_distance,
@@ -325,7 +329,7 @@ class LearnedPrototypesTagger(Classifier):
             embeddings=state["embeddings"],
             tag_type=state["tag_type"],
             tag_dictionary=state["prototype_labels"],
-            hyperbolic=state["hyperbolic"],
+            distance_function=state["distance_function"],
             prototype_size=state["prototype_size"],
             unlabeled_distance=state["unlabeled_distance"],
             learning_mode=state.get("learning_mode", None),
