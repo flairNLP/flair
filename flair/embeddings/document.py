@@ -73,10 +73,10 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
                 log.info("No model_max_length in Tokenizer's config.json - setting it to 512. "
                      "Specify desired model_max_length by passing it as attribute to embedding instance.")
             if not 'config' in kwargs:
-                    config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
-                    self.model = AutoModel.from_pretrained(model, config=config)
-                else:
-                    self.model = AutoModel.from_pretrained(None, **kwargs)
+                config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
+                self.model = AutoModel.from_pretrained(model, config=config)
+            else:
+                self.model = AutoModel.from_pretrained(None, **kwargs)
         elif type(model) == dict:
             self.tokenizer = model["tokenizer"]
             self.model = model["model"]
