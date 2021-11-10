@@ -46,6 +46,7 @@ from .sequence_labeling import NER_MULTI_WIKIANN
 from .sequence_labeling import NER_MULTI_XTREME
 from .sequence_labeling import NER_SWEDISH
 from .sequence_labeling import NER_TURKU
+from .sequence_labeling import MultiCoNer
 # keyphrase detection datasets
 from .sequence_labeling import KEYPHRASE_INSPEC
 from .sequence_labeling import KEYPHRASE_SEMEVAL2010
