@@ -25,11 +25,10 @@ class Lemmatizer(flair.nn.Model):
                  hidden_size: int = 128,
                  num_layers_in_rnn: int = 1,
                  beam_size: int = 5,
-                 path_to_corpus_for_creating_char_dict: str = None,
+                 char_dict: Union[str, Dictionary] = None,
                  label_type: str ='lemma',
                  max_sequence_length_dependend_on_input: bool = True,
                  max_sequence_length: int = 20,
-                 path_to_char_dict: str = None,
                  token_embedding: flair.embeddings.TokenEmbeddings = None,
                  use_attention: bool = True
                  ):
@@ -46,9 +45,6 @@ class Lemmatizer(flair.nn.Model):
         :param hidden_size: size of the hidden state of the RNN. The initial embedding is transformed to a vector of size hidden_size
             with an additional linear layer
         :param num_layers_in_rnn: Number of stacked RNN cells
-        :param path_to_char_dict: Path to character dictionary. If None, a standard dictionary will be used.
-            Note that there are some rules to the dictionary. The first three indices must be reserved for the special characters
-            <>, <S>, <E>, in that order. The characters represent a dummy symbol, start and end of a word, respectively.
         :param label_type: Name of the gold labels to use.
         :param beam_size: Number of hypothesis used when decoding the output of the RNN. Only used in prediction.
         :param max_sequence_length_dependend_on_input: If set to True, the maximum length of a decoded sequence in the prediction
@@ -66,7 +62,6 @@ class Lemmatizer(flair.nn.Model):
         self.dependend_on_input = max_sequence_length_dependend_on_input
         self.use_attention = use_attention
 
-
         # encoder: embed tokens and map embedding to hidden size of RNN
         self.token_embedding = token_embedding
         self.hidden_size = hidden_size
@@ -74,13 +69,20 @@ class Lemmatizer(flair.nn.Model):
             self.emb_to_hidden = nn.Linear(token_embedding.embedding_length, hidden_size)
 
         # decoder: dictionary of characters to create one-hot embeddings for decoder inputs
-        self.path_to_char_dict = path_to_char_dict
-        if path_to_char_dict is None and path_to_corpus_for_creating_char_dict is None:
+        if char_dict is None: # if no dictionary is provided use a standard one
             self.char_dictionary = Dictionary.load("common-chars-lemmatizer")
-        elif path_to_char_dict:
-            self.char_dictionary = Dictionary.load_from_file(path_to_char_dict)
+        elif isinstance(char_dict, Dictionary):
+            self.char_dictionary = char_dict
         else:
-            self.char_dictionary = self.create_char_dict_from_corpus(path_to_corpus_for_creating_char_dict)
+            self.char_dictionary = Dictionary.load_from_file(char_dict)
+
+        # make sure <unk> is in dictionary for handling of unknown characters
+        if not self.char_dictionary.add_unk:
+            raise KeyError("<unk> must be contained in char_dict")
+        # add special symbols to dictionary if necessary and save respective indices
+        self.dummy_index = self.char_dictionary.add_item('<>')
+        self.start_index = self.char_dictionary.add_item('<S>')
+        self.end_index = self.char_dictionary.add_item('<E>')
 
         self.alphabet_size = len(self.char_dictionary)
 
@@ -133,16 +135,17 @@ class Lemmatizer(flair.nn.Model):
         else:
             sequence_length=max(seq_length,max_length)
         # batch size is length of sentence
-        tensor = torch.ones(len(words), sequence_length, dtype=torch.long).to(flair.device)
+        # initialize with dummy symbols
+        tensor = self.dummy_index*torch.ones(len(words), sequence_length, dtype=torch.long).to(flair.device)
         for i in range(len(words)):
             if for_input:
-                tensor[i][0] = 2  # start character <S>
+                tensor[i][0] = self.start_index  # start character <S>
                 for index, letter in enumerate(words[i]):
 
                     tensor[i][index + 1] = self.char_dictionary.get_idx_for_item(letter)
 
             else:
-                tensor[i][len(words[i])] = 3  # end character <E> in the end
+                tensor[i][len(words[i])] = self.end_index  # end character <E> in the end
                 for index, letter in enumerate(words[i]):
 
                     tensor[i][index] = self.char_dictionary.get_idx_for_item(letter)
@@ -171,7 +174,6 @@ class Lemmatizer(flair.nn.Model):
             input_indices = self.words_to_char_indices([token.text for token in tokens], for_input=False)
             input_vectors = self.character_embedding_for_encoding(input_indices)
             encoding_output, initial_hidden_states = self.encoding_rnn(input_vectors)
-
 
         # get labels, if no label provided take the word itself # TODO: zusätzlicher Parameter bzgl label, ob token ohne label einfach übernommen werden sollen
         labels = [token.get_tag(label_type=self._label_type).value if token.get_tag(
@@ -296,9 +298,9 @@ class Lemmatizer(flair.nn.Model):
                             self.beam_size * number_tokens, -1, self.hidden_size)
 
                     # decoding
-                    # create input for first pass (batch_size, 1, input_size), first letter is special character <S> (represented by a '2')
+                    # create input for first pass (batch_size, 1, input_size), first letter is special character <S>
                     # sequence length is always set to one in prediction
-                    input_indices = 2*torch.ones(number_tokens, dtype=torch.long).to(flair.device)
+                    input_indices = self.start_index*torch.ones(number_tokens, dtype=torch.long).to(flair.device)
                     input_tensor = self.character_embedding_for_decoding(input_indices).unsqueeze(1)
 
                     # first pass
@@ -317,7 +319,8 @@ class Lemmatizer(flair.nn.Model):
                     output_vectors = self.character_decoder(output)
                     out_probs = self.softmax(output_vectors).squeeze(1)
                     # make sure no dummy symbol <> or start symbol <S> is predicted
-                    out_probs[:,1:3] = -1
+                    out_probs[:,self.dummy_index] = -1
+                    out_probs[:,self.start_index] = -1
                     # pick top beam size many outputs with highest probabilities
                     probabilities, leading_indices = out_probs.topk(self.beam_size, 1)  # max prob along dimension 1
                     # leading_indices and probabilities have size (batch_size, beam_size)
@@ -349,9 +352,6 @@ class Lemmatizer(flair.nn.Model):
                     # keep track of how many hypothesis were completed for each token
                     n_completed = [0 for _ in range(number_tokens)] # cpu
                     final_candidates = [[] for _ in range(number_tokens)] # cpu
-                    # max_completed = 5
-
-
 
                     for j in range(1, max_length):
 
@@ -373,7 +373,8 @@ class Lemmatizer(flair.nn.Model):
                         out_probs = self.softmax(output_vectors)
                         # out_probs have size (beam_size*batch_size, 1, alphabet_size)
                         # make sure no dummy symbol <> or start symbol <S> is predicted
-                        out_probs[:,0, 1:3] = -1
+                        out_probs[:,0, self.dummy_index] = -1
+                        out_probs[:,0, self.start_index] = -1
                         # choose beam_size many indices with highest probabilities
                         probabilities, index_candidates = out_probs.topk(self.beam_size, 2)
                         probabilities.squeeze_(1)
@@ -382,7 +383,7 @@ class Lemmatizer(flair.nn.Model):
                         # index_candidates have size (beam_size*batch_size, beam_size)
 
                         # check if an end symbol <E> has been predicted and, in that case, set hypothesis aside
-                        for tuple in (index_candidates==3).nonzero(as_tuple=False):
+                        for tuple in (index_candidates==self.end_index).nonzero(as_tuple=False):
                             token_number = tuple[0]//self.beam_size # index of token in in list tokens_in_batch
                             seq = sequences[tuple[0],:] # hypothesis sequence
                             score = (scores[tuple[0]] + log_probabilities[tuple[0], tuple[1]])/(len(seq) + 1) # hypothesis score
@@ -488,7 +489,7 @@ class Lemmatizer(flair.nn.Model):
                                 encoding_output, hidden_state = self.encoding_rnn(input_vectors)
 
                             # input (batch_size, 1, input_size), first letter is special character <S>
-                            input_tensor = self.character_embedding_for_decoding(torch.tensor([2], device=flair.device)).unsqueeze(1)
+                            input_tensor = self.character_embedding_for_decoding(torch.tensor([self.start_index], device=flair.device)).unsqueeze(1)
 
                             # first pass
                             output, hidden_state = self.decoding_rnn(input_tensor, hidden_state)
@@ -506,7 +507,8 @@ class Lemmatizer(flair.nn.Model):
                             output_vectors = self.character_decoder(output)
                             out_probs = self.softmax(output_vectors).squeeze(1)
                             # make sure no dummy symbol <> or start symbol <S> is predicted
-                            out_probs[0,1:3] = -1
+                            out_probs[0,self.dummy_index] = -1
+                            out_probs[0,self.start_index] = -1
                             # take beam size many predictions with highest probabilities
                             probabilities, leading_indices = out_probs.topk(self.beam_size, 1)  # max prob along dimension 1
                             log_probabilities = torch.log(probabilities)
@@ -564,7 +566,8 @@ class Lemmatizer(flair.nn.Model):
                                     output_vectors = self.character_decoder(output)
                                     out_probs = self.softmax(output_vectors).squeeze(1)
                                     # make sure no dummy symbol <> or start symbol <S> is predicted
-                                    out_probs[0, 1:3] = -1
+                                    out_probs[0, self.dummy_index] = -1
+                                    out_probs[0, self.start_index] = -1
 
                                     new_loss = 0
                                     if return_loss:
@@ -584,7 +587,7 @@ class Lemmatizer(flair.nn.Model):
                                         s = score + prediction_log_probability
 
                                         # if this prediction is a STOP symbol, set it aside
-                                        if prediction_index == 3:
+                                        if prediction_index == self.end_index:
                                             candidate = [seq, s/(len(seq) + 1), new_loss/(len(seq) + 1)]
                                             final_candidates.append(candidate)
                                             n_completed += 1
@@ -807,8 +810,8 @@ class Lemmatizer(flair.nn.Model):
             "embeddings": self.token_embedding,
             "input_size": self.input_size,
             "hidden_size": self.hidden_size,
-            "path_to_char_dict": self.path_to_char_dict,
             "num_layers_in_rnn": self.num_layers,
+            "char_dict": self.char_dictionary,
             "label_type": self._label_type,
             "beam_size": self.beam_size,
             "max_sequence_length":self.max_sequence_length,
@@ -823,8 +826,8 @@ class Lemmatizer(flair.nn.Model):
             token_embedding=state["embeddings"],
             input_size=state["input_size"],
             hidden_size=state["hidden_size"],
-            path_to_char_dict=state["path_to_char_dict"],
             num_layers_in_rnn=state["num_layers_in_rnn"],
+            char_dict=state["char_dict"],
             label_type=state["label_type"],
             beam_size=state["beam_size"],
             max_sequence_length_dependend_on_input=state["dependend_on_input"],
