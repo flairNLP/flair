@@ -8,7 +8,7 @@ import time
 import warnings
 from inspect import signature
 from pathlib import Path
-from typing import Union, Tuple, Optional
+from typing import Union, Tuple, Optional, List
 
 import torch
 from torch.optim.sgd import SGD
@@ -72,7 +72,7 @@ class ModelTrainer:
     def train(
             self,
             base_path: Union[Path, str],
-            learning_rate: float = 0.1,
+            learning_rate: Union[float, List[float]] = 0.1,
             mini_batch_size: int = 32,
             mini_batch_chunk_size: Optional[int] = None,
             max_epochs: int = 100,
@@ -84,7 +84,7 @@ class ModelTrainer:
             scheduler=AnnealOnPlateau,
             anneal_factor: float = 0.5,
             patience: int = 3,
-            min_learning_rate: float = 0.0001,
+            min_learning_rate: Union[float, List[float]] = 0.0001,
             initial_extra_patience: int = 0,
             optimizer: torch.optim.Optimizer = SGD,
             cycle_momentum: bool = False,
@@ -134,7 +134,7 @@ class ModelTrainer:
         :param anneal_factor: The factor by which the learning rate is annealed
         :param patience: Patience is the number of epochs with no improvement the Trainer waits
          until annealing the learning rate
-        :param min_learning_rate: If the learning rate falls below this threshold, training terminates
+        :param min_learning_rate: If the (in multi lr case: all) learning rate falls below this threshold, training terminates
         :param warmup_fraction: Fraction of warmup steps if the scheduler is LinearSchedulerWithWarmup
         :param train_with_dev:  If True, the data from dev split is added to the training data
         :param train_with_test: If True, the data from test split is added to the training data
@@ -216,10 +216,22 @@ class ModelTrainer:
 
         if mini_batch_chunk_size is None:
             mini_batch_chunk_size = mini_batch_size
-        if learning_rate < min_learning_rate:
-            min_learning_rate = learning_rate / 10
 
-        initial_learning_rate = learning_rate
+        if not isinstance(learning_rate, list):
+            if inspect.isclass(optimizer):
+                initial_learning_rate = [learning_rate]
+            else:
+                initial_learning_rate = [learning_rate] * len(optimizer.param_groups)
+
+        if not isinstance(min_learning_rate, list):
+            if inspect.isclass(optimizer):
+                min_learning_rate = [min_learning_rate]
+            else:
+                min_learning_rate = [min_learning_rate] * len(optimizer.param_groups)
+
+        for i, lr in enumerate(initial_learning_rate):
+            if lr < min_learning_rate[i]:
+                min_learning_rate[i] = lr / 10
 
         # cast string to Path
         if type(base_path) is str:
@@ -231,13 +243,15 @@ class ModelTrainer:
         else:
             log_handler = None
 
+        lr_info = ",".join([f"{lr:.6f}" for lr in initial_learning_rate])
+
         log_line(log)
         log.info(f'Model: "{self.model}"')
         log_line(log)
         log.info(f'Corpus: "{self.corpus}"')
         log_line(log)
         log.info("Parameters:")
-        log.info(f' - learning_rate: "{learning_rate}"')
+        log.info(f' - learning_rate: "{lr_info}"')
         log.info(f' - mini_batch_size: "{mini_batch_size}"')
         log.info(f' - patience: "{patience}"')
         log.info(f' - anneal_factor: "{anneal_factor}"')
@@ -280,9 +294,15 @@ class ModelTrainer:
 
         # if optimizer class is passed, instantiate:
         if inspect.isclass(optimizer):
+            if isinstance(learning_rate, list):
+                raise ValueError("If multiple learning rates are used, optimizer needs to be already instatiated.")
+
             optimizer: torch.optim.Optimizer = optimizer(self.model.parameters(), lr=learning_rate, **kwargs)
 
         if use_swa:
+            if isinstance(learning_rate, list) and use_swa:
+                raise ValueError("SWA can not be used with per-parameter learning rates.")
+
             import torchcontrib
             optimizer = torchcontrib.optim.SWA(optimizer, swa_start=10, swa_freq=5, swa_lr=learning_rate)
 
@@ -377,11 +397,15 @@ class ModelTrainer:
 
         # At any point you can hit Ctrl + C to break out of training early.
         try:
-            previous_learning_rate = learning_rate
-            momentum = 0
-            for group in optimizer.param_groups:
-                if "momentum" in group:
-                    momentum = group["momentum"]
+            if isinstance(learning_rate, list):
+                previous_learning_rate = learning_rate
+            else:
+                previous_learning_rate = [learning_rate] * len(optimizer.param_groups)
+
+            momentum = [
+                group["momentum"] if "momentum" in group else 0
+                for group in optimizer.param_groups
+            ]
 
             for epoch in range(epoch + 1, max_epochs + 1):
                 log_line(log)
@@ -399,16 +423,17 @@ class ModelTrainer:
                     train_part = torch.utils.data.dataset.Subset(self.corpus.train, train_part_indices)
 
                 # get new learning rate
-                for group in optimizer.param_groups:
-                    learning_rate = group["lr"]
+                learning_rate = [group["lr"] for group in optimizer.param_groups]
 
-                if learning_rate != previous_learning_rate and batch_growth_annealing:
+                lr_changed = any([lr != prev_lr for lr, prev_lr in zip(learning_rate, previous_learning_rate)])
+
+                if lr_changed and batch_growth_annealing:
                     mini_batch_size *= 2
 
                 # reload last best model if annealing with restarts is enabled
                 if (
                         (anneal_with_restarts or anneal_with_prestarts)
-                        and learning_rate != previous_learning_rate
+                        and lr_changed
                         and os.path.exists(base_path / "best-model.pt")
                 ):
                     if anneal_with_restarts:
@@ -424,11 +449,16 @@ class ModelTrainer:
 
                 previous_learning_rate = learning_rate
                 if use_tensorboard:
-                    writer.add_scalar("learning_rate", learning_rate, epoch)
+                    if len(learning_rate) == 1:
+                        writer.add_scalar("learning_rate", learning_rate[0], epoch)
+                    else:
+                        for i, lr in enumerate(learning_rate):
+                            writer.add_scalar(f"learning_rate_{i}", lr, epoch)
+
+                all_lrs_too_small = all([lr < min_lr for lr, min_lr in zip(learning_rate, min_learning_rate)])
 
                 # stop training if learning rate becomes too small
-                if ((not isinstance(scheduler, (OneCycleLR, LinearSchedulerWithWarmup)) and
-                     learning_rate < min_learning_rate)):
+                if ((not isinstance(scheduler, (OneCycleLR, LinearSchedulerWithWarmup)) and all_lrs_too_small)):
                     log_line(log)
                     log.info("learning rate too small - quitting training!")
                     log_line(log)
@@ -493,12 +523,11 @@ class ModelTrainer:
                     if isinstance(scheduler, (OneCycleLR, LinearSchedulerWithWarmup)):
                         scheduler.step()
                         # get new learning rate
-                        for group in optimizer.param_groups:
-                            learning_rate = group["lr"]
-                            if "momentum" in group:
-                                momentum = group["momentum"]
-                            if "betas" in group:
-                                momentum, _ = group["betas"]
+                        learning_rate = [group["lr"] for group in optimizer.param_groups]
+
+                        momentum = [
+                            group["betas"][0] if "betas" in group else group.get("momentum", 0)
+                        ]
 
                     seen_batches += 1
 
@@ -507,12 +536,19 @@ class ModelTrainer:
 
                     batch_time += time.time() - start_time
                     if seen_batches % modulo == 0:
-                        momentum_info = f' - momentum: {momentum:.4f}' if cycle_momentum else ''
+                        momentum_info = ''
+                        if cycle_momentum:
+                            momentum_info = " - momentum:" + ",".join([
+                                f"{m:.4f}" for m in momentum
+                            ])
+
+                        lr_info = ",".join([f"{lr:.6f}" for lr in learning_rate])
+
                         intermittent_loss = train_loss / average_over if average_over > 0 else train_loss / seen_batches
                         log.info(
                             f"epoch {epoch} - iter {seen_batches}/{total_number_of_batches} - loss "
                             f"{intermittent_loss:.8f} - samples/sec: {mini_batch_size * modulo / batch_time:.2f}"
-                            f" - lr: {learning_rate:.6f}{momentum_info}"
+                            f" - lr: {lr_info}{momentum_info}"
                         )
                         batch_time = 0
                         iteration = epoch * total_number_of_batches + batch_no
@@ -525,7 +561,7 @@ class ModelTrainer:
                 self.model.eval()
 
                 log_line(log)
-                log.info(f"EPOCH {epoch} done: loss {train_loss:.4f} - lr {learning_rate:.7f}")
+                log.info(f"EPOCH {epoch} done: loss {train_loss:.4f} - lr {lr_info}")
 
                 if use_tensorboard:
                     writer.add_scalar("train_loss", train_loss, epoch)
@@ -668,11 +704,13 @@ class ModelTrainer:
                     bad_epochs = scheduler.num_bad_epochs
                 except:
                     bad_epochs = 0
-                for group in optimizer.param_groups:
-                    new_learning_rate = group["lr"]
-                if new_learning_rate != previous_learning_rate:
+
+                new_learning_rate = [group["lr"] for group in optimizer.param_groups]
+
+                if any([new_lr != prev_lr for new_lr, prev_lr in zip(new_learning_rate, previous_learning_rate)]):
                     bad_epochs = patience + 1
-                    if previous_learning_rate == initial_learning_rate: bad_epochs += initial_extra_patience
+                    if all([prev_lr == initial_lr for prev_lr, initial_lr in zip(previous_learning_rate, initial_learning_rate)]):
+                        bad_epochs += initial_extra_patience
 
                 # log bad epochs
                 log.info(f"BAD EPOCHS (no improvement): {bad_epochs}")
@@ -698,8 +736,10 @@ class ModelTrainer:
                             if log_test:
                                 f.write("\tTEST_LOSS\tTEST_" + "\tTEST_".join(test_eval_result.log_header.split("\t")))
 
+                        lr_info = ",".join([f"{lr:.4f}" for lr in learning_rate])
+
                         f.write(
-                            f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{learning_rate:.4f}\t{train_loss}"
+                            f"\n{epoch}\t{datetime.datetime.now():%H:%M:%S}\t{bad_epochs}\t{lr_info}\t{train_loss}"
                         )
                         f.write(result_line)
 
@@ -801,7 +841,7 @@ class ModelTrainer:
 
     def fine_tune(self,
                   base_path: Union[Path, str],
-                  learning_rate: float = 5e-5,
+                  learning_rate: Union[float, List[float]] = 5e-5,
                   max_epochs: int = 10,
                   optimizer=torch.optim.AdamW,
                   scheduler=LinearSchedulerWithWarmup,
