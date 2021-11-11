@@ -6,12 +6,14 @@ import re
 from abc import abstractmethod
 from collections import Counter
 from pathlib import Path
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Optional
 
 import gensim
 import numpy as np
 import torch
 from bpemb import BPEmb
+from gensim.models import KeyedVectors
+from torch import nn
 from transformers import AutoTokenizer, AutoConfig, AutoModel, CONFIG_MAPPING, PreTrainedTokenizer, XLNetModel, \
     TransfoXLModel
 
@@ -119,15 +121,20 @@ class StackedEmbeddings(TokenEmbeddings):
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
-    def __init__(self, embeddings: str, field: str = None):
+    def __init__(self, embeddings: str, field: str = None, fine_tune: bool = False, force_cpu: bool = True,
+                 stable: bool = False):
         """
         Initializes classic word embeddings. Constructor downloads required files if not there.
         :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or custom
         If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
+        set stable=True to use the stable embeddings as described in https://arxiv.org/abs/2110.02861
         """
         self.embeddings = embeddings
 
         self.instance_parameters = self.get_instance_parameters(locals=locals())
+
+        if fine_tune and force_cpu and flair.device.type != "cpu":
+            raise ValueError("Cannot train WordEmbeddings on cpu if the model is trained on gpu, set force_cpu=False")
 
         hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/token"
 
@@ -189,42 +196,67 @@ class WordEmbeddings(TokenEmbeddings):
             )
 
         self.name: str = str(embeddings)
-        self.static_embeddings = True
+        self.static_embeddings = not fine_tune
+        self.fine_tune = fine_tune
+        self.force_cpu = force_cpu
+        self.field = field
+        self.stable = stable
+        super().__init__()
 
         if str(embeddings).endswith(".bin"):
-            self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
+            precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
                 str(embeddings), binary=True
             )
         else:
-            self.precomputed_word_embeddings = gensim.models.KeyedVectors.load(
+            precomputed_word_embeddings = gensim.models.KeyedVectors.load(
                 str(embeddings)
             )
 
-        self.field = field
+        self.__embedding_length: int = precomputed_word_embeddings.vector_size
 
-        self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
-        super().__init__()
+        vectors = np.row_stack(
+            (precomputed_word_embeddings.vectors, np.zeros(self.__embedding_length, dtype="float"))
+        )
+        self.embedding = nn.Embedding.from_pretrained(torch.FloatTensor(vectors), freeze=not fine_tune)
+
+        try:
+            # gensim version 4
+            self.vocab = precomputed_word_embeddings.key_to_index
+        except:
+            # gensim version 3
+            self.vocab = {k: v.index for k, v in precomputed_word_embeddings.vocab.items()}
+
+        if stable:
+            self.layer_norm = nn.LayerNorm(self.__embedding_length, elementwise_affine=fine_tune)
+        else:
+            self.layer_norm = None
+
+        self.device = None
+        self.to(flair.device)
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    @instance_lru_cache(maxsize=10000, typed=False)
-    def get_cached_vec(self, word: str) -> torch.Tensor:
-        if word in self.precomputed_word_embeddings:
-            word_embedding = self.precomputed_word_embeddings[word]
-        elif word.lower() in self.precomputed_word_embeddings:
-            word_embedding = self.precomputed_word_embeddings[word.lower()]
-        elif re.sub(r"\d", "#", word.lower()) in self.precomputed_word_embeddings:
-            word_embedding = self.precomputed_word_embeddings[
+    @instance_lru_cache(maxsize=100000, typed=False)
+    def get_cached_token_index(self, word: str) -> int:
+        if word in self.vocab:
+            return self.vocab[word]
+        elif word.lower() in self.vocab:
+            return self.vocab[word.lower()]
+        elif re.sub(r"\d", "#", word.lower()) in self.vocab:
+            return self.vocab[
                 re.sub(r"\d", "#", word.lower())
             ]
-        elif re.sub(r"\d", "0", word.lower()) in self.precomputed_word_embeddings:
-            word_embedding = self.precomputed_word_embeddings[
+        elif re.sub(r"\d", "0", word.lower()) in self.vocab:
+            return self.vocab[
                 re.sub(r"\d", "0", word.lower())
             ]
         else:
-            word_embedding = np.zeros(self.embedding_length, dtype="float")
+            return len(self.vocab)  # <unk> token
+
+    def get_vec(self, word: str) -> torch.Tensor:
+        word_embedding = self.vectors[self.get_cached_token_index(word)]
 
         word_embedding = torch.tensor(
             word_embedding.tolist(), device=flair.device, dtype=torch.float
@@ -233,18 +265,25 @@ class WordEmbeddings(TokenEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
 
-        for i, sentence in enumerate(sentences):
+        tokens = [token for sentence in sentences for token in sentence.tokens]
 
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+        word_indices: List[int] = []
+        for token in tokens:
+            if "field" not in self.__dict__ or self.field is None:
+                word = token.text
+            else:
+                word = token.get_tag(self.field).value
+            word_indices.append(self.get_cached_token_index(word))
 
-                if "field" not in self.__dict__ or self.field is None:
-                    word = token.text
-                else:
-                    word = token.get_tag(self.field).value
+        embeddings = self.embedding(torch.tensor(word_indices, dtype=torch.long, device=self.device))
+        if self.stable:
+            embeddings = self.layer_norm(embeddings)
 
-                word_embedding = self.get_cached_vec(word=word)
+        if self.force_cpu:
+            embeddings = embeddings.to(flair.device)
 
-                token.set_embedding(self.name, word_embedding)
+        for emb, token in zip(embeddings, tokens):
+            token.set_embedding(self.name, emb)
 
         return sentences
 
@@ -257,6 +296,63 @@ class WordEmbeddings(TokenEmbeddings):
             self.embeddings = self.name
 
         return f"'{self.embeddings}'"
+
+    def train(self, mode=True):
+        if not self.fine_tune:
+            pass
+        else:
+            super(WordEmbeddings, self).train(mode)
+
+    def to(self, device):
+        if self.force_cpu:
+            device = torch.device("cpu")
+        self.device = device
+        super(WordEmbeddings, self).to(device)
+
+    def _apply(self, fn):
+        if fn.__name__ == "convert" and self.force_cpu:
+            # this is required to force the module on the cpu,
+            # if a parent module is put to gpu, the _apply is called to each sub_module
+            # self.to(..) actually sets the device properly
+            if not hasattr(self, "device"):
+                self.to(flair.device)
+            return
+        super(WordEmbeddings, self)._apply(fn)
+
+    def __getattribute__(self, item):
+        # this ignores the get_cached_vec method when loading older versions
+        # it is needed for compatibility reasons
+        if "get_cached_vec" == item:
+            return None
+        return super().__getattribute__(item)
+
+    def __setstate__(self, state):
+        if "get_cached_vec" in state:
+            del state["get_cached_vec"]
+        if "force_cpu" not in state:
+            state["force_cpu"] = True
+        if "fine_tune" not in state:
+            state["fine_tune"] = False
+        if "precomputed_word_embeddings" in state:
+            precomputed_word_embeddings: KeyedVectors = state.pop("precomputed_word_embeddings")
+            vectors = np.row_stack(
+                (precomputed_word_embeddings.vectors, np.zeros(precomputed_word_embeddings.vector_size, dtype="float"))
+            )
+            embedding = nn.Embedding.from_pretrained(torch.FloatTensor(vectors), freeze=not state["fine_tune"])
+
+            try:
+                # gensim version 4
+                vocab = precomputed_word_embeddings.key_to_index
+            except:
+                # gensim version 3
+                vocab = {k: v.index for k, v in precomputed_word_embeddings.__dict__["vocab"].items()}
+            state["embedding"] = embedding
+            state["vocab"] = vocab
+        if "stable" not in state:
+            state["stable"] = False
+            state["layer_norm"] = None
+
+        super().__setstate__(state)
 
 
 class CharacterEmbeddings(TokenEmbeddings):
@@ -401,6 +497,7 @@ class FlairEmbeddings(TokenEmbeddings):
 
         hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/flair"
         clef_hipe_path: str = "https://files.ifi.uzh.ch/cl/siclemat/impresso/clef-hipe-2020/flair"
+        am_path : str = "http://ltdata1.informatik.uni-hamburg.de/amharic/models/flair/"
 
         self.is_lower: bool = is_lower
 
@@ -534,6 +631,8 @@ class FlairEmbeddings(TokenEmbeddings):
             "en-impresso-hipe-v1-backward": f"{clef_hipe_path}/en-flair-v1-backward/best-lm.pt",
             "fr-impresso-hipe-v1-forward": f"{clef_hipe_path}/fr-hipe-flair-v1-forward/best-lm.pt",
             "fr-impresso-hipe-v1-backward": f"{clef_hipe_path}/fr-hipe-flair-v1-backward/best-lm.pt",
+             # Amharic 
+             "am-forward": f"{am_path}/best-lm.pt",
         }
 
         if type(model) == str:
@@ -834,6 +933,10 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # load tokenizer and transformer model
         self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
+        if self.tokenizer.model_max_length > 1000000000:
+            self.tokenizer.model_max_length = 512
+            log.info("No model_max_length in Tokenizer's config.json - setting it to 512. "
+                     "Specify desired model_max_length by passing it as attribute to embedding instance.")
         if not 'config' in kwargs:
             config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
             self.model = AutoModel.from_pretrained(model, config=config)
@@ -1011,14 +1114,17 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                                         return_tensors='pt',
                                         )
 
+        model_kwargs = {}
         input_ids = batch_encoding['input_ids'].to(flair.device)
-        attention_mask = batch_encoding['attention_mask'].to(flair.device)
+
+        # Models such as FNet do not have an attention_mask
+        if 'attention_mask' in batch_encoding:
+            model_kwargs['attention_mask'] = batch_encoding['attention_mask'].to(flair.device)
 
         # determine which sentence was split into how many parts
         sentence_parts_lengths = torch.ones(len(tokenized_sentences), dtype=torch.int) if not self.allow_long_sentences \
             else torch.unique(batch_encoding['overflow_to_sample_mapping'], return_counts=True, sorted=True)[1].tolist()
 
-        model_kwargs = {}
         # set language IDs for XLM-style transformers
         if self.use_lang_emb:
             model_kwargs["langs"] = torch.zeros_like(input_ids, dtype=input_ids.dtype)
@@ -1029,7 +1135,7 @@ class TransformerWordEmbeddings(TokenEmbeddings):
                 model_kwargs["langs"][s_id][:sequence_length] = lang_id
 
         # put encoded batch through transformer model to get all hidden states of all encoder layers
-        hidden_states = self.model(input_ids, attention_mask=attention_mask, **model_kwargs)[-1]
+        hidden_states = self.model(input_ids, **model_kwargs)[-1]
         # make the tuple a tensor; makes working with it easier.
         hidden_states = torch.stack(hidden_states)
 
@@ -1377,9 +1483,10 @@ class FastTextEmbeddings(TokenEmbeddings):
 
         self.static_embeddings = True
 
-        self.precomputed_word_embeddings = gensim.models.FastText.load_fasttext_format(
+        self.precomputed_word_embeddings: gensim.models.FastText = gensim.models.FastText.load_fasttext_format(
             str(embeddings)
         )
+        print(self.precomputed_word_embeddings)
 
         self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
 
@@ -1393,7 +1500,7 @@ class FastTextEmbeddings(TokenEmbeddings):
     @instance_lru_cache(maxsize=10000, typed=False)
     def get_cached_vec(self, word: str) -> torch.Tensor:
         try:
-            word_embedding = self.precomputed_word_embeddings[word]
+            word_embedding = self.precomputed_word_embeddings.wv[word]
         except:
             word_embedding = np.zeros(self.embedding_length, dtype="float")
 
@@ -1431,24 +1538,89 @@ class OneHotEmbeddings(TokenEmbeddings):
 
     def __init__(
             self,
-            corpus: Corpus,
+            vocab_dictionary: Dictionary,
             field: str = "text",
             embedding_length: int = 300,
-            min_freq: int = 3,
+            stable: bool = False,
     ):
         """
         Initializes one-hot encoded word embeddings and a trainable embedding layer
-        :param corpus: you need to pass a Corpus in order to construct the vocabulary
+        :param vocab_dictionary: the vocabulary that will be encoded
         :param field: by default, the 'text' of tokens is embedded, but you can also embed tags such as 'pos'
         :param embedding_length: dimensionality of the trainable embedding layer
-        :param min_freq: minimum frequency of a word to become part of the vocabulary
+        :param stable: set stable=True to use the stable embeddings as described in https://arxiv.org/abs/2110.02861
         """
         super().__init__()
-        self.name = "one-hot"
+        self.name = f"one-hot-{field}"
         self.static_embeddings = False
-        self.min_freq = min_freq
         self.field = field
         self.instance_parameters = self.get_instance_parameters(locals=locals())
+        self.__embedding_length = embedding_length
+        self.vocab_dictionary = vocab_dictionary
+
+        print(self.vocab_dictionary.idx2item)
+        print(f"vocabulary size of {len(self.vocab_dictionary)}")
+
+        # model architecture
+        self.embedding_layer = torch.nn.Embedding(
+            len(self.vocab_dictionary), self.__embedding_length
+        )
+        torch.nn.init.xavier_uniform_(self.embedding_layer.weight)
+        if stable:
+            self.layer_norm = torch.nn.LayerNorm(embedding_length)
+        else:
+            self.layer_norm = None
+
+        self.to(flair.device)
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        tokens = [
+            t
+            for sentence in sentences
+            for t in sentence.tokens
+        ]
+
+        if self.field == "text":
+            one_hot_sentences = [
+                self.vocab_dictionary.get_idx_for_item(t.text)
+                for t in tokens
+            ]
+        else:
+            one_hot_sentences = [
+                self.vocab_dictionary.get_idx_for_item(t.get_tag(self.field).value)
+                for t in tokens
+            ]
+
+        one_hot_sentences = torch.tensor(one_hot_sentences, dtype=torch.long).to(
+            flair.device
+        )
+
+        embedded = self.embedding_layer.forward(one_hot_sentences)
+        if self.layer_norm:
+            embedded = self.layer_norm(embedded)
+
+        for emb, token in zip(embedded, tokens):
+            token.set_embedding(self.name, emb)
+
+        return sentences
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def from_corpus(
+            cls,
+            corpus: Corpus,
+            field: str = "text",
+            min_freq: int = 3,
+            **kwargs
+    ):
+        vocab_dictionary = Dictionary()
 
         tokens = list(map((lambda s: s.tokens), corpus.train))
         tokens = [token for sublist in tokens for token in sublist]
@@ -1466,66 +1638,10 @@ class OneHotEmbeddings(TokenEmbeddings):
                 break
             tokens.append(token)
 
-        self.vocab_dictionary: Dictionary = Dictionary()
         for token in tokens:
-            self.vocab_dictionary.add_item(token)
+            vocab_dictionary.add_item(token)
 
-        # max_tokens = 500
-        self.__embedding_length = embedding_length
-
-        print(self.vocab_dictionary.idx2item)
-        print(f"vocabulary size of {len(self.vocab_dictionary)}")
-
-        # model architecture
-        self.embedding_layer = torch.nn.Embedding(
-            len(self.vocab_dictionary), self.__embedding_length
-        )
-        torch.nn.init.xavier_uniform_(self.embedding_layer.weight)
-
-        self.to(flair.device)
-
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
-        one_hot_sentences = []
-        for i, sentence in enumerate(sentences):
-
-            if self.field == "text":
-                context_idxs = [
-                    self.vocab_dictionary.get_idx_for_item(t.text)
-                    for t in sentence.tokens
-                ]
-            else:
-                context_idxs = [
-                    self.vocab_dictionary.get_idx_for_item(t.get_tag(self.field).value)
-                    for t in sentence.tokens
-                ]
-
-            one_hot_sentences.extend(context_idxs)
-
-        one_hot_sentences = torch.tensor(one_hot_sentences, dtype=torch.long).to(
-            flair.device
-        )
-
-        embedded = self.embedding_layer.forward(one_hot_sentences)
-
-        index = 0
-        for sentence in sentences:
-            for token in sentence:
-                embedding = embedded[index]
-                token.set_embedding(self.name, embedding)
-                index += 1
-
-        return sentences
-
-    def __str__(self):
-        return self.name
-
-    def extra_repr(self):
-        return "min_freq={}".format(self.min_freq)
+        return cls(vocab_dictionary, field=field, **kwargs)
 
 
 class HashEmbeddings(TokenEmbeddings):
@@ -1640,7 +1756,7 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
                 "it",
                 "mk",
                 "no",
-                "pl",
+                # "pl",
                 "pt",
                 "ro",
                 "ru",
