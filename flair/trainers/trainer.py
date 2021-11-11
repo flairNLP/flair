@@ -519,7 +519,7 @@ class ModelTrainer:
                         learning_rate = [group["lr"] for group in optimizer.param_groups]
 
                         momentum = [
-                            group["betas"][0] if "betas" in group else group.get("momentum", 0)
+                            group["betas"][0] if "betas" in group else group.get("momentum", 0) for group in optimizer.param_groups
                         ]
 
                     seen_batches += 1
