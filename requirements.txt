@@ -1,6 +1,6 @@
 python-dateutil>=2.6.1
 torch>=1.5.0,!=1.8
-gensim>=3.4.0,<=3.8.3
+gensim>=3.4.0
 tqdm>=4.26.0
 segtok>=1.5.7
 matplotlib>=2.2.3
@@ -23,3 +23,4 @@ gdown==3.12.2
 huggingface-hub
 conllu>=4.0
 more-itertools~=8.8.0
+wikipedia-api

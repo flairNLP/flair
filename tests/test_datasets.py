@@ -2,8 +2,8 @@ import shutil
 
 import flair
 import flair.datasets
-from flair.data import MultiCorpus
-from flair.datasets.conllu import CoNLLUDataset, CoNLLUCorpus
+from flair.data import MultiCorpus, Sentence
+from flair.datasets.conllu import CoNLLUCorpus
 
 
 def test_load_imdb_data(tasks_base_path):
@@ -102,7 +102,7 @@ def test_load_column_corpus_options(tasks_base_path):
 
 def test_load_germeval_data(tasks_base_path):
     # get training, test and dev data
-    corpus = flair.datasets.GERMEVAL_14(tasks_base_path)
+    corpus = flair.datasets.ColumnCorpus(tasks_base_path / "germeval_14", column_format={0: "text", 2: "ner"})
 
     assert len(corpus.train) == 2
     assert len(corpus.dev) == 1
@@ -142,8 +142,7 @@ def test_load_no_dev_data_explicit(tasks_base_path):
 
 
 def test_multi_corpus(tasks_base_path):
-
-    corpus_1 = flair.datasets.GERMEVAL_14(tasks_base_path)
+    corpus_1 = flair.datasets.ColumnCorpus(tasks_base_path / "germeval_14", column_format={0: "text", 2: "ner"})
 
     corpus_2 = flair.datasets.ColumnCorpus(tasks_base_path / "fashion", column_format={0: "text", 2: "ner"})
     # get two corpora as one
@@ -167,8 +166,6 @@ def test_download_load_data(tasks_base_path):
 
 
 def _assert_conllu_dataset(dataset):
-    assert len(dataset) == 4
-
     sent1 = dataset[0]
     assert [token.get_tag("ner").value for token in sent1.tokens] == [
         "B-PER",
@@ -179,6 +176,17 @@ def _assert_conllu_dataset(dataset):
         "O",
         "B-ORG",
         "O",
+    ]
+
+    assert [token.get_tag("upos").value for token in sent1.tokens] == [
+        "PROPN",
+        "PROPN",
+        "CCONJ",
+        "PROPN",
+        "PROPN",
+        "VERB",
+        "PROPN",
+        "PUNCT"
     ]
 
     assert [token.whitespace_after for token in sent1.tokens] == [
@@ -192,8 +200,11 @@ def _assert_conllu_dataset(dataset):
         False,
     ]
 
-    spans1 = sent1.get_spans("ner")
-    assert len(spans1) == 3
+    ner_spans1 = sent1.get_spans("ner")
+    assert len(ner_spans1) == 3
+
+    upos_spans1 = sent1.get_spans("upos")
+    assert len(upos_spans1) == 8
 
     rels1 = sent1.get_labels("relation")
     assert len(rels1) == 2
@@ -202,8 +213,12 @@ def _assert_conllu_dataset(dataset):
     assert [token.idx for token in rels1[1].tail] == [4, 5]
 
     sent3 = dataset[2]
-    spans3 = sent3.get_labels("ner")
-    assert len(spans3) == 3
+
+    ner_labels3 = sent3.get_labels("ner")
+    assert len(ner_labels3) == 3
+
+    upos_labels3 = sent3.get_labels("upos")
+    assert len(upos_labels3) == 11
 
     rels3 = sent3.get_labels("relation")
     assert len(rels3) == 1
@@ -215,10 +230,11 @@ def _assert_conllu_dataset(dataset):
 def test_load_conllu_corpus(tasks_base_path):
     corpus = CoNLLUCorpus(
         tasks_base_path / "conllu",
-        fields=["id", "form", "ner", "misc"],
+        fields=["id", "form", "upos", "ner", "misc"],
         train_file="train.conllu",
         dev_file="train.conllu",
         test_file="train.conllu",
+        token_annotation_fields=["upos", "ner"],
         in_memory=False,
     )
 
@@ -232,10 +248,11 @@ def test_load_conllu_corpus(tasks_base_path):
 def test_load_conllu_corpus_in_memory(tasks_base_path):
     corpus = CoNLLUCorpus(
         tasks_base_path / "conllu",
-        fields=["id", "form", "ner", "misc"],
+        fields=["id", "form", "upos", "ner", "misc"],
         train_file="train.conllu",
         dev_file="train.conllu",
         test_file="train.conllu",
+        token_annotation_fields=["upos", "ner"],
         in_memory=True,
     )
 
@@ -252,6 +269,7 @@ def test_load_conllu_plus_corpus(tasks_base_path):
         train_file="train.conllup",
         dev_file="train.conllup",
         test_file="train.conllup",
+        token_annotation_fields=["upos", "ner"],
         in_memory=False,
     )
 
@@ -268,6 +286,7 @@ def test_load_conllu_corpus_plus_in_memory(tasks_base_path):
         train_file="train.conllup",
         dev_file="train.conllup",
         test_file="train.conllup",
+        token_annotation_fields=["upos", "ner"],
         in_memory=True,
     )
 
@@ -276,3 +295,60 @@ def test_load_conllu_corpus_plus_in_memory(tasks_base_path):
     assert len(corpus.test) == 4
 
     _assert_conllu_dataset(corpus.train)
+
+
+def _assert_universal_dependencies_conllu_dataset(dataset):
+    sent1: Sentence = dataset[0]
+
+    assert [token.whitespace_after for token in sent1.tokens] == [
+        True,
+        True,
+        True,
+        True,
+        False,
+        True
+    ]
+
+    assert len(sent1.get_spans("Number")) == 4
+    assert sent1[1].get_labels("Number")[0].value == "Plur"
+    assert sent1[1].get_labels("Person")[0].value == "3"
+    assert sent1[1].get_labels("Tense")[0].value == "Pres"
+
+    assert [token.get_tag("head").value for token in sent1.tokens] == [
+        "2",
+        "0",
+        "4",
+        "2",
+        "2",
+        "2"
+    ]
+
+    assert [token.get_tag("deprel").value for token in sent1.tokens] == [
+        "nsubj",
+        "root",
+        "cc",
+        "conj",
+        "obj",
+        "punct"
+    ]
+
+
+def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
+    """
+    This test only covers basic universal dependencies datasets.
+    For example, multi-word tokens or the "deps" column sentence annotations are not supported yet.
+    """
+
+    # Here, we use the default token annotation fields.
+    corpus = CoNLLUCorpus(
+        tasks_base_path / "conllu",
+        train_file="universal_dependencies.conllu",
+        dev_file="universal_dependencies.conllu",
+        test_file="universal_dependencies.conllu"
+    )
+
+    assert len(corpus.train) == 1
+    assert len(corpus.dev) == 1
+    assert len(corpus.test) == 1
+
+    _assert_universal_dependencies_conllu_dataset(corpus.train)

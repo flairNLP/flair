@@ -61,13 +61,23 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings):
         import os
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+        # do not print transformer warnings as these are confusing in this case
+        from transformers import logging
+        logging.set_verbosity_error()
+
         # load tokenizer and transformer model
         self.tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(model, **kwargs)
+        if self.tokenizer.model_max_length > 1000000000:
+            self.tokenizer.model_max_length = 512
+            log.info("No model_max_length in Tokenizer's config.json - setting it to 512. "
+                     "Specify desired model_max_length by passing it as attribute to embedding instance.")
         if not 'config' in kwargs:
             config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
-            self.model = AutoModel.from_pretrained(model, config=config, **kwargs)
+            self.model = AutoModel.from_pretrained(model, config=config)
         else:
             self.model = AutoModel.from_pretrained(None, **kwargs)
+
+        logging.set_verbosity_warning()
 
         # model name
         self.name = 'transformer-document-' + str(model)

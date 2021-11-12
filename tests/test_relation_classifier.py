@@ -16,6 +16,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
         train_file="train.conllup",
         dev_file="train.conllup",
         test_file="train.conllup",
+        token_annotation_fields=['ner'],
     )
 
     relation_label_dict = corpus.make_label_dictionary(label_type="relation")
@@ -23,11 +24,11 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     embeddings = TransformerWordEmbeddings()
 
     model: RelationExtractor = RelationExtractor(
-        token_embeddings=embeddings,
+        embeddings=embeddings,
         label_dictionary=relation_label_dict,
         label_type="relation",
-        span_label_type="ner",
-        use_gold_spans=True,
+        entity_label_type="ner",
+        train_on_gold_pairs_only=True,
     )
 
     # initialize trainer
@@ -46,7 +47,7 @@ def test_train_load_use_classifier(results_base_path, tasks_base_path):
     loaded_model: RelationExtractor = RelationExtractor.load(
         results_base_path / "final-model.pt"
     )
-    loaded_model.use_gold_spans = False
+    loaded_model.train_on_gold_pairs_only = False
 
     sentence = Sentence(["Apple", "was", "founded", "by", "Steve", "Jobs", "."])
     for token, tag in zip(sentence.tokens, ["B-ORG", "O", "O", "O", "B-PER", "I-PER", "O"]):

@@ -61,7 +61,7 @@ def test_train_load_use_tagger(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
@@ -104,7 +104,7 @@ def test_train_load_use_tagger_empty_tags(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 2: "ner"}
     )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
@@ -143,9 +143,36 @@ def test_train_load_use_tagger_empty_tags(results_base_path, tasks_base_path):
 
 
 @pytest.mark.integration
+def test_train_load_use_tagger_disjunct_tags(results_base_path, tasks_base_path):
+    corpus = flair.datasets.ColumnCorpus(
+        data_folder=tasks_base_path / "fashion_disjunct", column_format={0: "text", 3: "ner"}
+    )
+    tag_dictionary = corpus.make_label_dictionary("ner")
+
+    tagger: SequenceTagger = SequenceTagger(
+        hidden_size=64,
+        embeddings=turian_embeddings,
+        tag_dictionary=tag_dictionary,
+        tag_type="ner",
+        use_crf=False,
+    )
+
+    # initialize trainer
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
+
+    trainer.train(
+        results_base_path,
+        learning_rate=0.1,
+        mini_batch_size=2,
+        max_epochs=2,
+        shuffle=False,
+    )
+
+
+@pytest.mark.integration
 def test_train_load_use_tagger_large(results_base_path, tasks_base_path):
     corpus = flair.datasets.UD_ENGLISH().downsample(0.05)
-    tag_dictionary = corpus.make_tag_dictionary("pos")
+    tag_dictionary = corpus.make_label_dictionary("pos")
 
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
@@ -188,7 +215,7 @@ def test_train_load_use_tagger_flair_embeddings(results_base_path, tasks_base_pa
     corpus = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
@@ -231,7 +258,7 @@ def test_train_load_use_tagger_adam(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
@@ -242,7 +269,7 @@ def test_train_load_use_tagger_adam(results_base_path, tasks_base_path):
     )
 
     # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=Adam)
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
     trainer.train(
         results_base_path,
@@ -250,6 +277,7 @@ def test_train_load_use_tagger_adam(results_base_path, tasks_base_path):
         mini_batch_size=2,
         max_epochs=2,
         shuffle=False,
+        optimizer=Adam
     )
 
     del trainer, tagger, tag_dictionary, corpus
@@ -274,10 +302,10 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
     corpus_1 = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
-    corpus_2 = flair.datasets.GERMEVAL_14(base_path=tasks_base_path)
+    corpus_2 = flair.datasets.NER_GERMAN_GERMEVAL(base_path=tasks_base_path)
 
     corpus = MultiCorpus([corpus_1, corpus_2])
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
@@ -317,13 +345,14 @@ def test_train_load_use_tagger_multicorpus(results_base_path, tasks_base_path):
 
 @pytest.mark.integration
 def test_train_resume_tagger(results_base_path, tasks_base_path):
+
     corpus_1 = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
-    corpus_2 = flair.datasets.GERMEVAL_14(base_path=tasks_base_path)
+    corpus_2 = flair.datasets.NER_GERMAN_GERMEVAL(base_path=tasks_base_path)
 
     corpus = MultiCorpus([corpus_1, corpus_2])
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     model: SequenceTagger = SequenceTagger(
         hidden_size=64,
@@ -333,13 +362,16 @@ def test_train_resume_tagger(results_base_path, tasks_base_path):
         use_crf=False,
     )
 
+    # train model for 2 epochs
     trainer = ModelTrainer(model, corpus)
     trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
 
-    del trainer, model
-    trainer = ModelTrainer.load_checkpoint(results_base_path / "checkpoint.pt", corpus)
+    del model
 
-    trainer.train(results_base_path, max_epochs=2, shuffle=False, checkpoint=True)
+    # load the checkpoint model and train until epoch 4
+    checkpoint_model = SequenceTagger.load(results_base_path / "checkpoint.pt")
+    trainer.resume(model=checkpoint_model,
+                   max_epochs=4)
 
     # clean up results directory
     shutil.rmtree(results_base_path)
@@ -351,7 +383,7 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
     corpus = flair.datasets.ColumnCorpus(
         data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"}
     )
-    tag_dictionary = corpus.make_tag_dictionary("ner")
+    tag_dictionary = corpus.make_label_dictionary("ner")
 
     tagger: SequenceTagger = SequenceTagger(
         hidden_size=64,
@@ -362,11 +394,10 @@ def test_find_learning_rate(results_base_path, tasks_base_path):
     )
 
     # initialize trainer
-    trainer: ModelTrainer = ModelTrainer(tagger, corpus, optimizer=SGD)
+    trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-    trainer.find_learning_rate(results_base_path, iterations=5)
+    trainer.find_learning_rate(results_base_path, optimizer=SGD, iterations=5)
 
     # clean up results directory
     shutil.rmtree(results_base_path)
     del trainer, tagger, tag_dictionary, corpus
-

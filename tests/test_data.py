@@ -356,7 +356,7 @@ def test_sentence_to_real_string(tasks_base_path):
     sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=SegtokTokenizer())
     assert "I love Berlin." == sentence.to_plain_string()
 
-    corpus = flair.datasets.GERMEVAL_14(base_path=tasks_base_path)
+    corpus = flair.datasets.NER_GERMAN_GERMEVAL(base_path=tasks_base_path)
 
     sentence = corpus.train[0]
     sentence.infer_space_after()
@@ -589,8 +589,8 @@ def test_tagged_corpus_make_label_dictionary():
 
     label_dict = corpus.make_label_dictionary('label')
 
-    assert 2 == len(label_dict)
-    assert "<unk>" not in label_dict.get_items()
+    assert 3 == len(label_dict)
+    assert "<unk>" in label_dict.get_items()
     assert "class_1" in label_dict.get_items()
     assert "class_2" in label_dict.get_items()
 

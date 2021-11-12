@@ -1,23 +1,24 @@
-import logging
-import re
-import io
-import os
 import bisect
+import io
+import json
+import logging
+import os
+import re
+from collections import defaultdict
 from pathlib import Path
 from typing import List, Union, Sequence, Dict, Any, Tuple, Set
-from collections import defaultdict
+
+import conllu
+import gdown
 
 import flair
-import json
-import gdown
-import conllu
-from flair.file_utils import cached_path
+from flair.data import Sentence
 from flair.datasets.conllu import CoNLLUCorpus
+from flair.file_utils import cached_path
 from flair.tokenization import (
     SentenceSplitter,
-    SciSpacySentenceSplitter, SegtokSentenceSplitter,
+    SegtokSentenceSplitter,
 )
-from flair.data import Sentence
 
 log = logging.getLogger("flair")
 
@@ -34,8 +35,15 @@ def convert_ptb_token(token: str) -> str:
     }.get(token.lower(), token)
 
 
-class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
+class RE_ENGLISH_SEMEVAL2010(CoNLLUCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True, augment_train: bool = False):
+        """
+        SemEval-2010 Task 8 on Multi-Way Classification of Semantic Relations Between Pairs of
+        Nominals: https://aclanthology.org/S10-1006.pdf
+        :param base_path:
+        :param in_memory:
+        :param augment_train:
+        """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
@@ -66,10 +74,11 @@ class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
                 augment_train=augment_train,
             )
 
-        super(SEMEVAL_2010_TASK_8, self).__init__(
+        super(RE_ENGLISH_SEMEVAL2010, self).__init__(
             data_folder,
             train_file=train_file_name,
             test_file="semeval2010-task8-test.conllu",
+            token_annotation_fields=['ner'],
             in_memory=in_memory,
         )
 
@@ -165,7 +174,8 @@ class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
             label_inverted = label.replace("e1", "e3")
             label_inverted = label_inverted.replace("e2", "e1")
             label_inverted = label_inverted.replace("e3", "e2")
-            relation_inverted = ";".join([str(obj_start + 1), str(obj_end), str(subj_start + 1), str(subj_end), label_inverted])
+            relation_inverted = ";".join(
+                [str(obj_start + 1), str(obj_end), str(subj_start + 1), str(subj_end), label_inverted])
 
         metadata = {
             "text": " ".join(tokens),
@@ -196,8 +206,14 @@ class SEMEVAL_2010_TASK_8(CoNLLUCorpus):
         return conllu.TokenList(tokens=token_dicts, metadata=metadata)
 
 
-class TACRED(CoNLLUCorpus):
+class RE_ENGLISH_TACRED(CoNLLUCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+        """
+        TAC Relation Extraction Dataset with 41 relations from https://nlp.stanford.edu/projects/tacred/.
+        Manual download is required for this dataset.
+        :param base_path:
+        :param in_memory:
+        """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
@@ -220,8 +236,9 @@ class TACRED(CoNLLUCorpus):
                 data_folder=data_folder,
             )
 
-        super(TACRED, self).__init__(
+        super(RE_ENGLISH_TACRED, self).__init__(
             data_folder,
+            token_annotation_fields=['ner'],
             in_memory=in_memory,
         )
 
@@ -301,7 +318,7 @@ class TACRED(CoNLLUCorpus):
         return conllu.TokenList(tokens=token_dicts, metadata=metadata)
 
 
-class CoNLL04(CoNLLUCorpus):
+class RE_ENGLISH_CONLL04(CoNLLUCorpus):
     def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
         if type(base_path) == str:
             base_path: Path = Path(base_path)
@@ -332,8 +349,9 @@ class CoNLL04(CoNLLUCorpus):
                 data_folder=data_folder,
             )
 
-        super(CoNLL04, self).__init__(
+        super(RE_ENGLISH_CONLL04, self).__init__(
             data_folder,
+            token_annotation_fields=['ner'],
             in_memory=in_memory,
         )
 
@@ -462,20 +480,24 @@ class CoNLL04(CoNLLUCorpus):
         return conllu.TokenList(tokens=token_dicts, metadata=metadata)
 
 
-class DrugProt(CoNLLUCorpus):
+class RE_ENGLISH_DRUGPROT(CoNLLUCorpus):
     def __init__(
-        self,
-        base_path: Union[str, Path] = None,
-        in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
+            self,
+            base_path: Union[str, Path] = None,
+            in_memory: bool = True,
+            sentence_splitter: SentenceSplitter = SegtokSentenceSplitter(),
     ):
+        """
+        DrugProt corpus: Biocreative VII Track 1 from https://zenodo.org/record/5119892#.YSdSaVuxU5k/ on
+        drug and chemical-protein interactions.
+        """
         if type(base_path) == str:
             base_path: Path = Path(base_path)
 
         self.sentence_splitter = sentence_splitter
 
         # this dataset name
-        dataset_name = self.__class__.__name__.lower() + "_" + type(self.sentence_splitter).__name__
+        dataset_name = self.__class__.__name__.lower() + "_" + type(self.sentence_splitter).__name__ + "_v3"
 
         # default dataset folder is the cache root
         if not base_path:
@@ -483,7 +505,7 @@ class DrugProt(CoNLLUCorpus):
         data_folder = base_path / dataset_name
 
         drugprot_url = (
-            "https://zenodo.org/record/5042151/files/drugprot-gs-training-development.zip"
+            "https://zenodo.org/record/5119892/files/drugprot-training-development-test-background.zip"
         )
         data_file = data_folder / "drugprot-train.conllu"
 
@@ -491,13 +513,14 @@ class DrugProt(CoNLLUCorpus):
             source_data_folder = data_folder / "original"
             cached_path(drugprot_url, source_data_folder)
             self.extract_and_convert_to_conllu(
-                data_file=source_data_folder / "drugprot-gs-training-development.zip",
+                data_file=source_data_folder / "drugprot-training-development-test-background.zip",
                 data_folder=data_folder,
             )
 
-        super(DrugProt, self).__init__(
+        super(RE_ENGLISH_DRUGPROT, self).__init__(
             data_folder,
             in_memory=in_memory,
+            token_annotation_fields=["ner", "ner-2"],
             sample_missing_splits=False,
         )
 
@@ -512,14 +535,16 @@ class DrugProt(CoNLLUCorpus):
                 pmid_to_entities = defaultdict(dict)
                 pmid_to_relations = defaultdict(set)
 
-                with zip_file.open(f"drugprot-gs-training-development/{split}/drugprot_{split}_entities.tsv") as entites_file:
+                with zip_file.open(
+                        f"drugprot-gs-training-development/{split}/drugprot_{split}_entities.tsv") as entites_file:
                     for line in io.TextIOWrapper(entites_file, encoding="utf-8"):
                         fields = line.strip().split("\t")
                         pmid, ent_id, ent_type, start, end, mention = fields
                         pmid_to_entities[pmid][ent_id] = (
                             ent_type, int(start), int(end), mention)
 
-                with zip_file.open(f"drugprot-gs-training-development/{split}/drugprot_{split}_relations.tsv") as relations_file:
+                with zip_file.open(
+                        f"drugprot-gs-training-development/{split}/drugprot_{split}_relations.tsv") as relations_file:
                     for line in io.TextIOWrapper(relations_file, encoding="utf-8"):
                         fields = line.strip().split("\t")
                         pmid, rel_type, arg1, arg2 = fields
@@ -528,7 +553,8 @@ class DrugProt(CoNLLUCorpus):
                         pmid_to_relations[pmid].add((rel_type, ent1, ent2))
 
                 tokenlists: List[conllu.TokenList] = []
-                with zip_file.open(f"drugprot-gs-training-development/{split}/drugprot_{split}_abstracs.tsv") as abstracts_file:
+                with zip_file.open(
+                        f"drugprot-gs-training-development/{split}/drugprot_{split}_abstracs.tsv") as abstracts_file:
                     for line in io.TextIOWrapper(abstracts_file, encoding="utf-8"):
                         fields = line.strip().split("\t")
                         pmid, title, abstract = fields
@@ -561,6 +587,7 @@ class DrugProt(CoNLLUCorpus):
                 #             for example in json.load(source_file):
                 #                 token_list = self._tacred_example_to_token_list(example)
                 #                 target_file.write(token_list.serialize())
+
     def char_spans_to_token_spans(self, char_spans, token_offsets):
         token_starts = [s[0] for s in token_offsets]
         token_ends = [s[1] for s in token_offsets]
@@ -591,6 +618,7 @@ class DrugProt(CoNLLUCorpus):
         sentence_id = 1
         for offset, sents in [(0, title_sentences), (abstract_offset, abstract_sentences)]:
             for sent in sents:
+
                 sent_char_start = sent.start_pos + offset
                 sent_char_end = sent.end_pos + offset
 
@@ -601,19 +629,30 @@ class DrugProt(CoNLLUCorpus):
 
                 entity_char_spans = [(entities[entity_id][1], entities[entity_id][2]) for entity_id in entities_in_sent]
 
-                token_offsets = [(sent.start_pos + token.start_pos + offset, sent.start_pos + token.end_pos + offset) for token in sent.tokens]
+                token_offsets = [(sent.start_pos + token.start_pos + offset, sent.start_pos + token.end_pos + offset)
+                                 for token in sent.tokens]
                 entity_token_spans = self.char_spans_to_token_spans(entity_char_spans, token_offsets)
 
                 tags_1 = ["O"] * len(sent)
                 tags_2 = ["O"] * len(sent)
                 entity_id_to_token_idx = {}
-                prev_entity_span = None
-                for entity_id, entity_span in sorted(zip(entities_in_sent, entity_token_spans), key=lambda x: x[1][0]):
+
+                ordered_entities = sorted(zip(entities_in_sent, entity_token_spans), key=lambda x: x[1][1] - x[1][0],
+                                          reverse=True)
+
+                for entity_id, entity_span in ordered_entities:
+
                     entity_id_to_token_idx[entity_id] = entity_span
 
-                    overlap = self.has_overlap(prev_entity_span, entity_span)
+                    # check if first tag row is already occupied
+                    token_start, token_end = entity_span
+                    tag_1_occupied = False
+                    for i in range(token_start, token_end):
+                        if tags_1[i] != "O":
+                            tag_1_occupied = True
 
-                    tags = tags_2 if overlap else tags_1
+                    # if first tag row is occupied, use second tag row
+                    tags = tags_2 if tag_1_occupied else tags_1
 
                     tag = entities[entity_id][0]
                     token_start, token_end = entity_span
@@ -625,11 +664,8 @@ class DrugProt(CoNLLUCorpus):
 
                         tags[i] = prefix + tag
 
-                    prev_entity_span = entity_span
-
                 token_dicts = []
                 for i, (token, tag_1, tag_2) in enumerate(zip(sent, tags_1, tags_2)):
-
                     # hardcoded mapping TODO: perhaps find nicer solution
                     tag_1 = tag_1.replace("GENE-N", "GENE")
                     tag_1 = tag_1.replace("GENE-Y", "GENE")

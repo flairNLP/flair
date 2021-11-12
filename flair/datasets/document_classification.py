@@ -15,7 +15,7 @@ from flair.data import (
 )
 from flair.tokenization import SegtokTokenizer, SpaceTokenizer
 from flair.datasets.base import find_train_dev_test_files
-from flair.file_utils import cached_path, unzip_file
+from flair.file_utils import cached_path, unzip_file, unpack_file
 
 import logging
 log = logging.getLogger("flair")
@@ -41,6 +41,7 @@ class ClassificationCorpus(Corpus):
             label_name_map: Dict[str, str] = None,
             skip_labels: List[str] = None,
             allow_examples_without_labels=False,
+            sample_missing_splits: bool = True,
             encoding: str = 'utf-8',
     ):
         """
@@ -60,7 +61,7 @@ class ClassificationCorpus(Corpus):
         even this is too much for your memory, use 'disk'.
         :param label_name_map: Optionally map label names to different schema.
         :param allow_examples_without_labels: set to True to allow Sentences without label in the corpus.
-        :param encoding: Default is 'uft-8' but some datasets are in 'latin-1
+        :param encoding: Default is 'utf-8' but some datasets are in 'latin-1
         :return: a Corpus with annotated train, dev and test data
         """
 
@@ -113,7 +114,7 @@ class ClassificationCorpus(Corpus):
         ) if dev_file is not None else None
 
         super(ClassificationCorpus, self).__init__(
-            train, dev, test, name=str(data_folder)
+            train, dev, test, name=str(data_folder), sample_missing_splits=sample_missing_splits
         )
 
         log.info(f"Initialized corpus {self.name} (label type name is '{label_type}')")
@@ -155,7 +156,7 @@ class ClassificationDataset(FlairDataset):
         even this is too much for your memory, use 'disk'.
         :param label_name_map: Optionally map label names to different schema.
         :param allow_examples_without_labels: set to True to allow Sentences without label in the Dataset.
-        :param encoding: Default is 'uft-8' but some datasets are in 'latin-1
+        :param encoding: Default is 'utf-8' but some datasets are in 'latin-1
         :return: list of sentences
         """
         if type(path_to_file) == str:
@@ -350,7 +351,7 @@ class CSVClassificationCorpus(Corpus):
         :param tokenizer: Tokenizer for dataset, default is SegtokTokenizer
         :param in_memory: If True, keeps dataset as Sentences in memory, otherwise only keeps strings
         :param skip_header: If True, skips first line because it is header
-        :param encoding: Default is 'uft-8' but some datasets are in 'latin-1
+        :param encoding: Default is 'utf-8' but some datasets are in 'latin-1
         :param fmtparams: additional parameters for the CSV file reader
         :return: a Corpus with annotated train, dev and test data
         """
@@ -1257,13 +1258,17 @@ class SENTEVAL_SST_BINARY(ClassificationCorpus):
             cached_path('https://raw.githubusercontent.com/PrincetonML/SIF/master/data/sentiment-dev',
                         Path("datasets") / dataset_name / 'raw')
 
-            # create train.txt file by iterating over pos and neg file
-            with open(data_folder / "train.txt", "a") as out_file, open(
-                    data_folder / 'raw' / "sentiment-train") as in_file:
-                for line in in_file:
-                    fields = line.split('\t')
-                    label = 'POSITIVE' if fields[1].rstrip() == '1' else 'NEGATIVE'
-                    out_file.write(f"__label__{label} {fields[0]}\n")
+            original_filenames = ["sentiment-train", "sentiment-dev", "sentiment-test"]
+            new_filenames = ["train.txt", "dev.txt", "test.txt"]
+
+            # create train dev and test files in fasttext format
+            for new_filename, original_filename in zip(new_filenames, original_filenames):
+                with open(data_folder / new_filename, "a") as out_file, open(
+                        data_folder / 'raw' / original_filename) as in_file:
+                    for line in in_file:
+                        fields = line.split('\t')
+                        label = 'POSITIVE' if fields[1].rstrip() == '1' else 'NEGATIVE'
+                        out_file.write(f"__label__{label} {fields[0]}\n")
 
         super(SENTEVAL_SST_BINARY, self).__init__(
             data_folder,
@@ -1326,6 +1331,107 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
             memory_mode=memory_mode,
             **corpusargs,
         )
+
+
+class GLUE_COLA(ClassificationCorpus):
+    """
+    Corpus of Linguistic Acceptability from GLUE benchmark (https://gluebenchmark.com/tasks).
+    The task is to predict whether an English sentence is grammatically correct.
+    Additionaly to the Corpus we have eval_dataset containing the unlabeled test data for Glue evaluation.
+    """
+
+    def __init__(self,
+                label_type="acceptability",
+                base_path: Union[str, Path] = None,
+                tokenizer: Tokenizer = SegtokTokenizer(),
+                **corpusargs):
+        """
+        Instantiates CoLA dataset
+        :param base_path: Provide this only if you store the COLA corpus in a specific folder.
+        :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
+        :param corpusargs: Other args for ClassificationCorpus.
+        """
+
+        if type(base_path) == str:
+            base_path: Path = Path(base_path)
+
+        dataset_name = "glue"
+
+        # if no base_path provided take cache root
+        if not base_path:
+            base_path = flair.cache_root / "datasets"
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        cola_path = "https://dl.fbaipublicfiles.com/glue/data/CoLA.zip"
+
+        data_file = data_folder / "CoLA/train.txt"
+
+        # if data is not downloaded yet, download it
+        if not data_file.is_file():
+            # get the zip file
+            zipped_data_path = cached_path(cola_path, Path("datasets") / dataset_name)
+
+            unpack_file(zipped_data_path, data_folder, mode="zip", keep=False)
+
+            # move original .tsv files to another folder
+            Path(data_folder / "CoLA/train.tsv").rename(data_folder / "CoLA/original/train.tsv")
+            Path(data_folder / "CoLA/dev.tsv").rename(data_folder / "CoLA/original/dev.tsv")
+            Path(data_folder / "CoLA/test.tsv").rename(data_folder / "CoLA/original/test.tsv")
+
+            label_map = {0: 'not_grammatical', 1: 'grammatical'}
+
+            # create train and dev splits in fasttext format
+            for split in ["train", "dev"]:
+                with open(data_folder / "CoLA" / (split + ".txt"), "a") as out_file, open(
+                        data_folder / "CoLA" / "original" / (split + ".tsv")) as in_file:
+                    for line in in_file:
+                        fields = line.rstrip().split('\t')
+                        label = int(fields[1])
+                        sentence = fields[3]
+                        out_file.write(f"__label__{label_map[label]} {sentence}\n")
+
+            # create eval_dataset file with no labels
+            with open(data_folder / "CoLA" / "eval_dataset.txt", "a") as out_file, open(
+                    data_folder / "CoLA" / "original" / "test.tsv",) as in_file:
+                for line in in_file:
+                    fields = line.rstrip().split('\t')
+                    sentence = fields[1]
+                    out_file.write(f"{sentence}\n")
+
+        super(GLUE_COLA, self).__init__(
+            data_folder / "CoLA",
+            label_type=label_type,
+            tokenizer=tokenizer,
+            **corpusargs,
+        )
+
+        self.eval_dataset = ClassificationDataset(
+            data_folder / "CoLA/eval_dataset.txt",
+            label_type=label_type,
+            allow_examples_without_labels=True,
+            tokenizer=tokenizer,
+            memory_mode="full",
+        )
+
+    """
+    This function creates a tsv file with predictions of the eval_dataset (after calling 
+    classifier.predict(corpus.eval_dataset, label_name='acceptability')). The resulting file 
+    is called CoLA.tsv and is in the format required for submission to the Glue Benchmark.
+    """
+
+    def tsv_from_eval_dataset(self, folder_path: Union[str, Path]):
+
+        if type(folder_path) == str:
+            folder_path = Path(folder_path)
+        folder_path = folder_path / 'CoLA.tsv'
+
+        with open(folder_path, mode='w') as tsv_file:
+            tsv_file.write("index\tprediction\n")
+            for index, datapoint in enumerate(self.eval_dataset):
+                reverse_label_map = {'grammatical': 1, 'not_grammatical': 0}
+                predicted_label = reverse_label_map[datapoint.get_labels('acceptability')[0].value]
+                tsv_file.write(str(index) + '\t' + predicted_label + '\n')
 
 
 class GO_EMOTIONS(ClassificationCorpus):
