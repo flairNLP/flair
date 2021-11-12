@@ -126,7 +126,7 @@ class Lemmatizer(flair.nn.Model):
     def label_type(self):
         return self._label_type
 
-    def words_to_char_indices(self, words: List[str], end_symbol=True, start_symbol= False, padding_in_front = False,seq_length=None):
+    def words_to_char_indices(self, tokens: List[str], end_symbol=True, start_symbol= False, padding_in_front = False, seq_length=None):
         """
         For a given list of strings this function creates index vectors that represent the characters of the strings.
         Each string is represented by sequence_length (maximum string length + entries for special symbold) many indices representing characters
@@ -140,25 +140,25 @@ class Lemmatizer(flair.nn.Model):
         # add additional columns for special symbols if necessary
         c = int(end_symbol) + int(start_symbol)
 
-        max_length= max(len(label) for label in words) + c
+        max_length= max(len(token) for token in tokens) + c
         if not seq_length:
             sequence_length = max_length
         else:
             sequence_length=max(seq_length,max_length)
 
         # initialize with dummy symbols
-        tensor = self.dummy_index*torch.ones(len(words), sequence_length, dtype=torch.long).to(flair.device)
+        tensor = self.dummy_index*torch.ones(len(tokens), sequence_length, dtype=torch.long).to(flair.device)
 
-        for i in range(len(words)):
-            dif = sequence_length - (len(words[i]) + c)
+        for i in range(len(tokens)):
+            dif = sequence_length - (len(tokens[i]) + c)
             shift = 0
             if padding_in_front:
                 shift += dif
             if start_symbol:
                 tensor[i][0 + shift] = self.start_index
             if end_symbol:
-                tensor[i][len(words[i]) + int(start_symbol) + shift] = self.end_index
-            for index, letter in enumerate(words[i]):
+                tensor[i][len(tokens[i]) + int(start_symbol) + shift] = self.end_index
+            for index, letter in enumerate(tokens[i]):
                 tensor[i][index + int(start_symbol) + shift] = self.char_dictionary.get_idx_for_item(letter)
 
         return tensor
