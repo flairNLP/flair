@@ -66,11 +66,11 @@ class MultitaskModel(flair.nn.Model):
         """
         sent_idx_to_model = {}
         for sentence_id, sentence in enumerate(sentences):
-            task = random.choice(sentence.multitask_annotations.get("multitask_assignments"))
-            if not task.task_id in sent_idx_to_model:
-                sent_idx_to_model[task.task_id] = [sentence_id]
-            elif task.task_id in sent_idx_to_model:
-                sent_idx_to_model[task.task_id].append(sentence_id)
+            multitask_annotation = random.choice(sentence.multitask_annotations)
+            if not multitask_annotation.task_id in sent_idx_to_model:
+                sent_idx_to_model[multitask_annotation.task_id] = [sentence_id]
+            elif multitask_annotation.task_id in sent_idx_to_model:
+                sent_idx_to_model[multitask_annotation.task_id].append(sentence_id)
 
         return sent_idx_to_model
 

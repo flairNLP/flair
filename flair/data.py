@@ -272,7 +272,7 @@ class DataPoint:
 
     def __init__(self):
         self.annotation_layers = {}
-        self.multitask_annotations = None
+        self.multitask_annotations = []
 
     @property
     @abstractmethod
@@ -323,17 +323,7 @@ class DataPoint:
         return self.annotation_layers[typename] if typename in self.annotation_layers else []
 
     def add_multitask_id(self, task_id: str):
-
-        if self.multitask_annotations is None:
-            self.__setattr__("multitask_annotations", {})
-
-        key = "multitask_assignments"
-
-        if key not in self.multitask_annotations:
-            self.multitask_annotations[key] = [MultitaskAssignment(task_id)]
-        else:
-            self.multitask_annotations[key].append(MultitaskAssignment(task_id))
-
+        self.multitask_annotations.append(MultitaskAssignment(task_id))
         return self
 
     @property
