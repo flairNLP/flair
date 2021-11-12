@@ -244,6 +244,7 @@ class DependencyParser(flair.nn.Model):
 
         lines: List[str] = []
 
+        average_over = 0
         eval_loss_arc = 0
         eval_loss_rel = 0
 
@@ -253,7 +254,7 @@ class DependencyParser(flair.nn.Model):
         parsing_metric = ParsingMetric()
 
         for batch in data_loader:
-
+            average_over += 1
             with torch.no_grad():
                 score_arc, score_rel = self.forward(batch)
                 loss_arc, loss_rel = self._calculate_loss(score_arc, score_rel, batch)
@@ -280,7 +281,7 @@ class DependencyParser(flair.nn.Model):
                 lines.append("\n")
 
             for sentence in batch:
-
+                
                 gold_tags = [token.get_tag(gold_label_type).value for token in sentence.tokens]
                 predicted_tags = [tag.tag for tag in sentence.get_spans("predicted")]
 
@@ -291,8 +292,8 @@ class DependencyParser(flair.nn.Model):
 
             store_embeddings(batch, embedding_storage_mode)
 
-        eval_loss_arc /= len(data_loader)
-        eval_loss_rel /= len(data_loader)
+        eval_loss_arc /= average_over
+        eval_loss_rel /= average_over
 
         if out_path is not None:
             with open(out_path, "w", encoding="utf-8") as outfile:
@@ -329,7 +330,7 @@ class DependencyParser(flair.nn.Model):
             log_header=log_header,
             detailed_results=detailed_result,
             classification_report=classification_report_dict,
-            loss=eval_loss_rel
+            loss=eval_loss_rel+eval_loss_arc
         )
         return result
 
