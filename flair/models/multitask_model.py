@@ -110,6 +110,12 @@ class MultitaskModel(flair.nn.Model):
                                                      main_evaluation_metric=main_evaluation_metric,
                                                      exclude_labels=exclude_labels,
                                                      gold_label_dictionary=gold_label_dictionary)
+
+            log.info(f"{task} - {self.__getattr__(task)._get_name()} - "
+                     f"{self.__getattr__(task).corpus_name} - {self.label_type.get(task)} - "
+                     f"loss: {result.loss} - {main_evaluation_metric[1]} "
+                     f"({main_evaluation_metric[0]})  {round(result.main_score, 4)}")
+
             loss += result.loss
             main_score += result.main_score
             all_detailed_results += 50*'-' + "\n\n" +\
