@@ -4,28 +4,26 @@ from pathlib import Path
 from typing import Optional, Dict, Union, List
 from urllib.error import HTTPError
 
-# Torch Imports
 import torch
 import torch.nn
 import torch.nn.functional
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_sequence
 
-# Flair imports
 import flair.nn
 from flair.data import Sentence, Dictionary
 from flair.embeddings import TokenEmbeddings, StackedEmbeddings
 from flair.training_utils import store_embeddings
 from flair.file_utils import cached_path, unzip_file
 
-# Sequence tagger utils imports
 from .sequence_tagger_utils.crf import CRF
 from .sequence_tagger_utils.viterbi import ViterbiLoss, ViterbiDecoder
 from .sequence_tagger_utils.utils import init_stop_tag_embedding, get_tags_tensor, obtain_labels, START_TAG, STOP_TAG
 
+
 log = logging.getLogger("flair")
 
 
-class SequenceTagger(flair.nn.Classifier):
+class SequenceTagger(flair.nn.DefaultClassifier):
 
     def __init__(
             self,
@@ -43,6 +41,8 @@ class SequenceTagger(flair.nn.Classifier):
             dropout: float = 0.0,
             word_dropout: float = 0.0,
             locked_dropout: float = 0.5,
+            train_initial_hidden_state: bool = False,
+            beta: float = 1.0,
             loss_weights: Dict[str, float] = None,
     ):
         """
@@ -64,6 +64,7 @@ class SequenceTagger(flair.nn.Classifier):
         :param dropout: If > 0, then use dropout.
         :param word_dropout: If > 0, then use word dropout.
         :param locked_dropout: If > 0, then use locked dropout.
+        :param train_initial_hidden_state: if True, trains initial hidden state of RNN
         :param beta: Beta value for evaluation metric.
         :param loss_weights: Dictionary of weights for labels for the loss function
             (if any label's weight is unspecified it will default to 1.0)
@@ -105,6 +106,7 @@ class SequenceTagger(flair.nn.Classifier):
         if self.reproject_embeddings:
             self.embedding2nn = torch.nn.Linear(embedding_dim, embedding_dim)
 
+        # ----- Dropout layers -----
         if self.use_dropout:
             self.dropout = torch.nn.Dropout(dropout)
         if self.use_word_dropout:
@@ -112,18 +114,25 @@ class SequenceTagger(flair.nn.Classifier):
         if self.use_locked_dropout:
             self.locked_dropout = flair.nn.LockedDropout(locked_dropout)
 
+        # ----- RNN layer -----
         if use_rnn:
             # If Shared RNN provided, create one for model
-            if not rnn:
-                self.rnn = self.RNN(rnn_type, rnn_layers,  hidden_size, bidirectional, rnn_input_dim=embedding_dim)
-            else:
+            if rnn:
                 self.rnn = rnn
+            else:
+                self.rnn = self.RNN(rnn_type, rnn_layers,  hidden_size, bidirectional, rnn_input_dim=embedding_dim)
             num_directions = 2 if self.bidirectional else 1
             hidden_output_dim = self.rnn.hidden_size * num_directions
+
+            self.train_initial_hidden_state = train_initial_hidden_state
+            if self.train_initial_hidden_state:
+                self.hs_initializer, self.lstm_init_h, self.lstm_init_c = self.init_initial_hidden_state()
+
         else:
             self.linear = torch.nn.Linear(embedding_dim, embedding_dim)
             hidden_output_dim = embedding_dim
 
+        # ----- CRF / Linear layer -----
         if use_crf:
             self.crf = CRF(hidden_output_dim, self.tagset_size)
             self.viterbi_loss = ViterbiLoss(tag_dictionary)
@@ -149,14 +158,18 @@ class SequenceTagger(flair.nn.Classifier):
                 weight_list[i] = loss_weights[tag]
         return torch.FloatTensor(weight_list).to(flair.device)
 
-    @staticmethod
-    def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
-        filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
-        if len(sentences) != len(filtered_sentences):
-            log.warning(
-                f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens."
-            )
-        return filtered_sentences
+    def init_initial_hidden_state(self, num_directions: int):
+        hs_initializer = torch.nn.init.xavier_normal_
+        lstm_init_h = torch.nn.Parameter(
+            torch.randn(self.nlayers * num_directions, self.hidden_size),
+            requires_grad=True,
+        )
+        lstm_init_c = torch.nn.Parameter(
+            torch.randn(self.nlayers * num_directions, self.hidden_size),
+            requires_grad=True,
+        )
+
+        return hs_initializer, lstm_init_h, lstm_init_c
 
     @staticmethod
     def RNN(
@@ -187,6 +200,12 @@ class SequenceTagger(flair.nn.Classifier):
             raise Exception(f"Unknown RNN type: {rnn_type}. Please use either LSTM, GRU or RNN.")
 
         return RNN
+
+    def forward_pass(self,
+                     sentences: Union[List[DataPoint], DataPoint],
+                     return_label_candidates: bool = False,
+                     ):
+        pass
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.Tensor:
         """
@@ -584,6 +603,15 @@ class SequenceTagger(flair.nn.Classifier):
                 Path(flair.cache_root / 'models' / model_folder).rmdir()  # remove folder again if not valid
 
         return model_path
+
+    @staticmethod
+    def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
+        filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
+        if len(sentences) != len(filtered_sentences):
+            log.warning(
+                f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens."
+            )
+        return filtered_sentences
 
 
 class MultiTagger:
