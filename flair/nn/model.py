@@ -174,6 +174,10 @@ class Classifier(Model):
     Currently, the SequenceTagger implements this class directly, while all other classifiers in Flair
     implement the DefaultClassifier base class which implements Classifier."""
 
+    def __init__(self):
+        super().__init__()
+        self.corpus_name = ""
+
     def evaluate(
             self,
             data_points: Union[List[DataPoint], Dataset],

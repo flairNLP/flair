@@ -97,24 +97,33 @@ class MultitaskModel(flair.nn.Model):
 
         batch_split = self.split_batch_to_task_ids(data_points)
 
-        # Evaluate each split on its respective model
         loss = 0
         main_score = 0
+        all_detailed_results = ''
         for task, split in batch_split.items():
             result = self.__getattr__(task).evaluate(data_points=[data_points[i] for i in split],
-                                                   gold_label_type=gold_label_type[task],
-                                                   out_path=out_path,
-                                                   embedding_storage_mode=embedding_storage_mode,
-                                                   mini_batch_size=mini_batch_size,
-                                                   num_workers=num_workers,
-                                                   main_evaluation_metric=main_evaluation_metric,
-                                                   exclude_labels=exclude_labels,
-                                                   gold_label_dictionary=gold_label_dictionary)
+                                                     gold_label_type=gold_label_type[task],
+                                                     out_path=f'{out_path}_{task}.txt',
+                                                     embedding_storage_mode=embedding_storage_mode,
+                                                     mini_batch_size=mini_batch_size,
+                                                     num_workers=num_workers,
+                                                     main_evaluation_metric=main_evaluation_metric,
+                                                     exclude_labels=exclude_labels,
+                                                     gold_label_dictionary=gold_label_dictionary)
             loss += result.loss
             main_score += result.main_score
+            all_detailed_results += 50*'-' + "\n\n" +\
+                                    task + " - " +\
+                                    self.__getattr__(task)._get_name() + " - " +\
+                                    "Corpus: " + self.__getattr__(task).corpus_name + " - " +\
+                                    "Label type: " + self.label_type.get(task) + "\n\n" + \
+                                    result.detailed_results
 
         result.loss = (loss / len(batch_split))
         result.main_score = (main_score / len(batch_split))
+
+        # the detailed result is the combination of all detailed results
+        result.detailed_results = all_detailed_results
 
         return result
 

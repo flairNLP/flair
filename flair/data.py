@@ -1532,9 +1532,12 @@ class MultitaskCorpus(MultiCorpus):
 
             task_id = f"task_{id}"
             corpus = corpus_config.get("corpus")
+            model = corpus_config.get("model")
 
             corpus.set_multitask_id(task_id)
             if not corpus in corpora: corpora.append(corpus)
+
+            model.corpus_name = corpus.__class__.__name__
 
             self.models[task_id] = corpus_config.get("model")
 
