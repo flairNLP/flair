@@ -106,7 +106,7 @@ Span [3]: "Berlin"   [− Labels: LOC (0.9992)]
 * [Tutorial 5: Embedding Documents](/resources/docs/KOR_docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md)
 * [Tutorial 6: Loading a Dataset](/resources/docs/KOR_docs/TUTORIAL_6_CORPUS.md)
 * [Tutorial 7: Training a Model](/resources/docs/KOR_docs/TUTORIAL_7_TRAINING_A_MODEL.md)
-* [Tutorial 8: Training your own Flair Embeddings](/resources/docs/KOR_docs/TUTORIAL_8_TRAINING_LM_EMBEDDINGS.md)
+* [Tutorial 8: Training your own Flair Embeddings](/resources/docs/KOR_docs/TUTORIAL_8_MODEL_OPTIMIZATION.md)
 * [Tutorial 9: Training your own Flair Embeddings](/resources/docs/KOR_docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
 * [Tutorial 10: Training a Zero Shot Text Classifier (TARS)](/resources/docs/KOR_docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)
 
