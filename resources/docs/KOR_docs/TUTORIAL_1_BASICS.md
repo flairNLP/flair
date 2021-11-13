@@ -265,4 +265,4 @@ for label in sentence.get_labels('topic'):
 
 지금까지 문장을 만들고 수동으로 라벨을 붙이는 방법에 대해 알아보았습니다.
 
-이제 [사전 교육된 모델](/docs/KOR_docs)/TUTORIAL_2_TAGGING.md)을 사용하여 텍스트에 태그를 지정하는 방법에 대해 알아보겠습니다.
+이제 [사전 교육된 모델](/docs/KOR_docs/TUTORIAL_2_TAGGING.md)을 사용하여 텍스트에 태그를 지정하는 방법에 대해 알아보겠습니다.
