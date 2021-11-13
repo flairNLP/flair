@@ -1,6 +1,6 @@
 # 튜토리얼 6 : 훈련 데이터 불러오기
 이번 튜토리얼은 모델을 훈련하기 위해 말뭉치(corpus)를 로드하는 내용을 다룹니다. 
-이번 튜토리얼은 여러분이 라이브러리의 [기본 유형](/resources/docs/TUTORIAL_1_BASICS.md)에 익숙하다 가정하고 진행됩니다.
+이번 튜토리얼은 여러분이 라이브러리의 [기본 유형](/resources/docs/KOR_docs/TUTORIAL_1_BASICS.md)에 익숙하다 가정하고 진행됩니다.
 
 ## 말뭉치 오브젝트
 `corpus`는 모델을 훈련하는데 사용되는 데이터 세트입니다. 이는 모델 훈련 중 훈련, 검증 및 테스트 분할에 사용되는 문장들, 개발을 위한 문장 목록 및 테스트 문장 목록으로 구성됩니다.
@@ -483,4 +483,4 @@ corpus: Corpus = ClassificationCorpus(data_folder,
 `FastText` 형식은 열이 없기 때문에 주석의 이름을 직접 정의해야 합니다. 위 예제는 `label_type='topic'`인 말뭉치를 로드하고 있음을 나타냅니다.
 
 ## 다음 튜토리얼
-이제 [나만의 모델을 훈련](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)을 알아보겠습니다.
+이제 [나만의 모델을 훈련](/resources/docs/KOR_docs/TUTORIAL_7_TRAINING_A_MODEL.md)을 알아보겠습니다.
