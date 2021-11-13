@@ -1,4 +1,4 @@
-# doc_flairNLP
+# Korean documentation for flairNLP
 flairNLP를 한국어로 이해하기 쉽게 번역한 튜토리얼 번역본입니다.    
 
 
