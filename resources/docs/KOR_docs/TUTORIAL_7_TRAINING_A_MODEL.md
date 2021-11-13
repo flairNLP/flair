@@ -4,10 +4,10 @@
 훈련하는 방법을 살펴볼 것입니다.
 
 이 튜토리얼을 학습하기 전에, 다음의 항목들을 이미 알고있다고 가정할 것입니다.
-* Base types: [TUTORIAL_1_BASICS](/docs/TUTORIAL_1_BASICS.md)
-* Word embeddings: [TUTORIAL_3_WORD_EMBEDDING](/docs/TUTORIAL_3_WORD_EMBEDDING.md)
-* Flair embeddings: [TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING](/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md)
-* Load a corpus: [TUTORIAL_6_CORPUS](/docs/TUTORIAL_6_CORPUS.md)
+* Base types: [TUTORIAL_1_BASICS](/resources/docs/KOR_docs/TUTORIAL_1_BASICS.md)
+* Word embeddings: [TUTORIAL_3_WORD_EMBEDDING](/resources/docs/KOR_docs/TUTORIAL_3_WORD_EMBEDDING.md)
+* Flair embeddings: [TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING](/resources/docs/KOR_docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md)
+* Load a corpus: [TUTORIAL_6_CORPUS](/resources/docs/KOR_docs/TUTORIAL_6_CORPUS.md)
 
 
 
@@ -78,7 +78,7 @@ print(sentence.to_tagged_string())
 
 
 NER에 대한 시퀀스 레이블링 모델을 훈련하려면 위의 스크립트를 약간만 수정하면 됩니다.   
-CONLL_03(데이터를 수동으로 다운로드하거나 [different NER corpus](/docs/TUTORIAL_6_CORPUS.md#datasets-included-in-flair) 사용)과 같은 NER corpus를 로드하고,  
+CONLL_03(데이터를 수동으로 다운로드하거나 [different NER corpus](/resources/docs/KOR_docs/TUTORIAL_6_CORPUS.md#datasets-included-in-flair) 사용)과 같은 NER corpus를 로드하고,  
 `label_type'을 'ner'로 변경한 후, GloVe 및 Flair로 구성된 'StackedEmbedding'을 사용하세요:
 
 ```python
@@ -377,7 +377,7 @@ Flair의 많은 임베딩은 런타임 측면에서 생성하는 데 다소 비�
 ## Next
 
 훈련 데이터가 없거나 아주 적은 경우 TARS 접근 방식이 가장 적합할 수 있습니다.   
-[TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL](/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md): Few-shot and zero-shot classification에 대한 TARS 튜토리얼을 확인하세요.
+[TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL](/resources/docs/KOR_docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md): Few-shot and zero-shot classification에 대한 TARS 튜토리얼을 확인하세요.
 
 또는   
-[TUTORIAL_9_TRAINING_LM_EMBEDDINGS](/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md): Training your own embeddings을 살펴보세요.
+[TUTORIAL_9_TRAINING_LM_EMBEDDINGS](/resources/docs/KOR_docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md): Training your own embeddings을 살펴보세요.
