@@ -75,7 +75,7 @@ print(sentence.get_embedding())
 **주의** RNN 임베딩을 초기화하면 RNN 가중치가 무작위로 초기화됩니다! 사용을 위해서 사용자의 의도에 알맞게 훈련돼야 합니다.
 
 ## TransformerDocumentEmbeddings
-이미 훈련된 [변환기](https://github.com/huggingface/transformers를 통해 전체 문장을 임베딩합니다. 임베딩의 식별자를 통해 다른 변환기를 사용할 수 있습니다.
+이미 훈련된 [변환기](https://github.com/huggingface/transformers)를 통해 전체 문장을 임베딩합니다. 임베딩의 식별자를 통해 다른 변환기를 사용할 수 있습니다.
 
 표준 BERT 변환 모델의 예시입니다:
 ```python
