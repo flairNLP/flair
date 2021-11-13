@@ -430,7 +430,7 @@ class ModelTrainer:
                 batch_loader = DataLoader(
                     train_data,
                     batch_size=mini_batch_size,
-                    shuffle=shuffle if epoch > 1 else False,  # never shuffle the first epoch
+                    shuffle=shuffle if epoch > 1 or isinstance(self.corpus, MultiCorpus) else False,  # never shuffle the first epoch
                     num_workers=num_workers,
                     sampler=sampler,
                 )
