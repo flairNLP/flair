@@ -8,7 +8,7 @@ Flair에는 잘 알려진 하이퍼 매개변수 선택 도구인 [hyperopt](htt
 
 먼저 말뭉치를 로드해야 합니다. 다음 예에서 사용된 [AGNews corpus](https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html)를 로드하려면 
 먼저 다운로드하여 올바른 형식으로 변환하세요.   
-자세한 내용은 [tutorial 6](/docs/TUTORIAL_6_CORPUS.md)을 확인하세요.
+자세한 내용은 [tutorial 6](/resources/docs/KOR_docs/TUTORIAL_6_CORPUS.md)을 확인하세요.
 
 ```python
 from flair.datasets import TREC_6
@@ -143,4 +143,4 @@ trainer.train(
 
 ## Next
 
-다음 튜토리얼에서는 [training your own embeddings](/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)에 대해 살펴볼 것입니다,
+다음 튜토리얼에서는 [training your own embeddings](/resources/docs/KOR_docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)에 대해 살펴볼 것입니다,
