@@ -11,7 +11,7 @@
 우리의 방법으로 생산된 모든 임베딩은 PyTorch 벡터이기 때문에 즉시 훈련에 사용될 수 있고 미세 조정이 가능합니다.
 
 이 튜토리얼에서는 몇 가지 일반적인 임베딩을 소개하고 사용 방법을 보여줍니다. 
-이러한 임베딩에 대한 자세한 내용과 지원되는 모든 임베딩에 대한 개요는 [여기](/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMbeding.md)를 참조하세요.
+이러한 임베딩에 대한 자세한 내용과 지원되는 모든 임베딩에 대한 개요는 [여기](resources/docs/KOR_docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md)를 참조하세요.
 
 ## 클래식 워드 임베딩
 
@@ -150,4 +150,4 @@ for token in sentence:
 
 ## Next 
 이러한 임베딩에 대한 자세한 내용과 지원되는 모든 단어 임베딩에 대한 전체 개요를 보려면 다음을 참조하십시오.
-[튜토리얼](/리소스/docs/튜토리얼_4_ELMO_BERT_FLAIR_EMBeding.md). 
+[튜토리얼](resources/docs/KOR_docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md). 
