@@ -1,7 +1,7 @@
 # 튜토리얼 5: 문서 임베딩
-우리가 앞서 살펴본 [단어 임베딩](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)은 개별 단어에 대한 임베딩을 제공했습니다. 이번에 살펴볼 문서 임베딩은 전체 텍스트에 대해 하나의 임베딩을 제공합니다.
+우리가 앞서 살펴본 [단어 임베딩](/resources/docs/KOR_docs/TUTORIAL_3_WORD_EMBEDDING.md)은 개별 단어에 대한 임베딩을 제공했습니다. 이번에 살펴볼 문서 임베딩은 전체 텍스트에 대해 하나의 임베딩을 제공합니다.
 
-이번 튜토리얼은 여러분이 라이브러리의 [기본 유형](/resources/docs/TUTORIAL_1_BASICS.md)과 [단어 임베딩](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)이 어떻게 동작하는지 익숙하다 가정하고 진행됩니다.
+이번 튜토리얼은 여러분이 라이브러리의 [기본 유형](/resources/docs/KOR_docs/TUTORIAL_1_BASICS.md)과 [단어 임베딩](/resources/docs/KOR_docs/TUTORIAL_3_WORD_EMBEDDING.md)이 어떻게 동작하는지 익숙하다 가정하고 진행됩니다.
 
 ## 임베딩
 모든 문서 임베딩 클래스들은 `DocumentEmbeddings` 클래스를 상속하며 텍스트를 임베드 하기 위해 `embed()` 메소드를 호출합니다.
@@ -129,4 +129,4 @@ embedding.embed(sentence)
 `pip install sentence-transformers`. 
 
 ## 다음 튜토리얼
-[나만의 모델을 훈련](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)하기 위한 전제조건인 [말뭉치(corpus)를 로드](/resources/docs/TUTORIAL_6_CORPUS.md)하는 튜토리얼이 준비되어 있습니다.
+[나만의 모델을 훈련](/resources/docs/KOR_docs/TUTORIAL_7_TRAINING_A_MODEL.md)하기 위한 전제조건인 [말뭉치(corpus)를 로드](/resources/docs/KOR_docs/TUTORIAL_6_CORPUS.md)하는 튜토리얼이 준비되어 있습니다.
