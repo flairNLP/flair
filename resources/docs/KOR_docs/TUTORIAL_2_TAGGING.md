@@ -362,4 +362,4 @@ TARS는 임의 클래스에 대해 텍스트 분류를 수행할 수 있습니�
 
 ## 다음
 
-이제 텍스트를 포함하기 위해 다른 [워드 임베딩](/resources/docs/KOR_docs/TUTORIAL_3_WORD_EMBeding.md)을 사용하는 방법에 대해 알아보겠습니다.
+이제 텍스트를 포함하기 위해 다른 [워드 임베딩](/resources/docs/KOR_docs/TUTORIAL_3_WORD_EMBEDDING.md)을 사용하는 방법에 대해 알아보겠습니다.
