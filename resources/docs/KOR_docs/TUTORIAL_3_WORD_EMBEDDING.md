@@ -25,20 +25,20 @@ GloVe 임베딩을 사용하려면 'glove' 문자열을 생성자에게 전달�
 from flair.embeddings import WordEmbeddings
 from flair.data import Sentence
 
-# init embedding
+# 임베딩 초기화
 glove_embedding = WordEmbeddings('glove')
 ```
 
 이제 예제 문장을 만들고 임베딩의 `embed()` 메서드를 호출합니다. 일부 임베딩 유형은 속도를 높이기 위해 배치를 사용하기 때문에 문장 목록을 이 방법으로 전달할 수도 있습니다.
 
 ```python
-# create sentence.
+# 문장 만들기
 sentence = Sentence('The grass is green .')
 
-# embed a sentence using glove.
+# glove를 사용하여 문장 삽입
 glove_embedding.embed(sentence)
 
-# now check out the embedded tokens.
+# 이제 포함된 토큰을 확인하십시오.
 for token in sentence:
     print(token)
     print(token.embedding)
@@ -74,13 +74,13 @@ Flair를 사용할 때, 표준 단어 임베딩과 같은 적절한 임베딩 �
 ```python
 from flair.embeddings import FlairEmbeddings
 
-# init embedding
+# 임베딩 초기화
 flair_embedding_forward = FlairEmbeddings('news-forward')
 
-# create a sentence
+# 문장 만들기
 sentence = Sentence('The grass is green .')
 
-# embed words in sentence
+# 문장에 단어 삽입
 flair_embedding_forward.embed(sentence)
 ```
 
@@ -111,10 +111,10 @@ flair_embedding_backward = FlairEmbeddings('de-backward')
 ```python
 from flair.embeddings import WordEmbeddings, FlairEmbeddings
 
-# init standard GloVe embedding
+# 표준 GloVe 임베딩 초기화
 glove_embedding = WordEmbeddings('glove')
 
-# init Flair forward and backwards embeddings
+# Flair 정방향 및 역방향 임베딩 초기화
 flair_embedding_forward = FlairEmbeddings('news-forward')
 flair_embedding_backward = FlairEmbeddings('news-backward')
 ```
@@ -124,7 +124,7 @@ flair_embedding_backward = FlairEmbeddings('news-backward')
 ```python
 from flair.embeddings import StackedEmbeddings
 
-# create a StackedEmbedding object that combines glove and forward/backward flair embeddings
+# glove와 정방향 및 역방향 Flair 임베딩을 결합하는 StackedEmbedding 개체를 만들기
 stacked_embeddings = StackedEmbeddings([
                                         glove_embedding,
                                         flair_embedding_forward,
@@ -137,10 +137,10 @@ stacked_embeddings = StackedEmbeddings([
 ```python
 sentence = Sentence('The grass is green .')
 
-# just embed a sentence using the StackedEmbedding as you would with any single embedding.
+# 단일 임베딩에서와 같이 StackedEmbedding을 사용하여 문장을 임베드하기만 하면 됩니다.
 stacked_embeddings.embed(sentence)
 
-# now check out the embedded tokens.
+# 이제 임베딩된 토큰을 확인하십시오.
 for token in sentence:
     print(token)
     print(token.embedding)
