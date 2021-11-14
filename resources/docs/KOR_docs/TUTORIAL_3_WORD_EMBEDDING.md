@@ -150,4 +150,4 @@ for token in sentence:
 
 ## Next 
 이러한 임베딩에 대한 자세한 내용과 지원되는 모든 단어 임베딩에 대한 전체 개요를 보려면 다음을 참조하십시오.
-[튜토리얼](/resources/docs/KOR_docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md). 
+[TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING](/resources/docs/KOR_docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md). 
