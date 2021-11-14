@@ -178,6 +178,9 @@ Flair 임베딩(PooledFlairEmbeddings)의 풀링 버전을 사용하는 경우 [
 
 질문이나 의견은 [Alan Akbik](http://alanakbik.github.io/)로 이메일을 보내주세요.
 
+한국어 번역에 대한 의견은    
+김한결 (hannn0414@naver.com), 박태현(abnc7800@gmail.com), 최완규(wanq123@gachon.ac.kr)로 이메일을 보내주세요.
+
 ## Contributing
 
 contributing에 관심을 가져주셔서 감사합니다! 참여하는 방법에는 여러 가지가 있습니다.
