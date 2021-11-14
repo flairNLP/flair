@@ -80,7 +80,7 @@ tagger.predict(sentence)
 ```python
 print(sentence)
 print('The following NER tags are found:')
-# 엔티티를 반복하고 출력하기.
+# 엔티티를 반복하고 출력하기
 for entity in sentence.get_spans('ner'):
     print(entity)
 ```
