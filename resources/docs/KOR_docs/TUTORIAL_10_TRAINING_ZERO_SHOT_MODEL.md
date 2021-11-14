@@ -26,7 +26,7 @@ sentence = Sentence("I am so glad you liked it!")
 classes = ["happy", "sad"]
 # 4. 이 클래스들에 대한 예측
 tars.predict_zero_shot(sentence, classes)
-# 예측된 레이블이 있는 문장 출력
+# 5. 예측된 레이블이 있는 문장 출력
 print(sentence)
 ```
 
@@ -161,7 +161,7 @@ tars.add_and_switch_to_new_task("GO_EMOTIONS",
                                 label_type=label_type)
 # 6. 텍스트 분류기 트레이너 초기화
 trainer = ModelTrainer(tars, new_corpus)
-# 6. 훈련 시작
+# 7. 훈련 시작
 trainer.train(base_path='resources/taggers/go_emotions', # path to store the model artifacts
               learning_rate=0.02, # use very small learning rate
               mini_batch_size=16,
