@@ -20,10 +20,10 @@ tagger = SequenceTagger.load('ner')
 ```python
 sentence = Sentence('George Washington went to Washington.')
 
-# predict NER tags
+# NER 태그 예측
 tagger.predict(sentence)
 
-# print sentence with predicted tags
+# 예측된 태그가 있는 문장 출력
 print(sentence.to_tagged_string())
 ```
 
@@ -75,13 +75,13 @@ print(sentence.to_dict(tag_type='ner'))
 ```python
 from flair.models import MultiTagger
 
-# load tagger for POS and NER 
+# POS와 NER 용 tagger 로드
 tagger = MultiTagger.load(['pos', 'ner'])
 
-# make example sentence
+# 예시 문장 만들기
 sentence = Sentence("George Washington went to Washington.")
 
-# predict with both models
+# 두 모델로 예측
 tagger.predict(sentence)
 
 print(sentence)
@@ -168,16 +168,16 @@ NER 모델은 4개 언어(영어, 독일어, 네덜란드어 및 스페인어) �
 
 ```python
 
-# load model
+# 모델 로드
 tagger = SequenceTagger.load('de-ner')
 
-# make German sentence
+# 독일어 문장 만들기
 sentence = Sentence('George Washington ging nach Washington.')
 
-# predict NER tags
+# NER 태그 예측
 tagger.predict(sentence)
 
-# print sentence with predicted tags
+# 예측된 태그가 있는 문장 출력
 print(sentence.to_tagged_string())
 ```
 
@@ -191,16 +191,16 @@ George <B-PER> Washington <E-PER> ging nach Washington <S-LOC> .
 Flair는 또한 오른쪽에서 왼쪽으로 쓰는 언어에서도 작동한다. 아랍어 문장에 태그를 지정하려면 적절한 모델을 로드하면 됩니다.
 ```python
 
-# load model
+# 모델 로드
 tagger = SequenceTagger.load('ar-ner')
 
-# make Arabic sentence
+# 아랍어 문장 만들기
 sentence = Sentence("احب برلين")
 
-# predict NER tags
+# NER 태그 예측
 tagger.predict(sentence)
 
-# print sentence with predicted tags
+# 예측된 태그가 있는 문장 출력
 for entity in sentence.get_labels('ner'):
     print(entity)
 ```
@@ -216,16 +216,16 @@ LOC [برلين (2)] (0.9803)
 
 ```python
 
-# load model
+# 모델 로드
 tagger = SequenceTagger.load('pos-multi')
 
-# text with English and German sentences
+# 영어와 독일어 문장으로 된 텍스트
 sentence = Sentence('George Washington went to Washington. Dort kaufte er einen Hut.')
 
-# predict PoS tags
+# PoS 태그 예측
 tagger.predict(sentence)
 
-# print sentence with predicted tags
+# 예측된 태그가 있는 문장 출력
 print(sentence.to_tagged_string())
 ```
 
@@ -246,18 +246,18 @@ Dort <ADV> kaufte <VERB> er <PRON> einen <DET> Hut <NOUN> . <PUNCT>
 예를 들어 보겠습니다.
 
 ```python
-# load model
+# 모델 로드
 tagger = SequenceTagger.load('frame')
 
-# make English sentence
+# 영어 문장 만들기
 sentence_1 = Sentence('George returned to Berlin to return his hat.')
 sentence_2 = Sentence('He had a look at different hats.')
 
-# predict NER tags
+# NER 태그 예측하기
 tagger.predict(sentence_1)
 tagger.predict(sentence_2)
 
-# print sentence with predicted tags
+# 예측된 태그가 있는 문장 출력
 print(sentence_1.to_tagged_string())
 print(sentence_2.to_tagged_string())
 ```
@@ -286,20 +286,20 @@ look은 단어를 연상시키는 틀이다.
 from flair.models import SequenceTagger
 from flair.tokenization import SegtokSentenceSplitter
 
-# example text with many sentences
+# 많은 문장이 포함된 예제 텍스트
 text = "This is a sentence. This is another sentence. I love Berlin."
 
-# initialize sentence splitter
+# 문장 스플리터 초기화
 splitter = SegtokSentenceSplitter()
 
-# use splitter to split text into list of sentences
+# 스플리터를 사용하여 텍스트를 문장 목록으로 분할
 sentences = splitter.split(text)
 
-# predict tags for sentences
+# 문장에 대한 태그 예측
 tagger = SequenceTagger.load('ner')
 tagger.predict(sentences)
 
-# iterate through sentences and print predicted labels
+# 문장을 반복하고 예측된 레이블을 출력
 for sentence in sentences:
     print(sentence.to_tagged_string())
 ```
@@ -317,20 +317,20 @@ for sentence in sentences:
 ```python
 from flair.models import TextClassifier
 
-# load tagger
+# tagger 로드
 classifier = TextClassifier.load('sentiment')
 ```
 
 여러분은 문장에서 분류자의 `predict()`방법만 사용하면 됩니다. 예측 레이블에 추가하고, 긍정적인 느낌의 문장을 사용해봅시다.
 
 ```python
-# make example sentence
+# 예시 문장 만들기
 sentence = Sentence("enormously entertaining for moviegoers of any age.")
 
-# call predict
+# predict 호출
 classifier.predict(sentence)
 
-# check prediction
+# 예측 확인하기
 print(sentence)
 ```
 
