@@ -67,11 +67,11 @@ pip install flair
 ```python
 from flair.data import Sentence
 from flair.models import SequenceTagger
-# make a sentence
+# 문장 만들기
 sentence = Sentence('I love Berlin .')
-# load the NER tagger
+# NER tagger 로드하기
 tagger = SequenceTagger.load('ner')
-# run NER over sentence
+# 문장에 대해 NER 실행
 tagger.predict(sentence)
 ```
 
@@ -80,7 +80,7 @@ tagger.predict(sentence)
 ```python
 print(sentence)
 print('The following NER tags are found:')
-# iterate over entities and print
+# 엔티티를 반복하고 출력하기.
 for entity in sentence.get_spans('ner'):
     print(entity)
 ```
