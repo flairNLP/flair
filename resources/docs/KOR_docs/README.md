@@ -108,6 +108,7 @@ Span [3]: "Berlin"   [− Labels: LOC (0.9992)]
 * [Tutorial 7: Training a Model](/resources/docs/KOR_docs/TUTORIAL_7_TRAINING_A_MODEL.md)
 * [Tutorial 8: Training your own Flair Embeddings](/resources/docs/KOR_docs/TUTORIAL_8_MODEL_OPTIMIZATION.md)
 * [Tutorial 9: Training a Zero Shot Text Classifier (TARS)](/resources/docs/KOR_docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
+* [Tutorial 10: Few-Shot and Zero-Shot Classification (TARS)](/resources/docs/KOR_docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)
 
 튜토리얼에서는 기본 NLP 클래스가 작동하는 방법, 사전 훈련된 모델을 로드하여 텍스트에 태그를 지정하는 방법, 다른 단어 또는 문서 임베딩으로 텍스트를 포함하는 방법, 고유한 언어 모델, 시퀀스 레이블링 모델 및 텍스트 분류 모델에 대해 설명하고있습니다. 불분명한 것이 있으면 알려주세요.
 
