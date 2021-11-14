@@ -1,4 +1,4 @@
-# Tutorial 7: Training a Model
+# 튜토리얼 7: 모델 훈련하기
 
 튜토리얼 7에서는 최첨단 word embedding을 사용하여 여러분의 시퀀스 레이블링(sequence labeling)과 텍스트 분류(text classification) 모델을   
 훈련하는 방법을 살펴볼 것입니다.
