@@ -12,7 +12,7 @@ Flair에는 잘 알려진 하이퍼 매개변수 선택 도구인 [hyperopt](htt
 
 ```python
 from flair.datasets import TREC_6
-# load your corpus
+# 당신의 말뭉치를 로드하세요.
 corpus = TREC_6()
 ```
 
@@ -21,7 +21,7 @@ corpus = TREC_6()
 ```python
 from hyperopt import hp
 from flair.hyperparameter.param_selection import SearchSpace, Parameter
-# define your search space
+# 검색 공간을 정의하세요.
 search_space = SearchSpace()
 search_space.add(Parameter.EMBEDDINGS, hp.choice, options=[
     [ WordEmbeddings('en') ], 
@@ -53,7 +53,7 @@ hyperopt가 수행해야 하는 최대 평가 실행 횟수를 정의할 수 있
 
 ```python
 from flair.hyperparameter.param_selection import TextClassifierParamSelector, OptimizationValue
-# create the parameter selector
+# 매개변수 선택기 생성
 param_selector = TextClassifierParamSelector(
     corpus, 
     False, 
@@ -63,7 +63,7 @@ param_selector = TextClassifierParamSelector(
     training_runs=3,
     optimization_value=OptimizationValue.DEV_SCORE
 )
-# start the optimization
+# 최적화 시작
 param_selector.optimize(search_space, max_evals=100)
 ```
 
@@ -82,11 +82,6 @@ SGD의 모든 배치 업데이트에서 학습률을 기하급수적으로 증�
 낮은 학습률의 경우 손실이 개선되지 않으며, 손실이 가장 급격하게 떨어지는 최적의 학습률 범위와 학습률이 너무 커지면 손실이 폭발하는 최종 단계입니다. 
 이러한 플롯을 사용하면 최적의 학습률을 선택하는 것이 최적의 단계에서 가장 높은 것을 선택하는 것만큼 쉽습니다. 
 
-In order to run such an experiment start with your initialized `ModelTrainer` and call `find_learning_rate()` with the
-`base_path` and the file name in which to records the learning rates and losses. Then plot the generated results via the
-`Plotter`'s `plot_learning_rate()` function and have a look at the `learning_rate.png` image to select the optimal
-learning rate:
-
 이러한 실험을 실행하려면 초기화된 'ModelTrainer'로 시작하고 학습률과 손실을 기록할 파일 이름과 'base_path'와 함께 'find_learning_rate()'를 호출하십시오. 
 그런 다음 `Plotter`의 `plot_learning_rate()` 함수를 통해 생성된 결과를 플롯하고 `learning_rate.png` 이미지를 보고 최적의 학습률을 선택하세요:
 
@@ -95,32 +90,32 @@ from flair.datasets import WNUT_17
 from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
 from flair.trainers import ModelTrainer
 from typing import List
-# 1. get the corpus
+# 1. 말뭉치 가져오기
 corpus = WNUT_17().downsample(0.1)
 print(corpus)
-# 2. what tag do we want to predict?
+# 2. 우리는 예측하고 싶은 태그는 무엇인가요?
 tag_type = 'ner'
-# 3. make the tag dictionary from the corpus
+# 3. 말뭉치에서 태그 사전 만들기
 tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 print(tag_dictionary.idx2item)
-# 4. initialize embeddings
+# 4. 임베딩 초기화하기
 embedding_types: List[TokenEmbeddings] = [
     WordEmbeddings('glove'),
 ]
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
-# 5. initialize sequence tagger
+# 5. 시퀀스 tagger 초기화하기
 from flair.models import SequenceTagger
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
                                         tag_dictionary=tag_dictionary,
                                         tag_type=tag_type,
                                         use_crf=True)
-# 6. initialize trainer
+# 6. 트레이너 초기화하기
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
-# 7. find learning rate
+# 7. 학습률 찾기
 learning_rate_tsv = trainer.find_learning_rate('resources/taggers/example-ner',
                                                     'learning_rate.tsv')
-# 8. plot the learning rate finder curve
+# 8. 학습률 찾기 곡선 그리기
 from flair.visual.training_curves import Plotter
 plotter = Plotter()
 plotter.plot_learning_rate(learning_rate_tsv)
