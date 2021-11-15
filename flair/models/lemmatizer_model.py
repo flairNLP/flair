@@ -1,8 +1,8 @@
 import logging
 from collections import Counter
+from math import inf
 from pathlib import Path
 from typing import List, Union, Tuple, Optional
-from math import inf
 
 import torch
 from sklearn.metrics import classification_report, accuracy_score
@@ -26,7 +26,7 @@ class Lemmatizer(flair.nn.Model):
                  num_layers_in_rnn: int = 1,
                  beam_size: int = 5,
                  char_dict: Union[str, Dictionary] = None,
-                 label_type: str ='lemma',
+                 label_type: str = 'lemma',
                  max_sequence_length_dependend_on_input: bool = True,
                  max_sequence_length: int = 20,
                  token_embedding: flair.embeddings.TokenEmbeddings = None,
@@ -61,7 +61,7 @@ class Lemmatizer(flair.nn.Model):
             token in the respective batch. If  padding_in_front_for_encoder is True we fill up in the front, otherwise in the back of the vectors.
         """
 
-        super().__init__() # TODO: LSTMs instead of GRUs, maybe as a parameter?
+        super().__init__()  # TODO: LSTMs instead of GRUs, maybe as a parameter?
 
         self._label_type = label_type
         self.beam_size = beam_size
@@ -77,7 +77,7 @@ class Lemmatizer(flair.nn.Model):
             self.emb_to_hidden = nn.Linear(token_embedding.embedding_length, hidden_size)
 
         # decoder: dictionary of characters to create one-hot embeddings for decoder inputs
-        if char_dict is None: # if no dictionary is provided use a standard one
+        if char_dict is None:  # if no dictionary is provided use a standard one
             self.char_dictionary = Dictionary.load("common-chars-lemmatizer")
         elif isinstance(char_dict, Dictionary):
             self.char_dictionary = char_dict
@@ -96,9 +96,9 @@ class Lemmatizer(flair.nn.Model):
 
         # decoder: linear layers to transform vectors to and from alphabet_size
         self.decoder_character_embedding = nn.Embedding(self.alphabet_size, input_size)
-        if self.use_attention and token_embedding==None:
+        if self.use_attention and token_embedding == None:
             # when using attention we concatenate attention outcome and decoder hidden states
-            self.character_decoder = nn.Linear(2*self.hidden_size, self.alphabet_size)
+            self.character_decoder = nn.Linear(2 * self.hidden_size, self.alphabet_size)
         else:
             self.character_decoder = nn.Linear(self.hidden_size, self.alphabet_size)
 
@@ -117,7 +117,7 @@ class Lemmatizer(flair.nn.Model):
 
         # loss and softmax
         self.loss = nn.CrossEntropyLoss()
-        self.unreduced_loss = nn.CrossEntropyLoss(reduction='none') # for prediction
+        self.unreduced_loss = nn.CrossEntropyLoss(reduction='none')  # for prediction
         self.softmax = nn.Softmax(dim=2)
 
         self.to(flair.device)
@@ -126,7 +126,8 @@ class Lemmatizer(flair.nn.Model):
     def label_type(self):
         return self._label_type
 
-    def words_to_char_indices(self, tokens: List[str], end_symbol=True, start_symbol= False, padding_in_front = False, seq_length=None):
+    def words_to_char_indices(self, tokens: List[str], end_symbol=True, start_symbol=False, padding_in_front=False,
+                              seq_length=None):
         """
         For a given list of strings this function creates index vectors that represent the characters of the strings.
         Each string is represented by sequence_length (maximum string length + entries for special symbold) many indices representing characters
@@ -140,14 +141,14 @@ class Lemmatizer(flair.nn.Model):
         # add additional columns for special symbols if necessary
         c = int(end_symbol) + int(start_symbol)
 
-        max_length= max(len(token) for token in tokens) + c
+        max_length = max(len(token) for token in tokens) + c
         if not seq_length:
             sequence_length = max_length
         else:
-            sequence_length=max(seq_length,max_length)
+            sequence_length = max(seq_length, max_length)
 
         # initialize with dummy symbols
-        tensor = self.dummy_index*torch.ones(len(tokens), sequence_length, dtype=torch.long).to(flair.device)
+        tensor = self.dummy_index * torch.ones(len(tokens), sequence_length, dtype=torch.long).to(flair.device)
 
         for i in range(len(tokens)):
             dif = sequence_length - (len(tokens[i]) + c)
@@ -172,7 +173,7 @@ class Lemmatizer(flair.nn.Model):
         # create list of all tokens of batch, this way we can hand over all sentences at once
         tokens = [token for sentence in sentences for token in sentence]
 
-        if self.token_embedding: # input using embeddings
+        if self.token_embedding:  # input using embeddings
             # embedd sentences
             self.token_embedding.embed(sentences)
 
@@ -180,20 +181,21 @@ class Lemmatizer(flair.nn.Model):
             initial_hidden_states = self.emb_to_hidden(
                 torch.stack(self.num_layers * [torch.stack([token.get_embedding() for token in tokens])]))
 
-        else: # encode input using encoder RNN
+        else:  # encode input using encoder RNN
 
-            input_indices = self.words_to_char_indices([token.text for token in tokens],
+            encoder_input_indices = self.words_to_char_indices([token.text for token in tokens],
                                                        start_symbol=True,
                                                        end_symbol=True,
                                                        padding_in_front=self.padding_in_front_for_encoder)
 
-            input_vectors = self.encoder_character_embedding(input_indices)
+            input_vectors = self.encoder_character_embedding(encoder_input_indices)
 
             encoding_output, initial_hidden_states = self.encoder_rnn(input_vectors)
             # set those output vectors to 0 that correspond to a dummy symbol
-            # we cannot simply do an in-place operation and setting some of the vectors to 0, becausse this would cause problems
+            # we cannot simply do an in-place operation and setting some of the vectors to 0, because this would cause
+            # problems
             # with the gradient computation, instead we need to create a new tensor (done in torch.where)
-            condition_vector = torch.cat((self.hidden_size*[(input_indices == self.dummy_index).unsqueeze(2)]), dim=2)
+            condition_vector = torch.cat((self.hidden_size * [(encoder_input_indices == self.dummy_index).unsqueeze(2)]), dim=2)
             encoding_output = torch.where(condition_vector, torch.tensor(0., device=flair.device), encoding_output)
             # note that the initial hidden states are right now the last hidden states of the encoder
 
@@ -202,23 +204,24 @@ class Lemmatizer(flair.nn.Model):
             label_type=self._label_type).value else token.text for token in tokens]
 
         # get char indices for labels of sentence
-        # (batch_size, max_sequence_length) batch_size = #words in sentence, max_sequence_length = length of longest label of sentence + 1
-        input_indices = self.words_to_char_indices(labels, start_symbol=True, end_symbol=False, padding_in_front=False)
+        # (batch_size, max_sequence_length) batch_size = #words in sentence,
+        # max_sequence_length = length of longest label of sentence + 1
+        decoder_input_indices = self.words_to_char_indices(labels, start_symbol=True, end_symbol=False, padding_in_front=False)
 
         # get char embeddings
         # (batch_size,max_sequence_length,input_size), i.e. replaces char indices with vectors of length input_size
-        input_tensor = self.decoder_character_embedding(input_indices)
+        input_tensor = self.decoder_character_embedding(decoder_input_indices)
 
         # pass batch through rnn
         output, hn = self.decoder_rnn(input_tensor, initial_hidden_states)
         if not self.token_embedding and self.use_attention:
-
-            attention_coefficients = torch.softmax(torch.matmul(encoding_output, torch.transpose(output,1,2)), dim=1)
+            attention_coefficients = torch.softmax(torch.matmul(encoding_output, torch.transpose(output, 1, 2)), dim=1)
 
             # take convex combinations of encoder hidden states as new output using the computed attention coefficients
-            attention_output = torch.transpose(torch.matmul(torch.transpose(encoding_output,1,2), attention_coefficients),1,2)
+            attention_output = torch.transpose(
+                torch.matmul(torch.transpose(encoding_output, 1, 2), attention_coefficients), 1, 2)
 
-            output = torch.cat((output,attention_output), dim=2)
+            output = torch.cat((output, attention_output), dim=2)
 
         # transform output to vectors of size self.alphabet_size -> (batch_size, max_sequence_length, alphabet_size)
         output_vectors = self.character_decoder(output)
@@ -259,7 +262,7 @@ class Lemmatizer(flair.nn.Model):
         :print_prediction: If True, lemmatized sentences will be printed in the console.
         :param batching_in_rnn: If False, no batching will take place in RNN Cell. Tokens are processed one at a time.
         '''
-        if self.beam_size == 1: # batching in RNN only works flawlessly for beam size at least 2
+        if self.beam_size == 1:  # batching in RNN only works flawlessly for beam size at least 2
             batching_in_rnn = False
 
         if isinstance(sentences, Sentence):
@@ -276,7 +279,7 @@ class Lemmatizer(flair.nn.Model):
         else:
             max_length = max([len(token.text) + 1 for sentence in sentences for token in sentence])
 
-        #for printing
+        # for printing
         line_to_print = ''
 
         overall_loss = 0
@@ -301,21 +304,23 @@ class Lemmatizer(flair.nn.Model):
                     # create list of tokens in batch
                     tokens_in_batch = [token for sentence in batch for token in sentence]
                     number_tokens = len(tokens_in_batch)
-                    number_tokens_in_total +=number_tokens
+                    number_tokens_in_total += number_tokens
 
-                    if self.token_embedding: # if token embeddings are given, encoding is just the embedding of the words
+                    if self.token_embedding:  # if token embeddings are given, encoding is just the embedding of the words
                         # embedd sentences
                         self.token_embedding.embed(batch)
                         # create inital hidden state tensor for batch (num_layers, batch_size, hidden_size)
                         hidden_states = self.emb_to_hidden(
-                            torch.stack(self.num_layers * [torch.stack([token.get_embedding() for token in tokens_in_batch])]))
-                    else: # otherwise encode input using encoder RNN
+                            torch.stack(
+                                self.num_layers * [torch.stack([token.get_embedding() for token in tokens_in_batch])]))
+                    else:  # otherwise encode input using encoder RNN
 
                         input_indices = self.words_to_char_indices([token.text for token in tokens_in_batch],
                                                                    start_symbol=True, end_symbol=True,
                                                                    padding_in_front=self.padding_in_front_for_encoder)
 
-                        input_vectors = self.encoder_character_embedding(input_indices) # TODO: encode Input in reverse?? Maybe as parameter?
+                        input_vectors = self.encoder_character_embedding(
+                            input_indices)  # TODO: encode Input in reverse?? Maybe as parameter?
 
                         encoding_output, hidden_states = self.encoder_rnn(input_vectors)
 
@@ -329,7 +334,7 @@ class Lemmatizer(flair.nn.Model):
                     # decoding
                     # create input for first pass (batch_size, 1, input_size), first letter is special character <S>
                     # sequence length is always set to one in prediction
-                    input_indices = self.start_index*torch.ones(number_tokens, dtype=torch.long).to(flair.device)
+                    input_indices = self.start_index * torch.ones(number_tokens, dtype=torch.long).to(flair.device)
                     input_tensor = self.decoder_character_embedding(input_indices).unsqueeze(1)
 
                     # first pass
@@ -343,44 +348,46 @@ class Lemmatizer(flair.nn.Model):
                         attention_output = torch.transpose(
                             torch.matmul(torch.transpose(encoding_output, 1, 2), attention_coefficients), 1, 2)
 
-                        output= torch.cat((output,attention_output),dim=2)
+                        output = torch.cat((output, attention_output), dim=2)
 
                     output_vectors = self.character_decoder(output)
                     out_probs = self.softmax(output_vectors).squeeze(1)
                     # make sure no dummy symbol <> or start symbol <S> is predicted
-                    out_probs[:,self.dummy_index] = -1
-                    out_probs[:,self.start_index] = -1
+                    out_probs[:, self.dummy_index] = -1
+                    out_probs[:, self.start_index] = -1
                     # pick top beam size many outputs with highest probabilities
                     probabilities, leading_indices = out_probs.topk(self.beam_size, 1)  # max prob along dimension 1
                     # leading_indices and probabilities have size (batch_size, beam_size)
 
                     if return_loss:
-
                         # get labels
                         labels = [token.get_tag(label_type=self._label_type).value if token.get_tag(
                             label_type=self._label_type).value else token.text for token in tokens_in_batch]
 
                         # target vector represents the labels with vectors of indices for characters
-                        target = self.words_to_char_indices(labels, start_symbol=False, end_symbol=True, padding_in_front=False, seq_length=max_length)
+                        target = self.words_to_char_indices(labels, start_symbol=False, end_symbol=True,
+                                                            padding_in_front=False, seq_length=max_length)
 
-                        losses = self.unreduced_loss(output_vectors.squeeze(1), target[:,0])
-                        losses = torch.stack(self.beam_size*[losses], dim=1).view(-1,1)
+                        losses = self.unreduced_loss(output_vectors.squeeze(1), target[:, 0])
+                        losses = torch.stack(self.beam_size * [losses], dim=1).view(-1, 1)
                         # losses are now in the form (beam_size*batch_size,1)
                         # first beam_size many entries belong to first token of the batch, entries from beam_size + 1 until beam_size+beam_size belong to second token, and so on
 
                     # keep scores of beam_size many hypothesis for each token in the batch
-                    scores = torch.log(probabilities).view(-1,1) # (beam_size*batch_size,1)
+                    scores = torch.log(probabilities).view(-1, 1)  # (beam_size*batch_size,1)
 
                     # stack all leading indices of all hypothesis and corresponding hidden states in two tensors
-                    leading_indices = leading_indices.view(-1,1) # this vector will be send through the RNN in each iteration
-                    hidden_states_beam = torch.stack(self.beam_size*[hidden_states], dim=2).view(self.num_layers,-1,self.hidden_size)
+                    leading_indices = leading_indices.view(-1,
+                                                           1)  # this vector will be send through the RNN in each iteration
+                    hidden_states_beam = torch.stack(self.beam_size * [hidden_states], dim=2).view(self.num_layers, -1,
+                                                                                                   self.hidden_size)
 
                     # save sequences so far
                     sequences = torch.tensor([[i.item()] for i in leading_indices], device=flair.device)
 
                     # keep track of how many hypothesis were completed for each token
-                    n_completed = [0 for _ in range(number_tokens)] # cpu
-                    final_candidates = [[] for _ in range(number_tokens)] # cpu
+                    n_completed = [0 for _ in range(number_tokens)]  # cpu
+                    final_candidates = [[] for _ in range(number_tokens)]  # cpu
 
                     for j in range(1, max_length):
 
@@ -394,7 +401,8 @@ class Lemmatizer(flair.nn.Model):
 
                             # take convex combinations of encoder hidden states as new output using the computed attention coefficients
                             attention_output = torch.transpose(
-                                torch.matmul(torch.transpose(batched_encoding_output, 1, 2), attention_coefficients), 1, 2)
+                                torch.matmul(torch.transpose(batched_encoding_output, 1, 2), attention_coefficients), 1,
+                                2)
 
                             output = torch.cat((output, attention_output), dim=2)
 
@@ -402,8 +410,8 @@ class Lemmatizer(flair.nn.Model):
                         out_probs = self.softmax(output_vectors)
                         # out_probs have size (beam_size*batch_size, 1, alphabet_size)
                         # make sure no dummy symbol <> or start symbol <S> is predicted
-                        out_probs[:,0, self.dummy_index] = -1
-                        out_probs[:,0, self.start_index] = -1
+                        out_probs[:, 0, self.dummy_index] = -1
+                        out_probs[:, 0, self.start_index] = -1
                         # choose beam_size many indices with highest probabilities
                         probabilities, index_candidates = out_probs.topk(self.beam_size, 2)
                         probabilities.squeeze_(1)
@@ -412,18 +420,21 @@ class Lemmatizer(flair.nn.Model):
                         # index_candidates have size (beam_size*batch_size, beam_size)
 
                         # check if an end symbol <E> has been predicted and, in that case, set hypothesis aside
-                        for tuple in (index_candidates==self.end_index).nonzero(as_tuple=False):
-                            token_number = tuple[0]//self.beam_size # index of token in in list tokens_in_batch
-                            seq = sequences[tuple[0],:] # hypothesis sequence
-                            score = (scores[tuple[0]] + log_probabilities[tuple[0], tuple[1]])/(len(seq) + 1) # hypothesis score
+                        for tuple in (index_candidates == self.end_index).nonzero(as_tuple=False):
+                            token_number = torch.div(tuple[0], self.beam_size, rounding_mode='trunc')  # index of token in in list tokens_in_batch
+                            seq = sequences[tuple[0], :]  # hypothesis sequence
+                            score = (scores[tuple[0]] + log_probabilities[tuple[0], tuple[1]]) / (
+                                        len(seq) + 1)  # hypothesis score
                             loss = 0
                             if return_loss:
                                 o = output_vectors[tuple[0], :, :]
                                 t = target[token_number, j].unsqueeze(0)
-                                loss = (losses[tuple[0],0] + self.loss(o,t))/(len(seq) + 1) # average loss of output_vectors of sequence
+                                loss = (losses[tuple[0], 0] + self.loss(o, t)) / (
+                                            len(seq) + 1)  # average loss of output_vectors of sequence
 
                             final_candidates[token_number].append((seq, score, loss))
-                            n_completed[token_number] +=1 # TODO: remove token if number of completed hypothesis exceeds given value
+                            n_completed[
+                                token_number] += 1  # TODO: remove token if number of completed hypothesis exceeds given value
 
                             # set score of corresponding entry to -inf so it will not be expanded
                             log_probabilities[tuple[0], tuple[1]] = -inf
@@ -432,11 +443,13 @@ class Lemmatizer(flair.nn.Model):
                         # find highest scoring hypothesis among beam_size*beam_size possible ones for each token
 
                         # take beam_size many copies of scores vector and add scores of possible new extensions
-                        hypothesis_scores = torch.cat(self.beam_size*[scores], dim=1) + log_probabilities # size (beam_size*batch_size, beam_size)
+                        hypothesis_scores = torch.cat(self.beam_size * [scores],
+                                                      dim=1) + log_probabilities  # size (beam_size*batch_size, beam_size)
                         # reshape to vector of size (batch_size, beam_size*beam_size), each row contains beam_size*beam_size scores of the new possible hypothesis
-                        hypothesis_scores_per_token= hypothesis_scores.view(number_tokens ,self.beam_size**2)
+                        hypothesis_scores_per_token = hypothesis_scores.view(number_tokens, self.beam_size ** 2)
                         # choose beam_size best for each token
-                        best_scores, indices_per_token = hypothesis_scores_per_token.topk(self.beam_size, 1) # size (batch_size, beam_size)
+                        best_scores, indices_per_token = hypothesis_scores_per_token.topk(self.beam_size,
+                                                                                          1)  # size (batch_size, beam_size)
 
                         # out of indices_per_token we now need to recompute the original indices of the hypothesis in a list of length beam_size*batch_size
                         # where the first three inidices belomng to the first token, the next three to the second token, and so on
@@ -445,32 +458,40 @@ class Lemmatizer(flair.nn.Model):
 
                         for i, row in enumerate(indices_per_token):
                             for l, index in enumerate(row):
-                                beam = i*self.beam_size + index//self.beam_size
+                                beam = i * self.beam_size + torch.div(index, self.beam_size, rounding_mode='trunc')
                                 seq_number = index % self.beam_size
 
                                 beam_numbers.append(beam.item())
                                 seq_numbers.append(seq_number.item())
 
                         # with these indices we can compute the tensors for the next iteration
-                        sequences = torch.cat((sequences[beam_numbers], index_candidates[beam_numbers, seq_numbers].unsqueeze(1)), dim=1) #expand sequences with corresponding index
-                        scores = scores[beam_numbers] + log_probabilities[beam_numbers,seq_numbers].unsqueeze(1) # add log-probabilities to the scores
-                        leading_indices = index_candidates[beam_numbers,seq_numbers].unsqueeze(1) # save new leading indices
-                        hidden_states_beam = hidden_states_beam[:,beam_numbers,:] # save corresponding hidden states
+                        sequences = torch.cat(
+                            (sequences[beam_numbers], index_candidates[beam_numbers, seq_numbers].unsqueeze(1)),
+                            dim=1)  # expand sequences with corresponding index
+                        scores = scores[beam_numbers] + log_probabilities[beam_numbers, seq_numbers].unsqueeze(
+                            1)  # add log-probabilities to the scores
+                        leading_indices = index_candidates[beam_numbers, seq_numbers].unsqueeze(
+                            1)  # save new leading indices
+                        hidden_states_beam = hidden_states_beam[:, beam_numbers, :]  # save corresponding hidden states
 
                         if return_loss:
-                            losses = losses[beam_numbers] + self.unreduced_loss(output_vectors[beam_numbers,0,:], torch.stack(self.beam_size*[target[:,j]], dim=1).view(-1)).unsqueeze(1) # compute and update losses
+                            losses = losses[beam_numbers] + self.unreduced_loss(output_vectors[beam_numbers, 0, :],
+                                                                                torch.stack(
+                                                                                    self.beam_size * [target[:, j]],
+                                                                                    dim=1).view(-1)).unsqueeze(
+                                1)  # compute and update losses
 
                     # it could happen that no end symbol <E> was predicted for some token in all of the max_length iterations
                     # in that case we append one of the final seuqences without end symbol to the final_candidates
-                    best_scores, indices = scores.view(number_tokens, -1).topk(1,1)
+                    best_scores, indices = scores.view(number_tokens, -1).topk(1, 1)
 
                     for j, (score, index) in enumerate(zip(best_scores.squeeze(1), indices.squeeze(1))):
                         if len(final_candidates[j]) == 0:
-                            beam = j*self.beam_size + index.item()
+                            beam = j * self.beam_size + index.item()
                             loss = 0
                             if return_loss:
-                                loss = losses[beam,0]/max_length
-                            final_candidates[j].append((sequences[beam, :], score/max_length, loss))
+                                loss = losses[beam, 0] / max_length
+                            final_candidates[j].append((sequences[beam, :], score / max_length, loss))
 
                     # get best final hypothesis for each token
                     output_sequences = []
@@ -480,17 +501,17 @@ class Lemmatizer(flair.nn.Model):
 
                     # get characters from index sequences and add predicted label to token
                     for i, seq in enumerate(output_sequences):
-                        overall_loss +=seq[2]
+                        overall_loss += seq[2]
                         predicted_lemma = ''
                         for idx in seq[0]:
                             predicted_lemma += self.char_dictionary.get_item_for_index(idx)
-                        line_to_print+=predicted_lemma
-                        line_to_print+=' '
+                        line_to_print += predicted_lemma
+                        line_to_print += ' '
                         tokens_in_batch[i].add_tag(tag_type=label_name, tag_value=predicted_lemma)
 
                     store_embeddings(batch, storage_mode=embedding_storage_mode)
 
-            else: # no batching in RNN
+            else:  # no batching in RNN
                 # still: embedd sentences batch-wise
                 dataloader = DataLoader(dataset=SentenceDataset(sentences), batch_size=mini_batch_size)
 
@@ -503,25 +524,27 @@ class Lemmatizer(flair.nn.Model):
                     for sentence in batch:
                         for token in sentence:
 
-                            number_tokens_in_total +=1
+                            number_tokens_in_total += 1
                             # remove previously predicted labels of this type
                             token.remove_labels(label_name)
 
                             if self.token_embedding:
-                                hidden_state = self.emb_to_hidden( torch.stack(
-                                        self.num_layers * [token.get_embedding()])).unsqueeze(1) # size (1, 1, hidden_size)
-                            else: # encode input using encoder RNN
+                                hidden_state = self.emb_to_hidden(torch.stack(
+                                    self.num_layers * [token.get_embedding()])).unsqueeze(1)  # size (1, 1, hidden_size)
+                            else:  # encode input using encoder RNN
 
                                 # note that we do not need to fill up with dummy symbols since we process each token seperately
                                 input_indices = self.words_to_char_indices([token.text],
                                                                            start_symbol=True, end_symbol=True)
 
-                                input_vectors = self.encoder_character_embedding(input_indices) # TODO: encode input in reverse?? Maybe as parameter?
+                                input_vectors = self.encoder_character_embedding(
+                                    input_indices)  # TODO: encode input in reverse?? Maybe as parameter?
 
                                 encoding_output, hidden_state = self.encoder_rnn(input_vectors)
 
                             # input (batch_size, 1, input_size), first letter is special character <S>
-                            input_tensor = self.decoder_character_embedding(torch.tensor([self.start_index], device=flair.device)).unsqueeze(1)
+                            input_tensor = self.decoder_character_embedding(
+                                torch.tensor([self.start_index], device=flair.device)).unsqueeze(1)
 
                             # first pass
                             output, hidden_state = self.decoder_rnn(input_tensor, hidden_state)
@@ -539,10 +562,11 @@ class Lemmatizer(flair.nn.Model):
                             output_vectors = self.character_decoder(output)
                             out_probs = self.softmax(output_vectors).squeeze(1)
                             # make sure no dummy symbol <> or start symbol <S> is predicted
-                            out_probs[0,self.dummy_index] = -1
-                            out_probs[0,self.start_index] = -1
+                            out_probs[0, self.dummy_index] = -1
+                            out_probs[0, self.start_index] = -1
                             # take beam size many predictions with highest probabilities
-                            probabilities, leading_indices = out_probs.topk(self.beam_size, 1)  # max prob along dimension 1
+                            probabilities, leading_indices = out_probs.topk(self.beam_size,
+                                                                            1)  # max prob along dimension 1
                             log_probabilities = torch.log(probabilities)
                             # leading_indices have size (1, beam_size)
 
@@ -552,9 +576,10 @@ class Lemmatizer(flair.nn.Model):
                                 label = token.get_tag(label_type=self._label_type).value if token.get_tag(
                                     label_type=self._label_type).value else token.text
 
-                                target = self.words_to_char_indices([label], start_symbol=False, end_symbol=True, padding_in_front=False, seq_length=max_length)
+                                target = self.words_to_char_indices([label], start_symbol=False, end_symbol=True,
+                                                                    padding_in_front=False, seq_length=max_length)
 
-                                loss = self.loss(output_vectors.squeeze(0), target[:,0])
+                                loss = self.loss(output_vectors.squeeze(0), target[:, 0])
 
                             # the list sequences will contain beam_size many hypothesis at each point of the prediction
                             sequences = []
@@ -603,10 +628,11 @@ class Lemmatizer(flair.nn.Model):
 
                                     new_loss = 0
                                     if return_loss:
-                                        new_loss = seq_loss + self.loss(output_vectors.squeeze(0), target[:,i])
+                                        new_loss = seq_loss + self.loss(output_vectors.squeeze(0), target[:, i])
 
                                     # get top beam_size predictions
-                                    probabilities, leading_indices = out_probs.topk(self.beam_size, 1)  # max prob along dimension 1
+                                    probabilities, leading_indices = out_probs.topk(self.beam_size,
+                                                                                    1)  # max prob along dimension 1
                                     log_probabilities = torch.log(probabilities)
 
                                     # go through each of the top beam_size predictions
@@ -620,7 +646,7 @@ class Lemmatizer(flair.nn.Model):
 
                                         # if this prediction is a STOP symbol, set it aside
                                         if prediction_index == self.end_index:
-                                            candidate = [seq, s/(len(seq) + 1), new_loss/(len(seq) + 1)]
+                                            candidate = [seq, s / (len(seq) + 1), new_loss / (len(seq) + 1)]
                                             final_candidates.append(candidate)
                                             n_completed += 1
                                         # else, create a new candidate hypothesis with updated score and prediction sequence
@@ -628,7 +654,7 @@ class Lemmatizer(flair.nn.Model):
                                             candidate = [seq + [prediction_index], hidden_state, s, new_loss]
                                             new_sequences.append(candidate)
 
-                                if len(new_sequences) == 0: # only possible if self.beam_size is 1 and a <E> was predicted
+                                if len(new_sequences) == 0:  # only possible if self.beam_size is 1 and a <E> was predicted
                                     break
 
                                 # order final candidates by score (in descending order)
@@ -640,21 +666,22 @@ class Lemmatizer(flair.nn.Model):
                             # take one of the beam_size many sequences without predicted <E> symbol, if no end symbol was predicted
                             if len(final_candidates) == 0:
                                 seq_without_end = sequences[0]
-                                candidate=[seq_without_end[0], seq_without_end[2]/max_length, seq_without_end[3]/max_length]
+                                candidate = [seq_without_end[0], seq_without_end[2] / max_length,
+                                             seq_without_end[3] / max_length]
                                 final_candidates.append(candidate)
 
                             # order final candidates by score (in descending order)
                             ordered = sorted(final_candidates, key=lambda tup: tup[1], reverse=True)
                             best_sequence = ordered[0]
 
-                            overall_loss+=best_sequence[2]
+                            overall_loss += best_sequence[2]
 
                             # get lemma from indices and add label to token
                             predicted_lemma = ''
                             for idx in best_sequence[0]:
                                 predicted_lemma += self.char_dictionary.get_item_for_index(idx)
-                            line_to_print+=predicted_lemma
-                            line_to_print+=' '
+                            line_to_print += predicted_lemma
+                            line_to_print += ' '
                             token.add_tag(tag_type=label_name, tag_value=predicted_lemma)
 
                         store_embeddings(sentence, storage_mode=embedding_storage_mode)
@@ -703,9 +730,9 @@ class Lemmatizer(flair.nn.Model):
             eval_loss = 0
             average_over = 0
 
-            all_labels_and_predictions = [] # list to save sentences as strings and lemma-prediction pairs of token in respective sentence
-            all_labels_dict = Dictionary(add_unk=True) # give lemmas an id
-            all_label_names = [] # list to save lemma names
+            all_labels_and_predictions = []  # list to save sentences as strings and lemma-prediction pairs of token in respective sentence
+            all_labels_dict = Dictionary(add_unk=True)  # give lemmas an id
+            all_label_names = []  # list to save lemma names
 
             for batch in data_loader:
 
@@ -732,7 +759,7 @@ class Lemmatizer(flair.nn.Model):
                     for token in sentence:
                         # get gold label
                         lemma_gold = token.get_labels(gold_label_type)[0].value
-                        if not lemma_gold: # if no lemma is provided take the actual word, assuming only those words with not coiniciding lemma are annotated
+                        if not lemma_gold:  # if no lemma is provided take the actual word, assuming only those words with not coiniciding lemma are annotated
                             lemma_gold = token.text
                         # save gold label name and give it an id
                         all_labels_dict.add_item(lemma_gold)
@@ -773,7 +800,7 @@ class Lemmatizer(flair.nn.Model):
             target_names = []
             corresponding_ids = []
 
-             # go through lemma names in order of frequency
+            # go through lemma names in order of frequency
             for label_name, count in counter.most_common():
 
                 if label_name in exclude_labels: continue
@@ -798,7 +825,7 @@ class Lemmatizer(flair.nn.Model):
                 precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
                 recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
                 micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
-            except KeyError: # if classification report has no micro avg this means micro avg and accuracy coincide!
+            except KeyError:  # if classification report has no micro avg this means micro avg and accuracy coincide!
                 precision_score = accuracy
                 recall_score = accuracy
                 micro_f_score = accuracy
@@ -846,9 +873,9 @@ class Lemmatizer(flair.nn.Model):
             "char_dict": self.char_dictionary,
             "label_type": self._label_type,
             "beam_size": self.beam_size,
-            "max_sequence_length":self.max_sequence_length,
-            "dependend_on_input":self.dependend_on_input,
-            "use_attention":self.use_attention,
+            "max_sequence_length": self.max_sequence_length,
+            "dependend_on_input": self.dependend_on_input,
+            "use_attention": self.use_attention,
             "padding_in_front_for_encoder": self.padding_in_front_for_encoder
         }
 
@@ -874,9 +901,9 @@ class Lemmatizer(flair.nn.Model):
     def create_char_dict_from_corpus(corpus: Corpus) -> Dictionary:
         char_dict = Dictionary(add_unk=True)
 
-        char_dict.add_item('<>') # index 1
-        char_dict.add_item('<S>') # index 2
-        char_dict.add_item('<E>') # index 3
+        char_dict.add_item('<>')  # index 1
+        char_dict.add_item('<S>')  # index 2
+        char_dict.add_item('<E>')  # index 3
 
         for sen in corpus.get_all_sentences():
             for token in sen:
