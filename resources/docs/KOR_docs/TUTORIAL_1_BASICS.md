@@ -29,9 +29,9 @@ Sentence: "The grass is green ."   [− Tokens: 5]
 다음과 같이 토큰의 ID 나 인덱스를 통해 문장의 토큰에 액세스할 수도 있습니다.
 
 ```python
-# token id
+# 토큰 id
 print(sentence.get_token(4))
-# index itself
+# 인덱스 자체
 print(sentence[3])
 ```
 
@@ -172,12 +172,12 @@ print(f'"{token}" is tagged as "{tag.value}" with confidence score "{tag.score}"
 ```python
 sentence = Sentence('France is the current world cup winner.')
 
-# add a label to a sentence
+# 문장에 라벨 추가
 sentence.add_label('topic', 'sports')
 
 print(sentence)
 
-# Alternatively, you can also create a sentence with label in one line
+# 또는 한 줄에 레이블이 있는 문장을 만들 수도 있습니다.
 sentence = Sentence('France is the current world cup winner.').add_label('topic', 'sports')
 
 print(sentence)
@@ -198,7 +198,7 @@ Sentence: "France is the current world cup winner."   [− Tokens: 7  − Senten
 ```python
 sentence = Sentence('France is the current world cup winner.')
 
-# this sentence has multiple topic labels
+# 이 문장에는 여러 주제 레이블들이 있습니다.
 sentence.add_label('topic', 'sports')
 sentence.add_label('topic', 'soccer')
 ```
@@ -208,11 +208,11 @@ sentence.add_label('topic', 'soccer')
 ```python
 sentence = Sentence('France is the current world cup winner.')
 
-# this sentence has multiple "topic" labels
+# 이 문장에는 여러 "주제"의 레이블들이 있습니다.
 sentence.add_label('topic', 'sports')
 sentence.add_label('topic', 'soccer')
 
-# this sentence has a "language" label
+# 이 문장에는 "언어" 레이블이 있습니다.
 sentence.add_label('language', 'English')
 
 print(sentence)

@@ -35,7 +35,7 @@ Sentence: "What if Google Morphed Into GoogleOS ?" - 7 Tokens
 
 이 문장은 통사적, 형태학적 정보가 tag되어 있습니다. POS 태그를 사용해 문장을 인쇄해보겠습니다 :
 ```python
-# print the first Sentence in the training split
+# 훈련중인 split에서 첫 번째 문장을 출력합니다.
 print(corpus.test[0].to_tagged_string('pos'))
 ```
 결과입니다 : 

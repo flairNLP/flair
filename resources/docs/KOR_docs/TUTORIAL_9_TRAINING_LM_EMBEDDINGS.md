@@ -1,6 +1,6 @@
-# Tutorial 9: 여러분만의 Flair 임베딩을 훈련하세요!
+# 튜토리얼 9: 여러분만의 Flair 임베딩을 훈련하세요!
 
-Flair Embeddings는 Flair의 비밀 소스이며, 이를 통해 다양한 NLP 작업에서 최첨단 정확도를 달성할 수 있습니다.
+Flair 임베딩은 Flair의 비밀 소스이며, 이를 통해 다양한 NLP 작업에서 최첨단 정확도를 달성할 수 있습니다.
 이 튜토리얼에서는 자신만의 Flair 임베딩을 훈련하는 방법을 알려줄 것입니다. 이는 Flair를 새로운 언어나 도메인에 적용하려는 경우에 유용할 수 있습니다.
 
 
@@ -38,21 +38,21 @@ corpus/valid.txt
 from flair.data import Dictionary
 from flair.models import LanguageModel
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
-# are you training a forward or backward LM?
+# 앞으로 혹은 뒤로 LM을 훈련하고 있나요?
 is_forward_lm = True
-# load the default character dictionary
+# 기본 문자 사전 로드
 dictionary: Dictionary = Dictionary.load('chars')
-# get your corpus, process forward and at the character level
+# 당신의 말뭉치를 가져와서, 앞으로 그리고 문자 레벨에서 진행하세요.
 corpus = TextCorpus('/path/to/your/corpus',
                     dictionary,
                     is_forward_lm,
                     character_level=True)
-# instantiate your language model, set hidden size and number of layers
+# 언어 모델 인스턴스화, 숨겨진 크기 및 레이어 사이즈 설정
 language_model = LanguageModel(dictionary,
                                is_forward_lm,
                                hidden_size=128,
                                nlayers=1)
-# train your language model
+# 언어 모델 훈련
 trainer = LanguageModelTrainer(language_model, corpus)
 trainer.train('resources/taggers/language_model',
               sequence_length=10,
@@ -71,9 +71,9 @@ LM을 학습하면 임베딩으로 사용하기 쉽습니다. 모델을 `FlairEm
 
 ```python
 sentence = Sentence('I love Berlin')
-# init embeddings from your trained LM
+# 훈련된 LM에서 임베딩 초기화
 char_lm_embeddings = FlairEmbeddings('resources/taggers/language_model/best-lm.pt')
-# embed sentence
+# 임베딩된 문장
 char_lm_embeddings.embed(sentence)
 ```
 
@@ -85,10 +85,10 @@ char_lm_embeddings.embed(sentence)
 아랍어나 일본어와 같은 비라틴어 알파벳을 사용하는 언어에 대한 임베딩을 훈련하는 경우 먼저 고유한 문자 사전을 만들어야 합니다. 다음 코드로 이 작업을 수행할 수 있습니다:
 
 ```python
-# make an empty character dictionary
+# 빈 문자 사전 만들기
 from flair.data import Dictionary
 char_dictionary: Dictionary = Dictionary()
-# counter object
+# counter 오브젝트
 import collections
 counter = collections.Counter()
 processed = 0
@@ -103,9 +103,9 @@ for file in files:
             processed += 1            
             chars = list(line)
             tokens += len(chars)
-            # Add chars to the dictionary
+            # 사전에 문자 추가
             counter.update(chars)
-            # comment this line in to speed things up (if the corpus is too large)
+            # 속도를 높이려면 이 줄을 주석 처리하세요. (말뭉치가 너무 큰 경우)
             # if tokens > 50000000: break
     # break
 total_count = 0
@@ -118,7 +118,7 @@ idx = 0
 for letter, count in counter.most_common():
     sum += count
     percentile = (sum / total_count)
-    # comment this line in to use only top X percentile of chars, otherwise filter later
+    # 문자의 상위 X 백분위수만 사용하려면 이 줄에 주석을 달고, 그렇지 않으면 나중에 필터링하세요.
     # if percentile < 0.00001: break
     char_dictionary.add_item(letter)
     idx += 1
@@ -158,18 +158,18 @@ dictionary = Dictionary.load_from_file('/path/to/your_char_mappings')
 from flair.data import Dictionary
 from flair.embeddings import FlairEmbeddings
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
-# instantiate an existing LM, such as one from the FlairEmbeddings
+# FlairEmbeddings와 같은 기존 LM 인스턴스화
 language_model = FlairEmbeddings('news-forward').lm
-# are you fine-tuning a forward or backward LM?
+# 앞으로 또는 뒤로 LM을 미세 조정하고 있나요?
 is_forward_lm = language_model.is_forward_lm
-# get the dictionary from the existing language model
+# 기존 언어 모델에서 사전 가져오기
 dictionary: Dictionary = language_model.dictionary
-# get your corpus, process forward and at the character level
+# 당신의 말뭉치를 가져와서, 앞으로 그리고 문자 레벨에서 진행하세요.
 corpus = TextCorpus('path/to/your/corpus',
                     dictionary,
                     is_forward_lm,
                     character_level=True)
-# use the model trainer to fine-tune this model on your corpus
+# 모델 트레이너를 사용하여 코퍼스에서 이 모델을 미세 조정하세요.
 trainer = LanguageModelTrainer(language_model, corpus)
 trainer.train('resources/taggers/language_model',
               sequence_length=100,

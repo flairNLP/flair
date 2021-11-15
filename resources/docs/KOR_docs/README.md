@@ -67,11 +67,11 @@ pip install flair
 ```python
 from flair.data import Sentence
 from flair.models import SequenceTagger
-# make a sentence
+# 문장 만들기
 sentence = Sentence('I love Berlin .')
-# load the NER tagger
+# NER tagger 로드하기
 tagger = SequenceTagger.load('ner')
-# run NER over sentence
+# 문장에 대해 NER 실행
 tagger.predict(sentence)
 ```
 
@@ -80,7 +80,7 @@ tagger.predict(sentence)
 ```python
 print(sentence)
 print('The following NER tags are found:')
-# iterate over entities and print
+# 엔티티를 반복하고 출력하기
 for entity in sentence.get_spans('ner'):
     print(entity)
 ```
@@ -108,6 +108,7 @@ Span [3]: "Berlin"   [− Labels: LOC (0.9992)]
 * [Tutorial 7: Training a Model](/resources/docs/KOR_docs/TUTORIAL_7_TRAINING_A_MODEL.md)
 * [Tutorial 8: Training your own Flair Embeddings](/resources/docs/KOR_docs/TUTORIAL_8_MODEL_OPTIMIZATION.md)
 * [Tutorial 9: Training a Zero Shot Text Classifier (TARS)](/resources/docs/KOR_docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
+* [Tutorial 10: Few-Shot and Zero-Shot Classification (TARS)](/resources/docs/KOR_docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)
 
 튜토리얼에서는 기본 NLP 클래스가 작동하는 방법, 사전 훈련된 모델을 로드하여 텍스트에 태그를 지정하는 방법, 다른 단어 또는 문서 임베딩으로 텍스트를 포함하는 방법, 고유한 언어 모델, 시퀀스 레이블링 모델 및 텍스트 분류 모델에 대해 설명하고있습니다. 불분명한 것이 있으면 알려주세요.
 
@@ -177,6 +178,9 @@ Flair 임베딩(PooledFlairEmbeddings)의 풀링 버전을 사용하는 경우 [
 ## Contact
 
 질문이나 의견은 [Alan Akbik](http://alanakbik.github.io/)로 이메일을 보내주세요.
+
+한국어 번역에 대한 의견은    
+김한결(hannn0414@naver.com), 박태현(abnc7800@gmail.com), 최완규(wanq123@gachon.ac.kr)로 이메일을 보내주세요.
 
 ## Contributing
 
