@@ -24,7 +24,7 @@ def test_words_to_char_indices():
         [ d,  d,  d,  d,  d,  d,  d,  d,  9,  e],
         [24,  5,  9, 16,  8,  7, 22, 16, 15,  e],
         [ d,  d,  d,  d,  d,  d, 14,  9, 27,  e],
-        [ d,  d,  d,  d,  d,  d,  d,  d, 76,  e]]).to(flair.device)
+        [ d,  d,  d,  d,  d,  d,  d,  d, 76,  e]], dtype = torch.long).to(flair.device)
     out = lemmatizer.words_to_char_indices(string_list, end_symbol=True, start_symbol= False, padding_in_front = True)
     assert torch.equal(target, out)
 
@@ -36,7 +36,7 @@ def test_words_to_char_indices():
         [ s,  9,  d,  d,  d,  d,  d,  d,  d,  d],
         [ s, 24,  5,  9, 16,  8,  7, 22, 16, 15],
         [ s, 14,  9, 27,  d,  d,  d,  d,  d,  d],
-        [ s, 76,  d,  d,  d,  d,  d,  d,  d,  d]]).to(flair.device)
+        [ s, 76,  d,  d,  d,  d,  d,  d,  d,  d]], dtype = torch.long).to(flair.device)
     out = lemmatizer.words_to_char_indices(string_list, end_symbol=False, start_symbol=True, padding_in_front=False)
     assert torch.equal(target, out)
 
