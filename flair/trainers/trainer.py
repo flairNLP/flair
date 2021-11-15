@@ -554,7 +554,7 @@ class ModelTrainer:
                     result_line += f"\t{train_part_eval_result.loss}\t{train_part_eval_result.log_line}"
 
                     log.info(
-                        f"TRAIN_SPLIT : loss {train_part_eval_result.loss}} - {main_evaluation_metric[1]} ({main_evaluation_metric[0]}) {round(train_part_eval_result.main_score, 4)}"
+                        f"TRAIN_SPLIT : loss {train_part_eval_result.loss} - {main_evaluation_metric[1]} ({main_evaluation_metric[0]}) {round(train_part_eval_result.main_score, 4)}"
                     )
                 if use_tensorboard:
                     for (metric_class_avg_type, metric_type) in metrics_for_tensorboard:
