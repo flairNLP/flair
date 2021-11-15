@@ -10,7 +10,7 @@ import torch.nn.functional
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_sequence
 
 import flair.nn
-from flair.data import Sentence, Dictionary
+from flair.data import Sentence, Dictionary, Label, DataPoint
 from flair.embeddings import TokenEmbeddings, StackedEmbeddings
 from flair.training_utils import store_embeddings
 from flair.file_utils import cached_path, unzip_file
@@ -69,7 +69,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         :param loss_weights: Dictionary of weights for labels for the loss function
             (if any label's weight is unspecified it will default to 1.0)
         """
-        super(SequenceTagger, self).__init__()
+        super(SequenceTagger, self).__init__(label_dictionary=tag_dictionary)
 
         # ----- Embedding specific parameters -----
         self.embeddings = embeddings
@@ -126,7 +126,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
             self.train_initial_hidden_state = train_initial_hidden_state
             if self.train_initial_hidden_state:
-                self.hs_initializer, self.lstm_init_h, self.lstm_init_c = self.init_initial_hidden_state()
+                self.hs_initializer, self.lstm_init_h, self.lstm_init_c = self.init_initial_hidden_state(num_directions)
 
         else:
             self.linear = torch.nn.Linear(embedding_dim, embedding_dim)
@@ -135,11 +135,11 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         # ----- CRF / Linear layer -----
         if use_crf:
             self.crf = CRF(hidden_output_dim, self.tagset_size)
-            self.viterbi_loss = ViterbiLoss(tag_dictionary)
+            self.loss_function = ViterbiLoss(tag_dictionary)
             self.viterbi_decoder = ViterbiDecoder(tag_dictionary)
         else:
             self.linear2tag = torch.nn.Linear(hidden_output_dim, self.tagset_size)
-            self.cross_entropy_loss = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
+            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
 
         self.to(flair.device)
 
@@ -205,22 +205,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
                      sentences: Union[List[DataPoint], DataPoint],
                      return_label_candidates: bool = False,
                      ):
-        pass
 
-    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.Tensor:
-        """
-        Forward loss function from abstract base class flair.nn.Model
-        :param sentences: batch of sentences
-        """
-        features, lengths = self.forward(sentences)
-        return self.loss(features, sentences, lengths)
-
-    def forward(self, sentences: Union[List[Sentence], Sentence]) -> (torch.Tensor, torch.Tensor):
-        """
-        Forward method of base multitask model
-        :param sentences: list of sentences
-        :return: features and lengths of each sentence in batch
-        """
         self.embeddings.embed(sentences)
 
         # Get embedding for each sentence + append a stop token embedding to each sentence
@@ -261,68 +246,19 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         else:
             features = self.linear2tag(sentence_tensor)
 
-        return features, lengths
+        scores = (features, lengths)
 
-    def loss(self, features: torch.Tensor, sentences: Union[List[Sentence], Sentence], lengths) -> torch.Tensor:
-        """
-        Loss function of multitask base model.
-        :param features: Output features / CRF scores from feed-forward function
-        :param sentences: batch of sentences
-        :param lengths: lenghts of sentences in batch to sort tag tensor accordingly
-        """
-        tags_tensor = get_tags_tensor(sentences, self.tag_dictionary, self.tag_type, self.use_crf)
-        tags_tensor = tags_tensor[lengths.indices]
-        token_count = lengths.values.sum() - lengths.values.__len__()
+        all_tokens = [token for sentence in sentences for token in sentence]
+        labels = [[token.get_tag(self.label_type).value] for token in all_tokens]
 
-        if self.use_crf:
-            loss = self.viterbi_loss(features, tags_tensor, lengths.values)
-        else:
-            loss = self.cross_entropy_loss(features.permute(0,2,1), tags_tensor)
+        # minimal return is scores and labels
+        return_tuple = (scores, labels)
 
-        return loss, token_count
+        if return_label_candidates:
+            empty_label_candidates = [Label(value=None, score=None) for token in all_tokens]
+            return_tuple += (all_tokens, empty_label_candidates)
 
-    def predict(
-            self,
-            sentences: Union[List[Sentence], Sentence],
-            label_name: Optional[str] = None,
-            return_loss: bool = False,
-            embedding_storage_mode: str = "none",
-    ) -> Optional[torch.Tensor]:
-        """
-        Predicting tag sequence for current batch of sentences.
-        :param sentences: batch of sentences
-        :param label_name: which label should be predicted
-        :param return_loss: If True, a loss float tensor is returned
-        :param embedding_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and
-            freshly recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU
-        :return: Can return a loss float value (Tensor)
-        """
-        sentences = self._filter_empty_sentences(sentences)
-
-        if label_name == None:
-            label_name = self.tag_type
-
-        features, lengths = self.forward(sentences)
-
-        # features und lengths in der forward sortiert
-        if self.use_crf:
-            tags = self.viterbi_decoder.decode(features, lengths)
-        else:
-            tags = obtain_labels(features, lengths, self.tag_dictionary)
-
-        # sorted sentences to match tags from decoder
-        sentences = [sentences[i] for i in lengths.indices]
-
-        # Add predicted labels to sentences
-        for (sentence, sent_tags) in zip(sentences, tags):
-            for (token, tag) in zip(sentence.tokens, sent_tags):
-                token.add_tag_label(label_name, tag)
-
-        # clearing token embeddings to save memory
-        store_embeddings(sentences, storage_mode=embedding_storage_mode)
-
-        if return_loss:
-            return self.loss(features, sentences, lengths)
+        return return_tuple
 
     def _get_state_dict(self):
         """Returns the state dictionary for this model."""

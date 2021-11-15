@@ -24,7 +24,7 @@ class ViterbiLoss(torch.nn.Module):
         self.start_tag = tag_dictionary.get_idx_for_item(START_TAG)
         self.stop_tag = tag_dictionary.get_idx_for_item(STOP_TAG)
 
-    def forward(self, features: torch.Tensor, targets: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
+    def forward(self, features_tuple: tuple, targets: torch.Tensor) -> torch.Tensor:
         """
         Forward propagation of Viterbi Loss
 
@@ -38,13 +38,14 @@ class ViterbiLoss(torch.nn.Module):
         :param lengths: lengths tuple containing sorted lengths and indices from unsorted list
         :return: average Viterbi Loss over batch size
         """
+        features, lengths = features_tuple
         batch_size = features.size(0)
         seq_len = features.size(1)
-        targets = targets.unsqueeze(2)
+        targets = targets.unsqueeze(0).unsqueeze(0)
 
         # Squeeze crf scores matrices in 1-dim shape and gather scores at targets by matrix indices
-        scores_at_targets = torch.gather(features.view(batch_size, seq_len, -1), 2, targets).squeeze(2)
-        scores_at_targets = pack_padded_sequence(scores_at_targets, lengths, batch_first=True)[0]
+        scores_at_targets = torch.gather(features.view(batch_size, seq_len, -1), 2, targets).squeeze(0).squeeze(0)
+        scores_at_targets = pack_padded_sequence(scores_at_targets, lengths.values, batch_first=True)[0]
         gold_score = scores_at_targets.sum()
 
         scores_upto_t = torch.zeros(batch_size, self.tagset_size, device=flair.device)
