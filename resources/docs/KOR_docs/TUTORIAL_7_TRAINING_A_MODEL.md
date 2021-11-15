@@ -1,4 +1,4 @@
-# Tutorial 7: Training a Model
+# 튜토리얼 7: 모델 훈련하기
 
 튜토리얼 7에서는 최첨단 word embedding을 사용하여 여러분의 시퀀스 레이블링(sequence labeling)과 텍스트 분류(text classification) 모델을   
 훈련하는 방법을 살펴볼 것입니다.
@@ -13,25 +13,23 @@
 
 ## 품사 Tagging 모델 훈련
 
-다음 예제는 간단한 글로브(Glove) 임베딩을 이용하여 UD_ENGLISH (English universal dependency treebank) 데이터를 통해 훈련된 작은 품사 tagger   
-모델에 대한 코드입니다.
-이 예제에서는 더 빠르게 작동시키기 위해 기존 데이터의 10%로 다운샘플링하여 진행했지만, 보통의 경우에는 전체 데이터셋으로 훈련   
-시켜야 합니다:
+다음 예제는 간단한 글로브(Glove) 임베딩을 이용하여 UD_ENGLISH (English universal dependency treebank) 데이터를 통해 훈련된 작은 품사 tagger 모델에 대한 코드입니다.
+이 예제에서는 더 빠르게 작동시키기 위해 기존 데이터의 10%로 다운샘플링하여 진행했지만, 보통의 경우에는 전체 데이터셋으로 훈련시켜야 합니다:
 
 ```python
 from flair.datasets import UD_ENGLISH
 from flair.embeddings import WordEmbeddings, StackedEmbeddings
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
-# 1. get the corpus
+# 1. 말뭉치 가져오기
 corpus = UD_ENGLISH().downsample(0.1)
 print(corpus)
-# 2. what label do we want to predict?
+# 2. 어떤 레이블을 예측하고 싶으신가요?
 label_type = 'upos'
-# 3. make the label dictionary from the corpus
+# 3. 말뭉치에서 레이블 사전 만들기
 label_dict = corpus.make_label_dictionary(label_type=label_type)
 print(label_dict)
-# 4. initialize embeddings
+# 4. 임베딩 초기화하기
 embedding_types = [
     WordEmbeddings('glove'),
     # comment in this line to use character embeddings
@@ -41,15 +39,15 @@ embedding_types = [
     # FlairEmbeddings('news-backward'),
 ]
 embeddings = StackedEmbeddings(embeddings=embedding_types)
-# 5. initialize sequence tagger
+# 5. 시퀀스 tagger 초기화하기
 tagger = SequenceTagger(hidden_size=256,
                         embeddings=embeddings,
                         tag_dictionary=label_dict,
                         tag_type=label_type,
                         use_crf=True)
-# 6. initialize trainer
+# 6. 트레이너 초기화하기
 trainer = ModelTrainer(tagger, corpus)
-# 7. start training
+# 7. 훈련 시작
 trainer.train('resources/taggers/example-upos',
               learning_rate=0.1,
               mini_batch_size=32,
@@ -63,11 +61,11 @@ trainer.train('resources/taggers/example-upos',
 모델이 학습되면 이를 사용하여 새 문장의 태그를 예측할 수 있습니다. 모델의 'predict' 메서드를 호출하기만 하면 됩니다.
 
 ```python
-# load the model you trained
+# 훈련한 모델 로드하기
 model = SequenceTagger.load('resources/taggers/example-pos/final-model.pt')
-# create example sentence
+# 예시 문장 만들기
 sentence = Sentence('I love Berlin')
-# predict tags and print
+# 태그 예측하고 출력하기
 model.predict(sentence)
 print(sentence.to_tagged_string())
 ```
@@ -86,30 +84,30 @@ from flair.datasets import CONLL_03
 from flair.embeddings import WordEmbeddings, FlairEmbeddings, StackedEmbeddings
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
-# 1. get the corpus
+# 1. 말뭉치 가져오기
 corpus = CONLL_03()
 print(corpus)
-# 2. what label do we want to predict?
+# 2. 어떤 레이블을 예측하고 싶으신가요?
 label_type = 'ner'
-# 3. make the label dictionary from the corpus
+# 3. 말뭉치에서 레이블 사전 만들기
 label_dict = corpus.make_label_dictionary(label_type=label_type)
 print(label_dict)
-# 4. initialize embedding stack with Flair and GloVe
+# 4. Flair 및 GloVe로 임베딩 스택 초기화하기
 embedding_types = [
     WordEmbeddings('glove'),
     FlairEmbeddings('news-forward'),
     FlairEmbeddings('news-backward'),
 ]
 embeddings = StackedEmbeddings(embeddings=embedding_types)
-# 5. initialize sequence tagger
+# 5. 시퀀스 tagger 초기화하기
 tagger = SequenceTagger(hidden_size=256,
                         embeddings=embeddings,
                         tag_dictionary=label_dict,
                         tag_type=label_type,
                         use_crf=True)
-# 6. initialize trainer
+# 6. 트레이너 초기화하기
 trainer = ModelTrainer(tagger, corpus)
-# 7. start training
+# 7. 훈련 시작
 trainer.train('resources/taggers/sota-ner-flair',
               learning_rate=0.1,
               mini_batch_size=32,
@@ -133,15 +131,15 @@ from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
 import torch
 from torch.optim.lr_scheduler import OneCycleLR
-# 1. get the corpus
+# 1. 말뭉치 가져오기
 corpus = CONLL_03()
 print(corpus)
-# 2. what label do we want to predict?
+# 2. 어떤 레이블을 예측하고 싶으신가요?
 label_type = 'ner'
-# 3. make the label dictionary from the corpus
+# 3. 말뭉치에서 레이블 사전 만들기
 label_dict = corpus.make_label_dictionary(label_type=label_type)
 print(label_dict)
-# 4. initialize fine-tuneable transformer embeddings WITH document context
+# 4. 문서 컨텍스트로 미세 조정 가능한 변환기 임베딩 초기화
 embeddings = TransformerWordEmbeddings(
     model='xlm-roberta-large',
     layers="-1",
@@ -149,7 +147,7 @@ embeddings = TransformerWordEmbeddings(
     fine_tune=True,
     use_context=True,
 )
-# 5. initialize bare-bones sequence tagger (no CRF, no RNN, no reprojection)
+# 5. bare-bones 시퀀스 태거 초기화하기 (CRF 없음, RNN 없음, 재투영 없음)
 tagger = SequenceTagger(
     hidden_size=256,
     embeddings=embeddings,
@@ -159,9 +157,9 @@ tagger = SequenceTagger(
     use_rnn=False,
     reproject_embeddings=False,
 )
-# 6. initialize trainer with AdamW optimizer
+# 6. AdamW 옵티마이저로 트레이너 초기화하기
 trainer = ModelTrainer(tagger, corpus, optimizer=torch.optim.AdamW)
-# 7. run training with XLM parameters (20 epochs, small LR, one-cycle learning rate scheduling)
+# 7. XLM 매개변수로 훈련 실행(20 epochs, 작은 LR, 1주기 학습률 스케줄링)
 trainer.train('resources/taggers/sota-ner-flert',
               learning_rate=5.0e-6,
               mini_batch_size=4,
@@ -193,19 +191,19 @@ from flair.datasets import TREC_6
 from flair.embeddings import TransformerDocumentEmbeddings
 from flair.models import TextClassifier
 from flair.trainers import ModelTrainer
-# 1. get the corpus
+# 1. 말뭉치 가져오기
 corpus: Corpus = TREC_6()
-# 2. what label do we want to predict?
+# 2. 어떤 레이블을 예측하고 싶으신가요?
 label_type = 'question_class'
-# 3. create the label dictionary
+# 3. 레이블 사전 만들기
 label_dict = corpus.make_label_dictionary(label_type=label_type)
-# 4. initialize transformer document embeddings (many models are available)
+# 4. 변환기 문서 임베딩 초기화하기 (많은 모델 사용 가능)
 document_embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased', fine_tune=True)
-# 5. create the text classifier
+# 5. 텍스트 분류 만들기
 classifier = TextClassifier(document_embeddings, label_dictionary=label_dict, label_type=label_type)
-# 6. initialize trainer with AdamW optimizer
+# 6. AdamW 옵티마이저로 트레이너 초기화하기
 trainer = ModelTrainer(classifier, corpus, optimizer=torch.optim.AdamW)
-# 7. run training with fine-tuning
+# 7. 미세 조정으로 훈련 실행
 trainer.train('resources/taggers/question-classification-with-transformer',
               learning_rate=5.0e-5,
               mini_batch_size=4,
@@ -220,9 +218,9 @@ trainer.train('resources/taggers/question-classification-with-transformer',
 
 ```python
 classifier = TextClassifier.load('resources/taggers/question-classification-with-transformer/final-model.pt')
-# create example sentence
+# 예시 문장 만들기
 sentence = Sentence('Who built the Eiffel Tower ?')
-# predict class and print
+# 클래스를 예측하고 출력하기
 classifier.predict(sentence)
 print(sentence.labels)
 ```
@@ -238,29 +236,29 @@ from flair.datasets import UD_ENGLISH, UD_GERMAN
 from flair.embeddings import FlairEmbeddings, StackedEmbeddings
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
-# 1. get the corpora - English and German UD
+# 1. 말뭉치 가져오기 - 영어 및 독일어 UD
 corpus = MultiCorpus([UD_ENGLISH(), UD_GERMAN()]).downsample(0.1)
-# 2. what label do we want to predict?
+# 2. 어떤 레이블을 예측하고 싶으신가요?
 label_type = 'upos'
-# 3. make the label dictionary from the corpus
+# 3. 말뭉치에서 레이블 사전 만들기
 label_dict = corpus.make_label_dictionary(label_type=label_type)
 print(label_dict)
-# 4. initialize embeddings
+# 4. 임베딩 초기화하기
 embedding_types = [
     # we use multilingual Flair embeddings in this task
     FlairEmbeddings('multi-forward'),
     FlairEmbeddings('multi-backward'),
 ]
 embeddings = StackedEmbeddings(embeddings=embedding_types)
-# 5. initialize sequence tagger
+# 5. 시퀀스 tagger 초기화하기
 tagger = SequenceTagger(hidden_size=256,
                         embeddings=embeddings,
                         tag_dictionary=label_dict,
                         tag_type=label_type,
                         use_crf=True)
-# 6. initialize trainer
+# 6. 트레이너 초기화하기
 trainer = ModelTrainer(tagger, corpus)
-# 7. start training
+# 7. 훈련 시작
 trainer.train('resources/taggers/example-universal-pos',
               learning_rate=0.1,
               mini_batch_size=32,
@@ -278,13 +276,13 @@ Flair에는 신경망에서 훈련 곡선과 가중치를 표시하는 도우미
 훈련 후 plotter가 다음 파일을 가리킬 것입니다:
 
 ```python
-# set write_weights to True to write weights
+# 가중치를 쓰려면 write_weights를 True로 설정하세요.
 trainer.train('resources/taggers/example-universal-pos',
               ...
 write_weights = True,
                 ...
 )
-# visualize
+# 가시화하기
 from flair.visual.training_curves import Plotter
 plotter = Plotter()
 plotter.plot_training_curves('loss.tsv')
@@ -308,33 +306,33 @@ from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
 from typing import List
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
-# 1. get the corpus
+# 1. 말뭉치 가져오기
 corpus: Corpus = WNUT_17().downsample(0.1)
-# 2. what label do we want to predict?
+# 2. 어떤 레이블을 예측하고 싶으신가요?
 label_type = 'ner'
-# 3. make the label dictionary from the corpus
+# 3. 말뭉치에서 레이블 사전 만들기
 label_dict = corpus.make_label_dictionary(label_type=label_type)
-# 4. initialize embeddings
+# 4. 임베딩 초기화하기
 embedding_types: List[TokenEmbeddings] = [
     WordEmbeddings('glove')
 ]
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
-# 5. initialize sequence tagger
+# 5. 시퀀스 tagger 초기화하기
 tagger: SequenceTagger = SequenceTagger(hidden_size=256,
                                         embeddings=embeddings,
                                         tag_dictionary=label_dict,
                                         tag_type=label_type,
                                         use_crf=True)
-# 6. initialize trainer
+# 6. 트레이너 초기화하기
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
-# 7. start training
+# 7. 훈련 시작
 trainer.train('resources/taggers/example-ner',
               learning_rate=0.1,
               mini_batch_size=32,
               max_epochs=10,
               checkpoint=True)
-# 8. stop training at any point
-# 9. continue trainer at later point
+# 8. 언제든지 훈련을 중단하세요.
+# 9. 나중에 트레이너를 계속하세요.
 checkpoint = 'resources/taggers/example-ner/checkpoint.pt'
 trainer = ModelTrainer.load_checkpoint(checkpoint, corpus)
 trainer.train('resources/taggers/example-ner',
