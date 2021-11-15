@@ -269,11 +269,11 @@ George returned <return.01> to Berlin to return <return.02> his hat .
 He had <have.LV> a look <look.01> at different hats .
 ```
 
-우리가 볼 수 있듯이, 프레임 감지기는 문장 1에서 '반환'이라는 단어의 두 가지 다른 의미 사이를 구별한다.
-'return.01'은 위치로 돌아가는 것을 의미하고, 'return.02'는 무언가를 돌려주는 것을 의미한다.
+우리가 볼 수 있듯이, 프레임 감지기는 문장 1에서 '반환'이라는 단어의 두 가지 다른 의미 사이를 구별합니다.
+'return.01'은 위치로 돌아가는 것을 의미하고, 'return.02'는 무언가를 돌려주는 것을 의미합니다.
 
-비슷하게, 문장 2에서 프레임 탐지기는 'have'가 라이트 동사인 경동사 구조를 찾는다.
-look은 단어를 연상시키는 틀이다.
+비슷하게, 문장 2에서 프레임 탐지기는 'have'가 라이트 동사인 경동사 구조를 찾습니다.
+look은 단어를 연상시키는 틀입니다.
 
 ### 문장 목록 태그 지정
 
@@ -356,8 +356,8 @@ POSITION이라는 라벨이 문장에 추가되어 이 문장이 긍정적인 �
 ## 교육 데이터 없이 새 클래스 태그 지정
 
 포함되지 않은 클래스에 레이블을 지정해야 하는 경우
-사전 훈련된 제로샷 분류기 TARS
-([제로샷 자습서](/resources/docs/TUTORIAL_10_TRA로 건너뛰기)INING_ZERO_SHOT_MODEL.md)).
+사전 훈련된 제로샷 분류기 TARS를 사용해 볼 수도 있습니다.
+([제로샷 튜토리얼](/resources/docs/KOR_docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)로 건너뛰기)    
 TARS는 임의 클래스에 대해 텍스트 분류를 수행할 수 있습니다.
 
 ## 다음
