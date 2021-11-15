@@ -4,8 +4,6 @@ import torch
 from flair.models import Lemmatizer
 from flair.data import Sentence, Dictionary
 
-
-@pytest.mark.integration
 def test_words_to_char_indices():
 
     sentence = Sentence('Hello look what a beautiful day!')
