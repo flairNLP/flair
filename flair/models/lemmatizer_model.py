@@ -867,7 +867,8 @@ class Lemmatizer(flair.nn.Model):
             "max_sequence_length": self.max_sequence_length,
             "dependent_on_input": self.dependent_on_input,
             "use_attention": self.use_attention,
-            "padding_in_front_for_encoder": self.padding_in_front_for_encoder
+            "padding_in_front_for_encoder": self.padding_in_front_for_encoder,
+            "encode_characters": self.encode_characters,
         }
 
         return model_state
