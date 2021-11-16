@@ -1253,7 +1253,8 @@ class WSD_UFSAC(MultiCorpus):
                 sample_missing_splits_in_multicorpus = 'only_dev'
                 
             # also we remove 'raganato_ALL' from filenames in case its in the list
-            filenames.remove('raganato_ALL')
+            if 'raganato_ALL' in filenames:
+                filenames.remove('raganato_ALL')
 
             # generate the test file
             test_file = determine_tsv_file(filename='raganato_ALL', data_folder=data_folder,
