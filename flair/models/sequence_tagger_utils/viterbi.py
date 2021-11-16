@@ -6,7 +6,8 @@ from torch.nn.utils.rnn import pack_padded_sequence
 import flair
 from flair.data import Dictionary, Label, List
 
-from .utils import log_sum_exp, START_TAG, STOP_TAG
+from .utils import log_sum_exp, START_TAG, STOP_TAG, PAD_TAG
+
 
 class ViterbiLoss(torch.nn.Module):
     """
@@ -41,7 +42,16 @@ class ViterbiLoss(torch.nn.Module):
         features, lengths = features_tuple
         batch_size = features.size(0)
         seq_len = features.size(1)
-        targets = targets.unsqueeze(0).unsqueeze(0)
+        targets_formatted = []
+        targets_list = targets.tolist()
+        for cut in lengths.values:
+            targets_formatted.append(targets_list[:cut])
+            targets_list = targets_list[cut:]
+
+        for t in targets_formatted:
+            t += [self.tag_dictionary.get_idx_for_item(PAD_TAG)] * (seq_len - len(t))
+
+        targets = torch.tensor(targets_formatted, dtype=torch.long).unsqueeze(2).to(flair.device)
 
         # Squeeze crf scores matrices in 1-dim shape and gather scores at targets by matrix indices
         scores_at_targets = torch.gather(features.view(batch_size, seq_len, -1), 2, targets).squeeze(0).squeeze(0)
@@ -50,8 +60,8 @@ class ViterbiLoss(torch.nn.Module):
 
         scores_upto_t = torch.zeros(batch_size, self.tagset_size, device=flair.device)
 
-        for t in range(max(lengths)):
-            batch_size_t = sum([l > t for l in lengths])  # since batch is ordered, we can save computation time by reducing our effective batch_size
+        for t in range(max(lengths.values)):
+            batch_size_t = sum([l > t for l in lengths.values])  # since batch is ordered, we can save computation time by reducing our effective batch_size
 
             if t == 0:
                 # Initially, get scores from <start> tag to all other tags

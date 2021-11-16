@@ -10,14 +10,14 @@ import torch.nn.functional
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_sequence
 
 import flair.nn
-from flair.data import Sentence, Dictionary, Label, DataPoint
+from flair.data import Sentence, Dictionary, Label, DataPoint, Token
 from flair.embeddings import TokenEmbeddings, StackedEmbeddings
 from flair.training_utils import store_embeddings
 from flair.file_utils import cached_path, unzip_file
 
 from .sequence_tagger_utils.crf import CRF
 from .sequence_tagger_utils.viterbi import ViterbiLoss, ViterbiDecoder
-from .sequence_tagger_utils.utils import init_stop_tag_embedding, get_tags_tensor, obtain_labels, START_TAG, STOP_TAG
+from .sequence_tagger_utils.utils import init_stop_tag_embedding, START_TAG, STOP_TAG, PAD_TAG
 
 
 log = logging.getLogger("flair")
@@ -93,8 +93,10 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         # ----- Conditional Random Field parameters -----
         self.use_crf = use_crf
         if use_crf:
+            self.tag_dictionary.add_item(PAD_TAG)
             self.tag_dictionary.add_item(START_TAG)
             self.tag_dictionary.add_item(STOP_TAG)
+            self.tagset_size += 3
 
         # ----- Dropout parameters -----
         self.use_dropout = True if dropout > 0.0 else False
@@ -216,6 +218,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         lengths = torch.LongTensor([len(sentence) + 1 for sentence in sentences])
         lengths = lengths.sort(dim=0, descending=True)
         # sort tensor in decreasing order based on lengths of sentences in batch
+        sentences = [sentences[i] for i in lengths.indices]
         sentence_tensor = sentence_tensor[lengths.indices]
 
         # ----- Forward Propagation -----
@@ -248,8 +251,11 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         scores = (features, lengths)
 
-        all_tokens = [token for sentence in sentences for token in sentence]
-        labels = [[token.get_tag(self.label_type).value] for token in all_tokens]
+        tokens_per_sentence = [[token for token in sentence] for sentence in sentences]
+        all_tokens = [item for sublist in tokens_per_sentence for item in sublist]
+
+        labels_plus_stop_tag = [[[token.get_tag(self.label_type).value] for token in sentence] + [["<STOP>"]] for sentence in tokens_per_sentence]
+        labels = [item for sublist in labels_plus_stop_tag for item in sublist]
 
         # minimal return is scores and labels
         return_tuple = (scores, labels)
