@@ -18,7 +18,7 @@ from flair.training_utils import Result, store_embeddings
 log = logging.getLogger("flair")
 
 
-class Lemmatizer(flair.nn.Model):
+class Lemmatizer(flair.nn.Classifier):
 
     def __init__(self,
                  embeddings: flair.embeddings.TokenEmbeddings = None,
@@ -502,7 +502,7 @@ class Lemmatizer(flair.nn.Model):
                     store_embeddings(batch, storage_mode=embedding_storage_mode)
 
             else:  # no batching in RNN
-                # still: embedd sentences batch-wise
+                # still: embed sentences batch-wise
                 dataloader = DataLoader(dataset=SentenceDataset(sentences), batch_size=mini_batch_size)
 
                 for batch in dataloader:
@@ -682,177 +682,6 @@ class Lemmatizer(flair.nn.Model):
 
             if return_loss:
                 return overall_loss, number_tokens_in_total
-
-    def evaluate(
-            self,
-            sentences: Union[List[Sentence], Dataset],
-            gold_label_type: str,
-            out_path: Union[str, Path] = None,
-            embedding_storage_mode: str = "none",
-            mini_batch_size: int = 16,
-            num_workers: int = 8,
-            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-            exclude_labels: List[str] = [],
-            gold_label_dictionary: Optional[Dictionary] = None,
-            batching_in_rnn: bool = True
-    ) -> Result:
-        """
-        This function evaluates a lemmatizer on a given set of sentences
-        :param sentences: sentences on which to evaluate
-        :param gold_label_type: name of the gold label that is used
-        :param out_path: path to the output file in which the predictions of the lemmatizer will be stored
-        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
-            you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
-        :param mini_batch_size: batch size, also used in prediction
-        :param main_evaluation_metric: evaluation metric used in model selection
-        :param exclude_labels: list of labels one wants to exclude from evaluation
-        :param gold_label_dictionary: one can use a fixed label dictionary in evaluation instead of creating it from the data
-        :param batching_in_rnn: whether or not to use batching in the RNN of the decoder
-        """
-
-        if not isinstance(sentences, Dataset):
-            sentences = SentenceDataset(sentences)
-
-        data_loader = DataLoader(sentences, batch_size=mini_batch_size, num_workers=num_workers)
-
-        with torch.no_grad():
-
-            # loss calculation
-            eval_loss = 0
-            average_over = 0
-
-            all_labels_and_predictions = []  # list to save sentences as strings and lemma-prediction pairs of token in respective sentence
-            all_labels_dict = Dictionary(add_unk=True)  # give lemmas an id
-            all_label_names = []  # list to save lemma names
-
-            for batch in data_loader:
-
-                # remove any previously predicted labels
-                for sentence in batch:
-                    for token in sentence:
-                        token.remove_labels("predicted")
-
-                # predict for batch
-                loss_and_count = self.predict(batch,
-                                              embedding_storage_mode=embedding_storage_mode,
-                                              mini_batch_size=mini_batch_size,
-                                              label_name='predicted',
-                                              return_loss=True,
-                                              batching_in_rnn=batching_in_rnn)
-
-                average_over += loss_and_count[1]
-                eval_loss += loss_and_count[0]
-
-                # get the gold labels
-                for sentence in batch:
-
-                    sentence_labels_and_predictions = []
-                    for token in sentence:
-                        # get gold label
-                        lemma_gold = token.get_labels(gold_label_type)[0].value
-                        if not lemma_gold:  # if no lemma is provided take the actual word, assuming only those words with not coiniciding lemma are annotated
-                            lemma_gold = token.text
-                        # save gold label name and give it an id
-                        all_labels_dict.add_item(lemma_gold)
-                        all_label_names.append(lemma_gold)
-                        # get prediction
-                        prediction = token.get_labels('predicted')[0].value
-                        # save gold label - prediction pair as tuple
-                        sentence_labels_and_predictions.append((lemma_gold, prediction))
-
-                    # save sentence and all pairs of gold labels and predictions in list
-                    all_labels_and_predictions.append((sentence.to_plain_string(), sentence_labels_and_predictions))
-
-            # write all original sentences, lemmas and predicted values to out file if given
-            if out_path:
-                with open(Path(out_path), "w", encoding="utf-8") as outfile:
-                    for tuple in all_labels_and_predictions:
-                        outfile.write(tuple[0] + '\n')  # the sentence
-                        labels = [x[0] for x in tuple[1]]
-                        predictions = [x[1] for x in tuple[1]]
-                        outfile.write((' ').join(labels) + '\n')
-                        outfile.write((' ').join(predictions) + '\n\n')
-
-            # now we come to the evaluation
-            y_true = []
-            y_pred = []
-
-            # add ids of lemmas and predictions to y_true and y_pred
-            # if the prediction did not appear in the gold lemmas it is mapped to the index 0
-            for tuple in all_labels_and_predictions:
-                for lemma, prediction in tuple[1]:
-                    y_true.append(all_labels_dict.get_idx_for_item(lemma))
-                    y_pred.append(all_labels_dict.get_idx_for_item(prediction))
-
-            # sort by number of occurrences
-            counter = Counter()
-            counter.update(all_label_names)
-
-            target_names = []
-            corresponding_ids = []
-
-            # go through lemma names in order of frequency
-            for label_name, count in counter.most_common():
-
-                if label_name in exclude_labels: continue
-                target_names.append(label_name)
-                corresponding_ids.append(all_labels_dict.get_idx_for_item(label_name))
-
-            target_names.append('no corresponding gold lemma')
-            corresponding_ids.append(0)
-
-            classification = classification_report(
-                y_true, y_pred, digits=4, target_names=target_names, zero_division=0, labels=corresponding_ids,
-            )
-
-            classification_report_dict = classification_report(
-                y_true, y_pred, target_names=target_names, zero_division=0, output_dict=True,
-                labels=corresponding_ids,
-            )
-
-            accuracy = round(accuracy_score(y_true, y_pred), 4)
-
-            try:
-                precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
-                recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
-                micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
-            except KeyError:  # if classification report has no micro avg this means micro avg and accuracy coincide!
-                precision_score = accuracy
-                recall_score = accuracy
-                micro_f_score = accuracy
-
-            macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
-
-            try:
-                main_score = classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]]
-            except:
-                main_score = accuracy
-
-            detailed_result = (
-                    "\nResults:"
-                    f"\n- F-score (micro) {micro_f_score}"
-                    f"\n- F-score (macro) {macro_f_score}"
-                    f"\n- Accuracy {accuracy}"
-                    "\n\nBy class:\n" + classification
-            )
-
-            # line for log file
-            log_header = "PRECISION\tRECALL\tF1\tACCURACY"
-            log_line = f"{precision_score}\t" f"{recall_score}\t" f"{micro_f_score}\t" f"{accuracy}"
-
-            if average_over > 0:
-                eval_loss /= average_over
-
-            result = Result(
-                main_score=main_score,
-                log_line=log_line,
-                log_header=log_header,
-                detailed_results=detailed_result,
-                classification_report=classification_report_dict,
-                loss=eval_loss
-            )
-
-            return result
 
     def _get_state_dict(self):
         model_state = {
