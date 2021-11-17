@@ -93,7 +93,8 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         # ----- Conditional Random Field parameters -----
         self.use_crf = use_crf
-        if use_crf:
+        if use_crf and not {PAD_TAG.encode(), START_TAG.encode(),
+                            STOP_TAG.encode()}.issubset(self.tag_dictionary.item2idx.keys()):
             self.tag_dictionary.add_item(PAD_TAG)
             self.tag_dictionary.add_item(START_TAG)
             self.tag_dictionary.add_item(STOP_TAG)
