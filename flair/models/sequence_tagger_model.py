@@ -8,6 +8,7 @@ import torch
 import torch.nn
 import torch.nn.functional
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_sequence
+from tqdm import tqdm
 
 import flair.nn
 from flair.data import Sentence, Dictionary, Label, DataPoint, Token
@@ -18,7 +19,7 @@ from flair.file_utils import cached_path, unzip_file
 from .sequence_tagger_utils.crf import CRF
 from .sequence_tagger_utils.viterbi import ViterbiLoss, ViterbiDecoder
 from .sequence_tagger_utils.utils import init_stop_tag_embedding, START_TAG, STOP_TAG, PAD_TAG
-
+from ..datasets import DataLoader, SentenceDataset
 
 log = logging.getLogger("flair")
 
@@ -265,6 +266,71 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             return_tuple += (all_tokens, empty_label_candidates)
 
         return return_tuple
+
+    def predict(
+        self,
+        sentences: Union[List[Sentence], Sentence],
+        mini_batch_size: int = 32,
+        return_probabilities_for_all_classes: bool = False,
+        verbose: bool = False,
+        label_name: Optional[str] = None,
+        return_loss=False,
+        embedding_storage_mode="none"
+    ):
+        if label_name is None:
+            label_name = self.label_type if self.label_type is not None else "label"
+
+        with torch.no_grad():
+            if not sentences:
+                return sentences
+
+        if isinstance(sentences, DataPoint):
+            sentences = [sentences]
+
+        # filter empty sentences
+        if isinstance(sentences[0], DataPoint):
+            sentences = [sentence for sentence in sentences if len(sentence) > 0]
+        if len(sentences) == 0:
+            return sentences
+
+        dataloader = DataLoader(dataset=SentenceDataset(sentences), batch_size=mini_batch_size)
+        # progress bar for verbosity
+        if verbose:
+            dataloader = tqdm(dataloader)
+
+        overall_loss = 0
+        batch_no = 0
+        label_count = 0
+        for batch in dataloader:
+
+            batch_no += 1
+
+            if verbose:
+                dataloader.set_description(f"Inferencing on batch {batch_no}")
+
+            # stop if all sentences are empty
+            if not batch:
+                continue
+
+            features, gold_labels = self.forward_pass(batch)
+            scores, lengths = features
+            # remove previously predicted labels of this type
+            for sentence in sentences:
+                sentence.remove_labels(label_name)
+
+            if return_loss:
+                overall_loss += self._calculate_loss(features, gold_labels)[0]
+                label_count += len(lengths.values)
+
+            predicted = self.viterbi_decoder.decode(scores, lengths)
+            sentences = [sentences[i] for i in lengths.indices]
+
+            for sentence, labels in zip(sentences, predicted):
+                for token, label in zip(sentence, labels):
+                    token.add_tag_label(label_name, label)
+
+        if return_loss:
+            return overall_loss, label_count
 
     def _get_state_dict(self):
         """Returns the state dictionary for this model."""
