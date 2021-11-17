@@ -399,6 +399,17 @@ for relation in relations:
     print(relation)
 ```
 
+This should print: 
+
+~~~
+PER [George (1)] (0.9971)
+LOC [Washington (5)] (0.9847)
+
+born_in [George (1) -> Washington (5)] (0.9998)
+~~~
+
+Indicating that a born_in relationship holds between "George" and "Washington"!
+
 ## Tagging new classes without training data
 
 In case you need to label classes that are not included you can also try
