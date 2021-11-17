@@ -1159,16 +1159,17 @@ def determine_tsv_file(filename: str, data_folder: str, cut_multisense: bool = T
 class WSD_UFSAC(MultiCorpus):
     def __init__(
             self,
-            filenames: Union[str, List[str]] = ['masc', 'semcor'],
+            train_filenames: Union[str, List[str]] = 'semcor',
+            dev_filenames: Union[str, List[str]] = [],
+            test_filenames: Union[str, List[str]] = [],
             base_path: Union[str, Path] = None,
             in_memory: bool = True,
             cut_multisense: bool = True,
             columns={0: "text", 3: "wn30_key"},
             tag_to_bioes=None,
             banned_sentences: List[str] = None,
-            sample_missing_splits_in_multicorpus: bool = True,
-            sample_missing_splits_in_each_corpus: bool = True,
-            use_raganato_ALL_as_test_data: bool = False,
+            sample_missing_splits_in_multicorpus: Union[str, bool] = True,
+            sample_missing_splits_in_each_corpus: Union[str, bool] = True,
             name: str = 'multicorpus'
     ):
         """
@@ -1176,11 +1177,12 @@ class WSD_UFSAC(MultiCorpus):
         If the constructor is called for the first time the data is automatically downloaded and transformed from xml to a tab separated column format.
         Since only the WordNet 3.0 version for senses is consistently available for all provided datasets we will only consider this version.
         Also we ignore the id annotation used in datasets that were originally created for evaluation tasks
-        :param filenames: Here you can pass a single datasetname or a list of ddatasetnames. The available names are:
+        :param train_filenames: Here you can pass a single datasetname or a list of datasetnames. The available names are:
             'masc', 'omsti', 'raganato_ALL', 'raganato_semeval2007', 'raganato_semeval2013', 'raganato_semeval2015', 'raganato_senseval2', 'raganato_senseval3',
             'semcor', 'semeval2007task17', 'semeval2007task7', 'semeval2013task12', 'semeval2015task13', 'senseval2', 'senseval2_lexical_sample_test',
             'senseval2_lexical_sample_train', 'senseval3task1', 'senseval3task6_test', 'senseval3task6_train', 'trainomatic', 'wngt'.
-            So you can pass for example filenames = ['masc', 'omsti', 'wngt']. Default two mid-sized datasets 'masc' and 'semcor' are loaded.
+            So you can pass for example filenames = ['masc', 'omsti', 'wngt']. Default'semcor' is loaded.
+            One can also hand over 'all' to use all datasets as training sets.
         :param base_path: You can override this to point to a specific folder but typically this should not be necessary.
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object
@@ -1195,8 +1197,6 @@ class WSD_UFSAC(MultiCorpus):
         :param sample_missing_splits_in_multicorpus: Whether to sample missing splits when loading the multicorpus (this is redundant if
                                                                                                                     sample_missing_splits_in_each_corpus is True)
         :param sample_missing_splits_in_each_corpus: Whether to sample missing splits when loading each single corpus given in filenames.
-        :param use_raganato_ALL_as_test_data: If True, the raganato_ALL dataset (Raganato et al. "Word Sense Disambiguation: A unified evaluation framework and empirical compariso")
-            will be used as test data. Note that the sample_missing_splits parameters are set to 'only_dev' in this case if set to True.
         :param name: Name of your (costum) corpus
         """
         if type(base_path) == str:
@@ -1235,52 +1235,32 @@ class WSD_UFSAC(MultiCorpus):
         # transform data into column format if necessary
 
         # if no filenames are specified we use all the data
-        if not filenames:
-            filenames = [name[:-4] for name in os.listdir(original_data_folder) if not 'raganato' in name]
+        if train_filenames == 'all':
+            train_filenames = [name[:-4] for name in os.listdir(original_data_folder) if not 'raganato' in name]
 
-        if type(filenames) == str:
-            filenames = [filenames]
+        if type(train_filenames) == str:
+            train_filenames = [train_filenames]
+        if type(dev_filenames) == str:
+            dev_filenames = [dev_filenames]
+        if type(test_filenames) == str:
+            test_filenames = [test_filenames]
+
+        train_filenames = [(determine_tsv_file(filename=x, data_folder=data_folder, cut_multisense=cut_multisense),None,None) for x in train_filenames]
+        dev_filenames = [(None,determine_tsv_file(filename=x, data_folder=data_folder, cut_multisense=cut_multisense),None) for x in dev_filenames]
+        test_filenames = [(None,None,determine_tsv_file(filename=x, data_folder=data_folder, cut_multisense=cut_multisense)) for x in test_filenames]
 
         corpora = []
 
         print('Transforming data into column format and creating corpora...')
 
-        if use_raganato_ALL_as_test_data:
-            # in this case no test data should be generated by sampling from train data. But if the sample arguments are set to true, the dev set will be sampled
-            if sample_missing_splits_in_each_corpus:
-                sample_missing_splits_in_each_corpus = 'only_dev'
-            if sample_missing_splits_in_multicorpus:
-                sample_missing_splits_in_multicorpus = 'only_dev'
-                
-            # also we remove 'raganato_ALL' from filenames in case its in the list
-            if 'raganato_ALL' in filenames:
-                filenames.remove('raganato_ALL')
-
-            # generate the test file
-            test_file = determine_tsv_file(filename='raganato_ALL', data_folder=data_folder,
-                                           cut_multisense=cut_multisense)
-
-            corpus = ColumnCorpus(data_folder=data_folder,
-                                  column_format=columns,
-                                  test_file=test_file,  # corpus only has test data
-                                  in_memory=in_memory,
-                                  tag_to_bioes=tag_to_bioes,
-                                  column_delimiter='\t',
-                                  document_separator_token='-DOCSTART-',
-                                  banned_sentences=banned_sentences,
-                                  autofind_splits=False,
-                                  sample_missing_splits=sample_missing_splits_in_each_corpus,
-                                  )
-            corpora.append(corpus)
-
-        for filename in filenames:
+        for train,dev,test in train_filenames + dev_filenames + test_filenames:
             # make column file and save to data_folder
 
-            new_filename = determine_tsv_file(filename=filename, data_folder=data_folder, cut_multisense=cut_multisense)
-
             corpus = ColumnCorpus(data_folder=data_folder,
                                   column_format=columns,
-                                  train_file=new_filename,
+                                  train_file=train,
+                                  dev_file=dev,
+                                  test_file=test,
                                   in_memory=in_memory,
                                   tag_to_bioes=tag_to_bioes,
                                   column_delimiter='\t',
