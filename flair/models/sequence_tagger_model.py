@@ -318,9 +318,10 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             for sentence in sentences:
                 sentence.remove_labels(label_name)
 
+            loss = self._calculate_loss(features, gold_labels)
             if return_loss:
-                overall_loss += self._calculate_loss(features, gold_labels)[0]
-                label_count += len(lengths.values)
+                overall_loss += loss[0]
+                label_count += loss[1]
 
             predicted = self.viterbi_decoder.decode(scores, lengths)
             sentences = [sentences[i] for i in lengths.indices]
