@@ -42,16 +42,10 @@ class ViterbiLoss(torch.nn.Module):
         features, lengths = features_tuple
         batch_size = features.size(0)
         seq_len = features.size(1)
-        targets_formatted = []
-        targets_list = targets.tolist()
-        for cut in lengths.values:
-            targets_formatted.append(targets_list[:cut])
-            targets_list = targets_list[cut:]
 
-        for t in targets_formatted:
-            t += [self.tag_dictionary.get_idx_for_item(PAD_TAG)] * (seq_len - len(t))
+        formatted_targets = self.format_targets(targets, lengths)
 
-        targets = torch.tensor(targets_formatted, dtype=torch.long).unsqueeze(2).to(flair.device)
+        targets = torch.tensor(formatted_targets, dtype=torch.long).unsqueeze(2).to(flair.device)
 
         # Squeeze crf scores matrices in 1-dim shape and gather scores at targets by matrix indices
         scores_at_targets = torch.gather(features.view(batch_size, seq_len, -1), 2, targets).squeeze(0).squeeze(0)
@@ -77,6 +71,21 @@ class ViterbiLoss(torch.nn.Module):
 
         return viterbi_loss
 
+    def format_targets(self, targets: torch.tensor, lengths: torch.tensor):
+        targets_per_sentence = []
+
+        targets_list = targets.tolist()
+        for cut in lengths.values:
+            targets_per_sentence.append(targets_list[:cut])
+            targets_list = targets_list[cut:]
+
+        for t in targets_per_sentence:
+            t += [self.tag_dictionary.get_idx_for_item(PAD_TAG)] * (max(lengths.values) - len(t))
+
+        tmaps = list(map(lambda s: [self.tag_dictionary.get_idx_for_item(START_TAG) * self.tagset_size + s[0]] + [s[i - 1] * self.tagset_size + s[i] for i in range(1, len(s))],
+                         targets_per_sentence))
+
+        return tmaps
 
 class ViterbiDecoder:
     """
