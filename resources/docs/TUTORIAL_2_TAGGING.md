@@ -281,7 +281,7 @@ As we can see, the frame detector makes a distinction in sentence 1 between two 
 Similarly, in sentence 2 the frame detector finds a light verb construction in which 'have' is the light verb and
 'look' is a frame evoking word.
 
-### Tagging a List of Sentences
+## Tagging a List of Sentences
 
 Often, you may want to tag an entire text corpus. In this case, you need to split the corpus into sentences and pass a
 list of `Sentence` objects to the `.predict()` method.
@@ -360,6 +360,44 @@ are provided:
 | 'sentiment-fast' | English | detecting positive and negative sentiment (RNN-based) | movie and product reviews |  **96.83**|
 | 'communicative-functions' | English | detecting function of sentence in research paper (BETA) | scholarly papers |  |
 | 'de-offensive-language' | German | detecting offensive language | [GermEval 2018 Task 1](https://projects.fzai.h-da.de/iggsa/projekt/) |  **75.71** (Macro F1) |
+
+
+## Experimental: Relation Extraction
+
+Relations hold between two entities. For instance, a text like "George was born in Washington" 
+names two entities and also expresses that there is a born_in relationship between
+both. 
+
+We added two experimental relation extraction models, 
+trained over a modified version of TACRED: `relations` and `relations-fast`. 
+Use these models together with an entity tagger, like so: 
+```python
+from flair.data import Sentence
+from flair.models import RelationExtractor, SequenceTagger
+
+# 1. make example sentence
+sentence = Sentence("George was born in Washington")
+
+# 2. load entity tagger and predict entities
+tagger = SequenceTagger.load('ner-fast')
+tagger.predict(sentence)
+
+# check which entities have been found in the sentence
+entities = sentence.get_labels('ner')
+for entity in entities:
+    print(entity)
+
+# 3. load relation extractor
+extractor: RelationExtractor = RelationExtractor.load('relations-fast')
+
+# predict relations
+extractor.predict(sentence)
+
+# check which relations have been found
+relations = sentence.get_labels('relation')
+for relation in relations:
+    print(relation)
+```
 
 ## Tagging new classes without training data
 
