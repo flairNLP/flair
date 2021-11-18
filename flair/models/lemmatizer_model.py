@@ -32,7 +32,11 @@ class Lemmatizer(flair.nn.Classifier):
                  char_dict: Union[str, Dictionary] = "common-chars-lemmatizer",
                  max_sequence_length_dependent_on_input: bool = True,
                  max_sequence_length: int = 20,
-                 padding_in_front_for_encoder: bool = True
+                 padding_in_front_for_encoder: bool = True,
+                 start_symbol_for_encoding: bool = True,
+                 end_symbol_for_encoding: bool = False,
+                 batching_in_rnn: bool = True,
+                 bidirectional_encoding: bool = False
                  ):
         """
         Initializes a Lemmatizer model
@@ -69,6 +73,10 @@ class Lemmatizer(flair.nn.Classifier):
         self.max_sequence_length = max_sequence_length
         self.dependent_on_input = max_sequence_length_dependent_on_input
         self.padding_in_front_for_encoder = padding_in_front_for_encoder
+        self.start_symbol = start_symbol_for_encoding
+        self.end_symbol = end_symbol_for_encoding
+        self.batching_in_rnn = batching_in_rnn
+        self.bi_encoding = bidirectional_encoding
         self.rnn_hidden_size = rnn_hidden_size
 
         # whether to encode characters and whether to use attention (attention can only be used if chars are encoded)
@@ -99,11 +107,17 @@ class Lemmatizer(flair.nn.Classifier):
         hidden_input_size = 0
         if embeddings: hidden_input_size += embeddings.embedding_length
         if encode_characters: hidden_input_size += rnn_hidden_size
+        if bidirectional_encoding: hidden_input_size +=rnn_hidden_size
         self.emb_to_hidden = nn.Linear(hidden_input_size, rnn_hidden_size)
 
         # encoder RNN
         self.encoder_rnn = nn.GRU(input_size=rnn_input_size, hidden_size=self.rnn_hidden_size, batch_first=True,
-                                  num_layers=rnn_layers)
+                                  num_layers=rnn_layers, bidirectional=self.bi_encoding)
+
+        # additional encoder linear layer if bidirectional encoding
+        if self.bi_encoding:
+            self.bi_hidden_states_to_hidden_size = nn.Linear(2*self.rnn_hidden_size, self.rnn_hidden_size)
+            self.bi_final_hidden_states_to_hidden_size = nn.Linear(2*self.rnn_hidden_size, self.rnn_hidden_size)
 
         # ---- DECODER ----
         # decoder: linear layers to transform vectors to and from alphabet_size
@@ -177,9 +191,8 @@ class Lemmatizer(flair.nn.Classifier):
         # encode inputs
         initial_hidden_states, all_encoder_outputs = self.encode(sentences)
 
-        # get labels, if no label provided take the word itself # TODO: zusätzlicher Parameter bzgl label, ob token ohne label einfach übernommen werden sollen
-        labels = [token.get_tag(label_type=self._label_type).value if token.get_tag(
-            label_type=self._label_type).value else token.text for sentence in sentences for token in sentence]
+        # get labels (we assume each token has a lemma label)
+        labels = [token.get_tag(label_type=self._label_type).value for sentence in sentences for token in sentence]
 
         # get char indices for labels of sentence
         # (batch_size, max_sequence_length) batch_size = #words in sentence,
@@ -226,14 +239,26 @@ class Lemmatizer(flair.nn.Classifier):
         if self.encode_characters:
             # get one-hots for characters and add special symbols / padding
             encoder_input_indices = self.words_to_char_indices([token.text for token in tokens],
-                                                               start_symbol=True,
-                                                               end_symbol=True,
+                                                               start_symbol=self.start_symbol,
+                                                               end_symbol=self.end_symbol,
                                                                padding_in_front=self.padding_in_front_for_encoder)
             # embed character one-hots
             input_vectors = self.encoder_character_embedding(encoder_input_indices)
 
             # send through encoder RNN (produces initial hidden for decoder)
             all_encoder_outputs, initial_hidden_states = self.encoder_rnn(input_vectors)
+
+            # since bidirectional rnn is only used in encoding we need to project outputs to hidden_size of decoder
+            if self.bi_encoding:
+                # project 2*hidden_size to hidden_size
+                all_encoder_outputs = self.bi_hidden_states_to_hidden_size(all_encoder_outputs)
+
+                # concatenate the final hidden states of the encoder. These will be projected to hidden_size of decoder later with self.emb_to_hidden
+                #initial_hidden_states = torch.transpose(initial_hidden_states, 0,1).reshape(1,len(tokens),2*self.rnn_hidden_size) # works only for rnn_layers = 1
+                conditions = torch.cat(2 * [torch.eye(self.rnn_layers).bool()])
+                bi_states = [initial_hidden_states[conditions[:, i], :, :] for i in range(self.rnn_layers)]
+                initial_hidden_states = torch.stack([torch.cat((b[0, :, :], b[1, :, :]), dim=1) for b in bi_states])
+
             initial_hidden_for_decoder.append(initial_hidden_states)
 
             # mask out vectors that correspond to a dummy symbol
@@ -276,8 +301,7 @@ class Lemmatizer(flair.nn.Classifier):
                 mini_batch_size: int = 16,
                 embedding_storage_mode="None",
                 return_loss=False,
-                print_prediction=False,
-                batching_in_rnn: bool = True):
+                print_prediction=False):
         '''
         Predict lemmas of words for a given (list of) sentence(s).
         :param sentences: sentences to predict
@@ -314,7 +338,7 @@ class Lemmatizer(flair.nn.Classifier):
 
         with torch.no_grad():
 
-            if batching_in_rnn:
+            if self.batching_in_rnn:
                 dataloader = DataLoader(dataset=SentenceDataset(sentences), batch_size=mini_batch_size)
 
                 for batch in dataloader:
@@ -525,7 +549,7 @@ class Lemmatizer(flair.nn.Classifier):
 
                                 # note that we do not need to fill up with dummy symbols since we process each token seperately
                                 input_indices = self.words_to_char_indices([token.text],
-                                                                           start_symbol=True, end_symbol=True)
+                                                                           start_symbol=self.start_symbol, end_symbol=self.end_symbol)
 
                                 input_vectors = self.encoder_character_embedding(
                                     input_indices)  # TODO: encode input in reverse?? Maybe as parameter?
@@ -698,6 +722,10 @@ class Lemmatizer(flair.nn.Classifier):
             "use_attention": self.use_attention,
             "padding_in_front_for_encoder": self.padding_in_front_for_encoder,
             "encode_characters": self.encode_characters,
+            "start_symbol": self.start_symbol,
+            "end_symbol": self.end_symbol,
+            "batching_in_rnn": self.batching_in_rnn,
+            "bidirectional_encoding": self.bi_encoding
         }
 
         return model_state
@@ -715,7 +743,11 @@ class Lemmatizer(flair.nn.Classifier):
             max_sequence_length_dependent_on_input=state["dependent_on_input"],
             max_sequence_length=state["max_sequence_length"],
             use_attention=state["use_attention"],
-            padding_in_front_for_encoder=state["padding_in_front_for_encoder"]
+            padding_in_front_for_encoder=state["padding_in_front_for_encoder"],
+            start_symbol_for_encoding=state["start_symbol"],
+            end_symbol_for_encoding=state["end_symbol"],
+            batching_in_rnn=state["batching_in_rnn"],
+            bidirectional_encoding=state["bidirectional_encoding"]
         )
         model.load_state_dict(state["state_dict"])
         return model
