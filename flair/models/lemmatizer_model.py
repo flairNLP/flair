@@ -117,7 +117,6 @@ class Lemmatizer(flair.nn.Classifier):
         # additional encoder linear layer if bidirectional encoding
         if self.bi_encoding:
             self.bi_hidden_states_to_hidden_size = nn.Linear(2*self.rnn_hidden_size, self.rnn_hidden_size)
-            self.bi_final_hidden_states_to_hidden_size = nn.Linear(2*self.rnn_hidden_size, self.rnn_hidden_size)
 
         # ---- DECODER ----
         # decoder: linear layers to transform vectors to and from alphabet_size
