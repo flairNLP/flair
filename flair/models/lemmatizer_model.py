@@ -108,7 +108,7 @@ class Lemmatizer(flair.nn.Classifier):
 
         # additional encoder linear layer if bidirectional encoding
         if self.bi_encoding:
-            self.bi_hidden_states_to_hidden_size = nn.Linear(2 * self.rnn_hidden_size, self.rnn_hidden_size)
+            self.bi_hidden_states_to_hidden_size = nn.Linear(2 * self.rnn_hidden_size, self.rnn_hidden_size, bias=False)
 
         # ---- DECODER ----
         # decoder: linear layers to transform vectors to and from alphabet_size
@@ -217,7 +217,7 @@ class Lemmatizer(flair.nn.Classifier):
         output_vectors = self.character_decoder(output)
         return output_vectors, hidden
 
-    def encode(self, sentences):
+    def encode(self, sentences: List[Sentence]):
 
         # get all tokens
         tokens = [token for sentence in sentences for token in sentence]
@@ -233,6 +233,7 @@ class Lemmatizer(flair.nn.Classifier):
                                                                start_symbol=self.start_symbol,
                                                                end_symbol=self.end_symbol,
                                                                padding_in_front=False)
+            print(encoder_input_indices.size())
 
             # determine length of each token
             extra = 0
@@ -243,11 +244,13 @@ class Lemmatizer(flair.nn.Classifier):
             # embed character one-hots
             input_vectors = self.encoder_character_embedding(encoder_input_indices)
 
+            print(input_vectors.size())
             # test packing and padding
             packed_sequence = torch.nn.utils.rnn.pack_padded_sequence(input_vectors,
                                                                       lengths,
                                                                       enforce_sorted=False,
                                                                       batch_first=True,)
+
             encoding_flat, initial_hidden_states = self.encoder_rnn(packed_sequence)
             all_encoder_outputs, lengths = torch.nn.utils.rnn.pad_packed_sequence(encoding_flat, batch_first=True)
 
@@ -259,7 +262,6 @@ class Lemmatizer(flair.nn.Classifier):
 
                 all_encoder_outputs = self.bi_hidden_states_to_hidden_size(all_encoder_outputs)
 
-                # print(initial_hidden_states.size())
                 # concatenate the final hidden states of the encoder. These will be projected to hidden_size of decoder later with self.emb_to_hidden
                 # initial_hidden_states = torch.transpose(initial_hidden_states, 0,1).reshape(1,len(tokens),2*self.rnn_hidden_size) # works only for rnn_layers = 1
                 conditions = torch.cat(2 * [torch.eye(self.rnn_layers).bool()])
@@ -298,8 +300,7 @@ class Lemmatizer(flair.nn.Classifier):
             # note that we do not need to fill up with dummy symbols since we process each token seperately
             encoder_input_indices = self.words_to_char_indices([token.text],
                                                                start_symbol=self.start_symbol,
-                                                               end_symbol=self.end_symbol,
-                                                               padding_in_front=self.padding_in_front_for_encoder)
+                                                               end_symbol=self.end_symbol)
             # embed character one-hots
             input_vector = self.encoder_character_embedding(encoder_input_indices)
             # send through encoder RNN (produces initial hidden for decoder)
@@ -581,8 +582,6 @@ class Lemmatizer(flair.nn.Classifier):
 
                 for batch in dataloader:
 
-                    # encode = self.encode(batch)
-
                     if self.encoder_embeddings:
                         # embed sentence
                         self.encoder_embeddings.embed(batch)
@@ -595,32 +594,6 @@ class Lemmatizer(flair.nn.Classifier):
                             # remove previously predicted labels of this type
                             token.remove_labels(label_name)
 
-                            """
-                            if self.encoder_embeddings:
-                                hidden_state = self.emb_to_hidden(torch.stack(
-                                    self.rnn_layers * [token.get_embedding()])).unsqueeze(1)  # size (1, 1, hidden_size)
-                            else:  # encode input using encoder RNN
-
-                                # note that we do not need to fill up with dummy symbols since we process each token seperately
-                                input_indices = self.words_to_char_indices([token.text],
-                                                                           start_symbol=self.start_symbol,
-                                                                           end_symbol=self.end_symbol)
-
-                                print(input_indices)
-
-                                input_vectors = self.encoder_character_embedding(
-                                    input_indices)  # TODO: encode input in reverse?? Maybe as parameter?
-
-                                print(input_vectors.size())
-
-                                all_encoder_outputs, hidden_state = self.encoder_rnn(input_vectors)
-
-                                print(all_encoder_outputs.size())
-
-                                print(hidden_state.size())
-
-                                assert 0
-                            """
                             hidden, all_encoder_outputs = self.encode_token(token)
 
                             # input (batch_size, 1, input_size), first letter is special character <S>
