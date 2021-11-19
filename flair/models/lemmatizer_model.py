@@ -28,7 +28,6 @@ class Lemmatizer(flair.nn.Classifier):
                  char_dict: Union[str, Dictionary] = "common-chars-lemmatizer",
                  max_sequence_length_dependent_on_input: bool = True,
                  max_sequence_length: int = 20,
-                 padding_in_front_for_encoder: bool = False,
                  start_symbol_for_encoding: bool = True,
                  end_symbol_for_encoding: bool = False,
                  batching_in_rnn: bool = True,
@@ -58,8 +57,6 @@ class Lemmatizer(flair.nn.Classifier):
         :param max_sequence_length: If set to True and max_sequence_length_dependend_on_input is False a fixed maximum length for
             the decoding will be used for all sentences.
         :param use_attention: whether or not to use attention. Only sensible if encoding via RNN
-        :param padding_in_front_for_encoder: In batch-wise prediction we fill up inputs to encoder to the size of the maximum length
-            token in the respective batch. If  padding_in_front_for_encoder is True we fill up in the front, otherwise in the back of the vectors.
         """
 
         super().__init__()
@@ -68,7 +65,6 @@ class Lemmatizer(flair.nn.Classifier):
         self.beam_size = beam_size
         self.max_sequence_length = max_sequence_length
         self.dependent_on_input = max_sequence_length_dependent_on_input
-        self.padding_in_front_for_encoder = padding_in_front_for_encoder
         self.start_symbol = start_symbol_for_encoding
         self.end_symbol = end_symbol_for_encoding
         self.batching_in_rnn = batching_in_rnn
@@ -236,7 +232,7 @@ class Lemmatizer(flair.nn.Classifier):
             encoder_input_indices = self.words_to_char_indices([token.text for token in tokens],
                                                                start_symbol=self.start_symbol,
                                                                end_symbol=self.end_symbol,
-                                                               padding_in_front=self.padding_in_front_for_encoder)
+                                                               padding_in_front=False)
 
             # determine length of each token
             extra = 0
@@ -736,7 +732,6 @@ class Lemmatizer(flair.nn.Classifier):
             "max_sequence_length": self.max_sequence_length,
             "dependent_on_input": self.dependent_on_input,
             "use_attention": self.use_attention,
-            "padding_in_front_for_encoder": self.padding_in_front_for_encoder,
             "encode_characters": self.encode_characters,
             "start_symbol": self.start_symbol,
             "end_symbol": self.end_symbol,
@@ -759,7 +754,6 @@ class Lemmatizer(flair.nn.Classifier):
             max_sequence_length_dependent_on_input=state["dependent_on_input"],
             max_sequence_length=state["max_sequence_length"],
             use_attention=state["use_attention"],
-            padding_in_front_for_encoder=state["padding_in_front_for_encoder"],
             start_symbol_for_encoding=state["start_symbol"],
             end_symbol_for_encoding=state["end_symbol"],
             batching_in_rnn=state["batching_in_rnn"],
