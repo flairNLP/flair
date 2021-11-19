@@ -48,7 +48,7 @@ class ViterbiLoss(torch.nn.Module):
         targets = torch.tensor(formatted_targets, dtype=torch.long).unsqueeze(2).to(flair.device)
 
         # Squeeze crf scores matrices in 1-dim shape and gather scores at targets by matrix indices
-        scores_at_targets = torch.gather(features.view(batch_size, seq_len, -1), 2, targets).squeeze(0).squeeze(0)
+        scores_at_targets = torch.gather(features.view(batch_size, seq_len, -1), 2, targets)
         scores_at_targets = pack_padded_sequence(scores_at_targets, lengths.values, batch_first=True)[0]
         gold_score = scores_at_targets.sum()
 

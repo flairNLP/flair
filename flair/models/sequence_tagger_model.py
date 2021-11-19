@@ -45,6 +45,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             train_initial_hidden_state: bool = False,
             beta: float = 1.0,
             loss_weights: Dict[str, float] = None,
+            init_from_state_dict: bool = False
     ):
         """
         Sequence Tagger class for predicting labels for single tokens. Can be parameterized by several attributes.
@@ -71,6 +72,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             (if any label's weight is unspecified it will default to 1.0)
         """
         super(SequenceTagger, self).__init__(label_dictionary=tag_dictionary)
+        self.beta = beta
 
         # ----- Embedding specific parameters -----
         self.embeddings = embeddings
@@ -93,8 +95,10 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         # ----- Conditional Random Field parameters -----
         self.use_crf = use_crf
-        if use_crf and not {PAD_TAG.encode(), START_TAG.encode(),
-                            STOP_TAG.encode()}.issubset(self.tag_dictionary.item2idx.keys()):
+        if use_crf \
+                and not {PAD_TAG.encode(), START_TAG.encode(),
+                            STOP_TAG.encode()}.issubset(self.tag_dictionary.item2idx.keys())\
+                and not init_from_state_dict:
             self.tag_dictionary.add_item(PAD_TAG)
             self.tag_dictionary.add_item(START_TAG)
             self.tag_dictionary.add_item(STOP_TAG)
@@ -364,21 +368,33 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         reproject_embeddings = True if "reproject_embeddings" not in state.keys() else state["reproject_embeddings"]
         weights = None if "weight_dict" not in state.keys() else state["weight_dict"]
 
+        if state["use_crf"]:
+            if "transitions" in state["state_dict"]:
+                state["state_dict"]["crf.transitions"] = state["state_dict"]["transitions"]
+                del state["state_dict"]["transitions"]
+            if "linear.weight" in state["state_dict"] and "linear.bias" in state["state_dict"]:
+                state["state_dict"]["crf.emission.weight"] = state["state_dict"]["linear.weight"]
+                state["state_dict"]["crf.emission.bias"] = state["state_dict"]["linear.bias"]
+                del state["state_dict"]["linear.weight"]
+                del state["state_dict"]["linear.bias"]
+
         model = SequenceTagger(
-            hidden_size=state["hidden_size"],
             embeddings=state["embeddings"],
             tag_dictionary=state["tag_dictionary"],
             tag_type=state["tag_type"],
             use_crf=state["use_crf"],
             use_rnn=state["use_rnn"],
             rnn_layers=state["rnn_layers"],
+            hidden_size=state["hidden_size"],
             dropout=use_dropout,
             word_dropout=use_word_dropout,
             locked_dropout=use_locked_dropout,
             rnn_type=rnn_type,
             reproject_embeddings=reproject_embeddings,
-            loss_weights=weights
+            loss_weights=weights,
+            init_from_state_dict=True
         )
+
         model.load_state_dict(state["state_dict"])
         return model
 
