@@ -233,7 +233,6 @@ class Lemmatizer(flair.nn.Classifier):
                                                                start_symbol=self.start_symbol,
                                                                end_symbol=self.end_symbol,
                                                                padding_in_front=False)
-            print(encoder_input_indices.size())
 
             # determine length of each token
             extra = 0
@@ -244,7 +243,6 @@ class Lemmatizer(flair.nn.Classifier):
             # embed character one-hots
             input_vectors = self.encoder_character_embedding(encoder_input_indices)
 
-            print(input_vectors.size())
             # test packing and padding
             packed_sequence = torch.nn.utils.rnn.pack_padded_sequence(input_vectors,
                                                                       lengths,
