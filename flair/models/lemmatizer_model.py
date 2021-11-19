@@ -345,7 +345,6 @@ class Lemmatizer(flair.nn.Classifier):
 
         with torch.no_grad():
 
-            print(self.batching_in_rnn)
             if self.batching_in_rnn:
                 dataloader = DataLoader(dataset=SentenceDataset(sentences), batch_size=mini_batch_size)
 
