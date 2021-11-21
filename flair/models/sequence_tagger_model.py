@@ -252,10 +252,13 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         if self.use_crf:
             features = self.crf(sentence_tensor)
+            scores = (features, lengths)
         else:
             features = self.linear2tag(sentence_tensor)
-
-        scores = (features, lengths)
+            scores = []
+            for feat, length in zip(features, lengths.values):
+                scores.append(feat[:length])
+            scores = torch.cat(scores)
 
         tokens_per_sentence = [[token for token in sentence] for sentence in sentences]
         all_tokens = [item for sublist in tokens_per_sentence for item in sublist]
