@@ -6,7 +6,7 @@ from urllib.error import HTTPError
 
 import torch
 import torch.nn
-import torch.nn.functional
+import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_sequence
 from tqdm import tqdm
 
@@ -255,10 +255,10 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             scores = (features, lengths)
         else:
             features = self.linear2tag(sentence_tensor)
-            scores = []
+            features_formatted = []
             for feat, length in zip(features, lengths.values):
-                scores.append(feat[:length])
-            scores = torch.cat(scores)
+                features_formatted.append(feat[:length])
+            scores = torch.cat(features_formatted)
 
         tokens_per_sentence = [[token for token in sentence] for sentence in sentences]
         all_tokens = [item for sublist in tokens_per_sentence for item in sublist]
@@ -321,18 +321,36 @@ class SequenceTagger(flair.nn.DefaultClassifier):
                 continue
 
             features, gold_labels = self.forward_pass(batch)
-            scores, lengths = features
+
             # remove previously predicted labels of this type
             for sentence in sentences:
                 sentence.remove_labels(label_name)
 
             loss = self._calculate_loss(features, gold_labels)
+
             if return_loss:
                 overall_loss += loss[0]
                 label_count += loss[1]
 
-            predicted = self.viterbi_decoder.decode(scores, lengths)
-            sentences = [sentences[i] for i in lengths.indices]
+            sentences = sorted(sentences, key=len, reverse=True)
+
+            if self.use_crf:
+                predicted = self.viterbi_decoder.decode(features)
+            else:
+                softmax_batch = F.softmax(features, dim=1).cpu()
+                scores_batch, prediction_batch = torch.max(softmax_batch, dim=1)
+                predicted = []
+                for sentence in sentences:
+                    scores = scores_batch[:len(sentence)]
+                    predictions = prediction_batch[:len(sentence)]
+                    predicted.append(
+                        [
+                            Label(self.tag_dictionary.get_item_for_index(prediction), score.item())
+                            for token, score, prediction in zip(sentence, scores, predictions)
+                        ]
+                    )
+                    scores_batch = scores_batch[len(sentence):]
+                    prediction_batch = prediction_batch[len(sentence):]
 
             for sentence, labels in zip(sentences, predicted):
                 for token, label in zip(sentence, labels):
