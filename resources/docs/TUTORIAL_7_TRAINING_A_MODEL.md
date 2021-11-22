@@ -150,8 +150,6 @@ from flair.datasets import CONLL_03
 from flair.embeddings import TransformerWordEmbeddings
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
-import torch
-from torch.optim.lr_scheduler import OneCycleLR
 
 # 1. get the corpus
 corpus = CONLL_03()
@@ -165,38 +163,32 @@ label_dict = corpus.make_label_dictionary(label_type=label_type)
 print(label_dict)
 
 # 4. initialize fine-tuneable transformer embeddings WITH document context
-embeddings = TransformerWordEmbeddings(
-    model='xlm-roberta-large',
-    layers="-1",
-    subtoken_pooling="first",
-    fine_tune=True,
-    use_context=True,
-)
+embeddings = TransformerWordEmbeddings(model='xlm-roberta-large',
+                                       layers="-1",
+                                       subtoken_pooling="first",
+                                       fine_tune=True,
+                                       use_context=True,
+                                       )
 
 # 5. initialize bare-bones sequence tagger (no CRF, no RNN, no reprojection)
-tagger = SequenceTagger(
-    hidden_size=256,
-    embeddings=embeddings,
-    tag_dictionary=label_dict,
-    tag_type='ner',
-    use_crf=False,
-    use_rnn=False,
-    reproject_embeddings=False,
-)
+tagger = SequenceTagger(hidden_size=256,
+                        embeddings=embeddings,
+                        tag_dictionary=label_dict,
+                        tag_type='ner',
+                        use_crf=False,
+                        use_rnn=False,
+                        reproject_embeddings=False,
+                        )
 
-# 6. initialize trainer with AdamW optimizer
-trainer = ModelTrainer(tagger, corpus, optimizer=torch.optim.AdamW)
+# 6. initialize trainer
+trainer = ModelTrainer(tagger, corpus)
 
-# 7. run training with XLM parameters (20 epochs, small LR, one-cycle learning rate scheduling)
-trainer.train('resources/taggers/sota-ner-flert',
-              learning_rate=5.0e-6,
-              mini_batch_size=4,
-              mini_batch_chunk_size=1,  # remove this parameter to speed up computation if you have a big GPU
-              max_epochs=20,  # 10 is also good
-              scheduler=OneCycleLR,
-              embeddings_storage_mode='none',
-              weight_decay=0.,
-              )
+# 7. run fine-tuning
+trainer.fine_tune('resources/taggers/sota-ner-flert',
+                  learning_rate=5.0e-6,
+                  mini_batch_size=4,
+                  mini_batch_chunk_size=1,  # remove this parameter to speed up computation if you have a big GPU
+                  )
 ```
 
 This will give you state-of-the-art numbers similar to the ones reported
@@ -214,9 +206,6 @@ code below:
 (If you don't have a big GPU to fine-tune transformers, try `DocumentPoolEmbeddings` or `DocumentRNNEmbeddings` instead; sometimes they work just as well!)
 
 ```python
-import torch
-from torch.optim.lr_scheduler import OneCycleLR
-
 from flair.data import Corpus
 from flair.datasets import TREC_6
 from flair.embeddings import TransformerDocumentEmbeddings
@@ -238,18 +227,15 @@ document_embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased', f
 # 5. create the text classifier
 classifier = TextClassifier(document_embeddings, label_dictionary=label_dict, label_type=label_type)
 
-# 6. initialize trainer with AdamW optimizer
-trainer = ModelTrainer(classifier, corpus, optimizer=torch.optim.AdamW)
+# 6. initialize trainer
+trainer = ModelTrainer(classifier, corpus)
 
 # 7. run training with fine-tuning
-trainer.train('resources/taggers/question-classification-with-transformer',
-              learning_rate=5.0e-5,
-              mini_batch_size=4,
-              max_epochs=10,
-              scheduler=OneCycleLR,
-              embeddings_storage_mode='none',
-              weight_decay=0.,
-              )
+trainer.fine_tune('resources/taggers/question-classification-with-transformer',
+                  learning_rate=5.0e-5,
+                  mini_batch_size=4,
+                  max_epochs=10,
+                  )
 ```
 
 Once the model is trained you can load it to predict the class of new sentences. Just call the `predict` method of the
@@ -358,55 +344,46 @@ for `TextClassifier`.
 
 ```python
 from flair.data import Corpus
-from flair.datasets import WNUT_17
-from flair.embeddings import TokenEmbeddings, WordEmbeddings, StackedEmbeddings
-from typing import List
+from flair.datasets import UD_ENGLISH
+from flair.embeddings import WordEmbeddings
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
 
 # 1. get the corpus
-corpus: Corpus = WNUT_17().downsample(0.1)
+corpus: Corpus = UD_ENGLISH().downsample(0.1)
 
 # 2. what label do we want to predict?
-label_type = 'ner'
+label_type = 'upos'
 
 # 3. make the label dictionary from the corpus
 label_dict = corpus.make_label_dictionary(label_type=label_type)
 
-# 4. initialize embeddings
-embedding_types: List[TokenEmbeddings] = [
-    WordEmbeddings('glove')
-]
-
-embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
-
-# 5. initialize sequence tagger
-tagger: SequenceTagger = SequenceTagger(hidden_size=256,
-                                        embeddings=embeddings,
+# 4. initialize sequence tagger
+tagger: SequenceTagger = SequenceTagger(hidden_size=128,
+                                        embeddings=WordEmbeddings('glove'),
                                         tag_dictionary=label_dict,
-                                        tag_type=label_type,
-                                        use_crf=True)
+                                        tag_type=label_type)
 
-# 6. initialize trainer
+# 5. initialize trainer
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-# 7. start training
-trainer.train('resources/taggers/example-ner',
+# 6. train for 10 epochs with checkpoint=True
+path = 'resources/taggers/example-pos'
+trainer.train(path,
               learning_rate=0.1,
               mini_batch_size=32,
               max_epochs=10,
-              checkpoint=True)
+              checkpoint=True,
+              )
 
-# 8. stop training at any point
+# 7. continue training at later point. Load previously trained model checkpoint, then resume
+trained_model = SequenceTagger.load(path + '/checkpoint.pt')
 
-# 9. continue trainer at later point
-checkpoint = 'resources/taggers/example-ner/checkpoint.pt'
-trainer = ModelTrainer.load_checkpoint(checkpoint, corpus)
-trainer.train('resources/taggers/example-ner',
-              learning_rate=0.1,
-              mini_batch_size=32,
-              max_epochs=150,
-              checkpoint=True)
+# resume training best model, but this time until epoch 25
+trainer.resume(trained_model,
+               base_path=path + '-resume',
+               max_epochs=25,
+               )
 ```
 
 ## Scalability: Training with Large Datasets
