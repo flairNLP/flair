@@ -147,7 +147,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             self.viterbi_decoder = ViterbiDecoder(tag_dictionary)
         else:
             self.linear2tag = torch.nn.Linear(hidden_output_dim, self.tagset_size)
-            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights)
+            self.loss_function = torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction="sum")
 
         self.to(flair.device)
 
@@ -217,11 +217,17 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         self.embeddings.embed(sentences)
 
         # Get embedding for each sentence + append a stop token embedding to each sentence
-        tensor_list = list(map(lambda sent: torch.cat((sent.get_sequence_tensor(), self.stop_token_emb.unsqueeze(0)), dim=0), sentences))
+        if self.use_crf:
+            tensor_list = list(map(lambda sent: torch.cat((sent.get_sequence_tensor(), self.stop_token_emb.unsqueeze(0)), dim=0), sentences))
+            lengths = torch.LongTensor([len(sentence) + 1 for sentence in sentences])
+        else:
+            tensor_list = list(
+                map(lambda sent: sent.get_sequence_tensor(),
+                    sentences))
+            lengths = torch.LongTensor([len(sentence) for sentence in sentences])
         sentence_tensor = pad_sequence(tensor_list, batch_first=True)
 
         # +1 since we've added a stop token embedding to each sentence
-        lengths = torch.LongTensor([len(sentence) + 1 for sentence in sentences])
         lengths = lengths.sort(dim=0, descending=True)
         # sort tensor in decreasing order based on lengths of sentences in batch
         sentences = [sentences[i] for i in lengths.indices]
@@ -263,7 +269,10 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         tokens_per_sentence = [[token for token in sentence] for sentence in sentences]
         all_tokens = [item for sublist in tokens_per_sentence for item in sublist]
 
-        labels_plus_stop_tag = [[[token.get_tag(self.label_type).value] for token in sentence] + [["<STOP>"]] for sentence in tokens_per_sentence]
+        if self.use_crf:
+            labels_plus_stop_tag = [[[token.get_tag(self.label_type).value] for token in sentence] + [["<STOP>"]] for sentence in tokens_per_sentence]
+        else:
+            labels_plus_stop_tag = [[[token.get_tag(self.label_type).value] for token in sentence] for sentence in tokens_per_sentence]
         labels = [item for sublist in labels_plus_stop_tag for item in sublist]
 
         # minimal return is scores and labels
