@@ -70,9 +70,10 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         :param beta: Beta value for evaluation metric.
         :param loss_weights: Dictionary of weights for labels for the loss function
             (if any label's weight is unspecified it will default to 1.0)
+        :param init_from_state_dict: Indicator whether we are loading a model from state dict
+            since we need to transform previous models' weights into CRF instance weights
         """
         super(SequenceTagger, self).__init__(label_dictionary=tag_dictionary)
-        self.beta = beta
 
         # ----- Embedding specific parameters -----
         self.embeddings = embeddings
@@ -84,7 +85,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         # ----- Initial loss weights parameters -----
         self.weight_dict = loss_weights
-        self.loss_weights = self.init_loss_weights(loss_weights) if loss_weights else None
+        self.loss_weights = self._init_loss_weights(loss_weights) if loss_weights else None
 
         # ----- RNN specific parameters -----
         self.use_rnn = use_rnn
@@ -109,6 +110,9 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         self.use_word_dropout = True if word_dropout > 0.0 else False
         self.use_locked_dropout = True if locked_dropout > 0.0 else False
 
+        # ----- F-beta score for training + annealing
+        self.beta = beta
+
         # ----- Model layers -----
         self.reproject_embeddings = reproject_embeddings
         if self.reproject_embeddings:
@@ -124,7 +128,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         # ----- RNN layer -----
         if use_rnn:
-            # If Shared RNN provided, create one for model
+            # If shared RNN provided, else create one for model
             if rnn:
                 self.rnn = rnn
             else:
@@ -132,9 +136,10 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             num_directions = 2 if self.bidirectional else 1
             hidden_output_dim = self.rnn.hidden_size * num_directions
 
+            # Whether to train initial hidden state
             self.train_initial_hidden_state = train_initial_hidden_state
             if self.train_initial_hidden_state:
-                self.hs_initializer, self.lstm_init_h, self.lstm_init_c = self.init_initial_hidden_state(num_directions)
+                self.hs_initializer, self.lstm_init_h, self.lstm_init_c = self._init_initial_hidden_state(num_directions)
 
         else:
             self.linear = torch.nn.Linear(embedding_dim, embedding_dim)
@@ -155,10 +160,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
     def label_type(self):
         return self.tag_type
 
-    def init_loss_weights(self, loss_weights) -> torch.Tensor:
-        """
-        Initialize loss weights.
-        """
+    def _init_loss_weights(self, loss_weights) -> torch.Tensor:
         n_classes = len(self.label_dictionary)
         weight_list = [1. for i in range(n_classes)]
         for i, tag in enumerate(self.label_dictionary.get_items()):
@@ -166,7 +168,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
                 weight_list[i] = loss_weights[tag]
         return torch.FloatTensor(weight_list).to(flair.device)
 
-    def init_initial_hidden_state(self, num_directions: int):
+    def _init_initial_hidden_state(self, num_directions: int):
         hs_initializer = torch.nn.init.xavier_normal_
         lstm_init_h = torch.nn.Parameter(
             torch.randn(self.nlayers * num_directions, self.hidden_size),
@@ -212,23 +214,15 @@ class SequenceTagger(flair.nn.DefaultClassifier):
     def forward_pass(self,
                      sentences: Union[List[DataPoint], DataPoint],
                      return_label_candidates: bool = False,
-                     ):
+                     ) -> tuple:
 
         self.embeddings.embed(sentences)
 
-        # Get embedding for each sentence + append a stop token embedding to each sentence
-        if self.use_crf:
-            tensor_list = list(map(lambda sent: torch.cat((sent.get_sequence_tensor(), self.stop_token_emb.unsqueeze(0)), dim=0), sentences))
-            lengths = torch.LongTensor([len(sentence) + 1 for sentence in sentences])
-        else:
-            tensor_list = list(
-                map(lambda sent: sent.get_sequence_tensor(),
-                    sentences))
-            lengths = torch.LongTensor([len(sentence) for sentence in sentences])
+        # Get embedding for each sentence
+        tensor_list, lengths = self._create_tensor_list(sentences)
         sentence_tensor = pad_sequence(tensor_list, batch_first=True)
-
-        # +1 since we've added a stop token embedding to each sentence
         lengths = lengths.sort(dim=0, descending=True)
+
         # sort tensor in decreasing order based on lengths of sentences in batch
         sentences = [sentences[i] for i in lengths.indices]
         sentence_tensor = sentence_tensor[lengths.indices]
@@ -245,7 +239,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             sentence_tensor = self.embedding2nn(sentence_tensor)
 
         if self.use_rnn:
-            packed = pack_padded_sequence(sentence_tensor, list(lengths.values), batch_first=True)
+            packed = pack_padded_sequence(sentence_tensor, lengths.values, batch_first=True)
             rnn_output, hidden = self.rnn(packed)
             sentence_tensor, output_lengths = pad_packed_sequence(rnn_output, batch_first=True)
         else:
@@ -256,33 +250,49 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         if self.use_locked_dropout:
             sentence_tensor = self.locked_dropout(sentence_tensor)
 
+        # Depending on whether we are using CRF or a linear layer, scores is either:
+        # -- A tensor of shape (batch size, sequence length, tagset size, tagset size) for CRF
+        # -- A tensor of shape (aggregated sequence length for all sentences in batch, tagset size) for linear layer
         if self.use_crf:
             features = self.crf(sentence_tensor)
             scores = (features, lengths)
         else:
             features = self.linear2tag(sentence_tensor)
-            features_formatted = []
-            for feat, length in zip(features, lengths.values):
-                features_formatted.append(feat[:length])
-            scores = torch.cat(features_formatted)
+            scores = self._get_scores_from_features(features, lengths)
 
-        tokens_per_sentence = [[token for token in sentence] for sentence in sentences]
-        all_tokens = [item for sublist in tokens_per_sentence for item in sublist]
+        gold_labels = self._get_gold_labels(sentences)
 
+        return scores, gold_labels
+
+    def _create_tensor_list(self, sentences: Union[List[DataPoint], DataPoint]) -> tuple:
+        # If we are using CRF, add stop token to each sentence
         if self.use_crf:
-            labels_plus_stop_tag = [[[token.get_tag(self.label_type).value] for token in sentence] + [["<STOP>"]] for sentence in tokens_per_sentence]
+            tensor_list = list(map(lambda sent: torch.cat((sent.get_sequence_tensor(), self.stop_token_emb.unsqueeze(0)), dim=0), sentences))
+            lengths = torch.LongTensor([len(sentence) + 1 for sentence in sentences])
         else:
-            labels_plus_stop_tag = [[[token.get_tag(self.label_type).value] for token in sentence] for sentence in tokens_per_sentence]
-        labels = [item for sublist in labels_plus_stop_tag for item in sublist]
+            tensor_list = list(map(lambda sent: sent.get_sequence_tensor(), sentences))
+            lengths = torch.LongTensor([len(sentence) for sentence in sentences])
 
-        # minimal return is scores and labels
-        return_tuple = (scores, labels)
+        return tensor_list, lengths
 
-        if return_label_candidates:
-            empty_label_candidates = [Label(value=None, score=None) for token in all_tokens]
-            return_tuple += (all_tokens, empty_label_candidates)
+    @staticmethod
+    def _get_scores_from_features(features: torch.tensor, lengths: torch.tensor):
+        features_formatted = []
+        for feat, length in zip(features, lengths.values):
+            features_formatted.append(feat[:length])
+        scores = torch.cat(features_formatted)
+        return scores
 
-        return return_tuple
+    def _get_gold_labels(self, sentences: Union[List[DataPoint], DataPoint]):
+        tokens_per_sentence = [[token for token in sentence] for sentence in sentences]
+        # If we are using CRF, add a stop tag to each sentence - else simply get tag for each token
+        if self.use_crf:
+            labels = [[[token.get_tag(self.label_type).value] for token in sentence] + [["<STOP>"]] for sentence in tokens_per_sentence]
+        else:
+            labels = [[[token.get_tag(self.label_type).value] for token in sentence] for sentence in tokens_per_sentence]
+        # flatten list
+        labels = [token for sentence in labels for token in sentence]
+        return labels
 
     def predict(
         self,
@@ -332,7 +342,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             features, gold_labels = self.forward_pass(batch)
 
             # remove previously predicted labels of this type
-            for sentence in sentences:
+            for sentence in batch:
                 sentence.remove_labels(label_name)
 
             loss = self._calculate_loss(features, gold_labels)
@@ -341,27 +351,14 @@ class SequenceTagger(flair.nn.DefaultClassifier):
                 overall_loss += loss[0]
                 label_count += loss[1]
 
-            sentences = sorted(sentences, key=len, reverse=True)
+            batch = sorted(batch, key=len, reverse=True)
 
             if self.use_crf:
-                predicted = self.viterbi_decoder.decode(features)
+                predictions = self.viterbi_decoder.decode(features)
             else:
-                softmax_batch = F.softmax(features, dim=1).cpu()
-                scores_batch, prediction_batch = torch.max(softmax_batch, dim=1)
-                predicted = []
-                for sentence in sentences:
-                    scores = scores_batch[:len(sentence)]
-                    predictions = prediction_batch[:len(sentence)]
-                    predicted.append(
-                        [
-                            Label(self.tag_dictionary.get_item_for_index(prediction), score.item())
-                            for token, score, prediction in zip(sentence, scores, predictions)
-                        ]
-                    )
-                    scores_batch = scores_batch[len(sentence):]
-                    prediction_batch = prediction_batch[len(sentence):]
+                predictions = self._standard_inference(features, batch)
 
-            for sentence, labels in zip(sentences, predicted):
+            for sentence, labels in zip(batch, predictions):
                 for token, label in zip(sentence, labels):
                     token.add_tag_label(label_name, label)
 
@@ -369,6 +366,24 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         if return_loss:
             return overall_loss, label_count
+
+    def _standard_inference(self, features: torch.tensor, batch):
+        softmax_batch = F.softmax(features, dim=1).cpu()
+        scores_batch, prediction_batch = torch.max(softmax_batch, dim=1)
+        predictions = []
+        for sentence in batch:
+            scores = scores_batch[:len(sentence)]
+            predictions_for_sentence = prediction_batch[:len(sentence)]
+            predictions.append(
+                [
+                    Label(self.tag_dictionary.get_item_for_index(prediction), score.item())
+                    for token, score, prediction in zip(sentence, scores, predictions_for_sentence)
+                ]
+            )
+            scores_batch = scores_batch[len(sentence):]
+            prediction_batch = prediction_batch[len(sentence):]
+
+        return predictions
 
     def _get_state_dict(self):
         """Returns the state dictionary for this model."""
