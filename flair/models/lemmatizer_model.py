@@ -9,7 +9,7 @@ import flair.embeddings
 import flair.nn
 from flair.data import Token, Sentence, Dictionary, Corpus
 from flair.datasets import DataLoader, SentenceDataset
-from flair.training_utils import store_embeddings
+from flair.training_utils import store_embeddings, Result
 
 log = logging.getLogger("flair")
 
@@ -641,3 +641,8 @@ class Lemmatizer(flair.nn.Classifier):
                     char_dict.add_item(character)
 
         return char_dict
+
+    def evaluate(self, *args, **kwargs) -> Result:
+        result = super().evaluate(*args, **kwargs)
+        result.detailed_results = result.detailed_results.split("\n\n")[0]
+        return result
