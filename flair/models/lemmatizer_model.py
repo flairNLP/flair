@@ -567,10 +567,10 @@ class Lemmatizer(flair.nn.Classifier):
                         line_to_print += ' '
                         tokens_in_batch[i].add_tag(tag_type=label_name, tag_value=predicted_lemma)
 
-                    store_embeddings(batch, storage_mode=embedding_storage_mode)
-
                 if return_loss:
                     overall_loss += self.forward_loss(batch)[0].item()
+
+                store_embeddings(batch, storage_mode=embedding_storage_mode)
 
             if print_prediction:
                 print(line_to_print)
