@@ -29,7 +29,6 @@ class Lemmatizer(flair.nn.Classifier):
                  max_sequence_length: int = 20,
                  start_symbol_for_encoding: bool = True,
                  end_symbol_for_encoding: bool = False,
-                 batching_in_rnn: bool = True,
                  bidirectional_encoding: bool = False,
                  beam_size: int = 1,
                  ):
@@ -67,7 +66,6 @@ class Lemmatizer(flair.nn.Classifier):
         self.dependent_on_input = max_sequence_length_dependent_on_input
         self.start_symbol = start_symbol_for_encoding
         self.end_symbol = end_symbol_for_encoding
-        self.batching_in_rnn = batching_in_rnn
         self.bi_encoding = bidirectional_encoding
         self.rnn_hidden_size = rnn_hidden_size
 
