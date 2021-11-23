@@ -19,8 +19,7 @@ class Lemmatizer(flair.nn.Classifier):
     def __init__(self,
                  embeddings: flair.embeddings.TokenEmbeddings = None,
                  label_type: str = 'lemma',
-                 beam_size: int = 5,
-                 rnn_input_size: int = 30,
+                 rnn_input_size: int = 50,
                  rnn_hidden_size: int = 128,
                  rnn_layers: int = 1,
                  encode_characters: bool = True,
@@ -31,7 +30,8 @@ class Lemmatizer(flair.nn.Classifier):
                  start_symbol_for_encoding: bool = True,
                  end_symbol_for_encoding: bool = False,
                  batching_in_rnn: bool = True,
-                 bidirectional_encoding: bool = False
+                 bidirectional_encoding: bool = False,
+                 beam_size: int = 1,
                  ):
         """
         Initializes a Lemmatizer model
@@ -126,8 +126,8 @@ class Lemmatizer(flair.nn.Classifier):
                                   num_layers=rnn_layers)
 
         # loss and softmax
-        self.loss = nn.CrossEntropyLoss()
-        self.unreduced_loss = nn.CrossEntropyLoss(reduction='none')  # for prediction
+        self.loss = nn.CrossEntropyLoss(reduction='sum')
+        # self.unreduced_loss = nn.CrossEntropyLoss(reduction='none')  # for prediction
         self.softmax = nn.Softmax(dim=2)
 
         self.to(flair.device)
@@ -337,7 +337,7 @@ class Lemmatizer(flair.nn.Classifier):
 
         target.unsqueeze_(1)  # (batch_size, 1, max_label_seq_length + 1)
 
-        return self.loss(scores_in_correct_format, target)
+        return self.loss(scores_in_correct_format, target), len(labels)
 
     def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> torch.tensor:
         scores, labels = self.forward_pass(sentences)
@@ -384,45 +384,69 @@ class Lemmatizer(flair.nn.Classifier):
 
         with torch.no_grad():
 
-            if self.batching_in_rnn:
-                dataloader = DataLoader(dataset=SentenceDataset(sentences), batch_size=mini_batch_size)
+            dataloader = DataLoader(dataset=SentenceDataset(sentences), batch_size=mini_batch_size)
 
-                for batch in dataloader:
+            for batch in dataloader:
 
-                    # stop if all sentences are empty
-                    if not batch: continue
+                # stop if all sentences are empty
+                if not batch: continue
 
-                    # remove previously predicted labels of this type
-                    for sentence in batch:
-                        for token in sentence:
-                            token.remove_labels(label_name)
+                # remove previously predicted labels of this type
+                for sentence in batch:
+                    for token in sentence:
+                        token.remove_labels(label_name)
 
-                    # create list of tokens in batch
-                    tokens_in_batch = [token for sentence in batch for token in sentence]
-                    number_tokens = len(tokens_in_batch)
-                    number_tokens_in_total += number_tokens
+                # create list of tokens in batch
+                tokens_in_batch = [token for sentence in batch for token in sentence]
+                number_tokens = len(tokens_in_batch)
+                number_tokens_in_total += number_tokens
 
-                    # encode inputs
-                    hidden, all_encoder_outputs = self.encode(batch)
+                # encode inputs
+                hidden, all_encoder_outputs = self.encode(batch)
 
-                    # decoding
-                    # create input for first pass (batch_size, 1, input_size), first letter is special character <S>
-                    # sequence length is always set to one in prediction
-                    input_indices = self.start_index * torch.ones(number_tokens, dtype=torch.long,
-                                                                  device=flair.device).unsqueeze(1)
+                # create input for first pass (batch_size, 1, input_size), first letter is special character <S>
+                # sequence length is always set to one in prediction
+                input_indices = self.start_index * torch.ones(number_tokens, dtype=torch.long,
+                                                              device=flair.device).unsqueeze(1)
 
+                # option 1: greedy decoding
+                if self.beam_size == 1:
+
+                    # predictions
+                    predicted = [[] for _ in range(number_tokens)]
+
+                    for decode_step in range(max_length):
+
+                        # decode next character
+                        output_vectors, hidden = self.decode(input_indices, hidden, all_encoder_outputs)
+
+                        log_softmax_probs = torch.nn.functional.log_softmax(output_vectors, dim=2)
+                        # pick top beam size many outputs with highest probabilities
+                        input_indices = log_softmax_probs.argmax(dim=2)
+
+                        for i in range(number_tokens):
+                            if len(predicted[i]) > 0 and predicted[i][-1] == self.end_index: continue
+                            predicted[i].append(input_indices[i].item())
+
+                    for t_id, token in enumerate(tokens_in_batch):
+                        predicted_lemma = ''.join(
+                            self.char_dictionary.get_item_for_index(idx) if idx != self.end_index else ""
+                            for idx in predicted[t_id])
+                        token.set_label(typename=label_name, value=predicted_lemma)
+
+                # option 2: beam search
+                else:
                     output_vectors, hidden = self.decode(input_indices, hidden, all_encoder_outputs)
 
                     # out_probs = self.softmax(output_vectors).squeeze(1)
                     log_softmax_probs = torch.nn.functional.log_softmax(output_vectors, dim=2).squeeze(1)
-                    # make sure no dummy symbol <> or start symbol <S> is predicted TODO: is this necessary? should be learned, right?
+                    # make sure no dummy symbol <> or start symbol <S> is predicted
                     log_softmax_probs[:, self.dummy_index] = -inf
                     log_softmax_probs[:, self.start_index] = -inf
-                    log_softmax_probs[:, self.end_index] = -inf
+
                     # pick top beam size many outputs with highest probabilities
                     # probabilities, leading_indices = out_probs.topk(self.beam_size, 1)  # max prob along dimension 1
-                    log_probabilities, leading_indices = log_softmax_probs.topk(self.beam_size,
-                                                                                1)  # max prob along dimension 1
+                    log_probabilities, leading_indices = log_softmax_probs.topk(self.beam_size, 1)
                     # leading_indices and probabilities have size (batch_size, beam_size)
 
                     # keep scores of beam_size many hypothesis for each token in the batch
@@ -501,7 +525,6 @@ class Lemmatizer(flair.nn.Classifier):
                         seq_numbers = []
 
                         for i, row in enumerate(indices_per_token):
-
                             beam_numbers.extend(i * self.beam_size + index.item() // self.beam_size for index in row)
 
                             seq_numbers.extend(index.item() % self.beam_size for index in row)
@@ -546,170 +569,8 @@ class Lemmatizer(flair.nn.Classifier):
 
                     store_embeddings(batch, storage_mode=embedding_storage_mode)
 
-            else:  # no batching in RNN
-                # still: embed sentences batch-wise
-                dataloader = DataLoader(dataset=SentenceDataset(sentences), batch_size=mini_batch_size)
-
-                for batch in dataloader:
-
-                    if self.encoder_embeddings:
-                        # embed sentence
-                        self.encoder_embeddings.embed(batch)
-
-                    # no batches in RNN, prediction for each token
-                    for sentence in batch:
-                        for token in sentence:
-
-                            number_tokens_in_total += 1
-                            # remove previously predicted labels of this type
-                            token.remove_labels(label_name)
-
-                            hidden, all_encoder_outputs = self.encode_token(token)
-
-                            # input (batch_size, 1, input_size), first letter is special character <S>
-                            input_tensor = self.decoder_character_embedding(
-                                torch.tensor([self.start_index], device=flair.device)).unsqueeze(1)
-
-                            # first pass
-                            output, hidden_state = self.decoder_rnn(input_tensor, hidden)
-
-                            if self.use_attention:
-                                attention_coefficients = torch.softmax(
-                                    torch.matmul(all_encoder_outputs, torch.transpose(output, 1, 2)), dim=1)
-
-                                # take convex combinations of encoder hidden states as new output using the computed attention coefficients
-                                attention_output = torch.transpose(
-                                    torch.matmul(torch.transpose(all_encoder_outputs, 1, 2), attention_coefficients), 1,
-                                    2)
-
-                                output = torch.cat((output, attention_output), dim=2)
-
-                            output_vectors = self.character_decoder(output)
-                            out_probs = self.softmax(output_vectors).squeeze(1)
-                            # make sure no dummy symbol <> or start symbol <S> is predicted
-                            out_probs[0, self.dummy_index] = -1
-                            out_probs[0, self.start_index] = -1
-                            # take beam size many predictions with highest probabilities
-                            probabilities, leading_indices = out_probs.topk(self.beam_size,
-                                                                            1)  # max prob along dimension 1
-                            log_probabilities = torch.log(probabilities)
-                            # leading_indices have size (1, beam_size)
-
-                            loss = 0
-                            # get target and compute loss
-                            if return_loss:
-                                label = token.get_tag(label_type=self._label_type).value if token.get_tag(
-                                    label_type=self._label_type).value else token.text
-
-                                target = self.words_to_char_indices([label], start_symbol=False, end_symbol=True,
-                                                                    padding_in_front=False, seq_length=max_length)
-
-                                loss = self.loss(output_vectors.squeeze(0), target[:, 0])
-
-                            # the list sequences will contain beam_size many hypothesis at each point of the prediction
-                            sequences = []
-                            # create one candidate hypothesis for each prediction
-                            for j in range(self.beam_size):
-                                # each candidate is a tuple consisting of the predictions so far, the last hidden state, the score/log probability and the loss
-                                prediction_index = leading_indices[0][j].item()
-                                prediction_log_probability = log_probabilities[0][j]
-
-                                candidate = [[prediction_index], hidden_state, prediction_log_probability, loss]
-                                sequences.append(candidate)
-
-                            # variables needed for further beam search
-                            n_completed = 0
-                            final_candidates = []
-
-                            # Beam search after the first run
-                            for i in range(1, max_length):
-                                new_sequences = []
-
-                                # expand each candidate hypothesis in sequences
-                                for seq, hid, score, seq_loss in sequences:
-                                    # create input vector
-                                    input_index = torch.tensor([seq[-1]], device=flair.device)
-                                    input_tensor = self.decoder_character_embedding(input_index).unsqueeze(1)
-
-                                    # forward pass
-                                    output, hidden_state = self.decoder_rnn(input_tensor, hid)
-
-                                    if self.use_attention:
-                                        attention_coefficients = torch.softmax(
-                                            torch.matmul(all_encoder_outputs, torch.transpose(output, 1, 2)), dim=1)
-
-                                        # take convex combinations of encoder hidden states as new output using the computed attention coefficients
-                                        attention_output = torch.transpose(
-                                            torch.matmul(torch.transpose(all_encoder_outputs, 1, 2),
-                                                         attention_coefficients), 1, 2)
-
-                                        output = torch.cat((output, attention_output), dim=2)
-
-                                    output_vectors = self.character_decoder(output)
-                                    out_probs = self.softmax(output_vectors).squeeze(1)
-                                    # make sure no dummy symbol <> or start symbol <S> is predicted
-                                    out_probs[0, self.dummy_index] = -1
-                                    out_probs[0, self.start_index] = -1
-
-                                    new_loss = 0
-                                    if return_loss:
-                                        new_loss = seq_loss + self.loss(output_vectors.squeeze(0), target[:, i])
-
-                                    # get top beam_size predictions
-                                    probabilities, leading_indices = out_probs.topk(self.beam_size,
-                                                                                    1)  # max prob along dimension 1
-                                    log_probabilities = torch.log(probabilities)
-
-                                    # go through each of the top beam_size predictions
-                                    for j in range(self.beam_size):
-
-                                        prediction_index = leading_indices[0][j].item()
-                                        prediction_log_probability = log_probabilities[0][j].item()
-
-                                        # add their log probability to previous score
-                                        s = score + prediction_log_probability
-
-                                        # if this prediction is a STOP symbol, set it aside
-                                        if prediction_index == self.end_index:
-                                            candidate = [seq, s / (len(seq) + 1), new_loss / (len(seq) + 1)]
-                                            final_candidates.append(candidate)
-                                            n_completed += 1
-                                        # else, create a new candidate hypothesis with updated score and prediction sequence
-                                        else:
-                                            candidate = [seq + [prediction_index], hidden_state, s, new_loss]
-                                            new_sequences.append(candidate)
-
-                                if len(new_sequences) == 0:  # only possible if self.beam_size is 1 and a <E> was predicted
-                                    break
-
-                                # order final candidates by score (in descending order)
-                                seq_sorted = sorted(new_sequences, key=lambda tup: tup[2], reverse=True)
-
-                                # only use top beam_size hypothesis as starting point for next iteration
-                                sequences = seq_sorted[:self.beam_size]
-
-                            # take one of the beam_size many sequences without predicted <E> symbol, if no end symbol was predicted
-                            if len(final_candidates) == 0:
-                                seq_without_end = sequences[0]
-                                candidate = [seq_without_end[0], seq_without_end[2] / max_length,
-                                             seq_without_end[3] / max_length]
-                                final_candidates.append(candidate)
-
-                            # order final candidates by score (in descending order)
-                            ordered = sorted(final_candidates, key=lambda tup: tup[1], reverse=True)
-                            best_sequence = ordered[0]
-
-                            overall_loss += best_sequence[2]
-
-                            # get lemma from indices and add label to token
-                            predicted_lemma = ''
-                            for idx in best_sequence[0]:
-                                predicted_lemma += self.char_dictionary.get_item_for_index(idx)
-                            line_to_print += predicted_lemma
-                            line_to_print += ' '
-                            token.add_tag(tag_type=label_name, tag_value=predicted_lemma)
-
-                        store_embeddings(sentence, storage_mode=embedding_storage_mode)
+                if return_loss:
+                    overall_loss += self.forward_loss(batch)[0].item()
 
             if print_prediction:
                 print(line_to_print)
@@ -733,7 +594,6 @@ class Lemmatizer(flair.nn.Classifier):
             "encode_characters": self.encode_characters,
             "start_symbol": self.start_symbol,
             "end_symbol": self.end_symbol,
-            "batching_in_rnn": self.batching_in_rnn,
             "bidirectional_encoding": self.bi_encoding
         }
 
@@ -754,7 +614,6 @@ class Lemmatizer(flair.nn.Classifier):
             use_attention=state["use_attention"],
             start_symbol_for_encoding=state["start_symbol"],
             end_symbol_for_encoding=state["end_symbol"],
-            batching_in_rnn=state["batching_in_rnn"],
             bidirectional_encoding=state["bidirectional_encoding"]
         )
         model.load_state_dict(state["state_dict"])
