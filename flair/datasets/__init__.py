@@ -6,6 +6,7 @@ from .base import MongoDataset
 
 # Expose all sequence labeling datasets
 from .sequence_labeling import ColumnCorpus
+from .sequence_labeling import MultiFileColumnCorpus
 from .sequence_labeling import ColumnDataset
 # standard NER datasets
 from .sequence_labeling import CONLL_03
@@ -63,6 +64,7 @@ from .sequence_labeling import UP_SPANISH_ANCORA
 
 # Expose all entity linking datasets
 from .entity_linking import EntityLinkingCorpus
+from .entity_linking import MultiEntityLinkingCorpus
 from .entity_linking import NEL_ENGLISH_AIDA
 from .entity_linking import NEL_ENGLISH_AQUAINT
 from .entity_linking import NEL_ENGLISH_IITB

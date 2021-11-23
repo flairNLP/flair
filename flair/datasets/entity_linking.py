@@ -7,40 +7,34 @@ from typing import Union, List, Dict
 import requests
 
 import flair
-from flair.data import Dictionary, Sentence, MultiCorpus
-from flair.datasets import ColumnCorpus
+from flair.data import Dictionary, Sentence, ConcatDataset
+from flair.datasets import MultiFileColumnCorpus
 from flair.file_utils import cached_path, unpack_file
+from flair.datasets.base import find_train_dev_test_files
 from flair.tokenization import SentenceSplitter, SegtokSentenceSplitter
 
 log = logging.getLogger("flair")
 
+class MultiEntityLinkingCorpus(MultiFileColumnCorpus):
+    def __init__(self,
+                 train_files=None,
+                 test_files=None,
+                 dev_files=None,
+                 name: str = "MultiEntityLinkingCorpus",
+                 column_format={0: "text", 1: "nel"},
+                 column_delimiter="\t",
+                 document_separator_token='-DOCSTART-',
+                 **multifilecolumncorpusargs):
 
-class EntityLinkingCorpus(ColumnCorpus):
-    def __init__(
-            self,
-            data_folder,
-            train_file,
-            columns={0: "text", 1: "nel"},
-            column_delimiter="\t",
-            in_memory=True,
-            document_separator_token='-DOCSTART-',
-            **corpusargs,
-    ):
-        """
-        Super class for all entity linking corpora. Expects the data to be in column format with one column for words and another one for BIO-tags and wikipedia-page
-        name, e.g. B-Brad_Pitt.
-        The class provides the function make_entity_dict to create an entity dictionary suited for entity linking.
-        """
-        # TODO: Add a routine, that checks annotations for some widespread errors/inconsistencies??? (e.g. in AQUAINT corpus Iran-Iraq_War vs. Iran-Iraq_war)
-
-        super(EntityLinkingCorpus, self).__init__(
-            data_folder,
-            columns,
-            train_file=train_file,
+        super(MultiEntityLinkingCorpus, self).__init__(
+            train_files=train_files,
+            test_files=test_files,
+            dev_files=dev_files,
+            name=name,
+            column_format=column_format,
             column_delimiter=column_delimiter,
-            in_memory=in_memory,
             document_separator_token=document_separator_token,
-            **corpusargs,
+            **multifilecolumncorpusargs,
         )
 
     def make_entity_dict(self, label_type='nel', threshold: int = 1) -> Dictionary:
@@ -79,22 +73,58 @@ class EntityLinkingCorpus(ColumnCorpus):
         return self.ent_dictionary
 
     # this fct removes every second unknown label
-    def remove_unknowns(self):
+    def remove_unknowns(self, label_type='nel'):
         remove = True
         for sentence in self.get_all_sentences():
             if not sentence.is_document_boundary:  # exclude "-DOCSTART-"-sentences
 
-                spans = sentence.get_spans('nel')
+                spans = sentence.get_spans(label_type)
                 for span in spans:
                     annotation = span.tag
                     if self.ent_dictionary.get_idx_for_item(annotation) == 0:  # unknown label
                         if remove:
                             for token in span:
-                                token.remove_labels('nel')
+                                token.remove_labels(label_type)
                             remove = False
                         else:
                             remove = True
 
+class EntityLinkingCorpus(MultiEntityLinkingCorpus):
+    def __init__(
+            self,
+            data_folder,
+            train_file=None,
+            test_file=None,
+            dev_file=None,
+            autofind_splits: bool = True,
+            name: str = "EntityLinkingCorpus",
+            column_format={0: "text", 1: "nel"},
+            column_delimiter="\t",
+            in_memory=True,
+            document_separator_token='-DOCSTART-',
+            **corpusargs,
+    ):
+        """
+        Super class for all entity linking corpora. Expects the data to be in column format with one column for words and another one for BIO-tags and wikipedia-page
+        name, e.g. B-Brad_Pitt.
+        The class provides the function make_entity_dict to create an entity dictionary suited for entity linking.
+        """
+
+        # find train, dev and test files if not specified
+        dev_file, test_file, train_file = \
+            find_train_dev_test_files(data_folder, dev_file, test_file, train_file, autofind_splits)
+
+        super(EntityLinkingCorpus, self).__init__(
+            train_files=[train_file],
+            dev_files=[dev_file],
+            test_files=[test_file],
+            column_format=column_format,
+            column_delimiter=column_delimiter,
+            in_memory=in_memory,
+            document_separator_token=document_separator_token,
+            name=name if name else None,
+            **corpusargs,
+        )
 
 class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
     def __init__(
@@ -267,6 +297,8 @@ class NEL_ENGLISH_AQUAINT(EntityLinkingCorpus):
             data_folder,
             train_file=corpus_file_name,
             in_memory=in_memory,
+            autofind_splits=False,
+            name="AquaintELCorpus",
             **corpusargs,
         )
 
@@ -384,6 +416,8 @@ class NEL_GERMAN_HIPE(EntityLinkingCorpus):
             dev_file=wiki_language + '_dev.tsv',
             test_file=wiki_language + '_test.tsv',
             in_memory=in_memory,
+            autofind_splits=False,
+            name="GermanHipeELCorpus",
             **corpusargs,
         )
 
@@ -529,10 +563,12 @@ class NEL_ENGLISH_AIDA(EntityLinkingCorpus):
 
         super(NEL_ENGLISH_AIDA, self).__init__(
             data_folder,
-            train_file=corpus_file_name,
+            train_file='train',
             dev_file='testa',
             test_file='testb',
             in_memory=in_memory,
+            autofind_splits=False,
+            name="AidaELCorpus",
             **corpusargs,
         )
 
@@ -717,6 +753,8 @@ class NEL_ENGLISH_IITB(EntityLinkingCorpus):
             data_folder,
             train_file=corpus_file_name,
             in_memory=in_memory,
+            autofind_splits=False,
+            name="IttbELCorpus",
             **corpusargs,
         )
 
@@ -784,6 +822,8 @@ class NEL_ENGLISH_TWEEKI(EntityLinkingCorpus):
             data_folder,
             train_file=corpus_file_name,
             in_memory=in_memory,
+            autofind_splits=False,
+            name="TweekiELCorpus",
             **corpusargs,
         )
 
@@ -912,6 +952,8 @@ class NEL_ENGLISH_REDDIT(EntityLinkingCorpus):
             data_folder,
             train_file=corpus_file_name,
             in_memory=in_memory,
+            autofind_splits=False,
+            name="RedditELCorpus",
             **corpusargs,
         )
 
@@ -1156,21 +1198,17 @@ def determine_tsv_file(filename: str, data_folder: str, cut_multisense: bool = T
     return conll_file_name
 
 
-class WSD_UFSAC(MultiCorpus):
+class WSD_UFSAC(MultiEntityLinkingCorpus):
     def __init__(
             self,
             train_filenames: Union[str, List[str]] = 'semcor',
             dev_filenames: Union[str, List[str]] = [],
             test_filenames: Union[str, List[str]] = [],
             base_path: Union[str, Path] = None,
-            in_memory: bool = True,
             cut_multisense: bool = True,
             columns={0: "text", 3: "wn30_key"},
-            tag_to_bioes=None,
-            banned_sentences: List[str] = None,
-            sample_missing_splits_in_multicorpus: Union[str, bool] = True,
-            sample_missing_splits_in_each_corpus: Union[str, bool] = True,
-            name: str = 'multicorpus'
+            name: str = 'wsd_multicorpus',
+            **multifilecolumncorpusargs
     ):
         """
         Initialize a custom corpus with any Word Sense Disambiguation (WSD) datasets in the UFSAC format from https://github.com/getalp/UFSAC.
@@ -1245,37 +1283,17 @@ class WSD_UFSAC(MultiCorpus):
         if type(test_filenames) == str:
             test_filenames = [test_filenames]
 
-        train_filenames = [(determine_tsv_file(filename=x, data_folder=data_folder, cut_multisense=cut_multisense),None,None) for x in train_filenames]
-        dev_filenames = [(None,determine_tsv_file(filename=x, data_folder=data_folder, cut_multisense=cut_multisense),None) for x in dev_filenames]
-        test_filenames = [(None,None,determine_tsv_file(filename=x, data_folder=data_folder, cut_multisense=cut_multisense)) for x in test_filenames]
-
-        corpora = []
-
-        print('Transforming data into column format and creating corpora...')
-
-        for train,dev,test in train_filenames + dev_filenames + test_filenames:
-            # make column file and save to data_folder
-
-            corpus = ColumnCorpus(data_folder=data_folder,
-                                  column_format=columns,
-                                  train_file=train,
-                                  dev_file=dev,
-                                  test_file=test,
-                                  in_memory=in_memory,
-                                  tag_to_bioes=tag_to_bioes,
-                                  column_delimiter='\t',
-                                  document_separator_token='-DOCSTART-',
-                                  banned_sentences=banned_sentences,
-                                  autofind_splits=False,
-                                  sample_missing_splits=sample_missing_splits_in_each_corpus,
-                                  )
-            corpora.append(corpus)
-        print('...done!')
+        train_filenames = [data_folder / determine_tsv_file(filename=x, data_folder=data_folder, cut_multisense=cut_multisense) for x in train_filenames]
+        dev_filenames = [data_folder / determine_tsv_file(filename=x, data_folder=data_folder, cut_multisense=cut_multisense) for x in dev_filenames]
+        test_filenames = [data_folder / determine_tsv_file(filename=x, data_folder=data_folder, cut_multisense=cut_multisense) for x in test_filenames]
 
         super(WSD_UFSAC, self).__init__(
-            corpora,
-            sample_missing_splits=sample_missing_splits_in_multicorpus,
-            name=name
+            column_format=columns,
+            train_files=train_filenames,
+            dev_files=dev_filenames,
+            test_files=test_filenames,
+            name=name,
+            **multifilecolumncorpusargs
         )
 
 
@@ -1332,11 +1350,9 @@ class WSD_RAGANATO_ALL(EntityLinkingCorpus):
 
         super(WSD_RAGANATO_ALL, self).__init__(
             data_folder=data_folder,
-            columns=columns,
             train_file=train_file,
+            column_format=columns,
             in_memory=in_memory,
-            document_separator_token='-DOCSTART-',
-            column_delimiter='\t',
             autofind_splits=False,
             tag_to_bioes=tag_to_bioes,
             label_name_map=label_name_map,
@@ -1410,12 +1426,10 @@ class WSD_SEMCOR(EntityLinkingCorpus):
 
         super(WSD_SEMCOR, self).__init__(
             data_folder=data_folder,
-            columns=columns,
+            column_format=columns,
             train_file=train_file,
             test_file=test_file,
             in_memory=in_memory,
-            document_separator_token='-DOCSTART-',
-            column_delimiter='\t',
             autofind_splits=False,
             tag_to_bioes=tag_to_bioes,
             label_name_map=label_name_map,
@@ -1488,12 +1502,10 @@ class WSD_WORDNET_GLOSS_TAGGED(EntityLinkingCorpus):
 
         super(WSD_WORDNET_GLOSS_TAGGED, self).__init__(
             data_folder=data_folder,
-            columns=columns,
             train_file=train_file,
+            columns=columns,
             test_file=test_file,
             in_memory=in_memory,
-            document_separator_token='-DOCSTART-',
-            column_delimiter='\t',
             autofind_splits=False,
             tag_to_bioes=tag_to_bioes,
             label_name_map=label_name_map,
@@ -1567,12 +1579,10 @@ class WSD_MASC(EntityLinkingCorpus):
 
         super(WSD_MASC, self).__init__(
             data_folder=data_folder,
-            columns=columns,
             train_file=train_file,
+            columns=columns,
             test_file=test_file,
             in_memory=in_memory,
-            document_separator_token='-DOCSTART-',
-            column_delimiter='\t',
             autofind_splits=False,
             tag_to_bioes=tag_to_bioes,
             label_name_map=label_name_map,
@@ -1646,12 +1656,10 @@ class WSD_OMSTI(EntityLinkingCorpus):
 
         super(WSD_OMSTI, self).__init__(
             data_folder=data_folder,
-            columns=columns,
             train_file=train_file,
+            columns=columns,
             test_file=test_file,
             in_memory=in_memory,
-            document_separator_token='-DOCSTART-',
-            column_delimiter='\t',
             autofind_splits=False,
             tag_to_bioes=tag_to_bioes,
             label_name_map=label_name_map,
@@ -1724,12 +1732,10 @@ class WSD_TRAINOMATIC(EntityLinkingCorpus):
 
         super(WSD_TRAINOMATIC, self).__init__(
             data_folder=data_folder,
-            columns=columns,
             train_file=train_file,
+            columns=columns,
             test_file=test_file,
             in_memory=in_memory,
-            document_separator_token='-DOCSTART-',
-            column_delimiter='\t',
             autofind_splits=False,
             tag_to_bioes=tag_to_bioes,
             label_name_map=label_name_map,
