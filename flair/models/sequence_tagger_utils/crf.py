@@ -22,7 +22,7 @@ class CRF(torch.nn.Module):
         self.transitions.data.zero_()
         self.to(flair.device)
 
-    def forward(self, features: torch.Tensor) -> torch.Tensor:
+    def forward(self, features: torch.tensor) -> torch.tensor:
         """
         Forward propagation of Conditional Random Field.
         :param rnn_features: output from RNN / Linear layer in shape (batch size, seq len, hidden size)

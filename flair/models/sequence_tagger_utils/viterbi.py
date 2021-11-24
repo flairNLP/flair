@@ -25,7 +25,7 @@ class ViterbiLoss(torch.nn.Module):
         self.start_tag = tag_dictionary.get_idx_for_item(START_TAG)
         self.stop_tag = tag_dictionary.get_idx_for_item(STOP_TAG)
 
-    def forward(self, features_tuple: tuple, targets: torch.Tensor) -> torch.Tensor:
+    def forward(self, features_tuple: tuple, targets: torch.tensor) -> torch.tensor:
         """
         Forward propagation of Viterbi Loss
 

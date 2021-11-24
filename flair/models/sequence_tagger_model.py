@@ -160,7 +160,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
     def label_type(self):
         return self.tag_type
 
-    def _init_loss_weights(self, loss_weights) -> torch.Tensor:
+    def _init_loss_weights(self, loss_weights) -> torch.tensor:
         n_classes = len(self.label_dictionary)
         weight_list = [1. for i in range(n_classes)]
         for i, tag in enumerate(self.label_dictionary.get_items()):
