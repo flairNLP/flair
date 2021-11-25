@@ -42,7 +42,7 @@ class RegexpTagger:
                 continue
             self._regexp_mapping.pop(label)
 
-    def register_labels(self, regexps: List[Tuple[str, str]]):
+    def register_labels(self, regexps: Union[List[Tuple[str, str]], Tuple[str, str]]):
         regexps = self._listify(regexps)
 
         for regexp, label in regexps:
