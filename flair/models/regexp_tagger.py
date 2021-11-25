@@ -28,14 +28,19 @@ class RegexpTagger:
 
     def __init__(self, regexps: Union[List[Tuple[str, str]], Tuple[str, str]]):
         self._regexp_mapping: Dict[str, re.Pattern] = {}
-
         self.register_tags(regexps=regexps)
+
+    @property
+    def registered_regexp(self):
+        return self._regexp_mapping
 
     def remove_tags(self, tags: Union[List[str], str]):
         tags = self._listify(tags)
 
         for tag in tags:
-            self._regexp_mapping.pop(key=tag)
+            if not self._regexp_mapping.get(tag):
+                continue
+            self._regexp_mapping.pop(tag)
 
     def register_tags(self, regexps: List[Tuple[str, str]]):
         regexps = self._listify(regexps)
@@ -72,9 +77,9 @@ class RegexpTagger:
                     token_span = collection.get_token_indexes_for_span(span)
                 except ValueError:
                     raise Exception(f"The match span {span} for tag '{tag}' is overlapping with a token!")
-                if token_span[1]-token_span[0] > 0:
+                if token_span[1] - token_span[0] > 0:
                     sentence.tokens[token_span[0]].add_tag('regexp', 'B-' + tag)
-                    for i in range(token_span[0]+1, token_span[1]+1):
+                    for i in range(token_span[0] + 1, token_span[1] + 1):
                         sentence.tokens[i].add_tag('regexp', 'I-' + tag)
                     sentence.tokens[token_span[1]].add_tag('regexp', 'E-' + tag)
                 else:
@@ -82,8 +87,19 @@ class RegexpTagger:
 
 
 if __name__ == '__main__':
-    sentence = Sentence('"This talk" is interesting.')
-    tagger = RegexpTagger([('This talk', 'TEST'), (r'(?<=\s)is(?=\s)', 'TEST_2'), ('toll', 'TEST_3')])
+    paragraph: str = """
+    Familienpolitik in Deutschland, das hieß bislang oft: 
+    Politik für Vater, Mutter, Kind. Zwar stand schon im 2018 geschlossenen Vertrag der 
+    Großen Koalition: "Wir schreiben Familien kein bestimmtes Familienmodell vor. 
+    Wir respektieren die unterschiedlichen Formen des Zusammenlebens." Der Ansatz der 
+    Ampelkoalition ist aber noch grundlegender, sie weitet den Familienbegriff nicht nur, 
+    sondern definiert ihn neu: "Familie ist vielfältig und überall dort, wo Menschen 
+    Verantwortung füreinander übernehmen", steht im Papier, sogar fast wortgleich an zwei Stellen. 
+    Wichtiger als die Begrifflichkeiten sind die Gesetzesänderungen, die damit einhergehen. Die angehende 
+    Regierung hat sich vorgenommen, das Familienrecht zu modernisieren – und liefert dazu sehr konkrete Vorschläge. 
+    """
+    sentence = Sentence(paragraph)
+    tagger = RegexpTagger([(r'(["\'])(?:(?=(\\?))\2.)*?\1', 'QUOTES'), (r'(?<=\s)is(?=\s)', 'IS'), ('toll', 'TOLL')])
     tagger.predict(sentence)
     for entity in sentence.get_spans('regexp'):
         print(entity)
