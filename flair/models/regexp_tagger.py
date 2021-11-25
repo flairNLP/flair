@@ -31,7 +31,7 @@ class RegexpTagger:
         self.register_tags(regexps=regexps)
 
     @property
-    def registered_regexp(self):
+    def registered_regexps(self):
         return self._regexp_mapping
 
     def remove_tags(self, tags: Union[List[str], str]):
