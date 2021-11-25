@@ -21,7 +21,7 @@ class RegexpTagger:
         def tokens(self):
             return list(self.sentence)
 
-        def get_token_indexes_for_span(self, span: Tuple[int, int]) -> Tuple[int, int]:
+        def get_token_range_for_span(self, span: Tuple[int, int]) -> Tuple[int, int]:
             span_start: int = self.__tokens_start_pos.index(span[0])
             span_end: int = self.__tokens_end_pos.index(span[1])
             return span_start, span_end
@@ -74,7 +74,7 @@ class RegexpTagger:
             for match in pattern.finditer(sentence.to_original_text()):
                 span: Tuple[int, int] = match.span()
                 try:
-                    token_span = collection.get_token_indexes_for_span(span)
+                    token_span = collection.get_token_range_for_span(span)
                 except ValueError:
                     raise Exception(f"The match span {span} for tag '{tag}' is overlapping with a token!")
                 if token_span[1] - token_span[0] > 0:
