@@ -28,28 +28,28 @@ class RegexpTagger:
 
     def __init__(self, regexps: Union[List[Tuple[str, str]], Tuple[str, str]]):
         self._regexp_mapping: Dict[str, re.Pattern] = {}
-        self.register_tags(regexps=regexps)
+        self.register_labels(regexps=regexps)
 
     @property
-    def registered_regexps(self):
+    def registered_labels(self):
         return self._regexp_mapping
 
-    def remove_tags(self, tags: Union[List[str], str]):
-        tags = self._listify(tags)
+    def remove_labels(self, labels: Union[List[str], str]):
+        labels = self._listify(labels)
 
-        for tag in tags:
-            if not self._regexp_mapping.get(tag):
+        for label in labels:
+            if not self._regexp_mapping.get(label):
                 continue
-            self._regexp_mapping.pop(tag)
+            self._regexp_mapping.pop(label)
 
-    def register_tags(self, regexps: List[Tuple[str, str]]):
+    def register_labels(self, regexps: List[Tuple[str, str]]):
         regexps = self._listify(regexps)
 
-        for regexp, tag in regexps:
+        for regexp, label in regexps:
             try:
-                self._regexp_mapping[tag] = re.compile(regexp)
+                self._regexp_mapping[label] = re.compile(regexp)
             except re.error as err:
-                raise re.error(f"Couldn't compile regexp '{regexp}' for tag '{tag}'. Aborted with error: '{err.msg}'")
+                raise re.error(f"Couldn't compile regexp '{regexp}' for label '{label}'. Aborted with error: '{err.msg}'")
 
     @staticmethod
     def _listify(element: object) -> list:
@@ -64,42 +64,44 @@ class RegexpTagger:
 
         sentences = self._listify(sentences)
         for sentence in sentences:
-            self._tag(sentence)
+            self._label(sentence)
         return sentences
 
-    def _tag(self, sentence: Sentence):
+    def _label(self, sentence: Sentence):
         collection = RegexpTagger.TokenCollection(sentence)
 
-        for tag, pattern in self._regexp_mapping.items():
+        for label, pattern in self._regexp_mapping.items():
             for match in pattern.finditer(sentence.to_original_text()):
                 span: Tuple[int, int] = match.span()
                 try:
                     token_span = collection.get_token_range_for_span(span)
                 except ValueError:
-                    raise Exception(f"The match span {span} for tag '{tag}' is overlapping with a token!")
+                    raise Exception(f"The match span {span} for label '{label}' is overlapping with a token!")
                 if token_span[1] - token_span[0] > 0:
-                    sentence.tokens[token_span[0]].add_tag('regexp', 'B-' + tag)
+                    sentence.tokens[token_span[0]].add_label(label, 'B-' + label)
                     for i in range(token_span[0] + 1, token_span[1] + 1):
-                        sentence.tokens[i].add_tag('regexp', 'I-' + tag)
-                    sentence.tokens[token_span[1]].add_tag('regexp', 'E-' + tag)
+                        sentence.tokens[i].add_label(label, 'I-' + label)
+                    sentence.tokens[token_span[1]].add_label(label, 'E-' + label)
                 else:
-                    sentence.tokens[token_span[0]].add_tag('regexp', 'S-' + tag)
+                    sentence.tokens[token_span[0]].add_label(label, 'S-' + label)
 
 
 if __name__ == '__main__':
     paragraph: str = """
-    Familienpolitik in Deutschland, das hieß bislang oft: 
-    Politik für Vater, Mutter, Kind. Zwar stand schon im 2018 geschlossenen Vertrag der 
-    Großen Koalition: "Wir schreiben Familien kein bestimmtes Familienmodell vor. 
-    Wir respektieren die unterschiedlichen Formen des Zusammenlebens." Der Ansatz der 
-    Ampelkoalition ist aber noch grundlegender, sie weitet den Familienbegriff nicht nur, 
-    sondern definiert ihn neu: "Familie ist vielfältig und überall dort, wo Menschen 
-    Verantwortung füreinander übernehmen", steht im Papier, sogar fast wortgleich an zwei Stellen. 
-    Wichtiger als die Begrifflichkeiten sind die Gesetzesänderungen, die damit einhergehen. Die angehende 
-    Regierung hat sich vorgenommen, das Familienrecht zu modernisieren – und liefert dazu sehr konkrete Vorschläge. 
+    Familienpolitik in Deutschland, das hieß bislang oft:
+    Politik für Vater, Mutter, Kind. Zwar stand schon im 2018 geschlossenen Vertrag der
+    Großen Koalition: "Wir schreiben Familien kein bestimmtes Familienmodell vor.
+    Wir respektieren die unterschiedlichen Formen des Zusammenlebens." Der Ansatz der
+    Ampelkoalition ist aber noch grundlegender, sie weitet den Familienbegriff nicht nur,
+    sondern definiert ihn neu: "Familie ist vielfältig und überall dort, wo Menschen
+    Verantwortung füreinander übernehmen", steht im Papier, sogar fast wortgleich an zwei Stellen.
+    Wichtiger als die Begrifflichkeiten sind die Gesetzesänderungen, die damit einhergehen. Die angehende
+    Regierung hat sich vorgenommen, das Familienrecht zu modernisieren – und liefert dazu sehr konkrete Vorschläge.
     """
     sentence = Sentence(paragraph)
-    tagger = RegexpTagger([(r'(["\'])(?:(?=(\\?))\2.)*?\1', 'QUOTES'), (r'(?<=\s)is(?=\s)', 'IS'), ('toll', 'TOLL')])
+    tagger = RegexpTagger([('kein', 'KEIN'), (r'(["\'])(?:(?=(\\?))\2.)*?\1', 'QUOTE'), (r'(?<=\s)is(?=\s)', 'IS')])
     tagger.predict(sentence)
-    for entity in sentence.get_spans('regexp'):
+    print(sentence.to_tagged_string())
+    for entity in sentence.get_spans():
         print(entity)
+
