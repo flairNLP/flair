@@ -1,6 +1,6 @@
 import logging
 from abc import abstractmethod
-from typing import List, Union
+from typing import List, Union, Dict
 
 import torch
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -924,3 +924,220 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
     def _apply(self, fn):
         for child_module in self.children():
             child_module._apply(fn)
+
+
+class StackedDocumentEmbeddings(DocumentEmbeddings):
+    """A stack of document embeddings of different types.
+    Multiple sentence level representations are combined into one vector.
+    This class accepts any type of document embeddings and different models can
+    be trained together (e.g. TransformerDocumentEmbeddings, DocumentPoolEmbeddings)."""
+
+    def __init__(self,
+            embeddings: List[DocumentEmbeddings],
+            combine_method: str = 'concat',
+            alternate_freezing_prob: float = 0.,
+            alternate_dropout_prob: float = 0.,
+            dropout_prob: float = 0.,
+    ):
+        """
+        The constructor takes a list of document-level embeddings to be combined.
+        :param embeddings: list of different document embeddings
+        :param combine_method: one of three methods to combine embeddings ["concat", "mean", or "weighted-sum"]
+        :param alternate_freezing_prob: probability of one model to be frozen during fine-tuning
+        :param alternate_dropout_prob: standard dropout probability to be applied to one of the models
+        :param dropout_prob: standard dropout probability on top of the combined embedding
+        """
+        super().__init__()
+
+        self.embeddings = embeddings
+        self.combine_method = combine_method
+        self.alternate_freezing_prob = alternate_freezing_prob
+        self.alternate_dropout_prob = alternate_dropout_prob
+        self.dropout_prob = dropout_prob
+        self.num_document_embeddings = len(embeddings)
+        self.__use_projection = False
+
+        self.name: str = "Document Embedding Stack"
+
+        # add encoder models as torch modules
+        for i, embedding in enumerate(embeddings):
+            embedding.name = f"{str(i)}-{embedding.name}"
+            self.add_module(f"document_embedding_{str(i)}", embedding)
+
+        if combine_method not in ["concat", "mean", "weighted-sum"]:
+            raise ValueError(f"We only support concatenation, mean pooling, and weighted summation "
+                f"('concat', 'mean', 'weighted-sum') as method to combine different embedding types. "
+                f"`{combine_method}` is not supported.")
+
+        embedding_lengths = [embedding.embedding_length for embedding in embeddings]
+
+        # do not combine embeddings if only one model is used
+        if self.num_document_embeddings == 1:
+            self.__embedding_length = embedding_lengths[0]
+            self.combine_method = None
+
+        # concatenation of different embedding types
+        if self.combine_method == "concat":
+            self.__embedding_length = sum(embedding_lengths)
+
+        # add embedding projections only if embeddings are of different sizes
+        if self.combine_method != "concat":
+            if not all(emb_length == embedding_lengths[0] for emb_length in embedding_lengths):
+                self.__use_projection = True
+
+        # project embeddings into the same space
+        projection_size = max(embedding_lengths)
+        if self.__use_projection:
+            self.__embedding_length = projection_size
+            for i, embedding in enumerate(embeddings):
+                projection = torch.nn.Linear(embedding_lengths[i], projection_size)
+                self.add_module(f"embedding_projection_{str(i)}", projection)
+
+        # average multiple embedding types
+        if self.combine_method == "mean":
+            self.__embedding_length = projection_size
+
+        # weighted summation of different embedding types
+        if self.combine_method == 'weighted-sum':
+            self.__embedding_length = projection_size
+            self.attention = torch.nn.Linear(projection_size, 1)
+
+        # alternate freezing: uniform distribution to freeze one of the encoders
+        if alternate_freezing_prob > 0.:
+            if not all(isinstance(model, TransformerDocumentEmbeddings) for model in embeddings):
+                raise ValueError(f"Alternate freezing is only possible when "
+                                 f"combining different transformers.")
+            else:
+                self.alternate_dist = torch.distributions.uniform.Uniform(0, 1)
+
+        # apply standard dropout to one of the encoders
+        if alternate_dropout_prob > 0.:
+            self.alternate_dropout = torch.nn.Dropout(alternate_dropout_prob)
+
+        # standard dropout on top of the combined embedding
+        # TODO: change to locked dropout
+        if self.dropout_prob > 0.:
+            self.dropout = torch.nn.Dropout(dropout_prob)
+
+
+    def embed(
+            self,
+            sentences: Union[Sentence, List[Sentence]],
+            embed_with_attention: bool = False
+    ):
+        # if only one sentence is passed, convert to list
+        if type(sentences) is Sentence:
+            sentences = [sentences]
+
+        # random choice from one of the models
+        dice = torch.randint(self.num_document_embeddings, (1,)).item()
+
+        # alternate freezing: freeze one of the encoders
+        if self.alternate_freezing_prob > 0.:
+            if self.alternate_dist.sample() < self.alternate_freezing_prob:
+                encoder = getattr(self, f"document_embedding_{str(dice)}")
+                encoder.fine_tune = False
+
+        # embed sentence with all encoders
+        for embedding in self.embeddings:
+            embedding.embed(sentences)
+
+        # stack embeddings of different encoders
+        sentence_embeddings = [ [] for _ in range(self.num_document_embeddings) ]
+        for sentence in sentences:
+            for i, embedding_type in enumerate(list(sentence._embeddings.values())):
+                sentence_embeddings[i].append(embedding_type)
+        sentence_embeddings = [torch.stack(embedding_type) for embedding_type in sentence_embeddings]
+
+        # alternate freezing: unfreeze all encoders
+        if self.alternate_freezing_prob > 0.:
+            for i in range(self.num_document_embeddings):
+                encoder = getattr(self, f"document_embedding_{i}")
+                encoder.fine_tune = True
+
+        # do not combine embeddings if only one model is used
+        if not self.combine_method:
+            meta_embeddings = sentence_embeddings[0]
+
+        # project embeddings
+        if self.__use_projection:
+            for i in range(self.num_document_embeddings):
+                projection = getattr(self, f"embedding_projection_{i}")
+                sentence_embeddings[i] = projection(sentence_embeddings[i])
+
+        # apply dropout to a randomly chosen encoder
+        if self.alternate_dropout_prob > 0.:
+            sentence_embeddings[dice] = self.alternate_dropout(sentence_embeddings[dice])
+
+        if self.combine_method == "concat":
+            meta_embeddings = torch.cat(sentence_embeddings, dim=-1)
+
+        if self.combine_method == "mean":
+            sentence_embeddings = torch.stack(sentence_embeddings, dim=1)
+            meta_embeddings = torch.mean(sentence_embeddings, dim=1)
+
+        if self.combine_method == "weighted-sum":
+            sentence_embeddings = torch.stack(sentence_embeddings, dim=1)
+            attn_scores = torch.softmax(self.attention(sentence_embeddings), dim=1)
+            meta_embeddings = attn_scores * sentence_embeddings
+            meta_embeddings = torch.mean(meta_embeddings, dim=1)
+
+        # apply standard dropout on top of the meta-embedding
+        if self.dropout_prob > 0.:
+            meta_embeddings = self.dropout(meta_embeddings)
+
+        # set a new sentence embedding called 'meta-embedding'
+        # and store this embedding in the embedding dictionary for each sentence instance
+        for sentence, meta_embedding in zip(sentences, meta_embeddings):
+            sentence.set_embedding("meta-embedding", meta_embedding)
+
+        # can be used for visualization purposes of weighted summation
+        if embed_with_attention:
+            return attn_scores
+
+    @property
+    def embedding_type(self) -> str:
+        return self.__embedding_type
+
+    @property
+    def embedding_length(self) -> int:
+        return self.__embedding_length
+
+    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+
+        for embedding in self.embeddings:
+            embedding._add_embeddings_internal(sentences)
+
+        return sentences
+
+    def __str__(self):
+        return f'StackedDocumentEmbeddings [{",".join([str(e) for e in self.embeddings])}]'
+
+    def get_names(self) -> List[str]:
+        """StackedDocumentEmbeddings adds a new dictionary entry for each sentence called meta-embedding.
+        This embedding can be used together with TextClassifier."""
+
+        return ["meta-embedding"]
+
+    def get_named_embeddings_dict(self) -> Dict:
+
+        named_embeddings_dict = {}
+        for embedding in self.embeddings:
+            named_embeddings_dict.update(embedding.get_named_embeddings_dict())
+
+        return named_embeddings_dict
+
+    def embed_with_attention(self, sentences: Union[Sentence, List[Sentence]]):
+        """Just for visualization purposes and testing of weighted summation approach.
+        You can embed a few sentences and look at attention scores. These scores show how much
+        each embedding type is weighted when embedding a sentence"""
+
+        if self.combine_method != 'weighted-sum':
+            raise ValueError(f"You need to choose 'weighted-sum' as combine method and train the model."
+                f"Current combine method is {self.combine_method} which does not use attention.")
+
+        if self.num_document_embeddings < 2:
+            raise ValueError("You need to train more than one language model"
+                "if you want to create meta-embedding")
+
+        return self.embed(sentences, embed_with_attention=True)

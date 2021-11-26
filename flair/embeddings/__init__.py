@@ -28,6 +28,7 @@ from .document import DocumentRNNEmbeddings
 from .document import DocumentLMEmbeddings
 from .document import DocumentCNNEmbeddings
 from .document import SentenceTransformerDocumentEmbeddings
+from .document import StackedDocumentEmbeddings
 
 # Expose image embedding classes
 from .image import ImageEmbeddings
