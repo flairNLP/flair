@@ -64,10 +64,6 @@ class DependencyParser(flair.nn.Model):
         self.tag_type = tag_type
         self.lstm_input_dim: int = self.token_embeddings.embedding_length
         
-        if self.relations_dictionary:
-            self.embedding2nn = torch.nn.Linear(self.lstm_input_dim,
-                                                self.lstm_input_dim)
-
         self.lstm = BiLSTM(input_size=self.lstm_input_dim,
                            hidden_size=self.lstm_hidden_size,
                            num_layers=self.lstm_layers,
@@ -199,8 +195,6 @@ class DependencyParser(flair.nn.Model):
         'gpu' to store embeddings in GPU memory.
         """
 
-        if not sentences:
-            return sentences
         sentences = SentenceDataset(sentences)
         data_loader = DataLoader(sentences,
                                  batch_size=mini_batch_size,
@@ -242,7 +236,7 @@ class DependencyParser(flair.nn.Model):
                                  batch_size=mini_batch_size,
                                  num_workers=num_workers)
 
-        lines: List[str] = []
+        lines: List[str] = ["token gold_tag gold_arc predicted_tag predicted_arc\n"]
 
         average_over = 0
         eval_loss_arc = 0
@@ -269,14 +263,15 @@ class DependencyParser(flair.nn.Model):
                 for (token, arc, tag) in zip(sentence.tokens, arcs, sent_tags):
                     token: Token = token
                     token.add_tag_label("predicted", Label(tag))
-                    token.add_tag_label("predicted_head_id", Label(str(arc)))
+                    token.add_tag_label("predicted_head_id",
+                                        Label(str(int(arc))))
 
                     # append both to file for evaluation
                     eval_line = "{} {} {} {} {}\n".format(token.text,
                                                           token.get_tag(gold_label_type).value,
                                                           str(token.head_id),
                                                           tag,
-                                                          str(arc))
+                                                          str(int(arc)))
                     lines.append(eval_line)
                 lines.append("\n")
 
