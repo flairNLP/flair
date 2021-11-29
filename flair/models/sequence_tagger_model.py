@@ -18,7 +18,7 @@ from flair.file_utils import cached_path, unzip_file
 
 from .sequence_tagger_utils.crf import CRF
 from .sequence_tagger_utils.viterbi import ViterbiLoss, ViterbiDecoder
-from .sequence_tagger_utils.utils import init_stop_tag_embedding, START_TAG, STOP_TAG, PAD_TAG
+from .sequence_tagger_utils.utils import init_stop_tag_embedding, START_TAG, STOP_TAG
 from ..datasets import DataLoader, SentenceDataset
 
 log = logging.getLogger("flair")
@@ -97,13 +97,11 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         # ----- Conditional Random Field parameters -----
         self.use_crf = use_crf
         if use_crf \
-                and not {PAD_TAG.encode(), START_TAG.encode(),
-                            STOP_TAG.encode()}.issubset(self.tag_dictionary.item2idx.keys())\
+                and not {START_TAG.encode(), STOP_TAG.encode()}.issubset(self.tag_dictionary.item2idx.keys())\
                 and not init_from_state_dict:
-            self.tag_dictionary.add_item(PAD_TAG)
             self.tag_dictionary.add_item(START_TAG)
             self.tag_dictionary.add_item(STOP_TAG)
-            self.tagset_size += 3
+            self.tagset_size += 2
 
         # ----- Dropout parameters -----
         self.use_dropout = True if dropout > 0.0 else False
@@ -147,7 +145,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         # ----- CRF / Linear layer -----
         if use_crf:
-            self.crf = CRF(hidden_output_dim, self.tagset_size)
+            self.crf = CRF(hidden_output_dim, self.tagset_size, init_from_state_dict)
             self.loss_function = ViterbiLoss(tag_dictionary)
             self.viterbi_decoder = ViterbiDecoder(tag_dictionary)
         else:
@@ -417,7 +415,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         if state["use_crf"]:
             if "transitions" in state["state_dict"]:
-                state["state_dict"]["crf.transitions"] = state["state_dict"]["transitions"]
+                state["state_dict"]["crf.transitions"] = state["state_dict"]["transitions"].T
                 del state["state_dict"]["transitions"]
             if "linear.weight" in state["state_dict"] and "linear.bias" in state["state_dict"]:
                 state["state_dict"]["crf.emission.weight"] = state["state_dict"]["linear.weight"]

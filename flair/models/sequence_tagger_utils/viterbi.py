@@ -6,7 +6,7 @@ from torch.nn.utils.rnn import pack_padded_sequence
 import flair
 from flair.data import Dictionary, Label, List
 
-from .utils import log_sum_exp, START_TAG, STOP_TAG, PAD_TAG
+from .utils import log_sum_exp, START_TAG, STOP_TAG
 
 
 class ViterbiLoss(torch.nn.Module):
@@ -80,7 +80,7 @@ class ViterbiLoss(torch.nn.Module):
             targets_list = targets_list[cut:]
 
         for t in targets_per_sentence:
-            t += [self.tag_dictionary.get_idx_for_item(PAD_TAG)] * (max(lengths.values) - len(t))
+            t += [self.tag_dictionary.get_idx_for_item("<unk>")] * (max(lengths.values) - len(t))
 
         tmaps = list(map(lambda s: [self.tag_dictionary.get_idx_for_item(START_TAG) * self.tagset_size + s[0]] + [s[i - 1] * self.tagset_size + s[i] for i in range(1, len(s))],
                          targets_per_sentence))

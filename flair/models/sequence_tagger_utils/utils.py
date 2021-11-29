@@ -9,7 +9,6 @@ from flair.data import Label
 
 START_TAG: str = "<START>"
 STOP_TAG: str = "<STOP>"
-PAD_TAG: str = "<PAD>"
 
 def log_sum_exp(tensor, dim):
     """
