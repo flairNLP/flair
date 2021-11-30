@@ -151,6 +151,11 @@ class Dictionary:
 
         return Dictionary.load_from_file(name)
 
+    def __eq__(self, o: object) -> bool:
+        if not isinstance(o, Dictionary):
+            return False
+        return self.item2idx == o.item2idx and self.idx2item == o.idx2item and self.add_unk == o.add_unk
+
     def __str__(self):
         tags = ', '.join(self.get_item_for_index(i) for i in range(min(len(self), 50)))
         return f"Dictionary with {len(self)} tags: {tags}"
