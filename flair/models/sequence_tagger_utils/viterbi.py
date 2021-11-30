@@ -124,7 +124,7 @@ class ViterbiDecoder:
         backpointers = torch.ones((batch_size, seq_len + 1, self.tagset_size), dtype=torch.long,
                                   device=flair.device) * self.stop_tag
 
-        start_forward_var = torch.ones([self.tagset_size]) * -10000
+        start_forward_var = torch.ones([self.tagset_size]).to(flair.device) * -10000
         start_forward_var[self.tag_dictionary.get_idx_for_item(START_TAG)] = 0
         start_forward_var = start_forward_var.unsqueeze(1) + transitions
 
