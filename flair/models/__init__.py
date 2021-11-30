@@ -8,3 +8,4 @@ from .tars_model import FewshotClassifier
 from .tars_model import TARSClassifier
 from .tars_model import TARSTagger
 from .multitask_model import MultitaskModel
+from .dependency_parser_model import DependencyParser

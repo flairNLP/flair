@@ -1,66 +1,63 @@
-# Tutorial 2: Tagging your Text
+# 튜토리얼 2: 텍스트 태깅
 
-This is part 2 of the tutorial. It assumes that you're familiar with the
-[base types](/resources/docs/TUTORIAL_1_BASICS.md) of this library. Here, we show how to use our pre-trained models to
-tag your text.
+튜토리얼 2부는 1부를 어느정도 학습하였다고 가정하고 진행하겠습니다. 
+여기서는 사전 훈련된 모델을 사용하여 텍스트에 태그를 지정합니다.
 
-## Tagging with Pre-Trained Sequence Tagging Models
+## 사전 훈련된 모델을 사용하여 태깅
 
-Let's use a pre-trained model for named entity recognition (NER). 
-This model was trained over the English CoNLL-03 task and can recognize 4 different entity
-types.
+개체명 인식(NER)에 대해 사전 훈련된 모델을 사용하겠습니다.
+이 모델은 영어 CoNLL-03 과제를 통해 교육되었으며 4개의 다른 실체를 인식할 수 있습니다.
 
 ```python
 from flair.models import SequenceTagger
 
 tagger = SequenceTagger.load('ner')
 ```
-All you need to do is use the `predict()` method of the tagger on a sentence. This will add predicted tags to the tokens
-in the sentence. Lets use a sentence with two named entities:
+
+문장에서 tagger의 메소드인 predict()를 사용할 수 있습니다.
+예측 태그를 토큰에 추가합니다. 여기서는 문장에 두 개의 명명된 엔터티가 있는 문장을 사용하겠습니다.
 
 ```python
 sentence = Sentence('George Washington went to Washington.')
 
-# predict NER tags
+# NER 태그 예측
 tagger.predict(sentence)
 
-# print sentence with predicted tags
+# 예측된 태그가 있는 문장 출력
 print(sentence.to_tagged_string())
 ```
 
-This should print: 
+출력 결과: 
 ```console
 George <B-PER> Washington <E-PER> went to Washington <S-LOC> . 
 ```
 
-### Getting Annotated Spans
+### 주석이 달린 범위 받기
 
-Many sequence labeling methods annotate spans that consist of multiple words,
-such as "George Washington" in our example sentence.
-You can directly get such spans in a tagged sentence like this:
+많은 시퀀스 라벨링 방법은 여러 단어로 구성된 범위에 주석을 달게 됩니다. (예 : "조지 워싱턴")
+다음과 같이 태그가 지정된 문장에서 이러한 범위를 직접 얻을 수 있습니다.
 
 ```python
 for entity in sentence.get_spans('ner'):
     print(entity)
 ```
 
-This should print:
+출력 결과:
 ```console
 Span [1,2]: "George Washington"   [− Labels: PER (0.9968)]
 Span [5]: "Washington"   [− Labels: LOC (0.9994)]
 ```
 
-Which indicates that "George Washington" is a person (PER) and "Washington" is
-a location (LOC). Each such `Span` has a text, its position in the sentence and `Label` 
-with a value and a score (confidence in the prediction). 
-You can also get additional information, such as the position offsets of
-each entity in the sentence by calling:
+이것은 "조지 워싱턴"이 사람이고 "워싱턴"이 사람임을 나타냅니다.
+위치(LOC)에는 각각 문장과 문장 내 위치, 라벨이 있고, 값 및 점수(예측에 대한 신뢰)가 있어야 합니다.
+또한 저희는 위치 오프셋과 같은 추가 정보를 얻을 수 있습니다.
+문장의 각 실체는 다음을 호출합니다.
 
 ```python
 print(sentence.to_dict(tag_type='ner'))
 ```
 
-This should print:
+출력 결과:
 ```console
 {'text': 'George Washington went to Washington.',
     'entities': [
@@ -70,40 +67,40 @@ This should print:
 ```
 
 
-### Multi-Tagging 
+### 멀티 태깅
 
-Sometimes you want to predict several types of annotation at once, for instance NER and part-of-speech (POS) tags. 
-For this, you can use our new `MultiTagger` object, like this: 
+예를 들어 NER 및 POS(Part-of-Speech) 태그와 같은 여러 유형의 주석을 한 번에 예측하려는 경우도 있습니다.
+이를 위해 다음과 같이 새로운 멀티태거 개체를 사용할 수 있습니다.
 
 ```python
 from flair.models import MultiTagger
 
-# load tagger for POS and NER 
+# POS와 NER 용 tagger 로드
 tagger = MultiTagger.load(['pos', 'ner'])
 
-# make example sentence
+# 예시 문장 만들기
 sentence = Sentence("George Washington went to Washington.")
 
-# predict with both models
+# 두 모델로 예측
 tagger.predict(sentence)
 
 print(sentence)
 ``` 
 
-The sentence now has two types of annotation: POS and NER. 
+이 문장에는 두 가지 유형의 주석이 있습니다. POS와 NER입니다.
 
-### List of Pre-Trained Sequence Tagger Models
+### 사전 훈련된 시퀀스 태거 모델 목록
 
-You choose which pre-trained model you load by passing the appropriate
-string to the `load()` method of the `SequenceTagger` class. 
+적절한 교육을 통과하여 로드할 사전 교육 모델을 선택합니다.
+`SequenceTagger` 클래스의 `load()` 메서드에 문자열을 지정합니다.
 
-A full list of our current and community-contributed models can be browsed on the [__model hub__](https://huggingface.co/models?library=flair&sort=downloads). 
-At least the following pre-trained models are provided (click on an ID link to get more info
-for the model and an online demo):
+현재 및 커뮤니티 기반 모델의 전체 목록은 [__model hub__](https://huggingface.co/models?library=flair&sort=downloads)에서 찾아볼 수 있다.
+최소한 다음과 같은 사전 교육 모델이 제공됩니다(자세한 정보를 보려면 ID 링크 클릭).
+모델 및 온라인 데모):
 
-#### English Models
+#### 영어 모델들
 
-| ID | Task | Language | Training Dataset | Accuracy | Contributor / Notes |
+| ID | 태스크 | 언어 | 훈련 데이터셋 | 정확도 | 참고사항 |
 | -------------    | ------------- |------------- |------------- | ------------- | ------------- |
 | '[ner](https://huggingface.co/flair/ner-english)' | NER (4-class) |  English | Conll-03  |  **93.03** (F1) |
 | '[ner-fast](https://huggingface.co/flair/ner-english-fast)' | NER (4-class)  |  English  |  Conll-03  |  **92.75** (F1) | (fast model)
@@ -122,25 +119,24 @@ for the model and an online demo):
 | '[frame-fast](https://huggingface.co/flair/frame-english-fast)'  |  Frame Detection |  English | Propbank 3.0     |  **97.31** (F1) | (fast model)
 | 'negation-speculation'  | Negation / speculation |English |  Bioscope | **80.2** (F1) |
 
+### 다국어 모델
 
-#### Multilingual Models
+단일 모델 내에서 여러 언어로 텍스트를 처리할 수 있는 새로운 모델을 배포합니다.
 
-We distribute new models that are capable of handling text in multiple languages within a singular model. 
+NER 모델은 4개 언어(영어, 독일어, 네덜란드어 및 스페인어) 이상, PoS 모델은 12개 언어(영어, 독일어, 프랑스어, 이탈리아어, 네덜란드어, 폴란드어, 스페인어, 스웨덴어, 덴마크어, 노르웨이어, 핀란드어 및 체코어)이 존재합니다.
 
-The NER models are trained over 4 languages (English, German, Dutch and Spanish) and the PoS models over 12 languages (English, German, French, Italian, Dutch, Polish, Spanish, Swedish, Danish, Norwegian, Finnish and Czech).
-
-| ID | Task | Language | Training Dataset | Accuracy | Contributor / Notes |
+| ID | 태스크 | 언어 | 훈련 데이터셋 | 정확도 | 참고사항 |
 | -------------    | ------------- |------------- |------------- | ------------- | ------------- |
 | '[ner-multi](https://huggingface.co/flair/ner-multi)' | NER (4-class) | Multilingual | Conll-03   |  **89.27**  (average F1) | (4 languages)
 | '[ner-multi-fast](https://huggingface.co/flair/ner-multi-fast)' | NER (4-class)|  Multilingual |  Conll-03   |  **87.91**  (average F1) | (4 languages)
 | '[pos-multi](https://huggingface.co/flair/upos-multi)' |  POS-tagging   |  Multilingual |  UD Treebanks  |  **96.41** (average acc.) |  (12 languages)
 | '[pos-multi-fast](https://huggingface.co/flair/upos-multi-fast)' |  POS-tagging |  Multilingual |  UD Treebanks  |  **92.88** (average acc.) | (12 languages) 
 
-You can pass text in any of these languages to the model. In particular, the NER also kind of works for languages it was not trained on, such as French.
+이러한 언어로 된 텍스트를 모델에 전달할 수 있습니다. 특히, NER는 프랑스어와 같이 훈련되지 않은 언어에도 적용되었습니다.
 
-#### Models for Other Languages
+#### 다른 언어들을 위한 모델들
 
-| ID | Task | Language | Training Dataset | Accuracy | Contributor / Notes |
+| ID | 태스크 | 언어 | 훈련 데이터셋 | 정확도 | 참고사항 |
 | -------------    | ------------- |------------- |------------- |------------- | ------------ |
 | '[ar-ner](https://huggingface.co/megantosh/flair-arabic-multi-ner)' | NER (4-class) | Arabic | AQMAR & ANERcorp (curated) |  **86.66** (F1) | |
 | '[ar-pos](https://huggingface.co/megantosh/flair-arabic-dialects-codeswitch-egy-lev)' | NER (4-class) | Arabic (+dialects)| combination of corpora |  | |
@@ -166,108 +162,106 @@ You can pass text in any of these languages to the model. In particular, the NER
 | 'pt-pos-clinical' | POS-tagging | Portuguese | [PUCPR](https://github.com/HAILab-PUCPR/portuguese-clinical-pos-tagger) | **92.39** | [LucasFerroHAILab](https://github.com/LucasFerroHAILab) for clinical texts |
 
 
-### Tagging a German sentence
+### 독일어 문장 태그 지정
 
-As indicated in the list above, we also provide pre-trained models for languages other than English. To tag a German sentence, just load the appropriate model:
+위 목록에 표시된 것처럼 영어 이외의 언어에 대한 사전 교육 모델도 제공합니다. 독일어 문장에 태그를 지정하려면 적절한 모델을 로드하면 됩니다.
 
 ```python
 
-# load model
+# 모델 로드
 tagger = SequenceTagger.load('de-ner')
 
-# make German sentence
+# 독일어 문장 만들기
 sentence = Sentence('George Washington ging nach Washington.')
 
-# predict NER tags
+# NER 태그 예측
 tagger.predict(sentence)
 
-# print sentence with predicted tags
+# 예측된 태그가 있는 문장 출력
 print(sentence.to_tagged_string())
 ```
 
-This should print: 
+출력 결과: 
 ```console
 George <B-PER> Washington <E-PER> ging nach Washington <S-LOC> .
 ```
 
-### Tagging an Arabic sentence
+### 아랍어 문장 태그 지정
 
-Flair also works for languages that write from right to left. To tag an Arabic sentence, just load the appropriate model:
-
+Flair는 또한 오른쪽에서 왼쪽으로 쓰는 언어에서도 작동한다. 아랍어 문장에 태그를 지정하려면 적절한 모델을 로드하면 됩니다.
 ```python
 
-# load model
+# 모델 로드
 tagger = SequenceTagger.load('ar-ner')
 
-# make Arabic sentence
+# 아랍어 문장 만들기
 sentence = Sentence("احب برلين")
 
-# predict NER tags
+# NER 태그 예측
 tagger.predict(sentence)
 
-# print sentence with predicted tags
+# 예측된 태그가 있는 문장 출력
 for entity in sentence.get_labels('ner'):
     print(entity)
 ```
 
-This should print: 
+출력 : 
 ```console
 LOC [برلين (2)] (0.9803) 
 ```
 
-### Tagging Multilingual Text
+### 다국어 텍스트 태그 지정
 
-If you have text in many languages (such as English and German), you can use our new multilingual models: 
+여러 언어(예: 영어 및 독일어)의 텍스트가 있는 경우, 새로운 다국어 모델을 사용할 수 있습니다.
 
 ```python
 
-# load model
+# 모델 로드
 tagger = SequenceTagger.load('pos-multi')
 
-# text with English and German sentences
+# 영어와 독일어 문장으로 된 텍스트
 sentence = Sentence('George Washington went to Washington. Dort kaufte er einen Hut.')
 
-# predict PoS tags
+# PoS 태그 예측
 tagger.predict(sentence)
 
-# print sentence with predicted tags
+# 예측된 태그가 있는 문장 출력
 print(sentence.to_tagged_string())
 ```
 
-This should print: 
+출력 결과: 
 ```console
 George <PROPN> Washington <PROPN> went <VERB> to <ADP> Washington <PROPN> . <PUNCT>
 
 Dort <ADV> kaufte <VERB> er <PRON> einen <DET> Hut <NOUN> . <PUNCT>
 ```
 
-So, both 'went' and 'kaufte' are identified as VERBs in these sentences.
+그래서 이 문장에서는 'went'와 'kaufte'가 모두 동사로 식별된다.
 
-### Experimental: Semantic Frame Detection
+### 실험: 시맨틱 프레임 탐지
 
-For English, we provide a pre-trained model that detects semantic frames in text, trained using Propbank 3.0 frames.
-This provides a sort of word sense disambiguation for frame evoking words, and we are curious what researchers might
-do with this. 
+영어의 경우 Propbank 3.0 프레임을 사용하여 학습된 텍스트 의미 프레임을 감지하는 사전 교육 모델을 제공합니다.
+이것은 단어를 연상시키는 틀에 대한 일종의 단어 감각의 모호함을 제공합니다.
 
-Here's an example:
+예를 들어 보겠습니다.
 
 ```python
-# load model
+# 모델 로드
 tagger = SequenceTagger.load('frame')
 
-# make English sentence
+# 영어 문장 만들기
 sentence_1 = Sentence('George returned to Berlin to return his hat.')
 sentence_2 = Sentence('He had a look at different hats.')
 
-# predict NER tags
+# NER 태그 예측하기
 tagger.predict(sentence_1)
 tagger.predict(sentence_2)
 
-# print sentence with predicted tags
+# 예측된 태그가 있는 문장 출력
 print(sentence_1.to_tagged_string())
 print(sentence_2.to_tagged_string())
 ```
-This should print: 
+출력 결과: 
 
 ```console
 George returned <return.01> to Berlin to return <return.02> his hat .
@@ -275,149 +269,97 @@ George returned <return.01> to Berlin to return <return.02> his hat .
 He had <have.LV> a look <look.01> at different hats .
 ```
 
-As we can see, the frame detector makes a distinction in sentence 1 between two different meanings of the word 'return'.
-'return.01' means returning to a location, while 'return.02' means giving something back.
+우리가 볼 수 있듯이, 프레임 감지기는 문장 1에서 '반환'이라는 단어의 두 가지 다른 의미 사이를 구별합니다.
+'return.01'은 위치로 돌아가는 것을 의미하고, 'return.02'는 무언가를 돌려주는 것을 의미합니다.
 
-Similarly, in sentence 2 the frame detector finds a light verb construction in which 'have' is the light verb and
-'look' is a frame evoking word.
+비슷하게, 문장 2에서 프레임 탐지기는 'have'가 라이트 동사인 경동사 구조를 찾습니다.
+look은 단어를 연상시키는 틀입니다.
 
-## Tagging a List of Sentences
+### 문장 목록 태그 지정
 
-Often, you may want to tag an entire text corpus. In this case, you need to split the corpus into sentences and pass a
-list of `Sentence` objects to the `.predict()` method.
+종종 전체 텍스트 말뭉치에 태그를 지정할 수 있습니다. 이 경우에, 당신은 말뭉치를 문장으로 나누고 통과시킬 필요가 있다.
+.predict() 메서드에 대한 'Sentence' 개체 목록입니다.
 
-For instance, you can use the sentence splitter of segtok to split your text:
+예를 들어 segtok의 문장 분할기를 사용하여 텍스트를 분할할 수 있습니다.
 
 ```python
 from flair.models import SequenceTagger
 from flair.tokenization import SegtokSentenceSplitter
 
-# example text with many sentences
+# 많은 문장이 포함된 예제 텍스트
 text = "This is a sentence. This is another sentence. I love Berlin."
 
-# initialize sentence splitter
+# 문장 스플리터 초기화
 splitter = SegtokSentenceSplitter()
 
-# use splitter to split text into list of sentences
+# 스플리터를 사용하여 텍스트를 문장 목록으로 분할
 sentences = splitter.split(text)
 
-# predict tags for sentences
+# 문장에 대한 태그 예측
 tagger = SequenceTagger.load('ner')
 tagger.predict(sentences)
 
-# iterate through sentences and print predicted labels
+# 문장을 반복하고 예측된 레이블을 출력
 for sentence in sentences:
     print(sentence.to_tagged_string())
 ```
 
-Using the `mini_batch_size` parameter of the `.predict()` method, you can set the size of mini batches passed to the
-tagger. Depending on your resources, you might want to play around with this parameter to optimize speed.
+`.predict()` 메서드의 `mini_batch_size` 매개 변수를 사용하여, 다음에 전달된 미니 배치의 크기를 설정할 수 있습니다.
+태그거. 리소스에 따라 이 매개 변수를 사용하여 속도를 최적화할 수 있습니다.
 
 
-## Tagging with Pre-Trained Text Classification Models
+## 사전 교육된 텍스트 분류 모델을 사용한 태그 지정
 
-Let's use a pre-trained model for detecting positive or negative comments.
-This model was trained over a mix of product and movie review datasets and can recognize positive
-and negative sentiment in English text.
+긍정 또는 부정 의견을 탐지하기 위해 사전 훈련된 모델을 사용하겠습니다.
+이 모델은 제품과 영화 리뷰 데이터셋의 혼합에 대해 교육되었으며 긍정적인 것을 인식할 수 있습니다.
+그리고 영어 본문에는 부정적인 정서가 있습니다.
 
 ```python
 from flair.models import TextClassifier
 
-# load tagger
+# tagger 로드
 classifier = TextClassifier.load('sentiment')
 ```
 
-All you need to do is use the `predict()` method of the classifier on a sentence. This will add the predicted label to
-the sentence. Lets use a sentence with positive sentiment:
+여러분은 문장에서 분류자의 `predict()`방법만 사용하면 됩니다. 예측 레이블에 추가하고, 긍정적인 느낌의 문장을 사용해봅시다.
 
 ```python
-# make example sentence
+# 예시 문장 만들기
 sentence = Sentence("enormously entertaining for moviegoers of any age.")
 
-# call predict
+# predict 호출
 classifier.predict(sentence)
 
-# check prediction
+# 예측 확인하기
 print(sentence)
 ```
 
-This should print:
+출력 결과:
 ```console
 Sentence: "enormously entertaining for moviegoers of any age."   [− Tokens: 8  − Sentence-Labels: {'class': [POSITIVE (0.9976)]}]
 ```
 
-The label POSITIVE is added to the sentence, indicating that this sentence has positive sentiment.
+POSITION이라는 라벨이 문장에 추가되어 이 문장이 긍정적인 감정을 가지고 있음을 나타냅니다.
 
-### List of Pre-Trained Text Classification Models
+### 사전 교육 텍스트 분류 모델 목록
 
-You choose which pre-trained model you load by passing the appropriate
-string to the `load()` method of the `TextClassifier` class. Currently, the following pre-trained models
-are provided:
+적절한 교육을 통과하여 로드할 사전 교육 모델을 선택합니다.
+문자열은 `TextClassifier` 클래스의 `load()` 메서드로 이동합니다. 현재 다음과 같은 사전 교육 모델 제공됨:
 
-| ID | Language | Task | Training Dataset | Accuracy |
+| ID | 언어 | 태스크 | 훈련 데이터셋 | 정확도 |
 | ------------- | ---- | ------------- |------------- |------------- |
 | 'sentiment' | English | detecting positive and negative sentiment (transformer-based) | movie and product reviews |  **98.87** |
 | 'sentiment-fast' | English | detecting positive and negative sentiment (RNN-based) | movie and product reviews |  **96.83**|
 | 'communicative-functions' | English | detecting function of sentence in research paper (BETA) | scholarly papers |  |
 | 'de-offensive-language' | German | detecting offensive language | [GermEval 2018 Task 1](https://projects.fzai.h-da.de/iggsa/projekt/) |  **75.71** (Macro F1) |
 
+## 교육 데이터 없이 새 클래스 태그 지정
 
-## Experimental: Relation Extraction
+포함되지 않은 클래스에 레이블을 지정해야 하는 경우
+사전 훈련된 제로샷 분류기 TARS를 사용해 볼 수도 있습니다.
+([제로샷 튜토리얼](/resources/docs/KOR_docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)로 건너뛰기)    
+TARS는 임의 클래스에 대해 텍스트 분류를 수행할 수 있습니다.
 
-Relations hold between two entities. For instance, a text like "George was born in Washington" 
-names two entities and also expresses that there is a born_in relationship between
-both. 
+## 다음
 
-We added two experimental relation extraction models, 
-trained over a modified version of TACRED: `relations` and `relations-fast`. 
-Use these models together with an entity tagger, like so: 
-```python
-from flair.data import Sentence
-from flair.models import RelationExtractor, SequenceTagger
-
-# 1. make example sentence
-sentence = Sentence("George was born in Washington")
-
-# 2. load entity tagger and predict entities
-tagger = SequenceTagger.load('ner-fast')
-tagger.predict(sentence)
-
-# check which entities have been found in the sentence
-entities = sentence.get_labels('ner')
-for entity in entities:
-    print(entity)
-
-# 3. load relation extractor
-extractor: RelationExtractor = RelationExtractor.load('relations-fast')
-
-# predict relations
-extractor.predict(sentence)
-
-# check which relations have been found
-relations = sentence.get_labels('relation')
-for relation in relations:
-    print(relation)
-```
-
-This should print: 
-
-~~~
-PER [George (1)] (0.9971)
-LOC [Washington (5)] (0.9847)
-
-born_in [George (1) -> Washington (5)] (0.9998)
-~~~
-
-Indicating that a born_in relationship holds between "George" and "Washington"!
-
-## Tagging new classes without training data
-
-In case you need to label classes that are not included you can also try
-our pre-trained zero-shot classifier TARS 
-(skip ahead to the [zero-shot tutorial](/resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)).
-TARS can perform text classification for arbitrary classes. 
-
-## Next 
-
-Now, let us look at how to use different [word embeddings](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md) to embed your
-text. 
+이제 텍스트를 포함하기 위해 다른 [워드 임베딩](/resources/docs/KOR_docs/TUTORIAL_3_WORD_EMBEDDING.md)을 사용하는 방법에 대해 알아보겠습니다.
