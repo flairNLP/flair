@@ -22,7 +22,7 @@ document embeddings, including our proposed **[Flair embeddings](https://www.acl
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.9](https://github.com/flairNLP/flair/releases)!
+Now at [version 0.10](https://github.com/flairNLP/flair/releases)!
 
 
 ## Join Us: Open Positions at HU-Berlin!
@@ -35,11 +35,11 @@ Flair ships with state-of-the-art models for a range of NLP tasks. For instance,
 
 | Language | Dataset | Flair | Best published | Model card & demo
 |  ---  | ----------- | ---------------- | ------------- | ------------- |
-| English | Conll-03 (4-class)   |  **94.09**  | *94.3 [(Yamada et al., 2018)](https://doi.org/10.18653/v1/2020.emnlp-main.523)* | [Flair English 4-class NER demo](https://huggingface.co/flair/ner-english-large)  |
-| English | Ontonotes (18-class)  |  **90.93**  | *91.3 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair English 18-class NER demo](https://huggingface.co/flair/ner-english-ontonotes-large) |
-| German  | Conll-03 (4-class)   |  **92.31**  | *90.3 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair German 4-class NER demo](https://huggingface.co/flair/ner-german-large)  |
-| Dutch  | Conll-03  (4-class)  |  **95.25**  | *93.7 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Dutch 4-class NER demo](https://huggingface.co/flair/ner-dutch-large)  |
-| Spanish  | Conll-03 (4-class)   |  **90.54** | *90.3 [(Yu et al., 2016)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Spanish 18-class NER demo](https://huggingface.co/flair/ner-spanish-large)  |
+| English | Conll-03 (4-class)   |  **94.09**  | *94.3 [(Yamada et al., 2020)](https://doi.org/10.18653/v1/2020.emnlp-main.523)* | [Flair English 4-class NER demo](https://huggingface.co/flair/ner-english-large)  |
+| English | Ontonotes (18-class)  |  **90.93**  | *91.3 [(Yu et al., 2020)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair English 18-class NER demo](https://huggingface.co/flair/ner-english-ontonotes-large) |
+| German  | Conll-03 (4-class)   |  **92.31**  | *90.3 [(Yu et al., 2020)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair German 4-class NER demo](https://huggingface.co/flair/ner-german-large)  |
+| Dutch  | Conll-03  (4-class)  |  **95.25**  | *93.7 [(Yu et al., 2020)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Dutch 4-class NER demo](https://huggingface.co/flair/ner-dutch-large)  |
+| Spanish  | Conll-03 (4-class)   |  **90.54** | *90.3 [(Yu et al., 2020)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Spanish 4-class NER demo](https://huggingface.co/flair/ner-spanish-large)  |
 
 **New:** Most Flair sequence tagging models (named entity recognition, part-of-speech tagging etc.) are now hosted 
 on the [__🤗 HuggingFace model hub__](https://huggingface.co/models?library=flair&sort=downloads)! You can browse models, check detailed information on how they were trained, and even try each model out online!
@@ -155,18 +155,6 @@ If you use the Flair framework for your experiments, please cite [this paper](ht
 }
 ```
 
-If you use the pooled version of the Flair embeddings (PooledFlairEmbeddings), please cite [this paper](https://www.aclweb.org/anthology/papers/N/N19/N19-1078/):
-
-```
-@inproceedings{akbik2019naacl,
-  title={Pooled Contextualized Embeddings for Named Entity Recognition},
-  author={Akbik, Alan and Bergmann, Tanja and Vollgraf, Roland},
-  booktitle = {{NAACL} 2019, 2019 Annual Conference of the North American Chapter of the Association for Computational Linguistics},
-  pages     = {724–728},
-  year      = {2019}
-}
-```
-
 If you use our new "FLERT" models or approach, please cite [this paper](https://arxiv.org/abs/2011.06993):
 
 ```
@@ -179,6 +167,17 @@ If you use our new "FLERT" models or approach, please cite [this paper](https://
     primaryClass={cs.CL}
 ```
 
+If you use our TARS approach for few-shot and zero-shot learning, please cite [this paper](https://kishaloyhalder.github.io/pdfs/tars_coling2020.pdf/):
+
+```
+@inproceedings{halder2020coling,
+  title={Task Aware Representation of Sentences for Generic Text Classification},
+  author={Halder, Kishaloy and Akbik, Alan and Krapac, Josip and Vollgraf, Roland},
+  booktitle = {{COLING} 2020, 28th International Conference on Computational Linguistics},
+  year      = {2020}
+}
+```
+
 ## Contact
 
 Please email your questions or comments to [Alan Akbik](http://alanakbik.github.io/).
@@ -189,30 +188,6 @@ Thanks for your interest in contributing! There are many ways to get involved;
 start with our [contributor guidelines](CONTRIBUTING.md) and then
 check these [open issues](https://github.com/flairNLP/flair/issues) for specific tasks.
 
-For contributors looking to get deeper into the API we suggest cloning the repository and checking out the unit
-tests for examples of how to call methods. Nearly all classes and methods are documented, so finding your way around
-the code should hopefully be easy.
-
-### Running unit tests locally
-
-You need [Pipenv](https://pipenv.readthedocs.io/) for this:
-
-```bash
-pipenv install --dev && pipenv shell
-pytest tests/
-```
-
-To run integration tests execute:
-```bash
-pytest --runintegration tests/
-```
-The integration tests will train small models.
-Afterwards, the trained model will be loaded for prediction.
-
-To also run slow tests, such as loading and using the embeddings provided by flair, you should execute:
-```bash
-pytest --runslow tests/
-```
 
 ## [License](/LICENSE)
 
