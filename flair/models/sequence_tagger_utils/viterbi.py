@@ -116,12 +116,15 @@ class ViterbiDecoder:
         seq_len = features.size(1)
 
         # Create a tensor to hold accumulated sequence scores at each current tag
-        scores_upto_t = torch.zeros(batch_size, seq_len, self.tagset_size).to(flair.device)
+        scores_upto_t = torch.zeros(batch_size, seq_len + 1, self.tagset_size).to(flair.device)
+        start_forward_var = torch.ones([self.tagset_size]) * -10000
+        start_forward_var[self.tag_dictionary.get_idx_for_item(START_TAG)] = 0
+        scores_upto_t[:, 0] = start_forward_var
 
         # Create a tensor to hold back-pointers
         # i.e., indices of the previous_tag that corresponds to maximum accumulated score at current tag
         # Let pads be the <end> tag index, since that was the last tag in the decoded sequence
-        backpointers = torch.ones((batch_size, seq_len, self.tagset_size), dtype=torch.long, device=flair.device) * self.stop_tag
+        backpointers = torch.ones((batch_size, seq_len + 1, self.tagset_size), dtype=torch.long, device=flair.device) * self.stop_tag
 
         for t in range(seq_len):
             batch_size_t = sum([l > t for l in lengths.values])  # effective batch size (sans pads) at this timestep

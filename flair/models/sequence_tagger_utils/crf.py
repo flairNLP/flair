@@ -1,6 +1,7 @@
 import torch
 
 import flair
+from flair.models.sequence_tagger_utils.utils import START_TAG, STOP_TAG
 
 
 class CRF(torch.nn.Module):
@@ -20,7 +21,13 @@ class CRF(torch.nn.Module):
         self.emission = torch.nn.Linear(hidden_dim, tagset_size)
         self.transitions = torch.nn.Parameter(torch.randn(tagset_size, tagset_size))
         if not init_from_state_dict:
-            self.transitions.data.zero_()
+            self.transitions.detach()[
+            self.tag_dictionary.get_idx_for_item(START_TAG), :
+            ] = -10000
+
+            self.transitions.detach()[
+            :, self.tag_dictionary.get_idx_for_item(STOP_TAG)
+            ] = -10000
         self.to(flair.device)
 
     def forward(self, features: torch.tensor) -> torch.tensor:
