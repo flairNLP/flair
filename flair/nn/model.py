@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 import flair
 from flair import file_utils
-from flair.data import DataPoint, Sentence, Dictionary, SpanLabel
+from flair.data import DataPoint, Sentence, Dictionary
 from flair.datasets import DataLoader, SentenceDataset
 from flair.training_utils import Result, store_embeddings
 
@@ -202,7 +202,6 @@ class Classifier(Model):
 
             # variables for printing
             lines: List[str] = []
-            is_word_level = False
 
             # variables for computing scores
             all_spans: List[str] = []
@@ -247,8 +246,6 @@ class Classifier(Model):
                         if representation not in all_spans:
                             all_spans.append(representation)
 
-                        if type(gold_label) == SpanLabel: is_word_level = True
-
                     for predicted_span in datapoint.get_labels("predicted"):
                         representation = str(sentence_id) + ': ' + predicted_span.identifier
 
@@ -267,51 +264,7 @@ class Classifier(Model):
 
                 # make printout lines
                 if out_path:
-                    for datapoint in batch:
-
-                        # if the model is span-level, transfer to word-level annotations for printout
-                        if is_word_level:
-
-                            # all labels default to "O"
-                            for token in datapoint:
-                                token.set_label("gold_bio", "O")
-                                token.set_label("predicted_bio", "O")
-
-                            # set gold token-level
-                            for gold_label in datapoint.get_labels(gold_label_type):
-                                gold_label: SpanLabel = gold_label
-                                prefix = "B-"
-                                for token in gold_label.span:
-                                    token.set_label("gold_bio", prefix + gold_label.value)
-                                    prefix = "I-"
-
-                            # set predicted token-level
-                            for predicted_label in datapoint.get_labels("predicted"):
-                                predicted_label: SpanLabel = predicted_label
-                                prefix = "B-"
-                                for token in predicted_label.span:
-                                    token.set_label("predicted_bio", prefix + predicted_label.value)
-                                    prefix = "I-"
-
-                            # now print labels in CoNLL format
-                            for token in datapoint:
-                                eval_line = f"{token.text} " \
-                                            f"{token.get_tag('gold_bio').value} " \
-                                            f"{token.get_tag('predicted_bio').value}\n"
-                                lines.append(eval_line)
-                            lines.append("\n")
-                        else:
-                            # check if there is a label mismatch
-                            g = [label.identifier + label.value for label in datapoint.get_labels(gold_label_type)]
-                            p = [label.identifier + label.value for label in datapoint.get_labels('predicted')]
-                            g.sort()
-                            p.sort()
-                            correct_string = " -> MISMATCH!\n" if g != p else ""
-                            # print info
-                            eval_line = f"{datapoint.to_original_text()}\n" \
-                                        f" - Gold: {datapoint.get_labels(gold_label_type)}\n" \
-                                        f" - Pred: {datapoint.get_labels('predicted')}\n{correct_string}\n"
-                            lines.append(eval_line)
+                    lines.extend(self._print_predictions(batch, gold_label_type))
 
             # write all_predicted_values to out_file if set
             if out_path:
@@ -414,6 +367,22 @@ class Classifier(Model):
         )
 
         return result
+
+    def _print_predictions(self, batch, gold_label_type):
+        lines = []
+        for datapoint in batch:
+            # check if there is a label mismatch
+            g = [label.identifier + label.value for label in datapoint.get_labels(gold_label_type)]
+            p = [label.identifier + label.value for label in datapoint.get_labels('predicted')]
+            g.sort()
+            p.sort()
+            correct_string = " -> MISMATCH!\n" if g != p else ""
+            # print info
+            eval_line = f"{datapoint.to_original_text()}\n" \
+                        f" - Gold: {datapoint.get_labels(gold_label_type)}\n" \
+                        f" - Pred: {datapoint.get_labels('predicted')}\n{correct_string}\n"
+            lines.append(eval_line)
+        return lines
 
 
 class DefaultClassifier(Classifier):
