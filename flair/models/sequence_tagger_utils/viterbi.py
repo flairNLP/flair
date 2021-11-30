@@ -128,15 +128,11 @@ class ViterbiDecoder:
 
         for t in range(seq_len):
             batch_size_t = sum([l > t for l in lengths.values])  # effective batch size (sans pads) at this timestep
-            if t == 0:
-                scores_upto_t[:batch_size_t, t] = features[:batch_size_t, t, self.start_tag, :]
-                backpointers[:batch_size_t, t, :] = torch.ones((batch_size_t, self.tagset_size), dtype=torch.long, device=flair.device) * self.start_tag
-            else:
-                # We add scores at current timestep to scores accumulated up to previous timestep, and
-                # choose the previous timestep that corresponds to the max. accumulated score for each current timestep
-                scores_upto_t[:batch_size_t, t], backpointers[:batch_size_t, t, :] = torch.max(
-                    features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t, t-1].unsqueeze(2),
-                    dim=1)
+            # We add scores at current timestep to scores accumulated up to previous timestep, and
+            # choose the previous timestep that corresponds to the max. accumulated score for each current timestep
+            scores_upto_t[:batch_size_t, t+1], backpointers[:batch_size_t, t+1, :] = torch.max(
+                features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t, t].unsqueeze(1),
+                dim=1)
 
         # Decode/trace best path backwards
         decoded = torch.zeros((batch_size, backpointers.size(1)), dtype=torch.long, device=flair.device)
