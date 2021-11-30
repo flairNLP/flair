@@ -20,17 +20,17 @@ class Lemmatizer(flair.nn.Classifier):
                  embeddings: flair.embeddings.TokenEmbeddings = None,
                  label_type: str = 'lemma',
                  rnn_input_size: int = 50,
-                 rnn_hidden_size: int = 128,
-                 rnn_layers: int = 1,
+                 rnn_hidden_size: int = 256,
+                 rnn_layers: int = 2,
                  encode_characters: bool = True,
-                 use_attention: bool = True,
                  char_dict: Union[str, Dictionary] = "common-chars-lemmatizer",
                  max_sequence_length_dependent_on_input: bool = True,
                  max_sequence_length: int = 20,
-                 start_symbol_for_encoding: bool = True,
-                 end_symbol_for_encoding: bool = False,
-                 bidirectional_encoding: bool = False,
+                 use_attention: bool = True,
                  beam_size: int = 1,
+                 start_symbol_for_encoding: bool = True,
+                 end_symbol_for_encoding: bool = True,
+                 bidirectional_encoding: bool = True,
                  ):
         """
         Initializes a Lemmatizer model
