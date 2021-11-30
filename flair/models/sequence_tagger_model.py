@@ -346,7 +346,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             batch = sorted(batch, key=len, reverse=True)
 
             if self.use_crf:
-                predictions = self.viterbi_decoder.decode(features)
+                predictions = self.viterbi_decoder.decode(features, transitions=self.crf.transitions)
             else:
                 predictions = self._standard_inference(features, batch)
 

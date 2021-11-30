@@ -1,3 +1,4 @@
+import numpy
 import torch
 import torch.nn
 from torch.nn.functional import softmax
@@ -102,7 +103,7 @@ class ViterbiDecoder:
         self.start_tag = tag_dictionary.get_idx_for_item(START_TAG)
         self.stop_tag = tag_dictionary.get_idx_for_item(STOP_TAG)
 
-    def decode(self, features_tuple: tuple) -> List:
+    def decode(self, features_tuple: tuple, transitions: numpy.array) -> List:
         """
         Decoding function returning the most likely sequence of tags.
         :param features: CRF scores from CRF forward method in shape (batch size, seq len, tagset size, tagset size)
@@ -124,10 +125,12 @@ class ViterbiDecoder:
         # Create a tensor to hold back-pointers
         # i.e., indices of the previous_tag that corresponds to maximum accumulated score at current tag
         # Let pads be the <end> tag index, since that was the last tag in the decoded sequence
-        backpointers = torch.ones((batch_size, seq_len, self.tagset_size), dtype=torch.long, device=flair.device) * self.stop_tag
+        backpointers = torch.ones((batch_size, seq_len + 1, self.tagset_size), dtype=torch.long, device=flair.device) * self.stop_tag
 
         for t in range(seq_len):
             batch_size_t = sum([l > t for l in lengths.values])  # effective batch size (sans pads) at this timestep
+            terminate_var = [idx for idx, l in enumerate(lengths.values) if l == t]
+
             # We add scores at current timestep to scores accumulated up to previous timestep, and
             # choose the previous timestep that corresponds to the max. accumulated score for each current timestep
             if t == 0:
@@ -138,6 +141,28 @@ class ViterbiDecoder:
                 scores_upto_t[:batch_size_t, t], backpointers[:batch_size_t, t, :] = torch.max(
                     features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t, t-1].unsqueeze(2),
                     dim=1)
+
+            # if sentence is completed, add transition to stop tag
+            if terminate_var:
+                scores_upto_t[terminate_var, t-1] = scores_upto_t[terminate_var, t - 1] + transitions[:, self.tag_dictionary.get_idx_for_item(STOP_TAG)]
+                scores_upto_t[terminate_var, t-1, self.tag_dictionary.get_idx_for_item(START_TAG)] = -10000.0
+                scores_upto_t[terminate_var, t - 1, self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000.0
+
+        """
+        best_tag_id = terminal_var.argmax()
+
+        best_path = [best_tag_id]
+        for bptrs_t in reversed(backpointers):
+            best_tag_id = bptrs_t[best_tag_id]
+            best_path.append(best_tag_id)
+
+        start = best_path.pop()
+        assert start == id_start
+        best_path.reverse()
+
+        best_scores_softmax = self._softmax(backscores, axis=1)
+        best_scores_np = np.max(best_scores_softmax, axis=1)
+        """
 
         # Decode/trace best path backwards
         decoded = torch.zeros((batch_size, backpointers.size(1)), dtype=torch.long, device=flair.device)
