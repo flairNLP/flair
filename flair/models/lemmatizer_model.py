@@ -7,7 +7,7 @@ from torch import nn
 
 import flair.embeddings
 import flair.nn
-from flair.data import Token, Sentence, Dictionary, Corpus
+from flair.data import Token, Sentence, Dictionary
 from flair.datasets import DataLoader, SentenceDataset
 from flair.training_utils import store_embeddings, Result
 
@@ -252,9 +252,6 @@ class Lemmatizer(flair.nn.Classifier):
 
             # since bidirectional rnn is only used in encoding we need to project outputs to hidden_size of decoder
             if self.bi_encoding:
-                # initial_hidden_states = torch.cat([initial_hidden_states[0, :, :], initial_hidden_states[1, :, :]],
-                #                                   dim=1).unsqueeze(0)
-
                 all_encoder_outputs = self.bi_hidden_states_to_hidden_size(all_encoder_outputs)
 
                 # concatenate the final hidden states of the encoder. These will be projected to hidden_size of decoder later with self.emb_to_hidden
@@ -317,8 +314,8 @@ class Lemmatizer(flair.nn.Classifier):
         # use token embedding as initial hidden state for decoder
         if self.encoder_embeddings:
             # create initial hidden state tensor for batch (num_layers, batch_size, hidden_size)
-            token_embedding_hidden = torch.stack(
-                self.rnn_layers * [token.get_embedding()]).unsqueeze(1)
+            token_embedding_hidden = torch.stack(self.rnn_layers * [token.get_embedding()]).unsqueeze(1)
+
             initial_hidden_for_decoder.append(token_embedding_hidden)
 
         # concatenate everything together and project to appropriate size for decoder
@@ -348,7 +345,8 @@ class Lemmatizer(flair.nn.Classifier):
                 mini_batch_size: int = 16,
                 embedding_storage_mode="None",
                 return_loss=False,
-                print_prediction=False):
+                print_prediction=False,
+                ):
         '''
         Predict lemmas of words for a given (list of) sentence(s).
         :param sentences: sentences to predict
@@ -357,8 +355,7 @@ class Lemmatizer(flair.nn.Classifier):
         :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if
             you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.
         :param return_loss: whether or not to compute and return loss. Setting it to True only makes sense if labels are provided
-        :print_prediction: If True, lemmatized sentences will be printed in the console.
-        :param batching_in_rnn: If False, no batching will take place in RNN Cell. Tokens are processed one at a time.
+        :param print_prediction: If True, lemmatized sentences will be printed in the console.
         '''
         if isinstance(sentences, Sentence):
             sentences = [sentences]
@@ -626,21 +623,13 @@ class Lemmatizer(flair.nn.Classifier):
             lines.append(eval_line)
         return lines
 
-    def create_char_dict_from_corpus(corpus: Corpus) -> Dictionary:
-        char_dict = Dictionary(add_unk=True)
-
-        char_dict.add_item('<>')  # index 1
-        char_dict.add_item('<S>')  # index 2
-        char_dict.add_item('<E>')  # index 3
-
-        for sen in corpus.get_all_sentences():
-            for token in sen:
-                for character in token.text:
-                    char_dict.add_item(character)
-
-        return char_dict
-
     def evaluate(self, *args, **kwargs) -> Result:
+        """
+        Overwrites evaluate of parent class to remove the "by class" printout
+        :param args:
+        :param kwargs:
+        :return:
+        """
         result = super().evaluate(*args, **kwargs)
         result.detailed_results = result.detailed_results.split("\n\n")[0]
         return result
