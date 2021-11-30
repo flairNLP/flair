@@ -1,6 +1,5 @@
 import logging
 import sys
-
 from pathlib import Path
 from typing import List, Union, Optional, Dict, Tuple
 from warnings import warn
@@ -15,9 +14,9 @@ from torch.nn.parameter import Parameter
 from tqdm import tqdm
 
 import flair.nn
-from flair.data import Dictionary, Sentence, Label
+from flair.data import Dictionary, Sentence, Label, SpanLabel
 from flair.datasets import SentenceDataset, DataLoader
-from flair.embeddings import TokenEmbeddings, StackedEmbeddings, Embeddings
+from flair.embeddings import TokenEmbeddings, StackedEmbeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.training_utils import store_embeddings
 
@@ -1016,6 +1015,39 @@ class SequenceTagger(flair.nn.Classifier):
     @property
     def label_type(self):
         return self.tag_type
+
+    def _print_predictions(self, batch, gold_label_type):
+        lines = []
+        for datapoint in batch:
+            # all labels default to "O"
+            for token in datapoint:
+                token.set_label("gold_bio", "O")
+                token.set_label("predicted_bio", "O")
+
+            # set gold token-level
+            for gold_label in datapoint.get_labels(gold_label_type):
+                gold_label: SpanLabel = gold_label
+                prefix = "B-"
+                for token in gold_label.span:
+                    token.set_label("gold_bio", prefix + gold_label.value)
+                    prefix = "I-"
+
+            # set predicted token-level
+            for predicted_label in datapoint.get_labels("predicted"):
+                predicted_label: SpanLabel = predicted_label
+                prefix = "B-"
+                for token in predicted_label.span:
+                    token.set_label("predicted_bio", prefix + predicted_label.value)
+                    prefix = "I-"
+
+            # now print labels in CoNLL format
+            for token in datapoint:
+                eval_line = f"{token.text} " \
+                            f"{token.get_tag('gold_bio').value} " \
+                            f"{token.get_tag('predicted_bio').value}\n"
+                lines.append(eval_line)
+            lines.append("\n")
+        return lines
 
 
 class MultiTagger:
