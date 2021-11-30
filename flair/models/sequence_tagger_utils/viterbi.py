@@ -117,36 +117,34 @@ class ViterbiDecoder:
         seq_len = features.size(1)
 
         # Create a tensor to hold accumulated sequence scores at each current tag
-        scores_upto_t = torch.zeros(batch_size, seq_len, self.tagset_size).to(flair.device)
-        start_forward_var = torch.ones([self.tagset_size]) * -10000
-        start_forward_var[self.tag_dictionary.get_idx_for_item(START_TAG)] = 0
-        scores_upto_t[:, 0] = start_forward_var
-
+        scores_upto_t = torch.zeros(batch_size, seq_len + 1, self.tagset_size).to(flair.device)
         # Create a tensor to hold back-pointers
         # i.e., indices of the previous_tag that corresponds to maximum accumulated score at current tag
         # Let pads be the <end> tag index, since that was the last tag in the decoded sequence
-        backpointers = torch.ones((batch_size, seq_len + 1, self.tagset_size), dtype=torch.long, device=flair.device) * self.stop_tag
+        backpointers = torch.ones((batch_size, seq_len + 1, self.tagset_size), dtype=torch.long,
+                                  device=flair.device) * self.stop_tag
+
+        start_forward_var = torch.ones([self.tagset_size]) * -10000
+        start_forward_var[self.tag_dictionary.get_idx_for_item(START_TAG)] = 0
+        start_forward_var = start_forward_var.unsqueeze(1) + transitions
+
+        # initial fill of forward var
+        scores_upto_t[:, 0], backpointers[:, 0] = torch.max(start_forward_var, dim=0)
 
         for t in range(seq_len):
             batch_size_t = sum([l > t for l in lengths.values])  # effective batch size (sans pads) at this timestep
-            terminate_var = [idx for idx, l in enumerate(lengths.values) if l == t]
+            terminate_var = [idx for idx, l in enumerate(lengths.values) if l == t + 1]
 
             # We add scores at current timestep to scores accumulated up to previous timestep, and
             # choose the previous timestep that corresponds to the max. accumulated score for each current timestep
-            if t == 0:
-                scores_upto_t[:batch_size_t, t], backpointers[:batch_size_t, t, :] = torch.max(
-                    features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t, t].unsqueeze(2),
-                    dim=1)
-            else:
-                scores_upto_t[:batch_size_t, t], backpointers[:batch_size_t, t, :] = torch.max(
-                    features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t, t-1].unsqueeze(2),
-                    dim=1)
+            scores_upto_t[:batch_size_t, t + 1], backpointers[:batch_size_t, t + 1, :] = torch.max(
+                features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t, t].unsqueeze(2),
+                dim=2)
 
             # if sentence is completed, add transition to stop tag
             if terminate_var:
-                scores_upto_t[terminate_var, t-1] = scores_upto_t[terminate_var, t - 1] + transitions[:, self.tag_dictionary.get_idx_for_item(STOP_TAG)]
-                scores_upto_t[terminate_var, t-1, self.tag_dictionary.get_idx_for_item(START_TAG)] = -10000.0
-                scores_upto_t[terminate_var, t - 1, self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000.0
+                scores_upto_t[terminate_var, t + 1, self.tag_dictionary.get_idx_for_item(START_TAG)] = -10000.0
+                scores_upto_t[terminate_var, t + 1, self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000.0
 
         """
         best_tag_id = terminal_var.argmax()
