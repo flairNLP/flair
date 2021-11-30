@@ -263,13 +263,8 @@ class SequenceTagger(flair.nn.DefaultClassifier):
         return scores, gold_labels
 
     def _create_tensor_list(self, sentences: Union[List[DataPoint], DataPoint]) -> tuple:
-        # If we are using CRF, add stop token to each sentence
-        if self.use_crf:
-            tensor_list = list(map(lambda sent: torch.cat((sent.get_sequence_tensor(), self.stop_token_emb.unsqueeze(0)), dim=0), sentences))
-            lengths = torch.LongTensor([len(sentence) + 1 for sentence in sentences])
-        else:
-            tensor_list = list(map(lambda sent: sent.get_sequence_tensor(), sentences))
-            lengths = torch.LongTensor([len(sentence) for sentence in sentences])
+        tensor_list = list(map(lambda sent: sent.get_sequence_tensor(), sentences))
+        lengths = torch.LongTensor([len(sentence) for sentence in sentences])
 
         return tensor_list, lengths
 
@@ -343,9 +338,8 @@ class SequenceTagger(flair.nn.DefaultClassifier):
             for sentence in batch:
                 sentence.remove_labels(label_name)
 
-            loss = self._calculate_loss(features, gold_labels)
-
             if return_loss:
+                loss = self._calculate_loss(features, gold_labels)
                 overall_loss += loss[0]
                 label_count += loss[1]
 
