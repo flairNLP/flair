@@ -146,22 +146,6 @@ class ViterbiDecoder:
                 scores_upto_t[terminate_var, t + 1, self.tag_dictionary.get_idx_for_item(START_TAG)] = -10000.0
                 scores_upto_t[terminate_var, t + 1, self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000.0
 
-        """
-        best_tag_id = terminal_var.argmax()
-
-        best_path = [best_tag_id]
-        for bptrs_t in reversed(backpointers):
-            best_tag_id = bptrs_t[best_tag_id]
-            best_path.append(best_tag_id)
-
-        start = best_path.pop()
-        assert start == id_start
-        best_path.reverse()
-
-        best_scores_softmax = self._softmax(backscores, axis=1)
-        best_scores_np = np.max(best_scores_softmax, axis=1)
-        """
-
         # Decode/trace best path backwards
         decoded = torch.zeros((batch_size, backpointers.size(1)), dtype=torch.long, device=flair.device)
         pointer = torch.ones((batch_size, 1), dtype=torch.long, device=flair.device) * self.stop_tag
