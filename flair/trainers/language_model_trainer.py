@@ -206,7 +206,7 @@ class LanguageModelTrainer:
         if type(base_path) is str:
             base_path = Path(base_path)
 
-        add_file_handler(log, base_path / "training.log")
+        log_handler = add_file_handler(log, base_path / "training.log")
 
         number_of_splits: int = len(self.corpus.train)
 
@@ -416,6 +416,10 @@ class LanguageModelTrainer:
         except KeyboardInterrupt:
             log.info("-" * 89)
             log.info("Exiting from training early")
+        finally:
+            if log_handler is not None:
+                log_handler.close()
+                log.removeHandler(log_handler)
 
         ###############################################################################
         # final testing

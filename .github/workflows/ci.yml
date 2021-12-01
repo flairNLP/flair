@@ -23,4 +23,4 @@ jobs:
         run: |
           cd tests
           pip freeze
-          pytest --runintegration
+          pytest --runintegration -vv
