@@ -2009,7 +2009,7 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
             tag_bool = False
             new_sentence = True
             for line in lines:
-                line = re.sub('\s{2,}', ' ', line).strip().split(' ')
+                line = re.sub(r'\s{2,}', ' ', line).strip().split(' ')
                 for substr in line:
                     if substr == '.':
                         f.write("\n")
