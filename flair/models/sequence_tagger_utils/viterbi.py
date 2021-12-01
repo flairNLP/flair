@@ -126,10 +126,10 @@ class ViterbiDecoder:
 
         start_forward_var = torch.ones([self.tagset_size]).to(flair.device) * -10000
         start_forward_var[self.tag_dictionary.get_idx_for_item(START_TAG)] = 0
-        start_forward_var = start_forward_var.unsqueeze(1) + transitions
+        start_forward_var = start_forward_var + transitions
 
         # initial fill of forward var
-        scores_upto_t[:, 0], backpointers[:, 0] = torch.max(start_forward_var, dim=0)
+        scores_upto_t[:, 0], backpointers[:, 0] = torch.max(start_forward_var, dim=1)
 
         for t in range(seq_len):
             batch_size_t = sum([l > t for l in lengths.values])  # effective batch size (sans pads) at this timestep
@@ -138,7 +138,7 @@ class ViterbiDecoder:
             # We add scores at current timestep to scores accumulated up to previous timestep, and
             # choose the previous timestep that corresponds to the max. accumulated score for each current timestep
             scores_upto_t[:batch_size_t, t + 1], backpointers[:batch_size_t, t + 1, :] = torch.max(
-                features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t, t].unsqueeze(2),
+                features[:batch_size_t, t, :, :] + scores_upto_t[:batch_size_t, t].unsqueeze(1),
                 dim=2)
 
             # if sentence is completed, add transition to stop tag
@@ -180,7 +180,7 @@ class ViterbiDecoder:
             tags.append(
                 [
                     Label(self.tag_dictionary.get_item_for_index(tag), conf.item())
-                    for tag, conf in list(zip(tag_seq, tag_seq_conf))[1:length_seq]
+                    for tag, conf in list(zip(tag_seq, tag_seq_conf))[1:length_seq + 1]
                 ]
             )
 

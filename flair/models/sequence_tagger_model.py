@@ -409,7 +409,7 @@ class SequenceTagger(flair.nn.DefaultClassifier):
 
         if state["use_crf"]:
             if "transitions" in state["state_dict"]:
-                state["state_dict"]["crf.transitions"] = state["state_dict"]["transitions"].T
+                state["state_dict"]["crf.transitions"] = state["state_dict"]["transitions"]
                 del state["state_dict"]["transitions"]
             if "linear.weight" in state["state_dict"] and "linear.bias" in state["state_dict"]:
                 state["state_dict"]["crf.emission.weight"] = state["state_dict"]["linear.weight"]
