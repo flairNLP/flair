@@ -742,6 +742,13 @@ class ModelTrainer:
                 log.info("Saving model ...")
                 self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
                 log.info("Done.")
+        finally:
+            if create_file_logs:
+                log_handler.close()
+                log.removeHandler(log_handler)
+
+            if use_tensorboard:
+                writer.close()
 
         # test best model if test data is present
         if self.corpus.test and not train_with_test:
@@ -755,13 +762,6 @@ class ModelTrainer:
         else:
             final_score = 0
             log.info("Test data not provided setting final score to 0")
-
-        if create_file_logs:
-            log_handler.close()
-            log.removeHandler(log_handler)
-
-        if use_tensorboard:
-            writer.close()
 
         return {
             "test_score": final_score,
