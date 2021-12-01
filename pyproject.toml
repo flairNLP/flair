@@ -12,3 +12,9 @@ exclude = '''
   )/
 )
 '''
+[tool.pytest.ini_options]
+addopts = "-W error"
+markers = [
+    "integration",
+    "slow",
+]

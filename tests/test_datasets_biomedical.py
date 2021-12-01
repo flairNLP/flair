@@ -237,7 +237,7 @@ def assert_conll_writer_output(
     expected_output: List[str],
     sentence_splitter: SentenceSplitter = None,
 ):
-    outfile_path = tempfile.mkstemp()[1]
+    fd, outfile_path = tempfile.mkstemp()
     try:
         sentence_splitter = (
             sentence_splitter if sentence_splitter else NoSentenceSplitter(tokenizer=SpaceTokenizer())
@@ -245,9 +245,10 @@ def assert_conll_writer_output(
 
         writer = CoNLLWriter(sentence_splitter=sentence_splitter)
         writer.write_to_conll(dataset, Path(outfile_path))
-        contents = [l.strip() for l in open(outfile_path).readlines() if l.strip()]
-
+        with open(outfile_path) as f:
+            contents = [l.strip() for l in f.readlines() if l.strip()]
     finally:
+        os.close(fd)
         os.remove(outfile_path)
 
     assert contents == expected_output
@@ -277,8 +278,9 @@ def test_filter_nested_entities():
     dataset = InternalBioNerDataset(
         documents={}, entities_per_document=entities_per_document
     )
-
-    filter_nested_entities(dataset)
+    with pytest.warns(UserWarning) as warn:
+        filter_nested_entities(dataset)
+        assert warn
 
     for key, entities in dataset.entities_per_document.items():
         assert key in target

@@ -948,13 +948,11 @@ class TransformerWordEmbeddings(TokenEmbeddings):
         if type(self.model) not in self.NO_MAX_SEQ_LENGTH_MODELS:
             self.allow_long_sentences = allow_long_sentences
             self.truncate = True
-            self.max_subtokens_sequence_length = self.tokenizer.model_max_length
             self.stride = self.tokenizer.model_max_length // 2 if allow_long_sentences else 0
         else:
             # in the end, these models don't need this configuration
             self.allow_long_sentences = False
             self.truncate = False
-            self.max_subtokens_sequence_length = None
             self.stride = 0
 
         self.use_lang_emb = hasattr(self.model, "use_lang_emb") and self.model.use_lang_emb
@@ -1106,7 +1104,6 @@ class TransformerWordEmbeddings(TokenEmbeddings):
 
         # encode inputs
         batch_encoding = self.tokenizer(tokenized_sentences,
-                                        max_length=self.max_subtokens_sequence_length,
                                         stride=self.stride,
                                         return_overflowing_tokens=self.allow_long_sentences,
                                         truncation=self.truncate,
